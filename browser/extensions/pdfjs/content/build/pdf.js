@@ -15,9 +15,13 @@
  * limitations under the License.
  */
 
-var PDFJS = {};
-PDFJS.version = '0.8.229';
-PDFJS.build = 'b996e1b';
+// Initializing PDFJS global object (if still undefined)
+if (typeof PDFJS === 'undefined') {
+  (typeof window !== 'undefined' ? window : this).PDFJS = {};
+}
+
+PDFJS.version = '0.8.291';
+PDFJS.build = '4e83123';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -164,6 +168,12 @@ var ChunkedStream = (function ChunkedStreamClosure() {
 
       this.pos = end;
       return bytes.subarray(pos, end);
+    },
+
+    peekBytes: function ChunkedStream_peekBytes(length) {
+      var bytes = this.getBytes(length);
+      this.pos -= bytes.length;
+      return bytes;
     },
 
     getByteRange: function ChunkedStream_getBytes(begin, end) {
@@ -707,7 +717,6 @@ var Page = (function PageClosure() {
     this.xref = xref;
     this.ref = ref;
     this.idCounters = {
-      font: 0,
       obj: 0
     };
     this.resourcesPromise = null;
@@ -1803,41 +1812,121 @@ function isPDFFunction(v) {
 }
 
 /**
- * 'Promise' object.
- * Each object that is stored in PDFObjects is based on a Promise object that
- * contains the status of the object and the data. There might be situations
- * where a function wants to use the value of an object, but it isn't ready at
- * that time. To get a notification, once the object is ready to be used, s.o.
- * can add a callback using the `then` method on the promise that then calls
- * the callback once the object gets resolved.
- * A promise can get resolved only once and only once the data of the promise
- * can be set. If any of these happens twice or the data is required before
- * it was set, an exception is throw.
+ * The following promise implementation tries to generally implment the
+ * Promise/A+ spec. Some notable differences from other promise libaries are:
+ * - There currently isn't a seperate deferred and promise object.
+ * - Unhandled rejections eventually show an error if they aren't handled.
+ *
+ * Based off of the work in:
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=810490
  */
 var Promise = PDFJS.Promise = (function PromiseClosure() {
-  var EMPTY_PROMISE = {};
+  var STATUS_PENDING = 0;
+  var STATUS_RESOLVED = 1;
+  var STATUS_REJECTED = 2;
 
-  /**
-   * If `data` is passed in this constructor, the promise is created resolved.
-   * If there isn't data, it isn't resolved at the beginning.
-   */
-  function Promise(name, data) {
-    this.name = name;
-    this.isRejected = false;
-    this.error = null;
-    this.exception = null;
-    // If you build a promise and pass in some data it's already resolved.
-    if (data !== null && data !== undefined) {
-      this.isResolved = true;
-      this._data = data;
-      this.hasData = true;
-    } else {
-      this.isResolved = false;
-      this._data = EMPTY_PROMISE;
+  // In an attempt to avoid silent exceptions, unhandled rejections are
+  // tracked and if they aren't handled in a certain amount of time an
+  // error is logged.
+  var REJECTION_TIMEOUT = 500;
+
+  var HandlerManager = {
+    handlers: [],
+    running: false,
+    unhandledRejections: [],
+    pendingRejectionCheck: false,
+
+    scheduleHandlers: function scheduleHandlers(promise) {
+      if (promise._status == STATUS_PENDING) {
+        return;
+      }
+
+      this.handlers = this.handlers.concat(promise._handlers);
+      promise._handlers = [];
+
+      if (this.running) {
+        return;
+      }
+      this.running = true;
+
+      setTimeout(this.runHandlers.bind(this), 0);
+    },
+
+    runHandlers: function runHandlers() {
+      while (this.handlers.length > 0) {
+        var handler = this.handlers.shift();
+
+        var nextStatus = handler.thisPromise._status;
+        var nextValue = handler.thisPromise._value;
+
+        try {
+          if (nextStatus === STATUS_RESOLVED) {
+            if (typeof(handler.onResolve) == 'function') {
+              nextValue = handler.onResolve(nextValue);
+            }
+          } else if (typeof(handler.onReject) === 'function') {
+              nextValue = handler.onReject(nextValue);
+              nextStatus = STATUS_RESOLVED;
+
+              if (handler.thisPromise._unhandledRejection) {
+                this.removeUnhandeledRejection(handler.thisPromise);
+              }
+          }
+        } catch (ex) {
+          nextStatus = STATUS_REJECTED;
+          nextValue = ex;
+        }
+
+        handler.nextPromise._updateStatus(nextStatus, nextValue);
+      }
+
+      this.running = false;
+    },
+
+    addUnhandledRejection: function addUnhandledRejection(promise) {
+      this.unhandledRejections.push({
+        promise: promise,
+        time: Date.now()
+      });
+      this.scheduleRejectionCheck();
+    },
+
+    removeUnhandeledRejection: function removeUnhandeledRejection(promise) {
+      promise._unhandledRejection = false;
+      for (var i = 0; i < this.unhandledRejections.length; i++) {
+        if (this.unhandledRejections[i].promise === promise) {
+          this.unhandledRejections.splice(i);
+          i--;
+        }
+      }
+    },
+
+    scheduleRejectionCheck: function scheduleRejectionCheck() {
+      if (this.pendingRejectionCheck) {
+        return;
+      }
+      this.pendingRejectionCheck = true;
+      setTimeout(function rejectionCheck() {
+        this.pendingRejectionCheck = false;
+        var now = Date.now();
+        for (var i = 0; i < this.unhandledRejections.length; i++) {
+          if (now - this.unhandledRejections[i].time > REJECTION_TIMEOUT) {
+            warn('Unhandled rejection: ' +
+                 this.unhandledRejections[i].promise._value);
+            this.unhandledRejections.splice(i);
+            i--;
+          }
+        }
+        if (this.unhandledRejections.length) {
+          this.scheduleRejectionCheck();
+        }
+      }.bind(this), REJECTION_TIMEOUT);
     }
-    this.callbacks = [];
-    this.errbacks = [];
-    this.progressbacks = [];
+  };
+
+  function Promise() {
+    this._status = STATUS_PENDING;
+    this._handlers = [];
   }
   /**
    * Builds a promise that is resolved when all the passed in promises are
@@ -1854,7 +1943,7 @@ var Promise = PDFJS.Promise = (function PromiseClosure() {
       return deferred;
     }
     function reject(reason) {
-      if (deferred.isRejected) {
+      if (deferred._status === STATUS_REJECTED) {
         return;
       }
       results = [];
@@ -1864,7 +1953,7 @@ var Promise = PDFJS.Promise = (function PromiseClosure() {
       var promise = promises[i];
       promise.then((function(i) {
         return function(value) {
-          if (deferred.isRejected) {
+          if (deferred._status === STATUS_REJECTED) {
             return;
           }
           results[i] = value;
@@ -1876,102 +1965,63 @@ var Promise = PDFJS.Promise = (function PromiseClosure() {
     }
     return deferred;
   };
-  Promise.prototype = {
-    hasData: false,
 
-    set data(value) {
-      if (value === undefined) {
+  Promise.prototype = {
+    _status: null,
+    _value: null,
+    _handlers: null,
+    _unhandledRejection: null,
+
+    _updateStatus: function Promise__updateStatus(status, value) {
+      if (this._status === STATUS_RESOLVED ||
+          this._status === STATUS_REJECTED) {
         return;
       }
-      if (this._data !== EMPTY_PROMISE) {
-        error('Promise ' + this.name +
-              ': Cannot set the data of a promise twice');
-      }
-      this._data = value;
-      this.hasData = true;
 
-      if (this.onDataCallback) {
-        this.onDataCallback(value);
+      if (status == STATUS_RESOLVED &&
+          value && typeof(value.then) === 'function') {
+        value.then(this._updateStatus.bind(this, STATUS_RESOLVED),
+                   this._updateStatus.bind(this, STATUS_REJECTED));
+        return;
       }
+
+      this._status = status;
+      this._value = value;
+
+      if (status === STATUS_REJECTED && this._handlers.length === 0) {
+        this._unhandledRejection = true;
+        HandlerManager.addUnhandledRejection(this);
+      }
+
+      HandlerManager.scheduleHandlers(this);
     },
 
-    get data() {
-      if (this._data === EMPTY_PROMISE) {
-        error('Promise ' + this.name + ': Cannot get data that isn\'t set');
-      }
-      return this._data;
+    get isResolved() {
+      return this._status === STATUS_RESOLVED;
     },
 
-    onData: function Promise_onData(callback) {
-      if (this._data !== EMPTY_PROMISE) {
-        callback(this._data);
-      } else {
-        this.onDataCallback = callback;
-      }
+    get isRejected() {
+      return this._status === STATUS_REJECTED;
     },
 
-    resolve: function Promise_resolve(data) {
-      if (this.isResolved) {
-        error('A Promise can be resolved only once ' + this.name);
-      }
-      if (this.isRejected) {
-        error('The Promise was already rejected ' + this.name);
-      }
-
-      this.isResolved = true;
-      this.data = (typeof data !== 'undefined') ? data : null;
-      var callbacks = this.callbacks;
-
-      for (var i = 0, ii = callbacks.length; i < ii; i++) {
-        callbacks[i].call(null, data);
-      }
+    resolve: function Promise_resolve(value) {
+      this._updateStatus(STATUS_RESOLVED, value);
     },
 
-    progress: function Promise_progress(data) {
-      var callbacks = this.progressbacks;
-      for (var i = 0, ii = callbacks.length; i < ii; i++) {
-        callbacks[i].call(null, data);
-      }
+    reject: function Promise_reject(reason) {
+      this._updateStatus(STATUS_REJECTED, reason);
     },
 
-    reject: function Promise_reject(reason, exception) {
-      if (this.isRejected) {
-        error('A Promise can be rejected only once ' + this.name);
-      }
-      if (this.isResolved) {
-        error('The Promise was already resolved ' + this.name);
-      }
-
-      this.isRejected = true;
-      this.error = reason || null;
-      this.exception = exception || null;
-      var errbacks = this.errbacks;
-
-      for (var i = 0, ii = errbacks.length; i < ii; i++) {
-        errbacks[i].call(null, reason, exception);
-      }
-    },
-
-    then: function Promise_then(callback, errback, progressback) {
-      // If the promise is already resolved, call the callback directly.
-      if (this.isResolved && callback) {
-        var data = this.data;
-        callback.call(null, data);
-      } else if (this.isRejected && errback) {
-        var error = this.error;
-        var exception = this.exception;
-        errback.call(null, error, exception);
-      } else {
-        if (callback) {
-          this.callbacks.push(callback);
-        }
-        if (errback) {
-          this.errbacks.push(errback);
-        }
-      }
-
-      if (progressback)
-        this.progressbacks.push(progressback);
+    then: function Promise_then(onResolve, onReject) {
+      var nextPromise = new Promise();
+      this._handlers.push({
+        thisPromise: this,
+        onResolve: onResolve,
+        onReject: onReject,
+        nextPromise: nextPromise
+      });
+      HandlerManager.scheduleHandlers(this);
+      return nextPromise;
     }
   };
 
@@ -2068,7 +2118,8 @@ PDFJS.createBlob = function createBlob(data, contentType) {
  */
 PDFJS.getDocument = function getDocument(source,
                                          pdfDataRangeTransport,
-                                         passwordCallback) {
+                                         passwordCallback,
+                                         progressCallback) {
   var workerInitializedPromise, workerReadyPromise, transport;
 
   if (typeof source === 'string') {
@@ -2096,7 +2147,7 @@ PDFJS.getDocument = function getDocument(source,
   workerInitializedPromise = new PDFJS.Promise();
   workerReadyPromise = new PDFJS.Promise();
   transport = new WorkerTransport(workerInitializedPromise,
-      workerReadyPromise, pdfDataRangeTransport);
+      workerReadyPromise, pdfDataRangeTransport, progressCallback);
   workerInitializedPromise.then(function transportInitialized() {
     transport.passwordCallback = passwordCallback;
     transport.fetchDocument(params);
@@ -2370,17 +2421,9 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       var self = this;
       this.operatorList = operatorList;
 
-      var displayContinuation = function pageDisplayContinuation() {
-        // Always defer call to display() to work around bug in
-        // Firefox error reporting from XHR callbacks.
-        setTimeout(function pageSetTimeout() {
-          self.displayReadyPromise.resolve();
-        });
-      };
-
       this.ensureFonts(fonts,
         function pageStartRenderingFromOperatorListEnsureFonts() {
-          displayContinuation();
+          self.displayReadyPromise.resolve();
         }
       );
     },
@@ -2500,10 +2543,11 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
  */
 var WorkerTransport = (function WorkerTransportClosure() {
   function WorkerTransport(workerInitializedPromise, workerReadyPromise,
-      pdfDataRangeTransport) {
+      pdfDataRangeTransport, progressCallback) {
     this.pdfDataRangeTransport = pdfDataRangeTransport;
 
     this.workerReadyPromise = workerReadyPromise;
+    this.progressCallback = progressCallback;
     this.commonObjs = new PDFObjects();
 
     this.pageCache = [];
@@ -2725,14 +2769,12 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('DocProgress', function transportDocProgress(data) {
-        // TODO(mack): The progress event should be resolved on a different
-        // promise that tracks progress of whole file, since workerReadyPromise
-        // is for file being ready to render, not for when file is fully
-        // downloaded
-        this.workerReadyPromise.progress({
-          loaded: data.loaded,
-          total: data.total
-        });
+        if (this.progressCallback) {
+          this.progressCallback({
+            loaded: data.loaded,
+            total: data.total
+          });
+        }
       }, this);
 
       messageHandler.on('DocError', function transportDocError(data) {
@@ -3010,13 +3052,10 @@ function compileType3Glyph(imgData) {
   var POINT_TO_PROCESS_LIMIT = 1000;
 
   var width = imgData.width, height = imgData.height;
-  var i, j;
-  // we need sparse arrays
-  var points = [];
-  for (i = 0; i <= height; i++) {
-    points.push([]);
-  }
-
+  var i, j, j0, width1 = width + 1;
+  var points = new Uint8Array(width1 * (height + 1));
+  var POINT_TYPES = 
+      new Uint8Array([0, 2, 4, 0, 1, 0, 5, 4, 8, 10, 0, 8, 0, 2, 1, 0]);
   // finding iteresting points: every point is located between mask pixels,
   // so there will be points of the (width + 1)x(height + 1) grid. Every point
   // will have flags assigned based on neighboring mask pixels:
@@ -3029,40 +3068,41 @@ function compileType3Glyph(imgData) {
   //   - and, intersections: 5, 10.
   var pos = 3, data = imgData.data, lineSize = width * 4, count = 0;
   if (data[3] !== 0) {
-    points[0][0] = 1;
+    points[0] = 1;
     ++count;
   }
   for (j = 1; j < width; j++) {
     if (data[pos] !== data[pos + 4]) {
-      points[0][j] = data[pos] ? 2 : 1;
+      points[j] = data[pos] ? 2 : 1;
       ++count;
     }
     pos += 4;
   }
   if (data[pos] !== 0) {
-    points[0][j] = 2;
+    points[j] = 2;
     ++count;
   }
   pos += 4;
   for (i = 1; i < height; i++) {
+    j0 = i * width1;
     if (data[pos - lineSize] !== data[pos]) {
-      points[i][0] = data[pos] ? 1 : 8;
+      points[j0] = data[pos] ? 1 : 8;
       ++count;
     }
+    // 'sum' is the position of the current pixel configuration in the 'TYPES'
+    // array (in order 8-1-2-4, so we can use '>>2' to shift the column).
+    var sum = (data[pos] ? 4 : 0) + (data[pos - lineSize] ? 8 : 0);
     for (j = 1; j < width; j++) {
-      var f1 = data[pos + 4] ? 1 : 0;
-      var f2 = data[pos] ? 1 : 0;
-      var f4 = data[pos - lineSize] ? 1 : 0;
-      var f8 = data[pos - lineSize + 4] ? 1 : 0;
-      var fSum = f1 + f2 + f4 + f8;
-      if (fSum === 1 || fSum === 3 || (fSum === 2 && f1 === f4)) {
-        points[i][j] = f1 | (f2 << 1) | (f4 << 2) | (f8 << 3);
+      sum = (sum >> 2) + (data[pos + 4] ? 4 : 0) +
+            (data[pos - lineSize + 4] ? 8 : 0);
+      if (POINT_TYPES[sum]) { 
+        points[j0 + j] = POINT_TYPES[sum];
         ++count;
       }
       pos += 4;
     }
     if (data[pos - lineSize] !== data[pos]) {
-      points[i][j] = data[pos] ? 2 : 4;
+      points[j0 + j] = data[pos] ? 2 : 4;
       ++count;
     }
     pos += 4;
@@ -3071,20 +3111,22 @@ function compileType3Glyph(imgData) {
       return null;
     }
   }
+
   pos -= lineSize;
+  j0 = i * width1;
   if (data[pos] !== 0) {
-    points[i][0] = 8;
+    points[j0] = 8;
     ++count;
   }
   for (j = 1; j < width; j++) {
     if (data[pos] !== data[pos + 4]) {
-      points[i][j] = data[pos] ? 4 : 8;
+      points[j0 + j] = data[pos] ? 4 : 8;
       ++count;
     }
     pos += 4;
   }
   if (data[pos] !== 0) {
-    points[i][j] = 4;
+    points[j0 + j] = 4;
     ++count;
   }
   if (count > POINT_TO_PROCESS_LIMIT) {
@@ -3092,69 +3134,64 @@ function compileType3Glyph(imgData) {
   }
 
   // building outlines
-  var outline = [];
-  outline.push('c.save();');
-  // the path shall be painted in [0..1]x[0..1] space
-  outline.push('c.scale(' + (1 / width) + ',' +  (-1 / height) + ');');
-  outline.push('c.translate(0,-' + height + ');');
-  outline.push('c.beginPath();');
-  for (i = 0; i <= height; i++) {
-    if (points[i].length === 0) {
+  var steps = new Int32Array([0, width1, -1, 0, -width1, 0, 0, 0, 1]);
+  var outlines = [];
+  for (i = 0; count && i <= height; i++) {
+    var p = i * width1;
+    var end = p + width;
+    while (p < end && !points[p]) {
+      p++;
+    }
+    if (p === end) {
       continue;
     }
-    var js = null;
-    for (js in points[i]) {
-      break;
-    }
-    if (js === null) {
-      continue;
-    }
-    var i0 = i, j0 = (j = +js);
+    var coords = [p % width1, i];
 
-    outline.push('c.moveTo(' + j + ',' + i + ');');
-    var type = points[i][j], d = 0;
+    var type = points[p], p0 = p, pp;
     do {
-      if (type === 5 || type === 10) {
-        // line crossed: following dirrection we followed
-        points[i0][j0] = type | (15 ^ d); // changing direction for "future hit"
-        type |= d;
+      var step = steps[type];
+      do { p += step; } while (!points[p]);
+      
+      pp = points[p];
+      if (pp !== 5 && pp !== 10) {
+        // set new direction
+        type = pp; 
+        // delete mark
+        points[p] = 0; 
+      } else { // type is 5 or 10, ie, a crossing
+        // set new direction
+        type = pp & ((0x33 * type) >> 4); 
+        // set new type for "future hit"
+        points[p] &= (type >> 2 | type << 2);
       }
 
-      switch (type) {
-      case 1:
-      case 13:
-        do { i0++; } while (!points[i0][j0]);
-        d = 9;
-        break;
-      case 4:
-      case 7:
-        do { i0--; } while (!points[i0][j0]);
-        d = 6;
-        break;
-      case 8:
-      case 14:
-        do { j0++; } while (!points[i0][j0]);
-        d = 12;
-        break;
-      case 2:
-      case 11:
-        do { j0--; } while (!points[i0][j0]);
-        d = 3;
-        break;
-      }
-      outline.push('c.lineTo(' + j0 + ',' + i0 + ');');
-
-      type = points[i0][j0];
-      delete points[i0][j0];
-    } while (j0 !== j || i0 !== i);
+      coords.push(p % width1);
+      coords.push((p / width1) | 0);
+      --count;
+    } while (p0 !== p);
+    outlines.push(coords);
     --i;
   }
-  outline.push('c.fill();');
-  outline.push('c.beginPath();');
-  outline.push('c.restore();');
 
-  /*jshint -W054 */
-  return new Function('c', outline.join('\n'));
+  var drawOutline = function(c) {
+    c.save();
+    // the path shall be painted in [0..1]x[0..1] space
+    c.scale(1 / width, -1 / height);
+    c.translate(0, -height);
+    c.beginPath();
+    for (var i = 0, ii = outlines.length; i < ii; i++) {
+      var o = outlines[i];
+      c.moveTo(o[0], o[1]);
+      for (var j = 2, jj = o.length; j < jj; j += 2) {
+        c.lineTo(o[j], o[j+1]);
+      }
+    }
+    c.fill();
+    c.beginPath();
+    c.restore();
+  };
+  
+  return drawOutline;
 }
 
 var CanvasExtraState = (function CanvasExtraStateClosure() {
@@ -4856,6 +4893,28 @@ var RefSet = (function RefSetClosure() {
   return RefSet;
 })();
 
+var RefSetCache = (function RefSetCacheClosure() {
+  function RefSetCache() {
+    this.dict = {};
+  }
+
+  RefSetCache.prototype = {
+    get: function RefSetCache_get(ref) {
+      return this.dict['R' + ref.num + '.' + ref.gen];
+    },
+
+    has: function RefSetCache_has(ref) {
+      return ('R' + ref.num + '.' + ref.gen) in this.dict;
+    },
+
+    put: function RefSetCache_put(ref, obj) {
+      this.dict['R' + ref.num + '.' + ref.gen] = obj;
+    }
+  };
+
+  return RefSetCache;
+})();
+
 var Catalog = (function CatalogClosure() {
   function Catalog(pdfManager, xref) {
     this.pdfManager = pdfManager;
@@ -4913,6 +4972,18 @@ var Catalog = (function CatalogClosure() {
       return shadow(this, 'toplevelPagesDict', pagesObj);
     },
     get documentOutline() {
+      var obj = null;
+      try {
+        obj = this.readDocumentOutline();
+      } catch (ex) {
+        if (ex instanceof MissingDataException) {
+          throw ex;
+        }
+        warn('Unable to read document outline');
+      }
+      return shadow(this, 'documentOutline', obj);
+    },
+    readDocumentOutline: function Catalog_readDocumentOutline() {
       var xref = this.xref;
       var obj = this.catDict.get('Outlines');
       var root = { items: [] };
@@ -4963,8 +5034,7 @@ var Catalog = (function CatalogClosure() {
           }
         }
       }
-      obj = root.items.length > 0 ? root.items : null;
-      return shadow(this, 'documentOutline', obj);
+      return root.items.length > 0 ? root.items : null;
     },
     get numPages() {
       var obj = this.toplevelPagesDict.get('Count');
@@ -5243,6 +5313,12 @@ var XRef = (function XRefClosure() {
         tableState.parserBuf2 = parser.buf2;
         delete tableState.firstEntryNum;
         delete tableState.entryCount;
+      }
+
+      // Per issue 3248: hp scanners generate bad XRef
+      if (first === 1 && this.entries[1] && this.entries[1].free) {
+        // shifting the entries
+        this.entries.shift();
       }
 
       // Sanity check: as per spec, first object must be free
@@ -5638,7 +5714,7 @@ var XRef = (function XRefClosure() {
         }
       }
       e = entries[e.gen];
-      if (!e) {
+      if (e === undefined) {
         error('bad XRef entry for compressed object');
       }
       return e;
@@ -5741,13 +5817,20 @@ var PDFObjects = (function PDFObjectsClosure() {
   PDFObjects.prototype = {
     /**
      * Internal function.
-     * Ensures there is an object defined for `objId`. Stores `data` on the
-     * object *if* it is created.
+     * Ensures there is an object defined for `objId`.
      */
-    ensureObj: function PDFObjects_ensureObj(objId, data) {
+    ensureObj: function PDFObjects_ensureObj(objId) {
       if (this.objs[objId])
         return this.objs[objId];
-      return this.objs[objId] = new Promise(objId, data);
+
+      var obj = {
+        promise: new Promise(objId),
+        data: null,
+        resolved: false
+      };
+      this.objs[objId] = obj;
+
+      return obj;
     },
 
     /**
@@ -5763,7 +5846,7 @@ var PDFObjects = (function PDFObjectsClosure() {
       // If there is a callback, then the get can be async and the object is
       // not required to be resolved right now
       if (callback) {
-        this.ensureObj(objId).then(callback);
+        this.ensureObj(objId).promise.then(callback);
         return null;
       }
 
@@ -5773,7 +5856,7 @@ var PDFObjects = (function PDFObjectsClosure() {
 
       // If there isn't an object yet or the object isn't resolved, then the
       // data isn't ready yet!
-      if (!obj || !obj.isResolved)
+      if (!obj || !obj.resolved)
         error('Requesting object that isn\'t resolved yet ' + objId);
 
       return obj.data;
@@ -5783,36 +5866,25 @@ var PDFObjects = (function PDFObjectsClosure() {
      * Resolves the object `objId` with optional `data`.
      */
     resolve: function PDFObjects_resolve(objId, data) {
-      var objs = this.objs;
+      var obj = this.ensureObj(objId);
 
-      // In case there is a promise already on this object, just resolve it.
-      if (objs[objId]) {
-        objs[objId].resolve(data);
-      } else {
-        this.ensureObj(objId, data);
-      }
-    },
-
-    onData: function PDFObjects_onData(objId, callback) {
-      this.ensureObj(objId).onData(callback);
+      obj.resolved = true;
+      obj.data = data;
+      obj.promise.resolve(data);
     },
 
     isResolved: function PDFObjects_isResolved(objId) {
       var objs = this.objs;
+
       if (!objs[objId]) {
         return false;
       } else {
-        return objs[objId].isResolved;
+        return objs[objId].resolved;
       }
     },
 
     hasData: function PDFObjects_hasData(objId) {
-      var objs = this.objs;
-      if (!objs[objId]) {
-        return false;
-      } else {
-        return objs[objId].hasData;
-      }
+      return this.isResolved(objId);
     },
 
     /**
@@ -5820,20 +5892,11 @@ var PDFObjects = (function PDFObjectsClosure() {
      */
     getData: function PDFObjects_getData(objId) {
       var objs = this.objs;
-      if (!objs[objId] || !objs[objId].hasData) {
+      if (!objs[objId] || !objs[objId].resolved) {
         return null;
       } else {
         return objs[objId].data;
       }
-    },
-
-    /**
-     * Sets the data of an object but *doesn't* resolve it.
-     */
-    setData: function PDFObjects_setData(objId, data) {
-      // Watchout! If you call `this.ensureObj(objId, data)` you're going to
-      // create a *resolved* promise which shouldn't be the case!
-      this.ensureObj(objId).data = data;
     },
 
     clear: function PDFObjects_clear() {
@@ -6102,6 +6165,10 @@ var Annotation = (function AnnotationClosure() {
     loadResources: function(keys) {
       var promise = new Promise();
       this.appearance.dict.getAsync('Resources').then(function(resources) {
+        if (!resources) {
+          promise.resolve();
+          return;
+        }
         var objectLoader = new ObjectLoader(resources.map,
                                             keys,
                                             resources.xref);
@@ -15680,7 +15747,7 @@ var AES128Cipher = (function AES128CipherClosure() {
     this.bufferPosition = 0;
   }
 
-  function decryptBlock2(data) {
+  function decryptBlock2(data, finalize) {
     var i, j, ii, sourceLength = data.length,
         buffer = this.buffer, bufferLength = this.bufferPosition,
         result = [], iv = this.iv;
@@ -15703,19 +15770,25 @@ var AES128Cipher = (function AES128CipherClosure() {
     this.buffer = buffer;
     this.bufferLength = bufferLength;
     this.iv = iv;
-    if (result.length === 0)
+    if (result.length === 0) {
       return new Uint8Array([]);
-    if (result.length == 1)
-      return result[0];
+    }
     // combining plain text blocks into one
-    var output = new Uint8Array(16 * result.length);
+    var outputLength = 16 * result.length;
+    if (finalize) {
+      // undo a padding that is described in RFC 2898
+      var lastBlock = result[result.length - 1];
+      outputLength -= lastBlock[15];
+      result[result.length - 1] = lastBlock.subarray(0, 16 - lastBlock[15]);
+    }
+    var output = new Uint8Array(outputLength);
     for (i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16)
       output.set(result[i], j);
     return output;
   }
 
   AES128Cipher.prototype = {
-    decryptBlock: function AES128Cipher_decryptBlock(data) {
+    decryptBlock: function AES128Cipher_decryptBlock(data, finalize) {
       var i, sourceLength = data.length;
       var buffer = this.buffer, bufferLength = this.bufferPosition;
       // waiting for IV values -- they are at the start of the stream
@@ -15731,7 +15804,7 @@ var AES128Cipher = (function AES128CipherClosure() {
       this.bufferLength = 0;
       // starting decryption
       this.decryptBlock = decryptBlock2;
-      return this.decryptBlock(data.subarray(16));
+      return this.decryptBlock(data.subarray(16), finalize);
     }
   };
 
@@ -15747,15 +15820,15 @@ var CipherTransform = (function CipherTransformClosure() {
     createStream: function CipherTransform_createStream(stream) {
       var cipher = new this.streamCipherConstructor();
       return new DecryptStream(stream,
-        function cipherTransformDecryptStream(data) {
-          return cipher.decryptBlock(data);
+        function cipherTransformDecryptStream(data, finalize) {
+          return cipher.decryptBlock(data, finalize);
         }
       );
     },
     decryptString: function CipherTransform_decryptString(s) {
       var cipher = new this.stringCipherConstructor();
       var data = stringToBytes(s);
-      data = cipher.decryptBlock(data);
+      data = cipher.decryptBlock(data, true);
       return bytesToString(data);
     }
   };
@@ -16008,6 +16081,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     this.pageIndex = pageIndex;
     this.uniquePrefix = uniquePrefix;
     this.idCounters = idCounters;
+    this.fontCache = new RefSetCache();
   }
 
   // Specifies properties for each command
@@ -16095,7 +16169,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     // Images
     BI: { fnName: 'beginInlineImage', numArgs: 0, variableArgs: false },
     ID: { fnName: 'beginImageData', numArgs: 0, variableArgs: false },
-    EI: { fnName: 'endInlineImage', numArgs: 0, variableArgs: false },
+    EI: { fnName: 'endInlineImage', numArgs: 1, variableArgs: false },
 
     // XObjects
     Do: { fnName: 'paintXObject', numArgs: 1, variableArgs: false },
@@ -16475,38 +16549,45 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
     loadFont: function PartialEvaluator_loadFont(fontName, font, xref,
                                                  resources) {
-      var promise = new Promise();
-
-      var fontRes = resources.get('Font');
-      if (!fontRes) {
-        warn('fontRes not available');
-      }
-
-      font = xref.fetchIfRef(font) || (fontRes && fontRes.get(fontName));
-      if (!isDict(font)) {
-        ++this.idCounters.font;
+      function errorFont(promise) {
         promise.resolve({
           font: {
             translated: new ErrorFont('Font ' + fontName + ' is not available'),
-            loadedName: 'g_font_' + this.uniquePrefix + this.idCounters.obj
+            loadedName: 'g_font_error'
           },
           dependencies: {}
         });
         return promise;
       }
 
-      if (font.loaded) {
-        promise.resolve({
-          font: font,
-          dependencies: {}
-        });
-        return promise;
+      var fontRef;
+      if (font) { // Loading by ref.
+        assert(isRef(font));
+        fontRef = font;
+      } else { // Loading by name.
+        var fontRes = resources.get('Font');
+        if (fontRes) {
+          fontRef = fontRes.getRaw(fontName);
+        } else {
+          warn('fontRes not available');
+          return errorFont(new Promise());
+        }
+      }
+      if (this.fontCache.has(fontRef)) {
+        return this.fontCache.get(fontRef);
+      }
+
+      var promise = new Promise();
+      this.fontCache.put(fontRef, promise);
+
+      font = xref.fetchIfRef(fontRef);
+      if (!isDict(font)) {
+        return errorFont(promise);
       }
 
       // keep track of each font we translated so the caller can
       // load them asynchronously before calling display on a page
-      font.loadedName = 'g_font_' + this.uniquePrefix +
-                        (this.idCounters.font + 1);
+      font.loadedName = 'g_font_' + fontRef.num + '_' + fontRef.gen;
 
       if (!font.translated) {
         var translated;
@@ -16540,14 +16621,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           }
           font.translated.charProcOperatorList = charProcOperatorList;
           font.loaded = true;
-          ++this.idCounters.font;
           promise.resolve({
             font: font,
             dependencies: dependencies
           });
         }.bind(this));
       } else {
-        ++this.idCounters.font;
         font.loaded = true;
         promise.resolve({
           font: font,
@@ -17575,7 +17654,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var images = [];
         for (var q = 0; q < count; q++) {
           var transform = argsArray[j + (q << 2) + 1];
-          var maskParams = argsArray[j + (q << 2) + 2];
+          var maskParams = argsArray[j + (q << 2) + 2][0];
           images.push({data: maskParams.data, width: maskParams.width,
             height: maskParams.height, transform: transform});
         }
@@ -20748,7 +20827,8 @@ var Font = (function FontClosure() {
         }
       }
 
-      function sanitizeGlyph(source, sourceStart, sourceEnd, dest, destStart) {
+      function sanitizeGlyph(source, sourceStart, sourceEnd, dest, destStart,
+                             hintsValid) {
         if (sourceEnd - sourceStart <= 12) {
           // glyph with data less than 12 is invalid one
           return 0;
@@ -20768,8 +20848,10 @@ var Font = (function FontClosure() {
           j += 2;
         }
         // skipping instructions
+        var instructionsStart = j;
         var instructionsLength = (glyf[j] << 8) | glyf[j + 1];
         j += 2 + instructionsLength;
+        var instructionsEnd = j;
         // validating flags
         var coordinatesLength = 0;
         for (var i = 0; i < flagsCount; i++) {
@@ -20791,6 +20873,17 @@ var Font = (function FontClosure() {
         if (glyphDataLength > glyf.length) {
           // not enough data for coordinates
           return 0;
+        }
+        if (!hintsValid && instructionsLength > 0) {
+          dest.set(glyf.subarray(0, instructionsStart), destStart);
+          dest.set([0, 0], destStart + instructionsStart);
+          dest.set(glyf.subarray(instructionsEnd, glyphDataLength),
+                   destStart + instructionsStart + 2);
+          glyphDataLength -= instructionsLength;
+          if (glyf.length - glyphDataLength > 3) {
+            glyphDataLength = (glyphDataLength + 3) & ~3;
+          }
+          return glyphDataLength;
         }
         if (glyf.length - glyphDataLength > 3) {
           // truncating and aligning to 4 bytes the long glyph data
@@ -20848,7 +20941,7 @@ var Font = (function FontClosure() {
       }
 
       function sanitizeGlyphLocations(loca, glyf, numGlyphs,
-                                      isGlyphLocationsLong) {
+                                      isGlyphLocationsLong, hintsValid) {
         var itemSize, itemDecode, itemEncode;
         if (isGlyphLocationsLong) {
           itemSize = 4;
@@ -20890,7 +20983,7 @@ var Font = (function FontClosure() {
           }
 
           var newLength = sanitizeGlyph(oldGlyfData, startOffset, endOffset,
-                                        newGlyfData, writeOffset);
+                                        newGlyfData, writeOffset, hintsValid);
           writeOffset += newLength;
           itemEncode(locaData, j, writeOffset);
           startOffset = endOffset;
@@ -21055,7 +21148,7 @@ var Font = (function FontClosure() {
         0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2, -2, 0, 0, -2, -5,
         -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, -1, -1,
         1, -1, -999, 0, 1, 0, -1, -2, 0, -1, -2, -1, -1, 0, -1, -1,
-        0, 0, -999, -999, -1, -1, -1, -1, -2, -999, -2, -2, -2, 0, -2, -2,
+        0, 0, -999, -999, -1, -1, -1, -1, -2, -999, -2, -2, -999, 0, -2, -2,
         0, 0, -2, 0, -2, 0, 0, 0, -2, -1, -1, 1, 1, 0, 0, -1,
         -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, 0, -999, -1, -1,
         -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -21208,33 +21301,22 @@ var Font = (function FontClosure() {
         foldTTTable(table, content);
       }
 
-      function addTTDummyFunctions(table, ttContext, maxFunctionDefs) {
-        var content = [table.data];
-        if (!ttContext.tooComplexToFollowFunctions) {
-          var undefinedFunctions = [];
-          for (var j = 0, jj = ttContext.functionsUsed.length; j < jj; j++) {
-            if (!ttContext.functionsUsed[j] || ttContext.functionsDefined[j]) {
-              continue;
-            }
-            undefinedFunctions.push(j);
-            if (j >= maxFunctionDefs) {
-              continue;
-            }
-            // function is used, but not defined
-            if (j < 256) {
-              // creating empty one [PUSHB, function-id, FDEF, ENDF]
-              content.push(new Uint8Array([0xB0, j, 0x2C, 0x2D]));
-            } else {
-              // creating empty one [PUSHW, function-id, FDEF, ENDF]
-              content.push(
-                new Uint8Array([0xB8, j >> 8, j & 255, 0x2C, 0x2D]));
-            }
+      function checkInvalidFunctions(ttContext, maxFunctionDefs) {
+        if (ttContext.tooComplexToFollowFunctions) {
+          return;
+        }
+        for (var j = 0, jj = ttContext.functionsUsed.length; j < jj; j++) {
+          if (j > maxFunctionDefs) {
+            warn('TT: invalid function id: ' + j);
+            ttContext.hintsValid = false;
+            return;
           }
-          if (undefinedFunctions.length > 0) {
-            warn('TT: undefined functions: ' + undefinedFunctions);
+          if (ttContext.functionsUsed[j] && !ttContext.functionsDefined[j]) {
+            warn('TT: undefined function: ' + j);
+            ttContext.hintsValid = false;
+            return;
           }
         }
-        foldTTTable(table, content);
       }
 
       function foldTTTable(table, content) {
@@ -21261,7 +21343,8 @@ var Font = (function FontClosure() {
           functionsDefined: [],
           functionsUsed: [],
           functionsStackDeltas: [],
-          tooComplexToFollowFunctions: false
+          tooComplexToFollowFunctions: false,
+          hintsValid: true
         };
         if (fpgm) {
           sanitizeTTProgram(fpgm, ttContext);
@@ -21270,8 +21353,9 @@ var Font = (function FontClosure() {
           sanitizeTTProgram(prep, ttContext);
         }
         if (fpgm) {
-          addTTDummyFunctions(fpgm, ttContext, maxFunctionDefs);
+          checkInvalidFunctions(ttContext, maxFunctionDefs);
         }
+        return ttContext.hintsValid;
       }
 
       // The following steps modify the original font data, making copy
@@ -21326,6 +21410,25 @@ var Font = (function FontClosure() {
         tables.push(table);
       }
 
+      // Ensure the hmtx table contains the advance width and
+      // sidebearings information for numGlyphs in the maxp table
+      font.pos = (font.start || 0) + maxp.offset;
+      var version = int32(font.getBytes(4));
+      var numGlyphs = int16(font.getBytes(2));
+      var maxFunctionDefs = 0;
+      if (version >= 0x00010000 && maxp.length >= 22) {
+        font.pos += 14;
+        var maxFunctionDefs = int16(font.getBytes(2));
+      }
+
+      var hintsValid = sanitizeTTPrograms(fpgm, prep, maxFunctionDefs);
+      if (!hintsValid) {
+        tables.splice(tables.indexOf(fpgm), 1);
+        fpgm = null;
+        tables.splice(tables.indexOf(prep), 1);
+        prep = null;
+      }
+
       var numTables = tables.length + requiredTables.length;
 
       // header and new offsets. Table entry information is appended to the
@@ -21340,20 +21443,7 @@ var Font = (function FontClosure() {
       // of missing tables
       createOpenTypeHeader(header.version, ttf, numTables);
 
-      // Ensure the hmtx table contains the advance width and
-      // sidebearings information for numGlyphs in the maxp table
-      font.pos = (font.start || 0) + maxp.offset;
-      var version = int32(font.getBytes(4));
-      var numGlyphs = int16(font.getBytes(2));
-      var maxFunctionDefs = 0;
-      if (version >= 0x00010000 && maxp.length >= 22) {
-        font.pos += 14;
-        var maxFunctionDefs = int16(font.getBytes(2));
-      }
-
       sanitizeMetrics(font, hhea, hmtx, numGlyphs);
-
-      sanitizeTTPrograms(fpgm, prep, maxFunctionDefs);
 
       if (head) {
         sanitizeHead(head, numGlyphs, loca.length);
@@ -21361,7 +21451,8 @@ var Font = (function FontClosure() {
 
       var isGlyphLocationsLong = int16([head.data[50], head.data[51]]);
       if (head && loca && glyf) {
-        sanitizeGlyphLocations(loca, glyf, numGlyphs, isGlyphLocationsLong);
+        sanitizeGlyphLocations(loca, glyf, numGlyphs, isGlyphLocationsLong,
+                               hintsValid);
       }
 
       var emptyGlyphIds = [];
@@ -23178,7 +23269,7 @@ var CFFFont = (function CFFFontClosure() {
       } else {
         for (var charcode in encoding)
           inverseEncoding[encoding[charcode]] = charcode | 0;
-        if (charsets[0] === '.notedef') {
+        if (charsets[0] === '.notdef') {
           gidStart = 1;
         }
       }
@@ -33047,13 +33138,22 @@ var Parser = (function ParserClosure() {
       var startPos = stream.pos;
 
       // searching for the /EI\s/
-      var state = 0, ch;
+      var state = 0, ch, i, ii;
       while (state != 4 &&
              (ch = stream.getByte()) !== null && ch !== undefined) {
         switch (ch) {
           case 0x20:
           case 0x0D:
           case 0x0A:
+            // let's check next five bytes to be ASCII... just be sure
+            var followingBytes = stream.peekBytes(5);
+            for (i = 0, ii = followingBytes.length; i < ii; i++) {
+              ch = followingBytes[i];
+              if (ch !== 0x0A && ch != 0x0D && (ch < 0x20 || ch > 0x7F)) {
+                state = 0;
+                break; // some binary stuff found, resetting the state
+              }
+            }
             state = state === 3 ? 4 : 0;
             break;
           case 0x45:
@@ -33101,9 +33201,47 @@ var Parser = (function ParserClosure() {
       stream.pos = pos + length;
       this.shift(); // '>>'
       this.shift(); // 'stream'
-      if (!isCmd(this.buf1, 'endstream'))
-        error('Missing endstream');
-      this.shift();
+      if (!isCmd(this.buf1, 'endstream')) {
+        // bad stream length, scanning for endstream
+        stream.pos = pos;
+        var SCAN_BLOCK_SIZE = 2048;
+        var ENDSTREAM_SIGNATURE_LENGTH = 9;
+        var ENDSTREAM_SIGNATURE = [0x65, 0x6E, 0x64, 0x73, 0x74, 0x72, 0x65,
+                                   0x61, 0x6D];
+        var skipped = 0, found = false;
+        while (stream.pos < stream.end) {
+          var scanBytes = stream.peekBytes(SCAN_BLOCK_SIZE);
+          var scanLength = scanBytes.length - ENDSTREAM_SIGNATURE_LENGTH;
+          var found = false, i, ii, j;
+          for (i = 0, j = 0; i < scanLength; i++) {
+            var b = scanBytes[i];
+            if (b !== ENDSTREAM_SIGNATURE[j]) {
+              i -= j;
+              j = 0;
+            } else {
+              j++;
+              if (j >= ENDSTREAM_SIGNATURE_LENGTH) {
+                found = true;
+                break;
+              }
+            }
+          }
+          if (found) {
+            skipped += i - ENDSTREAM_SIGNATURE_LENGTH;
+            stream.pos += i - ENDSTREAM_SIGNATURE_LENGTH;
+            break;
+          }
+          skipped += scanLength;
+          stream.pos += scanLength;
+        }
+        if (!found) {
+          error('Missing endstream');
+        }
+        length = skipped;
+        this.shift();
+        this.shift();
+      }
+      this.shift(); // 'endstream'
 
       stream = stream.makeSubStream(pos, length, dict);
       if (cipherTransform)
@@ -34033,6 +34171,11 @@ var Stream = (function StreamClosure() {
       this.pos = end;
       return bytes.subarray(pos, end);
     },
+    peekBytes: function Stream_peekBytes(length) {
+      var bytes = this.getBytes(length);
+      this.pos -= bytes.length;
+      return bytes;
+    },
     lookChar: function Stream_lookChar() {
       if (this.pos >= this.end)
         return null;
@@ -34136,6 +34279,11 @@ var DecodeStream = (function DecodeStreamClosure() {
 
       this.pos = end;
       return this.buffer.subarray(pos, end);
+    },
+    peekBytes: function DecodeStream_peekBytes(length) {
+      var bytes = this.getBytes(length);
+      this.pos -= bytes.length;
+      return bytes;
     },
     lookChar: function DecodeStream_lookChar() {
       var pos = this.pos;
@@ -34470,8 +34618,11 @@ var FlateStream = (function FlateStreamClosure() {
       if (typeof (b = bytes[bytesPos++]) == 'undefined')
         error('Bad block header in flate stream');
       check |= (b << 8);
-      if (check != (~blockLen & 0xffff))
+      if (check != (~blockLen & 0xffff) &&
+          (blockLen !== 0 || check !== 0)) {
+        // Ignoring error for bad "empty" block (see issue 1277)
         error('Bad uncompressed block length in flate stream');
+      }
 
       this.codeBuf = 0;
       this.codeSize = 0;
@@ -35032,6 +35183,8 @@ var DecryptStream = (function DecryptStreamClosure() {
     this.str = str;
     this.dict = str.dict;
     this.decrypt = decrypt;
+    this.nextChunk = null;
+    this.initialized = false;
 
     DecodeStream.call(this);
   }
@@ -35041,13 +35194,22 @@ var DecryptStream = (function DecryptStreamClosure() {
   DecryptStream.prototype = Object.create(DecodeStream.prototype);
 
   DecryptStream.prototype.readBlock = function DecryptStream_readBlock() {
-    var chunk = this.str.getBytes(chunkSize);
+    var chunk;
+    if (this.initialized) {
+      chunk = this.nextChunk;
+    } else {
+      chunk = this.str.getBytes(chunkSize);
+      this.initialized = true;
+    }
     if (!chunk || chunk.length === 0) {
       this.eof = true;
       return;
     }
+    this.nextChunk = this.str.getBytes(chunkSize);
+    var hasMoreData = this.nextChunk && this.nextChunk.length > 0;
+
     var decrypt = this.decrypt;
-    chunk = decrypt(chunk);
+    chunk = decrypt(chunk, !hasMoreData);
 
     var bufferLength = this.bufferLength;
     var i, n = chunk.length;
@@ -41004,9 +41166,11 @@ var JpegImage = (function jpegImage() {
             break;
 
           case 0xFFC0: // SOF0 (Start of Frame, Baseline DCT)
+          case 0xFFC1: // SOF1 (Start of Frame, Extended DCT)
           case 0xFFC2: // SOF2 (Start of Frame, Progressive DCT)
             readUint16(); // skip data length
             frame = {};
+            frame.extended = (fileMarker === 0xFFC1);
             frame.progressive = (fileMarker === 0xFFC2);
             frame.precision = data[offset++];
             frame.scanLines = readUint16();
@@ -41124,6 +41288,21 @@ var JpegImage = (function jpegImage() {
             for (x = 0; x < width; x++) {
               Y = component1Line[0 | (x * component1.scaleX * scaleX)];
 
+              data[offset++] = Y;
+            }
+          }
+          break;
+        case 2:
+          // PDF might compress two component data in custom colorspace
+          component1 = this.components[0];
+          component2 = this.components[1];
+          for (y = 0; y < height; y++) {
+            component1Line = component1.lines[0 | (y * component1.scaleY * scaleY)];
+            component2Line = component1.lines[0 | (y * component2.scaleY * scaleY)];
+            for (x = 0; x < width; x++) {
+              Y = component1Line[0 | (x * component1.scaleX * scaleX)];
+              data[offset++] = Y;
+              Y = component2Line[0 | (x * component2.scaleX * scaleX)];
               data[offset++] = Y;
             }
           }
