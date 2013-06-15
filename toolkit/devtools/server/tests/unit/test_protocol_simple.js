@@ -169,12 +169,13 @@ function run_test()
   check_except(() => protocol.types.getType("unknown:number"));
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
-  let rootClient = RootFront(client);
+  let rootClient;
 
   client.connect((applicationType, traits) => {
     trace.expectReceive({"from":"<actorid>","applicationType":"xpcshell-tests","traits":[]});
     do_check_eq(applicationType, "xpcshell-tests");
 
+    rootClient = RootFront(client);
 
     rootClient.simpleReturn().then(ret => {
       trace.expectSend({"type":"simpleReturn","to":"<actorid>"});
