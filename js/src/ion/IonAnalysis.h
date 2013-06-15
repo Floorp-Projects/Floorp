@@ -59,6 +59,9 @@ AssertExtendedGraphCoherency(MIRGraph &graph);
 bool
 EliminateRedundantChecks(MIRGraph &graph);
 
+bool
+UnsplitEdges(LIRGraph *lir);
+
 class MDefinition;
 
 // Simple linear sum of the form 'n' or 'x + n'.
