@@ -87,10 +87,10 @@ static const MOZ_CONSTEXPR Register CallTempReg6 = rbp;
 // Different argument registers for WIN64
 #if defined(_WIN64)
 static const MOZ_CONSTEXPR Register IntArgReg0 = rcx;
-static constMOZ_CONSTEXPRconstexpr Register IntArgReg1 = rdx;
+static const MOZ_CONSTEXPR Register IntArgReg1 = rdx;
 static const MOZ_CONSTEXPR Register IntArgReg2 = r8;
 static const MOZ_CONSTEXPR Register IntArgReg3 = r9;
-static constMOZ_CONSTEXPRuint32_t NumIntArgRegs = 4;
+static const MOZ_CONSTEXPR uint32_t NumIntArgRegs = 4;
 static const MOZ_CONSTEXPR Register IntArgRegs[NumIntArgRegs] = { rcx, rdx, r8, r9 };
 
 static const MOZ_CONSTEXPR Register CallTempNonArgRegs[] = { rax, rdi, rbx, rsi };
