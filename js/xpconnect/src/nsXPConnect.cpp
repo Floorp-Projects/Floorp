@@ -2046,7 +2046,7 @@ void
 SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
 {
     MOZ_ASSERT(global);
-    EnsureCompartmentPrivate(global)->SetLocation(locationURI);
+    EnsureCompartmentPrivate(global)->SetLocationURI(locationURI);
 }
 
 } // namespace xpc
