@@ -4954,7 +4954,10 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
         return false;
     }
 
-    RootedScript script(cx, fun->nonLazyScript());
+    RootedScript script(cx, fun->getOrCreateScript(cx));
+    if (!script)
+        return false;
+
     if (!script->ensureRanAnalysis(cx) || !script->ensureRanInference(cx)) {
         state.baseobj = NULL;
         cx->compartment()->types.setPendingNukeTypes(cx);
