@@ -2774,8 +2774,8 @@ LazyScript::markChildren(JSTracer *trc)
     if (sourceObject_)
         MarkObject(trc, &sourceObject_, "sourceObject");
 
-    if (parentFunction_)
-        MarkObject(trc, &parentFunction_, "parentFunction");
+    if (enclosingScope_)
+        MarkObject(trc, &enclosingScope_, "enclosingScope");
 
     if (script_)
         MarkScript(trc, &script_, "realScript");
@@ -2948,7 +2948,7 @@ JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 LazyScript::LazyScript(void *table, uint32_t numFreeVariables, uint32_t numInnerFunctions,
                        JSVersion version, uint32_t begin, uint32_t end, uint32_t lineno, uint32_t column)
   : script_(NULL),
-    parentFunction_(NULL),
+    enclosingScope_(NULL),
     sourceObject_(NULL),
     table_(table),
     originPrincipals_(NULL),
@@ -2978,11 +2978,11 @@ LazyScript::initScript(JSScript *script)
 }
 
 void
-LazyScript::setParent(JSFunction *parentFunction, ScriptSourceObject *sourceObject,
+LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject,
                       JSPrincipals *originPrincipals)
 {
-    JS_ASSERT(sourceObject && !sourceObject_ && !parentFunction_ && !originPrincipals_);
-    parentFunction_ = parentFunction;
+    JS_ASSERT(sourceObject && !sourceObject_ && !enclosingScope_ && !originPrincipals_);
+    enclosingScope_ = enclosingScope;
     sourceObject_ = sourceObject;
     originPrincipals_ = originPrincipals;
     if (originPrincipals)
@@ -3019,9 +3019,14 @@ LazyScript::Create(JSContext *cx, uint32_t numFreeVariables, uint32_t numInnerFu
                                 begin, end, lineno, column);
 }
 
-uint32_t LazyScript::staticLevel() const
+uint32_t
+LazyScript::staticLevel(JSContext *cx) const
 {
-    return parentFunction() ? parentFunction()->nonLazyScript()->staticLevel + 1 : 1;
+    for (StaticScopeIter ssi(cx, enclosingScope()); !ssi.done(); ssi++) {
+        if (ssi.type() == StaticScopeIter::FUNCTION)
+            return ssi.funScript()->staticLevel + 1;
+    }
+    return 1;
 }
 
 void
