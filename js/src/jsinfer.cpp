@@ -2331,38 +2331,7 @@ StackTypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
 static inline void
 AddPendingRecompile(JSContext *cx, JSScript *script)
 {
-    /* Trigger recompilation of the script itself. */
     cx->compartment()->types.addPendingRecompile(cx, script);
-
-    /*
-     * Remind Ion not to save the compile code if generating type
-     * inference information mid-compilation causes an invalidation of the
-     * script being compiled.
-     */
-    RecompileInfo& info = cx->compartment()->types.compiledInfo;
-    if (info.outputIndex != RecompileInfo::NoCompilerRunning) {
-        CompilerOutput *co = info.compilerOutput(cx);
-        if (!co) {
-            if (script->compartment() != cx->compartment())
-                MOZ_CRASH();
-            return;
-        }
-        switch (co->kind()) {
-          case CompilerOutput::Ion:
-          case CompilerOutput::ParallelIon:
-            if (co->script == script)
-                co->invalidate();
-            break;
-        }
-    }
-
-    /*
-     * When one script is inlined into another the caller listens to state
-     * changes on the callee's script, so trigger these to force recompilation
-     * of any such callers.
-     */
-    if (script->function() && !script->function()->hasLazyType())
-        ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
 /*
@@ -2387,8 +2356,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
          * Unlike TypeConstraintFreeze, triggering this constraint once does
          * not disable it on future changes to the type set.
          */
-        RootedScript script(cx, script_);
-        AddPendingRecompile(cx, script);
+        AddPendingRecompile(cx, script_);
     }
 };
 
@@ -2834,6 +2802,14 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
     if (co->isValid())
         CancelOffThreadIonCompile(cx->compartment(), co->script);
 
+    if (compiledInfo.outputIndex == info.outputIndex) {
+        /* Tell Ion to discard generated code when it's done. */
+        JS_ASSERT(compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning);
+        JS_ASSERT(co->kind() == CompilerOutput::Ion || co->kind() == CompilerOutput::ParallelIon);
+        co->invalidate();
+        return;
+    }
+
     if (!co->isValid()) {
         JS_ASSERT(co->script == NULL);
         return;
@@ -2891,6 +2867,33 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     if (script->hasParallelIonScript())
         addPendingRecompile(cx, script->parallelIonScript()->recompileInfo());
 #endif
+
+    /*
+     * Remind Ion not to save the compile code if generating type
+     * inference information mid-compilation causes an invalidation of the
+     * script being compiled.
+     */
+    if (compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning) {
+        CompilerOutput *co = compiledInfo.compilerOutput(cx);
+        if (!co) {
+            if (script->compartment() != cx->compartment())
+                MOZ_CRASH();
+            return;
+        }
+
+        JS_ASSERT(co->kind() == CompilerOutput::Ion || co->kind() == CompilerOutput::ParallelIon);
+
+        if (co->script == script)
+            co->invalidate();
+    }
+
+    /*
+     * When one script is inlined into another the caller listens to state
+     * changes on the callee's script, so trigger these to force recompilation
+     * of any such callers.
+     */
+    if (script->function() && !script->function()->hasLazyType())
+        ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
 void
@@ -3009,8 +3012,7 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
          * however, do not trigger recompilation (the script will be recompiled
          * if any of the barriers is ever violated).
          */
-        RootedScript script(cx, script_);
-        AddPendingRecompile(cx, script);
+        AddPendingRecompile(cx, script_);
     }
 
     /* Ignore duplicate barriers. */
@@ -3068,8 +3070,7 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
 
     if (!code.typeBarriers) {
         /* Trigger recompilation as for normal type barriers. */
-        RootedScript script(cx, script_);
-        AddPendingRecompile(cx, script);
+        AddPendingRecompile(cx, script_);
     }
 
     InferSpew(ISpewOps, "singletonTypeBarrier: #%u:%05u: %sT%p%s %p %s",
