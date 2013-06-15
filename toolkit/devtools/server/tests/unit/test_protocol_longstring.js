@@ -87,7 +87,7 @@ function run_test()
   DebuggerServer.init(() => true);
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
-  let rootClient = RootFront(client);
+  let rootClient;
 
   let strfront = null;
 
@@ -96,10 +96,13 @@ function run_test()
     do_check_eq(rootClient.__poolMap.size, size + 1);
   }
 
-  // Root actor has no children yet.
-  expectRootChildren(0);
 
   client.connect((applicationType, traits) => {
+    rootClient = RootFront(client);
+
+    // Root actor has no children yet.
+    expectRootChildren(0);
+
     trace.expectReceive({"from":"<actorid>","applicationType":"xpcshell-tests","traits":[]});
     do_check_eq(applicationType, "xpcshell-tests");
     rootClient.shortString().then(ret => {
