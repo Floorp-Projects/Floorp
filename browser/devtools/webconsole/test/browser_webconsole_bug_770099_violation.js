@@ -8,7 +8,7 @@
 // Tests that the Web Console CSP messages are displayed
 
 const TEST_VIOLATION = "https://example.com/browser/browser/devtools/webconsole/test/test_bug_770099_violation.html";
-const CSP_VIOLATION_MSG = "CSP WARN:  Directive default-src https://example.com:443 violated by http://some.example.com/test.png"
+const CSP_VIOLATION_MSG = "Content Security Policy: Directive default-src https://example.com:443 violated by http://some.example.com/test.png"
 
 let hud = undefined;
 

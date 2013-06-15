@@ -179,8 +179,8 @@ IsFrameId(JSContext *cx, JSObject *objArg, jsid idArg)
 
     obj = JS_ObjectToInnerObject(cx, obj);
     MOZ_ASSERT(!js::IsWrapper(obj));
-    XPCWrappedNative *wn = IS_WN_WRAPPER(obj) ? XPCWrappedNative::Get(obj)
-                                              : nullptr;
+    XPCWrappedNative *wn = IS_WN_REFLECTOR(obj) ? XPCWrappedNative::Get(obj)
+                                                : nullptr;
     if (!wn) {
         return false;
     }
@@ -272,7 +272,7 @@ AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
     if (dom::GetSameCompartmentWrapperForDOMBinding(wrapper))
         return wrapper != obj;
 
-    if (!IS_WN_WRAPPER(obj))
+    if (!IS_WN_REFLECTOR(obj))
         return false;
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));

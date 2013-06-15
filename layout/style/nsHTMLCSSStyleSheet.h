@@ -19,33 +19,13 @@
 
 struct MiscContainer;
 
-class nsHTMLCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
-                                      public nsIStyleRuleProcessor
+class nsHTMLCSSStyleSheet MOZ_FINAL : public nsIStyleRuleProcessor
 {
 public:
-  nsHTMLCSSStyleSheet(nsIURI* aURL, nsIDocument* aDocument);
+  nsHTMLCSSStyleSheet();
   ~nsHTMLCSSStyleSheet();
 
   NS_DECL_ISUPPORTS
-
-  void Reset(nsIURI* aURL);
-
-  // nsIStyleSheet
-  virtual nsIURI* GetSheetURI() const MOZ_OVERRIDE;
-  virtual nsIURI* GetBaseURI() const MOZ_OVERRIDE;
-  virtual void GetTitle(nsString& aTitle) const MOZ_OVERRIDE;
-  virtual void GetType(nsString& aType) const MOZ_OVERRIDE;
-  virtual bool HasRules() const MOZ_OVERRIDE;
-  virtual bool IsApplicable() const MOZ_OVERRIDE;
-  virtual void SetEnabled(bool aEnabled) MOZ_OVERRIDE;
-  virtual bool IsComplete() const MOZ_OVERRIDE;
-  virtual void SetComplete() MOZ_OVERRIDE;
-  virtual nsIStyleSheet* GetParentSheet() const MOZ_OVERRIDE;  // will be null
-  virtual nsIDocument* GetOwningDocument() const MOZ_OVERRIDE;
-  virtual void SetOwningDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
-#endif
 
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;
@@ -73,15 +53,7 @@ private:
   nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy) MOZ_DELETE;
 
 protected:
-  nsCOMPtr<nsIURI> mURL;
-  nsIDocument*     mDocument;
   nsDataHashtable<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
 };
-
-inline nsISupports*
-ToSupports(nsHTMLCSSStyleSheet* aPointer)
-{
-  return static_cast<nsIStyleSheet*>(aPointer);
-}
 
 #endif /* !defined(nsHTMLCSSStyleSheet_h_) */

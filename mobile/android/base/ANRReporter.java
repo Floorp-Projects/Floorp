@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.UUID;
@@ -61,6 +62,10 @@ public final class ANRReporter extends BroadcastReceiver
     private static int sRegisteredCount;
     private Handler mHandler;
     private volatile boolean mPendingANR;
+
+    private static native boolean requestNativeStack();
+    private static native String getNativeStack();
+    private static native void releaseNativeStack();
 
     public static void register(Context context) {
         if (sRegisteredCount++ != 0) {
@@ -441,7 +446,8 @@ public final class ANRReporter extends BroadcastReceiver
         return total;
     }
 
-    private static void fillPingFooter(OutputStream ping, MessageDigest checksum)
+    private static void fillPingFooter(OutputStream ping, MessageDigest checksum,
+                                       boolean haveNativeStack)
             throws IOException {
 
         // We are at the end of ANR data
@@ -469,6 +475,17 @@ public final class ANRReporter extends BroadcastReceiver
             Log.w(LOGTAG, e);
         }
 
+        if (haveNativeStack) {
+            total += writePingPayload(ping, checksum, ("\"," +
+                    "\"androidNativeStack\":\""));
+
+            String nativeStack = String.valueOf(getNativeStack());
+            int size = fillPingBlock(ping, checksum, new StringReader(nativeStack), null);
+            if (DEBUG) {
+                Log.d(LOGTAG, "wrote native stack, size = " + String.valueOf(size));
+            }
+        }
+
         total += writePingPayload(ping, checksum, "\"}");
 
         String base64Checksum = Base64.encodeToString(checksum.digest(), Base64.NO_WRAP);
@@ -486,6 +503,8 @@ public final class ANRReporter extends BroadcastReceiver
     }
 
     private static void processTraces(Reader traces, File pingFile) {
+
+        boolean haveNativeStack = requestNativeStack();
         try {
             OutputStream ping = new BufferedOutputStream(
                 new FileOutputStream(pingFile), TRACES_BLOCK_SIZE);
@@ -507,13 +526,16 @@ public final class ANRReporter extends BroadcastReceiver
                 if (DEBUG) {
                     Log.d(LOGTAG, "wrote traces, size = " + String.valueOf(size));
                 }
-                fillPingFooter(ping, checksum);
+                fillPingFooter(ping, checksum, haveNativeStack);
                 if (DEBUG) {
                     Log.d(LOGTAG, "finished creating ping file");
                 }
                 return;
             } finally {
                 ping.close();
+                if (haveNativeStack) {
+                    releaseNativeStack();
+                }
             }
         } catch (GeneralSecurityException e) {
             Log.w(LOGTAG, e);

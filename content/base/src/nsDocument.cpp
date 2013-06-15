@@ -1478,8 +1478,6 @@ nsDocument::~nsDocument()
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
   }
-  if (mStyleAttrStyleSheet)
-    mStyleAttrStyleSheet->SetOwningDocument(nullptr);
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -1539,7 +1537,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsITouchEventReceiver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIInlineEventHandlers)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocumentRegister)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIObserver)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
@@ -2234,36 +2231,15 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // Now reset our inline style and attribute sheets.
   if (mAttrStyleSheet) {
-    // Remove this sheet from all style sets
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->RemoveStyleSheet(nsStyleSet::ePresHintSheet,
-                                          mAttrStyleSheet);
-    }
-    mAttrStyleSheet->Reset(aURI);
+    mAttrStyleSheet->Reset();
+    mAttrStyleSheet->SetOwningDocument(this);
   } else {
-    mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
+    mAttrStyleSheet = new nsHTMLStyleSheet(this);
   }
 
-  // Don't use AddStyleSheet, since it'll put the sheet into style
-  // sets in the document level, which is not desirable here.
-  mAttrStyleSheet->SetOwningDocument(this);
-
-  if (mStyleAttrStyleSheet) {
-    // Remove this sheet from all style sets
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->
-        RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
-    }
-    mStyleAttrStyleSheet->Reset(aURI);
-  } else {
-    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet(aURI, this);
+  if (!mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
   }
-
-  // The loop over style sets below will handle putting this sheet
-  // into style sets as needed.
-  mStyleAttrStyleSheet->SetOwningDocument(this);
 
   // Now set up our style sets
   nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2295,19 +2271,13 @@ void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::ePresHintSheet) == 0,
-                  "Style set already has a preshint sheet?");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
                   "Style set already has document sheets?");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eStyleAttrSheet) == 0,
-                  "Style set already has style attr sheets?");
-  NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
-  NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
 
-  aStyleSet->AppendStyleSheet(nsStyleSet::ePresHintSheet, mAttrStyleSheet);
-
-  aStyleSet->AppendStyleSheet(nsStyleSet::eStyleAttrSheet,
-                              mStyleAttrStyleSheet);
+  // We could consider moving this to nsStyleSet::Init, to match its
+  // handling of the eAnimationSheet and eTransitionSheet levels.
+  aStyleSet->DirtyRuleProcessors(nsStyleSet::ePresHintSheet);
+  aStyleSet->DirtyRuleProcessors(nsStyleSet::eStyleAttrSheet);
 
   int32_t i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
@@ -5102,32 +5072,6 @@ nsDocument::RegisterEnabled()
   static bool sPrefValue =
     Preferences::GetBool("dom.webcomponents.enabled", false);
   return sPrefValue;
-}
-
-NS_IMETHODIMP
-nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
-                     JSContext* aCx, uint8_t aOptionalArgc,
-                     jsval* aConstructor /* out param */)
-{
-  RootedDictionary<ElementRegistrationOptions> options(aCx);
-  if (aOptionalArgc > 0) {
-    JSAutoCompartment ac(aCx, GetWrapper());
-    JS::Rooted<JS::Value> opts(aCx, aOptions);
-    NS_ENSURE_TRUE(JS_WrapValue(aCx, opts.address()),
-                   NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(options.Init(aCx, opts),
-                   NS_ERROR_UNEXPECTED);
-  }
-
-  ErrorResult rv;
-  JSObject* object = Register(aCx, aName, options, rv);
-  if (rv.Failed()) {
-    return rv.ErrorCode();
-  }
-  NS_ENSURE_TRUE(object, NS_ERROR_UNEXPECTED);
-
-  *aConstructor = OBJECT_TO_JSVAL(object);
-  return NS_OK;
 }
 
 JSObject*

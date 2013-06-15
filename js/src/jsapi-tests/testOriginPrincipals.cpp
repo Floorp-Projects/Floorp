@@ -4,7 +4,6 @@
 
 #include "tests.h"
 #include "jsdbgapi.h"
-#include "jsobjinlines.h"
 
 JSPrincipals *sOriginPrincipalsInErrorReporter = NULL;
 

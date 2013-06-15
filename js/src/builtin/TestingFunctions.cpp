@@ -11,12 +11,13 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsobjinlines.h"
 #include "jsprf.h"
 #include "jswrapper.h"
 
 #include "builtin/TestingFunctions.h"
 #include "vm/ForkJoin.h"
+
+#include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
 

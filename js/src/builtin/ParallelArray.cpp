@@ -15,8 +15,6 @@
 #include "vm/String.h"
 #include "vm/ThreadPool.h"
 
-#include "jsobjinlines.h"
-
 #include "vm/Interpreter-inl.h"
 
 using namespace js;

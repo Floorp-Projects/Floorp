@@ -10,3 +10,7 @@ EXTRA_COMPONENTS += [
     'nsSearchSuggestions.js',
     'toolkitsearch.manifest',
 ]
+
+EXTRA_PP_COMPONENTS += [
+    'nsSearchService.js',
+]
