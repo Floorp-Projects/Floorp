@@ -13,7 +13,6 @@
 #include "jsanalyze.h"
 #include "jsbool.h"
 #include "jsnum.h"
-#include "jsobjinlines.h"
 #include "shared/Lowering-shared-inl.h"
 #include "mozilla/DebugOnly.h"
 

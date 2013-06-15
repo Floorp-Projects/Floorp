@@ -2684,10 +2684,6 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
         // Enter the target compartment.
         JSAutoCompartment ac(cx, obj);
 
-        // Morph slim wrappers.
-        if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
-            return NS_ERROR_FAILURE;
-
         // Now, try to create an Xray wrapper around the object. This won't work
         // if the object isn't Xray-able. In that case, we throw.
         JSObject *xray = WrapperFactory::WrapForSameCompartmentXray(cx, obj);
@@ -3316,7 +3312,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
             // Now check what sort of thing we've got in |proto|
             JSObject *unwrappedProto = js::UncheckedUnwrap(options.proto, false);
             js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
-            if (IS_WRAPPER_CLASS(unwrappedClass) ||
+            if (IS_WN_CLASS(unwrappedClass) ||
                 mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass))) {
                 // Wrap it up in a proxy that will do the right thing in terms
                 // of this-binding for methods.

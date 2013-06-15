@@ -9,6 +9,8 @@
 
 #include "jscompartment.h"
 
+#include "jscntxtinlines.h"
+
 inline void
 JSCompartment::initGlobal(js::GlobalObject &global)
 {

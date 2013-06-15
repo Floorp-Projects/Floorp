@@ -19,7 +19,7 @@ LOCAL_INCLUDES += $(MOZ_QT_CFLAGS)
 FORCE_STATIC_LIB = 1
 
 EXTRA_COMPONENTS = gtkqticonsconverter.manifest
-EXTRA_PP_COMPONENTS = gtkqticonsconverter.js
+DISABLED_EXTRA_PP_COMPONENTS = gtkqticonsconverter.js
 
 include $(topsrcdir)/config/rules.mk
 

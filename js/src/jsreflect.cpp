@@ -2147,12 +2147,12 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
                 : builder.continueStatement(label, &pn->pn_pos, dst));
       }
 
-      case PNK_COLON:
+      case PNK_LABEL:
       {
         JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
         RootedValue label(cx), stmt(cx);
-        RootedAtom pnAtom(cx, pn->pn_atom);
+        RootedAtom pnAtom(cx, pn->as<LabeledStatement>().label());
         return identifier(pnAtom, NULL, &label) &&
                statement(pn->pn_expr, &stmt) &&
                builder.labeledStatement(label, stmt, &pn->pn_pos, dst);
@@ -2516,7 +2516,7 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
         for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
             JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
-            if (next->isKind(PNK_COMMA) && next->pn_count == 0) {
+            if (next->isKind(PNK_ELISION)) {
                 elts.infallibleAppend(NullValue());
             } else {
                 RootedValue expr(cx);
@@ -2696,10 +2696,7 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValu
         return false;
 
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
-        /* Comma expressions can't occur inside patterns, so no need to test pn_count. */
-        JS_ASSERT_IF(next->isKind(PNK_COMMA), next->pn_count == 0);
-
-        if (next->isKind(PNK_COMMA)) {
+        if (next->isKind(PNK_ELISION)) {
             elts.infallibleAppend(NullValue());
         } else {
             RootedValue patt(cx);

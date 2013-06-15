@@ -1080,21 +1080,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     return NS_OK;
 }
 
-nsresult
-xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph)
-{
-    nsWrapperCache *cache;
-    CallQueryInterface(tomorph, &cache);
-    if (!cache)
-        return NS_OK;
-
-    RootedObject obj(cx, cache->GetWrapper());
-    if (!obj || !IS_SLIM_WRAPPER(obj))
-        return NS_OK;
-    NS_ENSURE_STATE(MorphSlimWrapper(cx, obj));
-    return NS_OK;
-}
-
 static nsresult
 NativeInterface2JSObject(HandleObject aScope,
                          nsISupports *aCOMObj,
@@ -1236,12 +1221,9 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext * aJSContext,
     NS_ASSERTION(_retval, "bad param");
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
-    SLIM_LOG_WILL_MORPH(aJSContext, aJSObj);
-    nsIXPConnectWrappedNative* wrapper =
-        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(aJSContext, aJSObj);
-    if (wrapper) {
-        NS_ADDREF(wrapper);
-        *_retval = wrapper;
+    aJSObj = js::CheckedUnwrap(aJSObj, /* stopAtOuter = */ false);
+    if (aJSObj && IS_WN_REFLECTOR(aJSObj)) {
+        NS_IF_ADDREF(*_retval = XPCWrappedNative::Get(aJSObj));
         return NS_OK;
     }
 
@@ -1263,10 +1245,8 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         JS_ReportError(aJSContext, "Permission denied to get native of security wrapper");
         return nullptr;
     }
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(aJSObj))) {
-        if (IS_SLIM_WRAPPER_OBJECT(aJSObj))
-            return (nsISupports*)xpc_GetJSPrivate(aJSObj);
-        else if (XPCWrappedNative *wn = XPCWrappedNative::Get(aJSObj))
+    if (IS_WN_REFLECTOR(aJSObj)) {
+        if (XPCWrappedNative *wn = XPCWrappedNative::Get(aJSObj))
             return wn->Native();
         return nullptr;
     }
@@ -1938,41 +1918,21 @@ IsJSContextOnStack(JSContext *aCx)
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)),
-                 "What kind of wrapper is this?");
+    NS_ASSERTION(IS_WN_REFLECTOR(obj), "What kind of wrapper is this?");
 
-    if (IS_WN_WRAPPER_OBJECT(obj)) {
-        XPCWrappedNative *xpcWrapper =
-            (XPCWrappedNative *)xpc_GetJSPrivate(obj);
-        if (xpcWrapper) {
-            if (allowShortCircuit) {
-                nsIPrincipal *result = xpcWrapper->GetObjectPrincipal();
-                if (result) {
-                    return result;
-                }
-            }
-
-            // If not, check if it points to an nsIScriptObjectPrincipal
-            nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-                do_QueryInterface(xpcWrapper->Native());
-            if (objPrin) {
-                nsIPrincipal *result = objPrin->GetPrincipal();
-                if (result) {
-                    return result;
-                }
-            }
-        }
-    } else {
+    XPCWrappedNative *xpcWrapper =
+        (XPCWrappedNative *)xpc_GetJSPrivate(obj);
+    if (xpcWrapper) {
         if (allowShortCircuit) {
-            nsIPrincipal *result =
-                GetSlimWrapperProto(obj)->GetScope()->GetPrincipal();
+            nsIPrincipal *result = xpcWrapper->GetObjectPrincipal();
             if (result) {
                 return result;
             }
         }
 
+        // If not, check if it points to an nsIScriptObjectPrincipal
         nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-            do_QueryInterface((nsISupports*)xpc_GetJSPrivate(obj));
+            do_QueryInterface(xpcWrapper->Native());
         if (objPrin) {
             nsIPrincipal *result = objPrin->GetPrincipal();
             if (result) {

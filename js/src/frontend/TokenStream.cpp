@@ -557,7 +557,7 @@ TokenStream::advance(size_t position)
 void
 TokenStream::tell(Position *pos)
 {
-    pos->buf = userbuf.addressOfNextRawChar();
+    pos->buf = userbuf.addressOfNextRawChar(/* allowPoisoned = */ true);
     pos->flags = flags;
     pos->lineno = lineno;
     pos->linebase = linebase;
@@ -571,7 +571,7 @@ TokenStream::tell(Position *pos)
 void
 TokenStream::seek(const Position &pos)
 {
-    userbuf.setAddressOfNextRawChar(pos.buf);
+    userbuf.setAddressOfNextRawChar(pos.buf, /* allowPoisoned = */ true);
     flags = pos.flags;
     lineno = pos.lineno;
     linebase = pos.linebase;
@@ -587,6 +587,7 @@ void
 TokenStream::seek(const Position &pos, const TokenStream &other)
 {
     srcCoords.fill(other.srcCoords);
+    lastFunctionKeyword = other.lastFunctionKeyword;
     seek(pos);
 }
 

@@ -15,7 +15,7 @@ DISABLED_EXTRA_COMPONENTS = \
   Webapps.manifest \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
   Webapps.js \
   $(NULL)
 

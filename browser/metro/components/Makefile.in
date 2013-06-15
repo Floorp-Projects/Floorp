@@ -11,7 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 # metro/components.manifest
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
         components.manifest \
         AboutRedirector.js \
         BrowserCLH.js \

@@ -90,36 +90,3 @@ XPC_Log_Clear_Indent()
 }
 
 #endif
-
-#ifdef DEBUG_slimwrappers
-void
-LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
-                        const char *functionName)
-{
-    if (obj && IS_SLIM_WRAPPER(obj)) {
-        XPCNativeScriptableInfo *si =
-            GetSlimWrapperProto(obj)->GetScriptableInfo();
-        printf("***** morphing %s from %s", si->GetJSClass()->name,
-               functionName);
-        if (propname)
-            printf(" for %s", propname);
-        printf(" (%p, %p)\n", obj,
-               static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
-        xpc_DumpJSStack(cx, false, false, false);
-    }
-}
-
-void
-LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj, const char *reason)
-{
-    char* className = nullptr;
-    nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(obj);
-    if (ci)
-        ci->GetClassDescription(&className);
-    printf("***** refusing to create slim wrapper%s%s, reason: %s (%p)\n",
-           className ? " for " : "", className ? className : "", reason, obj);
-    if (className)
-        PR_Free(className);
-    xpc_DumpJSStack(cx, false, false, false);
-}
-#endif

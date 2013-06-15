@@ -61,11 +61,9 @@ GetXrayType(JSObject *obj)
         return XrayForDOMObject;
 
     js::Class* clasp = js::GetObjectClass(obj);
-    if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
-        NS_ASSERTION(clasp->ext.innerObject || IS_WN_WRAPPER_OBJECT(obj),
-                     "We forgot to Morph a slim wrapper!");
+    if (IS_WN_CLASS(clasp) || clasp->ext.innerObject)
         return XrayForWrappedNative;
-    }
+
     return NotXray;
 }
 
@@ -511,7 +509,7 @@ GetHolder(JSObject *obj)
 static XPCWrappedNative *
 GetWrappedNative(JSObject *obj)
 {
-    MOZ_ASSERT(IS_WN_WRAPPER_OBJECT(obj));
+    MOZ_ASSERT(IS_WN_REFLECTOR(obj));
     return static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
 }
 

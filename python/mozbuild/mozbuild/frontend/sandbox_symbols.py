@@ -154,6 +154,12 @@ VARIABLES = {
         example/components/xpcomsample.lib on Windows.
         """),
 
+    'LIBS': (StrictOrderingOnAppendList, list, [],
+        """Linker libraries and flags.
+
+        A list of libraries and flags to include when linking.
+        """),
+
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
