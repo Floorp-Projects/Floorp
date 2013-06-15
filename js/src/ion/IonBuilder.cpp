@@ -6689,6 +6689,9 @@ IonBuilder::jsop_setelem()
         if (!icInspect.sawDenseWrite())
             break;
 
+        if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
+            break;
+
         MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);
         current->add(ins);
         current->push(value);
