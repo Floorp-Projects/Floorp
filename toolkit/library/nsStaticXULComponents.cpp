@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
-
 #include "mozilla/Module.h"
 #include "nsXPCOM.h"
 #include "nsStaticComponents.h"

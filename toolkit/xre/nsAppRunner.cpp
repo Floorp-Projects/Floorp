@@ -8,8 +8,6 @@
 #include <os2safe.h>
 #endif
 
-#define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
-
 #if defined(MOZ_WIDGET_QT)
 #include <QApplication>
 #include <QStringList>
