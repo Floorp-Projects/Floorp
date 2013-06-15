@@ -219,17 +219,13 @@ LocalDebuggerTransport.prototype = {
     }
     this._deepFreeze(aPacket);
     let other = this.other;
-    if (other) {
-      Services.tm.currentThread.dispatch(makeInfallible(function() {
-        // Avoid the cost of JSON.stringify() when logging is disabled.
-        if (wantLogging) {
-          dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));
-        }
-        if (other.hooks) {
-          other.hooks.onPacket(aPacket);
-        }
-      }, "LocalDebuggerTransport instance's this.other.hooks.onPacket"), 0);
-    }
+    Services.tm.currentThread.dispatch(makeInfallible(function() {
+      // Avoid the cost of JSON.stringify() when logging is disabled.
+      if (wantLogging) {
+        dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));
+      }
+      other.hooks.onPacket(aPacket);
+    }, "LocalDebuggerTransport instance's this.other.hooks.onPacket"), 0);
   },
 
   /**
