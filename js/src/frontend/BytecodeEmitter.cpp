@@ -1156,6 +1156,10 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
         RootedObject outerScope(bce->sc->context, bce->script->enclosingStaticScope());
         for (StaticScopeIter ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
             if (ssi.type() != StaticScopeIter::FUNCTION) {
+                if (ssi.type() == StaticScopeIter::BLOCK) {
+                    // Use generic ops if a catch block is encountered.
+                    return false;
+                }
                 if (ssi.hasDynamicScopeObject())
                     hops++;
                 continue;
@@ -4504,8 +4508,10 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     if (fun->isInterpretedLazy()) {
         if (!fun->lazyScript()->sourceObject()) {
-            JSFunction *parent = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox()->function() : NULL;
-            fun->lazyScript()->setParent(parent, bce->script->sourceObject(), bce->script->originPrincipals);
+            JSObject *scope = bce->blockChain;
+            if (!scope && bce->sc->isFunctionBox())
+                scope = bce->sc->asFunctionBox()->function();
+            fun->lazyScript()->setParent(scope, bce->script->sourceObject(), bce->script->originPrincipals);
         }
     } else {
         SharedContext *outersc = bce->sc;
