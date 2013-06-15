@@ -219,20 +219,35 @@ class LCallee : public LInstructionHelper<1, 0, 0>
     LIR_HEADER(Callee)
 };
 
-// Jumps to the start of a basic block.
-class LGoto : public LInstructionHelper<0, 0, 0>
-{
-    MBasicBlock *block_;
+// Base class for control instructions (goto, branch, etc.)
+template <size_t Succs, size_t Operands, size_t Temps>
+class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> {
 
+    MBasicBlock *successors_[Succs];
+
+  public:
+    size_t numSuccessors() const { return Succs; }
+
+    MBasicBlock *getSuccessor(size_t i) const { return successors_[i]; }
+
+    void setSuccessor(size_t i, MBasicBlock *successor) {
+        successors_[i] = successor;
+    }
+};
+
+// Jumps to the start of a basic block.
+class LGoto : public LControlInstructionHelper<1, 0, 0>
+{
   public:
     LIR_HEADER(Goto)
 
     LGoto(MBasicBlock *block)
-      : block_(block)
-    { }
+    {
+         setSuccessor(0, block);
+    }
 
     MBasicBlock *target() const {
-        return block_;
+        return getSuccessor(0);
     }
 };
 
@@ -1207,69 +1222,60 @@ class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
-class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
+class LTestIAndBranch : public LControlInstructionHelper<2, 1, 0>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(TestIAndBranch)
 
     LTestIAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
     {
         setOperand(0, in);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
     }
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
-class LTestDAndBranch : public LInstructionHelper<0, 1, 0>
+class LTestDAndBranch : public LControlInstructionHelper<2, 1, 0>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(TestDAndBranch)
 
     LTestDAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
     {
         setOperand(0, in);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
     }
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
 };
 
 // Takes an object and tests it for truthiness.  An object is falsy iff it
 // emulates |undefined|; see js::EmulatesUndefined.
-class LTestOAndBranch : public LInstructionHelper<0, 1, 1>
+class LTestOAndBranch : public LControlInstructionHelper<2, 1, 1>
 {
-    MBasicBlock *ifTruthy_;
-    MBasicBlock *ifFalsy_;
-
   public:
     LIR_HEADER(TestOAndBranch)
 
     LTestOAndBranch(const LAllocation &input, MBasicBlock *ifTruthy, MBasicBlock *ifFalsy,
                     const LDefinition &temp)
-      : ifTruthy_(ifTruthy),
-        ifFalsy_(ifFalsy)
     {
         setOperand(0, input);
+        setSuccessor(0, ifTruthy);
+        setSuccessor(1, ifFalsy);
         setTemp(0, temp);
     }
 
@@ -1278,10 +1284,10 @@ class LTestOAndBranch : public LInstructionHelper<0, 1, 1>
     }
 
     Label *ifTruthy() {
-        return ifTruthy_->lir()->label();
+        return getSuccessor(0)->lir()->label();
     }
     Label *ifFalsy() {
-        return ifFalsy_->lir()->label();
+        return getSuccessor(1)->lir()->label();
     }
 
     MTest *mir() {
@@ -1290,19 +1296,16 @@ class LTestOAndBranch : public LInstructionHelper<0, 1, 1>
 };
 
 // Takes in a boxed value and tests it for truthiness.
-class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 3>
+class LTestVAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 3>
 {
-    MBasicBlock *ifTruthy_;
-    MBasicBlock *ifFalsy_;
-
   public:
     LIR_HEADER(TestVAndBranch)
 
     LTestVAndBranch(MBasicBlock *ifTruthy, MBasicBlock *ifFalsy, const LDefinition &temp0,
                     const LDefinition &temp1, const LDefinition &temp2)
-      : ifTruthy_(ifTruthy),
-        ifFalsy_(ifFalsy)
     {
+        setSuccessor(0, ifTruthy);
+        setSuccessor(1, ifFalsy);
         setTemp(0, temp0);
         setTemp(1, temp1);
         setTemp(2, temp2);
@@ -1327,10 +1330,10 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 3>
     }
 
     Label *ifTruthy() {
-        return ifTruthy_->lir()->label();
+        return getSuccessor(0)->lir()->label();
     }
     Label *ifFalsy() {
-        return ifFalsy_->lir()->label();
+        return getSuccessor(1)->lir()->label();
     }
 
     MTest *mir() const {
@@ -1430,32 +1433,30 @@ class LCompare : public LInstructionHelper<1, 2, 0>
 
 // Compares two integral values of the same JS type, either integer or object.
 // For objects, both operands are in registers.
-class LCompareAndBranch : public LInstructionHelper<0, 2, 0>
+class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
     JSOp jsop_;
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(CompareAndBranch)
     LCompareAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : jsop_(jsop),
-        ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
+      : jsop_(jsop)
     {
         setOperand(0, left);
         setOperand(1, right);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
     }
 
     JSOp jsop() const {
         return jsop_;
     }
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
     const LAllocation *left() {
         return getOperand(0);
@@ -1488,27 +1489,24 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
+class LCompareDAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(CompareDAndBranch)
     LCompareDAndBranch(const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
     {
         setOperand(0, left);
         setOperand(1, right);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
     }
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
     const LAllocation *left() {
         return getOperand(0);
@@ -1597,18 +1595,16 @@ class LCompareB : public LInstructionHelper<1, BOX_PIECES + 1, 0>
     }
 };
 
-class LCompareBAndBranch : public LInstructionHelper<0, BOX_PIECES + 1, 0>
+class LCompareBAndBranch : public LControlInstructionHelper<2, BOX_PIECES + 1, 0>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(CompareBAndBranch)
 
     LCompareBAndBranch(const LAllocation &rhs, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue_(ifTrue), ifFalse_(ifFalse)
     {
         setOperand(BOX_PIECES, rhs);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
     }
 
     static const size_t Lhs = 0;
@@ -1618,10 +1614,10 @@ class LCompareBAndBranch : public LInstructionHelper<0, BOX_PIECES + 1, 0>
     }
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
     MCompare *mir() {
         return mir_->toCompare();
@@ -1641,11 +1637,8 @@ class LCompareV : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
     }
 };
 
-class LCompareVAndBranch : public LInstructionHelper<0, 2 * BOX_PIECES, 0>
+class LCompareVAndBranch : public LControlInstructionHelper<2, 2 * BOX_PIECES, 0>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(CompareVAndBranch)
 
@@ -1653,15 +1646,16 @@ class LCompareVAndBranch : public LInstructionHelper<0, 2 * BOX_PIECES, 0>
     static const size_t RhsInput = BOX_PIECES;
 
     LCompareVAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
-    { }
+    {
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
     MCompare *mir() {
         return mir_->toCompare();
@@ -1707,17 +1701,15 @@ class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
     }
 };
 
-class LIsNullOrLikeUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES, 2>
+class LIsNullOrLikeUndefinedAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 2>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(IsNullOrLikeUndefinedAndBranch)
 
     LIsNullOrLikeUndefinedAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp0, const LDefinition &temp1)
-      : ifTrue_(ifTrue), ifFalse_(ifFalse)
     {
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
         setTemp(0, temp0);
         setTemp(1, temp1);
     }
@@ -1725,10 +1717,10 @@ class LIsNullOrLikeUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES,
     static const size_t Value = 0;
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
     MCompare *mir() {
         return mir_->toCompare();
@@ -1759,26 +1751,24 @@ class LEmulatesUndefined : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LEmulatesUndefinedAndBranch : public LInstructionHelper<0, 1, 1>
+class LEmulatesUndefinedAndBranch : public LControlInstructionHelper<2, 1, 1>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
   public:
     LIR_HEADER(EmulatesUndefinedAndBranch)
 
     LEmulatesUndefinedAndBranch(const LAllocation &input, MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp)
-      : ifTrue_(ifTrue), ifFalse_(ifFalse)
     {
         setOperand(0, input);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
         setTemp(0, temp);
     }
 
     MBasicBlock *ifTrue() const {
-        return ifTrue_;
+        return getSuccessor(0);
     }
     MBasicBlock *ifFalse() const {
-        return ifFalse_;
+        return getSuccessor(1);
     }
     MCompare *mir() {
         return mir_->toCompare();
@@ -4443,6 +4433,16 @@ class LPhi : public LInstruction
     void setTemp(size_t index, const LDefinition &temp) {
         JS_NOT_REACHED("no temps");
     }
+    size_t numSuccessors() const {
+        return 0;
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_NOT_REACHED("no successors");
+        return NULL;
+    }
+    void setSuccessor(size_t i, MBasicBlock *) {
+        JS_NOT_REACHED("no successors");
+    }
 
     virtual void printInfo(FILE *fp) {
         printOperands(fp);
@@ -4722,6 +4722,16 @@ class LAsmJSCall : public LInstruction
     }
     void setTemp(size_t index, const LDefinition &a) {
         JS_NOT_REACHED("no temps");
+    }
+    size_t numSuccessors() const {
+        return 0;
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_NOT_REACHED("no successors");
+        return NULL;
+    }
+    void setSuccessor(size_t i, MBasicBlock *) {
+        JS_NOT_REACHED("no successors");
     }
 };
 
