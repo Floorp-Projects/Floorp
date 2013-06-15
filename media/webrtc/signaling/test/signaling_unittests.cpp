@@ -24,7 +24,6 @@
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
-#include "nsStaticComponents.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
