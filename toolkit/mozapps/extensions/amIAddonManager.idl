@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * A service to make some AddonManager functionality available to C++ callers.
+ * Javascript callers should still use AddonManager.jsm directly.
+ */
+[scriptable, function, uuid(7b45d82d-7ad5-48d7-9b05-f32eb9818cd4)]
+interface amIAddonManager : nsISupports
+{
+  /**
+   * Synchronously map a URI to the corresponding Addon ID.
+   *
+   * Mappable URIs are limited to in-application resources belonging to the
+   * add-on, such as Javascript compartments, XUL windows, XBL bindings, etc.
+   * but do not include URIs from meta data, such as the add-on homepage.
+   *
+   * @param  aURI
+   *         The nsIURI to map
+   * @return
+   *         true if the URI has been mapped successfully to an Addon ID
+   */
+  boolean mapURIToAddonID(in nsIURI aURI, out AUTF8String aID);
+};
