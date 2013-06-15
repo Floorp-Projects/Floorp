@@ -545,6 +545,7 @@ public:
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
+    nsAString& Data() { return mData; }
     int KeyCode() { return mKeyCode; }
     int MetaState() { return mMetaState; }
     uint32_t DomKeyLocation() { return mDomKeyLocation; }
@@ -600,7 +601,7 @@ protected:
     int mRangeForeColor, mRangeBackColor, mRangeLineColor;
     double mX, mY, mZ;
     int mPointerIndex;
-    nsString mCharacters, mCharactersExtra;
+    nsString mCharacters, mCharactersExtra, mData;
     nsRefPtr<nsGeoPosition> mGeoPosition;
     double mBandwidth;
     bool mCanBeMetered;
@@ -623,6 +624,7 @@ protected:
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
+    void ReadDataField(JNIEnv *jenv);
 
     uint32_t ReadDomKeyLocation(JNIEnv* jenv, jobject jGeckoEventObj);
 
@@ -645,6 +647,7 @@ protected:
 
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
+    static jfieldID jDataField;
     static jfieldID jKeyCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jDomKeyLocationField;
@@ -703,6 +706,7 @@ public:
         COMPOSITOR_RESUME = 30,
         NATIVE_GESTURE_EVENT = 31,
         IME_KEY_EVENT = 32,
+        CALL_OBSERVER = 33,
         dummy_java_enum_list_end
     };
 

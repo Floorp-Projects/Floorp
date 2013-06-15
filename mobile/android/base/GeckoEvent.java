@@ -62,7 +62,8 @@ public class GeckoEvent {
         COMPOSITOR_PAUSE(29),
         COMPOSITOR_RESUME(30),
         NATIVE_GESTURE_EVENT(31),
-        IME_KEY_EVENT(32);
+        IME_KEY_EVENT(32),
+        CALL_OBSERVER(33);
 
         public final int value;
 
@@ -155,6 +156,7 @@ public class GeckoEvent {
     private int mEnd;
     private String mCharacters;
     private String mCharactersExtra;
+    private String mData;
     private int mRangeType;
     private int mRangeStyles;
     private int mRangeLineStyle;
@@ -654,6 +656,14 @@ public class GeckoEvent {
     public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.SCREENORIENTATION_CHANGED);
         event.mScreenOrientation = aScreenOrientation;
+        return event;
+    }
+
+    public static GeckoEvent createCallObserverEvent(String observerKey, String topic, String data) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.CALL_OBSERVER);
+        event.mCharacters = observerKey;
+        event.mCharactersExtra = topic;
+        event.mData = data;
         return event;
     }
 
