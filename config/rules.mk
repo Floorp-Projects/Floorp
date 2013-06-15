@@ -159,13 +159,9 @@ ifdef CPP_UNIT_TESTS
 # through TestHarness.h, by modifying the list of includes and the libs against
 # which stuff links.
 CPPSRCS += $(CPP_UNIT_TESTS)
-CPP_UNIT_TEST_BINS := $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-SIMPLE_PROGRAMS += $(CPP_UNIT_TEST_BINS)
+SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 INCLUDES += -I$(DIST)/include/testing
 LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) $(MOZ_JS_LIBS) $(if $(JS_SHARED_LIBRARY),,$(MOZ_ZLIB_LIBS))
-
-libs:: $(CPP_UNIT_TEST_BINS) $(call mkdir_deps,$(DIST)/cpptests)
-	$(NSINSTALL) $(CPP_UNIT_TEST_BINS) $(DIST)/cpptests
 
 check::
 	@$(PYTHON) $(topsrcdir)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS))
