@@ -102,19 +102,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv *jenv, jclass, jstring jObserverKey, jstring jTopic, jstring jData)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    nsJNIString sObserverKey(jObserverKey, jenv);
-    nsJNIString sTopic(jTopic, jenv);
-    nsJNIString sData(jData, jenv);
-
-    nsAppShell::gAppShell->CallObserver(sObserverKey, sTopic, sData);
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey)
 {
     if (!nsAppShell::gAppShell)
