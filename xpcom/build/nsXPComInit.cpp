@@ -13,7 +13,6 @@
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMCIDInternal.h"
 
-#include "nsStaticComponents.h"
 #include "prlink.h"
 
 #include "nsCycleCollector.h"
