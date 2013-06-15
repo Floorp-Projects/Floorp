@@ -285,6 +285,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MResumePointIterator resumePointsEnd() const {
         return resumePoints_.end();
     }
+    bool resumePointsEmpty() const {
+        return resumePoints_.empty();
+    }
     MInstructionIterator begin() {
         return instructions_.begin();
     }

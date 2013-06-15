@@ -41,6 +41,12 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
     return safepoints_.append(ins);
 }
 
+void
+LIRGraph::removeBlock(size_t i)
+{
+    blocks_.erase(blocks_.begin() + i);
+}
+
 Label *
 LBlock::label()
 {
