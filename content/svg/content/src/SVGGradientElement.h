@@ -62,7 +62,7 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> GradientUnits();
   already_AddRefed<SVGAnimatedTransformList> GradientTransform();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> SpreadMethod();
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
 
 protected:
   virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;

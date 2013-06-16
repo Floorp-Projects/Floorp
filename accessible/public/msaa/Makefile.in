@@ -18,8 +18,6 @@ GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 
 FORCE_SHARED_LIB = 1
 
-SRCS_IN_OBJDIR	= 1
-
 CSRCS	= \
 	dlldata.c \
 	ISimpleDOMNode_p.c \

@@ -1525,6 +1525,23 @@ MediaStream::FinishOnGraphThread()
   GraphImpl()->FinishStream(this);
 }
 
+StreamBuffer::Track*
+MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
+{
+  StreamBuffer::Track* track = mBuffer.FindTrack(aTrackId);
+  if (!track) {
+    nsAutoPtr<MediaSegment> segment(new AudioSegment());
+    for (uint32_t j = 0; j < mListeners.Length(); ++j) {
+      MediaStreamListener* l = mListeners[j];
+      l->NotifyQueuedTrackChanges(Graph(), aTrackId, aSampleRate, 0,
+                                  MediaStreamListener::TRACK_EVENT_CREATED,
+                                  *segment);
+    }
+    track = &mBuffer.AddTrack(aTrackId, aSampleRate, 0, segment.forget());
+  }
+  return track;
+}
+
 void
 MediaStream::RemoveAllListenersImpl()
 {

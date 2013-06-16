@@ -125,7 +125,7 @@ SVGPatternElement::Height()
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGPatternElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

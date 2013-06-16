@@ -2065,11 +2065,6 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     if (!funbox)
         return false;
 
-    // Disable lazy parsing if any functions are defined within a scope
-    // statement. Free names in the inner functions will be bound incorrectly.
-    if (pc->topScopeStmt)
-        handler.disableSyntaxParser();
-
     // Try a syntax parse for this inner function.
     do {
         Parser<SyntaxParseHandler> *parser = handler.syntaxParser;
@@ -2150,11 +2145,6 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     if (becameStrict)
         *becameStrict = false;
     ParseContext<SyntaxParseHandler> *outerpc = pc;
-
-    // As from a full parse handler, abort if functions are defined within
-    // lexical scopes.
-    if (pc->topScopeStmt)
-        return abortIfSyntaxParser();
 
     // Create box for fun->object early to protect against last-ditch GC.
     FunctionBox *funbox = newFunctionBox(fun, pc, strict);

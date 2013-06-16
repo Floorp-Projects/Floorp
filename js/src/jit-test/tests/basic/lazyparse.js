@@ -34,3 +34,12 @@ function test() {
     (function(x) { return !(x) })(0/0)
   }
 }
+
+testCatch(15);
+function testCatch(y) {
+  try {
+      throw 5;
+  } catch(ex) {
+      (function(x) { assertEq(x + y + ex, 25); })(5)
+  }
+}

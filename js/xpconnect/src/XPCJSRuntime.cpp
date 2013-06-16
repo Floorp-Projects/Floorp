@@ -15,6 +15,7 @@
 #include "dom_quickstubs.h"
 
 #include "nsIMemoryReporter.h"
+#include "amIAddonManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
 #include "prsystem.h"
@@ -221,6 +222,96 @@ namespace xpc {
 CompartmentPrivate::~CompartmentPrivate()
 {
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
+}
+
+bool CompartmentPrivate::TryParseLocationURI()
+{
+    // Already tried parsing the location before
+    if (locationWasParsed)
+      return false;
+    locationWasParsed = true;
+
+    // Need to parse the URI.
+    if (location.IsEmpty())
+        return false;
+
+    // Handle Sandbox location strings.
+    // A sandbox string looks like this:
+    // <sandboxName> (from: <js-stack-frame-filename>:<lineno>)
+    // where <sandboxName> is user-provided via Cu.Sandbox()
+    // and <js-stack-frame-filename> and <lineno> is the stack frame location
+    // from where Cu.Sandbox was called.
+    // <js-stack-frame-filename> furthermore is "free form", often using a
+    // "uri -> uri -> ..." chain. The following code will and must handle this
+    // common case.
+    // It should be noted that other parts of the code may already rely on the
+    // "format" of these strings, such as the add-on SDK.
+
+    static const nsDependentCString from("(from: ");
+    static const nsDependentCString arrow(" -> ");
+    static const size_t fromLength = from.Length();
+    static const size_t arrowLength = arrow.Length();
+
+    // See: XPCComponents.cpp#AssembleSandboxMemoryReporterName
+    int32_t idx = location.Find(from);
+    if (idx < 0)
+        return TryParseLocationURICandidate(location);
+
+
+    // When parsing we're looking for the right-most URI. This URI may be in
+    // <sandboxName>, so we try this first.
+    if (TryParseLocationURICandidate(Substring(location, 0, idx)))
+        return true;
+
+    // Not in <sandboxName> so we need to inspect <js-stack-frame-filename> and
+    // the chain that is potentially contained within and grab the rightmost
+    // item that is actually a URI.
+
+    // First, hack off the :<lineno>) part as well
+    int32_t ridx = location.RFind(NS_LITERAL_CSTRING(":"));
+    nsAutoCString chain(Substring(location, idx + fromLength,
+                                  ridx - idx - fromLength));
+
+    // Loop over the "->" chain. This loop also works for non-chains, or more
+    // correctly chains with only one item.
+    for (;;) {
+        idx = chain.RFind(arrow);
+        if (idx < 0) {
+            // This is the last chain item. Try to parse what is left.
+            return TryParseLocationURICandidate(chain);
+        }
+
+        // Try to parse current chain item
+        if (TryParseLocationURICandidate(Substring(chain, idx + arrowLength)))
+            return true;
+
+        // Current chain item couldn't be parsed.
+        // Don't forget whitespace in " -> "
+        idx -= 1;
+        // Strip current item and continue
+        chain = Substring(chain, 0, idx);
+    }
+    MOZ_NOT_REACHED("Chain parser loop does not terminate");
+}
+
+bool CompartmentPrivate::TryParseLocationURICandidate(const nsACString& uristr)
+{
+    nsCOMPtr<nsIURI> uri;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), uristr)))
+        return false;
+
+    nsAutoCString scheme;
+    if (NS_FAILED(uri->GetScheme(scheme)))
+        return false;
+
+    // Cannot really map data: and blob:.
+    // Also, data: URIs are pretty memory hungry, which is kinda bad
+    // for memory reporter use.
+    if (scheme.EqualsLiteral("data") || scheme.EqualsLiteral("blob"))
+        return false;
+
+    locationURI = uri.forget();
+    return true;
 }
 
 CompartmentPrivate*
@@ -1751,12 +1842,34 @@ ReportZoneStats(const JS::ZoneStats &zStats,
 static nsresult
 ReportCompartmentStats(const JS::CompartmentStats &cStats,
                        const xpc::CompartmentStatsExtras &extras,
+                       amIAddonManager *addonManager,
                        nsIMemoryMultiReporterCallback *cb,
                        nsISupports *closure, size_t *gcTotalOut = NULL)
 {
+    static const nsDependentCString addonPrefix("explicit/add-ons/");
+
     size_t gcTotal = 0, gcHeapSundries = 0, otherSundries = 0;
-    const nsACString& cJSPathPrefix = extras.jsPathPrefix;
-    const nsACString& cDOMPathPrefix = extras.domPathPrefix;
+    nsAutoCString cJSPathPrefix = extras.jsPathPrefix;
+    nsAutoCString cDOMPathPrefix = extras.domPathPrefix;
+
+    // Only attempt to prefix if we got a location and the path wasn't already
+    // prefixed.
+    if (extras.location && addonManager &&
+        cJSPathPrefix.Find(addonPrefix, false, 0, 0) != 0) {
+        nsAutoCString addonId;
+        bool ok;
+        if (NS_SUCCEEDED(addonManager->MapURIToAddonID(extras.location,
+                                                        addonId, &ok))
+            && ok) {
+            // Insert the add-on id as "add-ons/@id@/" after "explicit/" to
+            // aggregate add-on compartments.
+            static const size_t explicitLength = strlen("explicit/");
+            addonId.Insert(NS_LITERAL_CSTRING("add-ons/"), 0);
+            addonId += "/";
+            cJSPathPrefix.Insert(addonId, explicitLength);
+            cDOMPathPrefix.Insert(addonId, explicitLength);
+        }
+    }
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/ordinary"),
                       cStats.gcHeapObjectsOrdinary,
@@ -1982,9 +2095,10 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     return NS_OK;
 }
 
-nsresult
+static nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
+                                 amIAddonManager* addonManager,
                                  nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotalOut)
 {
@@ -2004,7 +2118,8 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         JS::CompartmentStats cStats = rtStats.compartmentStatsVector[i];
         const xpc::CompartmentStatsExtras *extras =
             static_cast<const xpc::CompartmentStatsExtras*>(cStats.extra);
-        rv = ReportCompartmentStats(cStats, *extras, cb, closure, &gcTotal);
+        rv = ReportCompartmentStats(cStats, *extras, addonManager, cb, closure,
+                                    &gcTotal);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -2133,6 +2248,19 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     return NS_OK;
 }
 
+nsresult
+ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
+                                 const nsACString &rtPath,
+                                 nsIMemoryMultiReporterCallback *cb,
+                                 nsISupports *closure, size_t *rtTotalOut)
+{
+    nsCOMPtr<amIAddonManager> am =
+      do_GetService("@mozilla.org/addons/integration;1");
+    return ReportJSRuntimeExplicitTreeStats(rtStats, rtPath, am.get(), cb,
+                                            closure, rtTotalOut);
+}
+
+
 } // namespace xpc
 
 class JSCompartmentsMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
@@ -2240,10 +2368,15 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
 {
     WindowPaths *mWindowPaths;
     WindowPaths *mTopWindowPaths;
+    bool mGetLocations;
 
   public:
-    XPCJSRuntimeStats(WindowPaths *windowPaths, WindowPaths *topWindowPaths)
-      : JS::RuntimeStats(JsMallocSizeOf), mWindowPaths(windowPaths), mTopWindowPaths(topWindowPaths)
+    XPCJSRuntimeStats(WindowPaths *windowPaths, WindowPaths *topWindowPaths,
+                      bool getLocations)
+      : JS::RuntimeStats(JsMallocSizeOf),
+        mWindowPaths(windowPaths),
+        mTopWindowPaths(topWindowPaths),
+        mGetLocations(getLocations)
     {}
 
     ~XPCJSRuntimeStats() {
@@ -2288,6 +2421,14 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         xpc::CompartmentStatsExtras *extras = new xpc::CompartmentStatsExtras;
         nsCString cName;
         GetCompartmentName(c, cName, true);
+        if (mGetLocations) {
+            CompartmentPrivate *cp = GetCompartmentPrivate(c);
+            if (cp)
+              cp->GetLocationURI(getter_AddRefs(extras->location));
+            // Note: cannot use amIAddonManager implementation at this point,
+            // as it is a JS service and the JS heap is currently not idle.
+            // Otherwise, we could have computed the add-on id at this point.
+        }
 
         // Get the compartment's global.
         nsXPConnect *xpc = nsXPConnect::XPConnect();
@@ -2356,7 +2497,10 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     // callback may be a JS function, and executing JS while getting these
     // stats seems like a bad idea.
 
-    XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths);
+    nsCOMPtr<amIAddonManager> addonManager =
+      do_GetService("@mozilla.org/addons/integration;1");
+    bool getLocations = !!addonManager;
+    XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
     if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
@@ -2372,14 +2516,16 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     size_t rtTotal = 0;
     rv = xpc::ReportJSRuntimeExplicitTreeStats(rtStats,
                                                NS_LITERAL_CSTRING("explicit/js-non-window/"),
-                                               cb, closure, &rtTotal);
+                                               addonManager, cb, closure,
+                                               &rtTotal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Report the sums of the compartment numbers.
     xpc::CompartmentStatsExtras cExtrasTotal;
     cExtrasTotal.jsPathPrefix.AssignLiteral("js-main-runtime/compartments/");
     cExtrasTotal.domPathPrefix.AssignLiteral("window-objects/dom/");
-    rv = ReportCompartmentStats(rtStats.cTotals, cExtrasTotal, cb, closure);
+    rv = ReportCompartmentStats(rtStats.cTotals, cExtrasTotal, addonManager,
+                                cb, closure);
     NS_ENSURE_SUCCESS(rv, rv);
 
     xpc::ZoneStatsExtras zExtrasTotal;

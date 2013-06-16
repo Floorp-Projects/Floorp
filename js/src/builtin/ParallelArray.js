@@ -377,7 +377,7 @@ function ParallelArrayMap(func, mode) {
   // FIXME(bug 844887): Check |IsCallable(func)|
 
   var self = this;
-  var length = UnsafeGetImmutableElement(self.shape, 0);
+  var length = self.shape[0];
   var buffer = NewDenseArray(length);
 
   parallel: for (;;) { // see ParallelArrayBuild() to explain why for(;;) etc
@@ -432,7 +432,7 @@ function ParallelArrayReduce(func, mode) {
   // FIXME(bug 844887): Check |IsCallable(func)|
 
   var self = this;
-  var length = UnsafeGetImmutableElement(self.shape, 0);
+  var length = self.shape[0];
 
   if (length === 0)
     ThrowError(JSMSG_PAR_ARRAY_REDUCE_EMPTY);
@@ -519,7 +519,7 @@ function ParallelArrayScan(func, mode) {
   // FIXME(bug 844887): Check |IsCallable(func)|
 
   var self = this;
-  var length = UnsafeGetImmutableElement(self.shape, 0);
+  var length = self.shape[0];
 
   if (length === 0)
     ThrowError(JSMSG_PAR_ARRAY_REDUCE_EMPTY);
@@ -726,7 +726,7 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
   var self = this;
 
   if (length === undefined)
-    length = UnsafeGetImmutableElement(self.shape, 0);
+    length = self.shape[0];
 
   // The Divide-Scatter-Vector strategy:
   // 1. Slice |targets| array of indices ("scatter-vector") into N
@@ -977,7 +977,7 @@ function ParallelArrayFilter(func, mode) {
   // FIXME(bug 844887): Check |IsCallable(func)|
 
   var self = this;
-  var length = UnsafeGetImmutableElement(self.shape, 0);
+  var length = self.shape[0];
 
   parallel: for (;;) { // see ParallelArrayBuild() to explain why for(;;) etc
     if (ShouldForceSequential())
@@ -1151,11 +1151,6 @@ function ParallelArrayFlatten() {
 function ParallelArrayGet1(i) {
   if (i === undefined)
     return undefined;
-
-  // We could use UnsafeGetImmutableElement here, but I am not doing
-  // so (for the moment) since using the default path enables
-  // bounds-check hoisting, which is (currently) not possible
-  // otherwise.
   return this.buffer[this.offset + i];
 }
 
@@ -1163,25 +1158,27 @@ function ParallelArrayGet1(i) {
  * Specialized variant of get() for two-dimensional case
  */
 function ParallelArrayGet2(x, y) {
-  var xDimension = UnsafeGetImmutableElement(this.shape, 0);
-  var yDimension = UnsafeGetImmutableElement(this.shape, 1);
-  if (x === undefined || TO_INT32(x) !== x || x >= xDimension)
+  var xDimension = this.shape[0];
+  var yDimension = this.shape[1];
+  if (x === undefined)
+    return undefined;
+  if (x >= xDimension)
     return undefined;
   if (y === undefined)
     return NewParallelArray(ParallelArrayView, [yDimension], this.buffer, this.offset + x * yDimension);
-  if (TO_INT32(y) !== y || y >= yDimension)
+  if (y >= yDimension)
     return undefined;
   var offset = y + x * yDimension;
-  return UnsafeGetImmutableElement(this.buffer, this.offset + offset);
+  return this.buffer[this.offset + offset];
 }
 
 /**
  * Specialized variant of get() for three-dimensional case
  */
 function ParallelArrayGet3(x, y, z) {
-  var xDimension = UnsafeGetImmutableElement(this.shape, 0);
-  var yDimension = UnsafeGetImmutableElement(this.shape, 1);
-  var zDimension = UnsafeGetImmutableElement(this.shape, 2);
+  var xDimension = this.shape[0];
+  var yDimension = this.shape[1];
+  var zDimension = this.shape[2];
   if (x === undefined)
     return undefined;
   if (x >= xDimension)
@@ -1197,7 +1194,7 @@ function ParallelArrayGet3(x, y, z) {
   if (z >= zDimension)
     return undefined;
   var offset = z + y*zDimension + x * yDimension * zDimension;
-  return UnsafeGetImmutableElement(this.buffer, this.offset + offset);
+  return this.buffer[this.offset + offset];
 }
 
 /**
@@ -1231,7 +1228,7 @@ function ParallelArrayGetN(...coords) {
 
 /** The length property yields the outermost dimension */
 function ParallelArrayLength() {
-  return UnsafeGetImmutableElement(this.shape, 0);
+  return this.shape[0];
 }
 
 function ParallelArrayToString() {
