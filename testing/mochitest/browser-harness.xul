@@ -164,7 +164,7 @@
 
     // Returns an array of browserTest objects for all the selected tests
     function listTests() {
-      [links, singleTestPath] = getTestList();
+      var links = getTestList();
       if (!links)
         return [];
 

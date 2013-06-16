@@ -35,7 +35,7 @@ if (Cc === undefined) {
 function loadTests()
 {
   window.removeEventListener("load", loadTests, false);
-  [links, singleTestPath] = getTestList();
+  links = getTestList();
  
   // load server.js in so we can share template functions
   var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
