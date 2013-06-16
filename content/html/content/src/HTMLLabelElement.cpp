@@ -28,7 +28,7 @@ HTMLLabelElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLLabelElementBinding::Wrap(aCx, aScope, this);
 }
 
-// nsISupports 
+// nsISupports
 
 
 NS_IMPL_ADDREF_INHERITED(HTMLLabelElement, Element)
@@ -171,27 +171,26 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                          dragDistance.y > CLICK_DISTANCE ||
                          dragDistance.y < -CLICK_DISTANCE;
           }
-
           // Don't click the for-content if we did drag-select text or if we
-          // have a kbd modifier (which adjusts a selection), or if it's a
-          // double click (we already forwarded the first click event).
-          if (dragSelect || event->clickCount > 1 ||
-              event->IsShift() || event->IsControl() || event->IsAlt() ||
-              event->IsMeta()) {
+          // have a kbd modifier (which adjusts a selection).
+          if (dragSelect || event->IsShift() || event->IsControl() ||
+              event->IsAlt() || event->IsMeta()) {
             break;
           }
-
-          nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-          if (fm) {
-            // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.
-            // Also, within HTMLInputElement::PostHandleEvent, inputs will
-            // be selected only when focused via a key or when the navigation
-            // flag is used and we want to select the text on label clicks as
-            // well.
-            nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(content);
-            fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOVEFOCUS);
+          // Only set focus on the first click of multiple clicks to prevent
+          // to prevent immediate de-focus.
+          if (event->clickCount <= 1) {
+            nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+            if (fm) {
+              // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.
+              // Also, within HTMLInputElement::PostHandleEvent, inputs will
+              // be selected only when focused via a key or when the navigation
+              // flag is used and we want to select the text on label clicks as
+              // well.
+              nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(content);
+              fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOVEFOCUS);
+            }
           }
-
           // Dispatch a new click event to |content|
           //    (For compatibility with IE, we do only left click.  If
           //    we wanted to interpret the HTML spec very narrowly, we

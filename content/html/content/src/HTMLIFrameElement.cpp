@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
-#include "nsIDOMSVGDocument.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"

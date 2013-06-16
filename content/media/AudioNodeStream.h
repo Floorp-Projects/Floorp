@@ -116,7 +116,6 @@ public:
 protected:
   void FinishOutput();
 
-  StreamBuffer::Track* EnsureTrack();
   void ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex);
 
   // The engine that will generate output for this node.

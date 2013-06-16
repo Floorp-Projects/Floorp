@@ -4,23 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// HTTP Version from request, used for response.
-var gHttpVersion;
-
 /* Debug and Error wrapper functions for dump().
  */
 function ERR(response, responseCode, responseCodeStr, msg)
 {
+  // Reset state var.
+  setState("expectedRequestType", "");
   // Dump to console log and send to client in response.
   dump("SERVER ERROR: " + msg + "\n");
-  response.setStatusLine(gHttpVersion, responseCode, responseCodeStr);
+  response.write("HTTP/1.1" + responseCode + responseCodeStr + "\r\n");
+  response.write("Content-Type: text/html; charset=UTF-8\r\n");
+  response.write("Content-Length: " + msg.length + "\r\n");
+  response.write("\r\n");
   response.write(msg);
 }
 
 function DBG(msg)
 {
-  // Dump to console only.
-  dump("SERVER DEBUG: " + msg + "\n");
+  // enable when you want to debug
+  if (0) {
+    // Dump to console only.
+    dump("SERVER DEBUG: " + msg + "\n");
+  }
 }
 
 /* Delivers content in parts to test partially cached content: requires two
@@ -35,24 +40,28 @@ function DBG(msg)
  */
 function handleRequest(request, response)
 {
-  // Set http version for error responses.
-  gHttpVersion = request.httpVersion;
+  DBG("Trying to seize power");
+  response.seizePower();
 
-  // All responses, inc. errors, are text/html.
-  response.setHeader("Content-Type", "text/html; charset=UTF-8", false);
-
+  DBG("About to check state vars");
   // Get state var to determine if this is the first or second request.
   var expectedRequestType;
+  var lastModified;
   if (getState("expectedRequestType") === "") {
     DBG("First call: Should be requesting full content.");
     expectedRequestType = "fullRequest";
     // Set state var for second request.
     setState("expectedRequestType", "partialRequest");
+    // Create lastModified variable for responses.
+    lastModified = (new Date()).toUTCString();
+    setState("lastModified", lastModified);
   } else if (getState("expectedRequestType") === "partialRequest") {
     DBG("Second call: Should be requesting undelivered content.");
     expectedRequestType = "partialRequest";
     // Reset state var for first request.
     setState("expectedRequestType", "");
+    // Get last modified date and reset state var.
+    lastModified = getState("lastModified");
   } else {
     ERR(response, 500, "Internal Server Error",
         "Invalid expectedRequestType \"" + expectedRequestType + "\"in " +
@@ -105,24 +114,34 @@ function handleRequest(request, response)
   DBG("totalLength: " + totalLength);
 
   // Prepare common headers for the two responses.
-  response.setHeader("ETag", "abcd0123", false);
-  response.setHeader("Accept-Ranges", "bytes", false);
+  date = new Date();
+  DBG("Date: " + date.toUTCString() + ", Last-Modified: " + lastModified);
+  var commonHeaders = "Date: " + date.toUTCString() + "\r\n" +
+                      "Last-Modified: " + lastModified + "\r\n" +
+                      "Content-Type: text/html; charset=UTF-8\r\n" +
+                      "ETag: abcd0123\r\n" +
+                      "Accept-Ranges: bytes\r\n";
+
 
   // Prepare specific headers and content for first and second responses.
   if (expectedRequestType === "fullRequest") {
     DBG("First response: Sending partial content with a full header");
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(partialContent, partialContent.length);
+    response.write("HTTP/1.1 200 OK\r\n");
+    response.write(commonHeaders);
     // Set Content-Length to full length of resource.
-    response.setHeader("Content-Length", "" + totalLength, false);
+    response.write("Content-Length: " + totalLength + "\r\n");
+    response.write("\r\n");
+    response.write(partialContent);
   } else if (expectedRequestType === "partialRequest") {
     DBG("Second response: Sending remaining content with a range header");
-    response.setStatusLine(request.httpVersion, 206, "Partial Content");
-    response.setHeader("Content-Range", "bytes " + partialContent.length + "-" +
-                       (totalLength - 1) + "/" + totalLength);
-    response.write(remainderContent);
+    response.write("HTTP/1.1 206 Partial Content\r\n");
+    response.write(commonHeaders);
     // Set Content-Length to length of bytes transmitted.
-    response.setHeader("Content-Length", "" + remainderContent.length, false);
+    response.write("Content-Length: " + remainderContent.length + "\r\n");
+    response.write("Content-Range: bytes " + partialContent.length + "-" +
+                   (totalLength - 1) + "/" + totalLength + "\r\n");
+    response.write("\r\n");
+    response.write(remainderContent);
   } else {
     // Somewhat redundant, but a check for errors in this test code.
     ERR(response, 500, "Internal Server Error",
@@ -130,4 +149,6 @@ function handleRequest(request, response)
        "towards the end of handleRequest! - \"" + expectedRequestType + "\"");
     return;
   }
+
+  response.finish();
 }

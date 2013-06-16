@@ -9,18 +9,16 @@
 #include "SMILStringType.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGString::DOMAnimatedString, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(nsSVGString::DOMAnimatedString, mSVGElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGString::DOMAnimatedString)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGString::DOMAnimatedString)
 
-DOMCI_DATA(SVGAnimatedString, nsSVGString::DOMAnimatedString)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGString::DOMAnimatedString)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedString)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedString)
 NS_INTERFACE_MAP_END
 
 static inline
@@ -78,15 +76,7 @@ nsSVGString::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
   }
 }
 
-nsresult
-nsSVGString::ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                                 nsSVGElement *aSVGElement)
-{
-  *aResult = ToDOMAnimatedString(aSVGElement).get();
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 nsSVGString::ToDOMAnimatedString(nsSVGElement* aSVGElement)
 {
   nsRefPtr<DOMAnimatedString> domAnimatedString =

@@ -41,20 +41,6 @@ class IonBuilder : public MIRGenerator
         SetElem_Unsafe,
     };
 
-    enum GetElemSafety {
-        // Normal read like a[b]
-        GetElem_Normal,
-
-        // Read due to UnsafeGetElement:
-        // - assumed to be in bounds,
-        GetElem_Unsafe,
-
-        // Read due to UnsafeGetImmutableElement:
-        // - assumed to be in bounds,
-        // - assumed not to alias any stores
-        GetElem_UnsafeImmutable,
-    };
-
     struct DeferredEdge : public TempObject
     {
         MBasicBlock *block;
@@ -405,7 +391,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_intrinsic(HandlePropertyName name);
     bool jsop_bindname(PropertyName *name);
     bool jsop_getelem();
-    bool jsop_getelem_dense(GetElemSafety safety, MDefinition *object, MDefinition *index);
+    bool jsop_getelem_dense();
     bool jsop_getelem_typed(int arrayType);
     bool jsop_getelem_typed_static(bool *psucceeded);
     bool jsop_getelem_string();
@@ -500,8 +486,6 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineUnsafeSetElement(CallInfo &callInfo);
     bool inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base);
     bool inlineUnsafeSetTypedArrayElement(CallInfo &callInfo, uint32_t base, int arrayType);
-    InliningStatus inlineUnsafeGetElement(CallInfo &callInfo,
-                                          GetElemSafety safety);
     InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
     InliningStatus inlineNewDenseArray(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForSequentialExecution(CallInfo &callInfo);

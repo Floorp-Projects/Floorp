@@ -6266,11 +6266,8 @@ IonBuilder::jsop_getelem()
     if (ElementAccessIsDenseNative(obj, index)) {
         // Don't generate a fast path if there have been bounds check failures
         // and this access might be on a sparse property.
-        if (!ElementAccessHasExtraIndexedProperty(cx, obj) || !failedBoundsCheck_) {
-            MDefinition *id = current->pop();
-            MDefinition *obj = current->pop();
-            return jsop_getelem_dense(GetElem_Normal, obj, id);
-        }
+        if (!ElementAccessHasExtraIndexedProperty(cx, obj) || !failedBoundsCheck_)
+            return jsop_getelem_dense();
     }
 
     int arrayType = TypedArray::TYPE_MAX;
@@ -6335,8 +6332,11 @@ IonBuilder::jsop_getelem()
 }
 
 bool
-IonBuilder::jsop_getelem_dense(GetElemSafety safety, MDefinition *obj, MDefinition *id)
+IonBuilder::jsop_getelem_dense()
 {
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->pop();
+
     types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
 
     if (JSOp(*pc) == JSOP_CALLELEM && !id->mightBeType(MIRType_String) && types->noConstraints()) {
@@ -6353,7 +6353,6 @@ IonBuilder::jsop_getelem_dense(GetElemSafety safety, MDefinition *obj, MDefiniti
     // undefined values have been observed at this access site and the access
     // cannot hit another indexed property on the object or its prototypes.
     bool readOutOfBounds =
-        safety == GetElem_Normal &&
         types->hasType(types::Type::UndefinedType()) &&
         !ElementAccessHasExtraIndexedProperty(cx, obj);
 
@@ -6390,6 +6389,9 @@ IonBuilder::jsop_getelem_dense(GetElemSafety safety, MDefinition *obj, MDefiniti
     if (loadDouble)
         elements = addConvertElementsToDoubles(elements);
 
+    MInitializedLength *initLength = MInitializedLength::New(elements);
+    current->add(initLength);
+
     MInstruction *load;
 
     if (!readOutOfBounds) {
@@ -6397,28 +6399,14 @@ IonBuilder::jsop_getelem_dense(GetElemSafety safety, MDefinition *obj, MDefiniti
         // in-bounds elements, and the array is packed or its holes are not
         // read. This is the best case: we can separate the bounds check for
         // hoisting.
-        switch (safety) {
-          case GetElem_Normal: {
-              MInitializedLength *initLength = MInitializedLength::New(elements);
-              current->add(initLength);
-              id = addBoundsCheck(id, initLength);
-              break;
-          }
+        id = addBoundsCheck(id, initLength);
 
-          case GetElem_Unsafe: break;
-          case GetElem_UnsafeImmutable: break;
-        }
-
-        bool knownImmutable = (safety == GetElem_UnsafeImmutable);
-        load = MLoadElement::New(elements, id, needsHoleCheck, loadDouble,
-                                 knownImmutable);
+        load = MLoadElement::New(elements, id, needsHoleCheck, loadDouble);
         current->add(load);
     } else {
         // This load may return undefined, so assume that we *can* read holes,
         // or that we can read out-of-bounds accesses. In this case, the bounds
         // check is part of the opcode.
-        MInitializedLength *initLength = MInitializedLength::New(elements);
-        current->add(initLength);
         load = MLoadElementHole::New(elements, id, initLength, needsHoleCheck);
         current->add(load);
 
@@ -6699,6 +6687,9 @@ IonBuilder::jsop_setelem()
         // untill the cache supports more ics
         SetElemICInspector icInspect(inspector->setElemICInspector(pc));
         if (!icInspect.sawDenseWrite())
+            break;
+
+        if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
             break;
 
         MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);

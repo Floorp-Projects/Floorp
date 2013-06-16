@@ -175,7 +175,7 @@ SVGFEImageElement::IntrinsicState() const
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEImageElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEImageElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

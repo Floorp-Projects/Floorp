@@ -33,7 +33,11 @@ function expectInitialContent(e) {
 
   // Expect "First response" in received HTML.
   var firstResponse = frameWindow.document.getElementById('firstResponse');
-  is(firstResponse.innerHTML, "First response", "firstResponse");
+  ok(firstResponse, "First response should exist");
+  if (firstResponse) {
+    is(firstResponse.innerHTML, "First response",
+       "First response should be correct");
+  }
 
   // Expect NOT to get any second response element.
   var secondResponse = frameWindow.document.getElementById('secondResponse');
@@ -57,11 +61,19 @@ function expectFullContent(e)
 
   // Expect "First response" to still be there
   var firstResponse = frameWindow.document.getElementById('firstResponse');
-  is(firstResponse.innerHTML, "First response", "firstResponse");
+  ok(firstResponse, "First response should exist");
+  if (firstResponse) {
+    is(firstResponse.innerHTML, "First response",
+       "First response should be correct");
+  }
 
   // Expect "Second response" to be there also.
   var secondResponse = frameWindow.document.getElementById('secondResponse');
-  is(secondResponse.innerHTML, "Second response", "secondResponse");
+  ok(secondResponse, "Second response should exist");
+  if (secondResponse) {
+    is(secondResponse.innerHTML, "Second response",
+       "Second response should be correct");
+  }
 
   SimpleTest.finish();
 }

@@ -11,7 +11,6 @@
  */
 
 interface SVGAnimatedNumber;
-interface SVGAnimatedString;
 
 interface SVGFEDiffuseLightingElement : SVGElement {
   readonly attribute SVGAnimatedString in1;

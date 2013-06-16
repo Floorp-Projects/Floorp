@@ -3974,10 +3974,7 @@ Response.prototype =
       var avail = bodyStream ? bodyStream.available() : 0;
 
       // XXX assumes stream will always report the full amount of data available
-      // Set "Content-Length" if not already set by request handler.
-      if (!headers.hasHeader("Content-Length")) {
-        headers.setHeader("Content-Length", "" + avail, false);
-      }
+      headers.setHeader("Content-Length", "" + avail, false);
     }
 
 

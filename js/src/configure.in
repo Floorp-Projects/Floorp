@@ -2337,8 +2337,8 @@ AC_LANG_CPLUSPLUS
 
 if test "$GNU_CXX"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS -std=gnu++0x"
-    USE_CXX11=1
+    CXXFLAGS="$CXXFLAGS"
+    USE_CXX11=
 
     AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
         ac_cv_cxx0x_headers_bug,

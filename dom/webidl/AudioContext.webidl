@@ -35,6 +35,9 @@ interface AudioContext : EventTarget {
     [Creator]
     AudioBufferSourceNode createBufferSource();
 
+    [Creator]
+    MediaStreamAudioDestinationNode createMediaStreamDestination();
+
     [Creator, Throws]
     ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
                                               optional unsigned long numberOfInputChannels = 2,

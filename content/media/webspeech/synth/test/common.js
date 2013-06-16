@@ -170,6 +170,7 @@ function synthCleanup() {
       .getService(SpecialPowers.Ci.nsISyncMessageSender);
     mm.sendSyncMessage('test:SpeechSynthesis:ipcSynthCleanup');
   }
+  SpecialPowers.clearUserPref("media.webspeech.synth.enabled");
 }
 
 function synthTestQueue(aTestArgs, aEndFunc) {
