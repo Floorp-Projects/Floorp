@@ -255,7 +255,7 @@ public:
                       uint16_t          af)
         : mResolver(res)
         , mHost(host)
-        , mListener(listener)
+        , mListener(new nsMainThreadPtrHolder<nsIDNSListener>(listener))
         , mFlags(flags)
         , mAF(af) {}
     ~nsDNSAsyncRequest() {}
@@ -268,7 +268,7 @@ public:
 
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
-    nsCOMPtr<nsIDNSListener> mListener;
+    nsMainThreadPtrHandle<nsIDNSListener> mListener;
     uint16_t                 mFlags;
     uint16_t                 mAF;
 };
@@ -292,7 +292,6 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
     MOZ_EVENT_TRACER_DONE(this, "net::dns::lookup");
 
     mListener->OnLookupComplete(this, rec, status);
-    mListener = nullptr;
 
     // release the reference to ourselves that was added before we were
     // handed off to the host resolver.
