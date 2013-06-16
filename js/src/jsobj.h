@@ -217,7 +217,6 @@ extern Class IntlClass;
 extern Class JSONClass;
 extern Class MapIteratorClass;
 extern Class MathClass;
-extern Class ModuleClass;
 extern Class NumberClass;
 extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
@@ -244,7 +243,6 @@ class ElementIteratorObject;
 class GlobalObject;
 class MapObject;
 class MapIteratorObject;
-class Module;
 class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
@@ -967,6 +965,21 @@ class JSObject : public js::ObjectImpl
      * consider adding the missing XObject class.
      */
 
+    template <class T>
+    inline bool is() const { return getClass() == &T::class_; }
+
+    template <class T>
+    T &as() {
+        JS_ASSERT(is<T>());
+        return *static_cast<T *>(this);
+    }
+
+    template <class T>
+    const T &as() const {
+        JS_ASSERT(is<T>());
+        return *static_cast<const T *>(this);
+    }
+
     /* Direct subtypes of JSObject: */
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
     inline bool isArguments()        const { return isNormalArguments() || isStrictArguments(); }
@@ -979,7 +992,6 @@ class JSObject : public js::ObjectImpl
     inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
     inline bool isGlobal()           const;
     inline bool isMapIterator()      const { return hasClass(&js::MapIteratorClass); }
-    inline bool isModule()           const { return hasClass(&js::ModuleClass); }
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     inline bool isPrimitive()        const { return isNumber() || isString() || isBoolean(); }
     inline bool isPropertyIterator() const;
@@ -1030,10 +1042,6 @@ class JSObject : public js::ObjectImpl
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
     inline js::MapIteratorObject &asMapIterator();
-    js::Module &asModule() {
-        JS_ASSERT(isModule());
-        return *reinterpret_cast<js::Module *>(this);
-    }
     inline js::NestedScopeObject &asNestedScope();
     inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
