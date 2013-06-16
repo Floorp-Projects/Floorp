@@ -50,6 +50,58 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
                         "initSpecialConnection");
 
+var gRegisteredModules = Object.create(null);
+
+/**
+ * The ModuleAPI object is passed to modules loaded using the
+ * DebuggerServer.registerModule() API.  Modules can use this
+ * object to register actor factories.
+ * Factories registered through the module API will be removed
+ * when the module is unregistered or when the server is
+ * destroyed.
+ */
+function ModuleAPI() {
+  let activeTabActors = new Set();
+  let activeGlobalActors = new Set();
+
+  return {
+    // See DebuggerServer.addGlobalActor for a description.
+    addGlobalActor: function(factory, name) {
+      DebuggerServer.addGlobalActor(factory, name);
+      activeGlobalActors.add(factory);
+    },
+    // See DebuggerServer.removeGlobalActor for a description.
+    removeGlobalActor: function(factory) {
+      DebuggerServer.removeGlobalActor(factory);
+      activeGlobalActors.delete(factory);
+    },
+
+    // See DebuggerServer.addTabActor for a description.
+    addTabActor: function(factory, name) {
+      DebuggerServer.addTabActor(factory, name);
+      activeTabActors.add(factory);
+    },
+    // See DebuggerServer.removeTabActor for a description.
+    removeTabActor: function(factory) {
+      DebuggerServer.removeTabActor(factory);
+      activeTabActors.delete(factory);
+    },
+
+    // Destroy the module API object, unregistering any
+    // factories registered by the module.
+    destroy: function() {
+      for (let factory of activeTabActors) {
+        DebuggerServer.removeTabActor(factory);
+      }
+      activeTabActors = null;
+      for (let factory of activeGlobalActors) {
+        DebuggerServer.removeGlobalActor(factory);
+      }
+      activeGlobalActors = null;
+    }
+  }
+};
+
 /***
  * Public API
  */
@@ -67,6 +119,7 @@ var DebuggerServer = {
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
+  LONG_STRING_READ_LENGTH: 1000,
 
   /**
    * A handler function that prompts the user to accept or decline the incoming
@@ -159,6 +212,13 @@ var DebuggerServer = {
     for (let connID of Object.getOwnPropertyNames(this._connections)) {
       this._connections[connID].close();
     }
+
+    for (let id of Object.getOwnPropertyNames(gRegisteredModules)) {
+      let mod = gRegisteredModules[id];
+      mod.module.unregister(mod.api);
+    }
+    gRegisteredModules = {};
+
     this.closeListener();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
@@ -178,6 +238,45 @@ var DebuggerServer = {
    */
   addActors: function DS_addActors(aURL) {
     loadSubScript.call(this, aURL);
+  },
+
+  /**
+   * Register a CommonJS module with the debugger server.
+   * @param id string
+   *    The ID of a CommonJS module.  This module must export
+   *    'register' and 'unregister' functions.
+   */
+  registerModule: function(id) {
+    if (id in gRegisteredModules) {
+      throw new Error("Tried to register a module twice: " + id + "\n");
+    }
+
+    let moduleAPI = ModuleAPI();
+
+    let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    let mod = devtools.require(id);
+    mod.register(moduleAPI);
+    gRegisteredModules[id] = { module: mod, api: moduleAPI };
+  },
+
+  /**
+   * Returns true if a module id has been registered.
+   */
+  isModuleRegistered: function(id) {
+    return (id in gRegisteredModules);
+  },
+
+  /**
+   * Unregister a previously-loaded CommonJS module from the debugger server.
+   */
+  unregisterModule: function(id) {
+    let mod = gRegisteredModules[id];
+    if (!mod) {
+      throw new Error("Tried to unregister a module that was not previously registered.");
+    }
+    mod.module.unregister(mod.api);
+    mod.api.destroy();
+    delete gRegisteredModules[id];
   },
 
   /**
@@ -511,6 +610,13 @@ ActorPool.prototype = {
   },
 
   /**
+   * Match the api expected by the protocol library.
+   */
+  unmanage: function(aActor) {
+    return this.removeActor(aActor);
+  },
+
+  /**
    * Run all actor cleanups.
    */
   cleanup: function AP_cleanup() {
@@ -605,6 +711,13 @@ DebuggerServerConnection.prototype = {
   },
 
   /**
+   * Match the api expected by the protocol library.
+   */
+  unmanage: function(aActor) {
+    return this.removeActor(aActor);
+  },
+
+  /**
    * Look up an actor implementation for an actorID.  Will search
    * all the actor pools registered with the connection.
    *
@@ -612,20 +725,28 @@ DebuggerServerConnection.prototype = {
    *        Actor ID to look up.
    */
   getActor: function DSC_getActor(aActorID) {
-    if (this._actorPool.has(aActorID)) {
-      return this._actorPool.get(aActorID);
-    }
-
-    for each (let pool in this._extraPools) {
-      if (pool.has(aActorID)) {
-        return pool.get(aActorID);
-      }
+    let pool = this.poolFor(aActorID);
+    if (pool) {
+      return pool.get(aActorID);
     }
 
     if (aActorID === "root") {
       return this.rootActor;
     }
 
+    return null;
+  },
+
+  poolFor: function DSC_actorPool(aActorID) {
+    if (this._actorPool && this._actorPool.has(aActorID)) {
+      return this._actorPool;
+    }
+
+    for (let pool of this._extraPools) {
+      if (pool.has(aActorID)) {
+        return pool;
+      }
+    }
     return null;
   },
 
@@ -679,11 +800,14 @@ DebuggerServerConnection.prototype = {
     // Dispatch the request to the actor.
     if (actor.requestTypes && actor.requestTypes[aPacket.type]) {
       try {
-        ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket);
+        this.currentPacket = aPacket;
+        ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket, this);
       } catch(e) {
         this.transport.send(this._unknownError(
           "error occurred while processing '" + aPacket.type,
           e));
+      } finally {
+        delete this.currentPacket;
       }
     } else {
       ret = { error: "unrecognizedPacketType",
