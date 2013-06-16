@@ -19,6 +19,12 @@ function chunkifyTests(tests, totalChunks, thisChunk, chunkByDir, logger) {
       if (test_path[0] == '/') {
         test_path = test_path.substr(1);
       }
+      // mochitest-chrome and mochitest-browser-chrome pass an array of chrome://
+      // URIs
+      var protocolRegexp = /^[a-zA-Z]+:\/\//;
+      if (protocolRegexp.test(test_path)) {
+        test_path = test_path.replace(protocolRegexp, "");
+      }
       var dir = test_path.split("/");
       // We want the first chunkByDir+1 components, or everything but the
       // last component, whichever is less.
