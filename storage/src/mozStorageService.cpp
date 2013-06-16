@@ -10,7 +10,6 @@
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
 #include "prinit.h"
-#include "pratom.h"
 #include "nsAutoPtr.h"
 #include "nsCollationCID.h"
 #include "nsEmbedCID.h"

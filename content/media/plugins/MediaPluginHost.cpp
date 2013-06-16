@@ -11,7 +11,6 @@
 #include "MediaPluginHost.h"
 #include "nsXPCOMStrings.h"
 #include "nsISeekableStream.h"
-#include "pratom.h"
 #include "MediaPluginReader.h"
 #include "nsIGfxInfo.h"
 #include "gfxCrashReporterUtils.h"
