@@ -9,7 +9,6 @@
 
 #include "nspr.h"
 #include "nsString.h"
-#include "pratom.h"
 #include "nsUniversalCharDetDll.h"
 #include "nsISupports.h"
 #include "nsICategoryManager.h"

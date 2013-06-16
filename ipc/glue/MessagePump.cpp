@@ -9,7 +9,6 @@
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "pratom.h"
 #include "prthread.h"
 
 #include "base/logging.h"
