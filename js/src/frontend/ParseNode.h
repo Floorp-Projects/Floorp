@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 
 #include "jsscript.h"
-
+#include "builtin/Module.h"
 #include "frontend/TokenStream.h"
 
 namespace js {
@@ -1360,7 +1360,7 @@ class ObjectBox
     JSObject *object;
 
     ObjectBox(JSObject *object, ObjectBox *traceLink);
-    bool isModuleBox() { return object->isModule(); }
+    bool isModuleBox() { return object->is<Module>(); }
     bool isFunctionBox() { return object->isFunction(); }
     ModuleBox *asModuleBox();
     FunctionBox *asFunctionBox();
