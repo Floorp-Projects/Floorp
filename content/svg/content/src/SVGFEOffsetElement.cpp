@@ -39,7 +39,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEOffsetElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEOffsetElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);

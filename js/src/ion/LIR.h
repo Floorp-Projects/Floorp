@@ -635,6 +635,12 @@ class LInstruction
     virtual LDefinition *getTemp(size_t index) = 0;
     virtual void setTemp(size_t index, const LDefinition &a) = 0;
 
+    // Returns the number of successors of this instruction, if it is a control
+    // transfer instruction, or zero otherwise.
+    virtual size_t numSuccessors() const = 0;
+    virtual MBasicBlock *getSuccessor(size_t i) const = 0;
+    virtual void setSuccessor(size_t i, MBasicBlock *successor) = 0;
+
     virtual bool isCall() const {
         return false;
     }
@@ -754,6 +760,9 @@ class LBlock : public TempObject
     void removePhi(size_t index) {
         phis_.erase(&phis_[index]);
     }
+    void clearPhis() {
+        phis_.clear();
+    }
     MBasicBlock *mir() const {
         return block_;
     }
@@ -827,6 +836,17 @@ class LInstructionHelper : public LInstruction
     }
     void setTemp(size_t index, const LDefinition &a) {
         temps_[index] = a;
+    }
+
+    size_t numSuccessors() const {
+        return 0;
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_ASSERT(false);
+        return NULL;
+    }
+    void setSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(false);
     }
 
     // Default accessors, assuming a single input and output, respectively.
@@ -1363,6 +1383,7 @@ class LIRGraph
     LInstruction *getSafepoint(size_t i) const {
         return safepoints_[i];
     }
+    void removeBlock(size_t i);
 };
 
 LAllocation::LAllocation(const AnyRegister &reg)

@@ -31,7 +31,7 @@ nsSVGElement::StringInfo SVGFETileElement::sStringInfo[2] =
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETileElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFETileElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);

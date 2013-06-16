@@ -324,6 +324,9 @@ MDefinition::replaceAllUsesWith(MDefinition *dom)
     if (dom == this)
         return;
 
+    for (size_t i = 0; i < numOperands(); i++)
+        getOperand(i)->setUseRemovedUnchecked();
+
     for (MUseIterator i(usesBegin()); i != usesEnd(); ) {
         JS_ASSERT(i->producer() == this);
         i = i->consumer()->replaceOperand(i, dom);

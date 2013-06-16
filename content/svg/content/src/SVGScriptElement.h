@@ -69,7 +69,7 @@ public:
   void SetType(const nsAString & aType, ErrorResult& rv);
   void GetCrossOrigin(nsAString & aOrigin);
   void SetCrossOrigin(const nsAString & aOrigin, ErrorResult& rv);
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
 
 protected:
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;

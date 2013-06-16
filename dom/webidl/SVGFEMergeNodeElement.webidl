@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedString;
-
 interface SVGFEMergeNodeElement : SVGElement {
   readonly attribute SVGAnimatedString in1;
 };

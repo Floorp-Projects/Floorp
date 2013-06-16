@@ -54,7 +54,20 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * points.
      */                                                                         \
     _(Unused)                                                                   \
-    _(DOMFunction)   /* Contains or uses a common DOM method function */
+    _(DOMFunction)   /* Contains or uses a common DOM method function */        \
+                                                                                \
+    /* Marks if an instruction has fewer uses than the original code.
+     * E.g. UCE can remove code.
+     * Every instruction where an use is/was removed from an instruction and
+     * as a result the number of operands doesn't equal the original code
+     * need to get marked as UseRemoved. This is important for truncation
+     * analysis to know, since if all original uses are still present,
+     * it can ignore resumepoints.
+     * Currently this is done for every pass after IonBuilder and before
+     * Truncate Doubles. So every time removeUse is called, UseRemoved needs
+     * to get set.
+     */                                                                         \
+    _(UseRemoved)
 
 class MDefinition;
 class MInstruction;
@@ -4510,13 +4523,11 @@ class MLoadElement
 {
     bool needsHoleCheck_;
     bool loadDoubles_;
-    bool knownImmutable_; // load of data that is known to be immutable
 
-    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck, bool loadDoubles, bool knownImmutable)
+    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck, bool loadDoubles)
       : MBinaryInstruction(elements, index),
         needsHoleCheck_(needsHoleCheck),
-        loadDoubles_(loadDoubles),
-        knownImmutable_(knownImmutable)
+        loadDoubles_(loadDoubles)
     {
         setResultType(MIRType_Value);
         setMovable();
@@ -4528,10 +4539,8 @@ class MLoadElement
     INSTRUCTION_HEADER(LoadElement)
 
     static MLoadElement *New(MDefinition *elements, MDefinition *index,
-                             bool needsHoleCheck, bool loadDoubles,
-                             bool knownImmutable) {
-        return new MLoadElement(elements, index, needsHoleCheck, loadDoubles,
-                                knownImmutable);
+                             bool needsHoleCheck, bool loadDoubles) {
+        return new MLoadElement(elements, index, needsHoleCheck, loadDoubles);
     }
 
     TypePolicy *typePolicy() {
@@ -4553,9 +4562,6 @@ class MLoadElement
         return needsHoleCheck();
     }
     AliasSet getAliasSet() const {
-        if (knownImmutable_)
-            return AliasSet::None();
-
         return AliasSet::Load(AliasSet::Element);
     }
 };
