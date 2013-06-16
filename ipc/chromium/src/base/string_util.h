@@ -190,7 +190,7 @@ string16 ASCIIToUTF16(const std::string& ascii);
 bool WideToUTF8(const wchar_t* src, size_t src_len, std::string* output);
 std::string WideToUTF8(const std::wstring& wide);
 bool UTF8ToWide(const char* src, size_t src_len, std::wstring* output);
-std::wstring UTF8ToWide(const StringPiece& utf8);
+std::wstring UTF8ToWide(const ::StringPiece& utf8);
 
 bool WideToUTF16(const wchar_t* src, size_t src_len, string16* output);
 string16 WideToUTF16(const std::wstring& wide);
