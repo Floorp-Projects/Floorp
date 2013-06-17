@@ -1615,16 +1615,36 @@ var InspectorActor = protocol.ActorClass({
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
+  },
+
+  get window() {
+    let tabActor = this.tabActor;
     if (tabActor.browser instanceof Ci.nsIDOMWindow) {
-      this.window = tabActor.browser;
+      return tabActor.browser;
     } else if (tabActor.browser instanceof Ci.nsIDOMElement) {
-      this.window = tabActor.browser.contentWindow;
+      return tabActor.browser.contentWindow;
     }
-    this.webProgress = tabActor._tabbrowser;
+    return null;
   },
 
   getWalker: method(function(options={}) {
-    return WalkerActor(this.conn, this.window.document, this.webProgress, options);
+    let deferred = promise.defer();
+
+    let window = this.window;
+
+    var domReady = () => {
+      let tabActor = this.tabActor;
+      window.removeEventListener("DOMContentLoaded", domReady, true);
+      deferred.resolve(WalkerActor(this.conn, window.document, tabActor._tabbrowser, options));
+    };
+
+    if (window.document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", domReady, true);
+    } else {
+      domReady();
+    }
+
+    return deferred.promise;
   }, {
     request: {},
     response: {
