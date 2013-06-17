@@ -31,7 +31,7 @@ namespace js {
 static inline bool
 IsCacheableNonGlobalScope(JSObject *obj)
 {
-    bool cacheable = (obj->is<CallObject>() || obj->is<BlockObject>() || obj->isDeclEnv());
+    bool cacheable = (obj->is<CallObject>() || obj->is<BlockObject>() || obj->is<DeclEnvObject>());
 
     JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;
@@ -209,7 +209,7 @@ inline void
 StackFrame::pushOnScopeChain(ScopeObject &scope)
 {
     JS_ASSERT(*scopeChain() == scope.enclosingScope() ||
-              *scopeChain() == scope.as<CallObject>().enclosingScope().asDeclEnv().enclosingScope());
+              *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
     flags_ |= HAS_SCOPECHAIN;
 }

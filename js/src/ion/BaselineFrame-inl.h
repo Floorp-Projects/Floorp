@@ -22,7 +22,7 @@ inline void
 BaselineFrame::pushOnScopeChain(ScopeObject &scope)
 {
     JS_ASSERT(*scopeChain() == scope.enclosingScope() ||
-              *scopeChain() == scope.as<CallObject>().enclosingScope().asDeclEnv().enclosingScope());
+              *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
 }
 

@@ -31,7 +31,7 @@ ScopeObject::enclosingScope() const
 inline void
 ScopeObject::setEnclosingScope(HandleObject obj)
 {
-    JS_ASSERT_IF(obj->is<CallObject>() || obj->isDeclEnv() || obj->is<BlockObject>(),
+    JS_ASSERT_IF(obj->is<CallObject>() || obj->is<DeclEnvObject>() || obj->is<BlockObject>(),
                  obj->isDelegate());
     setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*obj));
 }
@@ -257,13 +257,6 @@ JSObject::asScope()
 {
     JS_ASSERT(isScope());
     return *static_cast<js::ScopeObject *>(this);
-}
-
-inline js::DeclEnvObject &
-JSObject::asDeclEnv()
-{
-    JS_ASSERT(isDeclEnv());
-    return *static_cast<js::DeclEnvObject *>(this);
 }
 
 inline js::NestedScopeObject &

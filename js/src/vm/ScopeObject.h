@@ -234,6 +234,8 @@ class DeclEnvObject : public ScopeObject
     static const uint32_t RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
+    static Class class_;
+
     static DeclEnvObject *
     createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap);
 
@@ -631,7 +633,7 @@ JSObject::isNestedScope() const
 inline bool
 JSObject::isScope() const
 {
-    return is<js::CallObject>() || isDeclEnv() || isNestedScope();
+    return is<js::CallObject>() || is<js::DeclEnvObject>() || isNestedScope();
 }
 
 #endif /* ScopeObject_h___ */
