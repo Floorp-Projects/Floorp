@@ -18,6 +18,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 let gModuleName = "[CustomizeMode]";
 #include logging.js
@@ -30,6 +32,7 @@ function CustomizeMode(aWindow) {
 
 CustomizeMode.prototype = {
   _changed: false,
+  _transitioning: false,
   window: null,
   document: null,
   // areas is used to cache the customizable areas when in customization mode.
@@ -66,7 +69,7 @@ CustomizeMode.prototype = {
   },
 
   enter: function() {
-    if (this._customizing) {
+    if (this._customizing || this._transitioning) {
       return;
     }
 
@@ -86,16 +89,7 @@ CustomizeMode.prototype = {
     let window = this.window;
     let document = this.document;
 
-    let customizer = document.getElementById("customization-container");
-    customizer.hidden = false;
-
-
     CustomizableUI.addListener(this);
-
-    // The menu panel is lazy, and registers itself when the popup shows. We
-    // need to force the menu panel to register itself, or else customization
-    // is really not going to work.
-    window.PanelUI.ensureRegistered();
 
     // Add a keypress listener and click listener to the tab-view-deck so that
     // we can quickly exit customization mode when pressing ESC or clicking on
@@ -109,46 +103,64 @@ CustomizeMode.prototype = {
     window.PanelUI.hide();
     window.PanelUI.menuButton.addEventListener("click", this, false);
     window.PanelUI.menuButton.open = true;
-
-    // Let everybody in this window know that we're about to customize.
-    this.dispatchToolboxEvent("customizationstarting");
-
-    customizer.parentNode.selectedPanel = customizer;
+    window.PanelUI.beginBatchUpdate();
 
     // Move the mainView in the panel to the holder so that we can see it
     // while customizing.
     let panelHolder = document.getElementById("customization-panelHolder");
     panelHolder.appendChild(window.PanelUI.mainView);
-    this._showPanelCustomizationPlaceholders();
 
-    let self = this;
-    deck.addEventListener("transitionend", function customizeTransitionEnd() {
-      deck.removeEventListener("transitionend", customizeTransitionEnd);
-      self.dispatchToolboxEvent("customizationready");
-    });
+    this._transitioning = true;
 
-    this._wrapToolbarItems();
-    this.populatePalette();
+    let customizer = document.getElementById("customization-container");
+    customizer.parentNode.selectedPanel = customizer;
+    customizer.hidden = false;
 
-    window.PanelUI.mainView.addEventListener("contextmenu", this, true);
-    this.visiblePalette.addEventListener("dragstart", this, true);
-    this.visiblePalette.addEventListener("dragover", this, true);
-    this.visiblePalette.addEventListener("dragexit", this, true);
-    this.visiblePalette.addEventListener("drop", this, true);
-    this.visiblePalette.addEventListener("dragend", this, true);
+    Task.spawn(function() {
+      yield this._doTransition(true);
 
-    this._updateResetButton();
+      // Let everybody in this window know that we're about to customize.
+      this.dispatchToolboxEvent("customizationstarting");
 
-    let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true]):not([collapsed=true])");
-    for (let toolbar of customizableToolbars)
-      toolbar.setAttribute("customizing", true);
+      // The menu panel is lazy, and registers itself when the popup shows. We
+      // need to force the menu panel to register itself, or else customization
+      // is really not going to work. We pass "true" to ensureRegistered to
+      // indicate that we're handling calling startBatchUpdate and
+      // endBatchUpdate.
+      window.PanelUI.ensureRegistered(true);
 
-    document.documentElement.setAttribute("customizing", true);
-    this._customizing = true;
+      this._showPanelCustomizationPlaceholders();
+
+      yield this._wrapToolbarItems();
+      yield this.populatePalette();
+
+      window.PanelUI.mainView.addEventListener("contextmenu", this, true);
+      this.visiblePalette.addEventListener("dragstart", this, true);
+      this.visiblePalette.addEventListener("dragover", this, true);
+      this.visiblePalette.addEventListener("dragexit", this, true);
+      this.visiblePalette.addEventListener("drop", this, true);
+      this.visiblePalette.addEventListener("dragend", this, true);
+
+      // Same goes for the menu button - if we're customizing, a click to the
+      // menu button means a quick exit from customization mode.
+      window.PanelUI.menuButton.addEventListener("click", this, false);
+      window.PanelUI.menuButton.disabled = true;
+
+      this._updateResetButton();
+
+      let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true]):not([collapsed=true])");
+      for (let toolbar of customizableToolbars)
+        toolbar.setAttribute("customizing", true);
+
+      window.PanelUI.endBatchUpdate();
+      this._customizing = true;
+      this._transitioning = false;
+      this.dispatchToolboxEvent("customizationready");
+    }.bind(this));
   },
 
   exit: function() {
-    if (!this._customizing) {
+    if (!this._customizing || this._transitioning) {
       return;
     }
 
@@ -160,91 +172,113 @@ CustomizeMode.prototype = {
     this.window.PanelUI.menuButton.removeEventListener("click", this, false);
     this.window.PanelUI.menuButton.open = false;
 
-    this._removePanelCustomizationPlaceholders();
-    this.depopulatePalette();
+    this.window.PanelUI.beginBatchUpdate();
 
-    this.window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
-    this.visiblePalette.removeEventListener("dragstart", this, true);
-    this.visiblePalette.removeEventListener("dragover", this, true);
-    this.visiblePalette.removeEventListener("dragexit", this, true);
-    this.visiblePalette.removeEventListener("drop", this, true);
-    this.visiblePalette.removeEventListener("dragend", this, true);
+    this._removePanelCustomizationPlaceholders();
+
+    this._transitioning = true;
 
     let window = this.window;
     let document = this.document;
-
     let documentElement = document.documentElement;
-    documentElement.setAttribute("customize-exiting", "true");
-    let tabViewDeck = document.getElementById("tab-view-deck");
-    tabViewDeck.addEventListener("transitionend", function onTransitionEnd(evt) {
-      if (evt.propertyName != "padding-top")
-        return;
-      tabViewDeck.removeEventListener("transitionend", onTransitionEnd);
-      documentElement.removeAttribute("customize-exiting");
-    });
 
-    this._unwrapToolbarItems();
+    Task.spawn(function() {
+      yield this._doTransition(false);
 
-    if (this._changed) {
-      // XXXmconley: At first, it seems strange to also persist the old way with
-      //             currentset - but this might actually be useful for switching
-      //             to old builds. We might want to keep this around for a little
-      //             bit.
-      this.persistCurrentSets();
-    }
+      let customizer = document.getElementById("customization-container");
+      customizer.hidden = true;
+      let browser = document.getElementById("browser");
+      browser.parentNode.selectedPanel = browser;
 
-    // And drop all area references.
-    this.areas = [];
+      yield this.depopulatePalette();
 
-    // Let everybody in this window know that we're starting to
-    // exit customization mode.
-    this.dispatchToolboxEvent("customizationending");
-    window.PanelUI.setMainView(window.PanelUI.mainView);
+      window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
+      this.visiblePalette.removeEventListener("dragstart", this, true);
+      this.visiblePalette.removeEventListener("dragover", this, true);
+      this.visiblePalette.removeEventListener("dragexit", this, true);
+      this.visiblePalette.removeEventListener("drop", this, true);
+      this.visiblePalette.removeEventListener("dragend", this, true);
 
-    let browser = document.getElementById("browser");
-    browser.parentNode.selectedPanel = browser;
+      yield this._unwrapToolbarItems();
 
-    // We need to set this._customizing to false before removing the tab
-    // or the TabSelect event handler will think that we are exiting
-    // customization mode for a second time.
-    this._customizing = false;
+      if (this._changed) {
+        // XXXmconley: At first, it seems strange to also persist the old way with
+        //             currentset - but this might actually be useful for switching
+        //             to old builds. We might want to keep this around for a little
+        //             bit.
+        this.persistCurrentSets();
+      }
 
-    if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
-      let custBrowser = this.browser.selectedBrowser;
-      if (custBrowser.canGoBack) {
-        // If there's history to this tab, just go back.
-        custBrowser.goBack();
-      } else {
-        // If we can't go back, we're removing the about:customization tab.
-        // We only do this if we're the top window for this window (so not
-        // a dialog window, for example).
-        if (this.window.getTopWin(true) == this.window) {
-          let customizationTab = this.browser.selectedTab;
-          if (this.browser.browsers.length == 1) {
-            this.window.BrowserOpenTab();
+      // And drop all area references.
+      this.areas = [];
+
+      // Let everybody in this window know that we're starting to
+      // exit customization mode.
+      this.dispatchToolboxEvent("customizationending");
+      window.PanelUI.setMainView(window.PanelUI.mainView);
+      window.PanelUI.menuButton.disabled = false;
+
+      // We need to set self._customizing to false before removing the tab
+      // or the TabSelect event handler will think that we are exiting
+      // customization mode for a second time.
+      this._customizing = false;
+
+      if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
+        let custBrowser = this.browser.selectedBrowser;
+        if (custBrowser.canGoBack) {
+          // If there's history to this tab, just go back.
+          custBrowser.goBack();
+        } else {
+          // If we can't go back, we're removing the about:customization tab.
+          // We only do this if we're the top window for this window (so not
+          // a dialog window, for example).
+          if (window.getTopWin(true) == window) {
+            let customizationTab = this.browser.selectedTab;
+            if (this.browser.browsers.length == 1) {
+              window.BrowserOpenTab();
+            }
+            this.browser.removeTab(customizationTab);
           }
-          this.browser.removeTab(customizationTab);
         }
       }
-    }
 
-    let deck = document.getElementById("tab-view-deck");
-    let self = this;
-    deck.addEventListener("transitionend", function customizeTransitionEnd() {
-      deck.removeEventListener("transitionend", customizeTransitionEnd);
-      self.dispatchToolboxEvent("aftercustomization");
       LightweightThemeManager.temporarilyToggleTheme(true);
-    });
-    documentElement.removeAttribute("customizing");
 
-    let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
-    for (let toolbar of customizableToolbars)
-      toolbar.removeAttribute("customizing");
+      let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
+      for (let toolbar of customizableToolbars)
+        toolbar.removeAttribute("customizing");
 
-    let customizer = document.getElementById("customization-container");
-    customizer.hidden = true;
+      this.window.PanelUI.endBatchUpdate();
+      this._changed = false;
+      this._transitioning = false;
+      this.dispatchToolboxEvent("aftercustomization");
+    }.bind(this));
+  },
 
-    this._changed = false;
+  _doTransition: function(aEntering) {
+    let deferred = Promise.defer();
+
+    let deck = this.document.getElementById("tab-view-deck");
+    deck.addEventListener("transitionend", function customizeTransitionEnd(aEvent) {
+      if (aEvent.originalTarget != deck || aEvent.propertyName != "padding-top") {
+        return;
+      }
+      deck.removeEventListener("transitionend", customizeTransitionEnd);
+
+      if (!aEntering) {
+        this.document.documentElement.removeAttribute("customize-exiting");
+      }
+
+      deferred.resolve();
+    }.bind(this));
+
+    if (aEntering) {
+      this.document.documentElement.setAttribute("customizing", true);
+    } else {
+      this.document.documentElement.setAttribute("customize-exiting", true);
+      this.document.documentElement.removeAttribute("customizing");
+    }
+    return deferred.promise;
   },
 
   dispatchToolboxEvent: function(aEventType, aDetails={}) {
@@ -262,16 +296,20 @@ CustomizeMode.prototype = {
   },
 
   populatePalette: function() {
+    let fragment = this.document.createDocumentFragment();
     let toolboxPalette = this.window.gNavToolbox.palette;
 
-    let unusedWidgets = CustomizableUI.getUnusedWidgets(toolboxPalette);
-    for (let widget of unusedWidgets) {
-      let paletteItem = this.makePaletteItem(widget, "palette");
-      this.visiblePalette.appendChild(paletteItem);
-    }
+    return Task.spawn(function() {
+      let unusedWidgets = CustomizableUI.getUnusedWidgets(toolboxPalette);
+      for (let widget of unusedWidgets) {
+        let paletteItem = this.makePaletteItem(widget, "palette");
+        fragment.appendChild(paletteItem);
+      }
 
-    this._stowedPalette = this.window.gNavToolbox.palette;
-    this.window.gNavToolbox.palette = this.visiblePalette;
+      this.visiblePalette.appendChild(fragment);
+      this._stowedPalette = this.window.gNavToolbox.palette;
+      this.window.gNavToolbox.palette = this.visiblePalette;
+    }.bind(this));
   },
 
   //XXXunf Maybe this should use -moz-element instead of wrapping the node?
@@ -286,28 +324,33 @@ CustomizeMode.prototype = {
   },
 
   depopulatePalette: function() {
-    let paletteChild = this.visiblePalette.firstChild;
-    let nextChild;
-    while (paletteChild) {
-      nextChild = paletteChild.nextElementSibling;
-      let provider = CustomizableUI.getWidget(paletteChild.id).provider;
-      if (provider == CustomizableUI.PROVIDER_XUL) {
-        let unwrappedPaletteItem = this.unwrapToolbarItem(paletteChild);
-        this._stowedPalette.appendChild(unwrappedPaletteItem);
-      } else if (provider == CustomizableUI.PROVIDER_API) {
-        //XXXunf Currently this doesn't destroy the (now unused) node. It would
-        //       be good to do so, but we need to keep strong refs to it in
-        //       CustomizableUI (can't iterate of WeakMaps), and there's the
-        //       question of what behavior wrappers should have if consumers
-        //       keep hold of them.
-        //widget.destroyInstance(widgetNode);
-      } else if (provider == CustomizableUI.PROVIDER_SPECIAL) {
-        this.visiblePalette.removeChild(paletteChild);
-      }
+    return Task.spawn(function() {
+      this.visiblePalette.hidden = true;
+      let paletteChild = this.visiblePalette.firstChild;
+      let nextChild;
+      while (paletteChild) {
+        nextChild = paletteChild.nextElementSibling;
+        let provider = CustomizableUI.getWidget(paletteChild.id).provider;
+        if (provider == CustomizableUI.PROVIDER_XUL) {
+          let unwrappedPaletteItem =
+            yield this.deferredUnwrapToolbarItem(paletteChild);
+          this._stowedPalette.appendChild(unwrappedPaletteItem);
+        } else if (provider == CustomizableUI.PROVIDER_API) {
+          //XXXunf Currently this doesn't destroy the (now unused) node. It would
+          //       be good to do so, but we need to keep strong refs to it in
+          //       CustomizableUI (can't iterate of WeakMaps), and there's the
+          //       question of what behavior wrappers should have if consumers
+          //       keep hold of them.
+          //widget.destroyInstance(widgetNode);
+        } else if (provider == CustomizableUI.PROVIDER_SPECIAL) {
+          this.visiblePalette.removeChild(paletteChild);
+        }
 
-      paletteChild = nextChild;
-    }
-    this.window.gNavToolbox.palette = this._stowedPalette;
+        paletteChild = nextChild;
+      }
+      this.visiblePalette.hidden = false;
+      this.window.gNavToolbox.palette = this._stowedPalette;
+    }.bind(this));
   },
 
   isCustomizableItem: function(aNode) {
@@ -320,6 +363,17 @@ CustomizeMode.prototype = {
 
   isWrappedToolbarItem: function(aNode) {
     return aNode.localName == "toolbarpaletteitem";
+  },
+
+  deferredWrapToolbarItem: function(aNode, aPlace) {
+    let deferred = Promise.defer();
+
+    dispatchFunction(function() {
+      let wrapper = this.wrapToolbarItem(aNode, aPlace);
+      deferred.resolve(wrapper);
+    }.bind(this))
+
+    return deferred.promise;
   },
 
   wrapToolbarItem: function(aNode, aPlace) {
@@ -384,6 +438,14 @@ CustomizeMode.prototype = {
     return wrapper;
   },
 
+  deferredUnwrapToolbarItem: function(aWrapper) {
+    let deferred = Promise.defer();
+    dispatchFunction(function() {
+      deferred.resolve(this.unwrapToolbarItem(aWrapper));
+    }.bind(this));
+    return deferred.promise;
+  },
+
   unwrapToolbarItem: function(aWrapper) {
     if (aWrapper.nodeName != "toolbarpaletteitem") {
       return aWrapper;
@@ -421,36 +483,40 @@ CustomizeMode.prototype = {
   _wrapToolbarItems: function() {
     let window = this.window;
     // Add drag-and-drop event handlers to all of the customizable areas.
-    this.areas = [];
-    for (let area of CustomizableUI.areas) {
-      let target = CustomizableUI.getCustomizeTargetForArea(area, window);
-      target.addEventListener("dragstart", this, true);
-      target.addEventListener("dragover", this, true);
-      target.addEventListener("dragexit", this, true);
-      target.addEventListener("drop", this, true);
-      target.addEventListener("dragend", this, true);
-      for (let child of target.children) {
-        if (this.isCustomizableItem(child)) {
-          this.wrapToolbarItem(child, getPlaceForItem(child));
+    return Task.spawn(function() {
+      this.areas = [];
+      for (let area of CustomizableUI.areas) {
+        let target = CustomizableUI.getCustomizeTargetForArea(area, window);
+        target.addEventListener("dragstart", this, true);
+        target.addEventListener("dragover", this, true);
+        target.addEventListener("dragexit", this, true);
+        target.addEventListener("drop", this, true);
+        target.addEventListener("dragend", this, true);
+        for (let child of target.children) {
+          if (this.isCustomizableItem(child)) {
+            yield this.deferredWrapToolbarItem(child, getPlaceForItem(child));
+          }
         }
+        this.areas.push(target);
       }
-      this.areas.push(target);
-    }
+    }.bind(this));
   },
 
   _unwrapToolbarItems: function() {
-    for (let target of this.areas) {
-      for (let toolbarItem of target.children) {
-        if (this.isWrappedToolbarItem(toolbarItem)) {
-          this.unwrapToolbarItem(toolbarItem);
+    return Task.spawn(function() {
+      for (let target of this.areas) {
+        for (let toolbarItem of target.children) {
+          if (this.isWrappedToolbarItem(toolbarItem)) {
+            this.unwrapToolbarItem(toolbarItem);
+          }
         }
+        target.removeEventListener("dragstart", this, true);
+        target.removeEventListener("dragover", this, true);
+        target.removeEventListener("dragexit", this, true);
+        target.removeEventListener("drop", this, true);
+        target.removeEventListener("dragend", this, true);
       }
-      target.removeEventListener("dragstart", this, true);
-      target.removeEventListener("dragover", this, true);
-      target.removeEventListener("dragexit", this, true);
-      target.removeEventListener("drop", this, true);
-      target.removeEventListener("dragend", this, true);
-    }
+    }.bind(this));
   },
 
   persistCurrentSets: function()  {
@@ -466,27 +532,29 @@ CustomizeMode.prototype = {
   },
 
   reset: function() {
-    this._removePanelCustomizationPlaceholders();
-    this.depopulatePalette();
-    this._unwrapToolbarItems();
+    return Task.spawn(function() {
+      this._removePanelCustomizationPlaceholders();
+      yield this.depopulatePalette();
+      yield this._unwrapToolbarItems();
 
-    CustomizableUI.reset();
+      CustomizableUI.reset();
 
-    this._wrapToolbarItems();
-    this.populatePalette();
+      yield this._wrapToolbarItems();
+      yield this.populatePalette();
 
-    let document = this.document;
-    let toolbars = document.querySelectorAll("toolbar[customizable='true']");
-    for (let toolbar of toolbars) {
-      let set = toolbar.currentSet;
-      toolbar.removeAttribute("currentset");
-      LOG("[RESET] Removing currentset of " + toolbar.id);
-      // Persist the currentset attribute directly on hardcoded toolbars.
-      document.persist(toolbar.id, "currentset");
-    }
+      let document = this.document;
+      let toolbars = document.querySelectorAll("toolbar[customizable='true']");
+      for (let toolbar of toolbars) {
+        let set = toolbar.currentSet;
+        toolbar.removeAttribute("currentset");
+        LOG("[RESET] Removing currentset of " + toolbar.id);
+        // Persist the currentset attribute directly on hardcoded toolbars.
+        document.persist(toolbar.id, "currentset");
+      }
 
-    this._updateResetButton();
-    this._showPanelCustomizationPlaceholders();
+      this._updateResetButton();
+      this._showPanelCustomizationPlaceholders();
+    }.bind(this));
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
@@ -975,4 +1043,8 @@ function __dumpDragData(aEvent, caller) {
   }
   str += "}";
   LOG(str);
+}
+
+function dispatchFunction(aFunc) {
+  Services.tm.currentThread.dispatch(aFunc, Ci.nsIThread.DISPATCH_NORMAL);
 }

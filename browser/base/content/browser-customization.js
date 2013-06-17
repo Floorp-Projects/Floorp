@@ -38,7 +38,6 @@ let CustomizationHandler = {
     PlacesToolbarHelper.customizeStart();
     BookmarkingUI.customizeStart();
     DownloadsButton.customizeStart();
-    TabsInTitlebar.allowedBy("customizing-toolbars", false);
   },
 
   _customizationEnding: function(aDetails) {
@@ -82,8 +81,6 @@ let CustomizationHandler = {
       BookmarkingUI.updateStarState();
       SocialMark.updateMarkState();
     }
-
-    TabsInTitlebar.allowedBy("customizing-toolbars", true);
 
     // Re-enable parts of the UI we disabled during the dialog
     let menubar = document.getElementById("main-menubar");
