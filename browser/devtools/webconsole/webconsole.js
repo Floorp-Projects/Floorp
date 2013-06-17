@@ -37,6 +37,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
+                                  "resource:///modules/devtools/VariablesViewController.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource:///modules/devtools/shared/event-emitter.js");
 
@@ -2104,13 +2107,9 @@ WebConsoleFrame.prototype = {
     }
     else if (aNode.classList.contains("webconsole-msg-inspector")) {
       let view = aNode._variablesView;
-      let actors = view ?
-                   this.jsterm._objectActorsInVariablesViews.get(view) :
-                   new Set();
-      for (let actor of actors) {
-        this._releaseObject(actor);
+      if (view) {
+        view.controller.releaseActors();
       }
-      actors.clear();
       aNode._variablesView = null;
     }
 
@@ -2743,6 +2742,35 @@ WebConsoleFrame.prototype = {
   },
 };
 
+
+/**
+ * @see VariablesView.simpleValueEvalMacro
+ */
+function simpleValueEvalMacro(aItem, aCurrentString)
+{
+  return VariablesView.simpleValueEvalMacro(aItem, aCurrentString, "_self");
+};
+
+
+/**
+ * @see VariablesView.overrideValueEvalMacro
+ */
+function overrideValueEvalMacro(aItem, aCurrentString)
+{
+  return VariablesView.overrideValueEvalMacro(aItem, aCurrentString, "_self");
+};
+
+
+/**
+ * @see VariablesView.getterOrSetterEvalMacro
+ */
+function getterOrSetterEvalMacro(aItem, aCurrentString)
+{
+  return VariablesView.getterOrSetterEvalMacro(aItem, aCurrentString, "_self");
+}
+
+
+
 /**
  * Create a JSTerminal (a JavaScript command line). This is attached to an
  * existing HeadsUpDisplay (a Web Console instance). This code is responsible
@@ -2771,8 +2799,6 @@ function JSTerm(aWebConsoleFrame)
 
   this._keyPress = this.keyPress.bind(this);
   this._inputEventHandler = this.inputEventHandler.bind(this);
-  this._fetchVarProperties = this._fetchVarProperties.bind(this);
-  this._fetchVarLongString = this._fetchVarLongString.bind(this);
   this._onKeypressInVariablesView = this._onKeypressInVariablesView.bind(this);
 
   EventEmitter.decorate(this);
@@ -3282,7 +3308,27 @@ JSTerm.prototype = {
     view.searchEnabled = !aOptions.hideFilterInput;
     view.lazyEmpty = this._lazyVariablesView;
     view.lazyAppend = this._lazyVariablesView;
-    this._objectActorsInVariablesViews.set(view, new Set());
+
+    VariablesViewController.attach(view, {
+      getGripClient: aGrip => {
+        return new GripClient(this.hud.proxy.client, aGrip);
+      },
+      getLongStringClient: aGrip => {
+        return this.webConsoleClient.longString(aGrip);
+      },
+      releaseActor: aActor => {
+        this.hud._releaseObject(aActor);
+      },
+      simpleValueEvalMacro: simpleValueEvalMacro,
+      overrideValueEvalMacro: overrideValueEvalMacro,
+      getterOrSetterEvalMacro: getterOrSetterEvalMacro,
+    });
+
+    // Relay events from the VariablesView.
+    view.on("fetched", (aEvent, aType, aVar) => {
+      this.emit("variablesview-fetched", aVar);
+    });
+
     return view;
   },
 
@@ -3304,16 +3350,11 @@ JSTerm.prototype = {
     view.createHierarchy();
     view.empty();
 
-    let actors = this._objectActorsInVariablesViews.get(view);
-    for (let actor of actors) {
-      // We need to avoid pruning the object inspection starting point.
-      // That one is pruned when the console message is removed.
-      if (view._consoleLastObjectActor != actor) {
-        this.hud._releaseObject(actor);
-      }
-    }
-
-    actors.clear();
+    // We need to avoid pruning the object inspection starting point.
+    // That one is pruned when the console message is removed.
+    view.controller.releaseActors(aActor => {
+      return view._consoleLastObjectActor != aActor;
+    });
 
     if (aOptions.objectActor) {
       // Make sure eval works in the correct context.
@@ -3331,11 +3372,11 @@ JSTerm.prototype = {
     scope.expanded = true;
     scope.locked = true;
 
-    let container = scope.addVar();
-    container.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
+    let container = scope.addItem();
+    container.evaluationMacro = simpleValueEvalMacro;
 
     if (aOptions.objectActor) {
-      this._fetchVarProperties(container, aOptions.objectActor);
+      view.controller.expand(container, aOptions.objectActor);
       view._consoleLastObjectActor = aOptions.objectActor.actor;
     }
     else if (aOptions.rawObject) {
@@ -3372,80 +3413,6 @@ JSTerm.prototype = {
     };
 
     this.requestEvaluation(aString, evalOptions).then(onEval, onEval);
-  },
-
-  /**
-   * Generates the string evaluated when performing simple value changes in the
-   * variables view.
-   *
-   * @private
-   * @param Variable | Property aItem
-   *        The current variable or property.
-   * @param string aCurrentString
-   *        The trimmed user inputted string.
-   * @return string
-   *         The string to be evaluated.
-   */
-  _variablesViewSimpleValueEvalMacro:
-  function JST__variablesViewSimpleValueEvalMacro(aItem, aCurrentString)
-  {
-    return "_self" + aItem.symbolicName + "=" + aCurrentString;
-  },
-
-
-  /**
-   * Generates the string evaluated when overriding getters and setters with
-   * plain values in the variables view.
-   *
-   * @private
-   * @param Property aItem
-   *        The current getter or setter property.
-   * @param string aCurrentString
-   *        The trimmed user inputted string.
-   * @return string
-   *         The string to be evaluated.
-   */
-  _variablesViewOverrideValueEvalMacro:
-  function JST__variablesViewOverrideValueEvalMacro(aItem, aCurrentString)
-  {
-    let parent = aItem.ownerView;
-    let symbolicName = parent.symbolicName;
-    if (symbolicName.indexOf("_self") != 0) {
-      parent._symbolicName = "_self" + symbolicName;
-    }
-
-    let result = VariablesView.overrideValueEvalMacro.apply(this, arguments);
-
-    parent._symbolicName = symbolicName;
-
-    return result;
-  },
-
-  /**
-   * Generates the string evaluated when performing getters and setters changes
-   * in the variables view.
-   *
-   * @private
-   * @param Property aItem
-   *        The current getter or setter property.
-   * @param string aCurrentString
-   *        The trimmed user inputted string.
-   * @return string
-   *         The string to be evaluated.
-   */
-  _variablesViewGetterOrSetterEvalMacro:
-  function JST__variablesViewGetterOrSetterEvalMacro(aItem, aCurrentString)
-  {
-    let propertyObject = aItem.ownerView;
-    let parentObject = propertyObject.ownerView;
-    let parent = parentObject.symbolicName;
-    parentObject._symbolicName = "_self" + parent;
-
-    let result = VariablesView.getterOrSetterEvalMacro.apply(this, arguments);
-
-    parentObject._symbolicName = parent;
-
-    return result;
   },
 
   /**
@@ -3556,144 +3523,7 @@ JSTerm.prototype = {
     aCallback && aCallback(aResponse);
   },
 
-  /**
-   * Adds properties to a variable in the view. Triggered when a variable is
-   * expanded. It does not expand the variable.
-   *
-   * @param object aVar
-   *        The VariablseView Variable instance where the properties get added.
-   * @param object [aGrip]
-   *        Optional, the object actor grip of the variable. If the grip is not
-   *        provided, then the aVar.value is used as the object actor grip.
-   */
-  _fetchVarProperties: function JST__fetchVarProperties(aVar, aGrip)
-  {
-    // Retrieve the properties only once.
-    if (aVar._fetched) {
-      return;
-    }
-    aVar._fetched = true;
 
-    let grip = aGrip || aVar.value;
-    if (!grip) {
-      throw new Error("No object actor grip was given for the variable.");
-    }
-
-    let view = aVar._variablesView;
-    let actors = this._objectActorsInVariablesViews.get(view);
-
-    function addActorForDescriptor(aGrip) {
-      if (WebConsoleUtils.isActorGrip(aGrip)) {
-        actors.add(aGrip.actor);
-      }
-    }
-
-    let onNewProperty = (aProperty) => {
-      if (aProperty.getter || aProperty.setter) {
-        aProperty.evaluationMacro = this._variablesViewOverrideValueEvalMacro;
-        let getter = aProperty.get("get");
-        let setter = aProperty.get("set");
-        if (getter) {
-          getter.evaluationMacro = this._variablesViewGetterOrSetterEvalMacro;
-        }
-        if (setter) {
-          setter.evaluationMacro = this._variablesViewGetterOrSetterEvalMacro;
-        }
-      }
-      else {
-        aProperty.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
-      }
-
-      let grips = [aProperty.value, aProperty.getter, aProperty.setter];
-      grips.forEach(addActorForDescriptor);
-
-      let inspectable = !VariablesView.isPrimitive({ value: aProperty.value });
-      let longString = WebConsoleUtils.isActorGrip(aProperty.value) &&
-                       aProperty.value.type == "longString";
-      if (inspectable) {
-        aProperty.onexpand = this._fetchVarProperties;
-      }
-      else if (longString) {
-        aProperty.onexpand = this._fetchVarLongString;
-        aProperty.showArrow();
-      }
-    };
-
-    let client = new GripClient(this.hud.proxy.client, grip);
-    client.getPrototypeAndProperties((aResponse) => {
-      let { ownProperties, prototype, safeGetterValues } = aResponse;
-      let sortable = VariablesView.NON_SORTABLE_CLASSES.indexOf(grip.class) == -1;
-
-      // Merge the safe getter values into one object such that we can use it
-      // in VariablesView.
-      for (let name of Object.keys(safeGetterValues)) {
-        if (name in ownProperties) {
-          ownProperties[name].getterValue = safeGetterValues[name].getterValue;
-          ownProperties[name].getterPrototypeLevel = safeGetterValues[name]
-                                                     .getterPrototypeLevel;
-        }
-        else {
-          ownProperties[name] = safeGetterValues[name];
-        }
-      }
-
-      // Add all the variable properties.
-      if (ownProperties) {
-        aVar.addProperties(ownProperties, {
-          sorted: sortable,
-          callback: onNewProperty,
-        });
-      }
-
-      // Add the variable's __proto__.
-      if (prototype && prototype.type != "null") {
-        let proto = aVar.addProperty("__proto__", { value: prototype });
-        onNewProperty(proto);
-      }
-
-      aVar._retrieved = true;
-      view.commitHierarchy();
-      this.emit("variablesview-fetched", aVar);
-    });
-  },
-
-  /**
-   * Fetch the full string for a given variable that displays a long string.
-   *
-   * @param object aVar
-   *        The VariablesView Variable instance where the properties get added.
-   */
-  _fetchVarLongString: function JST__fetchVarLongString(aVar)
-  {
-    if (aVar._fetched) {
-      return;
-    }
-    aVar._fetched = true;
-
-    let grip = aVar.value;
-    if (!grip) {
-      throw new Error("No long string actor grip was given for the variable.");
-    }
-
-    let client = this.webConsoleClient.longString(grip);
-    let toIndex = Math.min(grip.length, MAX_LONG_STRING_LENGTH);
-    client.substring(grip.initial.length, toIndex, (aResponse) => {
-      if (aResponse.error) {
-        Cu.reportError("JST__fetchVarLongString substring failure: " +
-                       aResponse.error + ": " + aResponse.message);
-        return;
-      }
-
-      aVar.onexpand = null;
-      aVar.setGrip(grip.initial + aResponse.substring);
-      aVar.hideArrow();
-      aVar._retrieved = true;
-
-      if (toIndex != grip.length) {
-        this.hud.logWarningAboutStringTooLong();
-      }
-    });
-  },
 
   /**
    * Writes a JS object to the JSTerm outputNode.
@@ -4358,11 +4188,7 @@ JSTerm.prototype = {
   _sidebarDestroy: function JST__sidebarDestroy()
   {
     if (this._variablesView) {
-      let actors = this._objectActorsInVariablesViews.get(this._variablesView);
-      for (let actor of actors) {
-        this.hud._releaseObject(actor);
-      }
-      actors.clear();
+      this._variablesView.controller.releaseActors();
       this._variablesView = null;
     }
 

@@ -574,7 +574,7 @@ var BrowserUI = {
             this._sslDiskCacheEnabled = Services.prefs.getBoolPref(aData);
             break;
           case "browser.urlbar.formatting.enabled":
-            this._formattingEnabled = Services.prefs.getBookPref(aData);
+            this._formattingEnabled = Services.prefs.getBoolPref(aData);
             break;
           case "browser.urlbar.trimURLs":
             this._mayTrimURLs = Services.prefs.getBoolPref(aData);
