@@ -224,7 +224,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         /*
          * Beware, sourceObj may be a (transparent) proxy to a RegExp, so only
          * use generic (proxyable) operations on sourceObj that do not assume
-         * sourceObj.isRegExp().
+         * sourceObj.is<RegExpObject>().
          */
         RootedObject sourceObj(cx, &sourceValue.toObject());
 
@@ -306,14 +306,14 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 JS_ALWAYS_INLINE bool
 IsRegExp(const Value &v)
 {
-    return v.isObject() && v.toObject().hasClass(&RegExpClass);
+    return v.isObject() && v.toObject().is<RegExpObject>();
 }
 
 JS_ALWAYS_INLINE bool
 regexp_compile_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
-    RegExpObjectBuilder builder(cx, &args.thisv().toObject().asRegExp());
+    RegExpObjectBuilder builder(cx, &args.thisv().toObject().as<RegExpObject>());
     return CompileRegExpObject(cx, builder, args);
 }
 
@@ -353,7 +353,7 @@ regexp_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
 
-    JSString *str = args.thisv().toObject().asRegExp().toString(cx);
+    JSString *str = args.thisv().toObject().as<RegExpObject>().toString(cx);
     if (!str)
         return false;
 
@@ -495,13 +495,13 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
 
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    RootedObject proto(cx, global->createBlankPrototype(cx, &RegExpClass));
+    RootedObject proto(cx, global->createBlankPrototype(cx, &RegExpObject::class_));
     if (!proto)
         return NULL;
     proto->setPrivate(NULL);
 
     HandlePropertyName empty = cx->names().empty;
-    RegExpObjectBuilder builder(cx, &proto->asRegExp());
+    RegExpObjectBuilder builder(cx, &proto->as<RegExpObject>());
     if (!builder.build(empty, RegExpFlag(0)))
         return NULL;
 
@@ -530,7 +530,7 @@ RegExpRunStatus
 js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string, MatchConduit &matches)
 {
     /* Step 1 (b) was performed by CallNonGenericMethod. */
-    Rooted<RegExpObject*> reobj(cx, &regexp->asRegExp());
+    Rooted<RegExpObject*> reobj(cx, &regexp->as<RegExpObject>());
 
     RegExpGuard re(cx);
     if (!reobj->getShared(cx, &re))

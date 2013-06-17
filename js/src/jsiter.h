@@ -143,6 +143,8 @@ class PropertyIteratorObject : public JSObject
 class ElementIteratorObject : public JSObject
 {
   public:
+    static Class class_;
+
     static JSObject *create(JSContext *cx, Handle<Value> target);
     static const JSFunctionSpec methods[];
 

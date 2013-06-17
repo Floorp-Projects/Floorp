@@ -6,10 +6,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0d0a6b62-d4a9-402e-a197-6bc6e358fec9)]
+[scriptable, uuid(8813d03b-e76c-4240-9691-d327d9b91e88)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long    securityState;
-    readonly attribute wstring          shortSecurityDescription;
     readonly attribute wstring          errorMessage;
 };
 

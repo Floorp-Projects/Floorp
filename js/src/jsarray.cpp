@@ -57,8 +57,8 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
         return true;
     }
 
-    if (obj->isArguments()) {
-        ArgumentsObject &argsobj = obj->asArguments();
+    if (obj->is<ArgumentsObject>()) {
+        ArgumentsObject &argsobj = obj->as<ArgumentsObject>();
         if (!argsobj.hasOverriddenLength()) {
             *lengthp = argsobj.initialLength();
             return true;
@@ -213,8 +213,8 @@ GetElement(JSContext *cx, HandleObject obj, IndexType index, JSBool *hole, Mutab
             return true;
         }
     }
-    if (obj->isArguments()) {
-        if (obj->asArguments().maybeGetElement(uint32_t(index), vp)) {
+    if (obj->is<ArgumentsObject>()) {
+        if (obj->as<ArgumentsObject>().maybeGetElement(uint32_t(index), vp)) {
             *hole = false;
             return true;
         }
@@ -249,8 +249,8 @@ js::GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
         return true;
     }
 
-    if (aobj->isArguments()) {
-        ArgumentsObject &argsobj = aobj->asArguments();
+    if (aobj->is<ArgumentsObject>()) {
+        ArgumentsObject &argsobj = aobj->as<ArgumentsObject>();
         if (!argsobj.hasOverriddenLength()) {
             if (argsobj.maybeGetElements(0, length, vp))
                 return true;
@@ -1475,6 +1475,7 @@ typedef bool (*ComparatorNumeric)(const NumericElement &a, const NumericElement 
 
 ComparatorNumeric SortComparatorNumerics[] = {
     NULL,
+    NULL,
     ComparatorNumericLeftMinusRight,
     ComparatorNumericRightMinusLeft
 };
@@ -1497,12 +1498,16 @@ typedef bool (*ComparatorInt32)(const Value &a, const Value &b, bool *lessOrEqua
 
 ComparatorInt32 SortComparatorInt32s[] = {
     NULL,
+    NULL,
     ComparatorInt32LeftMinusRight,
     ComparatorInt32RightMinusLeft
 };
 
+// Note: Values for this enum must match up with SortComparatorNumerics
+// and SortComparatorInt32s.
 enum ComparatorMatchResult {
-    Match_None = 0,
+    Match_Failure = 0,
+    Match_None,
     Match_LeftMinusRight,
     Match_RightMinusLeft
 };
@@ -1512,7 +1517,7 @@ enum ComparatorMatchResult {
  * patterns: namely, |return x - y| and |return y - x|.
  */
 ComparatorMatchResult
-MatchNumericComparator(const Value &v)
+MatchNumericComparator(JSContext *cx, const Value &v)
 {
     if (!v.isObject())
         return Match_None;
@@ -1522,10 +1527,13 @@ MatchNumericComparator(const Value &v)
         return Match_None;
 
     JSFunction *fun = obj.toFunction();
-    if (!fun->hasScript())
+    if (!fun->isInterpreted())
         return Match_None;
 
-    JSScript *script = fun->nonLazyScript();
+    JSScript *script = fun->getOrCreateScript(cx);
+    if (!script)
+        return Match_Failure;
+
     jsbytecode *pc = script->code;
 
     uint16_t arg0, arg1;
@@ -1802,7 +1810,9 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
                     return false;
             }
         } else {
-            ComparatorMatchResult comp = MatchNumericComparator(fval);
+            ComparatorMatchResult comp = MatchNumericComparator(cx, fval);
+            if (comp == Match_Failure)
+                return false;
 
             if (comp != Match_None) {
                 if (allInts) {
