@@ -76,6 +76,52 @@ CheckArgumentsWithinEval(JSContext *cx, Parser<FullParseHandler> &parser, Handle
     return true;
 }
 
+static bool
+MaybeCheckEvalFreeVariables(JSContext *cx, HandleScript evalCaller, HandleObject scopeChain,
+                            Parser<FullParseHandler> &parser,
+                            ParseContext<FullParseHandler> &pc)
+{
+    if (!evalCaller || !evalCaller->functionOrCallerFunction())
+        return true;
+
+    // Watch for uses of 'arguments' within the evaluated script, both as
+    // free variables and as variables redeclared with 'var'.
+    RootedFunction fun(cx, evalCaller->functionOrCallerFunction());
+    HandlePropertyName arguments = cx->names().arguments;
+    for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
+        if (r.front().key() == arguments) {
+            if (!CheckArgumentsWithinEval(cx, parser, fun))
+                return false;
+        }
+    }
+    for (AtomDefnListMap::Range r = pc.decls().all(); !r.empty(); r.popFront()) {
+        if (r.front().key() == arguments) {
+            if (!CheckArgumentsWithinEval(cx, parser, fun))
+                return false;
+        }
+    }
+
+    // If the eval'ed script contains any debugger statement, force construction
+    // of arguments objects for the caller script and any other scripts it is
+    // transitively nested inside. The debugger can access any variable on the
+    // scope chain.
+    if (pc.sc->hasDebuggerStatement()) {
+        RootedObject scope(cx, scopeChain);
+        while (scope->isScope() || scope->isDebugScope()) {
+            if (scope->isCall() && !scope->asCall().isForEval()) {
+                RootedScript script(cx, scope->asCall().callee().nonLazyScript());
+                if (script->argumentsHasVarBinding()) {
+                    if (!JSScript::argumentsOptimizationFailed(cx, script))
+                        return false;
+                }
+            }
+            scope = scope->enclosingScope();
+        }
+    }
+
+    return true;
+}
+
 inline bool
 CanLazilyParse(JSContext *cx, const CompileOptions &options)
 {
@@ -235,6 +281,12 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
                 // be ambiguous.
                 parser.clearAbortedSyntaxParse();
                 parser.tokenStream.seek(pos);
+
+                // Destroying the parse context will destroy its free
+                // variables, so check if any deoptimization is needed.
+                if (!MaybeCheckEvalFreeVariables(cx, evalCaller, scopeChain, parser, pc.ref()))
+                    return NULL;
+
                 pc.destroy();
                 pc.construct(&parser, (GenericParseContext *) NULL, &globalsc,
                              staticLevel, /* bodyid = */ 0);
@@ -265,44 +317,11 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
         parser.handler.freeTree(pn);
     }
 
-    if (!SetSourceMap(cx, parser.tokenStream, ss, script))
+    if (!MaybeCheckEvalFreeVariables(cx, evalCaller, scopeChain, parser, pc.ref()))
         return NULL;
 
-    if (evalCaller && evalCaller->functionOrCallerFunction()) {
-        // Watch for uses of 'arguments' within the evaluated script, both as
-        // free variables and as variables redeclared with 'var'.
-        RootedFunction fun(cx, evalCaller->functionOrCallerFunction());
-        HandlePropertyName arguments = cx->names().arguments;
-        for (AtomDefnRange r = pc.ref().lexdeps->all(); !r.empty(); r.popFront()) {
-            if (r.front().key() == arguments) {
-                if (!CheckArgumentsWithinEval(cx, parser, fun))
-                    return NULL;
-            }
-        }
-        for (AtomDefnListMap::Range r = pc.ref().decls().all(); !r.empty(); r.popFront()) {
-            if (r.front().key() == arguments) {
-                if (!CheckArgumentsWithinEval(cx, parser, fun))
-                    return NULL;
-            }
-        }
-
-        // If the eval'ed script contains any debugger statement, force construction
-        // of arguments objects for the caller script and any other scripts it is
-        // transitively nested inside.
-        if (pc.ref().sc->hasDebuggerStatement()) {
-            RootedObject scope(cx, scopeChain);
-            while (scope->isScope() || scope->isDebugScope()) {
-                if (scope->isCall() && !scope->asCall().isForEval()) {
-                    RootedScript script(cx, scope->asCall().callee().nonLazyScript());
-                    if (script->argumentsHasVarBinding()) {
-                        if (!JSScript::argumentsOptimizationFailed(cx, script))
-                            return NULL;
-                    }
-                }
-                scope = scope->enclosingScope();
-            }
-        }
-    }
+    if (!SetSourceMap(cx, parser.tokenStream, ss, script))
+        return NULL;
 
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we

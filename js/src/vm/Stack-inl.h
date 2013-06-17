@@ -892,4 +892,5 @@ InterpreterActivation::~InterpreterActivation()
 {}
 
 } /* namespace js */
+
 #endif /* Stack_inl_h__ */

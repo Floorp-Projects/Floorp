@@ -425,11 +425,11 @@ ion::PropagateParallelAbort(JSScript *outermostScript,
 void
 ion::ParCallToUncompiledScript(JSFunction *func)
 {
-    static const int max_bound_function_unrolling = 5;
-
     JS_ASSERT(InParallelSection());
 
 #ifdef DEBUG
+    static const int max_bound_function_unrolling = 5;
+
     if (func->hasScript()) {
         JSScript *script = func->nonLazyScript();
         Spew(SpewBailouts, "Call to uncompiled script: %p:%s:%d",
