@@ -1582,15 +1582,27 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     if (!this.conn._transport._serverConnection) {
       throw Error("Tried to use frontForRawNode on a remote connection.");
     }
-    let actor = this.conn._transport._serverConnection.getActor(this.actorID);
-    if (!actor) {
+    let walkerActor = this.conn._transport._serverConnection.getActor(this.actorID);
+    if (!walkerActor) {
       throw Error("Could not find client side for actor " + this.actorID);
     }
-    let nodeActor = actor._ref(rawNode);
+    let nodeActor = walkerActor._ref(rawNode);
 
     // Pass the node through a read/write pair to create the client side actor.
     let nodeType = types.getType("domnode");
-    return nodeType.read(nodeType.write(nodeActor, actor), this);
+    let returnNode = nodeType.read(nodeType.write(nodeActor, walkerActor), this);
+    let top = returnNode;
+    let extras = walkerActor.parents(nodeActor);
+    for (let extraActor of extras) {
+      top = nodeType.read(nodeType.write(extraActor, walkerActor), this);
+    }
+
+    if (top !== this.rootNode) {
+      // Imported an already-orphaned node.
+      this._orphaned.add(top);
+      walkerActor._orphaned.add(this.conn._transport._serverConnection.getActor(top.actorID));
+    }
+    return returnNode;
   }
 });
 
