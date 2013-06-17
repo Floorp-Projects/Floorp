@@ -324,10 +324,10 @@ Decoder::PostFrameStart()
 }
 
 void
-Decoder::PostFrameStop(RasterImage::FrameAlpha aFrameAlpha /* = RasterImage::kFrameHasAlpha */,
-                       RasterImage::FrameDisposalMethod aDisposalMethod /* = RasterImage::kDisposeKeep */,
+Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::kFrameHasAlpha */,
+                       FrameBlender::FrameDisposalMethod aDisposalMethod /* = FrameBlender::kDisposeKeep */,
                        int32_t aTimeout /* = 0 */,
-                       RasterImage::FrameBlendMethod aBlendMethod /* = RasterImage::kBlendOver */)
+                       FrameBlender::FrameBlendMethod aBlendMethod /* = FrameBlender::kBlendOver */)
 {
   // We should be mid-frame
   NS_ABORT_IF_FALSE(mInFrame, "Stopping frame when we didn't start one!");
@@ -336,7 +336,7 @@ Decoder::PostFrameStop(RasterImage::FrameAlpha aFrameAlpha /* = RasterImage::kFr
   // Update our state
   mInFrame = false;
 
-  if (aFrameAlpha == RasterImage::kFrameOpaque) {
+  if (aFrameAlpha == FrameBlender::kFrameOpaque) {
     mCurrentFrame->SetHasNoAlpha();
   }
 
