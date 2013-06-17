@@ -230,28 +230,28 @@ MarkupView.prototype = {
    */
   deleteNode: function MC__deleteNode(aNode)
   {
-    aNode = aNode.rawNode();
-    if (!aNode) {
-      return;
-    }
-    let doc = nodeDocument(aNode);
-    if (aNode === doc ||
-        aNode === doc.documentElement ||
+    if (aNode.isDocumentElement ||
         aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
       return;
     }
 
-    let parentNode = aNode.parentNode;
-    let sibling = aNode.nextSibling;
+    let container = this._containers.get(aNode);
 
-    this.undo.do(function() {
-      if (aNode.selected) {
-        this.navigate(this._containers.get(parentNode));
-      }
-      parentNode.removeChild(aNode);
-    }.bind(this), function() {
-      parentNode.insertBefore(aNode, sibling);
-    });
+    // Retain the node so we can undo this...
+    this.walker.retainNode(aNode).then(() => {
+      let parent = aNode.parentNode();
+      let sibling = null;
+      this.undo.do(() => {
+        if (container.selected) {
+          this.navigate(this._containers.get(parent));
+        }
+        this.walker.removeNode(aNode).then(nextSibling => {
+          sibling = nextSibling;
+        });
+      }, () => {
+        this.walker.insertBefore(aNode, parent, sibling);
+      });
+    }).then(null, console.error);
   },
 
   /**
@@ -593,6 +593,9 @@ MarkupView.prototype = {
     // again.
     aContainer.childrenDirty = false;
     let updatePromise = this._getVisibleChildren(aContainer, centered).then(children => {
+      if (!this._containers) {
+        return promise.reject("markup view destroyed");
+      }
       this._queuedChildUpdates.delete(aContainer);
 
       // If children are dirty, we got a change notification for this node
