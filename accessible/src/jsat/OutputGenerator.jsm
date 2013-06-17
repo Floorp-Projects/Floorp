@@ -14,9 +14,14 @@ const INCLUDE_NAME = 0x02;
 const INCLUDE_CUSTOM = 0x04;
 const NAME_FROM_SUBTREE_RULE = 0x08;
 
-const UTTERANCE_DESC_FIRST = 0;
+const OUTPUT_DESC_FIRST = 0;
+const OUTPUT_DESC_LAST = 1;
 
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Utils',
+  'resource://gre/modules/accessibility/Utils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'PrefCache',
+  'resource://gre/modules/accessibility/Utils.jsm');
 
 let gUtteranceOrder = new PrefCache('accessibility.accessfu.utterance');
 
@@ -24,44 +29,12 @@ var gStringBundle = Cc['@mozilla.org/intl/stringbundle;1'].
   getService(Ci.nsIStringBundleService).
   createBundle('chrome://global/locale/AccessFu.properties');
 
-this.EXPORTED_SYMBOLS = ['UtteranceGenerator'];
+this.EXPORTED_SYMBOLS = ['UtteranceGenerator', 'BrailleGenerator'];
 
-
-/**
- * Generates speech utterances from objects, actions and state changes.
- * An utterance is an array of strings.
- *
- * It should not be assumed that flattening an utterance array would create a
- * gramatically correct sentence. For example, {@link genForObject} might
- * return: ['graphic', 'Welcome to my home page'].
- * Each string element in an utterance should be gramatically correct in itself.
- * Another example from {@link genForObject}: ['list item 2 of 5', 'Alabama'].
- *
- * An utterance is ordered from the least to the most important. Speaking the
- * last string usually makes sense, but speaking the first often won't.
- * For example {@link genForAction} might return ['button', 'clicked'] for a
- * clicked event. Speaking only 'clicked' makes sense. Speaking 'button' does
- * not.
- */
-this.UtteranceGenerator = {
-  gActionMap: {
-    jump: 'jumpAction',
-    press: 'pressAction',
-    check: 'checkAction',
-    uncheck: 'uncheckAction',
-    select: 'selectAction',
-    open: 'openAction',
-    close: 'closeAction',
-    switch: 'switchAction',
-    click: 'clickAction',
-    collapse: 'collapseAction',
-    expand: 'expandAction',
-    activate: 'activateAction',
-    cycle: 'cycleAction'
-  },
+this.OutputGenerator = {
 
   /**
-   * Generates an utterance for a PivotContext.
+   * Generates output for a PivotContext.
    * @param {PivotContext} aContext object that generates and caches
    *    context information for a given accessible and its relationship with
    *    another accessible.
@@ -70,43 +43,44 @@ this.UtteranceGenerator = {
    *    starting from the accessible's ancestry or accessible's subtree.
    */
   genForContext: function genForContext(aContext) {
-    let utterance = [];
-    let addUtterance = function addUtterance(aAccessible) {
-      utterance.push.apply(utterance,
-        UtteranceGenerator.genForObject(aAccessible));
+    let output = [];
+    let self = this;
+    let addOutput = function addOutput(aAccessible) {
+      output.push.apply(output, self.genForObject(aAccessible));
     };
     let ignoreSubtree = function ignoreSubtree(aAccessible) {
       let roleString = Utils.AccRetrieval.getStringRole(aAccessible.role);
-      let nameRule = UtteranceGenerator.roleRuleMap[roleString] || 0;
+      let nameRule = self.roleRuleMap[roleString] || 0;
       // Ignore subtree if the name is explicit and the role's name rule is the
       // NAME_FROM_SUBTREE_RULE.
       return (nameRule & NAME_FROM_SUBTREE_RULE) &&
         (Utils.getAttributes(aAccessible)['explicit-name'] === 'true');
     };
-    let utteranceOrder = gUtteranceOrder.value || UTTERANCE_DESC_FIRST;
+    let outputOrder = typeof gUtteranceOrder.value == 'number' ?
+                      gUtteranceOrder.value : this.defaultOutputOrder;
+    let contextStart = this._getContextStart(aContext);
 
-    if (utteranceOrder === UTTERANCE_DESC_FIRST) {
-      aContext.newAncestry.forEach(addUtterance);
-      addUtterance(aContext.accessible);
-      [addUtterance(node) for
+    if (outputOrder === OUTPUT_DESC_FIRST) {
+      contextStart.forEach(addOutput);
+      addOutput(aContext.accessible);
+      [addOutput(node) for
         (node of aContext.subtreeGenerator(true, ignoreSubtree))];
     } else {
-      [addUtterance(node) for
+      [addOutput(node) for
         (node of aContext.subtreeGenerator(false, ignoreSubtree))];
-      addUtterance(aContext.accessible);
-      aContext.newAncestry.reverse().forEach(addUtterance);
+      addOutput(aContext.accessible);
+      contextStart.reverse().forEach(addOutput);
     }
 
     // Clean up the white space.
     let trimmed;
-    utterance = [trimmed for (word of utterance) if (trimmed = word.trim())];
-
-    return utterance;
+    output = [trimmed for (word of output) if (trimmed = word.trim())];
+    return output;
   },
 
 
   /**
-   * Generates an utterance for an object.
+   * Generates output for an object.
    * @param {nsIAccessible} aAccessible accessible object to generate utterance
    *    for.
    * @return {Array} Two string array. The first string describes the object
@@ -116,9 +90,8 @@ this.UtteranceGenerator = {
    */
   genForObject: function genForObject(aAccessible) {
     let roleString = Utils.AccRetrieval.getStringRole(aAccessible.role);
-
-    let func = this.objectUtteranceFunctions[roleString] ||
-      this.objectUtteranceFunctions.defaultFunc;
+    let func = this.objectOutputFunctions[roleString.replace(' ', '')] ||
+      this.objectOutputFunctions.defaultFunc;
 
     let flags = this.roleRuleMap[roleString] || 0;
 
@@ -134,67 +107,60 @@ this.UtteranceGenerator = {
   },
 
   /**
-   * Generates an utterance for an action performed.
-   * TODO: May become more verbose in the future.
+   * Generates output for an action performed.
    * @param {nsIAccessible} aAccessible accessible object that the action was
    *    invoked in.
    * @param {string} aActionName the name of the action, one of the keys in
    *    {@link gActionMap}.
    * @return {Array} A one string array with the action.
    */
-  genForAction: function genForAction(aObject, aActionName) {
-    return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
-  },
+  genForAction: function genForAction(aObject, aActionName) {},
 
   /**
-   * Generates an utterance for an announcement. Basically attempts to localize
+   * Generates output for an announcement. Basically attempts to localize
    * the announcement string.
    * @param {string} aAnnouncement unlocalized announcement.
    * @return {Array} A one string array with the announcement.
    */
-  genForAnnouncement: function genForAnnouncement(aAnnouncement) {
-    try {
-      return [gStringBundle.GetStringFromName(aAnnouncement)];
-    } catch (x) {
-      return [aAnnouncement];
-    }
-  },
+  genForAnnouncement: function genForAnnouncement(aAnnouncement) {},
 
   /**
-   * Generates an utterance for a tab state change.
+   * Generates output for a tab state change.
    * @param {nsIAccessible} aAccessible accessible object of the tab's attached
    *    document.
    * @param {string} aTabState the tab state name, see
    *    {@link Presenter.tabStateChanged}.
    * @return {Array} The tab state utterace.
    */
-  genForTabStateChange: function genForTabStateChange(aObject, aTabState) {
-    switch (aTabState) {
-      case 'newtab':
-        return [gStringBundle.GetStringFromName('tabNew')];
-      case 'loading':
-        return [gStringBundle.GetStringFromName('tabLoading')];
-      case 'loaded':
-        return [aObject.name || '',
-                gStringBundle.GetStringFromName('tabLoaded')];
-      case 'loadstopped':
-        return [gStringBundle.GetStringFromName('tabLoadStopped')];
-      case 'reload':
-        return [gStringBundle.GetStringFromName('tabReload')];
-      default:
-        return [];
-    }
-  },
+  genForTabStateChange: function genForTabStateChange(aObject, aTabState) {},
 
   /**
-   * Generates an utterance for announcing entering and leaving editing mode.
+   * Generates output for announcing entering and leaving editing mode.
    * @param {aIsEditing} boolean true if we are in editing mode
    * @return {Array} The mode utterance
    */
-  genForEditingMode: function genForEditingMode(aIsEditing) {
-    return [gStringBundle.GetStringFromName(
-              aIsEditing ? 'editingMode' : 'navigationMode')];
+  genForEditingMode: function genForEditingMode(aIsEditing) {},
+
+  _getContextStart: function getContextStart(aContext) {},
+
+  _addName: function _addName(aOutput, aAccessible, aFlags) {
+    let name;
+    if (Utils.getAttributes(aAccessible)['explicit-name'] === 'true' ||
+      (aFlags & INCLUDE_NAME)) {
+      name = aAccessible.name;
+    }
+
+    if (name) {
+      let outputOrder = typeof gUtteranceOrder.value == 'number' ?
+                        gUtteranceOrder.value : this.defaultOutputOrder;
+      aOutput[outputOrder === OUTPUT_DESC_FIRST ?
+        'push' : 'unshift'](name);
+    }
   },
+
+  _getLocalizedRole: function _getLocalizedRole(aRoleStr) {},
+
+  _getLocalizedStates: function _getLocalizedStates(aStates) {},
 
   roleRuleMap: {
     'menubar': INCLUDE_DESC,
@@ -268,35 +234,119 @@ this.UtteranceGenerator = {
     'listbox': INCLUDE_DESC,
     'definitionlist': INCLUDE_DESC | INCLUDE_NAME},
 
-  objectUtteranceFunctions: {
-    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
-      let utterance = [];
+  objectOutputFunctions: {
+    _generateBaseOutput: function _generateBaseOutput(aAccessible, aRoleStr, aStates, aFlags) {
+      let output = [];
 
       if (aFlags & INCLUDE_DESC) {
         let desc = this._getLocalizedStates(aStates);
         let roleStr = this._getLocalizedRole(aRoleStr);
         if (roleStr)
           desc.push(roleStr);
-        utterance.push(desc.join(' '));
+        output.push(desc.join(' '));
       }
 
-      this._addName(utterance, aAccessible, aFlags);
+      this._addName(output, aAccessible, aFlags);
 
-      return utterance;
+      return output;
     },
 
     entry: function entry(aAccessible, aRoleStr, aStates, aFlags) {
-      let utterance = [];
+      let output = [];
       let desc = this._getLocalizedStates(aStates);
       desc.push(this._getLocalizedRole(
                   (aStates.ext & Ci.nsIAccessibleStates.EXT_STATE_MULTI_LINE) ?
                     'textarea' : 'entry'));
 
-      utterance.push(desc.join(' '));
+      output.push(desc.join(' '));
 
-      this._addName(utterance, aAccessible, aFlags);
+      this._addName(output, aAccessible, aFlags);
 
-      return utterance;
+      return output;
+    }
+  }
+};
+
+/**
+ * Generates speech utterances from objects, actions and state changes.
+ * An utterance is an array of strings.
+ *
+ * It should not be assumed that flattening an utterance array would create a
+ * gramatically correct sentence. For example, {@link genForObject} might
+ * return: ['graphic', 'Welcome to my home page'].
+ * Each string element in an utterance should be gramatically correct in itself.
+ * Another example from {@link genForObject}: ['list item 2 of 5', 'Alabama'].
+ *
+ * An utterance is ordered from the least to the most important. Speaking the
+ * last string usually makes sense, but speaking the first often won't.
+ * For example {@link genForAction} might return ['button', 'clicked'] for a
+ * clicked event. Speaking only 'clicked' makes sense. Speaking 'button' does
+ * not.
+ */
+this.UtteranceGenerator = {
+  __proto__: OutputGenerator,
+
+  defaultOutputOrder: OUTPUT_DESC_FIRST,
+
+  gActionMap: {
+    jump: 'jumpAction',
+    press: 'pressAction',
+    check: 'checkAction',
+    uncheck: 'uncheckAction',
+    select: 'selectAction',
+    open: 'openAction',
+    close: 'closeAction',
+    switch: 'switchAction',
+    click: 'clickAction',
+    collapse: 'collapseAction',
+    expand: 'expandAction',
+    activate: 'activateAction',
+    cycle: 'cycleAction'
+  },
+
+  //TODO: May become more verbose in the future.
+  genForAction: function genForAction(aObject, aActionName) {
+    return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
+  },
+
+  genForAnnouncement: function genForAnnouncement(aAnnouncement) {
+    try {
+      return [gStringBundle.GetStringFromName(aAnnouncement)];
+    } catch (x) {
+      return [aAnnouncement];
+    }
+  },
+
+  genForTabStateChange: function genForTabStateChange(aObject, aTabState) {
+    switch (aTabState) {
+      case 'newtab':
+        return [gStringBundle.GetStringFromName('tabNew')];
+      case 'loading':
+        return [gStringBundle.GetStringFromName('tabLoading')];
+      case 'loaded':
+        return [aObject.name || '',
+                gStringBundle.GetStringFromName('tabLoaded')];
+      case 'loadstopped':
+        return [gStringBundle.GetStringFromName('tabLoadStopped')];
+      case 'reload':
+        return [gStringBundle.GetStringFromName('tabReload')];
+      default:
+        return [];
+    }
+  },
+
+  genForEditingMode: function genForEditingMode(aIsEditing) {
+    return [gStringBundle.GetStringFromName(
+              aIsEditing ? 'editingMode' : 'navigationMode')];
+  },
+
+  objectOutputFunctions: {
+    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
+      return OutputGenerator.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
+    },
+
+    entry: function entry(aAccessible, aRoleStr, aStates, aFlags) {
+      return OutputGenerator.objectOutputFunctions.entry.apply(this, arguments);
     },
 
     heading: function heading(aAccessible, aRoleStr, aStates, aFlags) {
@@ -338,25 +388,15 @@ this.UtteranceGenerator = {
     application: function application(aAccessible, aRoleStr, aStates, aFlags) {
       // Don't utter location of applications, it gets tiring.
       if (aAccessible.name != aAccessible.DOMNode.location)
-        return this.objectUtteranceFunctions.defaultFunc.apply(this,
+        return this.objectOutputFunctions.defaultFunc.apply(this,
           [aAccessible, aRoleStr, aStates, aFlags]);
 
       return [];
     }
   },
 
-  _addName: function _addName(utterance, aAccessible, aFlags) {
-    let name;
-    if (Utils.getAttributes(aAccessible)['explicit-name'] === 'true' ||
-      (aFlags & INCLUDE_NAME)) {
-      name = aAccessible.name;
-    }
-
-    if (name) {
-      let utteranceOrder = gUtteranceOrder.value || UTTERANCE_DESC_FIRST;
-      utterance[utteranceOrder === UTTERANCE_DESC_FIRST ?
-        'push' : 'unshift'](name);
-    }
+  _getContextStart: function _getContextStart(aContext) {
+    return aContext.newAncestry;
   },
 
   _getLocalizedRole: function _getLocalizedRole(aRoleStr) {
@@ -418,4 +458,119 @@ this.UtteranceGenerator = {
 
     return utterance;
   }
+};
+
+
+this.BrailleGenerator = {
+  __proto__: OutputGenerator,
+
+  defaultOutputOrder: OUTPUT_DESC_LAST,
+
+  objectOutputFunctions: {
+    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
+      let braille = OutputGenerator.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
+
+      if (aAccessible.indexInParent === 1 &&
+          aAccessible.parent.role == Ci.nsIAccessibleRole.ROLE_LISTITEM &&
+          aAccessible.previousSibling.role == Ci.nsIAccessibleRole.ROLE_STATICTEXT) {
+        if (aAccessible.parent.parent && aAccessible.parent.parent.DOMNode &&
+            aAccessible.parent.parent.DOMNode.nodeName == 'UL') {
+          braille.unshift('*');
+        } else {
+          braille.unshift(aAccessible.previousSibling.name);
+        }
+      }
+
+      return braille;
+    },
+
+    listitem: function listitem(aAccessible, aRoleStr, aStates, aFlags) {
+      let braille = [];
+
+      this._addName(braille, aAccessible, aFlags);
+
+      return braille;
+    },
+
+    statictext: function statictext(aAccessible, aRoleStr, aStates, aFlags) {
+      // Since we customize the list bullet's output, we add the static
+      // text from the first node in each listitem, so skip it here.
+      if (aAccessible.parent.role == Ci.nsIAccessibleRole.ROLE_LISTITEM) {
+        return [];
+      }
+
+      return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
+    },
+
+    _useStateNotRole: function _useStateNotRole(aAccessible, aRoleStr, aStates, aFlags) {
+      let braille = [];
+
+      let desc = this._getLocalizedStates(aStates);
+      braille.push(desc.join(' '));
+
+      this._addName(braille, aAccessible, aFlags);
+
+      return braille;
+    },
+
+    checkbutton: function checkbutton(aAccessible, aRoleStr, aStates, aFlags) {
+      return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
+    },
+
+    radiobutton: function radiobutton(aAccessible, aRoleStr, aStates, aFlags) {
+      return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
+    },
+
+    togglebutton: function radiobutton(aAccessible, aRoleStr, aStates, aFlags) {
+      return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
+    },
+
+    entry: function entry(aAccessible, aRoleStr, aStates, aFlags) {
+      return OutputGenerator.objectOutputFunctions.entry.apply(this, arguments);
+    }
+  },
+
+  _getContextStart: function _getContextStart(aContext) {
+    if (aContext.accessible.parent.role == Ci.nsIAccessibleRole.ROLE_LINK) {
+      return [aContext.accessible.parent];
+    }
+
+    return [];
+  },
+
+  _getLocalizedRole: function _getLocalizedRole(aRoleStr) {
+    try {
+      return gStringBundle.GetStringFromName(aRoleStr.replace(' ', '') + 'Abbr');
+    } catch (x) {
+      try {
+        return gStringBundle.GetStringFromName(aRoleStr.replace(' ', ''));
+      } catch (y) {
+        return '';
+      }
+    }
+  },
+
+  _getLocalizedStates: function _getLocalizedStates(aStates) {
+    let stateBraille = [];
+
+    let getCheckedState = function getCheckedState() {
+      let resultMarker = [];
+      let state = aStates.base;
+      let fill = !!(state & Ci.nsIAccessibleStates.STATE_CHECKED) ||
+                 !!(state & Ci.nsIAccessibleStates.STATE_PRESSED);
+
+      resultMarker.push('(');
+      resultMarker.push(fill ? 'x' : ' ');
+      resultMarker.push(')');
+
+      return resultMarker.join('');
+    };
+
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
+      stateBraille.push(getCheckedState());
+    }
+
+    return stateBraille;
+  }
+
 };

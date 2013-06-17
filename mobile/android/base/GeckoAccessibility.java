@@ -25,6 +25,9 @@ import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeProvider;
 
+import com.googlecode.eyesfree.braille.selfbraille.SelfBrailleClient;
+import com.googlecode.eyesfree.braille.selfbraille.WriteData;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +42,8 @@ public class GeckoAccessibility {
     // Used to store the JSON message and populate the event later in the code path.
     private static JSONObject sEventMessage = null;
     private static AccessibilityNodeInfo sVirtualCursorNode = null;
+
+    private static SelfBrailleClient sSelfBrailleClient = null;
 
     private static final HashSet<String> sServiceWhitelist =
         new HashSet<String>(Arrays.asList(new String[] {
@@ -65,6 +70,10 @@ public class GeckoAccessibility {
                             sEnabled = sServiceWhitelist.contains(runningServiceInfo.service.getClassName());
                             if (sEnabled)
                                 break;
+                        }
+                        if (sEnabled && sSelfBrailleClient == null &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            sSelfBrailleClient = new SelfBrailleClient(GeckoAppShell.getContext(), false);
                         }
                     }
 
@@ -188,6 +197,11 @@ public class GeckoAccessibility {
                 sVirtualCursorNode.setBoundsInScreen(screenBounds);
             }
 
+            final String brailleText = message.optString("brailleText");
+            if (!brailleText.isEmpty()) {
+                sendBrailleText(view, brailleText);
+            }
+
             ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -215,6 +229,16 @@ public class GeckoAccessibility {
                 });
 
         }
+    }
+
+    private static void sendBrailleText(final View view, final String text) {
+        AccessibilityNodeInfo info = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
+        WriteData data = WriteData.forInfo(info);
+        data.setText(text);
+        // Set the focus blink
+        data.setSelectionStart(0);
+        data.setSelectionEnd(0);
+        sSelfBrailleClient.write(data);
     }
 
     public static void setDelegate(LayerView layerview) {
@@ -282,7 +306,6 @@ public class GeckoAccessibility {
                                 info.addAction(AccessibilityNodeInfo.ACTION_CLICK);
                                 break;
                             }
-
                             return info;
                         }
 
@@ -306,6 +329,11 @@ public class GeckoAccessibility {
                                     break;
                                 }
                             } else if (action == AccessibilityNodeInfo.ACTION_CLICK && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                GeckoAppShell.
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
+                                return true;
+                            } else if (action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                // XXX: Self brailling gives this action with a bogus argument instead of an actual click action
                                 GeckoAppShell.
                                     sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
                                 return true;
