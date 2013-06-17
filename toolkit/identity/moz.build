@@ -18,3 +18,16 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'identity'
 
+JS_MODULES_PATH = 'modules/identity'
+
+EXTRA_JS_MODULES += [
+    'Identity.jsm',
+    'IdentityProvider.jsm',
+    'IdentityStore.jsm',
+    'IdentityUtils.jsm',
+    'LogUtils.jsm',
+    'MinimalIdentity.jsm',
+    'RelyingParty.jsm',
+    'Sandbox.jsm',
+    'jwcrypto.jsm',
+]

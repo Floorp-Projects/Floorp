@@ -51,6 +51,15 @@ if CONFIG['MOZ_PLACES']:
         'Database.cpp',
     ]
 
+    EXTRA_JS_MODULES = [
+        'BookmarkJSONUtils.jsm',
+        'ClusterLib.js',
+        'ColorAnalyzer_worker.js',
+        'ColorConversion.js',
+        'PlacesBackups.jsm',
+        'PlacesDBUtils.jsm',
+    ]
+
 MODULE = 'places'
 
 

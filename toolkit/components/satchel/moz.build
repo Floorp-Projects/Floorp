@@ -32,3 +32,6 @@ EXTRA_PP_COMPONENTS += [
 
 LIBRARY_NAME = 'satchel'
 
+EXTRA_JS_MODULES += [
+    'nsFormAutoCompleteResult.jsm',
+]

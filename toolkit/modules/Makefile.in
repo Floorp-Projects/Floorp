@@ -13,28 +13,6 @@ ifdef MOZ_TOOLKIT_SEARCH
 DEFINES += -DMOZ_TOOLKIT_SEARCH
 endif
 
-EXTRA_JS_MODULES := \
-  debug.js \
-  DeferredTask.jsm \
-  Deprecated.jsm \
-  Dict.jsm \
-  FileUtils.jsm \
-  Geometry.jsm \
-  InlineSpellChecker.jsm \
-  NewTabUtils.jsm \
-  PageMenu.jsm \
-  PopupNotifications.jsm \
-  Preferences.jsm \
-  PrivateBrowsingUtils.jsm \
-  Promise.jsm \
-  PropertyListUtils.jsm \
-  RemoteWebProgress.jsm \
-  Sqlite.jsm \
-  Task.jsm \
-  TelemetryTimestamps.jsm \
-  Timer.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES = \
   CertUtils.jsm \
   Services.jsm \
