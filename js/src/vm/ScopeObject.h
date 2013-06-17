@@ -622,8 +622,9 @@ class DebugScopes
 
 }  /* namespace js */
 
+template<>
 inline bool
-JSObject::isNestedScope() const
+JSObject::is<js::NestedScopeObject>() const
 {
     return is<js::BlockObject>() || isWith();
 }
@@ -631,7 +632,7 @@ JSObject::isNestedScope() const
 inline bool
 JSObject::isScope() const
 {
-    return is<js::CallObject>() || is<js::DeclEnvObject>() || isNestedScope();
+    return is<js::CallObject>() || is<js::DeclEnvObject>() || is<js::NestedScopeObject>();
 }
 
 #endif /* ScopeObject_h___ */

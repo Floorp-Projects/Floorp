@@ -225,7 +225,6 @@ class ClonedBlockObject;
 class DebugScopeObject;
 class GlobalObject;
 class MapObject;
-class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
@@ -928,8 +927,8 @@ class JSObject : public js::ObjectImpl
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
      * object, the following predicates are true: isClonedBlock, is<BlockObject>,
-     * isNestedScope and isScope. Each of these has a respective class that
-     * derives and adds operations.
+     * is<NestedScopeObject> and isScope. Each of these has a respective class
+     * that derives and adds operations.
      *
      * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
      * triplet (along with any class YObject that derives XObject).
@@ -975,7 +974,6 @@ class JSObject : public js::ObjectImpl
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of ScopeObject. */
-    inline bool isNestedScope() const;
     inline bool isWith()        const { return hasClass(&js::WithClass); }
     inline bool isClonedBlock() const;
     inline bool isStaticBlock() const;
@@ -996,7 +994,6 @@ class JSObject : public js::ObjectImpl
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
-    inline js::NestedScopeObject &asNestedScope();
     inline js::NumberObject &asNumber();
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();

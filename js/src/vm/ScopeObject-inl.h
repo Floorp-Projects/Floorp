@@ -259,13 +259,6 @@ JSObject::asScope()
     return *static_cast<js::ScopeObject *>(this);
 }
 
-inline js::NestedScopeObject &
-JSObject::asNestedScope()
-{
-    JS_ASSERT(isWith() || is<js::BlockObject>());
-    return *static_cast<js::NestedScopeObject *>(this);
-}
-
 inline js::WithObject &
 JSObject::asWith()
 {
