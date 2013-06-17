@@ -5341,8 +5341,8 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSi
 
     // Other things may be measured in the future if DMD indicates it is worthwhile.
     // Note that sizes->private_ is measured elsewhere.
-    if (isArguments()) {
-        sizes->argumentsData = asArguments().sizeOfMisc(mallocSizeOf);
+    if (is<ArgumentsObject>()) {
+        sizes->argumentsData = as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (isRegExpStatics()) {
         sizes->regExpStatics = js::SizeOfRegExpStaticsData(this, mallocSizeOf);
     } else if (isPropertyIterator()) {

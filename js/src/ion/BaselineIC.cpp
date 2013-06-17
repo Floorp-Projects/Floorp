@@ -3532,9 +3532,9 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     RootedObject obj(cx, &lhs.toObject());
 
     // Check for ArgumentsObj[int] accesses
-    if (obj->isArguments() && rhs.isInt32()) {
+    if (obj->is<ArgumentsObject>() && rhs.isInt32()) {
         ICGetElem_Arguments::Which which = ICGetElem_Arguments::Normal;
-        if (obj->isStrictArguments())
+        if (obj->is<StrictArgumentsObject>())
             which = ICGetElem_Arguments::Strict;
         if (!ArgumentsGetElemStubExists(stub, which)) {
             IonSpew(IonSpew_BaselineIC, "  Generating GetElem(ArgsObj[Int32]) stub");
@@ -3926,7 +3926,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
               which_ == ICGetElem_Arguments::Normal);
 
     bool isStrict = which_ == ICGetElem_Arguments::Strict;
-    Class *clasp = isStrict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
+    Class *clasp = isStrict ? &StrictArgumentsObject::class_ : &NormalArgumentsObject::class_;
 
     GeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
@@ -5192,11 +5192,11 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         return true;
     }
 
-    if (obj->isArguments() && res.isInt32()) {
+    if (obj->is<ArgumentsObject>() && res.isInt32()) {
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(ArgsObj.length %s) stub",
-                obj->isStrictArguments() ? "Strict" : "Normal");
+                obj->is<StrictArgumentsObject>() ? "Strict" : "Normal");
         ICGetProp_ArgumentsLength::Which which = ICGetProp_ArgumentsLength::Normal;
-        if (obj->isStrictArguments())
+        if (obj->is<StrictArgumentsObject>())
             which = ICGetProp_ArgumentsLength::Strict;
         ICGetProp_ArgumentsLength::Compiler compiler(cx, which);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -6115,7 +6115,7 @@ ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler &masm)
               which_ == ICGetProp_ArgumentsLength::Normal);
 
     bool isStrict = which_ == ICGetProp_ArgumentsLength::Strict;
-    Class *clasp = isStrict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
+    Class *clasp = isStrict ? &StrictArgumentsObject::class_ : &NormalArgumentsObject::class_;
 
     Register scratchReg = R1.scratchReg();
 

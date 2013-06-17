@@ -220,6 +220,8 @@ class ArgumentsObject : public JSObject
 class NormalArgumentsObject : public ArgumentsObject
 {
   public:
+    static Class class_;
+
     /*
      * Stores arguments.callee, or MagicValue(JS_ARGS_HOLE) if the callee has
      * been cleared.
@@ -231,36 +233,18 @@ class NormalArgumentsObject : public ArgumentsObject
 };
 
 class StrictArgumentsObject : public ArgumentsObject
-{};
+{
+  public:
+    static Class class_;
+};
 
 } // namespace js
 
-js::NormalArgumentsObject &
-JSObject::asNormalArguments()
+template<>
+inline bool
+JSObject::is<js::ArgumentsObject>() const
 {
-    JS_ASSERT(isNormalArguments());
-    return *static_cast<js::NormalArgumentsObject *>(this);
-}
-
-js::StrictArgumentsObject &
-JSObject::asStrictArguments()
-{
-    JS_ASSERT(isStrictArguments());
-    return *static_cast<js::StrictArgumentsObject *>(this);
-}
-
-js::ArgumentsObject &
-JSObject::asArguments()
-{
-    JS_ASSERT(isArguments());
-    return *static_cast<js::ArgumentsObject *>(this);
-}
-
-const js::ArgumentsObject &
-JSObject::asArguments() const
-{
-    JS_ASSERT(isArguments());
-    return *static_cast<const js::ArgumentsObject *>(this);
+    return is<js::NormalArgumentsObject>() || is<js::StrictArgumentsObject>();
 }
 
 #endif /* ArgumentsObject_h___ */
