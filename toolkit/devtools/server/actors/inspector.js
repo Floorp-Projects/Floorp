@@ -141,6 +141,11 @@ var NodeActor = protocol.ActorClass({
       attrs: this.writeAttrs()
     };
 
+    if (this.rawNode.ownerDocument &&
+        this.rawNode.ownerDocument.documentElement === this.rawNode) {
+      form.isDocumentElement = true;
+    }
+
     if (this.rawNode.nodeValue) {
       // We only include a short version of the value if it's longer than
       // gValueSummaryLength
@@ -305,6 +310,8 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   get tagName() this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null,
   get shortValue() this._form.shortValue,
   get incompleteValue() !!this._form.incompleteValue,
+
+  get isDocumentElement() !!this._form.isDocumentElement,
 
   // doctype properties
   get name() this._form.name,
