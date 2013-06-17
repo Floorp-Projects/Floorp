@@ -386,8 +386,11 @@ class ScriptSourceHolder
     }
 };
 
-class ScriptSourceObject : public JSObject {
+class ScriptSourceObject : public JSObject
+{
   public:
+    static Class class_;
+
     static void finalize(FreeOp *fop, JSObject *obj);
     static ScriptSourceObject *create(JSContext *cx, ScriptSource *source);
 
