@@ -48,13 +48,6 @@ js::ArrayBufferObject::dataPointer() const
     return (uint8_t *) elements;
 }
 
-inline js::DataViewObject &
-JSObject::asDataView()
-{
-    JS_ASSERT(isDataView());
-    return *static_cast<js::DataViewObject *>(this);
-}
-
 namespace js {
 
 inline bool
@@ -175,7 +168,7 @@ TypedArray::slotWidth(JSObject *obj) {
 bool
 DataViewObject::is(const Value &v)
 {
-    return v.isObject() && v.toObject().hasClass(&DataViewClass);
+    return v.isObject() && v.toObject().hasClass(&class_);
 }
 
 #ifdef JSGC_GENERATIONAL
@@ -227,7 +220,7 @@ DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
     JSScript *script = cx->stack.currentScript(&pc);
     if (!script)
         return GenericObject;
-    return types::UseNewTypeForInitializer(cx, script, pc, &DataViewClass);
+    return types::UseNewTypeForInitializer(cx, script, pc, &DataViewObject::class_);
 }
 
 inline DataViewObject *
@@ -241,12 +234,12 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     RootedObject obj(cx);
 
     NewObjectKind newKind = DataViewNewObjectKind(cx, byteLength, proto);
-    obj = NewBuiltinClassInstance(cx, &DataViewClass, newKind);
+    obj = NewBuiltinClassInstance(cx, &class_, newKind);
     if (!obj)
         return NULL;
 
     if (proto) {
-        types::TypeObject *type = proto->getNewType(cx, &DataViewClass);
+        types::TypeObject *type = proto->getNewType(cx, &class_);
         if (!type)
             return NULL;
         obj->setType(type);
@@ -265,7 +258,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
 
     JS_ASSERT(arrayBuffer->is<ArrayBufferObject>());
 
-    DataViewObject &dvobj = obj->asDataView();
+    DataViewObject &dvobj = obj->as<DataViewObject>();
     dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
     dvobj.setFixedSlot(BYTELENGTH_SLOT, Int32Value(byteLength));
     dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
@@ -285,7 +278,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
 inline uint32_t
 DataViewObject::byteLength()
 {
-    JS_ASSERT(isDataView());
+    JS_ASSERT(JSObject::is<DataViewObject>());
     int32_t length = getReservedSlot(BYTELENGTH_SLOT).toInt32();
     JS_ASSERT(length >= 0);
     return static_cast<uint32_t>(length);
@@ -294,7 +287,7 @@ DataViewObject::byteLength()
 inline uint32_t
 DataViewObject::byteOffset()
 {
-    JS_ASSERT(isDataView());
+    JS_ASSERT(JSObject::is<DataViewObject>());
     int32_t offset = getReservedSlot(BYTEOFFSET_SLOT).toInt32();
     JS_ASSERT(offset >= 0);
     return static_cast<uint32_t>(offset);
@@ -303,21 +296,21 @@ DataViewObject::byteOffset()
 inline void *
 DataViewObject::dataPointer()
 {
-    JS_ASSERT(isDataView());
+    JS_ASSERT(JSObject::is<DataViewObject>());
     return getPrivate();
 }
 
 inline ArrayBufferObject &
 DataViewObject::arrayBuffer()
 {
-    JS_ASSERT(isDataView());
+    JS_ASSERT(JSObject::is<DataViewObject>());
     return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
 }
 
 inline bool
 DataViewObject::hasBuffer() const
 {
-    JS_ASSERT(isDataView());
+    JS_ASSERT(JSObject::is<DataViewObject>());
     return getReservedSlot(BUFFER_SLOT).isObject();
 }
 
