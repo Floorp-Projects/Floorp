@@ -43,8 +43,8 @@
       <stylesheet src="chrome://browser/content/customizableui/panelUI.css"/>
     </resources>
     <content>
-      <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen">
-        <xul:stack anonid="viewStack" view="main" class="panel-viewstack">
+      <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,viewtype,transitioning">
+        <xul:stack anonid="viewStack" xbl:inherits="viewtype" viewtype="main" class="panel-viewstack">
           <xul:vbox anonid="mainViewContainer" class="panel-mainview"/>
 
           <!-- Used to capture click events over the PanelUI-mainView if we're in
@@ -88,11 +88,11 @@
       <field name="_anchorElement">null</field>
       <field name="_mainViewHeight">0</field>
       <field name="_subViewObserver">null</field>
-      <field name="_transitioning">false</field>
+      <field name="__transitioning">false</field>
       <field name="_ignoreMutations">false</field>
 
       <property name="showingSubView" readonly="true"
-                onget="return this._viewStack.getAttribute('view') == 'subview'"/>
+                onget="return this._viewStack.getAttribute('viewtype') == 'subview'"/>
       <property name="_mainViewId" onget="return this.getAttribute('mainViewId');" onset="this.setAttribute('mainViewId', val); return val;"/>
       <property name="_mainView" readonly="true"
                 onget="return document.getElementById(this._mainViewId);"/>
@@ -113,6 +113,19 @@
         ]]></setter>
       </property>
 
+      <property name="_transitioning">
+        <getter>
+          return this.__transitioning;
+        </getter>
+        <setter><![CDATA[
+          this.__transitioning = val;
+          if (val) {
+            this.setAttribute("transitioning", "true");
+          } else {
+            this.removeAttribute("transitioning");
+          }
+        ]]></setter>
+      </property>
       <constructor><![CDATA[
         this._clickCapturer.addEventListener("click", this);
         this._panel.addEventListener("popupshowing", this);
@@ -133,6 +146,7 @@
         if (this._mainView) {
           this.setMainView(this._mainView);
         }
+        this.setAttribute("viewtype", "main");
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -183,7 +197,7 @@
             }.bind(this));
             this._viewContainer.style.height = this._mainViewHeight + "px";
 
-            this._viewStack.setAttribute("view", "main");
+            this.setAttribute("viewtype", "main");
           }
 
           this._mainViewObserver.observe(this._mainView, {
@@ -226,7 +240,7 @@
           //
           // All three of these actions make use of CSS transformations, so they
           // should all occur simultaneously.
-          this._viewStack.setAttribute("view", "subview");
+          this.setAttribute("viewtype", "subview");
           this._shiftMainView(aAnchor);
 
           this._mainViewHeight = this._viewStack.clientHeight;
@@ -311,7 +325,7 @@
         <body><![CDATA[
           if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
             this._viewContainer.style.height =
-              this._mainViewContainer.scrollHeight + "px";
+              this._mainView.scrollHeight + "px";
           }
         ]]></body>
       </method>

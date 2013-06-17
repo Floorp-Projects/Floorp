@@ -9,12 +9,20 @@
   margin-left: 38px;
 }
 
-.panel-viewstack[view="main"] > .panel-subviews {
+.panel-viewstack[viewtype="main"] > .panel-subviews {
   transform: translateX(@menuPanelWidth@);
 }
 
 #PanelUI-contents[type="list"] > toolbarbutton {
   -moz-binding: url("chrome://browser/content/panelUI.xml#toolbarbutton");
+}
+
+.panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {
+  -moz-box-flex: 1;
+}
+
+.panel-viewstack[viewtype="main"] > .panel-mainview > #PanelUI-mainView > #PanelUI-mainView-spring {
+  display: none;
 }
 
 #app-extension-point-end > #PanelUI-menu-button {

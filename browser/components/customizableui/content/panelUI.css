@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.panel-viewstack[view="main"] > .panel-clickcapturer {
+.panel-viewstack[viewtype="main"] > .panel-clickcapturer {
   pointer-events: none;
 }
 
@@ -26,6 +26,6 @@
   transition: transform 150ms;
 }
 
-.panel-viewcontainer[panelopen] {
+.panel-viewcontainer[panelopen]:-moz-any(:not([viewtype="main"]),[transitioning="true"]) {
   transition: height 150ms;
 }
