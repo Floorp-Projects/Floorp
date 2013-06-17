@@ -959,8 +959,8 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 bool
 js::IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval)
 {
-    if (iterobj->isPropertyIterator()) {
-        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
+    if (iterobj->is<PropertyIteratorObject>()) {
+        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
             return true;
@@ -976,8 +976,8 @@ js::IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValu
 bool
 js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
-    if (iterobj->isPropertyIterator()) {
-        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
+    if (iterobj->is<PropertyIteratorObject>()) {
+        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             rval.setString(*ni->current());

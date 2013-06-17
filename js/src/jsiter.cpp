@@ -389,10 +389,10 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
             return NULL;
 
         JS_ASSERT(obj->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
-        return &obj->asPropertyIterator();
+        return &obj->as<PropertyIteratorObject>();
     }
 
-    return &NewBuiltinClassInstance(cx, &PropertyIteratorObject::class_)->asPropertyIterator();
+    return &NewBuiltinClassInstance(cx, &PropertyIteratorObject::class_)->as<PropertyIteratorObject>();
 }
 
 NativeIterator *
@@ -704,7 +704,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
             return false;
     }
 
-    PropertyIteratorObject *iterobj = &vp.toObject().asPropertyIterator();
+    PropertyIteratorObject *iterobj = &vp.toObject().as<PropertyIteratorObject>();
 
     /* Cache the iterator object if possible. */
     if (shapes.length())
@@ -816,15 +816,15 @@ PropertyIteratorObject::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
 void
 PropertyIteratorObject::trace(JSTracer *trc, JSObject *obj)
 {
-    if (NativeIterator *ni = obj->asPropertyIterator().getNativeIterator())
+    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator())
         ni->mark(trc);
 }
 
 void
 PropertyIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    if (NativeIterator *ni = obj->asPropertyIterator().getNativeIterator()) {
-        obj->asPropertyIterator().setNativeIterator(NULL);
+    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator()) {
+        obj->as<PropertyIteratorObject>().setNativeIterator(NULL);
         fop->free_(ni);
     }
 }
@@ -1002,9 +1002,9 @@ js::CloseIterator(JSContext *cx, HandleObject obj)
 {
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
-    if (obj->isPropertyIterator()) {
+    if (obj->is<PropertyIteratorObject>()) {
         /* Remove enumerators from the active list, which is a stack. */
-        NativeIterator *ni = obj->asPropertyIterator().getNativeIterator();
+        NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator();
 
         if (ni->flags & JSITER_ENUMERATE) {
             ni->unlink();
@@ -1041,8 +1041,8 @@ js::UnwindIteratorForException(JSContext *cx, HandleObject obj)
 void
 js::UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj)
 {
-    if (obj->isPropertyIterator()) {
-        NativeIterator *ni = obj->asPropertyIterator().getNativeIterator();
+    if (obj->is<PropertyIteratorObject>()) {
+        NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator();
         if (ni->flags & JSITER_ENUMERATE)
             ni->unlink();
     }
@@ -1201,9 +1201,9 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
     /* Fast path for native iterators */
     NativeIterator *ni = NULL;
-    if (iterobj->isPropertyIterator()) {
+    if (iterobj->is<PropertyIteratorObject>()) {
         /* Key iterators are handled by fast-paths. */
-        ni = iterobj->asPropertyIterator().getNativeIterator();
+        ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         bool more = ni->props_cursor < ni->props_end;
         if (ni->isKeyIter() || !more) {
             rval.setBoolean(more);
@@ -1260,12 +1260,12 @@ bool
 js_IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
     /* Fast path for native iterators */
-    if (iterobj->isPropertyIterator()) {
+    if (iterobj->is<PropertyIteratorObject>()) {
         /*
          * Implement next directly as all the methods of the native iterator are
          * read-only and permanent.
          */
-        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
+        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             rval.setString(*ni->current());
@@ -1769,7 +1769,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
             return false;
         ni->init(NULL, NULL, 0 /* flags */, 0, 0);
 
-        iteratorProto->asPropertyIterator().setNativeIterator(ni);
+        iteratorProto->as<PropertyIteratorObject>().setNativeIterator(ni);
 
         Rooted<JSFunction*> ctor(cx);
         ctor = global->createConstructor(cx, IteratorConstructor, cx->names().Iterator, 2);
