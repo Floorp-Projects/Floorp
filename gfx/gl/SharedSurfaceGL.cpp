@@ -314,8 +314,8 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
                              const gfxIntSize& size,
                              bool hasAlpha)
 {
-    MOZ_ASSERT(prodGL);
-    MOZ_ASSERT(!consGL || prodGL->SharesWith(consGL));
+    MOZ_ASSERT(prodGL && consGL);
+    MOZ_ASSERT(prodGL->SharesWith(consGL));
 
     prodGL->MakeCurrent();
     GLuint tex = prodGL->CreateTextureForOffscreen(formats, size);
@@ -386,7 +386,6 @@ SharedSurface_GLTexture::SetConsumerGL(GLContext* consGL)
 {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(consGL);
-    MOZ_ASSERT(mGL->SharesWith(consGL));
     mConsGL = consGL;
 }
 
