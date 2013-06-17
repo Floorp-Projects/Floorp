@@ -1475,6 +1475,7 @@ typedef bool (*ComparatorNumeric)(const NumericElement &a, const NumericElement 
 
 ComparatorNumeric SortComparatorNumerics[] = {
     NULL,
+    NULL,
     ComparatorNumericLeftMinusRight,
     ComparatorNumericRightMinusLeft
 };
@@ -1497,12 +1498,15 @@ typedef bool (*ComparatorInt32)(const Value &a, const Value &b, bool *lessOrEqua
 
 ComparatorInt32 SortComparatorInt32s[] = {
     NULL,
+    NULL,
     ComparatorInt32LeftMinusRight,
     ComparatorInt32RightMinusLeft
 };
 
+// Note: Values for this enum must match up with SortComparatorNumerics
+// and SortComparatorInt32s.
 enum ComparatorMatchResult {
-    Match_Failure,
+    Match_Failure = 0,
     Match_None,
     Match_LeftMinusRight,
     Match_RightMinusLeft
