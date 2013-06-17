@@ -236,6 +236,7 @@ function filterTests(filterFile, runOnly) {
       excludetests = filter;
   }
 
+  var testRoot = config.testRoot || "tests";
   // Start with gTestList, and put everything that's in 'runtests' in
   // filteredTests.
   if (Object.keys(runtests).length) {
@@ -247,8 +248,8 @@ function filterTests(filterFile, runOnly) {
         file = f.replace(/^\//, '')
         file = file.replace(/^tests\//, '')
 
-        // Match directory or filename, gTestList has tests/<path>
-        if (tmp_path.match("^tests/" + file) != null) {
+        // Match directory or filename, gTestList has <testroot>/<path>
+        if (tmp_path.match(testRoot + "/" + file) != null) {
           filteredTests.push(test_path);
           break;
         }
@@ -272,8 +273,8 @@ function filterTests(filterFile, runOnly) {
         file = f.replace(/^\//, '')
         file = file.replace(/^tests\//, '')
 
-        // Match directory or filename, gTestList has tests/<path>
-        if (tmp_path.match("^tests/" + file) != null) {
+        // Match directory or filename, gTestList has <testroot>/<path>
+        if (tmp_path.match(testRoot + "/" + file) != null) {
           found = true;
           break;
         }
