@@ -103,7 +103,7 @@ function test() {
     let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
 
-    inspector.selection.once("detached", deleteTest);
+    inspector.once("markupmutation", deleteTest);
 
     let commandEvent = document.createEvent("XULCommandEvent");
     commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
