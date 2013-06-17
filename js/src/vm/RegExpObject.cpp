@@ -581,7 +581,9 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
     if (!compileMatchOnlyIfNecessary(cx))
         return RegExpRunStatus_Error;
 
+#ifdef DEBUG
     const size_t origLength = length;
+#endif
     size_t start = *lastIndex;
     size_t displacement = 0;
 
