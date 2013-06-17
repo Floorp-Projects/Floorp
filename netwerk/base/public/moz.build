@@ -95,8 +95,6 @@ XPIDL_SOURCES += [
     'nsIStrictTransportSecurityService.idl',
     'nsISyncStreamListener.idl',
     'nsISystemProxySettings.idl',
-    'nsIThreadRetargetableRequest.idl',
-    'nsIThreadRetargetableStreamListener.idl',
     'nsITimedChannel.idl',
     'nsITraceableChannel.idl',
     'nsITransport.idl',
