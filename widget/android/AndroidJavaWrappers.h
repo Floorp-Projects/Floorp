@@ -707,7 +707,18 @@ public:
         NATIVE_GESTURE_EVENT = 31,
         IME_KEY_EVENT = 32,
         CALL_OBSERVER = 33,
+        LOW_MEMORY = 34,
+        NETWORK_LINK_CHANGE = 35,
         dummy_java_enum_list_end
+    };
+
+    enum {
+        // Memory pressue levels, keep in sync with those in MemoryMonitor.java
+        MEMORY_PRESSURE_NONE = 0,
+        MEMORY_PRESSURE_CLEANUP = 1,
+        MEMORY_PRESSURE_LOW = 2,
+        MEMORY_PRESSURE_MEDIUM = 3,
+        MEMORY_PRESSURE_HIGH = 4
     };
 
     enum {

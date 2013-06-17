@@ -25,6 +25,7 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "nsFrameManager.h"
+#include "nsINetworkLinkService.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -522,6 +523,29 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         CallObserver(curEvent->Characters(), curEvent->CharactersExtra(), curEvent->Data());
         break;
 
+    case AndroidGeckoEvent::LOW_MEMORY:
+        // TODO hook in memory-reduction stuff for different levels here
+        if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
+            nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+            if (os) {
+                os->NotifyObservers(nullptr,
+                                    "memory-pressure",
+                                    NS_LITERAL_STRING("low-memory").get());
+            }
+        }
+        break;
+
+    case AndroidGeckoEvent::NETWORK_LINK_CHANGE:
+    {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os) {
+            os->NotifyObservers(nullptr,
+                                NS_NETWORK_LINK_TOPIC,
+                                nsString(curEvent->Characters()).get());
+        }
+        break;
+    }
+
     case AndroidGeckoEvent::NOOP:
         break;
 
@@ -734,40 +758,6 @@ void
 nsAppShell::RemoveObserver(const nsAString &aObserverKey)
 {
     mObserversHash.Remove(aObserverKey);
-}
-
-// NotifyObservers support.  NotifyObservers only works on main thread.
-
-class NotifyObserversCaller : public nsRunnable {
-public:
-    NotifyObserversCaller(nsISupports *aSupports,
-                          const char *aTopic, const PRUnichar *aData) :
-        mSupports(aSupports), mTopic(aTopic), mData(aData) {
-    }
-
-    NS_IMETHOD Run() {
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os)
-            os->NotifyObservers(mSupports, mTopic.get(), mData.get());
-
-        return NS_OK;
-    }
-
-private:
-    nsCOMPtr<nsISupports> mSupports;
-    nsCString mTopic;
-    nsString mData;
-};
-
-void
-nsAppShell::NotifyObservers(nsISupports *aSupports,
-                            const char *aTopic,
-                            const PRUnichar *aData)
-{
-    // This isn't main thread, so post this to main thread
-    nsCOMPtr<nsIRunnable> caller =
-        new NotifyObserversCaller(aSupports, aTopic, aData);
-    NS_DispatchToMainThread(caller);
 }
 
 // Used by IPC code
