@@ -9,6 +9,7 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jstypedarray.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
