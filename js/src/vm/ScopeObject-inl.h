@@ -13,6 +13,20 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+template<>
+inline bool
+JSObject::is<js::ClonedBlockObject>() const
+{
+    return is<js::BlockObject>() && !!getProto();
+}
+
+template<>
+inline bool
+JSObject::is<js::StaticBlockObject>() const
+{
+    return is<js::BlockObject>() && !getProto();
+}
+
 namespace js {
 
 inline
@@ -39,14 +53,14 @@ ScopeObject::setEnclosingScope(HandleObject obj)
 inline const Value &
 ScopeObject::aliasedVar(ScopeCoordinate sc)
 {
-    JS_ASSERT(is<CallObject>() || isClonedBlock());
+    JS_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
     return getSlot(sc.slot);
 }
 
 inline void
 ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v)
 {
-    JS_ASSERT(is<CallObject>() || isClonedBlock());
+    JS_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
 
     // name may be null for non-singletons, whose types do not need to be tracked.
@@ -171,7 +185,7 @@ inline StaticBlockObject *
 StaticBlockObject::enclosingBlock() const
 {
     JSObject *obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    return obj && obj->isStaticBlock() ? &obj->asStaticBlock() : NULL;
+    return obj && obj->is<StaticBlockObject>() ? &obj->as<StaticBlockObject>() : NULL;
 }
 
 inline JSObject *
@@ -233,7 +247,7 @@ StaticBlockObject::containsVarAtDepth(uint32_t depth)
 inline StaticBlockObject &
 ClonedBlockObject::staticBlock() const
 {
-    return getProto()->asStaticBlock();
+    return getProto()->as<StaticBlockObject>();
 }
 
 inline const Value &
@@ -257,20 +271,6 @@ JSObject::asScope()
 {
     JS_ASSERT(isScope());
     return *static_cast<js::ScopeObject *>(this);
-}
-
-inline js::StaticBlockObject &
-JSObject::asStaticBlock()
-{
-    JS_ASSERT(isStaticBlock());
-    return *static_cast<js::StaticBlockObject *>(this);
-}
-
-inline js::ClonedBlockObject &
-JSObject::asClonedBlock()
-{
-    JS_ASSERT(isClonedBlock());
-    return *static_cast<js::ClonedBlockObject *>(this);
 }
 
 inline js::DebugScopeObject &

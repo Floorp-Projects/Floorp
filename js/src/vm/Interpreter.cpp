@@ -2959,7 +2959,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
 BEGIN_CASE(JSOP_ENTERLET0)
 BEGIN_CASE(JSOP_ENTERLET1)
 {
-    StaticBlockObject &blockObj = script->getObject(regs.pc)->asStaticBlock();
+    StaticBlockObject &blockObj = script->getObject(regs.pc)->as<StaticBlockObject>();
 
     if (op == JSOP_ENTERBLOCK) {
         JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());

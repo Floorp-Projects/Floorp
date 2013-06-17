@@ -17,6 +17,7 @@
 #endif
 
 #include "vm/Interpreter-inl.h"
+#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/Probes-inl.h"
 
@@ -250,8 +251,8 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
 
             switch (i.type()) {
               case StaticScopeIter::BLOCK:
-                JS_ASSERT(i.block() == scope->asClonedBlock().staticBlock());
-                scope = &scope->asClonedBlock().enclosingScope();
+                JS_ASSERT(i.block() == scope->as<ClonedBlockObject>().staticBlock());
+                scope = &scope->as<ClonedBlockObject>().enclosingScope();
                 break;
               case StaticScopeIter::FUNCTION:
                 JS_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
@@ -409,7 +410,7 @@ StackFrame::popBlock(JSContext *cx)
         DebugScopes::onPopBlock(cx, this);
 
     if (blockChain_->needsClone()) {
-        JS_ASSERT(scopeChain_->asClonedBlock().staticBlock() == *blockChain_);
+        JS_ASSERT(scopeChain_->as<ClonedBlockObject>().staticBlock() == *blockChain_);
         popOffScopeChain();
     }
 

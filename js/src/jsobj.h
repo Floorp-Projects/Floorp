@@ -220,7 +220,6 @@ extern Class WeakMapClass;
 
 class ArrayBufferObject;
 class BooleanObject;
-class ClonedBlockObject;
 class DebugScopeObject;
 class GlobalObject;
 class MapObject;
@@ -229,7 +228,6 @@ class NormalArgumentsObject;
 class NumberObject;
 class ScopeObject;
 class SetObject;
-class StaticBlockObject;
 class StrictArgumentsObject;
 class StringObject;
 
@@ -924,9 +922,9 @@ class JSObject : public js::ObjectImpl
      *   }
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
-     * object, the following predicates are true: isClonedBlock, is<BlockObject>,
-     * is<NestedScopeObject> and isScope. Each of these has a respective class
-     * that derives and adds operations.
+     * object, the following predicates are true: is<ClonedBlockObject>,
+     * is<BlockObject>, is<NestedScopeObject> and isScope. Each of these has a
+     * respective class that derives and adds operations.
      *
      * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
      * triplet (along with any class YObject that derives XObject).
@@ -971,10 +969,6 @@ class JSObject : public js::ObjectImpl
     inline bool isTypedArray()       const;
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
-    /* Subtypes of ScopeObject. */
-    inline bool isClonedBlock() const;
-    inline bool isStaticBlock() const;
-
     /* Subtypes of PrimitiveObject. */
     inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
     inline bool isNumber()  const { return hasClass(&js::NumberClass); }
@@ -987,14 +981,12 @@ class JSObject : public js::ObjectImpl
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::BooleanObject &asBoolean();
-    inline js::ClonedBlockObject &asClonedBlock();
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
     inline js::NumberObject &asNumber();
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
-    inline js::StaticBlockObject &asStaticBlock();
     inline js::StringObject &asString();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
