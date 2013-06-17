@@ -241,10 +241,34 @@ let tests = {
         port.postMessage({topic: "done", result: "ok"});
       }
     }
-    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testLocalStorage");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testLocalStorage", null, true);
     worker.port.onmessage = function(e) {
       if (e.data.topic == "done") {
         is(e.data.result, "ok", "check the localStorage test worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testNoLocalStorage: function(cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+        try {
+          localStorage.setItem("foo", "1");
+        } catch(e) {
+          port.postMessage({topic: "done", result: "ok"});
+          return;
+        }
+
+        port.postMessage({topic: "done", result: "FAILED because localStorage was exposed" });
+      }
+    }
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testNoLocalStorage");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check that retrieving localStorage fails by default");
         worker.terminate();
         cbnext();
       }
