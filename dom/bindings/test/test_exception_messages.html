@@ -47,9 +47,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882653
       [ '(new TextEncoder).encode("", new RegExp())',
 	"Argument 2 of TextEncoder.encode can't be converted to a dictionary.",
 	"regexp passed for a dictionary" ],
-      [ 'document.createElement("canvas").getContext("webgl").uniform1fv(null, new RegExp())',
-	"Argument 2 is not valid for any of the 2-argument overloads of WebGLRenderingContext.uniform1fv.",
-	"regexp passed for a sequence" ],
       [ 'document.createElement("select").add({})',
 	"Argument 1 of HTMLSelectElement.add could not be converted to any of: HTMLOptionElement, HTMLOptGroupElement.",
 	"invalid value passed for union" ],
@@ -57,6 +54,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882653
 	"Argument 1 of CanvasGradient.addColorStop is not a finite floating-point value.",
 	"invalid float" ]
   ];
+
+  try {
+    document.createElement("canvas").getContext("webgl");
+    // If that didn't throw, our WebGL-using test should be safe
+    tests.push(
+        [ 'document.createElement("canvas").getContext("webgl").uniform1fv(null, new RegExp())',
+	"Argument 2 is not valid for any of the 2-argument overloads of WebGLRenderingContext.uniform1fv.",
+	"regexp passed for a sequence" ]
+    );
+  } catch (e) {
+    // No WebGL in some cases, apparently
+    todo(false, "No WebGL here?");
+  }
 
   for (var i = 0; i < tests.length; ++i) {
       msg = "Correct exception should be thrown for " + tests[i][2];
