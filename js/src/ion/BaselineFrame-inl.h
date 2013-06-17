@@ -58,7 +58,7 @@ BaselineFrame::popBlock(JSContext *cx)
         DebugScopes::onPopBlock(cx, this);
 
     if (blockChain_->needsClone()) {
-        JS_ASSERT(scopeChain_->asClonedBlock().staticBlock() == *blockChain_);
+        JS_ASSERT(scopeChain_->as<ClonedBlockObject>().staticBlock() == *blockChain_);
         popOffScopeChain();
     }
 
