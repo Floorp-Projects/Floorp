@@ -157,14 +157,24 @@ InspectorPanel.prototype = {
    * Return a promise that will resolve to the default node for selection.
    */
   _getDefaultNodeForSelection : function() {
+    if (this._defaultNode) {
+      return this._defaultNode;
+    }
+    let walker = this.walker;
     // if available set body node as default selected node
     // else set documentElement
-    return this.walker.querySelector(this.walker.rootNode, "body").then(front => {
+    return walker.querySelector(this.walker.rootNode, "body").then(front => {
       if (front) {
         return front;
       }
       return this.walker.documentElement(this.walker.rootNode);
-    });
+    }).then(node => {
+      if (walker !== this.walker) {
+        promise.reject(null);
+      }
+      this._defaultNode = node;
+      return node;
+    })
   },
 
   /**
@@ -276,6 +286,7 @@ InspectorPanel.prototype = {
     let newWindow = payload._navPayload || payload;
     this.walker.release().then(null, console.error);
     this.walker = null;
+    this._defaultNode = null;
     this.selection.setNodeFront(null);
     this.selection.setWalker(null);
     this._destroyMarkup();
@@ -391,7 +402,7 @@ InspectorPanel.prototype = {
   onDetached: function InspectorPanel_onDetached(event, parentNode) {
     this.cancelLayoutChange();
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
-    this.selection.setNodeFront(parentNode, "detached");
+    this.selection.setNodeFront(parentNode ? parentNode : this._defaultNode, "detached");
   },
 
   /**
