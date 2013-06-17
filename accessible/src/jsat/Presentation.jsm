@@ -9,8 +9,17 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Utils',
+  'resource://gre/modules/accessibility/Utils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
+  'resource://gre/modules/accessibility/Utils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'PivotContext',
+  'resource://gre/modules/accessibility/Utils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'UtteranceGenerator',
+  'resource://gre/modules/accessibility/OutputGenerator.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'BrailleGenerator',
+  'resource://gre/modules/accessibility/OutputGenerator.jsm');
 
 this.EXPORTED_SYMBOLS = ['Presentation'];
 
@@ -219,6 +228,15 @@ AndroidPresenter.prototype = {
 
     let state = Utils.getStates(aContext.accessible)[0];
 
+    let brailleText = '';
+    if (Utils.AndroidSdkVersion >= 16) {
+      if (!this._braillePresenter) {
+        this._braillePresenter = new BraillePresenter();
+      }
+      brailleText = this._braillePresenter.pivotChanged(aContext, aReason).
+                         details.text;
+    }
+
     androidEvents.push({eventType: (isExploreByTouch) ?
                           this.ANDROID_VIEW_HOVER_ENTER : focusEventType,
                         text: UtteranceGenerator.genForContext(aContext),
@@ -227,7 +245,8 @@ AndroidPresenter.prototype = {
                         checkable: !!(state &
                                       Ci.nsIAccessibleStates.STATE_CHECKABLE),
                         checked: !!(state &
-                                    Ci.nsIAccessibleStates.STATE_CHECKED)});
+                                    Ci.nsIAccessibleStates.STATE_CHECKED),
+                        brailleText: brailleText});
 
 
     return {
@@ -365,6 +384,29 @@ HapticPresenter.prototype = {
   pivotChanged: function HapticPresenter_pivotChanged(aContext, aReason) {
     return { type: this.type, details: { pattern: this.PIVOT_CHANGE_PATTHERN } };
   }
+};
+
+/**
+ * A braille presenter
+ */
+
+this.BraillePresenter = function BraillePresenter() {};
+
+BraillePresenter.prototype = {
+  __proto__: Presenter.prototype,
+
+  type: 'Braille',
+
+  pivotChanged: function BraillePresenter_pivotChanged(aContext, aReason) {
+    if (!aContext.accessible) {
+      return null;
+    }
+
+    let text = BrailleGenerator.genForContext(aContext);
+
+    return { type: this.type, details: {text: text.join(' ')} };
+  }
+
 };
 
 this.Presentation = {

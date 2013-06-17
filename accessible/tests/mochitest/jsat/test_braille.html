@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=876475
+-->
+  <head>
+    <title>[AccessFu] braille generation test</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+    <script type="application/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="../common.js"></script>
+    <script type="application/javascript"
+            src="./output.js"></script>
+    <script type="application/javascript">
+
+      function doTest() {
+        // Test the following accOrElmOrID (with optional old accOrElmOrID).
+        // Note: each accOrElmOrID entry maps to a unique object braille
+        // generator function within the BrailleGenerator.
+        var tests = [{
+          accOrElmOrID: "link",
+          expected: [["lnk", "Link"], ["Link", "lnk"]]
+        },{
+          accOrElmOrID: "button",
+          expected: [["btn", "I am a button"], ["I am a button", "btn"]]
+        },{
+          accOrElmOrID: "password_input",
+          expected: [["passwdtxt", "Secret Password"], ["Secret Password", "passwdtxt"]]
+        },{
+          accOrElmOrID: "checkbox_unchecked",
+          expected: [["( )", "checkboxtext"], ["checkboxtext", "( )"]]
+        },{
+          accOrElmOrID: "checkbox_checked",
+          expected: [["(x)", "some more checkbox text"], ["some more checkbox text", "(x)"]]
+        },{
+          accOrElmOrID: "radio_unselected",
+          expected: [["( )", "any old radio button"], ["any old radio button", "( )"]]
+        },{
+          accOrElmOrID: "radio_selected",
+          expected: [["(x)", "a unique radio button"], ["a unique radio button", "(x)"]]
+        },{
+          accOrElmOrID: "togglebutton_notpressed",
+          expected: [["( )", "I ain't pressed"], ["I ain't pressed", "( )"]]
+        },{
+          accOrElmOrID: "togglebutton_pressed",
+          expected: [["(x)", "I am pressed!"], ["I am pressed!", "(x)"]]
+        },{
+          accOrElmOrID: "ul_li_one",
+          expected: [["*", "ul item 1"], ["*", "ul item 1"]]
+        },{
+          accOrElmOrID: "ol_li_one",
+          expected: [["1.", "ol item 1"], ["1.", "ol item 1"]]
+        },{
+          accOrElmOrID: "textarea",
+          expected: [["txtarea", "Here lies treasure."], ["Here lies treasure.", "txtarea"]]
+        }];
+
+        // Test all possible braille order preference values.
+        tests.forEach(function run(test) {
+          var brailleOrderValues = [0, 1];
+          brailleOrderValues.forEach(
+            function testBrailleOrder(brailleOrder) {
+              SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, brailleOrder);
+              var expected = test.expected[brailleOrder];
+              testOutput(expected, test.accOrElmOrID, test.oldAccOrElmOrID, 2);
+            }
+          );
+        });
+
+        // If there was an original utterance order preference, revert to it.
+        SpecialPowers.clearUserPref(PREF_UTTERANCE_ORDER);
+        SimpleTest.finish();
+      }
+
+      SimpleTest.waitForExplicitFinish();
+      addA11yLoadEvent(doTest);
+
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test"></pre>
+      <a href="example.com" id="link">Link</a>
+      <button id="button">I am a button</button>
+      <label for="password_input">Secret Password</label><input id="password_input" type="password"></input>
+      <label for="checkbox_unchecked">checkboxtext</label><input id="checkbox_unchecked" type="checkbox"></input>
+      <label for="checkbox_checked">some more checkbox text</label><input id="checkbox_checked" type="checkbox" checked></input>
+      <label for="radio_unselected">any old radio button</label><input id="radio_unselected" type="radio"></input>
+      <label for="radio_selected">a unique radio button</label><input id="radio_selected" type="radio" checked></input>
+      <div id="togglebutton_notpressed" aria-pressed="false" role="button" tabindex="-1">I ain't pressed</div>
+      <div id="togglebutton_pressed" aria-pressed="true" role="button" tabindex="-1">I am pressed!</div>
+      <ol id="ordered_list">
+        <li id="ol_li_one">ol item 1</li>
+        <li id="ol_li_two">ol item 2</li>
+        <li id="ol_li_three">ol item 3</li>
+        <li id="ol_li_three">ol item 4</li>
+      </ol>
+      <ul id="unordered_list">
+        <li id="ul_li_one">ul item 1</li>
+        <li id="ul_li_two">ul item 2</li>
+        <li id="ul_li_three">ul item 3</li>
+        <li id="ul_li_three">ul item 4</li>
+      </ul>
+      <textarea id="textarea" cols="80" rows="5">
+        Here lies treasure.
+      </textarea>
+   </div>
+  </body>
+</html>
