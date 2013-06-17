@@ -1130,10 +1130,8 @@ class FastInvokeGuard
     void initFunction(const Value &fval) {
         if (fval.isObject() && fval.toObject().isFunction()) {
             JSFunction *fun = fval.toObject().toFunction();
-            if (fun->hasScript()) {
+            if (fun->isInterpreted())
                 fun_ = fun;
-                script_ = fun->nonLazyScript();
-            }
         }
     }
 
@@ -1144,6 +1142,11 @@ class FastInvokeGuard
     bool invoke(JSContext *cx) {
 #ifdef JS_ION
         if (useIon_ && fun_) {
+            if (!script_) {
+                script_ = fun_->getOrCreateScript(cx);
+                if (!script_)
+                    return false;
+            }
             if (ictx_.empty())
                 ictx_.construct(cx, (js::ion::TempAllocator *)NULL);
             JS_ASSERT(fun_->nonLazyScript() == script_);

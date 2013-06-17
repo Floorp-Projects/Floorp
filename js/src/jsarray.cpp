@@ -1502,7 +1502,8 @@ ComparatorInt32 SortComparatorInt32s[] = {
 };
 
 enum ComparatorMatchResult {
-    Match_None = 0,
+    Match_Failure,
+    Match_None,
     Match_LeftMinusRight,
     Match_RightMinusLeft
 };
@@ -1512,7 +1513,7 @@ enum ComparatorMatchResult {
  * patterns: namely, |return x - y| and |return y - x|.
  */
 ComparatorMatchResult
-MatchNumericComparator(const Value &v)
+MatchNumericComparator(JSContext *cx, const Value &v)
 {
     if (!v.isObject())
         return Match_None;
@@ -1522,10 +1523,13 @@ MatchNumericComparator(const Value &v)
         return Match_None;
 
     JSFunction *fun = obj.toFunction();
-    if (!fun->hasScript())
+    if (!fun->isInterpreted())
         return Match_None;
 
-    JSScript *script = fun->nonLazyScript();
+    JSScript *script = fun->getOrCreateScript(cx);
+    if (!script)
+        return Match_Failure;
+
     jsbytecode *pc = script->code;
 
     uint16_t arg0, arg1;
@@ -1802,7 +1806,9 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
                     return false;
             }
         } else {
-            ComparatorMatchResult comp = MatchNumericComparator(fval);
+            ComparatorMatchResult comp = MatchNumericComparator(cx, fval);
+            if (comp == Match_Failure)
+                return false;
 
             if (comp != Match_None) {
                 if (allInts) {
