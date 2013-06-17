@@ -786,7 +786,7 @@ js::XDRScript(XDRState<XDR_DECODE> *, HandleObject, HandleScript, HandleFunction
 js::ScriptSourceObject *
 JSScript::sourceObject() const
 {
-    return &sourceObject_->asScriptSource();
+    return &sourceObject_->as<ScriptSourceObject>();
 }
 
 bool
@@ -917,10 +917,10 @@ void
 ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 {
     // ScriptSource::setSource automatically takes care of the refcount
-    obj->asScriptSource().setSource(NULL);
+    obj->as<ScriptSourceObject>().setSource(NULL);
 }
 
-Class js::ScriptSourceClass = {
+Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */
@@ -936,10 +936,10 @@ Class js::ScriptSourceClass = {
 ScriptSourceObject *
 ScriptSourceObject::create(JSContext *cx, ScriptSource *source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &ScriptSourceClass, NULL, cx->global()));
+    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NULL, cx->global()));
     if (!object)
         return NULL;
-    JS::RootedScriptSource sourceObject(cx, &object->asScriptSource());
+    JS::RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
     sourceObject->setSlot(SOURCE_SLOT, PrivateValue(source));
     source->incref();
     return sourceObject;
@@ -2992,7 +2992,7 @@ LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject
 ScriptSourceObject *
 LazyScript::sourceObject() const
 {
-    return sourceObject_ ? &sourceObject_->asScriptSource() : NULL;
+    return sourceObject_ ? &sourceObject_->as<ScriptSourceObject>() : NULL;
 }
 
 /* static */ LazyScript *

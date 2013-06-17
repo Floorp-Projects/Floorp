@@ -218,7 +218,6 @@ extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpStaticsClass;
 extern Class SetIteratorClass;
-extern Class ScriptSourceClass;
 extern Class StopIterationClass;
 extern Class StringClass;
 extern Class WeakMapClass;
@@ -978,7 +977,6 @@ class JSObject : public js::ObjectImpl
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
     inline bool isScope()            const { return isCall() || isDeclEnv() || isNestedScope(); }
-    inline bool isScriptSource()     const { return hasClass(&js::ScriptSourceClass); }
     inline bool isSetIterator()      const { return hasClass(&js::SetIteratorClass); }
     inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
     inline bool isTypedArray()       const;
@@ -1017,7 +1015,6 @@ class JSObject : public js::ObjectImpl
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
     inline js::SetIteratorObject &asSetIterator();
-    inline js::ScriptSourceObject &asScriptSource();
     inline js::StaticBlockObject &asStaticBlock();
     inline js::StringObject &asString();
     inline js::WithObject &asWith();
