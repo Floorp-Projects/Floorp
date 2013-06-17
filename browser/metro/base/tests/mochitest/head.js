@@ -118,15 +118,24 @@ function showNotification()
 function getSelection(aElement) {
   if (!aElement)
     return null;
-  // editable element
+
+  // chrome text edit
+  if (aElement instanceof Ci.nsIDOMXULTextBoxElement) {
+    return aElement.QueryInterface(Components.interfaces.nsIDOMXULTextBoxElement)
+                   .editor.selection;
+  }
+
+  // editable content element
   if (aElement instanceof Ci.nsIDOMNSEditableElement) {
     return aElement.QueryInterface(Ci.nsIDOMNSEditableElement)
-                 .editor.selection;
+                   .editor.selection;
   }
+
   // document or window
   if (aElement instanceof HTMLDocument || aElement instanceof Window) {
     return aElement.getSelection();
   }
+
   // browser
   return aElement.contentWindow.getSelection();
 };
@@ -177,7 +186,7 @@ function hideContextUI()
 
 function showNavBar()
 {
-  let promise = waitForEvent(Elements.tray, "transitionend");
+  let promise = waitForEvent(Elements.navbar, "transitionend");
   if (!ContextUI.isVisible) {
     ContextUI.displayNavbar();
     return promise;
@@ -572,6 +581,14 @@ function sendDoubleTap(aWindow, aX, aY) {
 
 function sendTap(aWindow, aX, aY) {
   EventUtils.synthesizeMouseAtPoint(aX, aY, {
+      clickCount: 1,
+      inputSource: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+    }, aWindow);
+}
+
+function sendElementTap(aWindow, aElement, aX, aY) {
+  let rect = aElement.getBoundingClientRect();
+  EventUtils.synthesizeMouseAtPoint(rect.left + aX, rect.top + aY, {
       clickCount: 1,
       inputSource: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
     }, aWindow);
