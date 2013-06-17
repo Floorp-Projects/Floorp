@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[OverrideBuiltins]
 interface DOMStringMap {
   getter DOMString (DOMString name);
   [Throws]
