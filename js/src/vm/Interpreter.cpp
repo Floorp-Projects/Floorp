@@ -835,7 +835,7 @@ js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
             frame.popBlock(cx);
             break;
           case ScopeIter::With:
-            if (si.scope().asWith().stackDepth() < stackDepth)
+            if (si.scope().as<WithObject>().stackDepth() < stackDepth)
                 return;
             frame.popWith(cx);
             break;

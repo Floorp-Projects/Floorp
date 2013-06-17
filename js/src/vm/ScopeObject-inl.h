@@ -259,13 +259,6 @@ JSObject::asScope()
     return *static_cast<js::ScopeObject *>(this);
 }
 
-inline js::WithObject &
-JSObject::asWith()
-{
-    JS_ASSERT(isWith());
-    return *static_cast<js::WithObject *>(this);
-}
-
 inline js::StaticBlockObject &
 JSObject::asStaticBlock()
 {
