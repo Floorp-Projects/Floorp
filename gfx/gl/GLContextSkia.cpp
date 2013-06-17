@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "skia/GrGLInterface.h"
+#include "mozilla/gfx/2D.h"
 
 /* SkPostConfig.h includes windows.h, which includes windef.h
  * which redefines min/max. We don't want that. */
@@ -15,14 +16,17 @@
 #include "GLContext.h"
 
 using mozilla::gl::GLContext;
+using mozilla::gfx::DrawTarget;
 
 static GLContext* sGLContext;
 
 extern "C" {
 
-void EnsureGLContext(const GrGLInterface* interface)
+void EnsureGLContext(const GrGLInterface* i)
 {
-    sGLContext = (GLContext*)(interface->fCallbackData);
+    const DrawTarget* drawTarget = reinterpret_cast<const DrawTarget*>(i->fCallbackData);
+    MOZ_ASSERT(drawTarget);
+    sGLContext = static_cast<GLContext*>(drawTarget->GetGLContext());
     sGLContext->MakeCurrent();
 }
 
@@ -656,146 +660,145 @@ GrGLvoid glBlitFramebuffer_mozilla(GrGLint srcX0, GrGLint srcY0,
 
 } // extern "C"
 
-GrGLInterface* CreateGrInterfaceFromGLContext(GLContext* context)
+GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 {
     sGLContext = context;
 
-    GrGLInterface* interface = new GrGLInterface();
-    interface->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(context);
-    interface->fCallback = EnsureGLContext;
+    GrGLInterface* i = new GrGLInterface();
+    i->fCallback = EnsureGLContext;
+    i->fCallbackData = 0; // must be later initialized to be a valid DrawTargetSkia* pointer
 
     // Core GL functions required by Ganesh
-    interface->fActiveTexture = glActiveTexture_mozilla;
-    interface->fAttachShader = glAttachShader_mozilla;
-    interface->fBindAttribLocation = glBindAttribLocation_mozilla;
-    interface->fBindBuffer = glBindBuffer_mozilla;
-    interface->fBindFramebuffer = glBindFramebuffer_mozilla;
-    interface->fBindRenderbuffer = glBindRenderbuffer_mozilla;
-    interface->fBindTexture = glBindTexture_mozilla;
-    interface->fBlendFunc = glBlendFunc_mozilla;
-    interface->fBlendColor = glBlendColor_mozilla;
-    interface->fBufferData = glBufferData_mozilla;
-    interface->fBufferSubData = glBufferSubData_mozilla;
-    interface->fCheckFramebufferStatus = glCheckFramebufferStatus_mozilla;
-    interface->fClear = glClear_mozilla;
-    interface->fClearColor = glClearColor_mozilla;
-    interface->fClearStencil = glClearStencil_mozilla;
-    interface->fColorMask = glColorMask_mozilla;
-    interface->fCompileShader = glCompileShader_mozilla;
-    interface->fCreateProgram = glCreateProgram_mozilla;
-    interface->fCreateShader = glCreateShader_mozilla;
-    interface->fCullFace = glCullFace_mozilla;
-    interface->fDeleteBuffers = glDeleteBuffers_mozilla;
-    interface->fDeleteFramebuffers = glDeleteFramebuffers_mozilla;
-    interface->fDeleteProgram = glDeleteProgram_mozilla;
-    interface->fDeleteRenderbuffers = glDeleteRenderbuffers_mozilla;
-    interface->fDeleteShader = glDeleteShader_mozilla;
-    interface->fDeleteTextures = glDeleteTextures_mozilla;
-    interface->fDepthMask = glDepthMask_mozilla;
-    interface->fDisable = glDisable_mozilla;
-    interface->fDisableVertexAttribArray = glDisableVertexAttribArray_mozilla;
-    interface->fDrawArrays = glDrawArrays_mozilla;
-    interface->fDrawElements = glDrawElements_mozilla;
-    interface->fEnable = glEnable_mozilla;
-    interface->fEnableVertexAttribArray = glEnableVertexAttribArray_mozilla;
-    interface->fFinish = glFinish_mozilla;
-    interface->fFlush = glFlush_mozilla;
-    interface->fFramebufferRenderbuffer = glFramebufferRenderbuffer_mozilla;
-    interface->fFramebufferTexture2D = glFramebufferTexture2D_mozilla;
-    interface->fFrontFace = glFrontFace_mozilla;
-    interface->fGenBuffers = glGenBuffers_mozilla;
-    interface->fGenFramebuffers = glGenFramebuffers_mozilla;
-    interface->fGenRenderbuffers = glGenRenderbuffers_mozilla;
-    interface->fGetFramebufferAttachmentParameteriv = glGetFramebufferAttachmentParameteriv_mozilla;
-    interface->fGenTextures = glGenTextures_mozilla;
-    interface->fGetBufferParameteriv = glGetBufferParameteriv_mozilla;
-    interface->fGetError = glGetError_mozilla;
-    interface->fGetIntegerv = glGetIntegerv_mozilla;
-    interface->fGetProgramInfoLog = glGetProgramInfoLog_mozilla;
-    interface->fGetProgramiv = glGetProgramiv_mozilla;
-    interface->fGetRenderbufferParameteriv = glGetRenderbufferParameteriv_mozilla;
-    interface->fGetShaderInfoLog = glGetShaderInfoLog_mozilla;
-    interface->fGetShaderiv = glGetShaderiv_mozilla;
-    interface->fGetString = glGetString_mozilla;
-    interface->fGetUniformLocation = glGetUniformLocation_mozilla;
-    interface->fLineWidth = glLineWidth_mozilla;
-    interface->fLinkProgram = glLinkProgram_mozilla;
-    interface->fPixelStorei = glPixelStorei_mozilla;
-    interface->fReadPixels = glReadPixels_mozilla;
-    interface->fRenderbufferStorage = glRenderbufferStorage_mozilla;
-    interface->fScissor = glScissor_mozilla;
-    interface->fShaderSource = glShaderSource_mozilla;
-    interface->fStencilFunc = glStencilFunc_mozilla;
-    interface->fStencilMask = glStencilMask_mozilla;
-    interface->fStencilOp = glStencilOp_mozilla;
-    interface->fTexImage2D = glTexImage2D_mozilla;
-    interface->fTexParameteri = glTexParameteri_mozilla;
-    interface->fTexParameteriv = glTexParameteriv_mozilla;
-    interface->fTexSubImage2D = glTexSubImage2D_mozilla;
-    interface->fUniform1f = glUniform1f_mozilla;
-    interface->fUniform1i = glUniform1i_mozilla;
-    interface->fUniform1fv = glUniform1fv_mozilla;
-    interface->fUniform1iv = glUniform1iv_mozilla;
-    interface->fUniform2f = glUniform2f_mozilla;
-    interface->fUniform2i = glUniform2i_mozilla;
-    interface->fUniform2fv = glUniform2fv_mozilla;
-    interface->fUniform2iv = glUniform2iv_mozilla;
-    interface->fUniform3f = glUniform3f_mozilla;
-    interface->fUniform3i = glUniform3i_mozilla;
-    interface->fUniform3fv = glUniform3fv_mozilla;
-    interface->fUniform3iv = glUniform3iv_mozilla;
-    interface->fUniform4f = glUniform4f_mozilla;
-    interface->fUniform4i = glUniform4i_mozilla;
-    interface->fUniform4fv = glUniform4fv_mozilla;
-    interface->fUniform4iv = glUniform4iv_mozilla;
-    interface->fUniformMatrix2fv = glUniformMatrix2fv_mozilla;
-    interface->fUniformMatrix3fv = glUniformMatrix3fv_mozilla;
-    interface->fUniformMatrix4fv = glUniformMatrix4fv_mozilla;
-    interface->fUseProgram = glUseProgram_mozilla;
-    interface->fVertexAttrib4fv = glVertexAttrib4fv_mozilla;
-    interface->fVertexAttribPointer = glVertexAttribPointer_mozilla;
-    interface->fViewport = glViewport_mozilla;
+    i->fActiveTexture = glActiveTexture_mozilla;
+    i->fAttachShader = glAttachShader_mozilla;
+    i->fBindAttribLocation = glBindAttribLocation_mozilla;
+    i->fBindBuffer = glBindBuffer_mozilla;
+    i->fBindFramebuffer = glBindFramebuffer_mozilla;
+    i->fBindRenderbuffer = glBindRenderbuffer_mozilla;
+    i->fBindTexture = glBindTexture_mozilla;
+    i->fBlendFunc = glBlendFunc_mozilla;
+    i->fBlendColor = glBlendColor_mozilla;
+    i->fBufferData = glBufferData_mozilla;
+    i->fBufferSubData = glBufferSubData_mozilla;
+    i->fCheckFramebufferStatus = glCheckFramebufferStatus_mozilla;
+    i->fClear = glClear_mozilla;
+    i->fClearColor = glClearColor_mozilla;
+    i->fClearStencil = glClearStencil_mozilla;
+    i->fColorMask = glColorMask_mozilla;
+    i->fCompileShader = glCompileShader_mozilla;
+    i->fCreateProgram = glCreateProgram_mozilla;
+    i->fCreateShader = glCreateShader_mozilla;
+    i->fCullFace = glCullFace_mozilla;
+    i->fDeleteBuffers = glDeleteBuffers_mozilla;
+    i->fDeleteFramebuffers = glDeleteFramebuffers_mozilla;
+    i->fDeleteProgram = glDeleteProgram_mozilla;
+    i->fDeleteRenderbuffers = glDeleteRenderbuffers_mozilla;
+    i->fDeleteShader = glDeleteShader_mozilla;
+    i->fDeleteTextures = glDeleteTextures_mozilla;
+    i->fDepthMask = glDepthMask_mozilla;
+    i->fDisable = glDisable_mozilla;
+    i->fDisableVertexAttribArray = glDisableVertexAttribArray_mozilla;
+    i->fDrawArrays = glDrawArrays_mozilla;
+    i->fDrawElements = glDrawElements_mozilla;
+    i->fEnable = glEnable_mozilla;
+    i->fEnableVertexAttribArray = glEnableVertexAttribArray_mozilla;
+    i->fFinish = glFinish_mozilla;
+    i->fFlush = glFlush_mozilla;
+    i->fFramebufferRenderbuffer = glFramebufferRenderbuffer_mozilla;
+    i->fFramebufferTexture2D = glFramebufferTexture2D_mozilla;
+    i->fFrontFace = glFrontFace_mozilla;
+    i->fGenBuffers = glGenBuffers_mozilla;
+    i->fGenFramebuffers = glGenFramebuffers_mozilla;
+    i->fGenRenderbuffers = glGenRenderbuffers_mozilla;
+    i->fGetFramebufferAttachmentParameteriv = glGetFramebufferAttachmentParameteriv_mozilla;
+    i->fGenTextures = glGenTextures_mozilla;
+    i->fGetBufferParameteriv = glGetBufferParameteriv_mozilla;
+    i->fGetError = glGetError_mozilla;
+    i->fGetIntegerv = glGetIntegerv_mozilla;
+    i->fGetProgramInfoLog = glGetProgramInfoLog_mozilla;
+    i->fGetProgramiv = glGetProgramiv_mozilla;
+    i->fGetRenderbufferParameteriv = glGetRenderbufferParameteriv_mozilla;
+    i->fGetShaderInfoLog = glGetShaderInfoLog_mozilla;
+    i->fGetShaderiv = glGetShaderiv_mozilla;
+    i->fGetString = glGetString_mozilla;
+    i->fGetUniformLocation = glGetUniformLocation_mozilla;
+    i->fLineWidth = glLineWidth_mozilla;
+    i->fLinkProgram = glLinkProgram_mozilla;
+    i->fPixelStorei = glPixelStorei_mozilla;
+    i->fReadPixels = glReadPixels_mozilla;
+    i->fRenderbufferStorage = glRenderbufferStorage_mozilla;
+    i->fScissor = glScissor_mozilla;
+    i->fShaderSource = glShaderSource_mozilla;
+    i->fStencilFunc = glStencilFunc_mozilla;
+    i->fStencilMask = glStencilMask_mozilla;
+    i->fStencilOp = glStencilOp_mozilla;
+    i->fTexImage2D = glTexImage2D_mozilla;
+    i->fTexParameteri = glTexParameteri_mozilla;
+    i->fTexParameteriv = glTexParameteriv_mozilla;
+    i->fTexSubImage2D = glTexSubImage2D_mozilla;
+    i->fUniform1f = glUniform1f_mozilla;
+    i->fUniform1i = glUniform1i_mozilla;
+    i->fUniform1fv = glUniform1fv_mozilla;
+    i->fUniform1iv = glUniform1iv_mozilla;
+    i->fUniform2f = glUniform2f_mozilla;
+    i->fUniform2i = glUniform2i_mozilla;
+    i->fUniform2fv = glUniform2fv_mozilla;
+    i->fUniform2iv = glUniform2iv_mozilla;
+    i->fUniform3f = glUniform3f_mozilla;
+    i->fUniform3i = glUniform3i_mozilla;
+    i->fUniform3fv = glUniform3fv_mozilla;
+    i->fUniform3iv = glUniform3iv_mozilla;
+    i->fUniform4f = glUniform4f_mozilla;
+    i->fUniform4i = glUniform4i_mozilla;
+    i->fUniform4fv = glUniform4fv_mozilla;
+    i->fUniform4iv = glUniform4iv_mozilla;
+    i->fUniformMatrix2fv = glUniformMatrix2fv_mozilla;
+    i->fUniformMatrix3fv = glUniformMatrix3fv_mozilla;
+    i->fUniformMatrix4fv = glUniformMatrix4fv_mozilla;
+    i->fUseProgram = glUseProgram_mozilla;
+    i->fVertexAttrib4fv = glVertexAttrib4fv_mozilla;
+    i->fVertexAttribPointer = glVertexAttribPointer_mozilla;
+    i->fViewport = glViewport_mozilla;
 
     // Required for either desktop OpenGL 2.0 or OpenGL ES 2.0
-    interface->fStencilFuncSeparate = glStencilFuncSeparate_mozilla;
-    interface->fStencilMaskSeparate = glStencilMaskSeparate_mozilla;
-    interface->fStencilOpSeparate = glStencilOpSeparate_mozilla;
+    i->fStencilFuncSeparate = glStencilFuncSeparate_mozilla;
+    i->fStencilMaskSeparate = glStencilMaskSeparate_mozilla;
+    i->fStencilOpSeparate = glStencilOpSeparate_mozilla;
 
     // GLContext supports glMapBuffer
-    interface->fMapBuffer = glMapBuffer_mozilla;
-    interface->fUnmapBuffer = glUnmapBuffer_mozilla;
+    i->fMapBuffer = glMapBuffer_mozilla;
+    i->fUnmapBuffer = glUnmapBuffer_mozilla;
 
     // GLContext supports glRenderbufferStorageMultisample/glBlitFramebuffer
-    interface->fRenderbufferStorageMultisample = glRenderbufferStorageMultisample_mozilla;
-    interface->fBlitFramebuffer = glBlitFramebuffer_mozilla;
+    i->fRenderbufferStorageMultisample = glRenderbufferStorageMultisample_mozilla;
+    i->fBlitFramebuffer = glBlitFramebuffer_mozilla;
 
     // GLContext supports glCompressedTexImage2D
-    interface->fCompressedTexImage2D = glCompressedTexImage2D_mozilla;
+    i->fCompressedTexImage2D = glCompressedTexImage2D_mozilla;
 
     // Desktop GL 
-    interface->fGetTexLevelParameteriv = glGetTexLevelParameteriv_mozilla;
-    interface->fDrawBuffer = glDrawBuffer_mozilla;
-    interface->fReadBuffer = glReadBuffer_mozilla;
+    i->fGetTexLevelParameteriv = glGetTexLevelParameteriv_mozilla;
+    i->fDrawBuffer = glDrawBuffer_mozilla;
+    i->fReadBuffer = glReadBuffer_mozilla;
 
     // Desktop OpenGL > 1.5
-    interface->fGenQueries = glGenQueries_mozilla;
-    interface->fDeleteQueries = glDeleteQueries_mozilla;
-    interface->fBeginQuery = glBeginQuery_mozilla;
-    interface->fEndQuery = glEndQuery_mozilla;
-    interface->fGetQueryiv = glGetQueryiv_mozilla;
-    interface->fGetQueryObjectiv = glGetQueryObjectiv_mozilla;
-    interface->fGetQueryObjectuiv = glGetQueryObjectuiv_mozilla;
+    i->fGenQueries = glGenQueries_mozilla;
+    i->fDeleteQueries = glDeleteQueries_mozilla;
+    i->fBeginQuery = glBeginQuery_mozilla;
+    i->fEndQuery = glEndQuery_mozilla;
+    i->fGetQueryiv = glGetQueryiv_mozilla;
+    i->fGetQueryObjectiv = glGetQueryObjectiv_mozilla;
+    i->fGetQueryObjectuiv = glGetQueryObjectuiv_mozilla;
 
     // Desktop OpenGL > 2.0
-    interface->fDrawBuffers = glDrawBuffers_mozilla;
+    i->fDrawBuffers = glDrawBuffers_mozilla;
 
     // We support both desktop GL and GLES2
     if (context->IsGLES2()) {
-        interface->fBindingsExported = kES2_GrGLBinding;
+        i->fBindingsExported = kES2_GrGLBinding;
     } else {
-        interface->fBindingsExported = kDesktop_GrGLBinding;
+        i->fBindingsExported = kDesktop_GrGLBinding;
     }
 
-    return interface;
+    return i;
 }
-
