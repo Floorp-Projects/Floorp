@@ -69,13 +69,12 @@ let gTests = [
   }
 ];
 
-function cleanup() {
-  resetCustomization();
+function asyncCleanup() {
+  yield resetCustomization();
 }
 
 function test() {
   waitForExplicitFinish();
-  registerCleanupFunction(cleanup);
-  runTests(gTests);
+  runTests(gTests, asyncCleanup);
 }
 

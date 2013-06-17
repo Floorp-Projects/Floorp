@@ -76,13 +76,16 @@ let gTests = [
   }
 ];
 
+function asyncCleanup() {
+  yield resetCustomization();
+}
+
 function cleanup() {
   removeCustomToolbars();
-  resetCustomization();
 }
 
 function test() {
   waitForExplicitFinish();
   registerCleanupFunction(cleanup);
-  runTests(gTests);
+  runTests(gTests, asyncCleanup);
 }
