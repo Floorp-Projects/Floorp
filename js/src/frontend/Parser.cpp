@@ -3505,7 +3505,6 @@ Parser<ParseHandler>::switchStatement()
     while ((tt = tokenStream.getToken()) != TOK_RC) {
         uint32_t caseBegin = tokenStream.currentToken().pos.begin;
 
-        ParseNodeKind caseKind;
         Node caseExpr;
         switch (tt) {
           case TOK_DEFAULT:
@@ -3514,12 +3513,10 @@ Parser<ParseHandler>::switchStatement()
                 return null();
             }
             seenDefault = true;
-            caseKind = PNK_DEFAULT;
             caseExpr = null();
             break;
 
           case TOK_CASE:
-            caseKind = PNK_CASE;
             caseExpr = expr();
             if (!caseExpr)
                 return null();
