@@ -1128,17 +1128,7 @@ class OrderedHashTableRef : public gc::BufferableRef
     HashableValue key;
 
   public:
-    OrderedHashTableRef(TableType *t, const HashableValue &k) : table(t), key(k) {}
-
-    bool match(void *location) {
-        if (!table->has(key))
-            return false;
-        for (typename TableType::Range r = table->all(); !r.empty(); r.popFront()) {
-            if ((void*)&r.front() == location)
-                return true;
-        }
-        return false;
-    }
+    explicit OrderedHashTableRef(TableType *t, const HashableValue &k) : table(t), key(k) {}
 
     void mark(JSTracer *trc) {
         HashableValue prior = key;

@@ -524,6 +524,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
 
     rt->gcHelperThread.waitBackgroundSweepEnd();
 
+    AutoStopVerifyingBarriers av(rt, false);
+
     /* Move objects pointed to by roots from the nursery to the major heap. */
     MinorCollectionTracer trc(rt, this);
     MarkRuntime(&trc);

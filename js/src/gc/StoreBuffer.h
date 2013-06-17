@@ -22,49 +22,6 @@ namespace gc {
 
 class AccumulateEdgesTracer;
 
-#ifdef JS_GC_ZEAL
-/*
- * Note: this is a stub Nursery that does not actually contain a heap, just a
- * set of pointers which are "inside" the nursery to implement verification.
- */
-class VerifierNursery
-{
-    HashSet<const void *, PointerHasher<const void *, 3>, SystemAllocPolicy> nursery;
-
-  public:
-    explicit VerifierNursery() : nursery() {}
-
-    bool enable() {
-        if (!nursery.initialized())
-            return nursery.init();
-        return true;
-    }
-
-    void disable() {
-        if (!nursery.initialized())
-            return;
-        nursery.finish();
-    }
-
-    bool isEnabled() const {
-        return nursery.initialized();
-    }
-
-    bool clear() {
-        disable();
-        return enable();
-    }
-
-    bool isInside(const void *cell) const {
-        return nursery.initialized() && nursery.has(cell);
-    }
-
-    void insertPointer(void *cell) {
-        nursery.putNew(cell);
-    }
-};
-#endif /* JS_GC_ZEAL */
-
 /*
  * BufferableRef represents an abstract reference for use in the generational
  * GC's remembered set. Entries in the store buffer that cannot be represented
@@ -74,7 +31,6 @@ class VerifierNursery
 class BufferableRef
 {
   public:
-    virtual bool match(void *location) = 0;
     virtual void mark(JSTracer *trc) = 0;
 };
 
@@ -95,19 +51,13 @@ class HashKeyRef : public BufferableRef
   public:
     HashKeyRef(Map *m, const Key &k) : map(m), key(k) {}
 
-    bool match(void *location) {
-        Ptr p = map->lookup(key);
-        if (!p)
-            return false;
-        return &p->key == location;
-    }
-
     void mark(JSTracer *trc) {
         Key prior = key;
         typename Map::Ptr p = map->lookup(key);
         if (!p)
             return;
         ValueType value = p->value;
+        JS_SET_TRACING_LOCATION(trc, (void*)&p->key);
         Mark(trc, &key, "HashKeyRef");
         if (prior != key) {
             map->remove(prior);
@@ -170,8 +120,7 @@ class StoreBuffer
         bool isAboutToOverflow() const { return pos >= highwater; }
 
         /* Compaction algorithms. */
-        template <typename NurseryType>
-        void compactNotInSet(NurseryType *nursery);
+        void compactNotInSet(const Nursery &nursery);
         void compactRemoveDuplicates();
 
         /*
@@ -208,9 +157,6 @@ class StoreBuffer
 
         /* Mark the source of all edges in the store buffer. */
         void mark(JSTracer *trc);
-
-        /* For verification. */
-        bool accumulateEdges(EdgeSet &edges);
     };
 
     /*
@@ -260,9 +206,6 @@ class StoreBuffer
         /* Mark all generic edges. */
         void mark(JSTracer *trc);
 
-        /* Check if a pointer is present in the buffer. */
-        bool containsEdge(void *location) const;
-
         template <typename T>
         void put(const T &t) {
             JS_ASSERT(!owner->inParallelSection());
@@ -300,9 +243,8 @@ class StoreBuffer
 
         void *location() const { return (void *)edge; }
 
-        template <typename NurseryType>
-        bool inRememberedSet(NurseryType *nursery) const {
-            return !nursery->isInside(edge) && nursery->isInside(*edge);
+        bool inRememberedSet(const Nursery &nursery) const {
+            return !nursery.isInside(edge) && nursery.isInside(*edge);
         }
 
         bool isNullEdge() const {
@@ -331,9 +273,8 @@ class StoreBuffer
         void *deref() const { return edge->isGCThing() ? edge->toGCThing() : NULL; }
         void *location() const { return (void *)edge; }
 
-        template <typename NurseryType>
-        bool inRememberedSet(NurseryType *nursery) const {
-            return !nursery->isInside(edge) && nursery->isInside(deref());
+        bool inRememberedSet(const Nursery &nursery) const {
+            return !nursery.isInside(edge) && nursery.isInside(deref());
         }
 
         bool isNullEdge() const {
@@ -374,8 +315,7 @@ class StoreBuffer
 
         JS_ALWAYS_INLINE void *location() const;
 
-        template <typename NurseryType>
-        JS_ALWAYS_INLINE bool inRememberedSet(NurseryType *nursery) const;
+        JS_ALWAYS_INLINE bool inRememberedSet(const Nursery &nursery) const;
 
         JS_ALWAYS_INLINE bool isNullEdge() const;
 
@@ -396,8 +336,7 @@ class StoreBuffer
         bool operator==(const WholeCellEdges &other) const { return tenured == other.tenured; }
         bool operator!=(const WholeCellEdges &other) const { return tenured != other.tenured; }
 
-        template <typename NurseryType>
-        bool inRememberedSet(NurseryType *nursery) const { return true; }
+        bool inRememberedSet(const Nursery &nursery) const { return true; }
 
         /* This is used by RemoveDuplicates as a unique pointer to this Edge. */
         void *location() const { return (void *)tenured; }
@@ -422,9 +361,6 @@ class StoreBuffer
     bool aboutToOverflow;
     bool overflowed;
     bool enabled;
-
-    /* For the verifier. */
-    EdgeSet edgeSet;
 
     /* TODO: profile to find the ideal size for these. */
     static const size_t ValueBufferSize = 1 * 1024 * sizeof(ValueEdge);
@@ -493,11 +429,6 @@ class StoreBuffer
 
     /* Mark the source of all edges in the store buffer. */
     void mark(JSTracer *trc);
-
-    /* For the verifier. */
-    bool coalesceForVerification();
-    void releaseVerificationData();
-    bool containsEdgeAt(void *loc) const;
 
     /* We cannot call InParallelSection directly because of a circular dependency. */
     bool inParallelSection() const;
