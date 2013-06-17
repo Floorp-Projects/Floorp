@@ -23,10 +23,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 
-#ifdef XP_MACOSX
-#include <CoreServices/CoreServices.h>
-#endif
-
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -572,25 +568,14 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
 
 #ifdef XP_MACOSX
-        if (mWorkAroundDriverBugs) {
-            if (mVendor == VendorIntel) {
-                // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-                mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
-                mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
-                // for good measure, we align renderbuffers on what we do for 2D textures
-                mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
-                mNeedsTextureSizeChecks = true;
-            } else if (mVendor == VendorNVIDIA) {
-                SInt32 major, minor;
-                OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
-                OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
-
-                if (err1 != noErr || err2 != noErr ||
-                    major < 10 || (major == 10 && minor < 8)) {
-                    mMaxTextureSize = std::min(mMaxTextureSize, 4096);
-                    mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize, 4096);
-                }
-            }
+        if (mWorkAroundDriverBugs &&
+            mVendor == VendorIntel) {
+            // see bug 737182 for 2D textures, bug 684882 for cube map textures.
+            mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
+            mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
+            // for good measure, we align renderbuffers on what we do for 2D textures
+            mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
+            mNeedsTextureSizeChecks = true;
         }
 #endif
 #ifdef MOZ_X11
