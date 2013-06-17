@@ -223,7 +223,6 @@ class ArrayBufferObject;
 class BooleanObject;
 class ClonedBlockObject;
 class DebugScopeObject;
-class DeclEnvObject;
 class GlobalObject;
 class MapObject;
 class NestedScopeObject;
@@ -488,7 +487,7 @@ class JSObject : public js::ObjectImpl
      *
      * The scope chain of an object is the link in the search path when a
      * script does a name lookup on a scope object. For JS internal scope
-     * objects --- Call, DeclEnv and block --- the chain is stored in
+     * objects --- Call, DeclEnv and Block --- the chain is stored in
      * the first fixed slot of the object, and the object's parent is the
      * associated global. For other scope objects, the chain is stored in the
      * object's parent.
@@ -976,7 +975,6 @@ class JSObject : public js::ObjectImpl
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of ScopeObject. */
-    inline bool isDeclEnv()     const { return hasClass(&js::DeclEnvClass); }
     inline bool isNestedScope() const;
     inline bool isWith()        const { return hasClass(&js::WithClass); }
     inline bool isClonedBlock() const;
@@ -995,7 +993,6 @@ class JSObject : public js::ObjectImpl
 
     inline js::BooleanObject &asBoolean();
     inline js::ClonedBlockObject &asClonedBlock();
-    inline js::DeclEnvObject &asDeclEnv();
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();

@@ -308,7 +308,7 @@ Class CallObject::class_ = {
     NULL                     /* convert: Leave it NULL so we notice if calls ever escape */
 };
 
-Class js::DeclEnvClass = {
+Class DeclEnvObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DeclEnvObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -329,12 +329,12 @@ Class js::DeclEnvClass = {
 DeclEnvObject *
 DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap)
 {
-    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &DeclEnvClass, NULL));
+    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &class_, NULL));
     if (!type)
         return NULL;
 
     RootedShape emptyDeclEnvShape(cx);
-    emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
+    emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &class_, NULL,
                                                     cx->global(), NULL, FINALIZE_KIND,
                                                     BaseShape::DELEGATE);
     if (!emptyDeclEnvShape)
@@ -355,7 +355,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
     }
 
     JS_ASSERT(!obj->hasDynamicSlots());
-    return &obj->asDeclEnv();
+    return &obj->as<DeclEnvObject>();
 }
 
 DeclEnvObject *
@@ -367,7 +367,7 @@ DeclEnvObject::create(JSContext *cx, HandleObject enclosing, HandleFunction call
 
     obj->asScope().setEnclosingScope(enclosing);
     obj->setFixedSlot(lambdaSlot(), ObjectValue(*callee));
-    return &obj->asDeclEnv();
+    return &obj->as<DeclEnvObject>();
 }
 
 WithObject *
@@ -1022,7 +1022,7 @@ ScopeIter::operator++()
         if (hasScopeObject_) {
             cur_ = &cur_->as<CallObject>().enclosingScope();
             if (CallObjectLambdaName(*frame_.fun()))
-                cur_ = &cur_->asDeclEnv().enclosingScope();
+                cur_ = &cur_->as<DeclEnvObject>().enclosingScope();
         }
         frame_ = NullFramePtr();
         break;
@@ -1287,7 +1287,8 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         /* The rest of the internal scopes do not have unaliased vars. */
-        JS_ASSERT(scope->isDeclEnv() || scope->isWith() || scope->as<CallObject>().isForEval());
+        JS_ASSERT(scope->is<DeclEnvObject>() || scope->isWith() ||
+                  scope->as<CallObject>().isForEval());
         return false;
     }
 
@@ -1572,7 +1573,7 @@ bool
 DebugScopeObject::isForDeclarative() const
 {
     ScopeObject &s = scope();
-    return s.is<CallObject>() || s.is<BlockObject>() || s.isDeclEnv();
+    return s.is<CallObject>() || s.is<BlockObject>() || s.is<DeclEnvObject>();
 }
 
 bool
@@ -2035,9 +2036,9 @@ GetDebugScopeForScope(JSContext *cx, Handle<ScopeObject*> scope, const ScopeIter
         return NULL;
 
     JSObject &maybeDecl = scope->enclosingScope();
-    if (maybeDecl.isDeclEnv()) {
+    if (maybeDecl.is<DeclEnvObject>()) {
         JS_ASSERT(CallObjectLambdaName(scope->as<CallObject>().callee()));
-        enclosingDebug = DebugScopeObject::create(cx, maybeDecl.asDeclEnv(), enclosingDebug);
+        enclosingDebug = DebugScopeObject::create(cx, maybeDecl.as<DeclEnvObject>(), enclosingDebug);
         if (!enclosingDebug)
             return NULL;
     }
@@ -2081,9 +2082,9 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
         if (!callobj)
             return NULL;
 
-        if (callobj->enclosingScope().isDeclEnv()) {
+        if (callobj->enclosingScope().is<DeclEnvObject>()) {
             JS_ASSERT(CallObjectLambdaName(callobj->callee()));
-            DeclEnvObject &declenv = callobj->enclosingScope().asDeclEnv();
+            DeclEnvObject &declenv = callobj->enclosingScope().as<DeclEnvObject>();
             enclosingDebug = DebugScopeObject::create(cx, declenv, enclosingDebug);
             if (!enclosingDebug)
                 return NULL;
