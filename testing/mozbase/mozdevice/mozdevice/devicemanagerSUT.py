@@ -496,6 +496,9 @@ class DeviceManagerSUT(DeviceManager):
             self._logger.warn("launchProcess called without command to run")
             return None
 
+        if cmd[0] == 'am' and hasattr(self, '_getExtraAmStartArgs'):
+            cmd = cmd[:2] + self._getExtraAmStartArgs() + cmd[2:] 
+
         cmdline = subprocess.list2cmdline(cmd)
         if (outputFile == "process.txt" or outputFile == None):
             outputFile = self.getDeviceRoot();
