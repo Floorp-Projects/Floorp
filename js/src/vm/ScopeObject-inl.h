@@ -27,6 +27,16 @@ JSObject::is<js::StaticBlockObject>() const
     return is<js::BlockObject>() && !getProto();
 }
 
+inline JSObject *
+JSObject::enclosingScope()
+{
+    return is<js::ScopeObject>()
+           ? &as<js::ScopeObject>().enclosingScope()
+           : is<js::DebugScopeObject>()
+           ? &as<js::DebugScopeObject>().enclosingScope()
+           : getParent();
+}
+
 namespace js {
 
 inline
@@ -34,12 +44,6 @@ ScopeCoordinate::ScopeCoordinate(jsbytecode *pc)
   : hops(GET_UINT16(pc)), slot(GET_UINT16(pc + 2))
 {
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
-}
-
-inline JSObject &
-ScopeObject::enclosingScope() const
-{
-    return getReservedSlot(SCOPE_CHAIN_SLOT).toObject();
 }
 
 inline void
@@ -265,19 +269,5 @@ ClonedBlockObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAl
 }
 
 }  /* namespace js */
-
-inline js::ScopeObject &
-JSObject::asScope()
-{
-    JS_ASSERT(isScope());
-    return *static_cast<js::ScopeObject *>(this);
-}
-
-inline js::DebugScopeObject &
-JSObject::asDebugScope()
-{
-    JS_ASSERT(isDebugScope());
-    return *static_cast<js::DebugScopeObject *>(this);
-}
 
 #endif /* ScopeObject_inl_h___ */

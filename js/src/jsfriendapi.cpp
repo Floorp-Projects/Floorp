@@ -350,7 +350,7 @@ js::IsAtomsCompartment(JSCompartment *comp)
 JS_FRIEND_API(bool)
 js::IsScopeObject(JSObject *obj)
 {
-    return obj->isScope();
+    return obj->is<ScopeObject>();
 }
 
 JS_FRIEND_API(bool)

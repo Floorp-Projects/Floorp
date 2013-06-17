@@ -29,7 +29,7 @@ BaselineFrame::pushOnScopeChain(ScopeObject &scope)
 inline void
 BaselineFrame::popOffScopeChain()
 {
-    scopeChain_ = &scopeChain_->asScope().enclosingScope();
+    scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
 }
 
 inline bool

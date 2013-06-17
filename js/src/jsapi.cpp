@@ -3224,7 +3224,7 @@ JS_SetPrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSObject *obj)
 {
-    JS_ASSERT(!obj->isScope());
+    JS_ASSERT(!obj->is<ScopeObject>());
     return obj->getParent();
 }
 
@@ -3235,7 +3235,7 @@ JS_SetParent(JSContext *cx, JSObject *objArg, JSObject *parentArg)
     RootedObject parent(cx, parentArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    JS_ASSERT(!obj->isScope());
+    JS_ASSERT(!obj->is<ScopeObject>());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
 

@@ -228,7 +228,7 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
     if (!callobj)
         return NULL;
 
-    callobj->asScope().setEnclosingScope(enclosing);
+    callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
 
     if (script->treatAsRunOnce) {
@@ -365,7 +365,7 @@ DeclEnvObject::create(JSContext *cx, HandleObject enclosing, HandleFunction call
     if (!obj)
         return NULL;
 
-    obj->asScope().setEnclosingScope(enclosing);
+    obj->as<ScopeObject>().setEnclosingScope(enclosing);
     obj->setFixedSlot(lambdaSlot(), ObjectValue(*callee));
     return &obj->as<DeclEnvObject>();
 }
@@ -386,7 +386,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
     if (!obj)
         return NULL;
 
-    obj->asScope().setEnclosingScope(enclosing);
+    obj->as<ScopeObject>().setEnclosingScope(enclosing);
     obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
 
     JSObject *thisp = JSObject::thisObject(cx, proto);
@@ -1011,7 +1011,7 @@ ScopeObject &
 ScopeIter::scope() const
 {
     JS_ASSERT(hasScopeObject());
-    return cur_->asScope();
+    return cur_->as<ScopeObject>();
 }
 
 ScopeIter &
@@ -1111,7 +1111,7 @@ ScopeIter::settle()
         hasScopeObject_ = true;
         JS_ASSERT_IF(type_ == Call, callobj.callee().nonLazyScript() == frame_.script());
     } else {
-        JS_ASSERT(!cur_->isScope());
+        JS_ASSERT(!cur_->is<ScopeObject>());
         JS_ASSERT(frame_.isGlobalFrame() || frame_.isDebuggerFrame());
         frame_ = NullFramePtr();
     }
@@ -1372,7 +1372,7 @@ class DebugScopeProxy : public BaseProxyHandler
     bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                   PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE
     {
-        Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
+        Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
 
         RootedArgumentsObject maybeArgsObj(cx);
@@ -1402,8 +1402,8 @@ class DebugScopeProxy : public BaseProxyHandler
     bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,  HandleId id,
              MutableHandleValue vp) MOZ_OVERRIDE
     {
-        Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
-        Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
+        Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
+        Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
         RootedArgumentsObject maybeArgsObj(cx);
         if (!checkForMissingArguments(cx, id, *scope, maybeArgsObj.address()))
@@ -1423,8 +1423,8 @@ class DebugScopeProxy : public BaseProxyHandler
     bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
              MutableHandleValue vp) MOZ_OVERRIDE
     {
-        Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
-        Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
+        Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
+        Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
         if (handleUnaliasedAccess(cx, debugScope, scope, id, SET, vp))
             return true;
         return JSObject::setGeneric(cx, scope, scope, id, vp, strict);
@@ -1433,7 +1433,7 @@ class DebugScopeProxy : public BaseProxyHandler
     bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                         PropertyDescriptor *desc) MOZ_OVERRIDE
     {
-        Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
+        Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
         bool found;
         if (!has(cx, proxy, id, &found))
@@ -1448,7 +1448,7 @@ class DebugScopeProxy : public BaseProxyHandler
     bool getScopePropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props,
                                unsigned flags)
     {
-        Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
+        Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
         if (isMissingArgumentsBinding(*scope)) {
             if (!props.append(NameToId(cx->names().arguments)))
@@ -1486,7 +1486,7 @@ class DebugScopeProxy : public BaseProxyHandler
     bool has(JSContext *cx, HandleObject proxy, HandleId id_, bool *bp) MOZ_OVERRIDE
     {
         RootedId id(cx, id_);
-        ScopeObject &scopeObj = proxy->asDebugScope().scope();
+        ScopeObject &scopeObj = proxy->as<DebugScopeObject>().scope();
 
         if (isArguments(cx, id) && isFunctionScope(scopeObj)) {
             *bp = true;
@@ -1537,17 +1537,17 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
     if (!obj)
         return NULL;
 
-    JS_ASSERT(!enclosing->isScope());
+    JS_ASSERT(!enclosing->is<ScopeObject>());
     SetProxyExtra(obj, ENCLOSING_EXTRA, ObjectValue(*enclosing));
     SetProxyExtra(obj, SNAPSHOT_EXTRA, NullValue());
 
-    return &obj->asDebugScope();
+    return &obj->as<DebugScopeObject>();
 }
 
 ScopeObject &
 DebugScopeObject::scope() const
 {
-    return GetProxyTargetObject(const_cast<DebugScopeObject*>(this))->asScope();
+    return GetProxyTargetObject(const_cast<DebugScopeObject*>(this))->as<ScopeObject>();
 }
 
 JSObject &
@@ -1694,7 +1694,7 @@ DebugScopes::hasDebugScope(JSContext *cx, ScopeObject &scope)
 
     if (ObjectWeakMap::Ptr p = scopes->proxiedScopes.lookup(&scope)) {
         JS_ASSERT(CanUseDebugScopeMaps(cx));
-        return &p->value->asDebugScope();
+        return &p->value->as<DebugScopeObject>();
     }
 
     return NULL;
@@ -1791,7 +1791,7 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
         CallObject &callobj = frame.scopeChain()->as<CallObject>();
         scopes->liveScopes.remove(&callobj);
         if (ObjectWeakMap::Ptr p = scopes->proxiedScopes.lookup(&callobj))
-            debugScope = &p->value->asDebugScope();
+            debugScope = &p->value->as<DebugScopeObject>();
     } else {
         ScopeIter si(frame, cx);
         if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
@@ -2125,16 +2125,16 @@ GetDebugScope(JSContext *cx, JSObject &obj)
      * chain; every scope chain must start with zero or more ScopeObjects and
      * terminate with one or more non-ScopeObjects (viz., GlobalObject).
      */
-    if (!obj.isScope()) {
+    if (!obj.is<ScopeObject>()) {
 #ifdef DEBUG
         JSObject *o = &obj;
         while ((o = o->enclosingScope()))
-            JS_ASSERT(!o->isScope());
+            JS_ASSERT(!o->is<ScopeObject>());
 #endif
         return &obj;
     }
 
-    Rooted<ScopeObject*> scope(cx, &obj.asScope());
+    Rooted<ScopeObject*> scope(cx, &obj.as<ScopeObject>());
     if (AbstractFramePtr frame = DebugScopes::hasLiveFrame(*scope)) {
         ScopeIter si(frame, *scope, cx);
         return GetDebugScope(cx, si);
