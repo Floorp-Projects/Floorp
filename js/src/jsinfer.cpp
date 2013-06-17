@@ -6150,7 +6150,7 @@ JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFun
             AddTypeProperty(cx, type, "lastIndex", types::Type::Int32Type());
         }
 
-        if (obj->isString())
+        if (obj->is<StringObject>())
             AddTypeProperty(cx, type, "length", Type::Int32Type());
     }
 

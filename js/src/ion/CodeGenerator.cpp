@@ -126,7 +126,7 @@ CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache *ool)
 
 StringObject *
 MNewStringObject::templateObj() const {
-    return &templateObj_->asString();
+    return &templateObj_->as<StringObject>();
 }
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)

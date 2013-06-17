@@ -19,7 +19,10 @@
 #include "builtin/ParallelArray.h"
 #include "ion/IonFrames.h"
 #include "js/RootingAPI.h"
+#include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/NumberObject.h"
+#include "vm/StringObject.h"
 
 #include "jsanalyzeinlines.h"
 
@@ -465,11 +468,11 @@ GetClassForProtoKey(JSProtoKey key)
         return &ArrayClass;
 
       case JSProto_Number:
-        return &NumberClass;
+        return &NumberObject::class_;
       case JSProto_Boolean:
-        return &BooleanClass;
+        return &BooleanObject::class_;
       case JSProto_String:
-        return &StringClass;
+        return &StringObject::class_;
       case JSProto_RegExp:
         return &RegExpObject::class_;
 

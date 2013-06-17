@@ -203,31 +203,25 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class BooleanClass;
 extern Class DateClass;
 extern Class ErrorClass;
 extern Class GeneratorClass;
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
-extern Class NumberClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpStaticsClass;
 extern Class StopIterationClass;
-extern Class StringClass;
 extern Class WeakMapClass;
 
 class ArrayBufferObject;
-class BooleanObject;
 class GlobalObject;
 class MapObject;
 class NewObjectCache;
 class NormalArgumentsObject;
-class NumberObject;
 class SetObject;
 class StrictArgumentsObject;
-class StringObject;
 
 }  /* namespace js */
 
@@ -966,22 +960,14 @@ class JSObject : public js::ObjectImpl
     inline bool isTypedArray()       const;
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
-    /* Subtypes of PrimitiveObject. */
-    inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
-    inline bool isNumber()  const { return hasClass(&js::NumberClass); }
-    inline bool isString()  const { return hasClass(&js::StringClass); }
-
     /* Subtypes of Proxy. */
     inline bool isWrapper()                 const;
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
-    inline js::BooleanObject &asBoolean();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
-    inline js::NumberObject &asNumber();
     inline js::SetObject &asSet();
-    inline js::StringObject &asString();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 

@@ -623,12 +623,12 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), NULL);
     } else if (srcObj->isDate()) {
         clone = JS_NewDateObjectMsec(cx, srcObj->getDateUTCTime().toNumber());
-    } else if (srcObj->isBoolean()) {
-        clone = BooleanObject::create(cx, srcObj->asBoolean().unbox());
-    } else if (srcObj->isNumber()) {
-        clone = NumberObject::create(cx, srcObj->asNumber().unbox());
-    } else if (srcObj->isString()) {
-        Rooted<JSStableString*> str(cx, srcObj->asString().unbox()->ensureStable(cx));
+    } else if (srcObj->is<BooleanObject>()) {
+        clone = BooleanObject::create(cx, srcObj->as<BooleanObject>().unbox());
+    } else if (srcObj->is<NumberObject>()) {
+        clone = NumberObject::create(cx, srcObj->as<NumberObject>().unbox());
+    } else if (srcObj->is<StringObject>()) {
+        Rooted<JSStableString*> str(cx, srcObj->as<StringObject>().unbox()->ensureStable(cx));
         if (!str)
             return NULL;
         str = js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length())->ensureStable(cx);
