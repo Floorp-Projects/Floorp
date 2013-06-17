@@ -271,6 +271,11 @@ public:
     , mNotifiedBlocked(false)
     , mHasCurrentData(false)
     , mNotifiedHasCurrentData(false)
+    , mHasBeenOrdered(false)
+    , mIsOnOrderingStack(false)
+    , mIsConsumed(false)
+    , mInBlockingSet(false)
+    , mBlockInThisPhase(false)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
@@ -858,10 +863,7 @@ public:
   friend class MediaStreamGraphImpl;
 
   // Do not call these from outside MediaStreamGraph.cpp!
-  virtual void AddInput(MediaInputPort* aPort)
-  {
-    mInputs.AppendElement(aPort);
-  }
+  virtual void AddInput(MediaInputPort* aPort);
   virtual void RemoveInput(MediaInputPort* aPort)
   {
     mInputs.RemoveElement(aPort);

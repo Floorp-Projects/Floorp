@@ -1015,7 +1015,11 @@ MediaStreamGraphImpl::RunThread()
     }
     messageQueue.Clear();
 
-    UpdateStreamOrder();
+    // Only update the stream order if needed, since it can be expensive.
+    if (mStreamOrderDirty) {
+      UpdateStreamOrder();
+      mStreamOrderDirty = false;
+    }
 
     // Find the sampling rate that we need to use for non-realtime graphs.
     TrackRate sampleRate = IdealAudioRate();
@@ -2151,6 +2155,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mPostedRunInStableState(false)
   , mRealtime(aRealtime)
   , mNonRealtimeProcessing(false)
+  , mStreamOrderDirty(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
@@ -2278,6 +2283,13 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   graph->mNonRealtimeTicksToProcess = aTicksToProcess;
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
+}
+
+void
+ProcessedMediaStream::AddInput(MediaInputPort* aPort)
+{
+  mInputs.AppendElement(aPort);
+  GraphImpl()->SetStreamOrderDirty();
 }
 
 }
