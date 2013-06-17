@@ -32,6 +32,8 @@ HOST_CPPSRCS = \
   stabs_to_module.cc \
   stabs_reader.cc \
   dwarf_line_to_module.cc \
+  arm_ex_reader.cc \
+  arm_ex_to_module.cc \
   pathname_stripper.cc \
   logging.cc \
   $(NULL)

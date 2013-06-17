@@ -50,7 +50,6 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "IMPORT_LIBRARY      = $(IMPORT_LIBRARY)"
 	@echo "STATIC_LIBS         = $(STATIC_LIBS)"
 	@echo "SHARED_LIBS         = $(SHARED_LIBS)"
-	@echo "EXTRA_DSO_LIBS      = $(EXTRA_DSO_LIBS)"
 	@echo "EXTRA_DSO_LDOPTS    = $(EXTRA_DSO_LDOPTS)"
 	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
 	@echo --------------------------------------------------------------------------------

@@ -28,6 +28,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_bug_740541_iframes.js \
                  browser_styleeditor_bug_851132_middle_click.js \
                  browser_styleeditor_nostyle.js \
+                 browser_styleeditor_reload.js \
                  head.js \
                  four.html \
                  head.js \

@@ -2006,6 +2006,7 @@ GK_ATOM(physical_home_button, "physical-home-button")
 // windows theme selector metrics
 GK_ATOM(windows_classic, "windows-classic")
 GK_ATOM(windows_theme_aero, "windows-theme-aero")
+GK_ATOM(windows_theme_aero_lite, "windows-theme-aero-lite")
 GK_ATOM(windows_theme_luna_blue, "windows-theme-luna-blue")
 GK_ATOM(windows_theme_luna_olive, "windows-theme-luna-olive")
 GK_ATOM(windows_theme_luna_silver, "windows-theme-luna-silver")

@@ -24,30 +24,14 @@
 
 class nsMappedAttributes;
 
-class nsHTMLStyleSheet MOZ_FINAL : public nsIStyleSheet,
-                                   public nsIStyleRuleProcessor
+class nsHTMLStyleSheet MOZ_FINAL : public nsIStyleRuleProcessor
 {
 public:
-  nsHTMLStyleSheet(nsIURI* aURL, nsIDocument* aDocument);
+  nsHTMLStyleSheet(nsIDocument* aDocument);
+
+  void SetOwningDocument(nsIDocument* aDocument);
 
   NS_DECL_ISUPPORTS
-
-  // nsIStyleSheet api
-  virtual nsIURI* GetSheetURI() const MOZ_OVERRIDE;
-  virtual nsIURI* GetBaseURI() const MOZ_OVERRIDE;
-  virtual void GetTitle(nsString& aTitle) const MOZ_OVERRIDE;
-  virtual void GetType(nsString& aType) const MOZ_OVERRIDE;
-  virtual bool HasRules() const MOZ_OVERRIDE;
-  virtual bool IsApplicable() const MOZ_OVERRIDE;
-  virtual void SetEnabled(bool aEnabled) MOZ_OVERRIDE;
-  virtual bool IsComplete() const MOZ_OVERRIDE;
-  virtual void SetComplete() MOZ_OVERRIDE;
-  virtual nsIStyleSheet* GetParentSheet() const MOZ_OVERRIDE;  // will be null
-  virtual nsIDocument* GetOwningDocument() const MOZ_OVERRIDE;
-  virtual void SetOwningDocument(nsIDocument* aDocumemt) MOZ_OVERRIDE;
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
-#endif
 
   // nsIStyleRuleProcessor API
   virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;
@@ -67,7 +51,7 @@ public:
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
   size_t DOMSizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  void Reset(nsIURI* aURL);
+  void Reset();
   nsresult SetLinkColor(nscolor aColor);
   nsresult SetActiveLinkColor(nscolor aColor);
   nsresult SetVisitedLinkColor(nscolor aColor);
@@ -159,7 +143,6 @@ public: // for mLangRuleTable structures only
   };
 
 private:
-  nsCOMPtr<nsIURI>        mURL;
   nsIDocument*            mDocument;
   nsRefPtr<HTMLColorRule> mLinkRule;
   nsRefPtr<HTMLColorRule> mVisitedRule;

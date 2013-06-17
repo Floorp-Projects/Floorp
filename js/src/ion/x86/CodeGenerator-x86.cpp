@@ -503,9 +503,9 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 bool
 CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
-    if (ool->dest().isFloat())
+    if (ool->dest().isFloat()) {
         masm.movsd(&js_NaN, ool->dest().fpu());
-    else {
+    } else {
         Register destReg = ool->dest().gpr();
         masm.xorl(destReg, destReg);
     }

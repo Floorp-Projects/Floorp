@@ -1334,13 +1334,13 @@ nsSVGUtils::GetFirstNonAAncestorFrame(nsIFrame* aStartFrame)
 gfxMatrix
 nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
 {
+  if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+    aFrame = aFrame->GetParent();
+  }
+
   if (aFrame->StyleSVGReset()->mVectorEffect ==
       NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
  
-    if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
-      aFrame = aFrame->GetParent();
-    }
-
     nsIContent *content = aFrame->GetContent();
     NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
 
@@ -1732,14 +1732,10 @@ GetStrokeDashData(nsIFrame* aFrame,
     *aDashOffset = aObjectPaint->GetStrokeDashOffset();
   } else {
     *aDashOffset = nsSVGUtils::CoordToFloat(presContext,
-                                           ctx,
-                                           style->mStrokeDashoffset);
+                                            ctx,
+                                            style->mStrokeDashoffset);
   }
   
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
-    content = content->GetParent();
-  }
-
   return (totalLength > 0.0);
 }
 

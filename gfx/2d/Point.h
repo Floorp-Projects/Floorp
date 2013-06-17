@@ -62,6 +62,12 @@ struct PointTyped :
 typedef PointTyped<UnknownUnits> Point;
 
 template<class units>
+IntPointTyped<units> RoundedToInt(const PointTyped<units>& aPoint) {
+  return IntPointTyped<units>(NS_lround(aPoint.x),
+                              NS_lround(aPoint.y));
+}
+
+template<class units>
 struct IntSizeTyped :
   public BaseSize< int32_t, IntSizeTyped<units> >,
   public units {

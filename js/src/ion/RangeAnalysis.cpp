@@ -85,11 +85,6 @@ using mozilla::IsNegative;
 // after range analysis is performed. The remaining compiler phases do not ever
 // encounter beta nodes.
 
-RangeAnalysis::RangeAnalysis(MIRGraph &graph)
-  : graph_(graph)
-{
-}
-
 static bool
 IsDominatedUse(MBasicBlock *block, MUse *use)
 {
@@ -749,7 +744,13 @@ void
 MTruncateToInt32::computeRange()
 {
     Range input(getOperand(0));
-    setRange(new Range(input.lower(), input.upper()));
+    int32_t lower = input.lower();
+    int32_t upper = input.upper();
+    if (input.isLowerInfinite() || input.isUpperInfinite()) {
+        lower = JSVAL_INT_MIN;
+        upper = JSVAL_INT_MAX;
+    }
+    setRange(new Range(lower, upper));
 }
 
 void
@@ -1402,13 +1403,21 @@ MToDouble::isOperandTruncated(size_t index) const
     return type() == MIRType_Int32;
 }
 
-// Ensure that all observables (non-resume point) uses can work with a truncated
+// Ensure that all observables uses can work with a truncated
 // version of the |candidate|'s result.
 static bool
 AllUsesTruncate(MInstruction *candidate)
 {
-    for (MUseDefIterator use(candidate); use; use++) {
-        if (!use.def()->isOperandTruncated(use.index()))
+    for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
+        if (!use->consumer()->isDefinition()) {
+            // We can only skip testing resume points, if all original uses are still present.
+            // Only than testing all uses is enough to guarantee the truncation isn't observerable.
+            if (candidate->isUseRemoved())
+                return false;
+            continue;
+        }
+
+        if (!use->consumer()->toDefinition()->isOperandTruncated(use->index()))
             return false;
     }
 

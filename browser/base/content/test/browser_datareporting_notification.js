@@ -23,7 +23,6 @@ function sendNotifyRequest(name) {
 
   service.healthReporter.onInit().then(function onInit() {
     is(policy.ensureNotifyResponse(new Date()), false, "User has not responded to policy.");
-    is(policy.notifyState, policy.STATE_NOTIFY_WAIT, "Policy is waiting for notification response.");
   });
 
   return policy;
@@ -53,15 +52,17 @@ function waitForNotificationClose(notification, cb) {
   observer.observe(parent, {childList: true});
 }
 
+let dumpAppender, rootLogger;
+
 function test() {
   waitForExplicitFinish();
 
   let ns = {};
   Components.utils.import("resource://services-common/log4moz.js", ns);
-  let rootLogger = ns.Log4Moz.repository.rootLogger;
-  let appender = new ns.Log4Moz.DumpAppender();
-  appender.level = ns.Log4Moz.Level.All;
-  rootLogger.addAppender(appender);
+  rootLogger = ns.Log4Moz.repository.rootLogger;
+  dumpAppender = new ns.Log4Moz.DumpAppender();
+  dumpAppender.level = ns.Log4Moz.Level.All;
+  rootLogger.addAppender(dumpAppender);
 
   let notification = document.getElementById("global-notificationbox");
   let policy;
@@ -126,6 +127,9 @@ function test_multiple_windows() {
         }
 
         dump("Finishing multiple window test.\n");
+        rootLogger.removeAppender(dumpAppender);
+        delete dumpAppender;
+        delete rootLogger;
         finish();
       }
 

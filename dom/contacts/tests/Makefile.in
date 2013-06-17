@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
   test_contacts_basics.html \
+  test_contacts_substringmatching.html \
   test_contacts_events.html \
   test_contacts_blobs.html \
   test_contacts_international.html \

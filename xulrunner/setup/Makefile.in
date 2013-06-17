@@ -10,7 +10,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = nsXULAppInstall.manifest
-EXTRA_PP_COMPONENTS = nsXULAppInstall.js
+DISABLED_EXTRA_PP_COMPONENTS = nsXULAppInstall.js
 
 DEFINES = -DBIN_SUFFIX=$(BIN_SUFFIX)
 

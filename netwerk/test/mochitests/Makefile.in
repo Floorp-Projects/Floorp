@@ -1,0 +1,21 @@
+# -*- Mode: Makefile; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# vim: set ts=8 sts=2 et sw=2 tw=80:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= @DEPTH@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= @relativesrcdir@
+FAIL_ON_WARNINGS := 1
+
+include $(DEPTH)/config/autoconf.mk
+
+MOCHITEST_FILES = \
+  partial_content.sjs \
+  test_partially_cached_content.html \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk

@@ -24,6 +24,7 @@
 #include "ScriptProcessorNode.h"
 #include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
+#include "MediaStreamAudioDestinationNode.h"
 #include "WaveShaperNode.h"
 #include "WaveTable.h"
 #include "ConvolverNode.h"
@@ -202,6 +203,14 @@ bool IsValidBufferSize(uint32_t aBufferSize) {
   }
 }
 
+}
+
+already_AddRefed<MediaStreamAudioDestinationNode>
+AudioContext::CreateMediaStreamDestination()
+{
+  nsRefPtr<MediaStreamAudioDestinationNode> node =
+      new MediaStreamAudioDestinationNode(this);
+  return node.forget();
 }
 
 already_AddRefed<ScriptProcessorNode>

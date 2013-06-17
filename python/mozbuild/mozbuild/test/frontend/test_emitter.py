@@ -134,6 +134,7 @@ class TestEmitterBasic(unittest.TestCase):
             HOST_CSRCS=['fans.c', 'tans.c'],
             HOST_LIBRARY_NAME='host_fans',
             LIBRARY_NAME='lib_name',
+            LIBS=['fans.lib', 'tans.lib'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
             SSRCS=['fans.S', 'tans.S'],
             XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],

@@ -47,7 +47,6 @@
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
-#include "jsobjinlines.h"
 #include "jsstrinlines.h"
 #include "jsautooplen.h"        // generated headers last
 

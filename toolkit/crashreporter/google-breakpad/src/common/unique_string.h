@@ -235,6 +235,27 @@ inline static const UniqueString* ustr__ZDra() {
   return us;
 }
 
+// "pc"
+inline static const UniqueString* ustr__pc() {
+  static const UniqueString* us = NULL;
+  if (!us) us = ToUniqueString("pc");
+  return us;
+}
+
+// "lr"
+inline static const UniqueString* ustr__lr() {
+  static const UniqueString* us = NULL;
+  if (!us) us = ToUniqueString("lr");
+  return us;
+}
+
+// "sp"
+inline static const UniqueString* ustr__sp() {
+  static const UniqueString* us = NULL;
+  if (!us) us = ToUniqueString("sp");
+  return us;
+}
+
 template <typename ValueType>
 class UniqueStringMap
 {

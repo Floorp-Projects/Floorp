@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_baseline_ic_h__) && defined(JS_ION)
+#ifndef jsion_baseline_ic_h__
 #define jsion_baseline_ic_h__
+
+#ifdef JS_ION
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -2717,7 +2719,7 @@ class ICUnaryArith_Double : public ICStub
     friend class ICStubSpace;
 
     ICUnaryArith_Double(IonCode *stubCode)
-      : ICStub(UnaryArith_Int32, stubCode)
+      : ICStub(UnaryArith_Double, stubCode)
     {}
 
   public:
@@ -2733,7 +2735,7 @@ class ICUnaryArith_Double : public ICStub
 
       public:
         Compiler(JSContext *cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
@@ -5522,4 +5524,6 @@ class ICRest_Fallback : public ICFallbackStub
 } // namespace ion
 } // namespace js
 
-#endif
+#endif // JS_ION
+
+#endif // jsion_baseline_ic_h__

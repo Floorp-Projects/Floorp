@@ -121,8 +121,7 @@ MediaStreamPlayback.prototype = {
         if (!timeUpdateFired) {
           self.mediaElement.removeEventListener('timeupdate',
             timeUpdateCallback, false);
-          ok(false, "timeUpdate event never fired");
-          onError();
+          onError("timeUpdate event never fired");
         }
       }, TIMEOUT_LENGTH);
     };
@@ -141,8 +140,7 @@ MediaStreamPlayback.prototype = {
       if (!canPlayThroughFired) {
         self.mediaElement.removeEventListener('canplaythrough',
           canPlayThroughCallback, false);
-        ok(false, "canplaythrough event never fired");
-        onError();
+        onError("canplaythrough event never fired");
       }
     }, TIMEOUT_LENGTH);
   },
@@ -237,8 +235,7 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
       // If ended doesn't fire in enough time, then we fail the test
       setTimeout(function() {
         if (!endedFired) {
-          ok(false, "ended event never fired");
-          onError();
+          onError("ended event never fired");
         }
       }, TIMEOUT_LENGTH);
     }

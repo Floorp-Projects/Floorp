@@ -52,6 +52,7 @@
 #include <utility>
 #include <vector>
 
+#include "common/arm_ex_reader.h"
 #include "common/dwarf/bytereader-inl.h"
 #include "common/dwarf/dwarf2diehandler.h"
 #include "common/dwarf_cfi_to_module.h"
@@ -69,6 +70,10 @@
 #endif
 #include "common/using_std_string.h"
 #include "common/logging.h"
+
+#if defined(__ANDROID__) && !defined(SHT_ARM_EXIDX)
+# define SHT_ARM_EXIDX (SHT_LOPROC + 1)
+#endif
 
 // This namespace contains helper functions.
 namespace {
@@ -341,6 +346,52 @@ bool LoadDwarfCFI(const string& dwarf_filename,
   dwarf2reader::CallFrameInfo parser(cfi, cfi_size,
                                      &byte_reader, &handler, &dwarf_reporter,
                                      eh_frame);
+  parser.Start();
+  return true;
+}
+
+template<typename ElfClass>
+bool LoadARMexidx(const typename ElfClass::Ehdr* elf_header,
+                  const typename ElfClass::Shdr* exidx_section,
+                  const typename ElfClass::Shdr* extab_section,
+                  uint32_t loading_addr,
+                  Module* module) {
+  // To do this properly we need to know:
+  // * the bounds of the .ARM.exidx section in the mapped image
+  // * the bounds of the .ARM.extab section in the mapped image
+  // * the vma of the last byte in the text section associated with the .exidx
+  // The first two are easy.  The third is a bit tricky.  If we can't
+  // figure out what it is, just pass in zero.
+  const char *exidx_img
+    = GetOffset<ElfClass, char>(elf_header, exidx_section->sh_offset);
+  size_t exidx_size = exidx_section->sh_size;
+  const char *extab_img
+    = GetOffset<ElfClass, char>(elf_header, extab_section->sh_offset);
+  size_t extab_size = extab_section->sh_size;
+
+  // The sh_link field of the exidx section gives the section number
+  // for the associated text section.
+  uint32_t exidx_text_last_svma = 0;
+  int exidx_text_sno = exidx_section->sh_link;
+  typedef typename ElfClass::Shdr Shdr;
+  // |sections| points to the section header table
+  const Shdr* sections
+    = GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
+  const int num_sections = elf_header->e_shnum;
+  if (exidx_text_sno >= 0 && exidx_text_sno < num_sections) {
+    const Shdr* exidx_text_shdr = &sections[exidx_text_sno];
+    if (exidx_text_shdr->sh_size > 0) {
+      exidx_text_last_svma
+        = exidx_text_shdr->sh_addr + exidx_text_shdr->sh_size - 1;
+    }
+  }
+
+  arm_ex_to_module::ARMExToModule handler(module);
+  arm_ex_reader::ExceptionTableInfo
+    parser(exidx_img, exidx_size, extab_img, extab_size, exidx_text_last_svma,
+           &handler,
+           reinterpret_cast<const char*>(elf_header),
+           loading_addr);
   parser.Start();
   return true;
 }
@@ -632,6 +683,29 @@ bool LoadSymbols(const string& obj_file,
       if (result)
         BPLOG(INFO) << "LoadSymbols:   read CFI from .eh_frame";
     }
+  }
+
+  // ARM has special unwind tables that can be used.
+  const Shdr* arm_exidx_section =
+      FindElfSectionByName<ElfClass>(".ARM.exidx", SHT_ARM_EXIDX,
+                                     sections, names, names_end,
+                                     elf_header->e_shnum);
+  const Shdr* arm_extab_section =
+      FindElfSectionByName<ElfClass>(".ARM.extab", SHT_PROGBITS,
+                                     sections, names, names_end,
+                                     elf_header->e_shnum);
+  // Only load information from this section if there isn't a .debug_info
+  // section.
+  if (!found_debug_info_section
+      && arm_exidx_section && arm_extab_section && symbol_data != NO_CFI) {
+    info->LoadedSection(".ARM.exidx");
+    info->LoadedSection(".ARM.extab");
+    bool result = LoadARMexidx<ElfClass>(elf_header,
+                                         arm_exidx_section, arm_extab_section,
+                                         loading_addr, module);
+    found_usable_info = found_usable_info || result;
+    if (result)
+      BPLOG(INFO) << "LoadSymbols:   read EXIDX from .ARM.{exidx,extab}";
   }
 
   if (!found_debug_info_section && symbol_data != ONLY_CFI) {

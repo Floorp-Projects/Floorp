@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
   var gHostedManifestURL = gBaseURL + 'file_app.sjs?apptype=hosted&getmanifest=true';
   var gCachedManifestURL = gBaseURL + 'file_app.sjs?apptype=cached&getmanifest=true';
   var gGenerator = runTest();
-  var mozBrowserFramesEnabledValue = undefined;
   var launchableValue = undefined;
 
   function go() {
@@ -41,11 +40,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 
   function runTest() {
     // Set up.
-
-    try {
-      mozBrowserFramesEnabledValue =
-        SpecialPowers.getBoolPref("dom.mozBrowserFramesEnabled");
-    } catch(e) {}
 
     launchableValue = SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
@@ -250,7 +244,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
   }
 
   function finish() {
-    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", mozBrowserFramesEnabledValue);
+    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
     //SpecialPowers.setAllAppsLaunchable(launchableValue);
     SimpleTest.finish();
   }

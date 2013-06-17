@@ -200,6 +200,8 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
                 targets.clear();
                 return true;
             }
+            if (!typeObj->interpretedFunction->getOrCreateScript(cx))
+                return false;
             DebugOnly<bool> appendOk = targets.append(typeObj->interpretedFunction);
             JS_ASSERT(appendOk);
 
@@ -6685,6 +6687,9 @@ IonBuilder::jsop_setelem()
         // untill the cache supports more ics
         SetElemICInspector icInspect(inspector->setElemICInspector(pc));
         if (!icInspect.sawDenseWrite())
+            break;
+
+        if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
             break;
 
         MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);

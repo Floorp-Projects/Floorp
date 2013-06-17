@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedString;
-
 interface SVGFETileElement : SVGElement {
   readonly attribute SVGAnimatedString in1;
 };

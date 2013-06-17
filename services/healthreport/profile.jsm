@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Metrics.jsm");
 const DEFAULT_PROFILE_MEASUREMENT_NAME = "age";
 const REQUIRED_UINT32_TYPE = {type: "TYPE_UINT32"};
 
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm")
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
