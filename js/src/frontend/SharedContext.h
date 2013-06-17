@@ -192,7 +192,7 @@ class ModuleBox : public ObjectBox, public SharedContext
     ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module,
               ParseContext<FullParseHandler> *pc);
     ObjectBox *toObjectBox() { return this; }
-    Module *module() const { return &object->asModule(); }
+    Module *module() const { return &object->as<Module>(); }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext

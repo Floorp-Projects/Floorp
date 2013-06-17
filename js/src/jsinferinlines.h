@@ -471,7 +471,7 @@ GetClassForProtoKey(JSProtoKey key)
       case JSProto_String:
         return &StringClass;
       case JSProto_RegExp:
-        return &RegExpClass;
+        return &RegExpObject::class_;
 
       case JSProto_Int8Array:
       case JSProto_Uint8Array:
@@ -485,10 +485,10 @@ GetClassForProtoKey(JSProtoKey key)
         return &TypedArray::classes[key - JSProto_Int8Array];
 
       case JSProto_ArrayBuffer:
-        return &ArrayBufferClass;
+        return &ArrayBufferObject::class_;
 
       case JSProto_DataView:
-        return &DataViewClass;
+        return &DataViewObject::class_;
 
       case JSProto_ParallelArray:
         return &ParallelArrayObject::class_;

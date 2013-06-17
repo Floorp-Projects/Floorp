@@ -176,25 +176,6 @@ TransportSecurityInfo::Flush()
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetShortSecurityDescription(PRUnichar** aText)
-{
-  if (mShortDesc.IsEmpty())
-    *aText = nullptr;
-  else {
-    *aText = ToNewUnicode(mShortDesc);
-    NS_ENSURE_TRUE(*aText, NS_ERROR_OUT_OF_MEMORY);
-  }
-  return NS_OK;
-}
-
-nsresult
-TransportSecurityInfo::SetShortSecurityDescription(const PRUnichar* aText)
-{
-  mShortDesc.Assign(aText);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
 {
   NS_ENSURE_ARG_POINTER(aText);
@@ -358,7 +339,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   uint32_t version = 3;
   stream->Write32(version | 0xFFFF0000);
   stream->Write32(mSecurityState);
-  stream->WriteWStringZ(mShortDesc.get());
+  stream->WriteWStringZ(EmptyString().get()); 
 
   // XXX: uses nsNSSComponent string bundles off the main thread
   nsresult rv = formatErrorMessage(lock, 
@@ -459,7 +440,8 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
     mSecurityState = version;
     version = 1;
   }
-  stream->ReadString(mShortDesc);
+  nsAutoString dummyShortDesc;
+  stream->ReadString(dummyShortDesc);
   stream->ReadString(mErrorMessageCached);
   mErrorCode = 0;
 

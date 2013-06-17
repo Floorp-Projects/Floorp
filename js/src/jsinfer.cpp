@@ -6141,7 +6141,7 @@ JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFun
         if (fun)
             CheckNewScriptProperties(cx, type, fun);
 
-        if (obj->isRegExp()) {
+        if (obj->is<RegExpObject>()) {
             AddTypeProperty(cx, type, "source", types::Type::StringType());
             AddTypeProperty(cx, type, "global", types::Type::BooleanType());
             AddTypeProperty(cx, type, "ignoreCase", types::Type::BooleanType());

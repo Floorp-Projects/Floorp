@@ -1980,7 +1980,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
      * refcounted JIT code blob for them across compartments instead of just
      * swapping guts.
      */
-    JS_ASSERT(!a->isRegExp() && !b->isRegExp());
+    JS_ASSERT(!a->is<RegExpObject>() && !b->is<RegExpObject>());
 
     /* Arrays can use their fixed storage for elements. */
     JS_ASSERT(!a->isArray() && !b->isArray());
@@ -1989,7 +1989,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
      * Callers should not try to swap ArrayBuffer objects,
      * these use a different slot representation from other objects.
      */
-    JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
+    JS_ASSERT(!a->is<ArrayBufferObject>() && !b->is<ArrayBufferObject>());
 
     /* Trade the guts of the objects. */
     const size_t size = a->tenuredSizeOfThis();
@@ -2553,7 +2553,7 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
      * allowing the slots pointer to change may require updating pointers in
      * the function's active args/vars information.
      */
-    if (obj->isCall())
+    if (obj->is<CallObject>())
         return;
 
     if (newCount == 0) {
@@ -3210,7 +3210,7 @@ js_PurgeScopeChainHelper(JSContext *cx, HandleObject objArg, HandleId id)
      * properties with the same names have been cached or traced. Call objects
      * may gain such properties via eval introducing new vars; see bug 490364.
      */
-    if (obj->isCall()) {
+    if (obj->is<CallObject>()) {
         while ((obj = obj->enclosingScope()) != NULL) {
             if (!PurgeProtoChain(cx, obj, id))
                 return false;
@@ -4311,7 +4311,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
         }
     } else {
         /* We should never add properties to lexical blocks. */
-        JS_ASSERT(!obj->isBlock());
+        JS_ASSERT(!obj->is<BlockObject>());
 
         if (obj->isGlobal() &&
             (defineHow & DNP_UNQUALIFIED) &&
@@ -5330,7 +5330,7 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSi
 #if defined (JS_CPU_X64)
             // On x64, ArrayBufferObject::prepareForAsmJS switches the
             // ArrayBufferObject to use mmap'd storage.
-            sizes->elementsAsmJSNonHeap = asArrayBuffer().byteLength();
+            sizes->elementsAsmJSNonHeap = as<ArrayBufferObject>().byteLength();
 #else
             sizes->elementsAsmJSHeap = mallocSizeOf(elements);
 #endif
@@ -5341,12 +5341,12 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSi
 
     // Other things may be measured in the future if DMD indicates it is worthwhile.
     // Note that sizes->private_ is measured elsewhere.
-    if (isArguments()) {
-        sizes->argumentsData = asArguments().sizeOfMisc(mallocSizeOf);
+    if (is<ArgumentsObject>()) {
+        sizes->argumentsData = as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (isRegExpStatics()) {
         sizes->regExpStatics = js::SizeOfRegExpStaticsData(this, mallocSizeOf);
-    } else if (isPropertyIterator()) {
-        sizes->propertyIteratorData = asPropertyIterator().sizeOfMisc(mallocSizeOf);
+    } else if (is<PropertyIteratorObject>()) {
+        sizes->propertyIteratorData = as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
 #ifdef JS_HAS_CTYPES
     } else {
         // This must be the last case.

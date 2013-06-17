@@ -485,7 +485,7 @@ JSStructuredCloneWriter::parseTransferable()
             JS_ReportError(context(), "Permission denied to access object");
             return false;
         }
-        if (!tObj->isArrayBuffer()) {
+        if (!tObj->is<ArrayBufferObject>()) {
             reportErrorTransferable();
             return false;
         }
@@ -600,7 +600,7 @@ JSStructuredCloneWriter::writeTypedArray(HandleObject arr)
 bool
 JSStructuredCloneWriter::writeArrayBuffer(JSHandleObject obj)
 {
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
            out.writeBytes(buffer.dataPointer(), buffer.byteLength());
 }
@@ -681,8 +681,8 @@ JSStructuredCloneWriter::startWrite(const Value &v)
         if (backref)
             return true;
 
-        if (obj->isRegExp()) {
-            RegExpObject &reobj = obj->asRegExp();
+        if (obj->is<RegExpObject>()) {
+            RegExpObject &reobj = obj->as<RegExpObject>();
             return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
                    writeString(SCTAG_STRING, reobj.getSource());
         } else if (obj->isDate()) {
@@ -690,7 +690,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
         } else if (obj->isTypedArray()) {
             return writeTypedArray(obj);
-        } else if (obj->isArrayBuffer() && obj->asArrayBuffer().hasData()) {
+        } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
             return writeArrayBuffer(obj);
         } else if (obj->isObject() || obj->isArray()) {
             return traverseObject(obj);
@@ -947,7 +947,7 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, Value *vp)
     if (!obj)
         return false;
     vp->setObject(*obj);
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     JS_ASSERT(buffer.byteLength() == nbytes);
     return in.readArray(buffer.dataPointer(), nbytes);
 }
@@ -989,7 +989,7 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, 
     if (!obj)
         return false;
     vp->setObject(*obj);
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     JS_ASSERT(buffer.byteLength() == nbytes);
 
     switch (arrayType) {

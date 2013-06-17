@@ -845,8 +845,8 @@ inline bool JSObject::watched() const
     return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
 }
 
-inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
-inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
+inline bool JSObject::isClonedBlock() const { return is<js::BlockObject>() && !!getProto(); }
+inline bool JSObject::isStaticBlock() const { return is<js::BlockObject>() && !getProto(); }
 inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
 
 inline js::NumberObject &
@@ -861,13 +861,6 @@ JSObject::asString()
 {
     JS_ASSERT(isString());
     return *static_cast<js::StringObject *>(this);
-}
-
-inline js::ScriptSourceObject &
-JSObject::asScriptSource()
-{
-    JS_ASSERT(isScriptSource());
-    return *static_cast<js::ScriptSourceObject *>(this);
 }
 
 inline bool
@@ -926,7 +919,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
         obj->privateRef(shape->numFixedSlots()) = NULL;
 
     size_t span = shape->slotSpan();
-    if (span && clasp != &js::ArrayBufferClass)
+    if (span && clasp != &js::ArrayBufferObject::class_)
         obj->initializeSlotRange(0, span);
 
     return obj;
@@ -1685,8 +1678,8 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Number: return obj->isNumber();
       case ESClass_String: return obj->isString();
       case ESClass_Boolean: return obj->isBoolean();
-      case ESClass_RegExp: return obj->isRegExp();
-      case ESClass_ArrayBuffer: return obj->isArrayBuffer();
+      case ESClass_RegExp: return obj->is<RegExpObject>();
+      case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
       case ESClass_Date: return obj->isDate();
     }
     JS_NOT_REACHED("bad classValue");
