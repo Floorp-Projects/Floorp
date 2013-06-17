@@ -2201,7 +2201,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %include ../shared/tabs.inc.css
 
 .tab-label {
-  margin-top: 3px;
+  margin-top: 1px;
   margin-bottom: 0;
   text-align: center;
 }
