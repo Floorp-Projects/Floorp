@@ -3505,13 +3505,15 @@ SearchService.prototype = {
 
   get defaultEngine() {
     this._ensureInitialized();
-    if (!this._defaultEngine || this._defaultEngine.hidden) {
+    if (!this._defaultEngine) {
       let defPref = BROWSER_SEARCH_PREF + "defaultenginename";
       let defaultEngine = this.getEngineByName(getLocalizedPref(defPref, ""))
-      if (!defaultEngine || defaultEngine.hidden)
+      if (!defaultEngine)
         defaultEngine = this._getSortedEngines(false)[0] || null;
       this._defaultEngine = defaultEngine;
     }
+    if (this._defaultEngine.hidden)
+      return this._getSortedEngines(false)[0];
     return this._defaultEngine;
   },
 
