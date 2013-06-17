@@ -488,7 +488,7 @@ GetClassForProtoKey(JSProtoKey key)
         return &ArrayBufferObject::class_;
 
       case JSProto_DataView:
-        return &DataViewClass;
+        return &DataViewObject::class_;
 
       case JSProto_ParallelArray:
         return &ParallelArrayObject::class_;

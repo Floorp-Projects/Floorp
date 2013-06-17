@@ -344,6 +344,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
 class DataViewObject : public JSObject, public BufferView
 {
 public:
+    static Class class_;
 
 private:
     static Class protoClass;
