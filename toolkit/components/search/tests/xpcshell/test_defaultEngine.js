@@ -44,22 +44,29 @@ function search_observer(aSubject, aTopic, aData) {
 
   search.defaultEngine = engine1;
   do_check_eq(search.defaultEngine, engine1);
-  
-  // Tests search defaultEngine when it changes
   search.defaultEngine = engine2
   do_check_eq(search.defaultEngine, engine2);
-
-  // Test search defaultEngine again when we change back
   search.defaultEngine = engine1;
   do_check_eq(search.defaultEngine, engine1);
 
-  // Test search defaultEngine when the current default is hidden
+  // Test that hiding the currently-default engine affects the defaultEngine getter
+  // (when the default is hidden, we fall back to the first in the list, so move
+  // our second engine to that position)
   search.moveEngine(engine2, 0);
   engine1.hidden = true;
   do_check_eq(search.defaultEngine, engine2);
-  
-  // Test search defaultEngine when it is set to a hidden engine
-  search.defaultEngine = engine1;
+
+  // Test that the default engine is restored when it is unhidden
+  engine1.hidden = false;
+  do_check_eq(search.defaultEngine, engine1);
+
+  // Test that setting defaultEngine to an already-hidden engine works, but
+  // doesn't change the return value of the getter
+  engine2.hidden = true;
+  search.moveEngine(engine1, 0)
+  search.defaultEngine = engine2;
+  do_check_eq(search.defaultEngine, engine1);
+  engine2.hidden = false;
   do_check_eq(search.defaultEngine, engine2);
 
   do_test_finished();
