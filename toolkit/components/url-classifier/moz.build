@@ -41,3 +41,6 @@ EXTRA_PP_COMPONENTS += [
     'nsUrlClassifierLib.js',
     'nsUrlClassifierListManager.js',
 ]
+
+LIBRARY_NAME = 'urlclassifier_s'
+

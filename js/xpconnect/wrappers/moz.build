@@ -19,3 +19,5 @@ CPP_SOURCES += [
     'XrayWrapper.cpp',
 ]
 
+LIBRARY_NAME = 'xpcwrappers_s'
+

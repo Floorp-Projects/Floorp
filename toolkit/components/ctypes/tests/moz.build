@@ -13,3 +13,6 @@ CPP_SOURCES += [
     'jsctypes-test-finalizer.cpp',
     'jsctypes-test.cpp',
 ]
+
+LIBRARY_NAME = 'jsctypes-test'
+

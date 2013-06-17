@@ -7,7 +7,6 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME	= AccessibleMarshal
 DEFFILE = $(win_srcdir)/AccessibleMarshal.def
 
 include $(DEPTH)/config/autoconf.mk

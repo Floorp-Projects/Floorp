@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = kiss_fft
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif

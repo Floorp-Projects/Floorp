@@ -38,3 +38,6 @@ if CONFIG['OS_ARCH'] == 'OS2':
         CPP_SOURCES += [
             'dlldeps-zlib.cpp',
         ]
+
+LIBRARY_NAME = 'xul'
+

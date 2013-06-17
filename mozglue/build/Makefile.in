@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = mozglue
 DIST_INSTALL = 1
 
 # Build mozglue as a shared lib on Windows, OSX and Android.

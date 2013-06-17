@@ -22,3 +22,5 @@ CPP_SOURCES += [
     'nsUnicodeProperties.cpp',
 ]
 
+LIBRARY_NAME = 'unicharutil_external_s'
+

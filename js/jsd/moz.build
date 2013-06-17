@@ -30,3 +30,6 @@ CPP_SOURCES += [
     'jsdebug.cpp',
     'jshash.cpp',
 ]
+
+LIBRARY_NAME = 'jsd'
+

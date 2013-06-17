@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'nsMaemoNetworkManager.cpp',
 ]
 
+LIBRARY_NAME = 'neckosystem_s'
+

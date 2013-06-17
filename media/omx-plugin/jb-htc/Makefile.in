@@ -20,7 +20,6 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE_NAME = omxpluginjb-htc
-LIBRARY_NAME = omxpluginjb-htc
 FORCE_SHARED_LIB = 1
 
 # Don't use STL wrappers; this isn't Gecko code

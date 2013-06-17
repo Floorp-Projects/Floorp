@@ -83,3 +83,5 @@ CPP_SOURCES += [
     'nsParserUtils.cpp',
 ]
 
+LIBRARY_NAME = 'html5p_s'
+

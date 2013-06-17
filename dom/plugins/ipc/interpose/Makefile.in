@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = plugin_child_interpose
 FORCE_SHARED_LIB = 1
 DIST_INSTALL     = 1
 

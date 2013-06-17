@@ -34,3 +34,6 @@ if CONFIG['OS_ARCH'] == 'OS2':
         'nsCP1131ToUnicode.cpp',
         'nsUnicodeToCP1131.cpp',
     ]
+
+LIBRARY_NAME = 'ucvibm_s'
+

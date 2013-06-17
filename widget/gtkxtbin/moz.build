@@ -10,3 +10,5 @@ EXPORTS += [
     'gtk2xtbin.h',
 ]
 
+LIBRARY_NAME = 'gtkxtbin'
+

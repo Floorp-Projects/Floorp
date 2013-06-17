@@ -54,3 +54,5 @@ CPP_SOURCES += [
     'XMLHttpRequestUpload.cpp',
 ]
 
+LIBRARY_NAME = 'domworkers_s'
+

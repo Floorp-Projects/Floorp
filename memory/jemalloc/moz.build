@@ -37,3 +37,6 @@ if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
     CSRCS += [
         'zone.c',
     ]
+
+LIBRARY_NAME = 'jemalloc'
+
