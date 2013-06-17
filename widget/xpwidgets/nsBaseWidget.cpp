@@ -118,31 +118,8 @@ nsBaseWidget::nsBaseWidget()
 #ifdef DEBUG
   debug_RegisterPrefCallbacks();
 #endif
-
-  mShutdownObserver = new WidgetShutdownObserver(this);
-  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
-NS_IMPL_ISUPPORTS1(WidgetShutdownObserver, nsIObserver)
-
-NS_IMETHODIMP
-WidgetShutdownObserver::Observe(nsISupports *aSubject,
-                                const char *aTopic,
-                                const PRUnichar *aData)
-{
-  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    mWidget->Shutdown();
-    nsContentUtils::UnregisterShutdownObserver(this);
-  }
- return NS_OK;
-}
-
-void
-nsBaseWidget::Shutdown()
-{
-  DestroyCompositor();
-  mShutdownObserver = nullptr;
-}
 
 static void DeferredDestroyCompositor(CompositorParent* aCompositorParent,
                               CompositorChild* aCompositorChild)
@@ -192,10 +169,6 @@ nsBaseWidget::~nsBaseWidget()
   if (mLayerManager) {
     mLayerManager->Destroy();
     mLayerManager = nullptr;
-  }
-
-  if (mShutdownObserver) {
-    nsContentUtils::UnregisterShutdownObserver(mShutdownObserver);
   }
 
   DestroyCompositor();
@@ -919,12 +892,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
   // Recreating this is tricky, as we may still have an old and we need
   // to make sure it's properly destroyed by calling DestroyCompositor!
-
-  // If we've already received a shutdown notification, don't try
-  // create a new compositor.
-  if (!mShutdownObserver) {
-    return;
-  }
 
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
   AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();

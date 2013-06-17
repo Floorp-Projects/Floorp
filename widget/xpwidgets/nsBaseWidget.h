@@ -15,7 +15,6 @@
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
-#include "nsIObserver.h"
 #include <algorithm>
 class nsIContent;
 class nsAutoRollup;
@@ -38,22 +37,6 @@ class CompositorParent;
 namespace base {
 class Thread;
 }
-
-class nsBaseWidget;
-
-class WidgetShutdownObserver MOZ_FINAL : public nsIObserver
-{
-public:
-  WidgetShutdownObserver(nsBaseWidget* aWidget)
-    : mWidget(aWidget)
-  { }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-private:
-  nsBaseWidget *mWidget;
-};
 
 /**
  * Common widget implementation used as base class for native
@@ -271,8 +254,6 @@ public:
 
   static nsIRollupListener* GetActiveRollupListener();
 
-  void Shutdown();
-
 protected:
 
   virtual void            ResolveIconName(const nsAString &aIconName,
@@ -375,7 +356,6 @@ protected:
   nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
-  nsCOMPtr<WidgetShutdownObserver> mShutdownObserver;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;
