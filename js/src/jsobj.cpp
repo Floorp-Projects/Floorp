@@ -1980,7 +1980,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
      * refcounted JIT code blob for them across compartments instead of just
      * swapping guts.
      */
-    JS_ASSERT(!a->isRegExp() && !b->isRegExp());
+    JS_ASSERT(!a->is<RegExpObject>() && !b->is<RegExpObject>());
 
     /* Arrays can use their fixed storage for elements. */
     JS_ASSERT(!a->isArray() && !b->isArray());

@@ -515,8 +515,8 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             return bytes->encodeLatin1(cx, str);
         }
 
-        if (obj->isRegExp()) {
-            JSString *source = obj->asRegExp().toString(cx);
+        if (obj->is<RegExpObject>()) {
+            JSString *source = obj->as<RegExpObject>().toString(cx);
             if (!source)
                 return false;
             JS::Anchor<JSString *> anchor(source);

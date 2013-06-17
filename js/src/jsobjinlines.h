@@ -1685,7 +1685,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Number: return obj->isNumber();
       case ESClass_String: return obj->isString();
       case ESClass_Boolean: return obj->isBoolean();
-      case ESClass_RegExp: return obj->isRegExp();
+      case ESClass_RegExp: return obj->is<RegExpObject>();
       case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
       case ESClass_Date: return obj->isDate();
     }

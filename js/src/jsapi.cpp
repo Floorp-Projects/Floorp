@@ -1792,10 +1792,12 @@ JS_InitStandardClasses(JSContext *cx, JSObject *objArg)
 }
 
 #define CLASP(name)                 (&name##Class)
+#define OCLASP(name)                (&name##Object::class_)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArray::classes[TypedArray::type])
 #define EAGER_ATOM(name)            NAME_OFFSET(name)
 #define EAGER_CLASS_ATOM(name)      NAME_OFFSET(name)
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
+#define EAGER_ATOM_AND_OCLASP(name) EAGER_CLASS_ATOM(name), OCLASP(name)
 
 typedef struct JSStdName {
     JSClassInitializerOp init;
@@ -1823,17 +1825,17 @@ static JSStdName standard_class_atoms[] = {
     {js_InitNumberClass,                EAGER_ATOM_AND_CLASP(Number)},
     {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
     {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
-    {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
+    {js_InitRegExpClass,                EAGER_ATOM_AND_OCLASP(RegExp)},
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
     {js_InitWeakMapClass,               EAGER_ATOM_AND_CLASP(WeakMap)},
-    {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
-    {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
+    {js_InitMapClass,                   EAGER_ATOM_AND_OCLASP(Map)},
+    {js_InitSetClass,                   EAGER_ATOM_AND_OCLASP(Set)},
 #ifdef ENABLE_PARALLEL_JS
-    {js_InitParallelArrayClass,         EAGER_CLASS_ATOM(ParallelArray), &js::ParallelArrayObject::class_},
+    {js_InitParallelArrayClass,         EAGER_ATOM_AND_OCLASP(ParallelArray)},
 #endif
     {js_InitProxyClass,                 EAGER_ATOM_AND_CLASP(Proxy)},
 #if ENABLE_INTL_API
@@ -6838,8 +6840,8 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *ch
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
 
     RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, res, reobj->asRegExp(), NullPtr(), chars, length, indexp, test,
-                             &val))
+    if (!ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
+                             test, &val))
     {
         return false;
     }
@@ -6879,8 +6881,8 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t
     CHECK_REQUEST(cx);
 
     RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, NULL, obj->asRegExp(), NullPtr(), chars, length, indexp, test,
-                             &val))
+    if (!ExecuteRegExpLegacy(cx, NULL, obj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
+                             test, &val))
     {
         return false;
     }
@@ -6903,7 +6905,7 @@ JS_GetRegExpFlags(JSContext *cx, JSObject *objArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return obj->asRegExp().getFlags();
+    return obj->as<RegExpObject>().getFlags();
 }
 
 JS_PUBLIC_API(JSString *)
@@ -6913,7 +6915,7 @@ JS_GetRegExpSource(JSContext *cx, JSObject *objArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return obj->asRegExp().getSource();
+    return obj->as<RegExpObject>().getSource();
 }
 
 /************************************************************************/
