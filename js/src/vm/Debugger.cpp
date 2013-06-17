@@ -5158,7 +5158,7 @@ IsDeclarative(Env *env)
 static bool
 IsWith(Env *env)
 {
-    return env->isDebugScope() && env->asDebugScope().scope().isWith();
+    return env->isDebugScope() && env->asDebugScope().scope().is<WithObject>();
 }
 
 static JSBool
@@ -5208,7 +5208,7 @@ DebuggerEnv_getObject(JSContext *cx, unsigned argc, Value *vp)
 
     JSObject *obj;
     if (IsWith(env)) {
-        obj = &env->asDebugScope().scope().asWith().object();
+        obj = &env->asDebugScope().scope().as<WithObject>().object();
     } else {
         obj = env;
         JS_ASSERT(!obj->isDebugScope());

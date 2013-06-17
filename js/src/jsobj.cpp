@@ -4729,7 +4729,7 @@ js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
     JSBool writing;
     RootedObject obj(cx, obj_), pobj(cx);
 
-    while (JS_UNLIKELY(obj->isWith()))
+    while (JS_UNLIKELY(obj->is<WithObject>()))
         obj = obj->getProto();
 
     writing = (mode & JSACC_WRITE) != 0;

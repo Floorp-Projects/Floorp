@@ -503,7 +503,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
         //
         JSObject *scope = outerpc->sc->asGlobalSharedContext()->scopeChain();
         while (scope) {
-            if (scope->isWith())
+            if (scope->is<WithObject>())
                 inWith = true;
             scope = scope->enclosingScope();
         }

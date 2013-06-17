@@ -245,8 +245,8 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
              * 'with' does not participate in the static scope of the script,
              * but it does in the dynamic scope, so skip them here.
              */
-            while (scope->isWith())
-                scope = &scope->asWith().enclosingScope();
+            while (scope->is<WithObject>())
+                scope = &scope->as<WithObject>().enclosingScope();
 
             switch (i.type()) {
               case StaticScopeIter::BLOCK:
@@ -422,7 +422,7 @@ StackFrame::popWith(JSContext *cx)
     if (cx->compartment()->debugMode())
         DebugScopes::onPopWith(this);
 
-    JS_ASSERT(scopeChain()->isWith());
+    JS_ASSERT(scopeChain()->is<WithObject>());
     popOffScopeChain();
 }
 
