@@ -2377,11 +2377,12 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
     As CastableObjectUnwrapper, but defaulting to throwing if unwrapping fails
     """
     def __init__(self, descriptor, source, target, exceptionCode,
-                 isCallbackReturnValue):
+                 isCallbackReturnValue, sourceDescription):
         CastableObjectUnwrapper.__init__(
             self, descriptor, source, target,
-            'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");\n'
-            '%s' % (descriptor.name, exceptionCode),
+            'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
+            '%s' % (sourceDescription, descriptor.interface.identifier.name,
+                    exceptionCode),
             exceptionCode,
             isCallbackReturnValue)
 
@@ -2393,11 +2394,12 @@ class CallbackObjectUnwrapper:
     |target| is an nsCOMPtr of the appropriate type in which we store the result.
     """
     def __init__(self, descriptor, source, target, exceptionCode,
-                 codeOnFailure=None):
+                 sourceDescription, codeOnFailure=None):
         if codeOnFailure is None:
             codeOnFailure = (
-                'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");\n'
-                '%s' % (descriptor.name, exceptionCode))
+                'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
+                '%s' % (sourceDescription, descriptor.interface.identifier.name,
+                        exceptionCode))
         self.descriptor = descriptor
         self.substitution = { "nativeType" : descriptor.nativeType,
                               "source" : source,
@@ -2617,10 +2619,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                  '%s' % (firstCap(sourceDescription), exceptionCode))),
             post="\n")
     def onFailureBadType(failureCode, typeName):
-        return CGWrapper(CGGeneric(
+        return CGWrapper(
+            CGGeneric(
                 failureCode or
-                ('ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");\n'
-                 '%s' % (typeName, exceptionCode))), post="\n")
+                ('ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
+                 '%s' % (firstCap(sourceDescription), typeName,
+                         exceptionCode))),
+            post="\n")
     def onFailureNotCallable(failureCode):
         return CGWrapper(CGGeneric(
                 failureCode or
@@ -3103,6 +3108,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     "callbackObj",
                     "${declName}",
                     exceptionCode,
+                    firstCap(sourceDescription),
                     codeOnFailure=failureCode))
             templateBody += (
                 "{ // Scope for callbackObj\n"
@@ -3122,7 +3128,8 @@ for (uint32_t i = 0; i < length; ++i) {
                         "&${val}.toObject()",
                         "${declName}",
                         exceptionCode,
-                        isCallbackReturnValue))
+                        isCallbackReturnValue,
+                        firstCap(sourceDescription)))
         elif descriptor.workers:
             return handleJSObjectType(type, isMember, failureCode)
         else:
@@ -5108,7 +5115,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
         if unwrapFailureCode is None:
-            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % descriptor.interface.identifier.name
+            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");' % descriptor.interface.identifier.name
         else:
             self.unwrapFailureCode = unwrapFailureCode
         self.getThisObj = getThisObj
