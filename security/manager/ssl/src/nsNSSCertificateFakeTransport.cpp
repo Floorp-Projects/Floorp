@@ -196,13 +196,6 @@ nsNSSCertificateFakeTransport::GetValidity(nsIX509CertValidity **aValidity)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::VerifyForUsage(uint32_t usage, uint32_t *verificationResult)
-{
-  NS_NOTREACHED("Unimplemented on content process");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetUsagesArray(bool localOnly,
                                  uint32_t *_verified,
                                  uint32_t *_count,

@@ -31,6 +31,7 @@ CPP_SOURCES += [
     'nsCRLInfo.cpp',
     'nsCRLManager.cpp',
     'nsCrypto.cpp',
+    'nsCryptoHash.cpp',
     'nsDataSignatureVerifier.cpp',
     'nsIdentityChecking.cpp',
     'nsKeygenHandler.cpp',

@@ -353,6 +353,12 @@ js::IsScopeObject(JSObject *obj)
     return obj->isScope();
 }
 
+JS_FRIEND_API(bool)
+js::IsCallObject(JSObject *obj)
+{
+    return obj->is<CallObject>();
+}
+
 JS_FRIEND_API(JSObject *)
 js::GetObjectParentMaybeScope(JSObject *obj)
 {

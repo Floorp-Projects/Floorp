@@ -20,7 +20,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
-#include "nsIScriptSecurityManager.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMEventTarget.h"
 #include "nsSmartCardMonitor.h"
@@ -29,9 +28,6 @@
 #include "nsITimer.h"
 #include "nsNetUtil.h"
 #include "nsHashtable.h"
-#include "nsICryptoHash.h"
-#include "nsICryptoHMAC.h"
-#include "hasht.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSShutDown.h"
 
@@ -60,8 +56,6 @@ class CertVerifier;
 
 #define NS_PSMCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
 #define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
-#define NS_CRYPTO_HASH_CID {0x36a1d3b3, 0xd886, 0x4317, {0x96, 0xff, 0x87, 0xb0, 0x00, 0x5c, 0xfe, 0xf7}}
-#define NS_CRYPTO_HMAC_CID {0xa496d0a2, 0xdff7, 0x4e23, {0xbd, 0x65, 0x1c, 0xa7, 0x42, 0xfa, 0x17, 0x8a}}
 
 enum EnsureNSSOperator
 {
@@ -139,8 +133,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   // values in the preferences.
   NS_IMETHOD SkipOcspOff() = 0;
 
-  NS_IMETHOD RememberCert(CERTCertificate *cert) = 0;
-
   NS_IMETHOD RemoveCrlFromList(nsAutoString) = 0;
 
   NS_IMETHOD DefineNextTimer() = 0;
@@ -170,40 +162,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
-
-class nsCryptoHash : public nsICryptoHash, public nsNSSShutDownObject
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICRYPTOHASH
-
-  nsCryptoHash();
-
-private:
-  ~nsCryptoHash();
-
-  HASHContext* mHashContext;
-  bool mInitialized;
-
-  virtual void virtualDestroyNSSReference();
-  void destructorSafeDestroyNSSReference();
-};
-
-class nsCryptoHMAC : public nsICryptoHMAC, public nsNSSShutDownObject
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICRYPTOHMAC
-
-  nsCryptoHMAC();
-
-private:
-  ~nsCryptoHMAC();
-  PK11Context* mHMACContext;
-
-  virtual void virtualDestroyNSSReference();
-  void destructorSafeDestroyNSSReference();
-};
 
 class nsNSSShutDownList;
 class nsCertVerificationThread;
@@ -256,7 +214,6 @@ public:
   NS_IMETHOD DefineNextTimer();
   NS_IMETHOD LogoutAuthenticatedPK11();
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
-  NS_IMETHOD RememberCert(CERTCertificate *cert);
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule *module);
@@ -280,10 +237,6 @@ private:
   nsresult InitializeNSS(bool showWarningBox);
   void ShutdownNSS();
 
-#ifdef XP_MACOSX
-  void TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath);
-#endif
-  
   void InstallLoadableRoots();
   void UnloadLoadableRoots();
   void CleanupIdentityInfo();
@@ -307,7 +260,6 @@ private:
   
   Mutex mutex;
   
-  nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
@@ -315,7 +267,6 @@ private:
   nsCOMPtr<nsITimer> mTimer;
   bool mNSSInitialized;
   bool mObserversRegistered;
-  PLHashTable *hashTableCerts;
   nsAutoString mDownloadURL;
   nsAutoString mCrlUpdateKey;
   Mutex mCrlTimerLock;
