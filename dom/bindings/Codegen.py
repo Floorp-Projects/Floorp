@@ -2627,10 +2627,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                          exceptionCode))),
             post="\n")
     def onFailureNotCallable(failureCode):
-        return CGWrapper(CGGeneric(
+        return CGWrapper(
+            CGGeneric(
                 failureCode or
-                ('ThrowErrorMessage(cx, MSG_NOT_CALLABLE);\n'
-                 '%s' % exceptionCode)), post="\n")
+                ('ThrowErrorMessage(cx, MSG_NOT_CALLABLE, "%s");\n'
+                 '%s' % (firstCap(sourceDescription), exceptionCode))),
+            post="\n")
 
     # A helper function for handling default values.  Takes a template
     # body and the C++ code to set the default value and wraps the
@@ -2717,8 +2719,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         assert not isEnforceRange and not isClamp
 
         if failureCode is None:
-            notSequence = ("ThrowErrorMessage(cx, MSG_NOT_SEQUENCE);\n"
-                           "%s" % exceptionCode)
+            notSequence = ('ThrowErrorMessage(cx, MSG_NOT_SEQUENCE, "%s");\n'
+                           "%s" % (firstCap(sourceDescription), exceptionCode))
         else:
             notSequence = failureCode
 
@@ -3350,7 +3352,7 @@ for (uint32_t i = 0; i < length; ++i) {
         template = (
             "{\n"
             "  bool ok;\n"
-            "  int index = FindEnumStringIndex<%(invalidEnumValueFatal)s>(cx, ${val}, %(values)s, \"%(enumtype)s\", &ok);\n"
+            '  int index = FindEnumStringIndex<%(invalidEnumValueFatal)s>(cx, ${val}, %(values)s, "%(enumtype)s", "%(sourceDescription)s", &ok);\n'
             "  if (!ok) {\n"
             "%(exceptionCode)s\n"
             "  }\n"
@@ -3362,6 +3364,7 @@ for (uint32_t i = 0; i < length; ++i) {
   "handleInvalidEnumValueCode" : handleInvalidEnumValueCode,
                "exceptionCode" : CGIndenter(exceptionCodeIndented).define(),
                      "enumLoc" : enumLoc,
+           "sourceDescription" : firstCap(sourceDescription)
                     })
 
         setNull = "${declName}.SetNull();"
@@ -3503,9 +3506,10 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             template = ""
 
-        template += ("if (!${declName}.Init(cx, %s)) {\n"
+        template += ('if (!${declName}.Init(cx, %s, "%s")) {\n'
                      "%s\n"
-                     "}" % (val, exceptionCodeIndented.define()))
+                     "}" % (val, firstCap(sourceDescription),
+                            exceptionCodeIndented.define()))
 
         # Dictionary arguments that might contain traceable things need to get
         # traced
@@ -3535,8 +3539,8 @@ for (uint32_t i = 0; i < length; ++i) {
             dateVal = "${declName}"
 
         if failureCode is None:
-            notDate = ("ThrowErrorMessage(cx, MSG_NOT_DATE);\n"
-                       "%s" % exceptionCode)
+            notDate = ('ThrowErrorMessage(cx, MSG_NOT_DATE, "%s");\n'
+                       "%s" % (firstCap(sourceDescription), exceptionCode))
         else:
             notDate = failureCode
 
@@ -7775,7 +7779,7 @@ class CGDictionary(CGThing):
         else:
             body += (
                 "if (!IsConvertibleToDictionary(cx, val)) {\n"
-                "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
+                "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY, sourceDescription);\n"
                 "}\n"
                 "\n")
 
@@ -7792,6 +7796,7 @@ class CGDictionary(CGThing):
         return ClassMethod("Init", "bool", [
             Argument('JSContext*', 'cx'),
             Argument('JS::Handle<JS::Value>', 'val'),
+            Argument('const char*', 'sourceDescription', default='"Value"')
         ], body=body)
 
     def initFromJSONMethod(self):
