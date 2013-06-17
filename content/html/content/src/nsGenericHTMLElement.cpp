@@ -2179,13 +2179,11 @@ nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm)
     mForm->RemoveElement(this, true);
 
     if (!nameVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, nameVal,
-                                    nsHTMLFormElement::ElementRemoved);
+      mForm->RemoveElementFromTable(this, nameVal);
     }
 
     if (!idVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, idVal,
-                                    nsHTMLFormElement::ElementRemoved);
+      mForm->RemoveElementFromTable(this, idVal);
     }
   }
 
@@ -2316,8 +2314,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       GetAttr(kNameSpaceID_None, aName, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, tmp,
-                                      nsHTMLFormElement::AttributeUpdated);
+        mForm->RemoveElementFromTable(this, tmp);
       }
     }
 
@@ -2325,15 +2322,13 @@ nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, tmp,
-                                      nsHTMLFormElement::AttributeUpdated);
+        mForm->RemoveElementFromTable(this, tmp);
       }
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, tmp,
-                                      nsHTMLFormElement::AttributeUpdated);
+        mForm->RemoveElementFromTable(this, tmp);
       }
 
       mForm->RemoveElement(this, false);

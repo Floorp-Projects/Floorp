@@ -124,6 +124,16 @@ private:
   nsCOMPtr<nsINode> mRoot;
 };
 
+// This class is used only by form element code and this is a static
+// list of elements. NOTE! This list holds strong references to
+// the elements in the list.
+class nsFormContentList : public nsSimpleContentList
+{
+public:
+  nsFormContentList(nsIContent *aForm,
+                    nsBaseContentList& aContentList);
+};
+
 /**
  * Class that's used as the key to hash nsContentList implementations
  * for fast retrieval

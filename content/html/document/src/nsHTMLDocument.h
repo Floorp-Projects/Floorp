@@ -115,6 +115,9 @@ public:
   JSObject* GetAll(JSContext* aCx, mozilla::ErrorResult& aRv);
 
   nsISupports* ResolveName(const nsAString& aName, nsWrapperCache **aCache);
+  virtual already_AddRefed<nsISupports> ResolveName(const nsAString& aName,
+                                                    nsIContent *aForm,
+                                                    nsWrapperCache **aCache) MOZ_OVERRIDE;
 
   virtual void AddedForm() MOZ_OVERRIDE;
   virtual void RemovedForm() MOZ_OVERRIDE;

@@ -32,12 +32,6 @@ class nsFormControlList;
 class nsIMutableArray;
 class nsIURI;
 
-namespace mozilla {
-namespace dom {
-class HTMLImageElement;
-}
-}
-
 class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFormElement,
                           public nsIWebProgressListener,
@@ -127,8 +121,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLFormElement,
-                                           nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLFormElement,
+                                                     nsGenericHTMLElement)
 
   /**
    * Remove an element from this form's list of elements
@@ -149,20 +143,10 @@ public:
    *
    * @param aElement the element to remove
    * @param aName the name or id of the element to remove
-   * @param aRemoveReason describe why this element is removed. If the element
-   *        is removed because it's removed from the form, it will be removed
-   *        from the past names map too, otherwise it will stay in the past
-   *        names map.
    * @return NS_OK if the element was successfully removed.
    */
-  enum RemoveElementReason {
-    AttributeUpdated,
-    ElementRemoved
-  };
   nsresult RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
-                                  const nsAString& aName,
-                                  RemoveElementReason aRemoveReason);
-
+                                  const nsAString& aName);
   /**
    * Add an element to end of this form's list of elements
    *
@@ -174,7 +158,7 @@ public:
   nsresult AddElement(nsGenericHTMLFormElement* aElement, bool aUpdateValidity,
                       bool aNotify);
 
-  /**
+  /**    
    * Add an element to the lookup table maintained by the form.
    *
    * We can't fold this method into AddElement() because when
@@ -184,47 +168,6 @@ public:
    */
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
-
-  /**
-   * Remove an image element from this form's list of image elements
-   *
-   * @param aElement the image element to remove
-   * @return NS_OK if the element was successfully removed.
-   */
-  nsresult RemoveImageElement(mozilla::dom::HTMLImageElement* aElement);
-
-  /**
-   * Remove an image element from the lookup table maintained by the form.
-   * We can't fold this method into RemoveImageElement() because when
-   * RemoveImageElement() is called it doesn't know if the element is
-   * removed because the id attribute has changed, or because the
-   * name attribute has changed.
-   *
-   * @param aElement the image element to remove
-   * @param aName the name or id of the element to remove
-   * @return NS_OK if the element was successfully removed.
-   */
-  nsresult RemoveImageElementFromTable(mozilla::dom::HTMLImageElement* aElement,
-                                      const nsAString& aName,
-                                      RemoveElementReason aRemoveReason);
-  /**
-   * Add an image element to the end of this form's list of image elements
-   *
-   * @param aElement the element to add
-   * @return NS_OK if the element was successfully added
-   */
-  nsresult AddImageElement(mozilla::dom::HTMLImageElement* aElement);
-
-  /**
-   * Add an image element to the lookup table maintained by the form.
-   *
-   * We can't fold this method into AddImageElement() because when
-   * AddImageElement() is called, the image attributes can change.
-   * The name or id attributes of the image are used as a key into the table.
-   */
-  nsresult AddImageElementToTable(mozilla::dom::HTMLImageElement* aChild,
-                                 const nsAString& aName);
-
    /**
     * Return whether there is one and only one input text control.
     *
@@ -420,12 +363,6 @@ protected:
    */
   bool CheckFormValidity(nsIMutableArray* aInvalidElements) const;
 
-  // Clear the mImageNameLookupTable and mImageElements.
-  void Clear();
-
-  // Insert a element into the past names map.
-  void AddToPastNamesMap(const nsAString& aName, nsISupports* aChild);
-
 public:
   /**
    * Flush a possible pending submission. If there was a scripted submission
@@ -479,25 +416,6 @@ protected:
 
   /** The first submit element in mNotInElements -- WEAK */
   nsGenericHTMLFormElement* mFirstSubmitNotInElements;
-
-  // This array holds on to all HTMLImageElement(s).
-  // This is needed to properly clean up the bi-directional references
-  // (both weak and strong) between the form and its HTMLImageElements.
-
-  nsTArray<mozilla::dom::HTMLImageElement*> mImageElements;  // Holds WEAK references
-
-  // A map from an ID or NAME attribute to the HTMLImageElement(s), this
-  // hash holds strong references either to the named HTMLImageElement, or
-  // to a list of named HTMLImageElement(s), in the case where this hash
-  // holds on to a list of named HTMLImageElement(s) the list has weak
-  // references to the HTMLImageElement.
-
-  nsInterfaceHashtable<nsStringHashKey,nsISupports> mImageNameLookupTable;
-
-  // A map from names to elements that were gotten by those names from this
-  // form in that past.  See "past names map" in the HTML5 specification.
-
-  nsInterfaceHashtable<nsStringHashKey,nsISupports> mPastNameLookupTable;
 
   /**
    * Number of invalid and candidate for constraint validation elements in the
