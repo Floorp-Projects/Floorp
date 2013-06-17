@@ -535,7 +535,8 @@ nsHttpServer.prototype =
       dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
             " pending connections");
       socket.asyncListen(this);
-      this._identity._initialize(port, host, true);
+      this._port = socket.port;
+      this._identity._initialize(socket.port, host, true);
       this._socket = socket;
     }
     catch (e)
