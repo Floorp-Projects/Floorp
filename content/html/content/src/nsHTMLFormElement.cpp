@@ -54,9 +54,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsSandboxFlags.h"
 
-// images
-#include "mozilla/dom/HTMLImageElement.h"
-
 using namespace mozilla::dom;
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
@@ -107,8 +104,6 @@ public:
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
-  nsresult AddImageElementToTable(HTMLImageElement* aChild,
-                                  const nsAString& aName);
   nsresult RemoveElementFromTable(nsGenericHTMLFormElement* aChild,
                                   const nsAString& aName);
   nsresult IndexOfControl(nsIFormControl* aControl,
@@ -246,8 +241,6 @@ nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mInvalidElementsCount(0),
     mEverTriedInvalidSubmit(false)
 {
-  mImageNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
-  mPastNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
 }
 
 nsHTMLFormElement::~nsHTMLFormElement()
@@ -255,8 +248,6 @@ nsHTMLFormElement::~nsHTMLFormElement()
   if (mControls) {
     mControls->DropFormReference();
   }
-
-  Clear();
 }
 
 nsresult
@@ -299,15 +290,8 @@ ElementTraverser(const nsAString& key, nsIDOMHTMLInputElement* element,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFormElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControls)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageNameLookupTable)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPastNameLookupTable)
   tmp->mSelectedRadioButtons.EnumerateRead(ElementTraverser, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLFormElement,
-                                                nsGenericHTMLElement)
-  tmp->Clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, Element)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, Element)
@@ -471,9 +455,8 @@ nsHTMLFormElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-template<typename T>
 static void
-MarkOrphans(const nsTArray<T*>& aArray)
+MarkOrphans(const nsTArray<nsGenericHTMLFormElement*>& aArray)
 {
   uint32_t length = aArray.Length();
   for (uint32_t i = 0; i < length; ++i) {
@@ -500,7 +483,8 @@ CollectOrphans(nsINode* aRemovalRoot,
     // Now if MAYBE_ORPHAN_FORM_ELEMENT is not set, that would mean that the
     // node is in fact a descendant of the form and hence should stay in the
     // form.  If it _is_ set, then we need to check whether the node is a
-    // descendant of aRemovalRoot.  If it is, we leave it in the form.
+    // descendant of aRemovalRoot.  If it is, we leave it in the form.  See
+    // also the code in nsGenericHTMLFormElement::FindForm.
 #ifdef DEBUG
     bool removed = false;
 #endif
@@ -527,46 +511,6 @@ CollectOrphans(nsINode* aRemovalRoot,
   }
 }
 
-static void
-CollectOrphans(nsINode* aRemovalRoot,
-               const nsTArray<HTMLImageElement*>& aArray
-#ifdef DEBUG
-               , nsIDOMHTMLFormElement* aThisForm
-#endif
-               )
-{
-  // Walk backwards so that if we remove elements we can just keep iterating
-  uint32_t length = aArray.Length();
-  for (uint32_t i = length; i > 0; --i) {
-    HTMLImageElement* node = aArray[i-1];
-
-    // Now if MAYBE_ORPHAN_FORM_ELEMENT is not set, that would mean that the
-    // node is in fact a descendant of the form and hence should stay in the
-    // form.  If it _is_ set, then we need to check whether the node is a
-    // descendant of aRemovalRoot.  If it is, we leave it in the form.
-#ifdef DEBUG
-    bool removed = false;
-#endif
-    if (node->HasFlag(MAYBE_ORPHAN_FORM_ELEMENT)) {
-      node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
-      if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
-        node->ClearForm(true);
-
-#ifdef DEBUG
-        removed = true;
-#endif
-      }
-    }
-
-#ifdef DEBUG
-    if (!removed) {
-      nsCOMPtr<nsIDOMHTMLFormElement> form = node->GetForm();
-      NS_ASSERTION(form == aThisForm, "How did that happen?");
-    }
-#endif /* DEBUG */
-  }
-}
-
 void
 nsHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
@@ -575,7 +519,6 @@ nsHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // Mark all of our controls as maybe being orphans
   MarkOrphans(mControls->mElements);
   MarkOrphans(mControls->mNotInElements);
-  MarkOrphans(mImageElements);
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
@@ -592,22 +535,17 @@ nsHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
   CollectOrphans(ancestor, mControls->mElements
 #ifdef DEBUG
                  , this
-#endif
+#endif                 
                  );
   CollectOrphans(ancestor, mControls->mNotInElements
 #ifdef DEBUG
                  , this
-#endif
-                 );
-  CollectOrphans(ancestor, mImageElements
-#ifdef DEBUG
-                 , this
-#endif
+#endif                 
                  );
 
   if (oldDocument) {
     oldDocument->RemovedForm();
-  }
+  }     
   ForgetCurrentSubmission();
 }
 
@@ -1096,17 +1034,18 @@ nsHTMLFormElement::GetElementAt(int32_t aIndex) const
  *         0 otherwise
  */
 static inline int32_t
-CompareFormControlPosition(Element *aElement1, Element *aElement2,
+CompareFormControlPosition(nsGenericHTMLFormElement *aControl1,
+                           nsGenericHTMLFormElement *aControl2,
                            const nsIContent* aForm)
 {
-  NS_ASSERTION(aElement1 != aElement2, "Comparing a form control to itself");
+  NS_ASSERTION(aControl1 != aControl2, "Comparing a form control to itself");
 
   // If an element has a @form, we can assume it *might* be able to not have
   // a parent and still be in the form.
-  NS_ASSERTION((aElement1->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
-                aElement1->GetParent()) &&
-               (aElement2->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
-                aElement2->GetParent()),
+  NS_ASSERTION((aControl1->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
+                aControl1->GetParent()) &&
+               (aControl2->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
+                aControl2->GetParent()),
                "Form controls should always have parents");
 
   // If we pass aForm, we are assuming both controls are form descendants which
@@ -1115,15 +1054,15 @@ CompareFormControlPosition(Element *aElement1, Element *aElement2,
   // TODO: remove the prevent asserts fix, see bug 598468.
 #ifdef DEBUG
   nsLayoutUtils::gPreventAssertInCompareTreePosition = true;
-  int32_t rVal = nsLayoutUtils::CompareTreePosition(aElement1, aElement2, aForm);
+  int32_t rVal = nsLayoutUtils::CompareTreePosition(aControl1, aControl2, aForm);
   nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 
   return rVal;
 #else // DEBUG
-  return nsLayoutUtils::CompareTreePosition(aElement1, aElement2, aForm);
+  return nsLayoutUtils::CompareTreePosition(aControl1, aControl2, aForm);
 #endif // DEBUG
 }
-
+ 
 #ifdef DEBUG
 /**
  * Checks that all form elements are in document order. Asserts if any pair of
@@ -1167,57 +1106,6 @@ nsHTMLFormElement::PostPasswordEvent()
   event->PostDOMEvent();
 }
 
-// This function return true if the element, once appended, is the last one in
-// the array.
-template<typename ElementType>
-static bool
-AddElementToList(nsTArray<ElementType*>& aList, ElementType* aChild,
-                 nsHTMLFormElement* aForm)
-{
-  NS_ASSERTION(aList.IndexOf(aChild) == aList.NoIndex,
-               "aChild already in aList");
-
-  uint32_t count = aList.Length();
-  ElementType* element;
-  bool lastElement = false;
-
-  // Optimize most common case where we insert at the end.
-  int32_t position = -1;
-  if (count > 0) {
-    element = aList[count - 1];
-    position = CompareFormControlPosition(aChild, element, aForm);
-  }
-
-  // If this item comes after the last element, or the elements array is
-  // empty, we append to the end. Otherwise, we do a binary search to
-  // determine where the element should go.
-  if (position >= 0 || count == 0) {
-    // WEAK - don't addref
-    aList.AppendElement(aChild);
-    lastElement = true;
-  }
-  else {
-    int32_t low = 0, mid, high;
-    high = count - 1;
-
-    while (low <= high) {
-      mid = (low + high) / 2;
-
-      element = aList[mid];
-      position = CompareFormControlPosition(aChild, element, aForm);
-      if (position >= 0)
-        low = mid + 1;
-      else
-        high = mid - 1;
-    }
-
-    // WEAK - don't addref
-    aList.InsertElementAt(low, aChild);
-  }
-
-  return lastElement;
-}
-
 nsresult
 nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
                               bool aUpdateValidity, bool aNotify)
@@ -1233,8 +1121,47 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   bool childInElements = ShouldBeInElements(aChild);
   nsTArray<nsGenericHTMLFormElement*>& controlList = childInElements ?
       mControls->mElements : mControls->mNotInElements;
+  
+  NS_ASSERTION(controlList.IndexOf(aChild) == controlList.NoIndex,
+               "Form control already in form");
 
-  bool lastElement = AddElementToList(controlList, aChild, this);
+  uint32_t count = controlList.Length();
+  nsGenericHTMLFormElement* element;
+  
+  // Optimize most common case where we insert at the end.
+  bool lastElement = false;
+  int32_t position = -1;
+  if (count > 0) {
+    element = controlList[count - 1];
+    position = CompareFormControlPosition(aChild, element, this);
+  }
+
+  // If this item comes after the last element, or the elements array is
+  // empty, we append to the end. Otherwise, we do a binary search to
+  // determine where the element should go.
+  if (position >= 0 || count == 0) {
+    // WEAK - don't addref
+    controlList.AppendElement(aChild);
+    lastElement = true;
+  }
+  else {
+    int32_t low = 0, mid, high;
+    high = count - 1;
+      
+    while (low <= high) {
+      mid = (low + high) / 2;
+        
+      element = controlList[mid];
+      position = CompareFormControlPosition(aChild, element, this);
+      if (position >= 0)
+        low = mid + 1;
+      else
+        high = mid - 1;
+    }
+      
+    // WEAK - don't addref
+    controlList.InsertElementAt(low, aChild);
+  }
 
 #ifdef DEBUG
   AssertDocumentOrder(controlList, this);
@@ -1432,74 +1359,10 @@ nsHTMLFormElement::HandleDefaultSubmitRemoval()
   }
 }
 
-static nsresult
-RemoveElementFromTableInternal(
-  nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
-  nsIContent* aChild, const nsAString& aName)
-{
-  nsCOMPtr<nsISupports> supports;
-
-  if (!aTable.Get(aName, getter_AddRefs(supports)))
-    return NS_OK;
-
-  // Single element in the hash, just remove it if it's the one
-  // we're trying to remove...
-  if (supports == aChild) {
-    aTable.Remove(aName);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(supports));
-  if (content) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
-
-  // Upcast, uggly, but it works!
-  nsBaseContentList *list = static_cast<nsBaseContentList*>(nodeList.get());
-
-  list->RemoveElement(aChild);
-
-  uint32_t length = 0;
-  list->GetLength(&length);
-
-  if (!length) {
-    // If the list is empty we remove if from our hash, this shouldn't
-    // happen tho
-    aTable.Remove(aName);
-  } else if (length == 1) {
-    // Only one element left, replace the list in the hash with the
-    // single element.
-    nsIContent* node = list->Item(0);
-    if (node) {
-      aTable.Put(aName, node);
-    }
-  }
-
-  return NS_OK;
-}
-
-static PLDHashOperator
-RemovePastNames(const nsAString& aName,
-                nsCOMPtr<nsISupports>& aData,
-                void* aClosure)
-{
-  return aClosure == aData ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
-}
-
 nsresult
 nsHTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
-                                          const nsAString& aName,
-                                          RemoveElementReason aRemoveReason)
+                                          const nsAString& aName)
 {
-  // If the element is being removed from the form, we have to remove it from
-  // the past names map.
-  if (aRemoveReason == ElementRemoved) {
-    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
-  }
-
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
@@ -1511,24 +1374,16 @@ nsHTMLFormElement::FindNamedItem(const nsAString& aName,
   if (result) {
     // FIXME Get the wrapper cache from DoResolveName.
     *aCache = nullptr;
-    AddToPastNamesMap(aName, result);
     return result.forget();
   }
 
-  result = mImageNameLookupTable.GetWeak(aName);
-  if (result) {
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(GetCurrentDoc());
+  if (!htmlDoc) {
     *aCache = nullptr;
-    AddToPastNamesMap(aName, result);
-    return result.forget();
+    return nullptr;
   }
 
-  result = mPastNameLookupTable.GetWeak(aName);
-  if (result) {
-    *aCache = nullptr;
-    return result.forget();
-  }
-
-  return nullptr;
+  return htmlDoc->ResolveName(aName, this, aCache);
 }
 
 already_AddRefed<nsISupports>
@@ -2055,7 +1910,7 @@ nsHTMLFormElement::OnSecurityChange(nsIWebProgress* aWebProgress,
   NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
-
+ 
 NS_IMETHODIMP_(int32_t)
 nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl)
 {
@@ -2286,17 +2141,6 @@ nsHTMLFormElement::IntrinsicState() const
   return state;
 }
 
-void
-nsHTMLFormElement::Clear()
-{
-  for (int32_t i = mImageElements.Length() - 1; i >= 0; i--) {
-    mImageElements[i]->ClearForm(false);
-  }
-  mImageElements.Clear();
-  mImageNameLookupTable.Clear();
-  mPastNameLookupTable.Clear();
-}
-
 //----------------------------------------------------------------------
 // nsFormControlList implementation, this could go away if there were
 // a lightweight collection implementation somewhere
@@ -2385,7 +2229,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFormControlList)
 
 // nsIDOMHTMLCollection interface
 
-NS_IMETHODIMP
+NS_IMETHODIMP    
 nsFormControlList::GetLength(uint32_t* aLength)
 {
   FlushPendingNotifications();
@@ -2454,17 +2298,20 @@ nsFormControlList::NamedItemInternal(const nsAString& aName,
   return mNameLookupTable.GetWeak(aName);
 }
 
-static nsresult
-AddElementToTableInternal(
-  nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
-  nsIContent* aChild, const nsAString& aName, nsHTMLFormElement* aForm)
+nsresult
+nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
+                                     const nsAString& aName)
 {
+  if (!ShouldBeInElements(aChild)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsISupports> supports;
-  aTable.Get(aName, getter_AddRefs(supports));
+  mNameLookupTable.Get(aName, getter_AddRefs(supports));
 
   if (!supports) {
-    // No entry found, add the element
-    aTable.Put(aName, aChild);
+    // No entry found, add the form control
+    mNameLookupTable.Put(aName, NS_ISUPPORTS_CAST(nsIContent*, aChild));
   } else {
     // Found something in the hash, check its type
     nsCOMPtr<nsIContent> content = do_QueryInterface(supports);
@@ -2480,7 +2327,7 @@ AddElementToTableInternal(
 
       // Found an element, create a list, add the element to the list and put
       // the list in the hash
-      nsSimpleContentList *list = new nsSimpleContentList(aForm);
+      nsSimpleContentList *list = new nsSimpleContentList(mForm);
 
       // If an element has a @form, we can assume it *might* be able to not have
       // a parent and still be in the form.
@@ -2490,14 +2337,14 @@ AddElementToTableInternal(
       // Determine the ordering between the new and old element.
       bool newFirst = nsContentUtils::PositionIsBefore(aChild, content);
 
-      list->AppendElement(newFirst ? aChild : content.get());
-      list->AppendElement(newFirst ? content.get() : aChild);
+      list->AppendElement(newFirst ? aChild : content);
+      list->AppendElement(newFirst ? content : aChild);
 
 
       nsCOMPtr<nsISupports> listSupports = do_QueryObject(list);
 
       // Replace the element with the list.
-      aTable.Put(aName, listSupports);
+      mNameLookupTable.Put(aName, listSupports);
     } else {
       // There's already a list in the hash, add the child to the list
       nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
@@ -2549,17 +2396,6 @@ AddElementToTableInternal(
 }
 
 nsresult
-nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
-                                     const nsAString& aName)
-{
-  if (!ShouldBeInElements(aChild)) {
-    return NS_OK;
-  }
-
-  return AddElementToTableInternal(mNameLookupTable, aChild, aName, mForm);
-}
-
-nsresult
 nsFormControlList::IndexOfControl(nsIFormControl* aControl,
                                   int32_t* aIndex)
 {
@@ -2580,7 +2416,48 @@ nsFormControlList::RemoveElementFromTable(nsGenericHTMLFormElement* aChild,
     return NS_OK;
   }
 
-  return RemoveElementFromTableInternal(mNameLookupTable, aChild, aName);
+  nsCOMPtr<nsISupports> supports;
+
+  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports)))
+    return NS_OK;
+
+  nsCOMPtr<nsIFormControl> fctrl(do_QueryInterface(supports));
+
+  if (fctrl) {
+    // Single element in the hash, just remove it if it's the one
+    // we're trying to remove...
+    if (fctrl == aChild) {
+      mNameLookupTable.Remove(aName);
+    }
+
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+
+  // Upcast, uggly, but it works!
+  nsBaseContentList *list = static_cast<nsBaseContentList*>(nodeList.get());
+
+  list->RemoveElement(aChild);
+
+  uint32_t length = 0;
+  list->GetLength(&length);
+
+  if (!length) {
+    // If the list is empty we remove if from our hash, this shouldn't
+    // happen tho
+    mNameLookupTable.Remove(aName);
+  } else if (length == 1) {
+    // Only one element left, replace the list in the hash with the
+    // single element.
+    nsIContent* node = list->Item(0);
+    if (node) {
+      mNameLookupTable.Put(aName, node);
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -2704,55 +2581,3 @@ nsFormControlList::GetSupportedNames(nsTArray<nsString>& aNames)
   // this enumeration.
   mNameLookupTable.EnumerateRead(CollectNames, &aNames);
 }
-
-nsresult
-nsHTMLFormElement::AddImageElement(HTMLImageElement* aChild)
-{
-  AddElementToList(mImageElements, aChild, this);
-  return NS_OK;
-}
-
-nsresult
-nsHTMLFormElement::AddImageElementToTable(HTMLImageElement* aChild,
-                                          const nsAString& aName)
-{
-  return AddElementToTableInternal(mImageNameLookupTable, aChild, aName, this);
-}
-
-nsresult
-nsHTMLFormElement::RemoveImageElement(HTMLImageElement* aChild)
-{
-  uint32_t index = mImageElements.IndexOf(aChild);
-  NS_ENSURE_STATE(index != mImageElements.NoIndex);
-
-  mImageElements.RemoveElementAt(index);
-  return NS_OK;
-}
-
-nsresult
-nsHTMLFormElement::RemoveImageElementFromTable(HTMLImageElement* aElement,
-                                               const nsAString& aName,
-                                               RemoveElementReason aRemoveReason)
-{
-  // If the element is being removed from the form, we have to remove it from
-  // the past names map.
-  if (aRemoveReason == ElementRemoved) {
-    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
-  }
-
-  return RemoveElementFromTableInternal(mImageNameLookupTable, aElement, aName);
-}
-
-void
-nsHTMLFormElement::AddToPastNamesMap(const nsAString& aName,
-                                     nsISupports* aChild)
-{
-  // If candidates contains exactly one node. Add a mapping from name to the
-  // node in candidates in the form element's past names map, replacing the
-  // previous entry with the same name, if any.
-  nsCOMPtr<nsIContent> node = do_QueryInterface(aChild);
-  if (node) {
-    mPastNameLookupTable.Put(aName, aChild);
-  }
-}
-

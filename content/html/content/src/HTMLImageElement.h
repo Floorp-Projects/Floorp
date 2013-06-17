@@ -174,30 +174,12 @@ public:
     SetHTMLAttr(nsGkAtoms::lowsrc, aLowsrc, aError);
   }
 
-#ifdef DEBUG
-  nsIDOMHTMLFormElement* GetForm() const;
-#endif
-  void SetForm(nsIDOMHTMLFormElement* aForm);
-  void ClearForm(bool aRemoveFromForm);
-
 protected:
   CSSIntPoint GetXY();
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-  void UpdateFormOwner();
-
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) MOZ_OVERRIDE;
-
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
-
-  // This is a weak reference that this element and the HTMLFormElement
-  // cooperate in maintaining.
-  nsHTMLFormElement* mForm;
 };
 
 } // namespace dom
