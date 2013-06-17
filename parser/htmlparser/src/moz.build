@@ -26,3 +26,5 @@ CPP_SOURCES += [
     'nsToken.cpp',
 ]
 
+LIBRARY_NAME = 'htmlpars'
+

@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'nsDataHandler.cpp',
 ]
 
+LIBRARY_NAME = 'nkdata_s'
+

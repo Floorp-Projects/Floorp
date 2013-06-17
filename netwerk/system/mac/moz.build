@@ -6,3 +6,5 @@
 
 MODULE = 'necko'
 
+LIBRARY_NAME = 'neckosystem_s'
+

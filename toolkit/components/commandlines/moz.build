@@ -21,3 +21,5 @@ CPP_SOURCES += [
     'nsCommandLine.cpp',
 ]
 
+LIBRARY_NAME = 'commandlines'
+

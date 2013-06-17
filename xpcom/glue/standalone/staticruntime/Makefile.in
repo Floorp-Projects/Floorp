@@ -12,7 +12,6 @@ include $(srcdir)/../../objs.mk
 
 EXTRA_DEPS += $(srcdir)/../../objs.mk
 
-LIBRARY_NAME	= xpcomglue_staticruntime
 DIST_INSTALL	= 1
 
 LOCAL_INCLUDES	= \

@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= gkmedias
 EXPORT_LIBRARY	= $(DIST)/lib
 ifeq (WINNT,$(OS_TARGET))
 FORCE_SHARED_LIB = 1

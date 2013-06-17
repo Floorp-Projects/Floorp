@@ -43,3 +43,6 @@ if CONFIG['OS_TARGET'] == 'Android':
         CSRCS += [
             'cubeb_audiotrack.c',
         ]
+
+LIBRARY_NAME = 'cubeb'
+

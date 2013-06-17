@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= breakpad_linux_common_s
 ifdef MOZ_CRASHREPORTER
 endif
 

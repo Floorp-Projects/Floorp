@@ -12,3 +12,5 @@ CPP_SOURCES += [
     'nsHyphenator.cpp',
 ]
 
+LIBRARY_NAME = 'hyphenation_s'
+

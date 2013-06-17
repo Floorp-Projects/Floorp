@@ -85,7 +85,6 @@ CPP_SOURCES += [
     'ArrayBoundsClamper.cpp',
 ]
 
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
         'ossource_win.cpp',
@@ -108,4 +107,6 @@ CPP_SOURCES += [
     'TranslatorGLSL.cpp',
     'VersionGLSL.cpp',
 ]
+
+LIBRARY_NAME = 'angle'
 

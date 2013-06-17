@@ -17,3 +17,5 @@ CPP_SOURCES += [
     'nsTextEditUtils.cpp',
 ]
 
+LIBRARY_NAME = 'texteditor_s'
+

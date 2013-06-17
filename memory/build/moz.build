@@ -30,3 +30,6 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
     CSRCS += [
         'replace_malloc.c',
     ]
+
+LIBRARY_NAME = 'memory'
+

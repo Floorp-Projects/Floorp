@@ -28,3 +28,5 @@ CPP_SOURCES += [
     'nsURILoader.cpp',
 ]
 
+LIBRARY_NAME = 'uriloaderbase_s'
+

@@ -14,3 +14,5 @@ CPP_SOURCES += [
     'nsAppStartupNotifier.cpp',
 ]
 
+LIBRARY_NAME = 'appstartupnotifier_s'
+

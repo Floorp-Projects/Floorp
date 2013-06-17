@@ -22,3 +22,5 @@ CPP_SOURCES += [
     'nsRegressionTester.cpp',
 ]
 
+LIBRARY_NAME = 'gkdebug'
+
