@@ -341,7 +341,7 @@ Section "-Application" APP_IDX
   ${AddDisabledDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" \
                                  "${AppRegName} Document" ""
   ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" \
-                                 "true"
+                                 "delete"
 
   ; For pre win8, the following keys should only be set if we can write to HKLM.
   ; For post win8, the keys below get set in both HKLM and HKCU.

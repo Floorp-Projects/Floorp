@@ -1495,6 +1495,8 @@
 
       StrCmp "$R9" "true" +1 +2
       WriteRegStr SHCTX "$R3\$R5" "URL Protocol" ""
+      StrCmp "$R9" "delete" +1 +2
+      DeleteRegValue SHCTX "$R3\$R5" "URL Protocol"
       StrCpy $R4 ""
       ReadRegDWord $R4 SHCTX "$R3\$R5" "EditFlags"
       StrCmp $R4 "" +1 +3  ; Only add EditFlags if a value doesn't exist
