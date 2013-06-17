@@ -84,13 +84,13 @@ VariablesView.prototype = {
   /**
    * Helper setter for populating this container with a raw object.
    *
-   * @param object aData
+   * @param object aObject
    *        The raw object to display. You can only provide this object
    *        if you want the variables view to work in sync mode.
    */
   set rawObject(aObject) {
     this.empty();
-    this.addScope().addItem().populate(aObject);
+    this.addScope().addItem().populate(aObject, { sorted: true });
   },
 
   /**
