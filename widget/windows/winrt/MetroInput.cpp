@@ -576,6 +576,11 @@ MetroInput::OnCharacterReceived(uint32_t aCharCode,
 
   nsKeyEvent keyEvent(true, NS_KEY_PRESS, mWidget.Get());
   mModifierKeyState.Update();
+  if (mModifierKeyState.IsAltGr()) {
+    mModifierKeyState.Unset(MODIFIER_CONTROL
+                          | MODIFIER_ALT
+                          | MODIFIER_ALTGRAPH);
+  }
   mModifierKeyState.InitInputEvent(keyEvent);
   keyEvent.time = ::GetMessageTime();
   keyEvent.isChar = true;
@@ -662,7 +667,8 @@ MetroInput::OnKeyDown(uint32_t aVKey,
   keyEvent.charCode = MapVirtualKey(aVKey, MAPVK_VK_TO_CHAR);
   keyEvent.isChar = !IsControlCharacter(keyEvent.charCode);
   if (!keyEvent.isChar
-   || mModifierKeyState.IsControl()) {
+   || (mModifierKeyState.IsControl()
+    && !mModifierKeyState.IsAltGr())) {
     // We don't want to send another message to our plugin,
     // so reset keyEvent.pluginEvent
     keyEvent.pluginEvent = nullptr;
