@@ -652,7 +652,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
         return false;
     JS_SetGlobalObject(cx, selfHostingGlobal_);
     JSAutoCompartment ac(cx, cx->global());
-    Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->asGlobal());
+    Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
     /*
      * During initialization of standard classes for the self-hosting global,
      * all self-hosted functions are ignored. Thus, we don't create cyclic

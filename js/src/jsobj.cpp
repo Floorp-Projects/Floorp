@@ -1282,7 +1282,7 @@ void
 NewObjectCache::fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto,
                           gc::AllocKind kind, JSObject *obj)
 {
-    JS_ASSERT_IF(proto.isObject(), !proto.toObject()->isGlobal());
+    JS_ASSERT_IF(proto.isObject(), !proto.toObject()->is<GlobalObject>());
     JS_ASSERT(obj->getTaggedProto() == proto);
     return fill(entry, clasp, proto.raw(), kind, obj);
 }
@@ -1304,7 +1304,8 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp,
     if (proto.isObject() &&
         newKind == GenericObject &&
         !cx->compartment()->objectMetadataCallback &&
-        (!parent || parent == proto.toObject()->getParent()) && !proto.toObject()->isGlobal())
+        (!parent || parent == proto.toObject()->getParent()) &&
+        !proto.toObject()->is<GlobalObject>())
     {
         if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
             JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
@@ -1361,12 +1362,12 @@ js::NewObjectWithClassProtoCommon(JSContext *cx, js::Class *clasp, JSObject *pro
     NewObjectCache &cache = cx->runtime()->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
-    if (parentArg->isGlobal() &&
+    if (parentArg->is<GlobalObject>() &&
         protoKey != JSProto_Null &&
         newKind == GenericObject &&
         !cx->compartment()->objectMetadataCallback)
     {
-        if (cache.lookupGlobal(clasp, &parentArg->asGlobal(), allocKind, &entry)) {
+        if (cache.lookupGlobal(clasp, &parentArg->as<GlobalObject>(), allocKind, &entry)) {
             JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
             if (obj)
                 return obj;
@@ -1388,7 +1389,7 @@ js::NewObjectWithClassProtoCommon(JSContext *cx, js::Class *clasp, JSObject *pro
         return NULL;
 
     if (entry != -1 && !obj->hasDynamicSlots())
-        cache.fillGlobal(entry, clasp, &parent->asGlobal(), allocKind, obj);
+        cache.fillGlobal(entry, clasp, &parent->as<GlobalObject>(), allocKind, obj);
 
     return obj;
 }
@@ -2134,7 +2135,7 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
          * property is not yet present, force it into a new one bound to a
          * reserved slot. Otherwise, go through the normal property path.
          */
-        JS_ASSERT(obj->isGlobal());
+        JS_ASSERT(obj->is<GlobalObject>());
         JS_ASSERT(obj->isNative());
 
         if (!obj->nativeLookup(cx, id)) {
@@ -2158,7 +2159,7 @@ static void
 SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 {
     JS_ASSERT(!obj->getParent());
-    if (!obj->isGlobal())
+    if (!obj->is<GlobalObject>())
         return;
 
     obj->setReservedSlot(key, ObjectOrNullValue(cobj));
@@ -2169,7 +2170,7 @@ static void
 ClearClassObject(JSObject *obj, JSProtoKey key)
 {
     JS_ASSERT(!obj->getParent());
-    if (!obj->isGlobal())
+    if (!obj->is<GlobalObject>())
         return;
 
     obj->setSlot(key, UndefinedValue());
@@ -2228,7 +2229,9 @@ js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey ke
          * of obj (the global object) is has a reserved slot indexed by key;
          * and (c) key is not the null key.
          */
-        if (!(clasp->flags & JSCLASS_IS_ANONYMOUS) || !obj->isGlobal() || key == JSProto_Null) {
+        if (!(clasp->flags & JSCLASS_IS_ANONYMOUS) || !obj->is<GlobalObject>() ||
+            key == JSProto_Null)
+        {
             uint32_t attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
                            ? JSPROP_READONLY | JSPROP_PERMANENT
                            : 0;
@@ -2522,7 +2525,7 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
     Debug_SetSlotRangeToCrashOnTouch(obj->slots + oldCount, newCount - oldCount);
 
     /* Changes in the slots of global objects can trigger recompilation. */
-    if (changed && obj->isGlobal())
+    if (changed && obj->is<GlobalObject>())
         types::MarkObjectStateChange(cx, obj);
 
     return true;
@@ -2567,7 +2570,7 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
     obj->slots = newslots;
 
     /* Watch for changes in global object slots, as for growSlots. */
-    if (changed && obj->isGlobal())
+    if (changed && obj->is<GlobalObject>())
         types::MarkObjectStateChange(cx, obj);
 }
 
@@ -2991,7 +2994,7 @@ bool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, MutableHandleObject objp)
 {
     RootedObject global(cx, &obj->global());
-    if (!global->isGlobal()) {
+    if (!global->is<GlobalObject>()) {
         objp.set(NULL);
         return true;
     }
@@ -3756,7 +3759,7 @@ js::LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleOb
     RootedShape prop(cx);
 
     RootedObject scope(cx, scopeChain);
-    for (; !scope->isGlobal(); scope = scope->enclosingScope()) {
+    for (; !scope->is<GlobalObject>(); scope = scope->enclosingScope()) {
         if (!JSObject::lookupGeneric(cx, scope, id, &pobj, &prop))
             return false;
         if (prop)
@@ -4298,7 +4301,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
         /* We should never add properties to lexical blocks. */
         JS_ASSERT(!obj->is<BlockObject>());
 
-        if (obj->isGlobal() &&
+        if (obj->is<GlobalObject>() &&
             (defineHow & DNP_UNQUALIFIED) &&
             !MaybeReportUndeclaredVarAssignment(cx, JSID_TO_STRING(id)))
         {
@@ -4953,7 +4956,7 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 
     if (!shape) {
         const char *slotname = NULL;
-        if (obj->isGlobal()) {
+        if (obj->is<GlobalObject>()) {
 #define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init)                           \
             if ((code) == slot) { slotname = js_##name##_str; goto found; }
             JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)

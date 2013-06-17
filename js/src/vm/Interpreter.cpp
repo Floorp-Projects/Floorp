@@ -612,7 +612,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     JSObject *s = scopeChain;
     do {
         assertSameCompartment(cx, s);
-        JS_ASSERT_IF(!s->enclosingScope(), s->isGlobal());
+        JS_ASSERT_IF(!s->enclosingScope(), s->is<GlobalObject>());
     } while ((s = s->enclosingScope()));
 #endif
 
@@ -3346,7 +3346,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     /* Step 5e. */
     JS_ASSERT(parent->isNative());
-    if (parent->isGlobal()) {
+    if (parent->is<GlobalObject>()) {
         if (shape->configurable()) {
             return JSObject::defineProperty(cx, parent, name, rval, JS_PropertyStub,
                                             JS_StrictPropertyStub, attrs);

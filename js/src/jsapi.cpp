@@ -2002,7 +2002,7 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, JSBool *re
          * If this standard class is anonymous, then we don't want to resolve
          * by name.
          */
-        JS_ASSERT(obj->isGlobal());
+        JS_ASSERT(obj->is<GlobalObject>());
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return true;
 
@@ -2119,7 +2119,7 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 extern JS_PUBLIC_API(JSBool)
 JS_IsGlobalObject(JSObject *obj)
 {
-    return obj->isGlobal();
+    return obj->is<GlobalObject>();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4428,7 +4428,7 @@ JS_ClearNonGlobalObject(JSContext *cx, JSObject *objArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    JS_ASSERT(!obj->isGlobal());
+    JS_ASSERT(!obj->is<GlobalObject>());
 
     if (!obj->isNative())
         return;
@@ -4815,7 +4815,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
             return NULL;
     }
     if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
-        (fun->nonLazyScript()->compileAndGo && !parent->isGlobal())))
+        (fun->nonLazyScript()->compileAndGo && !parent->is<GlobalObject>())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return NULL;
@@ -6667,7 +6667,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, 
     if (!chars)
         return NULL;
 
-    RegExpStatics *res = obj->asGlobal().getRegExpStatics();
+    RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
     RegExpObject *reobj = RegExpObject::create(cx, res, chars, length,
                                                RegExpFlag(flags), NULL);
     js_free(chars);
@@ -6680,7 +6680,7 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t leng
     RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    RegExpStatics *res = obj->asGlobal().getRegExpStatics();
+    RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
     return RegExpObject::create(cx, res, chars, length,
                                 RegExpFlag(flags), NULL);
 }
@@ -6693,7 +6693,7 @@ JS_SetRegExpInput(JSContext *cx, JSObject *objArg, JSString *input, JSBool multi
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
-    obj->asGlobal().getRegExpStatics()->reset(cx, input, !!multiline);
+    obj->as<GlobalObject>().getRegExpStatics()->reset(cx, input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -6704,7 +6704,7 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *objArg)
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
 
-    obj->asGlobal().getRegExpStatics()->clear();
+    obj->as<GlobalObject>().getRegExpStatics()->clear();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6716,7 +6716,7 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *ch
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    RegExpStatics *res = obj->asGlobal().getRegExpStatics();
+    RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
 
     RootedValue val(cx);
     if (!ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), NullPtr(), chars, length, indexp,

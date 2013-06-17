@@ -48,7 +48,7 @@ NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryInd
 inline bool
 NewObjectCache::lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
 {
-    JS_ASSERT(!proto->isGlobal());
+    JS_ASSERT(!proto->is<GlobalObject>());
     return lookup(clasp, proto, kind, pentry);
 }
 

@@ -1058,7 +1058,7 @@ InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey 
 JSObject *
 MapObject::initClass(JSContext *cx, JSObject *obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedObject proto(cx,
         InitClass(cx, global, &class_, JSProto_Map, construct, properties, methods));
     if (proto) {
@@ -1594,7 +1594,7 @@ const JSFunctionSpec SetObject::methods[] = {
 JSObject *
 SetObject::initClass(JSContext *cx, JSObject *obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedObject proto(cx,
         InitClass(cx, global, &class_, JSProto_Set, construct, properties, methods));
     if (proto) {

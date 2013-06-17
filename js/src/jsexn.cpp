@@ -830,10 +830,10 @@ InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObje
 JSObject *
 js_InitExceptionClasses(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(obj->isGlobal());
+    JS_ASSERT(obj->is<GlobalObject>());
     JS_ASSERT(obj->isNative());
 
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     RootedObject objectProto(cx, global->getOrCreateObjectPrototype(cx));
     if (!objectProto)

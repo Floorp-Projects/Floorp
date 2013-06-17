@@ -4788,7 +4788,7 @@ static bool
 TryAttachGlobalNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *stub,
                         HandleObject global, HandlePropertyName name)
 {
-    JS_ASSERT(global->isGlobal());
+    JS_ASSERT(global->is<GlobalObject>());
 
     RootedId id(cx, NameToId(name));
 
@@ -4826,7 +4826,7 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
         if (!shapes.append(scopeChain->lastProperty()))
             return false;
 
-        if (scopeChain->isGlobal()) {
+        if (scopeChain->is<GlobalObject>()) {
             shape = scopeChain->nativeLookup(cx, id);
             if (shape)
                 break;

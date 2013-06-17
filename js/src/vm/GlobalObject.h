@@ -468,17 +468,11 @@ typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy
 
 } // namespace js
 
+template<>
 inline bool
-JSObject::isGlobal() const
+JSObject::is<js::GlobalObject>() const
 {
     return !!(js::GetObjectClass(const_cast<JSObject*>(this))->flags & JSCLASS_IS_GLOBAL);
-}
-
-js::GlobalObject &
-JSObject::asGlobal()
-{
-    JS_ASSERT(isGlobal());
-    return *static_cast<js::GlobalObject *>(this);
 }
 
 #endif /* vm_GlobalObject_h */
