@@ -34,7 +34,6 @@ namespace js {
 
 class AutoPropDescArrayRooter;
 class BaseProxyHandler;
-class CallObject;
 struct GCMarker;
 struct NativeIterator;
 class Nursery;
@@ -205,7 +204,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 
 extern Class ArrayClass;
 extern Class BooleanClass;
-extern Class CallableObjectClass;
 extern Class DateClass;
 extern Class ErrorClass;
 extern Class GeneratorClass;
@@ -978,7 +976,6 @@ class JSObject : public js::ObjectImpl
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of ScopeObject. */
-    inline bool isCall()        const { return hasClass(&js::CallClass); }
     inline bool isDeclEnv()     const { return hasClass(&js::DeclEnvClass); }
     inline bool isNestedScope() const;
     inline bool isWith()        const { return hasClass(&js::WithClass); }
@@ -997,7 +994,6 @@ class JSObject : public js::ObjectImpl
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::BooleanObject &asBoolean();
-    inline js::CallObject &asCall();
     inline js::ClonedBlockObject &asClonedBlock();
     inline js::DeclEnvObject &asDeclEnv();
     inline js::DebugScopeObject &asDebugScope();

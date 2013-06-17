@@ -384,7 +384,7 @@ class ReferenceFinder {
 
             /* Certain classes of object are for internal use only. */
             if (object->is<BlockObject>() ||
-                object->isCall() ||
+                object->is<CallObject>() ||
                 object->isWith() ||
                 object->isDeclEnv()) {
                 return JSVAL_VOID;

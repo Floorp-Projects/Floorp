@@ -189,6 +189,8 @@ class CallObject : public ScopeObject
     create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
   public:
+    static Class class_;
+
     /* These functions are internal and are exposed only for JITs. */
     static CallObject *
     create(JSContext *cx, HandleScript script, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
@@ -629,7 +631,7 @@ JSObject::isNestedScope() const
 inline bool
 JSObject::isScope() const
 {
-    return isCall() || isDeclEnv() || isNestedScope();
+    return is<js::CallObject>() || isDeclEnv() || isNestedScope();
 }
 
 #endif /* ScopeObject_h___ */

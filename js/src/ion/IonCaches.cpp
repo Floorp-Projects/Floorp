@@ -2734,11 +2734,11 @@ static inline void
 GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
                         Register scopeObjReg, Shape *shape, Label *failures)
 {
-    if (scopeObj->isCall()) {
+    if (scopeObj->is<CallObject>()) {
         // We can skip a guard on the call object if the script's bindings are
         // guaranteed to be immutable (and thus cannot introduce shadowing
         // variables).
-        CallObject *callObj = &scopeObj->asCall();
+        CallObject *callObj = &scopeObj->as<CallObject>();
         if (!callObj->isForEval()) {
             JSFunction *fun = &callObj->callee();
             JSScript *script = fun->nonLazyScript();
@@ -2923,7 +2923,7 @@ IsCacheableNameReadSlot(JSContext *cx, HandleObject scopeChain, HandleObject obj
         if (!IsCacheableGetPropReadSlot(obj, holder, shape) &&
             !IsCacheableNoProperty(obj, holder, shape, pc, output))
             return false;
-    } else if (obj->isCall()) {
+    } else if (obj->is<CallObject>()) {
         if (!shape->hasDefaultGetter())
             return false;
     } else {
