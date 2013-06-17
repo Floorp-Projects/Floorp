@@ -265,7 +265,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
                 scope = &scope->as<CallObject>().enclosingScope();
                 break;
               case StaticScopeIter::NAMED_LAMBDA:
-                scope = &scope->asDeclEnv().enclosingScope();
+                scope = &scope->as<DeclEnvObject>().enclosingScope();
                 break;
             }
         }

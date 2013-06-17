@@ -386,7 +386,7 @@ class ReferenceFinder {
             if (object->is<BlockObject>() ||
                 object->is<CallObject>() ||
                 object->isWith() ||
-                object->isDeclEnv()) {
+                object->is<DeclEnvObject>()) {
                 return JSVAL_VOID;
             }
 

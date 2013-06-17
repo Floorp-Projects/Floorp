@@ -376,7 +376,6 @@ struct Atom {
 
 } /* namespace shadow */
 
-extern JS_FRIEND_DATA(js::Class) DeclEnvClass;
 extern JS_FRIEND_DATA(js::Class) FunctionClass;
 extern JS_FRIEND_DATA(js::Class) FunctionProxyClass;
 extern JS_FRIEND_DATA(js::Class) OuterWindowProxyClass;
