@@ -24,6 +24,18 @@
 using namespace js;
 using namespace js::gc;
 
+void *
+js::Allocator::onOutOfMemory(void *p, size_t nbytes)
+{
+    return zone->rt->onOutOfMemory(p, nbytes);
+}
+
+void
+js::Allocator::reportAllocationOverflow()
+{
+    js_ReportAllocationOverflow(NULL);
+}
+
 JS::Zone::Zone(JSRuntime *rt)
   : rt(rt),
     allocator(this),
