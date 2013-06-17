@@ -373,7 +373,7 @@ static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY 
 static JSBool
 str_enumerate(JSContext *cx, HandleObject obj)
 {
-    RootedString str(cx, obj->asString().unbox());
+    RootedString str(cx, obj->as<StringObject>().unbox());
     RootedValue value(cx);
     for (size_t i = 0, length = str->length(); i < length; i++) {
         JSString *str1 = js_NewDependentString(cx, str, i, 1);
@@ -398,7 +398,7 @@ str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     if (!JSID_IS_INT(id))
         return true;
 
-    RootedString str(cx, obj->asString().unbox());
+    RootedString str(cx, obj->as<StringObject>().unbox());
 
     int32_t slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
@@ -416,7 +416,7 @@ str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-Class js::StringClass = {
+Class StringObject::class_ = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_CACHED_PROTO(JSProto_String),
@@ -445,10 +445,10 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
 
     if (call.thisv().isObject()) {
         RootedObject obj(cx, &call.thisv().toObject());
-        if (obj->isString()) {
+        if (obj->is<StringObject>()) {
             Rooted<jsid> id(cx, NameToId(cx->names().toString));
-            if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
-                JSString *str = obj->asString().unbox();
+            if (ClassMethodIsNative(cx, obj, &StringObject::class_, id, js_str_toString)) {
+                JSString *str = obj->as<StringObject>().unbox();
                 call.setThis(StringValue(str));
                 return str;
             }
@@ -470,7 +470,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
 JS_ALWAYS_INLINE bool
 IsString(const Value &v)
 {
-    return v.isString() || (v.isObject() && v.toObject().hasClass(&StringClass));
+    return v.isString() || (v.isObject() && v.toObject().is<StringObject>());
 }
 
 #if JS_HAS_TOSOURCE
@@ -533,7 +533,7 @@ str_toString_impl(JSContext *cx, CallArgs args)
 
     args.rval().setString(args.thisv().isString()
                               ? args.thisv().toString()
-                              : args.thisv().toObject().asString().unbox());
+                              : args.thisv().toObject().as<StringObject>().unbox());
     return true;
 }
 
@@ -3595,8 +3595,8 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
     Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
-    RootedObject proto(cx, global->createBlankPrototype(cx, &StringClass));
-    if (!proto || !proto->asString().init(cx, empty))
+    RootedObject proto(cx, global->createBlankPrototype(cx, &StringObject::class_));
+    if (!proto || !proto->as<StringObject>().init(cx, empty))
         return NULL;
 
     /* Now create the String function. */
