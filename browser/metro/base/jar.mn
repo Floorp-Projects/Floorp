@@ -55,6 +55,8 @@ chrome.jar:
   content/contenthandlers/ConsoleAPIObserver.js (content/contenthandlers/ConsoleAPIObserver.js)
   content/contenthandlers/Content.js           (content/contenthandlers/Content.js)
 
+  content/library/SelectionPrototype.js        (content/library/SelectionPrototype.js)
+
   content/ContentAreaObserver.js               (content/ContentAreaObserver.js)
   content/BrowserTouchHandler.js               (content/BrowserTouchHandler.js)
 * content/WebProgress.js                       (content/WebProgress.js)
