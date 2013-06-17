@@ -1446,7 +1446,7 @@ NetworkDetailsView.prototype = {
     headersScope.expanded = true;
 
     for (let header of aResponse.headers) {
-      let headerVar = headersScope.addVar(header.name, { null: true }, true);
+      let headerVar = headersScope.addItem(header.name, { null: true }, true);
       gNetwork.getString(header.value).then((aString) => headerVar.setGrip(aString));
     }
   },
@@ -1489,7 +1489,7 @@ NetworkDetailsView.prototype = {
     cookiesScope.expanded = true;
 
     for (let cookie of aResponse.cookies) {
-      let cookieVar = cookiesScope.addVar(cookie.name, { null: true }, true);
+      let cookieVar = cookiesScope.addItem(cookie.name, { null: true }, true);
       gNetwork.getString(cookie.value).then((aString) => cookieVar.setGrip(aString));
 
       // By default the cookie name and value are shown. If this is the only
@@ -1591,7 +1591,7 @@ NetworkDetailsView.prototype = {
     paramsScope.expanded = true;
 
     for (let param of paramsArray) {
-      let headerVar = paramsScope.addVar(param.name, { null: true }, true);
+      let headerVar = paramsScope.addItem(param.name, { null: true }, true);
       headerVar.setGrip(param.value);
     }
   },
@@ -1634,7 +1634,7 @@ NetworkDetailsView.prototype = {
             : L10N.getStr("jsonScopeName");
 
           let jsonScope = this._json.addScope(jsonScopeName);
-          jsonScope.addVar().populate(jsonObject, { expanded: true });
+          jsonScope.addItem().populate(jsonObject, { expanded: true });
           jsonScope.expanded = true;
         }
         // Malformed JSON.
