@@ -33,7 +33,7 @@ is(blob.type, "null", "Blob type should be stringified");
 
 blob = Blob([], {type: undefined});
 ok(blob, "Blob should exist");
-is(blob.type, "undefined", "Blob type should be stringified");
+is(blob.type, "", "Blob type should be treated as missing");
 
 try {
 blob = Blob([]);
