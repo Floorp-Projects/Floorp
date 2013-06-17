@@ -95,12 +95,6 @@ DrawTargetSkia::~DrawTargetSkia()
     // All snapshots will now have copied data.
     mSnapshots.clear();
   }
-
-  // The GrGLInterface that we own has a raw pointer back to us, encoded in
-  // its fCallbackData field. We must clear it now.
-  if (mGrGLInterface) {
-    mGrGLInterface->fCallbackData = 0;
-  }
 }
 
 TemporaryRef<SourceSurface>
@@ -662,11 +656,14 @@ DrawTargetSkia::InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLCont
   mGLContext = aGLContext;
   mSize = aSize;
   mFormat = aFormat;
-  mGrGLInterface = aGrGLInterface;
-  GrBackendContext backendContext = reinterpret_cast<GrBackendContext>(aGrGLInterface);
-  mGrContext = GrContext::Create(kOpenGL_GrBackend, backendContext);
 
+  mGrGLInterface = aGrGLInterface;
   mGrGLInterface->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(this);
+
+  GrBackendContext backendContext = reinterpret_cast<GrBackendContext>(aGrGLInterface);
+  SkAutoTUnref<GrContext> gr(GrContext::Create(kOpenGL_GrBackend, backendContext));
+  mGrContext = gr.get();
+
 
   GrBackendRenderTargetDesc targetDescriptor;
 

@@ -119,15 +119,21 @@ private:
 
   void MarkChanged();
 
+#ifdef USE_SKIA_GPU
+  /*
+   * These members have inter-dependencies, but do not keep each other alive, so
+   * destruction order is very important here: mGrContext uses mGrGLInterface, and
+   * through it, uses mGLContext, so it is important that they be declared in the
+   * present order.
+   */
+  RefPtr<GenericRefCountedBase> mGLContext;
+  SkRefPtr<GrGLInterface> mGrGLInterface;
+  SkRefPtr<GrContext> mGrContext;
+#endif
+
   IntSize mSize;
   SkRefPtr<SkCanvas> mCanvas;
   std::vector<SourceSurfaceSkia*> mSnapshots;
-
-#ifdef USE_SKIA_GPU
-  SkRefPtr<GrContext> mGrContext;
-  SkRefPtr<GrGLInterface> mGrGLInterface;
-  RefPtr<GenericRefCountedBase> mGLContext;
-#endif
 };
 
 }
