@@ -11,7 +11,6 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp, gettempdir
 from threading import Timer
-import mozinfo
 import random
 import socket
 import time
@@ -27,19 +26,13 @@ HARNESS_TIMEOUT = 5 * 60
 here = os.path.dirname(__file__)
 mozbase = os.path.realpath(os.path.join(os.path.dirname(here), 'mozbase'))
 
-# hand enumerate our own deps
-modules = [('mozcrash', ['mozcrash', 'mozfile', 'mozlog']),
-           ('manifestparser', ['manifestdestiny'])]
+if os.path.isdir(mozbase):
+    for package in os.listdir(mozbase):
+        sys.path.append(os.path.join(mozbase, package))
 
-for module, deps in modules:
-    try:
-        globals()[module] = __import__(module)
-    except ImportError:
-        for dep in deps:
-            module_path = os.path.join(mozbase, dep)
-            if module_path not in sys.path:
-                sys.path.append(module_path)
-        globals()[module] = __import__(module)
+import manifestparser
+import mozcrash
+import mozinfo
 
 # ---------------------------------------------------------------
 #TODO: replace this with json.loads when Python 2.6 is required.
