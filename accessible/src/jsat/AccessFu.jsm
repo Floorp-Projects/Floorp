@@ -468,6 +468,10 @@ var Output = {
     Utils.win.navigator.vibrate(aDetails.pattern);
   },
 
+  Braille: function Braille(aDetails, aBrowser) {
+    Logger.debug('Braille output: ' + aDetails.text);
+  },
+
   _adjustBounds: function(aJsonBounds, aBrowser) {
     let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                           aJsonBounds.right - aJsonBounds.left,
