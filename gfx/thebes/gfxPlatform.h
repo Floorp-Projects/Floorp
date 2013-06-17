@@ -223,10 +223,6 @@ public:
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
-    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
-      CreateDrawTargetForFBO(unsigned int aFBOID, mozilla::gl::GLContext* aGLContext,
-                             const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
-
     /**
      * Returns true if we will render content using Azure using a gfxPlatform
      * provided DrawTarget.

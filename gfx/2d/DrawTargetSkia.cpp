@@ -11,6 +11,7 @@
 
 #ifdef USE_SKIA_GPU
 #include "skia/SkGpuDevice.h"
+#include "skia/GrGLInterface.h"
 #endif
 
 #include "skia/SkTypeface.h"
@@ -93,6 +94,12 @@ DrawTargetSkia::~DrawTargetSkia()
     }
     // All snapshots will now have copied data.
     mSnapshots.clear();
+  }
+
+  // The GrGLInterface that we own has a raw pointer back to us, encoded in
+  // its fCallbackData field. We must clear it now.
+  if (mGrGLInterface) {
+    mGrGLInterface->fCallbackData = 0;
   }
 }
 
@@ -647,26 +654,33 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 
 #ifdef USE_SKIA_GPU
 void
-DrawTargetSkia::InitWithFBO(unsigned int aFBOID, SkRefPtr<GrContext> aGrContext, const IntSize &aSize, SurfaceFormat aFormat)
+DrawTargetSkia::InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                                  GrGLInterface* aGrGLInterface,
+                                                  const IntSize &aSize,
+                                                  SurfaceFormat aFormat)
 {
-  mGrContext = aGrContext;
+  mGLContext = aGLContext;
+  mSize = aSize;
+  mFormat = aFormat;
+  mGrGLInterface = aGrGLInterface;
+  GrBackendContext backendContext = reinterpret_cast<GrBackendContext>(aGrGLInterface);
+  mGrContext = GrContext::Create(kOpenGL_GrBackend, backendContext);
+
+  mGrGLInterface->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(this);
+
   GrBackendRenderTargetDesc targetDescriptor;
 
-  targetDescriptor.fWidth = aSize.width;
-  targetDescriptor.fHeight = aSize.height;
-  targetDescriptor.fConfig = GfxFormatToGrConfig(aFormat);
+  targetDescriptor.fWidth = mSize.width;
+  targetDescriptor.fHeight = mSize.height;
+  targetDescriptor.fConfig = GfxFormatToGrConfig(mFormat);
   targetDescriptor.fOrigin = kBottomLeft_GrSurfaceOrigin;
   targetDescriptor.fSampleCnt = 0;
-  targetDescriptor.fRenderTargetHandle = aFBOID;
+  targetDescriptor.fRenderTargetHandle = 0; // GLContext always exposes the right framebuffer as id 0
 
-  SkAutoTUnref<GrRenderTarget> target(aGrContext->wrapBackendRenderTarget(targetDescriptor));
-
+  SkAutoTUnref<GrRenderTarget> target(mGrContext->wrapBackendRenderTarget(targetDescriptor));
   SkAutoTUnref<SkDevice> device(new SkGpuDevice(mGrContext.get(), target.get()));
   SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
-  mSize = aSize;
-
   mCanvas = canvas.get();
-  mFormat = aFormat;
 }
 #endif
 
