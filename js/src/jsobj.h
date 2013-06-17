@@ -896,8 +896,8 @@ class JSObject : public js::ObjectImpl
      * specific types of objects may provide additional operations. To access,
      * these addition operations, callers should use the pattern:
      *
-     *   if (obj.isX()) {
-     *     XObject &x = obj.asX();
+     *   if (obj.is<XObject>()) {
+     *     XObject &x = obj.as<XObject>();
      *     x.foo();
      *   }
      *
@@ -913,7 +913,7 @@ class JSObject : public js::ObjectImpl
      * [[Class]] property of object defined by the spec (for this, see
      * js::ObjectClassIs).
      *
-     * SpiderMonkey has not been completely switched to the isX/asX/XObject
+     * SpiderMonkey has not been completely switched to the is/as/XObject
      * pattern so in some cases there is no XObject class and the engine
      * instead pokes directly at reserved slots and getPrivate. In such cases,
      * consider adding the missing XObject class.
@@ -939,7 +939,6 @@ class JSObject : public js::ObjectImpl
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isError()            const { return hasClass(&js::ErrorClass); }
     inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
-    inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
@@ -949,8 +948,6 @@ class JSObject : public js::ObjectImpl
     inline bool isWrapper()                 const;
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
-
-    inline js::GlobalObject &asGlobal();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 

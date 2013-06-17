@@ -3592,7 +3592,7 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
     RootedObject proto(cx, global->createBlankPrototype(cx, &StringObject::class_));

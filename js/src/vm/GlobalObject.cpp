@@ -33,7 +33,7 @@ js_InitObjectClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 
-    return obj->asGlobal().getOrCreateObjectPrototype(cx);
+    return obj->as<GlobalObject>().getOrCreateObjectPrototype(cx);
 }
 
 JSObject *
@@ -41,7 +41,7 @@ js_InitFunctionClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 
-    return obj->asGlobal().getOrCreateFunctionPrototype(cx);
+    return obj->as<GlobalObject>().getOrCreateFunctionPrototype(cx);
 }
 
 static JSBool
@@ -424,7 +424,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     if (!obj)
         return NULL;
 
-    Rooted<GlobalObject *> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
 
     cx->compartment()->initGlobal(*global);
 

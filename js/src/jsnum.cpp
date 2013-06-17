@@ -1127,7 +1127,7 @@ js_InitNumberClass(JSContext *cx, HandleObject obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     RootedObject numberProto(cx, global->createBlankPrototype(cx, &NumberObject::class_));
     if (!numberProto)

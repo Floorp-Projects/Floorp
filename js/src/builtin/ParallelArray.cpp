@@ -199,7 +199,7 @@ ParallelArrayObject::initClass(JSContext *cx, HandleObject obj)
         }
     }
 
-    Rooted<GlobalObject *> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
 
     RootedObject proto(cx, global->createBlankPrototype(cx, &protoClass));
     if (!proto)
