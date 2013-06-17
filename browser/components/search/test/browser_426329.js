@@ -30,7 +30,8 @@ function test() {
       case "engine-added":
         var engine = ss.getEngineByName("Bug 426329");
         ok(engine, "Engine was added.");
-        ss.currentEngine = engine;
+        //XXX Bug 493051
+        //ss.currentEngine = engine;
         break;
       case "engine-current":
         ok(ss.currentEngine.name == "Bug 426329", "currentEngine set");
