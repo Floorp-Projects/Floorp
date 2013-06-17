@@ -38,7 +38,7 @@ js::ArrayBufferObject::getElementsHeaderInitializedLength(const js::ObjectElemen
 inline uint32_t
 js::ArrayBufferObject::byteLength() const
 {
-    JS_ASSERT(isArrayBuffer());
+    JS_ASSERT(is<ArrayBufferObject>());
     return getElementsHeader()->initializedLength;
 }
 
@@ -46,13 +46,6 @@ inline uint8_t *
 js::ArrayBufferObject::dataPointer() const
 {
     return (uint8_t *) elements;
-}
-
-inline js::ArrayBufferObject &
-JSObject::asArrayBuffer()
-{
-    JS_ASSERT(isArrayBuffer());
-    return *static_cast<js::ArrayBufferObject *>(this);
 }
 
 inline js::DataViewObject &
@@ -67,7 +60,7 @@ namespace js {
 inline bool
 ArrayBufferObject::hasData() const
 {
-    return getClass() == &ArrayBufferClass;
+    return getClass() == &class_;
 }
 
 inline bool
@@ -142,7 +135,7 @@ TypedArray::bufferValue(JSObject *obj)
 inline ArrayBufferObject *
 TypedArray::buffer(JSObject *obj)
 {
-    return &bufferValue(obj).toObject().asArrayBuffer();
+    return &bufferValue(obj).toObject().as<ArrayBufferObject>();
 }
 
 inline void *
@@ -203,7 +196,7 @@ class ArrayBufferViewByteOffsetRef : public gc::BufferableRef
         MarkObjectUnbarriered(trc, &obj, "TypedArray");
         HeapSlot &bufSlot = obj->getReservedSlotRef(BufferView::BUFFER_SLOT);
         gc::MarkSlot(trc, &bufSlot, "TypedArray::BUFFER_SLOT");
-        ArrayBufferObject &buf = bufSlot.toObject().asArrayBuffer();
+        ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
         int32_t offset = obj->getReservedSlot(BufferView::BYTEOFFSET_SLOT).toInt32();
         obj->initPrivate(buf.dataPointer() + offset);
     }
@@ -270,7 +263,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
         }
     }
 
-    JS_ASSERT(arrayBuffer->isArrayBuffer());
+    JS_ASSERT(arrayBuffer->is<ArrayBufferObject>());
 
     DataViewObject &dvobj = obj->asDataView();
     dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
@@ -284,7 +277,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     // Verify that the private slot is at the expected place
     JS_ASSERT(dvobj.numFixedSlots() == DATA_SLOT);
 
-    arrayBuffer->asArrayBuffer().addView(&dvobj);
+    arrayBuffer->as<ArrayBufferObject>().addView(&dvobj);
 
     return &dvobj;
 }
@@ -318,7 +311,7 @@ inline ArrayBufferObject &
 DataViewObject::arrayBuffer()
 {
     JS_ASSERT(isDataView());
-    return getReservedSlot(BUFFER_SLOT).toObject().asArrayBuffer();
+    return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
 }
 
 inline bool

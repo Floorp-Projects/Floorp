@@ -114,14 +114,14 @@ ToClampedIndex(JSContext *cx, const Value &v, uint32_t length, uint32_t *out)
 JS_ALWAYS_INLINE bool
 IsArrayBuffer(const Value &v)
 {
-    return v.isObject() && v.toObject().hasClass(&ArrayBufferClass);
+    return v.isObject() && v.toObject().hasClass(&ArrayBufferObject::class_);
 }
 
 JS_ALWAYS_INLINE bool
 ArrayBufferObject::byteLengthGetterImpl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsArrayBuffer(args.thisv()));
-    args.rval().setInt32(args.thisv().toObject().asArrayBuffer().byteLength());
+    args.rval().setInt32(args.thisv().toObject().as<ArrayBufferObject>().byteLength());
     return true;
 }
 
@@ -140,7 +140,7 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
 
     // these are the default values
-    uint32_t length = thisObj->asArrayBuffer().byteLength();
+    uint32_t length = thisObj->as<ArrayBufferObject>().byteLength();
     uint32_t begin = 0, end = length;
 
     if (args.length() > 0) {
@@ -156,7 +156,7 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
     if (begin > end)
         begin = end;
 
-    JSObject *nobj = createSlice(cx, thisObj->asArrayBuffer(), begin, end);
+    JSObject *nobj = createSlice(cx, thisObj->as<ArrayBufferObject>(), begin, end);
     if (!nobj)
         return false;
     args.rval().setObject(*nobj);
@@ -244,7 +244,7 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
      * their internal layout can use the object's fixed slots for storage.
      * Set up the object to look like an array with an elements header.
      */
-    JS_ASSERT(isArrayBuffer() && !hasDynamicSlots() && !hasDynamicElements());
+    JS_ASSERT(is<ArrayBufferObject>() && !hasDynamicSlots() && !hasDynamicElements());
 
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
@@ -412,7 +412,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 void
 ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 {
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     JS_ASSERT(buffer.isAsmJSArrayBuffer());
 
     uint8_t *p = buffer.dataPointer() - PageSize ;
@@ -453,7 +453,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 void
 ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 {
-    fop->free_(obj->asArrayBuffer().getElementsHeader());
+    fop->free_(obj->as<ArrayBufferObject>().getElementsHeader());
 }
 
 void
@@ -551,13 +551,13 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
 {
     SkipRoot skip(cx, &contents);
 
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ArrayBufferClass));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
     if (!obj)
         return NULL;
     JS_ASSERT_IF(obj->isTenured(), obj->tenuredGetAllocKind() == gc::FINALIZE_OBJECT16_BACKGROUND);
-    JS_ASSERT(obj->getClass() == &ArrayBufferClass);
+    JS_ASSERT(obj->getClass() == &class_);
 
-    js::Shape *empty = EmptyShape::getInitialShape(cx, &ArrayBufferClass,
+    js::Shape *empty = EmptyShape::getInitialShape(cx, &class_,
                                                    obj->getProto(), obj->getParent(), obj->getMetadata(),
                                                    gc::FINALIZE_OBJECT16_BACKGROUND);
     if (!empty)
@@ -568,7 +568,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
      * The beginning stores an ObjectElements header structure holding the
      * length. The rest of it is a flat data store for the array buffer.
      */
-    if (!obj->asArrayBuffer().allocateSlots(cx, nbytes, contents))
+    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes, contents))
         return NULL;
 
     return obj;
@@ -624,7 +624,7 @@ bool
 ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents,
                                  uint8_t **data)
 {
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     JSObject *views = *GetViewList(&buffer);
     js::ObjectElements *header = js::ObjectElements::fromElements((js::HeapSlot*)buffer.dataPointer());
     if (buffer.hasDynamicElements() && !buffer.isAsmJSArrayBuffer()) {
@@ -686,7 +686,7 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
     // linked list during collection, and then swept to prune out their dead
     // views.
 
-    HeapPtrObject *views = GetViewList(&obj->asArrayBuffer());
+    HeapPtrObject *views = GetViewList(&obj->as<ArrayBufferObject>());
     if (!*views)
         return;
 
@@ -742,7 +742,7 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
     compartment->gcLiveArrayBuffers = NULL;
 
     while (buffer) {
-        HeapPtrObject *views = GetViewList(&buffer->asArrayBuffer());
+        HeapPtrObject *views = GetViewList(&buffer->as<ArrayBufferObject>());
         JS_ASSERT(*views);
 
         JSObject *nextBuffer = BufferLink(*views);
@@ -776,7 +776,7 @@ ArrayBufferObject::resetArrayBufferList(JSCompartment *comp)
     comp->gcLiveArrayBuffers = NULL;
 
     while (buffer) {
-        JSObject *view = *GetViewList(&buffer->asArrayBuffer());
+        JSObject *view = *GetViewList(&buffer->as<ArrayBufferObject>());
         JS_ASSERT(view);
 
         JSObject *nextBuffer = BufferLink(view);
@@ -793,7 +793,7 @@ ArrayBufferObject::saveArrayBufferList(JSCompartment *comp, ArrayBufferVector &v
     JSObject *obj = comp->gcLiveArrayBuffers;
     while (obj) {
         JS_ASSERT(obj != UNSET_BUFFER_LINK);
-        ArrayBufferObject *buffer = &obj->asArrayBuffer();
+        ArrayBufferObject *buffer = &obj->as<ArrayBufferObject>();
         if (!vector.append(buffer))
             return false;
 
@@ -810,7 +810,7 @@ ArrayBufferObject::restoreArrayBufferLists(ArrayBufferVector &vector)
     for (ArrayBufferObject **p = vector.begin(); p != vector.end(); p++) {
         ArrayBufferObject *buffer = *p;
         JSCompartment *comp = buffer->compartment();
-        JSObject *firstView = *GetViewList(&buffer->asArrayBuffer());
+        JSObject *firstView = *GetViewList(&buffer->as<ArrayBufferObject>());
         JS_ASSERT(firstView);
         JS_ASSERT(firstView->compartment() == comp);
         JS_ASSERT(BufferLink(firstView) == UNSET_BUFFER_LINK);
@@ -946,7 +946,7 @@ JSBool
 ArrayBufferObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
                                   HandleId id, MutableHandleValue vp)
 {
-    JS_ASSERT(obj->isArrayBuffer());
+    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -957,7 +957,7 @@ JSBool
 ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj,
                                    HandleObject receiver, HandlePropertyName name, MutableHandleValue vp)
 {
-    JS_ASSERT(obj->isArrayBuffer());
+    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -969,7 +969,7 @@ JSBool
 ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
                                   HandleObject receiver, uint32_t index, MutableHandleValue vp)
 {
-    JS_ASSERT(obj->isArrayBuffer());
+    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -980,7 +980,7 @@ JSBool
 ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
                                            uint32_t index, MutableHandleValue vp, bool *present)
 {
-    JS_ASSERT(obj->isArrayBuffer());
+    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -1767,8 +1767,8 @@ class TypedArrayTemplate
         obj->setSlot(TYPE_SLOT, Int32Value(ArrayTypeID()));
         obj->setSlot(BUFFER_SLOT, ObjectValue(*bufobj));
 
-        JS_ASSERT(bufobj->isArrayBuffer());
-        Rooted<ArrayBufferObject *> buffer(cx, &bufobj->asArrayBuffer());
+        JS_ASSERT(bufobj->is<ArrayBufferObject>());
+        Rooted<ArrayBufferObject *> buffer(cx, &bufobj->as<ArrayBufferObject>());
 
         InitArrayBufferViewDataPointer(obj, buffer, byteOffset);
         obj->setSlot(LENGTH_SLOT, Int32Value(len));
@@ -1858,7 +1858,7 @@ class TypedArrayTemplate
          * properties from the object, treating it as some sort of array.
          * Note that offset and length will be ignored
          */
-        if (!UncheckedUnwrap(dataObj)->isArrayBuffer())
+        if (!UncheckedUnwrap(dataObj)->is<ArrayBufferObject>())
             return fromArray(cx, dataObj);
 
         /* (ArrayBuffer, [byteOffset, [length]]) */
@@ -2128,7 +2128,7 @@ class TypedArrayTemplate
             return NULL; // must be arrayBuffer
         }
 
-        JS_ASSERT(bufobj->isArrayBuffer() || bufobj->isProxy());
+        JS_ASSERT(bufobj->is<ArrayBufferObject>() || bufobj->isProxy());
         if (bufobj->isProxy()) {
             /*
              * Normally, NonGenericMethodGuard handles the case of transparent
@@ -2146,7 +2146,7 @@ class TypedArrayTemplate
                 JS_ReportError(cx, "Permission denied to access object");
                 return NULL;
             }
-            if (wrapped->isArrayBuffer()) {
+            if (wrapped->is<ArrayBufferObject>()) {
                 /*
                  * And for even more fun, the new view's prototype should be
                  * set to the origin compartment's prototype object, not the
@@ -2181,12 +2181,12 @@ class TypedArrayTemplate
             }
         }
 
-        if (!bufobj->isArrayBuffer()) {
+        if (!bufobj->is<ArrayBufferObject>()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return NULL; // must be arrayBuffer
         }
 
-        ArrayBufferObject &buffer = bufobj->asArrayBuffer();
+        ArrayBufferObject &buffer = bufobj->as<ArrayBufferObject>();
 
         if (byteOffset > buffer.byteLength() || byteOffset % sizeof(NativeType) != 0) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -2703,13 +2703,13 @@ TypedArrayTemplate<double>::copyIndexToValue(JSObject *tarray, uint32_t index,
 JSBool
 DataViewObject::construct(JSContext *cx, JSObject *bufobj, const CallArgs &args, HandleObject proto)
 {
-    if (!bufobj->isArrayBuffer()) {
+    if (!bufobj->is<ArrayBufferObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
                              "DataView", "ArrayBuffer", bufobj->getClass()->name);
         return false;
     }
 
-    Rooted<ArrayBufferObject*> buffer(cx, &bufobj->asArrayBuffer());
+    Rooted<ArrayBufferObject*> buffer(cx, &bufobj->as<ArrayBufferObject>());
     uint32_t bufferLength = buffer->byteLength();
     uint32_t byteOffset = 0;
     uint32_t byteLength = bufferLength;
@@ -2766,7 +2766,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, args, "DataView constructor", &bufobj))
         return false;
 
-    if (bufobj->isWrapper() && UncheckedUnwrap(bufobj)->isArrayBuffer()) {
+    if (bufobj->isWrapper() && UncheckedUnwrap(bufobj)->is<ArrayBufferObject>()) {
         Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
         Rooted<JSObject*> proto(cx, global->getOrCreateDataViewPrototype(cx));
         if (!proto)
@@ -3308,7 +3308,7 @@ Class ArrayBufferObject::protoClass = {
     JS_ConvertStub
 };
 
-Class js::ArrayBufferClass = {
+Class ArrayBufferObject::class_ = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_IMPLEMENTS_BARRIERS |
@@ -3872,7 +3872,7 @@ js::IsTypedArrayConstructor(const Value &v, uint32_t type)
 bool
 js::IsTypedArrayBuffer(const Value &v)
 {
-    return v.isObject() && v.toObject().isArrayBuffer();
+    return v.isObject() && v.toObject().is<ArrayBufferObject>();
 }
 
 /* JS Friend API */
@@ -3881,7 +3881,7 @@ JS_FRIEND_API(JSBool)
 JS_IsArrayBufferObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->isArrayBuffer() : false;
+    return obj ? obj->is<ArrayBufferObject>() : false;
 }
 
 JS_FRIEND_API(JSBool)
@@ -3902,7 +3902,7 @@ JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->asArrayBuffer().byteLength() : 0;
+    return obj ? obj->as<ArrayBufferObject>().byteLength() : 0;
 }
 
 JS_FRIEND_API(uint8_t *)
@@ -3911,7 +3911,7 @@ JS_GetArrayBufferData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return NULL;
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     if (!buffer.uninlineData(NULL))
         return NULL;
     return buffer.dataPointer();
@@ -3932,7 +3932,7 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
     if (!obj)
         return NULL;
     obj->setDynamicElements(reinterpret_cast<js::ObjectElements *>(contents));
-    JS_ASSERT(*GetViewList(&obj->asArrayBuffer()) == NULL);
+    JS_ASSERT(*GetViewList(&obj->as<ArrayBufferObject>()) == NULL);
     return obj;
 }
 
@@ -3971,7 +3971,7 @@ JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents,
     if (!(obj = CheckedUnwrap(obj)))
         return false;
 
-    if (!obj->isArrayBuffer()) {
+    if (!obj->is<ArrayBufferObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
     }
@@ -4215,11 +4215,11 @@ JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data)
 {
    if (!(obj = CheckedUnwrap(obj)))
        return NULL;
-    if (!obj->isArrayBuffer())
+    if (!obj->is<ArrayBufferObject>())
         return NULL;
 
-    *length = obj->asArrayBuffer().byteLength();
-    *data = obj->asArrayBuffer().dataPointer();
+    *length = obj->as<ArrayBufferObject>().byteLength();
+    *data = obj->as<ArrayBufferObject>().dataPointer();
 
     return obj;
 }

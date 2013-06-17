@@ -33,6 +33,8 @@ class ArrayBufferObject : public JSObject
     static bool fun_slice_impl(JSContext *cx, CallArgs args);
 
   public:
+    static Class class_;
+
     static Class protoClass;
     static const JSFunctionSpec jsfuncs[];
 
