@@ -863,7 +863,7 @@ ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
     RootedObject proto(cx, cx->global()->getOrCreateElementIteratorPrototype(cx));
     if (!proto)
         return NULL;
-    RootedObject iterobj(cx, NewObjectWithGivenProto(cx, &ElementIteratorClass, proto, cx->global()));
+    RootedObject iterobj(cx, NewObjectWithGivenProto(cx, &class_, proto, cx->global()));
     if (iterobj) {
         iterobj->setReservedSlot(TargetSlot, target);
         iterobj->setReservedSlot(IndexSlot, Int32Value(0));
@@ -874,7 +874,7 @@ ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
 static bool
 IsElementIterator(const Value &v)
 {
-    return v.isObject() && v.toObject().isElementIterator();
+    return v.isObject() && v.toObject().is<ElementIteratorObject>();
 }
 
 JSBool
@@ -934,7 +934,7 @@ ElementIteratorObject::next_impl(JSContext *cx, CallArgs args)
     return false;
 }
 
-Class js::ElementIteratorClass = {
+Class ElementIteratorObject::class_ = {
     "Array Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(ElementIteratorObject::NumSlots),
@@ -1785,7 +1785,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 
     RootedObject proto(cx);
     if (global->getSlot(ELEMENT_ITERATOR_PROTO).isUndefined()) {
-        Class *cls = &ElementIteratorClass;
+        Class *cls = &ElementIteratorObject::class_;
         proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
         if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, ElementIteratorObject::methods))
             return false;
