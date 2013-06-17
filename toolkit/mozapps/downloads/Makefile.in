@@ -12,12 +12,6 @@ include $(topsrcdir)/config/config.mk
 
 DISABLED_EXTRA_COMPONENTS = nsHelperAppDlg.manifest
 
-EXTRA_JS_MODULES = \
-  DownloadLastDir.jsm \
-  DownloadPaths.jsm \
-  DownloadUtils.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES = DownloadTaskbarProgress.jsm
 
 include $(topsrcdir)/config/rules.mk

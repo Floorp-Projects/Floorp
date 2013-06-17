@@ -8,3 +8,12 @@ EXTRA_COMPONENTS += [
     'DownloadLegacy.js',
     'Downloads.manifest',
 ]
+
+EXTRA_JS_MODULES += [
+    'DownloadCore.jsm',
+    'DownloadList.jsm',
+    'DownloadStore.jsm',
+    'DownloadUIHelper.jsm',
+    'Downloads.jsm',
+]
+

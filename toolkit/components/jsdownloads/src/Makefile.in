@@ -14,14 +14,6 @@ DISABLED_EXTRA_COMPONENTS = \
   DownloadLegacy.js \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  Downloads.jsm \
-  DownloadCore.jsm \
-  DownloadList.jsm \
-  DownloadStore.jsm \
-  DownloadUIHelper.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES = \
   DownloadIntegration.jsm \
   $(NULL)

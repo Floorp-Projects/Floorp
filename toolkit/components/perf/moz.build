@@ -12,3 +12,6 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'jsperf'
 
+EXTRA_JS_MODULES += [
+    'PerfMeasurement.jsm',
+]

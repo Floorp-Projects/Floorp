@@ -14,10 +14,4 @@ DISABLED_EXTRA_COMPONENTS = \
 	PageThumbsProtocol.js \
 	$(NULL)
 
-EXTRA_JS_MODULES = \
-	BackgroundPageThumbs.jsm \
-	PageThumbsWorker.js \
-	PageThumbs.jsm \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
