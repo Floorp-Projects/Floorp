@@ -204,7 +204,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class ArrayBufferClass;
 extern Class BlockClass;
 extern Class BooleanClass;
 extern Class CallableObjectClass;
@@ -979,7 +978,6 @@ class JSObject : public js::ObjectImpl
 
     /* Direct subtypes of JSObject: */
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
-    inline bool isArrayBuffer()      const { return hasClass(&js::ArrayBufferClass); }
     inline bool isDataView()         const { return hasClass(&js::DataViewClass); }
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isElementIterator()  const { return hasClass(&js::ElementIteratorClass); }
@@ -1021,7 +1019,6 @@ class JSObject : public js::ObjectImpl
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
-    inline js::ArrayBufferObject &asArrayBuffer();
     inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
