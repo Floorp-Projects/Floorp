@@ -1008,28 +1008,32 @@ function TextEditor(aContainer, aNode, aTemplate)
 
   aContainer.markup.template(aTemplate, this);
 
-  let rawNode = aNode.rawNode();
-  if (rawNode) {
-    editableField({
-      element: this.value,
-      stopOnReturn: true,
-      trigger: "dblclick",
-      multiline: true,
-      done: function TE_done(aVal, aCommit) {
-        if (!aCommit) {
-          return;
-        }
-        let oldValue = rawNode.nodeValue;
-        aContainer.undo.do(function() {
-          rawNode.nodeValue = aVal;
-          aContainer.markup.nodeChanged(this.node);
-        }.bind(this), function() {
-          rawNode.nodeValue = oldValue;
-          aContainer.markup.nodeChanged(this.node);
-        }.bind(this));
-      }.bind(this)
-    });
-  }
+  editableField({
+    element: this.value,
+    stopOnReturn: true,
+    trigger: "dblclick",
+    multiline: true,
+    done: (aVal, aCommit) => {
+      if (!aCommit) {
+        return;
+      }
+      this.node.getNodeValue().then(longstr => {
+        longstr.string().then(oldValue => {
+          longstr.release().then(null, console.error);
+
+          aContainer.undo.do(() => {
+            this.node.setNodeValue(aVal).then(() => {
+              aContainer.markup.nodeChanged(this.node);
+            });
+          }, () => {
+            this.node.setNodeValue(oldValue).then(() => {
+              aContainer.markup.nodeChanged(this.node);
+            })
+          });
+        });
+      });
+    }
+  });
 
   this.update();
 }
