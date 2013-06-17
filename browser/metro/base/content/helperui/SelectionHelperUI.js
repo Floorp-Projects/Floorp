@@ -289,6 +289,8 @@ var SelectionHelperUI = {
   },
 
   get layerMode() {
+    if (this._msgTarget && this._msgTarget instanceof SelectionPrototype)
+      return kChromeLayer;
     return kContentLayer;
   },
 
@@ -522,6 +524,8 @@ var SelectionHelperUI = {
     Elements.browsers.addEventListener("SizeChanged", this, true);
     Elements.browsers.addEventListener("ZoomChanged", this, true);
 
+    Elements.navbar.addEventListener("transitionend", this, true);
+
     this.overlay.enabled = true;
   },
 
@@ -545,6 +549,8 @@ var SelectionHelperUI = {
     Elements.browsers.removeEventListener("URLChanged", this, true);
     Elements.browsers.removeEventListener("SizeChanged", this, true);
     Elements.browsers.removeEventListener("ZoomChanged", this, true);
+
+    Elements.navbar.removeEventListener("transitionend", this, true);
 
     this._shutdownAllMarkers();
 
@@ -625,9 +631,6 @@ var SelectionHelperUI = {
    * tap that initiates the change.
    */
   _transitionFromSelectionToCaret: function _transitionFromSelectionToCaret(aClientX, aClientY) {
-    // clear existing selection and shutdown SelectionHandler
-    this.closeEditSession(true);
-
     // Reset some of our state
     this._activeSelectionRect = null;
 
@@ -694,7 +697,11 @@ var SelectionHelperUI = {
         Util.dumpLn("SelectionHelperUI sendAsyncMessage could not send", aMsg);
       return;
     }
-    this._msgTarget.messageManager.sendAsyncMessage(aMsg, aJson);
+    if (this._msgTarget && this._msgTarget instanceof SelectionPrototype) {
+      this._msgTarget.msgHandler(aMsg, aJson);
+    } else {
+      this._msgTarget.messageManager.sendAsyncMessage(aMsg, aJson);
+    }
   },
 
   _checkForActiveDrag: function _checkForActiveDrag() {
@@ -831,8 +838,15 @@ var SelectionHelperUI = {
     // since we always get a single tap before a double, and double tap
     // copies selected text.
     if (selectionTap) {
-      aEvent.stopPropagation();
-      aEvent.preventDefault();
+      if (!this._targetIsEditable) {
+        this.closeEditSession(false);
+        return;
+      }
+      // Attach to the newly placed caret position
+      this._sendAsyncMessage("Browser:CaretAttach", {
+        xPos: aEvent.clientX,
+        yPos: aEvent.clientY
+      });
       return;
     }
 
@@ -875,6 +889,24 @@ var SelectionHelperUI = {
   _onDeckOffsetChanged: function _onDeckOffsetChanged(aEvent) {
     // Update the monocle position and display
     this.attachToCaret(null, this._lastPoint.xPos, this._lastPoint.yPos);
+  },
+
+  /*
+   * Detects when the nav bar hides or shows, so we can enable
+   * selection at the appropriate location once the transition is
+   * complete, or shutdown selection down when the nav bar is hidden.
+   */
+  _onNavBarTransitionEvent: function _onNavBarTransitionEvent(aEvent) {
+    if (this.layerMode == kContentLayer) {
+      return;
+    }
+    if (aEvent.propertyName == "bottom" && !Elements.navbar.isShowing) {
+      this.closeEditSession(false);
+      return;
+    }
+    if (aEvent.propertyName == "bottom" && Elements.navbar.isShowing) {
+      this._sendAsyncMessage("Browser:SelectionUpdate", {});
+    }
   },
 
   /*
@@ -1022,6 +1054,10 @@ var SelectionHelperUI = {
 
       case "MozDeckOffsetChanged":
         this._onDeckOffsetChanged(aEvent);
+        break;
+
+      case "transitionend":
+        this._onNavBarTransitionEvent(aEvent);
         break;
     }
   },

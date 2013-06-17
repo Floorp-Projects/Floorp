@@ -110,6 +110,7 @@ let ScriptContexts = {};
   ["SelectHelperUI", "chrome://browser/content/helperui/SelectHelperUI.js"],
   ["SelectionHelperUI", "chrome://browser/content/helperui/SelectionHelperUI.js"],
   ["SelectionPrototype", "chrome://browser/content/library/SelectionPrototype.js"],
+  ["ChromeSelectionHandler", "chrome://browser/content/helperui/ChromeSelectionHandler.js"],
   ["AnimatedZoom", "chrome://browser/content/AnimatedZoom.js"],
   ["CommandUpdater", "chrome://browser/content/commandUtil.js"],
   ["ContextCommands", "chrome://browser/content/ContextCommands.js"],
