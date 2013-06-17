@@ -951,8 +951,6 @@ class JSObject : public js::ObjectImpl
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::GlobalObject &asGlobal();
-    inline js::MapObject &asMap();
-    inline js::SetObject &asSet();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 
