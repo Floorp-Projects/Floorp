@@ -90,7 +90,7 @@ ExhaustiveTest(const char funcode[])
     EVAL(funcode, v.address());
 
     EVAL(CALL_CODES[ArgCount], v.address());
-    Rooted<ArgumentsObject*> argsobj(cx, &JSVAL_TO_OBJECT(v)->asArguments());
+    Rooted<ArgumentsObject*> argsobj(cx, &JSVAL_TO_OBJECT(v)->as<ArgumentsObject>());
 
     Value elems[MAX_ELEMS];
 

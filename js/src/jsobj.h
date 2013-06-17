@@ -218,7 +218,6 @@ extern Class JSONClass;
 extern Class MapIteratorClass;
 extern Class MathClass;
 extern Class NumberClass;
-extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpClass;
@@ -227,11 +226,9 @@ extern Class SetIteratorClass;
 extern Class ScriptSourceClass;
 extern Class StopIterationClass;
 extern Class StringClass;
-extern Class StrictArgumentsObjectClass;
 extern Class WeakMapClass;
 extern Class WithClass;
 
-class ArgumentsObject;
 class ArrayBufferObject;
 class BlockObject;
 class BooleanObject;
@@ -982,7 +979,6 @@ class JSObject : public js::ObjectImpl
 
     /* Direct subtypes of JSObject: */
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
-    inline bool isArguments()        const { return isNormalArguments() || isStrictArguments(); }
     inline bool isArrayBuffer()      const { return hasClass(&js::ArrayBufferClass); }
     inline bool isDataView()         const { return hasClass(&js::DataViewClass); }
     inline bool isDate()             const { return hasClass(&js::DateClass); }
@@ -1019,19 +1015,13 @@ class JSObject : public js::ObjectImpl
     inline bool isNumber()  const { return hasClass(&js::NumberClass); }
     inline bool isString()  const { return hasClass(&js::StringClass); }
 
-    /* Subtypes of ArgumentsObject. */
-    inline bool isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
-    inline bool isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
-
     /* Subtypes of Proxy. */
     inline bool isDebugScope()              const;
     inline bool isWrapper()                 const;
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
-    inline js::ArgumentsObject &asArguments();
     inline js::ArrayBufferObject &asArrayBuffer();
-    inline const js::ArgumentsObject &asArguments() const;
     inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
@@ -1043,7 +1033,6 @@ class JSObject : public js::ObjectImpl
     inline js::MapObject &asMap();
     inline js::MapIteratorObject &asMapIterator();
     inline js::NestedScopeObject &asNestedScope();
-    inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
     inline js::PropertyIteratorObject &asPropertyIterator();
     inline const js::PropertyIteratorObject &asPropertyIterator() const;
@@ -1052,7 +1041,6 @@ class JSObject : public js::ObjectImpl
     inline js::SetObject &asSet();
     inline js::SetIteratorObject &asSetIterator();
     inline js::ScriptSourceObject &asScriptSource();
-    inline js::StrictArgumentsObject &asStrictArguments();
     inline js::StaticBlockObject &asStaticBlock();
     inline js::StringObject &asString();
     inline js::WithObject &asWith();

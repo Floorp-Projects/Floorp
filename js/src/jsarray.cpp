@@ -57,8 +57,8 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
         return true;
     }
 
-    if (obj->isArguments()) {
-        ArgumentsObject &argsobj = obj->asArguments();
+    if (obj->is<ArgumentsObject>()) {
+        ArgumentsObject &argsobj = obj->as<ArgumentsObject>();
         if (!argsobj.hasOverriddenLength()) {
             *lengthp = argsobj.initialLength();
             return true;
@@ -213,8 +213,8 @@ GetElement(JSContext *cx, HandleObject obj, IndexType index, JSBool *hole, Mutab
             return true;
         }
     }
-    if (obj->isArguments()) {
-        if (obj->asArguments().maybeGetElement(uint32_t(index), vp)) {
+    if (obj->is<ArgumentsObject>()) {
+        if (obj->as<ArgumentsObject>().maybeGetElement(uint32_t(index), vp)) {
             *hole = false;
             return true;
         }
@@ -249,8 +249,8 @@ js::GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
         return true;
     }
 
-    if (aobj->isArguments()) {
-        ArgumentsObject &argsobj = aobj->asArguments();
+    if (aobj->is<ArgumentsObject>()) {
+        ArgumentsObject &argsobj = aobj->as<ArgumentsObject>();
         if (!argsobj.hasOverriddenLength()) {
             if (argsobj.maybeGetElements(0, length, vp))
                 return true;
