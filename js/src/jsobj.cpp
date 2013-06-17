@@ -2553,7 +2553,7 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
      * allowing the slots pointer to change may require updating pointers in
      * the function's active args/vars information.
      */
-    if (obj->isCall())
+    if (obj->is<CallObject>())
         return;
 
     if (newCount == 0) {
@@ -3210,7 +3210,7 @@ js_PurgeScopeChainHelper(JSContext *cx, HandleObject objArg, HandleId id)
      * properties with the same names have been cached or traced. Call objects
      * may gain such properties via eval introducing new vars; see bug 490364.
      */
-    if (obj->isCall()) {
+    if (obj->is<CallObject>()) {
         while ((obj = obj->enclosingScope()) != NULL) {
             if (!PurgeProtoChain(cx, obj, id))
                 return false;

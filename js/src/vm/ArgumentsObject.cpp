@@ -59,7 +59,7 @@ ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleOb
     JSFunction *callee = ion::CalleeTokenToFunction(frame->calleeToken());
     JSScript *script = callee->nonLazyScript();
     if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
-        JS_ASSERT(callObj && callObj->isCall());
+        JS_ASSERT(callObj && callObj->is<CallObject>());
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
         for (AliasedFormalIter fi(script); fi; fi++)
             data->args[fi.frameIndex()] = MagicValue(JS_FORWARD_TO_CALL_OBJECT);
@@ -273,7 +273,7 @@ ArgumentsObject::createForIon(JSContext *cx, ion::IonJSFrameLayout *frame, Handl
     JS_ASSERT(ion::CalleeTokenIsFunction(token));
     RootedScript script(cx, ion::ScriptFromCalleeToken(token));
     RootedFunction callee(cx, ion::CalleeTokenToFunction(token));
-    RootedObject callObj(cx, scopeChain->isCall() ? scopeChain.get() : NULL);
+    RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain.get() : NULL);
     CopyIonJSFrameArgs copy(frame, callObj);
     return create(cx, script, callee, frame->numActualArgs(), copy);
 }
