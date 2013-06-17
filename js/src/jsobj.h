@@ -237,7 +237,6 @@ class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
-class PropertyIteratorObject;
 class ScopeObject;
 class SetObject;
 class SetIteratorObject;
@@ -978,7 +977,6 @@ class JSObject : public js::ObjectImpl
     inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
     inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
-    inline bool isPropertyIterator() const;
     using js::ObjectImpl::isProxy;
     inline bool isRegExp()           const { return hasClass(&js::RegExpClass); }
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
@@ -1019,8 +1017,6 @@ class JSObject : public js::ObjectImpl
     inline js::MapObject &asMap();
     inline js::NestedScopeObject &asNestedScope();
     inline js::NumberObject &asNumber();
-    inline js::PropertyIteratorObject &asPropertyIterator();
-    inline const js::PropertyIteratorObject &asPropertyIterator() const;
     inline js::RegExpObject &asRegExp();
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();

@@ -5345,8 +5345,8 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSi
         sizes->argumentsData = as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (isRegExpStatics()) {
         sizes->regExpStatics = js::SizeOfRegExpStaticsData(this, mallocSizeOf);
-    } else if (isPropertyIterator()) {
-        sizes->propertyIteratorData = asPropertyIterator().sizeOfMisc(mallocSizeOf);
+    } else if (is<PropertyIteratorObject>()) {
+        sizes->propertyIteratorData = as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
 #ifdef JS_HAS_CTYPES
     } else {
         // This must be the last case.
