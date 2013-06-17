@@ -7718,7 +7718,6 @@ class CGDictionary(CGThing):
                        for m in self.memberInfo]
         if memberInits:
             body += (
-                "JSBool found;\n"
                 "JS::Rooted<JS::Value> temp(cx);\n"
                 "bool isNull = val.isNullOrUndefined();\n")
             body += "\n\n".join(memberInits) + "\n"
@@ -7900,48 +7899,35 @@ class CGDictionary(CGThing):
         if conversionInfo.dealWithOptional:
             replacements["declName"] = "(" + replacements["declName"] + ".Value())"
         if member.defaultValue:
-            replacements["haveValue"] = "found"
+            replacements["haveValue"] = "!temp.isUndefined()"
 
         # NOTE: jsids are per-runtime, so don't use them in workers
         if self.workers:
             propName = member.identifier.name
-            propCheck = ('JS_HasProperty(cx, &val.toObject(), "%s", &found)' %
-                         propName)
             propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.address())' %
                        propName)
         else:
             propId = self.makeIdName(member.identifier.name);
-            propCheck = ("JS_HasPropertyById(cx, &val.toObject(), %s, &found)" %
-                         propId)
             propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.address())" %
                        propId)
 
         conversionReplacements = {
             "prop": self.makeMemberName(member.identifier.name),
             "convert": string.Template(conversionInfo.template).substitute(replacements),
-            "propCheck": propCheck,
             "propGet": propGet
             }
         conversion = ("if (isNull) {\n"
-                      "  found = false;\n"
-                      "} else if (!${propCheck}) {\n"
+                      "  temp.setUndefined();\n"
+                      "} else if (!${propGet}) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
             conversion += (
-                "if (found) {\n"
-                "  if (!${propGet}) {\n"
-                "    return false;\n"
-                "  }\n"
-                "}\n"
                 "${convert}")
         else:
             conversion += (
-                "if (found) {\n"
+                "if (!temp.isUndefined()) {\n"
                 "  ${prop}.Construct();\n"
-                "  if (!${propGet}) {\n"
-                "    return false;\n"
-                "  }\n"
                 "${convert}\n"
                 "}")
             conversionReplacements["convert"] = CGIndenter(
