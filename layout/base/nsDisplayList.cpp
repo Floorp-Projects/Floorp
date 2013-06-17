@@ -598,8 +598,10 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
 
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
-  aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(),
-    new OutOfFlowDisplayData(mClipState.GetClipForContainingBlockDescendants(), dirty));
+  const DisplayItemClip* clip = mClipState.GetClipForContainingBlockDescendants();
+  OutOfFlowDisplayData* data = clip ? new OutOfFlowDisplayData(*clip, dirty)
+    : new OutOfFlowDisplayData(dirty);
+  aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
 
   MarkFrameForDisplay(aFrame, aDirtyFrame);
 }
