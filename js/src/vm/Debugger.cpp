@@ -1914,13 +1914,13 @@ Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
         return NULL;
 
     /* If that didn't produce a global object, it's an error. */
-    if (!obj->isGlobal()) {
+    if (!obj->is<GlobalObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                              "argument", "not a global object");
         return NULL;
     }
 
-    return &obj->asGlobal();
+    return &obj->as<GlobalObject>();
 }
 
 JSBool
@@ -4131,7 +4131,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
         return false;
 
     script->isActiveEval = true;
-    ExecuteType type = !frame && env->isGlobal() ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
+    ExecuteType type = !frame && env->is<GlobalObject>() ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
     return ExecuteKernel(cx, script, *env, thisv, type, frame, rval.address());
 }
 
@@ -4142,7 +4142,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
 {
     /* Either we're specifying the frame, or a global. */
     JS_ASSERT_IF(iter, !scope);
-    JS_ASSERT_IF(!iter, scope && scope->isGlobal());
+    JS_ASSERT_IF(!iter, scope && scope->is<GlobalObject>());
 
     /* Check the first argument, the eval code string. */
     if (!code.isString()) {
@@ -4969,11 +4969,11 @@ DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
 static bool
 RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
 {
-    if (!obj->isGlobal()) {
+    if (!obj->is<GlobalObject>()) {
         /* Help the poor programmer by pointing out wrappers around globals. */
         if (obj->isWrapper()) {
             JSObject *unwrapped = js::UncheckedUnwrap(obj);
-            if (unwrapped->isGlobal()) {
+            if (unwrapped->is<GlobalObject>()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
                                          JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
                                          "a global object", NULL);
@@ -5411,7 +5411,7 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj_)
         objectProto(cx),
         envProto(cx);
 
-    objProto = obj->asGlobal().getOrCreateObjectPrototype(cx);
+    objProto = obj->as<GlobalObject>().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return false;
 

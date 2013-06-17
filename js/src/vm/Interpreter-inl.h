@@ -59,7 +59,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 {
     vp.setUndefined();
 
-    if (obj->isGlobal())
+    if (obj->is<GlobalObject>())
         return true;
 
     if (IsCacheableNonGlobalScope(obj))
@@ -334,7 +334,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
      * undeclared global variable. To do this, we call SetPropertyHelper
      * directly and pass DNP_UNQUALIFIED.
      */
-    if (scope->isGlobal()) {
+    if (scope->is<GlobalObject>()) {
         JS_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
         return baseops::SetPropertyHelper(cx, scope, scope, id, DNP_UNQUALIFIED, &valCopy, strict);
@@ -354,7 +354,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
         return false;
 
     /* Steps 8c, 8d. */
-    if (!prop || (obj2 != varobj && varobj->isGlobal())) {
+    if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
         RootedValue value(cx, UndefinedValue());
         if (!JSObject::defineProperty(cx, varobj, dn, value, JS_PropertyStub,
                                       JS_StrictPropertyStub, attrs)) {

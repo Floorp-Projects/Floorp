@@ -5976,11 +5976,11 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *observed, bo
 bool
 IonBuilder::getStaticName(HandleObject staticObject, HandlePropertyName name, bool *psucceeded)
 {
-    JS_ASSERT(staticObject->isGlobal() || staticObject->is<CallObject>());
+    JS_ASSERT(staticObject->is<GlobalObject>() || staticObject->is<CallObject>());
 
     *psucceeded = true;
 
-    if (staticObject->isGlobal()) {
+    if (staticObject->is<GlobalObject>()) {
         // Optimize undefined, NaN, and Infinity.
         if (name == cx->names().undefined)
             return pushConstant(UndefinedValue());
@@ -6092,7 +6092,7 @@ IonBuilder::setStaticName(HandleObject staticObject, HandlePropertyName name)
 {
     RootedId id(cx, NameToId(name));
 
-    JS_ASSERT(staticObject->isGlobal() || staticObject->is<CallObject>());
+    JS_ASSERT(staticObject->is<GlobalObject>() || staticObject->is<CallObject>());
 
     MDefinition *value = current->peek(-1);
 
@@ -6136,7 +6136,7 @@ IonBuilder::setStaticName(HandleObject staticObject, HandlePropertyName name)
 
     // Note: we do not use a post barrier when writing to the global object.
     // Slots in the global object will be treated as roots during a minor GC.
-    if (!staticObject->isGlobal() && NeedsPostBarrier(info(), value))
+    if (!staticObject->is<GlobalObject>() && NeedsPostBarrier(info(), value))
         current->add(MPostWriteBarrier::New(obj, value));
 
     // If the property has a known type, we may be able to optimize typed stores by not
@@ -8294,7 +8294,7 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, MutableHandleObject pcall)
     scope->setFoldedUnchecked();
 
     JSObject *environment = script()->function()->environment();
-    while (environment && !environment->isGlobal()) {
+    while (environment && !environment->is<GlobalObject>()) {
         if (environment->is<CallObject>() &&
             !environment->as<CallObject>().isForEval() &&
             environment->as<CallObject>().callee().nonLazyScript() == outerScript)

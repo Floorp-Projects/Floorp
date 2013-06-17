@@ -527,7 +527,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
          */
         BytecodeEmitter funbce(/* parent = */ NULL, &parser, funbox, script,
                                /* insideEval = */ false, /* evalCaller = */ NullPtr(),
-                               fun->environment() && fun->environment()->isGlobal(),
+                               fun->environment() && fun->environment()->is<GlobalObject>(),
                                options.lineno);
         if (!funbce.init())
             return false;

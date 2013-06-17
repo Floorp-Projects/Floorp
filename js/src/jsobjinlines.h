@@ -281,7 +281,7 @@ JSObject::canRemoveLastProperty()
 inline const js::HeapSlot *
 JSObject::getRawSlots()
 {
-    JS_ASSERT(isGlobal());
+    JS_ASSERT(is<js::GlobalObject>());
     return slots;
 }
 

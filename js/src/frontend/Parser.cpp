@@ -1185,9 +1185,9 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
 
     /*
      * Find the global compilation context in order to pre-set the newborn
-     * function's parent slot to pc->sc->asGlobal()->scopeChain. If the global
-     * context is a compile-and-go one, we leave the pre-set parent intact;
-     * otherwise we clear parent and proto.
+     * function's parent slot to pc->sc->as<GlobalObject>()->scopeChain. If the
+     * global context is a compile-and-go one, we leave the pre-set parent
+     * intact; otherwise we clear parent and proto.
      */
     while (pc->parent)
         pc = pc->parent;
