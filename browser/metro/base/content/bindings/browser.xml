@@ -126,7 +126,7 @@
         * rectBrowserToClient
         *  Converts a rect (left, top, right, bottom).
         *
-        * @param aMessage - message manager message
+        * @param aRect - rect to convert
         * @param aIgnoreScroll ignore root frame scroll.
         * @param aIgnoreScale ignore current scale factor.
         * @return { left:, top:, right:, bottom: }
