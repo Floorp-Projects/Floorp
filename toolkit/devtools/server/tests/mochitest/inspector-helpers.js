@@ -253,6 +253,12 @@ function assertFrameLoad(mutations) {
   return assertAndStrip(mutations, "Should have had a frame load change.", isFrameLoad);
 }
 
+// Make sure there's a childList change in the mutation list and strip
+// that mutation out of the list
+function assertChildList(mutations) {
+  return assertAndStrip(mutations, "Should have had a frame load change.", isChildList);
+}
+
 // Load mutations aren't predictable, so keep accumulating mutations until
 // the one we're looking for shows up.
 function waitForMutation(walker, test, mutations=[]) {
