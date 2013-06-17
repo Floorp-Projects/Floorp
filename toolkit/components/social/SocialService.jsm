@@ -137,42 +137,6 @@ let SocialServiceInternal = {
   }
 };
 
-XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
-  initService();
-  let providers = {};
-  for (let manifest of this.manifests) {
-    try {
-      if (ActiveProviders.has(manifest.origin)) {
-        let activationType = getOriginActivationType(manifest.origin);
-        let blessed = activationType == "builtin" ||
-                      activationType == "whitelist";
-        let provider = new SocialProvider(manifest, blessed);
-        providers[provider.origin] = provider;
-      }
-    } catch (err) {
-      Cu.reportError("SocialService: failed to load provider: " + manifest.origin +
-                     ", exception: " + err);
-    }
-  }
-  return providers;
-});
-
-function getOriginActivationType(origin) {
-  let prefname = SocialServiceInternal.getManifestPrefname(origin);
-  if (Services.prefs.getDefaultBranch("social.manifest.").getPrefType(prefname) == Services.prefs.PREF_STRING)
-    return 'builtin';
-
-  let whitelist = Services.prefs.getCharPref("social.whitelist").split(',');
-  if (whitelist.indexOf(origin) >= 0)
-    return 'whitelist';
-
-  let directories = Services.prefs.getCharPref("social.directories").split(',');
-  if (directories.indexOf(origin) >= 0)
-    return 'directory';
-
-  return 'foreign';
-}
-
 let ActiveProviders = {
   get _providers() {
     delete this._providers;
@@ -340,6 +304,23 @@ function initService() {
     MozSocialAPI.enabled = true;
 }
 
+XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
+  initService();
+  let providers = {};
+  for (let manifest of this.manifests) {
+    try {
+      if (ActiveProviders.has(manifest.origin)) {
+        let provider = new SocialProvider(manifest);
+        providers[provider.origin] = provider;
+      }
+    } catch (err) {
+      Cu.reportError("SocialService: failed to load provider: " + manifest.origin +
+                     ", exception: " + err);
+    }
+  }
+  return providers;
+});
+
 function schedule(callback) {
   Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
 }
@@ -461,6 +442,22 @@ this.SocialService = {
   // Returns an array of installed providers, sorted by frecency
   getOrderedProviderList: function(onDone) {
     SocialServiceInternal.orderedProviders(onDone);
+  },
+
+  getOriginActivationType: function(origin) {
+    let prefname = SocialServiceInternal.getManifestPrefname(origin);
+    if (Services.prefs.getDefaultBranch("social.manifest.").getPrefType(prefname) == Services.prefs.PREF_STRING)
+      return 'builtin';
+
+    let whitelist = Services.prefs.getCharPref("social.whitelist").split(',');
+    if (whitelist.indexOf(origin) >= 0)
+      return 'whitelist';
+
+    let directories = Services.prefs.getCharPref("social.directories").split(',');
+    if (directories.indexOf(origin) >= 0)
+      return 'directory';
+
+    return 'foreign';
   },
 
   _providerListeners: new Map(),
@@ -588,7 +585,7 @@ this.SocialService = {
     let sourceURI = aDOMDocument.location.href;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
-    let installType = getOriginActivationType(installOrigin);
+    let installType = this.getOriginActivationType(installOrigin);
     let manifest;
     if (data) {
       // if we get data, we MUST have a valid manifest generated from the data
@@ -652,9 +649,8 @@ this.SocialService = {
  *
  * @constructor
  * @param {jsobj} object representing the manifest file describing this provider
- * @param {bool} boolean indicating whether this provider is "built in"
  */
-function SocialProvider(input, blessed = false) {
+function SocialProvider(input) {
   if (!input.name)
     throw new Error("SocialProvider must be passed a name");
   if (!input.origin)
@@ -678,7 +674,6 @@ function SocialProvider(input, blessed = false) {
   this.ambientNotificationIcons = {};
   this.errorState = null;
   this.frecency = 0;
-  this.blessed = blessed;
   try {
     this.domain = etld.getBaseDomainFromHost(originUri.host);
   } catch(e) {
@@ -874,12 +869,8 @@ SocialProvider.prototype = {
   getWorkerPort: function getWorkerPort(window) {
     if (!this.workerURL || !this.enabled)
       return null;
-    // Only allow localStorage in the frameworker for blessed providers
-    let allowLocalStorage = this.blessed;
-    let handle = getFrameWorkerHandle(this.workerURL, window,
-                                      "SocialProvider:" + this.origin, this.origin,
-                                      allowLocalStorage);
-    return handle.port;
+    return getFrameWorkerHandle(this.workerURL, window,
+                                "SocialProvider:" + this.origin, this.origin).port;
   },
 
   /**
