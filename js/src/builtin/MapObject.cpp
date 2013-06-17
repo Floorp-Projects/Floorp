@@ -849,9 +849,11 @@ HashableValue::mark(JSTracer *trc) const
 
 /*** MapIterator *********************************************************************************/
 
-class js::MapIteratorObject : public JSObject
+class MapIteratorObject : public JSObject
 {
   public:
+    static Class class_;
+
     enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
     static const JSFunctionSpec methods[];
     static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data,
@@ -866,14 +868,7 @@ class js::MapIteratorObject : public JSObject
     static JSBool next(JSContext *cx, unsigned argc, Value *vp);
 };
 
-inline js::MapIteratorObject &
-JSObject::asMapIterator()
-{
-    JS_ASSERT(isMapIterator());
-    return *static_cast<js::MapIteratorObject *>(this);
-}
-
-Class js::MapIteratorClass = {
+Class MapIteratorObject::class_ = {
     "Map Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount),
@@ -913,7 +908,7 @@ GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
     if (!base)
         return false;
     Rooted<JSObject*> proto(cx,
-        NewObjectWithGivenProto(cx, &MapIteratorClass, base, global));
+        NewObjectWithGivenProto(cx, &MapIteratorObject::class_, base, global));
     if (!proto)
         return false;
     proto->setSlot(MapIteratorObject::RangeSlot, PrivateValue(NULL));
@@ -936,7 +931,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
     if (!range)
         return NULL;
 
-    JSObject *iterobj = NewObjectWithGivenProto(cx, &MapIteratorClass, proto, global);
+    JSObject *iterobj = NewObjectWithGivenProto(cx, &class_, proto, global);
     if (!iterobj) {
         js_delete(range);
         return NULL;
@@ -950,19 +945,19 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
 void
 MapIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    fop->delete_(obj->asMapIterator().range());
+    fop->delete_(obj->as<MapIteratorObject>().range());
 }
 
 bool
 MapIteratorObject::is(const Value &v)
 {
-    return v.isObject() && v.toObject().hasClass(&MapIteratorClass);
+    return v.isObject() && v.toObject().hasClass(&class_);
 }
 
 bool
 MapIteratorObject::next_impl(JSContext *cx, CallArgs args)
 {
-    MapIteratorObject &thisobj = args.thisv().toObject().asMapIterator();
+    MapIteratorObject &thisobj = args.thisv().toObject().as<MapIteratorObject>();
     ValueMap::Range *range = thisobj.range();
     if (!range)
         return js_ThrowStopIteration(cx);
