@@ -32,15 +32,6 @@ ifdef MOZ_XUL
 DISABLED_EXTRA_COMPONENTS += nsPlacesAutoComplete.js nsPlacesAutoComplete.manifest
 endif
 
-EXTRA_JS_MODULES = \
-  PlacesDBUtils.jsm \
-  ColorAnalyzer_worker.js \
-  ColorConversion.js \
-  ClusterLib.js \
-  BookmarkJSONUtils.jsm \
-  PlacesBackups.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES = \
   BookmarkHTMLUtils.jsm \
   PlacesUtils.jsm \

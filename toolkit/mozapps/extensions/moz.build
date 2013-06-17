@@ -25,3 +25,15 @@ EXTRA_PP_COMPONENTS += [
     'extensions.manifest',
     'nsBlocklistService.js',
 ]
+
+EXTRA_JS_MODULES += [
+    'AddonLogging.jsm',
+    'AddonRepository.jsm',
+    'AddonUpdateChecker.jsm',
+    'ChromeManifestParser.jsm',
+    'LightweightThemeImageOptimizer.jsm',
+    'LightweightThemeManager.jsm',
+    'PluginProvider.jsm',
+    'SpellCheckDictionaryBootstrap.js',
+]
+

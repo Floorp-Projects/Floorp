@@ -37,17 +37,6 @@ EXTRA_PP_JS_MODULES = \
   XPIProviderUtils.js \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  AddonLogging.jsm \
-  AddonRepository.jsm \
-  AddonUpdateChecker.jsm \
-  ChromeManifestParser.jsm \
-  LightweightThemeImageOptimizer.jsm \
-  LightweightThemeManager.jsm \
-  PluginProvider.jsm \
-  SpellCheckDictionaryBootstrap.js \
-  $(NULL)
-
 EXTRA_DSO_LDOPTS = \
   $(MOZ_JS_LIBS) \
   $(MOZ_UNICHARUTIL_LIBS) \
