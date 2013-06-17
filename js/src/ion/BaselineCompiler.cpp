@@ -429,6 +429,8 @@ static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(Inte
 bool
 BaselineCompiler::emitInterruptCheck()
 {
+    frame.syncStack(0);
+
     Label done;
     void *interrupt = (void *)&cx->compartment()->rt->interrupt;
     masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
@@ -2314,6 +2316,45 @@ bool
 BaselineCompiler::emit_JSOP_TRY()
 {
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_FINALLY()
+{
+    // JSOP_FINALLY has a def count of 2, but these values are already on the
+    // stack (they're pushed by JSOP_GOSUB). Update the compiler's stack state.
+    frame.setStackDepth(frame.stackDepth() + 2);
+
+    // To match the interpreter, emit an interrupt check at the start of the
+    // finally block.
+    return emitInterruptCheck();
+}
+
+bool
+BaselineCompiler::emit_JSOP_GOSUB()
+{
+    // Push |false| so that RETSUB knows the value on top of the
+    // stack is not an exception but the offset to the op following
+    // this GOSUB.
+    frame.push(BooleanValue(false));
+
+    int32_t nextOffset = GetNextPc(pc) - script->code;
+    frame.push(Int32Value(nextOffset));
+
+    // Jump to the finally block.
+    frame.syncStack(0);
+    jsbytecode *target = pc + GET_JUMP_OFFSET(pc);
+    masm.jump(labelOf(target));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_RETSUB()
+{
+    frame.popRegsAndSync(2);
+
+    ICRetSub_Fallback::Compiler stubCompiler(cx);
+    return emitOpIC(stubCompiler.getStub(&stubSpace_));
 }
 
 typedef bool (*EnterBlockFn)(JSContext *, BaselineFrame *, Handle<StaticBlockObject *>);
