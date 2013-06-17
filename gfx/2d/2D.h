@@ -11,6 +11,13 @@
 #include "Rect.h"
 #include "Matrix.h"
 #include "UserData.h"
+
+// GenericRefCountedBase allows us to hold on to refcounted objects of any type
+// (contrary to RefCounted<T> which requires knowing the type T) and, in particular,
+// without having a dependency on that type. This is used for DrawTargetSkia
+// to be able to hold on to a GLContext.
+#include "mozilla/GenericRefCounted.h"
+
 // This RefPtr class isn't ideal for usage in Azure, as it doesn't allow T**
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
@@ -31,6 +38,7 @@ struct ID3D10Texture2D;
 struct IDWriteRenderingParams;
 
 class GrContext;
+struct GrGLInterface;
 
 namespace mozilla {
 
@@ -856,6 +864,20 @@ public:
     return mPermitSubpixelAA;
   }
 
+  virtual GenericRefCountedBase* GetGLContext() const {
+    return nullptr;
+  }
+
+#ifdef USE_SKIA_GPU
+  virtual void InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                            GrGLInterface* aGrGLInterface,
+                                            const IntSize &aSize,
+                                            SurfaceFormat aFormat)
+  {
+    MOZ_CRASH();
+  }
+#endif
+
 protected:
   UserData mUserData;
   Matrix mTransform;
@@ -936,7 +958,10 @@ public:
 
 #ifdef USE_SKIA_GPU
   static TemporaryRef<DrawTarget>
-    CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext* aContext, const IntSize &aSize, SurfaceFormat aFormat);
+    CreateDrawTargetSkiaWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                                      GrGLInterface* aGrGLInterface,
+                                                      const IntSize &aSize,
+                                                      SurfaceFormat aFormat);
 #endif
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)

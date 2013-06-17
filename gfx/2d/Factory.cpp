@@ -442,10 +442,14 @@ Factory::D2DCleanup()
 
 #ifdef USE_SKIA_GPU
 TemporaryRef<DrawTarget>
-Factory::CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext* aGrContext, const IntSize &aSize, SurfaceFormat aFormat)
+Factory::CreateDrawTargetSkiaWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                                           GrGLInterface* aGrGLInterface,
+                                                           const IntSize &aSize,
+                                                           SurfaceFormat aFormat)
 {
-  RefPtr<DrawTargetSkia> newTarget = new DrawTargetSkia();
-  newTarget->InitWithFBO(aFBOID, aGrContext, aSize, aFormat);
+  DrawTargetSkia* newDrawTargetSkia = new DrawTargetSkia();
+  newDrawTargetSkia->InitWithGLContextAndGrGLInterface(aGLContext, aGrGLInterface, aSize, aFormat);
+  RefPtr<DrawTarget> newTarget = newDrawTargetSkia;
   return newTarget;
 }
 #endif // USE_SKIA_GPU
