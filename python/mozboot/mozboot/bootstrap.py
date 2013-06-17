@@ -76,5 +76,7 @@ class Bootstrapper(object):
 
         instance = cls(**args)
         instance.install_system_packages()
+        instance.ensure_mercurial_modern()
+        instance.ensure_python_modern()
 
         print(FINISHED)
