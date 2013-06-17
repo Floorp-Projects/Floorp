@@ -7834,7 +7834,9 @@ DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallb
         return false;
     res.setBoolean(cond);
 
-    if (iterValue.toObject().isPropertyIterator() && !stub->hasStub(ICStub::IteratorMore_Native)) {
+    if (iterValue.toObject().is<PropertyIteratorObject>() &&
+        !stub->hasStub(ICStub::IteratorMore_Native))
+    {
         ICIteratorMore_Native::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
         if (!newStub)
@@ -7912,7 +7914,9 @@ DoIteratorNextFallback(JSContext *cx, BaselineFrame *frame, ICIteratorNext_Fallb
     if (!IteratorNext(cx, iteratorObject, res))
         return false;
 
-    if (iteratorObject->isPropertyIterator() && !stub->hasStub(ICStub::IteratorNext_Native)) {
+    if (iteratorObject->is<PropertyIteratorObject>() &&
+        !stub->hasStub(ICStub::IteratorNext_Native))
+    {
         ICIteratorNext_Native::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
         if (!newStub)
