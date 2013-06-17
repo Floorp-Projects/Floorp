@@ -201,6 +201,23 @@ documenttab[selected] .documenttab-selection {
   display: none;
 }
 
+#tabs-controls {
+  margin-top: @metro_spacing_small@;
+  -moz-box-align: start;
+  -moz-box-orient: vertical;
+  padding: 0 @metro_spacing_small@;
+}
+
+#tabs-controls toolbarbutton {
+  margin: @toolbar_vertical_spacing@ @toolbar_horizontal_spacing@;
+}
+
+#newtab-button {
+  list-style-image: url("images/newtab-default.png");
+}
+
+/* Selection overlay and monocles ----------------------------------------------- */
+
 #page,
 .selection-overlay {
   -moz-stack-sizing: ignore;
@@ -218,19 +235,13 @@ documenttab[selected] .documenttab-selection {
   display: none;
 }
 
-#tabs-controls {
-  margin-top: @metro_spacing_small@;
-  -moz-box-align: start;
-  -moz-box-orient: vertical;
-  padding: 0 @metro_spacing_small@;
-}
-
-#tabs-controls toolbarbutton {
-  margin: @toolbar_vertical_spacing@ @toolbar_horizontal_spacing@;
-}
-
-#newtab-button {
-  list-style-image: url("images/newtab-default.png");
+.selectionhandle {
+  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
+  border: 0px solid gray;
+  padding: 0px;
+  margin-top: -30px;
+  margin-left: -18px;
+  pointer-events: auto;
 }
 
 /* Toolbar ------------------------------------------------------------------ */
@@ -1005,19 +1016,6 @@ setting[type="radio"] > vbox {
 
 #browsers[input="imprecise"] browser {
   overflow: hidden;
-}
-
-/* Text selection handles */
-
-#selectionhandle-mark1,
-#selectionhandle-mark2,
-#selectionhandle-mark3 {
-  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
-  border: 0px solid gray;
-  padding: 0px;
-  margin-top: -30px;
-  margin-left: -18px;
-  pointer-events: auto;
 }
 
 /* :::::: autoscroll popup ::::: */
