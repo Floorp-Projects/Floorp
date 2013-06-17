@@ -159,7 +159,9 @@ class ScopeObject : public JSObject
      * does not derive ScopeObject (it has a completely different layout), the
      * enclosing scope of a ScopeObject is necessarily non-null.
      */
-    inline JSObject &enclosingScope() const;
+    inline JSObject &enclosingScope() const {
+        return getReservedSlot(SCOPE_CHAIN_SLOT).toObject();
+    }
     inline void setEnclosingScope(HandleObject obj);
 
     /*
@@ -631,10 +633,19 @@ JSObject::is<js::NestedScopeObject>() const
     return is<js::BlockObject>() || is<js::WithObject>();
 }
 
+template<>
 inline bool
-JSObject::isScope() const
+JSObject::is<js::ScopeObject>() const
 {
     return is<js::CallObject>() || is<js::DeclEnvObject>() || is<js::NestedScopeObject>();
+}
+
+template<>
+inline bool
+JSObject::is<js::DebugScopeObject>() const
+{
+    extern bool js_IsDebugScopeSlow(JSObject *obj);
+    return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
 
 #endif /* ScopeObject_h___ */

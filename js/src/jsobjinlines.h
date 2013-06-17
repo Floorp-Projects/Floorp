@@ -227,16 +227,6 @@ JSObject::getMetadata() const
     return lastProperty()->getObjectMetadata();
 }
 
-inline JSObject *
-JSObject::enclosingScope()
-{
-    return isScope()
-           ? &asScope().enclosingScope()
-           : isDebugScope()
-           ? &asDebugScope().enclosingScope()
-           : getParent();
-}
-
 inline bool
 JSObject::isFixedSlot(size_t slot)
 {
@@ -795,8 +785,8 @@ inline bool JSObject::setDelegate(JSContext *cx)
 
 inline bool JSObject::isVarObj()
 {
-    if (isDebugScope())
-        return asDebugScope().scope().isVarObj();
+    if (is<js::DebugScopeObject>())
+        return as<js::DebugScopeObject>().scope().isVarObj();
     return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ);
 }
 
@@ -859,13 +849,6 @@ JSObject::asString()
 {
     JS_ASSERT(isString());
     return *static_cast<js::StringObject *>(this);
-}
-
-inline bool
-JSObject::isDebugScope() const
-{
-    extern bool js_IsDebugScopeSlow(JSObject *obj);
-    return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
 
 /* static */ inline JSObject *

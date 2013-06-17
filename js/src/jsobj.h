@@ -220,13 +220,11 @@ extern Class WeakMapClass;
 
 class ArrayBufferObject;
 class BooleanObject;
-class DebugScopeObject;
 class GlobalObject;
 class MapObject;
 class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
-class ScopeObject;
 class SetObject;
 class StrictArgumentsObject;
 class StringObject;
@@ -923,8 +921,8 @@ class JSObject : public js::ObjectImpl
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
      * object, the following predicates are true: is<ClonedBlockObject>,
-     * is<BlockObject>, is<NestedScopeObject> and isScope. Each of these has a
-     * respective class that derives and adds operations.
+     * is<BlockObject>, is<NestedScopeObject> and is<ScopeObject>. Each of
+     * these has a respective class that derives and adds operations.
      *
      * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
      * triplet (along with any class YObject that derives XObject).
@@ -964,7 +962,6 @@ class JSObject : public js::ObjectImpl
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
-    inline bool isScope()            const;
     inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
     inline bool isTypedArray()       const;
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
@@ -975,17 +972,14 @@ class JSObject : public js::ObjectImpl
     inline bool isString()  const { return hasClass(&js::StringClass); }
 
     /* Subtypes of Proxy. */
-    inline bool isDebugScope()              const;
     inline bool isWrapper()                 const;
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::BooleanObject &asBoolean();
-    inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
     inline js::NumberObject &asNumber();
-    inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
     inline js::StringObject &asString();
 
