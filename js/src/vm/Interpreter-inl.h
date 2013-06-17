@@ -227,8 +227,8 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
             return true;
         }
 
-        if (obj->isArguments()) {
-            ArgumentsObject *argsobj = &obj->asArguments();
+        if (obj->is<ArgumentsObject>()) {
+            ArgumentsObject *argsobj = &obj->as<ArgumentsObject>();
             if (!argsobj->hasOverriddenLength()) {
                 uint32_t length = argsobj->initialLength();
                 JS_ASSERT(length < INT32_MAX);

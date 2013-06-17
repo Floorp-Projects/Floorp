@@ -92,7 +92,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
     gc::AllocKind allocKind = gc::FINALIZE_OBJECT2_BACKGROUND;
     JS_ASSERT(gc::GetGCKindSlots(allocKind) == CallObject::RESERVED_SLOTS);
     RootedShape initial(cx,
-        EmptyShape::getInitialShape(cx, &CallClass, NULL, cx->global(), NULL,
+        EmptyShape::getInitialShape(cx, &CallObject::class_, NULL, cx->global(), NULL,
                                     allocKind, BaseShape::VAROBJ | BaseShape::DELEGATE));
     if (!initial)
         return false;
@@ -117,7 +117,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
             return false;
 #endif
 
-        StackBaseShape base(cx->compartment(), &CallClass, cx->global(), NULL,
+        StackBaseShape base(cx->compartment(), &CallObject::class_, cx->global(), NULL,
                             BaseShape::VAROBJ | BaseShape::DELEGATE);
 
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
@@ -657,7 +657,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (mode == XDR_ENCODE) {
             JSObject *obj = *objp;
             JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
-            isBlock = obj->isBlock() ? 1 : 0;
+            isBlock = obj->is<BlockObject>() ? 1 : 0;
         }
         if (!xdr->codeUint32(&isBlock))
             return false;
@@ -786,7 +786,7 @@ js::XDRScript(XDRState<XDR_DECODE> *, HandleObject, HandleScript, HandleFunction
 js::ScriptSourceObject *
 JSScript::sourceObject() const
 {
-    return &sourceObject_->asScriptSource();
+    return &sourceObject_->as<ScriptSourceObject>();
 }
 
 bool
@@ -917,10 +917,10 @@ void
 ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 {
     // ScriptSource::setSource automatically takes care of the refcount
-    obj->asScriptSource().setSource(NULL);
+    obj->as<ScriptSourceObject>().setSource(NULL);
 }
 
-Class js::ScriptSourceClass = {
+Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */
@@ -936,10 +936,10 @@ Class js::ScriptSourceClass = {
 ScriptSourceObject *
 ScriptSourceObject::create(JSContext *cx, ScriptSource *source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &ScriptSourceClass, NULL, cx->global()));
+    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NULL, cx->global()));
     if (!object)
         return NULL;
-    JS::RootedScriptSource sourceObject(cx, &object->asScriptSource());
+    JS::RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
     sourceObject->setSlot(SOURCE_SLOT, PrivateValue(source));
     source->incref();
     return sourceObject;
@@ -2356,7 +2356,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     for (unsigned i = 0; i < nregexps; i++) {
         HeapPtrObject *vector = src->regexps()->vector;
         for (unsigned i = 0; i < nregexps; i++) {
-            JSObject *clone = CloneScriptRegExpObject(cx, vector[i]->asRegExp());
+            JSObject *clone = CloneScriptRegExpObject(cx, vector[i]->as<RegExpObject>());
             if (!clone || !regexps.append(clone))
                 return NULL;
         }
@@ -2992,7 +2992,7 @@ LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject
 ScriptSourceObject *
 LazyScript::sourceObject() const
 {
-    return sourceObject_ ? &sourceObject_->asScriptSource() : NULL;
+    return sourceObject_ ? &sourceObject_->as<ScriptSourceObject>() : NULL;
 }
 
 /* static */ LazyScript *

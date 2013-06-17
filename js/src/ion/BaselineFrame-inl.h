@@ -22,7 +22,7 @@ inline void
 BaselineFrame::pushOnScopeChain(ScopeObject &scope)
 {
     JS_ASSERT(*scopeChain() == scope.enclosingScope() ||
-              *scopeChain() == scope.asCall().enclosingScope().asDeclEnv().enclosingScope());
+              *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
 }
 
@@ -72,9 +72,9 @@ BaselineFrame::callObj() const
     JS_ASSERT(fun()->isHeavyweight());
 
     JSObject *obj = scopeChain();
-    while (!obj->isCall())
+    while (!obj->is<CallObject>())
         obj = obj->enclosingScope();
-    return obj->asCall();
+    return obj->as<CallObject>();
 }
 
 } // namespace ion

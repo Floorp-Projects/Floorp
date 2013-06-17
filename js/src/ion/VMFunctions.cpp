@@ -639,7 +639,7 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
         JS_ASSERT_IF(ok, frame->hasReturnValue());
         DebugScopes::onPopCall(frame, cx);
     } else if (frame->isStrictEvalFrame()) {
-        JS_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->asCall().isForEval());
+        JS_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->as<CallObject>().isForEval());
         DebugScopes::onPopStrictEvalScope(frame);
     }
 
