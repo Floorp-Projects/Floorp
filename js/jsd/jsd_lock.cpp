@@ -9,7 +9,7 @@
  */
 
 /*                                                                           
-* ifdef JSD_USE_NSPR_LOCKS then you musat build and run against NSPR2.       
+* ifdef JSD_USE_NSPR_LOCKS then you must build and run against NSPR2.       
 * Otherwise, there are stubs that can be filled in with your own locking     
 * code. Also, note that these stubs include a jsd_CurrentThread()            
 * implementation that only works on Win32 - this is needed for the inprocess 
