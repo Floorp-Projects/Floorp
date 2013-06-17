@@ -107,8 +107,9 @@ VARIABLES = {
     'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list, [],
         """Additional JavaScript files to distribute.
 
-        This variable contains a list of files to copy into JS_MODULES_PATH,
-        which is $(FINAL_TARGET)/modules by default.
+        This variable contains a list of files to copy into
+        $(FINAL_TARGET)/$(JS_MODULES_PATH). JS_MODULES_PATH defaults to
+        "modules" if left undefined.
         """),
 
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
@@ -138,10 +139,12 @@ VARIABLES = {
         """),
 
     'JS_MODULES_PATH': (unicode, unicode, "",
-        """Path to install EXTRA_JS_MODULES.
+        """Sub-directory of $(FINAL_TARGET) to install EXTRA_JS_MODULES.
 
-        EXTRA_JS_MODULES files are copied to this path, which defaults to
-        $(FINAL_TARGET)/modules if unspecified.
+        EXTRA_JS_MODULES files are copied to
+        $(FINAL_TARGET)/$(JS_MODULES_PATH). This variable does not
+        need to be defined if the desired destination directory is
+        $(FINAL_TARGET)/modules.
         """),
 
     'LIBRARY_NAME': (unicode, unicode, "",
