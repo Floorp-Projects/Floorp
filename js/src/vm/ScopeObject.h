@@ -279,6 +279,8 @@ class BlockObject : public NestedScopeObject
     static const unsigned RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
+    static Class class_;
+
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;
 
@@ -617,4 +619,17 @@ class DebugScopes
 };
 
 }  /* namespace js */
+
+inline bool
+JSObject::isNestedScope() const
+{
+    return is<js::BlockObject>() || isWith();
+}
+
+inline bool
+JSObject::isScope() const
+{
+    return isCall() || isDeclEnv() || isNestedScope();
+}
+
 #endif /* ScopeObject_h___ */

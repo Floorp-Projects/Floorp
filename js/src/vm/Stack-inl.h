@@ -31,7 +31,7 @@ namespace js {
 static inline bool
 IsCacheableNonGlobalScope(JSObject *obj)
 {
-    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
+    bool cacheable = (obj->isCall() || obj->is<BlockObject>() || obj->isDeclEnv());
 
     JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;

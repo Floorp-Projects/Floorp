@@ -845,8 +845,8 @@ inline bool JSObject::watched() const
     return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
 }
 
-inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
-inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
+inline bool JSObject::isClonedBlock() const { return is<js::BlockObject>() && !!getProto(); }
+inline bool JSObject::isStaticBlock() const { return is<js::BlockObject>() && !getProto(); }
 inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
 
 inline js::NumberObject &

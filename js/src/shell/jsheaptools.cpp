@@ -383,7 +383,7 @@ class ReferenceFinder {
             JSObject *object = static_cast<JSObject *>(cell);
 
             /* Certain classes of object are for internal use only. */
-            if (object->isBlock() ||
+            if (object->is<BlockObject>() ||
                 object->isCall() ||
                 object->isWith() ||
                 object->isDeclEnv()) {
