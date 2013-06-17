@@ -59,6 +59,13 @@ UnwrapArg(JSContext* cx, jsval v, Interface** ppArg,
 
 bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
+bool
+ThrowInvalidMethodThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                       const char* aInterfaceName);
+bool
+ThrowInvalidGetterThis(JSContext* aCx, const char* aInterfaceName);
+bool
+ThrowInvalidSetterThis(JSContext* aCx, const char* aInterfaceName);
 
 template<bool mainThread>
 inline bool

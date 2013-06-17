@@ -5070,7 +5070,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
         if unwrapFailureCode is None:
-            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % self.descriptor.name
+            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % descriptor.interface.identifier.name
         else:
             self.unwrapFailureCode = unwrapFailureCode
         self.getThisObj = getThisObj
@@ -5133,7 +5133,12 @@ class CGGenericMethod(CGAbstractBindingMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, 'genericMethod', args)
+        unwrapFailureCode = (
+            'return ThrowInvalidMethodThis(cx, args, \"%s\");' %
+            descriptor.interface.identifier.name)
+        CGAbstractBindingMethod.__init__(self, descriptor, 'genericMethod',
+                                         args,
+                                         unwrapFailureCode=unwrapFailureCode)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -5265,7 +5270,9 @@ class CGGenericGetter(CGAbstractBindingMethod):
                 "return true;")
         else:
             name = "genericGetter"
-            unwrapFailureCode = None
+            unwrapFailureCode = (
+                'return ThrowInvalidGetterThis(cx, "%s");' %
+                descriptor.interface.identifier.name)
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
                                          unwrapFailureCode)
 
@@ -5343,7 +5350,10 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 "return true;")
         else:
             name = "genericSetter"
-            unwrapFailureCode = None
+            unwrapFailureCode = (
+                'return ThrowInvalidSetterThis(cx, "%s");' %
+                descriptor.interface.identifier.name)
+
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
                                          unwrapFailureCode)
 
