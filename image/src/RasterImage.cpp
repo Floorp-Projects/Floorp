@@ -450,17 +450,13 @@ RasterImage::~RasterImage()
     // have a decoder open, the last frame is always locked.
     // This would be done in ShutdownDecoder, but since mDecoder is non-null,
     // we didn't call ShutdownDecoder and we need to do it manually.
-    if (mFrames.Length() > 0) {
-      imgFrame *curframe = mFrames.ElementAt(mFrames.Length() - 1);
+    if (GetNumFrames() > 0) {
+      imgFrame *curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
       curframe->UnlockImageData();
     }
   }
 
   delete mAnim;
-
-  for (unsigned int i = 0; i < mFrames.Length(); ++i)
-    delete mFrames[i];
-
   delete mMultipartDecodedFrame;
 
   // Total statistics
@@ -549,8 +545,8 @@ RasterImage::GetSingleLoopTime() const
   }
 
   uint32_t looptime = 0;
-  for (uint32_t i = 0; i < mFrames.Length(); ++i) {
-    int32_t timeout = mFrames[i]->GetTimeout();
+  for (uint32_t i = 0; i < GetNumFrames(); ++i) {
+    int32_t timeout = mFrameBlender.RawGetFrame(i)->GetTimeout();
     if (timeout > 0) {
       looptime += static_cast<uint32_t>(timeout);
     } else {
@@ -570,39 +566,32 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
   NS_ASSERTION(aTime <= TimeStamp::Now(),
                "Given time appears to be in the future");
 
-  imgFrame* nextFrame = nullptr;
   uint32_t currentFrameIndex = mAnim->currentAnimationFrameIndex;
   uint32_t nextFrameIndex = mAnim->currentAnimationFrameIndex + 1;
   uint32_t timeout = 0;
 
   // Figure out if we have the next full frame. This is more complicated than
-  // just checking for mFrames.Length() because decoders append their frames
+  // just checking GetNumFrames() because decoders append their frames
   // before they're filled in.
-  NS_ABORT_IF_FALSE(mDecoder || nextFrameIndex <= mFrames.Length(),
+  NS_ABORT_IF_FALSE(mDecoder || nextFrameIndex <= GetNumFrames(),
                     "How did we get 2 indices too far by incrementing?");
 
   // If we don't have a decoder, we know we've got everything we're going to
   // get. If we do, we only display fully-downloaded frames; everything else
   // gets delayed.
   bool haveFullNextFrame = (mMultipart && mBytesDecoded == 0) || !mDecoder ||
-                           nextFrameIndex < mDecoder->GetCompleteFrameCount();
+                            nextFrameIndex < mDecoder->GetCompleteFrameCount();
 
   // If we're done decoding the next frame, go ahead and display it now and
   // reinit with the next frame's delay time.
   if (haveFullNextFrame) {
-    if (mFrames.Length() == nextFrameIndex) {
+    if (GetNumFrames() == nextFrameIndex) {
       // End of Animation, unless we are looping forever
 
       // If animation mode is "loop once", it's time to stop animating
       if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
         mAnimationFinished = true;
         EvaluateAnimation();
-      }
-
-      // We may have used compositingFrame to build a frame, and then copied
-      // it back into mFrames[..].  If so, delete composite to save memory
-      if (mAnim->compositingFrame && mAnim->lastCompositedFrameIndex == -1) {
-        mAnim->compositingFrame = nullptr;
       }
 
       nextFrameIndex = 0;
@@ -617,13 +606,7 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
       }
     }
 
-    if (!(nextFrame = mFrames[nextFrameIndex])) {
-      // something wrong with the next frame, skip it
-      mAnim->currentAnimationFrameIndex = nextFrameIndex;
-      return false;
-    }
-
-    timeout = nextFrame->GetTimeout();
+    timeout = mFrameBlender.GetFrame(nextFrameIndex)->GetTimeout();
 
   } else {
     // Uh oh, the frame we want to show is currently being decoded (partial)
@@ -639,24 +622,17 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
   if (nextFrameIndex == 0) {
     *aDirtyRect = mAnim->firstFrameRefreshArea;
   } else {
-    imgFrame *curFrame = mFrames[currentFrameIndex];
-
-    if (!curFrame) {
-      return false;
-    }
-
     // Change frame
-    if (NS_FAILED(DoComposite(aDirtyRect, curFrame,
-                              nextFrame, nextFrameIndex))) {
+    if (!mFrameBlender.DoBlend(aDirtyRect, currentFrameIndex, nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("RasterImage::AdvanceFrame(): Compositing of frame failed");
-      nextFrame->SetCompositingFailed(true);
+      mFrameBlender.RawGetFrame(nextFrameIndex)->SetCompositingFailed(true);
       mAnim->currentAnimationFrameTime = GetCurrentImgFrameEndTime();
       mAnim->currentAnimationFrameIndex = nextFrameIndex;
       return false;
     }
 
-    nextFrame->SetCompositingFailed(false);
+    mFrameBlender.RawGetFrame(nextFrameIndex)->SetCompositingFailed(false);
   }
 
   mAnim->currentAnimationFrameTime = GetCurrentImgFrameEndTime();
@@ -689,7 +665,6 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
     return;
   }
 
-  EnsureAnimExists();
   EvaluateAnimation();
 
   // only advance the frame if the current time is greater than or
@@ -817,11 +792,9 @@ RasterImage::GetImgFrameNoDecode(uint32_t framenum)
 {
   if (!mAnim) {
     NS_ASSERTION(framenum == 0, "Don't ask for a frame > 0 if we're not animated!");
-    return mFrames.SafeElementAt(0, nullptr);
+    return mFrameBlender.GetFrame(0);
   }
-  if (mAnim->lastCompositedFrameIndex == int32_t(framenum))
-    return mAnim->compositingFrame;
-  return mFrames.SafeElementAt(framenum, nullptr);
+  return mFrameBlender.GetFrame(framenum);
 }
 
 imgFrame*
@@ -867,7 +840,7 @@ RasterImage::GetCurrentImgFrameIndex() const
 TimeStamp
 RasterImage::GetCurrentImgFrameEndTime() const
 {
-  imgFrame* currentFrame = mFrames[mAnim->currentAnimationFrameIndex];
+  imgFrame* currentFrame = mFrameBlender.RawGetFrame(mAnim->currentAnimationFrameIndex);
   TimeStamp currentFrameTime = mAnim->currentAnimationFrameTime;
   int64_t timeout = currentFrame->GetTimeout();
 
@@ -954,9 +927,9 @@ RasterImage::GetCurrentFrameIndex()
 }
 
 uint32_t
-RasterImage::GetNumFrames()
+RasterImage::GetNumFrames() const
 {
-  return mFrames.Length();
+  return mFrameBlender.GetNumFrames();
 }
 
 //******************************************************************************
@@ -998,7 +971,7 @@ RasterImage::GetFirstFrameDelay()
   if (NS_FAILED(GetAnimated(&animated)) || !animated)
     return -1;
 
-  return mFrames[0]->GetTimeout();
+  return mFrameBlender.GetFrame(0)->GetTimeout();
 }
 
 nsresult
@@ -1226,12 +1199,7 @@ size_t
 RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
                                                      nsMallocSizeOfFun aMallocSizeOf) const
 {
-  size_t n = 0;
-  for (uint32_t i = 0; i < mFrames.Length(); ++i) {
-    imgFrame* frame = mFrames.SafeElementAt(i, nullptr);
-    NS_ABORT_IF_FALSE(frame, "Null frame in frame array!");
-    n += frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
-  }
+  size_t n = mFrameBlender.SizeOfDecodedWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
 
   if (mScaleResult.status == SCALE_DONE) {
     n += mScaleResult.frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
@@ -1261,23 +1229,14 @@ RasterImage::OutOfProcessSizeOfDecoded() const
                                                  NULL);
 }
 
-void
-RasterImage::DeleteImgFrame(uint32_t framenum)
-{
-  NS_ABORT_IF_FALSE(framenum < mFrames.Length(), "Deleting invalid frame!");
-
-  delete mFrames[framenum];
-  mFrames[framenum] = nullptr;
-}
-
 nsresult
 RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
                                     uint8_t **imageData, uint32_t *imageLength,
                                     uint32_t **paletteData, uint32_t *paletteLength,
                                     imgFrame** aRetFrame)
 {
-  NS_ABORT_IF_FALSE(framenum <= mFrames.Length(), "Invalid frame index!");
-  if (framenum > mFrames.Length())
+  NS_ABORT_IF_FALSE(framenum <= GetNumFrames(), "Invalid frame index!");
+  if (framenum > GetNumFrames())
     return NS_ERROR_INVALID_ARG;
 
   nsAutoPtr<imgFrame> frame(aFrame);
@@ -1293,7 +1252,7 @@ RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
 
   *aRetFrame = frame;
 
-  mFrames.InsertElementAt(framenum, frame.forget());
+  mFrameBlender.InsertFrame(framenum, frame.forget());
 
   return NS_OK;
 }
@@ -1315,8 +1274,8 @@ RasterImage::InternalAddFrame(uint32_t framenum,
   // lock frames.
   NS_ABORT_IF_FALSE(mDecoder, "Only decoders may add frames!");
 
-  NS_ABORT_IF_FALSE(framenum <= mFrames.Length(), "Invalid frame index!");
-  if (framenum > mFrames.Length())
+  NS_ABORT_IF_FALSE(framenum <= GetNumFrames(), "Invalid frame index!");
+  if (framenum > GetNumFrames())
     return NS_ERROR_INVALID_ARG;
 
   nsAutoPtr<imgFrame> frame(new imgFrame());
@@ -1330,27 +1289,27 @@ RasterImage::InternalAddFrame(uint32_t framenum,
 
   // We know we are in a decoder. Therefore, we must unlock the previous frame
   // when we move on to decoding into the next frame.
-  if (mFrames.Length() > 0) {
-    imgFrame *prevframe = mFrames.ElementAt(mFrames.Length() - 1);
+  if (GetNumFrames() > 0) {
+    imgFrame *prevframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
     prevframe->UnlockImageData();
   }
 
-  if (mFrames.Length() == 0) {
+  if (GetNumFrames() == 0) {
     return InternalAddFrameHelper(framenum, frame.forget(), imageData, imageLength,
                                   paletteData, paletteLength, aRetFrame);
   }
 
-  if (mFrames.Length() == 1) {
+  if (GetNumFrames() == 1) {
     // Since we're about to add our second frame, initialize animation stuff
     EnsureAnimExists();
 
     // If we dispose of the first frame by clearing it, then the
     // First Frame's refresh area is all of itself.
     // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR)
-    int32_t frameDisposalMethod = mFrames[0]->GetFrameDisposalMethod();
-    if (frameDisposalMethod == kDisposeClear ||
-        frameDisposalMethod == kDisposeRestorePrevious)
-      mAnim->firstFrameRefreshArea = mFrames[0]->GetRect();
+    int32_t frameDisposalMethod = mFrameBlender.RawGetFrame(0)->GetFrameDisposalMethod();
+    if (frameDisposalMethod == FrameBlender::kDisposeClear ||
+        frameDisposalMethod == FrameBlender::kDisposeRestorePrevious)
+      mAnim->firstFrameRefreshArea = mFrameBlender.RawGetFrame(0)->GetRect();
   }
 
   // Calculate firstFrameRefreshArea
@@ -1418,6 +1377,8 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight)
   mSize.SizeTo(aWidth, aHeight);
   mHasSize = true;
 
+  mFrameBlender.SetSize(mSize);
+
   return NS_OK;
 }
 
@@ -1436,27 +1397,29 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
   NS_ENSURE_ARG_POINTER(imageData);
   NS_ENSURE_ARG_POINTER(imageLength);
   NS_ENSURE_ARG_POINTER(aRetFrame);
-  NS_ABORT_IF_FALSE(aFrameNum <= mFrames.Length(), "Invalid frame index!");
+  NS_ABORT_IF_FALSE(aFrameNum <= GetNumFrames(), "Invalid frame index!");
 
   if (aPaletteDepth > 0) {
     NS_ENSURE_ARG_POINTER(paletteData);
     NS_ENSURE_ARG_POINTER(paletteLength);
   }
 
-  if (aFrameNum > mFrames.Length())
+  if (aFrameNum > GetNumFrames())
     return NS_ERROR_INVALID_ARG;
 
   // Adding a frame that doesn't already exist.
-  if (aFrameNum == mFrames.Length())
+  if (aFrameNum == GetNumFrames()) {
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat,
                             aPaletteDepth, imageData, imageLength,
                             paletteData, paletteLength, aRetFrame);
+  }
 
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  if (!frame)
+  imgFrame *frame = mFrameBlender.RawGetFrame(aFrameNum);
+  if (!frame) {
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat,
                             aPaletteDepth, imageData, imageLength,
                             paletteData, paletteLength, aRetFrame);
+  }
 
   // See if we can re-use the frame that already exists.
   nsIntRect rect = frame->GetRect();
@@ -1485,8 +1448,7 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
   // writing to.
   frame->UnlockImageData();
 
-  DeleteImgFrame(aFrameNum);
-  mFrames.RemoveElementAt(aFrameNum);
+  mFrameBlender.RemoveFrame(aFrameNum);
   nsAutoPtr<imgFrame> newFrame(new imgFrame());
   nsresult rv = newFrame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1515,11 +1477,11 @@ RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
   if (mError)
     return NS_ERROR_FAILURE;
 
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
+  NS_ABORT_IF_FALSE(aFrameNum < GetNumFrames(), "Invalid frame index!");
+  if (aFrameNum >= GetNumFrames())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame* frame = GetImgFrameNoDecode(aFrameNum);
+  imgFrame* frame = mFrameBlender.RawGetFrame(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameAsNonPremult on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1557,27 +1519,24 @@ RasterImage::DecodingComplete()
   //
   // We don't optimize the frame for multipart images because we reuse
   // the frame.
-  if ((mFrames.Length() == 1) && !mMultipart) {
-    rv = mFrames[0]->Optimize();
+  if ((GetNumFrames() == 1) && !mMultipart) {
+    rv = mFrameBlender.RawGetFrame(0)->Optimize();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Double-buffer our frame in the multipart case, since we'll start decoding
-  // into mFrames again immediately and this produces severe tearing.
+  // into the first frame again immediately and this produces severe tearing.
   if (mMultipart) {
-    if (mFrames.Length() == 1) {
-      imgFrame* swapFrame = mMultipartDecodedFrame;
-      mMultipartDecodedFrame = GetImgFrameNoDecode(GetCurrentFrameIndex());
-      mFrames.Clear();
-      if (swapFrame) {
-        mFrames.AppendElement(swapFrame);
-      }
+    if (GetNumFrames() == 1) {
+      mMultipartDecodedFrame = mFrameBlender.SwapFrame(GetCurrentFrameIndex(),
+                                                       mMultipartDecodedFrame);
     } else {
       // Don't double buffer for animated multipart images. It entails more
       // complexity and it's not really needed since we already are smart about
       // not displaying the still-decoding frame of an animated image. We may
       // have already stored an extra frame, though, so we'll release it here.
       delete mMultipartDecodedFrame;
+      mMultipartDecodedFrame = nullptr;
     }
   }
 
@@ -1643,7 +1602,8 @@ RasterImage::ResetAnimation()
   if (mAnimating)
     StopAnimation();
 
-  mAnim->lastCompositedFrameIndex = -1;
+  mFrameBlender.ResetAnimation();
+
   mAnim->currentAnimationFrameIndex = 0;
   UpdateImageContainer();
 
@@ -1742,12 +1702,9 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
       mAnim = nullptr;
     }
     // If there's only one frame, this could cause flickering
-    int old_frame_count = mFrames.Length();
+    int old_frame_count = GetNumFrames();
     if (old_frame_count > 1) {
-      for (int i = 0; i < old_frame_count; ++i) {
-        DeleteImgFrame(i);
-      }
-      mFrames.Clear();
+      mFrameBlender.ClearFrames();
     }
   }
 
@@ -1986,458 +1943,6 @@ RasterImage::SetSourceSizeHint(uint32_t sizeHint)
   return NS_OK;
 }
 
-//******************************************************************************
-// DoComposite gets called when the timer for animation get fired and we have to
-// update the composited frame of the animation.
-nsresult
-RasterImage::DoComposite(nsIntRect* aDirtyRect,
-                         imgFrame* aPrevFrame,
-                         imgFrame* aNextFrame,
-                         int32_t aNextFrameIndex)
-{
-  NS_ENSURE_ARG_POINTER(aDirtyRect);
-  NS_ENSURE_ARG_POINTER(aPrevFrame);
-  NS_ENSURE_ARG_POINTER(aNextFrame);
-
-  int32_t prevFrameDisposalMethod = aPrevFrame->GetFrameDisposalMethod();
-  if (prevFrameDisposalMethod == kDisposeRestorePrevious &&
-      !mAnim->compositingPrevFrame)
-    prevFrameDisposalMethod = kDisposeClear;
-
-  nsIntRect prevFrameRect = aPrevFrame->GetRect();
-  bool isFullPrevFrame = (prevFrameRect.x == 0 && prevFrameRect.y == 0 &&
-                          prevFrameRect.width == mSize.width &&
-                          prevFrameRect.height == mSize.height);
-
-  // Optimization: DisposeClearAll if the previous frame is the same size as
-  //               container and it's clearing itself
-  if (isFullPrevFrame &&
-      (prevFrameDisposalMethod == kDisposeClear))
-    prevFrameDisposalMethod = kDisposeClearAll;
-
-  int32_t nextFrameDisposalMethod = aNextFrame->GetFrameDisposalMethod();
-  nsIntRect nextFrameRect = aNextFrame->GetRect();
-  bool isFullNextFrame = (nextFrameRect.x == 0 && nextFrameRect.y == 0 &&
-                          nextFrameRect.width == mSize.width &&
-                          nextFrameRect.height == mSize.height);
-
-  if (!aNextFrame->GetIsPaletted()) {
-    // Optimization: Skip compositing if the previous frame wants to clear the
-    //               whole image
-    if (prevFrameDisposalMethod == kDisposeClearAll) {
-      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-      return NS_OK;
-    }
-
-    // Optimization: Skip compositing if this frame is the same size as the
-    //               container and it's fully drawing over prev frame (no alpha)
-    if (isFullNextFrame &&
-        (nextFrameDisposalMethod != kDisposeRestorePrevious) &&
-        !aNextFrame->GetHasAlpha()) {
-      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-      return NS_OK;
-    }
-  }
-
-  // Calculate area that needs updating
-  switch (prevFrameDisposalMethod) {
-    default:
-    case kDisposeNotSpecified:
-    case kDisposeKeep:
-      *aDirtyRect = nextFrameRect;
-      break;
-
-    case kDisposeClearAll:
-      // Whole image container is cleared
-      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-      break;
-
-    case kDisposeClear:
-      // Calc area that needs to be redrawn (the combination of previous and
-      // this frame)
-      // XXX - This could be done with multiple framechanged calls
-      //       Having prevFrame way at the top of the image, and nextFrame
-      //       way at the bottom, and both frames being small, we'd be
-      //       telling framechanged to refresh the whole image when only two
-      //       small areas are needed.
-      aDirtyRect->UnionRect(nextFrameRect, prevFrameRect);
-      break;
-
-    case kDisposeRestorePrevious:
-      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-      break;
-  }
-
-  // Optimization:
-  //   Skip compositing if the last composited frame is this frame
-  //   (Only one composited frame was made for this animation.  Example:
-  //    Only Frame 3 of a 10 frame image required us to build a composite frame
-  //    On the second loop, we do not need to rebuild the frame
-  //    since it's still sitting in compositingFrame)
-  if (mAnim->lastCompositedFrameIndex == aNextFrameIndex) {
-    return NS_OK;
-  }
-
-  bool needToBlankComposite = false;
-
-  // Create the Compositing Frame
-  if (!mAnim->compositingFrame) {
-    mAnim->compositingFrame = new imgFrame();
-    nsresult rv = mAnim->compositingFrame->Init(0, 0, mSize.width, mSize.height,
-                                                gfxASurface::ImageFormatARGB32);
-    if (NS_FAILED(rv)) {
-      mAnim->compositingFrame = nullptr;
-      return rv;
-    }
-    needToBlankComposite = true;
-  } else if (aNextFrameIndex != mAnim->lastCompositedFrameIndex+1) {
-
-    // If we are not drawing on top of last composited frame,
-    // then we are building a new composite frame, so let's clear it first.
-    needToBlankComposite = true;
-  }
-
-  // More optimizations possible when next frame is not transparent
-  // But if the next frame has kDisposeRestorePrevious,
-  // this "no disposal" optimization is not possible,
-  // because the frame in "after disposal operation" state
-  // needs to be stored in compositingFrame, so it can be
-  // copied into compositingPrevFrame later.
-  bool doDisposal = true;
-  if (!aNextFrame->GetHasAlpha() &&
-      nextFrameDisposalMethod != kDisposeRestorePrevious) {
-    if (isFullNextFrame) {
-      // Optimization: No need to dispose prev.frame when
-      // next frame is full frame and not transparent.
-      doDisposal = false;
-      // No need to blank the composite frame
-      needToBlankComposite = false;
-    } else {
-      if ((prevFrameRect.x >= nextFrameRect.x) &&
-          (prevFrameRect.y >= nextFrameRect.y) &&
-          (prevFrameRect.x + prevFrameRect.width <= nextFrameRect.x + nextFrameRect.width) &&
-          (prevFrameRect.y + prevFrameRect.height <= nextFrameRect.y + nextFrameRect.height)) {
-        // Optimization: No need to dispose prev.frame when
-        // next frame fully overlaps previous frame.
-        doDisposal = false;
-      }
-    }
-  }
-
-  if (doDisposal) {
-    // Dispose of previous: clear, restore, or keep (copy)
-    switch (prevFrameDisposalMethod) {
-      case kDisposeClear:
-        if (needToBlankComposite) {
-          // If we just created the composite, it could have anything in it's
-          // buffer. Clear whole frame
-          ClearFrame(mAnim->compositingFrame);
-        } else {
-          // Only blank out previous frame area (both color & Mask/Alpha)
-          ClearFrame(mAnim->compositingFrame, prevFrameRect);
-        }
-        break;
-
-      case kDisposeClearAll:
-        ClearFrame(mAnim->compositingFrame);
-        break;
-
-      case kDisposeRestorePrevious:
-        // It would be better to copy only the area changed back to
-        // compositingFrame.
-        if (mAnim->compositingPrevFrame) {
-          CopyFrameImage(mAnim->compositingPrevFrame, mAnim->compositingFrame);
-
-          // destroy only if we don't need it for this frame's disposal
-          if (nextFrameDisposalMethod != kDisposeRestorePrevious)
-            mAnim->compositingPrevFrame = nullptr;
-        } else {
-          ClearFrame(mAnim->compositingFrame);
-        }
-        break;
-
-      default:
-        // Copy previous frame into compositingFrame before we put the new frame on top
-        // Assumes that the previous frame represents a full frame (it could be
-        // smaller in size than the container, as long as the frame before it erased
-        // itself)
-        // Note: Frame 1 never gets into DoComposite(), so (aNextFrameIndex - 1) will
-        // always be a valid frame number.
-        if (mAnim->lastCompositedFrameIndex != aNextFrameIndex - 1) {
-          if (isFullPrevFrame && !aPrevFrame->GetIsPaletted()) {
-            // Just copy the bits
-            CopyFrameImage(aPrevFrame, mAnim->compositingFrame);
-          } else {
-            if (needToBlankComposite) {
-              // Only blank composite when prev is transparent or not full.
-              if (aPrevFrame->GetHasAlpha() || !isFullPrevFrame) {
-                ClearFrame(mAnim->compositingFrame);
-              }
-            }
-            DrawFrameTo(aPrevFrame, mAnim->compositingFrame, prevFrameRect);
-          }
-        }
-    }
-  } else if (needToBlankComposite) {
-    // If we just created the composite, it could have anything in it's
-    // buffers. Clear them
-    ClearFrame(mAnim->compositingFrame);
-  }
-
-  // Check if the frame we are composing wants the previous image restored afer
-  // it is done. Don't store it (again) if last frame wanted its image restored
-  // too
-  if ((nextFrameDisposalMethod == kDisposeRestorePrevious) &&
-      (prevFrameDisposalMethod != kDisposeRestorePrevious)) {
-    // We are storing the whole image.
-    // It would be better if we just stored the area that nextFrame is going to
-    // overwrite.
-    if (!mAnim->compositingPrevFrame) {
-      mAnim->compositingPrevFrame = new imgFrame();
-      nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
-                                                      gfxASurface::ImageFormatARGB32);
-      if (NS_FAILED(rv)) {
-        mAnim->compositingPrevFrame = nullptr;
-        return rv;
-      }
-    }
-
-    CopyFrameImage(mAnim->compositingFrame, mAnim->compositingPrevFrame);
-  }
-
-  // blit next frame into it's correct spot
-  DrawFrameTo(aNextFrame, mAnim->compositingFrame, nextFrameRect);
-
-  // Set timeout of CompositeFrame to timeout of frame we just composed
-  // Bug 177948
-  int32_t timeout = aNextFrame->GetTimeout();
-  mAnim->compositingFrame->SetTimeout(timeout);
-
-  // Tell the image that it is fully 'downloaded'.
-  nsresult rv = mAnim->compositingFrame->ImageUpdated(mAnim->compositingFrame->GetRect());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // We don't want to keep composite images for 8bit frames.
-  // Also this optimization won't work if the next frame has
-  // kDisposeRestorePrevious, because it would need to be restored
-  // into "after prev disposal but before next blend" state,
-  // not into empty frame.
-  if (isFullNextFrame && mAnimationMode == kNormalAnimMode && mLoopCount != 0 &&
-      nextFrameDisposalMethod != kDisposeRestorePrevious &&
-      !aNextFrame->GetIsPaletted()) {
-    // We have a composited full frame
-    // Store the composited frame into the mFrames[..] so we don't have to
-    // continuously re-build it
-    // Then set the previous frame's disposal to CLEAR_ALL so we just draw the
-    // frame next time around
-    if (CopyFrameImage(mAnim->compositingFrame, aNextFrame)) {
-      aPrevFrame->SetFrameDisposalMethod(kDisposeClearAll);
-      mAnim->lastCompositedFrameIndex = -1;
-      return NS_OK;
-    }
-  }
-
-  mAnim->lastCompositedFrameIndex = aNextFrameIndex;
-
-  return NS_OK;
-}
-
-//******************************************************************************
-// Fill aFrame with black. Does also clears the mask.
-void
-RasterImage::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect)
-{
-  if (!aFrameData)
-    return;
-
-  memset(aFrameData, 0, aFrameRect.width * aFrameRect.height * 4);
-}
-
-void
-RasterImage::ClearFrame(imgFrame* aFrame)
-{
-  AutoFrameLocker lock(aFrame);
-  if (lock.Succeeded()) {
-    ClearFrame(aFrame->GetImageData(), aFrame->GetRect());
-  }
-}
-
-//******************************************************************************
-void
-RasterImage::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect, const nsIntRect& aRectToClear)
-{
-  if (!aFrameData || aFrameRect.width <= 0 || aFrameRect.height <= 0 ||
-      aRectToClear.width <= 0 || aRectToClear.height <= 0) {
-    return;
-  }
-
-  nsIntRect toClear = aFrameRect.Intersect(aRectToClear);
-  if (toClear.IsEmpty()) {
-    return;
-  }
-
-  uint32_t bytesPerRow = aFrameRect.width * 4;
-  for (int row = toClear.y; row < toClear.height; ++row) {
-    memset(aFrameData + toClear.x * 4 + row * bytesPerRow, 0, toClear.width * 4);
-  }
-}
-
-void
-RasterImage::ClearFrame(imgFrame* aFrame, const nsIntRect& aRectToClear)
-{
-  AutoFrameLocker lock(aFrame);
-  if (lock.Succeeded()) {
-    ClearFrame(aFrame->GetImageData(), aFrame->GetRect(), aRectToClear);
-  }
-}
-
-//******************************************************************************
-// Whether we succeed or fail will not cause a crash, and there's not much
-// we can do about a failure, so there we don't return a nsresult
-bool
-RasterImage::CopyFrameImage(uint8_t *aDataSrc, const nsIntRect& aRectSrc,
-                            uint8_t *aDataDest, const nsIntRect& aRectDest)
-{
-  uint32_t dataLengthSrc = aRectSrc.width * aRectSrc.height * 4;
-  uint32_t dataLengthDest = aRectDest.width * aRectDest.height * 4;
-
-  if (!aDataDest || !aDataSrc || dataLengthSrc != dataLengthDest) {
-    return false;
-  }
-
-  memcpy(aDataDest, aDataSrc, dataLengthDest);
-
-  return true;
-}
-
-bool
-RasterImage::CopyFrameImage(imgFrame* aSrc, imgFrame* aDst)
-{
-  AutoFrameLocker srclock(aSrc);
-  AutoFrameLocker dstlock(aDst);
-  if (!srclock.Succeeded() || !dstlock.Succeeded()) {
-    return false;
-  }
-
-  return CopyFrameImage(aSrc->GetImageData(), aSrc->GetRect(),
-                        aDst->GetImageData(), aDst->GetRect());
-}
-
-nsresult
-RasterImage::DrawFrameTo(uint8_t *aSrcData, const nsIntRect& aSrcRect,
-                         uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
-                         uint8_t *aDstPixels, const nsIntRect& aDstRect,
-                         FrameBlendMethod aBlendMethod)
-{
-  NS_ENSURE_ARG_POINTER(aSrcData);
-  NS_ENSURE_ARG_POINTER(aDstPixels);
-
-  // According to both AGIF and APNG specs, offsets are unsigned
-  if (aSrcRect.x < 0 || aSrcRect.y < 0) {
-    NS_WARNING("RasterImage::DrawFrameTo: negative offsets not allowed");
-    return NS_ERROR_FAILURE;
-  }
-  // Outside the destination frame, skip it
-  if ((aSrcRect.x > aDstRect.width) || (aSrcRect.y > aDstRect.height)) {
-    return NS_OK;
-  }
-
-  if (aSrcPaletteLength) {
-    // Larger than the destination frame, clip it
-    int32_t width = std::min(aSrcRect.width, aDstRect.width - aSrcRect.x);
-    int32_t height = std::min(aSrcRect.height, aDstRect.height - aSrcRect.y);
-
-    // The clipped image must now fully fit within destination image frame
-    NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
-                 (aSrcRect.x + width <= aDstRect.width) &&
-                 (aSrcRect.y + height <= aDstRect.height),
-                "RasterImage::DrawFrameTo: Invalid aSrcRect");
-
-    // clipped image size may be smaller than source, but not larger
-    NS_ASSERTION((width <= aSrcRect.width) && (height <= aSrcRect.height),
-                 "RasterImage::DrawFrameTo: source must be smaller than dest");
-
-    // Get pointers to image data
-    uint8_t *srcPixels = aSrcData + aSrcPaletteLength;
-    uint32_t *dstPixels = reinterpret_cast<uint32_t*>(aDstPixels);
-    uint32_t *colormap = reinterpret_cast<uint32_t*>(aSrcData);
-
-    // Skip to the right offset
-    dstPixels += aSrcRect.x + (aSrcRect.y * aDstRect.width);
-    if (!aSrcHasAlpha) {
-      for (int32_t r = height; r > 0; --r) {
-        for (int32_t c = 0; c < width; c++) {
-          dstPixels[c] = colormap[srcPixels[c]];
-        }
-        // Go to the next row in the source resp. destination image
-        srcPixels += aSrcRect.width;
-        dstPixels += aDstRect.width;
-      }
-    } else {
-      for (int32_t r = height; r > 0; --r) {
-        for (int32_t c = 0; c < width; c++) {
-          const uint32_t color = colormap[srcPixels[c]];
-          if (color)
-            dstPixels[c] = color;
-        }
-        // Go to the next row in the source resp. destination image
-        srcPixels += aSrcRect.width;
-        dstPixels += aDstRect.width;
-      }
-    }
-  } else {
-    pixman_image_t* src = pixman_image_create_bits(aSrcHasAlpha ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
-                                                   aSrcRect.width,
-                                                   aSrcRect.height,
-                                                   reinterpret_cast<uint32_t*>(aSrcData),
-                                                   aSrcRect.width * 4);
-    pixman_image_t* dst = pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                                                   aDstRect.width,
-                                                   aDstRect.height,
-                                                   reinterpret_cast<uint32_t*>(aDstPixels),
-                                                   aDstRect.width * 4);
-
-    pixman_image_composite32(aBlendMethod == kBlendSource ? PIXMAN_OP_SRC : PIXMAN_OP_OVER,
-                             src,
-                             nullptr,
-                             dst,
-                             0, 0,
-                             0, 0,
-                             aSrcRect.x, aSrcRect.y,
-                             aDstRect.width, aDstRect.height);
-
-    pixman_image_unref(src);
-    pixman_image_unref(dst);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-RasterImage::DrawFrameTo(imgFrame* aSrc, imgFrame* aDst, const nsIntRect& aSrcRect)
-{
-  AutoFrameLocker srclock(aSrc);
-  AutoFrameLocker dstlock(aDst);
-  if (!srclock.Succeeded() || !dstlock.Succeeded()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aSrc->GetIsPaletted()) {
-    return DrawFrameTo(reinterpret_cast<uint8_t*>(aSrc->GetPaletteData()),
-                       aSrcRect, aSrc->PaletteDataLength(),
-                       aSrc->GetHasAlpha(), aDst->GetImageData(),
-                       aDst->GetRect(),
-                       FrameBlendMethod(aSrc->GetBlendMethod()));
-  }
-
-  return DrawFrameTo(aSrc->GetImageData(), aSrcRect,
-                     0, aSrc->GetHasAlpha(),
-                     aDst->GetImageData(), aDst->GetRect(),
-                     FrameBlendMethod(aSrc->GetBlendMethod()));
-}
-
 /********* Methods to implement lazy allocation of nsIProperties object *************/
 NS_IMETHODIMP
 RasterImage::Get(const char *prop, const nsIID & iid, void * *result)
@@ -2503,12 +2008,10 @@ RasterImage::Discard(bool force)
   NS_ABORT_IF_FALSE(!mAnim, "Asked to discard for animated image!");
 
   // For post-operation logging
-  int old_frame_count = mFrames.Length();
+  int old_frame_count = GetNumFrames();
 
-  // Delete all the decoded frames, then clear the array.
-  for (int i = 0; i < old_frame_count; ++i)
-    delete mFrames[i];
-  mFrames.Clear();
+  // Delete all the decoded frames
+  mFrameBlender.Discard();
 
   // Clear our downscaled frame.
   mScaleResult.status = SCALE_INVALID;
@@ -2539,7 +2042,7 @@ RasterImage::Discard(bool force)
           this,
           mSourceDataMimeType.get(),
           old_frame_count,
-          mFrames.Length(),
+          GetNumFrames(),
           num_containers,
           num_discardable_containers,
           total_source_bytes,
@@ -2636,8 +2139,8 @@ RasterImage::InitDecoder(bool aDoSizeDecode, bool aIsSynchronous /* = false */)
   // If we already have frames, we're probably in the multipart/x-mixed-replace
   // case. Regardless, we need to lock the last frame. Our invariant is that,
   // while we have a decoder open, the last frame is always locked.
-  if (mFrames.Length() > 0) {
-    imgFrame *curframe = mFrames.ElementAt(mFrames.Length() - 1);
+  if (GetNumFrames() > 0) {
+    imgFrame *curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
     curframe->LockImageData();
   }
 
@@ -2705,8 +2208,8 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
 
   // Unlock the last frame (if we have any). Our invariant is that, while we
   // have a decoder open, the last frame is always locked.
-  if (mFrames.Length() > 0) {
-    imgFrame *curframe = mFrames.ElementAt(mFrames.Length() - 1);
+  if (GetNumFrames() > 0) {
+    imgFrame *curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
     curframe->UnlockImageData();
   }
 
@@ -3490,7 +2993,7 @@ RasterImage::WriteToRasterImage(nsIInputStream* /* unused */,
 bool
 RasterImage::ShouldAnimate()
 {
-  return ImageResource::ShouldAnimate() && mFrames.Length() >= 2 &&
+  return ImageResource::ShouldAnimate() && GetNumFrames() >= 2 &&
          !mAnimationFinished;
 }
 
