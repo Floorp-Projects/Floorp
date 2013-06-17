@@ -9,7 +9,7 @@
        consumeoutsideclicks="true"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
-    <panelview id="PanelUI-mainView" flex="1" contextmenu="customizationPanelContextMenu">
+    <panelview id="PanelUI-mainView" contextmenu="customizationPanelContextMenu">
       <vbox id="PanelUI-contents" type="grid"/>
 
       <vbox id="PanelUI-mainView-spring" flex="1"/>
