@@ -208,6 +208,27 @@ class JSFunction : public JSObject
 
     static bool createScriptForLazilyInterpretedFunction(JSContext *cx, js::HandleFunction fun);
 
+    // Function Scripts
+    //
+    // Interpreted functions may either have an explicit JSScript (hasScript())
+    // or be lazy with sufficient information to construct the JSScript if
+    // necessary (isInterpretedLazy()).
+    //
+    // A lazy function will have a LazyScript if the function came from parsed
+    // source, or NULL if the function is a clone of a self hosted function.
+    //
+    // There are several methods to get the script of an interpreted function:
+    //
+    // - For all interpreted functions, getOrCreateScript() will get the
+    //   JSScript, delazifying the function if necessary. This is the safest to
+    //   use, but has extra checks, requires a cx and may trigger a GC.
+    //
+    // - For functions which may have a LazyScript but whose JSScript is known
+    //   to exist, getExistingScript() will get the script and delazify the
+    //   function if necessary.
+    //
+    // - For functions known to have a JSScript, nonLazyScript() will get it.
+
     JSScript *getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
         JS_ASSERT(cx);
@@ -222,34 +243,17 @@ class JSFunction : public JSObject
         return u.i.s.script_;
     }
 
-    static bool maybeGetOrCreateScript(JSContext *cx, js::HandleFunction fun,
-                                       js::MutableHandle<JSScript*> script)
-    {
-        if (fun->isNative()) {
-            script.set(NULL);
-            return true;
-        }
-        script.set(fun->getOrCreateScript(cx));
-        return fun->hasScript();
-    }
+    inline JSScript *getExistingScript();
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.s.script_);
     }
 
-    JSScript *maybeNonLazyScript() const {
-        return hasScript() ? nonLazyScript() : NULL;
-    }
-
     js::HeapPtrScript &mutableScript() {
         JS_ASSERT(isInterpreted());
         return *(js::HeapPtrScript *)&u.i.s.script_;
     }
-
-    // A lazily interpreted function will have an associated LazyScript if the
-    // script has not yet been parsed. For functions whose scripts are lazily
-    // cloned from self hosted code, there is no LazyScript.
 
     js::LazyScript *lazyScript() const {
         JS_ASSERT(isInterpretedLazy() && u.i.s.lazy_);

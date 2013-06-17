@@ -24,29 +24,32 @@ using namespace js::ion;
 #define PERF_MODE_FUNC  2
 #define PERF_MODE_BLOCK 3
 
-static bool PerfChecked = false;
-
 #ifdef JS_ION_PERF
 static uint32_t PerfMode = 0;
 
+static bool PerfChecked = false;
+
 void
 js::ion::CheckPerf() {
-    const char *env = getenv("IONPERF");
-    if (env == NULL) {
-        PerfMode = PERF_MODE_NONE;
-    } else if (!strcmp(env, "none")) {
-        PerfMode = PERF_MODE_NONE;
-    } else if (!strcmp(env, "block")) {
-        PerfMode = PERF_MODE_BLOCK;
-    } else if (!strcmp(env, "func")) {
-        PerfMode = PERF_MODE_FUNC;
-    } else {
-        fprintf(stderr, "Use IONPERF=func to record at basic block granularity\n");
-        fprintf(stderr, "Use IONPERF=block to record at basic block granularity\n");
-        fprintf(stderr, "\n");
-        fprintf(stderr, "Be advised that using IONPERF will cause all scripts\n");
-        fprintf(stderr, "to be leaked.\n");
-        exit(0);
+    if (!PerfChecked) {
+        const char *env = getenv("IONPERF");
+        if (env == NULL) {
+            PerfMode = PERF_MODE_NONE;
+        } else if (!strcmp(env, "none")) {
+            PerfMode = PERF_MODE_NONE;
+        } else if (!strcmp(env, "block")) {
+            PerfMode = PERF_MODE_BLOCK;
+        } else if (!strcmp(env, "func")) {
+            PerfMode = PERF_MODE_FUNC;
+        } else {
+            fprintf(stderr, "Use IONPERF=func to record at basic block granularity\n");
+            fprintf(stderr, "Use IONPERF=block to record at basic block granularity\n");
+            fprintf(stderr, "\n");
+            fprintf(stderr, "Be advised that using IONPERF will cause all scripts\n");
+            fprintf(stderr, "to be leaked.\n");
+            exit(0);
+        }
+        PerfChecked = true;
     }
 }
 
@@ -135,13 +138,16 @@ PerfSpewer::writeProfile(JSScript *script,
     uint32_t thisFunctionIndex = nextFunctionIndex++;
 
     if (PerfFuncEnabled()) {
-        fprintf(fp_,
-                "%lx %lx %s:%d: Func%02d\n",
-                reinterpret_cast<uintptr_t>(code->raw()),
-                (unsigned long) code->instructionsSize(),
-                script->filename(),
-                script->lineno,
-                thisFunctionIndex);
+        unsigned long size = (unsigned long) code->instructionsSize();
+        if (size > 0) {
+            fprintf(fp_,
+                    "%lx %lx %s:%d: Func%02d\n",
+                    reinterpret_cast<uintptr_t>(code->raw()),
+                    size,
+                    script->filename(),
+                    script->lineno,
+                    thisFunctionIndex);
+        }
     } else if (PerfBlockEnabled()) {
         uintptr_t funcStart = uintptr_t(code->raw());
         uintptr_t funcEnd = funcStart + code->instructionsSize();
@@ -163,11 +169,15 @@ PerfSpewer::writeProfile(JSScript *script,
             }
             cur = blockEnd;
 
-            fprintf(fp_,
-                    "%lx %lx %s:%d:%d: Func%02d-Block%d\n",
-                    blockStart, blockEnd - blockStart,
-                    r.filename, r.lineNumber, r.columnNumber,
-                    thisFunctionIndex, r.id);
+            unsigned long size = blockEnd - blockStart;
+
+            if (size > 0) {
+                fprintf(fp_,
+                        "%lx %lx %s:%d:%d: Func%02d-Block%d\n",
+                        blockStart, size,
+                        r.filename, r.lineNumber, r.columnNumber,
+                        thisFunctionIndex, r.id);
+            }
         }
 
         // Any stuff after the basic blocks is presumably OOL code,
