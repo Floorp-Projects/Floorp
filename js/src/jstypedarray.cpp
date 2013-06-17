@@ -1169,7 +1169,7 @@ bool
 js::IsDataView(JSObject* obj)
 {
     JS_ASSERT(obj);
-    return obj->isDataView();
+    return obj->is<DataViewObject>();
 }
 
 void
@@ -2961,7 +2961,7 @@ DataViewObject::getInt8Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     int8_t val;
     if (!read(cx, thisView, args, &val, "getInt8"))
@@ -2982,7 +2982,7 @@ DataViewObject::getUint8Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     uint8_t val;
     if (!read(cx, thisView, args, &val, "getUint8"))
@@ -3003,7 +3003,7 @@ DataViewObject::getInt16Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     int16_t val;
     if (!read(cx, thisView, args, &val, "getInt16"))
@@ -3024,7 +3024,7 @@ DataViewObject::getUint16Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     uint16_t val;
     if (!read(cx, thisView, args, &val, "getUint16"))
@@ -3045,7 +3045,7 @@ DataViewObject::getInt32Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     int32_t val;
     if (!read(cx, thisView, args, &val, "getInt32"))
@@ -3066,7 +3066,7 @@ DataViewObject::getUint32Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     uint32_t val;
     if (!read(cx, thisView, args, &val, "getUint32"))
@@ -3087,7 +3087,7 @@ DataViewObject::getFloat32Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     float val;
     if (!read(cx, thisView, args, &val, "getFloat32"))
@@ -3109,7 +3109,7 @@ DataViewObject::getFloat64Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     double val;
     if (!read(cx, thisView, args, &val, "getFloat64"))
@@ -3131,7 +3131,7 @@ DataViewObject::setInt8Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<int8_t>(cx, thisView, args, "setInt8"))
         return false;
@@ -3151,7 +3151,7 @@ DataViewObject::setUint8Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<uint8_t>(cx, thisView, args, "setUint8"))
         return false;
@@ -3171,7 +3171,7 @@ DataViewObject::setInt16Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<int16_t>(cx, thisView, args, "setInt16"))
         return false;
@@ -3191,7 +3191,7 @@ DataViewObject::setUint16Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<uint16_t>(cx, thisView, args, "setUint16"))
         return false;
@@ -3211,7 +3211,7 @@ DataViewObject::setInt32Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<int32_t>(cx, thisView, args, "setInt32"))
         return false;
@@ -3231,7 +3231,7 @@ DataViewObject::setUint32Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<uint32_t>(cx, thisView, args, "setUint32"))
         return false;
@@ -3251,7 +3251,7 @@ DataViewObject::setFloat32Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<float>(cx, thisView, args, "setFloat32"))
         return false;
@@ -3271,7 +3271,7 @@ DataViewObject::setFloat64Impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().asDataView());
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     if (!write<double>(cx, thisView, args, "setFloat64"))
         return false;
@@ -3672,7 +3672,7 @@ InitArrayBufferClass(JSContext *cx)
     return arrayBufferProto;
 }
 
-Class js::DataViewObject::protoClass = {
+Class DataViewObject::protoClass = {
     "DataViewPrototype",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
@@ -3686,7 +3686,7 @@ Class js::DataViewObject::protoClass = {
     JS_ConvertStub
 };
 
-Class js::DataViewClass = {
+Class DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_IMPLEMENTS_BARRIERS |
@@ -3735,7 +3735,7 @@ DataViewObject::getterImpl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(is(args.thisv()));
 
-    args.rval().set(ValueGetter(args.thisv().toObject().asDataView()));
+    args.rval().set(ValueGetter(args.thisv().toObject().as<DataViewObject>()));
     return true;
 }
 
@@ -3895,7 +3895,7 @@ JS_FRIEND_API(JSBool)
 JS_IsArrayBufferViewObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? (obj->isTypedArray() || obj->isDataView()) : false;
+    return obj ? (obj->isTypedArray() || obj->is<DataViewObject>()) : false;
 }
 
 JS_FRIEND_API(uint32_t)
@@ -4021,7 +4021,7 @@ JS_GetArrayBufferViewType(JSObject *obj)
 
     if (obj->isTypedArray())
         return static_cast<JSArrayBufferViewType>(TypedArray::type(obj));
-    else if (obj->isDataView())
+    else if (obj->is<DataViewObject>())
         return ArrayBufferView::TYPE_DATAVIEW;
     JS_NOT_REACHED("invalid ArrayBufferView type");
     return ArrayBufferView::TYPE_MAX;
@@ -4130,7 +4130,7 @@ JS_FRIEND_API(JSBool)
 JS_IsDataViewObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->isDataView() : false;
+    return obj ? obj->is<DataViewObject>() : false;
 }
 
 JS_FRIEND_API(uint32_t)
@@ -4139,7 +4139,7 @@ JS_GetDataViewByteOffset(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return 0;
-    return obj->asDataView().byteOffset();
+    return obj->as<DataViewObject>().byteOffset();
 }
 
 JS_FRIEND_API(void *)
@@ -4148,8 +4148,8 @@ JS_GetDataViewData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return NULL;
-    JS_ASSERT(obj->isDataView());
-    return obj->asDataView().dataPointer();
+    JS_ASSERT(obj->is<DataViewObject>());
+    return obj->as<DataViewObject>().dataPointer();
 }
 
 JS_FRIEND_API(uint32_t)
@@ -4158,8 +4158,8 @@ JS_GetDataViewByteLength(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return 0;
-    JS_ASSERT(obj->isDataView());
-    return obj->asDataView().byteLength();
+    JS_ASSERT(obj->is<DataViewObject>());
+    return obj->as<DataViewObject>().byteLength();
 }
 
 JS_FRIEND_API(void *)
@@ -4168,8 +4168,9 @@ JS_GetArrayBufferViewData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return NULL;
-    JS_ASSERT(obj->isTypedArray() || obj->isDataView());
-    return obj->isDataView() ? obj->asDataView().dataPointer() : TypedArray::viewData(obj);
+    JS_ASSERT(obj->isTypedArray() || obj->is<DataViewObject>());
+    return obj->is<DataViewObject>() ? obj->as<DataViewObject>().dataPointer()
+                                     : TypedArray::viewData(obj);
 }
 
 JS_FRIEND_API(JSObject *)
@@ -4178,7 +4179,7 @@ JS_GetArrayBufferViewBuffer(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return NULL;
-    JS_ASSERT(obj->isTypedArray() || obj->isDataView());
+    JS_ASSERT(obj->isTypedArray() || obj->is<DataViewObject>());
     return &obj->getFixedSlot(BufferView::BUFFER_SLOT).toObject();
 }
 
@@ -4188,9 +4189,9 @@ JS_GetArrayBufferViewByteLength(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return 0;
-    JS_ASSERT(obj->isTypedArray() || obj->isDataView());
-    return obj->isDataView()
-           ? obj->asDataView().byteLength()
+    JS_ASSERT(obj->isTypedArray() || obj->is<DataViewObject>());
+    return obj->is<DataViewObject>()
+           ? obj->as<DataViewObject>().byteLength()
            : TypedArray::byteLengthValue(obj).toInt32();
 }
 
@@ -4199,14 +4200,15 @@ JS_GetObjectAsArrayBufferView(JSObject *obj, uint32_t *length, uint8_t **data)
 {
     if (!(obj = CheckedUnwrap(obj)))
         return NULL;
-    if (!(obj->isTypedArray() || obj->isDataView()))
+    if (!(obj->isTypedArray() || obj->is<DataViewObject>()))
         return NULL;
 
-    *length = obj->isDataView() ? obj->asDataView().byteLength()
-                                : TypedArray::byteLengthValue(obj).toInt32();
+    *length = obj->is<DataViewObject>() ? obj->as<DataViewObject>().byteLength()
+                                        : TypedArray::byteLengthValue(obj).toInt32();
 
-    *data = static_cast<uint8_t *>(obj->isDataView() ? obj->asDataView().dataPointer()
-                                                     : TypedArray::viewData(obj));
+    *data = static_cast<uint8_t *>(obj->is<DataViewObject>()
+          ? obj->as<DataViewObject>().dataPointer()
+          : TypedArray::viewData(obj));
     return obj;
 }
 

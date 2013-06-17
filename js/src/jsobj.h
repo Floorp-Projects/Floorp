@@ -207,7 +207,6 @@ extern Class ArrayClass;
 extern Class BlockClass;
 extern Class BooleanClass;
 extern Class CallableObjectClass;
-extern Class DataViewClass;
 extern Class DateClass;
 extern Class ErrorClass;
 extern Class ElementIteratorClass;
@@ -232,7 +231,6 @@ class ArrayBufferObject;
 class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
-class DataViewObject;
 class DebugScopeObject;
 class DeclEnvObject;
 class ElementIteratorObject;
@@ -978,7 +976,6 @@ class JSObject : public js::ObjectImpl
 
     /* Direct subtypes of JSObject: */
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
-    inline bool isDataView()         const { return hasClass(&js::DataViewClass); }
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isElementIterator()  const { return hasClass(&js::ElementIteratorClass); }
     inline bool isError()            const { return hasClass(&js::ErrorClass); }
@@ -1023,7 +1020,6 @@ class JSObject : public js::ObjectImpl
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
     inline js::ClonedBlockObject &asClonedBlock();
-    inline js::DataViewObject &asDataView();
     inline js::DeclEnvObject &asDeclEnv();
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
