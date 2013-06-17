@@ -538,6 +538,12 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.movq(esp, outReg);
         break;
 
+      case Type_Pointer:
+        outReg = regs.takeAny();
+        masm.reserveStack(sizeof(uintptr_t));
+        masm.movq(esp, outReg);
+        break;
+
       default:
         JS_ASSERT(f.outParam == Type_Void);
         break;
@@ -610,6 +616,11 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
       case Type_Int32:
         masm.load32(Address(esp, 0), ReturnReg);
         masm.freeStack(sizeof(int32_t));
+        break;
+
+      case Type_Pointer:
+        masm.loadPtr(Address(esp, 0), ReturnReg);
+        masm.freeStack(sizeof(uintptr_t));
         break;
 
       default:

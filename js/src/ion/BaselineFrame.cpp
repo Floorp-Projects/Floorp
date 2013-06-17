@@ -132,6 +132,9 @@ BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
         hookData_ = fp->hookData();
     }
 
+    if (fp->hasReturnValue())
+        setReturnValue(fp->returnValue());
+
     if (fp->hasPushedSPSFrame())
         flags_ |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
 

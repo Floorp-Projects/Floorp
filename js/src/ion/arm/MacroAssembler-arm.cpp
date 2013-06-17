@@ -3219,13 +3219,15 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
     passABIArg(r0);
     callWithABI(handler);
 
-    Label catch_;
     Label entryFrame;
+    Label catch_;
+    Label finally;
     Label return_;
 
     ma_ldr(Operand(sp, offsetof(ResumeFromException, kind)), r0);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
 
     breakpoint(); // Invalid kind.
@@ -3246,6 +3248,21 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
     ma_ldr(Operand(sp, offsetof(ResumeFromException, target)), r0);
     ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
     ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    jump(r0);
+
+    // If we found a finally block, this must be a baseline frame. Push
+    // two values expected by JSOP_RETSUB: BooleanValue(true) and the
+    // exception.
+    bind(&finally);
+    ValueOperand exception = ValueOperand(r1, r2);
+    loadValue(Operand(sp, offsetof(ResumeFromException, exception)), exception);
+
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, target)), r0);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+
+    pushValue(BooleanValue(true));
+    pushValue(exception);
     jump(r0);
 
     // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
