@@ -664,8 +664,7 @@ var SelectionHandler = {
 
     // Modify selection based on monocle movement
     if (this._targetIsEditable) {
-      this._adjustEditableSelection(aMarker, clientPoint,
-                                    halfLineHeight, aEndOfSelection);
+      this._adjustEditableSelection(aMarker, clientPoint, aEndOfSelection);
     } else {
       this._adjustSelection(aMarker, clientPoint, aEndOfSelection);
     }
@@ -683,14 +682,12 @@ var SelectionHandler = {
    *
    * @param the marker currently being manipulated
    * @param aAdjustedClientPoint client point adjusted for line height.
-   * @param aHalfLineHeight half line height in pixels
    * @param aEndOfSelection indicates if this is the end of a selection
    * move, in which case we may want to snap to the end of a word or
    * sentence.
    */
   _adjustEditableSelection: function _adjustEditableSelection(aMarker,
                                                               aAdjustedClientPoint,
-                                                              aHalfLineHeight,
                                                               aEndOfSelection) {
     // Test to see if we need to handle auto-scroll in cases where the
     // monocle is outside the bounds of the control. This also handles
@@ -715,14 +712,21 @@ var SelectionHandler = {
       // If we aren't out-of-bounds, clear the scroll timer if it exists.
       this._clearTimers();
 
-      // Restrict the client point to the interior of the control. Prevents
-      // _adjustSelection from accidentally selecting content outside the
-      // control.
+      // Restrict the client point to the interior of the control.
       let constrainedPoint =
-        this._constrainPointWithinControl(aAdjustedClientPoint, aHalfLineHeight);
+        this._constrainPointWithinControl(aAdjustedClientPoint);
 
       // Add or subtract selection
-      this._adjustSelection(aMarker, constrainedPoint, aEndOfSelection);
+      let cp = this._contentWindow.document.caretPositionFromPoint(constrainedPoint.xPos,
+                                                                   constrainedPoint.yPos);
+      if (cp.offsetNode != this._targetElement) {
+        return;
+      }
+      if (aMarker == "start") {
+        this._targetElement.selectionStart = cp.offset;
+      } else {
+        this._targetElement.selectionEnd = cp.offset;
+      }
     }
   },
 
@@ -814,20 +818,19 @@ var SelectionHandler = {
    * Constrains a selection point within a text input control bounds.
    *
    * @param aPoint - client coordinate point
-   * @param aHalfLineHeight - half the line height at the point
    * @return new constrained point struct
    */
-  _constrainPointWithinControl: function _cpwc(aPoint, aHalfLineHeight) {
+  _constrainPointWithinControl: function _cpwc(aPoint) {
     let bounds = this._getTargetBrowserRect();
     let point = { xPos: aPoint.xPos, yPos: aPoint.yPos };
     if (point.xPos <= bounds.left)
       point.xPos = bounds.left + 2;
     if (point.xPos >= bounds.right)
       point.xPos = bounds.right - 2;
-    if (point.yPos <= (bounds.top + aHalfLineHeight))
-      point.yPos = (bounds.top + aHalfLineHeight);
-    if (point.yPos >= (bounds.bottom - aHalfLineHeight))
-      point.yPos = (bounds.bottom - aHalfLineHeight);
+    if (point.yPos <= bounds.top)
+      point.yPos = bounds.top + 2;
+    if (point.yPos >= bounds.bottom)
+      point.yPos = bounds.bottom - 2;
     return point;
   },
 
