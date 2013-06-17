@@ -376,7 +376,6 @@ struct Atom {
 
 } /* namespace shadow */
 
-extern JS_FRIEND_DATA(js::Class) CallClass;
 extern JS_FRIEND_DATA(js::Class) DeclEnvClass;
 extern JS_FRIEND_DATA(js::Class) FunctionClass;
 extern JS_FRIEND_DATA(js::Class) FunctionProxyClass;
@@ -408,6 +407,9 @@ IsOuterObject(JSObject *obj) {
 
 JS_FRIEND_API(bool)
 IsScopeObject(JSObject *obj);
+
+JS_FRIEND_API(bool)
+IsCallObject(JSObject *obj);
 
 inline JSObject *
 GetObjectParent(JSObject *obj)

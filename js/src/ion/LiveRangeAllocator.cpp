@@ -635,7 +635,8 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                             return false;
                     }
                 } else {
-                    CodePosition to = ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
+                    CodePosition to =
+                        ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
                     if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), to))
                         return false;
                 }
@@ -701,7 +702,8 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                             to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                         }
                     } else {
-                        to = (use->usedAtStart() || ins->isCall()) ? inputOf(*ins) : outputOf(*ins);
+                        to = (use->usedAtStart() || ins->isCall())
+                           ? inputOf(*ins) : outputOf(*ins);
                         if (use->isFixedRegister()) {
                             LAllocation reg(AnyRegister::FromCode(use->registerCode()));
                             for (size_t i = 0; i < ins->numDefs(); i++) {
