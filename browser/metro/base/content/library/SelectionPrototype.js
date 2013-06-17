@@ -49,7 +49,7 @@ dump("### SelectionPrototype.js loaded\n");
 var SelectionPrototype = function() { }
 
 SelectionPrototype.prototype = {
-  _debugEvents: true,
+  _debugEvents: false,
   _cache: {},
   _targetElement: null,
   _targetIsEditable: true,
@@ -307,7 +307,8 @@ SelectionPrototype.prototype = {
       let cp =
         this._contentWindow.document.caretPositionFromPoint(constrainedPoint.xPos,
                                                             constrainedPoint.yPos);
-      if (!cp || cp.offsetNode != this._targetElement) {
+      if (!cp || (cp.offsetNode != this._targetElement &&
+          this._contentWindow.document.getBindingParent(cp.offsetNode) != this._targetElement)) {
         return;
       }
       if (aMarker == "start") {
