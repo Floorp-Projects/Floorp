@@ -53,6 +53,7 @@ typedef char realGLboolean;
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/GenericRefCounted.h"
 
 namespace android {
     class GraphicBuffer;
@@ -84,9 +85,8 @@ typedef uintptr_t SharedTextureHandle;
 
 class GLContext
     : public GLLibraryLoader
+    , public GenericAtomicRefCounted
 {
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
-
 protected:
     typedef class gfx::SharedSurface SharedSurface;
     typedef gfx::SharedSurfaceType SharedSurfaceType;
