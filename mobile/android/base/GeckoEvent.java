@@ -63,7 +63,9 @@ public class GeckoEvent {
         COMPOSITOR_RESUME(30),
         NATIVE_GESTURE_EVENT(31),
         IME_KEY_EVENT(32),
-        CALL_OBSERVER(33);
+        CALL_OBSERVER(33),
+        LOW_MEMORY(34),
+        NETWORK_LINK_CHANGE(35);
 
         public final int value;
 
@@ -664,6 +666,18 @@ public class GeckoEvent {
         event.mCharacters = observerKey;
         event.mCharactersExtra = topic;
         event.mData = data;
+        return event;
+    }
+
+    public static GeckoEvent createLowMemoryEvent(int level) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.LOW_MEMORY);
+        event.mMetaState = level;
+        return event;
+    }
+
+    public static GeckoEvent createNetworkLinkChangeEvent(String status) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.NETWORK_LINK_CHANGE);
+        event.mCharacters = status;
         return event;
     }
 
