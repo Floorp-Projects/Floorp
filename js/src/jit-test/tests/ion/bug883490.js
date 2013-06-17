@@ -1,3 +1,4 @@
+//|jit-test| error: TypeError
 function coerceForeign(stdlib, foreign)
 {
     "use asm";
