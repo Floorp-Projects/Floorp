@@ -189,16 +189,16 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     passABIArg(rax);
     callWithABI(handler);
 
-    Label catch_;
     Label entryFrame;
+    Label catch_;
+    Label finally;
     Label return_;
 
-    branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
-             Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
-    branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
-             Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-    branch32(Assembler::Equal, Address(esp, offsetof(ResumeFromException, kind)),
-             Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, kind)), rax);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
 
     breakpoint(); // Invalid kind.
 
@@ -215,6 +215,21 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
     movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
     movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    jmp(Operand(rax));
+
+    // If we found a finally block, this must be a baseline frame. Push
+    // two values expected by JSOP_RETSUB: BooleanValue(true) and the
+    // exception.
+    bind(&finally);
+    ValueOperand exception = ValueOperand(rcx);
+    loadValue(Operand(esp, offsetof(ResumeFromException, exception)), exception);
+
+    movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
+    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+
+    pushValue(BooleanValue(true));
+    pushValue(exception);
     jmp(Operand(rax));
 
     // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.

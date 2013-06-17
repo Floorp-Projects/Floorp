@@ -392,7 +392,10 @@ class ICEntry
     _(TypeOf_Fallback)          \
     _(TypeOf_Typed)             \
                                 \
-    _(Rest_Fallback)
+    _(Rest_Fallback)            \
+                                \
+    _(RetSub_Fallback)          \
+    _(RetSub_Resume)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -740,6 +743,7 @@ class ICStub
           case GetProp_DOMProxyShadowed:
           case SetProp_CallScripted:
           case SetProp_CallNative:
+          case RetSub_Fallback:
             return true;
           default:
             return false;
@@ -5543,6 +5547,89 @@ class ICRest_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICRest_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Stub for JSOP_RETSUB ("returning" from a |finally| block).
+class ICRetSub_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICRetSub_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::RetSub_Fallback, stubCode)
+    { }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICRetSub_Fallback *New(ICStubSpace *space, IonCode *code) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICRetSub_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::RetSub_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICRetSub_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Optimized JSOP_RETSUB stub. Every stub maps a single pc offset to its
+// native code address.
+class ICRetSub_Resume : public ICStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    uint32_t pcOffset_;
+    uint8_t *addr_;
+
+    ICRetSub_Resume(IonCode *stubCode, uint32_t pcOffset, uint8_t *addr)
+      : ICStub(ICStub::RetSub_Resume, stubCode),
+        pcOffset_(pcOffset),
+        addr_(addr)
+    { }
+
+  public:
+    static ICRetSub_Resume *New(ICStubSpace *space, IonCode *code, uint32_t pcOffset,
+                                uint8_t *addr) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICRetSub_Resume>(code, pcOffset, addr);
+    }
+
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICRetSub_Resume, pcOffset_);
+    }
+    static size_t offsetOfAddr() {
+        return offsetof(ICRetSub_Resume, addr_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        uint32_t pcOffset_;
+        uint8_t *addr_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, uint32_t pcOffset, uint8_t *addr)
+          : ICStubCompiler(cx, ICStub::RetSub_Resume),
+            pcOffset_(pcOffset),
+            addr_(addr)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICRetSub_Resume::New(space, getStubCode(), pcOffset_, addr_);
         }
     };
 };

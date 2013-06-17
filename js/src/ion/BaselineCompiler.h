@@ -154,6 +154,9 @@ namespace ion {
     _(JSOP_SETCALL)            \
     _(JSOP_THROW)              \
     _(JSOP_TRY)                \
+    _(JSOP_FINALLY)            \
+    _(JSOP_GOSUB)              \
+    _(JSOP_RETSUB)             \
     _(JSOP_ENTERBLOCK)         \
     _(JSOP_ENTERLET0)          \
     _(JSOP_ENTERLET1)          \
