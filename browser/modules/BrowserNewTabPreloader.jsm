@@ -294,8 +294,8 @@ function HiddenBrowser(width, height) {
     let doc = aFrame.document;
     this._browser = doc.createElementNS(XUL_NS, "browser");
     this._browser.setAttribute("type", "content");
+    this._browser.setAttribute("src", NEWTAB_URL);
     doc.getElementById("win").appendChild(this._browser);
-    this.preload();
   });
 }
 
@@ -333,16 +333,6 @@ HiddenBrowser.prototype = {
 
   observe: function () {
     this._timer = null;
-    this.preload();
-  },
-
-  preload: function () {
-    if (!this._browser) {
-      return;
-    }
-
-    // Make sure the browser has the right size.
-    this.resize(this._width, this._height);
 
     // Start pre-loading the new tab page.
     this._browser.loadURI(NEWTAB_URL);
@@ -393,7 +383,10 @@ let HostFrame = {
   },
 
   destroy: function () {
-    this._frame = null;
+    if (this._frame) {
+      this._frame.remove();
+      this._frame = null;
+    }
   },
 
   _create: function (callback) {
@@ -401,17 +394,16 @@ let HostFrame = {
     let iframe = doc.createElementNS(HTML_NS, "iframe");
     doc.documentElement.appendChild(iframe);
 
-    let frame = iframe.contentWindow;
-    let docShell = frame.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDocShell);
+    iframe.addEventListener("load", function onload() {
+      iframe.removeEventListener("load", onload, true);
 
-    docShell.createAboutBlankContentViewer(null);
-    frame.location = XUL_PAGE;
+      let frame = iframe.contentWindow;
+      frame.location = XUL_PAGE;
 
-    let eventHandler = docShell.chromeEventHandler;
-    eventHandler.addEventListener("DOMContentLoaded", function onLoad() {
-      eventHandler.removeEventListener("DOMContentLoaded", onLoad, false);
-      callback(HostFrame._frame = frame);
-    }, false);
+      iframe.addEventListener("load", function onload() {
+        iframe.removeEventListener("load", onload, true);
+        callback(HostFrame._frame = frame);
+      }, true);
+    }, true);
   }
 };
