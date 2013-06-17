@@ -121,6 +121,7 @@
 #include "secerr.h"
 #include "secport.h"
 #include "sslerr.h"
+#include "ocsp.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -444,7 +445,8 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
                         TransportSecurityInfo * infoObject,
                         CERTCertificate * cert,
                         const void * fdForLogging,
-                        uint32_t providerFlags)
+                        uint32_t providerFlags,
+                        PRTime now)
 {
   MOZ_ASSERT(infoObject);
   MOZ_ASSERT(cert);
@@ -477,8 +479,6 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     return nullptr;
   }
   
-  PRTime now = PR_Now();
-
   PLArenaPool *log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
   if (!log_arena) {
@@ -1086,7 +1086,7 @@ SSLServerCertVerificationJob::Run()
     }
     if (error != 0) {
       RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
-        error, mInfoObject, mCert, mFdForLogging, mProviderFlags));
+        error, mInfoObject, mCert, mFdForLogging, mProviderFlags, PR_Now()));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError(); 
@@ -1162,7 +1162,28 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
       PR_SetError(PR_INVALID_STATE_ERROR, 0);
       return SECFailure;
   }
-      
+
+  // This value of "now" is used both here for OCSP stapling and later
+  // when calling CreateCertErrorRunnable.
+  PRTime now = PR_Now();
+  PRBool enabled;
+  if (SECSuccess != SSL_OptionGet(fd, SSL_ENABLE_OCSP_STAPLING, &enabled)) {
+    return SECFailure;
+  }
+  if (enabled) {
+      // no ownership
+      const SECItemArray *csa = SSL_PeerStapledOCSPResponses(fd);
+      // we currently only support single stapled responses
+      if (csa && csa->len == 1) {
+          CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
+          SECStatus cacheResult = CERT_CacheOCSPResponseFromSideChannel(
+              handle, serverCert, now, &csa->items[0], arg);
+          if (cacheResult != SECSuccess) {
+              return SECFailure;
+          }
+      }
+  }
+
   if (BlockServerCertChangeForSpdy(socketInfo, serverCert) != SECSuccess)
     return SECFailure;
 
@@ -1209,7 +1230,7 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   if (error != 0) {
     RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
                     error, socketInfo, serverCert,
-                    static_cast<const void *>(fd), providerFlags));
+                    static_cast<const void *>(fd), providerFlags, now));
     if (!runnable) {
       // CreateCertErrorRunnable sets a new error code when it fails
       error = PR_GetError();

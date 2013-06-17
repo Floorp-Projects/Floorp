@@ -891,6 +891,7 @@ setNonPkixOcspEnabled(int32_t ocspEnabled, nsIPrefBranch * pref)
 #define MISSING_CERT_DOWNLOAD_DEFAULT false
 #define FIRST_REVO_METHOD_DEFAULT "ocsp"
 #define USE_NSS_LIBPKIX_DEFAULT false
+#define OCSP_STAPLING_ENABLED_DEFAULT true
 
 // Caller must hold a lock on nsNSSComponent::mutex when calling this function
 void nsNSSComponent::setValidationOptions(nsIPrefBranch * pref)
@@ -929,6 +930,17 @@ void nsNSSComponent::setValidationOptions(nsIPrefBranch * pref)
   rv = pref->GetCharPref("security.first_network_revocation_method", getter_Copies(firstNetworkRevo));
   if (NS_FAILED(rv))
     firstNetworkRevo = FIRST_REVO_METHOD_DEFAULT;
+
+  bool ocspStaplingEnabled;
+  rv = pref->GetBoolPref("security.ssl.enable_ocsp_stapling", &ocspStaplingEnabled);
+  if (NS_FAILED(rv)) {
+    ocspStaplingEnabled = OCSP_STAPLING_ENABLED_DEFAULT;
+  }
+  if (!ocspEnabled) {
+    ocspStaplingEnabled = false;
+  }
+  PublicSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
+  PrivateSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
   
   setNonPkixOcspEnabled(ocspEnabled, pref);
   
@@ -1178,6 +1190,8 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       PK11_SetPasswordFunc(PK11PasswordPrompt);
 
+      SharedSSLState::GlobalInit();
+
       // Register an observer so we can inform NSS when these prefs change
       mPrefBranch->AddObserver("security.", this, false);
 
@@ -1370,7 +1384,6 @@ nsNSSComponent::Init()
   }
 
   RememberCertErrorsTable::Init();
-  SharedSSLState::GlobalInit();
   
   createBackgroundThreads();
   if (!mCertVerificationThread)
@@ -1656,7 +1669,8 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.fresh_revocation_info.require")
                || prefName.Equals("security.missing_cert_download.enabled")
                || prefName.Equals("security.first_network_revocation_method")
-               || prefName.Equals("security.OCSP.require")) {
+               || prefName.Equals("security.OCSP.require")
+               || prefName.Equals("security.ssl.enable_ocsp_stapling")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(mPrefBranch);
     } else if (prefName.Equals("network.ntlm.send-lm-response")) {
