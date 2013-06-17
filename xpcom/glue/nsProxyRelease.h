@@ -203,8 +203,6 @@ class nsMainThreadPtrHandle
   operator T*() { return get(); }
   T* operator->() { return get(); }
 
-  operator bool() { return get(); }
-
   // These are safe to call on other threads with appropriate external locking.
   bool operator==(const nsMainThreadPtrHandle<T>& aOther) const {
     if (!mPtr || !aOther.mPtr)
