@@ -303,7 +303,7 @@ let CustomizableUIInternal = {
         // Normalize removable attribute. It defaults to false if the widget is
         // originally defined as a child of a build area.
         if (!currentNode.hasAttribute("removable")) {
-          currentNode.setAttribute("removable", false);
+          currentNode.setAttribute("removable", this.isWidgetRemovable(id));
         }
 
         currentNode = currentNode.nextSibling;
@@ -346,7 +346,7 @@ let CustomizableUIInternal = {
         // IDs, and because such elements are not intended to be widgets
         // (eg, titlebar-placeholder elements).
         if (node.id) {
-          if (node.getAttribute("removable") == "true") {
+          if (this.isWidgetRemovable(node.id)) {
             if (palette) {
               palette.appendChild(node);
             } else {
@@ -683,6 +683,9 @@ let CustomizableUIInternal = {
     return node;
   },
 
+  /* Find a XUL-provided widget in a window. Don't try to use this
+   * for an API-provided widget or a special widget.
+   */
   findWidgetInWindow: function(aId, aWindow) {
     if (!gBuildWindows.has(aWindow)) {
       throw new Error("Build window not registered");
