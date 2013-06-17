@@ -42,6 +42,7 @@ chrome.jar:
   content/helperui/OfflineApps.js              (content/helperui/OfflineApps.js)
   content/helperui/SelectHelperUI.js           (content/helperui/SelectHelperUI.js)
   content/helperui/SelectionHelperUI.js        (content/helperui/SelectionHelperUI.js)
+  content/helperui/ChromeSelectionHandler.js   (content/helperui/ChromeSelectionHandler.js)
   content/helperui/FormHelperUI.js             (content/helperui/FormHelperUI.js)
   content/helperui/FindHelperUI.js             (content/helperui/FindHelperUI.js)
   content/helperui/ItemPinHelper.js            (content/helperui/ItemPinHelper.js)
