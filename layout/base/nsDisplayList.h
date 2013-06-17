@@ -566,15 +566,12 @@ public:
   void SetCurrentTableItem(nsDisplayTableItem* aTableItem) { mCurrentTableItem = aTableItem; }
 
   struct OutOfFlowDisplayData {
-    OutOfFlowDisplayData(const DisplayItemClip& aContainingBlockClip,
+    OutOfFlowDisplayData(const DisplayItemClip* aContainingBlockClip,
                          const nsRect &aDirtyRect)
       : mContainingBlockClip(aContainingBlockClip)
       , mDirtyRect(aDirtyRect)
     {}
-    OutOfFlowDisplayData(const nsRect &aDirtyRect)
-      : mDirtyRect(aDirtyRect)
-    {}
-    DisplayItemClip mContainingBlockClip;
+    const DisplayItemClip* mContainingBlockClip;
     nsRect mDirtyRect;
   };
   static void DestroyOutOfFlowDisplayData(void* aPropertyValue)
