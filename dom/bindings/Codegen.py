@@ -2967,9 +2967,10 @@ for (uint32_t i = 0; i < length; ++i) {
                           "%s\n"
                           "}\n"
                           "if (!done) {\n"
-                          "  ThrowErrorMessage(cx, MSG_NOT_IN_UNION, \"%s\");\n"
+                          '  ThrowErrorMessage(cx, MSG_NOT_IN_UNION, "%s", "%s");\n'
                           "%s\n"
                           "}" % (exceptionCodeIndented.define(),
+                                 firstCap(sourceDescription),
                                  ", ".join(names),
                                  exceptionCodeIndented.define()))
         templateBody = CGWrapper(CGIndenter(CGList([templateBody, throw], "\n")), pre="{\n", post="\n}")
@@ -3600,8 +3601,9 @@ for (uint32_t i = 0; i < length; ++i) {
         if lenientFloatCode is not None:
             nonFiniteCode = CGIndenter(CGGeneric(lenientFloatCode)).define()
         else:
-            nonFiniteCode = ("  ThrowErrorMessage(cx, MSG_NOT_FINITE);\n"
-                             "%s" % exceptionCodeIndented.define())
+            nonFiniteCode = ('  ThrowErrorMessage(cx, MSG_NOT_FINITE, "%s");\n'
+                             "%s" % (firstCap(sourceDescription),
+                                     exceptionCodeIndented.define()))
         template += (" else if (!mozilla::IsFinite(%s)) {\n"
                      "  // Note: mozilla::IsFinite will do the right thing\n"
                      "  //       when passed a non-finite float too.\n"
@@ -5040,8 +5042,8 @@ class CGMethodCall(CGThing):
                 # Just throw; we have no idea what we're supposed to
                 # do with this.
                 caseBody.append(CGGeneric(
-                  'return ThrowErrorMessage(cx, MSG_INVALID_ARG, "%s", "%s");'
-                  % (str(distinguishingIndex), str(argCount))))
+                  'return ThrowErrorMessage(cx, MSG_OVERLOAD_RESOLUTION_FAILED, "%d", "%d", "%s");'
+                  % (distinguishingIndex+1, argCount, methodName)))
 
             argCountCases.append(CGCase(str(argCount),
                                         CGList(caseBody, "\n")))
