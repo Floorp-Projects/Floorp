@@ -29,6 +29,6 @@ EXTRA_JS_MODULES = \
 	Sandbox.jsm \
 	$(NULL)
 
-JS_MODULES_PATH = $(FINAL_TARGET)/modules/identity
+JS_MODULES_PATH = modules/identity
 
 include $(topsrcdir)/config/rules.mk

@@ -16,7 +16,7 @@ DISABLED_EXTRA_COMPONENTS = \
   nsSessionStartup.js \
   $(NULL)
 
-JS_MODULES_PATH := $(FINAL_TARGET)/modules/sessionstore
+JS_MODULES_PATH := modules/sessionstore
 
 EXTRA_JS_MODULES := \
   DocumentUtils.jsm \
