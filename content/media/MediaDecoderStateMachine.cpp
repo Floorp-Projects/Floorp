@@ -2620,16 +2620,21 @@ void MediaDecoderStateMachine::UpdateReadyState() {
   }
   mLastFrameStatus = nextFrameStatus;
 
-  /* This is a bit tricky. MediaDecoder::UpdateReadyStateForData will run on
-   * the main thread and re-evaluate GetNextFrameStatus there, passing it to
-   * HTMLMediaElement::UpdateReadyStateForData. It doesn't use the value of
-   * GetNextFrameStatus we computed here, because what we're computing here
-   * could be stale by the time MediaDecoder::UpdateReadyStateForData runs.
-   * We only compute GetNextFrameStatus here to avoid posting runnables to the main
-   * thread unnecessarily.
-   */
   nsCOMPtr<nsIRunnable> event;
-  event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::UpdateReadyStateForData);
+  switch (nextFrameStatus) {
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+      event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameUnavailableBuffering);
+      break;
+    case MediaDecoderOwner::NEXT_FRAME_AVAILABLE:
+      event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameAvailable);
+      break;
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE:
+      event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameUnavailable);
+      break;
+    default:
+      PR_NOT_REACHED("unhandled frame state");
+  }
+
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
