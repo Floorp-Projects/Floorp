@@ -978,7 +978,6 @@ class JSObject : public js::ObjectImpl
     inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
     inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
-    inline bool isPrimitive()        const { return isNumber() || isString() || isBoolean(); }
     inline bool isPropertyIterator() const;
     using js::ObjectImpl::isProxy;
     inline bool isRegExp()           const { return hasClass(&js::RegExpClass); }
