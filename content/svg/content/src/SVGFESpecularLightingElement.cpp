@@ -23,7 +23,7 @@ SVGFESpecularLightingElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aSc
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFESpecularLightingElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFESpecularLightingElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);

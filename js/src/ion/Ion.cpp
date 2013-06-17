@@ -40,9 +40,12 @@
 # include "arm/Lowering-arm.h"
 #endif
 #include "gc/Marking.h"
+
+#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
-#include "jsobjinlines.h"
+
+#include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "ion/CompilerRoot.h"
@@ -526,7 +529,7 @@ IonCode::writeBarrierPre(IonCode *code)
 void
 IonCode::writeBarrierPost(IonCode *code, void *addr)
 {
-#ifdef JSGC_INCREMENTAL
+#ifdef JSGC_GENERATIONAL
     // Nothing to do.
 #endif
 }
@@ -1215,6 +1218,13 @@ GenerateLIR(MIRGenerator *mir)
     if (mir->shouldCancel("Allocate Registers"))
         return NULL;
 
+    // Now that all optimization and register allocation is done, re-introduce
+    // critical edges to avoid unnecessary jumps.
+    if (!UnsplitEdges(lir))
+        return NULL;
+    IonSpewPass("Unsplit Critical Edges");
+    AssertBasicGraphCoherency(graph);
+
     return lir;
 }
 
@@ -1266,8 +1276,7 @@ AttachFinishedCompilations(JSContext *cx)
     OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
     // Incorporate any off thread compilations which have finished, failed or
-    // have been cancelled, and destroy JM jitcode for any compilations which
-    // succeeded, to allow entering the Ion code from the interpreter.
+    // have been cancelled.
     while (!compilations.empty()) {
         IonBuilder *builder = compilations.popCopy();
 

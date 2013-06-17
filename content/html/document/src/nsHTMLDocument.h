@@ -44,7 +44,7 @@ public:
   ~nsHTMLDocument();
   virtual nsresult Init() MOZ_OVERRIDE;
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsHTMLDocument,
                                                          nsDocument)
 

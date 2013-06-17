@@ -433,6 +433,8 @@ src_tools_linux_dump_syms_dump_syms_SOURCES = \
 	src/common/dwarf/bytereader.cc \
 	src/common/dwarf/dwarf2diehandler.cc \
 	src/common/dwarf/dwarf2reader.cc \
+        src/common/arm_ex_reader.cc \
+        src/common/arm_ex_to_module.cc \
 	src/common/linux/dump_symbols.cc \
 	src/common/linux/elf_symbols_to_module.cc \
 	src/common/linux/elfutils.cc \
@@ -1015,6 +1017,10 @@ EXTRA_DIST = \
 	src/common/convert_UTF.h \
 	src/common/linux/dump_symbols.cc \
 	src/common/linux/dump_symbols.h \
+        src/common/arm_ex_reader.cc \
+        src/common/arm_ex_reader.h \
+        src/common/arm_ex_to_module.cc \
+        src/common/arm_ex_to_module.h \
 	src/common/linux/elf_symbols_to_module.cc \
 	src/common/linux/elf_symbols_to_module.h \
 	src/common/linux/elfutils.cc \

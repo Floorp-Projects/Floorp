@@ -47,7 +47,10 @@ var BuiltinProvider = {
         "": "resource://gre/modules/commonjs/",
         "main": "resource:///modules/devtools/main.js",
         "devtools": "resource:///modules/devtools",
-        "devtools/server": "resource://gre/modules/devtools/server"
+        "devtools/server": "resource://gre/modules/devtools/server",
+
+        // Allow access to xpcshell test items from the loader.
+        "xpcshell-test": "resource://test"
       },
       globals: loaderGlobals
     });

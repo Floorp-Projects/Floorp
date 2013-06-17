@@ -62,6 +62,7 @@ MOCHITEST_FILES := \
   test_gainNodeInLoop.html \
   test_maxChannelCount.html \
   test_mediaDecoding.html \
+  test_mediaStreamAudioDestinationNode.html \
   test_mixingRules.html \
   test_nodeToParamConnection.html \
   test_OfflineAudioContext.html \

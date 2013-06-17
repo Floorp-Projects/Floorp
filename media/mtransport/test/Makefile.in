@@ -18,7 +18,7 @@ ifneq ($(OS_TARGET),Android)
 DEFINES += -DINET6
 endif
 
-LIBS = $(EXTRA_DSO_LIBS) \
+LIBS = \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \

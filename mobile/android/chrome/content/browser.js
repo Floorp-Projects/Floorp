@@ -2985,8 +2985,8 @@ Tab.prototype = {
     // the clamping scroll-port size.
     let factor = Math.min(viewportWidth / screenWidth, pageWidth / screenWidth,
                           viewportHeight / screenHeight, pageHeight / screenHeight);
-    let scrollPortWidth = Math.min(screenWidth * factor, pageWidth * zoom);
-    let scrollPortHeight = Math.min(screenHeight * factor, pageHeight * zoom);
+    let scrollPortWidth = screenWidth * factor;
+    let scrollPortHeight = screenHeight * factor;
 
     let win = this.browser.contentWindow;
     win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).

@@ -120,7 +120,7 @@ function prompt(aWindowID, aCallID, aAudioRequested, aVideoRequested, aDevices) 
   }
 
   let contentWindow = Services.wm.getOuterWindowWithId(aWindowID);
-  let host = contentWindow.document.documentURIObject.asciiHost;
+  let host = contentWindow.document.documentURIObject.host;
   let browser = getBrowserForWindow(contentWindow);
   let chromeDoc = browser.ownerDocument;
   let chromeWin = chromeDoc.defaultView;

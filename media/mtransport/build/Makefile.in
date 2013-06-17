@@ -19,7 +19,6 @@ endif
 
 LIBXUL_LIBRARY=1
 
-SRCS_IN_OBJDIR	= 1
 ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER

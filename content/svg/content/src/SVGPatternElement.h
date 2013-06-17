@@ -63,7 +63,7 @@ public:
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();
   already_AddRefed<SVGAnimatedLength> Height();
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
 
 protected:
 

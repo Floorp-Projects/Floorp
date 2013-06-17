@@ -569,3 +569,60 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv * ar
   xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode);
 #endif
 
+#ifdef JNI_STUBS
+
+typedef jboolean (*Java_org_mozilla_gecko_ANRReporter_requestNativeStack_t)(JNIEnv *, jclass);
+static Java_org_mozilla_gecko_ANRReporter_requestNativeStack_t f_Java_org_mozilla_gecko_ANRReporter_requestNativeStack;
+extern "C" NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv * arg0, jclass arg1) {
+    if (!f_Java_org_mozilla_gecko_ANRReporter_requestNativeStack) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return false;
+    }
+    return f_Java_org_mozilla_gecko_ANRReporter_requestNativeStack(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_ANRReporter_requestNativeStack", &f_Java_org_mozilla_gecko_ANRReporter_requestNativeStack);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef jstring (*Java_org_mozilla_gecko_ANRReporter_getNativeStack_t)(JNIEnv *, jclass);
+static Java_org_mozilla_gecko_ANRReporter_getNativeStack_t f_Java_org_mozilla_gecko_ANRReporter_getNativeStack;
+extern "C" NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv * arg0, jclass arg1) {
+    if (!f_Java_org_mozilla_gecko_ANRReporter_getNativeStack) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return NULL;
+    }
+    return f_Java_org_mozilla_gecko_ANRReporter_getNativeStack(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_ANRReporter_getNativeStack", &f_Java_org_mozilla_gecko_ANRReporter_getNativeStack);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_ANRReporter_releaseNativeStack_t)(JNIEnv *, jclass);
+static Java_org_mozilla_gecko_ANRReporter_releaseNativeStack_t f_Java_org_mozilla_gecko_ANRReporter_releaseNativeStack;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_ANRReporter_releaseNativeStack(JNIEnv * arg0, jclass arg1) {
+    if (!f_Java_org_mozilla_gecko_ANRReporter_releaseNativeStack) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_ANRReporter_releaseNativeStack(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_ANRReporter_releaseNativeStack", &f_Java_org_mozilla_gecko_ANRReporter_releaseNativeStack);
+#endif
+

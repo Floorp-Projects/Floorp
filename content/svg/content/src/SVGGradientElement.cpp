@@ -93,7 +93,7 @@ SVGGradientElement::SpreadMethod()
   return mEnumAttributes[SPREADMETHOD].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGGradientElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

@@ -925,7 +925,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, floa
 }
 
 void
-AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
+AndroidGeckoLayerClient::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                           bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
                                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
@@ -937,9 +937,9 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float
     AutoLocalJNIFrame jniFrame(env);
 
     // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
-    LayerRect dpUnrounded = LayerRect::FromCSSRect(aDisplayPort, aDisplayResolution, aDisplayResolution);
-    dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset);
-    LayerIntRect dp = LayerRect::RoundToInt(dpUnrounded);
+    LayerRect dpUnrounded = aDisplayPort * CSSToLayerScale(aDisplayResolution);
+    dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset.ToUnknownPoint());
+    LayerIntRect dp = gfx::RoundedToInt(dpUnrounded);
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncFrameMetricsMethod,
             aScrollOffset.x, aScrollOffset.y, aZoom,

@@ -36,7 +36,7 @@ SVGAltGlyphElement::SVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAltGlyphElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGAltGlyphElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

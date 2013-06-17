@@ -18,7 +18,7 @@
   let oldOnError = window.onerror;
   window.onerror = function (errorMsg, url, lineNumber) {
     if (errorMsg.indexOf("Expected") == -1) {
-      getFail(new Error)(errorMsg);
+      getFail()(errorMsg);
     }
     error_count += 1;
     info("onerror " + error_count + ": " + errorMsg);
@@ -36,7 +36,7 @@
 
     // Test failure callbacks (limited to 1 for now)
     pc0 = new mozRTCPeerConnection();
-    pc0.createOffer(getFail(new Error), function(err) {
+    pc0.createOffer(getFail(), function(err) {
       pc1 = new mozRTCPeerConnection();
       pc2 = new mozRTCPeerConnection();
 
@@ -50,18 +50,18 @@
                 pc2.setLocalDescription(answer, function() {
                   pc1.setRemoteDescription(answer, function() {
                     throw new Error("Expected");
-                  }, getFail(new Error));
+                  }, getFail());
                   throw new Error("Expected");
-                }, getFail(new Error));
+                }, getFail());
                 throw new Error("Expected");
-              }, getFail(new Error));
+              }, getFail());
               throw new Error("Expected");
-            }, getFail(new Error));
+            }, getFail());
             throw new Error("Expected");
-          }, getFail(new Error));
+          }, getFail());
           throw new Error("Expected");
-        }, getFail(new Error));
-      }, getFail(new Error));
+        }, getFail());
+      }, getFail());
       throw new Error("Expected");
     });
   });
@@ -72,10 +72,10 @@
     SimpleTest.finish();
   }
 
-  function getFail(where) {
+  function getFail() {
     return function (err) {
       window.onerror = oldOnError;
-      unexpectedCallbackAndFinish(where)(err);
+      unexpectedCallbackAndFinish()(err);
     };
   }
 </script>

@@ -13,7 +13,6 @@
 interface SVGAnimatedEnumeration;
 interface SVGAnimatedInteger;
 interface SVGAnimatedNumber;
-interface SVGAnimatedString;
 
 interface SVGFETurbulenceElement : SVGElement {
 

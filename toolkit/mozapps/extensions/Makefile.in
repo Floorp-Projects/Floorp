@@ -25,7 +25,7 @@ else ifdef MOZ_DEBUG
 DEFINES += -DMOZ_EM_DEBUG=1
 endif
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
   nsBlocklistService.js \
   extensions.manifest \
   $(NULL)

@@ -1,5 +1,3 @@
-foo = evalcx("(function foo() { foo.bar() })");
-foo.bar = evalcx("(function bar() {})");
 
 function fatty() {
     try {
@@ -9,4 +7,9 @@ function fatty() {
     }
 }
 
-fatty();
+if (!getBuildConfiguration()['root-analysis']) { // >:(
+    foo = evalcx("(function foo() { foo.bar() })");
+    foo.bar = evalcx("(function bar() {})");
+
+    fatty();
+}

@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedString;
-
 interface SVGElement : Element {
            attribute DOMString id;
 /*           [SetterThrows]

@@ -13,7 +13,6 @@
 #include "jsanalyze.h"
 #include "jsbool.h"
 #include "jsnum.h"
-#include "jsobjinlines.h"
 #include "shared/Lowering-shared-inl.h"
 #include "mozilla/DebugOnly.h"
 
@@ -1396,7 +1395,7 @@ bool
 LIRGenerator::visitToDouble(MToDouble *convert)
 {
     MDefinition *opd = convert->input();
-    MToDouble::ConversionKind conversion = convert->conversion();
+    mozilla::DebugOnly<MToDouble::ConversionKind> conversion = convert->conversion();
 
     switch (opd->type()) {
       case MIRType_Value:

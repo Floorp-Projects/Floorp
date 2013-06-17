@@ -31,6 +31,8 @@ if CONFIG['OS_TARGET'] != 'WINNT':
         'language.cc',
         'dwarf/dwarf2diehandler.cc',
         'dwarf_line_to_module.cc',
+        'arm_ex_reader.cc',
+        'arm_ex_to_module.cc',
     ]
 
 if CONFIG['OS_ARCH'] == 'Linux':

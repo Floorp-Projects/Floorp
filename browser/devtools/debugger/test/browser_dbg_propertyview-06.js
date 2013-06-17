@@ -26,14 +26,14 @@ function testSimpleCall() {
       let globalScope = gDebugger.DebuggerView.Variables.addScope("Test-Global");
       let localScope = gDebugger.DebuggerView.Variables.addScope("Test-Local");
 
-      let windowVar = globalScope.addVar("window");
-      let documentVar = globalScope.addVar("document");
-      let localVar0 = localScope.addVar("localVariable");
-      let localVar1 = localScope.addVar("localVar1");
-      let localVar2 = localScope.addVar("localVar2");
-      let localVar3 = localScope.addVar("localVar3");
-      let localVar4 = localScope.addVar("localVar4");
-      let localVar5 = localScope.addVar("localVar5");
+      let windowVar = globalScope.addItem("window");
+      let documentVar = globalScope.addItem("document");
+      let localVar0 = localScope.addItem("localVariable");
+      let localVar1 = localScope.addItem("localVar1");
+      let localVar2 = localScope.addItem("localVar2");
+      let localVar3 = localScope.addItem("localVar3");
+      let localVar4 = localScope.addItem("localVar4");
+      let localVar5 = localScope.addItem("localVar5");
 
       localVar0.setGrip(42);
       localVar1.setGrip(true);
@@ -43,36 +43,36 @@ function testSimpleCall() {
       localVar4.setGrip({ "type": "null" });
       localVar5.setGrip({ "type": "object", "class": "Object" });
 
-      localVar5.addProperties({ "someProp0": { "value": 42, "enumerable": true },
-                                "someProp1": { "value": true , "enumerable": true},
-                                "someProp2": { "value": "nasu", "enumerable": true},
-                                "someProp3": { "value": { "type": "undefined" }, "enumerable": true},
-                                "someProp4": { "value": { "type": "null" }, "enumerable": true },
-                                "someProp5": {
-                                  "value": { "type": "object", "class": "Object" },
-                                  "enumerable": true
-                                }
-                              });
+      localVar5.addItems({ "someProp0": { "value": 42, "enumerable": true },
+                           "someProp1": { "value": true , "enumerable": true},
+                           "someProp2": { "value": "nasu", "enumerable": true},
+                           "someProp3": { "value": { "type": "undefined" }, "enumerable": true},
+                           "someProp4": { "value": { "type": "null" }, "enumerable": true },
+                           "someProp5": {
+                             "value": { "type": "object", "class": "Object" },
+                             "enumerable": true
+                           }
+                         });
 
-      localVar5.get("someProp5").addProperties({ "someProp0": { "value": 42, "enumerable": true },
-                                                 "someProp1": { "value": true, "enumerable": true },
-                                                 "someProp2": { "value": "nasu", "enumerable": true },
-                                                 "someProp3": { "value": { "type": "undefined" }, "enumerable": true },
-                                                 "someProp4": { "value": { "type": "null" }, "enumerable": true },
-                                                 "someAccessor": { "get": { "type": "object", "class": "Function" },
-                                                                   "set": { "type": "undefined" },
-                                                                   "enumerable": true } });
+      localVar5.get("someProp5").addItems({ "someProp0": { "value": 42, "enumerable": true },
+                                            "someProp1": { "value": true, "enumerable": true },
+                                            "someProp2": { "value": "nasu", "enumerable": true },
+                                            "someProp3": { "value": { "type": "undefined" }, "enumerable": true },
+                                            "someProp4": { "value": { "type": "null" }, "enumerable": true },
+                                            "someAccessor": { "get": { "type": "object", "class": "Function" },
+                                                              "set": { "type": "undefined" }, "enumerable": true }
+                                          });
 
       windowVar.setGrip({ "type": "object", "class": "Window" });
-      windowVar.addProperties({ "helloWorld": { "value": "hello world" } });
+      windowVar.addItems({ "helloWorld": { "value": "hello world" } });
 
       documentVar.setGrip({ "type": "object", "class": "HTMLDocument" });
-      documentVar.addProperties({ "onload": { "value": { "type": "null" } },
-                                  "onunload": { "value": { "type": "null" } },
-                                  "onfocus": { "value": { "type": "null" } },
-                                  "onblur": { "value": { "type": "null" } },
-                                  "onclick": { "value": { "type": "null" } },
-                                  "onkeypress": { "value": { "type": "null" } } });
+      documentVar.addItems({ "onload": { "value": { "type": "null" } },
+                             "onunload": { "value": { "type": "null" } },
+                             "onfocus": { "value": { "type": "null" } },
+                             "onblur": { "value": { "type": "null" } },
+                             "onclick": { "value": { "type": "null" } },
+                             "onkeypress": { "value": { "type": "null" } } });
 
 
       ok(windowVar, "The windowVar hasn't been created correctly.");

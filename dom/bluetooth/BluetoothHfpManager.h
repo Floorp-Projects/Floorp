@@ -120,7 +120,7 @@ private:
 
   bool SendCommand(const char* aCommand, uint32_t aValue = 0);
   bool SendLine(const char* aMessage);
-  void UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend);
+  void UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend = true);
   void OnScoConnectSuccess();
   void OnScoConnectError();
   void OnScoDisconnect();

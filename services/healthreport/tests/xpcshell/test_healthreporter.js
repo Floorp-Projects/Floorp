@@ -7,7 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -124,8 +124,13 @@ function getHealthReportProviderValues(reporter, day=null) {
 }
 
 function run_test() {
-  makeFakeAppDir().then(run_next_test, do_throw);
+  run_next_test();
 }
+
+// run_test() needs to finish synchronously, so we do async init here.
+add_task(function test_init() {
+  yield makeFakeAppDir();
+});
 
 add_task(function test_constructor() {
   let reporter = yield getReporter("constructor");

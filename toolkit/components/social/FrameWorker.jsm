@@ -345,8 +345,8 @@ function makeHiddenFrame() {
   docShell.allowAuth = false;
   docShell.allowPlugins = false;
   docShell.allowImages = false;
+  docShell.allowMedia = false;
   docShell.allowWindowControl = false;
-  // TODO: disable media (bug 759964)
   return iframe;
 }
 
