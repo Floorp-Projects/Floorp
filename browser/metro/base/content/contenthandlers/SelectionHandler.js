@@ -134,7 +134,7 @@ var SelectionHandler = {
     }
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(true, true);
+    this._updateSelectionUI("start", true, true);
   },
 
   _onSelectionAttach: function _onSelectionAttach(aX, aY) {
@@ -145,7 +145,7 @@ var SelectionHandler = {
     }
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(true, true);
+    this._updateSelectionUI("start", true, true);
   },
 
   /*
@@ -178,7 +178,7 @@ var SelectionHandler = {
 
     // Update the position of the selection marker that is *not*
     // being dragged.
-    this._updateSelectionUI(aMarker == "end", aMarker == "start");
+    this._updateSelectionUI("update", aMarker == "end", aMarker == "start");
   },
 
   /*
@@ -207,7 +207,7 @@ var SelectionHandler = {
     }
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(true, true);
+    this._updateSelectionUI("update", true, true);
   },
   
   /*
@@ -264,7 +264,7 @@ var SelectionHandler = {
     this._clearTimers();
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(true, true);
+    this._updateSelectionUI("end", true, true);
   },
 
    /*
@@ -295,7 +295,7 @@ var SelectionHandler = {
     }
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(false, false, true);
+    this._updateSelectionUI("caret", false, false, true);
   },
 
    /*
@@ -309,7 +309,7 @@ var SelectionHandler = {
     this._onCaretMove(aX, aY);
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(false, false, true);
+    this._updateSelectionUI("caret", false, false, true);
   },
 
    /*
@@ -391,7 +391,7 @@ var SelectionHandler = {
     }
 
     // Update the position of our selection monocles
-    this._updateSelectionUI(true, true);
+    this._updateSelectionUI("update", true, true);
   },
 
   /*
@@ -496,12 +496,13 @@ var SelectionHandler = {
    * Informs SelectionHelperUI about selection marker position
    * so that our selection monocles can be positioned properly.
    *
+   * @param aSrcMsg string the message type that triggered this update.
    * @param aUpdateStart bool update start marker position
    * @param aUpdateEnd bool update end marker position
    * @param aUpdateCaret bool update caret marker position, can be
    * undefined, defaults to false.
    */
-  _updateSelectionUI: function _updateSelectionUI(aUpdateStart, aUpdateEnd,
+  _updateSelectionUI: function _updateSelectionUI(aSrcMsg, aUpdateStart, aUpdateEnd,
                                                   aUpdateCaret) {
     let selection = this._getSelection();
 
@@ -522,6 +523,7 @@ var SelectionHandler = {
       return;
     }
 
+    this._cache.src = aSrcMsg;
     this._cache.updateStart = aUpdateStart;
     this._cache.updateEnd = aUpdateEnd;
     this._cache.updateCaret = aUpdateCaret || false;
@@ -708,7 +710,7 @@ var SelectionHandler = {
       this._setContinuousSelection();
 
       // Update the other monocle's position if we've dragged off to one side
-      this._updateSelectionUI(result.start, result.end);
+      this._updateSelectionUI("update", result.start, result.end);
     } else {
       // If we aren't out-of-bounds, clear the scroll timer if it exists.
       this._clearTimers();
@@ -779,11 +781,7 @@ var SelectionHandler = {
     // Update the other monocle's position. We do this because the dragging
     // monocle may reset the static monocle to a new position if the dragging
     // monocle drags ahead or behind the other.
-    if (aMarker == "start") {
-      this._updateSelectionUI(false, true);
-    } else {
-      this._updateSelectionUI(true, false);
-    }
+    this._updateSelectionUI("update", aMarker == "start", aMarker == "start");
   },
 
   /*
@@ -1186,10 +1184,7 @@ var SelectionHandler = {
     let result = SelectionHandler.updateTextEditSelection();
     // Update monocle position and speed if we've dragged off to one side
     if (result.trigger) {
-      if (result.start)
-        SelectionHandler._updateSelectionUI(true, false);
-      if (result.end)
-        SelectionHandler._updateSelectionUI(false, true);
+      SelectionHandler._updateSelectionUI("update", result.start, result.end);
     }
   },
 

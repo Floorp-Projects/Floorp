@@ -717,8 +717,7 @@ var SelectionHelperUI = {
    * @param aX, aY - browser relative client coordinates
    */
   _setCaretPositionAtPoint: function _setCaretPositionAtPoint(aX, aY) {
-    let json = this._getMarkerBaseMessage();
-    json.change = "caret";
+    let json = this._getMarkerBaseMessage("caret");
     json.caret.xPos = aX;
     json.caret.yPos = aY;
     this._sendAsyncMessage("Browser:CaretUpdate", json);
@@ -763,6 +762,15 @@ var SelectionHelperUI = {
     }
     if (this._caretMark) {
       this.caretMark.hide();
+    }
+  },
+
+  _showMonocles: function _showMonocles(aSelection) {
+    if (!aSelection) {
+      this.caretMark.show();
+    } else {
+      this.endMark.show();
+      this.startMark.show();
     }
   },
 
@@ -893,17 +901,15 @@ var SelectionHelperUI = {
   _onSelectionRangeChange: function _onSelectionRangeChange(json) {
     let haveSelectionRect = true;
 
-    // start and end contain client coordinates.
     if (json.updateStart) {
       this.startMark.position(this._msgTarget.btocx(json.start.xPos, true),
                               this._msgTarget.btocy(json.start.yPos, true));
-      this.startMark.show();
     }
     if (json.updateEnd) {
       this.endMark.position(this._msgTarget.btocx(json.end.xPos, true),
                             this._msgTarget.btocy(json.end.yPos, true));
-      this.endMark.show();
     }
+
     if (json.updateCaret) {
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
@@ -922,6 +928,12 @@ var SelectionHelperUI = {
       this._activeSelectionRect = Util.getCleanRect();
     this._targetElementRect =
       this._msgTarget.rectBrowserToClient(json.element, true);
+
+    // Ifd this is the end of a selection move show the appropriate
+    // monocle images. src=(start, update, end, caret)
+    if (json.src == "start" || json.src == "end") {
+      this._showMonocles(true);
+    }
   },
 
   _onSelectionFail: function _onSelectionFail() {
@@ -1043,8 +1055,9 @@ var SelectionHelperUI = {
    * Callbacks from markers
    */
 
-  _getMarkerBaseMessage: function _getMarkerBaseMessage() {
+  _getMarkerBaseMessage: function _getMarkerBaseMessage(aMarkerTag) {
     return {
+      change: aMarkerTag,
       start: {
         xPos: this._msgTarget.ctobx(this.startMark.xPos, true),
         yPos: this._msgTarget.ctoby(this.startMark.yPos, true)
@@ -1061,8 +1074,7 @@ var SelectionHelperUI = {
   },
 
   markerDragStart: function markerDragStart(aMarker) {
-    let json = this._getMarkerBaseMessage();
-    json.change = aMarker.tag;
+    let json = this._getMarkerBaseMessage(aMarker.tag);
     if (aMarker.tag == "caret") {
       this._sendAsyncMessage("Browser:CaretMove", json);
       return;
@@ -1071,8 +1083,7 @@ var SelectionHelperUI = {
   },
 
   markerDragStop: function markerDragStop(aMarker) {
-    let json = this._getMarkerBaseMessage();
-    json.change = aMarker.tag;
+    let json = this._getMarkerBaseMessage(aMarker.tag);
     if (aMarker.tag == "caret") {
       this._sendAsyncMessage("Browser:CaretUpdate", json);
       return;
@@ -1093,8 +1104,11 @@ var SelectionHelperUI = {
       }
       return true;
     }
-    let json = this._getMarkerBaseMessage();
-    json.change = aMarker.tag;
+
+    // We'll re-display these after the drag is complete.
+    this._hideMonocles();
+
+    let json = this._getMarkerBaseMessage(aMarker.tag);
     this._sendAsyncMessage("Browser:SelectionMove", json);
     return true;
   },
