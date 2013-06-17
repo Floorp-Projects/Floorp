@@ -199,7 +199,8 @@ bool Pass::readRules(const byte * rule_map, const size_t num_entries,
         if (r->sort > 63 || r->preContext >= r->sort || r->preContext > m_maxPreCtxt || r->preContext < m_minPreCtxt)
             return false;
         ac_begin      = ac_data + be::peek<uint16>(--o_action);
-        rc_begin      = *--o_constraint ? rc_data + be::peek<uint16>(o_constraint) : rc_end;
+        --o_constraint;
+        rc_begin      = be::peek<uint16>(o_constraint) ? rc_data + be::peek<uint16>(o_constraint) : rc_end;
 
         if (ac_begin > ac_end || ac_begin > ac_data_end || ac_end > ac_data_end
                 || rc_begin > rc_end || rc_begin > rc_data_end || rc_end > rc_data_end)

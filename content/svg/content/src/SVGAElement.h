@@ -66,8 +66,8 @@ public:
                              bool aNotify) MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
-  already_AddRefed<nsIDOMSVGAnimatedString> Target();
+  already_AddRefed<SVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Target();
   void GetDownload(nsAString & aDownload);
   void SetDownload(const nsAString & aDownload, ErrorResult& rv);
 

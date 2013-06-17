@@ -65,7 +65,7 @@ public:
   void MaybeLoadSVGImage();
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
 
 private:

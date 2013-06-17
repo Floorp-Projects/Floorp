@@ -23,6 +23,7 @@ assertEq(asmLink(asmCompile(USE_ASM + 'function f(x,y){x=x|0;y=y|0; return (x+y)
 assertAsmTypeFail('a', USE_ASM + 'function a(){} return a');
 assertAsmTypeFail('a','b','c', USE_ASM + 'var c');
 assertAsmTypeFail('a','b','c', USE_ASM + 'var c=0');
+assertAsmTypeFail(USE_ASM + 'c=0;return {}');
 assertAsmTypeFail('x','x', USE_ASM + 'function a(){} return a');
 assertAsmTypeFail('x','y','x', USE_ASM + 'function a(){} return a');
 assertEq(asmLink(asmCompile('x', USE_ASM + 'function a(){} return a'))(), undefined);

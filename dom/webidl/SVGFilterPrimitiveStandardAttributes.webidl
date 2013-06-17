@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedString;
-
 [NoInterfaceObject]
 interface SVGFilterPrimitiveStandardAttributes {
   readonly attribute SVGAnimatedLength x;

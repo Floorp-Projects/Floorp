@@ -9,6 +9,7 @@ import platform
 import sys
 
 from mozboot.centos import CentOSBootstrapper
+from mozboot.debian import DebianBootstrapper
 from mozboot.fedora import FedoraBootstrapper
 from mozboot.gentoo import GentooBootstrapper
 from mozboot.mint import MintBootstrapper
@@ -41,6 +42,8 @@ class Bootstrapper(object):
 
             if distro == 'CentOS':
                 cls = CentOSBootstrapper
+            elif distro in ('Debian', 'debian'):
+                cls = DebianBootstrapper
             elif distro == 'Fedora':
                 cls = FedoraBootstrapper
             elif distro == 'Gentoo Base System':

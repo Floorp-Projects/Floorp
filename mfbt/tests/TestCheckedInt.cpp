@@ -190,6 +190,26 @@ void test()
     VERIFY_IS_INVALID(one - min + min);
   }
 
+  /* Modulo checks */
+  VERIFY_IS_INVALID(zero % zero);
+  VERIFY_IS_INVALID(one % zero);
+  VERIFY_IS_VALID(zero % one);
+  VERIFY_IS_VALID(zero % max);
+  VERIFY_IS_VALID(one % max);
+  VERIFY_IS_VALID(max % one);
+  VERIFY_IS_VALID(max % max);
+  if (isTSigned) {
+    const CheckedInt<T> minusOne = zero - one;
+    VERIFY_IS_INVALID(minusOne % minusOne);
+    VERIFY_IS_INVALID(zero % minusOne);
+    VERIFY_IS_INVALID(one % minusOne);
+    VERIFY_IS_INVALID(minusOne % one);
+
+    VERIFY_IS_INVALID(min % min);
+    VERIFY_IS_INVALID(zero % min);
+    VERIFY_IS_INVALID(min % one);
+  }
+
   /* Unary operator- checks */
 
   const CheckedInt<T> negOne = -one;
@@ -347,10 +367,15 @@ void test()
   VERIFY_IS_INVALID(someInvalid / one);
   VERIFY_IS_INVALID(zero / someInvalid);
   VERIFY_IS_INVALID(one / someInvalid);
+  VERIFY_IS_INVALID(someInvalid % zero);
+  VERIFY_IS_INVALID(someInvalid % one);
+  VERIFY_IS_INVALID(zero % someInvalid);
+  VERIFY_IS_INVALID(one % someInvalid);
   VERIFY_IS_INVALID(someInvalid + someInvalid);
   VERIFY_IS_INVALID(someInvalid - someInvalid);
   VERIFY_IS_INVALID(someInvalid * someInvalid);
   VERIFY_IS_INVALID(someInvalid / someInvalid);
+  VERIFY_IS_INVALID(someInvalid % someInvalid);
 
   /* Check that mixing checked integers with plain integers in expressions is allowed */
 
@@ -382,6 +407,13 @@ void test()
     x /= 2;
     VERIFY(x == two);
   }
+  VERIFY(three % 2 == one);
+  VERIFY(3 % two == one);
+  {
+    CheckedInt<T> x = three;
+    x %= 2;
+    VERIFY(x == one);
+  }
 
   VERIFY(one == 1);
   VERIFY(1 == one);
@@ -390,25 +422,50 @@ void test()
   VERIFY_IS_FALSE(someInvalid == 1);
   VERIFY_IS_FALSE(1 == someInvalid);
 
-  /* Check that construction of CheckedInt from an integer value of a mismatched type is checked */
+  // Check simple casting between different signedness and sizes.
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<uint16_t>(2).toChecked<uint8_t>();
+    VERIFY_IS_VALID(foo);
+    VERIFY(foo == 2);
+  }
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<uint16_t>(255).toChecked<uint8_t>();
+    VERIFY_IS_VALID(foo);
+    VERIFY(foo == 255);
+  }
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<uint16_t>(256).toChecked<uint8_t>();
+    VERIFY_IS_INVALID(foo);
+  }
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<int8_t>(-2).toChecked<uint8_t>();
+    VERIFY_IS_INVALID(foo);
+  }
 
-  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
+  // Check that construction of CheckedInt from an integer value of a mismatched type is checked
+  // Also check casting between all types.
+
+  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,V,PostVExpr) \
   { \
     bool isUSigned = detail::IsSigned<U>::value; \
-    VERIFY_IS_VALID(CheckedInt<T>(U(0))); \
-    VERIFY_IS_VALID(CheckedInt<T>(U(1))); \
-    VERIFY_IS_VALID(CheckedInt<T>(U(100))); \
+    VERIFY_IS_VALID(CheckedInt<T>(V(  0)PostVExpr)); \
+    VERIFY_IS_VALID(CheckedInt<T>(V(  1)PostVExpr)); \
+    VERIFY_IS_VALID(CheckedInt<T>(V(100)PostVExpr)); \
     if (isUSigned) \
-      VERIFY_IS_VALID_IF(CheckedInt<T>(U(-1)), isTSigned); \
+      VERIFY_IS_VALID_IF(CheckedInt<T>(V(-1)PostVExpr), isTSigned); \
     if (sizeof(U) > sizeof(T)) \
-      VERIFY_IS_INVALID(CheckedInt<T>(U(detail::MaxValue<T>::value) + one.value())); \
+      VERIFY_IS_INVALID(CheckedInt<T>(V(detail::MaxValue<T>::value)PostVExpr + one.value())); \
     VERIFY_IS_VALID_IF(CheckedInt<T>(detail::MaxValue<U>::value), \
       (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (isUSigned || !isTSigned)))); \
     VERIFY_IS_VALID_IF(CheckedInt<T>(detail::MinValue<U>::value), \
-      isUSigned == false ? 1 : \
-      bool(isTSigned) == false ? 0 : \
-      sizeof(T) >= sizeof(U)); \
+      isUSigned == false ? 1 \
+                         : bool(isTSigned) == false ? 0 \
+                                                    : sizeof(T) >= sizeof(U)); \
   }
+  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,U,+0) \
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,CheckedInt<U>,.toChecked<T>())
+
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int8_t)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint8_t)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int16_t)

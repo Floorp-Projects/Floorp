@@ -30,9 +30,11 @@ void InterleaveAndConvertBuffer(const void** aSourceChannels,
                                 int32_t aLength, float aVolume,
                                 int32_t aChannels,
                                 AudioDataValue* aOutput);
+
 /**
- * Down-mix audio channels, and interleave the channel data. A total of
- * aOutputChannels*aDuration interleaved samples will be stored into aOutput.
+ * Given an array of input channels (aChannelData), downmix to aOutputChannels,
+ * interleave the channel data. A total of aOutputChannels*aDuration
+ * interleaved samples will be copied to a channel buffer in aOutput.
  */
 void DownmixAndInterleave(const nsTArray<const void*>& aChannelData,
                           AudioSampleFormat aSourceFormat, int32_t aDuration,

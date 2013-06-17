@@ -441,19 +441,6 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
 #endif
 }
 
-inline bool
-AbstractFramePtr::hasPushedSPSFrame() const
-{
-    if (isStackFrame())
-        return asStackFrame()->hasPushedSPSFrame();
-#ifdef JS_ION
-    return asBaselineFrame()->hasPushedSPSFrame();
-#else
-    JS_NOT_REACHED("Invalid frame");
-    return false;
-#endif
-}
-
 inline JSObject *
 AbstractFramePtr::scopeChain() const
 {
@@ -905,4 +892,5 @@ InterpreterActivation::~InterpreterActivation()
 {}
 
 } /* namespace js */
+
 #endif /* Stack_inl_h__ */

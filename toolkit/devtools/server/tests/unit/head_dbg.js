@@ -17,6 +17,7 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+Cu.import("resource://gre/modules/devtools/Loader.jsm");
 
 function testExceptionHook(ex) {
   try {
@@ -233,3 +234,92 @@ function writeFile(aFileName, aContent) {
     stream.close();
   }
 }
+
+function connectPipeTracing() {
+  return new TracingTransport(DebuggerServer.connectPipe());
+}
+
+function TracingTransport(childTransport) {
+  this.hooks = null;
+  this.child = childTransport;
+  this.child.hooks = this;
+
+  this.expectations = [];
+  this.packets = [];
+  this.checkIndex = 0;
+}
+
+function deepEqual(a, b) {
+  if (a === b)
+    return true;
+  if (typeof a != "object" || typeof b != "object")
+    return false;
+  if (a === null || b === null)
+    return false;
+  if (Object.keys(a).length != Object.keys(b).length)
+    return false;
+  for (let k in a) {
+    if (!deepEqual(a[k], b[k]))
+      return false;
+  }
+  return true;
+}
+
+TracingTransport.prototype = {
+  // Remove actor names
+  normalize: function(packet) {
+    return JSON.parse(JSON.stringify(packet, (key, value) => {
+      if (key === "to" || key === "from" || key === "actor") {
+        return "<actorid>";
+      }
+      return value;
+    }));
+  },
+  send: function(packet) {
+    this.packets.push({
+      type: "sent",
+      packet: this.normalize(packet)
+    });
+    return this.child.send(packet);
+  },
+  close: function() {
+    return this.child.close();
+  },
+  ready: function() {
+    return this.child.ready();
+  },
+  onPacket: function(packet) {
+    this.packets.push({
+      type: "received",
+      packet: this.normalize(packet)
+    });
+    this.hooks.onPacket(packet);
+  },
+  onClosed: function() {
+    this.hooks.onClosed();
+  },
+
+  expectSend: function(expected) {
+    let packet = this.packets[this.checkIndex++];
+    do_check_eq(packet.type, "sent");
+    do_check_true(deepEqual(packet.packet, this.normalize(expected)));
+  },
+
+  expectReceive: function(expected) {
+    let packet = this.packets[this.checkIndex++];
+    do_check_eq(packet.type, "received");
+    do_check_true(deepEqual(packet.packet, this.normalize(expected)));
+  },
+
+  // Write your tests, call dumpLog at the end, inspect the output,
+  // then sprinkle the calls through the right places in your test.
+  dumpLog: function() {
+    for (let entry of this.packets) {
+      if (entry.type === "sent") {
+        dump("trace.expectSend(" + entry.packet + ");\n");
+      } else {
+        dump("trace.expectReceive(" + entry.packet + ");\n");
+      }
+    }
+  }
+};

@@ -20,6 +20,8 @@ const SEARCH_ACTION_MAX_DELAY = 300; // ms
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
   "resource://gre/modules/devtools/NetworkHelper.jsm");
@@ -74,6 +76,8 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
   for (let name in aFlags) {
     this[name] = aFlags[name];
   }
+
+  EventEmitter.decorate(this);
 };
 
 VariablesView.prototype = {
@@ -86,7 +90,7 @@ VariablesView.prototype = {
    */
   set rawObject(aObject) {
     this.empty();
-    this.addScope().addVar().populate(aObject);
+    this.addScope().addItem().populate(aObject);
   },
 
   /**
@@ -179,6 +183,11 @@ VariablesView.prototype = {
       }
     }, aTimeout);
   },
+
+  /**
+   * The controller for this VariablesView, if it has one.
+   */
+  controller: null,
 
   /**
    * The amount of time (in milliseconds) it takes to empty this view lazily.
@@ -587,7 +596,8 @@ VariablesView.prototype = {
    */
   getScopeForNode: function(aNode) {
     let item = this._itemsByElement.get(aNode);
-    if (item && !(item instanceof Variable) && !(item instanceof Property)) {
+    // Match only Scopes, not Variables or Properties.
+    if (item && !(item instanceof Variable)) {
       return item;
     }
     return null;
@@ -790,9 +800,8 @@ VariablesView.prototype = {
 
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
-        // Start editing the value or name of the variable or property.
-        if (item instanceof Variable ||
-            item instanceof Property) {
+        // Start editing the value or name of the Variable or Property.
+        if (item instanceof Variable) {
           if (e.metaKey || e.altKey || e.shiftKey) {
             item._activateNameInput();
           } else {
@@ -803,9 +812,8 @@ VariablesView.prototype = {
 
       case e.DOM_VK_DELETE:
       case e.DOM_VK_BACK_SPACE:
-        // Delete the variable or property if allowed.
-        if (item instanceof Variable ||
-            item instanceof Property) {
+        // Delete the Variable or Property if allowed.
+        if (item instanceof Variable) {
           item._onDelete(e);
         }
         return;
@@ -902,6 +910,7 @@ VariablesView.NON_SORTABLE_CLASSES = [
   "Array",
   "Int8Array",
   "Uint8Array",
+  "Uint8ClampedArray",
   "Int16Array",
   "Uint16Array",
   "Int32Array",
@@ -911,17 +920,29 @@ VariablesView.NON_SORTABLE_CLASSES = [
 ];
 
 /**
+ * Determine whether an object's properties should be sorted based on its class.
+ *
+ * @param string aClassName
+ *        The class of the object.
+ */
+VariablesView.isSortable = function(aClassName) {
+  return VariablesView.NON_SORTABLE_CLASSES.indexOf(aClassName) == -1;
+};
+
+/**
  * Generates the string evaluated when performing simple value changes.
  *
  * @param Variable | Property aItem
  *        The current variable or property.
  * @param string aCurrentString
  *        The trimmed user inputted string.
+ * @param string aPrefix [optional]
+ *        Prefix for the symbolic name.
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString) {
-  return aItem._symbolicName + "=" + aCurrentString;
+VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
+  return aPrefix + aItem._symbolicName + "=" + aCurrentString;
 };
 
 /**
@@ -932,12 +953,14 @@ VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString) {
  *        The current getter or setter property.
  * @param string aCurrentString
  *        The trimmed user inputted string.
+ * @param string aPrefix [optional]
+ *        Prefix for the symbolic name.
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString) {
+VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
   let property = "\"" + aItem._nameString + "\"";
-  let parent = aItem.ownerView._symbolicName || "this";
+  let parent = aPrefix + aItem.ownerView._symbolicName || "this";
 
   return "Object.defineProperty(" + parent + "," + property + "," +
     "{ value: " + aCurrentString +
@@ -954,15 +977,17 @@ VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString) {
  *        The current getter or setter property.
  * @param string aCurrentString
  *        The trimmed user inputted string.
+ * @param string aPrefix [optional]
+ *        Prefix for the symbolic name.
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString) {
+VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
   let type = aItem._nameString;
   let propertyObject = aItem.ownerView;
   let parentObject = propertyObject.ownerView;
   let property = "\"" + propertyObject._nameString + "\"";
-  let parent = parentObject._symbolicName || "this";
+  let parent = aPrefix + parentObject._symbolicName || "this";
 
   switch (aCurrentString) {
     case "":
@@ -976,7 +1001,7 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString) {
       if ((type == "set" && propertyObject.getter.type == "undefined") ||
           (type == "get" && propertyObject.setter.type == "undefined")) {
         // Make sure the right getter/setter to value override macro is applied to the target object.
-        return propertyObject.evaluationMacro(propertyObject, "undefined");
+        return propertyObject.evaluationMacro(propertyObject, "undefined", aPrefix);
       }
 
       // Construct and return the getter/setter removal evaluation string.
@@ -995,16 +1020,16 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString) {
 
     default:
       // Wrap statements inside a function declaration if not already wrapped.
-      if (aCurrentString.indexOf("function") != 0) {
+      if (!aCurrentString.startsWith("function")) {
         let header = "function(" + (type == "set" ? "value" : "") + ")";
         let body = "";
         // If there's a return statement explicitly written, always use the
         // standard function definition syntax
-        if (aCurrentString.indexOf("return ") != -1) {
+        if (aCurrentString.contains("return ")) {
           body = "{" + aCurrentString + "}";
         }
         // If block syntax is used, use the whole string as the function body.
-        else if (aCurrentString.indexOf("{") == 0) {
+        else if (aCurrentString.startsWith("{")) {
           body = aCurrentString;
         }
         // Prefer an expression closure.
@@ -1041,6 +1066,7 @@ VariablesView.getterOrSetterDeleteCallback = function(aItem) {
 
   return true; // Don't hide the element.
 };
+
 
 /**
  * A Scope is an object holding Variable instances.
@@ -1083,12 +1109,31 @@ function Scope(aView, aName, aFlags = {}) {
 
 Scope.prototype = {
   /**
-   * Adds a variable to contain any inspected properties.
+   * Whether this Scope should be prefetched when it is remoted.
+   */
+  shouldPrefetch: true,
+
+  /**
+   * Create a new Variable that is a child of this Scope.
    *
    * @param string aName
-   *        The variable's name.
+   *        The name of the new Property.
    * @param object aDescriptor
-   *        Specifies the value and/or type & class of the variable,
+   *        The variable's descriptor.
+   * @return Variable
+   *         The newly created child Variable.
+   */
+  _createChild: function(aName, aDescriptor) {
+    return new Variable(this, aName, aDescriptor);
+  },
+
+  /**
+   * Adds a child to contain any inspected properties.
+   *
+   * @param string aName
+   *        The child's name.
+   * @param object aDescriptor
+   *        Specifies the value and/or type & class of the child,
    *        or 'get' & 'set' accessor properties. If the type is implicit,
    *        it will be inferred from the value.
    *        e.g. - { value: 42 }
@@ -1104,17 +1149,56 @@ Scope.prototype = {
    * @return Variable
    *         The newly created Variable instance, null if it already exists.
    */
-  addVar: function(aName = "", aDescriptor = {}, aRelaxed = false) {
+  addItem: function(aName = "", aDescriptor = {}, aRelaxed = false) {
     if (this._store.has(aName) && !aRelaxed) {
       return null;
     }
 
-    let variable = new Variable(this, aName, aDescriptor);
-    this._store.set(aName, variable);
-    this._variablesView._itemsByElement.set(variable._target, variable);
-    this._variablesView._currHierarchy.set(variable._absoluteName, variable);
-    variable.header = !!aName;
-    return variable;
+    let child = this._createChild(aName, aDescriptor);
+    this._store.set(aName, child);
+    this._variablesView._itemsByElement.set(child._target, child);
+    this._variablesView._currHierarchy.set(child._absoluteName, child);
+    child.header = !!aName;
+    return child;
+  },
+
+  /**
+   * Adds items for this variable.
+   *
+   * @param object aItems
+   *        An object containing some { name: descriptor } data properties,
+   *        specifying the value and/or type & class of the variable,
+   *        or 'get' & 'set' accessor properties. If the type is implicit,
+   *        it will be inferred from the value.
+   *        e.g. - { someProp0: { value: 42 },
+   *                 someProp1: { value: true },
+   *                 someProp2: { value: "nasu" },
+   *                 someProp3: { value: { type: "undefined" } },
+   *                 someProp4: { value: { type: "null" } },
+   *                 someProp5: { value: { type: "object", class: "Object" } },
+   *                 someProp6: { get: { type: "object", class: "Function" },
+   *                              set: { type: "undefined" } } }
+   * @param object aOptions [optional]
+   *        Additional options for adding the properties. Supported options:
+   *        - sorted: true to sort all the properties before adding them
+   *        - callback: function invoked after each item is added
+   */
+  addItems: function(aItems, aOptions = {}) {
+    let names = Object.keys(aItems);
+
+    // Sort all of the properties before adding them, if preferred.
+    if (aOptions.sorted) {
+      names.sort();
+    }
+    // Add the properties to the current scope.
+    for (let name of names) {
+      let descriptor = aItems[name];
+      let item = this.addItem(name, descriptor);
+
+      if (aOptions.callback) {
+        aOptions.callback(item, descriptor.value);
+      }
+    }
   },
 
   /**
@@ -1179,11 +1263,13 @@ Scope.prototype = {
     if (this.isChildOf(aParent)) {
       return true;
     }
-    if (this.ownerView instanceof Scope ||
-        this.ownerView instanceof Variable ||
-        this.ownerView instanceof Property) {
+
+    // Recurse to parent if it is a Scope, Variable, or Property.
+    if (this.ownerView instanceof Scope) {
       return this.ownerView.isDescendantOf(aParent);
     }
+
+    return false;
   },
 
   /**
@@ -1405,10 +1491,9 @@ Scope.prototype = {
     }
     // Check if all parent objects are expanded.
     let item = this;
-    while ((item = item.ownerView) &&  /* Parent object exists. */
-           (item instanceof Scope ||
-            item instanceof Variable ||
-            item instanceof Property)) {
+
+    // Recurse while parent is a Scope, Variable, or Property
+    while ((item = item.ownerView) && item instanceof Scope) {
       if (!item._isExpanded) {
         return false;
       }
@@ -1722,14 +1807,11 @@ Scope.prototype = {
           variable._wasToggled = true;
         }
 
-        // If the variable is contained in another scope (variable or property),
+        // If the variable is contained in another Scope, Variable, or Property,
         // the parent may not be a match, thus hidden. It should be visible
         // ("expand upwards").
-
         while ((variable = variable.ownerView) &&  /* Parent object exists. */
-               (variable instanceof Scope ||
-                variable instanceof Variable ||
-                variable instanceof Property)) {
+               variable instanceof Scope) {
 
           // Show and expand the parent, as it is certainly accessible.
           variable._matched = true;
@@ -1971,79 +2053,24 @@ function Variable(aScope, aName, aDescriptor) {
 
 ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
   /**
-   * Adds a property for this variable.
-   *
-   * @param string aName
-   *        The property's name.
-   * @param object aDescriptor
-   *        Specifies the value and/or type & class of the property,
-   *        or 'get' & 'set' accessor properties. If the type is implicit,
-   *        it will be inferred from the value.
-   *        e.g. - { value: 42 }
-   *             - { value: true }
-   *             - { value: "nasu" }
-   *             - { value: { type: "undefined" } }
-   *             - { value: { type: "null" } }
-   *             - { value: { type: "object", class: "Object" } }
-   *             - { get: { type: "object", class: "Function" },
-   *                 set: { type: "undefined" } }
-   *             - { get: { type "object", class: "Function" },
-   *                 getterValue: "foo", getterPrototypeLevel: 2 }
-   * @param boolean aRelaxed
-   *        True if name duplicates should be allowed.
-   * @return Property
-   *         The newly created Property instance, null if it already exists.
+   * Whether this Scope should be prefetched when it is remoted.
    */
-  addProperty: function(aName = "", aDescriptor = {}, aRelaxed = false) {
-    if (this._store.has(aName) && !aRelaxed) {
-      return null;
-    }
-
-    let property = new Property(this, aName, aDescriptor);
-    this._store.set(aName, property);
-    this._variablesView._itemsByElement.set(property._target, property);
-    this._variablesView._currHierarchy.set(property._absoluteName, property);
-    property.header = !!aName;
-    return property;
+  get shouldPrefetch(){
+    return this.name == "window" || this.name == "this";
   },
 
   /**
-   * Adds properties for this variable.
+   * Create a new Property that is a child of Variable.
    *
-   * @param object aProperties
-   *        An object containing some { name: descriptor } data properties,
-   *        specifying the value and/or type & class of the variable,
-   *        or 'get' & 'set' accessor properties. If the type is implicit,
-   *        it will be inferred from the value.
-   *        e.g. - { someProp0: { value: 42 },
-   *                 someProp1: { value: true },
-   *                 someProp2: { value: "nasu" },
-   *                 someProp3: { value: { type: "undefined" } },
-   *                 someProp4: { value: { type: "null" } },
-   *                 someProp5: { value: { type: "object", class: "Object" } },
-   *                 someProp6: { get: { type: "object", class: "Function" },
-   *                              set: { type: "undefined" } } }
-   * @param object aOptions [optional]
-   *        Additional options for adding the properties. Supported options:
-   *        - sorted: true to sort all the properties before adding them
-   *        - callback: function invoked after each property is added
+   * @param string aName
+   *        The name of the new Property.
+   * @param object aDescriptor
+   *        The property's descriptor.
+   * @return Property
+   *         The newly created child Property.
    */
-  addProperties: function(aProperties, aOptions = {}) {
-    let propertyNames = Object.keys(aProperties);
-
-    // Sort all of the properties before adding them, if preferred.
-    if (aOptions.sorted) {
-      propertyNames.sort();
-    }
-    // Add the properties to the current scope.
-    for (let name of propertyNames) {
-      let descriptor = aProperties[name];
-      let property = this.addProperty(name, descriptor);
-
-      if (aOptions.callback) {
-        aOptions.callback(property, descriptor.value);
-      }
-    }
+  _createChild: function(aName, aDescriptor) {
+    return new Property(this, aName, aDescriptor);
   },
 
   /**
@@ -2122,7 +2149,7 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
     let descriptor = Object.create(aDescriptor);
     descriptor.value = VariablesView.getGrip(aValue);
 
-    let propertyItem = this.addProperty(aName, descriptor);
+    let propertyItem = this.addItem(aName, descriptor);
     propertyItem._sourceValue = aValue;
 
     // Add an 'onexpand' callback for the property, lazily handling
@@ -2149,7 +2176,7 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
     descriptor.get = VariablesView.getGrip(aDescriptor.get);
     descriptor.set = VariablesView.getGrip(aDescriptor.set);
 
-    return this.addProperty(aName, descriptor);
+    return this.addItem(aName, descriptor);
   },
 
   /**
@@ -2311,8 +2338,8 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
         this.evaluationMacro = null;
       }
 
-      let getter = this.addProperty("get", { value: descriptor.get });
-      let setter = this.addProperty("set", { value: descriptor.set });
+      let getter = this.addItem("get", { value: descriptor.get });
+      let setter = this.addItem("set", { value: descriptor.set });
       getter.evaluationMacro = VariablesView.getterOrSetterEvalMacro;
       setter.evaluationMacro = VariablesView.getterOrSetterEvalMacro;
 
@@ -2852,9 +2879,8 @@ VariablesView.prototype.commitHierarchy = function() {
     if (prevVariable) {
       expanded = prevVariable._isExpanded;
 
-      // Only analyze variables and properties for displayed value changes.
-      if (currVariable instanceof Variable ||
-          currVariable instanceof Property) {
+      // Only analyze Variables and Properties for displayed value changes.
+      if (currVariable instanceof Variable) {
         changed = prevVariable._valueString != currVariable._valueString;
       }
     }
@@ -2972,6 +2998,16 @@ VariablesView.isFalsy = function(aDescriptor) {
   }
 
   return false;
+};
+
+/**
+ * Returns true if the value is an instance of Variable or Property.
+ *
+ * @param any aValue
+ *        The value to test.
+ */
+VariablesView.isVariable = function(aValue) {
+  return aValue instanceof Variable;
 };
 
 /**

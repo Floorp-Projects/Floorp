@@ -91,6 +91,7 @@ class TreeMetadataEmitter(object):
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
             JS_MODULES_PATH='JS_MODULES_PATH',
             LIBRARY_NAME='LIBRARY_NAME',
+            LIBS='LIBS',
             MODULE='MODULE',
             SIMPLE_PROGRAMS='SIMPLE_PROGRAMS',
             SSRCS='SSRCS',

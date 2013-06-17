@@ -357,6 +357,11 @@ MOCHITEST_FILES = \
 		wakelock.ogg \
 		wakelock.ogv \
 		test_bug869040.html \
+		allowMedia.sjs \
+		$(NULL)
+
+MOCHITEST_CHROME_FILES = \
+		test_allowMedia.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

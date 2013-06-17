@@ -165,7 +165,14 @@ class Module {
       offset_ = 0;
       how_ = kExprInvalid;
     }
-    bool invalid() const { return how_ == kExprInvalid; }
+    bool isExprInvalid() const { return how_ == kExprInvalid; }
+    bool isExprPostfix() const { return how_ == kExprPostfix; }
+
+    // Return the postfix expression string.  This is only
+    // meaningful on Exprs for which isExprPostfix returns true.
+    // In all other cases it returns an empty string.
+    string getExprPostfix() const { return postfix_; }
+
     bool operator==(const Expr& other) const {
       return how_ == other.how_ &&
           ident_ == other.ident_ &&

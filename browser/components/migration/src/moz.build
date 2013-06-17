@@ -20,3 +20,18 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXTRA_COMPONENTS += [
         'IEProfileMigrator.js',
     ]
+
+EXTRA_PP_COMPONENTS += [
+    'BrowserProfileMigrators.manifest',
+    'ChromeProfileMigrator.js',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXTRA_PP_COMPONENTS += [
+        'SafariProfileMigrator.js',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXTRA_PP_COMPONENTS += [
+        'SafariProfileMigrator.js',
+    ]

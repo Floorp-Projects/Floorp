@@ -22,11 +22,17 @@ export ANDROID_SERIAL
 else
 # Determine if there's more than one device connected
 android_devices=$(filter device,$(shell $(ANDROID_PLATFORM_TOOLS)/adb devices))
+ifeq ($(android_devices),)
+install::
+	@echo "No devices are connected.  Connect a device or start an emulator."
+	@exit 1
+else
 ifneq ($(android_devices),device)
 install::
 	@echo "Multiple devices are connected. Define ANDROID_SERIAL to specify the install target."
 	$(ANDROID_PLATFORM_TOOLS)/adb devices
 	@exit 1
+endif
 endif
 endif
 

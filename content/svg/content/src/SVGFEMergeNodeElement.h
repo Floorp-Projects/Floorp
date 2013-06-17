@@ -37,7 +37,7 @@ public:
   const nsSVGString* GetIn1() { return &mStringAttributes[IN1]; }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedString> In1();
 
 protected:
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;

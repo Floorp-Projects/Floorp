@@ -143,7 +143,7 @@ let Content = {
     // pages have any privilege themselves.
     addEventListener("click", this, false);
 
-    docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
+    docShell.useGlobalHistory = true;
   },
 
   /*******************************************

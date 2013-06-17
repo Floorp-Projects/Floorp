@@ -777,8 +777,6 @@ function test22()
   waitTest22 = true;
 
   const pref_open = "network.websocket.timeout.open";
-  var oldpref_open_value = 20;
-  oldpref_open_value = SpecialPowers.getIntPref(pref_open);
   SpecialPowers.setIntPref(pref_open, 5);
 
   var ws = CreateTestWS("ws://sub2.test2.example.org/tests/content/base/test/file_websocket", "test-22");
@@ -791,7 +789,7 @@ function test22()
     maybeFinished();
   };
 
-  SpecialPowers.setIntPref(pref_open, oldpref_open_value);
+  SpecialPowers.clearUserPref(pref_open);
   doTest(23);
 }
 

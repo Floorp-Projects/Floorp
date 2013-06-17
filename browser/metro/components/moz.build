@@ -10,3 +10,14 @@ XPIDL_SOURCES += [
 
 MODULE = 'components'
 
+# metro/components.manifest
+EXTRA_PP_COMPONENTS += [
+    'AboutRedirector.js',
+    'BrowserCLH.js',
+    'BrowserStartup.js',
+    'DirectoryProvider.js',
+    'HelperAppDialog.js',
+    'SessionStore.js',
+    'Sidebar.js',
+    'components.manifest',
+]

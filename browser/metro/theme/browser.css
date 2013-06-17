@@ -308,6 +308,12 @@ documenttab[selected] .documenttab-selection {
   padding: 0 !important;
 }
 
+#urlbar-edit > hbox > .textbox-input-box > .textbox-input:invalid {
+  /* Hide error glow around the address bar that shows by default
+   * when URLs are made invalid by trmming. */
+  box-shadow: none !important;
+}
+
 /* Combined stop-reload button */
 #tool-reload {
   list-style-image: url("chrome://browser/skin/images/reload.png");

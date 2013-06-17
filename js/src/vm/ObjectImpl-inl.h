@@ -204,24 +204,6 @@ js::ObjectImpl::invalidateSlotRange(uint32_t start, uint32_t length)
 #endif /* DEBUG */
 }
 
-inline void
-js::ObjectImpl::initializeSlotRange(uint32_t start, uint32_t length)
-{
-    /*
-     * No bounds check, as this is used when the object's shape does not
-     * reflect its allocated slots (updateSlotsForSpan).
-     */
-    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
-    getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
-
-    JSRuntime *rt = runtime();
-    uint32_t offset = start;
-    for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
-        sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
-    for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
-        sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
-}
-
 inline bool
 js::ObjectImpl::isNative() const
 {
@@ -330,12 +312,6 @@ inline JSClass *
 js::ObjectImpl::getJSClass() const
 {
     return Jsvalify(getClass());
-}
-
-inline bool
-js::ObjectImpl::hasClass(const Class *c) const
-{
-    return getClass() == c;
 }
 
 inline const js::ObjectOps *
@@ -454,38 +430,6 @@ js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
         return;
     obj->runtime()->gcStoreBuffer.putCell((Cell **)addr);
 #endif
-}
-
-inline bool
-js::ObjectImpl::hasPrivate() const
-{
-    return getClass()->hasPrivate();
-}
-
-inline void *&
-js::ObjectImpl::privateRef(uint32_t nfixed) const
-{
-    /*
-     * The private pointer of an object can hold any word sized value.
-     * Private pointers are stored immediately after the last fixed slot of
-     * the object.
-     */
-    MOZ_ASSERT(nfixed == numFixedSlots());
-    MOZ_ASSERT(hasPrivate());
-    HeapSlot *end = &fixedSlots()[nfixed];
-    return *reinterpret_cast<void**>(end);
-}
-
-inline void *
-js::ObjectImpl::getPrivate() const
-{
-    return privateRef(numFixedSlots());
-}
-
-inline void *
-js::ObjectImpl::getPrivate(uint32_t nfixed) const
-{
-    return privateRef(nfixed);
 }
 
 inline void

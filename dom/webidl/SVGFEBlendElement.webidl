@@ -11,7 +11,6 @@
  */
 
 interface SVGAnimatedEnumeration;
-interface SVGAnimatedString;
 
 interface SVGFEBlendElement : SVGElement {
 

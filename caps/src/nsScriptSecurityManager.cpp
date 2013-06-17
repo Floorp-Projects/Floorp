@@ -2090,7 +2090,7 @@ nsScriptSecurityManager::old_doGetObjectPrincipal(JS::Handle<JSObject*> aObj,
         // Note: jsClass is set before this loop, and also at the
         // *end* of this loop.
         
-        if (IS_WRAPPER_CLASS(jsClass)) {
+        if (IS_WN_CLASS(jsClass)) {
             result = nsXPConnect::XPConnect()->GetPrincipal(obj,
                                                             aAllowShortCircuit);
             if (result) {

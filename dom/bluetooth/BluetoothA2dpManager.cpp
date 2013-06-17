@@ -203,12 +203,12 @@ BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress)
 void
 BluetoothA2dpManager::Disconnect()
 {
-  MOZ_ASSERT(!mDeviceAddress.IsEmpty());
-
   if (!mConnected) {
     NS_WARNING("BluetoothA2dpManager has been disconnected");
     return;
   }
+
+  MOZ_ASSERT(!mDeviceAddress.IsEmpty());
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);

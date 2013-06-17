@@ -1694,6 +1694,10 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         return true;
     }
 
+    // The calleereg is known to be a non-native function, but might point to
+    // a LazyScript instead of a JSScript.
+    masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
+
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
 
@@ -5188,27 +5192,6 @@ CodeGenerator::generate()
     return !masm.oom();
 }
 
-#ifdef JSGC_GENERATIONAL
-/*
- * IonScripts normally live as long as their owner JSScript; however, they can
- * occasionally get destroyed outside the context of a GC by FinishInvalidationOf.
- * Because of this case, we cannot use the normal store buffer to guard them.
- * Instead we use the generic buffer to mark the owner script, which will mark the
- * IonScript's fields, if it is still alive.
- */
-class IonScriptRefs : public gc::BufferableRef
-{
-    JSScript *script_;
-
-  public:
-    IonScriptRefs(JSScript *script) : script_(script) {}
-    virtual bool match(void *location) { return false; }
-    virtual void mark(JSTracer *trc) {
-        gc::MarkScriptUnbarriered(trc, &script_, "script for IonScript");
-    }
-};
-#endif // JSGC_GENERATIONAL
-
 bool
 CodeGenerator::link()
 {
@@ -5306,9 +5289,6 @@ CodeGenerator::link()
         ionScript->copySnapshots(&snapshots_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
-#ifdef JSGC_GENERATIONAL
-    cx->runtime()->gcStoreBuffer.putGeneric(IonScriptRefs(script));
-#endif
     JS_ASSERT(graph.mir().numScripts() > 0);
     ionScript->copyScriptEntries(graph.mir().scripts());
     if (callTargets.length() > 0)

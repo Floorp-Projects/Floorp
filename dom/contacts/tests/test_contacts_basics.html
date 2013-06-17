@@ -162,7 +162,6 @@ function checkAddress(adr1, adr2) {
     ok(false, "Expected both adrs to be either present or absent");
     return;
   }
-  dump("adr1: " + adr1 + ", adr2: " + adr2 + "\n");
   checkStrArray(adr1.type, adr2.type, "Same type");
   checkStrArray(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
   checkStrArray(adr1.locality, adr2.locality, "Same locality");
@@ -350,7 +349,6 @@ var steps = [
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
       checkContacts(createResult1, properties1);
-      dump("findResult: " + JSON.stringify(findResult1) + "\n");
       // Some manual testing. Testint the testfunctions
       // tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}],
       is(findResult1.tel[0].carrier, "testCarrier", "Same Carrier");
@@ -910,9 +908,10 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({})
+    req = mozContacts.find({sortBy: 'FamilyName',})
     req.onsuccess = function () {
       is(req.result.length, 2, "Found exactly 2 contact.");
+      checkContacts(properties2, req.result[1]);
       next();
     }
     req.onerror = onFailure;
@@ -1423,6 +1422,78 @@ var steps = [
       ok(createResult1.id, "The contact now has an ID.");
       next();
     };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Testing numbersOnly search");
+    createResult1 = new mozContact();
+    createResult1.init({ givenName: ["aaaaaaaaa"], tel: [{ value: "1234567890"}]});
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test numbersOnly search");
+    var options = {filterBy: ["givenName", "tel"],
+                   filterOp: "contains",
+                   filterValue: "a"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "1 Entry.");
+      checkContacts(req.result[0], createResult1);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test numbersOnly search");
+    var options = {filterBy: ["givenName", "tel"],
+                   filterOp: "contains",
+                   filterValue: "b"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 0, "0 Entries.");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test numbersOnly search");
+    var options = {filterBy: ["givenName", "tel"],
+                   filterOp: "contains",
+                   filterValue: "1a"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 0, "0 Entries.");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test numbersOnly search");
+    var options = {filterBy: ["givenName", "tel"],
+                   filterOp: "contains",
+                   filterValue: "1(23)"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "1 Entry.");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test numbersOnly search");
+    var options = {filterBy: ["givenName", "tel"],
+                   filterOp: "contains",
+                   filterValue: "1(23)a"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 0, "0 Entries.");
+      next();
+    }
     req.onerror = onFailure;
   },
   function () {
