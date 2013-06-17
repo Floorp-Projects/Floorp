@@ -890,22 +890,18 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 //----------nsXULScrollFrame-------------------------------------------
 
 nsIFrame*
-NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                     bool aIsRoot, bool aClipAllDescendants)
+NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot)
 {
-  return new (aPresShell) nsXULScrollFrame(aPresShell, aContext, aIsRoot,
-                                           aClipAllDescendants);
+  return new (aPresShell) nsXULScrollFrame(aPresShell, aContext, aIsRoot);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
-nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext,
-                                   bool aIsRoot, bool aClipAllDescendants)
+nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot)
   : nsBoxFrame(aShell, aContext, aIsRoot),
     mInner(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
   SetLayoutManager(nullptr);
-  mInner.mClipAllDescendants = aClipAllDescendants;
 }
 
 nsMargin
@@ -1507,7 +1503,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mFrameIsUpdatingScrollbar(false)
   , mDidHistoryRestore(false)
   , mIsRoot(aIsRoot)
-  , mClipAllDescendants(aIsRoot)
   , mSupppressScrollbarUpdate(false)
   , mSkippedScrollbarLayout(false)
   , mHadNonInitialReflow(false)
@@ -2203,7 +2198,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (usingDisplayport) {
       nsRect clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
-      if (mClipAllDescendants) {
+      if (mIsRoot) {
         clipState.ClipContentDescendants(clip);
       } else {
         clipState.ClipContainingBlockDescendants(clip, nullptr);
@@ -2212,7 +2207,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
       // Our override of GetBorderRadii ensures we never have a radius at
       // the corners where we have a scrollbar.
-      if (mClipAllDescendants) {
+      if (mIsRoot) {
 #ifdef DEBUG
         nscoord radii[8];
 #endif

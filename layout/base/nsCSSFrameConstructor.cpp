@@ -327,8 +327,7 @@ nsIFrame*
 NS_NewHTMLScrollFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot);
 
 nsIFrame*
-NS_NewXULScrollFrame (nsIPresShell* aPresShell, nsStyleContext* aContext,
-                      bool aIsRoot, bool aClipAllDescendants);
+NS_NewXULScrollFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot);
 
 nsIFrame*
 NS_NewSliderFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -4117,11 +4116,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     // HTMLScrollFrame
     // XXXbz this is the lone remaining consumer of IsXULDisplayType.
     // I wonder whether we can eliminate that somehow.
-    const nsStyleDisplay* displayStyle = aContentStyle->StyleDisplay();
-    if (IsXULDisplayType(displayStyle)) {
-      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot,
-          displayStyle->mDisplay == NS_STYLE_DISPLAY_STACK ||
-          displayStyle->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK);
+    if (IsXULDisplayType(aContentStyle->StyleDisplay())) {
+      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot);
     } else {
       gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }

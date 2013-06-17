@@ -320,9 +320,6 @@ public:
   bool mDidHistoryRestore:1;
   // Is this the scrollframe for the document's viewport?
   bool mIsRoot:1;
-  // True if we should clip all descendants, false if we should only clip
-  // descendants for which we are the containing block.
-  bool mClipAllDescendants:1;
   // If true, don't try to layout the scrollbars in Reflow().  This can be
   // useful if multiple passes are involved, because we don't want to place the
   // scrollbars at the wrong size.
@@ -633,8 +630,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                                        bool aIsRoot, bool aClipAllDescendants);
+  friend nsIFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot);
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
@@ -857,8 +853,7 @@ public:
 #endif
 
 protected:
-  nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot,
-                   bool aClipAllDescendants);
+  nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot);
 
   void ClampAndSetBounds(nsBoxLayoutState& aState, 
                          nsRect& aRect,
