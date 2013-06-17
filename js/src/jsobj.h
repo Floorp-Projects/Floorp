@@ -204,7 +204,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class BlockClass;
 extern Class BooleanClass;
 extern Class CallableObjectClass;
 extern Class DateClass;
@@ -223,7 +222,6 @@ extern Class WeakMapClass;
 extern Class WithClass;
 
 class ArrayBufferObject;
-class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
 class DebugScopeObject;
@@ -932,7 +930,7 @@ class JSObject : public js::ObjectImpl
      *   }
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
-     * object, the following predicates are true: isClonedBlock, isBlock,
+     * object, the following predicates are true: isClonedBlock, is<BlockObject>,
      * isNestedScope and isScope. Each of these has a respective class that
      * derives and adds operations.
      *
@@ -974,16 +972,15 @@ class JSObject : public js::ObjectImpl
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
-    inline bool isScope()            const { return isCall() || isDeclEnv() || isNestedScope(); }
+    inline bool isScope()            const;
     inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
     inline bool isTypedArray()       const;
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of ScopeObject. */
-    inline bool isBlock()       const { return hasClass(&js::BlockClass); }
     inline bool isCall()        const { return hasClass(&js::CallClass); }
     inline bool isDeclEnv()     const { return hasClass(&js::DeclEnvClass); }
-    inline bool isNestedScope() const { return isBlock() || isWith(); }
+    inline bool isNestedScope() const;
     inline bool isWith()        const { return hasClass(&js::WithClass); }
     inline bool isClonedBlock() const;
     inline bool isStaticBlock() const;
@@ -999,7 +996,6 @@ class JSObject : public js::ObjectImpl
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
-    inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
     inline js::ClonedBlockObject &asClonedBlock();

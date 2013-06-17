@@ -650,9 +650,9 @@ ClonedBlockObject *
 ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, AbstractFramePtr frame)
 {
     assertSameCompartment(cx, frame);
-    JS_ASSERT(block->getClass() == &BlockClass);
+    JS_ASSERT(block->getClass() == &BlockObject::class_);
 
-    RootedTypeObject type(cx, block->getNewType(cx, &BlockClass));
+    RootedTypeObject type(cx, block->getNewType(cx, &BlockObject::class_));
     if (!type)
         return NULL;
 
@@ -706,13 +706,13 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 StaticBlockObject *
 StaticBlockObject::create(JSContext *cx)
 {
-    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &BlockClass, NULL));
+    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &BlockObject::class_, NULL));
     if (!type)
         return NULL;
 
     RootedShape emptyBlockShape(cx);
-    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, NULL, FINALIZE_KIND,
-                                                  BaseShape::DELEGATE);
+    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockObject::class_, NULL, NULL, NULL,
+                                                  FINALIZE_KIND, BaseShape::DELEGATE);
     if (!emptyBlockShape)
         return NULL;
 
@@ -742,14 +742,14 @@ StaticBlockObject::addVar(JSContext *cx, Handle<StaticBlockObject*> block, Handl
      * Don't convert this object to dictionary mode so that we can clone the
      * block's shape later.
      */
-    uint32_t slot = JSSLOT_FREE(&BlockClass) + index;
+    uint32_t slot = JSSLOT_FREE(&BlockObject::class_) + index;
     return JSObject::addPropertyInternal(cx, block, id, /* getter = */ NULL, /* setter = */ NULL,
                                          slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
                                          Shape::HAS_SHORTID, index, spp,
                                          /* allowDictionary = */ false);
 }
 
-Class js::BlockClass = {
+Class BlockObject::class_ = {
     "Block",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
@@ -1572,7 +1572,7 @@ bool
 DebugScopeObject::isForDeclarative() const
 {
     ScopeObject &s = scope();
-    return s.isCall() || s.isBlock() || s.isDeclEnv();
+    return s.isCall() || s.is<BlockObject>() || s.isDeclEnv();
 }
 
 bool

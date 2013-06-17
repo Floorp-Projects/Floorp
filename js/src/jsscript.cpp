@@ -657,7 +657,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (mode == XDR_ENCODE) {
             JSObject *obj = *objp;
             JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
-            isBlock = obj->isBlock() ? 1 : 0;
+            isBlock = obj->is<BlockObject>() ? 1 : 0;
         }
         if (!xdr->codeUint32(&isBlock))
             return false;

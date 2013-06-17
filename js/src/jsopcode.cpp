@@ -476,8 +476,9 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        if (obj->isBlock()) {
-            char *source = JS_sprintf_append(NULL, "depth %d {", obj->asBlock().stackDepth());
+        if (obj->is<BlockObject>()) {
+            char *source = JS_sprintf_append(NULL, "depth %d {",
+                                             obj->as<BlockObject>().stackDepth());
             if (!source)
                 return false;
 
@@ -1089,7 +1090,8 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
           case JSOP_ENTERLET0:
           case JSOP_ENTERLET1: {
             JSObject *child = script->getObject(p);
-            JS_ASSERT_IF(blockChain, child->asBlock().stackDepth() >= blockChain->asBlock().stackDepth());
+            JS_ASSERT_IF(blockChain, child->as<BlockObject>().stackDepth() >=
+                                     blockChain->as<BlockObject>().stackDepth());
             blockChain = child;
             break;
           }
@@ -1104,7 +1106,7 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
             if (!(sn && SN_TYPE(sn) == SRC_HIDDEN)) {
                 JS_ASSERT(blockChain);
                 blockChain = blockChain->asStaticBlock().enclosingBlock();
-                JS_ASSERT_IF(blockChain, blockChain->isBlock());
+                JS_ASSERT_IF(blockChain, blockChain->is<BlockObject>());
             }
             break;
           }
@@ -1404,9 +1406,9 @@ ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
         JSObject *chain = GetBlockChainAtPC(cx, script, pc);
         if (!chain)
             return NULL;
-        JS_ASSERT(chain->isBlock());
+        JS_ASSERT(chain->is<BlockObject>());
         do {
-            BlockObject &block = chain->asBlock();
+            BlockObject &block = chain->as<BlockObject>();
             uint32_t blockDepth = block.stackDepth();
             uint32_t blockCount = block.slotCount();
             if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
@@ -1417,7 +1419,7 @@ ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
                 }
             }
             chain = chain->getParent();
-        } while (chain && chain->isBlock());
+        } while (chain && chain->is<BlockObject>());
     }
     return NULL;
 }
