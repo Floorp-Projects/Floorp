@@ -485,7 +485,7 @@ GetClassForProtoKey(JSProtoKey key)
         return &TypedArray::classes[key - JSProto_Int8Array];
 
       case JSProto_ArrayBuffer:
-        return &ArrayBufferClass;
+        return &ArrayBufferObject::class_;
 
       case JSProto_DataView:
         return &DataViewClass;

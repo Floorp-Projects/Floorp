@@ -186,7 +186,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
         if (!IsTypedArrayBuffer(bufferVal))
             return LinkFail(cx, "bad ArrayBuffer argument");
 
-        heap = &bufferVal.toObject().asArrayBuffer();
+        heap = &bufferVal.toObject().as<ArrayBufferObject>();
 
         if (!IsPowerOfTwo(heap->byteLength()) || heap->byteLength() < AsmJSAllocationGranularity)
             return LinkFail(cx, "ArrayBuffer byteLength must be a power of two greater than or equal to 4096");
