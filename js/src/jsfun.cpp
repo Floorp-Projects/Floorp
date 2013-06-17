@@ -1654,11 +1654,11 @@ js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
                   !thisv.toObject().getProto() ||
                   thisv.toObject().getProto()->getClass() != clasp);
     } else if (thisv.isString()) {
-        JS_ASSERT(clasp != &StringClass);
+        JS_ASSERT(clasp != &StringObject::class_);
     } else if (thisv.isNumber()) {
-        JS_ASSERT(clasp != &NumberClass);
+        JS_ASSERT(clasp != &NumberObject::class_);
     } else if (thisv.isBoolean()) {
-        JS_ASSERT(clasp != &BooleanClass);
+        JS_ASSERT(clasp != &BooleanObject::class_);
     } else {
         JS_ASSERT(thisv.isUndefined() || thisv.isNull());
     }

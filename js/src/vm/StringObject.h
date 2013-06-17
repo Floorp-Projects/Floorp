@@ -20,6 +20,8 @@ class StringObject : public JSObject
   public:
     static const unsigned RESERVED_SLOTS = 2;
 
+    static Class class_;
+
     /*
      * Creates a new String object boxing the given string.  The object's
      * [[Prototype]] is determined from context.
