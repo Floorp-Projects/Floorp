@@ -426,7 +426,7 @@ public:
 
     void push_i32(int imm)
     {
-        spew("pushl      %s$0x%x",
+        spew("push       %s$0x%x",
              PRETTY_PRINT_OFFSET(imm));
         m_formatter.oneByteOp(OP_PUSH_Iz);
         m_formatter.immediate32(imm);
@@ -447,13 +447,13 @@ public:
 
     void push_flags()
     {
-        spew("push flags register");
+        spew("pushf");
         m_formatter.oneByteOp(OP_PUSHFLAGS);
     }
 
     void pop_flags()
     {
-        spew("pop flags register");
+        spew("popf");
         m_formatter.oneByteOp(OP_POPFLAGS);
     }
 
@@ -799,7 +799,7 @@ public:
 
     void subl_mr(int offset, RegisterID base, RegisterID dst)
     {
-        spew("subl        %s0x%x(%s), %s",
+        spew("subl       %s0x%x(%s), %s",
              PRETTY_PRINT_OFFSET(offset), nameIReg(4,base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_SUB_GvEv, dst, base, offset);
     }
@@ -1035,13 +1035,13 @@ public:
 
     void imull_rr(RegisterID src, RegisterID dst)
     {
-        spew("imull       %s, %s", nameIReg(4,src), nameIReg(4, dst));
+        spew("imull      %s, %s", nameIReg(4,src), nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_IMUL_GvEv, dst, src);
     }
 
     void imull_mr(int offset, RegisterID base, RegisterID dst)
     {
-        spew("imull       %s0x%x(%s), %s",
+        spew("imull      %s0x%x(%s), %s",
              PRETTY_PRINT_OFFSET(offset), nameIReg(4,base), nameIReg(4,dst));
         m_formatter.twoByteOp(OP2_IMUL_GvEv, dst, base, offset);
     }
@@ -1307,12 +1307,14 @@ public:
 
     void testb_im(int imm, int offset, RegisterID base)
     {
+        FIXME_INSN_PRINTING;
         m_formatter.oneByteOp(OP_GROUP3_EbIb, GROUP3_OP_TEST, base, offset);
         m_formatter.immediate8(imm);
     }
 
     void testb_im(int imm, int offset, RegisterID base, RegisterID index, int scale)
     {
+        FIXME_INSN_PRINTING;
         m_formatter.oneByteOp(OP_GROUP3_EbIb, GROUP3_OP_TEST, base, index, scale, offset);
         m_formatter.immediate8(imm);
     }
@@ -1410,7 +1412,7 @@ public:
 
     void cdq()
     {
-        spew("cdq              ");
+        spew("cdq        ");
         m_formatter.oneByteOp(OP_CDQ);
     }
 
@@ -1524,7 +1526,7 @@ public:
     void movl_i32r(int imm, RegisterID dst)
     {
         spew("movl       $0x%x, %s",
-             imm, nameIReg(dst));
+             imm, nameIReg(4, dst));
         m_formatter.oneByteOp(OP_MOV_EAXIv, dst);
         m_formatter.immediate32(imm);
     }
@@ -1857,7 +1859,7 @@ public:
         // In 64-bit, this may cause an unnecessary REX to be planted (if the dst register
         // is in the range ESP-EDI, and the src would not have required a REX).  Unneeded
         // REX prefixes are defined to be silently ignored by the processor.
-        spew("movzbl      %s, %s",
+        spew("movzbl     %s, %s",
              nameIReg(1,src), nameIReg(4,dst));
         m_formatter.twoByteOp8(OP2_MOVZX_GvEb, dst, src);
     }
@@ -2212,7 +2214,7 @@ public:
 
     void psrldq_ir(int shift, XMMRegisterID dest)
     {
-        spew("psrldq      $%d, %s",
+        spew("psrldq     $%d, %s",
              shift, nameFPReg(dest));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)3, (RegisterID)dest);
@@ -2328,7 +2330,7 @@ public:
 
     void movsd_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("movsd       %s, %d(%s,%s,%d)",
+        spew("movsd      %s, %d(%s,%s,%d)",
              nameFPReg(src), offset, nameIReg(base), nameIReg(index), 1<<scale);
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, index, scale, offset);
@@ -2336,7 +2338,7 @@ public:
 
     void movss_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("movss       %s, %d(%s,%s,%d)",
+        spew("movss      %s, %d(%s,%s,%d)",
              nameFPReg(src), offset, nameIReg(base), nameIReg(index), 1<<scale);
         m_formatter.prefix(PRE_SSE_F3);
         m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, index, scale, offset);
@@ -2401,7 +2403,7 @@ public:
 #else
     JmpSrc movsd_ripr(XMMRegisterID dst)
     {
-        spew("movsd     \?(%%rip), %s",
+        spew("movsd      \?(%%rip), %s",
              nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteRipOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, 0);
@@ -2409,7 +2411,7 @@ public:
     }
     JmpSrc movsd_rrip(XMMRegisterID src)
     {
-        spew("movsd     %s, \?(%%rip)",
+        spew("movsd      %s, \?(%%rip)",
              nameFPReg(src));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteRipOp(OP2_MOVSD_WsdVsd, (RegisterID)src, 0);
@@ -2427,7 +2429,7 @@ public:
 
     void movdqa_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("movdqa      %s, %d(%s,%s,%d)",
+        spew("movdqa     %s, %d(%s,%s,%d)",
              nameFPReg(src), offset, nameIReg(base), nameIReg(index), 1<<scale);
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVDQA_WsdVsd, (RegisterID)src, base, index, scale, offset);
@@ -2555,7 +2557,7 @@ public:
 
     void roundsd_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)
     {
-        spew("roundsd     %s, %s, %d",
+        spew("roundsd    %s, %s, %d",
              nameFPReg(src), nameFPReg(dst), (int)mode);
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
