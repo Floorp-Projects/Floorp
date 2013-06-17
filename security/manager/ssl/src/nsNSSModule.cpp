@@ -24,6 +24,7 @@
 #include "nsCertTree.h"
 #endif
 #include "nsCrypto.h"
+#include "nsCryptoHash.h"
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
 

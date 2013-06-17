@@ -15,13 +15,6 @@
 
 #include "String-inl.h"
 
-inline js::RegExpObject &
-JSObject::asRegExp()
-{
-    JS_ASSERT(isRegExp());
-    return *static_cast<js::RegExpObject *>(this);
-}
-
 namespace js {
 
 inline RegExpShared *
@@ -114,8 +107,8 @@ RegExpShared::isJITRuntimeEnabled(JSContext *cx)
 inline bool
 RegExpToShared(JSContext *cx, HandleObject obj, RegExpGuard *g)
 {
-    if (obj->isRegExp())
-        return obj->asRegExp().getShared(cx, g);
+    if (obj->is<RegExpObject>())
+        return obj->as<RegExpObject>().getShared(cx, g);
     return Proxy::regexp_toShared(cx, obj, g);
 }
 
