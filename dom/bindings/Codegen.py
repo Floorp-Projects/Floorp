@@ -5185,7 +5185,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
         unwrapFailureCode = (
-            'return ThrowInvalidThis(cx, args, MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE, \"%s\");' %
+            'return ThrowInvalidMethodThis(cx, args, \"%s\");' %
             descriptor.interface.identifier.name)
         CGAbstractBindingMethod.__init__(self, descriptor, 'genericMethod',
                                          args,
@@ -5322,7 +5322,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
         else:
             name = "genericGetter"
             unwrapFailureCode = (
-                'return ThrowInvalidThis(cx, args, MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' %
+                'return ThrowInvalidGetterThis(cx, "%s");' %
                 descriptor.interface.identifier.name)
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
                                          unwrapFailureCode)
@@ -5402,7 +5402,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
         else:
             name = "genericSetter"
             unwrapFailureCode = (
-                'return ThrowInvalidThis(cx, args, MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' %
+                'return ThrowInvalidSetterThis(cx, "%s");' %
                 descriptor.interface.identifier.name)
 
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
