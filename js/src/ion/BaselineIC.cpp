@@ -4833,7 +4833,7 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
             return true;
         }
 
-        if (!scopeChain->isScope() || scopeChain->is<WithObject>())
+        if (!scopeChain->is<ScopeObject>() || scopeChain->is<WithObject>())
             return true;
 
         // Check for an 'own' property on the scope. There is no need to
@@ -6302,7 +6302,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
         if (!SetNameOperation(cx, script, pc, obj, rhs))
             return false;
     } else if (op == JSOP_SETALIASEDVAR) {
-        obj->asScope().setAliasedVar(cx, pc, name, rhs);
+        obj->as<ScopeObject>().setAliasedVar(cx, pc, name, rhs);
     } else if (script->strict) {
         if (!js::SetProperty<true>(cx, obj, id, rhs))
             return false;

@@ -266,8 +266,9 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
     }
 
     /*
-     * Ideally, we'd JS_ASSERT(!scope->isScope()) but the enclosing lexical
-     * scope chain stops at eval() boundaries. See StaticScopeIter comment.
+     * Ideally, we'd JS_ASSERT(!scope->is<ScopeObject>()) but the enclosing
+     * lexical scope chain stops at eval() boundaries. See StaticScopeIter
+     * comment.
      */
 #endif
 }
@@ -342,7 +343,7 @@ StackFrame::epilogue(JSContext *cx)
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
             if (isDebuggerFrame())
-                JS_ASSERT(!scopeChain()->isScope());
+                JS_ASSERT(!scopeChain()->is<ScopeObject>());
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval
@@ -360,7 +361,7 @@ StackFrame::epilogue(JSContext *cx)
     }
 
     if (isGlobalFrame()) {
-        JS_ASSERT(!scopeChain()->isScope());
+        JS_ASSERT(!scopeChain()->is<ScopeObject>());
         return;
     }
 

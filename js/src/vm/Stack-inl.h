@@ -199,10 +199,10 @@ StackFrame::initArgsObj(ArgumentsObject &argsobj)
 inline ScopeObject &
 StackFrame::aliasedVarScope(ScopeCoordinate sc) const
 {
-    JSObject *scope = &scopeChain()->asScope();
+    JSObject *scope = &scopeChain()->as<ScopeObject>();
     for (unsigned i = sc.hops; i; i--)
-        scope = &scope->asScope().enclosingScope();
-    return scope->asScope();
+        scope = &scope->as<ScopeObject>().enclosingScope();
+    return scope->as<ScopeObject>();
 }
 
 inline void
@@ -218,7 +218,7 @@ inline void
 StackFrame::popOffScopeChain()
 {
     JS_ASSERT(flags_ & HAS_SCOPECHAIN);
-    scopeChain_ = &scopeChain_->asScope().enclosingScope();
+    scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
 }
 
 inline CallObject &
