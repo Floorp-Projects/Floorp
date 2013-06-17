@@ -1868,7 +1868,7 @@ GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
   }
 
   if (!domImplVal.isObject()) {
-    ThrowErrorMessage(cx, MSG_NOT_OBJECT);
+    ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Value");
     return false;
   }
 
