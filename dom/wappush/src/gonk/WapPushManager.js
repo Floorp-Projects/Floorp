@@ -80,20 +80,22 @@ this.WapPushManager = {
     * @see http://technical.openmobilealliance.org/tech/omna/omna-wsp-content-type.aspx
     */
     let contentType = options.headers["content-type"].media;
-    let msg = { contentType: contentType };
+    let msg;
 
     if (contentType === "text/vnd.wap.si" ||
         contentType === "application/vnd.wap.sic") {
-      SI.PduHelper.parse(data, contentType, msg);
+      msg = SI.PduHelper.parse(data, contentType);
     } else if (contentType === "text/vnd.wap.sl" ||
                contentType === "application/vnd.wap.slc") {
-      SL.PduHelper.parse(data, contentType, msg);
-    } else if (contentType === "text/vnd.wap.connectivity-xml" ||
-               contentType === "application/vnd.wap.connectivity-wbxml") {
-      // TODO: Bug 869291 - Support Receiving WAP-Push-CP
+      msg = SL.PduHelper.parse(data, contentType);
     } else {
+      // TODO: Bug 869291 - Support Receiving WAP-Push-CP
+
       // Unsupported type, provide raw data.
-      msg.content = data.array;
+      msg = {
+        contentType: contentType,
+        content: data.array
+      };
     }
 
     // TODO: Bug 853782 - Notify receiving of WAP Push messages
