@@ -471,7 +471,7 @@ GetClassForProtoKey(JSProtoKey key)
       case JSProto_String:
         return &StringClass;
       case JSProto_RegExp:
-        return &RegExpClass;
+        return &RegExpObject::class_;
 
       case JSProto_Int8Array:
       case JSProto_Uint8Array:
