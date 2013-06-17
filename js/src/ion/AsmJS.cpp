@@ -5830,6 +5830,13 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     masm.pop(JSReturnReg_Data);
     masm.pop(JSReturnReg_Type);
 
+#ifdef DEBUG
+    masm.branchTestMagicValue(Assembler::Equal, JSReturnOperand, JS_ION_ERROR, throwLabel);
+    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, &ionFailed);
+#else
+    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
+#endif
+
     switch (exit.use().which()) {
       case Use::NoCoercion:
         break;
