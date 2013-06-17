@@ -32,7 +32,7 @@ typedef Rooted<ArgumentsObject *> RootedArgumentsObject;
 StaticScopeIter::StaticScopeIter(JSContext *cx, JSObject *objArg)
   : obj(cx, objArg), onNamedLambda(false)
 {
-    JS_ASSERT_IF(obj, obj->isStaticBlock() || obj->isFunction());
+    JS_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->isFunction());
 }
 
 bool
@@ -44,23 +44,23 @@ StaticScopeIter::done() const
 void
 StaticScopeIter::operator++(int)
 {
-    if (obj->isStaticBlock()) {
-        obj = obj->asStaticBlock().enclosingStaticScope();
+    if (obj->is<StaticBlockObject>()) {
+        obj = obj->as<StaticBlockObject>().enclosingStaticScope();
     } else if (onNamedLambda || !obj->toFunction()->isNamedLambda()) {
         onNamedLambda = false;
         obj = obj->toFunction()->nonLazyScript()->enclosingStaticScope();
     } else {
         onNamedLambda = true;
     }
-    JS_ASSERT_IF(obj, obj->isStaticBlock() || obj->isFunction());
+    JS_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->isFunction());
     JS_ASSERT_IF(onNamedLambda, obj->isFunction());
 }
 
 bool
 StaticScopeIter::hasDynamicScopeObject() const
 {
-    return obj->isStaticBlock()
-           ? obj->asStaticBlock().needsClone()
+    return obj->is<StaticBlockObject>()
+           ? obj->as<StaticBlockObject>().needsClone()
            : obj->toFunction()->isHeavyweight();
 }
 
@@ -79,14 +79,14 @@ StaticScopeIter::type() const
 {
     if (onNamedLambda)
         return NAMED_LAMBDA;
-    return obj->isStaticBlock() ? BLOCK : FUNCTION;
+    return obj->is<StaticBlockObject>() ? BLOCK : FUNCTION;
 }
 
 StaticBlockObject &
 StaticScopeIter::block() const
 {
     JS_ASSERT(type() == BLOCK);
-    return obj->asStaticBlock();
+    return obj->as<StaticBlockObject>();
 }
 
 JSScript *
@@ -108,7 +108,7 @@ InnermostStaticScope(JSScript *script, jsbytecode *pc)
 
     if (blockIndex == UINT32_MAX)
         return script->function();
-    return &script->getObject(blockIndex)->asStaticBlock();
+    return &script->getObject(blockIndex)->as<StaticBlockObject>();
 }
 
 Shape *
@@ -684,12 +684,12 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
     unsigned base = frame.script()->nfixed + block->stackDepth();
     for (unsigned i = 0; i < nslots; ++i) {
         if (block->isAliased(i))
-            obj->asClonedBlock().setVar(i, frame.unaliasedLocal(base + i));
+            obj->as<ClonedBlockObject>().setVar(i, frame.unaliasedLocal(base + i));
     }
 
     JS_ASSERT(obj->isDelegate());
 
-    return &obj->asClonedBlock();
+    return &obj->as<ClonedBlockObject>();
 }
 
 void
@@ -720,7 +720,7 @@ StaticBlockObject::create(JSContext *cx)
     if (!obj)
         return NULL;
 
-    return &obj->asStaticBlock();
+    return &obj->as<StaticBlockObject>();
 }
 
 /* static */ Shape *
@@ -998,7 +998,8 @@ ScopeIter::ScopeIter(AbstractFramePtr frame, ScopeObject &scope, JSContext *cx
                 break;
             block_ = block_->enclosingBlock();
         }
-        JS_ASSERT_IF(cur_->isClonedBlock(), cur_->asClonedBlock().staticBlock() == *block_);
+        JS_ASSERT_IF(cur_->is<ClonedBlockObject>(),
+                     cur_->as<ClonedBlockObject>().staticBlock() == *block_);
     } else {
         block_ = NULL;
     }
@@ -1029,7 +1030,7 @@ ScopeIter::operator++()
       case Block:
         block_ = block_->enclosingBlock();
         if (hasScopeObject_)
-            cur_ = &cur_->asClonedBlock().enclosingScope();
+            cur_ = &cur_->as<ClonedBlockObject>().enclosingScope();
         settle();
         break;
       case With:
@@ -1103,7 +1104,7 @@ ScopeIter::settle()
     } else if (block_) {
         type_ = Block;
         hasScopeObject_ = block_->needsClone();
-        JS_ASSERT_IF(hasScopeObject_, cur_->asClonedBlock().staticBlock() == *block_);
+        JS_ASSERT_IF(hasScopeObject_, cur_->as<ClonedBlockObject>().staticBlock() == *block_);
     } else if (cur_->is<CallObject>()) {
         CallObject &callobj = cur_->as<CallObject>();
         type_ = callobj.isForEval() ? StrictEvalScope : Call;
@@ -1258,8 +1259,8 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         /* Handle unaliased let and catch bindings at block scope. */
-        if (scope->isClonedBlock()) {
-            Rooted<ClonedBlockObject *> block(cx, &scope->asClonedBlock());
+        if (scope->is<ClonedBlockObject>()) {
+            Rooted<ClonedBlockObject *> block(cx, &scope->as<ClonedBlockObject>());
             Shape *shape = block->lastProperty()->search(cx, id);
             if (!shape)
                 return false;
@@ -1857,13 +1858,13 @@ DebugScopes::onPopBlock(JSContext *cx, AbstractFramePtr frame)
 
     StaticBlockObject &staticBlock = *frame.maybeBlockChain();
     if (staticBlock.needsClone()) {
-        ClonedBlockObject &clone = frame.scopeChain()->asClonedBlock();
+        ClonedBlockObject &clone = frame.scopeChain()->as<ClonedBlockObject>();
         clone.copyUnaliasedValues(frame);
         scopes->liveScopes.remove(&clone);
     } else {
         ScopeIter si(frame, cx);
         if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
-            ClonedBlockObject &clone = p->value->scope().asClonedBlock();
+            ClonedBlockObject &clone = p->value->scope().as<ClonedBlockObject>();
             clone.copyUnaliasedValues(frame);
             scopes->liveScopes.remove(&clone);
             scopes->missingScopes.remove(p);
