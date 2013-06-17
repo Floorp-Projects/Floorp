@@ -227,6 +227,8 @@ const CustomizableWidgets = [{
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
       node.setAttribute("id", "zoom-controls");
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      // Set this as an attribute in addition to the property to make sure we can style correctly.
+      node.setAttribute("removable", "true");
       if (inPanel)
         node.setAttribute("flex", "1");
       node.classList.add("chromeclass-toolbar-additional");
@@ -350,6 +352,8 @@ const CustomizableWidgets = [{
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
       node.setAttribute("id", "edit-controls");
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      // Set this as an attribute in addition to the property to make sure we can style correctly.
+      node.setAttribute("removable", "true");
       if (inPanel)
         node.setAttribute("flex", "1");
       node.classList.add("chromeclass-toolbar-additional");
