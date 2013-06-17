@@ -382,13 +382,13 @@ var SelectionHelperUI = {
    * Attempts to select underlying text at a point and begins editing
    * the section.
    *
-   * @param aContent - Browser object
+   * @param aMsgTarget - Browser or chrome message target
    * @param aX, aY - Browser relative client coordinates.
    */
-  openEditSession: function openEditSession(aBrowser, aX, aY) {
-    if (!aBrowser || this.isActive)
+  openEditSession: function openEditSession(aMsgTarget, aX, aY) {
+    if (!aMsgTarget || this.isActive)
       return;
-    this._init(aBrowser);
+    this._init(aMsgTarget);
     this._setupDebugOptions();
 
     // Send this over to SelectionHandler in content, they'll message us
@@ -405,13 +405,13 @@ var SelectionHelperUI = {
    * 
    * Attaches to existing selection and begins editing.
    *
-   * @param aBrowser - Browser object
+   * @param aMsgTarget - Browser or chrome message target
    * @param aX, aY - Browser relative client coordinates.
    */
-  attachEditSession: function attachEditSession(aBrowser, aX, aY) {
-    if (!aBrowser || this.isActive)
+  attachEditSession: function attachEditSession(aMsgTarget, aX, aY) {
+    if (!aMsgTarget || this.isActive)
       return;
-    this._init(aBrowser);
+    this._init(aMsgTarget);
     this._setupDebugOptions();
 
     // Send this over to SelectionHandler in content, they'll message us
@@ -434,13 +434,13 @@ var SelectionHelperUI = {
    * Once the user starts a drag, the caret marker is hidden, and
    * the start and end markers take over.
    *
-   * @param aBrowser - Browser object
+   * @param aMsgTarget - Browser or chrome message target
    * @param aX, aY - Browser relative client coordinates of the tap
    * that initiated the session.
    */
-  attachToCaret: function attachToCaret(aBrowser, aX, aY) {
+  attachToCaret: function attachToCaret(aMsgTarget, aX, aY) {
     if (!this.isActive) {
-      this._init(aBrowser);
+      this._init(aMsgTarget);
       this._setupDebugOptions();
     } else {
       this._hideMonocles();
