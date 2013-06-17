@@ -212,7 +212,6 @@ extern Class ErrorClass;
 extern Class GeneratorClass;
 extern Class IntlClass;
 extern Class JSONClass;
-extern Class MapIteratorClass;
 extern Class MathClass;
 extern Class NumberClass;
 extern Class ObjectClass;
@@ -234,7 +233,6 @@ class DebugScopeObject;
 class DeclEnvObject;
 class GlobalObject;
 class MapObject;
-class MapIteratorObject;
 class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
@@ -979,7 +977,6 @@ class JSObject : public js::ObjectImpl
     inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
     inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
     inline bool isGlobal()           const;
-    inline bool isMapIterator()      const { return hasClass(&js::MapIteratorClass); }
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     inline bool isPrimitive()        const { return isNumber() || isString() || isBoolean(); }
     inline bool isPropertyIterator() const;
@@ -1021,7 +1018,6 @@ class JSObject : public js::ObjectImpl
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
-    inline js::MapIteratorObject &asMapIterator();
     inline js::NestedScopeObject &asNestedScope();
     inline js::NumberObject &asNumber();
     inline js::PropertyIteratorObject &asPropertyIterator();
