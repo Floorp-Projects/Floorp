@@ -5,7 +5,6 @@ mochikit.jar:
   content/browser-test-overlay.xul (browser-test-overlay.xul)
   content/cc-analyzer.js (cc-analyzer.js)
   content/chrome-harness.js (chrome-harness.js)
-  content/harness-overlay.xul (harness-overlay.xul)
   content/harness.xul (harness.xul)
   content/redirect.html (redirect.html)
   content/server.js (server.js)
