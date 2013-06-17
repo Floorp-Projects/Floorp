@@ -816,9 +816,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcPoke(false),
     heapState(Idle),
 #ifdef JSGC_GENERATIONAL
-# ifdef JS_GC_ZEAL
-    gcVerifierNursery(),
-# endif
     gcNursery(thisFromCtor()),
     gcStoreBuffer(thisFromCtor()),
 #endif
