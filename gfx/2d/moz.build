@@ -6,6 +6,10 @@
 
 MODULE = 'gfx2d'
 
+EXPORTS.mozilla += [
+    'GenericRefCounted.h',
+]
+
 EXPORTS.mozilla.gfx += [
     '2D.h',
     'BaseMargin.h',
