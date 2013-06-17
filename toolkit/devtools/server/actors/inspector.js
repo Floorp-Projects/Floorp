@@ -127,13 +127,21 @@ var NodeActor = protocol.ActorClass({
   form: function(detail) {
     let parentNode = this.walker.parentNode(this);
 
+    // Estimate the number of children.
+    let numChildren = this.rawNode.childNodes.length;
+    if (numChildren === 0 &&
+        (this.rawNode.contentDocument || this.rawNode.getSVGDocument)) {
+      // This might be an iframe with virtual children.
+      numChildren = 1;
+    }
+
     let form = {
       actor: this.actorID,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.namespaceURI,
       nodeName: this.rawNode.nodeName,
-      numChildren: this.rawNode.childNodes.length,
+      numChildren: numChildren,
 
       // doctype attributes
       name: this.rawNode.name,
@@ -1532,9 +1540,15 @@ var WalkerActor = protocol.ActorClass({
     this.queueMutation({
       type: "frameLoad",
       target: frameActor.actorID,
+    });
+
+    // Send a childList mutation on the frame.
+    this.queueMutation({
+      type: "childList",
+      target: frameActor.actorID,
       added: [],
       removed: []
-    });
+    })
   },
 
   // Returns true if domNode is in window or a subframe.
@@ -1582,6 +1596,19 @@ var WalkerActor = protocol.ActorClass({
       type: "documentUnload",
       target: documentActor.actorID
     });
+
+    let walker = documentWalker(doc);
+    let parentNode = walker.parentNode();
+    if (parentNode) {
+      // Send a childList mutation on the frame so that clients know
+      // they should reread the children list.
+      this.queueMutation({
+        type: "childList",
+        target: this._refMap.get(parentNode).actorID,
+        added: [],
+        removed: []
+      });
+    }
 
     // Need to force a release of this node, because those nodes can't
     // be accessed anymore.
@@ -1775,6 +1802,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
           // We try to give fronts instead of actorIDs, but these fronts need
           // to be destroyed now.
           emittedMutation.target = targetFront.actorID;
+          emittedMutation.targetParent = targetFront.parentNode();
 
           // Release the document node and all of its children, even retained.
           this._releaseFront(targetFront, true);
