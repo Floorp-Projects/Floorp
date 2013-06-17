@@ -690,6 +690,16 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case LOW_MEMORY: {
+            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
+            break;
+        }
+
+        case NETWORK_LINK_CHANGE: {
+            ReadCharactersField(jenv);
+            break;
+        }
+
         default:
             break;
     }
