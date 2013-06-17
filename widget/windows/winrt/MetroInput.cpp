@@ -8,7 +8,6 @@
 // Moz headers (alphabetical)
 #include "MetroUtils.h" // Logging, POINT_CEIL_*, ActivateGenericInstance, etc
 #include "MetroWidget.h" // MetroInput::mWidget
-#include "npapi.h" // NPEvent
 #include "mozilla/dom/Touch.h"  // Touch
 #include "nsTArray.h" // Touch lists
 #include "nsIDOMSimpleGestureEvent.h" // Constants for gesture events
@@ -154,118 +153,6 @@ namespace {
     aData->mChanged = false;
     return PL_DHASH_NEXT;
   }
-
-  // In response to keyboard events, we create an `NPEvent` and point the
-  // `pluginEvent` member of our `nsInputEvent` to it.  We must set the
-  // `wParam` and `lParam` members of our `NPEvent` according to what
-  // Windows would have sent for this particular WM_* message.  See the
-  // following documentation for descriptions of what these values should
-  // be for the various keyboard events.
-  //
-  // This union is used when setting up the lParam for keyboard events.
-  union LParamForKeyEvents {
-    uintptr_t lParam;
-    struct {
-      // bits 0-15    Repeat count, always 1 for WM_KEYUP
-      uint16_t repeatCount;
-      // bits 16-23   Scan code
-      uint8_t scanCode;
-      // See LParamFlagsForKeyEvents
-      uint8_t flags;
-    } parts;
-  };
-  // The high-order byte of the lParam for keyboard events is a set of bit
-  // flags that specifies information about the key being pressed/released.
-  enum LParamFlagsForKeyEvents {
-    // bit 24       1 if the key is an extended key, 0 otherwise
-    isExtendedKey = 1,
-    // bits 25-28   Reserved; do not use
-    // bit 29       1 if ALT is held down while key was pressed
-    //              Always 0 for WM_KEYDOWN
-    //              Always 0 for WM_KEYUP
-    isMenuKeyDown = 1<<5,
-    // bit 30       Previous key state. 1 if key was down before this message.
-    //              Always 1 for WM_KEYUP
-    wasKeyDown = 1<<6,
-    // bit 31       1 if key is being released, 0 if key is being pressed.
-    //              Always 0 for WM_KEYDOWN
-    //              Always 1 for WM_KEYUP
-    isKeyReleased = 1<<7
-  };
-  // This helper function sets up the lParam for plugin events that we create
-  // in response to keyboard events.
-  void
-  InitPluginKeyEventLParamFromKeyStatus(
-                      uintptr_t& aLParam,
-                      UI::Core::CorePhysicalKeyStatus const& aKeyStatus) {
-    LParamForKeyEvents lParam;
-
-    lParam.parts.repeatCount = aKeyStatus.RepeatCount;
-    lParam.parts.scanCode = aKeyStatus.ScanCode;
-    if (aKeyStatus.IsExtendedKey) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::isExtendedKey;
-    }
-    if (aKeyStatus.IsMenuKeyDown) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::isMenuKeyDown;
-    }
-    if (aKeyStatus.WasKeyDown) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::wasKeyDown;
-    }
-    if (aKeyStatus.IsKeyReleased) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::isKeyReleased;
-    }
-
-    aLParam = lParam.lParam;
-  }
-
-  // In response to mouse events, we create an `NPEvent` and point the
-  // `pluginEvent` member of our `nsInputEvent` to it.  We must set the
-  // `wParam` and `lParam` members of our `NPEvent` according to what
-  // Windows would have sent for this particular WM_* message.  See the
-  // following documentation for descriptions of what these values should
-  // be for the various mouse events.
-  //
-  // This union is used when setting up the lParam for mouse events.
-  union LParamForMouseEvents {
-    uintptr_t lParam;
-    // lParam is the position at which the event occurred.
-    struct lParamDeconstruction {
-      // The low-order word is the x-coordinate
-      uint16_t x;
-      // The high-order word is the y-coordinate
-      uint16_t y;
-    } parts;
-  };
-  // This helper function sets up the wParam and lParam for plugin events
-  // that we create in response to mouse events.
-  void
-  InitPluginMouseEventParams(nsInputEvent const& aEvent,
-                             uintptr_t& aWParam,
-                             uintptr_t& aLParam) {
-    // wParam is a mask indicating whether certain virtual keys are down.
-    aWParam = 0;
-    if (IS_VK_DOWN(VK_LBUTTON)) {
-      aWParam |= MK_LBUTTON;
-    }
-    if (IS_VK_DOWN(VK_MBUTTON)) {
-      aWParam |= MK_MBUTTON;
-    }
-    if (IS_VK_DOWN(VK_RBUTTON)) {
-      aWParam |= MK_RBUTTON;
-    }
-    if (aEvent.IsControl()) {
-      aWParam |= MK_CONTROL;
-    }
-    if (aEvent.IsShift()) {
-      aWParam |= MK_SHIFT;
-    }
-
-    Foundation::Point logPoint = MetroUtils::PhysToLog(aEvent.refPoint);
-    LParamForMouseEvents lParam;
-    lParam.parts.x = static_cast<uint16_t>(NS_round(logPoint.X));
-    lParam.parts.y = static_cast<uint16_t>(NS_round(logPoint.Y));
-    aLParam = lParam.lParam;
-  }
 }
 
 namespace mozilla {
@@ -337,11 +224,9 @@ MetroInput::OnAcceleratorKeyActivated(UI::Core::ICoreDispatcher* sender,
                                       UI::Core::IAcceleratorKeyEventArgs* aArgs) {
   UI::Core::CoreAcceleratorKeyEventType type;
   System::VirtualKey vkey;
-  UI::Core::CorePhysicalKeyStatus keyStatus;
 
   aArgs->get_EventType(&type);
   aArgs->get_VirtualKey(&vkey);
-  aArgs->get_KeyStatus(&keyStatus);
 
 #ifdef DEBUG_INPUT
   LogFunction();
@@ -351,16 +236,16 @@ MetroInput::OnAcceleratorKeyActivated(UI::Core::ICoreDispatcher* sender,
   switch(type) {
     case UI::Core::CoreAcceleratorKeyEventType_KeyUp:
     case UI::Core::CoreAcceleratorKeyEventType_SystemKeyUp:
-      OnKeyUp(vkey, keyStatus);
+      OnKeyUp(vkey);
       break;
     case UI::Core::CoreAcceleratorKeyEventType_KeyDown:
     case UI::Core::CoreAcceleratorKeyEventType_SystemKeyDown:
-      OnKeyDown(vkey, keyStatus);
+      OnKeyDown(vkey);
       break;
     case UI::Core::CoreAcceleratorKeyEventType_Character:
     case UI::Core::CoreAcceleratorKeyEventType_SystemCharacter:
     case UI::Core::CoreAcceleratorKeyEventType_UnicodeCharacter:
-      OnCharacterReceived(vkey, keyStatus);
+      OnCharacterReceived(vkey);
       break;
   }
 
@@ -528,30 +413,6 @@ MetroInput::OnPointerWheelChanged(UI::Core::ICoreWindow* aSender,
     previousVertLeftOverDelta %= WHEEL_DELTA;
   }
 
-  NPEvent pluginEvent;
-  pluginEvent.event = horzEvent ? WM_MOUSEHWHEEL : WM_MOUSEWHEEL;
-
-  union {
-    uintptr_t wParam;
-    uint16_t parts[2];
-  } wParam;
-
-  // This sets lParam and the low-order word of wParam
-  InitPluginMouseEventParams(wheelEvent,
-                             wParam.wParam,
-                             pluginEvent.lParam);
-
-  // The high-order word of wParam is the number of detents the wheel has
-  // traveled. Positive values mean the wheel was rotated forward or to the
-  // right.  Negative values mean the wheel was rotated backward (toward the
-  // user) or to the left.
-  wParam.parts[1] = horzEvent
-                  ? wheelEvent.lineOrPageDeltaX
-                  : wheelEvent.lineOrPageDeltaY * -1;
-
-  pluginEvent.wParam = wParam.wParam;
-
-  wheelEvent.pluginEvent = static_cast<void*>(&pluginEvent);
   DispatchEventIgnoreStatus(&wheelEvent);
 
   WRL::ComPtr<UI::Input::IPointerPoint> point;
@@ -566,8 +427,7 @@ MetroInput::OnPointerWheelChanged(UI::Core::ICoreWindow* aSender,
 // app.  This function is responsible for sending an appropriate gecko
 // event in response to the character entered.
 void
-MetroInput::OnCharacterReceived(uint32_t aCharCode,
-                                UI::Core::CorePhysicalKeyStatus const& aKeyStatus)
+MetroInput::OnCharacterReceived(uint32_t aCharCode)
 {
   // We only send NS_KEY_PRESS events for printable characters
   if (IsControlCharacter(aCharCode)) {
@@ -587,35 +447,13 @@ MetroInput::OnCharacterReceived(uint32_t aCharCode,
   keyEvent.charCode = aCharCode;
   keyEvent.mKeyNameIndex = KEY_NAME_INDEX_PrintableKey;
 
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_CHAR;
-  InitPluginKeyEventLParamFromKeyStatus(pluginEvent.lParam,
-                                        aKeyStatus);
-  // The wParam of WM_CHAR messages is a single utf-16 character.
-  // If charCode cannot be represented in a single utf-16 character,
-  // then we must send two WM_CHAR messages; one with a high surrogate
-  // and one with a low surrogate.
-  if (IS_IN_BMP(aCharCode)) {
-    pluginEvent.wParam = aCharCode;
-  } else {
-    pluginEvent.wParam = H_SURROGATE(aCharCode);
-    nsPluginEvent surrogateEvent(true, NS_PLUGIN_INPUT_EVENT, mWidget.Get());
-    surrogateEvent.time = ::GetMessageTime();
-    surrogateEvent.pluginEvent = static_cast<void*>(&pluginEvent);
-    DispatchEventIgnoreStatus(&surrogateEvent);
-    pluginEvent.wParam = L_SURROGATE(aCharCode);
-  }
-
-  keyEvent.pluginEvent = static_cast<void*>(&pluginEvent);
-
   DispatchEventIgnoreStatus(&keyEvent);
 }
 
 // This helper function is responsible for sending an appropriate gecko
 // event in response to a keyboard key being pressed down.
 void
-MetroInput::OnKeyDown(uint32_t aVKey,
-                      UI::Core::CorePhysicalKeyStatus const& aKeyStatus)
+MetroInput::OnKeyDown(uint32_t aVKey)
 {
   // We can only send a gecko event if there is a gecko virtual key code that
   // corresponds to the Windows virtual key code
@@ -630,15 +468,6 @@ MetroInput::OnKeyDown(uint32_t aVKey,
   keyEvent.time = ::GetMessageTime();
   keyEvent.keyCode = mozKey;
   keyEvent.mKeyNameIndex = GetDOMKeyNameIndex(aVKey);
-
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_KEYDOWN;
-  InitPluginKeyEventLParamFromKeyStatus(pluginEvent.lParam,
-                                        aKeyStatus);
-  // wParam is the virtual key code
-  pluginEvent.wParam = aVKey;
-
-  keyEvent.pluginEvent = static_cast<void*>(&pluginEvent);
   DispatchEventIgnoreStatus(&keyEvent);
 
   // If the key being pressed is not a printable character (e.g.
@@ -669,9 +498,6 @@ MetroInput::OnKeyDown(uint32_t aVKey,
   if (!keyEvent.isChar
    || (mModifierKeyState.IsControl()
     && !mModifierKeyState.IsAltGr())) {
-    // We don't want to send another message to our plugin,
-    // so reset keyEvent.pluginEvent
-    keyEvent.pluginEvent = nullptr;
     keyEvent.message = NS_KEY_PRESS;
     DispatchEventIgnoreStatus(&keyEvent);
   }
@@ -680,8 +506,7 @@ MetroInput::OnKeyDown(uint32_t aVKey,
 // This helper function is responsible for sending an appropriate gecko
 // event in response to a keyboard key being released.
 void
-MetroInput::OnKeyUp(uint32_t aVKey,
-                    UI::Core::CorePhysicalKeyStatus const& aKeyStatus)
+MetroInput::OnKeyUp(uint32_t aVKey)
 {
   uint32_t mozKey = GetMozKeyCode(aVKey);
   if (!mozKey) {
@@ -694,15 +519,6 @@ MetroInput::OnKeyUp(uint32_t aVKey,
   keyEvent.time = ::GetMessageTime();
   keyEvent.keyCode = mozKey;
   keyEvent.mKeyNameIndex = GetDOMKeyNameIndex(aVKey);
-
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_KEYUP;
-  InitPluginKeyEventLParamFromKeyStatus(pluginEvent.lParam,
-                                        aKeyStatus);
-  // wParam is the virtual key code
-  pluginEvent.wParam = aVKey;
-
-  keyEvent.pluginEvent = static_cast<void*>(&pluginEvent);
   DispatchEventIgnoreStatus(&keyEvent);
 }
 
@@ -719,11 +535,9 @@ void
 MetroInput::OnPointerNonTouch(UI::Input::IPointerPoint* aPoint) {
   WRL::ComPtr<UI::Input::IPointerPointProperties> props;
   UI::Input::PointerUpdateKind pointerUpdateKind;
-  boolean canBeDoubleTap;
 
   aPoint->get_Properties(props.GetAddressOf());
   props->get_PointerUpdateKind(&pointerUpdateKind);
-  mGestureRecognizer->CanBeDoubleTap(aPoint, &canBeDoubleTap);
 
   nsMouseEvent mouseEvent(true,
                           NS_MOUSE_MOVE,
@@ -731,52 +545,35 @@ MetroInput::OnPointerNonTouch(UI::Input::IPointerPoint* aPoint) {
                           nsMouseEvent::eReal,
                           nsMouseEvent::eNormal);
 
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_MOUSEMOVE;
-
   switch (pointerUpdateKind) {
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonPressed:
       // We don't bother setting mouseEvent.button because it is already
       // set to nsMouseEvent::buttonType::eLeftButton whose value is 0.
       mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-      pluginEvent.event = (canBeDoubleTap
-                        ? WM_LBUTTONDBLCLK
-                        : WM_LBUTTONDOWN);
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonPressed:
       mouseEvent.button = nsMouseEvent::buttonType::eMiddleButton;
       mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-      pluginEvent.event = (canBeDoubleTap
-                        ? WM_MBUTTONDBLCLK
-                        : WM_MBUTTONDOWN);
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonPressed:
       mouseEvent.button = nsMouseEvent::buttonType::eRightButton;
       mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-      pluginEvent.event = (canBeDoubleTap
-                        ? WM_RBUTTONDBLCLK
-                        : WM_RBUTTONDOWN);
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonReleased:
       // We don't bother setting mouseEvent.button because it is already
       // set to nsMouseEvent::buttonType::eLeftButton whose value is 0.
       mouseEvent.message = NS_MOUSE_BUTTON_UP;
-      pluginEvent.event = WM_LBUTTONUP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonReleased:
       mouseEvent.button = nsMouseEvent::buttonType::eMiddleButton;
       mouseEvent.message = NS_MOUSE_BUTTON_UP;
-      pluginEvent.event = WM_MBUTTONUP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonReleased:
       mouseEvent.button = nsMouseEvent::buttonType::eRightButton;
       mouseEvent.message = NS_MOUSE_BUTTON_UP;
-      pluginEvent.event = WM_RBUTTONUP;
       break;
   }
   InitGeckoMouseEventFromPointerPoint(mouseEvent, aPoint);
-
-  mouseEvent.pluginEvent = static_cast<void*>(&pluginEvent);
   DispatchEventIgnoreStatus(&mouseEvent);
   return;
 }
