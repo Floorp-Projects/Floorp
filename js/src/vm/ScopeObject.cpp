@@ -373,11 +373,11 @@ DeclEnvObject::create(JSContext *cx, HandleObject enclosing, HandleFunction call
 WithObject *
 WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth)
 {
-    RootedTypeObject type(cx, proto->getNewType(cx, &WithClass));
+    RootedTypeObject type(cx, proto->getNewType(cx, &class_));
     if (!type)
         return NULL;
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &WithClass, TaggedProto(proto),
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(proto),
                                                       &enclosing->global(), NULL, FINALIZE_KIND));
     if (!shape)
         return NULL;
@@ -395,14 +395,14 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
 
     obj->setFixedSlot(THIS_SLOT, ObjectValue(*thisp));
 
-    return &obj->asWith();
+    return &obj->as<WithObject>();
 }
 
 static JSBool
 with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                    MutableHandleObject objp, MutableHandleShape propp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::lookupGeneric(cx, actual, id, objp, propp);
 }
 
@@ -436,7 +436,7 @@ static JSBool
 with_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                 MutableHandleValue vp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::getGeneric(cx, actual, actual, id, vp);
 }
 
@@ -470,7 +470,7 @@ static JSBool
 with_SetGeneric(JSContext *cx, HandleObject obj, HandleId id,
                 MutableHandleValue vp, JSBool strict)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setGeneric(cx, actual, actual, id, vp, strict);
 }
 
@@ -478,7 +478,7 @@ static JSBool
 with_SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                  MutableHandleValue vp, JSBool strict)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setProperty(cx, actual, actual, name, vp, strict);
 }
 
@@ -486,7 +486,7 @@ static JSBool
 with_SetElement(JSContext *cx, HandleObject obj, uint32_t index,
                 MutableHandleValue vp, JSBool strict)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setElement(cx, actual, actual, index, vp, strict);
 }
 
@@ -494,63 +494,63 @@ static JSBool
 with_SetSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                 MutableHandleValue vp, JSBool strict)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setSpecial(cx, actual, actual, sid, vp, strict);
 }
 
 static JSBool
 with_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::getGenericAttributes(cx, actual, id, attrsp);
 }
 
 static JSBool
 with_GetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::getPropertyAttributes(cx, actual, name, attrsp);
 }
 
 static JSBool
 with_GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::getElementAttributes(cx, actual, index, attrsp);
 }
 
 static JSBool
 with_GetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::getSpecialAttributes(cx, actual, sid, attrsp);
 }
 
 static JSBool
 with_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setGenericAttributes(cx, actual, id, attrsp);
 }
 
 static JSBool
 with_SetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setPropertyAttributes(cx, actual, name, attrsp);
 }
 
 static JSBool
 with_SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setElementAttributes(cx, actual, index, attrsp);
 }
 
 static JSBool
 with_SetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setSpecialAttributes(cx, actual, sid, attrsp);
 }
 
@@ -558,7 +558,7 @@ static JSBool
 with_DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                     JSBool *succeeded)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::deleteProperty(cx, actual, name, succeeded);
 }
 
@@ -566,7 +566,7 @@ static JSBool
 with_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index,
                    JSBool *succeeded)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::deleteElement(cx, actual, index, succeeded);
 }
 
@@ -574,7 +574,7 @@ static JSBool
 with_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                    JSBool *succeeded)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::deleteSpecial(cx, actual, sid, succeeded);
 }
 
@@ -582,17 +582,17 @@ static JSBool
 with_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                MutableHandleValue statep, MutableHandleId idp)
 {
-    RootedObject actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::enumerate(cx, actual, enum_op, statep, idp);
 }
 
 static JSObject *
 with_ThisObject(JSContext *cx, HandleObject obj)
 {
-    return &obj->asWith().withThis();
+    return &obj->as<WithObject>().withThis();
 }
 
-Class js::WithClass = {
+Class WithObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(WithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
@@ -1034,7 +1034,7 @@ ScopeIter::operator++()
         break;
       case With:
         JS_ASSERT(hasScopeObject_);
-        cur_ = &cur_->asWith().enclosingScope();
+        cur_ = &cur_->as<WithObject>().enclosingScope();
         settle();
         break;
       case StrictEvalScope:
@@ -1094,10 +1094,10 @@ ScopeIter::settle()
     } else if (frame_.isStrictEvalFrame() && !frame_.hasCallObj()) {
         JS_ASSERT(cur_ == frame_.evalPrevScopeChain(cx));
         frame_ = NullFramePtr();
-    } else if (cur_->isWith()) {
+    } else if (cur_->is<WithObject>()) {
         JS_ASSERT_IF(frame_.isFunctionFrame(), frame_.fun()->isHeavyweight());
         JS_ASSERT_IF(block_, block_->needsClone());
-        JS_ASSERT_IF(block_, block_->stackDepth() < cur_->asWith().stackDepth());
+        JS_ASSERT_IF(block_, block_->stackDepth() < cur_->as<WithObject>().stackDepth());
         type_ = With;
         hasScopeObject_ = true;
     } else if (block_) {
@@ -1287,7 +1287,7 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         /* The rest of the internal scopes do not have unaliased vars. */
-        JS_ASSERT(scope->is<DeclEnvObject>() || scope->isWith() ||
+        JS_ASSERT(scope->is<DeclEnvObject>() || scope->is<WithObject>() ||
                   scope->as<CallObject>().isForEval());
         return false;
     }
@@ -1876,7 +1876,7 @@ DebugScopes::onPopWith(AbstractFramePtr frame)
 {
     DebugScopes *scopes = frame.compartment()->debugScopes;
     if (scopes)
-        scopes->liveScopes.remove(&frame.scopeChain()->asWith());
+        scopes->liveScopes.remove(&frame.scopeChain()->as<WithObject>());
 }
 
 void

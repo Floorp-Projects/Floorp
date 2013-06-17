@@ -217,7 +217,6 @@ extern Class RegExpStaticsClass;
 extern Class StopIterationClass;
 extern Class StringClass;
 extern Class WeakMapClass;
-extern Class WithClass;
 
 class ArrayBufferObject;
 class BooleanObject;
@@ -233,7 +232,6 @@ class SetObject;
 class StaticBlockObject;
 class StrictArgumentsObject;
 class StringObject;
-class WithObject;
 
 }  /* namespace js */
 
@@ -974,7 +972,6 @@ class JSObject : public js::ObjectImpl
     inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of ScopeObject. */
-    inline bool isWith()        const { return hasClass(&js::WithClass); }
     inline bool isClonedBlock() const;
     inline bool isStaticBlock() const;
 
@@ -999,7 +996,6 @@ class JSObject : public js::ObjectImpl
     inline js::SetObject &asSet();
     inline js::StaticBlockObject &asStaticBlock();
     inline js::StringObject &asString();
-    inline js::WithObject &asWith();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 

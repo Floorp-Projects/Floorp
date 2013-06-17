@@ -247,8 +247,8 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             return false;
     } else {
         Rooted<JSObject*> normalized(cx, obj);
-        if (normalized->getClass() == &WithClass && !shape->hasDefaultGetter())
-            normalized = &normalized->asWith().object();
+        if (normalized->getClass() == &WithObject::class_ && !shape->hasDefaultGetter())
+            normalized = &normalized->as<WithObject>().object();
         if (!NativeGet(cx, normalized, obj2, shape, 0, vp))
             return false;
     }

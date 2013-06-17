@@ -1716,7 +1716,7 @@ BytecodeEmitter::needsImplicitThis()
     } else {
         JSObject *scope = sc->asGlobalSharedContext()->scopeChain();
         while (scope) {
-            if (scope->isWith())
+            if (scope->is<WithObject>())
                 return true;
             scope = scope->enclosingScope();
         }
