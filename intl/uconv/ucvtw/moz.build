@@ -18,3 +18,5 @@ CPP_SOURCES += [
     'nsUnicodeToHKSCS.cpp',
 ]
 
+LIBRARY_NAME = 'ucvtw_s'
+

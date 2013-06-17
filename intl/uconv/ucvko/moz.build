@@ -18,3 +18,5 @@ CPP_SOURCES += [
     'nsUnicodeToJohab.cpp',
 ]
 
+LIBRARY_NAME = 'ucvko_s'
+

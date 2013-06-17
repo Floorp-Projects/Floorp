@@ -12,3 +12,5 @@ CPP_SOURCES += [
     'mozJSSubScriptLoader.cpp',
 ]
 
+LIBRARY_NAME = 'jsloader_s'
+

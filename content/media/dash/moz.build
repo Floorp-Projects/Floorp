@@ -19,3 +19,5 @@ CPP_SOURCES += [
     'DASHRepDecoder.cpp',
 ]
 
+LIBRARY_NAME = 'gkcondash_s'
+

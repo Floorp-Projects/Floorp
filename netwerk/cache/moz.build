@@ -42,3 +42,5 @@ CPP_SOURCES += [
     'nsMemoryCacheDevice.cpp',
 ]
 
+LIBRARY_NAME = 'nkcache_s'
+

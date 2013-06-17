@@ -19,3 +19,5 @@ EXPORTS += [
     'nsCocoaUtils.h',
 ]
 
+LIBRARY_NAME = 'widget_mac'
+

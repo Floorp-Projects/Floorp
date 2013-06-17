@@ -32,3 +32,6 @@ if CONFIG['ENABLE_EDITOR_API_LOG']:
     CPP_SOURCES += [
         'nsEditorTxnLog.cpp',
     ]
+
+LIBRARY_NAME = 'htmleditor_s'
+

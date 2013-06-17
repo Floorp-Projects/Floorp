@@ -200,7 +200,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'SkThread_pthread.cpp',
     ]
 
-
 # Separate 'if' from above, since the else below applies to all != 'android'
 # toolkits.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -474,4 +473,6 @@ CPP_SOURCES += [
     'SkWriter32.cpp',
     'SkXfermode.cpp',
 ]
+
+LIBRARY_NAME = 'skia'
 

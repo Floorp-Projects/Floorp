@@ -16,3 +16,5 @@ CPP_SOURCES += [
     'main.cpp',
 ]
 
+LIBRARY_NAME = 'libEGL'
+

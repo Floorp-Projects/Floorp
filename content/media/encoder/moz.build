@@ -20,3 +20,6 @@ CPP_SOURCES += [
 if CONFIG['MOZ_OPUS']:
     EXPORTS += ['OpusTrackEncoder.h']
     CPP_SOURCES += ['OpusTrackEncoder.cpp']
+
+LIBRARY_NAME = 'gkconencoder_s'
+

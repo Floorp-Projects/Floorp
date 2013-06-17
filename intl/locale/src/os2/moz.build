@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'nsOS2Locale.cpp',
 ]
 
+LIBRARY_NAME = 'platlocale_s'
+

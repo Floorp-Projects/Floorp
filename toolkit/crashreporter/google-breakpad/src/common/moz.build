@@ -60,3 +60,6 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     CMMSRCS += [
         'mac/dump_syms.mm',
     ]
+
+LIBRARY_NAME = 'breakpad_common_s'
+
