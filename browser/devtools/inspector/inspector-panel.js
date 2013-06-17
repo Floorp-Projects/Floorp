@@ -635,10 +635,7 @@ InspectorPanel.prototype = {
     if (!this.selection.isNode()) {
       return;
     }
-    let toCopy = this.selection.node.innerHTML;
-    if (toCopy) {
-      clipboardHelper.copyString(toCopy);
-    }
+    this._copyLongStr(this.walker.innerHTML(this.selection.nodeFront));
   },
 
   /**
@@ -649,10 +646,17 @@ InspectorPanel.prototype = {
     if (!this.selection.isNode()) {
       return;
     }
-    let toCopy = this.selection.node.outerHTML;
-    if (toCopy) {
-      clipboardHelper.copyString(toCopy);
-    }
+
+    this._copyLongStr(this.walker.outerHTML(this.selection.nodeFront));
+  },
+
+  _copyLongStr: function(promise) {
+    return promise.then(longstr => {
+      return longstr.string().then(toCopy => {
+        longstr.release().then(null, console.error);
+        clipboardHelper.copyString(toCopy);
+      });
+    }).then(null, console.error);
   },
 
   /**
