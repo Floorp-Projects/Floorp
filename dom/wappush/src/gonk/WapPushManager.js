@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyGetter(this, "SL", function () {
   return SL;
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 /**
  * Helpers for WAP PDU processing.
  */
@@ -98,7 +102,10 @@ this.WapPushManager = {
       };
     }
 
-    // TODO: Bug 853782 - Notify receiving of WAP Push messages
+    gSystemMessenger.broadcastMessage("wappush-received", {
+      contentType:    msg.contentType,
+      content:        msg.content
+    });
   },
 
   /**
