@@ -294,6 +294,8 @@ class RegExpObject : public JSObject
   public:
     static const unsigned RESERVED_SLOTS = 6;
 
+    static Class class_;
+
     /*
      * Note: The regexp statics flags are OR'd into the provided flags,
      * so this function is really meant for object creation during code

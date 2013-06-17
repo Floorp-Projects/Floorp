@@ -216,7 +216,6 @@ extern Class MathClass;
 extern Class NumberClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
-extern Class RegExpClass;
 extern Class RegExpStaticsClass;
 extern Class SetIteratorClass;
 extern Class ScriptSourceClass;
@@ -243,7 +242,6 @@ class SetIteratorObject;
 class StaticBlockObject;
 class StrictArgumentsObject;
 class StringObject;
-class RegExpObject;
 class WithObject;
 
 }  /* namespace js */
@@ -978,7 +976,6 @@ class JSObject : public js::ObjectImpl
     inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
-    inline bool isRegExp()           const { return hasClass(&js::RegExpClass); }
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
     inline bool isScope()            const { return isCall() || isDeclEnv() || isNestedScope(); }
     inline bool isScriptSource()     const { return hasClass(&js::ScriptSourceClass); }
@@ -1017,7 +1014,6 @@ class JSObject : public js::ObjectImpl
     inline js::MapObject &asMap();
     inline js::NestedScopeObject &asNestedScope();
     inline js::NumberObject &asNumber();
-    inline js::RegExpObject &asRegExp();
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
     inline js::SetIteratorObject &asSetIterator();

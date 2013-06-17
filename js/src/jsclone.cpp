@@ -681,8 +681,8 @@ JSStructuredCloneWriter::startWrite(const Value &v)
         if (backref)
             return true;
 
-        if (obj->isRegExp()) {
-            RegExpObject &reobj = obj->asRegExp();
+        if (obj->is<RegExpObject>()) {
+            RegExpObject &reobj = obj->as<RegExpObject>();
             return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
                    writeString(SCTAG_STRING, reobj.getSource());
         } else if (obj->isDate()) {
