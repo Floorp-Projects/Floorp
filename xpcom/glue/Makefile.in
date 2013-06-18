@@ -30,7 +30,6 @@ SDK_HEADERS = \
 		nsCategoryCache.h \
 		nsClassHashtable.h \
 		nsComponentManagerUtils.h \
-		nsCycleCollectionJSRuntime.h \
 		nsCycleCollectionParticipant.h \
 		nsCycleCollectorUtils.h \
 		nsDataHashtable.h \

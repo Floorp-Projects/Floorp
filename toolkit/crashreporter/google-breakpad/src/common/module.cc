@@ -261,10 +261,10 @@ std::ostream& operator<<(std::ostream& stream, const Module::Expr& expr) {
   assert(!expr.isExprInvalid());
   switch (expr.how_) {
     case Module::kExprSimple:
-      stream << expr.ident_ << " " << expr.offset_ << " +";
+      stream << FromUniqueString(expr.ident_) << " " << expr.offset_ << " +";
       break;
     case Module::kExprSimpleMem:
-      stream << expr.ident_ << " " << expr.offset_ << " + ^";
+      stream << FromUniqueString(expr.ident_) << " " << expr.offset_ << " + ^";
       break;
     case Module::kExprPostfix:
       stream << expr.postfix_; break;
