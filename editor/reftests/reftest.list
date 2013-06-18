@@ -108,3 +108,20 @@ needs-focus != 824080-4.html 824080-5.html
 needs-focus == 824080-6.html 824080-6-ref.html
 needs-focus == 824080-7.html 824080-7-ref.html
 needs-focus != 824080-6.html 824080-7.html
+# Bug 674927: copy spellcheck-textarea tests to contenteditable
+== spellcheck-contenteditable-attr.html spellcheck-contenteditable-nofocus-ref.html
+fails-if(Android) != spellcheck-contenteditable-attr.html spellcheck-contenteditable-ref.html
+needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-ref.html
+needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-ref.html
+== spellcheck-contenteditable-nofocus.html spellcheck-contenteditable-disabled-ref.html
+fails-if(!Android) == spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled-ref.html
+fails-if(!Android) == spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial-ref.html
+== spellcheck-contenteditable-attr-inherit.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-attr-dynamic.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-attr-dynamic-inherit.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-property-dynamic.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-property-dynamic-inherit.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-attr-dynamic-override.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-attr-dynamic-override-inherit.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-property-dynamic-override.html spellcheck-contenteditable-disabled-ref.html
+== spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-disabled-ref.html

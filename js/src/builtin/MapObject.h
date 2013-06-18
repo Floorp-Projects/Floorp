@@ -7,9 +7,6 @@
 #ifndef MapObject_h__
 #define MapObject_h__
 
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/GuardObjects.h"
-
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"

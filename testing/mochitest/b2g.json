@@ -75,6 +75,7 @@
     "content/html/content/test/test_fullscreen-api.html":"",
     "content/html/content/test/test_iframe_sandbox_inheritance.html":"",
     "content/html/content/test/test_iframe_sandbox_navigation.html":"",
+    "content/html/content/test/test_iframe_sandbox_navigation2.html":"multiple concurrent window.open()s fail on B2G",
     "content/html/content/test/test_formSubmission.html":"",
     "content/html/content/test/test_iframe_sandbox_plugins.html":"",
     "content/html/content/test/test_object_plugin_nav.html":"",

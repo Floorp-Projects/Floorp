@@ -86,6 +86,8 @@ static const char *sExtensionNames[] = {
     "GL_OES_EGL_image_external",
     "GL_EXT_packed_depth_stencil",
     "GL_OES_element_index_uint",
+    "GL_OES_vertex_array_object",
+    "GL_ARB_vertex_array_object",
     nullptr
 };
 
@@ -545,6 +547,26 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 MarkExtensionUnsupported(OES_EGL_image);
                 mSymbols.fEGLImageTargetTexture2D = nullptr;
                 mSymbols.fEGLImageTargetRenderbufferStorage = nullptr;
+            }
+        }
+
+        if (IsExtensionSupported(OES_vertex_array_object)) {
+            SymLoadStruct vaoSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArray", "IsVertexArrayOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArrays", "GenVertexArraysOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArrays", "BindVertexArrayOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArrays", "DeleteVertexArraysOES", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(&vaoSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports Vertex Array Object without supplying its functions.");
+
+                MarkExtensionUnsupported(OES_vertex_array_object);
+                mSymbols.fIsVertexArray = nullptr;
+                mSymbols.fGenVertexArrays = nullptr;
+                mSymbols.fBindVertexArray = nullptr;
+                mSymbols.fDeleteVertexArrays = nullptr;
             }
         }
 

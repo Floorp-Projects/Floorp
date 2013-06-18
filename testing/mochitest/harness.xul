@@ -3,9 +3,110 @@
 <?xml-stylesheet href="chrome://mochikit/content/static/harness.css" 
                  type="text/css"?>
 
-<?xul-overlay href="chrome://mochikit/content/harness-overlay.xul"?>
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Chrome Test Harness"
         directory="chrome">
+
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/specialpowersAPI.js"/>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js"/>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/ChromePowers.js"/>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js" />
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
+  <script type="application/javascript;version=1.7"><![CDATA[
+
+if (Cc === undefined) {
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+}
+
+function loadTests()
+{
+  window.removeEventListener("load", loadTests, false);
+  links = getTestList();
+ 
+  // load server.js in so we can share template functions
+  var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                       getService(Ci.mozIJSSubScriptLoader);
+  var srvScope = {};
+  scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
+                             srvScope);
+
+  // generate our test list
+  srvScope.makeTags();
+  var tableContent = srvScope.linksToTableRows(links, 0);
+
+  function populate() {
+    document.getElementById("test-table").innerHTML += tableContent;
+  }
+  gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
+  populate();
+
+  hookup();
+}
+
+    window.addEventListener("load", loadTests, false);
+  ]]>
+  </script>
+
+  <vbox>   
+    <button label="Run Chrome Tests" id="runtests" flex="1"/>
+
+    <body xmlns="http://www.w3.org/1999/xhtml" id="xulharness">
+      <!--TODO: this should be separated into a file that both this file and server.js uses-->
+      <div class="container">
+        <p style="float:right;">
+          <small>Based on the MochiKit unit tests.</small>
+        </p>
+        <div class="status">
+          <h1 id="indicator">Status</h1>
+          <h2 id="pass">Passed: <span id="pass-count">0</span></h2>
+          <h2 id="fail">Failed: <span id="fail-count">0</span></h2>
+          <h2 id="fail">Todo: <span id="todo-count">0</span></h2>
+        </div>
+        <div class="clear"></div>
+        <div id="current-test">
+          <b>Currently Executing: <span id="current-test-path">_</span></b>
+        </div>
+        <div class="clear"></div>
+        <div class="frameholder">
+          <iframe type="content" scrolling="no" id="testframe" width="550" height="350"></iframe>
+        </div>
+        <div class="clear"></div>
+        <div class="toggle">
+          <a href="#" id="toggleNonTests">Show Non-Tests</a>
+          <br />
+        </div>
+        <div id="wrapper">
+          <table cellpadding="0" cellspacing="0">
+          <!-- tbody needed to avoid bug 494546 causing performance problems -->
+            <tbody id="test-table">
+              <tr>
+                <td>Passed</td>
+                <td>Failed</td>
+                <td>Todo</td>
+                <td>Test Files</td>
+              </tr>
+            </tbody>
+          </table>
+          <br/>
+          <table cellpadding="0" cellspacing="0" border="1" bordercolor="red">
+          <!-- tbody needed to avoid bug 494546 causing performance problems -->
+            <tbody id="fail-table">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </body>
+  </vbox>
 </window>

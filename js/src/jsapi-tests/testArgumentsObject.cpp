@@ -30,7 +30,7 @@ static const char STRICT_TWO[] =
 static const char STRICT_THREE[] =
     "function f() { 'use strict'; return arguments; }";
 
-static const char *CALL_CODES[] =
+static const char * const CALL_CODES[] =
     { "f()", "f(0)", "f(0, 1)", "f(0, 1, 2)", "f(0, 1, 2, 3)", "f(0, 1, 2, 3, 4)" };
 
 static const size_t MAX_ELEMS = 6;

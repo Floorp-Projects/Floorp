@@ -25,6 +25,7 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "nsFrameManager.h"
+#include "nsINetworkLinkService.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -518,6 +519,33 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::CALL_OBSERVER:
+        CallObserver(curEvent->Characters(), curEvent->CharactersExtra(), curEvent->Data());
+        break;
+
+    case AndroidGeckoEvent::LOW_MEMORY:
+        // TODO hook in memory-reduction stuff for different levels here
+        if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
+            nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+            if (os) {
+                os->NotifyObservers(nullptr,
+                                    "memory-pressure",
+                                    NS_LITERAL_STRING("low-memory").get());
+            }
+        }
+        break;
+
+    case AndroidGeckoEvent::NETWORK_LINK_CHANGE:
+    {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os) {
+            os->NotifyObservers(nullptr,
+                                NS_NETWORK_LINK_TOPIC,
+                                nsString(curEvent->Characters()).get());
+        }
+        break;
+    }
+
     case AndroidGeckoEvent::NOOP:
         break;
 
@@ -708,29 +736,6 @@ nsAppShell::AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver)
     return NS_OK;
 }
 
-/**
- * The XPCOM event that will call the observer on the main thread.
- */
-class ObserverCaller : public nsRunnable {
-public:
-    ObserverCaller(nsIObserver *aObserver, const char *aTopic, const PRUnichar *aData) :
-        mObserver(aObserver), mTopic(aTopic), mData(aData) {
-        NS_ASSERTION(aObserver != nullptr, "ObserverCaller: aObserver is null!");
-    }
-
-    NS_IMETHOD Run() {
-        ALOG("ObserverCaller::Run: observer = %p, topic = '%s')",
-             (nsIObserver*)mObserver, mTopic.get());
-        mObserver->Observe(nullptr, mTopic.get(), mData.get());
-        return NS_OK;
-    }
-
-private:
-    nsCOMPtr<nsIObserver> mObserver;
-    nsCString mTopic;
-    nsString mData;
-};
-
 void
 nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData)
 {
@@ -745,56 +750,14 @@ nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic,
     const NS_ConvertUTF16toUTF8 sTopic(aTopic);
     const nsPromiseFlatString& sData = PromiseFlatString(aData);
 
-    if (NS_IsMainThread()) {
-        // This branch will unlikely be hit, have it just in case
-        observer->Observe(nullptr, sTopic.get(), sData.get());
-    } else {
-        // Java is not running on main thread, so we have to use NS_DispatchToMainThread
-        nsCOMPtr<nsIRunnable> observerCaller = new ObserverCaller(observer, sTopic.get(), sData.get());
-        nsresult rv = NS_DispatchToMainThread(observerCaller);
-        ALOG("NS_DispatchToMainThread result: %d", rv);
-        unused << rv;
-    }
+    MOZ_ASSERT(NS_IsMainThread());
+    observer->Observe(nullptr, sTopic.get(), sData.get());
 }
 
 void
 nsAppShell::RemoveObserver(const nsAString &aObserverKey)
 {
     mObserversHash.Remove(aObserverKey);
-}
-
-// NotifyObservers support.  NotifyObservers only works on main thread.
-
-class NotifyObserversCaller : public nsRunnable {
-public:
-    NotifyObserversCaller(nsISupports *aSupports,
-                          const char *aTopic, const PRUnichar *aData) :
-        mSupports(aSupports), mTopic(aTopic), mData(aData) {
-    }
-
-    NS_IMETHOD Run() {
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os)
-            os->NotifyObservers(mSupports, mTopic.get(), mData.get());
-
-        return NS_OK;
-    }
-
-private:
-    nsCOMPtr<nsISupports> mSupports;
-    nsCString mTopic;
-    nsString mData;
-};
-
-void
-nsAppShell::NotifyObservers(nsISupports *aSupports,
-                            const char *aTopic,
-                            const PRUnichar *aData)
-{
-    // This isn't main thread, so post this to main thread
-    nsCOMPtr<nsIRunnable> caller =
-        new NotifyObserversCaller(aSupports, aTopic, aData);
-    NS_DispatchToMainThread(caller);
 }
 
 // Used by IPC code

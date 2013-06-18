@@ -147,7 +147,9 @@ def parse_versions(*args):
     return retval
 
 def version_tag(directory, version):
-    return '%s-%s' % (directory, version)
+    """return a version tag string given the directory name of the package"""
+    package = current_package_info[directory]['name']
+    return '%s-%s' % (package, version)
 
 def setup(**kwargs):
     """monkey-patch function for setuptools.setup"""
@@ -321,7 +323,7 @@ def main(args=sys.argv[1:]):
 
             tag = version_tag(directory, version)
             if tag not in _tags:
-                error("Tag for '%s' -- %s -- not in tags")
+                error("Tag for '%s' -- %s -- not in tags:\n%s" % (directory, version, '\n'.join(sorted(_tags))))
 
         # ensure that the versions to mirror are compatible with what is in m-c
         old_package_info = current_package_info.copy()
@@ -376,7 +378,8 @@ def main(args=sys.argv[1:]):
 
     finally:
         # cleanup
-        revert(hg_root, untracked)
+        if options.check:
+            revert(hg_root, untracked)
         shutil.rmtree(tempdir)
 
     print "Diff at %s" % output

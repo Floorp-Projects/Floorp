@@ -12,6 +12,8 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
+#include "jsiter.h"
+
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
 #include "vm/Interpreter.h"
@@ -29,15 +31,6 @@ NewObjectCache::staticAsserts()
 {
     JS_STATIC_ASSERT(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
     JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
-}
-
-inline void
-NewObjectCache::clearNurseryObjects(JSRuntime *rt)
-{
-    for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
-        if (IsInsideNursery(rt, entries[i].key))
-            mozilla::PodZero(&entries[i]);
-    }
 }
 
 inline bool

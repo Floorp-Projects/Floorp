@@ -665,7 +665,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             Condition testCond = testMagic(Equal, val);
             j(InvertCondition(testCond), &notmagic);
             // Test magic value
-            branch32(NotEqual, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
+            branch32(Equal, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
             bind(&notmagic);
         } else {
             Condition testCond = testMagic(NotEqual, val);
