@@ -2058,7 +2058,6 @@ nsScriptSecurityManager::old_doGetObjectPrincipal(JS::Handle<JSObject*> aObj,
     JSContext* cx = nsXPConnect::XPConnect()->GetCurrentJSContext();
     JS::RootedObject obj(cx, aObj);
     JS::RootedObject origObj(cx, obj);
-    js::Class *jsClass = js::GetObjectClass(obj);
 
     // A common case seen in this code is that we enter this function
     // with obj being a Function object, whose parent is a Call
@@ -2067,28 +2066,26 @@ nsScriptSecurityManager::old_doGetObjectPrincipal(JS::Handle<JSObject*> aObj,
     // avoid wasting time checking properties of their classes etc in
     // the loop.
 
-    if (jsClass == &js::FunctionClass) {
+    if (js::IsFunctionObject(obj)) {
         obj = js::GetObjectParent(obj);
 
         if (!obj)
             return nullptr;
-
-        jsClass = js::GetObjectClass(obj);
 
         if (js::IsCallObject(obj)) {
             obj = js::GetObjectParentMaybeScope(obj);
 
             if (!obj)
                 return nullptr;
-
-            jsClass = js::GetObjectClass(obj);
         }
     }
+
+    js::Class *jsClass = js::GetObjectClass(obj);
 
     do {
         // Note: jsClass is set before this loop, and also at the
         // *end* of this loop.
-        
+
         if (IS_WN_CLASS(jsClass)) {
             result = nsXPConnect::XPConnect()->GetPrincipal(obj,
                                                             aAllowShortCircuit);

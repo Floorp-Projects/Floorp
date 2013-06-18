@@ -940,8 +940,8 @@ UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
 inline JSFunction *
 ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO_CONSTRUCT)
 {
-    if (v.isObject() && v.toObject().isFunction())
-        return v.toObject().toFunction();
+    if (v.isObject() && v.toObject().is<JSFunction>())
+        return &v.toObject().as<JSFunction>();
 
     ReportIsNotFunction(cx, v, -1, construct);
     return NULL;
@@ -978,8 +978,8 @@ class FastInvokeGuard
     }
 
     void initFunction(const Value &fval) {
-        if (fval.isObject() && fval.toObject().isFunction()) {
-            JSFunction *fun = fval.toObject().toFunction();
+        if (fval.isObject() && fval.toObject().is<JSFunction>()) {
+            JSFunction *fun = &fval.toObject().as<JSFunction>();
             if (fun->isInterpreted())
                 fun_ = fun;
         }

@@ -907,7 +907,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
                               InitialFrameFlags initial, InvokeFrameGuard *ifg)
 {
     JSObject &callee = args.callee();
-    JSFunction *fun = callee.toFunction();
+    JSFunction *fun = &callee.as<JSFunction>();
     if (!pushInvokeFrame(cx, REPORT_ERROR, args, fun, initial, ifg))
         return false;
     return true;

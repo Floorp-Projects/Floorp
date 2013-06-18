@@ -452,7 +452,7 @@ bool
 js::ForkJoin(JSContext *cx, CallArgs &args)
 {
     JS_ASSERT(args[0].isObject()); // else the self-hosted code is wrong
-    JS_ASSERT(args[0].toObject().isFunction());
+    JS_ASSERT(args[0].toObject().is<JSFunction>());
 
     ForkJoinMode mode = ForkJoinModeNormal;
     if (args.length() > 1) {
@@ -629,10 +629,10 @@ js::ParallelDo::enqueueInitialScript(ExecutionStatus *status)
     // RedLight: fatal error or fell back to sequential
 
     // The kernel should be a self-hosted function.
-    if (!fun_->isFunction())
+    if (!fun_->is<JSFunction>())
         return sequentialExecution(true, status);
 
-    RootedFunction callee(cx_, fun_->toFunction());
+    RootedFunction callee(cx_, &fun_->as<JSFunction>());
 
     if (!callee->isInterpreted() || !callee->isSelfHostedBuiltin())
         return sequentialExecution(true, status);
@@ -1213,7 +1213,7 @@ js::ParallelDo::recoverFromBailout(ExecutionStatus *status)
 
     // After any bailout, we always scan over callee list of main
     // function, if nothing else
-    RootedScript mainScript(cx_, fun_->toFunction()->nonLazyScript());
+    RootedScript mainScript(cx_, fun_->as<JSFunction>().nonLazyScript());
     if (!addToWorklist(mainScript))
         return fatalError(status);
 
@@ -1462,8 +1462,8 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
     JS_ASSERT(slice.bailoutRecord->topScript == NULL);
 
     RootedObject fun(perThread, fun_);
-    JS_ASSERT(fun->isFunction());
-    RootedFunction callee(perThread, fun->toFunction());
+    JS_ASSERT(fun->is<JSFunction>());
+    RootedFunction callee(perThread, &fun->as<JSFunction>());
     if (!callee->nonLazyScript()->hasParallelIonScript()) {
         // Sometimes, particularly with GCZeal, the parallel ion
         // script can be collected between starting the parallel

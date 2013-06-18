@@ -200,11 +200,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Create |Function.prototype| next so we can create other functions. */
     RootedFunction functionProto(cx);
     {
-        JSObject *functionProto_ = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, self,
-                                                           SingletonObject);
+        JSObject *functionProto_ = NewObjectWithGivenProto(cx, &JSFunction::class_,
+                                                           objectProto, self, SingletonObject);
         if (!functionProto_)
             return NULL;
-        functionProto = functionProto_->toFunction();
+        functionProto = &functionProto_->as<JSFunction>();
 
         /*
          * Bizarrely, |Function.prototype| must be an interpreted function, so
@@ -260,15 +260,15 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
          * inference to have unknown properties, to simplify handling of e.g.
          * CloneFunctionObject.
          */
-        if (!setNewTypeUnknown(cx, &FunctionClass, functionProto))
+        if (!setNewTypeUnknown(cx, &JSFunction::class_, functionProto))
             return NULL;
     }
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
     RootedFunction objectCtor(cx);
     {
-        RootedObject ctor(cx, NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self,
-                                                      SingletonObject));
+        RootedObject ctor(cx, NewObjectWithGivenProto(cx, &JSFunction::class_, functionProto,
+                                                      self, SingletonObject));
         if (!ctor)
             return NULL;
         RootedAtom objectAtom(cx, cx->names().Object);
@@ -288,8 +288,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     RootedFunction functionCtor(cx);
     {
         // Note that ctor is rooted purely for the JS_ASSERT at the end
-        RootedObject ctor(cx, NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self,
-                                                      SingletonObject));
+        RootedObject ctor(cx, NewObjectWithGivenProto(cx, &JSFunction::class_, functionProto,
+                                                      self, SingletonObject));
         if (!ctor)
             return NULL;
         RootedAtom functionAtom(cx, cx->names().Function);
@@ -509,7 +509,7 @@ static JSObject *
 CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &global)
 {
     JS_ASSERT(clasp != &ObjectClass);
-    JS_ASSERT(clasp != &FunctionClass);
+    JS_ASSERT(clasp != &JSFunction::class_);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
     if (!blankProto)

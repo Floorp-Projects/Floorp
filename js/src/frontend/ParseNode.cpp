@@ -751,7 +751,7 @@ ObjectBox::ObjectBox(JSObject *object, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(!object->isFunction());
+    JS_ASSERT(!object->is<JSFunction>());
 }
 
 ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
@@ -759,7 +759,7 @@ ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(object->isFunction());
+    JS_ASSERT(object->is<JSFunction>());
     JS_ASSERT(asFunctionBox()->function() == function);
 }
 

@@ -1440,8 +1440,8 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
     // Unwrap bound functions.
     while (fun->isBoundFunction()) {
         JSObject *target = fun->getBoundFunctionTarget();
-        if (target && target->isFunction())
-            fun = target->toFunction();
+        if (target && target->is<JSFunction>())
+            fun = &target->as<JSFunction>();
         else
             break;
     }
@@ -1494,7 +1494,7 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
         jsval v = argv[0];
         unsigned intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
-            JS_GetClass(&v.toObject()) == Jsvalify(&FunctionClass)) {
+            JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_)) {
             script = ValueToScript(cx, v);
             if (!script)
                 return false;
@@ -1650,7 +1650,7 @@ LineToPC(JSContext *cx, unsigned argc, jsval *vp)
     script = GetTopScript(cx);
     jsval v = args[0];
     if (!JSVAL_IS_PRIMITIVE(v) &&
-        JS_GetClass(&v.toObject()) == Jsvalify(&FunctionClass))
+        JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_))
     {
         script = ValueToScript(cx, v);
         if (!script)
@@ -1894,9 +1894,9 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
         ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
-            if (obj->isFunction()) {
+            if (obj->is<JSFunction>()) {
                 Sprint(sp, "\n");
-                RootedFunction fun(cx, obj->toFunction());
+                RootedFunction fun(cx, &obj->as<JSFunction>());
                 if (fun->isInterpreted()) {
                     RootedScript script(cx, fun->getOrCreateScript(cx));
                     if (!script || !DisassembleScript(cx, script, fun, lines, recursive, sp))
@@ -2322,7 +2322,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
             ac.construct(cx, obj);
             args[0] = ObjectValue(*obj);
         }
-        if (obj && obj->isFunction()) {
+        if (obj && obj->is<JSFunction>()) {
             funobj = obj;
         } else {
             JSFunction *fun = JS_ValueToFunction(cx, args[0]);
@@ -2332,7 +2332,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
     if (funobj->compartment() != cx->compartment()) {
-        JSFunction *fun = funobj->toFunction();
+        JSFunction *fun = &funobj->as<JSFunction>();
         if (fun->hasScript() && fun->nonLazyScript()->compileAndGo) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
@@ -3062,7 +3062,7 @@ Timeout(JSContext *cx, unsigned argc, jsval *vp)
 
     if (argc > 1) {
         RootedValue value(cx, JS_ARGV(cx, vp)[1]);
-        if (!value.isObject() || !value.toObject().isFunction()) {
+        if (!value.isObject() || !value.toObject().is<JSFunction>()) {
             JS_ReportError(cx, "Second argument must be a timeout function");
             return false;
         }
@@ -3330,11 +3330,11 @@ DecompileFunctionSomehow(JSContext *cx, unsigned argc, Value *vp,
                          JSString *(*decompiler)(JSContext *, JSFunction *, unsigned))
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1 || !args[0].isObject() || !args[0].toObject().isFunction()) {
+    if (args.length() < 1 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
-    JSString *result = decompiler(cx, args[0].toObject().toFunction(), 0);
+    JSString *result = decompiler(cx, &args[0].toObject().as<JSFunction>(), 0);
     if (!result)
         return false;
     args.rval().setString(result);

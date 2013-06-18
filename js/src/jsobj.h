@@ -645,15 +645,6 @@ class JSObject : public js::ObjectImpl
     inline const js::Value &getDateUTCTime() const;
     inline void setDateUTCTime(const js::Value &pthis);
 
-    /*
-     * Function-specific getters and setters.
-     */
-
-    friend class JSFunction;
-
-    inline JSFunction *toFunction();
-    inline const JSFunction *toFunction() const;
-
   public:
     /*
      * Iterator-specific getters and setters.
@@ -938,7 +929,6 @@ class JSObject : public js::ObjectImpl
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isError()            const { return hasClass(&js::ErrorClass); }
-    inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
