@@ -20,6 +20,8 @@ HOST_LIBRARY_NAME = 'host_bar'
 LIBRARY_NAME = 'lib_name'
 LIBS = ['bar.lib', 'foo.lib']
 
+SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
+
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']

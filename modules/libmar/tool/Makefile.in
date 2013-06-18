@@ -40,9 +40,6 @@ HOST_CFLAGS += \
   $(DEFINES) \
   $(NULL)
 
-DISABLED_HOST_CSRCS = \
-  mar.c \
-  $(NULL)
 DISABLED_CSRCS = $(HOST_CSRCS)
 
 HOST_LIBS = $(DIST)/host/lib/$(LIB_PREFIX)hostmar.$(LIB_SUFFIX)

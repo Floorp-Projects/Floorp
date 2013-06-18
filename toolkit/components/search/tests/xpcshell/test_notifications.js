@@ -40,8 +40,7 @@ function search_observer(subject, topic, data) {
       let retrievedEngine = Services.search.getEngineByName("Test search engine");
       do_check_eq(engine, retrievedEngine);
       Services.search.defaultEngine = engine;
-      // XXX bug 493051
-      // Services.search.currentEngine = engine;
+      Services.search.currentEngine = engine;
       do_execute_soon(function () {
         Services.search.removeEngine(engine);
       });

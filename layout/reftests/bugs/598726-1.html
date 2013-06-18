@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html class="reftest-wait reftest-snapshot-all">
   <head>
     <style type="text/css">
       input {
@@ -31,7 +31,7 @@
             }
             i.removeEventListener("transitionend", arguments.callee, true);
             i.getClientRects();
-            document.documentElement.removeAttribute("class");
+            document.documentElement.setAttribute("class", "reftest-snapshot-all");
           }, true);
           i.blur();
           i.getClientRects();
