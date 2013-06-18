@@ -17,9 +17,6 @@ FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-# This is going to be a framework named "XUL", not an ordinary library named
-# "libxul.dylib"
-LIBRARY_NAME=XUL
 # Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
 # setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
 # as-is so that dependencies of the form -ltracemalloc still work.
