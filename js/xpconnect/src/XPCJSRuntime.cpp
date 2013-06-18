@@ -1220,7 +1220,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
         // The callback is only used for detecting long running scripts, and triggering the
         // callback from off the main thread can be expensive.
         if (self->IsRuntimeActive() && self->TimeSinceLastRuntimeStateChange() >= PRTime(PR_USEC_PER_SEC))
-            JS_TriggerOperationCallback(self->mJSRuntime);
+            JS_TriggerOperationCallback(self->Runtime());
     }
 
     /* Wake up the main thread waiting for the watchdog to terminate. */
@@ -1367,9 +1367,9 @@ XPCJSRuntime::~XPCJSRuntime()
 {
     MOZ_ASSERT(!mReleaseRunnable);
 
-    JS::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(Runtime(), mPrevGCSliceCallback);
 
-    xpc_DelocalizeRuntime(mJSRuntime);
+    xpc_DelocalizeRuntime(Runtime());
 
     if (mWatchdogWakeup) {
         // If the watchdog thread is running, tell it to terminate waking it
@@ -1411,7 +1411,7 @@ XPCJSRuntime::~XPCJSRuntime()
         if (count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);
 #endif
-        mWrappedJSMap->ShutdownMarker(mJSRuntime);
+        mWrappedJSMap->ShutdownMarker(Runtime());
         delete mWrappedJSMap;
     }
 
@@ -1501,13 +1501,7 @@ XPCJSRuntime::~XPCJSRuntime()
         delete mDetachedWrappedNativeProtoMap;
     }
 
-    if (mJSRuntime) {
-        JS_DestroyRuntime(mJSRuntime);
-        JS_ShutDown();
-#ifdef DEBUG_shaver_off
-        fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mJSRuntime);
-#endif
-    }
+    JS_ShutDown();
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
     if (PseudoStack *stack = mozilla_get_pseudo_stack())
@@ -2797,7 +2791,7 @@ SourceHook(JSContext *cx, JS::Handle<JSScript*> script, jschar **src,
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
-   : mJSRuntime(nullptr),
+   : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
    mJSContextStack(new XPCJSContextStack()),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
@@ -2843,9 +2837,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
 
-    mJSRuntime = JS_NewRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS); // pref ?
-    if (!mJSRuntime)
-        NS_RUNTIMEABORT("JS_NewRuntime failed.");
+    MOZ_ASSERT(Runtime());
+    JSRuntime* runtime = Runtime();
 
     // Unconstrain the runtime's threshold on nominal heap size, to avoid
     // triggering GC too often if operating continuously near an arbitrary
@@ -2853,44 +2846,44 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // This leaves the maximum-JS_malloc-bytes threshold still in effect
     // to cause period, and we hope hygienic, last-ditch GCs from within
     // the GC's allocator.
-    JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
+    JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
 #if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
     // Bug 803182: account for the 4x difference in the size of js::Interpret
     // between optimized and debug builds. Also, ASan requires more stack space
     // due to redzones
-    JS_SetNativeStackQuota(mJSRuntime, 2 * 128 * sizeof(size_t) * 1024);
+    JS_SetNativeStackQuota(runtime, 2 * 128 * sizeof(size_t) * 1024);
 #elif defined(XP_WIN)
     // 1MB is the default stack size on Windows
-    JS_SetNativeStackQuota(mJSRuntime, 900 * 1024);
+    JS_SetNativeStackQuota(runtime, 900 * 1024);
 #elif defined(XP_MACOSX) || defined(DARWIN)
     // 8MB is the default stack size on MacOS
-    JS_SetNativeStackQuota(mJSRuntime, 7 * 1024 * 1024);
+    JS_SetNativeStackQuota(runtime, 7 * 1024 * 1024);
 #else
-    JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
+    JS_SetNativeStackQuota(runtime, 128 * sizeof(size_t) * 1024);
 #endif
-    JS_SetContextCallback(mJSRuntime, ContextCallback);
-    JS_SetDestroyCompartmentCallback(mJSRuntime, CompartmentDestroyedCallback);
-    JS_SetCompartmentNameCallback(mJSRuntime, CompartmentNameCallback);
-    JS_SetGCCallback(mJSRuntime, GCCallback);
-    mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
-    JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
-    JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
-    JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
-    JS_SetWrapObjectCallbacks(mJSRuntime,
+    JS_SetContextCallback(runtime, ContextCallback);
+    JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
+    JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
+    JS_SetGCCallback(runtime, GCCallback);
+    mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
+    JS_SetFinalizeCallback(runtime, FinalizeCallback);
+    JS_SetExtraGCRootsTracer(runtime, TraceBlackJS, this);
+    JS_SetGrayGCRootsTracer(runtime, TraceGrayJS, this);
+    JS_SetWrapObjectCallbacks(runtime,
                               xpc::WrapperFactory::Rewrap,
                               xpc::WrapperFactory::WrapForSameCompartment,
                               xpc::WrapperFactory::PrepareForWrapping);
-    js::SetPreserveWrapperCallback(mJSRuntime, PreserveWrapper);
+    js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
 #ifdef MOZ_CRASHREPORTER
     JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (PseudoStack *stack = mozilla_get_pseudo_stack())
-        stack->sampleRuntime(mJSRuntime);
+        stack->sampleRuntime(runtime);
 #endif
-    JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
-    js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
-    js::SetCTypesActivityCallback(mJSRuntime, CTypesActivityCallback);
+    JS_SetAccumulateTelemetryCallback(runtime, AccumulateTelemetryCallback);
+    js::SetActivityCallback(runtime, ActivityCallback, this);
+    js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for
@@ -2908,12 +2901,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // compileAndGo mode and compiled function bodies (from
     // JS_CompileFunction*). In practice, this means content scripts and event
     // handlers.
-    JS_SetSourceHook(mJSRuntime, SourceHook);
+    JS_SetSourceHook(runtime, SourceHook);
 
     // Set up locale information and callbacks for the newly-created runtime so
     // that the various toLocaleString() methods, localeCompare(), and other
     // internationalization APIs work as desired.
-    if (!xpc_LocalizeRuntime(mJSRuntime))
+    if (!xpc_LocalizeRuntime(runtime))
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
@@ -2926,8 +2919,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
-    if (!JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
-        xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
+    if (!JS_GetGlobalDebugHooks(runtime)->debuggerHandler)
+        xpc_InstallJSDebuggerKeywordHandler(runtime);
 #endif
 
     mWatchdogLock = PR_NewLock();
@@ -3056,7 +3049,7 @@ XPCJSRuntime::DebugDump(int16_t depth)
     depth--;
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
         XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mJSRuntime @ %x", mJSRuntime));
+        XPC_LOG_ALWAYS(("mJSRuntime @ %x", Runtime()));
         XPC_LOG_ALWAYS(("mMapLock @ %x", mMapLock));
 
         XPC_LOG_ALWAYS(("mWrappedJSToReleaseArray @ %x with %d wrappers(s)", \
@@ -3065,12 +3058,12 @@ XPCJSRuntime::DebugDump(int16_t depth)
 
         int cxCount = 0;
         JSContext* iter = nullptr;
-        while (JS_ContextIterator(mJSRuntime, &iter))
+        while (JS_ContextIterator(Runtime(), &iter))
             ++cxCount;
         XPC_LOG_ALWAYS(("%d JS context(s)", cxCount));
 
         iter = nullptr;
-        while (JS_ContextIterator(mJSRuntime, &iter)) {
+        while (JS_ContextIterator(Runtime(), &iter)) {
             XPCContext *xpc = XPCContext::GetXPCContext(iter);
             XPC_LOG_INDENT();
             xpc->DebugDump(depth);

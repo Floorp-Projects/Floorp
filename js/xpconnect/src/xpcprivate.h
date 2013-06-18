@@ -99,6 +99,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionJSRuntime.h"
 #include "nsCycleCollectorUtils.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -621,13 +622,13 @@ public:
 // no virtuals. no refcounting.
 class XPCJSContextStack;
 class XPCIncrementalReleaseRunnable;
-class XPCJSRuntime
+class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect);
     static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
 
-    JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
+    JSRuntime*     GetJSRuntime() const {return Runtime();}
 
     XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
     void DestroyJSContextStack();
@@ -882,7 +883,6 @@ private:
     jsid mStrIDs[IDX_TOTAL_COUNT];
     jsval mStrJSVals[IDX_TOTAL_COUNT];
 
-    JSRuntime*               mJSRuntime;
     XPCJSContextStack*       mJSContextStack;
     XPCCallContext*          mCallContext;
     AutoMarkingPtr*          mAutoRoots;
