@@ -1199,6 +1199,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     LayerProperties::ClearInvalidations(root);
   }
 
+  bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
   if (view) {
     if (props) {
       if (!invalid.IsEmpty()) {
@@ -1207,10 +1208,12 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                     presContext->DevPixelsToAppUnits(bounds.y),
                     presContext->DevPixelsToAppUnits(bounds.width),
                     presContext->DevPixelsToAppUnits(bounds.height));
-        view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
+        if (shouldInvalidate) {
+          view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
+        }
         presContext->NotifyInvalidation(bounds, 0);
       }
-    } else {
+    } else if (shouldInvalidate) {
       view->GetViewManager()->InvalidateView(view);
     }
   }
