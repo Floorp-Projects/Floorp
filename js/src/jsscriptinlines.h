@@ -127,7 +127,7 @@ JSScript::getRegExp(size_t index)
     js::ObjectArray *arr = regexps();
     JS_ASSERT(uint32_t(index) < arr->length);
     JSObject *obj = arr->vector[index];
-    JS_ASSERT(obj->isRegExp());
+    JS_ASSERT(obj->is<js::RegExpObject>());
     return (js::RegExpObject *) obj;
 }
 

@@ -53,9 +53,51 @@ ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...)
 {
   va_list ap;
   va_start(ap, aErrorNumber);
-  JS_ReportErrorNumberVA(aCx, GetErrorMessage, NULL,
+  JS_ReportErrorNumberVA(aCx, GetErrorMessage, nullptr,
                          static_cast<const unsigned>(aErrorNumber), ap);
   va_end(ap);
+  return false;
+}
+
+bool
+ThrowInvalidMethodThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                       const char* aInterfaceName)
+{
+  NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
+  // This should only be called for DOM methods, which are JSNative-backed
+  // functions, so we can assume that JS_ValueToFunction and
+  // JS_GetFunctionDisplayId will both return non-null and that
+  // JS_GetStringCharsZ returns non-null.
+  JS::Rooted<JSFunction*> func(aCx, JS_ValueToFunction(aCx, aArgs.calleev()));
+  MOZ_ASSERT(func);
+  JS::Rooted<JSString*> funcName(aCx, JS_GetFunctionDisplayId(func));
+  MOZ_ASSERT(funcName);
+  JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
+                         static_cast<const unsigned>(MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE),
+                         JS_GetStringCharsZ(aCx, funcName),
+                         ifaceName.get());
+  return false;
+}
+
+bool
+ThrowInvalidGetterThis(JSContext* aCx, const char* aInterfaceName)
+{
+  // Sadly for getters we have no way to get the name of the property.
+  NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
+  JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
+                         static_cast<const unsigned>(MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE),
+                         ifaceName.get());
+  return false;
+}
+
+bool
+ThrowInvalidSetterThis(JSContext* aCx, const char* aInterfaceName)
+{
+  // Sadly for setters we have no way to get the name of the property.
+  NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
+  JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
+                         static_cast<const unsigned>(MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE),
+                         ifaceName.get());
   return false;
 }
 
@@ -1826,7 +1868,7 @@ GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
   }
 
   if (!domImplVal.isObject()) {
-    ThrowErrorMessage(cx, MSG_NOT_OBJECT);
+    ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Value");
     return false;
   }
 
