@@ -9,6 +9,13 @@ if CONFIG['MOZ_METRO'] and CONFIG['OS_ARCH'] == 'WINNT':
 
 MODULE = 'libxul'
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    # This is going to be a framework named "XUL", not an ordinary library named
+    # "libxul.dylib"
+    LIBRARY_NAME = 'XUL'
+else:
+    LIBRARY_NAME = 'xul'
+
 CPP_SOURCES += [
     '$(INTL_UNICHARUTIL_UTIL_LCPPSRCS)',
     '$(RDF_UTIL_SRC_LCPPSRCS)',
@@ -38,6 +45,4 @@ if CONFIG['OS_ARCH'] == 'OS2':
         CPP_SOURCES += [
             'dlldeps-zlib.cpp',
         ]
-
-LIBRARY_NAME = 'xul'
 

@@ -6,6 +6,7 @@
 
 if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     MODULE = 'profiler'
+    LIBRARY_NAME = 'profiler'
     XPIDL_SOURCES += [
         'nsIProfileSaveEvent.idl',
         'nsIProfiler.idl',

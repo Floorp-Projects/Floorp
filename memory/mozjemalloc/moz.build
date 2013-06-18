@@ -14,3 +14,5 @@ if not CONFIG['MOZ_JEMALLOC3']:
     CSRCS += [
         'jemalloc.c',
     ]
+    LIBRARY_NAME = 'jemalloc'
+

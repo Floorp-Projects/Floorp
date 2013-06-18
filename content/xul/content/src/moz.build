@@ -12,3 +12,4 @@ if CONFIG['MOZ_XUL']:
         'nsXULPopupListener.cpp',
         'nsXULContextMenuBuilder.cpp',
     ]
+    LIBRARY_NAME = 'gkconxulcon_s'
