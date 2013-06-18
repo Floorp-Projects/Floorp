@@ -808,6 +808,13 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
     return;
   }
 
+  ResetMarkedFramesForDisplayList();
+  mPresShellStates.SetLength(mPresShellStates.Length() - 1);
+}
+
+void
+nsDisplayListBuilder::ResetMarkedFramesForDisplayList()
+{
   // Unmark and pop off the frames marked for display in this pres shell.
   uint32_t firstFrameForShell = CurrentPresShellState()->mFirstFrameMarkedForDisplay;
   for (uint32_t i = firstFrameForShell;
@@ -815,7 +822,6 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
     UnmarkFrameForDisplay(mFramesMarkedForDisplay[i]);
   }
   mFramesMarkedForDisplay.SetLength(firstFrameForShell);
-  mPresShellStates.SetLength(mPresShellStates.Length() - 1);
 }
 
 void
