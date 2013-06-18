@@ -16,17 +16,15 @@
 
 namespace js {
 
-bool BooleanGetPrimitiveValueSlow(JSContext *, HandleObject, Value *);
+bool BooleanGetPrimitiveValueSlow(HandleObject, JSContext *);
 
-inline bool
+inline void
 BooleanGetPrimitiveValue(JSContext *cx, HandleObject obj, Value *vp)
 {
-    if (obj->isBoolean()) {
+    if (obj->isBoolean())
         *vp = BooleanValue(obj->asBoolean().unbox());
-        return true;
-    }
 
-    return BooleanGetPrimitiveValueSlow(cx, obj, vp);
+    vp->setBoolean(BooleanGetPrimitiveValueSlow(obj, cx));
 }
 
 inline bool
