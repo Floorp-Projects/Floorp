@@ -69,9 +69,9 @@ CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 void
-TraceCallbackFunc::Trace(JS::Value* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const
 {
-  mCallback(JSVAL_TO_TRACEABLE(*p), name, closure);
+  mCallback(JSVAL_TO_TRACEABLE(p->get()), name, closure);
 }
 
 void

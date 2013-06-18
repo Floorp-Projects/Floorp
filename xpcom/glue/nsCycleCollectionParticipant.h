@@ -62,7 +62,7 @@ template <class T> class Heap;
  */
 struct TraceCallbacks
 {
-    virtual void Trace(JS::Value* p, const char* name, void* closure) const = 0;
+    virtual void Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const = 0;
     virtual void Trace(jsid* p, const char* name, void* closure) const = 0;
     virtual void Trace(JSObject** p, const char* name, void* closure) const = 0;
     virtual void Trace(JSString** p, const char* name, void* closure) const = 0;
@@ -83,7 +83,7 @@ struct TraceCallbackFunc : public TraceCallbacks
 
     explicit TraceCallbackFunc(Func cb) : mCallback(cb) {}
 
-    virtual void Trace(JS::Value* p, const char* name, void* closure) const MOZ_OVERRIDE;
+    virtual void Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const MOZ_OVERRIDE;
     virtual void Trace(jsid* p, const char* name, void* closure) const MOZ_OVERRIDE;
     virtual void Trace(JSObject** p, const char* name, void* closure) const MOZ_OVERRIDE;
     virtual void Trace(JSString** p, const char* name, void* closure) const MOZ_OVERRIDE;
