@@ -160,6 +160,12 @@ VARIABLES = {
         A list of libraries and flags to include when linking.
         """),
 
+    'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
+        """Elements of the distributed SDK.
+
+        Files on this list will be copied into SDK_LIB_DIR ($DIST/sdk/lib).
+        """),
+
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
