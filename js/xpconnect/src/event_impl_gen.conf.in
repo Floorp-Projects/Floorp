@@ -75,3 +75,12 @@ exclude_automatic_type_include = [
     'mozIDOMApplication',
     'nsIDOMBlob'
   ]
+
+""" Map xpidl interface names to implementation classes. The third column is the canonical interface. """
+xpidl_to_native = [
+    ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
+    ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
+    ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
+    ['nsIDOMGamepad', 'nsDOMGamepad', 'nsIDOMGamepad']
+  ]
+

@@ -17,5 +17,5 @@ interface nsIDOMDeviceLightEvent : nsIDOMEvent
 
 dictionary DeviceLightEventInit : EventInit
 {
-   double value;
+   double value = Infinity;
 };
