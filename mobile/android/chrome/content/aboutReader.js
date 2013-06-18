@@ -353,13 +353,46 @@ AboutReader.prototype = {
     Services.prefs.setIntPref("reader.font_size", this._fontSize);
   },
 
-  _handleDeviceLight: function Reader_handleDeviceLight(luxValue) {
+  _handleDeviceLight: function Reader_handleDeviceLight(newLux) {
+    // Desired size of the this._luxValues array.
+    let luxValuesSize = 10;
+    // Add new lux value at the front of the array.
+    this._luxValues.unshift(newLux);
+    // Add new lux value to this._totalLux for averaging later.
+    this._totalLux += newLux;
+
+    // Don't update when length of array is less than luxValuesSize except when it is 1.
+    if (this._luxValues.length < luxValuesSize) {
+      // Use the first lux value to set the color scheme until our array equals luxValuesSize.
+      if (this._luxValues.length == 1) {
+        this._updateColorScheme(newLux);
+      }
+      return;
+    }
+    // Holds the average of the lux values collected in this._luxValues.
+    let averageLuxValue = this._totalLux/luxValuesSize;
+
+    this._updateColorScheme(averageLuxValue);
+    // Pop the oldest value off the array.
+    let oldLux = this._luxValues.pop();
+    // Subtract oldLux since it has been discarded from the array.
+    this._totalLux -= oldLux;
+  },
+
+  _updateColorScheme: function Reader_updateColorScheme(luxValue) {
+    // Upper bound value for "dark" color scheme beyond which it changes to "light".
+    let upperBoundDark = 50;
+    // Lower bound value for "light" color scheme beyond which it changes to "dark".
+    let lowerBoundLight = 10;
+    // Threshold for color scheme change.
+    let colorChangeThreshold = 20;
+
     // Ignore changes that are within a certain threshold of previous lux values.
-    if ((this._colorScheme === "dark" && luxValue < 50) ||
-        (this._colorScheme === "light" && luxValue > 25))
+    if ((this._colorScheme === "dark" && luxValue < upperBoundDark) ||
+        (this._colorScheme === "light" && luxValue > lowerBoundLight))
       return;
 
-    if (luxValue < 30)
+    if (luxValue < colorChangeThreshold)
       this._setColorScheme("dark");
     else
       this._setColorScheme("light");
@@ -383,9 +416,13 @@ AboutReader.prototype = {
   _setColorSchemePref: function Reader_setColorSchemePref(colorSchemePref) {
     if (colorSchemePref === "auto") {
       this._win.addEventListener("devicelight", this, false);
+      this._luxValues = [];
+      this._totalLux = 0;
     } else {
       this._win.removeEventListener("devicelight", this, false);
       this._setColorScheme(colorSchemePref);
+      delete this._luxValues;
+      delete this._totalLux;
     }
 
     Services.prefs.setCharPref("reader.color_scheme", colorSchemePref);
