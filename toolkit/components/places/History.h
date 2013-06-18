@@ -73,9 +73,10 @@ public:
    *
    * @param _place
    *        The VisitData for the place we need to know information about.
-   * @return true if the page was recorded in moz_places, false otherwise.
+   * @param [out] _exists
+   *        Whether or the page was recorded in moz_places, false otherwise.
    */
-  bool FetchPageInfo(VisitData& _place);
+  nsresult FetchPageInfo(VisitData& _place, bool* _exists);
 
   /**
    * Get the number of bytes of memory this History object is using,
