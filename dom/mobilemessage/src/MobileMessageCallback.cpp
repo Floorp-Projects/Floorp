@@ -85,6 +85,12 @@ MobileMessageCallback::NotifyError(int32_t aError)
     case nsIMobileMessageCallback::INTERNAL_ERROR:
       mDOMRequest->FireError(NS_LITERAL_STRING("InternalError"));
       break;
+    case nsIMobileMessageCallback::NO_SIM_CARD_ERROR:
+      mDOMRequest->FireError(NS_LITERAL_STRING("NoSimCardError"));
+      break;
+    case nsIMobileMessageCallback::RADIO_DISABLED_ERROR:
+      mDOMRequest->FireError(NS_LITERAL_STRING("RadioDisabledError"));
+      break;
     default: // SUCCESS_NO_ERROR is handled above.
       MOZ_NOT_REACHED("Should never get here!");
       return NS_ERROR_FAILURE;
