@@ -14,12 +14,9 @@ endif
 
 DX=$(ANDROID_BUILD_TOOLS)/dx
 AAPT=$(ANDROID_BUILD_TOOLS)/aapt
-APKBUILDER=$(ANDROID_SDK)/../../tools/apkbuilder
 ZIPALIGN=$(ANDROID_SDK)/../../tools/zipalign
-
-ifdef JARSIGNER
-  APKBUILDER_FLAGS += -u
-endif
+# DEBUG_JARSIGNER always debug signs.
+DEBUG_JARSIGNER=$(PYTHON) $(call core_abspath,$(topsrcdir)/mobile/android/debug_sign_tool.py)
 
 # For Android, this defaults to $(ANDROID_SDK)/android.jar
 ifndef JAVA_BOOTCLASSPATH
