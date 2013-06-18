@@ -71,16 +71,13 @@ nsProfiler::Observe(nsISupports *aSubject,
 
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, uint32_t aInterval,
-                          const char** aFeatures, uint32_t aFeatureCount,
-                          const char** aThreadNameFilters, uint32_t aFilterCount)
+                          const char** aFeatures, uint32_t aFeatureCount)
 {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  profiler_start(aEntries, aInterval,
-                 aFeatures, aFeatureCount,
-                 aThreadNameFilters, aFilterCount);
+  profiler_start(aEntries, aInterval, aFeatures, aFeatureCount);
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
   bool printToConsole = false;
   mozilla::InitEventTracing(printToConsole);
