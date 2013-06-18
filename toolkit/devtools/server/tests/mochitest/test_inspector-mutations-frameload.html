@@ -67,67 +67,6 @@ function loadChildSelector(selector) {
   });
 }
 
-
-function isSrcChange(change) {
-  return (change.type === "attributes" && change.attributeName === "src");
-}
-
-function assertAndStrip(mutations, message, test) {
-  let size = mutations.length;
-  mutations = mutations.filter(test);
-  ok((mutations.size != size), message);
-  return mutations;
-}
-
-function isSrcChange(change) {
-  return change.type === "attributes" && change.attributeName === "src";
-}
-
-function isUnload(change) {
-  return change.type === "documentUnload";
-}
-
-function isFrameLoad(change) {
-  return change.type === "frameLoad";
-}
-
-// Make sure an iframe's src attribute changed and then
-// strip that mutation out of the list.
-function assertSrcChange(mutations) {
-  return assertAndStrip(mutations, "Should have had an iframe source change.", isSrcChange);
-}
-
-// Make sure there's an unload in the mutation list and strip
-// that mutation out of the list
-function assertUnload(mutations) {
-  return assertAndStrip(mutations, "Should have had a document unload change.", isUnload);
-}
-
-// Make sure there's a frame load in the mutation list and strip
-// that mutation out of the list
-function assertFrameLoad(mutations) {
-  return assertAndStrip(mutations, "Should have had a frame load change.", isFrameLoad);
-}
-
-// Load mutations aren't predictable, so keep accumulating mutations until
-// the one we're looking for shows up.
-function waitForMutation(walker, test, mutations=[]) {
-  let deferred = Promise.defer();
-  for (let change of mutations) {
-    if (test(change)) {
-      deferred.resolve(mutations);
-    }
-  }
-
-  walker.once("mutations", newMutations => {
-    waitForMutation(walker, test, mutations.concat(newMutations)).then(finalMutations => {
-      deferred.resolve(finalMutations);
-    })
-  });
-
-  return deferred.promise;
-}
-
 function getUnloadedDoc(mutations) {
   for (let change of mutations) {
     if (isUnload(change)) {
