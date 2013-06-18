@@ -160,6 +160,9 @@ BaselineInspector::expectedResultType(jsbytecode *pc)
 
     switch (stub->kind()) {
       case ICStub::BinaryArith_Int32:
+        if (stub->toBinaryArith_Int32()->allowDouble())
+            return MIRType_Double;
+        return MIRType_Int32;
       case ICStub::BinaryArith_BooleanWithInt32:
       case ICStub::UnaryArith_Int32:
         return MIRType_Int32;
