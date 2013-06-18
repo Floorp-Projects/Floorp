@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<title>Delayed image reftest wrapper + background colour</title>
+<style>
+img {
+  background-color: rgb(0, 255, 0);
+}
+</style>
+</head>
+<body>
+<img id="image1">
+<script>
+// This loads a externally specified image, forces a draw (in case of
+// decode-on-draw), waits, and then triggers the reftest snapshot.
+// This allows the animation on the page to complete.
+//
+// Use as "delaytest.html?animation.png"
+//
+
+// Get the image URL from our URL
+var imgURL = document.location.search.substr(1);
+
+// Load the image
+var img = document.images[0];
+img.src = imgURL;
+img.onload = forceDecode;
+
+function forceDecode() {
+
+  // We need to force drawing of the image in an invisible context
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  // We've force the decode. start the timer to trigger the reftest
+  startTimer();
+}
+
+function startTimer() {
+  const delay = 1000;
+  setTimeout("document.documentElement.className = '';", delay);
+}
+</script>
+</body>
+</html>
