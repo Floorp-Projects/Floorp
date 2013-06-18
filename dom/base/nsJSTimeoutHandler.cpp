@@ -67,7 +67,7 @@ private:
   // caller of setTimeout()
   nsCString mFileName;
   uint32_t mLineNo;
-  nsTArray<JS::Value> mArgs;
+  nsTArray<JS::Heap<JS::Value> > mArgs;
 
   // The JS expression to evaluate or function to call, if !mExpr
   JSFlatString *mExpr;
@@ -299,7 +299,8 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
     // array.
     // std::max(argc - 2, 0) wouldn't work right because argc is unsigned.
     uint32_t argCount = std::max(argc, 2u) - 2;
-    FallibleTArray<JS::Value> args;
+
+    FallibleTArray<JS::Heap<JS::Value> > args;
     if (!args.SetCapacity(argCount)) {
       // No need to drop here, since we already have a non-null mFunction
       return NS_ERROR_OUT_OF_MEMORY;
