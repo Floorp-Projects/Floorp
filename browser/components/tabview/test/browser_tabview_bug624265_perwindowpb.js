@@ -99,45 +99,12 @@ function test() {
     }, aWindow);
   }
 
-  // [624102] check state after return from private browsing
-  let testPrivateBrowsing = function (aWindow) {
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/#1', {inBackground: true});
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/#2', {inBackground: true});
-
-    let cw = getContentWindow(aWindow);
-    let box = new cw.Rect(20, 20, 250, 200);
-    let groupItem = new cw.GroupItem([], {bounds: box, immediately: true});
-    cw.UI.setActive(groupItem);
-
-    aWindow.gBrowser.selectedTab = aWindow.gBrowser.loadOneTab('http://mochi.test:8888/#3', {inBackground: true});
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/#4', {inBackground: true});
-
-    afterAllTabsLoaded(function () {
-      assertNumberOfVisibleTabs(aWindow, 2);
-
-      enterAndLeavePrivateBrowsing(function () {
-        assertNumberOfVisibleTabs(aWindow, 2);
-        aWindow.gBrowser.selectedTab = aWindow.gBrowser.tabs[0];
-        closeGroupItem(cw.GroupItems.groupItems[1], function() {
-          next(aWindow);
-        });
-      });
-    }, aWindow);
-  }
-
-  function testOnWindow(aIsPrivate, aCallback) {
-    let win = OpenBrowserWindow({private: aIsPrivate});
+  function testOnWindow(aCallback) {
+    let win = OpenBrowserWindow({private: false});
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad, false);
       executeSoon(function() { aCallback(win) });
     }, false);
-  }
-
-  function enterAndLeavePrivateBrowsing(callback) {
-    testOnWindow(true, function (aWindow) {
-      aWindow.close();
-      callback();
-    });
   }
 
   waitForExplicitFinish();
@@ -149,10 +116,7 @@ function test() {
   tests.push(testDuplicateTab);
   tests.push(testBackForwardDuplicateTab);
 
-  // Tests for #624102
-  tests.push(testPrivateBrowsing);
-
-  testOnWindow(false, function(aWindow) {
+  testOnWindow(function(aWindow) {
     loadTabView(function() {
       next(aWindow);
     }, aWindow);
