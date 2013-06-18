@@ -248,55 +248,7 @@ nsXPConnect::NeedCollect()
 void
 nsXPConnect::Collect(uint32_t reason)
 {
-    // We're dividing JS objects into 2 categories:
-    //
-    // 1. "real" roots, held by the JS engine itself or rooted through the root
-    //    and lock JS APIs. Roots from this category are considered black in the
-    //    cycle collector, any cycle they participate in is uncollectable.
-    //
-    // 2. roots held by C++ objects that participate in cycle collection,
-    //    held by XPConnect (see XPCJSRuntime::TraceXPConnectRoots). Roots from
-    //    this category are considered grey in the cycle collector, their final
-    //    color depends on the objects that hold them.
-    //
-    // Note that if a root is in both categories it is the fact that it is in
-    // category 1 that takes precedence, so it will be considered black.
-    //
-    // During garbage collection we switch to an additional mark color (gray)
-    // when tracing inside TraceXPConnectRoots. This allows us to walk those
-    // roots later on and add all objects reachable only from them to the
-    // cycle collector.
-    //
-    // Phases:
-    //
-    // 1. marking of the roots in category 1 by having the JS GC do its marking
-    // 2. marking of the roots in category 2 by XPCJSRuntime::TraceXPConnectRoots
-    //    using an additional color (gray).
-    // 3. end of GC, GC can sweep its heap
-    //
-    // At some later point, when the cycle collector runs:
-    //
-    // 4. walk gray objects and add them to the cycle collector, cycle collect
-    //
-    // JS objects that are part of cycles the cycle collector breaks will be
-    // collected by the next JS.
-    //
-    // If WantAllTraces() is false the cycle collector will not traverse roots
-    // from category 1 or any JS objects held by them. Any JS objects they hold
-    // will already be marked by the JS GC and will thus be colored black
-    // themselves. Any C++ objects they hold will have a missing (untraversed)
-    // edge from the JS object to the C++ object and so it will be marked black
-    // too. This decreases the number of objects that the cycle collector has to
-    // deal with.
-    // To improve debugging, if WantAllTraces() is true all JS objects are
-    // traversed.
-
-    MOZ_ASSERT(reason < JS::gcreason::NUM_REASONS);
-    JS::gcreason::Reason gcreason = (JS::gcreason::Reason)reason;
-
-    JSRuntime *rt = GetRuntime()->Runtime();
-    JS::PrepareForFullGC(rt);
-    JS::GCForReason(rt, gcreason);
+    return GetRuntime()->Collect(reason);
 }
 
 NS_IMETHODIMP
@@ -342,34 +294,10 @@ nsXPConnect::NotifyEnterMainThread()
     mRuntime->NotifyEnterMainThread();
 }
 
-/*
- * Return true if there exists a JSContext with a default global whose current
- * inner is gray. The intent is to look for JS Object windows. We don't merge
- * system compartments, so we don't use them to trigger merging CCs.
- */
 bool
 nsXPConnect::UsefulToMergeZones()
 {
-    JSContext *iter = nullptr;
-    JSContext *cx;
-    while ((cx = JS_ContextIterator(GetRuntime()->Runtime(), &iter))) {
-        // Skip anything without an nsIScriptContext, as well as any scx whose
-        // NativeGlobal() is not an outer window (this happens with XUL Prototype
-        // compilation scopes, for example, which we're not interested in).
-        nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-        JS::RootedObject global(cx, scx ? scx->GetNativeGlobal() : nullptr);
-        if (!global || !js::GetObjectParent(global)) {
-            continue;
-        }
-        // Grab the inner from the outer.
-        global = JS_ObjectToInnerObject(cx, global);
-        MOZ_ASSERT(!js::GetObjectParent(global));
-        if (JS::GCThingIsMarkedGray(global) &&
-            !js::IsSystemCompartment(js::GetObjectCompartment(global))) {
-            return true;
-        }
-    }
-    return false;
+    return GetRuntime()->UsefulToMergeZones();
 }
 
 nsCycleCollectionParticipant *
