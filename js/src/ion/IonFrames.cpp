@@ -1225,6 +1225,11 @@ InlineFrameIteratorMaybeGC<allowGC>::resetOn(const IonFrameIterator *iter)
 template void InlineFrameIteratorMaybeGC<NoGC>::resetOn(const IonFrameIterator *iter);
 template void InlineFrameIteratorMaybeGC<CanGC>::resetOn(const IonFrameIterator *iter);
 
+// Disable PGO.
+#if defined(_MSC_VER)
+# pragma optimize("g", off)
+#endif
+
 template <AllowGC allowGC>
 void
 InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
@@ -1280,6 +1285,11 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
 }
 template void InlineFrameIteratorMaybeGC<NoGC>::findNextFrame();
 template void InlineFrameIteratorMaybeGC<CanGC>::findNextFrame();
+
+// Reenable default optimization flags.
+#if defined(_MSC_VER)
+# pragma optimize("", on)
+#endif
 
 template <AllowGC allowGC>
 bool
