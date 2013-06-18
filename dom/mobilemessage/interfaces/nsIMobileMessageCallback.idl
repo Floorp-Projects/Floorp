@@ -13,19 +13,21 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(6e20c451-8bae-4b36-be3c-da166fdd10ba)]
+[scriptable, builtinclass, uuid(e73baef1-7a9f-48c1-8b04-20d9d16c4974)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
    * All SMS related errors.
    * Make sure to keep this list in sync with the list in:
-   * mobile/android/GeckoSmsManager.java
+   * embedding/android/GeckoSmsManager.java
    */
-  const unsigned short SUCCESS_NO_ERROR = 0;
-  const unsigned short NO_SIGNAL_ERROR  = 1;
-  const unsigned short NOT_FOUND_ERROR  = 2;
-  const unsigned short UNKNOWN_ERROR    = 3;
-  const unsigned short INTERNAL_ERROR   = 4;
+  const unsigned short SUCCESS_NO_ERROR          = 0;
+  const unsigned short NO_SIGNAL_ERROR           = 1;
+  const unsigned short NOT_FOUND_ERROR           = 2;
+  const unsigned short UNKNOWN_ERROR             = 3;
+  const unsigned short INTERNAL_ERROR            = 4;
+  const unsigned short NO_SIM_CARD_ERROR         = 5;
+  const unsigned short RADIO_DISABLED_ERROR      = 6;
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.
