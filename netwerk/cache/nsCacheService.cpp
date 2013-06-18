@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
@@ -1496,10 +1497,31 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
     return NS_OK;
 }
 
+void nsCacheService::FireClearNetworkCacheStoredAnywhereNotification()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIObserverService> obsvc = mozilla::services::GetObserverService();
+    if (obsvc) {
+        obsvc->NotifyObservers(nullptr,
+                               "network-clear-cache-stored-anywhere",
+                               nullptr);
+    }
+}
 
 NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
 {
-    return  EvictEntriesForClient(nullptr, storagePolicy);
+    if (storagePolicy == nsICache::STORE_ANYWHERE) {
+        // if not called on main thread, dispatch the notification to the main thread to notify observers
+        if (!NS_IsMainThread()) { 
+            nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this,
+                                                               &nsCacheService::FireClearNetworkCacheStoredAnywhereNotification);
+            NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+        } else {
+            // else you're already on main thread - notify observers
+            FireClearNetworkCacheStoredAnywhereNotification(); 
+        }
+    }
+    return EvictEntriesForClient(nullptr, storagePolicy);
 }
 
 NS_IMETHODIMP nsCacheService::GetCacheIOTarget(nsIEventTarget * *aCacheIOTarget)
