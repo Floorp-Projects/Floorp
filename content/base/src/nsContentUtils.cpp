@@ -2366,62 +2366,6 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 }
 
 // static
-bool
-nsContentUtils::BelongsInForm(nsIContent *aForm,
-                              nsIContent *aContent)
-{
-  NS_PRECONDITION(aForm, "Must have a form");
-  NS_PRECONDITION(aContent, "Must have a content node");
-
-  if (aForm == aContent) {
-    // A form does not belong inside itself, so we return false here
-
-    return false;
-  }
-
-  nsIContent* content = aContent->GetParent();
-
-  while (content) {
-    if (content == aForm) {
-      // aContent is contained within the form so we return true.
-
-      return true;
-    }
-
-    if (content->Tag() == nsGkAtoms::form &&
-        content->IsHTML()) {
-      // The child is contained within a form, but not the right form
-      // so we ignore it.
-
-      return false;
-    }
-
-    content = content->GetParent();
-  }
-
-  if (aForm->GetChildCount() > 0) {
-    // The form is a container but aContent wasn't inside the form,
-    // return false
-
-    return false;
-  }
-
-  // The form is a leaf and aContent wasn't inside any other form so
-  // we check whether the content comes after the form.  If it does,
-  // return true.  If it does not, then it couldn't have been inside
-  // the form in the HTML.
-  if (PositionIsBefore(aForm, aContent)) {
-    // We could be in this form!
-    // In the future, we may want to get document.forms, look at the
-    // form after aForm, and if aContent is after that form after
-    // aForm return false here....
-    return true;
-  }
-
-  return false;
-}
-
-// static
 nsresult
 nsContentUtils::CheckQName(const nsAString& aQualifiedName,
                            bool aNamespaceAware,

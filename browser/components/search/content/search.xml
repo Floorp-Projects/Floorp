@@ -488,17 +488,22 @@
     <handlers>
       <handler event="command"><![CDATA[
         const target = event.originalTarget;
-        if (target.classList.contains("addengine-item")) {
+        if (target.engine) {
+          this.currentEngine = target.engine;
+        } else if (target.classList.contains("addengine-item")) {
           var searchService =
             Components.classes["@mozilla.org/browser/search-service;1"]
                       .getService(Components.interfaces.nsIBrowserSearchService);
           // We only detect OpenSearch files
           var type = Components.interfaces.nsISearchEngine.DATA_XML;
+          // Select the installed engine if the installation succeeds
+          var installCallback = {
+            onSuccess: engine => this.currentEngine = engine
+          }
           searchService.addEngine(target.getAttribute("uri"), type,
-                                  target.getAttribute("src"), false);
+                                  target.getAttribute("src"), false,
+                                  installCallback);
         }
-        else if (target.engine)
-          this.currentEngine = target.engine;
         else
           return;
 

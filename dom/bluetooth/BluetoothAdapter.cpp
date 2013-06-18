@@ -262,10 +262,12 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     NS_ENSURE_SUCCESS_VOID(rv);
 
     AutoPushJSContext cx(sc->GetNativeContext());
-    if (NS_FAILED(nsTArrayToJSArray(cx, mUuids, &mJsUuids))) {
+    JS::Rooted<JSObject*> uuids(cx);
+    if (NS_FAILED(nsTArrayToJSArray(cx, mUuids, uuids.address()))) {
       NS_WARNING("Cannot set JS UUIDs object!");
       return;
     }
+    mJsUuids = uuids;
     Root();
   } else if (name.EqualsLiteral("Devices")) {
     mDeviceAddresses = value.get_ArrayOfnsString();
@@ -280,11 +282,13 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     NS_ENSURE_SUCCESS_VOID(rv);
 
     AutoPushJSContext cx(sc->GetNativeContext());
+    JS::Rooted<JSObject*> deviceAddresses(cx);
     if (NS_FAILED(nsTArrayToJSArray(cx, mDeviceAddresses,
-                                    &mJsDeviceAddresses))) {
+                                    deviceAddresses.address()))) {
       NS_WARNING("Cannot set JS Devices object!");
       return;
     }
+    mJsDeviceAddresses = deviceAddresses;
     Root();
   } else {
 #ifdef DEBUG

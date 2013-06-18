@@ -83,6 +83,7 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
     if (types->hasType(types::Type::AnyObjectType())) {
         branchTestObject(Equal, tag, matched);
     } else if (types->getObjectCount()) {
+        JS_ASSERT(scratch != InvalidReg);
         branchTestObject(NotEqual, tag, miss);
         Register obj = extractObject(address, scratch);
 
