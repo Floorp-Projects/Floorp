@@ -439,46 +439,8 @@ void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
-// static
-void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
+void XPCJSRuntime::TraceAdditionalNativeRoots(JSTracer *trc)
 {
-    XPCJSRuntime* self = (XPCJSRuntime*)data;
-
-    // Mark these roots as gray so the CC can walk them later.
-    self->TraceXPConnectRoots(trc);
-}
-
-struct JsGcTracer : public TraceCallbacks
-{
-    virtual void Trace(JS::Heap<JS::Value> *p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallHeapValueTracer(static_cast<JSTracer*>(closure), p, name);
-    }
-    virtual void Trace(JS::Heap<jsid> *p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallHeapIdTracer(static_cast<JSTracer*>(closure), p, name);
-    }
-    virtual void Trace(JS::Heap<JSObject *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallHeapObjectTracer(static_cast<JSTracer*>(closure), p, name);
-    }
-    virtual void Trace(JS::Heap<JSString *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallHeapStringTracer(static_cast<JSTracer*>(closure), p, name);
-    }
-    virtual void Trace(JS::Heap<JSScript *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallHeapScriptTracer(static_cast<JSTracer*>(closure), p, name);
-    }
-};
-
-static PLDHashOperator
-TraceJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
-{
-    tracer->Trace(holder, JsGcTracer(), arg);
-
-    return PL_DHASH_NEXT;
-}
-
-void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
-{
-    MaybeTraceGlobals(trc);
-
     XPCAutoLock lock(mMapLock);
 
     XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(trc, this);
@@ -488,8 +450,6 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 
     for (XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot())
         static_cast<nsXPCWrappedJS*>(e)->TraceJS(trc);
-
-    mJSHolders.Enumerate(TraceJSHolder, trc);
 }
 
 // static
@@ -2750,7 +2710,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_SetFinalizeCallback(runtime, FinalizeCallback);
     JS_SetExtraGCRootsTracer(runtime, TraceBlackJS, this);
-    JS_SetGrayGCRootsTracer(runtime, TraceGrayJS, this);
     JS_SetWrapObjectCallbacks(runtime,
                               xpc::WrapperFactory::Rewrap,
                               xpc::WrapperFactory::WrapForSameCompartment,
