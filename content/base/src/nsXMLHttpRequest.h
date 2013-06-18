@@ -664,7 +664,7 @@ protected:
   JS::Heap<JS::Value> mResultJSON;
 
   js::ArrayBufferBuilder mArrayBufferBuilder;
-  JSObject* mResultArrayBuffer;
+  JS::Heap<JSObject*> mResultArrayBuffer;
 
   void ResetResponse();
 

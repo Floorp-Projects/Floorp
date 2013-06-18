@@ -268,7 +268,7 @@ protected:
   virtual void UpdateScopeObject(JS::Handle<JSObject*> aScopeObject) = 0;
 
   nsCOMPtr<nsIScriptContext> mContext;
-  JSObject* mScopeObject;
+  JS::Heap<JSObject*> mScopeObject;
   nsISupports* mTarget;
   nsCOMPtr<nsIAtom> mEventName;
   nsEventHandler mHandler;

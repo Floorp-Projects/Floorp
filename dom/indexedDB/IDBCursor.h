@@ -168,7 +168,7 @@ protected:
   nsRefPtr<IDBObjectStore> mObjectStore;
   nsRefPtr<IDBIndex> mIndex;
 
-  JSObject* mScriptOwner;
+  JS::Heap<JSObject*> mScriptOwner;
 
   Type mType;
   Direction mDirection;
