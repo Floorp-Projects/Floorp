@@ -183,7 +183,7 @@ private:
   // If this factory lives on a window then mWindow must be non-null. Otherwise
   // mOwningObject must be non-null.
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  JSObject* mOwningObject;
+  JS::Heap<JSObject*> mOwningObject;
 
   IndexedDBChild* mActorChild;
   IndexedDBParent* mActorParent;

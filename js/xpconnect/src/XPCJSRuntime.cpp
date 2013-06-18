@@ -509,10 +509,10 @@ struct JsGcTracer : public TraceCallbacks
     virtual void Trace(JS::Heap<jsid> *p, const char *name, void *closure) const MOZ_OVERRIDE {
         JS_CallHeapIdTracer(static_cast<JSTracer*>(closure), p, name);
     }
-    virtual void Trace(JSObject **p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallObjectTracer(static_cast<JSTracer*>(closure), p, name);
+    virtual void Trace(JS::Heap<JSObject *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
+        JS_CallHeapObjectTracer(static_cast<JSTracer*>(closure), p, name);
     }
-    virtual void Trace(JS::Heap<JSString *>*p, const char *name, void *closure) const MOZ_OVERRIDE {
+    virtual void Trace(JS::Heap<JSString *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
         JS_CallHeapStringTracer(static_cast<JSTracer*>(closure), p, name);
     }
     virtual void Trace(JS::Heap<JSScript *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
