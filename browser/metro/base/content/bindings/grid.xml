@@ -338,53 +338,13 @@
       <field name="_columnCount">0</field>
       <property name="columnCount" readonly="true" onget="return this._columnCount;"/>
 
-      <field name="_scheduledArrangeItemsTries">0</field>
-
       <!--  define a height where we consider an item not yet rendered
             10 is the height of the empty item (padding/border etc. only) -->
       <field name="_itemHeightRenderThreshold">10</field>
 
-      <method name="arrangeItems">
-        <body>
-          <![CDATA[
-            if (this.itemCount <= 0) {
-              return;
-            }
-            let item = this.getItemAtIndex(0);
-            if (item == null) {
-              return;
-            }
-            let gridItemRect = item.getBoundingClientRect();
-
-            // cap the number of times we reschedule calling arrangeItems
-            let maxRetries = 5;
-
-            // delay as necessary until the item has a proper height
-            if (gridItemRect.height <= this._itemHeightRenderThreshold) {
-              if (this._scheduledArrangeItemsTimerId) {
-                // retry of arrangeItems already scheduled
-                return;
-              }
-
-              // track how many times we've attempted arrangeItems
-              this._scheduledArrangeItemsTries++;
-
-              if (maxRetries > this._scheduledArrangeItemsTries) {
-                // schedule re-try of arrangeItems at the next tick
-                this._scheduledArrangeItemsTimerId = setTimeout(this.arrangeItems.bind(this), 0);
-                return;
-              }
-            }
-
-            // items ready to arrange (or retries max exceeded)
-            // reset the flags
-            if (this._scheduledArrangeItemsTimerId) {
-              clearTimeout(this._scheduledArrangeItemsTimerId);
-              delete this._scheduledArrangeItemsTimerId;
-            }
-            if (this._scheduledArrangeItemsTries) {
-              this._scheduledArrangeItemsTries = 0;
-            }
+      <property name="_containerRect">
+        <getter><![CDATA[
+            // return the rect that represents our bounding box
 
             // Autocomplete is a binding within a binding, so we have to step
             // up an additional parentNode.
@@ -394,11 +354,88 @@
               container = this.parentNode.parentNode.getBoundingClientRect();
             else
               container = this.parentNode.getBoundingClientRect();
+            return container;
+        ]]></getter>
+      </property>
 
-            // If we don't have valid dimensions we can't arrange yet
-            if (!container.height || !gridItemRect.height) {
+      <property name="_itemRect">
+        <getter><![CDATA[
+            // return the rect that represents an item in the grid
+
+            // TODO: when we remove the need for DOM item measurement, 0 items will not be a problem
+            let item = this.itemCount ? this.getItemAtIndex(0) : null;
+            if (item) {
+              let gridItemRect = item.getBoundingClientRect();
+              if (gridItemRect.height > this._itemHeightRenderThreshold) {
+                return gridItemRect;
+              }
+            }
+            return null;
+        ]]></getter>
+      </property>
+
+      <!-- do conditions allow layout/arrange of the grid? -->
+      <property name="_canLayout" readonly="true">
+        <getter>
+          <![CDATA[
+            let gridItemRect = this._itemRect;
+            // If we don't have valid item dimensions we can't arrange yet
+            if (!(gridItemRect && gridItemRect.height)) {
+              return false;
+            }
+
+            let container = this._containerRect;
+            // If we don't have valid container dimensions we can't arrange yet
+            if (!(container && container.height)) {
+              return false;
+            }
+            return true;
+          ]]>
+        </getter>
+      </property>
+
+      <field name="_scheduledArrangeItemsTimerId">null</field>
+      <field name="_scheduledArrangeItemsTries">0</field>
+      <field name="_maxArrangeItemsRetries">5</field>
+      <method name="_scheduleArrangeItems">
+        <parameter name="aTime"/>
+        <body>
+          <![CDATA[
+              // cap the number of times we reschedule calling arrangeItems
+              if (
+                  !this._scheduledArrangeItemsTimerId &&
+                  this._maxArrangeItemsRetries > this._scheduledArrangeItemsTries
+              ) {
+                this._scheduledArrangeItemsTimerId = setTimeout(this.arrangeItems.bind(this), aTime || 0);
+                // track how many times we've attempted arrangeItems
+                this._scheduledArrangeItemsTries++;
+              }
+          ]]>
+        </body>
+      </method>
+
+      <method name="arrangeItems">
+        <body>
+          <![CDATA[
+            if (this.hasAttribute("deferlayout")) {
               return;
             }
+
+            if (!this._canLayout) {
+              // try again later
+              this._scheduleArrangeItems();
+              return;
+            }
+
+            let gridItemRect = this._itemRect;
+            let container = this._containerRect;
+
+            // reset the flags
+            if (this._scheduledArrangeItemsTimerId) {
+              clearTimeout(this._scheduledArrangeItemsTimerId);
+              delete this._scheduledArrangeItemsTimerId;
+            }
+            this._scheduledArrangeItemsTries = 0;
 
             // We favor overflowing horizontally, not vertically
             let maxRowCount = Math.floor(container.height / gridItemRect.height) - 1;
@@ -415,6 +452,21 @@
 
             this._grid.style.width = (this._columnCount * gridItemRect.width) + "px";
 
+          ]]>
+        </body>
+      </method>
+      <method name="arrangeItemsNow">
+        <body>
+          <![CDATA[
+            this.removeAttribute("deferlayout");
+            // cancel any scheduled arrangeItems and reset flags
+            if (this._scheduledArrangeItemsTimerId) {
+              clearTimeout(this._scheduledArrangeItemsTimerId);
+              delete this._scheduledArrangeItemsTimerId;
+            }
+            this._scheduledArrangeItemsTries = 0;
+            // pass over any params
+            return this.arrangeItems.apply(this, arguments);
           ]]>
         </body>
       </method>
