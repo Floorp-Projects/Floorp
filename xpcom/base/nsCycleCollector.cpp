@@ -2756,7 +2756,7 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
         return;
 
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
-        NS_WARN_IF_FALSE(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
+        NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
 
         // Synchronous cycle collection. Always force a JS GC beforehand.
         FixGrayBits(true);
