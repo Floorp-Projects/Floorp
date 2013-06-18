@@ -17,10 +17,6 @@ if (typeof this.parseInt  === "undefined")  $ERROR('#5: typeof this.parseInt !==
 if (typeof this['parseInt'] === "undefined")  $ERROR('#6: typeof this["parseInt"] !== "undefined"');
 if (typeof this.parseFloat  === "undefined")  $ERROR('#7: typeof this.parseFloat !== "undefined"');
 if (typeof this['parseFloat'] === "undefined")  $ERROR('#8: typeof this["parseFloat"] !== "undefined"');
-if (typeof this.escape  === "undefined")  $ERROR('#9: typeof this.escape !== "undefined"');
-if (typeof this['escape'] === "undefined")  $ERROR('#10: typeof this["escape"] !== "undefined"');
-if (typeof this.unescape  === "undefined")  $ERROR('#11: typeof this.unescape !== "undefined"');
-if (typeof this['unescape'] === "undefined")  $ERROR('#12: typeof this["unescape"] !== "undefined"');
 if (typeof this.isNaN  === "undefined")  $ERROR('#13: typeof this.isNaN !== "undefined"');
 if (typeof this['isNaN'] === "undefined")  $ERROR('#14: typeof this["isNaN"] !== "undefined"');
 if (typeof this.isFinite  === "undefined")  $ERROR('#15: typeof this.isFinite !== "undefined"');
