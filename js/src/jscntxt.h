@@ -22,7 +22,6 @@
 #include "jsatom.h"
 #include "jsclist.h"
 #include "jsgc.h"
-#include "jspropertycache.h"
 #include "jspropertytree.h"
 #include "jsprototypes.h"
 #include "jsutil.h"
@@ -1262,7 +1261,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     js::GSNCache        gsnCache;
-    js::PropertyCache   propertyCache;
     js::NewObjectCache  newObjectCache;
     js::NativeIterCache nativeIterCache;
     js::SourceDataCache sourceDataCache;
@@ -1723,8 +1721,6 @@ struct JSContext : js::ContextFriendFields,
     inline js::LifoAlloc &typeLifoAlloc();
 
     inline js::PropertyTree &propertyTree();
-
-    js::PropertyCache &propertyCache() { return runtime()->propertyCache; }
 
 #ifdef JS_THREADSAFE
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls
