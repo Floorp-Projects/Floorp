@@ -12,6 +12,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
+class nsCycleCollectionNoteRootCallback;
 class nsScriptObjectTracer;
 
 namespace mozilla {
@@ -31,6 +32,11 @@ protected:
   }
 
   void MaybeTraceGlobals(JSTracer* aTracer) const;
+  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
+private:
+  void MaybeTraverseGlobals(nsCycleCollectionNoteRootCallback& aCb) const;
+
+  void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
@@ -40,6 +46,17 @@ public:
   void SetObjectToUnlink(void* aObject) { mObjectToUnlink = aObject; }
   void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
+
+  // This returns the singleton nsCycleCollectionParticipant for JSContexts.
+  static nsCycleCollectionParticipant *JSContextParticipant();
+
+  bool NotifyLeaveMainThread() const;
+  void NotifyEnterCycleCollectionThread() const;
+  void NotifyLeaveCycleCollectionThread() const;
+  void NotifyEnterMainThread() const;
+  nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &aCb);
+  void FixWeakMappingGrayBits() const;
+  bool NeedCollect() const;
 
 // XXXkhuey should be private
 protected:

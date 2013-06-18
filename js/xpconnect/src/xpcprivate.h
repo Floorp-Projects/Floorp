@@ -501,15 +501,15 @@ public:
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
     // nsCycleCollectionJSRuntime
-    virtual bool NotifyLeaveMainThread();
-    virtual void NotifyEnterCycleCollectionThread();
-    virtual void NotifyLeaveCycleCollectionThread();
-    virtual void NotifyEnterMainThread();
-    virtual nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb);
+    virtual bool NotifyLeaveMainThread(); // DONE
+    virtual void NotifyEnterCycleCollectionThread(); // DONE
+    virtual void NotifyLeaveCycleCollectionThread(); // DONE
+    virtual void NotifyEnterMainThread(); // DONE
+    virtual nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb); // DONE
     virtual nsCycleCollectionParticipant *GetParticipant();
     virtual bool UsefulToMergeZones();
-    virtual void FixWeakMappingGrayBits();
-    virtual bool NeedCollect();
+    virtual void FixWeakMappingGrayBits(); // DONE
+    virtual bool NeedCollect(); // DONE
     virtual void Collect(uint32_t reason);
 
     // This returns the singleton nsCycleCollectionParticipant for JSContexts.
@@ -761,7 +761,7 @@ public:
     static void TraceBlackJS(JSTracer* trc, void* data);
     static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
-    void AddXPConnectRoots(nsCycleCollectionNoteRootCallback& cb);
+    void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb);
     void UnmarkSkippableJSHolders();
 
     static void GCCallback(JSRuntime *rt, JSGCStatus status);

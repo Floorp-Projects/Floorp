@@ -492,40 +492,6 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     mJSHolders.Enumerate(TraceJSHolder, trc);
 }
 
-struct Closure
-{
-    bool cycleCollectionEnabled;
-    nsCycleCollectionNoteRootCallback *cb;
-};
-
-static void
-CheckParticipatesInCycleCollection(void *aThing, const char *name, void *aClosure)
-{
-    Closure *closure = static_cast<Closure*>(aClosure);
-
-    if (closure->cycleCollectionEnabled)
-        return;
-
-    if (AddToCCKind(js::GCThingTraceKind(aThing)) &&
-        xpc_IsGrayGCThing(aThing))
-    {
-        closure->cycleCollectionEnabled = true;
-    }
-}
-
-static PLDHashOperator
-NoteJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
-{
-    Closure *closure = static_cast<Closure*>(arg);
-
-    closure->cycleCollectionEnabled = false;
-    tracer->Trace(holder, TraceCallbackFunc(CheckParticipatesInCycleCollection), closure);
-    if (closure->cycleCollectionEnabled)
-        closure->cb->NoteNativeRoot(holder, tracer);
-
-    return PL_DHASH_NEXT;
-}
-
 // static
 void
 XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
@@ -574,26 +540,8 @@ CanSkipWrappedJS(nsXPCWrappedJS *wrappedJS)
 }
 
 void
-XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionNoteRootCallback &cb)
+XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &cb)
 {
-    // For all JS objects that are held by native objects but aren't held
-    // through rooting or locking, we need to add all the native objects that
-    // hold them so that the JS objects are colored correctly in the cycle
-    // collector. This includes JSContexts that don't have outstanding requests,
-    // because their global object wasn't marked by the JS GC. All other JS
-    // roots were marked by the JS GC and will be colored correctly in the cycle
-    // collector.
-
-    JSContext *iter = nullptr, *acx;
-    while ((acx = JS_ContextIterator(Runtime(), &iter))) {
-        // Add the context to the CC graph only if traversing it would
-        // end up doing something.
-        JSObject* global = js::GetDefaultGlobalForContext(acx);
-        if (global && xpc_IsGrayGCThing(global)) {
-            cb.NoteNativeRoot(acx, nsXPConnect::JSContextParticipant());
-        }
-    }
-
     XPCAutoLock lock(mMapLock);
 
     XPCWrappedNativeScope::SuspectAllWrappers(this, cb);
@@ -618,9 +566,6 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionNoteRootCallback &cb)
 
         cb.NoteXPCOMRoot(static_cast<nsIXPConnectWrappedJS *>(wrappedJS));
     }
-
-    Closure closure = { true, &cb };
-    mJSHolders.Enumerate(NoteJSHolder, &closure);
 }
 
 static PLDHashOperator
