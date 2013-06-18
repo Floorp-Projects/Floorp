@@ -2895,6 +2895,17 @@ nsObjectLoadingContent::PlayPlugin()
 }
 
 NS_IMETHODIMP
+nsObjectLoadingContent::Reload(bool aClearActivation)
+{
+  if (aClearActivation) {
+    mActivated = false;
+    mPlayPreviewCanceled = false;
+  }
+
+  return LoadObject(true, true);
+}
+
+NS_IMETHODIMP
 nsObjectLoadingContent::GetActivated(bool *aActivated)
 {
   *aActivated = Activated();
