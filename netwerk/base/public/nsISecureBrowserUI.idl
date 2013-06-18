@@ -10,14 +10,13 @@ interface nsIDOMWindow;
 interface nsIDOMElement;
 interface nsIDocShell;
 
-[scriptable, uuid(e97e5688-add2-4a1d-acae-396d7702e382)]
+[scriptable, uuid(62f6c5be-ea8c-4fab-8e5c-d1580b50ec3f)]
 interface nsISecureBrowserUI : nsISupports
 {
     void init(in nsIDOMWindow window);
     void setDocShell(in nsIDocShell docShell);
 
     readonly attribute unsigned long state;
-    readonly attribute AString tooltipText;
 };
 
 %{C++

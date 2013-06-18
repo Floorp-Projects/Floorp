@@ -29,3 +29,6 @@ class FedoraBootstrapper(BaseBootstrapper):
             'mesa-libGL-devel',
             'wireless-tools-devel',
             'yasm')
+
+    def upgrade_mercurial(self):
+        self.yum_update('mercurial')

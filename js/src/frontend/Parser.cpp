@@ -4533,7 +4533,7 @@ Parser<ParseHandler>::statement()
         if (!cond)
             return null();
 
-        if (tokenStream.peekToken() == TOK_SEMI &&
+        if (tokenStream.peekToken(TSF_OPERAND) == TOK_SEMI &&
             !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
         {
             return null();
