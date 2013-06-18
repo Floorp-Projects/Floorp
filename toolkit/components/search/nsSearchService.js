@@ -5,6 +5,7 @@
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -1150,7 +1151,10 @@ Engine.prototype = {
   _confirm: false,
   // Whether to set this as the current engine as soon as it is loaded.  This
   // is only used when the engine is first added to the list.
-  _useNow: true,
+  _useNow: false,
+  // A function to be invoked when this engine object's addition completes (or
+  // fails). Only used for installation via addEngine.
+  _installCallback: null,
   // Where the engine was loaded from. Can be one of: SEARCH_APP_DIR,
   // SEARCH_PROFILE_DIR, SEARCH_IN_EXTENSION.
   __installLocation: null,
@@ -1304,10 +1308,19 @@ Engine.prototype = {
    */
   _onLoad: function SRCH_ENG_onLoad(aBytes, aEngine) {
     /**
-     * Handle an error during the load of an engine by prompting the user to
-     * notify him that the load failed.
+     * Handle an error during the load of an engine by notifying the engine's
+     * error callback, if any.
      */
-    function onError(aErrorString, aTitleString) {
+    function onError(errorCode = Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE) {
+      // Notify the callback of the failure
+      if (aEngine._installCallback) {
+        aEngine._installCallback(errorCode);
+      }
+    }
+
+    function promptError(strings = {}, error = undefined) {
+      onError(error);
+
       if (aEngine._engineToUpdate) {
         // We're in an update, so just fail quietly
         LOG("updating " + aEngine._engineToUpdate.name + " failed");
@@ -1317,8 +1330,8 @@ Engine.prototype = {
       var brandName = brandBundle.GetStringFromName("brandShortName");
 
       var searchBundle = Services.strings.createBundle(SEARCH_BUNDLE);
-      var msgStringName = aErrorString || "error_loading_engine_msg2";
-      var titleStringName = aTitleString || "error_loading_engine_title";
+      var msgStringName = strings.error || "error_loading_engine_msg2";
+      var titleStringName = strings.title || "error_loading_engine_title";
       var title = searchBundle.GetStringFromName(titleStringName);
       var text = searchBundle.formatStringFromName(msgStringName,
                                                    [brandName, aEngine._location],
@@ -1328,7 +1341,7 @@ Engine.prototype = {
     }
 
     if (!aBytes) {
-      onError();
+      promptError();
       return;
     }
 
@@ -1351,7 +1364,7 @@ Engine.prototype = {
         aEngine._data = aBytes;
         break;
       default:
-        onError();
+        promptError();
         LOG("_onLoad: Bogus engine _dataType: \"" + this._dataType + "\"");
         return;
     }
@@ -1362,7 +1375,7 @@ Engine.prototype = {
     } catch (ex) {
       LOG("_onLoad: Failed to init engine!\n" + ex);
       // Report an error to the user
-      onError();
+      promptError();
       return;
     }
 
@@ -1371,9 +1384,9 @@ Engine.prototype = {
     // otherwise we fail silently.
     if (!engineToUpdate) {
       if (Services.search.getEngineByName(aEngine.name)) {
-        if (aEngine._confirm)
-          onError("error_duplicate_engine_msg", "error_invalid_engine_title");
-
+        promptError({ error: "error_duplicate_engine_msg",
+                      title: "error_invalid_engine_title"
+                    }, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
         LOG("_onLoad: duplicate engine found, bailing");
         return;
       }
@@ -1386,8 +1399,10 @@ Engine.prototype = {
       var confirmation = aEngine._confirmAddEngine();
       LOG("_onLoad: confirm is " + confirmation.confirmed +
           "; useNow is " + confirmation.useNow);
-      if (!confirmation.confirmed)
+      if (!confirmation.confirmed) {
+        onError();
         return;
+      }
       aEngine._useNow = confirmation.useNow;
     }
 
@@ -1414,6 +1429,7 @@ Engine.prototype = {
           if (!newSelfURL || !newSelfURL._hasRelation("self")) {
             LOG("_onLoad: updateURL missing in updated engine for " +
                 aEngine.name + " aborted");
+            onError();
             return;
           }
           newUpdateURL = newSelfURL.template;
@@ -1421,6 +1437,7 @@ Engine.prototype = {
 
         if (oldUpdateURL != newUpdateURL) {
           LOG("_onLoad: updateURLs do not match! Update of " + aEngine.name + " aborted");
+          onError();
           return;
         }
       }
@@ -1428,10 +1445,6 @@ Engine.prototype = {
       // Set the new engine's icon, if it doesn't yet have one.
       if (!aEngine._iconURI && engineToUpdate._iconURI)
         aEngine._iconURI = engineToUpdate._iconURI;
-
-      // Clear the "use now" flag since we don't want to be changing the
-      // current engine for an update.
-      aEngine._useNow = false;
     }
 
     // Write the engine to file. For readOnly engines, they'll be stored in the
@@ -1442,6 +1455,11 @@ Engine.prototype = {
     // Notify the search service of the successful load. It will deal with
     // updates by checking aEngine._engineToUpdate.
     notifyAction(aEngine, SEARCH_ENGINE_LOADED);
+
+    // Notify the callback if needed
+    if (aEngine._installCallback) {
+      aEngine._installCallback();
+    }
   },
 
   /**
@@ -3341,14 +3359,31 @@ SearchService.prototype = {
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,
-                                         aConfirm) {
+                                         aConfirm, aCallback) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     this._ensureInitialized();
     try {
       var uri = makeURI(aEngineURL);
       var engine = new Engine(uri, aDataType, false);
+      if (aCallback) {
+        engine._installCallback = function (errorCode) {
+          try {
+            if (errorCode == null)
+              aCallback.onSuccess(engine);
+            else
+              aCallback.onError(errorCode);
+          } catch (ex) {
+            Cu.reportError("Error invoking addEngine install callback: " + ex);
+          }
+          // Clear the reference to the callback now that it's been invoked.
+          engine._installCallback = null;
+        };
+      }
       engine._initFromURI();
     } catch (ex) {
+      // Drop the reference to the callback, if set
+      if (engine)
+        engine._installCallback = null;
       FAIL("addEngine: Error adding engine:\n" + ex, Cr.NS_ERROR_FAILURE);
     }
     engine._setIcon(aIconURL, false);
