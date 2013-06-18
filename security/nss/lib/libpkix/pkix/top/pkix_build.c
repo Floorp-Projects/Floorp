@@ -1021,9 +1021,11 @@ pkix_Build_ValidationCheckers(
         PKIX_ProcessingParams *procParams = NULL;
         PKIX_PL_Cert *trustedCert = NULL;
         PKIX_PL_PublicKey *trustedPubKey = NULL;
+        PKIX_PL_CertNameConstraints *trustedNC = NULL;
         PKIX_CertChainChecker *sigChecker = NULL;
         PKIX_CertChainChecker *policyChecker = NULL;
         PKIX_CertChainChecker *userChecker = NULL;
+        PKIX_CertChainChecker *nameConstraintsChecker = NULL;
         PKIX_CertChainChecker *checker = NULL;
         PKIX_CertSelector *certSelector = NULL;
         PKIX_List *userCheckerExtOIDs = NULL;
@@ -1192,7 +1194,7 @@ pkix_Build_ValidationCheckers(
                 }
         }
 
-        /* Inabling post chain building signature check on the certs. */
+        /* Enabling post chain building signature check on the certs. */
         PKIX_CHECK(PKIX_TrustAnchor_GetTrustedCert
                    (anchor, &trustedCert, plContext),
                    PKIX_TRUSTANCHORGETTRUSTEDCERTFAILED);
@@ -1213,6 +1215,23 @@ pkix_Build_ValidationCheckers(
                     (PKIX_PL_Object *)sigChecker,
                     plContext),
                    PKIX_LISTAPPENDITEMFAILED);
+
+        /* Enabling post chain building name constraints check on the certs. */
+        PKIX_CHECK(PKIX_TrustAnchor_GetNameConstraints
+                  (anchor, &trustedNC, plContext),
+                  PKIX_TRUSTANCHORGETNAMECONSTRAINTSFAILED);
+
+        PKIX_CHECK(pkix_NameConstraintsChecker_Initialize
+                  (trustedNC, numChainCerts, &nameConstraintsChecker,
+                   plContext),
+                  PKIX_NAMECONSTRAINTSCHECKERINITIALIZEFAILED);
+
+        PKIX_CHECK(PKIX_List_AppendItem
+                  (checkers,
+                   (PKIX_PL_Object *)nameConstraintsChecker,
+                   plContext),
+                  PKIX_LISTAPPENDITEMFAILED);
+
 
         PKIX_DECREF(state->reversedCertChain);
         PKIX_INCREF(reversedCertChain);
@@ -1240,6 +1259,8 @@ cleanup:
         PKIX_DECREF(trustedPubKey);
         PKIX_DECREF(certSelector);
         PKIX_DECREF(sigChecker);
+        PKIX_DECREF(trustedNC);
+        PKIX_DECREF(nameConstraintsChecker);
         PKIX_DECREF(policyChecker);
         PKIX_DECREF(userChecker);
         PKIX_DECREF(userCheckerExtOIDs);
