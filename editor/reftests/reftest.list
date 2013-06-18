@@ -114,8 +114,8 @@ fails-if(Android) != spellcheck-contenteditable-attr.html spellcheck-contentedit
 needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-ref.html
 needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-ref.html
 == spellcheck-contenteditable-nofocus.html spellcheck-contenteditable-disabled-ref.html
-fails == spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled-ref.html
-fails == spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial-ref.html
+fails-if(!Android) == spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled-ref.html
+fails-if(!Android) == spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial-ref.html
 == spellcheck-contenteditable-attr-inherit.html spellcheck-contenteditable-disabled-ref.html
 == spellcheck-contenteditable-attr-dynamic.html spellcheck-contenteditable-disabled-ref.html
 == spellcheck-contenteditable-attr-dynamic-inherit.html spellcheck-contenteditable-disabled-ref.html
