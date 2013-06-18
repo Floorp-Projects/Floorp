@@ -172,6 +172,8 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
         return NULL;
     }
 
+    global->setBooleanValueOf(valueOf);
+
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Boolean, ctor, booleanProto))
         return NULL;
 
@@ -194,16 +196,16 @@ js::ToBooleanSlow(const Value &v)
     return !EmulatesUndefined(&v.toObject());
 }
 
-/*
- * This slow path is only ever taken for Boolean objects from other
- * compartments. The only caller of the fast path, JSON's PreprocessValue,
- * makes sure of that.
- */
 bool
-js::BooleanGetPrimitiveValueSlow(HandleObject wrappedBool, JSContext *cx)
+js::BooleanGetPrimitiveValueSlow(JSContext *cx, HandleObject obj, Value *vp)
 {
-    JS_ASSERT(wrappedBool->isCrossCompartmentWrapper());
-    JSObject *obj = Wrapper::wrappedObject(wrappedBool);
-    JS_ASSERT(obj);
-    return obj->asBoolean().unbox();
+    InvokeArgsGuard ag;
+    if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
+        return false;
+    ag.setCallee(cx->compartment()->maybeGlobal()->booleanValueOf());
+    ag.setThis(ObjectValue(*obj));
+    if (!Invoke(cx, ag))
+        return false;
+    *vp = ag.rval();
+    return true;
 }
