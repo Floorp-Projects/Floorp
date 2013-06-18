@@ -2560,7 +2560,7 @@ let GroupItems = {
         shouldShowTabView = true;
       }
     } else {
-      shouldHideTab = true
+      shouldHideTab = true;
     }
 
     // remove tab item from a groupItem
