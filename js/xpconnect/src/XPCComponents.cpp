@@ -4003,7 +4003,7 @@ nsXPCComponents_Utils::GetWeakReference(const JS::Value &object, JSContext *cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
     JS::PrepareForFullGC(rt);
     JS::GCForReason(rt, JS::gcreason::COMPONENT_UTILS);
     return NS_OK;
@@ -4021,7 +4021,7 @@ nsXPCComponents_Utils::ForceCC()
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
     JS::PrepareForFullGC(rt);
     JS::ShrinkingGC(rt, JS::gcreason::COMPONENT_UTILS);
     return NS_OK;
@@ -4035,7 +4035,7 @@ class PreciseGCRunnable : public nsRunnable
 
     NS_IMETHOD Run()
     {
-        JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+        JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
 
         JSContext *cx;
         JSContext *iter = nullptr;
