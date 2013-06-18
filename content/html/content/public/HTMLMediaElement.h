@@ -82,6 +82,21 @@ public:
    */
   nsresult LoadWithChannel(nsIChannel *aChannel, nsIStreamListener **aListener);
 
+  // Our WebIDL compiler doesn't put these values anywhere we can use.
+  enum {
+    NETWORK_EMPTY = 0,
+    NETWORK_IDLE = 1,
+    NETWORK_LOADING = 2,
+    NETWORK_NO_SOURCE = 3
+  };
+  enum {
+    HAVE_NOTHING = 0,
+    HAVE_METADATA = 1,
+    HAVE_CURRENT_DATA = 2,
+    HAVE_FUTURE_DATA = 3,
+    HAVE_ENOUGH_DATA = 4
+  };
+
   // nsIDOMHTMLMediaElement
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
 
@@ -225,7 +240,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.
