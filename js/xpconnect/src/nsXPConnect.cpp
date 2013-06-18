@@ -242,7 +242,7 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
 bool
 nsXPConnect::NeedCollect()
 {
-    return !js::AreGCGrayBitsValid(GetRuntime()->Runtime());
+    return GetRuntime()->NeedCollect();
 }
 
 void
@@ -306,215 +306,40 @@ nsXPConnect::GarbageCollect(uint32_t reason)
     return NS_OK;
 }
 
-struct NoteWeakMapChildrenTracer : public JSTracer
-{
-    NoteWeakMapChildrenTracer(nsCycleCollectionNoteRootCallback &cb)
-        : mCb(cb)
-    {
-    }
-    nsCycleCollectionNoteRootCallback &mCb;
-    bool mTracedAny;
-    JSObject *mMap;
-    void *mKey;
-    void *mKeyDelegate;
-};
-
-static void
-TraceWeakMappingChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
-{
-    MOZ_ASSERT(trc->callback == TraceWeakMappingChild);
-    void *thing = *thingp;
-    NoteWeakMapChildrenTracer *tracer =
-        static_cast<NoteWeakMapChildrenTracer *>(trc);
-    if (kind == JSTRACE_STRING)
-        return;
-    if (!xpc_IsGrayGCThing(thing) && !tracer->mCb.WantAllTraces())
-        return;
-    if (AddToCCKind(kind)) {
-        tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey, tracer->mKeyDelegate, thing);
-        tracer->mTracedAny = true;
-    } else {
-        JS_TraceChildren(trc, thing, kind);
-    }
-}
-
-struct NoteWeakMapsTracer : public js::WeakMapTracer
-{
-    NoteWeakMapsTracer(JSRuntime *rt, js::WeakMapTraceCallback cb,
-                       nsCycleCollectionNoteRootCallback &cccb)
-      : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(cccb)
-    {
-        JS_TracerInit(&mChildTracer, rt, TraceWeakMappingChild);
-    }
-    nsCycleCollectionNoteRootCallback &mCb;
-    NoteWeakMapChildrenTracer mChildTracer;
-};
-
-static void
-TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m,
-                 void *k, JSGCTraceKind kkind,
-                 void *v, JSGCTraceKind vkind)
-{
-    MOZ_ASSERT(trc->callback == TraceWeakMapping);
-    NoteWeakMapsTracer *tracer = static_cast<NoteWeakMapsTracer *>(trc);
-
-    // If nothing that could be held alive by this entry is marked gray, return.
-    if ((!k || !xpc_IsGrayGCThing(k)) && MOZ_LIKELY(!tracer->mCb.WantAllTraces())) {
-        if (!v || !xpc_IsGrayGCThing(v) || vkind == JSTRACE_STRING)
-            return;
-    }
-
-    // The cycle collector can only properly reason about weak maps if it can
-    // reason about the liveness of their keys, which in turn requires that
-    // the key can be represented in the cycle collector graph.  All existing
-    // uses of weak maps use either objects or scripts as keys, which are okay.
-    MOZ_ASSERT(AddToCCKind(kkind));
-
-    // As an emergency fallback for non-debug builds, if the key is not
-    // representable in the cycle collector graph, we treat it as marked.  This
-    // can cause leaks, but is preferable to ignoring the binding, which could
-    // cause the cycle collector to free live objects.
-    if (!AddToCCKind(kkind))
-        k = nullptr;
-
-    JSObject *kdelegate = nullptr;
-    if (k && kkind == JSTRACE_OBJECT)
-        kdelegate = js::GetWeakmapKeyDelegate((JSObject *)k);
-
-    if (AddToCCKind(vkind)) {
-        tracer->mCb.NoteWeakMapping(m, k, kdelegate, v);
-    } else {
-        tracer->mChildTracer.mTracedAny = false;
-        tracer->mChildTracer.mMap = m;
-        tracer->mChildTracer.mKey = k;
-        tracer->mChildTracer.mKeyDelegate = kdelegate;
-
-        if (v && vkind != JSTRACE_STRING)
-            JS_TraceChildren(&tracer->mChildTracer, v, vkind);
-
-        // The delegate could hold alive the key, so report something to the CC
-        // if we haven't already.
-        if (!tracer->mChildTracer.mTracedAny && k && xpc_IsGrayGCThing(k) && kdelegate)
-            tracer->mCb.NoteWeakMapping(m, k, kdelegate, nullptr);
-    }
-}
-
-// This is based on the logic in TraceWeakMapping.
-struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
-{
-    FixWeakMappingGrayBitsTracer(JSRuntime *rt)
-        : js::WeakMapTracer(rt, FixWeakMappingGrayBits)
-    {}
-
-    void
-    FixAll()
-    {
-        do {
-            mAnyMarked = false;
-            js::TraceWeakMaps(this);
-        } while (mAnyMarked);
-    }
-
-private:
-
-    static void
-    FixWeakMappingGrayBits(js::WeakMapTracer *trc, JSObject *m,
-                           void *k, JSGCTraceKind kkind,
-                           void *v, JSGCTraceKind vkind)
-    {
-        MOZ_ASSERT(!JS::IsIncrementalGCInProgress(trc->runtime),
-                   "Don't call FixWeakMappingGrayBits during a GC.");
-
-        FixWeakMappingGrayBitsTracer *tracer = static_cast<FixWeakMappingGrayBitsTracer*>(trc);
-
-        // If nothing that could be held alive by this entry is marked gray, return.
-        bool delegateMightNeedMarking = k && xpc_IsGrayGCThing(k);
-        bool valueMightNeedMarking = v && xpc_IsGrayGCThing(v) && vkind != JSTRACE_STRING;
-        if (!delegateMightNeedMarking && !valueMightNeedMarking)
-            return;
-
-        if (!AddToCCKind(kkind))
-            k = nullptr;
-
-        if (delegateMightNeedMarking && kkind == JSTRACE_OBJECT) {
-            JSObject *kdelegate = js::GetWeakmapKeyDelegate((JSObject *)k);
-            if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
-                JS::UnmarkGrayGCThingRecursively(k, JSTRACE_OBJECT);
-                tracer->mAnyMarked = true;
-            }
-        }
-
-        if (v && xpc_IsGrayGCThing(v) &&
-            (!k || !xpc_IsGrayGCThing(k)) &&
-            (!m || !xpc_IsGrayGCThing(m)) &&
-            vkind != JSTRACE_SHAPE)
-        {
-            JS::UnmarkGrayGCThingRecursively(v, vkind);
-            tracer->mAnyMarked = true;
-        }
-
-    }
-
-    bool mAnyMarked;
-};
-
 void
 nsXPConnect::FixWeakMappingGrayBits()
 {
-    FixWeakMappingGrayBitsTracer fixer(GetRuntime()->Runtime());
-    fixer.FixAll();
+    GetRuntime()->FixWeakMappingGrayBits();
 }
 
 nsresult
 nsXPConnect::BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb)
 {
-    JSRuntime* rt = GetRuntime()->Runtime();
-    static bool gcHasRun = false;
-    if (!gcHasRun) {
-        uint32_t gcNumber = JS_GetGCParameter(rt, JSGC_NUMBER);
-        if (!gcNumber)
-            NS_RUNTIMEABORT("Cannot cycle collect if GC has not run first!");
-        gcHasRun = true;
-    }
-
-    GetRuntime()->AddXPConnectRoots(cb);
-
-    NoteWeakMapsTracer trc(rt, TraceWeakMapping, cb);
-    js::TraceWeakMaps(&trc);
-
-    return NS_OK;
+    return GetRuntime()->BeginCycleCollection(cb);
 }
 
 bool
 nsXPConnect::NotifyLeaveMainThread()
 {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
-    JSRuntime *rt = mRuntime->Runtime();
-    if (JS_IsInRequest(rt))
-        return false;
-    JS_ClearRuntimeThread(rt);
-    return true;
+    return mRuntime->NotifyLeaveMainThread();
 }
 
 void
 nsXPConnect::NotifyEnterCycleCollectionThread()
 {
-    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
-    JS_SetRuntimeThread(mRuntime->Runtime());
+    mRuntime->NotifyEnterCycleCollectionThread();
 }
 
 void
 nsXPConnect::NotifyLeaveCycleCollectionThread()
 {
-    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
-    JS_ClearRuntimeThread(mRuntime->Runtime());
+    mRuntime->NotifyLeaveCycleCollectionThread();
 }
 
 void
 nsXPConnect::NotifyEnterMainThread()
 {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
-    JS_SetRuntimeThread(mRuntime->Runtime());
+    mRuntime->NotifyEnterMainThread();
 }
 
 /*
@@ -811,64 +636,18 @@ nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
     return NS_OK;
 }
 
-class JSContextParticipant : public nsCycleCollectionParticipant
-{
-public:
-    static NS_METHOD RootImpl(void *n)
-    {
-        return NS_OK;
-    }
-    static NS_METHOD UnlinkImpl(void *n)
-    {
-        return NS_OK;
-    }
-    static NS_METHOD UnrootImpl(void *n)
-    {
-        return NS_OK;
-    }
-    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
-    {
-    }
-    static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
-                                  nsCycleCollectionTraversalCallback &cb)
-    {
-        JSContext *cx = static_cast<JSContext*>(n);
-
-        // JSContexts do not have an internal refcount and always have a single
-        // owner (e.g., nsJSContext). Thus, the default refcount is 1. However,
-        // in the (abnormal) case of synchronous cycle-collection, the context
-        // may be actively executing code in which case we want to treat it as
-        // rooted by adding an extra refcount.
-        unsigned refCount = js::ContextHasOutstandingRequests(cx) ? 2 : 1;
-
-        cb.DescribeRefCountedNode(refCount, "JSContext");
-        if (JSObject *global = js::GetDefaultGlobalForContext(cx)) {
-            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
-            cb.NoteJSChild(global);
-        }
-
-        return NS_OK;
-    }
-};
-
-static const CCParticipantVTable<JSContextParticipant>::Type
-JSContext_cycleCollectorGlobal =
-{
-  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSContextParticipant)
-};
-
 // static
 nsCycleCollectionParticipant*
 nsXPConnect::JSContextParticipant()
 {
-    return JSContext_cycleCollectorGlobal.GetParticipant();
+    return mozilla::CycleCollectedJSRuntime::JSContextParticipant();
 }
 
 NS_IMETHODIMP_(void)
 nsXPConnect::NoteJSContext(JSContext *aJSContext,
                            nsCycleCollectionTraversalCallback &aCb)
 {
-    aCb.NoteNativeChild(aJSContext, JSContext_cycleCollectorGlobal.GetParticipant());
+    aCb.NoteNativeChild(aJSContext, JSContextParticipant());
 }
 
 
