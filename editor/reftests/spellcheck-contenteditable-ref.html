@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div contenteditable spellcheck="true">blahblahblah</div>
+  <script type="text/javascript">
+    var box = document.getElementsByTagName("div")[0];
+    box.focus(); //Bring the textbox into focus, triggering a spellcheck
+    box.blur(); //Blur in order to make things similar to other tests otherwise
+  </script>
+</body>
+</html>
