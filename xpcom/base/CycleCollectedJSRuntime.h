@@ -88,6 +88,9 @@ protected:
     return mJSRuntime;
   }
 
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  void UnmarkSkippableJSHolders();
+
   virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
   virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
 
@@ -168,10 +171,6 @@ public:
   bool NeedCollect() const;
   void Collect(uint32_t reason) const;
 
-// XXXkhuey should be private
-protected:
-  nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
-
 private:
   typedef const CCParticipantVTable<JSGCThingParticipant>::Type GCThingParticipantVTable;
   const GCThingParticipantVTable mGCThingCycleCollectorGlobal;
@@ -180,6 +179,8 @@ private:
   const JSZoneParticipantVTable mJSZoneCycleCollectorGlobal;
 
   JSRuntime* mJSRuntime;
+
+  nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
 
 #ifdef DEBUG
   void* mObjectToUnlink;

@@ -525,18 +525,11 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &c
     }
 }
 
-static PLDHashOperator
-UnmarkJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
-{
-    tracer->CanSkip(holder, true);
-    return PL_DHASH_NEXT;
-}
-
 void
 XPCJSRuntime::UnmarkSkippableJSHolders()
 {
     XPCAutoLock lock(mMapLock);
-    mJSHolders.Enumerate(UnmarkJSHolder, nullptr);
+    CycleCollectedJSRuntime::UnmarkSkippableJSHolders();
 }
 
 void
@@ -1113,9 +1106,7 @@ XPCJSRuntime::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
     n += mClassInfo2NativeSetMap->ShallowSizeOfIncludingThis(mallocSizeOf);
     n += mNativeSetMap->SizeOfIncludingThis(mallocSizeOf);
 
-    // NULL for the second arg;  we're not measuring anything hanging off the
-    // entries in mJSHolders.
-    n += mJSHolders.SizeOfExcludingThis(nullptr, mallocSizeOf);
+    n += CycleCollectedJSRuntime::SizeOfExcludingThis(mallocSizeOf);
 
     // There are other XPCJSRuntime members that could be measured; the above
     // ones have been seen by DMD to be worth measuring.  More stuff may be

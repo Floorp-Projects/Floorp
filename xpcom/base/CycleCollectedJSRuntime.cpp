@@ -479,6 +479,31 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   mJSRuntime = nullptr;
 }
 
+size_t
+CycleCollectedJSRuntime::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+
+  // NULL for the second arg;  we're not measuring anything hanging off the
+  // entries in mJSHolders.
+  n += mJSHolders.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+
+  return n;
+}
+
+static PLDHashOperator
+UnmarkJSHolder(void* holder, nsScriptObjectTracer*& tracer, void* arg)
+{
+  tracer->CanSkip(holder, true);
+  return PL_DHASH_NEXT;
+}
+
+void
+CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
+{
+  mJSHolders.Enumerate(UnmarkJSHolder, nullptr);
+}
+
 void
 CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
 {
