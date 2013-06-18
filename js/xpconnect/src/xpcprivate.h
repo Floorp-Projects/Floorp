@@ -506,7 +506,7 @@ public:
     virtual void NotifyLeaveCycleCollectionThread(); // DONE
     virtual void NotifyEnterMainThread(); // DONE
     virtual nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb); // DONE
-    virtual nsCycleCollectionParticipant *GetParticipant();
+    virtual nsCycleCollectionParticipant *GetParticipant(); // DONE
     virtual bool UsefulToMergeZones();
     virtual void FixWeakMappingGrayBits(); // DONE
     virtual bool NeedCollect(); // DONE
@@ -619,7 +619,6 @@ public:
 // In the current xpconnect system there can only be one XPCJSRuntime.
 // So, xpconnect can only be used on one JSRuntime within the process.
 
-// no virtuals. no refcounting.
 class XPCJSContextStack;
 class XPCIncrementalReleaseRunnable;
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
@@ -680,6 +679,13 @@ public:
     XPCLock* GetMapLock() const {return mMapLock;}
 
     JSBool OnJSContextNew(JSContext* cx);
+
+    virtual bool
+    DescribeCustomObjects(JSObject* aObject, js::Class* aClasp,
+                          char (&aName)[72]) const;
+    virtual bool
+    NoteCustomGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
+                                   nsCycleCollectionTraversalCallback& aCb) const;
 
     bool DeferredRelease(nsISupports* obj);
 

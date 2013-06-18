@@ -5,13 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/DOMJSClass.h"
 #include "jsfriendapi.h"
+#include "jsprf.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsLayoutStatics.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 inline bool
 AddToCCKind(JSGCTraceKind kind)
@@ -263,10 +267,147 @@ NoteJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
   return PL_DHASH_NEXT;
 }
 
+NS_METHOD
+JSGCThingParticipant::TraverseImpl(JSGCThingParticipant* that, void* p,
+                                   nsCycleCollectionTraversalCallback& cb)
+{
+  CycleCollectedJSRuntime* runtime = reinterpret_cast<CycleCollectedJSRuntime*>
+    (reinterpret_cast<char*>(that) -
+     offsetof(CycleCollectedJSRuntime, mGCThingCycleCollectorGlobal));
+
+  runtime->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_FULL,
+                           p, js::GCThingTraceKind(p), cb);
+  return NS_OK;
+}
+
+// NB: This is only used to initialize the participant in
+// CycleCollectedJSRuntime. It should never be used directly.
+static const CCParticipantVTable<JSGCThingParticipant>::Type
+sGCThingCycleCollectorGlobal =
+{
+  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSGCThingParticipant)
+};
+
+NS_METHOD
+JSZoneParticipant::TraverseImpl(JSZoneParticipant* that, void* p,
+                                nsCycleCollectionTraversalCallback& cb)
+{
+  CycleCollectedJSRuntime* runtime = reinterpret_cast<CycleCollectedJSRuntime*>
+    (reinterpret_cast<char*>(that) -
+     offsetof(CycleCollectedJSRuntime, mJSZoneCycleCollectorGlobal));
+
+  MOZ_ASSERT(!cb.WantAllTraces());
+  JS::Zone* zone = static_cast<JS::Zone*>(p);
+
+  runtime->TraverseZone(zone, cb);
+  return NS_OK;
+}
+
+struct TraversalTracer : public JSTracer
+{
+  TraversalTracer(nsCycleCollectionTraversalCallback& aCb) : mCb(aCb)
+  {
+  }
+  nsCycleCollectionTraversalCallback& mCb;
+};
+
+static void
+NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
+{
+  TraversalTracer* tracer = static_cast<TraversalTracer*>(aTrc);
+
+  // Don't traverse non-gray objects, unless we want all traces.
+  if (!xpc_IsGrayGCThing(aThing) && !tracer->mCb.WantAllTraces()) {
+    return;
+  }
+
+  /*
+   * This function needs to be careful to avoid stack overflow. Normally, when
+   * AddToCCKind is true, the recursion terminates immediately as we just add
+   * |thing| to the CC graph. So overflow is only possible when there are long
+   * chains of non-AddToCCKind GC things. Currently, this only can happen via
+   * shape parent pointers. The special JSTRACE_SHAPE case below handles
+   * parent pointers iteratively, rather than recursively, to avoid overflow.
+   */
+if (AddToCCKind(aTraceKind)) {
+    if (MOZ_UNLIKELY(tracer->mCb.WantDebugInfo())) {
+      // based on DumpNotify in jsapi.c
+      if (tracer->debugPrinter) {
+        char buffer[200];
+        tracer->debugPrinter(aTrc, buffer, sizeof(buffer));
+        tracer->mCb.NoteNextEdgeName(buffer);
+      } else if (tracer->debugPrintIndex != (size_t)-1) {
+        char buffer[200];
+        JS_snprintf(buffer, sizeof(buffer), "%s[%lu]",
+                    static_cast<const char *>(tracer->debugPrintArg),
+                    tracer->debugPrintIndex);
+        tracer->mCb.NoteNextEdgeName(buffer);
+      } else {
+        tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg));
+      }
+    }
+    tracer->mCb.NoteJSChild(aThing);
+  } else if (aTraceKind == JSTRACE_SHAPE) {
+    JS_TraceShapeCycleCollectorChildren(aTrc, aThing);
+  } else if (aTraceKind != JSTRACE_STRING) {
+    JS_TraceChildren(aTrc, aThing, aTraceKind);
+  }
+}
+
+static void
+NoteJSChildTracerShim(JSTracer* aTrc, void** aThingp, JSGCTraceKind aTraceKind)
+{
+  NoteJSChild(aTrc, *aThingp, aTraceKind);
+}
+
+static void
+NoteJSChildGrayWrapperShim(void* aData, void* aThing)
+{
+  TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
+  NoteJSChild(trc, aThing, js::GCThingTraceKind(aThing));
+}
+
+/*
+ * The cycle collection participant for a Zone is intended to produce the same
+ * results as if all of the gray GCthings in a zone were merged into a single node,
+ * except for self-edges. This avoids the overhead of representing all of the GCthings in
+ * the zone in the cycle collector graph, which should be much faster if many of
+ * the GCthings in the zone are gray.
+ *
+ * Zone merging should not always be used, because it is a conservative
+ * approximation of the true cycle collector graph that can incorrectly identify some
+ * garbage objects as being live. For instance, consider two cycles that pass through a
+ * zone, where one is garbage and the other is live. If we merge the entire
+ * zone, the cycle collector will think that both are alive.
+ *
+ * We don't have to worry about losing track of a garbage cycle, because any such garbage
+ * cycle incorrectly identified as live must contain at least one C++ to JS edge, and
+ * XPConnect will always add the C++ object to the CC graph. (This is in contrast to pure
+ * C++ garbage cycles, which must always be properly identified, because we clear the
+ * purple buffer during every CC, which may contain the last reference to a garbage
+ * cycle.)
+ */
+
+// NB: This is only used to initialize the participant in
+// CycleCollectedJSRuntime. It should never be used directly.
+static const CCParticipantVTable<JSZoneParticipant>::Type
+sJSZoneCycleCollectorGlobal = {
+  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSZoneParticipant)
+};
+
+// XXXkhuey this is totally wrong ...
+nsCycleCollectionParticipant*
+xpc_JSZoneParticipant()
+{
+  return sJSZoneCycleCollectorGlobal.GetParticipant();
+}
+
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
                                                  JSUseHelperThreads aUseHelperThreads,
                                                  bool aExpectUnrootedGlobals)
-  : mJSRuntime(nullptr)
+  : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
+    mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal),
+    mJSRuntime(nullptr)
 #ifdef DEBUG
   , mObjectToUnlink(nullptr)
   , mExpectUnrootedGlobals(aExpectUnrootedGlobals)
@@ -300,6 +441,183 @@ CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
       JS_CallObjectTracer(aTracer, &global, "Global Object");
     }
   }
+}
+
+void
+CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
+                                         JSGCTraceKind aTraceKind,
+                                         nsCycleCollectionTraversalCallback& aCb) const
+{
+  if (!aCb.WantDebugInfo()) {
+    aCb.DescribeGCedNode(aIsMarked, "JS Object");
+    return;
+  }
+
+  char name[72];
+  if (aTraceKind == JSTRACE_OBJECT) {
+    JSObject* obj = static_cast<JSObject*>(aThing);
+    js::Class* clasp = js::GetObjectClass(obj);
+
+    // Give the subclass a chance to do something
+    if (DescribeCustomObjects(obj, clasp, name)) {
+      // Nothing else to do!
+    } else if (clasp == &js::FunctionClass) {
+      JSFunction* fun = JS_GetObjectFunction(obj);
+      JSString* str = JS_GetFunctionDisplayId(fun);
+      if (str) {
+        NS_ConvertUTF16toUTF8 fname(JS_GetInternedStringChars(str));
+        JS_snprintf(name, sizeof(name),
+                    "JS Object (Function - %s)", fname.get());
+      } else {
+        JS_snprintf(name, sizeof(name), "JS Object (Function)");
+      }
+    } else {
+      JS_snprintf(name, sizeof(name), "JS Object (%s)",
+                  clasp->name);
+    }
+  } else {
+    static const char trace_types[][11] = {
+      "Object",
+      "String",
+      "Script",
+      "LazyScript",
+      "IonCode",
+      "Shape",
+      "BaseShape",
+      "TypeObject",
+    };
+    JS_STATIC_ASSERT(NS_ARRAY_LENGTH(trace_types) == JSTRACE_LAST + 1);
+    JS_snprintf(name, sizeof(name), "JS %s", trace_types[aTraceKind]);
+  }
+
+  // Disable printing global for objects while we figure out ObjShrink fallout.
+  aCb.DescribeGCedNode(aIsMarked, name);
+}
+
+void
+CycleCollectedJSRuntime::NoteGCThingJSChildren(void* aThing,
+                                               JSGCTraceKind aTraceKind,
+                                               nsCycleCollectionTraversalCallback& aCb) const
+{
+  MOZ_ASSERT(mJSRuntime);
+  TraversalTracer trc(aCb);
+  JS_TracerInit(&trc, mJSRuntime, NoteJSChildTracerShim);
+  trc.eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
+  JS_TraceChildren(&trc, aThing, aTraceKind);
+}
+
+void
+CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
+                                                  nsCycleCollectionTraversalCallback& aCb) const
+{
+  MOZ_ASSERT(aClasp);
+  MOZ_ASSERT(aClasp == js::GetObjectClass(aObj));
+
+  if (NoteCustomGCThingXPCOMChildren(aClasp, aObj, aCb)) {
+    // Nothing else to do!
+    return;
+  }
+  // XXX This test does seem fragile, we should probably whitelist classes
+  //     that do hold a strong reference, but that might not be possible.
+  else if (aClasp->flags & JSCLASS_HAS_PRIVATE &&
+           aClasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "js::GetObjectPrivate(obj)");
+    aCb.NoteXPCOMChild(static_cast<nsISupports*>(js::GetObjectPrivate(aObj)));
+  } else {
+    const DOMClass* domClass = GetDOMClass(aObj);
+    if (domClass) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "UnwrapDOMObject(obj)");
+      if (domClass->mDOMObjectIsISupports) {
+        aCb.NoteXPCOMChild(UnwrapDOMObject<nsISupports>(aObj));
+      } else if (domClass->mParticipant) {
+        aCb.NoteNativeChild(UnwrapDOMObject<void>(aObj),
+                            domClass->mParticipant);
+      }
+    }
+  }
+}
+
+void
+CycleCollectedJSRuntime::TraverseGCThing(TraverseSelect aTs, void* aThing,
+                                         JSGCTraceKind aTraceKind,
+                                         nsCycleCollectionTraversalCallback& aCb)
+{
+  MOZ_ASSERT(aTraceKind == js::GCThingTraceKind(aThing));
+  bool isMarkedGray = xpc_IsGrayGCThing(aThing);
+
+  if (aTs == TRAVERSE_FULL) {
+    DescribeGCThing(!isMarkedGray, aThing, aTraceKind, aCb);
+  }
+
+  // If this object is alive, then all of its children are alive. For JS objects,
+  // the black-gray invariant ensures the children are also marked black. For C++
+  // objects, the ref count from this object will keep them alive. Thus we don't
+  // need to trace our children, unless we are debugging using WantAllTraces.
+  if (!isMarkedGray && !aCb.WantAllTraces()) {
+    return;
+  }
+
+  if (aTs == TRAVERSE_FULL) {
+    NoteGCThingJSChildren(aThing, aTraceKind, aCb);
+  }
+
+  if (aTraceKind == JSTRACE_OBJECT) {
+    JSObject* obj = static_cast<JSObject*>(aThing);
+    NoteGCThingXPCOMChildren(js::GetObjectClass(obj), obj, aCb);
+  }
+}
+
+struct TraverseObjectShimClosure {
+  nsCycleCollectionTraversalCallback& cb;
+  CycleCollectedJSRuntime* self;
+};
+
+void
+CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
+                                      nsCycleCollectionTraversalCallback& aCb)
+{
+  /*
+   * We treat the zone as being gray. We handle non-gray GCthings in the
+   * zone by not reporting their children to the CC. The black-gray invariant
+   * ensures that any JS children will also be non-gray, and thus don't need to be
+   * added to the graph. For C++ children, not representing the edge from the
+   * non-gray JS GCthings to the C++ object will keep the child alive.
+   *
+   * We don't allow zone merging in a WantAllTraces CC, because then these
+   * assumptions don't hold.
+   */
+  aCb.DescribeGCedNode(false, "JS Zone");
+
+  /*
+   * Every JS child of everything in the zone is either in the zone
+   * or is a cross-compartment wrapper. In the former case, we don't need to
+   * represent these edges in the CC graph because JS objects are not ref counted.
+   * In the latter case, the JS engine keeps a map of these wrappers, which we
+   * iterate over. Edges between compartments in the same zone will add
+   * unnecessary loop edges to the graph (bug 842137).
+   */
+  TraversalTracer trc(aCb);
+  JS_TracerInit(&trc, mJSRuntime, NoteJSChildTracerShim);
+  trc.eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
+  js::VisitGrayWrapperTargets(aZone, NoteJSChildGrayWrapperShim, &trc);
+
+  /*
+   * To find C++ children of things in the zone, we scan every JS Object in
+   * the zone. Only JS Objects can have C++ children.
+   */
+  TraverseObjectShimClosure closure = { aCb, this };
+  js::IterateGrayObjects(aZone, TraverseObjectShim, &closure);
+}
+
+/* static */ void
+CycleCollectedJSRuntime::TraverseObjectShim(void* aData, void* aThing)
+{
+  TraverseObjectShimClosure* closure =
+      static_cast<TraverseObjectShimClosure*>(aData);
+
+  MOZ_ASSERT(js::GCThingTraceKind(aThing) == JSTRACE_OBJECT);
+  closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP, aThing,
+                                 JSTRACE_OBJECT, closure->cb);
 }
 
 // For all JS objects that are held by native objects but aren't held
@@ -394,6 +712,18 @@ nsCycleCollectionParticipant*
 CycleCollectedJSRuntime::JSContextParticipant()
 {
   return JSContext_cycleCollectorGlobal.GetParticipant();
+}
+
+nsCycleCollectionParticipant*
+CycleCollectedJSRuntime::GCThingParticipant() const
+{
+    return mGCThingCycleCollectorGlobal.GetParticipant();
+}
+
+nsCycleCollectionParticipant*
+CycleCollectedJSRuntime::ZoneParticipant() const
+{
+    return mJSZoneCycleCollectorGlobal.GetParticipant();
 }
 
 bool
