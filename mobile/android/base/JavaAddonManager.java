@@ -90,7 +90,7 @@ class JavaAddonManager implements GeckoEventListener {
                 Log.d(LOGTAG, "Attempting to load classes.dex file from " + zipFile + " and instantiate " + implClass);
                 try {
                     File tmpDir = mApplicationContext.getDir("dex", 0);
-                    DexClassLoader loader = new DexClassLoader(zipFile, tmpDir.getAbsolutePath(), null, mApplicationContext.getClassLoader());
+                    DexClassLoader loader = new DexClassLoader(zipFile, tmpDir.getAbsolutePath(), null, ClassLoader.getSystemClassLoader());
                     Class<?> c = loader.loadClass(implClass);
                     try {
                         Constructor<?> constructor = c.getDeclaredConstructor(Map.class);
