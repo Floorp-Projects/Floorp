@@ -185,7 +185,7 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
 // static
 nsresult
 Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
-                         JSContext* aCx, uint8_t aTypeOffset, jsval* aVal,
+                         JSContext* aCx, uint8_t aTypeOffset, JS::MutableHandle<JS::Value> aVal,
                          uint16_t aRecursionDepth)
 {
   NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
@@ -208,7 +208,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
     while (aPos < aEnd && *aPos - aTypeOffset != eTerminator) {
       JS::Rooted<JS::Value> val(aCx);
       nsresult rv = DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset,
-                                        val.address(), aRecursionDepth + 1);
+                                        &val, aRecursionDepth + 1);
       NS_ENSURE_SUCCESS(rv, rv);
 
       aTypeOffset = 0;
@@ -223,12 +223,12 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
                  "Should have found end-of-array marker");
     ++aPos;
 
-    *aVal = OBJECT_TO_JSVAL(array);
+    aVal.setObject(*array);
   }
   else if (*aPos - aTypeOffset == eString) {
     nsString key;
     DecodeString(aPos, aEnd, key);
-    if (!xpc::StringToJsval(aCx, key, aVal)) {
+    if (!xpc::StringToJsval(aCx, key, aVal.address())) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
@@ -240,10 +240,10 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    *aVal = OBJECT_TO_JSVAL(date);
+    aVal.setObject(*date);
   }
   else if (*aPos - aTypeOffset == eFloat) {
-    *aVal = DOUBLE_TO_JSVAL(DecodeNumber(aPos, aEnd));
+    aVal.setDouble(DecodeNumber(aPos, aEnd));
   }
   else {
     NS_NOTREACHED("Unknown key type!");

@@ -5489,8 +5489,6 @@ PresShell::Paint(nsView*        aViewToPaint,
     return;
   }
 
-  nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
-
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
 
@@ -5500,6 +5498,13 @@ PresShell::Paint(nsView*        aViewToPaint,
   LayerManager* layerManager =
     aViewToPaint->GetWidget()->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
+  bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
+
+  uint32_t didPaintFlags = aFlags;
+  if (!shouldInvalidate) {
+    didPaintFlags |= PAINT_COMPOSITE;
+  }
+  nsAutoNotifyDidPaint notifyDidPaint(this, didPaintFlags);
 
   // Whether or not we should set first paint when painting is
   // suppressed is debatable. For now we'll do it because
@@ -5519,9 +5524,6 @@ PresShell::Paint(nsView*        aViewToPaint,
     // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
     // that will cause us to forget to update the real layer manager!
     if (!(aFlags & PAINT_LAYERS)) {
-      if (layerManager->HasShadowManager() && Compositor::GetBackend() != LAYERS_BASIC) {
-        return;
-      }
       layerManager->BeginTransaction();
       if (layerManager->EndEmptyTransaction()) {
         return;
@@ -5556,10 +5558,12 @@ PresShell::Paint(nsView*        aViewToPaint,
                         presContext->DevPixelsToAppUnits(bounds.y),
                         presContext->DevPixelsToAppUnits(bounds.width),
                         presContext->DevPixelsToAppUnits(bounds.height));
-            aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
+            if (shouldInvalidate) {
+              aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
+            }
             presContext->NotifyInvalidation(bounds, 0);
           }
-        } else {
+        } else if (shouldInvalidate) {
           aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
         }
 
