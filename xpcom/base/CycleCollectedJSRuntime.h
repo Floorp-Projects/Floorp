@@ -88,8 +88,9 @@ protected:
     return mJSRuntime;
   }
 
-  void MaybeTraceGlobals(JSTracer* aTracer) const;
   virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
+  virtual void TraceAdditionalNativeRoots(JSTracer* aTracer) = 0;
+
 private:
 
   void
@@ -132,6 +133,12 @@ private:
   void MaybeTraverseGlobals(nsCycleCollectionNoteRootCallback& aCb) const;
 
   void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
+
+  void MaybeTraceGlobals(JSTracer* aTracer) const;
+
+  static void TraceGrayJS(JSTracer* aTracer, void* aData);
+
+  void TraceNativeRoots(JSTracer* aTracer);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);

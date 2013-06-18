@@ -765,9 +765,9 @@ public:
     }
 
     static void TraceBlackJS(JSTracer* trc, void* data);
-    static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
     void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb);
+    void TraceAdditionalNativeRoots(JSTracer* aTracer);
     void UnmarkSkippableJSHolders();
 
     static void GCCallback(JSRuntime *rt, JSGCStatus status);
