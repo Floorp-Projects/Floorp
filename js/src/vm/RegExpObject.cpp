@@ -37,12 +37,12 @@ RegExpObjectBuilder::getOrCreate()
 
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass, TenuredObject);
+    JSObject *obj = NewBuiltinClassInstance(cx, &RegExpObject::class_, TenuredObject);
     if (!obj)
         return false;
     obj->initPrivate(NULL);
 
-    reobj_ = &obj->asRegExp();
+    reobj_ = &obj->as<RegExpObject>();
     return true;
 }
 
@@ -53,13 +53,13 @@ RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
 
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    JSObject *clone = NewObjectWithGivenProto(cx, &RegExpClass, proto, proto->getParent(),
+    JSObject *clone = NewObjectWithGivenProto(cx, &RegExpObject::class_, proto, proto->getParent(),
                                               TenuredObject);
     if (!clone)
         return false;
     clone->initPrivate(NULL);
 
-    reobj_ = &clone->asRegExp();
+    reobj_ = &clone->as<RegExpObject>();
     return true;
 }
 
@@ -207,7 +207,7 @@ regexp_trace(JSTracer *trc, JSObject *obj)
         obj->setPrivate(NULL);
 }
 
-Class js::RegExpClass = {
+Class RegExpObject::class_ = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
@@ -273,7 +273,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
 Shape *
 RegExpObject::assignInitialShape(JSContext *cx)
 {
-    JS_ASSERT(isRegExp());
+    JS_ASSERT(is<RegExpObject>());
     JS_ASSERT(nativeEmpty());
 
     JS_STATIC_ASSERT(LAST_INDEX_SLOT == 0);
@@ -736,8 +736,8 @@ JSObject *
 js::CloneRegExpObject(JSContext *cx, JSObject *obj_, JSObject *proto_)
 {
     RegExpObjectBuilder builder(cx);
-    Rooted<RegExpObject*> regex(cx, &obj_->asRegExp());
-    Rooted<RegExpObject*> proto(cx, &proto_->asRegExp());
+    Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
+    Rooted<RegExpObject*> proto(cx, &proto_->as<RegExpObject>());
     return builder.clone(regex, proto);
 }
 
@@ -789,7 +789,7 @@ js::XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp)
 
     if (mode == XDR_ENCODE) {
         JS_ASSERT(objp);
-        RegExpObject &reobj = (*objp)->asRegExp();
+        RegExpObject &reobj = (*objp)->as<RegExpObject>();
         source = reobj.getSource();
         flagsword = reobj.getFlags();
     }

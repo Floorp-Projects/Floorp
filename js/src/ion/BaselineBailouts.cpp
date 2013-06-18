@@ -560,7 +560,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             v = iter.read();
             JS_ASSERT(v.isObject() || v.isUndefined());
             if (v.isObject())
-                argsObj = &v.toObject().asArguments();
+                argsObj = &v.toObject().as<ArgumentsObject>();
         }
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
