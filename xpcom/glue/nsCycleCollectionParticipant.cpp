@@ -84,7 +84,7 @@ TraceCallbackFunc::Trace(JS::Heap<jsid>* p, const char* name, void* closure) con
 }
 
 void
-TraceCallbackFunc::Trace(JSObject** p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSObject*>* p, const char* name, void* closure) const
 {
   mCallback(*p, name, closure);
 }
