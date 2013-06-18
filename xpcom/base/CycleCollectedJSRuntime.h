@@ -89,7 +89,7 @@ protected:
   }
 
   virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
-  virtual void TraceAdditionalNativeRoots(JSTracer* aTracer) = 0;
+  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
 
 private:
 
@@ -136,9 +136,12 @@ private:
 
   void MaybeTraceGlobals(JSTracer* aTracer) const;
 
+
+  static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
 
-  void TraceNativeRoots(JSTracer* aTracer);
+  virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
+  void TraceNativeGrayRoots(JSTracer* aTracer);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
