@@ -2797,8 +2797,9 @@ function JSTerm(aWebConsoleFrame)
   this.historyPlaceHolder = 0;
   this._objectActorsInVariablesViews = new Map();
 
-  this._keyPress = this.keyPress.bind(this);
-  this._inputEventHandler = this.inputEventHandler.bind(this);
+  this._keyPress = this._keyPress.bind(this);
+  this._inputEventHandler = this._inputEventHandler.bind(this);
+  this._focusEventHandler = this._focusEventHandler.bind(this);
   this._onKeypressInVariablesView = this._onKeypressInVariablesView.bind(this);
 
   EventEmitter.decorate(this);
@@ -2853,11 +2854,18 @@ JSTerm.prototype = {
   lastInputValue: "",
 
   /**
+   * Indicate input node changed since last focus.
+   *
+   * @private
+   * @type boolean
+   */
+  _inputChanged: false,
+
+  /**
    * History of code that was executed.
    * @type array
    */
   history: null,
-
   autocompletePopup: null,
   inputNode: null,
   completeNode: null,
@@ -2903,6 +2911,7 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("keypress", this._keyPress, false);
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
+    this.inputNode.addEventListener("focus", this._focusEventHandler, false);
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -3660,28 +3669,30 @@ JSTerm.prototype = {
     this.lastInputValue = aNewValue;
     this.completeNode.value = "";
     this.resizeInput();
+    this._inputChanged = true;
   },
 
   /**
    * The inputNode "input" and "keyup" event handler.
-   *
-   * @param nsIDOMEvent aEvent
+   * @private
    */
-  inputEventHandler: function JSTF_inputEventHandler(aEvent)
+  _inputEventHandler: function JST__inputEventHandler()
   {
     if (this.lastInputValue != this.inputNode.value) {
       this.resizeInput();
       this.complete(this.COMPLETE_HINT_ONLY);
       this.lastInputValue = this.inputNode.value;
+      this._inputChanged = true;
     }
   },
 
   /**
    * The inputNode "keypress" event handler.
    *
+   * @private
    * @param nsIDOMEvent aEvent
    */
-  keyPress: function JSTF_keyPress(aEvent)
+  _keyPress: function JST__keyPress(aEvent)
   {
     if (aEvent.ctrlKey) {
       let inputNode = this.inputNode;
@@ -3816,15 +3827,23 @@ JSTerm.prototype = {
             this.acceptProposedCompletion()) {
           aEvent.preventDefault();
         }
-        else {
+        else if (this._inputChanged) {
           this.updateCompleteNode(l10n.getStr("Autocomplete.blank"));
           aEvent.preventDefault();
         }
         break;
-
       default:
         break;
     }
+  },
+
+  /**
+   * The inputNode "focus" event handler.
+   * @private
+   */
+  _focusEventHandler: function JST__focusEventHandler()
+  {
+    this._inputChanged = false;
   },
 
   /**
@@ -4223,6 +4242,7 @@ JSTerm.prototype = {
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
+    this.inputNode.removeEventListener("focus", this._focusEventHandler, false);
 
     this.hud = null;
   },
