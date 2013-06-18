@@ -4,15 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
-interface USSDReceivedEvent : Event
+[Constructor(DOMString type, optional DataErrorEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+interface DataErrorEvent : Event
 {
   readonly attribute DOMString? message;
-  readonly attribute boolean sessionEnded;
 };
 
-dictionary USSDReceivedEventInit : EventInit
+dictionary DataErrorEventInit : EventInit
 {
-  DOMString? message = null;
-  boolean sessionEnded = false;
+  DOMString message = "";
 };

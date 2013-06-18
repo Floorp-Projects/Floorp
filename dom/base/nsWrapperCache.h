@@ -123,7 +123,7 @@ public:
 
   void SetIsDOMBinding()
   {
-    MOZ_ASSERT(!mWrapper && !GetWrapperFlags(),
+    MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_DOM_BINDING),
                "This flag should be set before creating any wrappers.");
     SetWrapperFlags(WRAPPER_IS_DOM_BINDING);
   }
