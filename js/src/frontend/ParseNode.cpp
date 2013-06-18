@@ -8,10 +8,6 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 
-#include "jsscriptinlines.h"
-
-#include "frontend/ParseMaps-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "frontend/Parser-inl.h"
 
 using namespace js;
@@ -374,7 +370,7 @@ NameNode::create(ParseNodeKind kind, JSAtom *atom, FullParseHandler *handler,
 const char *
 Definition::kindString(Kind kind)
 {
-    static const char *table[] = {
+    static const char * const table[] = {
         "", js_var_str, js_const_str, js_let_str, js_function_str, "argument", "unknown"
     };
 
@@ -575,7 +571,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
 
 #ifdef DEBUG
 
-static const char *parseNodeNames[] = {
+static const char * const parseNodeNames[] = {
 #define STRINGIFY(name) #name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
 #undef STRINGIFY

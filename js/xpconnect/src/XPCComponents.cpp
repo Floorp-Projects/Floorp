@@ -82,12 +82,12 @@ char* xpc_CloneAllAccess()
     return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
 }
 
-char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
+char * xpc_CheckAccessList(const PRUnichar* wideName, const char* const list[])
 {
     nsAutoCString asciiName;
     CopyUTF16toUTF8(nsDependentString(wideName), asciiName);
 
-    for (const char** p = list; *p; p++)
+    for (const char* const* p = list; *p; p++)
         if (!strcmp(*p, asciiName.get()))
             return xpc_CloneAllAccess();
 
@@ -1329,7 +1329,7 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                                       uint32_t enum_op, jsval * statep,
                                       jsid * idp, bool *_retval)
 {
-    void** iter;
+    const void** iter;
 
     switch (enum_op) {
         case JSENUMERATE_INIT:
@@ -1346,7 +1346,7 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         case JSENUMERATE_NEXT:
         {
             const char* name;
-            iter = (void**) JSVAL_TO_PRIVATE(*statep);
+            iter = (const void**) JSVAL_TO_PRIVATE(*statep);
             if (nsXPCException::IterateNSResults(nullptr, &name, nullptr, iter)) {
                 JSString* idstr = JS_NewStringCopyZ(cx, name);
                 if (idstr && JS_ValueToId(cx, STRING_TO_JSVAL(idstr), idp))
@@ -1357,7 +1357,7 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 
         case JSENUMERATE_DESTROY:
         default:
-            iter = (void**) JSVAL_TO_PRIVATE(*statep);
+            iter = (const void**) JSVAL_TO_PRIVATE(*statep);
             delete [] (char*) iter;
             *statep = JSVAL_NULL;
             return NS_OK;
@@ -1378,7 +1378,7 @@ nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     if (JSID_IS_STRING(id) && name.encodeLatin1(cx, JSID_TO_STRING(id))) {
         const char* rv_name;
-        void* iter = nullptr;
+        const void* iter = nullptr;
         nsresult rv;
         while (nsXPCException::IterateNSResults(&rv, &rv_name, nullptr, &iter)) {
             if (!strcmp(name.ptr(), rv_name)) {
@@ -4395,7 +4395,7 @@ nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsXPCComponents_Utils::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    static const char* allowed[] = { "lookupMethod", "evalInSandbox", nullptr };
+    static const char* const allowed[] = { "lookupMethod", "evalInSandbox", nullptr };
     *_retval = xpc_CheckAccessList(methodName, allowed);
     return NS_OK;
 }
@@ -4917,7 +4917,7 @@ nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    static const char* allowed[] = { "isSuccessCode", "lookupMethod", nullptr };
+    static const char* const allowed[] = { "isSuccessCode", "lookupMethod", nullptr };
     *_retval = xpc_CheckAccessList(methodName, allowed);
     if (*_retval &&
         methodName[0] == 'l' &&
@@ -4932,7 +4932,7 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 NS_IMETHODIMP
 nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const char* allowed[] = { "interfaces", "interfacesByID", "results", nullptr};
+    static const char* const allowed[] = { "interfaces", "interfacesByID", "results", nullptr};
     *_retval = xpc_CheckAccessList(propertyName, allowed);
     if (*_retval &&
         propertyName[0] == 'i' &&

@@ -185,7 +185,32 @@ addTest(function testSiblings() {
       ok(response.nodes[0] === gWalker.rootNode, "Document element is its own sibling.");
     });
   }).then(runNextTest));
-})
+});
+
+addTest(function testNextSibling() {
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#y").then(y => {
+    is(y.id, "y", "Got the right node.");
+    return gWalker.nextSibling(y);
+  }).then(z => {
+    is(z.id, "z", "nextSibling got the next node.");
+    return gWalker.nextSibling(z);
+  }).then(nothing => {
+    is(nothing, null, "nextSibling on the last node returned null.");
+  }).then(runNextTest));
+});
+
+addTest(function testPreviousSibling() {
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#b").then(b => {
+    is(b.id, "b", "Got the right node.");
+    return gWalker.previousSibling(b);
+  }).then(a => {
+    is(a.id, "a", "nextSibling got the next node.");
+    return gWalker.previousSibling(a);
+  }).then(nothing => {
+    is(nothing, null, "previousSibling on the first node returned null.");
+  }).then(runNextTest));
+});
+
 
 addTest(function testFrameTraversal() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#childFrame").then(childFrame => {

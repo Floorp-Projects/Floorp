@@ -4,19 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "frontend/FoldConstants.h"
+
 #include "mozilla/FloatingPoint.h"
 
 #include "jslibmath.h"
 
-#include "frontend/FoldConstants.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "vm/NumericConversions.h"
-
-#include "jsatominlines.h"
-
-#include "frontend/Parser-inl.h"
-#include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::frontend;

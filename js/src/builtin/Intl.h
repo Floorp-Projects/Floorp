@@ -7,6 +7,8 @@
 #ifndef Intl_h___
 #define Intl_h___
 
+#include "jsapi.h"
+
 #include "js/RootingAPI.h"
 
 struct JSContext;

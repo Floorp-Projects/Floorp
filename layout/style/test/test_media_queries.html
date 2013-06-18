@@ -171,6 +171,39 @@ function run() {
   query_should_be_parseable("not all and (-moz-device-orientation)");
   query_should_be_parseable("only all and (-moz-device-orientation)");
 
+  // Test that the 'not', 'only', 'and', and 'or' keywords are not
+  // allowed as media types.
+  query_should_not_be_parseable("not");
+  query_should_not_be_parseable("and");
+  query_should_not_be_parseable("or");
+  query_should_not_be_parseable("only");
+  query_should_be_parseable("unknowntype");
+  query_should_not_be_parseable("not not");
+  query_should_not_be_parseable("not and");
+  query_should_not_be_parseable("not or");
+  query_should_not_be_parseable("not only");
+  query_should_be_parseable("not unknowntype");
+  query_should_not_be_parseable("only not");
+  query_should_not_be_parseable("only and");
+  query_should_not_be_parseable("only or");
+  query_should_not_be_parseable("only only");
+  query_should_be_parseable("only unknowntype");
+  query_should_not_be_parseable("not and (width)");
+  query_should_not_be_parseable("and and (width)");
+  query_should_not_be_parseable("or and (width)");
+  query_should_not_be_parseable("only and (width)");
+  query_should_be_parseable("unknowntype and (width)");
+  query_should_not_be_parseable("not not and (width)");
+  query_should_not_be_parseable("not and and (width)");
+  query_should_not_be_parseable("not or and (width)");
+  query_should_not_be_parseable("not only and (width)");
+  query_should_be_parseable("not unknowntype and (width)");
+  query_should_not_be_parseable("only not and (width)");
+  query_should_not_be_parseable("only and and (width)");
+  query_should_not_be_parseable("only or and (width)");
+  query_should_not_be_parseable("only only and (width)");
+  query_should_be_parseable("only unknowntype and (width)");
+
   var features = [ "width", "height", "device-width", "device-height" ];
   var feature;
   var i;

@@ -11,6 +11,12 @@
 
 namespace js {
 
+class AbstractFramePtr;
+
+namespace ion {
+class IonJSFrameLayout;
+}
+
 /*
  * ArgumentsData stores the initial indexed arguments provided to the
  * corresponding and that function itself.  It is used to store arguments[i]

@@ -61,7 +61,7 @@ class TraceLogging
     int fileno;
     FILE *out;
 
-    const static char *type_name[];
+    static const char * const type_name[];
     static TraceLogging* _defaultLogger;
   public:
     TraceLogging();

@@ -60,43 +60,22 @@ ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...)
 }
 
 bool
-ThrowInvalidMethodThis(JSContext* aCx, const JS::CallArgs& aArgs,
-                       const char* aInterfaceName)
+ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                 const ErrNum aErrorNumber,
+                 const char* aInterfaceName)
 {
   NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
-  // This should only be called for DOM methods, which are JSNative-backed
-  // functions, so we can assume that JS_ValueToFunction and
-  // JS_GetFunctionDisplayId will both return non-null and that
-  // JS_GetStringCharsZ returns non-null.
+  // This should only be called for DOM methods/getters/setters, which
+  // are JSNative-backed functions, so we can assume that
+  // JS_ValueToFunction and JS_GetFunctionDisplayId will both return
+  // non-null and that JS_GetStringCharsZ returns non-null.
   JS::Rooted<JSFunction*> func(aCx, JS_ValueToFunction(aCx, aArgs.calleev()));
   MOZ_ASSERT(func);
   JS::Rooted<JSString*> funcName(aCx, JS_GetFunctionDisplayId(func));
   MOZ_ASSERT(funcName);
   JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
-                         static_cast<const unsigned>(MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE),
+                         static_cast<const unsigned>(aErrorNumber),
                          JS_GetStringCharsZ(aCx, funcName),
-                         ifaceName.get());
-  return false;
-}
-
-bool
-ThrowInvalidGetterThis(JSContext* aCx, const char* aInterfaceName)
-{
-  // Sadly for getters we have no way to get the name of the property.
-  NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
-  JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
-                         static_cast<const unsigned>(MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE),
-                         ifaceName.get());
-  return false;
-}
-
-bool
-ThrowInvalidSetterThis(JSContext* aCx, const char* aInterfaceName)
-{
-  // Sadly for setters we have no way to get the name of the property.
-  NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
-  JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
-                         static_cast<const unsigned>(MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE),
                          ifaceName.get());
   return false;
 }
@@ -850,8 +829,8 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
           // They all have getters, so we can just make it.
           JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, wrapper));
           JS::Rooted<JSFunction*> fun(cx,
-                                      JS_NewFunction(cx, (JSNative)attrSpec.getter.op,
-                                                     0, 0, global, nullptr));
+                                      JS_NewFunctionById(cx, (JSNative)attrSpec.getter.op,
+                                                         0, 0, global, id));
           if (!fun)
             return false;
           SET_JITINFO(fun, attrSpec.getter.info);
@@ -860,8 +839,8 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
           desc->attrs |= JSPROP_GETTER;
           if (attrSpec.setter.op) {
             // We have a setter! Make it.
-            fun = JS_NewFunction(cx, (JSNative)attrSpec.setter.op, 1, 0,
-                                 global, nullptr);
+            fun = JS_NewFunctionById(cx, (JSNative)attrSpec.setter.op, 1, 0,
+                                     global, id);
             if (!fun)
               return false;
             SET_JITINFO(fun, attrSpec.setter.info);

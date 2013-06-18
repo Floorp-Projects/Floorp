@@ -150,7 +150,7 @@ struct JSSrcNoteSpec {
     int8_t          arity;      /* number of offset operands */
 };
 
-extern JS_FRIEND_DATA(JSSrcNoteSpec)  js_SrcNoteSpec[];
+extern JS_FRIEND_DATA(const JSSrcNoteSpec) js_SrcNoteSpec[];
 extern JS_FRIEND_API(unsigned)         js_SrcNoteLength(jssrcnote *sn);
 
 /*

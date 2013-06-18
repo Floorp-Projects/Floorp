@@ -76,7 +76,7 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
         }
 
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
-            GeckoAppShell.onChangeNetworkLinkStatus(status);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(status));
         }
     }
 }

@@ -34,11 +34,6 @@ BROWSER_TESTS = \
   browser_form_auto_complete.html \
   $(NULL)
 
-# disabled due to timeouts and lack of plugin support.
-#  browser_plugin_input.html \
-#  browser_plugin_input_mouse.js \
-#  browser_plugin_input_keyboard.js \
-
 ifndef MOZ_DEBUG
 BROWSER_TESTS += \
   browser_selection_basic.js \
