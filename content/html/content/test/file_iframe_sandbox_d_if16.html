@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 838692</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<script type="application/javascript">
+function doTest() {
+  window.parent.parent.postMessage("test attempted", "*");
+  sendMouseEvent({type:'click'}, 'anchor');
+}
+</script>
+
+<body onload="doTest()">
+  I am sandboxed with 'allow-same-origin allow-scripts'
+
+  <a href="file_iframe_sandbox_navigation_fail.html?Test 16: Navigate parent/ancestor by name:%20" target='if_parent' id='anchor'>
+</body>
+</html>

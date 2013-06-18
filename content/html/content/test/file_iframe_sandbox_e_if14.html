@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 838692</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+  function doTest() {
+    var testContext = location.search.substring(1);
+    try {
+      var topsOpener = window.top.opener;
+      window.open("file_iframe_sandbox_top_navigation_fail.html?" + testContext, "_top");
+      topsOpener.postMessage({ok: false, desc: unescape(testContext) + "top navigation should NOT be allowed by a document sandboxed without 'allow-top-navigation.'"}, "*");
+    } catch(error) {
+      window.top.opener.postMessage({ok: true, desc: unescape(testContext) + "as expected error thrown during window.open(..., \"_top\")"}, "*");
+      window.top.close();
+    }
+  }
+</script>
+<body onload="doTest()">
+  I am sandboxed with 'allow-scripts'
+</body>
+</html>

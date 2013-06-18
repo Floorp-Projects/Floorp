@@ -50,6 +50,7 @@ class BasicTest(unittest.TestCase):
         except mozdevice.DMError:
             exceptionThrown = True
         self.assertEqual(exceptionThrown, True)
+        a.should_stop = True
         a.wait()
 
     def test_shell(self):

@@ -38,22 +38,10 @@ js::AutoCompartment::~AutoCompartment()
     cx_->leaveCompartment(origin_);
 }
 
-void *
-js::Allocator::onOutOfMemory(void *p, size_t nbytes)
-{
-    return zone->rt->onOutOfMemory(p, nbytes);
-}
-
 void
 js::Allocator::updateMallocCounter(size_t nbytes)
 {
     zone->rt->updateMallocCounter(zone, nbytes);
-}
-
-void
-js::Allocator::reportAllocationOverflow()
-{
-    js_ReportAllocationOverflow(NULL);
 }
 
 inline void *

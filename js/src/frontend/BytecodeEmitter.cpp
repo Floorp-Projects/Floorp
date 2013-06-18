@@ -14,31 +14,22 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#ifdef HAVE_MEMORY_H
-#include <memory.h>
-#endif
 #include <string.h>
 
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsscript.h"
-#include "jsautooplen.h"        // generated headers last
 
-#include "ds/LifoAlloc.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "ion/AsmJS.h"
 #include "vm/Debugger.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -47,7 +38,6 @@
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "frontend/SharedContext-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -286,7 +276,7 @@ const char js_with_statement_str[] = "with statement";
 const char js_finally_block_str[]  = "finally block";
 const char js_script_str[]         = "script";
 
-static const char *statementName[] = {
+static const char * const statementName[] = {
     "label statement",       /* LABEL */
     "if statement",          /* IF */
     "else statement",        /* ELSE */
@@ -6426,7 +6416,7 @@ CGConstList::finish(ConstArray *array)
  * We should try to get rid of offsetBias (always 0 or 1, where 1 is
  * JSOP_{NOP,POP}_LENGTH), which is used only by SRC_FOR.
  */
-JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
+JS_FRIEND_DATA(const JSSrcNoteSpec) js_SrcNoteSpec[] = {
 /*  0 */ {"null",           0},
 
 /*  1 */ {"if",             0},

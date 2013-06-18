@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div contenteditable spellcheck="false">blahblahblah</div>
+  <script>
+    // Adding focus to the textbox should trigger a spellcheck
+    document.querySelector("div").focus();
+    document.querySelector("div").blur();
+  </script>
+</body>
+</html>

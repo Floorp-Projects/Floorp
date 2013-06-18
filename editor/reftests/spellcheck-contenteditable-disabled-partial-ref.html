@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <span contenteditable>sakde</span> kreid <span contenteditable>slodv</span>
+  <script>
+    // Adding focus to the textbox should trigger a spellcheck
+    document.querySelector("span").focus();
+    document.querySelector("span + span").focus();
+    document.querySelector("span + span").blur();
+  </script>
+</body>
+</html>

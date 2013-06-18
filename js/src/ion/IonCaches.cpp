@@ -84,7 +84,7 @@ CodeOffsetJump::fixup(MacroAssembler *masm)
 const char *
 IonCache::CacheName(IonCache::Kind kind)
 {
-    static const char *names[] =
+    static const char * const names[] =
     {
 #define NAME(x) #x,
         IONCACHE_KIND_LIST(NAME)

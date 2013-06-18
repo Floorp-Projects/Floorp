@@ -43,7 +43,6 @@ namespace ABI {
     };
     namespace UI {
       namespace Core {
-        struct CorePhysicalKeyStatus;
         struct ICoreWindow;
         struct ICoreDispatcher;
         struct IAcceleratorKeyEventArgs;
@@ -82,7 +81,6 @@ private:
   typedef ABI::Windows::Foundation::Point Point;
 
   // UI::Core
-  typedef ABI::Windows::UI::Core::CorePhysicalKeyStatus CorePhysicalKeyStatus;
   typedef ABI::Windows::UI::Core::ICoreWindow ICoreWindow;
   typedef ABI::Windows::UI::Core::IAcceleratorKeyEventArgs \
                                   IAcceleratorKeyEventArgs;
@@ -172,12 +170,9 @@ private:
   void UnregisterInputEvents();
 
   // Event processing helpers.  See function definitions for more info.
-  void OnKeyDown(uint32_t aVKey,
-                 CorePhysicalKeyStatus const& aKeyStatus);
-  void OnKeyUp(uint32_t aVKey,
-               CorePhysicalKeyStatus const& aKeyStatus);
-  void OnCharacterReceived(uint32_t aVKey,
-                           CorePhysicalKeyStatus const& aKeyStatus);
+  void OnKeyDown(uint32_t aVKey);
+  void OnKeyUp(uint32_t aVKey);
+  void OnCharacterReceived(uint32_t aVKey);
   void OnPointerNonTouch(IPointerPoint* aPoint);
   void InitGeckoMouseEventFromPointerPoint(nsMouseEvent& aEvent,
                                            IPointerPoint* aPoint);

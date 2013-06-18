@@ -61,7 +61,7 @@ js::rdtsc(void)
 }
 #endif
 
-const char* TraceLogging::type_name[] = {
+const char* const TraceLogging::type_name[] = {
     "start,ion_compile",
     "stop,ion_compile",
     "start,ion_cannon",

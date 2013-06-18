@@ -1024,7 +1024,7 @@ namespace JSC {
             store32(SparcRegisters::g2, address.m_ptr);
         }
 
-        void load32(void* address, RegisterID dest)
+        void load32(const void* address, RegisterID dest)
         {
             m_assembler.move_nocheck((int)address, SparcRegisters::g3);
             m_assembler.lduw_r(SparcRegisters::g3, SparcRegisters::g0, dest);

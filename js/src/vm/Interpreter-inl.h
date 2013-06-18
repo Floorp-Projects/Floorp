@@ -23,7 +23,6 @@
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
 #include "jsopcodeinlines.h"
-#include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
 #include "vm/GlobalObject-inl.h"
 #include "vm/Stack-inl.h"
@@ -200,17 +199,6 @@ NativeGet(JSContext *cx, JSObject *objArg, JSObject *pobjArg, Shape *shapeArg,
     return true;
 }
 
-#if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
-extern void
-AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
-                            PropertyCacheEntry *entry);
-#else
-inline void
-AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
-                            PropertyCacheEntry *entry)
-{}
-#endif
-
 inline bool
 GetLengthProperty(const Value &lval, MutableHandleValue vp)
 {
@@ -244,129 +232,6 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
     }
 
     return false;
-}
-
-inline bool
-GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHandleValue lval,
-                     MutableHandleValue vp)
-{
-    JSOp op = JSOp(*pc);
-
-    if (op == JSOP_LENGTH) {
-        if (IsOptimizedArguments(cx->fp(), lval.address())) {
-            vp.setInt32(cx->fp()->numActualArgs());
-            return true;
-        }
-
-        if (GetLengthProperty(lval, vp))
-            return true;
-    }
-
-    JSObject *obj = ToObjectFromStack(cx, lval);
-    if (!obj)
-        return false;
-
-    PropertyCacheEntry *entry;
-    JSObject *pobj;
-    PropertyName *name;
-    cx->propertyCache().test(cx, pc, &obj, &pobj, &entry, &name);
-    if (!name) {
-        AssertValidPropertyCacheHit(cx, obj, pobj, entry);
-        return NativeGet(cx, obj, pobj, entry->prop, JSGET_CACHE_RESULT, vp);
-    }
-
-    bool wasObject = lval.isObject();
-
-    RootedId id(cx, NameToId(name));
-    RootedObject nobj(cx, obj);
-
-    if (obj->getOps()->getProperty) {
-        if (!JSObject::getGeneric(cx, nobj, nobj, id, vp))
-            return false;
-    } else {
-        if (!GetPropertyHelper(cx, nobj, id, JSGET_CACHE_RESULT, vp))
-            return false;
-    }
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (op == JSOP_CALLPROP &&
-        JS_UNLIKELY(vp.isPrimitive()) &&
-        wasObject)
-    {
-        if (!OnUnknownMethod(cx, nobj, IdToValue(id), vp))
-            return false;
-    }
-#endif
-
-    return true;
-}
-
-inline bool
-SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValue rval)
-{
-    JS_ASSERT(*pc == JSOP_SETPROP);
-
-    RootedObject obj(cx, ToObjectFromStack(cx, lval));
-    if (!obj)
-        return false;
-
-    PropertyCacheEntry *entry;
-    JSObject *obj2;
-    PropertyName *name;
-    if (cx->propertyCache().testForSet(cx, pc, obj, &entry, &obj2, &name)) {
-        /*
-         * Property cache hit, only partially confirmed by testForSet. We
-         * know that the entry applies to regs.pc and that obj's shape
-         * matches.
-         *
-         * The entry predicts a set either an existing "own" property, or
-         * on a prototype property that has a setter.
-         */
-        RootedShape shape(cx, entry->prop);
-        JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
-        JS_ASSERT_IF(shape->hasSlot(), entry->isOwnPropertyHit());
-
-        if (entry->isOwnPropertyHit() ||
-            ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape)) {
-#ifdef DEBUG
-            if (entry->isOwnPropertyHit()) {
-                JS_ASSERT(obj->nativeLookup(cx, shape->propid()) == shape);
-            } else {
-                JS_ASSERT(obj2->nativeLookup(cx, shape->propid()) == shape);
-                JS_ASSERT(entry->isPrototypePropertyHit());
-                JS_ASSERT(entry->kshape != entry->pshape);
-                JS_ASSERT(!shape->hasSlot());
-            }
-#endif
-
-            if (shape->hasDefaultSetter() && shape->hasSlot()) {
-                /* Fast path for, e.g., plain Object instance properties. */
-                JSObject::nativeSetSlotWithType(cx, obj, shape, rval);
-            } else {
-                RootedValue rref(cx, rval);
-                bool strict = cx->stack.currentScript()->strict;
-                if (!js_NativeSet(cx, obj, obj, shape, strict, &rref))
-                    return false;
-            }
-            return true;
-        }
-
-        GET_NAME_FROM_BYTECODE(cx->stack.currentScript(), pc, 0, name);
-    }
-
-    bool strict = cx->stack.currentScript()->strict;
-    RootedValue rref(cx, rval);
-
-    RootedId id(cx, NameToId(name));
-    if (JS_LIKELY(!obj->getOps()->setProperty)) {
-        if (!baseops::SetPropertyHelper(cx, obj, obj, id, DNP_CACHE_RESULT, &rref, strict))
-            return false;
-    } else {
-        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, strict))
-            return false;
-    }
-
-    return true;
 }
 
 template <bool TypeOf> inline bool

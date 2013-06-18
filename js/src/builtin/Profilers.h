@@ -11,7 +11,7 @@
 #ifndef Profilers_h___
 #define Profilers_h___
 
-#include "jsapi.h"
+#include "jstypes.h"
 
 /**
  * Start any profilers that are available and have been configured on for this

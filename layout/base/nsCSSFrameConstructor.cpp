@@ -8246,8 +8246,10 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           DebugVerifyStyleTree(frame);
         }
       }
-    } else {
-      NS_WARNING("Unable to test style tree integrity -- no content node");
+    } else if (!changeData->mFrame ||
+               changeData->mFrame->GetType() != nsGkAtoms::viewportFrame) {
+      NS_WARNING("Unable to test style tree integrity -- no content node "
+                 "(and not a viewport frame)");
     }
 #endif
   }
