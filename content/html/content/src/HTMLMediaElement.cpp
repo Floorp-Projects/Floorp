@@ -2581,7 +2581,7 @@ public:
   {
     mHaveCurrentData = true;
     if (mElement) {
-      mElement->FirstFrameLoaded(false);
+      mElement->FirstFrameLoaded();
     }
     UpdateReadyStateForData();
     DoNotifyOutput();
@@ -2671,8 +2671,7 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   }
 
   AddRemoveSelfReference();
-  // FirstFrameLoaded(false) will be called when the stream has current data,
-  // to complete the setup by entering the HAVE_CURRENT_DATA state.
+  // FirstFrameLoaded() will be called when the stream has current data.
 }
 
 void HTMLMediaElement::EndSrcMediaStreamPlayback()
@@ -2744,7 +2743,7 @@ void HTMLMediaElement::MetadataLoaded(int aChannels,
   }
 }
 
-void HTMLMediaElement::FirstFrameLoaded(bool aResourceFullyLoaded)
+void HTMLMediaElement::FirstFrameLoaded()
 {
   ChangeDelayLoadStatus(false);
   UpdateReadyStateForData(NEXT_FRAME_UNAVAILABLE);
@@ -2752,7 +2751,6 @@ void HTMLMediaElement::FirstFrameLoaded(bool aResourceFullyLoaded)
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
 
   if (mDecoder && mAllowSuspendAfterFirstFrame && mPaused &&
-      !aResourceFullyLoaded &&
       !HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
       mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
     mSuspendedAfterFirstFrame = true;
@@ -2772,26 +2770,6 @@ void HTMLMediaElement::FirstFrameLoaded(bool aResourceFullyLoaded)
     ChangeReadyState(HAVE_ENOUGH_DATA);
     return;
   }
-}
-
-void HTMLMediaElement::ResourceLoaded()
-{
-  NS_ASSERTION(!mSrcStream, "Don't call this for streams");
-
-  mBegun = false;
-  mNetworkState = NETWORK_IDLE;
-  AddRemoveSelfReference();
-  if (mReadyState >= HAVE_METADATA) {
-    // MediaStream sources are put into HAVE_CURRENT_DATA state here on setup. If the
-    // stream is not blocked, we will receive a notification that will put it
-    // into HAVE_ENOUGH_DATA state.
-    ChangeReadyState(mSrcStream ? HAVE_CURRENT_DATA
-                     : HAVE_ENOUGH_DATA);
-  }
-  // Ensure a progress event is dispatched at the end of download.
-  DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
-  // The download has stopped.
-  DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
 }
 
 void HTMLMediaElement::NetworkError()
@@ -2938,7 +2916,7 @@ void HTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
 
   if (mReadyState < HAVE_METADATA) {
     // aNextFrame might have a next frame because the decoder can advance
-    // on its own thread before ResourceLoaded or MetadataLoaded gets
+    // on its own thread before MetadataLoaded gets
     // a chance to run.
     // The arrival of more data can't change us out of this readyState.
     return;
@@ -2955,6 +2933,8 @@ void HTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     // media cache is too small, and scripts are bound to fail. Don't force
     // this transition if the decoder is in ended state; the readyState
     // should remain at HAVE_CURRENT_DATA in this case.
+    // Note that this state transition includes the case where we finished
+    // downloaded the whole data stream.
     ChangeReadyState(HAVE_ENOUGH_DATA);
     return;
   }
