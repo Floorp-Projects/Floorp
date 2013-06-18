@@ -782,12 +782,14 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
   RootJSResultObjects();
 
   // The Unicode converter has already zapped the BOM if there was one
+  JS::Rooted<JS::Value> value(aCx);
   if (!JS_ParseJSON(aCx,
                     static_cast<const jschar*>(mResponseText.get()), mResponseText.Length(),
-                    JS::MutableHandle<JS::Value>::fromMarkedLocation(&mResultJSON))) {
+                    &value)) {
     return NS_ERROR_FAILURE;
   }
 
+  mResultJSON = value;
   return NS_OK;
 }
 

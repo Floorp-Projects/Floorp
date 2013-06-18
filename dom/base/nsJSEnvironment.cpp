@@ -3523,7 +3523,7 @@ public:
 
 protected:
   JSContext *mContext;
-  JS::Value *mArgv;
+  JS::Heap<JS::Value> *mArgv;
   uint32_t mArgc;
 };
 
@@ -3534,9 +3534,10 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
     mArgc(argc)
 {
   // copy the array - we don't know its lifetime, and ours is tied to xpcom
-  // refcounting.  Alloc zero'd array so cleanup etc is safe.
+  // refcounting.
   if (argc) {
-    mArgv = (JS::Value *) PR_CALLOC(argc * sizeof(JS::Value));
+    static const fallible_t fallible = fallible_t();
+    mArgv = new (fallible) JS::Heap<JS::Value>[argc];
     if (!mArgv) {
       *prv = NS_ERROR_OUT_OF_MEMORY;
       return;
@@ -3566,7 +3567,7 @@ void
 nsJSArgArray::ReleaseJSObjects()
 {
   if (mArgv) {
-    PR_DELETE(mArgv);
+    delete [] mArgv;
   }
   if (mArgc > 0) {
     mArgc = 0;

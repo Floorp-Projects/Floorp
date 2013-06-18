@@ -176,9 +176,9 @@ protected:
   nsCString mContinueToQuery;
 
   // These are cycle-collected!
-  jsval mCachedKey;
-  jsval mCachedPrimaryKey;
-  jsval mCachedValue;
+  JS::Heap<JS::Value> mCachedKey;
+  JS::Heap<JS::Value> mCachedPrimaryKey;
+  JS::Heap<JS::Value> mCachedValue;
 
   Key mRangeKey;
 

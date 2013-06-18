@@ -503,8 +503,8 @@ void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
 
 struct JsGcTracer : public TraceCallbacks
 {
-    virtual void Trace(JS::Value *p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallValueTracer(static_cast<JSTracer*>(closure), p, name);
+    virtual void Trace(JS::Heap<JS::Value> *p, const char *name, void *closure) const MOZ_OVERRIDE {
+        JS_CallHeapValueTracer(static_cast<JSTracer*>(closure), p, name);
     }
     virtual void Trace(jsid *p, const char *name, void *closure) const MOZ_OVERRIDE {
         JS_CallIdTracer(static_cast<JSTracer*>(closure), p, name);
