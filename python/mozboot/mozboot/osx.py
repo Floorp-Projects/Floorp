@@ -132,6 +132,7 @@ class OSXBootstrapper(BaseBootstrapper):
         self.ensure_xcode()
 
         choice = self.ensure_package_manager()
+        self.package_manager = choice
         getattr(self, 'ensure_%s_packages' % choice)()
 
     def ensure_xcode(self):
@@ -183,10 +184,10 @@ class OSXBootstrapper(BaseBootstrapper):
                 sys.exit(1)
 
     def ensure_homebrew_packages(self):
-        brew = self.which('brew')
-        assert brew is not None
+        self.brew = self.which('brew')
+        assert self.brew is not None
 
-        installed = self.check_output([brew, 'list']).split()
+        installed = self.check_output([self.brew, 'list']).split()
 
         packages = [
             # We need to install Python because Mercurial requires the Python
@@ -209,19 +210,19 @@ class OSXBootstrapper(BaseBootstrapper):
                 print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
                 printed = True
 
-            subprocess.check_call([brew, '-v', 'install', package])
+            subprocess.check_call([self.brew, '-v', 'install', package])
 
         if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
-            subprocess.check_call([brew, '-v', 'install', 'llvm',
+            subprocess.check_call([self.brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
 
     def ensure_macports_packages(self):
-        port = self.which('port')
-        assert port is not None
+        self.port = self.which('port')
+        assert self.port is not None
 
-        installed = set(self.check_output([port, 'installed']).split())
+        installed = set(self.check_output([self.port, 'installed']).split())
 
         packages = ['python27',
                     'mercurial',
@@ -232,14 +233,14 @@ class OSXBootstrapper(BaseBootstrapper):
         missing = [package for package in packages if package not in installed]
         if missing:
             print(PACKAGE_MANAGER_PACKAGES % ('MacPorts',))
-            self.run_as_root([port, '-v', 'install'] + missing)
+            self.run_as_root([self.port, '-v', 'install'] + missing)
 
         if self.os_version < StrictVersion('10.7') and MACPORTS_CLANG_PACKAGE not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
-            self.run_as_root([port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
+            self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
 
-        self.run_as_root([port, 'select', '--set', 'python', 'python27'])
-        self.run_as_root([port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
+        self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
+        self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
 
     def ensure_package_manager(self):
         '''
@@ -293,4 +294,30 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.which('port') is None:
             print(MACPORTS_POSTINSTALL_RESTART_REQUIRED)
             sys.exit(1)
+
+    def _update_package_manager(self):
+        if self.package_manager == 'homebrew':
+            subprocess.check_call([self.brew, '-v', 'update'])
+        else:
+            assert self.package_manager == 'macports'
+            self.run_as_root([self.port, 'selfupdate'])
+
+    def _upgrade_package(self, package):
+        self._ensure_package_manager_updated()
+
+        if self.package_manager == 'homebrew':
+            subprocess.check_call([self.brew, '-v', 'upgrade', package])
+        else:
+            assert self.package_manager == 'macports'
+
+            self.run_as_root([self.port, 'upgrade', package])
+
+    def upgrade_mercurial(self, current):
+        self._upgrade_package('mercurial')
+
+    def upgrade_python(self, current):
+        if self.package_manager == 'homebrew':
+            self._upgrade_package('python')
+        else:
+            self._upgrade_package('python27')
 

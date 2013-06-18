@@ -27,3 +27,11 @@ class UbuntuBootstrapper(BaseBootstrapper):
             'mesa-common-dev',
             'uuid',
             'yasm')
+
+    def _update_package_manager(self):
+        self.run_as_root(['apt-get', 'update'])
+
+    def upgrade_mercurial(self):
+        self._ensure_package_manager_updated()
+        self.apt_install('mercurial')
+
