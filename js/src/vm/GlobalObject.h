@@ -66,7 +66,8 @@ class GlobalObject : public JSObject
     static const unsigned STANDARD_CLASS_SLOTS  = JSProto_LIMIT * 3;
 
     /* Various function values needed by the engine. */
-    static const unsigned EVAL                    = STANDARD_CLASS_SLOTS;
+    static const unsigned BOOLEAN_VALUEOF         = STANDARD_CLASS_SLOTS;
+    static const unsigned EVAL                    = BOOLEAN_VALUEOF + 1;
     static const unsigned CREATE_DATAVIEW_FOR_THIS = EVAL + 1;
     static const unsigned THROWTYPEERROR          = CREATE_DATAVIEW_FOR_THIS + 1;
     static const unsigned PROTO_GETTER            = THROWTYPEERROR + 1;
@@ -193,6 +194,7 @@ class GlobalObject : public JSObject
 
   public:
     /* XXX Privatize me! */
+    inline void setBooleanValueOf(Handle<JSFunction*> valueOfFun);
     inline void setCreateDataViewForThis(Handle<JSFunction*> fun);
 
     template<typename T>
@@ -394,6 +396,11 @@ class GlobalObject : public JSObject
     JSObject *getThrowTypeError() const {
         JS_ASSERT(functionObjectClassesInitialized());
         return &getSlot(THROWTYPEERROR).toObject();
+    }
+
+    Value booleanValueOf() const {
+        JS_ASSERT(booleanClassInitialized());
+        return getSlot(BOOLEAN_VALUEOF);
     }
 
     Value createDataViewForThis() const {
