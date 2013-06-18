@@ -1456,6 +1456,8 @@
  *          The display name for the handler. If emtpy no value will be set.
  * @param   _ISPROTOCOL
  *          Sets protocol handler specific registry values when "true".
+ *          Deletes protocol handler specific registry values when "delete".
+ *          Otherwise doesn't touch handler specific registry values.
  *
  * $R3 = storage for SOFTWARE\Classes
  * $R4 = string value of the current registry key path.
@@ -1473,7 +1475,7 @@
     !define ${_MOZFUNC_UN}AddDisabledDDEHandlerValues "!insertmacro ${_MOZFUNC_UN}AddDisabledDDEHandlerValuesCall"
 
     Function ${_MOZFUNC_UN}AddDisabledDDEHandlerValues
-      Exch $R9 ; true if a protocol handler
+      Exch $R9 ; _ISPROTOCOL
       Exch 1
       Exch $R8 ; FriendlyTypeName
       Exch 2
