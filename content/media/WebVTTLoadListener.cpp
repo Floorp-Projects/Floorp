@@ -160,7 +160,7 @@ WebVTTLoadListener::OnParsedCue(webvtt_cue* aCue)
 
   nsRefPtr<TextTrackCue> textTrackCue =
     new TextTrackCue(mElement->OwnerDoc()->GetParentObject(),
-                     SECONDS_TO_MS(aCue->from), SECONDS_TO_MS(aCue->until),
+                     MS_TO_SECONDS(aCue->from), MS_TO_SECONDS(aCue->until),
                      NS_ConvertUTF8toUTF16(text), mElement,
                      aCue->node_head);
 
