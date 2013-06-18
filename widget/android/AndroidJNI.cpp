@@ -22,7 +22,6 @@
 #include <android/log.h>
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "nsINetworkLinkService.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
@@ -85,33 +84,10 @@ Java_org_mozilla_gecko_GeckoAppShell_setLayerClient(JNIEnv *jenv, jclass, jobjec
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *jenv, jclass jc)
-{
-    if (nsAppShell::gAppShell) {
-        nsAppShell::gAppShell->NotifyObservers(nullptr,
-                                               "memory-pressure",
-                                               NS_LITERAL_STRING("low-memory").get());
-    }
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
 {
     if (nsAppShell::gAppShell)
         nsAppShell::gAppShell->OnResume();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv *jenv, jclass, jstring jObserverKey, jstring jTopic, jstring jData)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    nsJNIString sObserverKey(jObserverKey, jenv);
-    nsJNIString sTopic(jTopic, jenv);
-    nsJNIString sData(jData, jenv);
-
-    nsAppShell::gAppShell->CallObserver(sObserverKey, sTopic, sData);
 }
 
 NS_EXPORT void JNICALL
@@ -126,19 +102,6 @@ Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstrin
     jenv->ReleaseStringChars(jObserverKey, observerKey);
 
     nsAppShell::gAppShell->RemoveObserver(sObserverKey);
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *jenv, jclass, jstring jStatus)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    nsJNIString sStatus(jStatus, jenv);
-
-    nsAppShell::gAppShell->NotifyObservers(nullptr,
-                                           NS_NETWORK_LINK_TOPIC,
-                                           sStatus.get());
 }
 
 NS_EXPORT void JNICALL

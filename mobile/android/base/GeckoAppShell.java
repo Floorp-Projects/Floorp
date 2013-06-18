@@ -171,10 +171,10 @@ public class GeckoAppShell
     //    public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void setLayerClient(GeckoLayerClient client);
     public static native void onResume();
-    public static native void onLowMemory();
-    public static native void callObserver(String observerKey, String topic, String data);
+    public static void callObserver(String observerKey, String topic, String data) {
+        sendEventToGecko(GeckoEvent.createCallObserverEvent(observerKey, topic, data));
+    }
     public static native void removeObserver(String observerKey);
-    public static native void onChangeNetworkLinkStatus(String status);
     public static native Message getNextMessageFromQueue(MessageQueue queue);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
 

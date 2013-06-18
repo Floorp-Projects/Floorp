@@ -365,8 +365,8 @@ static const JSFunctionSpec string_functions[] = {
     JS_FS_END
 };
 
-jschar      js_empty_ucstr[]  = {0};
-JSSubString js_EmptySubString = {0, js_empty_ucstr};
+const jschar      js_empty_ucstr[]  = {0};
+const JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
 static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
@@ -606,12 +606,13 @@ DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
         size_t lhsLength = rope->leftChild()->length() - begin;
         size_t rhsLength = begin + len - rope->leftChild()->length();
 
-        RootedString lhs(cx, js_NewDependentString(cx, rope->leftChild(),
+        Rooted<JSRope *> ropeRoot(cx, rope);
+        RootedString lhs(cx, js_NewDependentString(cx, ropeRoot->leftChild(),
                                                    begin, lhsLength));
         if (!lhs)
             return NULL;
 
-        RootedString rhs(cx, js_NewDependentString(cx, rope->rightChild(), 0, rhsLength));
+        RootedString rhs(cx, js_NewDependentString(cx, ropeRoot->rightChild(), 0, rhsLength));
         if (!rhs)
             return NULL;
 

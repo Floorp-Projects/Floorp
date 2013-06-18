@@ -4,18 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gc/Marking.h"
+
 #include "mozilla/DebugOnly.h"
 
-#include "jsprf.h"
-#include "jsstr.h"
-
-#include "gc/Marking.h"
 #include "ion/IonCode.h"
 #include "vm/Shape.h"
 
 #include "jscompartmentinlines.h"
 
-#include "gc/Nursery-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 

@@ -1024,6 +1024,8 @@ public:
         OES_EGL_image_external,
         EXT_packed_depth_stencil,
         OES_element_index_uint,
+        OES_vertex_array_object,
+        ARB_vertex_array_object,
         Extensions_Max
     };
 
@@ -2868,6 +2870,39 @@ public:
         ASSERT_SYMBOL_PRESENT(fEGLImageTargetRenderbufferStorage);
         mSymbols.fEGLImageTargetRenderbufferStorage(target, image);
         AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY fBindVertexArray(GLuint array)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindVertexArray);
+        mSymbols.fBindVertexArray(array);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY fDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteVertexArrays);
+        mSymbols.fDeleteVertexArrays(n, arrays);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY fGenVertexArrays(GLsizei n, GLuint *arrays)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGenVertexArrays);
+        mSymbols.fGenVertexArrays(n, arrays);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean GLAPIENTRY fIsVertexArray(GLuint array)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsVertexArray);
+        realGLboolean ret = mSymbols.fIsVertexArray(array);
+        AFTER_GL_CALL;
+        return ret;
     }
 
 #undef ASSERT_SYMBOL_PRESENT

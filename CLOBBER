@@ -17,5 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 879831 needed to clobber for the removal of jsprobes.cpp
-bug 882904:  move LIBS to moz.build (logic).
+Bug 704356 needed to clobber for the removal of jspropertycache.cpp

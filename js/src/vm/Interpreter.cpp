@@ -14,7 +14,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "jsapi.h"
@@ -29,10 +28,8 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jspropertycache.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsversion.h"
 #include "builtin/Eval.h"
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
@@ -255,6 +252,76 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
+
+inline bool
+GetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, MutableHandleValue lval,
+                     MutableHandleValue vp)
+{
+    JSOp op = JSOp(*pc);
+
+    if (op == JSOP_LENGTH) {
+        if (IsOptimizedArguments(cx->fp(), lval.address())) {
+            vp.setInt32(cx->fp()->numActualArgs());
+            return true;
+        }
+
+        if (GetLengthProperty(lval, vp))
+            return true;
+    }
+
+    JSObject *obj = ToObjectFromStack(cx, lval);
+    if (!obj)
+        return false;
+
+    bool wasObject = lval.isObject();
+
+    RootedId id(cx, NameToId(script->getName(pc)));
+    RootedObject nobj(cx, obj);
+
+    if (obj->getOps()->getProperty) {
+        if (!JSObject::getGeneric(cx, nobj, nobj, id, vp))
+            return false;
+    } else {
+        if (!GetPropertyHelper(cx, nobj, id, 0, vp))
+            return false;
+    }
+
+#if JS_HAS_NO_SUCH_METHOD
+    if (op == JSOP_CALLPROP &&
+        JS_UNLIKELY(vp.isPrimitive()) &&
+        wasObject)
+    {
+        if (!OnUnknownMethod(cx, nobj, IdToValue(id), vp))
+            return false;
+    }
+#endif
+
+    return true;
+}
+
+inline bool
+SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lval,
+                     HandleValue rval)
+{
+    JS_ASSERT(*pc == JSOP_SETPROP);
+
+    RootedObject obj(cx, ToObjectFromStack(cx, lval));
+    if (!obj)
+        return false;
+
+    RootedValue rref(cx, rval);
+
+    RootedId id(cx, NameToId(script->getName(pc)));
+    if (JS_LIKELY(!obj->getOps()->setProperty)) {
+        if (!baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rref, script->strict))
+            return false;
+    } else {
+        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict))
+            return false;
+    }
+
+    return true;
+}
 
 bool
 js::ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip, MaybeConstruct construct)
@@ -911,31 +978,8 @@ inline InterpreterFrames::~InterpreterFrames()
     context->runtime()->interpreterFrames = older;
 }
 
-#if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
-void
-js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
-                                JSObject *found, PropertyCacheEntry *entry)
-{
-    jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc);
-
-    uint64_t sample = cx->runtime()->gcNumber;
-
-    PropertyName *name = GetNameFromBytecode(cx, script, pc, JSOp(*pc));
-    JSObject *pobj;
-    Shape *prop;
-    if (baseops::LookupProperty<NoGC>(cx, start, NameToId(name), &pobj, &prop)) {
-        JS_ASSERT(prop);
-        JS_ASSERT(pobj == found);
-        JS_ASSERT(entry->prop == prop);
-    }
-
-    JS_ASSERT(cx->runtime()->gcNumber == sample);
-}
-#endif /* DEBUG && !JS_THREADSAFE */
-
 /*
- * Ensure that the intrepreter switch can close call-bytecode cases in the
+ * Ensure that the interpreter switch can close call-bytecode cases in the
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
@@ -2083,7 +2127,7 @@ BEGIN_CASE(JSOP_SETPROP)
     HandleValue lval = HandleValue::fromMarkedLocation(&regs.sp[-2]);
     HandleValue rval = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
-    if (!SetPropertyOperation(cx, regs.pc, lval, rval))
+    if (!SetPropertyOperation(cx, script, regs.pc, lval, rval))
         goto error;
 
     regs.sp[-2] = regs.sp[-1];

@@ -45,9 +45,9 @@ class Allocator : public MallocProvider<Allocator>
 
     inline void *parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize);
 
-    inline void *onOutOfMemory(void *p, size_t nbytes);
+    void *onOutOfMemory(void *p, size_t nbytes);
     inline void updateMallocCounter(size_t nbytes);
-    inline void reportAllocationOverflow();
+    void reportAllocationOverflow();
 };
 
 typedef Vector<JSCompartment *, 1, SystemAllocPolicy> CompartmentVector;

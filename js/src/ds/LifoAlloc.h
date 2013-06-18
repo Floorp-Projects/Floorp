@@ -7,10 +7,7 @@
 #ifndef LifoAlloc_h__
 #define LifoAlloc_h__
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
@@ -21,8 +18,6 @@
 // thrashing, unused segments are deallocated when garbage collection occurs.
 
 #include "jsutil.h"
-
-#include "js/TemplateLib.h"
 
 namespace js {
 

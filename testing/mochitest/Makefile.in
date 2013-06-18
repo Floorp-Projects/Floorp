@@ -48,7 +48,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/build/mobile/b2gautomation.py \
 		gen_template.pl \
 		server.js \
-		harness-overlay.xul \
+		chunkifyTests.js \
 		harness.xul \
 		browser-test-overlay.xul \
 		browser-test.js \
