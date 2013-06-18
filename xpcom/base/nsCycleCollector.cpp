@@ -1215,10 +1215,15 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-// The static collector object
+// The static collector struct
 ////////////////////////////////////////////////////////////////////////
 
-static mozilla::ThreadLocal<nsCycleCollector*> sCollector;
+struct CollectorData {
+  nsCycleCollector* mCollector;
+  CycleCollectedJSRuntime* mRuntime;
+};
+
+static mozilla::ThreadLocal<CollectorData*> sCollectorData;
 
 ////////////////////////////////////////////////////////////////////////
 // Utility functions
@@ -2943,22 +2948,6 @@ nsCycleCollector::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     // - mParams: because it only contains scalars.
 }
 
-// This is our special sentinel value that tells us that we've shut
-// down this thread's CC.
-static nsCycleCollector* const kSentinelCollector = (nsCycleCollector*)1;
-
-inline bool
-CollectorIsShutDown(nsCycleCollector* aCollector)
-{
-    return aCollector == kSentinelCollector;
-}
-
-inline bool
-HaveCollector(nsCycleCollector* aCollector)
-{
-    return aCollector && !CollectorIsShutDown(aCollector);
-}
-
 ////////////////////////////////////////////////////////////////////////
 // Module public API (exported in nsCycleCollector.h)
 // Just functions that redirect into the singleton, once it's built.
@@ -2967,100 +2956,128 @@ HaveCollector(nsCycleCollector* aCollector)
 void
 nsCycleCollector_registerJSRuntime(CycleCollectedJSRuntime *rt)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (collector)
-        collector->RegisterJSRuntime(rt);
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
+    // But we shouldn't already have a runtime.
+    MOZ_ASSERT(!data->mRuntime);
+
+    data->mRuntime = rt;
+    data->mCollector->RegisterJSRuntime(rt);
 }
 
 void
 nsCycleCollector_forgetJSRuntime()
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (CollectorIsShutDown(collector)) {
-        return;
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    // And we shouldn't have already forgotten our runtime.
+    MOZ_ASSERT(data->mRuntime);
+
+    // But it may have shutdown already.
+    if (data->mCollector) {
+        data->mCollector->ForgetJSRuntime();
+        data->mRuntime = nullptr;
+    } else {
+        data->mRuntime = nullptr;
+        delete data;
+        sCollectorData.set(nullptr);
     }
-
-    if (collector)
-        collector->ForgetJSRuntime();
 }
 
 void
 cyclecollector::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    MOZ_ASSERT(HaveCollector(collector));
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
+    // And we should have a runtime.
+    MOZ_ASSERT(data->mRuntime);
 
-    collector->JSRuntime()->AddJSHolder(aHolder, aTracer);
+    data->mRuntime->AddJSHolder(aHolder, aTracer);
 }
 
 void
 cyclecollector::RemoveJSHolder(void* aHolder)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    MOZ_ASSERT(HaveCollector(collector));
+    // We should have started the cycle collector by now, and not completely
+    // shut down.
+    MOZ_ASSERT(data);
+    // And we should have a runtime.
+    MOZ_ASSERT(data->mRuntime);
 
-    collector->JSRuntime()->RemoveJSHolder(aHolder);
+    data->mRuntime->RemoveJSHolder(aHolder);
 }
 
 #ifdef DEBUG
 bool
 cyclecollector::TestJSHolder(void* aHolder)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    MOZ_ASSERT(HaveCollector(collector));
+    // We should have started the cycle collector by now, and not completely
+    // shut down.
+    MOZ_ASSERT(data);
+    // And we should have a runtime.
+    MOZ_ASSERT(data->mRuntime);
 
-    return collector->JSRuntime()->TestJSHolder(aHolder);
+    return data->mRuntime->TestJSHolder(aHolder);
 }
 #endif
 
 nsPurpleBufferEntry*
 NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *cp)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (!collector) {
-        MOZ_CRASH();
-    }
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
 
-    if (CollectorIsShutDown(collector)) {
+    if (!data->mCollector) {
         return nullptr;
     }
 
-    return collector->Suspect(n, cp);
+    return data->mCollector->Suspect(n, cp);
 }
 
 uint32_t
 nsCycleCollector_suspectedCount()
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (CollectorIsShutDown(collector)) {
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+
+    if (!data->mCollector) {
         return 0;
     }
 
-    return collector ? collector->SuspectedCount() : 0;
+    return data->mCollector->SuspectedCount();
 }
 
 bool
 nsCycleCollector_init()
 {
     MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-    MOZ_ASSERT(!sCollector.initialized(), "Called twice!?");
+    MOZ_ASSERT(!sCollectorData.initialized(), "Called twice!?");
 
-    return sCollector.init();
+    return sCollectorData.init();
 }
 
 nsresult
 nsCycleCollector_startup(CCThreadingModel aThreadingModel)
 {
-    MOZ_ASSERT(sCollector.initialized(),
+    MOZ_ASSERT(sCollectorData.initialized(),
                "Forgot to call nsCycleCollector_init!");
-    if (sCollector.get()) {
+    if (sCollectorData.get()) {
         MOZ_CRASH();
     }
 
@@ -3068,7 +3085,11 @@ nsCycleCollector_startup(CCThreadingModel aThreadingModel)
 
     nsresult rv = collector->Init();
     if (NS_SUCCEEDED(rv)) {
-        sCollector.set(collector.forget());
+        nsAutoPtr<CollectorData> data(new CollectorData);
+        data->mRuntime = nullptr;
+        data->mCollector = collector.forget();
+
+        sCollectorData.set(data.forget());
     }
 
     return rv;
@@ -3077,39 +3098,39 @@ nsCycleCollector_startup(CCThreadingModel aThreadingModel)
 void
 nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (!collector) {
-        MOZ_CRASH();
-    }
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
 
-    collector->SetBeforeUnlinkCallback(aCB);
+    data->mCollector->SetBeforeUnlinkCallback(aCB);
 }
 
 void
 nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (!collector) {
-        MOZ_CRASH();
-    }
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
 
-    collector->SetForgetSkippableCallback(aCB);
+    data->mCollector->SetForgetSkippableCallback(aCB);
 }
 
 void
 nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (!collector) {
-        MOZ_CRASH();
-    }
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
 
     PROFILER_LABEL("CC", "nsCycleCollector_forgetSkippable");
     TimeLog timeLog;
-    collector->ForgetSkippable(aRemoveChildlessNodes);
+    data->mCollector->ForgetSkippable(aRemoveChildlessNodes);
     timeLog.Checkpoint("ForgetSkippable()");
 }
 
@@ -3118,43 +3139,48 @@ nsCycleCollector_collect(bool aManuallyTriggered,
                          nsCycleCollectorResults *aResults,
                          nsICycleCollectorListener *aListener)
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (!collector) {
-        MOZ_CRASH();
-    }
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
 
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
     nsCOMPtr<nsICycleCollectorListener> listener(aListener);
-    if (!aListener && collector->mParams.mLogAll) {
+    if (!aListener && data->mCollector->mParams.mLogAll) {
         listener = new nsCycleCollectorLogger();
     }
 
-    collector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aResults, listener);
+    data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aResults, listener);
 }
 
 void
 nsCycleCollector_shutdownThreads()
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    MOZ_ASSERT(collector);
-    collector->CheckThreadSafety();
-    collector->ShutdownThreads();
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
+
+    data->mCollector->CheckThreadSafety();
+    data->mCollector->ShutdownThreads();
 }
 
 void
 nsCycleCollector_shutdown()
 {
-    nsCycleCollector *collector = sCollector.get();
+    CollectorData *data = sCollectorData.get();
 
-    if (collector) {
+    if (data) {
+        MOZ_ASSERT(data->mCollector);
         PROFILER_LABEL("CC", "nsCycleCollector_shutdown");
-        collector->CheckThreadSafety();
-        collector->Shutdown();
-        delete collector;
-        // We want to be able to distinguish never having a collector from
-        // having a shutdown collector.
-        sCollector.set(kSentinelCollector);
+        data->mCollector->CheckThreadSafety();
+        data->mCollector->Shutdown();
+        delete data->mCollector;
+        data->mCollector = nullptr;
+        if (!data->mRuntime) {
+          delete data;
+          sCollectorData.set(nullptr);
+        }
     }
 }
