@@ -770,14 +770,6 @@ public:
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
     inline void AddObjectHolderRoot(XPCJSObjectHolder* holder);
 
-    void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
-    void RemoveJSHolder(void* aHolder);
-#ifdef DEBUG
-    bool TestJSHolder(void* aHolder);
-    void SetObjectToUnlink(void* aObject) { mObjectToUnlink = aObject; }
-    void AssertNoObjectsToTrace(void* aPossibleJSHolder);
-#endif
-
     static void SuspectWrappedNative(XPCWrappedNative *wrapper,
                                      nsCycleCollectionNoteRootCallback &cb);
 
@@ -905,7 +897,6 @@ private:
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
-    nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
     PRLock *mWatchdogLock;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
@@ -940,10 +931,6 @@ private:
 
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
-
-#ifdef DEBUG
-    void* mObjectToUnlink;
-#endif
 };
 
 /***************************************************************************/

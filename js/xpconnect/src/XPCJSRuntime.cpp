@@ -412,61 +412,6 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
     JS_SetCompartmentPrivate(compartment, nullptr);
 }
 
-void
-XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
-{
-    MOZ_ASSERT(aTracer->Trace, "AddJSHolder needs a non-null Trace function");
-    bool wasEmpty = mJSHolders.Count() == 0;
-    mJSHolders.Put(aHolder, aTracer);
-    if (wasEmpty && mJSHolders.Count() == 1) {
-      nsLayoutStatics::AddRef();
-    }
-}
-
-#ifdef DEBUG
-static void
-AssertNoGcThing(void* aGCThing, const char* aName, void* aClosure)
-{
-    MOZ_ASSERT(!aGCThing);
-}
-
-void
-XPCJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
-{
-    nsScriptObjectTracer* tracer = mJSHolders.Get(aPossibleJSHolder);
-    if (tracer && tracer->Trace) {
-        tracer->Trace(aPossibleJSHolder, TraceCallbackFunc(AssertNoGcThing), nullptr);
-    }
-}
-#endif
-
-void
-XPCJSRuntime::RemoveJSHolder(void* aHolder)
-{
-#ifdef DEBUG
-    // Assert that the holder doesn't try to keep any GC things alive.
-    // In case of unlinking cycle collector calls AssertNoObjectsToTrace
-    // manually because we don't want to check the holder before we are
-    // finished unlinking it
-    if (aHolder != mObjectToUnlink) {
-        AssertNoObjectsToTrace(aHolder);
-    }
-#endif
-    bool hadOne = mJSHolders.Count() == 1;
-    mJSHolders.Remove(aHolder);
-    if (hadOne && mJSHolders.Count() == 0) {
-      nsLayoutStatics::Release();
-    }
-}
-
-#ifdef DEBUG
-bool
-XPCJSRuntime::TestJSHolder(void* aHolder)
-{
-    return mJSHolders.Get(aHolder, nullptr);
-}
-#endif
-
 // static
 void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
 {
@@ -2822,9 +2767,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mTimeAtLastRuntimeStateChange(PR_Now()),
    mJunkScope(nullptr),
    mExceptionManagerNotAvailable(false)
-#ifdef DEBUG
-   , mObjectToUnlink(nullptr)
-#endif
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
@@ -2914,8 +2856,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(JSMainRuntimeTemporaryPeak));
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
-
-    mJSHolders.Init(512);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
