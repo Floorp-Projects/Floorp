@@ -10,6 +10,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
+const NOTIFICATION_EVENT_SHOWING = "showing";
 const NOTIFICATION_EVENT_SHOWN = "shown";
 
 const ICON_SELECTOR = ".notification-anchor-icon";
@@ -521,6 +522,9 @@ PopupNotifications.prototype = {
   _showPanel: function PopupNotifications_showPanel(notificationsToShow, anchorElement) {
     this.panel.hidden = false;
 
+    notificationsToShow.forEach(function (n) {
+      this._fireCallback(n, NOTIFICATION_EVENT_SHOWING);
+    }, this);
     this._refreshPanel(notificationsToShow);
 
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement)

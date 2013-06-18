@@ -6,9 +6,13 @@
 #ifndef nsCycleCollector_h__
 #define nsCycleCollector_h__
 
-class nsCycleCollectionJSRuntime;
 class nsICycleCollectorListener;
 class nsISupports;
+class nsScriptObjectTracer;
+
+namespace mozilla {
+class CycleCollectedJSRuntime;
+}
 
 // Contains various stats about the cycle collection.
 class nsCycleCollectorResults
@@ -51,7 +55,7 @@ void nsCycleCollector_shutdownThreads();
 void nsCycleCollector_shutdown();
 
 // Helpers for interacting with JS
-void nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *aRt);
+void nsCycleCollector_registerJSRuntime(mozilla::CycleCollectedJSRuntime *aRt);
 void nsCycleCollector_forgetJSRuntime();
 
 #define NS_CYCLE_COLLECTOR_LOGGER_CID \
@@ -62,5 +66,17 @@ extern nsresult
 nsCycleCollectorLoggerConstructor(nsISupports* outer,
                                   const nsIID& aIID,
                                   void* *aInstancePtr);
+
+namespace mozilla {
+namespace cyclecollector {
+
+void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
+void RemoveJSHolder(void* aHolder);
+#ifdef DEBUG
+bool TestJSHolder(void* aHolder);
+#endif
+
+} // namespace cyclecollector
+} // namespace mozilla
 
 #endif // nsCycleCollector_h__
