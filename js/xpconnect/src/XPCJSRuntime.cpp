@@ -459,11 +459,13 @@ XPCJSRuntime::RemoveJSHolder(void* aHolder)
     }
 }
 
+#ifdef DEBUG
 bool
 XPCJSRuntime::TestJSHolder(void* aHolder)
 {
     return mJSHolders.Get(aHolder, nullptr);
 }
+#endif
 
 // static
 void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
