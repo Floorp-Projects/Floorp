@@ -14,8 +14,8 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage)
 
 nsConsoleMessage::nsConsoleMessage()
-    :  mTimeStamp(0),
-       mMessage()
+    :  mMessage(),
+       mTimeStamp(0)
 {
 }
 
