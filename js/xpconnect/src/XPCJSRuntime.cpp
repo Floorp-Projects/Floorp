@@ -515,8 +515,8 @@ struct JsGcTracer : public TraceCallbacks
     virtual void Trace(JSString **p, const char *name, void *closure) const MOZ_OVERRIDE {
         JS_CallStringTracer(static_cast<JSTracer*>(closure), p, name);
     }
-    virtual void Trace(JSScript **p, const char *name, void *closure) const MOZ_OVERRIDE {
-        JS_CallScriptTracer(static_cast<JSTracer*>(closure), p, name);
+    virtual void Trace(JS::Heap<JSScript *> *p, const char *name, void *closure) const MOZ_OVERRIDE {
+        JS_CallHeapScriptTracer(static_cast<JSTracer*>(closure), p, name);
     }
 };
 
