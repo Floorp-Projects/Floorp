@@ -20,7 +20,7 @@
  *   implementation isn't always required (or even well defined)
  */
 
-this.EXPORTED_SYMBOLS = [ "console" ];
+this.EXPORTED_SYMBOLS = [ "console", "ConsoleAPI" ];
 
 const Cu = Components.utils;
 
@@ -272,6 +272,41 @@ function logProperty(aProp, aValue) {
   return reply;
 }
 
+const LOG_LEVELS = {
+  "all": Number.MIN_VALUE,
+  "debug": 2,
+  "log": 3,
+  "info": 3,
+  "trace": 3,
+  "timeEnd": 3,
+  "time": 3,
+  "group": 3,
+  "groupEnd": 3,
+  "dir": 3,
+  "dirxml": 3,
+  "warn": 4,
+  "error": 5,
+  "off": Number.MAX_VALUE,
+};
+
+/**
+ * Helper to tell if a console message of `aLevel` type
+ * should be logged in stdout and sent to consoles given
+ * the current maximum log level being defined in `console.maxLogLevel`
+ *
+ * @param {string} aLevel
+ *        Console message log level
+ * @param {string} aMaxLevel {string}
+ *        String identifier (See LOG_LEVELS for possible
+ *        values) that allows to filter which messages
+ *        are logged based on their log level
+ * @return {boolean}
+ *        Should this message be logged or not?
+ */
+function shouldLog(aLevel, aMaxLevel) {
+  return LOG_LEVELS[aMaxLevel] <= LOG_LEVELS[aLevel];
+}
+
 /**
  * Parse a stack trace, returning an array of stack frame objects, where
  * each has filename/lineNumber/functionName members
@@ -389,6 +424,25 @@ function stopTimer(aName, aTimestamp) {
 }
 
 /**
+ * Dump a new message header to stdout by taking care of adding an eventual
+ * prefix
+ *
+ * @param {object} aConsole
+ *        ConsoleAPI instance
+ * @param {string} aLevel
+ *        The string identifier for the message log level
+ * @param {string} aMessage
+ *        The string message to print to stdout
+ */
+function dumpMessage(aConsole, aLevel, aMessage) {
+  aConsole.dump(
+    "console." + aLevel + ": " +
+    aConsole.prefix +
+    aMessage + "\n"
+  );
+}
+
+/**
  * Create a function which will output a concise level of output when used
  * as a logging function
  *
@@ -401,13 +455,16 @@ function stopTimer(aName, aTimestamp) {
  */
 function createDumper(aLevel) {
   return function() {
+    if (!shouldLog(aLevel, this.maxLogLevel)) {
+      return;
+    }
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     sendConsoleAPIMessage(aLevel, frame, args);
     let data = args.map(function(arg) {
       return stringify(arg);
     });
-    dump("console." + aLevel + ": " + data.join(", ") + "\n");
+    dumpMessage(this, aLevel, data.join(", "));
   };
 }
 
@@ -424,13 +481,16 @@ function createDumper(aLevel) {
  */
 function createMultiLineDumper(aLevel) {
   return function() {
-    dump("console." + aLevel + ": \n");
+    if (!shouldLog(aLevel, this.maxLogLevel)) {
+      return;
+    }
+    dumpMessage(this, aLevel, "");
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     sendConsoleAPIMessage(aLevel, frame, args);
     args.forEach(function(arg) {
-      dump(log(arg));
-    });
+      this.dump(log(arg));
+    }, this);
   };
 }
 
@@ -496,9 +556,32 @@ function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
 
 /**
  * This creates a console object that somewhat replicates Firebug's console
- * object.
+ * object
+ *
+ * @param {object} aConsoleOptions
+ *        Optional dictionary with a set of runtime console options:
+ *        - prefix {string} : An optional prefix string to be printed before
+ *                            the actual logged message
+ *        - maxLogLevel {string} : String identifier (See LOG_LEVELS for
+ *                            possible values) that allows to filter which
+ *                            messages are logged based on their log level.
+ *                            If falsy value, all messages will be logged.
+ *                            If wrong value that doesn't match any key of
+ *                            LOG_LEVELS, no message will be logged
+ *        - dump {function} : An optional function to intercept all strings
+ *                            written to stdout
+ * @return {object}
+ *        A console API instance object
  */
-this.console = {
+function ConsoleAPI(aConsoleOptions = {}) {
+  // Normalize console options to set default values
+  // in order to avoid runtime checks on each console method call.
+  this.dump = aConsoleOptions.dump || dump;
+  this.prefix = aConsoleOptions.prefix || "";
+  this.maxLogLevel = aConsoleOptions.maxLogLevel || "all";
+}
+
+ConsoleAPI.prototype = {
   debug: createMultiLineDumper("debug"),
   log: createDumper("log"),
   info: createDumper("info"),
@@ -507,11 +590,14 @@ this.console = {
   exception: createMultiLineDumper("error"),
 
   trace: function Console_trace() {
+    if (!shouldLog("trace", this.maxLogLevel)) {
+      return;
+    }
     let args = Array.prototype.slice.call(arguments, 0);
     let trace = getStack(Components.stack.caller);
     sendConsoleAPIMessage("trace", trace[0], args,
                           { stacktrace: trace });
-    dump("console.trace:\n" + formatTrace(trace) + "\n");
+    dumpMessage(this, "trace", "\n" + formatTrace(trace));
   },
   clear: function Console_clear() {},
 
@@ -521,18 +607,28 @@ this.console = {
   groupEnd: createDumper("groupEnd"),
 
   time: function Console_time() {
+    if (!shouldLog("time", this.maxLogLevel)) {
+      return;
+    }
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = startTimer(args[0]);
     sendConsoleAPIMessage("time", frame, args, { timer: timer });
-    dump("console.time: '" + timer.name + "' @ " + (new Date()) + "\n");
+    dumpMessage(this, "time",
+                "'" + timer.name + "' @ " + (new Date()));
   },
 
   timeEnd: function Console_timeEnd() {
+    if (!shouldLog("timeEnd", this.maxLogLevel)) {
+      return;
+    }
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = stopTimer(args[0]);
     sendConsoleAPIMessage("timeEnd", frame, args, { timer: timer });
-    dump("console.timeEnd: '" + timer.name + "' " + timer.duration + "ms\n");
+    dumpMessage(this, "timeEnd",
+                "'" + timer.name + "' " + timer.duration + "ms");
   },
 };
+
+const console = new ConsoleAPI();
