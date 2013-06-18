@@ -101,6 +101,10 @@ HealthReporterState.prototype = Object.freeze({
     return this._s.remoteIDs;
   },
 
+  get _lastPayloadPath() {
+    return OS.Path.join(this._stateDir, "lastpayload.json");
+  },
+
   init: function () {
     return Task.spawn(function init() {
       try {
@@ -116,6 +120,7 @@ HealthReporterState.prototype = Object.freeze({
           v: 1,
           remoteIDs: [],
           lastPingTime: 0,
+          removedOutdatedLastpayload: false,
         };
       }.bind(this);
 
@@ -138,21 +143,13 @@ HealthReporterState.prototype = Object.freeze({
 
       if (typeof(this._s) != "object") {
         this._log.warn("Read state is not an object. Resetting state.");
-        this._s = {
-          v: 1,
-          remoteIDs: [],
-          lastPingTime: 0,
-        };
+        resetObjectState();
         yield this.save();
       }
 
       if (this._s.v != 1) {
         this._log.warn("Unknown version in state file: " + this._s.v);
-        this._s = {
-          v: 1,
-          remoteIDs: [],
-          lastPingTime: 0,
-        };
+        resetObjectState();
         // We explicitly don't save here in the hopes an application re-upgrade
         // comes along and fixes us.
       }
@@ -343,16 +340,52 @@ AbstractHealthReporter.prototype = Object.freeze({
   },
 
   _onStateInitialized: function () {
-    // As soon as we have could storage, we need to register cleanup or
-    // else bad things happen on shutdown.
-    Services.obs.addObserver(this, "quit-application", false);
-    Services.obs.addObserver(this, "profile-before-change", false);
+    return Task.spawn(function onStateInitialized () {
+      try {
+        if (!this._state._s.removedOutdatedLastpayload) {
+          yield this._deleteOldLastPayload();
+          this._state._s.removedOutdatedLastpayload = true;
+          // Normally we should save this to a file but it directly conflicts with
+          //  the "application re-upgrade" decision in HealthReporterState::init()
+          //  which specifically does not save the state to a file.
+        }
+      } catch (ex) {
+        this._log.error("Error deleting last payload: " +
+                        CommonUtils.exceptionStr(ex));
+      }
+      // As soon as we have could storage, we need to register cleanup or
+      // else bad things happen on shutdown.
+      Services.obs.addObserver(this, "quit-application", false);
+      Services.obs.addObserver(this, "profile-before-change", false);
 
-    this._storageInProgress = true;
-    TelemetryStopwatch.start(this._dbOpenHistogram, this);
+      this._storageInProgress = true;
+      TelemetryStopwatch.start(this._dbOpenHistogram, this);
 
-    Metrics.Storage(this._dbName).then(this._onStorageCreated.bind(this),
-                                       this._onInitError.bind(this));
+      Metrics.Storage(this._dbName).then(this._onStorageCreated.bind(this),
+                                         this._onInitError.bind(this));
+    }.bind(this));
+  },
+
+
+  /**
+   * Removes the outdated lastpaylaod.json and lastpayload.json.tmp files
+   * @see Bug #867902
+   * @return a promise for when all the files have been deleted
+   */
+  _deleteOldLastPayload: function () {
+    let paths = [this._state._lastPayloadPath, this._state._lastPayloadPath + ".tmp"];
+    return Task.spawn(function removeAllFiles () {
+      for (let path of paths) {
+        try {
+          OS.File.remove(path);
+        } catch (ex) {
+          if (!ex.becauseNoSuchFile) {
+            this._log.error("Exception when removing outdated payload files: " +
+                            CommonUtils.exceptionStr(ex));
+          }
+        }
+      }
+    }.bind(this));
   },
 
   // Called when storage has been opened.
