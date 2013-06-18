@@ -70,7 +70,8 @@ private:
   nsTArray<JS::Heap<JS::Value> > mArgs;
 
   // The JS expression to evaluate or function to call, if !mExpr
-  JSFlatString *mExpr;
+  // Note this is always a flat string.
+  JS::Heap<JSString*> mExpr;
   nsRefPtr<Function> mFunction;
 };
 
@@ -281,7 +282,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
 
     NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
 
-    mExpr = expr;
+    mExpr = JS_FORGET_STRING_FLATNESS(expr);
 
     // Get the calling location.
     const char *filename;
@@ -320,7 +321,7 @@ const PRUnichar *
 nsJSScriptTimeoutHandler::GetHandlerText()
 {
   NS_ASSERTION(mExpr, "No expression, so no handler text!");
-  return ::JS_GetFlatStringChars(mExpr);
+  return ::JS_GetFlatStringChars(JS_ASSERT_STRING_IS_FLAT(mExpr));
 }
 
 nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
