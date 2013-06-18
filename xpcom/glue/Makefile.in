@@ -46,6 +46,7 @@ SDK_HEADERS = \
 		nsISupportsUtils.h \
 		nsIWeakReferenceUtils.h \
 		nsInterfaceHashtable.h \
+		nsJSThingHashtable.h \
 		nsMemory.h \
 		nsQuickSort.h \
 		nsRefPtrHashtable.h \
