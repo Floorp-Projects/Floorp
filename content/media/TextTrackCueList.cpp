@@ -10,6 +10,20 @@
 namespace mozilla {
 namespace dom {
 
+class CompareCuesByTime
+{
+public:
+  bool Equals(TextTrackCue* aOne, TextTrackCue* aTwo) const {
+    return aOne->StartTime() == aTwo->StartTime() &&
+           aOne->EndTime() == aTwo->EndTime();
+  }
+  bool LessThan(TextTrackCue* aOne, TextTrackCue* aTwo) const {
+    return aOne->StartTime() < aTwo->StartTime() ||
+           (aOne->StartTime() == aTwo->StartTime() &&
+            aOne->EndTime() < aTwo->EndTime());
+  }
+};
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(TextTrackCueList, mParent, mList)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextTrackCueList)
@@ -69,7 +83,7 @@ TextTrackCueList::AddCue(TextTrackCue& aCue)
   if (mList.Contains(&aCue)) {
     return;
   }
-  mList.AppendElement(&aCue);
+  mList.InsertElementSorted(&aCue, CompareCuesByTime());
 }
 
 void

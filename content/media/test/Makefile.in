@@ -148,6 +148,7 @@ MOCHITEST_FILES = \
 		test_webvtt_disabled.html \
 		test_bug895305.html \
 		test_bug895091.html \
+		test_bug883173.html \
 		$(NULL)
 
 # Don't run in suite
@@ -275,6 +276,7 @@ MOCHITEST_FILES += \
 		basic.vtt \
 		region.vtt \
 		long.vtt \
+		bug883173.vtt \
 		$(NULL)
 
 # Wave sample files
