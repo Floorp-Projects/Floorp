@@ -2387,7 +2387,7 @@ IDBObjectStore::GetKeyPath(JSContext* aCx,
     return NS_OK;
   }
 
-  nsresult rv = GetKeyPath().ToJSVal(aCx, &mCachedKeyPath);
+  nsresult rv = GetKeyPath().ToJSVal(aCx, mCachedKeyPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (JSVAL_IS_GCTHING(mCachedKeyPath)) {
@@ -3134,7 +3134,12 @@ AddHelper::GetSuccessResult(JSContext* aCx,
 
   mCloneWriteInfo.mCloneBuffer.clear();
 
-  return mKey.ToJSVal(aCx, aVal);
+  JS::Rooted<JS::Value> value(aCx);
+  nsresult rv = mKey.ToJSVal(aCx, &value);
+  if (NS_SUCCEEDED(rv)) {
+    *aVal = value;
+  }
+  return rv;
 }
 
 void

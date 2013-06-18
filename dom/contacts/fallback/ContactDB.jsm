@@ -438,7 +438,8 @@ ContactDB.prototype = {
       impp:            [],
       anniversary:     null,
       sex:             null,
-      genderIdentity:  null
+      genderIdentity:  null,
+      key:             [],
     };
 
     contact.search = {
@@ -448,7 +449,7 @@ ContactDB.prototype = {
       category:        [],
       tel:             [],
       exactTel:        [],
-      parsedTel:       []
+      parsedTel:       [],
     };
 
     for (let field in aContact.properties) {

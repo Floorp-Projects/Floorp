@@ -116,7 +116,7 @@ protected:
 
   nsRefPtr<AudioContext> mContext;
   // Float32Arrays
-  AutoFallibleTArray<JSObject*,2> mJSChannels;
+  AutoFallibleTArray<JS::Heap<JSObject*>, 2> mJSChannels;
 
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
   // if and only if the mJSChannels are neutered.
