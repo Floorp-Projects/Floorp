@@ -44,6 +44,10 @@ UTIL_JAVA_FILES := \
   util/UiAsyncTask.java \
   $(NULL)
 
+AIDL_AUTOGEN_FILES = \
+  braille/com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java \
+  $(NULL)
+
 FENNEC_JAVA_FILES = \
   ANRReporter.java \
   ActivityHandlerHelper.java \
@@ -173,6 +177,8 @@ FENNEC_JAVA_FILES = \
   WebAppAllocator.java \
   WebAppImpl.java \
   ZoomConstraints.java \
+  braille/com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java \
+  braille/com/googlecode/eyesfree/braille/selfbraille/WriteData.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
   db/FormHistoryProvider.java \
@@ -1172,10 +1178,10 @@ classes.dex: $(ALL_JARS)
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
-jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar jars/websockets.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar jars/websockets.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) $(AIDL_AUTOGEN_FILES) R.java
 	@echo "JAR gecko-browser.jar"
 	$(NSINSTALL) -D classes/gecko-browser
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar:jars/websockets.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar:jars/websockets.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(AIDL_AUTOGEN_FILES)) R.java
 	$(JAR) cMf jars/gecko-browser.jar -C classes/gecko-browser .
 
 jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_PP_JAVA_FILES) jars
@@ -1213,6 +1219,9 @@ endif
 jars:
 	@echo "MKDIR jars"
 	$(NSINSTALL) -D jars
+
+$(AIDL_AUTOGEN_FILES): %.java: %.aidl
+	$(ANDROID_PLATFORM_TOOLS)/aidl -I$(srcdir)/braille $<
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \

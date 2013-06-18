@@ -33,6 +33,8 @@ class ArrayBufferObject : public JSObject
     static bool fun_slice_impl(JSContext *cx, CallArgs args);
 
   public:
+    static Class class_;
+
     static Class protoClass;
     static const JSFunctionSpec jsfuncs[];
 
@@ -342,6 +344,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
 class DataViewObject : public JSObject, public BufferView
 {
 public:
+    static Class class_;
 
 private:
     static Class protoClass;

@@ -53,6 +53,7 @@ BROWSER_TESTS += \
   browser_selection_frame_textarea.html \
   browser_selection_frame_inputs.js \
   browser_selection_frame_inputs.html \
+  browser_selection_urlbar.js \
   $(NULL)
 endif
 

@@ -68,23 +68,18 @@
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
 #include "GeneratedEvents.h"
-#include "nsIKeyModule.h"
 #include "SharedSSLState.h"
 
 #include "nss.h"
-#include "pk11func.h"
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
-#include "sechash.h"
 #include "secmime.h"
 #include "ocsp.h"
-#include "cms.h"
 #include "nssckbi.h"
 #include "base64.h"
 #include "secerr.h"
 #include "sslerr.h"
-#include "cert.h"
 
 #include "nsXULAppAPI.h"
 #include <algorithm>
@@ -104,8 +99,6 @@ using namespace mozilla::psm;
 PRLogModuleInfo* gPIPNSSLog = nullptr;
 #endif
 
-#define NS_CRYPTO_HASH_BUFFER_SIZE 4096
-
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 int nsNSSComponent::mInstanceCount = 0;
@@ -119,75 +112,6 @@ extern char* pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 #define NSSERR_STRBUNDLE_URL "chrome://pipnss/locale/nsserrors.properties"
-
-static PLHashNumber certHashtable_keyHash(const void *key)
-{
-  if (!key)
-    return 0;
-  
-  SECItem *certKey = (SECItem*)key;
-  
-  // lazy hash function, sum up all char values of SECItem
-  
-  PLHashNumber hash = 0;
-  unsigned int i = 0;
-  unsigned char *c = certKey->data;
-  
-  for (i = 0; i < certKey->len; ++i, ++c) {
-    hash += *c;
-  }
-  
-  return hash;
-}
-
-static int certHashtable_keyCompare(const void *k1, const void *k2)
-{
-  // return type is a bool, answering the question "are the keys equal?"
-
-  if (!k1 || !k2)
-    return false;
-  
-  SECItem *certKey1 = (SECItem*)k1;
-  SECItem *certKey2 = (SECItem*)k2;
-  
-  if (certKey1->len != certKey2->len) {
-    return false;
-  }
-  
-  unsigned int i = 0;
-  unsigned char *c1 = certKey1->data;
-  unsigned char *c2 = certKey2->data;
-  
-  for (i = 0; i < certKey1->len; ++i, ++c1, ++c2) {
-    if (*c1 != *c2) {
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-static int certHashtable_valueCompare(const void *v1, const void *v2)
-{
-  // two values are identical if their keys are identical
-  
-  if (!v1 || !v2)
-    return false;
-  
-  CERTCertificate *cert1 = (CERTCertificate*)v1;
-  CERTCertificate *cert2 = (CERTCertificate*)v2;
-  
-  return certHashtable_keyCompare(&cert1->certKey, &cert2->certKey);
-}
-
-static int certHashtable_clearEntry(PLHashEntry *he, int /*index*/, void * /*userdata*/)
-{
-  if (he && he->value) {
-    CERT_DestroyCertificate((CERTCertificate*)he->value);
-  }
-  
-  return HT_ENUMERATE_NEXT;
-}
 
 class CRLDownloadEvent : public nsRunnable {
 public:
@@ -365,7 +289,6 @@ nsNSSComponent::nsNSSComponent()
 
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
-  hashTableCerts = nullptr;
   mShutdownObjectList = nsNSSShutDownList::construct();
   mIsNetworkDown = false;
 }
@@ -1467,115 +1390,6 @@ nsNSSComponent::InitializeCRLUpdateTimer()
   return NS_OK;
 }
 
-#ifdef XP_MACOSX
-void
-nsNSSComponent::TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath)
-{
-  // We will modify the parameters.
-  //
-  // If neither cert7.db, cert8.db, key3.db, are available, 
-  // copy from filenames that were used in the old days
-  // test for key3.db first, since a new profile might only contain cert8.db, 
-  // but not cert7.db - this optimizes number of tests
-
-  NS_NAMED_LITERAL_CSTRING(cstr_key3db, "key3.db");
-  NS_NAMED_LITERAL_CSTRING(cstr_cert7db, "cert7.db");
-  NS_NAMED_LITERAL_CSTRING(cstr_cert8db, "cert8.db");
-  NS_NAMED_LITERAL_CSTRING(cstr_keydatabase3, "Key Database3");
-  NS_NAMED_LITERAL_CSTRING(cstr_certificate7, "Certificates7");
-  NS_NAMED_LITERAL_CSTRING(cstr_certificate8, "Certificates8");
-
-  bool bExists;
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> macho_key3db;
-  rv = machoPath->Clone(getter_AddRefs(macho_key3db));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  macho_key3db->AppendNative(cstr_key3db);
-  rv = macho_key3db->Exists(&bExists);
-  if (NS_FAILED(rv) || bExists) {
-    return;
-  }
-
-  nsCOMPtr<nsIFile> macho_cert7db;
-  rv = machoPath->Clone(getter_AddRefs(macho_cert7db));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  macho_cert7db->AppendNative(cstr_cert7db);
-  rv = macho_cert7db->Exists(&bExists);
-  if (NS_FAILED(rv) || bExists) {
-    return;
-  }
-
-  nsCOMPtr<nsIFile> macho_cert8db;
-  rv = machoPath->Clone(getter_AddRefs(macho_cert8db));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  macho_cert8db->AppendNative(cstr_cert8db);
-  rv = macho_cert7db->Exists(&bExists);
-  if (NS_FAILED(rv) || bExists) {
-    return;
-  }
-
-  // None of the new files exist. Try to copy any available old files.
-
-  nsCOMPtr<nsIFile> cfm_key3;
-  rv = cfmPath->Clone(getter_AddRefs(cfm_key3));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  cfm_key3->AppendNative(cstr_keydatabase3);
-  rv = cfm_key3->Exists(&bExists);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (bExists) {
-    cfm_key3->CopyToFollowingLinksNative(machoPath, cstr_key3db);
-  }
-
-  nsCOMPtr<nsIFile> cfm_cert7;
-  rv = cfmPath->Clone(getter_AddRefs(cfm_cert7));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  cfm_cert7->AppendNative(cstr_certificate7);
-  rv = cfm_cert7->Exists(&bExists);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (bExists) {
-    cfm_cert7->CopyToFollowingLinksNative(machoPath, cstr_cert7db);
-  }
-
-  nsCOMPtr<nsIFile> cfm_cert8;
-  rv = cfmPath->Clone(getter_AddRefs(cfm_cert8));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  cfm_cert8->AppendNative(cstr_certificate8);
-  rv = cfm_cert8->Exists(&bExists);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (bExists) {
-    cfm_cert8->CopyToFollowingLinksNative(machoPath, cstr_cert8db);
-  }
-}
-#endif
-
 static void configureMD5(bool enabled)
 {
   if (enabled) { // set flags
@@ -1644,28 +1458,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
     }
     else
     {
-
-  // XP_MACOSX == MachO
-
-  #if defined(XP_MACOSX)
-    // On Mac CFM we place all NSS DBs in the Security
-    // Folder in the profile directory.
-    nsCOMPtr<nsIFile> cfmSecurityPath;
-    cfmSecurityPath = profilePath; // alias for easier code reading
-    cfmSecurityPath->AppendNative(NS_LITERAL_CSTRING("Security"));
-  #endif
-
-  #if defined(XP_MACOSX)
-    // On MachO, we need to access both directories,
-    // and therefore need separate nsIFile instances.
-    // Keep cfmSecurityPath instance, obtain new instance for MachO profilePath.
-    rv = cfmSecurityPath->GetParent(getter_AddRefs(profilePath));
-    if (NS_FAILED(rv)) {
-      nsPSMInitPanic::SetPanic();
-      return rv;
-    }
-  #endif
-
     const char *dbdir_override = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
     if (dbdir_override && strlen(dbdir_override)) {
       profileStr = dbdir_override;
@@ -1685,15 +1477,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
         return rv;
       }
     }
-
-    hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare,
-      certHashtable_valueCompare, 0, 0 );
-
-  #if defined(XP_MACOSX)
-    // function may modify the parameters
-    // ignore return code from conversion, we continue anyway
-    TryCFM2MachOMigration(cfmSecurityPath, profilePath);
-  #endif
 
 #ifndef NSS_NO_LIBPKIX
     rv = mPrefBranch->GetBoolPref("security.use_libpkix_verification", &globalConstFlagUsePKIXVerification);
@@ -1870,12 +1653,6 @@ nsNSSComponent::ShutdownNSS()
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::ShutdownNSS\n"));
 
   MutexAutoLock lock(mutex);
-
-  if (hashTableCerts) {
-    PL_HashTableEnumerateEntries(hashTableCerts, certHashtable_clearEntry, 0);
-    PL_HashTableDestroy(hashTableCerts);
-    hashTableCerts = nullptr;
-  }
 
   if (mNSSInitialized) {
     mNSSInitialized = false;
@@ -2104,18 +1881,6 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
       if (!pCert) {
         rv2 = NS_ERROR_OUT_OF_MEMORY;
         break;
-      }
-
-      if (!mScriptSecurityManager) {
-        MutexAutoLock lock(mutex);
-        // re-test the condition to prevent double initialization
-        if (!mScriptSecurityManager) {
-          mScriptSecurityManager = 
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
-          if (NS_FAILED(rv2)) {
-            break;
-          }
-        }
       }
 
       //-- Create a certificate principal with id and organization data
@@ -2430,37 +2195,6 @@ nsNSSComponent::DeregisterObservers()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSSComponent::RememberCert(CERTCertificate *cert)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  // Must not interfere with init / shutdown / profile switch.
-
-  MutexAutoLock lock(mutex);
-
-  if (!hashTableCerts || !cert)
-    return NS_OK;
-  
-  void *found = PL_HashTableLookup(hashTableCerts, (void*)&cert->certKey);
-  
-  if (found) {
-    // we remember that cert already
-    return NS_OK;
-  }
-  
-  CERTCertificate *myDupCert = CERT_DupCertificate(cert);
-  
-  if (!myDupCert)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  if (!PL_HashTableAdd(hashTableCerts, (void*)&myDupCert->certKey, myDupCert)) {
-    CERT_DestroyCertificate(myDupCert);
-  }
-  
-  return NS_OK;
-}
-
 void
 nsNSSComponent::DoProfileChangeNetTeardown()
 {
@@ -2526,394 +2260,6 @@ nsNSSComponent::GetDefaultCertVerifier(RefPtr<CertVerifier> &out)
   if (!mNSSInitialized)
       return NS_ERROR_NOT_INITIALIZED;
   out = mDefaultCertVerifier;
-  return NS_OK;
-}
-
-//---------------------------------------------
-// Implementing nsICryptoHash
-//---------------------------------------------
-
-nsCryptoHash::nsCryptoHash()
-  : mHashContext(nullptr)
-  , mInitialized(false)
-{
-}
-
-nsCryptoHash::~nsCryptoHash()
-{
-  nsNSSShutDownPreventionLock locker;
-
-  if (isAlreadyShutDown())
-    return;
-
-  destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
-}
-
-void nsCryptoHash::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void nsCryptoHash::destructorSafeDestroyNSSReference()
-{
-  if (isAlreadyShutDown())
-    return;
-
-  if (mHashContext)
-    HASH_Destroy(mHashContext);
-  mHashContext = nullptr;
-}
-
-NS_IMPL_ISUPPORTS1(nsCryptoHash, nsICryptoHash)
-
-NS_IMETHODIMP 
-nsCryptoHash::Init(uint32_t algorithm)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  HASH_HashType hashType = (HASH_HashType)algorithm;
-  if (mHashContext)
-  {
-    if ((!mInitialized) && (HASH_GetType(mHashContext) == hashType))
-    {
-      mInitialized = true;
-      HASH_Begin(mHashContext);
-      return NS_OK;
-    }
-
-    // Destroy current hash context if the type was different
-    // or Finish method wasn't called.
-    HASH_Destroy(mHashContext);
-    mInitialized = false;
-  }
-
-  mHashContext = HASH_Create(hashType);
-  if (!mHashContext)
-    return NS_ERROR_INVALID_ARG;
-
-  HASH_Begin(mHashContext);
-  mInitialized = true;
-  return NS_OK; 
-}
-
-NS_IMETHODIMP
-nsCryptoHash::InitWithString(const nsACString & aAlgorithm)
-{
-  if (aAlgorithm.LowerCaseEqualsLiteral("md2"))
-    return Init(nsICryptoHash::MD2);
-
-  if (aAlgorithm.LowerCaseEqualsLiteral("md5"))
-    return Init(nsICryptoHash::MD5);
-
-  if (aAlgorithm.LowerCaseEqualsLiteral("sha1"))
-    return Init(nsICryptoHash::SHA1);
-
-  if (aAlgorithm.LowerCaseEqualsLiteral("sha256"))
-    return Init(nsICryptoHash::SHA256);
-
-  if (aAlgorithm.LowerCaseEqualsLiteral("sha384"))
-    return Init(nsICryptoHash::SHA384);
-
-  if (aAlgorithm.LowerCaseEqualsLiteral("sha512"))
-    return Init(nsICryptoHash::SHA512);
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-nsCryptoHash::Update(const uint8_t *data, uint32_t len)
-{
-  nsNSSShutDownPreventionLock locker;
-  
-  if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  HASH_Update(mHashContext, data, len);
-  return NS_OK; 
-}
-
-NS_IMETHODIMP
-nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
-{
-  if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!data)
-    return NS_ERROR_INVALID_ARG;
-
-  uint64_t n;
-  nsresult rv = data->Available(&n);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // if the user has passed UINT32_MAX, then read
-  // everything in the stream
-
-  uint64_t len = aLen;
-  if (aLen == UINT32_MAX)
-    len = n;
-
-  // So, if the stream has NO data available for the hash,
-  // or if the data available is less then what the caller
-  // requested, we can not fulfill the hash update.  In this
-  // case, just return NS_ERROR_NOT_AVAILABLE indicating
-  // that there is not enough data in the stream to satisify
-  // the request.
-
-  if (n == 0 || n < len)
-    return NS_ERROR_NOT_AVAILABLE;
-  
-  char buffer[NS_CRYPTO_HASH_BUFFER_SIZE];
-  uint32_t read, readLimit;
-  
-  while(NS_SUCCEEDED(rv) && len>0)
-  {
-    readLimit = (uint32_t)std::min<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
-    
-    rv = data->Read(buffer, readLimit, &read);
-    
-    if (NS_SUCCEEDED(rv))
-      rv = Update((const uint8_t*)buffer, read);
-    
-    len -= read;
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsCryptoHash::Finish(bool ascii, nsACString & _retval)
-{
-  nsNSSShutDownPreventionLock locker;
-  
-  if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
-  
-  uint32_t hashLen = 0;
-  unsigned char buffer[HASH_LENGTH_MAX];
-  unsigned char* pbuffer = buffer;
-
-  HASH_End(mHashContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
-
-  mInitialized = false;
-
-  if (ascii)
-  {
-    char *asciiData = BTOA_DataToAscii(buffer, hashLen);
-    NS_ENSURE_TRUE(asciiData, NS_ERROR_OUT_OF_MEMORY);
-
-    _retval.Assign(asciiData);
-    PORT_Free(asciiData);
-  }
-  else
-  {
-    _retval.Assign((const char*)buffer, hashLen);
-  }
-
-  return NS_OK;
-}
-
-//---------------------------------------------
-// Implementing nsICryptoHMAC
-//---------------------------------------------
-
-NS_IMPL_ISUPPORTS1(nsCryptoHMAC, nsICryptoHMAC)
-
-nsCryptoHMAC::nsCryptoHMAC()
-{
-  mHMACContext = nullptr;
-}
-
-nsCryptoHMAC::~nsCryptoHMAC()
-{
-  nsNSSShutDownPreventionLock locker;
-
-  if (isAlreadyShutDown())
-    return;
-
-  destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
-}
-
-void nsCryptoHMAC::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void nsCryptoHMAC::destructorSafeDestroyNSSReference()
-{
-  if (isAlreadyShutDown())
-    return;
-
-  if (mHMACContext)
-    PK11_DestroyContext(mHMACContext, true);
-  mHMACContext = nullptr;
-}
-
-/* void init (in unsigned long aAlgorithm, in nsIKeyObject aKeyObject); */
-NS_IMETHODIMP nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  if (mHMACContext)
-  {
-    PK11_DestroyContext(mHMACContext, true);
-    mHMACContext = nullptr;
-  }
-
-  CK_MECHANISM_TYPE HMACMechType;
-  switch (aAlgorithm)
-  {
-  case nsCryptoHMAC::MD2:
-    HMACMechType = CKM_MD2_HMAC; break;
-  case nsCryptoHMAC::MD5:
-    HMACMechType = CKM_MD5_HMAC; break;
-  case nsCryptoHMAC::SHA1:
-    HMACMechType = CKM_SHA_1_HMAC; break;
-  case nsCryptoHMAC::SHA256:
-    HMACMechType = CKM_SHA256_HMAC; break;
-  case nsCryptoHMAC::SHA384:
-    HMACMechType = CKM_SHA384_HMAC; break;
-  case nsCryptoHMAC::SHA512:
-    HMACMechType = CKM_SHA512_HMAC; break;
-  default:
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  NS_ENSURE_ARG_POINTER(aKeyObject);
-
-  nsresult rv;
-
-  int16_t keyType;
-  rv = aKeyObject->GetType(&keyType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_TRUE(keyType == nsIKeyObject::SYM_KEY, NS_ERROR_INVALID_ARG);
-
-  PK11SymKey* key;
-  // GetKeyObj doesn't addref the key
-  rv = aKeyObject->GetKeyObj((void**)&key);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SECItem rawData;
-  rawData.data = 0;
-  rawData.len = 0;
-  mHMACContext = PK11_CreateContextBySymKey(
-      HMACMechType, CKA_SIGN, key, &rawData);
-  NS_ENSURE_TRUE(mHMACContext, NS_ERROR_FAILURE);
-
-  SECStatus ss = PK11_DigestBegin(mHMACContext);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
-
-  return NS_OK;
-}
-
-/* void update ([array, size_is (aLen), const] in octet aData, in unsigned long aLen); */
-NS_IMETHODIMP nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  if (!mHMACContext)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!aData)
-    return NS_ERROR_INVALID_ARG;
-
-  SECStatus ss = PK11_DigestOp(mHMACContext, aData, aLen);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
-  
-  return NS_OK;
-}
-
-/* void updateFromStream (in nsIInputStream aStream, in unsigned long aLen); */
-NS_IMETHODIMP nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
-{
-  if (!mHMACContext)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!aStream)
-    return NS_ERROR_INVALID_ARG;
-
-  uint64_t n;
-  nsresult rv = aStream->Available(&n);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // if the user has passed UINT32_MAX, then read
-  // everything in the stream
-
-  uint64_t len = aLen;
-  if (aLen == UINT32_MAX)
-    len = n;
-
-  // So, if the stream has NO data available for the hash,
-  // or if the data available is less then what the caller
-  // requested, we can not fulfill the HMAC update.  In this
-  // case, just return NS_ERROR_NOT_AVAILABLE indicating
-  // that there is not enough data in the stream to satisify
-  // the request.
-
-  if (n == 0 || n < len)
-    return NS_ERROR_NOT_AVAILABLE;
-  
-  char buffer[NS_CRYPTO_HASH_BUFFER_SIZE];
-  uint32_t read, readLimit;
-  
-  while(NS_SUCCEEDED(rv) && len > 0)
-  {
-    readLimit = (uint32_t)std::min<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
-    
-    rv = aStream->Read(buffer, readLimit, &read);
-    if (read == 0)
-      return NS_BASE_STREAM_CLOSED;
-    
-    if (NS_SUCCEEDED(rv))
-      rv = Update((const uint8_t*)buffer, read);
-    
-    len -= read;
-  }
-  
-  return rv;
-}
-
-/* ACString finish (in bool aASCII); */
-NS_IMETHODIMP nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  if (!mHMACContext)
-    return NS_ERROR_NOT_INITIALIZED;
-  
-  uint32_t hashLen = 0;
-  unsigned char buffer[HASH_LENGTH_MAX];
-  unsigned char* pbuffer = buffer;
-
-  PK11_DigestFinal(mHMACContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
-  if (aASCII)
-  {
-    char *asciiData = BTOA_DataToAscii(buffer, hashLen);
-    NS_ENSURE_TRUE(asciiData, NS_ERROR_OUT_OF_MEMORY);
-
-    _retval.Assign(asciiData);
-    PORT_Free(asciiData);
-  }
-  else
-  {
-    _retval.Assign((const char*)buffer, hashLen);
-  }
-
-  return NS_OK;
-}
-
-/* void reset (); */
-NS_IMETHODIMP nsCryptoHMAC::Reset()
-{
-  nsNSSShutDownPreventionLock locker;
-
-  SECStatus ss = PK11_DigestBegin(mHMACContext);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
-
   return NS_OK;
 }
 
