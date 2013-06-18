@@ -288,9 +288,6 @@ public:
   nsresult OpenResource(MediaResource* aResource,
                         nsIStreamListener** aStreamListener);
 
-  // Called when the video file has completed downloading.
-  virtual void ResourceLoaded();
-
   // Called if the media file encounters a network error.
   virtual void NetworkError();
 
@@ -1019,11 +1016,6 @@ public:
   // Any change to the state must call NotifyAll on the monitor.
   // This can only be PLAY_STATE_PAUSED or PLAY_STATE_PLAYING.
   PlayState mNextState;
-
-  // True when we have fully loaded the resource and reported that
-  // to the element (i.e. reached NETWORK_LOADED state).
-  // Accessed on the main thread only.
-  bool mCalledResourceLoaded;
 
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set

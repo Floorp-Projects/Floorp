@@ -154,13 +154,7 @@ public:
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
-  // aResourceFullyLoaded should be true if the resource has been
-  // fully loaded and the caller will call ResourceLoaded next.
-  virtual void FirstFrameLoaded(bool aResourceFullyLoaded) MOZ_FINAL MOZ_OVERRIDE;
-
-  // Called by the video decoder object, on the main thread,
-  // when the resource has completed downloading.
-  virtual void ResourceLoaded() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void FirstFrameLoaded() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
