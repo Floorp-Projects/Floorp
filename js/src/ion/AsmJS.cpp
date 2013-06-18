@@ -6244,7 +6244,7 @@ IsMaybeWrappedNativeFunction(const Value &v, Native native)
     if (!obj)
         return false;
 
-    return obj->isFunction() && obj->toFunction()->maybeNative() == native;
+    return obj->is<JSFunction>() && obj->as<JSFunction>().maybeNative() == native;
 }
 
 JSBool

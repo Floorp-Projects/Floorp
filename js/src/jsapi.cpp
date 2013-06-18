@@ -371,7 +371,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
-            *va_arg(ap, JSFunction **) = obj->toFunction();
+            *va_arg(ap, JSFunction **) = &obj->as<JSFunction>();
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -1806,7 +1806,7 @@ StdNameToPropertyName(JSContext *cx, const JSStdName *stdn)
  * If you add a "standard" class, remember to update this table.
  */
 static const JSStdName standard_class_atoms[] = {
-    {js_InitFunctionClass,              EAGER_ATOM_AND_CLASP(Function)},
+    {js_InitFunctionClass,              EAGER_CLASS_ATOM(Function), &JSFunction::class_},
     {js_InitObjectClass,                EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
     {js_InitBooleanClass,               EAGER_ATOM_AND_OCLASP(Boolean)},
@@ -2506,21 +2506,14 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           case JSTRACE_OBJECT:
           {
             JSObject *obj = (JSObject *)thing;
-            Class *clasp = obj->getClass();
-            if (clasp == &FunctionClass) {
-                JSFunction *fun = obj->toFunction();
-                if (!fun) {
-                    JS_snprintf(buf, bufsize, " <newborn>");
-                } else if (fun != obj) {
-                    JS_snprintf(buf, bufsize, " %p", fun);
-                } else {
-                    if (fun->displayAtom()) {
-                        *buf++ = ' ';
-                        bufsize--;
-                        PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
-                    }
+            if (obj->is<JSFunction>()) {
+                JSFunction *fun = &obj->as<JSFunction>();
+                if (fun->displayAtom()) {
+                    *buf++ = ' ';
+                    bufsize--;
+                    PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
                 }
-            } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+            } else if (obj->getClass()->flags & JSCLASS_HAS_PRIVATE) {
                 JS_snprintf(buf, bufsize, " %p", obj->getPrivate());
             } else {
                 JS_snprintf(buf, bufsize, " <no private>");
@@ -3355,7 +3348,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *pare
     if (!clasp)
         clasp = &ObjectClass;    /* default class is Object */
 
-    JS_ASSERT(clasp != &FunctionClass);
+    JS_ASSERT(clasp != &JSFunction::class_);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
@@ -3385,7 +3378,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, 
     if (!clasp)
         clasp = &ObjectClass;    /* default class is Object */
 
-    JS_ASSERT(clasp != &FunctionClass);
+    JS_ASSERT(clasp != &JSFunction::class_);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
@@ -4798,7 +4791,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
     if (!parent)
         parent = cx->global();
 
-    if (!funobj->isFunction()) {
+    if (!funobj->is<JSFunction>()) {
         AutoCompartment ac(cx, funobj);
         ReportIsNotFunction(cx, ObjectValue(*funobj));
         return NULL;
@@ -4808,7 +4801,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
      * If a function was compiled to be lexically nested inside some other
      * script, we cannot clone it without breaking the compiler's assumptions.
      */
-    RootedFunction fun(cx, funobj->toFunction());
+    RootedFunction fun(cx, &funobj->as<JSFunction>());
     if (fun->isInterpretedLazy()) {
         AutoCompartment ac(cx, funobj);
         if (!fun->getOrCreateScript(cx))
@@ -4861,7 +4854,7 @@ JS_GetFunctionArity(JSFunction *fun)
 JS_PUBLIC_API(JSBool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 {
-    return obj->isFunction();
+    return obj->is<JSFunction>();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4873,9 +4866,9 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_IsNativeFunction(JSObject *funobj, JSNative call)
 {
-    if (!funobj->isFunction())
+    if (!funobj->is<JSFunction>())
         return false;
-    JSFunction *fun = funobj->toFunction();
+    JSFunction *fun = &funobj->as<JSFunction>();
     return fun->isNative() && fun->native() == call;
 }
 
@@ -4899,7 +4892,7 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const JSFunctionSpec *fs = (JSFunctionSpec *)
-        vp->toObject().toFunction()->getExtendedSlot(0).toPrivate();
+        vp->toObject().as<JSFunction>().getExtendedSlot(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {

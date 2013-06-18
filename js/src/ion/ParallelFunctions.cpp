@@ -436,12 +436,12 @@ ion::ParCallToUncompiledScript(JSFunction *func)
         Spew(SpewBailouts, "Call to uncompiled lazy script");
     } else if (func->isBoundFunction()) {
         int depth = 0;
-        JSFunction *target = func->getBoundFunctionTarget()->toFunction();
+        JSFunction *target = &func->getBoundFunctionTarget()->as<JSFunction>();
         while (depth < max_bound_function_unrolling) {
             if (target->hasScript())
                 break;
             if (target->isBoundFunction())
-                target = target->getBoundFunctionTarget()->toFunction();
+                target = &target->getBoundFunctionTarget()->as<JSFunction>();
             depth--;
         }
         if (target->hasScript()) {

@@ -1109,8 +1109,8 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
     types::StackTypeSet *ctorTypes = callInfo.getArg(0)->resultTypeSet();
     JSObject *targetObj = ctorTypes ? ctorTypes->getSingleton() : NULL;
     RootedFunction target(cx);
-    if (targetObj && targetObj->isFunction())
-        target = targetObj->toFunction();
+    if (targetObj && targetObj->is<JSFunction>())
+        target = &targetObj->as<JSFunction>();
     if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
         RootedScript scriptRoot(cx, script());
         target = CloneFunctionAtCallsite(cx, target, scriptRoot, pc);

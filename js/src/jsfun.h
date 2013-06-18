@@ -19,6 +19,8 @@ namespace js { class FunctionExtended; }
 class JSFunction : public JSObject
 {
   public:
+    static js::Class class_;
+
     enum Flags {
         INTERPRETED      = 0x0001,  /* function has a JSScript and environment. */
         NATIVE_CTOR      = 0x0002,  /* native that can be called as a constructor */
@@ -330,29 +332,7 @@ class JSFunction : public JSObject
         JS_ASSERT_IF(isTenured(), kind == tenuredGetAllocKind());
         return kind;
     }
-
-  private:
-    /*
-     * These member functions are inherited from JSObject, but should never be applied to
-     * a value statically known to be a JSFunction.
-     */
-    inline JSFunction *toFunction() MOZ_DELETE;
-    inline const JSFunction *toFunction() const MOZ_DELETE;
 };
-
-inline JSFunction *
-JSObject::toFunction()
-{
-    JS_ASSERT(JS_ObjectIsFunction(NULL, this));
-    return static_cast<JSFunction *>(this);
-}
-
-inline const JSFunction *
-JSObject::toFunction() const
-{
-    JS_ASSERT(JS_ObjectIsFunction(NULL, const_cast<JSObject *>(this)));
-    return static_cast<const JSFunction *>(this);
-}
 
 extern JSString *
 fun_toStringHelper(JSContext *cx, js::HandleObject obj, unsigned indent);

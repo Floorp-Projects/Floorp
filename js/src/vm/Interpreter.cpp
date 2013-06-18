@@ -162,7 +162,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
     JS_ASSERT(!thisv.isMagic());
 
 #ifdef DEBUG
-    JSFunction *fun = call.callee().isFunction() ? call.callee().toFunction() : NULL;
+    JSFunction *fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : NULL;
     JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
 #endif
 
@@ -436,7 +436,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     Class *clasp = callee.getClass();
 
     /* Invoke non-functions. */
-    if (JS_UNLIKELY(clasp != &FunctionClass)) {
+    if (JS_UNLIKELY(clasp != &JSFunction::class_)) {
 #if JS_HAS_NO_SUCH_METHOD
         if (JS_UNLIKELY(clasp == &js_NoSuchMethodClass))
             return NoSuchMethod(cx, args.length(), args.base());
@@ -448,7 +448,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    JSFunction *fun = callee.toFunction();
+    JSFunction *fun = &callee.as<JSFunction>();
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
@@ -511,7 +511,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
 bool
 js::InvokeConstructor(JSContext *cx, CallArgs args)
 {
-    JS_ASSERT(!FunctionClass.construct);
+    JS_ASSERT(!JSFunction::class_.construct);
 
     args.setThis(MagicValue(JS_IS_CONSTRUCTING));
 
@@ -519,8 +519,8 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
         return ReportIsNotFunction(cx, args.calleev().get(), args.length() + 1, CONSTRUCT);
 
     JSObject &callee = args.callee();
-    if (callee.isFunction()) {
-        RootedFunction fun(cx, callee.toFunction());
+    if (callee.is<JSFunction>()) {
+        RootedFunction fun(cx, &callee.as<JSFunction>());
 
         if (fun->isNativeConstructor()) {
             bool ok = CallJSNativeConstructor(cx, fun->native(), args);
@@ -3281,7 +3281,7 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
         clone = js_fun_bind(cx, clone, thisval, NULL, 0);
         if (!clone)
             return NULL;
-        clone->toFunction()->flags |= JSFunction::ARROW;
+        clone->as<JSFunction>().flags |= JSFunction::ARROW;
     }
 
     JS_ASSERT(clone->global() == clone->global());

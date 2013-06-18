@@ -1250,14 +1250,14 @@ GetOuterObject(JSContext *cx, HandleObject obj)
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
 {
-    return v.isObject() && v.toObject().isFunction();
+    return v.isObject() && v.toObject().is<JSFunction>();
 }
 
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSFunction **fun)
 {
-    if (v.isObject() && v.toObject().isFunction()) {
-        *fun = v.toObject().toFunction();
+    if (v.isObject() && v.toObject().is<JSFunction>()) {
+        *fun = &v.toObject().as<JSFunction>();
         return true;
     }
     return false;
@@ -1357,7 +1357,7 @@ ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp)
 inline bool
 IsInternalFunctionObject(JSObject *funobj)
 {
-    JSFunction *fun = funobj->toFunction();
+    JSFunction *fun = &funobj->as<JSFunction>();
     return fun->isLambda() && !funobj->getParent();
 }
 

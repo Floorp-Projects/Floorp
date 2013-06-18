@@ -1862,7 +1862,7 @@ ion::SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoVal
         data.numActualArgs = args.length();
         data.maxArgc = Max(args.length(), numFormals) + 1;
         data.scopeChain = NULL;
-        data.calleeToken = CalleeToToken(args.callee().toFunction());
+        data.calleeToken = CalleeToToken(&args.callee().as<JSFunction>());
 
         if (data.numActualArgs >= numFormals) {
             data.maxArgv = args.base() + 1;

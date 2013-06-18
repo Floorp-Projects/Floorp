@@ -706,7 +706,7 @@ class StackFrame
 
     JSFunction &callee() const {
         JS_ASSERT(isFunctionFrame());
-        return *calleev().toObject().toFunction();
+        return calleev().toObject().as<JSFunction>();
     }
 
     const Value &calleev() const {

@@ -207,8 +207,8 @@ MarkFunctionsWithinEvalScript(JSScript *script)
 
     for (size_t i = start; i < objects->length; i++) {
         JSObject *obj = objects->vector[i];
-        if (obj->isFunction()) {
-            JSFunction *fun = obj->toFunction();
+        if (obj->is<JSFunction>()) {
+            JSFunction *fun = &obj->as<JSFunction>();
             if (fun->hasScript())
                 fun->nonLazyScript()->directlyInsideEval = true;
             else if (fun->isInterpretedLazy())
@@ -467,8 +467,9 @@ js::IsAnyBuiltinEval(JSFunction *fun)
 JSPrincipals *
 js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
 {
-    JS_ASSERT(IsAnyBuiltinEval(call.callee().toFunction()) ||
-              IsBuiltinFunctionConstructor(call.callee().toFunction()));
+    JSObject &callee = call.callee();
+    JS_ASSERT(IsAnyBuiltinEval(&callee.as<JSFunction>()) ||
+              IsBuiltinFunctionConstructor(&callee.as<JSFunction>()));
 
     // To compute the principals of the compiled eval/Function code, we simply
     // use the callee's principals. To see why the caller's principals are
@@ -484,5 +485,5 @@ js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
     // compiled code will be run with the callee's scope chain, this would make
     // fp->script()->compartment() != fp->compartment().
 
-    return call.callee().compartment()->principals;
+    return callee.compartment()->principals;
 }

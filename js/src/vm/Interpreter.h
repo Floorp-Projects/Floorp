@@ -262,7 +262,7 @@ class InvokeState : public RunState
 
   public:
     InvokeState(JSContext *cx, CallArgs &args, InitialFrameFlags initial)
-      : RunState(cx, Invoke, args.callee().toFunction()->nonLazyScript()),
+      : RunState(cx, Invoke, args.callee().as<JSFunction>().nonLazyScript()),
         args_(args),
         initial_(initial),
         useNewType_(false)

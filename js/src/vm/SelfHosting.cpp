@@ -217,7 +217,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 2);
     JS_ASSERT(args[0].isObject());
-    JS_ASSERT(args[0].toObject().isFunction());
+    JS_ASSERT(args[0].toObject().is<JSFunction>());
     JS_ASSERT(args[1].isObject());
 
     // Normal .prototype properties aren't enumerable.  But for this to clone
@@ -230,7 +230,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    ctor->toFunction()->setIsSelfHostedConstructor();
+    ctor->as<JSFunction>().setIsSelfHostedConstructor();
     args.rval().setUndefined();
     return true;
 }
@@ -241,8 +241,8 @@ intrinsic_MakeWrappable(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() >= 1);
     JS_ASSERT(args[0].isObject());
-    JS_ASSERT(args[0].toObject().isFunction());
-    args[0].toObject().toFunction()->makeWrappable();
+    JS_ASSERT(args[0].toObject().is<JSFunction>());
+    args[0].toObject().as<JSFunction>().makeWrappable();
     args.rval().setUndefined();
     return true;
 }
@@ -290,10 +290,10 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() >= 2);
-    JS_ASSERT(args[0].isObject() && args[0].toObject().isFunction());
+    JS_ASSERT(args[0].isObject() && args[0].toObject().is<JSFunction>());
     JS_ASSERT(args[1].isObject());
 
-    RootedFunction fun(cx, args[0].toObject().toFunction());
+    RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
     RootedScript funScript(cx, fun->nonLazyScript());
     RootedObject flags(cx, &args[1].toObject());
 
@@ -360,9 +360,9 @@ js::intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JS_ASSERT(args[0].isObject() && args[0].toObject().isFunction());
+    JS_ASSERT(args[0].isObject() && args[0].toObject().is<JSFunction>());
 
-    RootedFunction init(cx, args[0].toObject().toFunction());
+    RootedFunction init(cx, &args[0].toObject().as<JSFunction>());
     CallArgs args0 = CallArgsFromVp(argc - 1, vp + 1);
     if (!js::ParallelArrayObject::constructHelper(cx, &init, args0))
         return false;
@@ -783,13 +783,13 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     if (p)
         return p->value;
     RootedObject clone(cx);
-    if (srcObj->isFunction()) {
-        if (srcObj->toFunction()->isWrappable()) {
+    if (srcObj->is<JSFunction>()) {
+        if (srcObj->as<JSFunction>().isWrappable()) {
             clone = srcObj;
             if (!cx->compartment()->wrap(cx, clone.address()))
                 return NULL;
         } else {
-            RootedFunction fun(cx, srcObj->toFunction());
+            RootedFunction fun(cx, &srcObj->as<JSFunction>());
             clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind(), TenuredObject);
         }
     } else if (srcObj->is<RegExpObject>()) {
@@ -862,7 +862,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     if (!GetUnclonedValue(cx, shg, id, &funVal))
         return false;
 
-    RootedFunction sourceFun(cx, funVal.toObject().toFunction());
+    RootedFunction sourceFun(cx, &funVal.toObject().as<JSFunction>());
     RootedScript sourceScript(cx, sourceFun->nonLazyScript());
     JS_ASSERT(!sourceScript->enclosingStaticScope());
     JSScript *cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
@@ -910,7 +910,7 @@ JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, Handle<PropertyName*> n
     JS_ASSERT(funVal.isObject());
     JS_ASSERT(funVal.toObject().isCallable());
 
-    if (!funVal.toObject().toFunction()->isWrappable()) {
+    if (!funVal.toObject().as<JSFunction>().isWrappable()) {
         funVal.setUndefined();
         return true;
     }

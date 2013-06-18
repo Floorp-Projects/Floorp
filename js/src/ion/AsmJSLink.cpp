@@ -80,10 +80,10 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
     if (!GetProperty(cx, importVal, field, &v))
         return false;
 
-    if (!v.isObject() || !v.toObject().isFunction())
+    if (!v.isObject() || !v.toObject().is<JSFunction>())
         return LinkFail(cx, "FFI imports must be functions");
 
-    (*ffis)[global.ffiIndex()] = v.toObject().toFunction();
+    (*ffis)[global.ffiIndex()] = &v.toObject().as<JSFunction>();
     return true;
 }
 
@@ -243,7 +243,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
     }
 
     for (unsigned i = 0; i < module.numExits(); i++)
-        module.exitIndexToGlobalDatum(i).fun = ffis[module.exit(i).ffiIndex()]->toFunction();
+        module.exitIndexToGlobalDatum(i).fun = &ffis[module.exit(i).ffiIndex()]->as<JSFunction>();
 
     module.setIsLinked(heap);
     return true;
@@ -287,7 +287,7 @@ extern JSBool
 js::CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs callArgs = CallArgsFromVp(argc, vp);
-    RootedFunction callee(cx, callArgs.callee().toFunction());
+    RootedFunction callee(cx, &callArgs.callee().as<JSFunction>());
 
     // An asm.js function stores, in its extended slots:
     //  - a pointer to the module from which it was returned
@@ -472,7 +472,7 @@ JSBool
 js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction fun(cx, args.callee().toFunction());
+    RootedFunction fun(cx, &args.callee().as<JSFunction>());
     RootedObject moduleObj(cx, &AsmJSModuleObject(fun));
     AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
 

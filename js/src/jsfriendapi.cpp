@@ -86,8 +86,8 @@ JS_FindCompilationScope(JSContext *cx, JSObject *objArg)
 JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSObject *obj)
 {
-    if (obj->isFunction())
-        return obj->toFunction();
+    if (obj->is<JSFunction>())
+        return &obj->as<JSFunction>();
     return NULL;
 }
 
@@ -348,6 +348,12 @@ js::IsAtomsCompartment(JSCompartment *comp)
 }
 
 JS_FRIEND_API(bool)
+js::IsFunctionObject(JSObject *obj)
+{
+    return obj->is<JSFunction>();
+}
+
+JS_FRIEND_API(bool)
 js::IsScopeObject(JSObject *obj)
 {
     return obj->is<ScopeObject>();
@@ -491,15 +497,15 @@ js::InitClassWithReserved(JSContext *cx, JSObject *objArg, JSObject *parent_prot
 JS_FRIEND_API(const Value &)
 js::GetFunctionNativeReserved(JSObject *fun, size_t which)
 {
-    JS_ASSERT(fun->toFunction()->isNative());
-    return fun->toFunction()->getExtendedSlot(which);
+    JS_ASSERT(fun->as<JSFunction>().isNative());
+    return fun->as<JSFunction>().getExtendedSlot(which);
 }
 
 JS_FRIEND_API(void)
 js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
 {
-    JS_ASSERT(fun->toFunction()->isNative());
-    fun->toFunction()->setExtendedSlot(which, val);
+    JS_ASSERT(fun->as<JSFunction>().isNative());
+    fun->as<JSFunction>().setExtendedSlot(which, val);
 }
 
 JS_FRIEND_API(void)

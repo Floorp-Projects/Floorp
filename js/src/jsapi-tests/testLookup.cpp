@@ -30,7 +30,7 @@ BEGIN_TEST(testLookup_bug522590)
     CHECK(JS_LookupProperty(cx, xobj, "f", r.address()));
     CHECK(r.isObject());
     JSObject *funobj = &r.toObject();
-    CHECK(funobj->isFunction());
+    CHECK(funobj->is<JSFunction>());
     CHECK(!js::IsInternalFunctionObject(funobj));
 
     return true;
