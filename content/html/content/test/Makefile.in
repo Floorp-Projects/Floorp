@@ -378,6 +378,7 @@ MOCHITEST_FILES = \
 		wakelock.ogg \
 		wakelock.ogv \
 		test_bug869040.html \
+		test_bug870787.html \
 		allowMedia.sjs \
 		test_bug874758.html \
 		$(NULL)
