@@ -319,7 +319,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     // XXX might not want to do this at xpconnect shutdown time???
     mComponents = nullptr;
 
-    JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
+    JSRuntime *rt = XPCJSRuntime::Get()->Runtime();
     mXBLScope.finalize(rt);
     mGlobalJSObject.finalize(rt);
 }
