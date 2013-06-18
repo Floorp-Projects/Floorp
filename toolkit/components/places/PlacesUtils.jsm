@@ -1755,56 +1755,6 @@ this.PlacesUtils = {
     }, Ci.nsIThread.DISPATCH_NORMAL);
 
     return deferred.promise;
-  },
-
-  /**
-   * Promised wrapper for mozIAsyncHistory::updatePlaces for a single place.
-   *
-   * @param aPlaces
-   *        a single mozIPlaceInfo object
-   * @resolves {Promise}
-   */
-  promiseUpdatePlace: function PU_promiseUpdatePlaces(aPlace) {
-    let deferred = Promise.defer();
-    PlacesUtils.asyncHistory.updatePlaces(aPlace, {
-      _placeInfo: null,
-      handleResult: function handleResult(aPlaceInfo) {
-        this._placeInfo = aPlaceInfo;
-      },
-      handleError: function handleError(aResultCode, aPlaceInfo) {
-        deferred.reject(new Components.Exception("Error", aResultCode));
-      },
-      handleCompletion: function() {
-        deferred.resolve(this._placeInfo);
-      }
-    });
-
-    return deferred.promise;
-  },
-
-  /**
-   * Promised wrapper for mozIAsyncHistory::getPlacesInfo for a single place.
-   *
-   * @param aPlaceIdentifier
-   *        either an nsIURI or a GUID (@see getPlacesInfo)
-   * @resolves to the place info object handed to handleResult.
-   */
-  promisePlaceInfo: function PU_promisePlaceInfo(aPlaceIdentifier) {
-    let deferred = Promise.defer();
-    PlacesUtils.asyncHistory.getPlacesInfo(aPlaceIdentifier, {
-      _placeInfo: null,
-      handleResult: function handleResult(aPlaceInfo) {
-        this._placeInfo = aPlaceInfo;
-      },
-      handleError: function handleError(aResultCode, aPlaceInfo) {
-        deferred.reject(new Components.Exception("Error", aResultCode));
-      },
-      handleCompletion: function() {
-        deferred.resolve(this._placeInfo);
-      }
-    });
-
-    return deferred.promise;
   }
 };
 
