@@ -264,7 +264,7 @@ SVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
 {
   int bx0, bx1, by0, by1, b00, b10, b01, b11;
   double rx0, rx1, ry0, ry1, *q, sx, sy, a, b, t, u, v;
-  register long i, j;
+  long i, j;
   t = aVec[0] + sPerlinN;
   bx0 = (int) t;
   bx1 = bx0 + 1;

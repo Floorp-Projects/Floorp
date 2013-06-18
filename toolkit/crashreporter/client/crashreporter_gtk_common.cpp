@@ -145,7 +145,7 @@ void LoadProxyinfo()
     host = gconf_client_get_string(conf, HTTP_PROXY_DIR "/host", NULL);
     port = gconf_client_get_int(conf, HTTP_PROXY_DIR "/port", NULL);
 
-    if (port && host && host != '\0') {
+    if (port && host && *host != '\0') {
       httpproxy = g_strdup_printf("http://%s:%d/", host, port);
       gHttpProxy = httpproxy;
     }

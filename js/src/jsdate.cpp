@@ -543,7 +543,7 @@ Class js::DateClass = {
 
 /* for use by date_parse */
 
-static const char* wtb[] = {
+static const char* const wtb[] = {
     "am", "pm",
     "monday", "tuesday", "wednesday", "thursday", "friday",
     "saturday", "sunday",
@@ -557,7 +557,7 @@ static const char* wtb[] = {
     /* time zone table needs to be expanded */
 };
 
-static int ttb[] = {
+static const int ttb[] = {
     -1, -2, 0, 0, 0, 0, 0, 0, 0,       /* AM/PM */
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
     10000 + 0, 10000 + 0, 10000 + 0,   /* GMT/UT/UTC */
@@ -2459,12 +2459,12 @@ date_setYear(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* constants for toString, toUTCString */
-static char js_NaN_date_str[] = "Invalid Date";
-static const char* days[] =
+static const char js_NaN_date_str[] = "Invalid Date";
+static const char * const days[] =
 {
    "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
 };
-static const char* months[] =
+static const char * const months[] =
 {
    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };

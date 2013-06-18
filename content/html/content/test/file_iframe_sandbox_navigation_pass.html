@@ -7,7 +7,8 @@
 </head>
 <script>
 function doStuff() {
-  window.parent.postMessage({ok: true, desc: "this navigation should be allowed by a sandboxed document"}, "*");
+  var testContext = unescape(location.search.substring(1));
+  window.parent.postMessage({ok: true, desc: testContext + "this navigation should be allowed by a sandboxed document"}, "*");
 }
 </script>
 <body onLoad="doStuff()">

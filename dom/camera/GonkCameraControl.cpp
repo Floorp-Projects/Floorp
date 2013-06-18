@@ -174,8 +174,8 @@ public:
   InitGonkCameraControl(nsGonkCameraControl* aCameraControl, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
     : mCameraControl(aCameraControl)
     , mDOMCameraControl(aDOMCameraControl)
-    , mOnSuccessCb(onSuccess)
-    , mOnErrorCb(onError)
+    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraGetCameraCallback>(onSuccess))
+    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
     , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -195,8 +195,8 @@ public:
   nsRefPtr<nsGonkCameraControl> mCameraControl;
   // Raw pointer to DOM-facing camera control--it must NS_ADDREF itself for us
   nsDOMCameraControl* mDOMCameraControl;
-  nsCOMPtr<nsICameraGetCameraCallback> mOnSuccessCb;
-  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
+  nsMainThreadPtrHandle<nsICameraGetCameraCallback> mOnSuccessCb;
+  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
   uint64_t mWindowId;
 };
 

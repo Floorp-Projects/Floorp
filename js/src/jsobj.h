@@ -1200,12 +1200,11 @@ CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, Hand
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
  */
-const unsigned DNP_CACHE_RESULT = 1;   /* an interpreter call from JSOP_INITPROP */
-const unsigned DNP_DONT_PURGE   = 2;   /* suppress js_PurgeScopeChain */
-const unsigned DNP_UNQUALIFIED  = 4;   /* Unqualified property set.  Only used in
+const unsigned DNP_DONT_PURGE   = 1;   /* suppress js_PurgeScopeChain */
+const unsigned DNP_UNQUALIFIED  = 2;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
-const unsigned DNP_SKIP_TYPE    = 8;   /* Don't update type information */
+const unsigned DNP_SKIP_TYPE    = 4;   /* Don't update type information */
 
 /*
  * Return successfully added or changed shape or NULL on error.
@@ -1291,9 +1290,6 @@ LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject
 
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
-
-/* JSGET_CACHE_RESULT is the analogue of DNP_CACHE_RESULT. */
-const unsigned JSGET_CACHE_RESULT = 1; // from a caching interpreter opcode
 
 /*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing shape

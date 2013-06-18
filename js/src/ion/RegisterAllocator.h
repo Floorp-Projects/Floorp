@@ -325,16 +325,16 @@ class RegisterAllocator
   protected:
     bool init();
 
-    CodePosition outputOf(uint32_t pos) {
+    CodePosition outputOf(uint32_t pos) const {
         return CodePosition(pos, CodePosition::OUTPUT);
     }
-    CodePosition outputOf(LInstruction *ins) {
+    CodePosition outputOf(const LInstruction *ins) const {
         return CodePosition(ins->id(), CodePosition::OUTPUT);
     }
-    CodePosition inputOf(uint32_t pos) {
+    CodePosition inputOf(uint32_t pos) const {
         return CodePosition(pos, CodePosition::INPUT);
     }
-    CodePosition inputOf(LInstruction *ins) {
+    CodePosition inputOf(const LInstruction *ins) const {
         return CodePosition(ins->id(), CodePosition::INPUT);
     }
 
@@ -348,11 +348,11 @@ class RegisterAllocator
         return getMoveGroupAfter(pos.ins());
     }
 
-    size_t findFirstNonCallSafepoint(CodePosition from)
+    size_t findFirstNonCallSafepoint(CodePosition from) const
     {
         size_t i = 0;
         for (; i < graph.numNonCallSafepoints(); i++) {
-            LInstruction *ins = graph.getNonCallSafepoint(i);
+            const LInstruction *ins = graph.getNonCallSafepoint(i);
             if (from <= inputOf(ins))
                 break;
         }

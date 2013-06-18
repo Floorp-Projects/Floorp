@@ -5,8 +5,10 @@
 from optparse import OptionParser
 import os
 import re
-import unittest
 import sys
+import unittest
+
+import mozlog
 
 import dmunit
 import genfiles
@@ -17,8 +19,7 @@ def main(ip, port, heartbeat_port, scripts, directory, isTestDevice, verbose):
     dmunit.port = port
     dmunit.heartbeat_port = heartbeat_port
     if verbose:
-        from mozdevice.devicemanagerSUT import DeviceManagerSUT
-        DeviceManagerSUT.debug = 4
+        dmunit.log_level = mozlog.DEBUG
 
     suite = unittest.TestSuite()
 

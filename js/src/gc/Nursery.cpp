@@ -9,11 +9,14 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jstypedarray.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
+
+#include "jscompartmentinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "gc/Nursery-inl.h"

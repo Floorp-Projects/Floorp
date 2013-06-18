@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 838692</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="application/javascript">
+  var testContext = "Test 21: navigate parent by name with window.open(): ";
+
+  function doTest() {
+    try {
+      window.open("file_iframe_sandbox_navigation_fail.html?" + escape(testContext), "if_parent2");
+      window.parent.parent.postMessage("test attempted", "*");
+    } catch(error) {
+      window.parent.parent.postMessage({ok: true, desc: testContext + "as expected, error thrown during window.open(..., \"if_parent2\")"}, "*");
+    }
+  }
+</script>
+
+<body onload="doTest()">
+  I am sandboxed with 'allow-same-origin allow-scripts'
+</body>
+</html>

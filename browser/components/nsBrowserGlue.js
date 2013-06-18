@@ -317,6 +317,23 @@ BrowserGlue.prototype = {
         });
         break;
 #endif
+      case "browser-search-engine-modified":
+        if (data != "engine-default" && data != "engine-current") {
+          break;
+        }
+        // Enforce that the search service's defaultEngine is always equal to
+        // its currentEngine. The search service will notify us any time either
+        // of them are changed (either by directly setting the relevant prefs,
+        // i.e. if add-ons try to change this directly, or if the
+        // nsIBrowserSearchService setters are called).
+        let ss = Services.search;
+        if (ss.currentEngine.name == ss.defaultEngine.name)
+          return;
+        if (data == "engine-current")
+          ss.defaultEngine = ss.currentEngine;
+        else
+          ss.currentEngine = ss.defaultEngine;
+        break;
     }
   },
 
@@ -351,6 +368,7 @@ BrowserGlue.prototype = {
 #ifdef MOZ_SERVICES_HEALTHREPORT
     os.addObserver(this, "keyword-search", false);
 #endif
+    os.addObserver(this, "browser-search-engine-modified", false);
   },
 
   // cleanup (called on application shutdown)
@@ -384,6 +402,7 @@ BrowserGlue.prototype = {
 #ifdef MOZ_SERVICES_HEALTHREPORT
     os.removeObserver(this, "keyword-search");
 #endif
+    os.removeObserver(this, "browser-search-engine-modified");
   },
 
   _onAppDefaults: function BG__onAppDefaults() {

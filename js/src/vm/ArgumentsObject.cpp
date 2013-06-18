@@ -4,19 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsgc.h"
+#include "vm/ArgumentsObject-inl.h"
+
 #include "jsinfer.h"
 
 #include "vm/GlobalObject.h"
-#include "vm/Interpreter.h"
 #include "vm/Stack.h"
-#include "vm/Xdr.h"
 
 #include "jsobjinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/ArgumentsObject-inl.h"
 
 #if defined(JS_ION)
 #include "ion/IonFrames.h"

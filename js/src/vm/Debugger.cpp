@@ -6,8 +6,6 @@
 
 #include "vm/Debugger.h"
 
-#include <limits.h>
-
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -24,7 +22,6 @@
 #include "jsopcodeinlines.h"
 
 #include "gc/FindSCCs-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

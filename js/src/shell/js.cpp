@@ -2062,7 +2062,7 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
     FILE *file;
     char linebuf[LINE_BUF_LEN];
     jsbytecode *pc, *end;
-    static char sep[] = ";-------------------------";
+    static const char sep[] = ";-------------------------";
 
     bool ok = true;
     RootedScript script(cx);
@@ -3564,7 +3564,7 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
     return cx->runtime()->cloneSelfHostedValue(cx, srcName, args.rval());
 }
 
-static JSFunctionSpecWithHelp shell_functions[] = {
+static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
 "  Get or force a script compilation version number."),
@@ -3887,7 +3887,7 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FS_HELP_END
 };
 
-static JSFunctionSpecWithHelp self_hosting_functions[] = {
+static const JSFunctionSpecWithHelp self_hosting_functions[] = {
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
