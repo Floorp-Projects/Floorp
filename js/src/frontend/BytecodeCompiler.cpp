@@ -268,7 +268,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
         TokenStream::Position pos(parser.keepAtoms);
         parser.tokenStream.tell(&pos);
 
-        ParseNode *pn = parser.statement();
+        ParseNode *pn = parser.statement(canHaveDirectives);
         if (!pn) {
             if (parser.hadAbortedSyntaxParse()) {
                 // Parsing inner functions lazily may lead the parser into an

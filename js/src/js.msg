@@ -391,7 +391,7 @@ MSG_DEF(JSMSG_DATE_NOT_FINITE,        337, 0, JSEXN_RANGEERR, "date value is not
 MSG_DEF(JSMSG_MODULE_STATEMENT,       338, 0, JSEXN_SYNTAXERR, "module declarations may only appear at the top level of a program or module body")
 MSG_DEF(JSMSG_CURLY_BEFORE_MODULE,    339, 0, JSEXN_SYNTAXERR, "missing { before module body")
 MSG_DEF(JSMSG_CURLY_AFTER_MODULE,     340, 0, JSEXN_SYNTAXERR, "missing } after module body")
-MSG_DEF(JSMSG_USE_ASM_DIRECTIVE_FAIL, 341, 0, JSEXN_SYNTAXERR, "'use asm' directive only works on function code")
+MSG_DEF(JSMSG_USE_ASM_DIRECTIVE_FAIL, 341, 0, JSEXN_SYNTAXERR, "\"use asm\" is only meaningful in the Directive Prologue of a function body")
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,      342, 1, JSEXN_TYPEERR, "asm.js type error: {0}")
 MSG_DEF(JSMSG_USE_ASM_LINK_FAIL,      343, 1, JSEXN_TYPEERR, "asm.js link error: {0}")
 MSG_DEF(JSMSG_USE_ASM_TYPE_OK,        344, 1, JSEXN_ERR,     "successfully compiled asm.js code ({0})")
