@@ -73,7 +73,7 @@ FileLocation::GetBaseFile()
     nsRefPtr<nsZipHandle> handler = mBaseZip->GetFD();
     if (handler)
       return handler->mFile.GetBaseFile();
-    return nullptr;
+    return NULL;
   }
 
   nsCOMPtr<nsIFile> file = mBaseFile;
