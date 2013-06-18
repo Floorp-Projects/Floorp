@@ -5,11 +5,78 @@
 from __future__ import print_function, unicode_literals
 
 import os
+import re
 import subprocess
 import sys
 
+from distutils.version import StrictVersion
+
+
+NO_MERCURIAL = '''
+Could not find Mercurial (hg) in the current shell's path. Try starting a new
+shell and running the bootstrapper again.
+'''
+
+MERCURIAL_UNABLE_UPGRADE = '''
+You are currently running Mercurial %s. Running %s or newer is
+recommended for performance and stability reasons.
+
+Unfortunately, this bootstrapper currently does not know how to automatically
+upgrade Mercurial on your machine.
+
+You can usually install Mercurial through your package manager or by
+downloading a package from http://mercurial.selenic.com/.
+'''
+
+MERCURIAL_UPGRADE_FAILED = '''
+We attempted to upgrade Mercurial to a modern version (%s or newer).
+However, you appear to have version %s still.
+
+It's possible your package manager doesn't support a modern version of
+Mercurial. It's also possible Mercurial is not being installed in the search
+path for this shell. Try creating a new shell and run this bootstrapper again.
+
+If it continues to fail, consider installing Mercurial by following the
+instructions at http://mercurial.selenic.com/.
+'''
+
+PYTHON_UNABLE_UPGRADE = '''
+You are currently running Python %s. Running %s or newer (but
+not 3.x) is required.
+
+Unfortunately, this bootstrapper does not currently know how to automatically
+upgrade Python on your machine.
+
+Please search the Internet for how to upgrade your Python and try running this
+bootstrapper again to ensure your machine is up to date.
+'''
+
+PYTHON_UPGRADE_FAILED = '''
+We attempted to upgrade Python to a modern version (%s or newer).
+However, you appear to still have version %s.
+
+It's possible your package manager doesn't yet expose a modern version of
+Python. It's also possible Python is not being installed in the search path for
+this shell. Try creating a new shell and run this bootstrapper again.
+
+If this continues to fail and you are sure you have a modern Python on your
+system, ensure it is on the $PATH and try again. If that fails, you'll need to
+install Python manually. See http://www.python.org/.
+'''
+
+
+# Upgrade Mercurial older than this.
+MODERN_MERCURIAL_VERSION = StrictVersion('2.5')
+
+# Upgrade Python older than this.
+MODERN_PYTHON_VERSION = StrictVersion('2.7.3')
+
+
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
+
+    def __init__(self):
+        self.package_manager_updated = False
 
     def install_system_packages(self):
         raise NotImplemented('%s must implement install_system_packages()' %
@@ -43,6 +110,12 @@ class BaseBootstrapper(object):
 
     def yum_groupinstall(self, *packages):
         command = ['yum', 'groupinstall']
+        command.extend(packages)
+
+        self.run_as_root(command)
+
+    def yum_update(self, *packages):
+        command = ['yum', 'update']
         command.extend(packages)
 
         self.run_as_root(command)
@@ -93,3 +166,98 @@ class BaseBootstrapper(object):
         else:
             raise Exception("Error! Reached max attempts of entering option.")
 
+    def _ensure_package_manager_updated(self):
+        if self.package_manager_updated:
+            return
+
+        self._update_package_manager()
+        self.package_manager_updated = True
+
+    def _update_package_manager(self):
+        """Updates the package manager's manifests/package list.
+
+        This should be defined in child classes.
+        """
+
+    def is_mercurial_modern(self):
+        hg = self.which('hg')
+        if not hg:
+            print(NO_MERCURIAL)
+            return False, False, None
+
+        info = self.check_output([hg, '--version']).splitlines()[0]
+
+        match = re.search('version ([^\)]+)', info)
+        if not match:
+            print('ERROR: Unable to identify Mercurial version.')
+            return True, False, None
+
+        our = StrictVersion(match.group(1))
+
+        return True, our >= MODERN_MERCURIAL_VERSION, our
+
+    def ensure_mercurial_modern(self):
+        installed, modern, version = self.is_mercurial_modern()
+
+        if not installed or modern:
+            print('Your version of Mercurial (%s) is sufficiently modern.' %
+                version)
+            return
+
+        self._ensure_package_manager_updated()
+        self.upgrade_mercurial(version)
+
+        installed, modern, after = self.is_mercurial_modern()
+
+        if installed and not modern:
+            print(MERCURIAL_UPGRADE_FAILED % (MODERN_MERCURIAL_VERSION, after))
+
+    def upgrade_mercurial(self, current):
+        """Upgrade Mercurial.
+
+        Child classes should reimplement this.
+        """
+        print(MERCURIAL_UNABLE_UPGRADE % (current, MODERN_MERCURIAL_VERSION))
+
+    def is_python_modern(self):
+        python = None
+
+        for test in ['python2.7', 'python']:
+            python = self.which(test)
+            if python:
+                break
+
+        assert python
+
+        info = self.check_output([python, '--version'],
+            stderr=subprocess.STDOUT)
+        match = re.search('Python ([a-z0-9\.]+)', info)
+        if not match:
+            print('ERROR Unable to identify Python version.')
+            return False, None
+
+        our = StrictVersion(match.group(1))
+
+        return our >= MODERN_PYTHON_VERSION, our
+
+    def ensure_python_modern(self):
+        modern, version = self.is_python_modern()
+
+        if modern:
+            print('Your version of Python (%s) is new enough.' % version)
+            return
+
+        self._ensure_package_manager_updated()
+        self.upgrade_python(version)
+
+        modern, after = self.is_python_modern()
+
+        if not modern:
+            print(PYTHON_UPGRADE_FAILED % (MODERN_PYTHON_VERSION, after))
+
+    def upgrade_python(self, current):
+        """Upgrade Python.
+
+        Child classes should reimplement this.
+        """
+        print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
