@@ -7,8 +7,9 @@
 </head>
 <script>
 function doStuff() {
-	window.opener.postMessage({ok: true, desc:  "top navigation should be allowed by a document sandboxed with 'allow-top-navigation'"}, "*");
-	window.close();
+  var testContext = unescape(location.search.substring(1));
+  window.opener.postMessage({ok: true, desc: testContext + "top navigation should be allowed by a document sandboxed with 'allow-top-navigation'"}, "*");
+  window.close();
 }
 </script>
 <body onLoad="doStuff()">

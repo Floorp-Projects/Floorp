@@ -3,26 +3,32 @@
   <head>
     <style type="text/css">
       input {
-          -webkit-transition: all 200ms ease-in-out;
-          -moz-transition: all 200ms ease-in-out;
-          transition: all 200ms ease-in-out;
+          -webkit-transition: -webkit-transform 200ms ease-in-out;
+          transition: transform 200ms ease-in-out;
       }
       input:focus {
           -webkit-transform: scale(1.05);
-          -moz-transform: scale(1.05);
           transform: scale(1.05);
       }
     </style>
     <script>
       function boom() {
         var i = document.querySelector("input");
-        i.addEventListener("transitionend", function() {
+        i.addEventListener("transitionend", function(aEvent) {
+          if (aEvent.propertyName != 'transform' &&
+              aEvent.propertyName != '-webkit-transform') {
+            return;
+          }
           i.removeEventListener("transitionend", arguments.callee, true);
           i.value = "test";
           i.getClientRects();
           i.value = "";
           i.getClientRects();
-          i.addEventListener("transitionend", function() {
+          i.addEventListener("transitionend", function(aEvent) {
+            if (aEvent.propertyName != 'transform' &&
+                aEvent.propertyName != '-webkit-transform') {
+              return;
+            }
             i.removeEventListener("transitionend", arguments.callee, true);
             i.getClientRects();
             document.documentElement.removeAttribute("class");

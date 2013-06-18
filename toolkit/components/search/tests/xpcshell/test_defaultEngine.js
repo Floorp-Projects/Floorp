@@ -43,29 +43,31 @@ function search_observer(aSubject, aTopic, aData) {
   let engine2 = search.getEngineByName("A second test engine");
 
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine.name, "Test search engine");
-  do_check_eq(search.defaultEngine.searchForm, "http://www.google.com/");
-  
-  // Tests search defaultEngine when it changes
+  do_check_eq(search.defaultEngine, engine1);
   search.defaultEngine = engine2
-  do_check_eq(search.defaultEngine.name, "A second test engine");
-  do_check_eq(search.defaultEngine.searchForm, "https://duckduckgo.com");
-
-  // Test search defaultEngine again when we change back
+  do_check_eq(search.defaultEngine, engine2);
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine.name, "Test search engine");
-  do_check_eq(search.defaultEngine.searchForm, "http://www.google.com/");
+  do_check_eq(search.defaultEngine, engine1);
 
-  // Test search defaultEngine when the current default is hidden
-  search.moveEngine(engine2, 0)
+  // Test that hiding the currently-default engine affects the defaultEngine getter
+  // (when the default is hidden, we fall back to the first in the list, so move
+  // our second engine to that position)
+  search.moveEngine(engine2, 0);
   engine1.hidden = true;
-  do_check_eq(search.defaultEngine.name, "A second test engine");
-  do_check_eq(search.defaultEngine.searchForm, "https://duckduckgo.com");
-  
-  // Test search defaultEngine when it is set to a hidden engine
-  search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine.name, "A second test engine");
-  do_check_eq(search.defaultEngine.searchForm, "https://duckduckgo.com");
+  do_check_eq(search.defaultEngine, engine2);
+
+  // Test that the default engine is restored when it is unhidden
+  engine1.hidden = false;
+  do_check_eq(search.defaultEngine, engine1);
+
+  // Test that setting defaultEngine to an already-hidden engine works, but
+  // doesn't change the return value of the getter
+  engine2.hidden = true;
+  search.moveEngine(engine1, 0)
+  search.defaultEngine = engine2;
+  do_check_eq(search.defaultEngine, engine1);
+  engine2.hidden = false;
+  do_check_eq(search.defaultEngine, engine2);
 
   do_test_finished();
 }

@@ -378,7 +378,7 @@ class VirtualRegister
             return false;
         return intervals_.append(initial);
     }
-    uint32_t id() {
+    uint32_t id() const {
         return id_;
     }
     LBlock *block() {
@@ -634,7 +634,7 @@ class LiveRangeAllocator : public RegisterAllocator
     }
 
     // Finds the first safepoint that is within range of an interval.
-    size_t findFirstSafepoint(LiveInterval *interval, size_t startFrom)
+    size_t findFirstSafepoint(const LiveInterval *interval, size_t startFrom) const
     {
         size_t i = startFrom;
         for (; i < graph.numSafepoints(); i++) {

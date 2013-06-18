@@ -7,19 +7,15 @@
 #ifndef Debugger_h__
 #define Debugger_h__
 
-#include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 
 #include "jsapi.h"
 #include "jsclist.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgc.h"
 #include "jsweakmap.h"
-#include "jswrapper.h"
 
 #include "gc/Barrier.h"
-#include "gc/FindSCCs.h"
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 

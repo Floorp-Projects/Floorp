@@ -6,19 +6,15 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
-<body>
-  <script>
-    window.addEventListener("message", receiveMessage, false);
 
-    function receiveMessage(event)
-    {
-      window.parent.postMessage("close", "*");
+<script>
+  function doTest() {
+    var testContext = location.search == "" ? "?Test 10: Navigate _top:%20" : location.search;
+    document.getElementById("if_6").src = "file_iframe_sandbox_e_if6.html" + testContext;
+  }
+</script>
 
-      SimpleTest.executeSoon(function() {
-        window.close();
-      }); 
-    }
-  </script>
-  <iframe sandbox='allow-scripts allow-same-origin' id='if_6' src="file_iframe_sandbox_e_if6.html" height="10" width="10"></iframe>
+<body onload="doTest()">
+  <iframe sandbox='allow-scripts' id='if_6' height="10" width="10"></iframe>
 </body>
 </html>

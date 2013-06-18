@@ -143,10 +143,10 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
 static const char *
 OptionFlagsToFormatInfo(char shortflag, bool isValued, size_t *length)
 {
-    static const char *fmt[4] = { "  -%c --%s ",
-                                  "  --%s ",
-                                  "  -%c --%s=%s ",
-                                  "  --%s=%s " };
+    static const char * const fmt[4] = { "  -%c --%s ",
+                                         "  --%s ",
+                                         "  -%c --%s=%s ",
+                                         "  --%s=%s " };
 
     /* How mny chars w/o longflag? */
     size_t lengths[4] = { strlen(fmt[0]) - 3,

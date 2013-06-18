@@ -9,7 +9,6 @@
 
 #include "jscntxt.h"
 
-#include "frontend/ParseNode.h" /* Need sizeof(js::Definition). */
 #include "frontend/ParseMaps.h"
 
 namespace js {

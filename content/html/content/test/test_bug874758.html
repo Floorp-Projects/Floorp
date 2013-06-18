@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html data-expando-prop="xyz">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=874758
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 874758</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 874758 **/
+  Object.prototype.expandoProp = 5;
+  is({}.expandoProp, 5, "Should see this on random objects");
+
+  is(document.head.dataset.expandoProp, 5, "Should see this on dataset too");
+  is(document.documentElement.dataset.expandoProp, "xyz",
+     "But if the dataset has it, we should get it from there");
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=874758">Mozilla Bug 874758</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

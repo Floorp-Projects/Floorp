@@ -21,6 +21,7 @@ _TEST_FILES = \
   test_SpecialPowersExtension.html \
   test_SpecialPowersExtension2.html \
   test_SpecialPowersPushPermissions.html \
+  test_SpecialPowersPushPrefEnv.html \
   file_SpecialPowersFrame1.html \
   test_bug816847.html \
   test_sanity_cleanup.html \
