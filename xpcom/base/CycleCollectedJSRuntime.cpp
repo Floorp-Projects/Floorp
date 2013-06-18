@@ -4,6 +4,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// We're dividing JS objects into 3 categories:
+//
+// 1. "real" roots, held by the JS engine itself or rooted through the root
+//    and lock JS APIs. Roots from this category are considered black in the
+//    cycle collector, any cycle they participate in is uncollectable.
+//
+// 2. certain roots held by C++ objects that are guaranteed to be alive.
+//    Roots from this category are considered black in the cycle collector,
+//    and any cycle they participate in is uncollectable. These roots are
+//    traced from TraceNativeBlackRoots.
+//
+// 3. all other roots held by C++ objects that participate in cycle
+//    collection, held by us (see TraceNativeGrayRoots). Roots from this
+//    category are considered grey in the cycle collector; whether or not
+//    they are collected depends on the objects that hold them.
+//
+// Note that if a root is in multiple categories the fact that it is in
+// category 1 or 2 that takes precedence, so it will be considered black.
+//
+// During garbage collection we switch to an additional mark color (gray)
+// when tracing inside TraceNativeGrayRoots. This allows us to walk those
+// roots later on and add all objects reachable only from them to the
+// cycle collector.
+//
+// Phases:
+//
+// 1. marking of the roots in category 1 by having the JS GC do its marking
+// 2. marking of the roots in category 2 by having the JS GC call us back
+//    (via JS_SetExtraGCRootsTracer) and running TraceNativeBlackRoots
+// 3. marking of the roots in category 3 by TraceNativeGrayRoots using an
+//    additional color (gray).
+// 4. end of GC, GC can sweep its heap
+//
+// At some later point, when the cycle collector runs:
+//
+// 5. walk gray objects and add them to the cycle collector, cycle collect
+//
+// JS objects that are part of cycles the cycle collector breaks will be
+// collected by the next JS GC.
+//
+// If WantAllTraces() is false the cycle collector will not traverse roots
+// from category 1 or any JS objects held by them. Any JS objects they hold
+// will already be marked by the JS GC and will thus be colored black
+// themselves. Any C++ objects they hold will have a missing (untraversed)
+// edge from the JS object to the C++ object and so it will be marked black
+// too. This decreases the number of objects that the cycle collector has to
+// deal with.
+// To improve debugging, if WantAllTraces() is true all JS objects are
+// traversed.
+
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMJSClass.h"
@@ -413,6 +463,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
     MOZ_CRASH();
   }
 
+  JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
 
   mJSHolders.Init(512);
@@ -656,12 +707,20 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
 }
 
 /* static */ void
+CycleCollectedJSRuntime::TraceBlackJS(JSTracer* aTracer, void* aData)
+{
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+
+  self->TraceNativeBlackRoots(aTracer);
+}
+
+/* static */ void
 CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData)
 {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
 
   // Mark these roots as gray so the CC can walk them later.
-  self->TraceNativeRoots(aTracer);
+  self->TraceNativeGrayRoots(aTracer);
 }
 
 struct JsGcTracer : public TraceCallbacks
@@ -692,13 +751,13 @@ TraceJSHolder(void* aHolder, nsScriptObjectTracer*& aTracer, void* aArg)
 }
 
 void
-CycleCollectedJSRuntime::TraceNativeRoots(JSTracer* aTracer)
+CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 {
   MaybeTraceGlobals(aTracer);
 
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
-  TraceAdditionalNativeRoots(aTracer);
+  TraceAdditionalNativeGrayRoots(aTracer);
 
   mJSHolders.Enumerate(TraceJSHolder, aTracer);
 }
@@ -874,49 +933,6 @@ CycleCollectedJSRuntime::NeedCollect() const
 void
 CycleCollectedJSRuntime::Collect(uint32_t aReason) const
 {
-  // We're dividing JS objects into 2 categories:
-  //
-  // 1. "real" roots, held by the JS engine itself or rooted through the root
-  //    and lock JS APIs. Roots from this category are considered black in the
-  //    cycle collector, any cycle they participate in is uncollectable.
-  //
-  // 2. roots held by C++ objects that participate in cycle collection,
-  //    held by XPConnect (see TraceXPConnectRoots). Roots from this category
-  //    are considered grey in the cycle collector, their final color depends
-  //    on the objects that hold them.
-  //
-  // Note that if a root is in both categories it is the fact that it is in
-  // category 1 that takes precedence, so it will be considered black.
-  //
-  // During garbage collection we switch to an additional mark color (gray)
-  // when tracing inside TraceNativeRoots. This allows us to walk those
-  // roots later on and add all objects reachable only from them to the
-  // cycle collector.
-  //
-  // Phases:
-  //
-  // 1. marking of the roots in category 1 by having the JS GC do its marking
-  // 2. marking of the roots in category 2 by TraceNativeRoots using an
-  //    additional color (gray).
-  // 3. end of GC, GC can sweep its heap
-  //
-  // At some later point, when the cycle collector runs:
-  //
-  // 4. walk gray objects and add them to the cycle collector, cycle collect
-  //
-  // JS objects that are part of cycles the cycle collector breaks will be
-  // collected by the next JS.
-  //
-  // If WantAllTraces() is false the cycle collector will not traverse roots
-  // from category 1 or any JS objects held by them. Any JS objects they hold
-  // will already be marked by the JS GC and will thus be colored black
-  // themselves. Any C++ objects they hold will have a missing (untraversed)
-  // edge from the JS object to the C++ object and so it will be marked black
-  // too. This decreases the number of objects that the cycle collector has to
-  // deal with.
-  // To improve debugging, if WantAllTraces() is true all JS objects are
-  // traversed.
-
   MOZ_ASSERT(aReason < JS::gcreason::NUM_REASONS);
   JS::gcreason::Reason gcreason = static_cast<JS::gcreason::Reason>(aReason);
 
