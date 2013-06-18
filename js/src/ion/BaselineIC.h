@@ -2405,14 +2405,20 @@ class ICBinaryArith_Int32 : public ICStub
 {
     friend class ICStubSpace;
 
-    ICBinaryArith_Int32(IonCode *stubCode)
-      : ICStub(BinaryArith_Int32, stubCode) {}
+    ICBinaryArith_Int32(IonCode *stubCode, bool allowDouble)
+      : ICStub(BinaryArith_Int32, stubCode)
+    {
+        extra_ = allowDouble;
+    }
 
   public:
-    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code) {
+    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code, bool allowDouble) {
         if (!code)
             return NULL;
-        return space->allocate<ICBinaryArith_Int32>(code);
+        return space->allocate<ICBinaryArith_Int32>(code, allowDouble);
+    }
+    bool allowDouble() const {
+        return extra_;
     }
 
     // Compiler for this stub kind.
@@ -2435,7 +2441,7 @@ class ICBinaryArith_Int32 : public ICStub
             op_(op), allowDouble_(allowDouble) {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICBinaryArith_Int32::New(space, getStubCode());
+            return ICBinaryArith_Int32::New(space, getStubCode(), allowDouble_);
         }
     };
 };

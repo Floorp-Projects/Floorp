@@ -8,7 +8,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Assertions.h"
-#include "js/RootingAPI.h"
+#include "js/Value.h"
 
 struct JSTracer;
 class JSObject;
@@ -182,7 +182,7 @@ public:
   void TraceWrapper(const TraceCallbacks& aCallbacks, void* aClosure)
   {
     if (PreservingWrapper() && mWrapper) {
-        aCallbacks.Trace(&mWrapper, "Preserved wrapper", aClosure);
+      aCallbacks.Trace(&mWrapper, "Preserved wrapper", aClosure);
     }
   }
 
@@ -280,8 +280,8 @@ private:
   enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING |
                               WRAPPER_HAS_SOW) };
 
-  JSObject* mWrapper;
-  uint32_t  mFlags;
+  JS::Heap<JSObject*> mWrapper;
+  uint32_t            mFlags;
 };
 
 enum { WRAPPER_CACHE_FLAGS_BITS_USED = 3 };
