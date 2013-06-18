@@ -11,8 +11,7 @@ dictionary MmsAttachment
 {
   DOMString? id;
   DOMString? location;
-  nsIDOMBlob content; // If the content blob is a text/plain type, the encoding
-                      // for text should always be "utf-8".
+  nsIDOMBlob content;
 };
 
 [scriptable, builtinclass, uuid(2e5e1c16-b7af-11e2-af04-8f4b1610a600)]
