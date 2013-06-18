@@ -738,10 +738,9 @@ public:
         return mStrings[index];
     }
 
-    static void TraceBlackJS(JSTracer* trc, void* data);
-    void TraceXPConnectRoots(JSTracer *trc);
+    void TraceNativeBlackRoots(JSTracer* trc);
+    void TraceAdditionalNativeGrayRoots(JSTracer* aTracer);
     void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb);
-    void TraceAdditionalNativeRoots(JSTracer* aTracer);
     void UnmarkSkippableJSHolders();
 
     static void GCCallback(JSRuntime *rt, JSGCStatus status);

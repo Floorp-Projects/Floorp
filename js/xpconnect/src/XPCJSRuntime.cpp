@@ -412,11 +412,8 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
     JS_SetCompartmentPrivate(compartment, nullptr);
 }
 
-// static
-void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
+void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
 {
-    XPCJSRuntime* self = (XPCJSRuntime*)data;
-
     // Skip this part if XPConnect is shutting down. We get into
     // bad locking problems with the thread iteration otherwise.
     if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
@@ -426,20 +423,20 @@ void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
     }
 
     {
-        XPCAutoLock lock(self->mMapLock);
+        XPCAutoLock lock(mMapLock);
 
         // XPCJSObjectHolders don't participate in cycle collection, so always
         // trace them here.
         XPCRootSetElem *e;
-        for (e = self->mObjectHolderRoots; e; e = e->GetNextRoot())
+        for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
             static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
     }
 
-    dom::TraceBlackJS(trc, JS_GetGCParameter(self->Runtime(), JSGC_NUMBER),
+    dom::TraceBlackJS(trc, JS_GetGCParameter(Runtime(), JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
-void XPCJSRuntime::TraceAdditionalNativeRoots(JSTracer *trc)
+void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer *trc)
 {
     XPCAutoLock lock(mMapLock);
 
@@ -2709,7 +2706,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetGCCallback(runtime, GCCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_SetFinalizeCallback(runtime, FinalizeCallback);
-    JS_SetExtraGCRootsTracer(runtime, TraceBlackJS, this);
     JS_SetWrapObjectCallbacks(runtime,
                               xpc::WrapperFactory::Rewrap,
                               xpc::WrapperFactory::WrapForSameCompartment,
