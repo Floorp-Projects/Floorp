@@ -149,10 +149,20 @@ public:
    *
    * @param aElement the element to remove
    * @param aName the name or id of the element to remove
+   * @param aRemoveReason describe why this element is removed. If the element
+   *        is removed because it's removed from the form, it will be removed
+   *        from the past names map too, otherwise it will stay in the past
+   *        names map.
    * @return NS_OK if the element was successfully removed.
    */
+  enum RemoveElementReason {
+    AttributeUpdated,
+    ElementRemoved
+  };
   nsresult RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
-                                  const nsAString& aName);
+                                  const nsAString& aName,
+                                  RemoveElementReason aRemoveReason);
+
   /**
    * Add an element to end of this form's list of elements
    *
@@ -195,7 +205,8 @@ public:
    * @return NS_OK if the element was successfully removed.
    */
   nsresult RemoveImageElementFromTable(mozilla::dom::HTMLImageElement* aElement,
-                                      const nsAString& aName);
+                                      const nsAString& aName,
+                                      RemoveElementReason aRemoveReason);
   /**
    * Add an image element to the end of this form's list of image elements
    *
@@ -412,6 +423,9 @@ protected:
   // Clear the mImageNameLookupTable and mImageElements.
   void Clear();
 
+  // Insert a element into the past names map.
+  void AddToPastNamesMap(const nsAString& aName, nsISupports* aChild);
+
 public:
   /**
    * Flush a possible pending submission. If there was a scripted submission
@@ -479,6 +493,11 @@ protected:
   // references to the HTMLImageElement.
 
   nsInterfaceHashtable<nsStringHashKey,nsISupports> mImageNameLookupTable;
+
+  // A map from names to elements that were gotten by those names from this
+  // form in that past.  See "past names map" in the HTML5 specification.
+
+  nsInterfaceHashtable<nsStringHashKey,nsISupports> mPastNameLookupTable;
 
   /**
    * Number of invalid and candidate for constraint validation elements in the
