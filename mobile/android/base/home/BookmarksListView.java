@@ -47,6 +47,9 @@ public class BookmarksListView extends HomeListView
     // Folder title for the currently shown list of bookmarks.
     private BookmarkFolderView mFolderView;
 
+    // Check for adding a header view, if needed.
+    private boolean mHasFolderHeader = false;
+
     public BookmarksListView(Context context) {
         this(context, null);
     }
@@ -105,9 +108,15 @@ public class BookmarksListView extends HomeListView
         final ListView list = (ListView) parent;
         final int headerCount = list.getHeaderViewsCount();
 
-        // If we tap on the header view, move back to parent folder.
-        if (headerCount == 1 && position == 0) {
-            mCursorAdapter.moveToParentFolder();
+        if (mHasFolderHeader) {
+            // If we tap on the folder view (last of the header views),
+            // move back to parent folder.
+            if (position == headerCount - 1) {   
+                mCursorAdapter.moveToParentFolder();
+                return;
+            }
+        } else if (position < headerCount) {
+            // The click is on a header, don't do anything.
             return;
         }
 
@@ -116,10 +125,8 @@ public class BookmarksListView extends HomeListView
             return;
         }
 
-        // The header view takes up a spot in the list
-        if (headerCount == 1) {
-            position--;
-        }
+        // Absolute position for the adapter.
+        position -= headerCount;
 
         cursor.moveToPosition(position);
 
@@ -145,12 +152,14 @@ public class BookmarksListView extends HomeListView
 
         // Add a header view based on the root folder.
         if (mFolderId == Bookmarks.FIXED_ROOT_ID) {
-            if (getHeaderViewsCount() == 1) {
+            if (mHasFolderHeader) {
                 removeHeaderView(mFolderView);
+                mHasFolderHeader = false;
             }
         } else {
-            if (getHeaderViewsCount() == 0) {
+            if (!mHasFolderHeader) {
                 addHeaderView(mFolderView, null, true);
+                mHasFolderHeader = true;
             }
 
             mFolderView.setText(mFolderTitle);
