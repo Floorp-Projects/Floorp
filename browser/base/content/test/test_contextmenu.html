@@ -712,10 +712,10 @@ function runTest(testNum) {
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openDomFullScreen = function() {
             subwindow.removeEventListener("mozfullscreenchange", openDomFullScreen, false);
-            SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
             openContextMenuFor(dom_full_screen, true); // Invoke context menu for next test.
         }
         subwindow.addEventListener("mozfullscreenchange", openDomFullScreen, false);
+        SpecialPowers.setBoolPref("full-screen-api.approval-required", false);
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         full_screen_element.mozRequestFullScreen();
         break;
@@ -741,11 +741,11 @@ function runTest(testNum) {
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openPagemenu = function() {
             subwindow.removeEventListener("mozfullscreenchange", openPagemenu, false);
+            SpecialPowers.clearUserPref("full-screen-api.approval-required");
             SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
             openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
         }
         subwindow.addEventListener("mozfullscreenchange", openPagemenu, false);
-        SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         subwindow.document.mozCancelFullScreen();
         break;
 
