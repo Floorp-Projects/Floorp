@@ -20,7 +20,8 @@ class CycleCollectedJSRuntime
 {
 protected:
   CycleCollectedJSRuntime(uint32_t aMaxbytes,
-                          JSUseHelperThreads aUseHelperThreads);
+                          JSUseHelperThreads aUseHelperThreads,
+                          bool aExpectRootedGlobals);
   virtual ~CycleCollectedJSRuntime();
 
   JSRuntime* Runtime() const
@@ -28,6 +29,8 @@ protected:
     MOZ_ASSERT(mJSRuntime);
     return mJSRuntime;
   }
+
+  void MaybeTraceGlobals(JSTracer* aTracer) const;
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
@@ -47,6 +50,7 @@ private:
 
 #ifdef DEBUG
   void* mObjectToUnlink;
+  bool mExpectUnrootedGlobals;
 #endif
 };
 

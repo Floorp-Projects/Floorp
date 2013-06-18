@@ -5,16 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "jsfriendapi.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsLayoutStatics.h"
 
 using namespace mozilla;
 
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
-                                                 JSUseHelperThreads aUseHelperThreads)
+                                                 JSUseHelperThreads aUseHelperThreads,
+                                                 bool aExpectUnrootedGlobals)
   : mJSRuntime(nullptr)
 #ifdef DEBUG
   , mObjectToUnlink(nullptr)
+  , mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #endif
 {
   mJSRuntime = JS_NewRuntime(aMaxbytes, aUseHelperThreads);
@@ -31,6 +34,21 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   mJSRuntime = nullptr;
 }
 
+void
+CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
+{
+  JSContext* iter = nullptr;
+  while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
+    MOZ_ASSERT(js::HasUnrootedGlobal(acx) == mExpectUnrootedGlobals);
+    if (!js::HasUnrootedGlobal(acx)) {
+      continue;
+    }
+
+    if (JSObject* global = js::GetDefaultGlobalForContext(acx)) {
+      JS_CallObjectTracer(aTracer, &global, "Global Object");
+    }
+  }
+}
 
 void
 CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
