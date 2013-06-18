@@ -137,7 +137,7 @@ nsresult GenerateGUID(nsCString& _guid);
  *        The guid to test.
  * @return true if it is a valid guid, false otherwise.
  */
-bool IsValidGUID(const nsACString& aGUID);
+bool IsValidGUID(const nsCString& aGUID);
 
 /**
  * Truncates the title if it's longer than TITLE_LENGTH_MAX.

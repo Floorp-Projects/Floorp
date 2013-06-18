@@ -300,7 +300,7 @@ GenerateGUID(nsCString& _guid)
 }
 
 bool
-IsValidGUID(const nsACString& aGUID)
+IsValidGUID(const nsCString& aGUID)
 {
   nsCString::size_type len = aGUID.Length();
   if (len != GUID_LENGTH) {
