@@ -560,10 +560,12 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             Tab tab = Tabs.getInstance().getSelectedTab();
 
             RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
+            RectF pageRect = RectUtils.scaleAndRound(cssPageRect, zoom);
+
             final ImmutableViewportMetrics newMetrics = currentMetrics
                 .setViewportOrigin(offsetX, offsetY)
                 .setZoomFactor(zoom)
-                .setPageRect(RectUtils.scale(cssPageRect, zoom), cssPageRect)
+                .setPageRect(pageRect, cssPageRect)
                 .setIsRTL(tab.getIsRTL());
             // Since we have switched to displaying a different document, we need to update any
             // viewport-related state we have lying around. This includes mGeckoViewport and
@@ -610,9 +612,10 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       */
     public void setPageRect(float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (getLock()) {
-            RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
             float ourZoom = getViewportMetrics().zoomFactor;
-            setPageRect(RectUtils.scale(cssPageRect, ourZoom), cssPageRect);
+            RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
+            RectF pageRect = RectUtils.scaleAndRound(cssPageRect, ourZoom);
+            setPageRect(pageRect, cssPageRect);
             // Here the page size of the document has changed, but the document being displayed
             // is still the same. Therefore, we don't need to send anything to browser.js; any
             // changes we need to make to the display port will get sent the next time we call
