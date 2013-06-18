@@ -509,12 +509,6 @@ nsGeolocationRequest::MarkCleared()
     mTimeoutTimer = nullptr;
   }
   mCleared = true;
-
-  // Attempt to save power when possible
-  if (WantsHighAccuracy()) {
-    nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
-    gs->SetHigherAccuracy(false);
-  }
 }
 
 void
