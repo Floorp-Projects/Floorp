@@ -31,6 +31,11 @@
 
 #define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
+namespace JS {
+template <class T>
+class Heap;
+} /* namespace JS */
+
 extern JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
@@ -890,7 +895,7 @@ struct ExpandoAndGeneration {
       generation(0)
   {}
 
-  Value expando;
+  JS::Heap<JS::Value> expando;
   uint32_t generation;
 };
 

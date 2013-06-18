@@ -20,16 +20,11 @@ endif
 
 # This makefile just builds support for reading archives.
 
-
-DISABLED_HOST_CSRCS	= \
-		mar_create.c \
-		mar_extract.c \
-		mar_read.c \
-		$(NULL)
-
-CSRCS		= \
-		$(HOST_CSRCS) \
-		$(NULL)
+CSRCS = \
+    mar_create.c \
+    mar_extract.c \
+    mar_read.c \
+    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

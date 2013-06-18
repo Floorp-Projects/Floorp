@@ -62,7 +62,7 @@ protected:
   virtual ~IDBWrapperCache();
 
 private:
-  JSObject* mScriptOwner;
+  JS::Heap<JSObject*> mScriptOwner;
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -832,16 +832,7 @@ var SelectionHelperUI = {
       return;
     }
 
-    let selectionTap = this._hitTestSelection(aEvent);
-
-    // If the tap is in the selection, just ignore it. We disallow this
-    // since we always get a single tap before a double, and double tap
-    // copies selected text.
-    if (selectionTap) {
-      if (!this._targetIsEditable) {
-        this.closeEditSession(false);
-        return;
-      }
+    if (this._hitTestSelection(aEvent) && this._targetIsEditable) {
       // Attach to the newly placed caret position
       this._sendAsyncMessage("Browser:CaretAttach", {
         xPos: aEvent.clientX,
@@ -855,12 +846,11 @@ var SelectionHelperUI = {
     if (this.startMark.visible && pointInTargetElement &&
         this._targetIsEditable) {
       this._transitionFromSelectionToCaret(clientCoords.x, clientCoords.y);
+      return;
     }
 
-    // If we have active selection in anything else don't let the event get
-    // to content. Prevents random taps from killing active selection.
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
+    // Close when we get a single tap in content.
+    this.closeEditSession(false);
   },
 
   _onKeypress: function _onKeypress() {

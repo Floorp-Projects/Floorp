@@ -606,17 +606,17 @@ LIRGenerator::visitTest(MTest *test)
                 return add(lir, comp);
             }
 
-            LDefinition temp0, temp1;
+            LDefinition tmp, tmpToUnbox;
             if (comp->operandMightEmulateUndefined()) {
-                temp0 = temp();
-                temp1 = temp();
+                tmp = temp();
+                tmpToUnbox = tempToUnbox();
             } else {
-                temp0 = LDefinition::BogusTemp();
-                temp1 = LDefinition::BogusTemp();
+                tmp = LDefinition::BogusTemp();
+                tmpToUnbox = LDefinition::BogusTemp();
             }
 
             LIsNullOrLikeUndefinedAndBranch *lir =
-                new LIsNullOrLikeUndefinedAndBranch(ifTrue, ifFalse, temp0, temp1);
+                new LIsNullOrLikeUndefinedAndBranch(ifTrue, ifFalse, tmp, tmpToUnbox);
             if (!useBox(lir, LIsNullOrLikeUndefinedAndBranch::Value, left))
                 return false;
             return add(lir, comp);
@@ -749,7 +749,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         JS_ASSERT(left->type() == MIRType_Value);
         JS_ASSERT(right->type() == MIRType_String);
 
-        LCompareStrictS *lir = new LCompareStrictS(useRegister(right), temp(), temp());
+        LCompareStrictS *lir = new LCompareStrictS(useRegister(right), temp(), tempToUnbox());
         if (!useBox(lir, LCompareStrictS::Lhs, left))
             return false;
         if (!define(lir, comp))
@@ -785,16 +785,16 @@ LIRGenerator::visitCompare(MCompare *comp)
             return define(new LEmulatesUndefined(useRegister(left)), comp);
         }
 
-        LDefinition temp0, temp1;
+        LDefinition tmp, tmpToUnbox;
         if (comp->operandMightEmulateUndefined()) {
-            temp0 = temp();
-            temp1 = temp();
+            tmp = temp();
+            tmpToUnbox = tempToUnbox();
         } else {
-            temp0 = LDefinition::BogusTemp();
-            temp1 = LDefinition::BogusTemp();
+            tmp = LDefinition::BogusTemp();
+            tmpToUnbox = LDefinition::BogusTemp();
         }
 
-        LIsNullOrLikeUndefined *lir = new LIsNullOrLikeUndefined(temp0, temp1);
+        LIsNullOrLikeUndefined *lir = new LIsNullOrLikeUndefined(tmp, tmpToUnbox);
         if (!useBox(lir, LIsNullOrLikeUndefined::Value, left))
             return false;
         return define(lir, comp);
@@ -1732,7 +1732,12 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 {
     // Requesting a non-GC pointer is safe here since we never re-enter C++
     // from inside a type barrier test.
-    LTypeBarrier *barrier = new LTypeBarrier(temp());
+
+    const types::StackTypeSet *types = ins->resultTypeSet();
+    bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
+    LDefinition tmp = needTemp ? temp() : tempToUnbox();
+
+    LTypeBarrier *barrier = new LTypeBarrier(tmp);
     if (!useBox(barrier, LTypeBarrier::Input, ins->input()))
         return false;
     if (!assignSnapshot(barrier, ins->bailoutKind()))
@@ -1745,7 +1750,12 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes *ins)
 {
     // Requesting a non-GC pointer is safe here since we never re-enter C++
     // from inside a type check.
-    LMonitorTypes *lir = new LMonitorTypes(temp());
+
+    const types::StackTypeSet *types = ins->typeSet();
+    bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
+    LDefinition tmp = needTemp ? temp() : tempToUnbox();
+
+    LMonitorTypes *lir = new LMonitorTypes(tmp);
     if (!useBox(lir, LMonitorTypes::Input, ins->input()))
         return false;
     return assignSnapshot(lir, Bailout_Normal) && add(lir, ins);
@@ -1763,7 +1773,7 @@ LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier *ins)
       }
       case MIRType_Value: {
         LPostWriteBarrierV *lir =
-            new LPostWriteBarrierV(useRegisterOrConstant(ins->object()), temp());
+            new LPostWriteBarrierV(useRegisterOrConstant(ins->object()), tempToUnbox());
         if (!useBox(lir, LPostWriteBarrierV::Input, ins->value()))
             return false;
         return add(lir, ins) && assignSafepoint(lir, ins);

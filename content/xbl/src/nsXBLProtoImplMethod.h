@@ -11,6 +11,7 @@
 #include "nsString.h"
 #include "jsapi.h"
 #include "nsString.h"
+#include "nsXBLMaybeCompiled.h"
 #include "nsXBLProtoImplMember.h"
 #include "nsXBLSerialize.h"
 
@@ -102,29 +103,31 @@ public:
 
   bool IsCompiled() const
   {
-    return !(mUncompiledMethod & BIT_UNCOMPILED);
+    return mMethod.IsCompiled();
   }
+
   void SetUncompiledMethod(nsXBLUncompiledMethod* aUncompiledMethod)
   {
-    mUncompiledMethod = uintptr_t(aUncompiledMethod) | BIT_UNCOMPILED;
+    mMethod.SetUncompiled(aUncompiledMethod);
   }
+
   nsXBLUncompiledMethod* GetUncompiledMethod() const
   {
-    uintptr_t unmasked = mUncompiledMethod & ~BIT_UNCOMPILED;
-    return reinterpret_cast<nsXBLUncompiledMethod*>(unmasked);
+    return mMethod.GetUncompiled();
   }
 
 protected:
-  enum { BIT_UNCOMPILED = 1 << 0 };
+  void SetCompiledMethod(JSObject* aCompiledMethod)
+  {
+    mMethod.SetJSFunction(aCompiledMethod);
+  }
 
-  union {
-    uintptr_t mUncompiledMethod; // An object that represents the method before being compiled.
-    JSObject* mJSMethodObject;    // The JS object for the method (after compilation)
-  };
+  JSObject* GetCompiledMethod() const
+  {
+    return mMethod.GetJSFunction();
+  }
 
-#ifdef DEBUG
-  bool mIsCompiled;
-#endif
+  JS::Heap<nsXBLMaybeCompiled<nsXBLUncompiledMethod> > mMethod;
 };
 
 class nsXBLProtoImplAnonymousMethod : public nsXBLProtoImplMethod {

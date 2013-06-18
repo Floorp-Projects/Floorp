@@ -87,7 +87,8 @@ public:
   void SerializeToString(nsAString& aString) const;
   static KeyPath DeserializeFromString(const nsAString& aString);
 
-  nsresult ToJSVal(JSContext* aCx, JS::Value* aValue) const;
+  nsresult ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aValue) const;
+  nsresult ToJSVal(JSContext* aCx, JS::Heap<JS::Value>& aValue) const;
 
   bool IsAllowedForObjectStore(bool aAutoIncrement) const;
 

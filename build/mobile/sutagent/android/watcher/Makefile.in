@@ -9,6 +9,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ANDROID_APK_NAME := Watcher
+
 JAVAFILES = \
   IWatcherService.java \
   RedirOutputThread.java \
@@ -32,7 +34,10 @@ RES_FILES = \
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  Watcher.apk  \
+  $(ANDROID_APK_NAME).ap_ \
+  $(ANDROID_APK_NAME)-unsigned-unaligned.apk \
+  $(ANDROID_APK_NAME)-unaligned.apk \
+  $(ANDROID_APK_NAME).apk \
   $(NULL)
 
 GARBAGE_DIRS += res classes network-libs
@@ -44,29 +49,23 @@ include $(topsrcdir)/config/rules.mk
 # include Android specific java flags - using these instead of what's in rules.mk
 include $(topsrcdir)/config/android-common.mk
 
-tools:: Watcher.apk
+tools:: $(ANDROID_APK_NAME).apk
 
 classes.dex: $(JAVAFILES)
 	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -d classes  $(addprefix $(srcdir)/,$(JAVAFILES))
 	$(DX) --dex --output=$@ classes
 
-Watcher.ap_: $(srcdir)/AndroidManifest.xml
-	$(AAPT) package -f -M $(srcdir)/AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
+$(ANDROID_APK_NAME).ap_: AndroidManifest.xml
+	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -S res -F $@
 
-Watcher-unsigned-unaligned.apk: Watcher.ap_ classes.dex
-	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z Watcher.ap_ -f classes.dex
+$(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
+	cp $< $@
+	$(ZIP) -v0 $@ classes.dex
 
-Watcher-unaligned.apk: Watcher-unsigned-unaligned.apk
-	cp  Watcher-unsigned-unaligned.apk $@
-ifdef JARSIGNER
-  $(JARSIGNER) $@
-endif
+$(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
+	cp $< $@
+	$(DEBUG_JARSIGNER) $@
 
-Watcher.apk: Watcher-unaligned.apk
-	$(ZIPALIGN) -f -v 4 Watcher-unaligned.apk $@
-
-export::
-	$(NSINSTALL) -D res
-	@(cd $(srcdir)/res && tar $(TAR_CREATE_FLAGS) - *) | (cd $(DEPTH)/build/mobile/sutagent/android/watcher/res && tar -xf -)
-
+$(ANDROID_APK_NAME).apk: $(ANDROID_APK_NAME)-unaligned.apk
+	$(ZIPALIGN) -f -v 4 $< $@

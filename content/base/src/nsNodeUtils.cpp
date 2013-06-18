@@ -25,6 +25,7 @@
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsObjectLoadingContent.h"
@@ -215,6 +216,11 @@ nsNodeUtils::LastRelease(nsINode* aNode)
       // Tell the form (if any) this node is going away.  Don't
       // notify, since we're being destroyed in any case.
       static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(true);
+    }
+
+    if (aNode->IsElement() && aNode->AsElement()->IsHTML(nsGkAtoms::img)) {
+      HTMLImageElement* imageElem = static_cast<HTMLImageElement*>(aNode);
+      imageElem->ClearForm(true);
     }
   }
   aNode->UnsetFlags(NODE_HAS_PROPERTIES);

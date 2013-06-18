@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bad MIME type</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
+  const mimeService = Cc["@mozilla.org/mime;1"].
+                      getService(Ci.nsIMIMEService);
+  // "text/plain" has an 0xFF character appended to it.  This means it's an
+  // invalid string, which is tricky to enter using a text editor (I used
+  // emacs' hexl-mode).  It also means an ordinary text editor might drop it
+  // or convert it to something that *is* valid (in UTF8).  So we measure
+  // its length to make sure this hasn't happened.
+  var badMimeType = "text/plainÿ";
+  ok(badMimeType.length == 11, "badMimeType has changed, making this test invalid");
+  mimeService.getFromTypeAndExtension(badMimeType, "txt");
+  ok(true, "The test shouldn't trigger a crash");
+</script>
+</pre>
+</body>
+</html>
