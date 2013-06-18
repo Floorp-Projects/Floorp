@@ -86,7 +86,7 @@ public:
         sub32(imm, Address(scratchRegister));
     }
 
-    void load32(void* address, RegisterID dest)
+    void load32(const void* address, RegisterID dest)
     {
         if (dest == X86Registers::eax)
             m_assembler.movl_mEAX(address);
@@ -105,7 +105,7 @@ public:
 
     void convertInt32ToDouble(AbsoluteAddress src, FPRegisterID dest)
     {
-        move(Imm32(*static_cast<int32_t*>(src.m_ptr)), scratchRegister);
+        move(Imm32(*static_cast<const int32_t*>(src.m_ptr)), scratchRegister);
         m_assembler.cvtsi2sd_rr(scratchRegister, dest);
     }
 
@@ -297,7 +297,7 @@ public:
         m_assembler.movq_mr(address.offset, address.base, address.index, address.scale, dest);
     }
 
-    void loadPtr(void* address, RegisterID dest)
+    void loadPtr(const void* address, RegisterID dest)
     {
         if (dest == X86Registers::eax)
             m_assembler.movq_mEAX(address);

@@ -32,7 +32,7 @@ using namespace js::frontend;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 
-char const *js::aopNames[] = {
+char const * const js::aopNames[] = {
     "=",    /* AOP_ASSIGN */
     "+=",   /* AOP_PLUS */
     "-=",   /* AOP_MINUS */
@@ -47,7 +47,7 @@ char const *js::aopNames[] = {
     "&="    /* AOP_BITAND */
 };
 
-char const *js::binopNames[] = {
+char const * const js::binopNames[] = {
     "==",         /* BINOP_EQ */
     "!=",         /* BINOP_NE */
     "===",        /* BINOP_STRICTEQ */
@@ -71,7 +71,7 @@ char const *js::binopNames[] = {
     "instanceof", /* BINOP_INSTANCEOF */
 };
 
-char const *js::unopNames[] = {
+char const * const js::unopNames[] = {
     "delete",  /* UNOP_DELETE */
     "-",       /* UNOP_NEG */
     "+",       /* UNOP_POS */
@@ -81,14 +81,14 @@ char const *js::unopNames[] = {
     "void"     /* UNOP_VOID */
 };
 
-char const *js::nodeTypeNames[] = {
+char const * const js::nodeTypeNames[] = {
 #define ASTDEF(ast, str, method) str,
 #include "jsast.tbl"
 #undef ASTDEF
     NULL
 };
 
-static char const *callbackNames[] = {
+static char const * const callbackNames[] = {
 #define ASTDEF(ast, str, method) method,
 #include "jsast.tbl"
 #undef ASTDEF
