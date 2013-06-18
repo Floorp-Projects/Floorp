@@ -477,12 +477,7 @@ TraceJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
 
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
-    JSContext *iter = nullptr;
-    while (JSContext *acx = JS_ContextIterator(Runtime(), &iter)) {
-        MOZ_ASSERT(js::HasUnrootedGlobal(acx));
-        if (JSObject *global = js::GetDefaultGlobalForContext(acx))
-            JS_CallObjectTracer(trc, &global, "XPC global object");
-    }
+    MaybeTraceGlobals(trc);
 
     XPCAutoLock lock(mMapLock);
 
@@ -2736,7 +2731,7 @@ SourceHook(JSContext *cx, JS::Handle<JSScript*> script, jschar **src,
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
-   : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
+   : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS, true),
    mJSContextStack(new XPCJSContextStack()),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
