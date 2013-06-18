@@ -31,7 +31,7 @@ ScopeObject::enclosingScope() const
 inline void
 ScopeObject::setEnclosingScope(HandleObject obj)
 {
-    JS_ASSERT_IF(obj->isCall() || obj->isDeclEnv() || obj->isBlock(),
+    JS_ASSERT_IF(obj->is<CallObject>() || obj->is<DeclEnvObject>() || obj->is<BlockObject>(),
                  obj->isDelegate());
     setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*obj));
 }
@@ -39,14 +39,14 @@ ScopeObject::setEnclosingScope(HandleObject obj)
 inline const Value &
 ScopeObject::aliasedVar(ScopeCoordinate sc)
 {
-    JS_ASSERT(isCall() || isClonedBlock());
+    JS_ASSERT(is<CallObject>() || isClonedBlock());
     return getSlot(sc.slot);
 }
 
 inline void
 ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v)
 {
-    JS_ASSERT(isCall() || isClonedBlock());
+    JS_ASSERT(is<CallObject>() || isClonedBlock());
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
 
     // name may be null for non-singletons, whose types do not need to be tracked.
@@ -259,24 +259,10 @@ JSObject::asScope()
     return *static_cast<js::ScopeObject *>(this);
 }
 
-inline js::CallObject &
-JSObject::asCall()
-{
-    JS_ASSERT(isCall());
-    return *static_cast<js::CallObject *>(this);
-}
-
-inline js::DeclEnvObject &
-JSObject::asDeclEnv()
-{
-    JS_ASSERT(isDeclEnv());
-    return *static_cast<js::DeclEnvObject *>(this);
-}
-
 inline js::NestedScopeObject &
 JSObject::asNestedScope()
 {
-    JS_ASSERT(isWith() || isBlock());
+    JS_ASSERT(isWith() || is<js::BlockObject>());
     return *static_cast<js::NestedScopeObject *>(this);
 }
 
@@ -285,13 +271,6 @@ JSObject::asWith()
 {
     JS_ASSERT(isWith());
     return *static_cast<js::WithObject *>(this);
-}
-
-inline js::BlockObject &
-JSObject::asBlock()
-{
-    JS_ASSERT(isBlock());
-    return *static_cast<js::BlockObject *>(this);
 }
 
 inline js::StaticBlockObject &

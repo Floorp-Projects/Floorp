@@ -5974,7 +5974,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *observed, bo
 bool
 IonBuilder::getStaticName(HandleObject staticObject, HandlePropertyName name, bool *psucceeded)
 {
-    JS_ASSERT(staticObject->isGlobal() || staticObject->isCall());
+    JS_ASSERT(staticObject->isGlobal() || staticObject->is<CallObject>());
 
     *psucceeded = true;
 
@@ -6090,7 +6090,7 @@ IonBuilder::setStaticName(HandleObject staticObject, HandlePropertyName name)
 {
     RootedId id(cx, NameToId(name));
 
-    JS_ASSERT(staticObject->isGlobal() || staticObject->isCall());
+    JS_ASSERT(staticObject->isGlobal() || staticObject->is<CallObject>());
 
     MDefinition *value = current->peek(-1);
 
@@ -8267,9 +8267,9 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, MutableHandleObject pcall)
 
     JSObject *environment = script()->function()->environment();
     while (environment && !environment->isGlobal()) {
-        if (environment->isCall() &&
-            !environment->asCall().isForEval() &&
-            environment->asCall().callee().nonLazyScript() == outerScript)
+        if (environment->is<CallObject>() &&
+            !environment->as<CallObject>().isForEval() &&
+            environment->as<CallObject>().callee().nonLazyScript() == outerScript)
         {
             JS_ASSERT(environment->hasSingletonType());
             pcall.set(environment);
@@ -8285,7 +8285,9 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, MutableHandleObject pcall)
 
     if (script() == outerScript && fp && info().osrPc()) {
         JSObject *scope = fp.scopeChain();
-        if (scope->isCall() && scope->asCall().callee().nonLazyScript() == outerScript) {
+        if (scope->is<CallObject>() &&
+            scope->as<CallObject>().callee().nonLazyScript() == outerScript)
+        {
             JS_ASSERT(scope->hasSingletonType());
             pcall.set(scope);
             return true;

@@ -261,11 +261,11 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
                 scope = &scope->asClonedBlock().enclosingScope();
                 break;
               case StaticScopeIter::FUNCTION:
-                JS_ASSERT(scope->asCall().callee().nonLazyScript() == i.funScript());
-                scope = &scope->asCall().enclosingScope();
+                JS_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
+                scope = &scope->as<CallObject>().enclosingScope();
                 break;
               case StaticScopeIter::NAMED_LAMBDA:
-                scope = &scope->asDeclEnv().enclosingScope();
+                scope = &scope->as<DeclEnvObject>().enclosingScope();
                 break;
             }
         }
@@ -343,7 +343,7 @@ StackFrame::epilogue(JSContext *cx)
 
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
-            JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().isForEval());
+            JS_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
             if (cx->compartment()->debugMode())
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
@@ -373,7 +373,8 @@ StackFrame::epilogue(JSContext *cx)
     JS_ASSERT(isNonEvalFunctionFrame());
 
     if (fun()->isHeavyweight())
-        JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().callee().nonLazyScript() == script);
+        JS_ASSERT_IF(hasCallObj(),
+                     scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
     else
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
@@ -1641,9 +1642,9 @@ ScriptFrameIter::callObj() const
     JS_ASSERT(callee()->isHeavyweight());
 
     JSObject *pobj = scopeChain();
-    while (!pobj->isCall())
+    while (!pobj->is<CallObject>())
         pobj = pobj->enclosingScope();
-    return pobj->asCall();
+    return pobj->as<CallObject>();
 }
 
 bool

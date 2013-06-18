@@ -783,21 +783,35 @@ var BrowserUI = {
     onEvent: function(aEventName) {}
   },
 
-  _urlbarClicked: function _urlbarClicked() {
+  _urlbarClicked: function _urlbarClicked(aEvent) {
+    let touchEvent = aEvent.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
+
     // If the urlbar is not already focused, focus it and select the contents.
-    if (Elements.urlbarState.getAttribute("mode") != "edit")
+    if (Elements.urlbarState.getAttribute("mode") != "edit") {
       this._editURI(true);
+      if (touchEvent) {
+        SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
+                                            aEvent.clientX, aEvent.clientY);
+      }
+      return;
+    }
+
+    // tap caret handling
+    if (touchEvent) {
+      SelectionHelperUI.attachToCaret(ChromeSelectionHandler,
+                                      aEvent.clientX, aEvent.clientY);
+    }
   },
 
   _editURI: function _editURI(aShouldDismiss) {
-    this._clearURIFormatting();
     this._edit.focus();
     this._edit.select();
 
     Elements.urlbarState.setAttribute("mode", "edit");
     StartUI.show();
-    if (aShouldDismiss)
+    if (aShouldDismiss) {
       ContextUI.dismissTabs();
+    }
   },
 
   formatURI: function formatURI() {
