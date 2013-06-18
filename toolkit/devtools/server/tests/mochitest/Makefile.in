@@ -19,6 +19,7 @@ MOCHITEST_CHROME_FILES	= \
 	test_inspector-mutations-frameload.html \
 	test_inspector-mutations-value.html \
 	test_inspector-release.html \
+	test_inspector-retain.html \
 	test_inspector-traversal.html \
 	test_unsafeDereference.html \
 	nonchrome_unsafeDereference.html \
