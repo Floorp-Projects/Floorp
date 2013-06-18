@@ -466,6 +466,15 @@ public:
    */
   virtual void SetIsFirstPaint() {}
 
+  /**
+   * Make sure that the previous transaction has been entirely
+   * completed.
+   *
+   * Note: This may sychronously wait on a remote compositor
+   * to complete rendering.
+   */
+  virtual void FlushRendering() { }
+
   // We always declare the following logging symbols, because it's
   // extremely tricky to conditionally declare them.  However, for
   // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial
