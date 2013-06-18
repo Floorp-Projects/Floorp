@@ -25,6 +25,7 @@
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/layers/Compositor.h"
 
 /**
    XXX TODO XXX
@@ -41,6 +42,8 @@
    We do NOT assume anything about the relative z-ordering of sibling widgets. Even though
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
+
+using namespace mozilla::layers;
 
 #define NSCOORD_NONE      INT32_MIN
 
@@ -330,8 +333,14 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion)
         printf("--COMPOSITE-- %p\n", mPresShell);
       }
 #endif
-      mPresShell->Paint(aView, damageRegion,
-                        nsIPresShell::PAINT_COMPOSITE);
+      uint32_t paintFlags = nsIPresShell::PAINT_COMPOSITE;
+      LayerManager *manager = widget->GetLayerManager();
+      if (!manager->NeedsWidgetInvalidation()) {
+        manager->FlushRendering();
+      } else {
+        mPresShell->Paint(aView, damageRegion,
+                          paintFlags);
+      }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
         printf("--ENDCOMPOSITE--\n");

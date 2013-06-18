@@ -475,6 +475,12 @@ public:
    */
   virtual void FlushRendering() { }
 
+  /**
+   * Checks if we need to invalidate the OS widget to trigger
+   * painting when updating this layer manager.
+   */
+  virtual bool NeedsWidgetInvalidation() { return true; }
+
   // We always declare the following logging symbols, because it's
   // extremely tricky to conditionally declare them.  However, for
   // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial
