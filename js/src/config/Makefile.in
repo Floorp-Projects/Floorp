@@ -16,7 +16,6 @@ VISIBILITY_FLAGS =
 
 ifneq (WINNT,$(HOST_OS_ARCH))
 HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
-DISABLED_HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have

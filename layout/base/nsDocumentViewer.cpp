@@ -1541,12 +1541,6 @@ nsDocumentViewer::Destroy()
         nsView *rootView = vm->GetRootView();
 
         if (rootView) {
-          // The invalidate that removing this view causes is dropped because
-          // the Freeze call above sets painting to be suppressed for our
-          // document. So we do it ourselves and make it happen.
-          vm->InvalidateViewNoSuppression(rootView,
-            rootView->GetBounds() - rootView->GetPosition());
-
           nsView *rootViewParent = rootView->GetParent();
           if (rootViewParent) {
             nsViewManager *parentVM = rootViewParent->GetViewManager();

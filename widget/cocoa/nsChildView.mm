@@ -1386,6 +1386,10 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
   if (!mView || !mVisible)
     return NS_OK;
 
+  NS_ASSERTION(GetLayerManager()->GetBackendType() != LAYERS_CLIENT ||
+               Compositor::GetBackend() == LAYERS_BASIC,
+               "Shouldn't need to invalidate with accelerated OMTC layers!");
+
   if ([NSView focusView]) {
     // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
     // don't lose it.

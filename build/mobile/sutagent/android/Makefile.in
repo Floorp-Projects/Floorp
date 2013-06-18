@@ -9,6 +9,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ANDROID_APK_NAME := sutAgentAndroid
+
 JAVAFILES = \
   AlertLooperThread.java \
   ASMozStub.java \
@@ -39,10 +41,10 @@ RES_FILES = \
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  sutAgentAndroid.apk  \
-  sutAgentAndroid.ap_ \
-  sutAgentAndroid-unsigned-unaligned.apk \
-  sutAgentAndroid-unaligned.apk \
+  $(ANDROID_APK_NAME).ap_ \
+  $(ANDROID_APK_NAME)-unsigned-unaligned.apk \
+  $(ANDROID_APK_NAME)-unaligned.apk \
+  $(ANDROID_APK_NAME).apk \
   $(NULL)
 
 GARBAGE_DIRS += network-libs
@@ -56,23 +58,22 @@ include $(topsrcdir)/config/rules.mk
 # include Android specific java flags - using these instead of what's in rules.mk
 include $(topsrcdir)/config/android-common.mk
 
-tools:: sutAgentAndroid.apk
+tools:: $(ANDROID_APK_NAME).apk
 
 classes.dex: $(JAVAFILES)
 	$(JAVAC) $(JAVAC_FLAGS) -d classes  $(addprefix $(srcdir)/,$(JAVAFILES))
 	$(DX) --dex --output=$@ classes $(subst :, ,$(EXTRA_JARS))
 
-sutAgentAndroid.ap_: $(srcdir)/AndroidManifest.xml
+$(ANDROID_APK_NAME).ap_: AndroidManifest.xml
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -S res -F $@
 
-sutAgentAndroid-unsigned-unaligned.apk: sutAgentAndroid.ap_ classes.dex
-	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z sutAgentAndroid.ap_ -f classes.dex
-
-sutAgentAndroid-unaligned.apk: sutAgentAndroid-unsigned-unaligned.apk
+$(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
 	cp $< $@
-ifdef JARSIGNER
-	$(JARSIGNER) $@
-endif
+	$(ZIP) -v0 $@ classes.dex
 
-sutAgentAndroid.apk: sutAgentAndroid-unaligned.apk
-	$(ZIPALIGN) -f -v 4 sutAgentAndroid-unaligned.apk $@
+$(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
+	cp $< $@
+	$(DEBUG_JARSIGNER) $@
+
+$(ANDROID_APK_NAME).apk: $(ANDROID_APK_NAME)-unaligned.apk
+	$(ZIPALIGN) -f -v 4 $< $@

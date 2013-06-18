@@ -12,6 +12,7 @@
 #include "jsapi.h"
 #include "nsString.h"
 #include "nsXBLSerialize.h"
+#include "nsXBLMaybeCompiled.h"
 #include "nsXBLProtoImplMember.h"
 
 class nsXBLProtoImplProperty: public nsXBLProtoImplMember
@@ -48,21 +49,17 @@ public:
                          nsIObjectOutputStream* aStream) MOZ_OVERRIDE;
 
 protected:
-  union {
-    // The raw text for the getter (prior to compilation).
-    nsXBLTextWithLineNumber* mGetterText;
-    // The JS object for the getter (after compilation)
-    JSObject *               mJSGetterObject;
-  };
+  typedef JS::Heap<nsXBLMaybeCompiled<nsXBLTextWithLineNumber> > PropertyOp;
 
-  union {
-    // The raw text for the setter (prior to compilation).
-    nsXBLTextWithLineNumber* mSetterText;
-    // The JS object for the setter (after compilation)
-    JSObject *               mJSSetterObject;
-  };
+  void EnsureUncompiledText(PropertyOp& aPropertyOp);
+
+  // The raw text for the getter, or the JS object (after compilation).
+  PropertyOp mGetter;
+
+  // The raw text for the setter, or the JS object (after compilation).
+  PropertyOp mSetter;
   
-  unsigned mJSAttributes;          // A flag for all our JS properties (getter/setter/readonly/shared/enum)
+  unsigned mJSAttributes;  // A flag for all our JS properties (getter/setter/readonly/shared/enum)
 
 #ifdef DEBUG
   bool mIsCompiled;

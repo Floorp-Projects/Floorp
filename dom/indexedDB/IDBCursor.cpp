@@ -544,7 +544,7 @@ IDBCursor::GetKey(JSContext* aCx,
       mRooted = true;
     }
 
-    nsresult rv = mKey.ToJSVal(aCx, &mCachedKey);
+    nsresult rv = mKey.ToJSVal(aCx, mCachedKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mHaveCachedKey = true;
@@ -578,7 +578,7 @@ IDBCursor::GetPrimaryKey(JSContext* aCx,
 
     const Key& key = mType == OBJECTSTORE ? mKey : mObjectKey;
 
-    nsresult rv = key.ToJSVal(aCx, &mCachedPrimaryKey);
+    nsresult rv = key.ToJSVal(aCx, mCachedPrimaryKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mHaveCachedPrimaryKey = true;
@@ -739,7 +739,7 @@ IDBCursor::Update(const jsval& aValue,
   }
   else {
     JS::Rooted<JS::Value> keyVal(aCx);
-    rv = objectKey.ToJSVal(aCx, keyVal.address());
+    rv = objectKey.ToJSVal(aCx, &keyVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mObjectStore->Put(aValue, keyVal, aCx, 1, getter_AddRefs(request));
@@ -810,7 +810,7 @@ IDBCursor::Delete(JSContext* aCx,
   Key& objectKey = (mType == OBJECTSTORE) ? mKey : mObjectKey;
 
   JS::Rooted<JS::Value> key(aCx);
-  nsresult rv = objectKey.ToJSVal(aCx, key.address());
+  nsresult rv = objectKey.ToJSVal(aCx, &key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIIDBRequest> request;
