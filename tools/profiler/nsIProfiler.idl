@@ -5,14 +5,12 @@
  
 #include "nsISupports.idl"
 
-[scriptable, uuid(eb77a9b0-285f-472c-93b0-04db5e9e3e7e)]
+[scriptable, uuid(c94651cf-082f-45e2-9481-33a1a700b46a)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in uint32_t aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
-                      in uint32_t aFeatureCount,
-                      [array, size_is(aFilterCount), optional] in string aThreadNameFilters,
-                      [optional] in uint32_t aFilterCount);
+                      in uint32_t aFeatureCount);
   void StopProfiler();
   void AddMarker(in string aMarker);
   string GetProfile();
