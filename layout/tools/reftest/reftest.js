@@ -1647,7 +1647,7 @@ function FindUnexpectedCrashDumpFiles()
                 gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gCurrentURL +
                          " | This test left crash dumps behind, but we weren't expecting it to!\n");
             }
-            gDumpLog("REFTEST INFO | Found unexpected crash dump file" + path +
+            gDumpLog("REFTEST INFO | Found unexpected crash dump file " + path +
                      ".\n");
             gUnexpectedCrashDumpFiles[path] = true;
         }
