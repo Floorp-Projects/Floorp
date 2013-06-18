@@ -57,7 +57,7 @@ createCRL(char *inFileName)
                 printFailure("Unable to open crl file");
                 goto cleanup;
         } else {
-                rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
+                rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
                 if (!rv){
                         buf = (void *)crlDER.data;
                         len = crlDER.len;

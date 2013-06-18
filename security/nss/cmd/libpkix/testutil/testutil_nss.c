@@ -89,7 +89,7 @@ createCert(
                 pkixTestErrorMsg = "Unable to open cert file";
                 goto cleanup;
         } else {
-                rv = SECU_ReadDERFromFile(&certDER, certFile, PR_FALSE);
+                rv = SECU_ReadDERFromFile(&certDER, certFile, PR_FALSE, PR_FALSE);
                 if (!rv){
                         buf = (void *)certDER.data;
                         len = certDER.len;
@@ -154,7 +154,7 @@ createCRL(
                 pkixTestErrorMsg = "Unable to open crl file";
                 goto cleanup;
         } else {
-                rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
+                rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
                 if (!rv){
                         buf = (void *)crlDER.data;
                         len = crlDER.len;
