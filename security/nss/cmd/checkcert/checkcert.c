@@ -302,7 +302,7 @@ int main(int argc, char **argv)
 	exit(1);
     }
 
-    if (SECU_ReadDERFromFile(&derCert, inFile, ascii) != SECSuccess) {
+    if (SECU_ReadDERFromFile(&derCert, inFile, ascii, PR_FALSE) != SECSuccess) {
 	printf("Couldn't read input certificate as DER binary or base64\n");
 	exit(1);
     }
@@ -315,8 +315,8 @@ int main(int argc, char **argv)
 
     if (issuerCertFile) {
 	CERTSignedData *issuerCertSD=0;
-	if (SECU_ReadDERFromFile(&derIssuerCert, issuerCertFile, issuerAscii)
-	    != SECSuccess) {
+	if (SECU_ReadDERFromFile(&derIssuerCert, issuerCertFile, issuerAscii,
+	                         PR_FALSE) != SECSuccess) {
 	    printf("Couldn't read issuer certificate as DER binary or base64.\n");
 	    exit(1);
 	}

@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	return -1;
     }
 
-	rv = SECU_ReadDERFromFile(&der, inFile, PR_FALSE);
+	rv = SECU_ReadDERFromFile(&der, inFile, PR_FALSE, PR_FALSE);
     if (rv == SECSuccess) {
 	rv = DER_PrettyPrint(outFile, &der, raw);
 	if (rv == SECSuccess)
