@@ -59,6 +59,13 @@ GlobalObject::setCreateArrayFromBufferHelper(uint32_t slot, Handle<JSFunction*> 
 }
 
 void
+GlobalObject::setBooleanValueOf(Handle<JSFunction*> valueOfFun)
+{
+    JS_ASSERT(getSlotRef(BOOLEAN_VALUEOF).isUndefined());
+    setSlot(BOOLEAN_VALUEOF, ObjectValue(*valueOfFun));
+}
+
+void
 GlobalObject::setCreateDataViewForThis(Handle<JSFunction*> fun)
 {
     JS_ASSERT(getSlotRef(CREATE_DATAVIEW_FOR_THIS).isUndefined());
