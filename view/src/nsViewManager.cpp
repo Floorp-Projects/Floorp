@@ -384,7 +384,6 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
             vm->mRootView->IsEffectivelyVisible() &&
             mPresShell && mPresShell->IsVisible()) {
           vm->FlushDelayedResize(true);
-          vm->InvalidateView(vm->mRootView);
         }
       }
 
@@ -842,11 +841,6 @@ nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
       // if the parent view is marked as "floating", make the newly added view float as well.
       if (aParent->GetFloating())
         aChild->SetFloating(true);
-
-      //and mark this area as dirty if the view is visible...
-
-      if (nsViewVisibility_kHide != aChild->GetVisibility())
-        aChild->GetViewManager()->InvalidateView(aChild);
     }
 }
 
@@ -869,7 +863,6 @@ nsViewManager::RemoveChild(nsView *aChild)
   if (nullptr != parent) {
     NS_ASSERTION(aChild->GetViewManager() == this ||
                  parent->GetViewManager() == this, "wrong view manager");
-    aChild->GetViewManager()->InvalidateView(aChild);
     parent->RemoveChild(aChild);
   }
 }
@@ -878,53 +871,7 @@ void
 nsViewManager::MoveViewTo(nsView *aView, nscoord aX, nscoord aY)
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
-  nsPoint oldPt = aView->GetPosition();
-  nsRect oldBounds = aView->GetBoundsInParentUnits();
   aView->SetPosition(aX, aY);
-
-  // only do damage control if the view is visible
-
-  if ((aX != oldPt.x) || (aY != oldPt.y)) {
-    if (aView->GetVisibility() != nsViewVisibility_kHide) {
-      nsView* parentView = aView->GetParent();
-      if (parentView) {
-        nsViewManager* parentVM = parentView->GetViewManager();
-        parentVM->InvalidateView(parentView, oldBounds);
-        parentVM->InvalidateView(parentView, aView->GetBoundsInParentUnits());
-      }
-    }
-  }
-}
-
-void nsViewManager::InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
-  nscoord aY1, nscoord aY2, bool aInCutOut) {
-  nscoord height = aY2 - aY1;
-  if (aRect.x < aCutOut.x) {
-    nsRect r(aRect.x, aY1, aCutOut.x - aRect.x, height);
-    InvalidateView(aView, r);
-  }
-  if (!aInCutOut && aCutOut.x < aCutOut.XMost()) {
-    nsRect r(aCutOut.x, aY1, aCutOut.width, height);
-    InvalidateView(aView, r);
-  }
-  if (aCutOut.XMost() < aRect.XMost()) {
-    nsRect r(aCutOut.XMost(), aY1, aRect.XMost() - aCutOut.XMost(), height);
-    InvalidateView(aView, r);
-  }
-}
-
-void nsViewManager::InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut) {
-  NS_ASSERTION(aView->GetViewManager() == this,
-               "InvalidateRectDifference called on view we don't own");
-  if (aRect.y < aCutOut.y) {
-    InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aRect.y, aCutOut.y, false);
-  }
-  if (aCutOut.y < aCutOut.YMost()) {
-    InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aCutOut.y, aCutOut.YMost(), true);
-  }
-  if (aCutOut.YMost() < aRect.YMost()) {
-    InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aCutOut.YMost(), aRect.YMost(), false);
-  }
 }
 
 void
@@ -934,28 +881,7 @@ nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExpos
 
   nsRect oldDimensions = aView->GetDimensions();
   if (!oldDimensions.IsEqualEdges(aRect)) {
-    // resize the view.
-    // Prevent Invalidation of hidden views 
-    if (aView->GetVisibility() == nsViewVisibility_kHide) {
-      aView->SetDimensions(aRect, false);
-    } else {
-      nsView* parentView = aView->GetParent();
-      if (!parentView) {
-        parentView = aView;
-      }
-      nsRect oldBounds = aView->GetBoundsInParentUnits();
-      aView->SetDimensions(aRect, true);
-      nsViewManager* parentVM = parentView->GetViewManager();
-      if (!aRepaintExposedAreaOnly) {
-        // Invalidate the union of the old and new size
-        InvalidateView(aView, aRect);
-        parentVM->InvalidateView(parentView, oldBounds);
-      } else {
-        InvalidateRectDifference(aView, aRect, oldDimensions);
-        nsRect newBounds = aView->GetBoundsInParentUnits();
-        parentVM->InvalidateRectDifference(parentView, oldBounds, newBounds);
-      } 
-    }
+    aView->SetDimensions(aRect, true);
   }
 
   // Note that if layout resizes the view and the view has a custom clip
@@ -980,21 +906,6 @@ nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility aVisible)
 
   if (aVisible != aView->GetVisibility()) {
     aView->SetVisibility(aVisible);
-
-    if (IsViewInserted(aView)) {
-      if (!aView->HasWidget()) {
-        if (nsViewVisibility_kHide == aVisible) {
-          nsView* parentView = aView->GetParent();
-          if (parentView) {
-            parentView->GetViewManager()->
-              InvalidateView(parentView, aView->GetBoundsInParentUnits());
-          }
-        }
-        else {
-          InvalidateView(aView);
-        }
-      }
-    }
   }
 }
 
@@ -1027,20 +938,11 @@ nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex, b
     return;
   }
 
-  bool oldTopMost = aView->IsTopMost();
-  bool oldIsAuto = aView->GetZIndexIsAuto();
-
   if (aAutoZIndex) {
     aZIndex = 0;
   }
 
-  int32_t oldidx = aView->GetZIndex();
   aView->SetZIndex(aAutoZIndex, aZIndex, aTopMost);
-
-  if (oldidx != aZIndex || oldTopMost != aTopMost ||
-      oldIsAuto != aAutoZIndex) {
-    InvalidateView(aView);
-  }
 }
 
 nsViewManager*
