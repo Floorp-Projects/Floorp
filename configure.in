@@ -5755,6 +5755,10 @@ AC_SUBST(MOZ_PULSEAUDIO_LIBS)
 dnl ========================================================
 dnl = Enable GStreamer
 dnl ========================================================
+if test "$OS_TARGET" = "Linux"; then
+  MOZ_GSTREAMER=1
+fi
+
 MOZ_ARG_ENABLE_BOOL(gstreamer,
 [  --enable-gstreamer           Enable GStreamer support],
 MOZ_GSTREAMER=1,
