@@ -2904,7 +2904,7 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
         RootedObject obj(cx), s(cx);
         for (uint32_t i = script->innerObjectsStart(); i < objects->length; i++) {
             obj = objects->vector[i];
-            if (obj->isFunction()) {
+            if (obj->is<JSFunction>()) {
                 fun = static_cast<JSFunction *>(obj.get());
                 funScript = fun->nonLazyScript();
                 s = dbg->wrapScript(cx, funScript);
@@ -3853,7 +3853,7 @@ static JSBool
 DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    int32_t i = args.callee().toFunction()->getExtendedSlot(0).toInt32();
+    int32_t i = args.callee().as<JSFunction>().getExtendedSlot(0).toInt32();
 
     /* Check that the this value is an Arguments object. */
     if (!args.thisv().isObject()) {
@@ -4402,12 +4402,12 @@ static JSBool
 DebuggerObject_getName(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get name", args, dbg, obj);
-    if (!obj->isFunction()) {
+    if (!obj->is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
 
-    JSString *name = obj->toFunction()->atom();
+    JSString *name = obj->as<JSFunction>().atom();
     if (!name) {
         args.rval().setUndefined();
         return true;
@@ -4424,12 +4424,12 @@ static JSBool
 DebuggerObject_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get display name", args, dbg, obj);
-    if (!obj->isFunction()) {
+    if (!obj->is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
 
-    JSString *name = obj->toFunction()->displayAtom();
+    JSString *name = obj->as<JSFunction>().displayAtom();
     if (!name) {
         args.rval().setUndefined();
         return true;
@@ -4446,12 +4446,12 @@ static JSBool
 DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get parameterNames", args, obj);
-    if (!obj->isFunction()) {
+    if (!obj->is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
 
-    RootedFunction fun(cx, obj->toFunction());
+    RootedFunction fun(cx, &obj->as<JSFunction>());
     JSObject *result = NewDenseAllocatedArray(cx, fun->nargs);
     if (!result)
         return false;
@@ -4488,12 +4488,12 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get script", args, dbg, obj);
 
-    if (!obj->isFunction()) {
+    if (!obj->is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
 
-    RootedFunction fun(cx, obj->toFunction());
+    RootedFunction fun(cx, &obj->as<JSFunction>());
     if (fun->isBuiltin()) {
         args.rval().setUndefined();
         return true;
@@ -4514,7 +4514,7 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get environment", args, dbg, obj);
 
     /* Don't bother switching compartments just to check obj's type and get its env. */
-    if (!obj->isFunction() || !obj->toFunction()->isInterpreted()) {
+    if (!obj->is<JSFunction>() || !obj->as<JSFunction>().isInterpreted()) {
         args.rval().setUndefined();
         return true;
     }
@@ -4522,7 +4522,7 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     Rooted<Env*> env(cx);
     {
         AutoCompartment ac(cx, obj);
-        RootedFunction fun(cx, obj->toFunction());
+        RootedFunction fun(cx, &obj->as<JSFunction>());
         env = GetDebugScopeForFunction(cx, fun);
         if (!env)
             return false;

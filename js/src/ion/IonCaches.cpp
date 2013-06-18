@@ -594,8 +594,8 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
     if (!shape->hasGetterValue() || !shape->getterValue().isObject())
         return false;
 
-    return shape->getterValue().toObject().isFunction() &&
-           shape->getterValue().toObject().toFunction()->isNative();
+    return shape->getterValue().toObject().is<JSFunction>() &&
+           shape->getterValue().toObject().as<JSFunction>().isNative();
 }
 
 static bool
@@ -890,8 +890,8 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
     if (callNative) {
         JS_ASSERT(shape->hasGetterValue() && shape->getterValue().isObject() &&
-                  shape->getterValue().toObject().isFunction());
-        JSFunction *target = shape->getterValue().toObject().toFunction();
+                  shape->getterValue().toObject().is<JSFunction>());
+        JSFunction *target = &shape->getterValue().toObject().as<JSFunction>();
 
         JS_ASSERT(target);
         JS_ASSERT(target->isNative());
@@ -3053,7 +3053,7 @@ CallsiteCloneIC::update(JSContext *cx, size_t cacheIndex, HandleObject callee)
 
     // Act as the identity for functions that are not clone-at-callsite, as we
     // generate this cache as long as some callees are clone-at-callsite.
-    RootedFunction fun(cx, callee->toFunction());
+    RootedFunction fun(cx, &callee->as<JSFunction>());
     if (!fun->hasScript() || !fun->nonLazyScript()->shouldCloneAtCallsite)
         return fun;
 

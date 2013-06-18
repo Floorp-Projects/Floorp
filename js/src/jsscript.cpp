@@ -662,7 +662,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         uint32_t isBlock;
         if (mode == XDR_ENCODE) {
             JSObject *obj = *objp;
-            JS_ASSERT(obj->isFunction() || obj->is<StaticBlockObject>());
+            JS_ASSERT(obj->is<JSFunction>() || obj->is<StaticBlockObject>());
             isBlock = obj->is<BlockObject>() ? 1 : 0;
         }
         if (!xdr->codeUint32(&isBlock))
@@ -671,7 +671,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             /* Code the nested function's enclosing scope. */
             uint32_t funEnclosingScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                JSScript *innerScript = (*objp)->toFunction()->getOrCreateScript(cx);
+                JSScript *innerScript = (*objp)->as<JSFunction>().getOrCreateScript(cx);
                 if (!innerScript)
                     return false;
                 RootedObject staticScope(cx, innerScript->enclosingStaticScope());
@@ -1986,8 +1986,8 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
      */
     JSObject *enclosing = enclosingStaticScope();
     while (enclosing) {
-        if (enclosing->isFunction()) {
-            JSFunction *fun = enclosing->toFunction();
+        if (enclosing->is<JSFunction>()) {
+            JSFunction *fun = &enclosing->as<JSFunction>();
             if (!fun->hasScript() || !fun->nonLazyScript())
                 return false;
             enclosing = fun->nonLazyScript()->enclosingStaticScope();
@@ -2316,8 +2316,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     enclosingScope = fun;
 
                 clone = CloneStaticBlockObject(cx, enclosingScope, innerBlock);
-            } else if (obj->isFunction()) {
-                RootedFunction innerFun(cx, obj->toFunction());
+            } else if (obj->is<JSFunction>()) {
+                RootedFunction innerFun(cx, &obj->as<JSFunction>());
                 if (innerFun->isNative()) {
                     assertSameCompartment(cx, innerFun);
                     clone = innerFun;

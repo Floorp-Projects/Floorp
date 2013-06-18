@@ -913,8 +913,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     Value callee = *builder.valuePointerAtStackOffset(calleeOffset);
     IonSpew(IonSpew_BaselineBailouts, "      CalleeStackSlot=%d", (int) calleeStackSlot);
     IonSpew(IonSpew_BaselineBailouts, "      Callee = %016llx", *((uint64_t *) &callee));
-    JS_ASSERT(callee.isObject() && callee.toObject().isFunction());
-    JSFunction *calleeFun = callee.toObject().toFunction();
+    JS_ASSERT(callee.isObject() && callee.toObject().is<JSFunction>());
+    JSFunction *calleeFun = &callee.toObject().as<JSFunction>();
     if (!builder.writePtr(CalleeToToken(calleeFun), "CalleeToken"))
         return false;
     nextCallee.set(calleeFun);

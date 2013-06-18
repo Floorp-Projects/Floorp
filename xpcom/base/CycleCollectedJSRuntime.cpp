@@ -538,7 +538,7 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
     // Give the subclass a chance to do something
     if (DescribeCustomObjects(obj, clasp, name)) {
       // Nothing else to do!
-    } else if (clasp == &js::FunctionClass) {
+    } else if (js::IsFunctionObject(obj)) {
       JSFunction* fun = JS_GetObjectFunction(obj);
       JSString* str = JS_GetFunctionDisplayId(fun);
       if (str) {

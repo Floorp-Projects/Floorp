@@ -395,7 +395,7 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
     JS_ASSERT_IF(native != FunctionProxyClass.construct &&
                  native != js::CallOrConstructBoundFunction &&
                  native != js::IteratorConstructor &&
-                 (!callee->isFunction() || callee->toFunction()->native() != obj_construct),
+                 (!callee->is<JSFunction>() || callee->as<JSFunction>().native() != obj_construct),
                  !args.rval().isPrimitive() && callee != &args.rval().toObject());
 
     return true;

@@ -2026,7 +2026,7 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
         lazy->setUsesArgumentsAndApply();
     PropagateTransitiveParseFlags(funbox, lazy);
 
-    funbox->object->toFunction()->initLazyScript(lazy);
+    funbox->object->as<JSFunction>().initLazyScript(lazy);
     return true;
 }
 

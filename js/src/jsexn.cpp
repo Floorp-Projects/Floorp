@@ -596,7 +596,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         lineno = iter.done() ? 0 : PCToLineNumber(script, iter.pc(), &column);
     }
 
-    int exnType = args.callee().toFunction()->getExtendedSlot(0).toInt32();
+    int exnType = args.callee().as<JSFunction>().getExtendedSlot(0).toInt32();
     if (!InitExnPrivate(cx, obj, message, filename, lineno, column, NULL, exnType))
         return false;
 

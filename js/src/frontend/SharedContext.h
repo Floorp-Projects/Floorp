@@ -226,7 +226,7 @@ class FunctionBox : public ObjectBox, public SharedContext
                 bool strict);
 
     ObjectBox *toObjectBox() { return this; }
-    JSFunction *function() const { return object->toFunction(); }
+    JSFunction *function() const { return &object->as<JSFunction>(); }
 
     bool isGenerator()              const { return funCxFlags.isGenerator; }
     bool mightAliasLocals()         const { return funCxFlags.mightAliasLocals; }

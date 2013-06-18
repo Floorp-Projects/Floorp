@@ -843,8 +843,8 @@ GetPossibleCallees(JSContext *cx,
     RootedScript rootedScript(cx);
     for (unsigned i = 0; i < objCount; i++) {
         JSObject *obj = calleeTypes->getSingleObject(i);
-        if (obj && obj->isFunction()) {
-            rootedFun = obj->toFunction();
+        if (obj && obj->is<JSFunction>()) {
+            rootedFun = &obj->as<JSFunction>();
         } else {
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
             if (!typeObj)

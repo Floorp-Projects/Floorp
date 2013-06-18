@@ -1043,7 +1043,7 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     Value fval = GetCall(proxy);
     if (IsFunctionProxy(proxy) &&
-        (fval.isPrimitive() || !fval.toObject().isFunction())) {
+        (fval.isPrimitive() || !fval.toObject().is<JSFunction>())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
                              js_Function_str, js_toString_str,
