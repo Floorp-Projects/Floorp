@@ -2890,6 +2890,47 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
 }
 
 bool
+XPCJSRuntime::DescribeCustomObjects(JSObject* obj, js::Class* clasp,
+                                    char (&name)[72]) const
+{
+    XPCNativeScriptableInfo *si = nullptr;
+
+    if (!IS_PROTO_CLASS(clasp)) {
+        return false;
+    }
+
+    XPCWrappedNativeProto *p =
+        static_cast<XPCWrappedNativeProto*>(xpc_GetJSPrivate(obj));
+    si = p->GetScriptableInfo();
+    
+    if (!si) {
+        return false;
+    }
+
+    JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
+                clasp->name, si->GetJSClass()->name);
+    return true;
+}
+
+bool
+XPCJSRuntime::NoteCustomGCThingXPCOMChildren(js::Class* clasp, JSObject* obj,
+                                             nsCycleCollectionTraversalCallback& cb) const
+{
+    if (clasp != &XPC_WN_Tearoff_JSClass) {
+        return false;
+    }
+
+    // A tearoff holds a strong reference to its native object
+    // (see XPCWrappedNative::FlatJSObjectFinalized). Its XPCWrappedNative
+    // will be held alive through the parent of the JSObject of the tearoff.
+    XPCWrappedNativeTearOff *to =
+        static_cast<XPCWrappedNativeTearOff*>(xpc_GetJSPrivate(obj));
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)->mNative");
+    cb.NoteXPCOMChild(to->GetNative());
+    return true;
+}
+
+bool
 XPCJSRuntime::DeferredRelease(nsISupports *obj)
 {
     MOZ_ASSERT(obj);
