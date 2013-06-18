@@ -53,6 +53,10 @@ parent:
   sync MakeSnapshot(SurfaceDescriptor inSnapshot)
     returns (SurfaceDescriptor outSnapshot);
 
+  // Make sure any pending composites are started immediately and
+  // block until they are completed.
+  sync FlushRendering();
+
   sync PLayerTransaction(LayersBackend layersBackendHint, uint64_t id)
     returns (TextureFactoryIdentifier textureFactoryIdentifier);
 };

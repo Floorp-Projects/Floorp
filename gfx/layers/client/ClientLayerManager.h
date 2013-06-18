@@ -53,6 +53,8 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
   virtual already_AddRefed<RefLayer> CreateRefLayer();
 
+  virtual void FlushRendering() MOZ_OVERRIDE;
+
   ShadowableLayer* Hold(Layer* aLayer);
 
   bool HasShadowManager() const { return ShadowLayerForwarder::HasShadowManager(); }
