@@ -435,7 +435,7 @@ void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
             static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
     }
 
-    dom::TraceBlackJS(trc, JS_GetGCParameter(self->GetJSRuntime(), JSGC_NUMBER),
+    dom::TraceBlackJS(trc, JS_GetGCParameter(self->Runtime(), JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
@@ -478,7 +478,7 @@ TraceJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
     JSContext *iter = nullptr;
-    while (JSContext *acx = JS_ContextIterator(GetJSRuntime(), &iter)) {
+    while (JSContext *acx = JS_ContextIterator(Runtime(), &iter)) {
         MOZ_ASSERT(js::HasUnrootedGlobal(acx));
         if (JSObject *global = js::GetDefaultGlobalForContext(acx))
             JS_CallObjectTracer(trc, &global, "XPC global object");
@@ -590,7 +590,7 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionNoteRootCallback &cb)
     // collector.
 
     JSContext *iter = nullptr, *acx;
-    while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
+    while ((acx = JS_ContextIterator(Runtime(), &iter))) {
         // Add the context to the CC graph only if traversing it would
         // end up doing something.
         JSObject* global = js::GetDefaultGlobalForContext(acx);
@@ -1494,7 +1494,7 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
 static int64_t
 GetGCChunkTotalBytes()
 {
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
     return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize;
 }
 
@@ -1511,13 +1511,13 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
 static int64_t
 GetJSSystemCompartmentCount()
 {
-    return JS::SystemCompartmentCount(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+    return JS::SystemCompartmentCount(nsXPConnect::GetRuntimeInstance()->Runtime());
 }
 
 static int64_t
 GetJSUserCompartmentCount()
 {
-    return JS::UserCompartmentCount(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+    return JS::UserCompartmentCount(nsXPConnect::GetRuntimeInstance()->Runtime());
 }
 
 // Nb: js-system-compartment-count + js-user-compartment-count could be
@@ -1550,7 +1550,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
 static int64_t
 GetJSMainRuntimeTemporaryPeakSize()
 {
-    return JS::PeakSizeOfTemporary(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+    return JS::PeakSizeOfTemporary(nsXPConnect::GetRuntimeInstance()->Runtime());
 }
 
 // This is also a single reporter so it can be used by telemetry.
@@ -2238,7 +2238,7 @@ class JSCompartmentsMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
         // Collect.
 
         Paths paths;
-        JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
+        JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->Runtime(),
                                &paths, CompartmentCallback);
 
         // Report.
@@ -2443,7 +2443,7 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     bool getLocations = !!addonManager;
     XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats, &orphanReporter))
+    if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
 
     size_t xpconnect =
@@ -2890,7 +2890,7 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
     XPCJSRuntime* self = new XPCJSRuntime(aXPConnect);
 
     if (self                                    &&
-        self->GetJSRuntime()                    &&
+        self->Runtime()                    &&
         self->GetWrappedJSMap()                 &&
         self->GetWrappedJSClassMap()            &&
         self->GetIID2NativeInterfaceMap()       &&
@@ -3078,7 +3078,7 @@ void
 XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 {
     nsXPConnect *xpc = nsXPConnect::XPConnect();
-    JS::PokeGC(xpc->GetRuntime()->GetJSRuntime());
+    JS::PokeGC(xpc->GetRuntime()->Runtime());
 
     NS_ASSERTION(mSelfp, "Must be linked");
 

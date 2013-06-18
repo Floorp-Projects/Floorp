@@ -106,7 +106,7 @@ nsXPConnect::~nsXPConnect()
         // Create our own JSContext rather than an XPCCallContext, since
         // otherwise we will create a new safe JS context and attach a
         // components object that won't get GCed.
-        cx = JS_NewContext(mRuntime->GetJSRuntime(), 8192);
+        cx = JS_NewContext(mRuntime->Runtime(), 8192);
     }
 
     // This needs to happen exactly here, otherwise we leak at shutdown. I don't
@@ -182,7 +182,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
                                  ? stdout
                                  : fopen(dumpName, "w");
                 if (dumpFile) {
-                    JS_DumpHeap(xpc->GetRuntime()->GetJSRuntime(), dumpFile, nullptr,
+                    JS_DumpHeap(xpc->GetRuntime()->Runtime(), dumpFile, nullptr,
                                 JSTRACE_OBJECT, nullptr, static_cast<size_t>(-1), nullptr);
                     if (dumpFile != stdout)
                         fclose(dumpFile);
@@ -242,7 +242,7 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
 bool
 nsXPConnect::NeedCollect()
 {
-    return !js::AreGCGrayBitsValid(GetRuntime()->GetJSRuntime());
+    return !js::AreGCGrayBitsValid(GetRuntime()->Runtime());
 }
 
 void
@@ -294,7 +294,7 @@ nsXPConnect::Collect(uint32_t reason)
     MOZ_ASSERT(reason < JS::gcreason::NUM_REASONS);
     JS::gcreason::Reason gcreason = (JS::gcreason::Reason)reason;
 
-    JSRuntime *rt = GetRuntime()->GetJSRuntime();
+    JSRuntime *rt = GetRuntime()->Runtime();
     JS::PrepareForFullGC(rt);
     JS::GCForReason(rt, gcreason);
 }
@@ -461,14 +461,14 @@ private:
 void
 nsXPConnect::FixWeakMappingGrayBits()
 {
-    FixWeakMappingGrayBitsTracer fixer(GetRuntime()->GetJSRuntime());
+    FixWeakMappingGrayBitsTracer fixer(GetRuntime()->Runtime());
     fixer.FixAll();
 }
 
 nsresult
 nsXPConnect::BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb)
 {
-    JSRuntime* rt = GetRuntime()->GetJSRuntime();
+    JSRuntime* rt = GetRuntime()->Runtime();
     static bool gcHasRun = false;
     if (!gcHasRun) {
         uint32_t gcNumber = JS_GetGCParameter(rt, JSGC_NUMBER);
@@ -489,7 +489,7 @@ bool
 nsXPConnect::NotifyLeaveMainThread()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
-    JSRuntime *rt = mRuntime->GetJSRuntime();
+    JSRuntime *rt = mRuntime->Runtime();
     if (JS_IsInRequest(rt))
         return false;
     JS_ClearRuntimeThread(rt);
@@ -500,21 +500,21 @@ void
 nsXPConnect::NotifyEnterCycleCollectionThread()
 {
     NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
-    JS_SetRuntimeThread(mRuntime->GetJSRuntime());
+    JS_SetRuntimeThread(mRuntime->Runtime());
 }
 
 void
 nsXPConnect::NotifyLeaveCycleCollectionThread()
 {
     NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
-    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
+    JS_ClearRuntimeThread(mRuntime->Runtime());
 }
 
 void
 nsXPConnect::NotifyEnterMainThread()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
-    JS_SetRuntimeThread(mRuntime->GetJSRuntime());
+    JS_SetRuntimeThread(mRuntime->Runtime());
 }
 
 /*
@@ -527,7 +527,7 @@ nsXPConnect::UsefulToMergeZones()
 {
     JSContext *iter = nullptr;
     JSContext *cx;
-    while ((cx = JS_ContextIterator(GetRuntime()->GetJSRuntime(), &iter))) {
+    while ((cx = JS_ContextIterator(GetRuntime()->Runtime(), &iter))) {
         // Skip anything without an nsIScriptContext, as well as any scx whose
         // NativeGlobal() is not an outer window (this happens with XUL Prototype
         // compilation scopes, for example, which we're not interested in).
@@ -794,7 +794,7 @@ TraverseGCThing(TraverseSelect ts, void *p, JSGCTraceKind traceKind,
         return;
 
     if (ts == TRAVERSE_FULL)
-        NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
+        NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->Runtime(),
                               p, traceKind, cb);
  
     if (traceKind == JSTRACE_OBJECT) {
@@ -1744,7 +1744,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     // loop. This is a good time to make changes to debug mode.
     if (XPCJSRuntime::Get()->GetJSContextStack()->Count() == 0) {
         MOZ_ASSERT(mEventDepth == 0);
-        CheckForDebugMode(XPCJSRuntime::Get()->GetJSRuntime());
+        CheckForDebugMode(XPCJSRuntime::Get()->Runtime());
     }
     return NS_OK;
 }
@@ -1793,7 +1793,7 @@ nsXPConnect::GetRuntime(JSRuntime **runtime)
     if (!runtime)
         return NS_ERROR_NULL_POINTER;
 
-    JSRuntime *rt = GetRuntime()->GetJSRuntime();
+    JSRuntime *rt = GetRuntime()->Runtime();
     JS_AbortIfWrongThread(rt);
     *runtime = rt;
     return NS_OK;
@@ -1873,7 +1873,7 @@ xpc_ActivateDebugMode()
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     nsXPConnect::XPConnect()->SetDebugModeWhenPossible(true, true);
-    nsXPConnect::CheckForDebugMode(rt->GetJSRuntime());
+    nsXPConnect::CheckForDebugMode(rt->Runtime());
 }
 
 /* virtual */
@@ -2030,7 +2030,7 @@ DumpJSHeap(FILE* file)
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Must dump GC heap on main thread.");
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    js::DumpHeapComplete(xpc->GetRuntime()->GetJSRuntime(), file);
+    js::DumpHeapComplete(xpc->GetRuntime()->Runtime(), file);
 }
 
 void
@@ -2116,7 +2116,7 @@ public:
          * unnecessary loop edges to the graph (bug 842137).
          */
         TraversalTracer trc(cb);
-        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
         JS_TracerInit(&trc, rt, NoteJSChildTracerShim);
         trc.eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
         js::VisitGrayWrapperTargets(zone, NoteJSChildGrayWrapperShim, &trc);
@@ -2166,7 +2166,7 @@ nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
 {
     gDesiredDebugMode = mode;
     if (!mode && allowSyncDisable)
-        CheckForDebugMode(mRuntime->GetJSRuntime());
+        CheckForDebugMode(mRuntime->Runtime());
     return NS_OK;
 }
 
@@ -2196,7 +2196,7 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
 NS_IMETHODIMP
 nsXPConnect::NotifyDidPaint()
 {
-    JS::NotifyDidPaint(GetRuntime()->GetJSRuntime());
+    JS::NotifyDidPaint(GetRuntime()->Runtime());
     return NS_OK;
 }
 
