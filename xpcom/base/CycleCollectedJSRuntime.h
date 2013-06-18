@@ -160,8 +160,10 @@ public:
   void NotifyLeaveCycleCollectionThread() const;
   void NotifyEnterMainThread() const;
   nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &aCb);
+  bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
   bool NeedCollect() const;
+  void Collect(uint32_t reason) const;
 
 // XXXkhuey should be private
 protected:
