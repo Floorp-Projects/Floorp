@@ -24,11 +24,6 @@
 
 class nsCSSStyleSheet;
 
-struct CacheScriptEntry
-{
-    JSScript*   mScriptObject; // the script object.
-};
-
 /**
  * The XUL prototype cache can be used to store and retrieve shared data for
  * XUL documents, style sheets, XBL, and scripts.
@@ -130,7 +125,7 @@ protected:
 
     nsRefPtrHashtable<nsURIHashKey,nsXULPrototypeDocument>  mPrototypeTable; // owns the prototypes
     nsRefPtrHashtable<nsURIHashKey,nsCSSStyleSheet>        mStyleSheetTable;
-    nsDataHashtable<nsURIHashKey,CacheScriptEntry>         mScriptTable;
+    nsDataHashtable<nsURIHashKey, JSScript*>               mScriptTable;
     nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>  mXBLDocTable;
 
     nsTHashtable<nsURIHashKey> mCacheURITable;
