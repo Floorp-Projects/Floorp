@@ -89,8 +89,6 @@ nsXPConnect::nsXPConnect()
 {
     mRuntime = XPCJSRuntime::newXPCJSRuntime(this);
 
-    nsCycleCollector_registerJSRuntime(this);
-
     char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
     if (reportableEnv && *reportableEnv)
         gReportAllJSExceptions = 1;
@@ -99,7 +97,6 @@ nsXPConnect::nsXPConnect()
 nsXPConnect::~nsXPConnect()
 {
     mRuntime->DeleteJunkScope();
-    nsCycleCollector_forgetJSRuntime();
 
     JSContext *cx = nullptr;
     if (mRuntime) {
@@ -239,71 +236,11 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
   return NS_FAILED(rv) ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
-bool
-nsXPConnect::NeedCollect()
-{
-    return GetRuntime()->NeedCollect();
-}
-
-void
-nsXPConnect::Collect(uint32_t reason)
-{
-    return GetRuntime()->Collect(reason);
-}
-
 NS_IMETHODIMP
 nsXPConnect::GarbageCollect(uint32_t reason)
 {
-    Collect(reason);
+    GetRuntime()->Collect(reason);
     return NS_OK;
-}
-
-void
-nsXPConnect::FixWeakMappingGrayBits()
-{
-    GetRuntime()->FixWeakMappingGrayBits();
-}
-
-nsresult
-nsXPConnect::BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb)
-{
-    return GetRuntime()->BeginCycleCollection(cb);
-}
-
-bool
-nsXPConnect::NotifyLeaveMainThread()
-{
-    return mRuntime->NotifyLeaveMainThread();
-}
-
-void
-nsXPConnect::NotifyEnterCycleCollectionThread()
-{
-    mRuntime->NotifyEnterCycleCollectionThread();
-}
-
-void
-nsXPConnect::NotifyLeaveCycleCollectionThread()
-{
-    mRuntime->NotifyLeaveCycleCollectionThread();
-}
-
-void
-nsXPConnect::NotifyEnterMainThread()
-{
-    mRuntime->NotifyEnterMainThread();
-}
-
-bool
-nsXPConnect::UsefulToMergeZones()
-{
-    return GetRuntime()->UsefulToMergeZones();
-}
-
-nsCycleCollectionParticipant *
-nsXPConnect::GetParticipant()
-{
-    return GetRuntime()->GCThingParticipant();
 }
 
 JSBool
@@ -338,18 +275,11 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
     }
 }
 
-// static
-nsCycleCollectionParticipant*
-nsXPConnect::JSContextParticipant()
-{
-    return mozilla::CycleCollectedJSRuntime::JSContextParticipant();
-}
-
 NS_IMETHODIMP_(void)
 nsXPConnect::NoteJSContext(JSContext *aJSContext,
                            nsCycleCollectionTraversalCallback &aCb)
 {
-    aCb.NoteNativeChild(aJSContext, JSContextParticipant());
+    aCb.NoteNativeChild(aJSContext, mozilla::CycleCollectedJSRuntime::JSContextParticipant());
 }
 
 
@@ -1237,26 +1167,6 @@ nsXPConnect::OnDispatchedEvent(nsIThreadInternal* aThread)
     return NS_ERROR_UNEXPECTED;
 }
 
-void
-nsXPConnect::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
-{
-    mRuntime->AddJSHolder(aHolder, aTracer);
-}
-
-void
-nsXPConnect::RemoveJSHolder(void* aHolder)
-{
-    mRuntime->RemoveJSHolder(aHolder);
-}
-
-#ifdef DEBUG
-bool
-nsXPConnect::TestJSHolder(void* aHolder)
-{
-    return mRuntime->TestJSHolder(aHolder);
-}
-#endif
-
 NS_IMETHODIMP
 nsXPConnect::SetReportAllJSExceptions(bool newval)
 {
@@ -1718,22 +1628,6 @@ nsXPConnect::ReadFunction(nsIObjectInputStream *stream, JSContext *cx, JSObject 
 {
     return ReadScriptOrFunction(stream, cx, nullptr, functionObjp);
 }
-
-#ifdef DEBUG
-void
-nsXPConnect::SetObjectToUnlink(void* aObject)
-{
-    if (mRuntime)
-        mRuntime->SetObjectToUnlink(aObject);
-}
-
-void
-nsXPConnect::AssertNoObjectsToTrace(void* aPossibleJSHolder)
-{
-    if (mRuntime)
-        mRuntime->AssertNoObjectsToTrace(aPossibleJSHolder);
-}
-#endif
 
 /* These are here to be callable from a debugger */
 JS_BEGIN_EXTERN_C

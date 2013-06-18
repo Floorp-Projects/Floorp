@@ -11,6 +11,7 @@
 #include "jsprf.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
 #include "nsLayoutStatics.h"
 #include "xpcpublic.h"
@@ -396,13 +397,6 @@ sJSZoneCycleCollectorGlobal = {
   NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSZoneParticipant)
 };
 
-// XXXkhuey this is totally wrong ...
-nsCycleCollectionParticipant*
-xpc_JSZoneParticipant()
-{
-  return sJSZoneCycleCollectorGlobal.GetParticipant();
-}
-
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
                                                  JSUseHelperThreads aUseHelperThreads,
                                                  bool aExpectUnrootedGlobals)
@@ -422,10 +416,14 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
 
   mJSHolders.Init(512);
+
+  nsCycleCollector_registerJSRuntime(this);
 }
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 {
+  nsCycleCollector_forgetJSRuntime();
+
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
 }
