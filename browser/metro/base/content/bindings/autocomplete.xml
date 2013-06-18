@@ -86,12 +86,12 @@
     <content orient="horizontal">
       <xul:vbox id="results-vbox" class="meta-section viewable-height" flex="1">
         <xul:label class="meta-section-title" value="&autocompleteResultsHeader.label;"/>
-        <richgrid id="results-richgrid" anonid="results" seltype="single" flex="1"/>
+        <richgrid id="results-richgrid" deferlayout="true" anonid="results" seltype="single" flex="1"/>
       </xul:vbox>
 
       <xul:vbox id="searches-vbox" class="meta-section viewable-height" flex="1">
         <xul:label class="meta-section-title" value="&autocompleteSearchesHeader.label;"/>
-        <richgrid id="searches-richgrid" anonid="searches" seltype="single" flex="1"/>
+        <richgrid id="searches-richgrid" deferlayout="true" anonid="searches" seltype="single" flex="1"/>
       </xul:vbox>
     </content>
 
@@ -178,6 +178,10 @@
 
             this.clearSelection();
             this.invalidate();
+
+            this._results.arrangeItemsNow();
+            this._searches.arrangeItemsNow();
+
             this._fire("autocompletestart");
           ]]>
         </body>
@@ -411,7 +415,7 @@
         <parameter name="aGrid"/>
         <body>
           <![CDATA[
-            return aGrid.itemCount != undefined;
+            return aGrid && aGrid.itemCount != undefined;
           ]]>
         </body>
       </method>
