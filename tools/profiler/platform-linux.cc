@@ -371,8 +371,20 @@ bool Sampler::RegisterCurrentThread(const char* aName,
   ThreadInfo* info = new ThreadInfo(aName, gettid(),
     aIsMainThread, aPseudoStack);
 
-  if (sActiveSampler) {
-    sActiveSampler->RegisterThread(info);
+  bool profileThread = sActiveSampler &&
+    (aIsMainThread || sActiveSampler->ProfileThreads());
+
+  if (profileThread) {
+    // We need to create the ThreadProfile now
+    info->SetProfile(new ThreadProfile(info->Name(),
+                                       sActiveSampler->EntrySize(),
+                                       info->Stack(),
+                                       info->ThreadId(),
+                                       info->GetPlatformData(),
+                                       aIsMainThread));
+    if (sActiveSampler->ProfileJS()) {
+      info->Profile()->GetPseudoStack()->enableJSSampling();
+    }
   }
 
   sRegisteredThreads->push_back(info);
@@ -408,8 +420,7 @@ const int SIGSTART = SIGUSR1;
 
 static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
   profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                 PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT,
-                 NULL, 0);
+                 PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
 }
 
 void OS::RegisterStartHandler()

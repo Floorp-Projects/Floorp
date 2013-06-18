@@ -353,8 +353,20 @@ bool Sampler::RegisterCurrentThread(const char* aName,
   ThreadInfo* info = new ThreadInfo(aName, gettid(),
     aIsMainThread, aPseudoStack);
 
-  if (sActiveSampler) {
-    sActiveSampler->RegisterThread(info);
+  bool profileThread = sActiveSampler &&
+    (aIsMainThread || sActiveSampler->ProfileThreads());
+
+  if (profileThread) {
+    // We need to create the ThreadProfile now
+    info->SetProfile(new ThreadProfile(info->Name(),
+                                       sActiveSampler->EntrySize(),
+                                       info->Stack(),
+                                       info->ThreadId(),
+                                       info->GetPlatformData(),
+                                       aIsMainThread));
+    if (sActiveSampler->ProfileJS()) {
+      info->Profile()->GetPseudoStack()->enableJSSampling();
+    }
   }
 
   sRegisteredThreads->push_back(info);
