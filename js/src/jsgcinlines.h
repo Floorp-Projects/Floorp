@@ -51,7 +51,7 @@ namespace gc {
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
-extern AllocKind slotsToThingKind[];
+extern const AllocKind slotsToThingKind[];
 
 /* Get the best kind to use when making an object with the given slot count. */
 static inline AllocKind
@@ -77,8 +77,6 @@ GetGCObjectKind(Class *clasp)
 static inline AllocKind
 GetGCArrayKind(size_t numSlots)
 {
-    extern AllocKind slotsToThingKind[];
-
     /*
      * Dense arrays can use their fixed slots to hold their elements array
      * (less two Values worth of ObjectElements header), but if more than the
@@ -94,8 +92,6 @@ GetGCArrayKind(size_t numSlots)
 static inline AllocKind
 GetGCObjectFixedSlotsKind(size_t numFixedSlots)
 {
-    extern AllocKind slotsToThingKind[];
-
     JS_ASSERT(numFixedSlots < SLOTS_TO_THING_KIND_LIMIT);
     return slotsToThingKind[numFixedSlots];
 }

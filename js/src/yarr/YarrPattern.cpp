@@ -90,21 +90,21 @@ public:
         }
 
         // Add multiple matches, if necessary.
-        UCS2CanonicalizationRange* info = rangeInfoFor(ch);
+        const UCS2CanonicalizationRange* info = rangeInfoFor(ch);
         if (info->type == CanonicalizeUnique)
             addSorted(m_matchesUnicode, ch);
         else
             putUnicodeIgnoreCase(ch, info);
     }
 
-    void putUnicodeIgnoreCase(UChar ch, UCS2CanonicalizationRange* info)
+    void putUnicodeIgnoreCase(UChar ch, const UCS2CanonicalizationRange* info)
     {
         ASSERT(m_isCaseInsensitive);
         ASSERT(ch > 0x7f);
         ASSERT(ch >= info->begin && ch <= info->end);
         ASSERT(info->type != CanonicalizeUnique);
         if (info->type == CanonicalizeSet) {
-            for (uint16_t* set = characterSetInfo[info->value]; (ch = *set); ++set)
+            for (const uint16_t* set = characterSetInfo[info->value]; (ch = *set); ++set)
                 addSorted(m_matchesUnicode, ch);
         } else {
             addSorted(m_matchesUnicode, ch);
@@ -135,7 +135,7 @@ public:
         if (!m_isCaseInsensitive)
             return;
 
-        UCS2CanonicalizationRange* info = rangeInfoFor(lo);
+        const UCS2CanonicalizationRange* info = rangeInfoFor(lo);
         while (true) {
             // Handle the range [lo .. end]
             UChar end = std::min<UChar>(info->end, hi);
@@ -146,7 +146,7 @@ public:
                 break;
             case CanonicalizeSet: {
                 UChar ch;
-                for (uint16_t* set = characterSetInfo[info->value]; (ch = *set); ++set)
+                for (const uint16_t* set = characterSetInfo[info->value]; (ch = *set); ++set)
                     addSorted(m_matchesUnicode, ch);
                 break;
             }
@@ -326,7 +326,7 @@ public:
             return;
         }
 
-        UCS2CanonicalizationRange* info = rangeInfoFor(ch);
+        const UCS2CanonicalizationRange* info = rangeInfoFor(ch);
         if (info->type == CanonicalizeUnique) {
             m_alternative->m_terms.append(PatternTerm(ch));
             return;

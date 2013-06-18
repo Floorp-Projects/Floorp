@@ -94,7 +94,7 @@ namespace X86Registers {
 
     static const char* nameFPReg(XMMRegisterID fpreg)
     {
-        static const char* xmmnames[16]
+        static const char* const xmmnames[16]
           = { "%xmm0", "%xmm1", "%xmm2", "%xmm3",
               "%xmm4", "%xmm5", "%xmm6", "%xmm7",
               "%xmm8", "%xmm9", "%xmm10", "%xmm11",
@@ -105,20 +105,20 @@ namespace X86Registers {
 
     static const char* nameIReg(int szB, RegisterID reg)
     {
-        static const char* r64names[16]
+        static const char* const r64names[16]
           = { "%rax", "%rcx", "%rdx", "%rbx", "%rsp", "%rbp", "%rsi", "%rdi",
               "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15" };
-        static const char* r32names[16]
+        static const char* const r32names[16]
           = { "%eax", "%ecx", "%edx", "%ebx", "%esp", "%ebp", "%esi", "%edi",
               "%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d" };
-        static const char* r16names[16]
+        static const char* const r16names[16]
           = { "%ax", "%cx", "%dx", "%bx", "%sp", "%bp", "%si", "%di",
               "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w" };
-        static const char* r8names[16]
+        static const char* const r8names[16]
           = { "%al", "%cl", "%dl", "%bl", "%ah/spl", "%ch/bpl", "%dh/sil", "%bh/dil",
               "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b" };
         int          off = (RegisterID)reg - (RegisterID)eax;
-        const char** tab = r64names;
+        const char* const* tab = r64names;
         switch (szB) {
             case 1: tab = r8names; break;
             case 2: tab = r16names; break;
@@ -169,7 +169,7 @@ public:
 
     static const char* nameCC(Condition cc)
     {
-        static const char* names[16]
+        static const char* const names[16]
           = { "o ", "no", "b ", "ae", "e ", "ne", "be", "a ",
               "s ", "ns", "p ", "np", "l ", "ge", "le", "g " };
         int ix = (int)cc;
@@ -460,7 +460,7 @@ public:
     // Arithmetic operations:
 
 #if !WTF_CPU_X86_64
-    void adcl_im(int imm, void* addr)
+    void adcl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -558,7 +558,7 @@ public:
         }
     }
 #else
-    void addl_im(int imm, void* addr)
+    void addl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -649,7 +649,7 @@ public:
         }
     }
 #else
-    void andl_im(int imm, void* addr)
+    void andl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -777,7 +777,7 @@ public:
         m_formatter.oneByteOp64(OP_GROUP3_Ev, GROUP3_OP_NOT, dst);
     }
 #else
-    void orl_im(int imm, void* addr)
+    void orl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -862,7 +862,7 @@ public:
         }
     }
 #else
-    void subl_im(int imm, void* addr)
+    void subl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -1226,13 +1226,13 @@ public:
         }
     }
 #else
-    void cmpl_rm(RegisterID reg, void* addr)
+    void cmpl_rm(RegisterID reg, const void* addr)
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp(OP_CMP_EvGv, reg, addr);
     }
 
-    void cmpl_im(int imm, void* addr)
+    void cmpl_im(int imm, const void* addr)
     {
         spew("cmpl       $0x%x, 0x%p", imm, addr);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -1483,7 +1483,7 @@ public:
         m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
-    void movl_mEAX(void* addr)
+    void movl_mEAX(const void* addr)
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp(OP_MOV_EAXOv);
@@ -1508,7 +1508,7 @@ public:
     }
 
 #if WTF_CPU_X86
-    void movl_mr(void* base, RegisterID index, int scale, RegisterID dst)
+    void movl_mr(const void* base, RegisterID index, int scale, RegisterID dst)
     {
         spew("movl       %d(%s,%d), %s",
              int(base), nameIReg(index), scale, nameIReg(dst));
@@ -1581,7 +1581,7 @@ public:
         m_formatter.immediate32(imm);
     }
 
-    void movl_EAXm(void* addr)
+    void movl_EAXm(const void* addr)
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp(OP_MOV_OvEAX);
@@ -1620,14 +1620,14 @@ public:
         m_formatter.oneByteOp64(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
-    void movq_mEAX(void* addr)
+    void movq_mEAX(const void* addr)
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp64(OP_MOV_EAXOv);
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
     }
 
-    void movq_EAXm(void* addr)
+    void movq_EAXm(const void* addr)
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp64(OP_MOV_OvEAX);
@@ -1721,7 +1721,7 @@ public:
         return JmpSrc(m_formatter.size());
     }
 #else
-    void movl_rm(RegisterID src, void* addr)
+    void movl_rm(RegisterID src, const void* addr)
     {
         spew("movl       %s, 0(%p)",
              nameIReg(4, src), addr);
@@ -1731,7 +1731,7 @@ public:
             m_formatter.oneByteOp(OP_MOV_EvGv, src, addr);
     }
 
-    void movl_mr(void* addr, RegisterID dst)
+    void movl_mr(const void* addr, RegisterID dst)
     {
         spew("movl       0(%p), %s",
              addr, nameIReg(4, dst));
@@ -1741,7 +1741,7 @@ public:
             m_formatter.oneByteOp(OP_MOV_GvEv, dst, addr);
     }
 
-    void movl_i32m(int imm, void* addr)
+    void movl_i32m(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, addr);
@@ -2170,7 +2170,7 @@ public:
     }
 
 #if !WTF_CPU_X86_64
-    void cvtsi2sd_mr(void* address, XMMRegisterID dst)
+    void cvtsi2sd_mr(const void* address, XMMRegisterID dst)
     {
         spew("cvtsi2sd   %p, %s",
              address, nameFPReg(dst));
@@ -2771,7 +2771,7 @@ public:
         setInt32(where, value);
     }
 
-    static void repatchPointer(void* where, void* value)
+    static void repatchPointer(void* where, const void* value)
     {
         staticSpew("##repatchPtr ((where=%p)) ((value=%p))",
                    where, value);
@@ -2977,7 +2977,7 @@ private:
         }
 
 #if !WTF_CPU_X86_64
-        void oneByteOp(OneByteOpcodeID opcode, int reg, void* address)
+        void oneByteOp(OneByteOpcodeID opcode, int reg, const void* address)
         {
             m_buffer.ensureSpace(maxInstructionSize);
             m_buffer.putByteUnchecked(opcode);
