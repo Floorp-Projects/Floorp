@@ -75,8 +75,8 @@ class Registers
     typedef RegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
-                                       "r8", "r9", "r10", "r11", "r12", "sp", "r14", "pc"};
+        static const char * const Names[] = { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+                                              "r8", "r9", "r10", "r11", "r12", "sp", "r14", "pc"};
         return Names[code];
     }
 
@@ -181,8 +181,8 @@ class FloatRegisters
     typedef FPRegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7",
-                                       "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15"};
+        static const char * const Names[] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7",
+                                              "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15"};
         return Names[code];
     }
 

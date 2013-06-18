@@ -215,8 +215,8 @@ struct JSCodeSpec {
 };
 
 extern const JSCodeSpec js_CodeSpec[];
-extern unsigned            js_NumCodeSpecs;
-extern const char       *js_CodeName[];
+extern const unsigned   js_NumCodeSpecs;
+extern const char       * const js_CodeName[];
 extern const char       js_EscapeMap[];
 
 /* Silence unreferenced formal parameter warnings */
@@ -652,7 +652,7 @@ class PCCounts
 
     static const char *countName(JSOp op, size_t which);
 
-    double *rawCounts() { return counts; }
+    double *rawCounts() const { return counts; }
 
     double& get(size_t which) {
         JS_ASSERT(which < capacity);

@@ -169,8 +169,8 @@ class AutoVersionAPI
 #endif
 
 #ifdef JS_USE_JSID_STRUCT_TYPES
-jsid JSID_VOID  = { size_t(JSID_TYPE_VOID) };
-jsid JSID_EMPTY = { size_t(JSID_TYPE_OBJECT) };
+const jsid JSID_VOID  = { size_t(JSID_TYPE_VOID) };
+const jsid JSID_EMPTY = { size_t(JSID_TYPE_OBJECT) };
 #endif
 
 const jsval JSVAL_NULL  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_NULL,      0));
@@ -1806,7 +1806,7 @@ typedef struct JSStdName {
 } JSStdName;
 
 static Handle<PropertyName*>
-StdNameToPropertyName(JSContext *cx, JSStdName *stdn)
+StdNameToPropertyName(JSContext *cx, const JSStdName *stdn)
 {
     return OFFSET_TO_NAME(cx->runtime(), stdn->atomOffset);
 }
@@ -1815,7 +1815,7 @@ StdNameToPropertyName(JSContext *cx, JSStdName *stdn)
  * Table of class initializers and their atom offsets in rt->atomState.
  * If you add a "standard" class, remember to update this table.
  */
-static JSStdName standard_class_atoms[] = {
+static const JSStdName standard_class_atoms[] = {
     {js_InitFunctionClass,              EAGER_ATOM_AND_CLASP(Function)},
     {js_InitObjectClass,                EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
@@ -1849,7 +1849,7 @@ static JSStdName standard_class_atoms[] = {
  * If you add a "standard" global function or property, remember to update
  * this table.
  */
-static JSStdName standard_class_names[] = {
+static const JSStdName standard_class_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(eval), CLASP(Object)},
 
     /* Global properties and functions defined by the Number class. */
@@ -1900,7 +1900,7 @@ static JSStdName standard_class_names[] = {
     {NULL,                      0, NULL}
 };
 
-static JSStdName object_prototype_names[] = {
+static const JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
     {js_InitObjectClass,        EAGER_ATOM(proto), CLASP(Object)},
 #if JS_HAS_TOSOURCE
@@ -1932,7 +1932,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolv
     RootedObject obj(cx, objArg);
     JSRuntime *rt;
     JSAtom *atom;
-    JSStdName *stdnm;
+    const JSStdName *stdnm;
     unsigned i;
 
     AssertHeapIsIdle(cx);
@@ -4047,7 +4047,7 @@ JS_DefineObject(JSContext *cx, JSObject *objArg, const char *name, JSClass *jscl
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DefineConstDoubles(JSContext *cx, JSObject *objArg, JSConstDoubleSpec *cds)
+JS_DefineConstDoubles(JSContext *cx, JSObject *objArg, const JSConstDoubleSpec *cds)
 {
     RootedObject obj(cx, objArg);
     JSBool ok;
