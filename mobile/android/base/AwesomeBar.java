@@ -142,6 +142,7 @@ public class AwesomeBar extends GeckoActivity
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
         if (currentUrl != null) {
             mText.setText(currentUrl);
+            mText.selectAll();
         }
 
         mTarget = intent.getStringExtra(TARGET_KEY);
