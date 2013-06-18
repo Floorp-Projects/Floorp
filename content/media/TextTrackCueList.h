@@ -47,12 +47,18 @@ public:
   TextTrackCue* IndexedGetter(uint32_t aIndex, bool& aFound);
   TextTrackCue* GetCueById(const nsAString& aId);
 
+  // Adds a cue to mList by performing an insertion sort on mList.
+  // We expect most files to already be sorted, so an insertion sort starting
+  // from the end of the current array should be more efficient than a general
+  // sort step after all cues are loaded.
   void AddCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
 
 private:
   nsCOMPtr<nsISupports> mParent;
 
+  // A sorted list of TextTrackCues sorted by earliest start time. If the start
+  // times are equal then it will be sorted by end time, earliest first.
   nsTArray< nsRefPtr<TextTrackCue> > mList;
 };
 
