@@ -69,15 +69,11 @@ this.PduHelper = {
    *        Content type of incoming SI message, should be "text/vnd.wap.si" or
    *        "application/vnd.wap.sic".
    *        Default value is "application/vnd.wap.sic".
-   * @param msg [optional]
-   *        Optional target object for decoding.
    *
    * @return A SI message object or null in case of errors found.
    */
-  parse: function parse_si(data, contentType, msg) {
-    if (!msg) {
-      msg = {};
-    }
+  parse: function parse_si(data, contentType) {
+    let msg = {};
 
     /**
      * Message is compressed by WBXML, decode into string.
@@ -100,6 +96,7 @@ this.PduHelper = {
 
       WBXML.PduHelper.parse(data, appToken, msg);
 
+      msg.contentType = "text/vnd.wap.si";
       return msg;
     }
 
@@ -110,6 +107,7 @@ this.PduHelper = {
       let stringData = WSP.Octet.decodeMultiple(data, data.array.length);
       msg.publicId = PUBLIC_IDENTIFIER_SI;
       msg.content = WSP.PduHelper.decodeStringContent(stringData, "UTF-8");
+      msg.contentType = "text/vnd.wap.si";
       return msg;
     }
 

@@ -97,7 +97,7 @@ function afterCache(callback)
   Services.obs.addObserver(obs, "browser-search-service", false);
 }
 
-function  parseJsonFromStream(aInputStream) {
+function parseJsonFromStream(aInputStream) {
   const json = Cc["@mozilla.org/dom/json;1"].createInstance(Components.interfaces.nsIJSON);
   const data = json.decodeFromStream(aInputStream, aInputStream.available());
   return data;

@@ -16,6 +16,7 @@ MOCHITEST_FILES =	\
 		handlerApps.js \
 		handlerApp.xhtml \
 		unsafeBidiFileName.sjs \
+		test_badMimeType.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

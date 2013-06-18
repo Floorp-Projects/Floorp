@@ -30,15 +30,11 @@ this.PduHelper = {
    *        Content type of incoming SL message, should be "text/vnd.wap.sl" or
    *        "application/vnd.wap.slc".
    *        Default value is "application/vnd.wap.slc".
-   * @param msg [optional]
-   *        Optional target object for decoding.
    *
    * @return A SL message object or null in case of errors found.
    */
-  parse: function parse_sl(data, contentType, msg) {
-    if (!msg) {
-      msg = {};
-    }
+  parse: function parse_sl(data, contentType) {
+    let msg = {};
 
     /**
      * Message is compressed by WBXML, decode into string.
@@ -55,6 +51,7 @@ this.PduHelper = {
 
       WBXML.PduHelper.parse(data, appToken, msg);
 
+      msg.contentType = "text/vnd.wap.sl";
       return msg;
     }
 
@@ -65,6 +62,7 @@ this.PduHelper = {
       let stringData = WSP.Octet.decodeMultiple(data, data.array.length);
       msg.publicId = PUBLIC_IDENTIFIER_SL;
       msg.content = WSP.PduHelper.decodeStringContent(stringData, "UTF-8");
+      msg.contentType = "text/vnd.wap.sl";
       return msg;
     }
 
