@@ -64,6 +64,9 @@ private:
 
   /* Gst callbacks */
 
+  static GstBusSyncReply ErrorCb(GstBus *aBus, GstMessage *aMessage, gpointer aUserData);
+  GstBusSyncReply Error(GstBus *aBus, GstMessage *aMessage);
+
   /* Called on the source-setup signal emitted by playbin. Used to
    * configure appsrc .
    */
@@ -116,7 +119,7 @@ private:
 
   /* Called at end of stream, when decoding has finished */
   static void EosCb(GstAppSink* aSink, gpointer aUserData);
-  void Eos(GstAppSink* aSink);
+  void Eos();
 
   GstElement* mPlayBin;
   GstBus* mBus;
