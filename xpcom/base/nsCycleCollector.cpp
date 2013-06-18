@@ -101,7 +101,7 @@
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
 
-#include "nsCycleCollectionJSRuntime.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectorUtils.h"
@@ -992,7 +992,7 @@ class nsCycleCollector
     nsCycleCollectorResults *mResults;
     TimeStamp mCollectionStart;
 
-    nsCycleCollectionJSRuntime *mJSRuntime;
+    CycleCollectedJSRuntime *mJSRuntime;
 
     GCGraph mGraph;
 
@@ -1022,10 +1022,10 @@ private:
     uint32_t mMergedInARow;
 
 public:
-    void RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime);
+    void RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime);
     void ForgetJSRuntime();
 
-    inline nsCycleCollectionJSRuntime*
+    inline CycleCollectedJSRuntime*
     JSRuntime() const
     {
         return mJSRuntime;
@@ -1734,7 +1734,7 @@ private:
 public:
     GCGraphBuilder(nsCycleCollector *aCollector,
                    GCGraph &aGraph,
-                   nsCycleCollectionJSRuntime *aJSRuntime,
+                   CycleCollectedJSRuntime *aJSRuntime,
                    nsICycleCollectorListener *aListener,
                    bool aMergeZones);
     ~GCGraphBuilder();
@@ -1817,7 +1817,7 @@ private:
 
 GCGraphBuilder::GCGraphBuilder(nsCycleCollector *aCollector,
                                GCGraph &aGraph,
-                               nsCycleCollectionJSRuntime *aJSRuntime,
+                               CycleCollectedJSRuntime *aJSRuntime,
                                nsICycleCollectorListener *aListener,
                                bool aMergeZones)
     : mCollector(aCollector),
@@ -1825,7 +1825,7 @@ GCGraphBuilder::GCGraphBuilder(nsCycleCollector *aCollector,
       mEdgeBuilder(aGraph.mEdges),
       mWeakMaps(aGraph.mWeakMaps),
       mJSParticipant(nullptr),
-      mJSZoneParticipant(xpc_JSZoneParticipant()),
+      mJSZoneParticipant(nullptr),
       mListener(aListener),
       mMergeZones(aMergeZones),
       mRanOutOfMemory(false)
@@ -1837,7 +1837,8 @@ GCGraphBuilder::GCGraphBuilder(nsCycleCollector *aCollector,
     }
 
     if (aJSRuntime) {
-        mJSParticipant = aJSRuntime->GetParticipant();
+        mJSParticipant = aJSRuntime->GCThingParticipant();
+        mJSZoneParticipant = aJSRuntime->ZoneParticipant();
     }
 
     uint32_t flags = 0;
@@ -2555,7 +2556,7 @@ nsCycleCollector::ShutdownThreads()
 }
 
 void
-nsCycleCollector::RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime)
+nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
 {
     if (mParams.mDoNothing)
         return;
@@ -2964,7 +2965,7 @@ HaveCollector(nsCycleCollector* aCollector)
 ////////////////////////////////////////////////////////////////////////
 
 void
-nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *rt)
+nsCycleCollector_registerJSRuntime(CycleCollectedJSRuntime *rt)
 {
     nsCycleCollector *collector = sCollector.get();
 
