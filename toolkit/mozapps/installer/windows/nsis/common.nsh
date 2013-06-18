@@ -1153,6 +1153,8 @@
  *          The display name for the handler. If emtpy no value will be set.
  * @param   _ISPROTOCOL
  *          Sets protocol handler specific registry values when "true".
+ *          Deletes protocol handler specific registry values when "delete".
+ *          Otherwise doesn't touch handler specific registry values.
  * @param   _ISDDE
  *          Sets DDE specific registry values when "true".
  *
@@ -1194,6 +1196,8 @@
 
       StrCmp "$R8" "true" +1 +2
       WriteRegStr SHCTX "$R4" "URL Protocol" ""
+      StrCmp "$R8" "delete" +1 +2
+      DeleteRegValue SHCTX "$R4" "URL Protocol"
       StrCpy $R3 ""
       ReadRegDWord $R3 SHCTX "$R4" "EditFlags"
       StrCmp $R3 "" +1 +3  ; Only add EditFlags if a value doesn't exist
@@ -1297,6 +1301,8 @@
  *          The display name for the handler. If emtpy no value will be set.
  * @param   _ISPROTOCOL
  *          Sets protocol handler specific registry values when "true".
+ *          Deletes protocol handler specific registry values when "delete".
+ *          Otherwise doesn't touch handler specific registry values.
  * @param   _DDE_APPNAME
  *          Sets DDE specific registry values when not an empty string.
  *
@@ -1347,6 +1353,8 @@
 
       StrCmp "$R6" "true" +1 +2
       WriteRegStr SHCTX "$R0\$R2" "URL Protocol" ""
+      StrCmp "$R6" "delete" +1 +2
+      DeleteRegValue SHCTX "$R0\$R2" "URL Protocol"
       StrCpy $R1 ""
       ReadRegDWord $R1 SHCTX "$R0\$R2" "EditFlags"
       StrCmp $R1 "" +1 +3  ; Only add EditFlags if a value doesn't exist
