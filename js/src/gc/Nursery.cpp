@@ -16,6 +16,8 @@
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
 
+#include "jscompartmentinlines.h"
+
 #include "gc/Barrier-inl.h"
 #include "gc/Nursery-inl.h"
 
