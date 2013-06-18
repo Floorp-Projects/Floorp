@@ -336,7 +336,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         *ppc = NULL;
 
     Activation *act = cx_->mainThread().activation();
-    while (act && act->cx() != cx_)
+    while (act && (act->cx() != cx_ || !act->isActive()))
         act = act->prev();
 
     if (!act)
