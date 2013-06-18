@@ -692,7 +692,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActions.sendKeys(addedText);
         mSolo.clickOnText("OK");
         waitForText("Bookmark updated");
-        toggleVKB(); // close the VKB
     }
 
     public boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
@@ -712,12 +711,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         if (mSolo.searchText(addedText)) {
             clickOnButton("Cancel");
             waitForText("about:home");
-            toggleVKB(); // close the VKB
             return true;
         } else {
             clickOnButton("Cancel");
             waitForText("about:home");
-            toggleVKB(); // close the VKB
             return false;
         }
     }
