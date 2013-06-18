@@ -2292,18 +2292,40 @@ this.PduHelper = {
         let octetArray = Octet.decodeMultiple(data, contentEnd);
         let content = null;
         if (octetArray) {
-          // If the content is a SMIL type, convert it to a string.
-          // We hope to save and expose the SMIL content as a string way.
-          if (headers["content-type"].media == "application/smil") {
-            let charset = headers["content-type"].params &&
-                          headers["content-type"].params.charset
-                        ? headers["content-type"].params.charset["charset"]
-                        : null;
-            content = this.decodeStringContent(octetArray, charset);
+          let charset = headers["content-type"].params &&
+                        headers["content-type"].params.charset
+                      ? headers["content-type"].params.charset.charset
+                      : null;
+
+          let mimeType = headers["content-type"].media;
+
+          if (mimeType) {
+            if (mimeType == "application/smil") {
+              // If the content is a SMIL type, convert it to a string.
+              // We hope to save and expose the SMIL content in a string way.
+              content = this.decodeStringContent(octetArray, charset);
+            } else if (mimeType.indexOf("text/") == 0 && charset != "utf-8") {
+              // If the content is a "text/plain" type, we have to make sure
+              // the encoding of the blob content should always be "utf-8".
+              let tmpStr = this.decodeStringContent(octetArray, charset);
+              let encoder = new TextEncoder("UTF-8");
+              content = new Blob([encoder.encode(tmpStr)], {type : mimeType});
+
+              // Make up the missing encoding info.
+              if (!headers["content-type"].params) {
+                headers["content-type"].params = {};
+              }
+              if (!headers["content-type"].params.charset) {
+                headers["content-type"].params.charset = {};
+              }
+              if (!headers["content-type"].params.charset.charset) {
+                headers["content-type"].params.charset.charset = "utf-8";
+              }
+            }
           }
+
           if (!content) {
-            content = new Blob([octetArray],
-                               {type : headers["content-type"].media});
+            content = new Blob([octetArray], {type : mimeType});
           }
         }
 
