@@ -11,8 +11,8 @@ function updateBlocklist(aCallback) {
   var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
                           .getService(Ci.nsITimerCallback);
   var observer = function() {
+    aCallback();
     Services.obs.removeObserver(observer, "blocklist-updated");
-    SimpleTest.executeSoon(aCallback);
   };
   Services.obs.addObserver(observer, "blocklist-updated", false);
   blocklistNotifier.notify(null);
