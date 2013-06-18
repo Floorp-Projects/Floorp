@@ -96,7 +96,7 @@ TraceCallbackFunc::Trace(JSString** p, const char* name, void* closure) const
 }
 
 void
-TraceCallbackFunc::Trace(JSScript** p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSScript*>* p, const char* name, void* closure) const
 {
-   mCallback(*p, name, closure);
+  mCallback(p->get(), name, closure);
 }
