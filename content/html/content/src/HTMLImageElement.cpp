@@ -311,7 +311,8 @@ HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     GetAttr(kNameSpaceID_None, aName, tmp);
 
     if (!tmp.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, tmp);
+      mForm->RemoveImageElementFromTable(this, tmp,
+                                         nsHTMLFormElement::AttributeUpdated);
     }
   }
 
@@ -694,11 +695,13 @@ HTMLImageElement::ClearForm(bool aRemoveFromForm)
     mForm->RemoveImageElement(this);
 
     if (!nameVal.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, nameVal);
+      mForm->RemoveImageElementFromTable(this, nameVal,
+                                         nsHTMLFormElement::ElementRemoved);
     }
 
     if (!idVal.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, idVal);
+      mForm->RemoveImageElementFromTable(this, idVal,
+                                         nsHTMLFormElement::ElementRemoved);
     }
   }
 

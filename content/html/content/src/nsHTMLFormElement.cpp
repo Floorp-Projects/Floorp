@@ -247,6 +247,7 @@ nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mEverTriedInvalidSubmit(false)
 {
   mImageNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
+  mPastNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
 }
 
 nsHTMLFormElement::~nsHTMLFormElement()
@@ -299,6 +300,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFormElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControls)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageNameLookupTable)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPastNameLookupTable)
   tmp->mSelectedRadioButtons.EnumerateRead(ElementTraverser, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1440,15 +1442,15 @@ RemoveElementFromTableInternal(
   if (!aTable.Get(aName, getter_AddRefs(supports)))
     return NS_OK;
 
+  // Single element in the hash, just remove it if it's the one
+  // we're trying to remove...
+  if (supports == aChild) {
+    aTable.Remove(aName);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(supports));
-
   if (content) {
-    // Single element in the hash, just remove it if it's the one
-    // we're trying to remove...
-    if (content == aChild) {
-      aTable.Remove(aName);
-    }
-
     return NS_OK;
   }
 
@@ -1479,10 +1481,25 @@ RemoveElementFromTableInternal(
   return NS_OK;
 }
 
+static PLDHashOperator
+RemovePastNames(const nsAString& aName,
+                nsCOMPtr<nsISupports>& aData,
+                void* aClosure)
+{
+  return aClosure == aData ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
+}
+
 nsresult
 nsHTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
-                                          const nsAString& aName)
+                                          const nsAString& aName,
+                                          RemoveElementReason aRemoveReason)
 {
+  // If the element is being removed from the form, we have to remove it from
+  // the past names map.
+  if (aRemoveReason == ElementRemoved) {
+    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+  }
+
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
@@ -1494,10 +1511,18 @@ nsHTMLFormElement::FindNamedItem(const nsAString& aName,
   if (result) {
     // FIXME Get the wrapper cache from DoResolveName.
     *aCache = nullptr;
+    AddToPastNamesMap(aName, result);
     return result.forget();
   }
 
   result = mImageNameLookupTable.GetWeak(aName);
+  if (result) {
+    *aCache = nullptr;
+    AddToPastNamesMap(aName, result);
+    return result.forget();
+  }
+
+  result = mPastNameLookupTable.GetWeak(aName);
   if (result) {
     *aCache = nullptr;
     return result.forget();
@@ -2269,6 +2294,7 @@ nsHTMLFormElement::Clear()
   }
   mImageElements.Clear();
   mImageNameLookupTable.Clear();
+  mPastNameLookupTable.Clear();
 }
 
 //----------------------------------------------------------------------
@@ -2705,8 +2731,28 @@ nsHTMLFormElement::RemoveImageElement(HTMLImageElement* aChild)
 
 nsresult
 nsHTMLFormElement::RemoveImageElementFromTable(HTMLImageElement* aElement,
-                                               const nsAString& aName)
+                                               const nsAString& aName,
+                                               RemoveElementReason aRemoveReason)
 {
+  // If the element is being removed from the form, we have to remove it from
+  // the past names map.
+  if (aRemoveReason == ElementRemoved) {
+    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+  }
+
   return RemoveElementFromTableInternal(mImageNameLookupTable, aElement, aName);
+}
+
+void
+nsHTMLFormElement::AddToPastNamesMap(const nsAString& aName,
+                                     nsISupports* aChild)
+{
+  // If candidates contains exactly one node. Add a mapping from name to the
+  // node in candidates in the form element's past names map, replacing the
+  // previous entry with the same name, if any.
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aChild);
+  if (node) {
+    mPastNameLookupTable.Put(aName, aChild);
+  }
 }
 
