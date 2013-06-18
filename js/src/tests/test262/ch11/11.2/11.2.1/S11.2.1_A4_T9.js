@@ -23,8 +23,6 @@ if (typeof Date.prototype.valueOf !== "function")  $ERROR('#11: typeof Date.prot
 if (typeof Date.prototype['valueOf'] !== "function")  $ERROR('#12: typeof Date.prototype["valueOf"] === "function". Actual: ' + (typeof Date.prototype["valueOf"] ));
 if (typeof Date.prototype.getTime !== "function")  $ERROR('#13: typeof Date.prototype.getTime === "function". Actual: ' + (typeof Date.prototype.getTime ));
 if (typeof Date.prototype['getTime'] !== "function")  $ERROR('#14: typeof Date.prototype["getTime"] === "function". Actual: ' + (typeof Date.prototype["getTime"] ));
-if (typeof Date.prototype.getYear !== "function")  $ERROR('#15: typeof Date.prototype.getYear === "function". Actual: ' + (typeof Date.prototype.getYear ));
-if (typeof Date.prototype['getYear'] !== "function")  $ERROR('#16: typeof Date.prototype["getYear"] === "function". Actual: ' + (typeof Date.prototype["getYear"] ));
 if (typeof Date.prototype.getFullYear !== "function")  $ERROR('#17: typeof Date.prototype.getFullYear === "function". Actual: ' + (typeof Date.prototype.getFullYear ));
 if (typeof Date.prototype['getFullYear'] !== "function")  $ERROR('#18: typeof Date.prototype["getFullYear"] === "function". Actual: ' + (typeof Date.prototype["getFullYear"] ));
 if (typeof Date.prototype.getUTCFullYear !== "function")  $ERROR('#19: typeof Date.prototype.getUTCFullYear === "function". Actual: ' + (typeof Date.prototype.getUTCFullYear ));
@@ -87,15 +85,10 @@ if (typeof Date.prototype.setFullYear !== "function")  $ERROR('#75: typeof Date.
 if (typeof Date.prototype['setFullYear'] !== "function")  $ERROR('#76: typeof Date.prototype["setFullYear"] === "function". Actual: ' + (typeof Date.prototype["setFullYear"] ));
 if (typeof Date.prototype.setUTCFullYear !== "function")  $ERROR('#77: typeof Date.prototype.setUTCFullYear === "function". Actual: ' + (typeof Date.prototype.setUTCFullYear ));
 if (typeof Date.prototype['setUTCFullYear'] !== "function")  $ERROR('#78: typeof Date.prototype["setUTCFullYear"] === "function". Actual: ' + (typeof Date.prototype["setUTCFullYear"] ));
-if (typeof Date.prototype.setYear !== "function")  $ERROR('#79: typeof Date.prototype.setYear === "function". Actual: ' + (typeof Date.prototype.setYear ));
-if (typeof Date.prototype['setYear'] !== "function")  $ERROR('#80: typeof Date.prototype["setYear"] === "function". Actual: ' + (typeof Date.prototype["setYear"] ));
 if (typeof Date.prototype.toLocaleString !== "function")  $ERROR('#81: typeof Date.prototype.toLocaleString === "function". Actual: ' + (typeof Date.prototype.toLocaleString ));
 if (typeof Date.prototype['toLocaleString'] !== "function")  $ERROR('#82: typeof Date.prototype["toLocaleString"] === "function". Actual: ' + (typeof Date.prototype["toLocaleString"] ));
 if (typeof Date.prototype.toUTCString !== "function")  $ERROR('#83: typeof Date.prototype.toUTCString === "function". Actual: ' + (typeof Date.prototype.toUTCString ));
 if (typeof Date.prototype['toUTCString'] !== "function")  $ERROR('#84: typeof Date.prototype["toUTCString"] === "function". Actual: ' + (typeof Date.prototype["toUTCString"] ));
-if (typeof Date.prototype.toGMTString !== "function")  $ERROR('#85: typeof Date.prototype.toGMTString === "function". Actual: ' + (typeof Date.prototype.toGMTString ));
-if (typeof Date.prototype['toGMTString'] !== "function")  $ERROR('#86: typeof Date.prototype["toGMTString"] === "function". Actual: ' + (typeof Date.prototype["toGMTString"] ));
-
 
 
 
