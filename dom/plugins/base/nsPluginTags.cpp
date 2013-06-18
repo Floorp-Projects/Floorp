@@ -80,7 +80,9 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
     mFullPath(aPluginTag->mFullPath),
     mVersion(aPluginTag->mVersion),
     mLastModifiedTime(0),
-    mNiceFileName()
+    mNiceFileName(),
+    mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
+    mCachedBlocklistStateValid(false)
 {
 }
 
@@ -94,7 +96,9 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
     mFullPath(aPluginInfo->fFullPath),
     mVersion(aPluginInfo->fVersion),
     mLastModifiedTime(0),
-    mNiceFileName()
+    mNiceFileName(),
+    mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
+    mCachedBlocklistStateValid(false)
 {
   InitMime(aPluginInfo->fMimeTypeArray,
            aPluginInfo->fMimeDescriptionArray,
@@ -123,7 +127,9 @@ nsPluginTag::nsPluginTag(const char* aName,
     mFullPath(aFullPath),
     mVersion(aVersion),
     mLastModifiedTime(aLastModifiedTime),
-    mNiceFileName()
+    mNiceFileName(),
+    mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
+    mCachedBlocklistStateValid(false)
 {
   InitMime(aMimeTypes, aMimeDescriptions, aExtensions,
            static_cast<uint32_t>(aVariants));
@@ -537,4 +543,36 @@ void nsPluginTag::ImportFlagsToPrefs(uint32_t flags)
   if (!(flags & NS_PLUGIN_FLAG_ENABLED)) {
     SetPluginState(ePluginState_Disabled);
   }
+}
+
+uint32_t
+nsPluginTag::GetBlocklistState()
+{
+  if (mCachedBlocklistStateValid) {
+    return mCachedBlocklistState;
+  }
+
+  nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
+  if (!blocklist) {
+    return nsIBlocklistService::STATE_NOT_BLOCKED;
+  }
+
+  // The EmptyString()s are so we use the currently running application
+  // and toolkit versions
+  uint32_t state;
+  if (NS_FAILED(blocklist->GetPluginBlocklistState(this, EmptyString(),
+                                                   EmptyString(), &state))) {
+    return nsIBlocklistService::STATE_NOT_BLOCKED;
+  }
+
+  MOZ_ASSERT(state <= UINT16_MAX);
+  mCachedBlocklistState = (uint16_t) state;
+  mCachedBlocklistStateValid = true;
+  return state;
+}
+
+void
+nsPluginTag::InvalidateBlocklistState()
+{
+  mCachedBlocklistStateValid = false;
 }
