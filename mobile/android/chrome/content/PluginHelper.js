@@ -102,23 +102,23 @@ var PluginHelper = {
     if (pluginDisable)
       return "0";
 
-    let clickToPlay = Services.prefs.getBoolPref("plugins.click_to_play");
-    return clickToPlay ? "2" : "1";
+    let state = Services.prefs.getIntPref("plugin.default.state");
+    return state == Ci.nsIPluginTag.STATE_CLICKTOPLAY ? "2" : "1";
   },
 
   setPluginPreference: function setPluginPreference(aValue) {
     switch (aValue) {
       case "0": // Enable Plugins = No
         Services.prefs.setBoolPref("plugin.disable", true);
-        Services.prefs.clearUserPref("plugins.click_to_play");
+        Services.prefs.clearUserPref("plugin.default.state");
         break;
       case "1": // Enable Plugins = Yes
         Services.prefs.clearUserPref("plugin.disable");
-        Services.prefs.setBoolPref("plugins.click_to_play", false);
+        Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_ENABLED);
         break;
       case "2": // Enable Plugins = Tap to Play (default)
         Services.prefs.clearUserPref("plugin.disable");
-        Services.prefs.clearUserPref("plugins.click_to_play");
+        Services.prefs.clearUserPref("plugin.default.state");
         break;
     }
   },
