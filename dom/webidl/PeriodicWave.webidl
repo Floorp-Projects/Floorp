@@ -11,7 +11,7 @@
  */
 
 [PrefControlled]
-interface WaveTable {
+interface PeriodicWave {
 
 };
 

@@ -203,6 +203,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  PeriodicWave.webidl \
   Position.webidl \
   PositionError.webidl \
   ProcessingInstruction.webidl \
@@ -346,7 +347,6 @@ webidl_files = \
   URLUtils.webidl \
   VideoStreamTrack.webidl \
   WaveShaperNode.webidl \
-  WaveTable.webidl \
   Window.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \

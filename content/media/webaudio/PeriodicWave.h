@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WaveTable_h_
-#define WaveTable_h_
+#ifndef PeriodicWave_h_
+#define PeriodicWave_h_
 
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
@@ -18,18 +18,18 @@ namespace mozilla {
 
 namespace dom {
 
-class WaveTable MOZ_FINAL : public nsWrapperCache,
-                            public EnableWebAudioCheck
+class PeriodicWave MOZ_FINAL : public nsWrapperCache,
+                               public EnableWebAudioCheck
 {
 public:
-  WaveTable(AudioContext* aContext,
-            const float* aRealData,
-            uint32_t aRealDataLength,
-            const float* aImagData,
-            uint32_t aImagDataLength);
+  PeriodicWave(AudioContext* aContext,
+               const float* aRealData,
+               uint32_t aRealDataLength,
+               const float* aImagData,
+               uint32_t aImagDataLength);
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WaveTable)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WaveTable)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PeriodicWave)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PeriodicWave)
 
   AudioContext* GetParentObject() const
   {
