@@ -697,13 +697,11 @@ protected:
    * @param aState the block reflow state
    * @param aLine where to put a new frame
    * @param aFrame the frame
-   * @param aMadeNewFrame true if a new frame was created, false if not
-   * @return NS_OK if a next-in-flow already exists or is successfully created
+   * @return true if a new frame was created, false if not
    */
-  virtual nsresult CreateContinuationFor(nsBlockReflowState& aState,
-                                         nsLineBox*          aLine,
-                                         nsIFrame*           aFrame,
-                                         bool&             aMadeNewFrame);
+  bool CreateContinuationFor(nsBlockReflowState& aState,
+                             nsLineBox*          aLine,
+                             nsIFrame*           aFrame);
 
   /**
    * Push aLine (and any after it), since it cannot be placed on this
