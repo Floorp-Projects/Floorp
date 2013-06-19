@@ -510,6 +510,10 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node cloneLeftHandSide(Node opn);
     Node cloneParseTree(Node opn);
 
+    Node newNumber(const Token &tok) {
+        return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
+    }
+
     static bool
     bindDestructuringArg(JSContext *cx, BindData<ParseHandler> *data,
                          HandlePropertyName name, Parser<ParseHandler> *parser);
