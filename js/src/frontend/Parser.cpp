@@ -6488,15 +6488,14 @@ Parser<ParseHandler>::atomNode(ParseNodeKind kind, JSOp op)
     return pn;
 }
 
-template <>
-ParseNode *
-Parser<FullParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag flags)
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::newRegExp()
 {
-    ParseNode *pn = NullaryNode::create(PNK_REGEXP, &handler);
-    if (!pn)
-        return NULL;
-
-    const StableCharPtr chars(buf, length);
+    // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
+    size_t length = tokenStream.getTokenbuf().length();
+    const StableCharPtr chars(tokenStream.getTokenbuf().begin(), length);
+    RegExpFlag flags = tokenStream.currentToken().regExpFlags();
 
     Rooted<RegExpObject*> reobj(context);
     if (RegExpStatics *res = context->regExpStatics())
@@ -6505,30 +6504,9 @@ Parser<FullParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag
         reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
 
     if (!reobj)
-        return NULL;
+        return null();
 
-    pn->pn_objbox = newObjectBox(reobj);
-    if (!pn->pn_objbox)
-        return NULL;
-
-    pn->setOp(JSOP_REGEXP);
-    return pn;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag flags)
-{
-    // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
-    const StableCharPtr chars(buf, length);
-
-    RegExpObject *reobj;
-    if (RegExpStatics *res = context->regExpStatics())
-        reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
-    else
-        reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
-
-    return reobj ? SyntaxParseHandler::NodeGeneric : SyntaxParseHandler::NodeFailure;
+    return handler.newRegExp(reobj, pos(), *this);
 }
 
 template <typename ParseHandler>
@@ -6932,9 +6910,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         break;
 
       case TOK_REGEXP:
-        pn = newRegExp(tokenStream.getTokenbuf().begin(),
-                       tokenStream.getTokenbuf().length(),
-                       tokenStream.currentToken().regExpFlags());
+        pn = newRegExp();
         break;
 
       case TOK_NUMBER:
