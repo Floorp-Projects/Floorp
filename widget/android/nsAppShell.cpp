@@ -520,7 +520,22 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
     case AndroidGeckoEvent::CALL_OBSERVER:
-        CallObserver(curEvent->Characters(), curEvent->CharactersExtra(), curEvent->Data());
+    {
+        nsCOMPtr<nsIObserver> observer;
+        mObserversHash.Get(curEvent->Characters(), getter_AddRefs(observer));
+
+        if (observer) {
+            observer->Observe(nullptr, NS_ConvertUTF16toUTF8(curEvent->CharactersExtra()).get(),
+                              nsString(curEvent->Data()).get());
+        } else {
+            ALOG("Call_Observer event: Observer was not found!");
+        }
+
+        break;
+    }
+
+    case AndroidGeckoEvent::REMOVE_OBSERVER:
+        mObserversHash.Remove(curEvent->Characters());
         break;
 
     case AndroidGeckoEvent::LOW_MEMORY:
@@ -734,30 +749,6 @@ nsAppShell::AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver)
     NS_ASSERTION(aObserver != nullptr, "nsAppShell::AddObserver: aObserver is null!");
     mObserversHash.Put(aObserverKey, aObserver);
     return NS_OK;
-}
-
-void
-nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData)
-{
-    nsCOMPtr<nsIObserver> observer;
-    mObserversHash.Get(aObserverKey, getter_AddRefs(observer));
-
-    if (!observer) {
-        ALOG("nsAppShell::CallObserver: Observer was not found!");
-        return;
-    }
-
-    const NS_ConvertUTF16toUTF8 sTopic(aTopic);
-    const nsPromiseFlatString& sData = PromiseFlatString(aData);
-
-    MOZ_ASSERT(NS_IsMainThread());
-    observer->Observe(nullptr, sTopic.get(), sData.get());
-}
-
-void
-nsAppShell::RemoveObserver(const nsAString &aObserverKey)
-{
-    mObserversHash.Remove(aObserverKey);
 }
 
 // Used by IPC code
