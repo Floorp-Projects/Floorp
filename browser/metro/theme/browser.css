@@ -294,6 +294,10 @@ documenttab[selected] .documenttab-selection {
   overflow: hidden;
 }
 
+#urlbar-container[mode="edit"] {
+  border-color: @metro_orange@;
+}
+
 /* Identity widget */
 #identity-icon {
   margin: 0;
@@ -317,6 +321,11 @@ documenttab[selected] .documenttab-selection {
   border-radius: 0;
   border: 0 none !important;
   padding: 0 !important;
+}
+
+#urlbar-edit > hbox > .textbox-input-box > .textbox-input::-moz-selection {
+  color: white;
+  background-color: @metro_orange@;
 }
 
 #urlbar-edit > hbox > .textbox-input-box > .textbox-input:invalid {
