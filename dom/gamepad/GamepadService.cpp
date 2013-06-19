@@ -31,6 +31,8 @@ namespace dom {
 
 namespace {
 const char* kGamepadEnabledPref = "dom.gamepad.enabled";
+const char* kGamepadEventsEnabledPref =
+  "dom.gamepad.non_standard_events.enabled";
 // Amount of time to wait before cleaning up gamepad resources
 // when no pages are listening for events.
 const int kCleanupDelayMS = 2000;
@@ -50,6 +52,8 @@ GamepadService::GamepadService()
     mShuttingDown(false)
 {
   mEnabled = IsAPIEnabled();
+  mNonstandardEventsEnabled =
+    Preferences::GetBool(kGamepadEventsEnabledPref, false);
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   observerService->AddObserver(this,
@@ -219,8 +223,10 @@ GamepadService::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
     nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetButton(aButton, aPressed, aValue);
-      // Fire event
-      FireButtonEvent(listeners[i], gamepad, aButton, aValue);
+      if (mNonstandardEventsEnabled) {
+        // Fire event
+        FireButtonEvent(listeners[i], gamepad, aButton, aValue);
+      }
     }
   }
 }
@@ -277,8 +283,10 @@ GamepadService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
     nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetAxis(aAxis, aValue);
-      // Fire event
-      FireAxisMoveEvent(listeners[i], gamepad, aAxis, aValue);
+      if (mNonstandardEventsEnabled) {
+        // Fire event
+        FireAxisMoveEvent(listeners[i], gamepad, aAxis, aValue);
+      }
     }
   }
 }
