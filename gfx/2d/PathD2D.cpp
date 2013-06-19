@@ -314,7 +314,8 @@ PathD2D::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 {
   BOOL result;
 
-  RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
+  RefPtr<ID2D1StrokeStyle> strokeStyle =
+    DrawTargetD2D::CreateStrokeStyleForOptions(aStrokeOptions);
   HRESULT hr = mGeometry->StrokeContainsPoint(D2DPoint(aPoint),
                                               aStrokeOptions.mLineWidth,
                                               strokeStyle,
@@ -350,7 +351,8 @@ PathD2D::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
 {
   D2D1_RECT_F bounds;
 
-  RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
+  RefPtr<ID2D1StrokeStyle> strokeStyle =
+    DrawTargetD2D::CreateStrokeStyleForOptions(aStrokeOptions);
   HRESULT hr =
     mGeometry->GetWidenedBounds(aStrokeOptions.mLineWidth, strokeStyle,
                                 D2DMatrix(aTransform), &bounds);
