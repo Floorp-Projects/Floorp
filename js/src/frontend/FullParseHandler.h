@@ -148,6 +148,18 @@ class FullParseHandler
         return new_<NullaryNode>(PNK_ELISION, pos());
     }
 
+    void markAsSetCall(ParseNode *pn) {
+        pn->pn_xflags |= PNX_SETCALL;
+    }
+
+    ParseNode *newDelete(uint32_t begin, ParseNode *expr) {
+        if (expr->getKind() == PNK_NAME) {
+            expr->pn_dflags |= PND_DEOPTIMIZED;
+            expr->setOp(JSOP_DELNAME);
+        }
+        return newUnary(PNK_DELETE, JSOP_NOP, begin, expr);
+    }
+
     ParseNode *newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode *kid) {
         TokenPos pos = {begin, kid ? kid->pn_pos.end : begin + 1};
         return new_<UnaryNode>(kind, op, pos, kid);
@@ -341,6 +353,9 @@ class FullParseHandler
     }
     PropertyName *isName(ParseNode *pn) {
         return pn->isKind(PNK_NAME) ? pn->pn_atom->asPropertyName() : NULL;
+    }
+    bool isCall(ParseNode *pn) {
+        return pn->isKind(PNK_CALL);
     }
     PropertyName *isGetProp(ParseNode *pn) {
         return pn->isOp(JSOP_GETPROP) ? pn->pn_atom->asPropertyName() : NULL;

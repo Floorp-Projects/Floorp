@@ -493,7 +493,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool setIncOpKid(Node pn, Node kid, TokenKind tt, bool preorder);
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(HandlePropertyName name, Node pn);
-    bool checkDeleteExpression(Node *pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node *duplicatedArg = NULL);
     Node pushLexicalScope(StmtInfoPC *stmt);
