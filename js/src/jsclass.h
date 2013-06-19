@@ -387,7 +387,7 @@ IsPoisonedSpecialId(js::SpecialId iden)
     return false;
 }
 
-template <> struct RootMethods<SpecialId>
+template <> struct GCMethods<SpecialId>
 {
     static SpecialId initial() { return SpecialId(); }
     static ThingRootKind kind() { return THING_ROOT_ID; }
