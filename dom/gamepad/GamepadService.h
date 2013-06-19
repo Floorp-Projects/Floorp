@@ -77,6 +77,8 @@ class GamepadService : public nsIObserver
 
   // true if this feature is enabled in preferences
   bool mEnabled;
+  // true if non-standard events are enabled in preferences
+  bool mNonstandardEventsEnabled;
   // true if the platform-specific backend has started work
   bool mStarted;
   // true when shutdown has begun
