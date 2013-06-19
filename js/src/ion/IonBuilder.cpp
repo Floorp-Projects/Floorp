@@ -34,13 +34,13 @@ using namespace js::ion;
 using mozilla::DebugOnly;
 
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-                       BaselineInspector *inspector, CompileInfo *info, AbstractFramePtr fp,
+                       BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
                        size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(cx->compartment(), temp, graph, info),
     backgroundCodegen_(NULL),
     recompileInfo(cx->compartment()->types.compiledInfo),
     cx(cx),
-    fp(fp),
+    baselineFrame_(baselineFrame),
     abortReason_(AbortReason_Disable),
     loopDepth_(loopDepth),
     callerResumePoint_(NULL),
@@ -62,7 +62,7 @@ void
 IonBuilder::clearForBackEnd()
 {
     cx = NULL;
-    fp = AbstractFramePtr();
+    baselineFrame_ = NULL;
 }
 
 bool
@@ -3460,7 +3460,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     AutoAccumulateExits aae(graph(), saveExits);
 
     // Build the graph.
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &inspector, info, AbstractFramePtr(),
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &inspector, info, NULL,
                              inliningDepth_ + 1, loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         JS_ASSERT(calleeScript->hasAnalysis());
@@ -5602,19 +5602,19 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
             Value existingValue;
             if (info().fun() && i == info().thisSlot()) {
                 haveValue = true;
-                existingValue = fp.thisValue();
+                existingValue = baselineFrame_->thisValue();
             } else {
                 uint32_t arg = i - info().firstArgSlot();
                 uint32_t var = i - info().firstLocalSlot();
                 if (arg < info().nargs()) {
                     if (!script()->formalIsAliased(arg)) {
                         haveValue = true;
-                        existingValue = fp.unaliasedFormal(arg);
+                        existingValue = baselineFrame_->unaliasedFormal(arg);
                     }
                 } else if (var < info().nlocals()) {
                     if (!script()->varIsAliased(var)) {
                         haveValue = true;
-                        existingValue = fp.unaliasedVar(var);
+                        existingValue = baselineFrame_->unaliasedVar(var);
                     }
                 }
             }
@@ -8148,7 +8148,7 @@ IonBuilder::jsop_this()
 
     types::StackTypeSet *types = types::TypeScript::ThisTypes(script());
     if (types && (types->getKnownTypeTag() == JSVAL_TYPE_OBJECT ||
-                  (types->empty() && fp && fp.thisValue().isObject())))
+                  (types->empty() && baselineFrame_ && baselineFrame_->thisValue().isObject())))
     {
         // This is safe, because if the entry type of |this| is an object, it
         // will necessarily be an object throughout the entire function. OSR
@@ -8309,8 +8309,8 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, MutableHandleObject pcall)
     // script, as the call object we see will not be the real one --- after
     // entering the Ion code a different call object will be created.
 
-    if (script() == outerScript && fp && info().osrPc()) {
-        JSObject *scope = fp.scopeChain();
+    if (script() == outerScript && baselineFrame_ && info().osrPc()) {
+        JSObject *scope = baselineFrame_->scopeChain();
         if (scope->is<CallObject>() &&
             scope->as<CallObject>().callee().nonLazyScript() == outerScript)
         {

@@ -13,6 +13,7 @@
 
 #include "jscompartmentinlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 

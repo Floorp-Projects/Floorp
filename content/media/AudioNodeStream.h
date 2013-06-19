@@ -108,6 +108,12 @@ public:
   {
     return mLastChunks;
   }
+  virtual bool MainThreadNeedsUpdates() const MOZ_OVERRIDE
+  {
+    // Only source and external streams need updates on the main thread.
+    return (mKind == MediaStreamGraph::SOURCE_STREAM && mFinished) ||
+           mKind == MediaStreamGraph::EXTERNAL_STREAM;
+  }
 
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }

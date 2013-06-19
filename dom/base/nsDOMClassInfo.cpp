@@ -526,7 +526,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // HTML element classes
-  NS_DEFINE_CLASSINFO_DATA(HTMLFormElement, nsHTMLFormElementSH,
+  NS_DEFINE_CLASSINFO_DATA(HTMLFormElement, HTMLFormElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
@@ -2652,7 +2652,7 @@ static JSClass sGlobalScopePolluterClass = {
 // static
 JSBool
 nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                           JSHandleId id, JSMutableHandleValue vp)
+                                           JSHandleId id, JS::MutableHandle<JS::Value> vp)
 {
   // Someone is accessing a element by referencing its name/id in the
   // global scope, do a security check to make sure that's ok.
@@ -2675,7 +2675,7 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
 // Gets a subframe.
 static JSBool
 ChildWindowGetter(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                  JSMutableHandleValue vp)
+                  JS::MutableHandle<JS::Value> vp)
 {
   MOZ_ASSERT(JSID_IS_STRING(id));
   // Grab the native DOM window.
@@ -3158,7 +3158,7 @@ static const IDBConstant sIDBConstants[] = {
 };
 
 static JSBool
-IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JS::MutableHandle<JS::Value> vp)
 {
   JSString *idstr = JSID_TO_STRING(id);
   unsigned index;
@@ -4295,7 +4295,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 template<class Interface>
 static JSBool
 LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
-               JSMutableHandleValue vp)
+               JS::MutableHandle<JS::Value> vp)
 {
   nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp.address());
   if (NS_FAILED(rv)) {
@@ -4308,7 +4308,7 @@ LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 
 static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
-                        JSMutableHandleValue vp)
+                        JS::MutableHandle<JS::Value> vp)
 {
   JS::RootedObject obj(cx, obj_);
 
@@ -5701,7 +5701,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
 
 JSBool
 nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
-                                         JSHandleId id, JSMutableHandleValue vp)
+                                         JSHandleId id, JS::MutableHandle<JS::Value> vp)
 {
   JS::Rooted<JSObject*> obj(cx, obj_);
 
@@ -5891,10 +5891,10 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 // HTMLFormElement helper
 
 NS_IMETHODIMP
-nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                                JSContext *cx, JSObject *aObj, jsid aId,
-                                uint32_t flags, JSObject **objp,
-                                bool *_retval)
+HTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                              JSContext *cx, JSObject *aObj, jsid aId,
+                              uint32_t flags, JSObject **objp,
+                              bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
@@ -5907,7 +5907,7 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     nsDependentJSString name(id);
     nsWrapperCache* cache;
     nsCOMPtr<nsISupports> result =
-      static_cast<nsHTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
+      static_cast<HTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
 
     if (result) {
       *_retval = ::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nullptr,
@@ -5924,9 +5924,9 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
 
 NS_IMETHODIMP
-nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                                 JSContext *cx, JSObject *aObj, jsid aId,
-                                 jsval *vp, bool *_retval)
+HTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *aObj, jsid aId,
+                               jsval *vp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
@@ -5937,7 +5937,7 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     nsDependentJSString name(id);
     nsWrapperCache* cache;
     nsCOMPtr<nsISupports> result =
-      static_cast<nsHTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
+      static_cast<HTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
 
     if (result) {
       // Wrap result, result can be either an element or a list of
@@ -5965,10 +5965,10 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 }
 
 NS_IMETHODIMP
-nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj,
-                                  uint32_t enum_op, jsval *statep,
-                                  jsid *idp, bool *_retval)
+HTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
+                                JSContext *cx, JSObject *obj,
+                                uint32_t enum_op, jsval *statep,
+                                jsid *idp, bool *_retval)
 {
   switch (enum_op) {
   case JSENUMERATE_INIT:

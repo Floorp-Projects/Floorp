@@ -412,12 +412,6 @@ class DenseRangeRef : public gc::BufferableRef
         JS_ASSERT(start < end);
     }
 
-    bool match(void *location) {
-        uint32_t len = owner->getDenseInitializedLength();
-        return location >= &owner->getDenseElement(Min(start, len)) &&
-               location <= &owner->getDenseElement(Min(end, len)) - 1;
-    }
-
     void mark(JSTracer *trc) {
         /* Apply forwarding, if we have already visited owner. */
         IsObjectMarked(&owner);

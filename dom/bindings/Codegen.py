@@ -931,7 +931,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
     """
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('JSHandleId', 'id'), Argument('JSMutableHandleValue', 'vp')]
+                Argument('JSHandleId', 'id'), Argument('JS::MutableHandle<JS::Value>', 'vp')]
         CGAbstractClassHook.__init__(self, descriptor, ADDPROPERTY_HOOK_NAME,
                                      'JSBool', args)
 
@@ -1188,7 +1188,7 @@ class CGNamedConstructors(CGThing):
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('JSMutableHandleValue', 'vp'), Argument('JSBool*', 'bp')]
+                Argument('JS::MutableHandle<JS::Value>', 'vp'), Argument('JSBool*', 'bp')]
         CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
                                         'JSBool', args)
 
@@ -8017,7 +8017,7 @@ class CGDictionary(CGThing):
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
-            memberData = "%s.Value()" % memberLoc
+            memberData = "%s.InternalValue()" % memberLoc
 
         if self.workers:
             propDef = (

@@ -372,7 +372,7 @@ public:
                                               JSHandleId id, unsigned flags,
                                               JS::MutableHandle<JSObject*> objp);
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                               JSHandleId id, JSMutableHandleValue vp);
+                                               JSHandleId id, JS::MutableHandle<JS::Value> vp);
   static JSBool InvalidateGlobalScopePolluter(JSContext *cx,
                                               JS::Handle<JSObject*> obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx,
@@ -602,7 +602,7 @@ protected:
                                        nsContentList **nodeList);
 public:
   static JSBool DocumentAllGetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                       JSMutableHandleValue vp);
+                                       JS::MutableHandle<JS::Value> vp);
   static JSBool DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
                                       unsigned flags, JS::MutableHandle<JSObject*> objp);
   static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
@@ -612,14 +612,14 @@ public:
 
 // HTMLFormElement helper
 
-class nsHTMLFormElementSH : public nsElementSH
+class HTMLFormElementSH : public nsElementSH
 {
 protected:
-  nsHTMLFormElementSH(nsDOMClassInfoData* aData) : nsElementSH(aData)
+  HTMLFormElementSH(nsDOMClassInfoData* aData) : nsElementSH(aData)
   {
   }
 
-  virtual ~nsHTMLFormElementSH()
+  virtual ~HTMLFormElementSH()
   {
   }
 
@@ -638,7 +638,7 @@ public:
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLFormElementSH(aData);
+    return new HTMLFormElementSH(aData);
   }
 };
 

@@ -619,7 +619,7 @@ class Rooted<JSStableString *>
 
     Rooted & operator =(JSStableString *value)
     {
-        JS_ASSERT(!js::RootMethods<JSStableString *>::poisoned(value));
+        JS_ASSERT(!js::GCMethods<JSStableString *>::poisoned(value));
         rooter.setString(value);
         return *this;
     }

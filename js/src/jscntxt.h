@@ -24,7 +24,9 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/ParseMaps.h"
+#include "gc/Nursery.h"
 #include "gc/Statistics.h"
+#include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/DateTime.h"
@@ -520,12 +522,6 @@ class PerThreadData : public js::PerThreadDataFriendFields
 
     js::Activation *activation() const {
         return activation_;
-    }
-    bool currentlyRunningInInterpreter() const {
-        return activation_->isInterpreter();
-    }
-    bool currentlyRunningInJit() const {
-        return activation_->isJit();
     }
 
     /*
@@ -1045,9 +1041,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
 
 #ifdef JSGC_GENERATIONAL
-# ifdef JS_GC_ZEAL
-    js::gc::VerifierNursery      gcVerifierNursery;
-# endif
     js::Nursery                  gcNursery;
     js::gc::StoreBuffer          gcStoreBuffer;
 #endif
@@ -1527,7 +1520,7 @@ struct JSContext : js::ContextFriendFields,
         JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
         return zone_;
     }
-    js::PerThreadData &mainThread() { return runtime()->mainThread; }
+    js::PerThreadData &mainThread() const { return runtime()->mainThread; }
 
   private:
     /* See JSContext::findVersion. */
@@ -1616,13 +1609,6 @@ struct JSContext : js::ContextFriendFields,
      * AutoCompartment from which it's called.
      */
     inline js::Handle<js::GlobalObject*> global() const;
-
-    /* ContextStack convenience functions */
-    inline bool hasfp() const               { return stack.hasfp(); }
-    inline js::StackFrame* fp() const       { return stack.fp(); }
-    inline js::StackFrame* maybefp() const  { return stack.maybefp(); }
-    inline js::FrameRegs& regs() const      { return stack.regs(); }
-    inline js::FrameRegs* maybeRegs() const { return stack.maybeRegs(); }
 
     /* Wrap cx->exception for the current compartment. */
     void wrapPendingException();
@@ -1732,6 +1718,22 @@ struct JSContext : js::ContextFriendFields,
     inline bool typeInferenceEnabled() const;
 
     void updateJITEnabled();
+
+    /* Whether this context has JS frames on the stack. */
+    bool currentlyRunning() const;
+
+    bool currentlyRunningInInterpreter() const {
+        return mainThread().activation()->isInterpreter();
+    }
+    bool currentlyRunningInJit() const {
+        return mainThread().activation()->isJit();
+    }
+    js::StackFrame *interpreterFrame() const {
+        return mainThread().activation()->asInterpreter()->current();
+    }
+    js::FrameRegs &interpreterRegs() const {
+        return mainThread().activation()->asInterpreter()->regs();
+    }
 
 #ifdef MOZ_TRACE_JSCALLS
     /* Function entry/exit debugging callback. */

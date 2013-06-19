@@ -76,7 +76,7 @@ IsTopFrameConstructing(JSContext *cx, AbstractFramePtr frame)
 JSTrapStatus
 js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->fp());
+    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
     if (!frame.script()->selfHosted) {
         if (frame.isFramePushedByExecute()) {
@@ -113,7 +113,8 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 bool
 js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->fp());
+    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
+
     JSBool ok = okArg;
 
     // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.

@@ -274,9 +274,9 @@ bool SetIonContext(IonContext *ctx);
 bool CanIonCompileScript(JSContext *cx, HandleScript script, bool osr);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
-                              AbstractFramePtr fp, jsbytecode *pc, bool isConstructing);
-MethodStatus CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp, bool isConstructing);
-MethodStatus CompileFunctionForBaseline(JSContext *cx, HandleScript script, AbstractFramePtr fp,
+                              BaselineFrame *frame, jsbytecode *pc, bool isConstructing);
+MethodStatus CanEnter(JSContext *cx, RunState &state);
+MethodStatus CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame,
                                         bool isConstructing);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
 
@@ -302,7 +302,11 @@ IsErrorStatus(IonExecStatus status)
     return status == IonExec_Error || status == IonExec_Aborted;
 }
 
-IonExecStatus Cannon(JSContext *cx, StackFrame *fp);
+struct EnterJitData;
+
+bool SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoValueVector &vals);
+
+IonExecStatus Cannon(JSContext *cx, RunState &state);
 
 // Used to enter Ion from C++ natives like Array.map. Called from FastInvokeGuard.
 IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args);
