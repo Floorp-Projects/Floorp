@@ -22,9 +22,9 @@ class XPCWrappedNative;
 namespace xpc {
 
 JSBool
-holder_get(JSContext *cx, JSHandleObject holder, JSHandleId id, JSMutableHandleValue vp);
+holder_get(JSContext *cx, JSHandleObject holder, JSHandleId id, JS::MutableHandleValue vp);
 JSBool
-holder_set(JSContext *cx, JSHandleObject holder, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+holder_set(JSContext *cx, JSHandleObject holder, JSHandleId id, JSBool strict, JS::MutableHandleValue vp);
 
 namespace XrayUtils {
 
