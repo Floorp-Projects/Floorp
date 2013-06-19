@@ -24,8 +24,8 @@ function testSimpleCall() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       let testScope = gDebugger.DebuggerView.Variables.addScope("test-scope");
-      let testVar = testScope.addVar("something");
-      let duplVar = testScope.addVar("something");
+      let testVar = testScope.addItem("something");
+      let duplVar = testScope.addItem("something");
 
       info("Scope id: " + testScope.target.id);
       info("Scope name: " + testScope.target.name);
@@ -61,8 +61,8 @@ function testSimpleCall() {
         "Any new variable should have a details container with no child nodes.");
 
 
-      let properties = testVar.addProperties({ "child": { "value": { "type": "object",
-                                                                     "class": "Object" } } });
+      let properties = testVar.addItems({ "child": { "value": { "type": "object",
+                                                                "class": "Object" } } });
 
 
       ok(!testVar.expanded,

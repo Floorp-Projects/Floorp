@@ -31,7 +31,7 @@ namespace js {
 static inline bool
 IsCacheableNonGlobalScope(JSObject *obj)
 {
-    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
+    bool cacheable = (obj->is<CallObject>() || obj->is<BlockObject>() || obj->is<DeclEnvObject>());
 
     JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;
@@ -209,7 +209,7 @@ inline void
 StackFrame::pushOnScopeChain(ScopeObject &scope)
 {
     JS_ASSERT(*scopeChain() == scope.enclosingScope() ||
-              *scopeChain() == scope.asCall().enclosingScope().asDeclEnv().enclosingScope());
+              *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
     flags_ |= HAS_SCOPECHAIN;
 }
@@ -227,9 +227,9 @@ StackFrame::callObj() const
     JS_ASSERT(fun()->isHeavyweight());
 
     JSObject *pobj = scopeChain();
-    while (JS_UNLIKELY(!pobj->isCall()))
+    while (JS_UNLIKELY(!pobj->is<CallObject>()))
         pobj = pobj->enclosingScope();
-    return pobj->asCall();
+    return pobj->as<CallObject>();
 }
 
 /*****************************************************************************/
@@ -336,7 +336,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         *ppc = NULL;
 
     Activation *act = cx_->mainThread().activation();
-    while (act && act->cx() != cx_)
+    while (act && (act->cx() != cx_ || !act->isActive()))
         act = act->prev();
 
     if (!act)
@@ -438,19 +438,6 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
     asBaselineFrame()->setReturnValue(rval);
 #else
     JS_NOT_REACHED("Invalid frame");
-#endif
-}
-
-inline bool
-AbstractFramePtr::hasPushedSPSFrame() const
-{
-    if (isStackFrame())
-        return asStackFrame()->hasPushedSPSFrame();
-#ifdef JS_ION
-    return asBaselineFrame()->hasPushedSPSFrame();
-#else
-    JS_NOT_REACHED("Invalid frame");
-    return false;
 #endif
 }
 
@@ -905,4 +892,5 @@ InterpreterActivation::~InterpreterActivation()
 {}
 
 } /* namespace js */
+
 #endif /* Stack_inl_h__ */

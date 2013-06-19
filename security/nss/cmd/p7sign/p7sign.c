@@ -96,7 +96,8 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert,
 	return -1;
 
     /* suck the file in */
-	if (SECU_ReadDERFromFile(&data2sign, inFile, PR_FALSE) != SECSuccess)
+	if (SECU_ReadDERFromFile(&data2sign, inFile, PR_FALSE,
+	                         PR_FALSE) != SECSuccess)
 	return -1;
 
     if (!encapsulated) {
@@ -147,7 +148,7 @@ main(int argc, char **argv)
     PRFileDesc *inFile;
     char *keyName = NULL;
     CERTCertDBHandle *certHandle;
-    CERTCertificate *cert;
+    CERTCertificate *cert = NULL;
     PRBool encapsulated = PR_FALSE;
     PLOptState *optstate;
     PLOptStatus status;

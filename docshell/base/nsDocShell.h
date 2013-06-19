@@ -803,6 +803,7 @@ protected:
     bool                       mAllowJavascript;
     bool                       mAllowMetaRedirects;
     bool                       mAllowImages;
+    bool                       mAllowMedia;
     bool                       mAllowDNSPrefetch;
     bool                       mAllowWindowControl;
     bool                       mCreatingDocument; // (should be) debugging only
@@ -872,6 +873,13 @@ private:
     nsTObserverArray<nsWeakPtr> mReflowObservers;
     int32_t           mParentCharsetSource;
     nsCString         mOriginalUriString;
+
+    // Separate function to do the actual name (i.e. not _top, _self etc.)
+    // searching for FindItemWithName.
+    nsresult DoFindItemWithName(const PRUnichar* aName,
+                                nsISupports* aRequestor,
+                                nsIDocShellTreeItem* aOriginalRequestor,
+                                nsIDocShellTreeItem** _retval);
 
 #ifdef DEBUG
     // We're counting the number of |nsDocShells| to help find leaks

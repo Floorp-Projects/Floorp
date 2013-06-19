@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_baseline_frame_inl_h__) && defined(JS_ION)
+#ifndef jsion_baseline_frame_inl_h__
 #define jsion_baseline_frame_inl_h__
+
+#ifdef JS_ION
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -20,7 +22,7 @@ inline void
 BaselineFrame::pushOnScopeChain(ScopeObject &scope)
 {
     JS_ASSERT(*scopeChain() == scope.enclosingScope() ||
-              *scopeChain() == scope.asCall().enclosingScope().asDeclEnv().enclosingScope());
+              *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
 }
 
@@ -70,13 +72,15 @@ BaselineFrame::callObj() const
     JS_ASSERT(fun()->isHeavyweight());
 
     JSObject *obj = scopeChain();
-    while (!obj->isCall())
+    while (!obj->is<CallObject>())
         obj = obj->enclosingScope();
-    return obj->asCall();
+    return obj->as<CallObject>();
 }
 
 } // namespace ion
 } // namespace js
 
-#endif
+#endif // JS_ION
+
+#endif // jsion_baseline_frame_inl_h__
 

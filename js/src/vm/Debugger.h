@@ -7,19 +7,15 @@
 #ifndef Debugger_h__
 #define Debugger_h__
 
-#include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 
 #include "jsapi.h"
 #include "jsclist.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgc.h"
 #include "jsweakmap.h"
-#include "jswrapper.h"
 
 #include "gc/Barrier.h"
-#include "gc/FindSCCs.h"
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 
@@ -422,7 +418,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     inline bool observesNewScript() const;
     inline bool observesNewGlobalObject() const;
     inline bool observesGlobal(GlobalObject *global) const;
-    inline bool observesFrame(AbstractFramePtr frame) const;
+    bool observesFrame(AbstractFramePtr frame) const;
     bool observesScript(JSScript *script) const;
 
     /*

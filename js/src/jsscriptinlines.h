@@ -18,6 +18,8 @@
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 
+#include "jscompartmentinlines.h"
+
 #include "vm/Shape-inl.h"
 
 namespace js {
@@ -87,6 +89,7 @@ SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 inline void
 JSScript::setFunction(JSFunction *fun)
 {
+    JS_ASSERT(fun->isTenured());
     function_ = fun;
 }
 
@@ -124,7 +127,7 @@ JSScript::getRegExp(size_t index)
     js::ObjectArray *arr = regexps();
     JS_ASSERT(uint32_t(index) < arr->length);
     JSObject *obj = arr->vector[index];
-    JS_ASSERT(obj->isRegExp());
+    JS_ASSERT(obj->is<js::RegExpObject>());
     return (js::RegExpObject *) obj;
 }
 

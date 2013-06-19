@@ -10,12 +10,8 @@
 /*
  * JS parser definitions.
  */
-#include "jsversion.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
-#include "jsatom.h"
-#include "jsscript.h"
-#include "jswin.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"
@@ -376,7 +372,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
   public:
 
     /* Public entry points for parsing. */
-    Node statement();
+    Node statement(bool canHaveDirectives = false);
     bool maybeParseDirective(Node pn, bool *cont);
 
     // Parse a function, given only its body. Used for the Function constructor.
@@ -421,10 +417,11 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node moduleDecl();
     Node functionStmt();
     Node functionExpr();
-    Node statements(bool *hasFunctionStmt = NULL);
+    Node statements();
 
     Node switchStatement();
     Node forStatement();
+    Node labeledStatement();
     Node tryStatement();
     Node withStatement();
 #if JS_HAS_BLOCK_SCOPE
@@ -482,7 +479,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool setAssignmentLhsOps(Node pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 
-    void addStatementToList(Node pn, Node kid, bool *hasFunctionStmt);
+    void addStatementToList(Node pn, Node kid);
     bool checkFunctionArguments();
     bool makeDefIntoUse(Definition *dn, Node pn, JSAtom *atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node *pn, FunctionSyntaxKind kind,

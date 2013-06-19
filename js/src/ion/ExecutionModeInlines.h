@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_executionmodeinlines_h__) && defined(JS_ION)
+#ifndef jsion_executionmodeinlines_h__
 #define jsion_executionmodeinlines_h__
+
+#ifdef JS_ION
 
 namespace js {
 namespace ion {
@@ -102,7 +104,9 @@ CompilerOutputKind(ExecutionMode cmode)
     return types::CompilerOutput::Ion;
 }
 
-}
-}
+} // namespace ion
+} // namespace js
+
+#endif  // JS_ION
 
 #endif  // jsion_executionmodeinlines_h__

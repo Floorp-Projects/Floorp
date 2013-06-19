@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479863
   <title>Test for Bug 479863</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="use_large_cache.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
@@ -70,17 +69,21 @@ function suspended(event) {
 }
 
 var key = Math.random();
-for (var i = 1; i <= 6; ++i) {
-  var id = "v" + i;
-  var v = document.getElementById(id);
-  suspendCount[id] = 0;
-  v.addEventListener("suspend", suspended, false);
-  // Treat "load" as "suspend" for now, it means the same thing: we
-  // stopped the download.
-  v.addEventListener("load", suspended, false);
-  v.src = "seek.ogv?key=" + key + "&id=" + id;
-}
+
 SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
+function beginTest() {
+  for (var i = 1; i <= 6; ++i) {
+    var id = "v" + i;
+    var v = document.getElementById(id);
+    suspendCount[id] = 0;
+    v.addEventListener("suspend", suspended, false);
+    // Treat "load" as "suspend" for now, it means the same thing: we
+    // stopped the download.
+    v.addEventListener("load", suspended, false);
+    v.src = "seek.ogv?key=" + key + "&id=" + id;
+  }
+}
 </script>
 </pre>
 </body>

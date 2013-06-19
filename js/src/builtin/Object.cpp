@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/Object.h"
+
 #include "mozilla/Util.h"
 
 #include "jscntxt.h"
 #include "jsobj.h"
 
-#include "builtin/Object.h"
 #include "frontend/BytecodeCompiler.h"
 #include "vm/StringBuffer.h"
 
-#include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;

@@ -47,6 +47,8 @@ struct GLContextSymbols
     PFNGLBINDBUFFERPROC fBindBuffer;
     typedef void (GLAPIENTRY * PFNGLBINDTEXTUREPROC) (GLenum target, GLuint texture);
     PFNGLBINDTEXTUREPROC fBindTexture;
+    typedef void (GLAPIENTRY * PFNGLBINDVERTEXARRAYPROC) (GLuint array);
+    PFNGLBINDVERTEXARRAYPROC fBindVertexArray;
     typedef void (GLAPIENTRY * PFNGLBLENDCOLORPROC) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     PFNGLBLENDCOLORPROC fBlendColor;
     typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONPROC) (GLenum mode);
@@ -302,6 +304,8 @@ struct GLContextSymbols
     PFNGLISFRAMEBUFFER fIsFramebuffer;
     typedef realGLboolean (GLAPIENTRY * PFNGLISRENDERBUFFER) (GLuint renderbuffer);
     PFNGLISRENDERBUFFER fIsRenderbuffer;
+    typedef realGLboolean (GLAPIENTRY * PFNGLISVERTEXARRAY) (GLuint array);
+    PFNGLISVERTEXARRAY fIsVertexArray;
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGE) (GLenum target, GLenum internalFormat, GLsizei width, GLsizei height);
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
@@ -354,6 +358,8 @@ struct GLContextSymbols
     PFNGLGENFRAMEBUFFERS fGenFramebuffers;
     typedef void (GLAPIENTRY * PFNGLGENRENDERBUFFERS) (GLsizei n, GLuint* ids);
     PFNGLGENRENDERBUFFERS fGenRenderbuffers;
+    typedef void (GLAPIENTRY * PFNGLGENVERTEXARRAYS) (GLsizei n, GLuint* arrays);
+    PFNGLGENVERTEXARRAYS fGenVertexArrays;
 
     typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMPROC) (GLuint program);
     PFNGLDELETEPROGRAMPROC fDeleteProgram;
@@ -369,6 +375,8 @@ struct GLContextSymbols
     PFNGLDELETEFRAMEBUFFERS fDeleteFramebuffers;
     typedef void (GLAPIENTRY * PFNGLDELETERENDERBUFFERS) (GLsizei n, const GLuint* ids);
     PFNGLDELETERENDERBUFFERS fDeleteRenderbuffers;
+    typedef void (GLAPIENTRY * PFNGLDELETEVERTEXARRAYS) (GLsizei n, const GLuint* arrays);
+    PFNGLDELETEVERTEXARRAYS fDeleteVertexArrays;
 
     typedef void* (GLAPIENTRY * PFNGLMAPBUFFER) (GLenum target, GLenum access);
     PFNGLMAPBUFFER fMapBuffer;

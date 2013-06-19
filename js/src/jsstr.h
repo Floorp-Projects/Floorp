@@ -60,8 +60,8 @@ struct JSSubString {
     const jschar    *chars;
 };
 
-extern jschar      js_empty_ucstr[];
-extern JSSubString js_EmptySubString;
+extern const jschar js_empty_ucstr[];
+extern const JSSubString js_EmptySubString;
 
 /*
  * Shorthands for ASCII (7-bit) decimal and hex conversion.

@@ -27,12 +27,12 @@
 #include "jstypes.h"
 #include "jsprf.h"
 #include "jsatom.h"
+#include "jscompartment.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
-#include "jslock.h"
 #include "jsmath.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -47,12 +47,10 @@
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
-#include "frontend/ParseMaps.h"
 #include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartment.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -95,6 +93,15 @@ js::TraceCycleDetectionSet(JSTracer *trc, js::ObjectSet &set)
         MarkObjectRoot(trc, const_cast<JSObject **>(&e.front()), "cycle detector table entry");
         if (prior != e.front())
             e.rekeyFront(e.front());
+    }
+}
+
+void
+NewObjectCache::clearNurseryObjects(JSRuntime *rt)
+{
+    for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
+        if (IsInsideNursery(rt, entries[i].key))
+            mozilla::PodZero(&entries[i]);
     }
 }
 
@@ -1464,6 +1471,18 @@ JSContext::mark(JSTracer *trc)
     MarkValueRoot(trc, &iterValue, "iterValue");
 }
 
+JSVersion
+JSContext::findVersion() const
+{
+    if (hasVersionOverride)
+        return versionOverride;
+
+    if (JSScript *script = stack.currentScript(NULL, js::ContextStack::ALLOW_CROSS_COMPARTMENT))
+        return script->getVersion();
+
+    return defaultVersion;
+}
+
 #if defined JS_THREADSAFE && defined DEBUG
 
 JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
@@ -1481,3 +1500,18 @@ JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 }
 
 #endif
+
+#ifdef JS_CRASH_DIAGNOSTICS
+void CompartmentChecker::check(StackFrame *fp)
+{
+    if (fp)
+        check(fp->scopeChain());
+}
+
+void CompartmentChecker::check(AbstractFramePtr frame)
+{
+    if (frame)
+        check(frame.scopeChain());
+}
+#endif
+

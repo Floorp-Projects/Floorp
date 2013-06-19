@@ -3232,6 +3232,12 @@ nsSVGTextFrame2::NotifySVGChanged(uint32_t aFlags)
       needNewBounds = true;
       needGlyphMetricsUpdate = true;
     }
+    if (StyleSVGReset()->mVectorEffect ==
+        NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
+      // Stroke currently contributes to our mRect, and our stroke depends on
+      // the transform to our outer-<svg> if |vector-effect:non-scaling-stroke|.
+      needNewBounds = true;
+    }
   }
 
   if (needNewBounds) {

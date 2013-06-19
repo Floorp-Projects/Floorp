@@ -45,7 +45,7 @@ XPCVariant::XPCVariant(JSContext* cx, jsval aJSVal)
         mJSVal = OBJECT_TO_JSVAL(obj);
 
         JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
-        mReturnRawObject = !(unwrapped && IS_WN_WRAPPER(unwrapped));
+        mReturnRawObject = !(unwrapped && IS_WN_REFLECTOR(unwrapped));
     } else
         mReturnRawObject = false;
 }

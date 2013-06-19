@@ -4,22 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
+#include "vm/Stack.h"
+
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jsopcode.h"
+
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/BaselineFrame.h"
-#include "ion/IonFrames.h"
 #include "ion/IonCompartment.h"
 #endif
-#include "vm/Stack.h"
-#include "vm/ForkJoin.h"
 
-#include "jsgcinlines.h"
-#include "jsobjinlines.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/Probes-inl.h"
@@ -44,7 +40,6 @@
 
 using namespace js;
 
-using mozilla::DebugOnly;
 using mozilla::PodCopy;
 
 /*****************************************************************************/
@@ -259,11 +254,11 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
                 scope = &scope->asClonedBlock().enclosingScope();
                 break;
               case StaticScopeIter::FUNCTION:
-                JS_ASSERT(scope->asCall().callee().nonLazyScript() == i.funScript());
-                scope = &scope->asCall().enclosingScope();
+                JS_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
+                scope = &scope->as<CallObject>().enclosingScope();
                 break;
               case StaticScopeIter::NAMED_LAMBDA:
-                scope = &scope->asDeclEnv().enclosingScope();
+                scope = &scope->as<DeclEnvObject>().enclosingScope();
                 break;
             }
         }
@@ -341,7 +336,7 @@ StackFrame::epilogue(JSContext *cx)
 
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
-            JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().isForEval());
+            JS_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
             if (cx->compartment()->debugMode())
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
@@ -371,7 +366,8 @@ StackFrame::epilogue(JSContext *cx)
     JS_ASSERT(isNonEvalFunctionFrame());
 
     if (fun()->isHeavyweight())
-        JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().callee().nonLazyScript() == script);
+        JS_ASSERT_IF(hasCallObj(),
+                     scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
     else
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
@@ -1639,9 +1635,9 @@ ScriptFrameIter::callObj() const
     JS_ASSERT(callee()->isHeavyweight());
 
     JSObject *pobj = scopeChain();
-    while (!pobj->isCall())
+    while (!pobj->is<CallObject>())
         pobj = pobj->enclosingScope();
-    return pobj->asCall();
+    return pobj->as<CallObject>();
 }
 
 bool
@@ -1824,6 +1820,19 @@ AbstractFramePtr::evalPrevScopeChain(JSContext *cx) const
         ++iter;
     ++iter;
     return iter.scopeChain();
+}
+
+bool
+AbstractFramePtr::hasPushedSPSFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->hasPushedSPSFrame();
+#ifdef JS_ION
+    return asBaselineFrame()->hasPushedSPSFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+#endif
 }
 
 #ifdef DEBUG

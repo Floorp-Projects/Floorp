@@ -178,17 +178,21 @@ template <typename T>
 class Heap : public js::HeapBase<T>
 {
   public:
-    Heap() { set(js::RootMethods<T>::initial()); }
-    explicit Heap(T p) { set(p); }
-    explicit Heap(const Heap<T> &p) { set(p.ptr); }
+    Heap() {
+        MOZ_STATIC_ASSERT(sizeof(T) == sizeof(Heap<T>),
+                          "Heap<T> must be binary compatible with T.");
+        init(js::RootMethods<T>::initial());
+    }
+    explicit Heap(T p) { init(p); }
+    explicit Heap(const Heap<T> &p) { init(p.ptr); }
 
     ~Heap() {
         if (js::RootMethods<T>::needsPostBarrier(ptr))
             relocate();
     }
 
-    bool operator!=(const T &other) { return *ptr != other; }
-    bool operator==(const T &other) { return *ptr == other; }
+    bool operator!=(const T &other) const { return ptr != other; }
+    bool operator==(const T &other) const { return ptr == other; }
 
     operator T() const { return ptr; }
     T operator->() const { return ptr; }
@@ -216,6 +220,13 @@ class Heap : public js::HeapBase<T>
     }
 
   private:
+    void init(T newPtr) {
+        JS_ASSERT(!js::RootMethods<T>::poisoned(newPtr));
+        ptr = newPtr;
+        if (js::RootMethods<T>::needsPostBarrier(ptr))
+            post();
+    }
+
     void post() {
 #ifdef JSGC_GENERATIONAL
         JS_ASSERT(js::RootMethods<T>::needsPostBarrier(ptr));
@@ -251,6 +262,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     Handle(Handle<S> handle,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
     {
+        MOZ_STATIC_ASSERT(sizeof(Handle<T>) == sizeof(T *),
+                          "Handle must be binary compatible with T*.");
         ptr = reinterpret_cast<const T *>(handle.address());
     }
 
@@ -314,8 +327,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     operator const T&() const { return get(); }
     T operator->() const { return get(); }
 
-    bool operator!=(const T &other) { return *ptr != other; }
-    bool operator==(const T &other) { return *ptr == other; }
+    bool operator!=(const T &other) const { return *ptr != other; }
+    bool operator==(const T &other) const { return *ptr == other; }
 
   private:
     Handle() {}
@@ -599,8 +612,8 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         ptr = value;
     }
 
-    bool operator!=(const T &other) { return ptr != other; }
-    bool operator==(const T &other) { return ptr == other; }
+    bool operator!=(const T &other) const { return ptr != other; }
+    bool operator==(const T &other) const { return ptr == other; }
 
   private:
     void commonInit(Rooted<void*> **thingGCRooters) {
@@ -760,8 +773,8 @@ class FakeRooted : public RootedBase<T>
         return ptr;
     }
 
-    bool operator!=(const T &other) { return ptr != other; }
-    bool operator==(const T &other) { return ptr == other; }
+    bool operator!=(const T &other) const { return ptr != other; }
+    bool operator==(const T &other) const { return ptr == other; }
 
   private:
     T ptr;
@@ -880,6 +893,8 @@ template <typename T>
 inline
 MutableHandle<T>::MutableHandle(Rooted<T> *root)
 {
+    MOZ_STATIC_ASSERT(sizeof(MutableHandle<T>) == sizeof(T *),
+                      "MutableHandle must be binary compatible with T*.");
     ptr = root->address();
 }
 

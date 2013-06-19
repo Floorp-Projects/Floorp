@@ -300,6 +300,38 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGImageRelease(subimage);
 }
 
+void
+DrawTargetCG::MaskSurface(const Pattern &aSource,
+                          SourceSurface *aMask,
+                          Point aOffset,
+                          const DrawOptions &aDrawOptions)
+{
+  MarkChanged();
+
+  CGImageRef image;
+  CGContextSaveGState(mCg);
+
+  CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
+  UnboundnessFixer fixer;
+  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
+  CGContextSetAlpha(cg, aDrawOptions.mAlpha);
+
+  CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
+  image = GetImageFromSourceSurface(aMask);
+
+  CGContextScaleCTM(cg, 1, -1);
+
+  IntSize size = aMask->GetSize();
+  CGContextClipToMask(cg, CGRectMake(aOffset.x, aOffset.y, size.width, size.height), image);
+  
+  FillRect(Rect(0, 0, size.width, size.height), aSource, aDrawOptions);
+  
+  fixer.Fix(mCg);
+
+  CGContextRestoreGState(mCg);
+
+}
+
 static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)
 {
   CGFloat components[4] = {aColor.r, aColor.g, aColor.b, aColor.a};

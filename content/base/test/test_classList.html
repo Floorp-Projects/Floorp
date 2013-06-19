@@ -35,7 +35,7 @@ function onAttrModified(event) {
   });
 }
 
-function checkModification(e, funcName, argument, expectedRes, before, after, expectedException) {
+function checkModification(e, funcName, args, expectedRes, before, after, expectedException) {
   var shouldThrow = typeof(expectedException) === "string";
   if (shouldThrow) {
     // If an exception is thrown, the class attribute shouldn't change.
@@ -46,14 +46,15 @@ function checkModification(e, funcName, argument, expectedRes, before, after, ex
   else
     e.setAttribute("class", before);
 
-  var contextMsg = "(checkModification: funcName=" + funcName + ",argument=" +
-                   argument + ",expectedRes=" + expectedRes + ",before=" +
-                   before + ",after=" + after + ")";
+  var contextMsg = "(checkModification: funcName=" + funcName + ",args=" +
+                   JSON.stringify(args) + ",expectedRes=" + expectedRes +
+                   ",before=" + before + ",after=" + after + ")";
 
   gMutationEvents = [];
   e.addEventListener("DOMAttrModified", onAttrModified, false);
   try {
-    var res = e.classList[funcName](argument);
+    var list = e.classList;
+    var res = list[funcName].apply(list, args);
     if (shouldThrow)
       ok(false, "classList modification didn't throw " + contextMsg);
   } catch (e) {
@@ -258,7 +259,7 @@ function testClassList(e) {
   // add() method
 
   function checkAdd(before, argument, after, expectedException) {
-    checkModification(e, "add", argument, null, before, after, expectedException);
+    checkModification(e, "add", [argument], null, before, after, expectedException);
   }
 
   checkAdd(null, "", null, "SyntaxError");
@@ -284,7 +285,7 @@ function testClassList(e) {
   // remove() method
 
   function checkRemove(before, argument, after, expectedException) {
-    checkModification(e, "remove", argument, null, before, after, expectedException);
+    checkModification(e, "remove", [argument], null, before, after, expectedException);
   }
 
   checkRemove(null, "", null, "SyntaxError");
@@ -323,7 +324,7 @@ function testClassList(e) {
   // toggle() method
 
   function checkToggle(before, argument, expectedRes, after, expectedException) {
-    checkModification(e, "toggle", argument, expectedRes, before, after, expectedException);
+    checkModification(e, "toggle", [argument], expectedRes, before, after, expectedException);
   }
 
   checkToggle(null, "", null, null, "SyntaxError");
@@ -351,7 +352,24 @@ function testClassList(e) {
   checkToggle("", null, true, "null");
   checkToggle("undefined", undefined, false, "");
   checkToggle("", undefined, true, "undefined");
+
+
+  // tests for the force argument handling
+  
+  function checkForceToggle(before, argument, force, expectedRes, after, expectedException) {
+    checkModification(e, "toggle", [argument, force], expectedRes, before, after, expectedException);
+  }
+
+  checkForceToggle("", "a", true, true, "a");
+  checkForceToggle("a", "a", true, true, "a");
+  checkForceToggle("a", "b", true, true, "a b");
+  checkForceToggle("a b", "b", true, true, "a b");
+  checkForceToggle("", "a", false, false, "");
+  checkForceToggle("a", "a", false, false, "");
+  checkForceToggle("a", "b", false, false, "a");
+  checkForceToggle("a b", "b", false, false, "a");
 }
+
 var content = document.getElementById("content");
 
 var htmlNode = document.createElement("div");

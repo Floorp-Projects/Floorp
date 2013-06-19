@@ -7,6 +7,10 @@
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/NullPtr.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#endif
+#include "testing/TestHarness.h"
 #include "prenv.h"
 
 using ::testing::EmptyTestEventListener;
@@ -77,6 +81,31 @@ int RunGTestFunc()
   }
 
   PR_SetEnv("XPCOM_DEBUG_BREAK=stack-and-abort");
+
+  ScopedXPCOM xpcom("AsyncPanZoomController");
+
+#ifdef MOZ_CRASHREPORTER
+  nsCOMPtr<nsICrashReporter> crashreporter;
+  char *crashreporterStr = PR_GetEnv("MOZ_CRASHREPORTER");
+  if (crashreporterStr && !strcmp(crashreporterStr, "1")) {
+    //TODO: move this to an even-more-common location to use in all
+    // C++ unittests
+    crashreporter = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+    if (crashreporter) {
+      std::cerr << "Setting up crash reporting" << std::endl;
+
+      nsCOMPtr<nsIProperties> dirsvc =
+          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+      nsCOMPtr<nsIFile> cwd;
+      nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR,
+                       NS_GET_IID(nsIFile),
+                       getter_AddRefs(cwd));
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      crashreporter->SetEnabled(true);
+      crashreporter->SetMinidumpPath(cwd);
+    }
+  }
+#endif
 
   return RUN_ALL_TESTS();
 }

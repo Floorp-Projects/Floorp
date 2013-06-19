@@ -11,12 +11,10 @@
 #ifndef jsdate_h___
 #define jsdate_h___
 
-#include "mozilla/FloatingPoint.h"
-
-#include <math.h>
-
 #include "jsapi.h"
 #include "jstypes.h"
+
+#include "js/Date.h"
 
 extern "C" {
 class JSObject;

@@ -184,15 +184,15 @@ class GlobalSharedContext : public SharedContext
     JSObject *scopeChain() const { return scopeChain_; }
 };
 
-
-class ModuleBox : public ObjectBox, public SharedContext {
-public:
+class ModuleBox : public ObjectBox, public SharedContext
+{
+  public:
     Bindings bindings;
 
     ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module,
               ParseContext<FullParseHandler> *pc);
     ObjectBox *toObjectBox() { return this; }
-    Module *module() const { return &object->asModule(); }
+    Module *module() const { return &object->as<Module>(); }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
@@ -209,6 +209,10 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            inGenexpLambda:1;       /* lambda from generator expression */
     bool            useAsm:1;               /* function contains "use asm" directive */
     bool            insideUseAsm:1;         /* nested function of function of "use asm" directive */
+
+    // Fields for use in heuristics.
+    bool            usesArguments:1;  /* contains a free use of 'arguments' */
+    bool            usesApply:1;      /* contains an f.apply() call */
 
     FunctionContextFlags funCxFlags;
 

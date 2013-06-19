@@ -11,7 +11,7 @@
 
 #include "vm/Stack-inl.h"
 
-bool
+inline bool
 js::Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
 {
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */

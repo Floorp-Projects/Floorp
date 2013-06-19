@@ -707,6 +707,21 @@ public:
                     const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /*
+   * This takes a source pattern and a mask, and composites the source pattern
+   * onto the destination surface using the alpha channel of the mask source.
+   * The operation is bound by the extents of the mask.
+   *
+   * aSource Source pattern
+   * aMask Mask surface
+   * aOffset a transformed offset that the surface is masked at
+   * aOptions Drawing options
+   */
+  virtual void MaskSurface(const Pattern &aSource,
+                           SourceSurface *aMask,
+                           Point aOffset,
+                           const DrawOptions &aOptions = DrawOptions()) { MOZ_ASSERT(0); };
+
+  /*
    * Push a clip to the DrawTarget.
    *
    * aPath The path to clip to

@@ -48,17 +48,15 @@ function testConsoleProfile(hud) {
 
 function checkProfiles(toolbox) {
   let panel = toolbox.getPanel("jsprofiler");
-  let getTitle = (uid) =>
-    panel.document.querySelector("li#profile-" + uid + " > h1").textContent;
 
-  is(getTitle(1), "Profile 1", "Profile 1 doesn't have a star next to it.");
-  is(getTitle(2), "Profile 2 *", "Profile 2 doesn't have a star next to it.");
-  is(getTitle(3), "Profile 3", "Profile 3 doesn't have a star next to it.");
+  is(getSidebarItem(1, panel).attachment.state, PROFILE_IDLE);
+  is(getSidebarItem(2, panel).attachment.state, PROFILE_RUNNING);
+  is(getSidebarItem(3, panel).attachment.state, PROFILE_COMPLETED);
 
   // Make sure we can still stop profiles via the UI.
 
   gPanel.profiles.get(2).once("stopped", () => {
-    is(getTitle(2), "Profile 2", "Profile 2 doesn't have a star next to it.");
+    is(getSidebarItem(2, panel).attachment.state, PROFILE_COMPLETED);
     tearDown(gTab, () => gTab = gPanel = null);
   });
 

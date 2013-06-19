@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest();">
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function starttest() {
+  try {
+    SpecialPowers.setBoolPref("test.bool", 1);
+  } catch(e) {
+    SpecialPowers.setBoolPref("test.bool", true);
+  }
+  try {
+    SpecialPowers.setIntPref("test.int", true);
+  } catch(e) {
+    SpecialPowers.setIntPref("test.int", 1);
+  }
+  SpecialPowers.setCharPref("test.char", 'test');
+
+  setTimeout(test1, 0, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function test1(aCount) {
+  if (aCount >= 20) {
+    ok(false, "Too many times attempting to set pref, aborting");
+    SimpleTest.finish();
+    return;
+  }
+
+  try {
+    is(SpecialPowers.getBoolPref('test.bool'), true, 'test.bool should be true');
+  } catch(e) {
+    setTimeout(test1, 0, ++aCount);
+    return;
+  }
+
+  try {
+    is(SpecialPowers.getIntPref('test.int'), 1, 'test.int should be 1');
+  } catch(e) {
+    setTimeout(test1, 0, ++aCount);
+    return;
+  }
+
+  try {
+    is(SpecialPowers.getCharPref('test.char'), 'test', 'test.char should be test');
+  } catch(e) {
+    setTimeout(test1, 0, ++aCount);
+    return;
+  }
+
+  test2();
+}
+
+function test2() {
+  // test non-changing values
+  SpecialPowers.pushPrefEnv({"set": [["test.bool", true], ["test.int", 1], ["test.char", "test"]]}, test3);
+}
+
+function test3() {
+  // test changing char pref
+  is(SpecialPowers.getBoolPref('test.bool'), true, 'test.bool should be true');
+  is(SpecialPowers.getIntPref('test.int'), 1, 'test.int should be 1');
+  is(SpecialPowers.getCharPref('test.char'), 'test', 'test.char should be test');
+  SpecialPowers.pushPrefEnv({"set": [["test.bool", true], ["test.int", 1], ["test.char", "test2"]]}, test4);
+}
+
+function test4() {
+  // test changing all values and adding test.char2 pref
+  is(SpecialPowers.getCharPref('test.char'), 'test2', 'test.char should be test2');
+  SpecialPowers.pushPrefEnv({"set": [["test.bool", false], ["test.int", 10], ["test.char", "test2"], ["test.char2", "test"]]}, test5);
+}
+
+function test5() {
+  // test flushPrefEnv
+  is(SpecialPowers.getBoolPref('test.bool'), false, 'test.bool should be false');
+  is(SpecialPowers.getIntPref('test.int'), 10, 'test.int should be 10');
+  is(SpecialPowers.getCharPref('test.char'), 'test2', 'test.char should be test2');
+  is(SpecialPowers.getCharPref('test.char2'), 'test', 'test.char2 should be test');
+  SpecialPowers.flushPrefEnv(test6);
+}
+
+function test6() {
+  // test clearing prefs
+  is(SpecialPowers.getBoolPref('test.bool'), true, 'test.bool should be true');
+  is(typeof SpecialPowers.getBoolPref('test.bool'), typeof true, 'test.bool should be boolean');
+  is(SpecialPowers.getIntPref('test.int'), 1, 'test.int should be 1');
+  is(typeof SpecialPowers.getIntPref('test.int'), typeof 1, 'test.int should be integer');
+  is(SpecialPowers.getCharPref('test.char'), 'test', 'test.char should be test');
+  is(typeof SpecialPowers.getCharPref('test.char'), typeof 'test', 'test.char should be String');
+  try {
+    SpecialPowers.getCharPref('test.char2');
+    ok(false, 'This ok should not be reached!');
+  } catch(e) {
+    ok(true, 'getCharPref("test.char2") should throw');
+  }
+  SpecialPowers.pushPrefEnv({"clear": [["test.bool"], ["test.int"], ["test.char"], ["test.char2"]]}, test6b);
+}
+
+function test6b() {
+  // test if clearing another time doesn't cause issues
+  SpecialPowers.pushPrefEnv({"clear": [["test.bool"], ["test.int"], ["test.char"], ["test.char2"]]}, test7);
+}
+
+function test7() {
+  try {
+    SpecialPowers.getBoolPref('test.bool');
+    ok(false, 'This ok should not be reached!');
+  } catch(e) {
+    ok(true, 'getBoolPref("test.bool") should throw');
+  }
+
+  try {
+    SpecialPowers.getIntPref('test.int');
+    ok(false, 'This ok should not be reached!');
+  } catch(e) {
+    ok(true, 'getIntPref("test.int") should throw');
+  }
+
+  try {
+    SpecialPowers.getCharPref('test.char');
+    ok(false, 'This ok should not be reached!');
+  } catch(e) {
+    ok(true, 'getCharPref("test.char") should throw');
+  }
+
+  try {
+    SpecialPowers.getCharPref('test.char2');
+    ok(false, 'This ok should not be reached!');
+  } catch(e) {
+    ok(true, 'getCharPref("test.char2") should throw');
+  }
+
+  SpecialPowers.flushPrefEnv(test8);
+}
+
+function test8() {
+  is(SpecialPowers.getBoolPref('test.bool'), true, 'test.bool should be true');
+  is(typeof SpecialPowers.getBoolPref('test.bool'), typeof true, 'test.bool should be boolean');
+  is(SpecialPowers.getIntPref('test.int'), 1, 'test.int should be 1');
+  is(typeof SpecialPowers.getIntPref('test.int'), typeof 1, 'test.int should be integer');
+  is(SpecialPowers.getCharPref('test.char'), 'test', 'test.char should be test');
+  is(typeof SpecialPowers.getCharPref('test.char'), typeof 'test', 'test.char should be String');
+  try {
+    SpecialPowers.getCharPref('test.char2');
+    ok(false, 'This ok should not be reached!');
+  } catch(e) {
+    ok(true, 'getCharPref("test.char2") should throw');
+  }
+  SpecialPowers.clearUserPref("test.bool");
+  SpecialPowers.clearUserPref("test.int");
+  SpecialPowers.clearUserPref("test.char");
+  setTimeout(test9, 0, 0);
+}
+
+function test9(aCount) {
+  if (aCount >= 20) {
+    ok(false, "Too many times attempting to set pref, aborting");
+    SimpleTest.finish();
+    return;
+  }
+
+  try {
+    SpecialPowers.getBoolPref('test.bool');
+    setTimeout(test9, 0, ++aCount);
+  } catch(e) {
+    test10(0);
+  }
+}
+
+function test10(aCount) {
+  if (aCount >= 20) {
+    ok(false, "Too many times attempting to set pref, aborting");
+    SimpleTest.finish();
+    return;
+  }
+
+  try {
+    SpecialPowers.getIntPref('test.int');
+    setTimeout(test10, 0, ++aCount);
+  } catch(e) {
+    test11(0);
+  }
+}
+
+function test11(aCount) {
+  if (aCount >= 20) {
+    ok(false, "Too many times attempting to set pref, aborting");
+    SimpleTest.finish();
+    return;
+  }
+
+  try {
+    SpecialPowers.getCharPref('test.char');
+    setTimeout(test11, 0, ++aCount);
+  } catch(e) {
+    SimpleTest.finish();
+  }
+}
+// todo - test non-changing values, test complex values, test mixing of pushprefEnv 'set' and 'clear'
+// When bug 776424 gets fixed, getPref doesn't throw anymore, so this test would have to be changed accordingly
+</script>
+</pre>
+</body>
+</html>

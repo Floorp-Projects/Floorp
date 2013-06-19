@@ -8,6 +8,7 @@
 #include "MIRGraph.h"
 #include "Ion.h"
 #include "IonAnalysis.h"
+#include "LIR.h"
 
 using namespace js;
 using namespace js::ion;
@@ -1387,6 +1388,100 @@ ion::EliminateRedundantChecks(MIRGraph &graph)
     }
 
     JS_ASSERT(index == graph.numBlocks());
+    return true;
+}
+
+// If the given block contains a goto and nothing interesting before that,
+// return the goto. Return NULL otherwise.
+static LGoto *
+FindLeadingGoto(LBlock *bb)
+{
+    for (LInstructionIterator ins(bb->begin()); ins != bb->end(); ins++) {
+        // Ignore labels.
+        if (ins->isLabel())
+            continue;
+        // Ignore empty move groups.
+        if (ins->isMoveGroup() && ins->toMoveGroup()->numMoves() == 0)
+            continue;
+        // If we have a goto, we're good to go.
+        if (ins->isGoto())
+            return ins->toGoto();
+        break;
+    }
+    return NULL;
+}
+
+// Eliminate blocks containing nothing interesting besides gotos. These are
+// often created by optimizer, which splits all critical edges. If these
+// splits end up being unused after optimization and register allocation,
+// fold them back away to avoid unnecessary branching.
+bool
+ion::UnsplitEdges(LIRGraph *lir)
+{
+    for (size_t i = 0; i < lir->numBlocks(); i++) {
+        LBlock *bb = lir->getBlock(i);
+        MBasicBlock *mirBlock = bb->mir();
+
+        // Renumber the MIR blocks as we go, since we may remove some.
+        mirBlock->setId(i);
+
+        // Register allocation is done by this point, so we don't need the phis
+        // anymore. Clear them to avoid needed to keep them current as we edit
+        // the CFG.
+        bb->clearPhis();
+        mirBlock->discardAllPhis();
+
+        // First make sure the MIR block looks sane. Some of these checks may be
+        // over-conservative, but we're attempting to keep everything in MIR
+        // current as we modify the LIR, so only proceed if the MIR is simple.
+        if (mirBlock->numPredecessors() == 0 || mirBlock->numSuccessors() != 1 ||
+            !mirBlock->resumePointsEmpty() || !mirBlock->begin()->isGoto())
+        {
+            continue;
+        }
+
+        // The MIR block is empty, but check the LIR block too (in case the
+        // register allocator inserted spill code there, or whatever).
+        LGoto *theGoto = FindLeadingGoto(bb);
+        if (!theGoto)
+            continue;
+        MBasicBlock *target = theGoto->target();
+        if (target == mirBlock || target != mirBlock->getSuccessor(0))
+            continue;
+
+        // If we haven't yet cleared the phis for the successor, do so now so
+        // that the CFG manipulation routines don't trip over them.
+        if (!target->phisEmpty()) {
+            target->discardAllPhis();
+            target->lir()->clearPhis();
+        }
+
+        // Edit the CFG to remove lir/mirBlock and reconnect all its edges.
+        for (size_t j = 0; j < mirBlock->numPredecessors(); j++) {
+            MBasicBlock *mirPred = mirBlock->getPredecessor(j);
+
+            for (size_t k = 0; k < mirPred->numSuccessors(); k++) {
+                if (mirPred->getSuccessor(k) == mirBlock) {
+                    mirPred->replaceSuccessor(k, target);
+                    if (!target->addPredecessorWithoutPhis(mirPred))
+                        return false;
+                }
+            }
+
+            LInstruction *predTerm = *mirPred->lir()->rbegin();
+            for (size_t k = 0; k < predTerm->numSuccessors(); k++) {
+                if (predTerm->getSuccessor(k) == mirBlock)
+                    predTerm->setSuccessor(k, target);
+            }
+        }
+        target->removePredecessor(mirBlock);
+
+        // Zap the block.
+        lir->removeBlock(i);
+        lir->mir().removeBlock(mirBlock);
+        --i;
+    }
+
     return true;
 }
 

@@ -167,7 +167,6 @@ CPP_SOURCES += [
     'jsopcode.cpp',
     'jsperf.cpp',
     'jsprf.cpp',
-    'jspropertycache.cpp',
     'jspropertytree.cpp',
     'jsproxy.cpp',
     'jsreflect.cpp',

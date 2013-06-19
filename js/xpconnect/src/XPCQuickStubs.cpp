@@ -69,7 +69,7 @@ LookupInterfaceOrAncestor(uint32_t tableSize, const xpc_qsHashEntry *table,
 static MOZ_ALWAYS_INLINE bool
 HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)), "Not a wrapper?");
+    NS_ASSERTION(IS_WN_REFLECTOR(obj), "Not a wrapper?");
 
     XPCWrappedNativeJSClass *clasp =
       (XPCWrappedNativeJSClass*)js::GetObjectClass(obj);
@@ -178,16 +178,10 @@ GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
     // because it isn't worth the risk of something going wrong just to generate
     // an error message. Instead, only handle the simple case where we have the
     // reflector in hand.
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
-        XPCWrappedNativeProto *proto;
-        if (IS_SLIM_WRAPPER_OBJECT(obj)) {
-            proto = GetSlimWrapperProto(obj);
-        } else {
-            MOZ_ASSERT(IS_WN_WRAPPER_OBJECT(obj));
-            XPCWrappedNative *wrapper =
-                static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
-            proto = wrapper->GetProto();
-        }
+    if (IS_WN_REFLECTOR(obj)) {
+        XPCWrappedNative *wrapper =
+            static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
+        XPCWrappedNativeProto *proto = wrapper->GetProto();
         if (proto) {
             XPCNativeSet *set = proto->GetSet();
             if (set) {
@@ -565,14 +559,10 @@ getWrapper(JSContext *cx,
         obj = js::GetObjectParent(obj);
     }
 
-    // If we've got a WN or slim wrapper, store things the way callers expect.
-    // Otherwise, leave things null and return.
-    if (IS_WRAPPER_CLASS(clasp)) {
-        if (IS_WN_WRAPPER_OBJECT(obj))
-            *wrapper = (XPCWrappedNative*) js::GetObjectPrivate(obj);
-        else
-            *cur = obj;
-    }
+    // If we've got a WN, store things the way callers expect. Otherwise, leave
+    // things null and return.
+    if (IS_WN_CLASS(clasp))
+        *wrapper = XPCWrappedNative::Get(obj);
 
     return NS_OK;
 }
@@ -597,12 +587,8 @@ castNative(JSContext *cx,
     } else if (cur) {
         nsISupports *native;
         if (!(native = mozilla::dom::UnwrapDOMObjectToISupports(cur))) {
-            if (IS_SLIM_WRAPPER(cur)) {
-                native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
-            } else {
-                *pThisRef = nullptr;
-                return NS_ERROR_ILLEGAL_VALUE;
-            }
+            *pThisRef = nullptr;
+            return NS_ERROR_ILLEGAL_VALUE;
         }
 
         if (NS_SUCCEEDED(getNative(native, cur, iid, ppThis, pThisRef, vp))) {
@@ -628,11 +614,9 @@ castNativeFromWrapper(JSContext *cx,
     XPCWrappedNativeTearOff *tearoff;
     JSObject *cur;
 
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
+    if (IS_WN_REFLECTOR(obj)) {
         cur = obj;
-        wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
-                  (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
-                  nullptr;
+        wrapper = (XPCWrappedNative*)xpc_GetJSPrivate(obj);
         tearoff = nullptr;
     } else {
         *rv = getWrapper(cx, obj, &wrapper, &cur, &tearoff);
@@ -644,11 +628,6 @@ castNativeFromWrapper(JSContext *cx,
     if (wrapper) {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
-        if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        }
-    } else if (cur && IS_SLIM_WRAPPER(cur)) {
-        native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
         if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
             native = nullptr;
         }
