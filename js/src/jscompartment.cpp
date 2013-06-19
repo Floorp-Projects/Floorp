@@ -20,6 +20,7 @@
 #include "ion/IonCompartment.h"
 #endif
 #include "js/RootingAPI.h"
+#include "vm/StopIterationObject.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -234,7 +235,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
             return WrapForSameCompartment(cx, obj, vp);
 
         /* Translate StopIteration singleton. */
-        if (obj->isStopIteration())
+        if (obj->is<StopIterationObject>())
             return js_FindClassObject(cx, JSProto_StopIteration, vp);
 
         /* Unwrap the object, but don't unwrap outer windows. */

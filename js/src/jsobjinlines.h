@@ -1248,12 +1248,6 @@ GetOuterObject(JSContext *cx, HandleObject obj)
     return obj;
 }
 
-static inline bool
-IsStopIteration(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isStopIteration();
-}
-
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
 {
