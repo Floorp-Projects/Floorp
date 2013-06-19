@@ -288,7 +288,7 @@ StackFrame::prologue(JSContext *cx)
     RootedScript script(cx, this->script());
 
     JS_ASSERT(!isGeneratorFrame());
-    JS_ASSERT(cx->regs().pc == script->code);
+    JS_ASSERT(cx->interpreterRegs().pc == script->code);
 
     if (isEvalFrame()) {
         if (script->strict) {
@@ -805,7 +805,7 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
                           MaybeExtend extend, bool *pushedSeg)
 {
     Value *firstUnused = space().firstUnused();
-    FrameRegs *regs = cx->maybeRegs();
+    FrameRegs *regs = cx->stack.maybeRegs();
 
     if (onTop() && extend) {
         if (!space().ensureSpace(cx, report, firstUnused, nvars))
@@ -1772,8 +1772,8 @@ ScriptFrameIter::numFrameSlots() const
       }
       case SCRIPTED:
         JS_ASSERT(data_.cx_);
-        JS_ASSERT(data_.cx_->regs().spForStackDepth(0) == interpFrame()->base());
-        return data_.cx_->regs().sp - interpFrame()->base();
+        JS_ASSERT(data_.cx_->stack.regs().spForStackDepth(0) == interpFrame()->base());
+        return data_.cx_->stack.regs().sp - interpFrame()->base();
     }
     JS_NOT_REACHED("Unexpected state");
     return 0;

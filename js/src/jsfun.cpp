@@ -884,7 +884,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         // We do not want to use ScriptFrameIter to abstract here because this
         // is supposed to be a fast path as opposed to ScriptFrameIter which is
         // doing complex logic to settle on the next frame twice.
-        if (cx->mainThread().currentlyRunningInJit()) {
+        if (cx->currentlyRunningInJit()) {
             ion::JitActivationIterator activations(cx->runtime());
             ion::IonFrameIterator frame(activations);
             if (frame.isNative()) {
@@ -929,7 +929,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         } else
 #endif
         {
-            StackFrame *fp = cx->fp();
+            StackFrame *fp = cx->interpreterFrame();
             unsigned length = fp->numActualArgs();
             JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
 
