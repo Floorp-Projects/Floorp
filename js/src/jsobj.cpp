@@ -913,7 +913,7 @@ static JSBool
 DefinePropertyOnArray(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
                       bool throwError, bool *rval)
 {
-    JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->is<ArrayObject>());
 
     /* Step 2. */
     if (id == NameToId(cx->names().length)) {
@@ -976,7 +976,7 @@ bool
 js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
                    bool throwError, bool *rval)
 {
-    if (obj->isArray())
+    if (obj->is<ArrayObject>())
         return DefinePropertyOnArray(cx, obj, id, desc, throwError, rval);
 
     if (obj->getOps()->lookupGeneric) {
@@ -1170,7 +1170,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
     // arrays with non-writable length.  We don't need to do anything special
     // for that, because capacity was zeroed out by preventExtensions.  (See
     // the assertion before the if-else above.)
-    if (it == FREEZE && obj->isArray())
+    if (it == FREEZE && obj->is<ArrayObject>())
         obj->getElementsHeader()->setNonwritableArrayLength();
 
     return true;
@@ -1233,7 +1233,7 @@ JSObject::className(JSContext *cx, HandleObject obj)
 static inline gc::AllocKind
 NewObjectGCKind(js::Class *clasp)
 {
-    if (clasp == &ArrayClass)
+    if (clasp == &ArrayObject::class_)
         return gc::FINALIZE_OBJECT8;
     if (clasp == &JSFunction::class_)
         return gc::FINALIZE_OBJECT2;
@@ -1244,7 +1244,7 @@ static inline JSObject *
 NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *parent,
           gc::AllocKind kind, NewObjectKind newKind)
 {
-    JS_ASSERT(clasp != &ArrayClass);
+    JS_ASSERT(clasp != &ArrayObject::class_);
     JS_ASSERT_IF(clasp == &JSFunction::class_,
                  kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT_IF(parent, &parent->global() == cx->compartment()->maybeGlobal());
@@ -1986,7 +1986,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(!a->is<RegExpObject>() && !b->is<RegExpObject>());
 
     /* Arrays can use their fixed storage for elements. */
-    JS_ASSERT(!a->isArray() && !b->isArray());
+    JS_ASSERT(!a->is<ArrayObject>() && !b->is<ArrayObject>());
 
     /*
      * Callers should not try to swap ArrayBuffer objects,
@@ -2804,7 +2804,7 @@ bool
 JSObject::growElements(ThreadSafeContext *tcx, uint32_t newcap)
 {
     JS_ASSERT(isExtensible());
-    JS_ASSERT_IF(isArray() && !arrayLengthIsWritable(),
+    JS_ASSERT_IF(is<ArrayObject>() && !arrayLengthIsWritable(),
                  newcap <= getArrayLength());
 
     /*
@@ -2825,7 +2825,7 @@ JSObject::growElements(ThreadSafeContext *tcx, uint32_t newcap)
                       : oldcap + (oldcap >> 3);
 
     uint32_t actualCapacity;
-    if (isArray() && !arrayLengthIsWritable()) {
+    if (is<ArrayObject>() && !arrayLengthIsWritable()) {
         // Preserve the |capacity <= length| invariant for arrays with
         // non-writable length.  See also js::ArraySetLength which initially
         // enforces this requirement.
@@ -3300,7 +3300,7 @@ CallAddPropertyHookDense(JSContext *cx, Class *clasp, HandleObject obj, uint32_t
                          HandleValue nominal)
 {
     /* Inline addProperty for array objects. */
-    if (obj->isArray()) {
+    if (obj->is<ArrayObject>()) {
         uint32_t length = obj->getArrayLength();
         if (index >= length)
             JSObject::setArrayLength(cx, obj, index + 1);
@@ -3351,7 +3351,7 @@ DefinePropertyOrElement(JSContext *cx, HandleObject obj, HandleId id,
         }
     }
 
-    if (obj->isArray()) {
+    if (obj->is<ArrayObject>()) {
         if (id == NameToId(cx->names().length))
             return ArraySetLength(cx, obj, id, attrs, value, setterIsStrict);
 
@@ -4409,7 +4409,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
         return true;
     }
 
-    if (obj->isArray() && id == NameToId(cx->names().length))
+    if (obj->is<ArrayObject>() && id == NameToId(cx->names().length))
         return ArraySetLength(cx, obj, id, attrs, vp, strict);
 
     if (!shape) {

@@ -1254,7 +1254,7 @@ GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
     HeapSlot::Kind kind = (HeapSlot::Kind) stack.pop();
 
     if (kind == HeapSlot::Element) {
-        if (obj->getClass() != &ArrayClass)
+        if (!obj->is<ArrayObject>())
             return false;
 
         uint32_t initlen = obj->getDenseInitializedLength();

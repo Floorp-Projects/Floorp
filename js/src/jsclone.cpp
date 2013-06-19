@@ -644,7 +644,7 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
     checkStack();
 
     /* Write the header for obj. */
-    return out.writePair(obj->isArray() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+    return out.writePair(obj->is<ArrayObject>() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
 }
 
 bool
@@ -692,7 +692,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
             return writeTypedArray(obj);
         } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
             return writeArrayBuffer(obj);
-        } else if (obj->isObject() || obj->isArray()) {
+        } else if (obj->isObject() || obj->is<ArrayObject>()) {
             return traverseObject(obj);
         } else if (obj->is<BooleanObject>()) {
             return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->as<BooleanObject>().unbox());

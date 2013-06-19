@@ -11,6 +11,7 @@
 
 #include "jswrapper.h"
 
+#include "vm/ArrayObject.h"
 #include "vm/DateObject.h"
 #include "vm/NumberObject.h"
 #include "vm/Probes.h"
@@ -196,30 +197,28 @@ JSObject::prepareElementRangeForOverwrite(size_t start, size_t end)
 inline uint32_t
 JSObject::getArrayLength() const
 {
-    JS_ASSERT(isArray());
+    JS_ASSERT(is<js::ArrayObject>());
     return getElementsHeader()->length;
 }
 
 inline bool
 JSObject::arrayLengthIsWritable() const
 {
-    JS_ASSERT(isArray());
+    JS_ASSERT(is<js::ArrayObject>());
     return !getElementsHeader()->hasNonwritableArrayLength();
 }
 
 /* static */ inline void
 JSObject::setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length)
 {
-    JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->is<js::ArrayObject>());
     JS_ASSERT(obj->arrayLengthIsWritable());
 
     if (length > INT32_MAX) {
         /* Track objects with overflowing lengths in type information. */
-        js::types::MarkTypeObjectFlags(cx, obj,
-                                       js::types::OBJECT_FLAG_LENGTH_OVERFLOW);
+        js::types::MarkTypeObjectFlags(cx, obj, js::types::OBJECT_FLAG_LENGTH_OVERFLOW);
         jsid lengthId = js::NameToId(cx->names().length);
-        js::types::AddTypePropertyId(cx, obj, lengthId,
-                                     js::types::Type::DoubleType());
+        js::types::AddTypePropertyId(cx, obj, lengthId, js::types::Type::DoubleType());
     }
 
     obj->getElementsHeader()->length = length;
@@ -229,7 +228,7 @@ inline void
 JSObject::setArrayLengthInt32(uint32_t length)
 {
     /* Variant of setArrayLength for use on arrays where the length cannot overflow int32_t. */
-    JS_ASSERT(isArray());
+    JS_ASSERT(is<js::ArrayObject>());
     JS_ASSERT(arrayLengthIsWritable());
     JS_ASSERT(length <= INT32_MAX);
     getElementsHeader()->length = length;
@@ -247,7 +246,7 @@ JSObject::setDenseInitializedLength(uint32_t length)
 inline void
 JSObject::setShouldConvertDoubleElements()
 {
-    JS_ASSERT(isArray() && !hasEmptyElements());
+    JS_ASSERT(is<js::ArrayObject>() && !hasEmptyElements());
     getElementsHeader()->setShouldConvertDoubleElements();
 }
 
@@ -454,7 +453,7 @@ inline JSObject::EnsureDenseResult
 JSObject::parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v, uint32_t extra)
 {
     JS_ASSERT(isNative());
-    JS_ASSERT_IF(isArray(), arrayLengthIsWritable());
+    JS_ASSERT_IF(is<js::ArrayObject>(), arrayLengthIsWritable());
 
     js::ObjectElements *header = getElementsHeader();
     uint32_t initializedLength = header->initializedLength;
@@ -669,7 +668,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
      */
     JS_ASSERT(shape && type);
     JS_ASSERT(type->clasp == shape->getObjectClass());
-    JS_ASSERT(type->clasp != &js::ArrayClass);
+    JS_ASSERT(type->clasp != &js::ArrayObject::class_);
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT_IF(type->clasp->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
     JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
@@ -719,7 +718,7 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap
 {
     JS_ASSERT(shape && type);
     JS_ASSERT(type->clasp == shape->getObjectClass());
-    JS_ASSERT(type->clasp == &js::ArrayClass);
+    JS_ASSERT(type->clasp == &js::ArrayObject::class_);
     JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
 
     /*
@@ -1298,7 +1297,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
         return Proxy::objectClassIs(obj, classValue, cx);
 
     switch (classValue) {
-      case ESClass_Array: return obj->isArray();
+      case ESClass_Array: return obj->is<ArrayObject>();
       case ESClass_Number: return obj->is<NumberObject>();
       case ESClass_String: return obj->is<StringObject>();
       case ESClass_Boolean: return obj->is<BooleanObject>();
