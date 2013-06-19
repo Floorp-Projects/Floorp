@@ -2870,18 +2870,14 @@ template <>
 bool
 Parser<FullParseHandler>::makeSetCall(ParseNode *pn, unsigned msg)
 {
+    JS_ASSERT(pn->isKind(PNK_CALL));
     JS_ASSERT(pn->isArity(PN_LIST));
     JS_ASSERT(pn->isOp(JSOP_CALL) || pn->isOp(JSOP_EVAL) ||
               pn->isOp(JSOP_FUNCALL) || pn->isOp(JSOP_FUNAPPLY));
+
     if (!report(ParseStrictError, pc->sc->strict, pn, msg))
         return false;
-
-    ParseNode *pn2 = pn->pn_head;
-    if (pn2->isKind(PNK_FUNCTION) && (pn2->pn_funbox->inGenexpLambda)) {
-        report(ParseError, false, pn, msg);
-        return false;
-    }
-    pn->pn_xflags |= PNX_SETCALL;
+    handler.markAsSetCall(pn);
     return true;
 }
 
@@ -5342,63 +5338,6 @@ Parser<ParseHandler>::unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin)
     return handler.newUnary(kind, op, begin, kid);
 }
 
-template <>
-bool
-Parser<FullParseHandler>::checkDeleteExpression(ParseNode **pn_)
-{
-    ParseNode *&pn = *pn_;
-
-    /*
-     * Under ECMA3, deleting any unary expression is valid -- it simply
-     * returns true. Here we fold constants before checking for a call
-     * expression, in order to rule out delete of a generator expression.
-     */
-    if (foldConstants && !FoldConstants(context, &pn, this))
-        return false;
-    switch (pn->getKind()) {
-      case PNK_CALL:
-        if (!(pn->pn_xflags & PNX_SETCALL)) {
-            /*
-             * Call MakeSetCall to check for errors, but clear PNX_SETCALL
-             * because the optimizer will eliminate the useless delete.
-             */
-            if (!makeSetCall(pn, JSMSG_BAD_DELETE_OPERAND))
-                return false;
-            pn->pn_xflags &= ~PNX_SETCALL;
-        }
-        break;
-      case PNK_NAME:
-        if (!report(ParseStrictError, pc->sc->strict, pn, JSMSG_DEPRECATED_DELETE_OPERAND))
-            return null();
-        pc->sc->setBindingsAccessedDynamically();
-        pn->pn_dflags |= PND_DEOPTIMIZED;
-        pn->setOp(JSOP_DELNAME);
-        break;
-      default:;
-    }
-    return true;
-}
-
-template <>
-bool
-Parser<SyntaxParseHandler>::checkDeleteExpression(Node *pn)
-{
-    PropertyName *name = handler.isName(*pn);
-    if (name)
-        return report(ParseStrictError, pc->sc->strict, *pn, JSMSG_DEPRECATED_DELETE_OPERAND);
-
-    // Treat deletion of non-lvalues as ambiguous, so that any error associated
-    // with deleting a call expression is reported.
-    if (*pn != SyntaxParseHandler::NodeGetProp &&
-        *pn != SyntaxParseHandler::NodeLValue &&
-        strictMode())
-    {
-        return abortIfSyntaxParser();
-    }
-
-    return true;
-}
-
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::unaryExpr()
@@ -5441,20 +5380,24 @@ Parser<ParseHandler>::unaryExpr()
         break;
       }
 
-      case TOK_DELETE:
-      {
-        pn2 = unaryExpr();
-        if (!pn2)
+      case TOK_DELETE: {
+        Node expr = unaryExpr();
+        if (!expr)
             return null();
 
-        if (!checkDeleteExpression(&pn2))
+        // Per spec, deleting any unary expression is valid -- it simply returns
+        // true -- except for a few cases that are illegal in strict mode.
+        if (foldConstants && !FoldConstants(context, &expr, this))
             return null();
+        if (handler.isName(expr)) {
+            if (!report(ParseStrictError, pc->sc->strict, expr, JSMSG_DEPRECATED_DELETE_OPERAND))
+                return null();
+            pc->sc->setBindingsAccessedDynamically();
+        }
 
-        pn = handler.newUnary(PNK_DELETE, JSOP_NOP, begin, pn2);
-        if (!pn)
-            return null();
-        break;
+        return handler.newDelete(begin, expr);
       }
+
       case TOK_ERROR:
         return null();
 
