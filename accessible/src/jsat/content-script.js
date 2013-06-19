@@ -172,6 +172,58 @@ function activateContextMenu(aMessage) {
     sendContextMenuCoordinates(vc.position);
 }
 
+function moveCaret(aMessage) {
+  const MOVEMENT_GRANULARITY_CHARACTER = 1;
+  const MOVEMENT_GRANULARITY_WORD = 2;
+  const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+
+  let direction = aMessage.json.direction;
+  let granularity = aMessage.json.granularity;
+  let accessible = Utils.getVirtualCursor(content.document).position;
+  let accText = accessible.QueryInterface(Ci.nsIAccessibleText);
+  let oldOffset = accText.caretOffset;
+  let text = accText.getText(0, accText.characterCount);
+
+  let start = {}, end = {};
+  if (direction === 'Previous' && !aMessage.json.atStart) {
+    switch (granularity) {
+      case MOVEMENT_GRANULARITY_CHARACTER:
+        accText.caretOffset--;
+        break;
+      case MOVEMENT_GRANULARITY_WORD:
+        accText.getTextBeforeOffset(accText.caretOffset,
+                                    Ci.nsIAccessibleText.BOUNDARY_WORD_START, start, end);
+        accText.caretOffset = end.value === accText.caretOffset ? start.value : end.value;
+        break;
+      case MOVEMENT_GRANULARITY_PARAGRAPH:
+        let startOfParagraph = text.lastIndexOf('\n', accText.caretOffset - 1);
+        accText.caretOffset = startOfParagraph !== -1 ? startOfParagraph : 0;
+        break;
+    }
+  } else if (direction === 'Next' && !aMessage.json.atEnd) {
+    switch (granularity) {
+      case MOVEMENT_GRANULARITY_CHARACTER:
+        accText.caretOffset++;
+        break;
+      case MOVEMENT_GRANULARITY_WORD:
+        accText.getTextAtOffset(accText.caretOffset,
+                                Ci.nsIAccessibleText.BOUNDARY_WORD_END, start, end);
+        accText.caretOffset = end.value;
+        break;
+      case MOVEMENT_GRANULARITY_PARAGRAPH:
+        accText.caretOffset = text.indexOf('\n', accText.caretOffset + 1);
+        break;
+    }
+  }
+
+  let newOffset = accText.caretOffset;
+  if (oldOffset !== newOffset) {
+    let msg = Presentation.textSelectionChanged(text, newOffset, newOffset,
+                                                oldOffset, oldOffset);
+    sendAsyncMessage('AccessFu:Present', msg);
+  }
+}
+
 function scroll(aMessage) {
   let vc = Utils.getVirtualCursor(content.document);
 
@@ -262,6 +314,7 @@ addMessageListener(
     addMessageListener('AccessFu:Activate', activateCurrent);
     addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
+    addMessageListener('AccessFu:MoveCaret', moveCaret);
 
     if (!eventManager) {
       eventManager = new EventManager(this);
@@ -278,6 +331,7 @@ addMessageListener(
     removeMessageListener('AccessFu:Activate', activateCurrent);
     removeMessageListener('AccessFu:ContextMenu', activateContextMenu);
     removeMessageListener('AccessFu:Scroll', scroll);
+    removeMessageListener('AccessFu:MoveCaret', moveCaret);
 
     eventManager.stop();
   });
