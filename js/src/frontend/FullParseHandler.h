@@ -130,6 +130,18 @@ class FullParseHandler
     ParseNode *newNullLiteral(const TokenPos &pos) {
         return new_<NullLiteral>(pos);
     }
+
+    // The Boxer object here is any object that can allocate ObjectBoxes.
+    // Specifically, a Boxer has a .newObjectBox(T) method that accepts a
+    // Rooted<RegExpObject*> argument and returns an ObjectBox*.
+    template <class Boxer>
+    ParseNode *newRegExp(HandleObject reobj, const TokenPos &pos, Boxer &boxer) {
+        ObjectBox *objbox = boxer.newObjectBox(reobj);
+        if (!objbox)
+            return null();
+        return new_<RegExpLiteral>(objbox, pos);
+    }
+
     ParseNode *newConditional(ParseNode *cond, ParseNode *thenExpr, ParseNode *elseExpr) {
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
