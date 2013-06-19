@@ -92,6 +92,7 @@ chrome.jar:
 * content/sync.js                              (content/sync.js)
   content/RemoteTabs.js                        (content/RemoteTabs.js)
 #endif
+  content/NavButtonSlider.js                   (content/NavButtonSlider.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
