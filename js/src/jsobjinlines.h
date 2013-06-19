@@ -194,46 +194,6 @@ JSObject::prepareElementRangeForOverwrite(size_t start, size_t end)
         elements[i].js::HeapSlot::~HeapSlot();
 }
 
-inline uint32_t
-JSObject::getArrayLength() const
-{
-    JS_ASSERT(is<js::ArrayObject>());
-    return getElementsHeader()->length;
-}
-
-inline bool
-JSObject::arrayLengthIsWritable() const
-{
-    JS_ASSERT(is<js::ArrayObject>());
-    return !getElementsHeader()->hasNonwritableArrayLength();
-}
-
-/* static */ inline void
-JSObject::setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length)
-{
-    JS_ASSERT(obj->is<js::ArrayObject>());
-    JS_ASSERT(obj->arrayLengthIsWritable());
-
-    if (length > INT32_MAX) {
-        /* Track objects with overflowing lengths in type information. */
-        js::types::MarkTypeObjectFlags(cx, obj, js::types::OBJECT_FLAG_LENGTH_OVERFLOW);
-        jsid lengthId = js::NameToId(cx->names().length);
-        js::types::AddTypePropertyId(cx, obj, lengthId, js::types::Type::DoubleType());
-    }
-
-    obj->getElementsHeader()->length = length;
-}
-
-inline void
-JSObject::setArrayLengthInt32(uint32_t length)
-{
-    /* Variant of setArrayLength for use on arrays where the length cannot overflow int32_t. */
-    JS_ASSERT(is<js::ArrayObject>());
-    JS_ASSERT(arrayLengthIsWritable());
-    JS_ASSERT(length <= INT32_MAX);
-    getElementsHeader()->length = length;
-}
-
 inline void
 JSObject::setDenseInitializedLength(uint32_t length)
 {
@@ -453,7 +413,7 @@ inline JSObject::EnsureDenseResult
 JSObject::parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v, uint32_t extra)
 {
     JS_ASSERT(isNative());
-    JS_ASSERT_IF(is<js::ArrayObject>(), arrayLengthIsWritable());
+    JS_ASSERT_IF(is<js::ArrayObject>(), as<js::ArrayObject>().lengthIsWritable());
 
     js::ObjectElements *header = getElementsHeader();
     uint32_t initializedLength = header->initializedLength;

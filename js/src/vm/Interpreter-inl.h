@@ -201,8 +201,7 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
     if (lval.isObject()) {
         JSObject *obj = &lval.toObject();
         if (obj->is<ArrayObject>()) {
-            uint32_t length = obj->getArrayLength();
-            vp.setNumber(length);
+            vp.setNumber(obj->as<ArrayObject>().length());
             return true;
         }
 

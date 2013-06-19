@@ -630,12 +630,6 @@ class JSObject : public js::ObjectImpl
      */
     static EnsureDenseResult maybeDensifySparseElements(JSContext *cx, js::HandleObject obj);
 
-    /* Array specific accessors. */
-    inline bool arrayLengthIsWritable() const;
-    inline uint32_t getArrayLength() const;
-    static inline void setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length);
-    inline void setArrayLengthInt32(uint32_t length);
-
   public:
     /*
      * Iterator-specific getters and setters.

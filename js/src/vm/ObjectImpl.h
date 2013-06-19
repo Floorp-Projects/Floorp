@@ -937,6 +937,7 @@ ElementsHeader::asArrayBufferElements()
     return *static_cast<ArrayBufferElementsHeader *>(this);
 }
 
+class ArrayObject;
 class ArrayBufferObject;
 
 /*
@@ -948,8 +949,8 @@ class ArrayBufferObject;
  * to be thrown.
  */
 extern bool
-ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, HandleValue value,
-               bool setterIsStrict);
+ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
+               HandleValue value, bool setterIsStrict);
 
 /*
  * Elements header used for all native objects. The elements component of such
@@ -974,7 +975,7 @@ ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, Han
  *
  * We track these pieces of metadata for dense elements:
  *  - The length property as a uint32_t, accessible for array objects with
- *    getArrayLength(), setArrayLength(). This is unused for non-arrays.
+ *    ArrayObject::{length,setLength}().  This is unused for non-arrays.
  *  - The number of element slots (capacity), gettable with
  *    getDenseElementsCapacity().
  *  - The array's initialized length, accessible with
@@ -1035,12 +1036,13 @@ class ObjectElements
   private:
     friend class ::JSObject;
     friend class ObjectImpl;
+    friend class ArrayObject;
     friend class ArrayBufferObject;
     friend class Nursery;
 
     friend bool
-    ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, HandleValue value,
-                   bool setterIsStrict);
+    ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
+                   HandleValue value, bool setterIsStrict);
 
     /* See Flags enum above. */
     uint32_t flags;
@@ -1201,8 +1203,8 @@ class ObjectImpl : public gc::Cell
     HeapSlot *elements;  /* Slots for object elements. */
 
     friend bool
-    ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, HandleValue value,
-                   bool setterIsStrict);
+    ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
+                   HandleValue value, bool setterIsStrict);
 
   private:
     static void staticAsserts() {
