@@ -2238,12 +2238,6 @@ js_GetScriptLineExtent(JSScript *script)
     return 1 + lineno - script->lineno;
 }
 
-unsigned
-js::CurrentLine(JSContext *cx)
-{
-    return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
-}
-
 void
 js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                     JSPrincipals **origin)

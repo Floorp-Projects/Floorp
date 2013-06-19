@@ -1453,9 +1453,6 @@ extern unsigned
 PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc,
                unsigned *columnp = NULL);
 
-extern unsigned
-CurrentLine(JSContext *cx);
-
 /*
  * This function returns the file and line number of the script currently
  * executing on cx. If there is no current script executing on cx (e.g., a

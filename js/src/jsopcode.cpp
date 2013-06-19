@@ -411,8 +411,9 @@ js_DumpPC(JSContext *cx)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
-    RootedScript script(cx, cx->fp()->script());
-    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, false, &sprinter);
+    ScriptFrameIter iter(cx);
+    RootedScript script(cx, iter.script());
+    JSBool ok = js_DisassembleAtPC(cx, script, true, iter.pc(), false, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
