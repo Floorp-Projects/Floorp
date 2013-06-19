@@ -4147,6 +4147,9 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
      */
     rt->stackSpace.markActiveCompartments();
 
+    for (ActivationIterator iter(rt); !iter.done(); ++iter)
+        iter.activation()->compartment()->zone()->active = true;
+
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         /*
          * Clear needsBarrier early so we don't do any write barriers during

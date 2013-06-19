@@ -9,6 +9,7 @@
 /*
  * JS interpreter interface.
  */
+#include "jsiter.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
@@ -163,8 +164,140 @@ ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Va
 extern bool
 Execute(JSContext *cx, HandleScript script, JSObject &scopeChain, Value *rval);
 
+class ExecuteState;
+class InvokeState;
+class GeneratorState;
+
+// RunState is passed to RunScript and RunScript then eiter passes it to the
+// interpreter or to the JITs. RunState contains all information we need to
+// construct an interpreter or JIT frame.
+class RunState
+{
+  protected:
+    enum Kind { Execute, Invoke, Generator };
+    Kind kind_;
+
+    RootedScript script_;
+
+    explicit RunState(JSContext *cx, Kind kind, JSScript *script)
+      : kind_(kind),
+        script_(cx, script)
+    { }
+
+  public:
+    bool isExecute() const { return kind_ == Execute; }
+    bool isInvoke() const { return kind_ == Invoke; }
+    bool isGenerator() const { return kind_ == Generator; }
+
+    ExecuteState *asExecute() const {
+        JS_ASSERT(isExecute());
+        return (ExecuteState *)this;
+    }
+    InvokeState *asInvoke() const {
+        JS_ASSERT(isInvoke());
+        return (InvokeState *)this;
+    }
+    GeneratorState *asGenerator() const {
+        JS_ASSERT(isGenerator());
+        return (GeneratorState *)this;
+    }
+
+    JSScript *script() const { return script_; }
+
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx) = 0;
+    virtual void setReturnValue(Value v) = 0;
+
+  private:
+    RunState(const RunState &other) MOZ_DELETE;
+    RunState(const ExecuteState &other) MOZ_DELETE;
+    RunState(const InvokeState &other) MOZ_DELETE;
+    RunState(const GeneratorState &other) MOZ_DELETE;
+    void operator=(const RunState &other) MOZ_DELETE;
+};
+
+// Eval or global script.
+class ExecuteState : public RunState
+{
+    mozilla::Maybe<ExecuteFrameGuard> efg_;
+    ExecuteType type_;
+
+    RootedValue thisv_;
+    RootedObject scopeChain_;
+
+    AbstractFramePtr evalInFrame_;
+    Value *result_;
+
+  public:
+    ExecuteState(JSContext *cx, JSScript *script, const Value &thisv, JSObject &scopeChain,
+                 ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
+      : RunState(cx, Execute, script),
+        type_(type),
+        thisv_(cx, thisv),
+        scopeChain_(cx, &scopeChain),
+        evalInFrame_(evalInFrame),
+        result_(result)
+    { }
+
+    Value *addressOfThisv() { return thisv_.address(); }
+    JSObject *scopeChain() const { return scopeChain_; }
+    ExecuteType type() const { return type_; }
+
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+
+    virtual void setReturnValue(Value v) {
+        if (result_)
+            *result_ = v;
+    }
+};
+
+// Data to invoke a function.
+class InvokeState : public RunState
+{
+    mozilla::Maybe<InvokeFrameGuard> ifg_;
+    CallArgs &args_;
+    InitialFrameFlags initial_;
+    bool useNewType_;
+
+  public:
+    InvokeState(JSContext *cx, CallArgs &args, InitialFrameFlags initial)
+      : RunState(cx, Invoke, args.callee().toFunction()->nonLazyScript()),
+        args_(args),
+        initial_(initial),
+        useNewType_(false)
+    { }
+
+    bool useNewType() const { return useNewType_; }
+    void setUseNewType() { useNewType_ = true; }
+
+    bool constructing() const { return InitialFrameFlagsAreConstructing(initial_); }
+    CallArgs &args() const { return args_; }
+
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+
+    virtual void setReturnValue(Value v) {
+        args_.rval().set(v);
+    }
+};
+
+// Generator script.
+class GeneratorState : public RunState
+{
+    mozilla::Maybe<GeneratorFrameGuard> gfg_;
+    JSContext *cx_;
+    JSGenerator *gen_;
+    JSGeneratorState futureState_;
+    bool entered_;
+
+  public:
+    GeneratorState(JSContext *cx, JSGenerator *gen, JSGeneratorState futureState);
+    ~GeneratorState();
+
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual void setReturnValue(Value) { }
+};
+
 extern bool
-RunScript(JSContext *cx, StackFrame *fp);
+RunScript(JSContext *cx, RunState &state);
 
 extern bool
 StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *equal);
