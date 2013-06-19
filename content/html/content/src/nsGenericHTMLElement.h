@@ -33,13 +33,13 @@ class nsILayoutHistoryState;
 class nsIEditor;
 struct nsRect;
 struct nsSize;
-class nsHTMLFormElement;
 class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 
 namespace mozilla {
 namespace dom{
+class HTMLFormElement;
 class HTMLPropertiesCollection;
 class HTMLMenuElement;
 }
@@ -666,7 +666,8 @@ public:
    *        current form that they're not descendants of.
    * @note This method should not be called if the element has a form attribute.
    */
-  nsHTMLFormElement* FindAncestorForm(nsHTMLFormElement* aCurrentForm = nullptr);
+  mozilla::dom::HTMLFormElement*
+  FindAncestorForm(mozilla::dom::HTMLFormElement* aCurrentForm = nullptr);
 
   virtual void RecompileScriptEventListeners() MOZ_OVERRIDE;
 
@@ -1087,7 +1088,7 @@ public:
 
   // nsIFormControl
   virtual mozilla::dom::Element* GetFormElement() MOZ_OVERRIDE;
-  nsHTMLFormElement* GetForm() const
+  mozilla::dom::HTMLFormElement* GetForm() const
   {
     return mForm;
   }
@@ -1221,7 +1222,7 @@ protected:
   FocusTristate FocusState();
 
   /** The form that contains this control */
-  nsHTMLFormElement* mForm;
+  mozilla::dom::HTMLFormElement* mForm;
 
   /* This is a pointer to our closest fieldset parent if any */
   mozilla::dom::HTMLFieldSetElement* mFieldSet;

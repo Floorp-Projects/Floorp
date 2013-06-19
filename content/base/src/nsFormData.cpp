@@ -6,7 +6,7 @@
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
 #include "nsIDOMFile.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "nsContentUtils.h"
 
@@ -109,7 +109,7 @@ nsFormData::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 
 /* static */ already_AddRefed<nsFormData>
 nsFormData::Constructor(const GlobalObject& aGlobal,
-                        const Optional<nsHTMLFormElement*>& aFormElement,
+                        const Optional<HTMLFormElement*>& aFormElement,
                         ErrorResult& aRv)
 {
   nsRefPtr<nsFormData> formData = new nsFormData(aGlobal.Get());

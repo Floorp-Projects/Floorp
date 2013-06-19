@@ -612,14 +612,14 @@ public:
 
 // HTMLFormElement helper
 
-class nsHTMLFormElementSH : public nsElementSH
+class HTMLFormElementSH : public nsElementSH
 {
 protected:
-  nsHTMLFormElementSH(nsDOMClassInfoData* aData) : nsElementSH(aData)
+  HTMLFormElementSH(nsDOMClassInfoData* aData) : nsElementSH(aData)
   {
   }
 
-  virtual ~nsHTMLFormElementSH()
+  virtual ~HTMLFormElementSH()
   {
   }
 
@@ -638,7 +638,7 @@ public:
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLFormElementSH(aData);
+    return new HTMLFormElementSH(aData);
   }
 };
 
