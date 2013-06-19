@@ -89,10 +89,10 @@ struct BaseRect {
   Sub Intersect(const Sub& aRect) const
   {
     Sub result;
-    result.x = std::max(x, aRect.x);
-    result.y = std::max(y, aRect.y);
-    result.width = std::min(XMost(), aRect.XMost()) - result.x;
-    result.height = std::min(YMost(), aRect.YMost()) - result.y;
+    result.x = std::max<T>(x, aRect.x);
+    result.y = std::max<T>(y, aRect.y);
+    result.width = std::min<T>(XMost(), aRect.XMost()) - result.x;
+    result.height = std::min<T>(YMost(), aRect.YMost()) - result.y;
     if (result.width < 0 || result.height < 0) {
       result.SizeTo(0, 0);
     }
