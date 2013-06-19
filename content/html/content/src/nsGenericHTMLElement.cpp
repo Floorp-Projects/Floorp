@@ -517,17 +517,17 @@ nsGenericHTMLElement::Spellcheck()
     }
   }
 
+  // contenteditable/designMode are spellchecked by default
+  if (IsEditable()) {
+    return true;
+  }
+
   // Is this a chrome element?
   if (nsContentUtils::IsChromeDoc(OwnerDoc())) {
     return false;                       // Not spellchecked by default
   }
 
-  if (IsCurrentBodyElement()) {
-    nsCOMPtr<nsIHTMLDocument> doc = do_QueryInterface(GetCurrentDoc());
-    return doc && doc->IsEditingOn();
-  }
-
-  // Is this element editable?
+  // Anything else that's not a form control is not spellchecked by default
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(this);
   if (!formControl) {
     return false;                       // Not spellchecked by default

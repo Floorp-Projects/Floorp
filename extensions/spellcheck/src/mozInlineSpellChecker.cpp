@@ -39,6 +39,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
@@ -1258,9 +1259,29 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
     }
   }
   else {
-    // XXX Do we really want this for all editable content?
+    // Check spelling only if the node is editable, and GetSpellcheck() is true
+    // on the nearest HTMLElement ancestor.
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    *checkSpelling = content->IsEditable();
+    if (!content->IsEditable()) {
+      *checkSpelling = false;
+      return NS_OK;
+    }
+
+    // Get HTML element ancestor (might be aNode itself, although probably that
+    // has to be a text node in real life here)
+    nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(content);
+    while (content && !htmlElement) {
+      content = content->GetParent();
+      htmlElement = do_QueryInterface(content);
+    }
+    NS_ASSERTION(htmlElement, "Why do we have no htmlElement?");
+    if (!htmlElement) {
+      return NS_OK;
+    }
+
+    // See if it's spellcheckable
+    htmlElement->GetSpellcheck(checkSpelling);
+    return NS_OK;
   }
 
   return NS_OK;
