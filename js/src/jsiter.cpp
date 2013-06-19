@@ -1373,6 +1373,55 @@ SetGeneratorClosed(JSContext *cx, JSGenerator *gen)
     gen->state = JSGEN_CLOSED;
 }
 
+GeneratorState::GeneratorState(JSContext *cx, JSGenerator *gen, JSGeneratorState futureState)
+  : RunState(cx, Generator, gen->fp->script()),
+    cx_(cx),
+    gen_(gen),
+    futureState_(futureState),
+    entered_(false)
+{ }
+
+GeneratorState::~GeneratorState()
+{
+    if (entered_)
+        cx_->leaveGenerator(gen_);
+}
+
+StackFrame *
+GeneratorState::pushInterpreterFrame(JSContext *cx)
+{
+    gfg_.construct();
+
+    /*
+     * Write barrier is needed since the generator stack can be updated,
+     * and it's not barriered in any other way. We need to do it before
+     * gen->state changes, which can cause us to trace the generator
+     * differently.
+     *
+     * We could optimize this by setting a bit on the generator to signify
+     * that it has been marked. If this bit has already been set, there is no
+     * need to mark again. The bit would have to be reset before the next GC,
+     * or else some kind of epoch scheme would have to be used.
+     */
+    GeneratorWriteBarrierPre(cx, gen_);
+
+    if (!cx->stack.pushGeneratorFrame(cx, gen_, gfg_.addr())) {
+        SetGeneratorClosed(cx, gen_);
+        return NULL;
+    }
+
+    /*
+     * Don't change the state until after the frame is successfully pushed
+     * or else we might fail to scan some generator values.
+     */
+    gen_->state = futureState_;
+    gen_->regs = cx->stack.regs();
+
+    cx->enterGenerator(gen_);   /* OOM check above. */
+    entered_ = true;
+    return gfg_.ref().fp();
+}
+
 static void
 generator_trace(JSTracer *trc, JSObject *obj)
 {
@@ -1493,19 +1542,6 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         return false;
     }
 
-    /*
-     * Write barrier is needed since the generator stack can be updated,
-     * and it's not barriered in any other way. We need to do it before
-     * gen->state changes, which can cause us to trace the generator
-     * differently.
-     *
-     * We could optimize this by setting a bit on the generator to signify
-     * that it has been marked. If this bit has already been set, there is no
-     * need to mark again. The bit would have to be reset before the next GC,
-     * or else some kind of epoch scheme would have to be used.
-     */
-    GeneratorWriteBarrierPre(cx, gen);
-
     JSGeneratorState futureState;
     JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_OPEN);
     switch (op) {
@@ -1535,24 +1571,10 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
 
     JSBool ok;
     {
-        GeneratorFrameGuard gfg;
-        if (!cx->stack.pushGeneratorFrame(cx, gen, &gfg)) {
-            SetGeneratorClosed(cx, gen);
+        GeneratorState state(cx, gen, futureState);
+        ok = RunScript(cx, state);
+        if (!ok && gen->state == JSGEN_CLOSED)
             return false;
-        }
-
-        /*
-         * Don't change the state until after the frame is successfully pushed
-         * or else we might fail to scan some generator values.
-         */
-        gen->state = futureState;
-
-        StackFrame *fp = gfg.fp();
-        gen->regs = cx->stack.regs();
-
-        cx->enterGenerator(gen);   /* OOM check above. */
-        ok = RunScript(cx, fp);
-        cx->leaveGenerator(gen);
     }
 
     if (gen->fp->isYielding()) {

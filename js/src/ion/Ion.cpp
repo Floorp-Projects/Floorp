@@ -1342,7 +1342,7 @@ OffThreadCompilationAvailable(JSContext *cx)
 
 static AbortReason
 IonCompile(JSContext *cx, JSScript *script,
-           AbstractFramePtr fp, jsbytecode *osrPc, bool constructing,
+           BaselineFrame *baselineFrame, jsbytecode *osrPc, bool constructing,
            ExecutionMode executionMode)
 {
 #if JS_TRACE_LOGGING
@@ -1391,12 +1391,12 @@ IonCompile(JSContext *cx, JSScript *script,
 
     AutoTempAllocatorRooter root(cx, temp);
 
-    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &inspector, info, fp);
+    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &inspector, info, baselineFrame);
     if (!builder)
         return AbortReason_Alloc;
 
     JS_ASSERT(!GetIonScript(builder->script(), executionMode));
-    JS_ASSERT(builder->script()->canIonCompile());
+    JS_ASSERT(CanIonCompile(builder->script(), executionMode));
 
     RootedScript builderScript(cx, builder->script());
     IonSpewNewFunction(graph, builderScript);
@@ -1437,33 +1437,19 @@ IonCompile(JSContext *cx, JSScript *script,
 }
 
 static bool
-CheckFrame(AbstractFramePtr fp)
+TooManyArguments(unsigned nargs)
 {
-    if (fp.isEvalFrame()) {
-        // Eval frames are not yet supported. Supporting this will require new
-        // logic in pushBailoutFrame to deal with linking prev.
-        // Additionally, JSOP_DEFVAR support will require baking in isEvalFrame().
-        IonSpew(IonSpew_Abort, "eval frame");
-        return false;
-    }
+    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_IonOptions.maxStackArgs);
+}
 
-    if (fp.isGeneratorFrame()) {
-        // Err... no.
-        IonSpew(IonSpew_Abort, "generator frame");
-        return false;
-    }
+static bool
+CheckFrame(BaselineFrame *frame)
+{
+    JS_ASSERT(!frame->isGeneratorFrame());
+    JS_ASSERT(!frame->isDebuggerFrame());
 
-    if (fp.isDebuggerFrame()) {
-        IonSpew(IonSpew_Abort, "debugger frame");
-        return false;
-    }
-
-    // This check is to not overrun the stack. Eventually, we will want to
-    // handle this when we support JSOP_ARGUMENTS or function calls.
-    if (fp.isFunctionFrame() &&
-        (fp.numActualArgs() >= SNAPSHOT_MAX_NARGS ||
-         fp.numActualArgs() > js_IonOptions.maxStackArgs))
-    {
+    // This check is to not overrun the stack.
+    if (frame->isFunctionFrame() && TooManyArguments(frame->numActualArgs())) {
         IonSpew(IonSpew_Abort, "too many actual args");
         return false;
     }
@@ -1474,6 +1460,14 @@ CheckFrame(AbstractFramePtr fp)
 static bool
 CheckScript(JSContext *cx, JSScript *script, bool osr)
 {
+    if (script->isForEval()) {
+        // Eval frames are not yet supported. Supporting this will require new
+        // logic in pushBailoutFrame to deal with linking prev.
+        // Additionally, JSOP_DEFVAR support will require baking in isEvalFrame().
+        IonSpew(IonSpew_Abort, "eval script");
+        return false;
+    }
+
     if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx)) {
         IonSpew(IonSpew_Abort, "OOM under ensureRanAnalysis");
         return false;
@@ -1546,7 +1540,7 @@ CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
 }
 
 static MethodStatus
-Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osrPc,
+Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
         bool constructing, ExecutionMode executionMode)
 {
     JS_ASSERT(ion::IsEnabled(cx));
@@ -1586,7 +1580,7 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
             return Method_Skipped;
     }
 
-    AbortReason reason = IonCompile(cx, script, fp, osrPc, constructing, executionMode);
+    AbortReason reason = IonCompile(cx, script, osrFrame, osrPc, constructing, executionMode);
     if (reason == AbortReason_Disable)
         return Method_CantCompile;
 
@@ -1600,7 +1594,7 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
 // Decide if a transition from interpreter execution to Ion code should occur.
 // May compile or recompile the target JSScript.
 MethodStatus
-ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
+ion::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
                       jsbytecode *pc, bool isConstructing)
 {
     JS_ASSERT(ion::IsEnabled(cx));
@@ -1623,14 +1617,14 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
         return Method_Skipped;
 
     // Mark as forbidden if frame can't be handled.
-    if (!CheckFrame(fp)) {
+    if (!CheckFrame(osrFrame)) {
         ForbidCompilation(cx, script);
         return Method_CantCompile;
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, fp, pc, isConstructing, SequentialExecution);
+    MethodStatus status = Compile(cx, rscript, osrFrame, pc, isConstructing, SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1655,9 +1649,11 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
 }
 
 MethodStatus
-ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp, bool isConstructing)
+ion::CanEnter(JSContext *cx, RunState &state)
 {
     JS_ASSERT(ion::IsEnabled(cx));
+
+    JSScript *script = state.script();
 
     // Skip if the script has been disabled.
     if (!script->canIonCompile())
@@ -1674,16 +1670,26 @@ ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp, bool isCo
     // If constructing, allocate a new |this| object before building Ion.
     // Creating |this| is done before building Ion because it may change the
     // type information and invalidate compilation results.
-    if (isConstructing && fp.thisValue().isPrimitive()) {
-        RootedObject callee(cx, fp.callee());
-        RootedObject obj(cx, CreateThisForFunction(cx, callee, fp.useNewType()));
-        if (!obj || !ion::IsEnabled(cx)) // Note: OOM under CreateThis can disable TI.
-            return Method_Skipped;
-        fp.thisValue().setObject(*obj);
-    }
+    if (state.isInvoke()) {
+        InvokeState &invoke = *state.asInvoke();
 
-    // Mark as forbidden if frame can't be handled.
-    if (!CheckFrame(fp)) {
+        if (TooManyArguments(invoke.args().length())) {
+            IonSpew(IonSpew_Abort, "too many actual args");
+            ForbidCompilation(cx, script);
+            return Method_CantCompile;
+        }
+
+        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
+            RootedScript scriptRoot(cx, script);
+            RootedObject callee(cx, &invoke.args().callee());
+            RootedObject obj(cx, CreateThisForFunction(cx, callee, invoke.useNewType()));
+            if (!obj || !ion::IsEnabled(cx)) // Note: OOM under CreateThis can disable TI.
+                return Method_Skipped;
+            invoke.args().setThis(ObjectValue(*obj));
+            script = scriptRoot;
+        }
+    } else if (state.isGenerator()) {
+        IonSpew(IonSpew_Abort, "generator frame");
         ForbidCompilation(cx, script);
         return Method_CantCompile;
     }
@@ -1691,15 +1697,15 @@ ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp, bool isCo
     // If --ion-eager is used, compile with Baseline first, so that we
     // can directly enter IonMonkey.
     if (js_IonOptions.eagerCompilation && !script->hasBaselineScript()) {
-        bool newType = isConstructing && fp.asStackFrame()->useNewType();
-        MethodStatus status = CanEnterBaselineJIT(cx, script, fp.asStackFrame(), newType);
+        MethodStatus status = CanEnterBaselineMethod(cx, state);
         if (status != Method_Compiled)
             return status;
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, fp, NULL, isConstructing, SequentialExecution);
+    bool constructing = state.isInvoke() && state.asInvoke()->constructing();
+    MethodStatus status = Compile(cx, rscript, NULL, NULL, constructing, SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1710,23 +1716,23 @@ ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp, bool isCo
 }
 
 MethodStatus
-ion::CompileFunctionForBaseline(JSContext *cx, HandleScript script, AbstractFramePtr fp,
+ion::CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame,
                                 bool isConstructing)
 {
     JS_ASSERT(ion::IsEnabled(cx));
-    JS_ASSERT(fp.fun()->nonLazyScript()->canIonCompile());
-    JS_ASSERT(!fp.fun()->nonLazyScript()->isIonCompilingOffThread());
-    JS_ASSERT(!fp.fun()->nonLazyScript()->hasIonScript());
-    JS_ASSERT(fp.isFunctionFrame());
+    JS_ASSERT(frame->fun()->nonLazyScript()->canIonCompile());
+    JS_ASSERT(!frame->fun()->nonLazyScript()->isIonCompilingOffThread());
+    JS_ASSERT(!frame->fun()->nonLazyScript()->hasIonScript());
+    JS_ASSERT(frame->isFunctionFrame());
 
     // Mark as forbidden if frame can't be handled.
-    if (!CheckFrame(fp)) {
+    if (!CheckFrame(frame)) {
         ForbidCompilation(cx, script);
         return Method_CantCompile;
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    MethodStatus status = Compile(cx, script, fp, NULL, isConstructing, SequentialExecution);
+    MethodStatus status = Compile(cx, script, frame, NULL, isConstructing, SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1751,8 +1757,7 @@ ion::CanEnterInParallel(JSContext *cx, HandleScript script)
     if (script->isParallelIonCompilingOffThread())
         return Method_Skipped;
 
-    MethodStatus status = Compile(cx, script, AbstractFramePtr(), NULL, false,
-                                  ParallelExecution);
+    MethodStatus status = Compile(cx, script, NULL, NULL, false, ParallelExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script, ParallelExecution);
@@ -1808,74 +1813,106 @@ ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numAct
 }
 
 static IonExecStatus
-EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
+EnterIon(JSContext *cx, EnterJitData &data)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Aborted);
     JS_ASSERT(ion::IsEnabled(cx));
-    JS_ASSERT(CheckFrame(fp));
-    JS_ASSERT(!fp->script()->ionScript()->bailoutExpected());
+    JS_ASSERT(!data.osrFrame);
 
     EnterIonCode enter = cx->compartment()->ionCompartment()->enterJIT();
 
-    // maxArgc is the maximum of arguments between the number of actual
-    // arguments and the number of formal arguments. It accounts for |this|.
-    int maxArgc = 0;
-    Value *maxArgv = NULL;
-    unsigned numActualArgs = 0;
-    RootedValue thisv(cx);
-
-    void *calleeToken;
-    if (fp->isFunctionFrame()) {
-        numActualArgs = fp->numActualArgs();
-        maxArgc = Max(numActualArgs, fp->numFormalArgs()) + 1; // +1 = include |this|
-        maxArgv = fp->argv() - 1; // -1 = include |this|
-        calleeToken = CalleeToToken(&fp->callee());
-    } else {
-        calleeToken = CalleeToToken(fp->script());
-        thisv = fp->thisValue();
-        maxArgc = 1;
-        maxArgv = thisv.address();
-    }
-
     // Caller must construct |this| before invoking the Ion function.
-    JS_ASSERT_IF(fp->isConstructing(), fp->functionThis().isObject());
-    RootedValue result(cx, Int32Value(numActualArgs));
+    JS_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
+
+    data.result.setInt32(data.numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, NULL);
-        JitActivation activation(cx, fp->isConstructing());
+        JitActivation activation(cx, data.constructing);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->compartment()->ionCompartment());
 
-        fp->setRunningInJit();
-
-        // Single transition point from Interpreter to Ion.
-        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, /* scopeChain = */ NULL, 0,
-              result.address());
-
-        fp->clearRunningInJit();
+        // Single transition point from Interpreter to Baseline.
+        enter(data.jitcode, data.maxArgc, data.maxArgv, /* osrFrame = */NULL, data.calleeToken,
+              /* scopeChain = */ NULL, 0, data.result.address());
     }
 
     JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
 
-    // The trampoline wrote the return value but did not set the HAS_RVAL flag.
-    fp->setReturnValue(result);
+    // Jit callers wrap primitive constructor return.
+    if (!data.result.isMagic() && data.constructing && data.result.isPrimitive())
+        data.result = data.maxArgv[0];
 
-    // Ion callers wrap primitive constructor return.
-    if (!result.isMagic() && fp->isConstructing() && fp->returnValue().isPrimitive())
-        fp->setReturnValue(ObjectValue(fp->constructorThis()));
+    // Release temporary buffer used for OSR into Ion.
+    cx->runtime()->getIonRuntime(cx)->freeOsrTempData();
 
-    JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
-    return result.isMagic() ? IonExec_Error : IonExec_Ok;
+    JS_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
+    return data.result.isMagic() ? IonExec_Error : IonExec_Ok;
+}
+
+bool
+ion::SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoValueVector &vals)
+{
+    data.osrFrame = NULL;
+
+    if (state.isInvoke()) {
+        CallArgs &args = state.asInvoke()->args();
+        unsigned numFormals = state.script()->function()->nargs;
+        data.constructing = state.asInvoke()->constructing();
+        data.numActualArgs = args.length();
+        data.maxArgc = Max(args.length(), numFormals) + 1;
+        data.scopeChain = NULL;
+        data.calleeToken = CalleeToToken(args.callee().toFunction());
+
+        if (data.numActualArgs >= numFormals) {
+            data.maxArgv = args.base() + 1;
+        } else {
+            // Pad missing arguments with |undefined|.
+            for (size_t i = 1; i < args.length() + 2; i++) {
+                if (!vals.append(args.base()[i]))
+                    return false;
+            }
+
+            while (vals.length() < numFormals + 1) {
+                if (!vals.append(UndefinedValue()))
+                    return false;
+            }
+
+            JS_ASSERT(vals.length() >= numFormals + 1);
+            data.maxArgv = vals.begin();
+        }
+    } else {
+        data.constructing = false;
+        data.numActualArgs = 0;
+        data.maxArgc = 1;
+        data.maxArgv = state.asExecute()->addressOfThisv();
+        data.scopeChain = state.asExecute()->scopeChain();
+
+        data.calleeToken = CalleeToToken(state.script());
+
+        if (state.script()->isForEval() &&
+            !(state.asExecute()->type() & StackFrame::GLOBAL))
+        {
+            ScriptFrameIter iter(cx);
+            if (iter.isFunctionFrame())
+                data.calleeToken = CalleeToToken(iter.callee());
+        }
+    }
+
+    return true;
 }
 
 IonExecStatus
-ion::Cannon(JSContext *cx, StackFrame *fp)
+ion::Cannon(JSContext *cx, RunState &state)
 {
-    RootedScript script(cx, fp->script());
-    IonScript *ion = script->ionScript();
-    IonCode *code = ion->method();
-    void *jitcode = code->raw();
+    IonScript *ion = state.script()->ionScript();
+
+    EnterJitData data(cx);
+    data.jitcode = ion->method()->raw();
+
+    AutoValueVector vals(cx);
+    if (!SetEnterJitData(cx, data, state, vals))
+        return IonExec_Error;
 
 #if JS_TRACE_LOGGING
     TraceLog(TraceLogging::defaultLogger(),
@@ -1883,19 +1920,16 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
              script);
 #endif
 
-    IonExecStatus status = EnterIon(cx, fp, jitcode);
+    IonExecStatus status = EnterIon(cx, data);
 
 #if JS_TRACE_LOGGING
-    if (status == IonExec_Bailout) {
-        TraceLog(TraceLogging::defaultLogger(),
-                 TraceLogging::ION_CANNON_BAIL,
-                 script);
-    } else {
-        TraceLog(TraceLogging::defaultLogger(),
-                 TraceLogging::ION_CANNON_STOP,
-                 script);
-    }
+    TraceLog(TraceLogging::defaultLogger(),
+             TraceLogging::ION_CANNON_STOP,
+             script);
 #endif
+
+    if (status == IonExec_Ok)
+        state.setReturnValue(data.result);
 
     return status;
 }

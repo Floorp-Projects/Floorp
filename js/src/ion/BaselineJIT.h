@@ -263,10 +263,13 @@ IsBaselineEnabled(JSContext *cx)
 }
 
 MethodStatus
-CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, bool newType);
+CanEnterBaselineMethod(JSContext *cx, RunState &state);
+
+MethodStatus
+CanEnterBaselineAtBranch(JSContext *cx, StackFrame *fp, bool newType);
 
 IonExecStatus
-EnterBaselineMethod(JSContext *cx, StackFrame *fp);
+EnterBaselineMethod(JSContext *cx, RunState &state);
 
 IonExecStatus
 EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc);

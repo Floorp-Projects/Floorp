@@ -347,71 +347,68 @@ js::ValueToCallable(JSContext *cx, const Value &v, int numToSkip, MaybeConstruct
 }
 
 static JS_NEVER_INLINE bool
-Interpret(JSContext *cx, StackFrame *entryFrame);
+Interpret(JSContext *cx, RunState &state);
 
-bool
-js::RunScript(JSContext *cx, StackFrame *fp)
+StackFrame *
+InvokeState::pushInterpreterFrame(JSContext *cx)
 {
-    JS_ASSERT(fp == cx->stack.fp());
-    RootedScript script(cx, fp->script());
+    ifg_.construct();
 
-    JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->stack.regs().pc == script->code);
-    JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
+    if (!cx->stack.pushInvokeFrame(cx, args_, initial_, ifg_.addr()))
+        return NULL;
 
-    JS_CHECK_RECURSION(cx, return false);
+    return ifg_.ref().fp();
+}
 
-    // Check to see if useNewType flag should be set for this frame.
-    if (fp->isFunctionFrame() && fp->isConstructing() && !fp->isGeneratorFrame() &&
-        cx->typeInferenceEnabled())
+StackFrame *
+ExecuteState::pushInterpreterFrame(JSContext *cx)
+{
+    efg_.construct();
+
+    if (!cx->stack.pushExecuteFrame(cx, script_, thisv_, scopeChain_, type_, evalInFrame_,
+                                    efg_.addr()))
     {
-        ScriptFrameIter iter(cx);
-        if (!iter.done()) {
-            JSScript *script = iter.script();
-            jsbytecode *pc = iter.pc();
-            if (UseNewType(cx, script, pc))
-                fp->setUseNewType();
-        }
+        return NULL;
     }
 
-#ifdef DEBUG
-    struct CheckStackBalance {
-        JSContext *cx;
-        StackFrame *fp;
-        CheckStackBalance(JSContext *cx)
-          : cx(cx), fp(cx->stack.fp())
-        {}
-        ~CheckStackBalance() {
-            JS_ASSERT(fp == cx->stack.fp());
-        }
-    } check(cx);
-#endif
+    return efg_.ref().fp();
+}
+
+bool
+js::RunScript(JSContext *cx, RunState &state)
+{
+    JS_CHECK_RECURSION(cx, return false);
 
     SPSEntryMarker marker(cx->runtime());
 
 #ifdef JS_ION
     if (ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, AbstractFramePtr(fp),
-                                                 fp->isConstructing());
+        ion::MethodStatus status = ion::CanEnter(cx, state);
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled) {
-            ion::IonExecStatus status = ion::Cannon(cx, fp);
+            ion::IonExecStatus status = ion::Cannon(cx, state);
             return !IsErrorStatus(status);
         }
     }
 
     if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, fp, false);
+        ion::MethodStatus status = ion::CanEnterBaselineMethod(cx, state);
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled) {
-            ion::IonExecStatus status = ion::EnterBaselineMethod(cx, fp);
+            ion::IonExecStatus status = ion::EnterBaselineMethod(cx, state);
             return !IsErrorStatus(status);
         }
     }
 #endif
 
-    return Interpret(cx, fp);
+    if (state.isInvoke()) {
+        InvokeState &invoke = *state.asInvoke();
+        TypeMonitorCall(cx, invoke.args(), invoke.constructing());
+    }
+
+    return Interpret(cx, state);
 }
 
 /*
@@ -459,18 +456,22 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (!fun->getOrCreateScript(cx))
         return false;
 
-    TypeMonitorCall(cx, args, construct);
-
-    /* Get pointer to new frame/slots, prepare arguments. */
-    InvokeFrameGuard ifg;
-    if (!cx->stack.pushInvokeFrame(cx, args, initial, &ifg))
-        return false;
-
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
-    JSBool ok = RunScript(cx, ifg.fp());
+    InvokeState state(cx, args, initial);
 
-    /* Propagate the return value out. */
-    args.rval().set(ifg.fp()->returnValue());
+    // Check to see if useNewType flag should be set for this frame.
+    if (construct && cx->typeInferenceEnabled()) {
+        ScriptFrameIter iter(cx);
+        if (!iter.done()) {
+            JSScript *script = iter.script();
+            jsbytecode *pc = iter.pc();
+            if (UseNewType(cx, script, pc))
+                state.setUseNewType();
+        }
+    }
+
+    JSBool ok = RunScript(cx, state);
+
     JS_ASSERT_IF(ok && construct, !args.rval().isPrimitive());
     return ok;
 }
@@ -578,10 +579,8 @@ bool
 js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, const Value &thisv,
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
-    RootedObject scopeChain(cx, &scopeChainArg);
-
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain->isScope());
+    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.isScope());
 
     if (script->isEmpty()) {
         if (result)
@@ -589,19 +588,13 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
         return true;
     }
 
-    ExecuteFrameGuard efg;
-    if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
-        return false;
-
-    TypeScript::SetThis(cx, script, efg.fp()->thisValue());
+    TypeScript::SetThis(cx, script, thisv);
 
     Probes::startExecution(script);
-    bool ok = RunScript(cx, efg.fp());
+    ExecuteState state(cx, script, thisv, scopeChainArg, type, evalInFrame, result);
+    bool ok = RunScript(cx, state);
     Probes::stopExecution(script);
 
-    /* Propgate the return value out. */
-    if (result)
-        *result = efg.fp()->returnValue();
     return ok;
 }
 
@@ -1026,7 +1019,7 @@ js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 }
 
 static JS_NEVER_INLINE bool
-Interpret(JSContext *cx, StackFrame *entryFrame)
+Interpret(JSContext *cx, RunState &state)
 {
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
@@ -1101,9 +1094,18 @@ Interpret(JSContext *cx, StackFrame *entryFrame)
             interrupts.enable();                                              \
     JS_END_MACRO
 
+    StackFrame *entryFrame = state.pushInterpreterFrame(cx);
+    if (!entryFrame)
+        return false;
+
+    JS_ASSERT_IF(!state.isGenerator(), cx->stack.regs().pc == state.script()->code);
+    JS_ASSERT_IF(entryFrame->isEvalFrame(), state.script()->isActiveEval);
+
     /* Repoint cx->regs to a local variable for faster access. */
     FrameRegs regs = cx->stack.regs();
     PreserveRegsGuard interpGuard(cx, regs);
+
+    InterpreterActivation activation(cx, entryFrame, regs);
 
     /*
      * Help Debugger find frames running scripts that it has put in
@@ -1140,11 +1142,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame)
     RootedShape rootShape0(cx);
     RootedScript rootScript0(cx);
     DebugOnly<uint32_t> blockDepth;
-
-    if (!entryFrame)
-        entryFrame = regs.fp();
-
-    InterpreterActivation activation(cx, entryFrame, regs);
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
@@ -1350,7 +1347,7 @@ BEGIN_CASE(JSOP_LOOPENTRY)
 #ifdef JS_ION
     // Attempt on-stack replacement with Baseline code.
     if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, regs.fp(), false);
+        ion::MethodStatus status = ion::CanEnterBaselineAtBranch(cx, regs.fp(), false);
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
@@ -1363,9 +1360,7 @@ BEGIN_CASE(JSOP_LOOPENTRY)
             interpReturnOK = (maybeOsr == ion::IonExec_Ok);
 
             if (entryFrame != regs.fp())
-                goto jit_return;
-
-            regs.fp()->setFinishedInInterpreter();
+                goto jit_return_pop_frame;
             goto leave_on_safe_point;
         }
     }
@@ -1454,14 +1449,17 @@ BEGIN_CASE(JSOP_STOP)
         else
             Probes::exitScript(cx, script, script->function(), regs.fp());
 
-        /* The JIT inlines the epilogue. */
 #if defined(JS_ION)
-  jit_return:
+  jit_return_pop_frame:
 #endif
 
         activation.popFrame(regs.fp());
         cx->stack.popInlineFrame(regs);
         SET_SCRIPT(regs.fp()->script());
+
+#if defined(JS_ION)
+  jit_return:
+#endif
 
         JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_INVOKE);
 
@@ -2256,10 +2254,43 @@ BEGIN_CASE(JSOP_FUNCALL)
         DO_NEXT_OP(len);
     }
 
-    TypeMonitorCall(cx, args, construct);
-
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+
+#ifdef JS_ION
+    InvokeState state(cx, args, initial);
+    if (newType)
+        state.setUseNewType();
+
+    if (!newType && ion::IsEnabled(cx)) {
+        ion::MethodStatus status = ion::CanEnter(cx, state);
+        if (status == ion::Method_Error)
+            goto error;
+        if (status == ion::Method_Compiled) {
+            ion::IonExecStatus exec = ion::Cannon(cx, state);
+            CHECK_BRANCH();
+            regs.sp = args.spAfterCall();
+            interpReturnOK = !IsErrorStatus(exec);
+            goto jit_return;
+        }
+    }
+
+    if (ion::IsBaselineEnabled(cx)) {
+        ion::MethodStatus status = ion::CanEnterBaselineMethod(cx, state);
+        if (status == ion::Method_Error)
+            goto error;
+        if (status == ion::Method_Compiled) {
+            ion::IonExecStatus exec = ion::EnterBaselineMethod(cx, state);
+            CHECK_BRANCH();
+            regs.sp = args.spAfterCall();
+            interpReturnOK = !IsErrorStatus(exec);
+            goto jit_return;
+        }
+    }
+#endif
+
+    TypeMonitorCall(cx, args, construct);
+
     funScript = fun->nonLazyScript();
     if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;
@@ -2270,33 +2301,6 @@ BEGIN_CASE(JSOP_FUNCALL)
         regs.fp()->setUseNewType();
 
     SET_SCRIPT(regs.fp()->script());
-
-#ifdef JS_ION
-    if (!newType && ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, AbstractFramePtr(regs.fp()),
-                                                 regs.fp()->isConstructing());
-        if (status == ion::Method_Error)
-            goto error;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus exec = ion::Cannon(cx, regs.fp());
-            CHECK_BRANCH();
-            interpReturnOK = !IsErrorStatus(exec);
-            goto jit_return;
-        }
-    }
-
-    if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, regs.fp(), newType);
-        if (status == ion::Method_Error)
-            goto error;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus exec = ion::EnterBaselineMethod(cx, regs.fp());
-            CHECK_BRANCH();
-            interpReturnOK = !IsErrorStatus(exec);
-            goto jit_return;
-        }
-    }
-#endif
 
     if (!regs.fp()->prologue(cx))
         goto error;
@@ -3171,7 +3175,6 @@ END_CASE(JSOP_ARRAYPUSH)
         regs.fp()->epilogue(cx);
     else
         Probes::exitScript(cx, script, script->function(), regs.fp());
-    regs.fp()->setFinishedInInterpreter();
 
     gc::MaybeVerifyBarriers(cx, true);
 
@@ -3182,6 +3185,9 @@ END_CASE(JSOP_ARRAYPUSH)
      */
   leave_on_safe_point:
 #endif
+
+    if (interpReturnOK)
+        state.setReturnValue(entryFrame->returnValue());
 
     return interpReturnOK;
 }
