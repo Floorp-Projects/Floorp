@@ -892,6 +892,12 @@ struct ExpandoAndGeneration {
       generation(0)
   {}
 
+  void Unlink()
+  {
+      ++generation;
+      expando.setUndefined();
+  }
+
   JS::Heap<JS::Value> expando;
   uint32_t generation;
 };

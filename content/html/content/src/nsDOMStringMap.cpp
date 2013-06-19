@@ -28,8 +28,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStringMap)
     tmp->mElement->RemoveMutationObserver(tmp);
     tmp->mElement = nullptr;
   }
-  ++tmp->mExpandoAndGeneration.generation;
-  tmp->mExpandoAndGeneration.expando = JS::UndefinedValue();
+  tmp->mExpandoAndGeneration.Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMStringMap)
