@@ -198,8 +198,11 @@ function checkPayloadInfo(payload, reason) {
 
 function checkPayload(request, reason, successfulPings) {
   let payload = decodeRequestPayload(request);
+  // Take off ["","submit","telemetry"].
+  let pathComponents = request.path.split("/").slice(3);
 
   checkPayloadInfo(payload, reason);
+  do_check_eq(reason, pathComponents[1]);
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);

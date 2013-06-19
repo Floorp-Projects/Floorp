@@ -676,10 +676,14 @@ TelemetryPing.prototype = {
 
   submissionPath: function submissionPath(ping) {
     let slug;
-    if (!ping || ping.reason == "test-ping") {
+    if (!ping) {
       slug = this._uuid;
     } else {
-      slug = ping.slug;
+      let info = ping.payload.info;
+      let pathComponents = [ping.slug, info.reason, info.appName,
+                            info.appVersion, info.appUpdateChannel,
+                            info.appBuildID];
+      slug = pathComponents.join("/");
     }
     return "/submit/telemetry/" + slug;
   },
