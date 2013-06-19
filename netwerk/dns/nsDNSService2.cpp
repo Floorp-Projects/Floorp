@@ -255,11 +255,7 @@ public:
                       uint16_t          af)
         : mResolver(res)
         , mHost(host)
-        // Sometimes aListener is a main-thread only object like XPCWrappedJS, and
-        // sometimes it's a threadsafe object like nsSocketTransport. Use a main-
-        // thread pointer holder, but disable strict enforcement of thread invariants.
-        // The AddRef implementation of XPCWrappedJS will assert if we go wrong here.
-        , mListener(new nsMainThreadPtrHolder<nsIDNSListener>(listener, false))
+        , mListener(listener)
         , mFlags(flags)
         , mAF(af) {}
     ~nsDNSAsyncRequest() {}
@@ -272,7 +268,7 @@ public:
 
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
-    nsMainThreadPtrHandle<nsIDNSListener> mListener;
+    nsCOMPtr<nsIDNSListener> mListener;
     uint16_t                 mFlags;
     uint16_t                 mAF;
 };
@@ -296,6 +292,7 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
     MOZ_EVENT_TRACER_DONE(this, "net::dns::lookup");
 
     mListener->OnLookupComplete(this, rec, status);
+    mListener = nullptr;
 
     // release the reference to ourselves that was added before we were
     // handed off to the host resolver.
