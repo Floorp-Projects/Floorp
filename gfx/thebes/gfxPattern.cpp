@@ -55,6 +55,7 @@ gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aTransform)
   , mGfxPattern(NULL)
   , mSourceSurface(aSurface)
   , mTransform(aTransform)
+  , mExtend(EXTEND_NONE)
 {
 }
 
@@ -323,7 +324,7 @@ gfxPattern::SetExtend(GraphicsExtend extend)
   } else {
     // This is always a surface pattern and will default to EXTEND_PAD
     // for EXTEND_PAD_EDGE.
-    mExtend = ToExtendMode(extend);
+    mExtend = extend;
   }
 }
 
@@ -358,7 +359,7 @@ gfxPattern::Extend() const
   if (mPattern) {
     return (GraphicsExtend)cairo_pattern_get_extend(mPattern);
   } else {
-    return ThebesExtend(mExtend);
+    return mExtend;
   }
 }
 
