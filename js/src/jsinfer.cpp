@@ -5983,7 +5983,7 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
     if (obj->isIndexed())
         type->flags |= OBJECT_FLAG_SPARSE_INDEXES;
 
-    if (obj->is<ArrayObject>() && obj->getArrayLength() > INT32_MAX)
+    if (obj->is<ArrayObject>() && obj->as<ArrayObject>().length() > INT32_MAX)
         type->flags |= OBJECT_FLAG_LENGTH_OVERFLOW;
 
     obj->type_ = type;

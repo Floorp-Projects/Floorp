@@ -591,9 +591,10 @@ JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
 
 #ifdef DEBUG
     if (obj->is<ArrayObject>()) {
+        ArrayObject *arr = &obj->as<ArrayObject>();
         uint32_t index;
         if (js_IdIsIndex(id, &index))
-            JS_ASSERT(index < obj->getArrayLength() || obj->arrayLengthIsWritable());
+            JS_ASSERT(index < arr->length() || arr->lengthIsWritable());
     }
 #endif
 

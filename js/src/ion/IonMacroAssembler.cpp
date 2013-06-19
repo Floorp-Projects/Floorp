@@ -594,7 +594,7 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
                 Address(obj, elementsOffset + ObjectElements::offsetOfCapacity()));
         store32(Imm32(templateObject->getDenseInitializedLength()),
                 Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
-        store32(Imm32(templateObject->getArrayLength()),
+        store32(Imm32(templateObject->as<ArrayObject>().length()),
                 Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
         store32(Imm32(templateObject->shouldConvertDoubleElements()
                       ? ObjectElements::CONVERT_DOUBLE_ELEMENTS
