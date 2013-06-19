@@ -116,6 +116,8 @@
                       autocheck="false" prefKey="exception"/>
             <menuitem label="&btnConsoleWarnings;" type="checkbox"
                       autocheck="false" prefKey="jswarn"/>
+            <menuitem label="&btnConsoleLog;" type="checkbox"
+                      autocheck="false" prefKey="jslog"/>
           </menupopup>
         </toolbarbutton>
         <toolbarbutton label="&btnPageSecurity.label;" type="menu-button"
