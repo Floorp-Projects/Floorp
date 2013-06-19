@@ -1630,7 +1630,7 @@ extern bool
 HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned resolveFlags,
            bool *found);
 
-template <> struct RootMethods<PropertyId>
+template <> struct GCMethods<PropertyId>
 {
     static PropertyId initial() { return PropertyId(); }
     static ThingRootKind kind() { return THING_ROOT_PROPERTY_ID; }

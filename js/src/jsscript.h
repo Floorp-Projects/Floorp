@@ -211,7 +211,7 @@ class Bindings
 };
 
 template <>
-struct RootMethods<Bindings> {
+struct GCMethods<Bindings> {
     static Bindings initial();
     static ThingRootKind kind() { return THING_ROOT_BINDINGS; }
     static bool poisoned(const Bindings &bindings) {

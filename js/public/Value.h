@@ -1401,14 +1401,14 @@ JS_PUBLIC_API(void) HeapValueRelocate(Value *valuep);
 
 namespace js {
 
-template <> struct RootMethods<const JS::Value>
+template <> struct GCMethods<const JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }
     static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
 };
 
-template <> struct RootMethods<JS::Value>
+template <> struct GCMethods<JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }

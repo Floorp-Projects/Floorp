@@ -1786,7 +1786,7 @@ IsPoisonedId(jsid iden)
 
 namespace js {
 
-template <> struct RootMethods<jsid>
+template <> struct GCMethods<jsid>
 {
     static jsid initial() { return JSID_VOID; }
     static ThingRootKind kind() { return THING_ROOT_ID; }
@@ -3343,7 +3343,7 @@ class PropertyDescriptorOperations
 namespace js {
 
 template <>
-struct RootMethods<JSPropertyDescriptor> {
+struct GCMethods<JSPropertyDescriptor> {
     static JSPropertyDescriptor initial() { return JSPropertyDescriptor(); }
     static ThingRootKind kind() { return THING_ROOT_PROPERTY_DESCRIPTOR; }
     static bool poisoned(const JSPropertyDescriptor &desc) {
