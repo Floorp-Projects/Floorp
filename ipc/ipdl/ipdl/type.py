@@ -1776,7 +1776,7 @@ class BuildProcessGraph(TcheckVisitor):
                 if parentSideActor is not None:
                     self.error(bridges.loc,
                                "ambiguous bridge `%s' between `%s' and `%s'",
-                               bridgeProto.type.name(),
+                               bridgeProto.name(),
                                parentSideProto.name(),
                                childSideProto.name())
                 else:
