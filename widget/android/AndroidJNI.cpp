@@ -91,20 +91,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    const jchar *observerKey = jenv->GetStringChars(jObserverKey, NULL);
-    nsString sObserverKey(observerKey);
-    sObserverKey.SetLength(jenv->GetStringLength(jObserverKey));
-    jenv->ReleaseStringChars(jObserverKey, observerKey);
-
-    nsAppShell::gAppShell->RemoveObserver(sObserverKey);
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstring jStackTrace)
 {
 #ifdef MOZ_CRASHREPORTER
