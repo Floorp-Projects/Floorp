@@ -690,6 +690,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case REMOVE_OBSERVER: {
+            ReadCharactersField(jenv);
+            break;
+        }
+
         case LOW_MEMORY: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             break;
