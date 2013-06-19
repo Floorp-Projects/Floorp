@@ -213,7 +213,6 @@ extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpStaticsClass;
 extern Class StopIterationClass;
-extern Class WeakMapClass;
 
 class ArrayBufferObject;
 class GlobalObject;
@@ -958,7 +957,6 @@ class JSObject : public js::ObjectImpl
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
     inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
     inline bool isTypedArray()       const;
-    inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of Proxy. */
     inline bool isWrapper()                 const;
