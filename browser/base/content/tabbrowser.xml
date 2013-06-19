@@ -4137,7 +4137,7 @@
          * close many tabs at once.
          */
         let target = event.originalTarget;
-        if (target.className == 'tab-close-button') {
+        if (target.classList.contains('tab-close-button')) {
           // We preemptively set this to allow the closing-multiple-tabs-
           // in-a-row case.
           if (this._blockDblClick) {
