@@ -54,12 +54,14 @@ typedef CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallba
 class nsGeolocationRequest
  : public nsIContentPermissionRequest
  , public nsITimerCallback
+ , public nsIGeolocationUpdate
  , public PCOMContentPermissionRequestChild
 {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSIGEOLOCATIONUPDATE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGeolocationRequest, nsIContentPermissionRequest)
 
@@ -70,9 +72,6 @@ class nsGeolocationRequest
                        bool watchPositionRequest = false,
                        int32_t watchId = 0);
   void Shutdown();
-
-  // Called by the geolocation device to notify that a location has changed.
-  void Update(nsIDOMGeoPosition* aPosition);
 
   void SendLocation(nsIDOMGeoPosition* location);
   bool WantsHighAccuracy() {return mOptions && mOptions->enableHighAccuracy;}
@@ -87,8 +86,6 @@ class nsGeolocationRequest
   bool IsWatch() { return mIsWatchPositionRequest; }
   int32_t WatchId() { return mWatchId; }
  private:
-
-  void NotifyError(int16_t errorCode);
   bool mIsWatchPositionRequest;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
@@ -176,13 +173,15 @@ namespace dom {
  * Can return a geolocation info
  */
 class Geolocation MOZ_FINAL : public nsIDOMGeoGeolocation,
-                                public nsWrapperCache
+                              public nsIGeolocationUpdate,
+                              public nsWrapperCache
 {
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Geolocation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Geolocation, nsIDOMGeoGeolocation)
 
+  NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIDOMGEOGEOLOCATION
 
   Geolocation();
@@ -195,9 +194,6 @@ public:
 
   int32_t WatchPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);
   void GetCurrentPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);
-
-  // Called by the geolocation device to notify that a location has changed.
-  void Update(nsIDOMGeoPosition* aPosition);
 
   void SetCachedPosition(Position* aPosition);
   Position* GetCachedPosition();
@@ -311,6 +307,12 @@ private:
   nsRefPtr<Geolocation> mParent;
 };
 
+}
+
+inline nsISupports*
+ToSupports(dom::Geolocation* aGeolocation)
+{
+  return ToSupports(static_cast<nsIDOMGeoGeolocation*>(aGeolocation));
 }
 }
 
