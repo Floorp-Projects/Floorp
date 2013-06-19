@@ -148,15 +148,9 @@ class FullParseHandler
         return new_<NullaryNode>(PNK_ELISION, pos());
     }
 
-    ParseNode *newUnary(ParseNodeKind kind, ParseNode *kid, JSOp op = JSOP_NOP) {
-        return new_<UnaryNode>(kind, op, kid->pn_pos, kid);
-    }
-    ParseNode *newUnary(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        return new_<UnaryNode>(kind, op, pos(), (ParseNode *) NULL);
-    }
-    void setUnaryKid(ParseNode *pn, ParseNode *kid) {
-        pn->pn_kid = kid;
-        pn->pn_pos.end = kid->pn_pos.end;
+    ParseNode *newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode *kid) {
+        TokenPos pos = {begin, kid ? kid->pn_pos.end : begin + 1};
+        return new_<UnaryNode>(kind, op, pos, kid);
     }
 
     ParseNode *newBinary(ParseNodeKind kind, JSOp op = JSOP_NOP) {

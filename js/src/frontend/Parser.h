@@ -452,7 +452,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
                              size_t startOffset, FunctionType type, FunctionSyntaxKind kind,
                              bool strict, bool *becameStrict = NULL);
 
-    Node unaryOpExpr(ParseNodeKind kind, JSOp op);
+    Node unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin);
 
     Node condition();
     Node comprehensionTail(Node kid, unsigned blockid, bool isGenexp,

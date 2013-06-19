@@ -76,13 +76,11 @@ class SyntaxParseHandler
 
     Node newElision() { return NodeGeneric; }
 
-    Node newUnary(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
+    Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
         if (kind == PNK_SEMI && kid == NodeString)
             return NodeStringExprStatement;
         return NodeGeneric;
     }
-    Node newUnary(ParseNodeKind kind, JSOp op = JSOP_NOP) { return NodeGeneric; }
-    void setUnaryKid(Node pn, Node kid) {}
 
     Node newBinary(ParseNodeKind kind, JSOp op = JSOP_NOP) { return NodeGeneric; }
     Node newBinary(ParseNodeKind kind, Node left, JSOp op = JSOP_NOP) { return NodeGeneric; }
