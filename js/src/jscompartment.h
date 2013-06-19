@@ -7,12 +7,9 @@
 #ifndef jscompartment_h___
 #define jscompartment_h___
 
-#include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/Util.h"
 
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsgc.h"
 #include "jsobj.h"
 

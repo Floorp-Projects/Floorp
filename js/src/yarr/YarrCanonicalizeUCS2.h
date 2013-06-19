@@ -29,8 +29,8 @@
 #define YarrCanonicalizeUCS2_H
 
 #include "mozilla/StandardInteger.h"
+
 #include "wtfbridge.h"
-#include "assembler/wtf/Assertions.h"
 
 namespace JSC { namespace Yarr {
 

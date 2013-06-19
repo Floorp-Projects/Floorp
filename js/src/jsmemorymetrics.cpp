@@ -6,7 +6,6 @@
 
 #include "js/MemoryMetrics.h"
 
-#include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 
 #include "jsapi.h"

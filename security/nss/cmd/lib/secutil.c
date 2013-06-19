@@ -494,7 +494,8 @@ SECU_GetClientAuthData(void *arg, PRFileDesc *fd,
 }
 
 SECStatus
-SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
+SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii,
+		     PRBool warnOnPrivateKeyInAsciiFile)
 {
     SECStatus rv;
     if (ascii) {
@@ -510,6 +511,11 @@ SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 	if (!asc) {
 	    fprintf(stderr, "unable to read data from input file\n");
 	    return SECFailure;
+	}
+
+	if (warnOnPrivateKeyInAsciiFile && strstr(asc, "PRIVATE KEY")) {
+	    fprintf(stderr, "Warning: ignoring private key. Consider to use "
+	                    "pk12util.\n");
 	}
 
 	/* check for headers and trailers and remove them */
@@ -3551,7 +3557,7 @@ SECU_FindCertByNicknameOrFilename(CERTCertDBHandle *handle,
         if (!fd) {
             return NULL;
         }
-        rv = SECU_ReadDERFromFile(&item, fd, ascii);
+        rv = SECU_ReadDERFromFile(&item, fd, ascii, PR_FALSE);
         PR_Close(fd);
         if (rv != SECSuccess || !item.len) {
             PORT_Free(item.data);

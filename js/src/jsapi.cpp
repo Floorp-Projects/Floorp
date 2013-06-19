@@ -11,7 +11,6 @@
 #include "jsapi.h"
 
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ThreadLocal.h"
 
@@ -23,14 +22,12 @@
 
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsclist.h"
 #include "jsprf.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jsclone.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsdate.h"
 #include "jsdtoa.h"
 #include "jsexn.h"
@@ -43,7 +40,6 @@
 #include "jsnum.h"
 #include "json.h"
 #include "jsobj.h"
-#include "jsopcode.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -66,6 +62,7 @@
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "ion/AsmJS.h"
+#include "ion/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"

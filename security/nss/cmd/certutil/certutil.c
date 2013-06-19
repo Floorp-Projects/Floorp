@@ -3158,7 +3158,8 @@ merge_fail:
 	certutil.commands[cmd_AddEmailCert].activated) {
 	PRBool isCreate = certutil.commands[cmd_CreateNewCert].activated;
 	rv = SECU_ReadDERFromFile(isCreate ? &certReqDER : &certDER, inFile,
-				  certutil.options[opt_ASCIIForIO].activated);
+				  certutil.options[opt_ASCIIForIO].activated,
+				  PR_TRUE);
 	if (rv)
 	    goto shutdown;
     }
@@ -3229,6 +3230,10 @@ merge_fail:
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
          certutil.commands[cmd_AddCert].activated ||
 	 certutil.commands[cmd_AddEmailCert].activated) {
+	if (strstr(certutil.options[opt_Trust].arg, "u")) {
+	    fprintf(stderr, "Notice: Trust flag u is set automatically if the "
+			    "private key is present.\n");
+	}
 	rv = AddCert(slot, certHandle, name, 
 	             certutil.options[opt_Trust].arg,
 	             &certDER,
