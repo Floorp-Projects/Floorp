@@ -27,6 +27,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
+#include "vm/StopIterationObject.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
@@ -1194,6 +1195,12 @@ js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
+static inline bool
+IsStopIteration(const js::Value &v)
+{
+    return v.isObject() && v.toObject().is<StopIterationObject>();
+}
+
 bool
 js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
@@ -1286,7 +1293,7 @@ stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBo
     return true;
 }
 
-Class js::StopIterationClass = {
+Class StopIterationObject::class_ = {
     "StopIteration",
     JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration) |
     JSCLASS_FREEZE_PROTO,
@@ -1821,7 +1828,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 #endif
 
     if (global->getPrototype(JSProto_StopIteration).isUndefined()) {
-        proto = global->createBlankPrototype(cx, &StopIterationClass);
+        proto = global->createBlankPrototype(cx, &StopIterationObject::class_);
         if (!proto || !JSObject::freeze(cx, proto))
             return false;
 
@@ -1829,7 +1836,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
             return false;
 
-        MarkStandardClassInitializedNoProto(global, &StopIterationClass);
+        MarkStandardClassInitializedNoProto(global, &StopIterationObject::class_);
     }
 
     return true;
