@@ -1698,7 +1698,7 @@ function WifiWorker() {
   this._connectionInfoTimer = null;
   this._reconnectOnDisconnect = false;
 
-  // Users of instances of nsITimer should keep a reference to the timer until 
+  // Users of instances of nsITimer should keep a reference to the timer until
   // it is no longer needed in order to assure the timer is fired.
   this._callbackTimer = null;
 
@@ -2258,7 +2258,7 @@ WifiWorker.prototype = {
   tetheringSettings: {},
 
   initTetheringSettings: function initTetheringSettings() {
-    this.tetheringSettings[SETTINGS_WIFI_ENABLED] = false;
+    this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] = null;
     this.tetheringSettings[SETTINGS_WIFI_SSID] = DEFAULT_WIFI_SSID;
     this.tetheringSettings[SETTINGS_WIFI_SECURITY_TYPE] = DEFAULT_WIFI_SECURITY_TYPE;
     this.tetheringSettings[SETTINGS_WIFI_SECURITY_PASSWORD] = DEFAULT_WIFI_SECURITY_PASSWORD;
