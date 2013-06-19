@@ -485,6 +485,30 @@ private:
   mozInlineSpellStatus mStatus;
 };
 
+// Used as the nsIEditorSpellCheck::InitSpellChecker callback.
+class InitEditorSpellCheckCallback MOZ_FINAL : public nsIEditorSpellCheckCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit InitEditorSpellCheckCallback(mozInlineSpellChecker* aSpellChecker)
+    : mSpellChecker(aSpellChecker) {}
+
+  NS_IMETHOD EditorSpellCheckDone()
+  {
+    return mSpellChecker ? mSpellChecker->EditorSpellCheckInited() : NS_OK;
+  }
+
+  void Cancel()
+  {
+    mSpellChecker = nullptr;
+  }
+
+private:
+  nsRefPtr<mozInlineSpellChecker> mSpellChecker;
+};
+NS_IMPL_ISUPPORTS1(InitEditorSpellCheckCallback, nsIEditorSpellCheckCallback)
+
 
 NS_INTERFACE_MAP_BEGIN(mozInlineSpellChecker)
   NS_INTERFACE_MAP_ENTRY(nsIInlineSpellChecker)
@@ -566,6 +590,39 @@ nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
 
     rv = UnregisterEventListeners();
   }
+
+  // Notify ENDED observers now.  If we wait to notify as we normally do when
+  // these async operations finish, then in the meantime the editor may create
+  // another inline spell checker and cause more STARTED and ENDED
+  // notifications to be broadcast.  Interleaved notifications for the same
+  // editor but different inline spell checkers could easily confuse
+  // observers.  They may receive two consecutive STARTED notifications for
+  // example, which we guarantee will not happen.
+
+  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditor);
+  if (mPendingSpellCheck) {
+    // Cancel the pending editor spell checker initialization.
+    mPendingSpellCheck = nullptr;
+    mPendingInitEditorSpellCheckCallback->Cancel();
+    mPendingInitEditorSpellCheckCallback = nullptr;
+    ChangeNumPendingSpellChecks(-1, editor);
+  }
+
+  // Increment this token so that pending UpdateCurrentDictionary calls and
+  // scheduled spell checks are discarded when they finish.
+  mDisabledAsyncToken++;
+
+  if (mNumPendingUpdateCurrentDictionary > 0) {
+    // Account for pending UpdateCurrentDictionary calls.
+    ChangeNumPendingSpellChecks(-mNumPendingUpdateCurrentDictionary, editor);
+    mNumPendingUpdateCurrentDictionary = 0;
+  }
+  if (mNumPendingSpellChecks > 0) {
+    // If mNumPendingSpellChecks is still > 0 at this point, the remainder is
+    // pending scheduled spell checks.
+    ChangeNumPendingSpellChecks(-mNumPendingSpellChecks, editor);
+  }
+
   mEditor = nullptr;
 
   return rv;
@@ -673,30 +730,6 @@ mozInlineSpellChecker::GetEnableRealTimeSpell(bool* aEnabled)
   return NS_OK;
 }
 
-// Used as the nsIEditorSpellCheck::InitSpellChecker callback.
-class InitEditorSpellCheckCallback MOZ_FINAL : public nsIEditorSpellCheckCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  explicit InitEditorSpellCheckCallback(mozInlineSpellChecker* aSpellChecker)
-    : mSpellChecker(aSpellChecker) {}
-
-  NS_IMETHOD EditorSpellCheckDone()
-  {
-    return mSpellChecker ? mSpellChecker->EditorSpellCheckInited() : NS_OK;
-  }
-
-  void Cancel()
-  {
-    mSpellChecker = nullptr;
-  }
-
-private:
-  nsRefPtr<mozInlineSpellChecker> mSpellChecker;
-};
-NS_IMPL_ISUPPORTS1(InitEditorSpellCheckCallback, nsIEditorSpellCheckCallback)
-
 // mozInlineSpellChecker::SetEnableRealTimeSpell
 
 NS_IMETHODIMP
@@ -704,46 +737,7 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
 {
   if (!aEnabled) {
     mSpellCheck = nullptr;
-
-    // Hold on to mEditor since Cleanup nulls it out.  See below.
-    nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditor);
-
-    nsresult rv = Cleanup(false);
-
-    // Notify ENDED observers now.  If we wait to notify as we normally do when
-    // these async operations finish, then in the meantime the editor may create
-    // another inline spell checker and cause more STARTED and ENDED
-    // notifications to be broadcast.  Interleaved notifications for the same
-    // editor but different inline spell checkers could easily confuse
-    // observers.  They may receive two consecutive STARTED notifications for
-    // example, which we guarantee will not happen.  Plus, mEditor must always
-    // be passed to observers.  If we wait to notify, we'd have to hold on to
-    // mEditor because Cleanup nulls it out.
-
-    if (mPendingSpellCheck) {
-      // Cancel the pending editor spell checker initialization.
-      mPendingSpellCheck = nullptr;
-      mPendingInitEditorSpellCheckCallback->Cancel();
-      mPendingInitEditorSpellCheckCallback = nullptr;
-      ChangeNumPendingSpellChecks(-1, editor);
-    }
-
-    // Increment this token so that pending UpdateCurrentDictionary calls and
-    // scheduled spell checks are discarded when they finish.
-    mDisabledAsyncToken++;
-
-    if (mNumPendingUpdateCurrentDictionary > 0) {
-      // Account for pending UpdateCurrentDictionary calls.
-      ChangeNumPendingSpellChecks(-mNumPendingUpdateCurrentDictionary, editor);
-      mNumPendingUpdateCurrentDictionary = 0;
-    }
-    if (mNumPendingSpellChecks > 0) {
-      // If mNumPendingSpellChecks is still > 0 at this point, the remainder is
-      // pending scheduled spell checks.
-      ChangeNumPendingSpellChecks(-mNumPendingSpellChecks, editor);
-    }
-
-    return rv;
+    return Cleanup(false);
   }
 
   if (mSpellCheck) {
