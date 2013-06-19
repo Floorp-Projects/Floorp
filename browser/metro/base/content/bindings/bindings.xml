@@ -204,28 +204,6 @@
     </handlers>
   </binding>
 
-  <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textarea">
-    <handlers>
-      <handler event="contextmenu" phase="capturing">
-        <![CDATA[
-          let box = this.inputField.parentNode;
-          box.showContextMenu(this, event, false);
-        ]]>
-      </handler>
-    </handlers>
-  </binding>
-
-  <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#timed-textbox">
-    <handlers>
-      <handler event="contextmenu" phase="capturing">
-        <![CDATA[
-          let box = this.inputField.parentNode;
-          box.showContextMenu(this, event, false);
-        ]]>
-      </handler>
-    </handlers>
-  </binding>
-
   <binding id="search-textbox" extends="chrome://global/content/bindings/textbox.xml#search-textbox">
     <implementation>
       <field name="_searchClear">
@@ -267,17 +245,6 @@
           }, 0, this);
         }
       ]]></handler>
-    </handlers>
-  </binding>
-
-  <binding id="numberbox" extends="chrome://global/content/bindings/numberbox.xml#numberbox">
-    <handlers>
-      <handler event="contextmenu" phase="capturing">
-        <![CDATA[
-          let box = this.inputField.parentNode;
-          box.showContextMenu(this, event, false);
-        ]]>
-      </handler>
     </handlers>
   </binding>
 
