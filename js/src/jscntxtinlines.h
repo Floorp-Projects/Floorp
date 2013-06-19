@@ -126,11 +126,11 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
 struct PreserveRegsGuard
 {
     PreserveRegsGuard(JSContext *cx, FrameRegs &regs)
-      : prevContextRegs(cx->maybeRegs()), cx(cx), regs_(regs) {
+      : prevContextRegs(cx->stack.maybeRegs()), cx(cx), regs_(regs) {
         cx->stack.repointRegs(&regs_);
     }
     ~PreserveRegsGuard() {
-        JS_ASSERT(cx->maybeRegs() == &regs_);
+        JS_ASSERT(cx->stack.maybeRegs() == &regs_);
         *prevContextRegs = regs_;
         cx->stack.repointRegs(prevContextRegs);
     }
@@ -458,7 +458,7 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 inline bool
 JSContext::canSetDefaultVersion() const
 {
-    return !stack.hasfp() && !hasVersionOverride;
+    return !currentlyRunning() && !hasVersionOverride;
 }
 
 inline void
@@ -518,7 +518,7 @@ JSContext::setDefaultCompartmentObject(JSObject *obj)
          * final leaveCompartment call to set the context's compartment back to
          * defaultCompartmentObject->compartment()).
          */
-        JS_ASSERT(!hasfp());
+        JS_ASSERT(!currentlyRunning());
         setCompartment(obj ? obj->compartment() : NULL);
         if (throwing)
             wrapPendingException();

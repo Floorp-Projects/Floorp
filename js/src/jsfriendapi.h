@@ -125,7 +125,7 @@ extern JS_FRIEND_API(JSString *)
 JS_BasicObjectToString(JSContext *cx, JSHandleObject obj);
 
 extern JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+js_GetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JS::MutableHandleValue vp);
 
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
@@ -891,6 +891,12 @@ struct ExpandoAndGeneration {
     : expando(UndefinedValue()),
       generation(0)
   {}
+
+  void Unlink()
+  {
+      ++generation;
+      expando.setUndefined();
+  }
 
   JS::Heap<JS::Value> expando;
   uint32_t generation;

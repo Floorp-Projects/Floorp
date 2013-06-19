@@ -247,12 +247,10 @@ ifeq ($(MOZ_PKG_FORMAT),APK)
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 include $(MOZILLA_DIR)/config/android-common.mk
 
-# DEBUG_JARSIGNER is defined by android-common.mk and always debug
-# signs.  We want to release sign if possible.
 ifdef MOZ_SIGN_CMD
-RELEASE_JARSIGNER := $(MOZ_SIGN_CMD) -f jar
+JARSIGNER := $(MOZ_SIGN_CMD) -f jar
 else
-RELEASE_JARSIGNER := $(DEBUG_JARSIGNER)
+JARSIGNER ?= echo
 endif
 
 DIST_FILES =
@@ -329,12 +327,10 @@ ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
 ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
-# Robocop and Fennec need to be signed with the same key, which means
-# release signing them both.
 INNER_ROBOCOP_PACKAGE= \
   $(NSINSTALL) $(GECKO_APP_AP_PATH)/fennec_ids.txt $(_ABS_DIST) && \
-  cp $(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk $(_ABS_DIST)/robocop-unaligned.apk && \
-  $(RELEASE_JARSIGNER) $(_ABS_DIST)/robocop-unaligned.apk && \
+  cp $(ROBOCOP_PATH)/robocop-debug-signed-unaligned.apk $(_ABS_DIST)/robocop-unaligned.apk && \
+  $(JARSIGNER) $(_ABS_DIST)/robocop-unaligned.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-unaligned.apk $(_ABS_DIST)/robocop.apk
 endif
 else
@@ -374,10 +370,9 @@ INNER_MAKE_PACKAGE	= \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) $(SZIP_LIBRARIES) && \
     $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(OMNIJAR_NAME)) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
-  cp $(_ABS_DIST)/gecko.ap_ $(_ABS_DIST)/gecko.apk && \
-  $(ZIP) -vj0 $(_ABS_DIST)/gecko.apk $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
+  $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
   cp $(_ABS_DIST)/gecko.apk $(_ABS_DIST)/gecko-unsigned-unaligned.apk && \
-  $(RELEASE_JARSIGNER) $(_ABS_DIST)/gecko.apk && \
+  $(JARSIGNER) $(_ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE)
 

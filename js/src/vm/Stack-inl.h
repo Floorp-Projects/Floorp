@@ -74,7 +74,7 @@ inline void
 StackFrame::initPrev(JSContext *cx)
 {
     JS_ASSERT(flags_ & HAS_PREVPC);
-    if (FrameRegs *regs = cx->maybeRegs()) {
+    if (FrameRegs *regs = cx->stack.maybeRegs()) {
         prev_ = regs->fp();
         prevpc_ = regs->pc;
         JS_ASSERT(uint32_t(prevpc_ - prev_->script()->code) < prev_->script()->length);
@@ -448,6 +448,20 @@ AbstractFramePtr::scopeChain() const
         return asStackFrame()->scopeChain();
 #ifdef JS_ION
     return asBaselineFrame()->scopeChain();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
+}
+
+inline void
+AbstractFramePtr::pushOnScopeChain(ScopeObject &scope)
+{
+    if (isStackFrame()) {
+        asStackFrame()->pushOnScopeChain(scope);
+        return;
+    }
+#ifdef JS_ION
+    asBaselineFrame()->pushOnScopeChain(scope);
 #else
     JS_NOT_REACHED("Invalid frame");
 #endif

@@ -150,20 +150,20 @@ class BaselineFrame
         return (Value *)this - (slot + 1);
     }
 
-    Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing) const {
+    Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
         JS_ASSERT(i < script()->nfixed);
         return *valueSlot(i);
     }
 
-    Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing) const {
+    Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         JS_ASSERT(i < numFormalArgs());
         JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
         JS_ASSERT_IF(checkAliasing, !script()->formalIsAliased(i));
         return argv()[i];
     }
 
-    Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const {
+    Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         JS_ASSERT(i < numActualArgs());
         JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
         JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
@@ -335,6 +335,9 @@ class BaselineFrame
         return isFunctionFrame() && !isEvalFrame();
     }
     bool isDebuggerFrame() const {
+        return false;
+    }
+    bool isGeneratorFrame() const {
         return false;
     }
 

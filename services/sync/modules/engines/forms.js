@@ -267,7 +267,7 @@ FormTracker.prototype = {
         if (!this._enabled) {
           Svc.Obs.add("form-notifier", this);
           Svc.Obs.add("satchel-storage-changed", this);
-          // nsHTMLFormElement doesn't use the normal observer/observe
+          // HTMLFormElement doesn't use the normal observer/observe
           // pattern and looks up nsIFormSubmitObservers to .notify()
           // them so add manually to observers
           Cc["@mozilla.org/observer-service;1"]

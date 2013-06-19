@@ -60,14 +60,6 @@ members = [
 
     'nsIDOMTouchList.*',
 
-    # dom/interfaces/html
-    'nsIDOMHTMLFormElement.elements',
-    'nsIDOMHTMLFormElement.name',
-    'nsIDOMHTMLFormElement.submit',
-    'nsIDOMHTMLFormElement.length',
-    'nsIDOMHTMLFormElement.target',
-    'nsIDOMHTMLFormElement.action',
-
     # dom/interfaces/storage
     'nsIDOMToString.toString',
     'nsIDOMStorage.setItem',
@@ -142,9 +134,6 @@ irregularFilenames = {
 
 customIncludes = [
     'nsDOMQS.h',
-    'mozilla/dom/NodeBinding.h',
-    'mozilla/dom/ElementBinding.h',
-    'mozilla/dom/HTMLElementBinding.h',
     'nsPerformance.h',
     'mozilla/dom/EventTargetBinding.h',
     'mozilla/dom/EventBinding.h',
@@ -186,9 +175,6 @@ customMethodCalls = {
 newBindingProperties = {
     # Once the last entry here goes away, we can make the sNativePropertyHooks
     # of bindings static.
-    'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMEvent': 'mozilla::dom::EventBinding::sNativePropertyHooks.mNativeProperties.regular',
     }
