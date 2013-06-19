@@ -6375,21 +6375,18 @@ Parser<ParseHandler>::identifierName()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::atomNode(ParseNodeKind kind, JSOp op)
+Parser<ParseHandler>::stringLiteral()
 {
     JSAtom *atom = tokenStream.currentToken().atom();
-    Node pn = handler.newAtom(kind, atom, op);
-    if (!pn)
-        return null();
 
     // Large strings are fast to parse but slow to compress. Stop compression on
     // them, so we don't wait for a long time for compression to finish at the
     // end of compilation.
     const size_t HUGE_STRING = 50000;
-    if (sct && sct->active() && kind == PNK_STRING && atom->length() >= HUGE_STRING)
+    if (sct && sct->active() && atom->length() >= HUGE_STRING)
         sct->abort();
 
-    return pn;
+    return handler.newStringLiteral(atom, pos());
 }
 
 template <typename ParseHandler>
@@ -6589,7 +6586,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     } else if (atom == context->names().set) {
                         op = JSOP_INITPROP_SETTER;
                     } else {
-                        pn3 = handler.newAtom(PNK_NAME, atom);
+                        pn3 = handler.newAtom(PNK_NAME, atom, pos());
                         if (!pn3)
                             return null();
                         break;
@@ -6614,7 +6611,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                             if (!atom)
                                 return null();
                         } else {
-                            pn3 = handler.newName(atom->asPropertyName(), pc, PNK_STRING);
+                            pn3 = stringLiteral();
                             if (!pn3)
                                 return null();
                         }
@@ -6629,7 +6626,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                             return null();
                     } else {
                         tokenStream.ungetToken();
-                        pn3 = handler.newAtom(PNK_NAME, atom);
+                        pn3 = handler.newAtom(PNK_NAME, atom, pos());
                         if (!pn3)
                             return null();
                         break;
@@ -6659,7 +6656,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     if (!pn3)
                         return null();
                 } else {
-                    pn3 = handler.newAtom(PNK_STRING, atom);
+                    pn3 = stringLiteral();
                     if (!pn3)
                         return null();
                 }
@@ -6798,7 +6795,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
       }
 
       case TOK_STRING:
-        return atomNode(PNK_STRING, JSOP_STRING);
+        return stringLiteral();
 
       case TOK_NAME:
         return identifierName();
