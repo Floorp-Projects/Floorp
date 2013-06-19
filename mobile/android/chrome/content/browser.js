@@ -30,6 +30,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
+                                  "resource://gre/modules/LoginManagerContent.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
@@ -2563,6 +2566,8 @@ Tab.prototype = {
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
+    this.browser.addEventListener("DOMAutoComplete", this, true);
+    this.browser.addEventListener("blur", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
     // Note that the XBL binding is untrusted
@@ -2712,6 +2717,8 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
+    this.browser.removeEventListener("DOMAutoComplete", this, true);
+    this.browser.removeEventListener("blur", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
     this.browser.removeEventListener("PluginBindingAttached", this, true);
@@ -3205,6 +3212,8 @@ Tab.prototype = {
       case "DOMContentLoaded": {
         let target = aEvent.originalTarget;
 
+        LoginManagerContent.onContentLoaded(aEvent);
+
         // ignore on frames and other documents
         if (target != this.browser.contentDocument)
           return;
@@ -3365,6 +3374,12 @@ Tab.prototype = {
         // tab is brought to the front.
         let tab = BrowserApp.getTabForWindow(aEvent.target.top);
         BrowserApp.selectTab(tab);
+        break;
+      }
+
+      case "DOMAutoComplete":
+      case "blur": {
+        LoginManagerContent.onUsernameInput(aEvent);
         break;
       }
 
