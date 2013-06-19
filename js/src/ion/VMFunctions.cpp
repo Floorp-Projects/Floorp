@@ -10,6 +10,7 @@
 #include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
 
+#include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/StringObject-inl.h"
@@ -361,20 +362,20 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 }
 
 JSObject *
-ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res)
+ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject objRes)
 {
-    JS_ASSERT(obj1->is<ArrayObject>());
-    JS_ASSERT(obj2->is<ArrayObject>());
-    JS_ASSERT_IF(res, res->is<ArrayObject>());
+    Rooted<ArrayObject*> arr1(cx, &obj1->as<ArrayObject>());
+    Rooted<ArrayObject*> arr2(cx, &obj2->as<ArrayObject>());
+    Rooted<ArrayObject*> arrRes(cx, objRes ? &objRes->as<ArrayObject>() : NULL);
 
-    if (res) {
+    if (arrRes) {
         // Fast path if we managed to allocate an object inline.
-        if (!js::array_concat_dense(cx, obj1, obj2, res))
+        if (!js::array_concat_dense(cx, arr1, arr2, arrRes))
             return NULL;
-        return res;
+        return arrRes;
     }
 
-    Value argv[] = { UndefinedValue(), ObjectValue(*obj1), ObjectValue(*obj2) };
+    Value argv[] = { UndefinedValue(), ObjectValue(*arr1), ObjectValue(*arr2) };
     AutoValueArray ava(cx, argv, 3);
     if (!js::array_concat(cx, 1, argv))
         return NULL;
@@ -700,24 +701,25 @@ NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
 
 JSObject *
 InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject templateObj,
-                  HandleObject res)
+                  HandleObject objRes)
 {
-    if (res) {
-        JS_ASSERT(res->is<ArrayObject>());
-        JS_ASSERT(!res->getDenseInitializedLength());
-        JS_ASSERT(res->type() == templateObj->type());
-        JS_ASSERT(res->type()->unknownProperties());
+    if (objRes) {
+        Rooted<ArrayObject*> arrRes(cx, &objRes->as<ArrayObject>());
+
+        JS_ASSERT(!arrRes->getDenseInitializedLength());
+        JS_ASSERT(arrRes->type() == templateObj->type());
+        JS_ASSERT(arrRes->type()->unknownProperties());
 
         // Fast path: we managed to allocate the array inline; initialize the
         // slots.
         if (length > 0) {
-            if (!res->ensureElements(cx, length))
+            if (!arrRes->ensureElements(cx, length))
                 return NULL;
-            res->setDenseInitializedLength(length);
-            res->initDenseElements(0, rest, length);
-            res->setArrayLengthInt32(length);
+            arrRes->setDenseInitializedLength(length);
+            arrRes->initDenseElements(0, rest, length);
+            arrRes->setLengthInt32(length);
         }
-        return res;
+        return arrRes;
     }
 
     return NewDenseCopiedArray(cx, length, rest, NULL);
