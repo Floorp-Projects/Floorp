@@ -1819,10 +1819,6 @@ ia64*-hpux*)
     	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	;;
     esac
-
-    if test "$HAVE_64BIT_OS"; then
-    	AC_DEFINE(_WIN64)
-    fi
     ;;
 
 *-netbsd*)
