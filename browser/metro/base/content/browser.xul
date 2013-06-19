@@ -334,7 +334,6 @@
                      flex="1"
                      ontextentered="BrowserUI.handleUrlbarEnter(param);"
                      onkeydown="BrowserUI.navEditKeyPress();"
-                     onclick="BrowserUI._urlbarClicked(event);"
                      onblur="BrowserUI._urlbarBlurred();"/>
           </hbox>
         </hbox>
@@ -363,10 +362,6 @@
         <toolbarbutton id="clear-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>
     </appbar>
-
-    <!-- Chrome touch selection overlay -->
-    <!-- onclick addresses dom bug 835175 -->
-    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
 
     <autoscroller class="autoscroller" id="autoscrollerid"/>
 
@@ -606,6 +601,10 @@
       </dialog>
     </box>
 #endif
+
+    <!-- Chrome touch selection overlay -->
+    <!-- onclick addresses dom bug 835175 -->
+    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
 
     <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
       <!-- onclick is dom bug 835175 -->
