@@ -142,7 +142,7 @@ class FullParseHandler
         return new_<UnaryNode>(kind, op, kid->pn_pos, kid);
     }
     ParseNode *newUnary(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        return new_<UnaryNode>(kind, op, tokenStream.currentToken().pos, (ParseNode *) NULL);
+        return new_<UnaryNode>(kind, op, pos(), (ParseNode *) NULL);
     }
     void setUnaryKid(ParseNode *pn, ParseNode *kid) {
         pn->pn_kid = kid;
@@ -150,8 +150,7 @@ class FullParseHandler
     }
 
     ParseNode *newBinary(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        return new_<BinaryNode>(kind, op, tokenStream.currentToken().pos,
-                                (ParseNode *) NULL, (ParseNode *) NULL);
+        return new_<BinaryNode>(kind, op, pos(), (ParseNode *) NULL, (ParseNode *) NULL);
     }
     ParseNode *newBinary(ParseNodeKind kind, ParseNode *left,
                          JSOp op = JSOP_NOP) {

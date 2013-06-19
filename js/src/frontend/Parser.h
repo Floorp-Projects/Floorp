@@ -533,6 +533,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
                        ParseContext<ParseHandler> *outerpc,
                        FunctionSyntaxKind kind = Expression);
 
+    TokenPos pos() const { return tokenStream.currentToken().pos; }
+
     friend class CompExprTransplanter;
     friend class GenexpGuard<ParseHandler>;
     friend struct BindData<ParseHandler>;
