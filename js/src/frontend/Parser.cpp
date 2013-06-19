@@ -6522,10 +6522,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
     switch (tt) {
       case TOK_FUNCTION:
-        pn = functionExpr();
-        if (!pn)
-            return null();
-        break;
+        return functionExpr();
 
       case TOK_LB:
       {
@@ -6678,7 +6675,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                 if (!atom)
                     return null();
-                pn3 = handler.newNumber(tokenStream.currentToken());
+                pn3 = newNumber(tokenStream.currentToken());
                 break;
               case TOK_NAME:
                 {
@@ -6705,7 +6702,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
                         uint32_t index;
                         if (atom->isIndex(&index)) {
-                            pn3 = handler.newNumber(index);
+                            pn3 = handler.newNumber(index, NoDecimal, pos());
                             if (!pn3)
                                 return null();
                             tmp = DoubleValue(index);
@@ -6723,7 +6720,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                         atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                         if (!atom)
                             return null();
-                        pn3 = handler.newNumber(tokenStream.currentToken());
+                        pn3 = newNumber(tokenStream.currentToken());
                         if (!pn3)
                             return null();
                     } else {
@@ -6754,7 +6751,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 atom = tokenStream.currentToken().atom();
                 uint32_t index;
                 if (atom->isIndex(&index)) {
-                    pn3 = handler.newNumber(index);
+                    pn3 = handler.newNumber(index, NoDecimal, pos());
                     if (!pn3)
                         return null();
                 } else {
@@ -6879,10 +6876,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
-        pn = letBlock(LetExpresion);
-        if (!pn)
-            return null();
-        break;
+        return letBlock(LetExpresion);
 #endif
 
       case TOK_LP:
@@ -6896,26 +6890,20 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
         if (!genexp)
             MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
-        break;
+        return pn;
       }
 
       case TOK_STRING:
-        pn = atomNode(PNK_STRING, JSOP_STRING);
-        if (!pn)
-            return null();
-        break;
+        return atomNode(PNK_STRING, JSOP_STRING);
 
       case TOK_NAME:
-        pn = identifierName();
-        break;
+        return identifierName();
 
       case TOK_REGEXP:
-        pn = newRegExp();
-        break;
+        return newRegExp();
 
       case TOK_NUMBER:
-        pn = handler.newNumber(tokenStream.currentToken());
-        break;
+        return newNumber(tokenStream.currentToken());
 
       case TOK_TRUE:
         return handler.newBooleanLiteral(true, pos());
@@ -6963,7 +6951,6 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
         return null();
     }
-    return pn;
 }
 
 template <typename ParseHandler>
