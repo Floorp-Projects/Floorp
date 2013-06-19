@@ -313,27 +313,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocationRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIGeolocationUpdate)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGeolocationRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocationRequest)
 
 NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLocator)
-
-
-void
-nsGeolocationRequest::NotifyError(int16_t errorCode)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsRefPtr<PositionError> positionError = new PositionError(mLocator, errorCode);
-  if (!positionError) {
-    return;
-  }
-
-  positionError->NotifyCallback(mErrorCallback);
-}
-
 
 NS_IMETHODIMP
 nsGeolocationRequest::Notify(nsITimer* aTimer)
@@ -501,7 +487,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aPosition->GetCoords(getter_AddRefs(coords));
     if (coords) {
-      wrapped = new Position(mLocator, aPosition);
+      wrapped = new Position(ToSupports(mLocator), aPosition);
     }
   }
 
@@ -545,11 +531,22 @@ nsGeolocationRequest::GetPrincipal()
   return mLocator->GetPrincipal();
 }
 
-void
+NS_IMETHODIMP
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 {
   nsCOMPtr<nsIRunnable> ev = new RequestSendLocationEvent(aPosition, this);
   NS_DispatchToMainThread(ev);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequest::NotifyError(uint16_t aErrorCode)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<PositionError> positionError = new PositionError(mLocator, aErrorCode);
+  positionError->NotifyCallback(mErrorCallback);
+  return NS_OK;
 }
 
 void
@@ -777,6 +774,15 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGeolocationService::NotifyError(uint16_t aErrorCode)
+{
+  for (uint32_t i = 0; i < mGeolocators.Length(); i++) {
+    mGeolocators[i]->NotifyError(aErrorCode);
+  }
+
+  return NS_OK;
+}
 
 void
 nsGeolocationService::SetCachedPosition(nsIDOMGeoPosition* aPosition)
@@ -819,8 +825,15 @@ nsGeolocationService::StartDevice(nsIPrincipal *aPrincipal, bool aRequestPrivate
     return NS_ERROR_FAILURE;
   }
 
-  mProvider->Startup();
-  mProvider->Watch(this, aRequestPrivate);
+  nsresult rv;
+
+  if (NS_FAILED(rv = mProvider->Startup()) ||
+      NS_FAILED(rv = mProvider->Watch(this, aRequestPrivate))) {
+
+    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    return rv;
+  }
+
   obs->NotifyObservers(mProvider,
                        "geolocation-device-events",
                        NS_LITERAL_STRING("starting").get());
@@ -946,6 +959,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Geolocation)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoGeolocation)
+  NS_INTERFACE_MAP_ENTRY(nsIGeolocationUpdate)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Geolocation)
@@ -1076,11 +1090,12 @@ Geolocation::RemoveRequest(nsGeolocationRequest* aRequest)
   unused << requestWasKnown;
 }
 
-void
+NS_IMETHODIMP
 Geolocation::Update(nsIDOMGeoPosition *aSomewhere)
 {
   if (!WindowOwnerStillExists()) {
-    return Shutdown();
+    Shutdown();
+    return NS_OK;
   }
 
   for (uint32_t i = mPendingCallbacks.Length(); i > 0; i--) {
@@ -1089,9 +1104,32 @@ Geolocation::Update(nsIDOMGeoPosition *aSomewhere)
   }
 
   // notify everyone that is watching
-  for (uint32_t i = 0; i< mWatchingCallbacks.Length(); i++) {
+  for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
     mWatchingCallbacks[i]->Update(aSomewhere);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Geolocation::NotifyError(uint16_t aErrorCode)
+{
+  if (!WindowOwnerStillExists()) {
+    Shutdown();
+    return NS_OK;
+  }
+
+  for (uint32_t i = mPendingCallbacks.Length(); i > 0; i--) {
+    mPendingCallbacks[i-1]->NotifyError(aErrorCode);
+    RemoveRequest(mPendingCallbacks[i-1]);
+  }
+
+  // notify everyone that is watching
+  for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
+    mWatchingCallbacks[i]->NotifyError(aErrorCode);
+  }
+
+  return NS_OK;
 }
 
 void
