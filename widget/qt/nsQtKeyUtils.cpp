@@ -367,7 +367,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
             return KEY_NAME_INDEX_PrintableKey;
 
         case Qt::Key_Backtab:
-        case Qt::Key_Print:
         case Qt::Key_Direction_L:
         case Qt::Key_Direction_R:
         case Qt::Key_SingleCandidate:
