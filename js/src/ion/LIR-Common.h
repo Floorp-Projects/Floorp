@@ -1132,7 +1132,7 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     }
 };
 
-class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
+class LGetDynamicName : public LInstructionHelper<BOX_PIECES, 2, 3>
 {
   public:
     LIR_HEADER(GetDynamicName)
@@ -1169,7 +1169,7 @@ class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
     }
 };
 
-class LFilterArguments : public LCallInstructionHelper<0, 1, 2>
+class LFilterArguments : public LInstructionHelper<0, 1, 2>
 {
   public:
     LIR_HEADER(FilterArguments)
