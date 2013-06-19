@@ -24,6 +24,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
@@ -1019,7 +1020,7 @@ js::CloseIterator(JSContext *cx, HandleObject obj)
         }
     }
 #if JS_HAS_GENERATORS
-    else if (obj->isGenerator()) {
+    else if (obj->is<GeneratorObject>()) {
         return CloseGenerator(cx, obj);
     }
 #endif
@@ -1318,7 +1319,7 @@ Class StopIterationObject::class_ = {
 static void
 generator_finalize(FreeOp *fop, JSObject *obj)
 {
-    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
+    JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();
     if (!gen)
         return;
 
@@ -1432,7 +1433,7 @@ GeneratorState::pushInterpreterFrame(JSContext *cx)
 static void
 generator_trace(JSTracer *trc, JSObject *obj)
 {
-    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
+    JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();
     if (!gen)
         return;
 
@@ -1440,7 +1441,7 @@ generator_trace(JSTracer *trc, JSObject *obj)
         MarkGeneratorFrame(trc, gen);
 }
 
-Class js::GeneratorClass = {
+Class GeneratorObject::class_ = {
     "Generator",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub,         /* addProperty */
@@ -1483,7 +1484,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
         JSObject *proto = global->getOrCreateGeneratorPrototype(cx);
         if (!proto)
             return NULL;
-        obj = NewObjectWithGivenProto(cx, &GeneratorClass, proto, global);
+        obj = NewObjectWithGivenProto(cx, &GeneratorObject::class_, proto, global);
     }
     if (!obj)
         return NULL;
@@ -1615,9 +1616,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
 static JSBool
 CloseGenerator(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(obj->isGenerator());
-
-    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
+    JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();
     if (!gen) {
         /* Generator prototype object. */
         return true;
@@ -1632,7 +1631,7 @@ CloseGenerator(JSContext *cx, HandleObject obj)
 JS_ALWAYS_INLINE bool
 IsGenerator(const Value &v)
 {
-    return v.isObject() && v.toObject().hasClass(&GeneratorClass);
+    return v.isObject() && v.toObject().is<GeneratorObject>();
 }
 
 JS_ALWAYS_INLINE bool
@@ -1642,7 +1641,7 @@ generator_send_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
+    JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
     if (!gen || gen->state == JSGEN_CLOSED) {
         /* This happens when obj is the generator prototype. See bug 352885. */
         return js_ThrowStopIteration(cx);
@@ -1679,7 +1678,7 @@ generator_next_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
+    JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
     if (!gen || gen->state == JSGEN_CLOSED) {
         /* This happens when obj is the generator prototype. See bug 352885. */
         return js_ThrowStopIteration(cx);
@@ -1706,7 +1705,7 @@ generator_throw_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
+    JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
     if (!gen || gen->state == JSGEN_CLOSED) {
         /* This happens when obj is the generator prototype. See bug 352885. */
         cx->setPendingException(args.length() >= 1 ? args[0] : UndefinedValue());
@@ -1737,7 +1736,7 @@ generator_close_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
+    JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
     if (!gen || gen->state == JSGEN_CLOSED) {
         /* This happens when obj is the generator prototype. See bug 352885. */
         args.rval().setUndefined();
@@ -1820,7 +1819,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 
 #if JS_HAS_GENERATORS
     if (global->getSlot(GENERATOR_PROTO).isUndefined()) {
-        proto = global->createBlankPrototype(cx, &GeneratorClass);
+        proto = global->createBlankPrototype(cx, &GeneratorObject::class_);
         if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
             return false;
         global->setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));

@@ -205,7 +205,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 extern Class ArrayClass;
 extern Class DateClass;
 extern Class ErrorClass;
-extern Class GeneratorClass;
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
@@ -949,7 +948,6 @@ class JSObject : public js::ObjectImpl
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isError()            const { return hasClass(&js::ErrorClass); }
     inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
-    inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
     inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
