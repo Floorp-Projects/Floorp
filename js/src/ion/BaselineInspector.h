@@ -108,6 +108,7 @@ class BaselineInspector
 
     bool hasSeenNonNativeGetElement(jsbytecode *pc);
     bool hasSeenAccessedGetter(jsbytecode *pc);
+    bool hasSeenDoubleResult(jsbytecode *pc);
 };
 
 } // namespace ion

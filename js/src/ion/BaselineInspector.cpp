@@ -165,9 +165,9 @@ BaselineInspector::expectedResultType(jsbytecode *pc)
         return MIRType_Int32;
       case ICStub::BinaryArith_BooleanWithInt32:
       case ICStub::UnaryArith_Int32:
+      case ICStub::BinaryArith_DoubleWithInt32:
         return MIRType_Int32;
       case ICStub::BinaryArith_Double:
-      case ICStub::BinaryArith_DoubleWithInt32:
       case ICStub::UnaryArith_Double:
         return MIRType_Double;
       case ICStub::BinaryArith_StringConcat:
@@ -309,5 +309,24 @@ BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
 
     if (stub->isGetProp_Fallback())
         return stub->toGetProp_Fallback()->hasAccessedGetter();
+    return false;
+}
+
+bool
+BaselineInspector::hasSeenDoubleResult(jsbytecode *pc)
+{
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+    ICStub *stub = entry.fallbackStub();
+
+    JS_ASSERT(stub->isUnaryArith_Fallback() || stub->isBinaryArith_Fallback());
+
+    if (stub->isUnaryArith_Fallback())
+        return stub->toUnaryArith_Fallback()->sawDoubleResult();
+    else
+        return stub->toBinaryArith_Fallback()->sawDoubleResult();
+
     return false;
 }
