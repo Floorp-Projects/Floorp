@@ -2029,7 +2029,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
                      JS::Handle<JSObject*> instance,
                      JSBool* bp);
 JSBool
-InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
+InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JS::MutableHandle<JS::Value> vp,
                      JSBool* bp);
 
 // Helper for lenient getters/setters to report to console.  If this

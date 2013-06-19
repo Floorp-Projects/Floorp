@@ -1755,7 +1755,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
 }
 
 JSBool
-InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
+InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JS::MutableHandle<JS::Value> vp,
                      JSBool* bp)
 {
   if (!vp.isObject()) {
