@@ -1995,33 +1995,24 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName *lir)
     Register temp1 = ToRegister(lir->temp1());
     Register temp2 = ToRegister(lir->temp2());
     Register temp3 = ToRegister(lir->temp3());
+
+    masm.loadJSContext(temp3);
+
+    /* Make space for the outparam. */
+    masm.adjustStack(-int32_t(sizeof(Value)));
+    masm.movePtr(StackPointer, temp2);
+
+    masm.setupUnalignedABICall(4, temp1);
+    masm.passABIArg(temp3);
+    masm.passABIArg(scopeChain);
+    masm.passABIArg(name);
+    masm.passABIArg(temp2);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, GetDynamicName));
+
     const ValueOperand out = ToOutValue(lir);
 
-    RegisterSet temps;
-    temps.add(temp1);
-    temps.add(temp2);
-    temps.add(temp3);
-    temps.add(out);
-
-    // GC-free call with a JSContext* for heap allocations.
-    masm.loadJSContext(temp3);
-    saveVolatile(temps, lir->safepoint()->liveRegs());
-    {
-        /* Make space for the outparam. */
-        masm.adjustStack(-int32_t(sizeof(Value)));
-        masm.movePtr(StackPointer, temp2);
-
-        masm.setupUnalignedABICall(4, temp1);
-        masm.passABIArg(temp3);
-        masm.passABIArg(scopeChain);
-        masm.passABIArg(name);
-        masm.passABIArg(temp2);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, GetDynamicName));
-
-        masm.loadValue(Address(StackPointer, 0), out);
-        masm.adjustStack(sizeof(Value));
-    }
-    restoreVolatile(temps, lir->safepoint()->liveRegs());
+    masm.loadValue(Address(StackPointer, 0), out);
+    masm.adjustStack(sizeof(Value));
 
     Assembler::Condition cond = masm.testUndefined(Assembler::Equal, out);
     return bailoutIf(cond, lir->snapshot());
@@ -2034,24 +2025,15 @@ CodeGenerator::visitFilterArguments(LFilterArguments *lir)
     Register temp1 = ToRegister(lir->temp1());
     Register temp2 = ToRegister(lir->temp2());
 
-    RegisterSet temps;
-    temps.add(temp1);
-    temps.add(temp2);
-
-    // GC-free call with a JSContext* for heap allocations.
     masm.loadJSContext(temp2);
-    saveVolatile(temps, lir->safepoint()->liveRegs());
-    {
-        masm.setupUnalignedABICall(2, temp1);
-        masm.passABIArg(temp2);
-        masm.passABIArg(string);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, FilterArguments));
-    }
-    masm.movePtr(ReturnReg, temp1);
-    restoreVolatile(temps, lir->safepoint()->liveRegs());
+
+    masm.setupUnalignedABICall(2, temp1);
+    masm.passABIArg(temp2);
+    masm.passABIArg(string);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, FilterArguments));
 
     Label bail;
-    masm.branch32(Assembler::Equal, temp1, Imm32(0), &bail);
+    masm.branch32(Assembler::Equal, ReturnReg, Imm32(0), &bail);
     return bailoutFrom(&bail, lir->snapshot());
 }
 
