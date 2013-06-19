@@ -112,7 +112,7 @@ SocialUI = {
           break;
         case "social:profile-changed":
           if (this._matchesCurrentProvider(data)) {
-            SocialToolbar.updateProfile();
+            SocialToolbar.updateProvider();
             SocialMark.update();
             SocialChatBar.update();
           }
@@ -1073,7 +1073,6 @@ SocialToolbar = {
     userDetailsBroadcaster.setAttribute("label", loggedInStatusValue);
   },
 
-  // XXX doesn't this need to be called for profile changes, given its use of provider.profile?
   updateButton: function SocialToolbar_updateButton() {
     this._updateButtonHiddenState();
     let panel = document.getElementById("social-notification-panel");
