@@ -65,16 +65,16 @@ private:
     JSObject* mCompiled;
   };
 
-  friend class js::RootMethods<nsXBLMaybeCompiled<UncompiledT> >;
+  friend class js::GCMethods<nsXBLMaybeCompiled<UncompiledT> >;
 };
 
 /* Add support for JS::Heap<nsXBLMaybeCompiled>. */
 namespace js {
 
 template <class UncompiledT>
-struct RootMethods<nsXBLMaybeCompiled<UncompiledT> > : public RootMethods<JSObject *>
+struct GCMethods<nsXBLMaybeCompiled<UncompiledT> > : public GCMethods<JSObject *>
 {
-  typedef struct RootMethods<JSObject *> Base;
+  typedef struct GCMethods<JSObject *> Base;
 
   static nsXBLMaybeCompiled<UncompiledT> initial() { return nsXBLMaybeCompiled<UncompiledT>(); }
 

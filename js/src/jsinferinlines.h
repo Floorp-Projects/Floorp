@@ -1805,7 +1805,7 @@ js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32_t offset, uint3
 namespace js {
 
 template <>
-struct RootMethods<const types::Type>
+struct GCMethods<const types::Type>
 {
     static types::Type initial() { return types::Type::UnknownType(); }
     static ThingRootKind kind() { return THING_ROOT_TYPE; }
@@ -1816,7 +1816,7 @@ struct RootMethods<const types::Type>
 };
 
 template <>
-struct RootMethods<types::Type>
+struct GCMethods<types::Type>
 {
     static types::Type initial() { return types::Type::UnknownType(); }
     static ThingRootKind kind() { return THING_ROOT_TYPE; }
