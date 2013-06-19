@@ -6288,50 +6288,6 @@ Parser<ParseHandler>::argumentList(Node listNode)
     return true;
 }
 
-template <>
-PropertyName *
-Parser<FullParseHandler>::foldPropertyByValue(ParseNode *pn)
-{
-    /*
-     * Optimize property name lookups. If the name is a PropertyName,
-     * then make a name-based node so the emitter will use a name-based
-     * bytecode. Otherwise make a node using the property expression
-     * by value. If the node is a string containing an index, convert
-     * it to a number to save work later.
-     */
-
-    uint32_t index;
-    if (foldConstants) {
-        if (pn->isKind(PNK_STRING)) {
-            JSAtom *atom = pn->pn_atom;
-            if (atom->isIndex(&index)) {
-                pn->setKind(PNK_NUMBER);
-                pn->setOp(JSOP_DOUBLE);
-                pn->pn_dval = index;
-            } else {
-                return atom->asPropertyName();
-            }
-        } else if (pn->isKind(PNK_NUMBER)) {
-            double number = pn->pn_dval;
-            if (number != ToUint32(number)) {
-                JSAtom *atom = ToAtom<NoGC>(context, DoubleValue(number));
-                if (!atom)
-                    return NULL;
-                return atom->asPropertyName();
-            }
-        }
-    }
-
-    return NULL;
-}
-
-template <>
-PropertyName *
-Parser<SyntaxParseHandler>::foldPropertyByValue(Node pn)
-{
-    return NULL;
-}
-
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
@@ -6392,13 +6348,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             if (foldConstants && !FoldConstants(context, &propExpr, this))
                 return null();
 
-            PropertyName *name = foldPropertyByValue(propExpr);
-
-            uint32_t end = pos().end;
-            if (name)
-                nextMember = handler.newPropertyAccess(lhs, name, end);
-            else
-                nextMember = handler.newPropertyByValue(lhs, propExpr, end);
+            nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
                 return null();
         } else if (allowCallSyntax && tt == TOK_LP) {

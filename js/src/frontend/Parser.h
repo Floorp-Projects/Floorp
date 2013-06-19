@@ -506,7 +506,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool bindDestructuringVar(BindData<ParseHandler> *data, Node pn);
     bool bindDestructuringLHS(Node pn);
     bool makeSetCall(Node pn, unsigned msg);
-    PropertyName *foldPropertyByValue(Node pn);
     Node cloneLeftHandSide(Node opn);
     Node cloneParseTree(Node opn);
 
