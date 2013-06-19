@@ -4280,7 +4280,7 @@
         var clickedOnce = false;
         function enableDblClick(event) {
           var target = event.originalTarget;
-          if (target.className == 'tab-close-button')
+          if (target.classList.contains("tab-close-button"))
             target._ignoredClick = true;
           if (!clickedOnce) {
             clickedOnce = true;
