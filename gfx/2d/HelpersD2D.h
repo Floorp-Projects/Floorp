@@ -8,13 +8,18 @@
 
 #include "moz-d2d1-1.h"
 
+#include <vector>
+
 #include <dwrite.h>
 #include "2D.h"
+#include "Logging.h"
 
 #include "ScaledFontDWrite.h"
 
 namespace mozilla {
 namespace gfx {
+
+ID2D1Factory* D2DFactory();
 
 static inline D2D1_POINT_2F D2DPoint(const Point &aPoint)
 {
@@ -246,6 +251,114 @@ DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, Au
   run->fontEmSize = aFont->GetSize();
   run->glyphCount = aGlyphs.mNumGlyphs;
   run->isSideways = FALSE;
+}
+
+static TemporaryRef<ID2D1Geometry>
+ConvertRectToGeometry(const D2D1_RECT_F& aRect)
+{
+  RefPtr<ID2D1RectangleGeometry> rectGeom;
+  D2DFactory()->CreateRectangleGeometry(&aRect, byRef(rectGeom));
+  return rectGeom.forget();
+}
+
+static TemporaryRef<ID2D1Geometry>
+GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform)
+{
+  RefPtr<ID2D1PathGeometry> tmpGeometry;
+  D2DFactory()->CreatePathGeometry(byRef(tmpGeometry));
+  RefPtr<ID2D1GeometrySink> currentSink;
+  tmpGeometry->Open(byRef(currentSink));
+  aGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                      aTransform, currentSink);
+  currentSink->Close();
+  return tmpGeometry;
+}
+
+static TemporaryRef<ID2D1Geometry>
+IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
+{
+  RefPtr<ID2D1PathGeometry> pathGeom;
+  D2DFactory()->CreatePathGeometry(byRef(pathGeom));
+  RefPtr<ID2D1GeometrySink> sink;
+  pathGeom->Open(byRef(sink));
+  aGeometryA->CombineWithGeometry(aGeometryB, D2D1_COMBINE_MODE_INTERSECT, nullptr, sink);
+  sink->Close();
+
+  return pathGeom;
+}
+
+static TemporaryRef<ID2D1StrokeStyle>
+CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
+{
+  RefPtr<ID2D1StrokeStyle> style;
+
+  D2D1_CAP_STYLE capStyle;
+  D2D1_LINE_JOIN joinStyle;
+
+  switch (aStrokeOptions.mLineCap) {
+  case CAP_BUTT:
+    capStyle = D2D1_CAP_STYLE_FLAT;
+    break;
+  case CAP_ROUND:
+    capStyle = D2D1_CAP_STYLE_ROUND;
+    break;
+  case CAP_SQUARE:
+    capStyle = D2D1_CAP_STYLE_SQUARE;
+    break;
+  }
+
+  switch (aStrokeOptions.mLineJoin) {
+  case JOIN_MITER:
+    joinStyle = D2D1_LINE_JOIN_MITER;
+    break;
+  case JOIN_MITER_OR_BEVEL:
+    joinStyle = D2D1_LINE_JOIN_MITER_OR_BEVEL;
+    break;
+  case JOIN_ROUND:
+    joinStyle = D2D1_LINE_JOIN_ROUND;
+    break;
+  case JOIN_BEVEL:
+    joinStyle = D2D1_LINE_JOIN_BEVEL;
+    break;
+  }
+
+
+  HRESULT hr;
+  if (aStrokeOptions.mDashPattern) {
+    typedef std::vector<Float> FloatVector;
+    // D2D "helpfully" multiplies the dash pattern by the line width.
+    // That's not what cairo does, or is what <canvas>'s dash wants.
+    // So fix the multiplication in advance.
+    Float lineWidth = aStrokeOptions.mLineWidth;
+    FloatVector dash(aStrokeOptions.mDashPattern,
+                     aStrokeOptions.mDashPattern + aStrokeOptions.mDashLength);
+    for (FloatVector::iterator it = dash.begin(); it != dash.end(); ++it) {
+      *it /= lineWidth;
+    }
+
+    hr = D2DFactory()->CreateStrokeStyle(
+      D2D1::StrokeStyleProperties(capStyle, capStyle,
+                                  capStyle, joinStyle,
+                                  aStrokeOptions.mMiterLimit,
+                                  D2D1_DASH_STYLE_CUSTOM,
+                                  aStrokeOptions.mDashOffset),
+      &dash[0], // data() is not C++98, although it's in recent gcc
+                // and VC10's STL
+      dash.size(),
+      byRef(style));
+  } else {
+    hr = D2DFactory()->CreateStrokeStyle(
+      D2D1::StrokeStyleProperties(capStyle, capStyle,
+                                  capStyle, joinStyle,
+                                  aStrokeOptions.mMiterLimit),
+      nullptr, 0, byRef(style));
+  }
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create Direct2D stroke style.";
+  }
+
+  return style;
 }
 
 }
