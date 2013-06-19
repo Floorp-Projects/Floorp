@@ -65,3 +65,4 @@ sed -e "s/^The git tag\/revision used was .*/The git tag\/revision used was ${ve
 # apply outstanding local patches
 patch -p3 < bug776661.patch
 patch -p1 < padding.patch
+patch -p3 < mingw.patch
