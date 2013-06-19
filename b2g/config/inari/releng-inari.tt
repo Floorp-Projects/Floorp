@@ -1,0 +1,20 @@
+[
+{
+"size": 4249600,
+"digest": "9f2150350e6fb2e8fe8744f47c02799865de16f8539844374188c2b421d8a044c213af57c8fe9dc7ad2038150687b50eba251dc782fa606674a86d8acc9e3dad",
+"algorithm": "sha512",
+"filename": "boot.img"
+},
+{
+"size": 33335060,
+"digest": "aa60b13458fabcb60c671e80db4dfc0cda3090fc5df27215cec3fb01f9cf2ac4403c93be99d1816a1f2d903febd4b027f7193a5fcec1aacf18ebb419ee9f32d7",
+"algorithm": "sha512",
+"filename": "backup-inari.tar.xz"
+},
+{
+"size": 1570553,
+"digest": "ea03de74df73b05e939c314cd15c54aac7b5488a407b7cc4f5f263f3049a1f69642c567dd35c43d0bc3f0d599d0385a26ab2dd947a6b18f9044e4918b382eea7",
+"algorithm": "sha512",
+"filename": "Adreno200-AU_LINUX_ANDROID_ICS_CHOCO_CS.04.00.03.06.001.zip"
+}
+]
