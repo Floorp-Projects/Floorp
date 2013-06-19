@@ -198,7 +198,7 @@ class IonBuilder : public MIRGenerator
 
   public:
     IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-               BaselineInspector *inspector, CompileInfo *info, AbstractFramePtr fp,
+               BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
 
     bool build();
@@ -586,7 +586,7 @@ class IonBuilder : public MIRGenerator
 
   private:
     JSContext *cx;
-    AbstractFramePtr fp;
+    BaselineFrame *baselineFrame_;
     AbortReason abortReason_;
 
     jsbytecode *pc;
