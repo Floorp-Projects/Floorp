@@ -1249,7 +1249,7 @@ XPCJSRuntime::~XPCJSRuntime()
     // count the total JSContexts in use
     JSContext* iter = nullptr;
     int count = 0;
-    while (JS_ContextIterator(mJSRuntime, &iter))
+    while (JS_ContextIterator(Runtime(), &iter))
         count ++;
     if (count)
         printf("deleting XPCJSRuntime with %d live JSContexts\n", count);
