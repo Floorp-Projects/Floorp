@@ -13,6 +13,8 @@
 #include <dwrite.h>
 #include "2D.h"
 #include "Logging.h"
+#include "Tools.h"
+#include "ImageScaling.h"
 
 #include "ScaledFontDWrite.h"
 
@@ -359,6 +361,136 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
   }
 
   return style;
+}
+
+// This creates a (partially) uploaded bitmap for a DataSourceSurface. It
+// uploads the minimum requirement and possibly downscales. It adjusts the
+// input Matrix to compensate.
+static TemporaryRef<ID2D1Bitmap>
+CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestinationTransform,
+                              const IntSize &aDestinationSize, ExtendMode aExtendMode,
+                              Matrix &aSourceTransform, ID2D1RenderTarget *aRT)
+{
+  RefPtr<ID2D1Bitmap> bitmap;
+
+  // This is where things get complicated. The source surface was
+  // created for a surface that was too large to fit in a texture.
+  // We'll need to figure out if we can work with a partial upload
+  // or downsample in software.
+
+  Matrix transform = aDestinationTransform;
+  Matrix invTransform = transform = aSourceTransform * transform;
+  if (!invTransform.Invert()) {
+    // Singular transform, nothing to be drawn.
+    return nullptr;
+  }
+
+  Rect rect(0, 0, Float(aDestinationSize.width), Float(aDestinationSize.height));
+
+  // Calculate the rectangle of the source mapped to our surface.
+  rect = invTransform.TransformBounds(rect);
+  rect.RoundOut();
+
+  IntSize size = aSurface->GetSize();
+
+  Rect uploadRect(0, 0, Float(size.width), Float(size.height));
+
+  // Limit the uploadRect as much as possible without supporting discontiguous uploads 
+  //
+  //                               region we will paint from
+  //   uploadRect
+  //   .---------------.              .---------------.         resulting uploadRect
+  //   |               |rect          |               |
+  //   |          .---------.         .----.     .----.          .---------------.
+  //   |          |         |  ---->  |    |     |    |   ---->  |               |
+  //   |          '---------'         '----'     '----'          '---------------'
+  //   '---------------'              '---------------'
+  //
+  //
+
+  if (uploadRect.Contains(rect)) {
+    // Extend mode is irrelevant, the displayed rect is completely contained
+    // by the source bitmap.
+    uploadRect = rect;
+  } else if (aExtendMode == EXTEND_CLAMP && uploadRect.Intersects(rect)) {
+    // Calculate the rectangle on the source bitmap that touches our
+    // surface, and upload that, for EXTEND_CLAMP we can actually guarantee
+    // correct behaviour in this case.
+    uploadRect = uploadRect.Intersect(rect);
+
+    // We now proceed to check if we can limit at least one dimension of the
+    // upload rect safely without looking at extend mode.
+  } else if (rect.x >= 0 && rect.XMost() < size.width) {
+    uploadRect.x = rect.x;
+    uploadRect.width = rect.width;
+  } else if (rect.y >= 0 && rect.YMost() < size.height) {
+    uploadRect.y = rect.y;
+    uploadRect.height = rect.height;
+  }
+
+
+  int stride = aSurface->Stride();
+
+  if (uploadRect.width <= aRT->GetMaximumBitmapSize() &&
+      uploadRect.height <= aRT->GetMaximumBitmapSize()) {
+
+    // A partial upload will suffice.
+    aRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
+                      aSurface->GetData() + int(uploadRect.x) * 4 + int(uploadRect.y) * stride,
+                      stride,
+                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
+                      byRef(bitmap));
+
+    aSourceTransform.Translate(uploadRect.x, uploadRect.y);
+
+    return bitmap;
+  } else {
+    int Bpp = BytesPerPixel(aSurface->GetFormat());
+
+    if (Bpp != 4) {
+      // This shouldn't actually happen in practice!
+      MOZ_ASSERT(false);
+      return nullptr;
+    }
+
+    ImageHalfScaler scaler(aSurface->GetData(), stride, size);
+
+    // Calculate the maximum width/height of the image post transform.
+    Point topRight = transform * Point(Float(size.width), 0);
+    Point topLeft = transform * Point(0, 0);
+    Point bottomRight = transform * Point(Float(size.width), Float(size.height));
+    Point bottomLeft = transform * Point(0, Float(size.height));
+    
+    IntSize scaleSize;
+
+    scaleSize.width = int32_t(max(Distance(topRight, topLeft),
+                                  Distance(bottomRight, bottomLeft)));
+    scaleSize.height = int32_t(max(Distance(topRight, bottomRight),
+                                   Distance(topLeft, bottomLeft)));
+
+    if (unsigned(scaleSize.width) > aRT->GetMaximumBitmapSize()) {
+      // Ok, in this case we'd really want a downscale of a part of the bitmap,
+      // perhaps we can do this later but for simplicity let's do something
+      // different here and assume it's good enough, this should be rare!
+      scaleSize.width = 4095;
+    }
+    if (unsigned(scaleSize.height) > aRT->GetMaximumBitmapSize()) {
+      scaleSize.height = 4095;
+    }
+
+    scaler.ScaleForSize(scaleSize);
+
+    IntSize newSize = scaler.GetSize();
+    
+    aRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
+                      scaler.GetScaledData(), scaler.GetStride(),
+                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
+                      byRef(bitmap));
+
+    aSourceTransform.Scale(Float(size.width / newSize.width),
+                           Float(size.height / newSize.height));
+    return bitmap;
+  }
 }
 
 }
