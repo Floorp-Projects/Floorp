@@ -1028,7 +1028,7 @@ reload_crl(PRFileDesc *crlFile)
         return SECFailure;
     }
 
-    rv = SECU_ReadDERFromFile(crlDer, crlFile, PR_FALSE);
+    rv = SECU_ReadDERFromFile(crlDer, crlFile, PR_FALSE, PR_FALSE);
     if (rv != SECSuccess) {
         errWarn("Unable to read input file.");
         PORT_Free(crlDer);

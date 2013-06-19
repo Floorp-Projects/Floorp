@@ -11,6 +11,7 @@
 #include "jsdbgapi.h"
 
 #include <string.h>
+
 #include "jsprvtd.h"
 #include "jstypes.h"
 #include "jsapi.h"
@@ -22,9 +23,9 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jswatchpoint.h"
-#include "jswrapper.h"
 
 #include "frontend/SourceNotes.h"
+#include "ion/AsmJS.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"

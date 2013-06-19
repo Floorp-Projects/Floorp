@@ -6,17 +6,13 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsgc.h"
 #include "jsprf.h"
-#include "jsutil.h"
-#include "jswatchpoint.h"
-
-#include "mozilla/Util.h"
 
 #include "js/HashTable.h"
 #include "gc/GCInternals.h"
-
-#include "jsgcinlines.h"
+#include "gc/Zone.h"
 
 #ifdef MOZ_VALGRIND
 # include <valgrind/memcheck.h>

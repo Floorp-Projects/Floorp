@@ -33,7 +33,6 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
-#include "jslock.h"
 #include "jsmath.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -48,7 +47,6 @@
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
-#include "frontend/ParseMaps.h"
 #include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 

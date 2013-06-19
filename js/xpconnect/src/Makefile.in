@@ -117,7 +117,10 @@ GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
 	  --header-output GeneratedEvents.h \
 	  event_impl_gen.conf
 
+GeneratedEventClasses.h: GeneratedEvents.cpp
+
 GeneratedEvents.cpp: DictionaryHelpers.h \
+                     GeneratedEvents.h \
                      $(srcdir)/dictionary_helper_gen.conf \
                      event_impl_gen.conf \
                      $(srcdir)/dictionary_helper_gen.py \
@@ -130,13 +133,23 @@ GeneratedEvents.cpp: DictionaryHelpers.h \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/event_impl_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --header-output GeneratedEvents.h \
+	  --class-declarations GeneratedEventClasses.h \
 	  --stub-output GeneratedEvents.cpp \
 	  --makedepend-output $(MDDEPDIR)/event_impl_gen.pp \
 	  event_impl_gen.conf
 
+GeneratedEvents-webidl: event_impl_gen.conf
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  $(PLY_INCLUDE) \
+	  -I$(LIBXUL_DIST)/sdk/bin \
+	  $(srcdir)/event_impl_gen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --webidltarget=$(top_srcdir)/dom/webidl \
+	  event_impl_gen.conf
+
 _EXTRA_EXPORT_FILES = \
   DictionaryHelpers.h \
+  GeneratedEventClasses.h \
   $(NULL)
 
 libs:: $(_EXTRA_EXPORT_FILES)
@@ -149,6 +162,7 @@ GARBAGE += \
 		DictionaryHelpers.cpp \
 		GeneratedEvents.h \
 		GeneratedEvents.cpp \
+		GeneratedEventClasses.h \
 		event_impl_gen.conf \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \

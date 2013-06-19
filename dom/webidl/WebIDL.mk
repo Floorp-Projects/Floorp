@@ -32,7 +32,6 @@ webidl_files = \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
   CDATASection.webidl \
-  CFStateChangeEvent.webidl \
   ChannelMergerNode.webidl \
   ChannelSplitterNode.webidl \
   CharacterData.webidl \
@@ -344,7 +343,6 @@ webidl_files = \
   WheelEvent.webidl \
   UndoManager.webidl \
   URLUtils.webidl \
-  USSDReceivedEvent.webidl \
   VideoStreamTrack.webidl \
   WaveShaperNode.webidl \
   WaveTable.webidl \
@@ -391,6 +389,7 @@ webidl_files += \
   SpeechSynthesisUtterance.webidl \
   SpeechSynthesisVoice.webidl \
   SpeechSynthesis.webidl \
+  SpeechSynthesisEvent.webidl \
   $(NULL)
 endif
 
@@ -403,6 +402,69 @@ endif
 ifdef MOZ_B2G_RIL
 webidl_files += \
   MozStkCommandEvent.webidl \
+  $(NULL)
+endif
+
+webidl_files += \
+  ProgressEvent.webidl \
+  StorageEvent.webidl \
+  DeviceProximityEvent.webidl \
+  MozSettingsEvent.webidl \
+  UserProximityEvent.webidl \
+  CustomEvent.webidl \
+  PageTransitionEvent.webidl \
+  DOMTransactionEvent.webidl \
+  PopStateEvent.webidl \
+  HashChangeEvent.webidl \
+  CloseEvent.webidl \
+  MozContactChangeEvent.webidl \
+  DeviceOrientationEvent.webidl \
+  DeviceLightEvent.webidl \
+  MozApplicationEvent.webidl \
+  SmartCardEvent.webidl \
+  StyleRuleChangeEvent.webidl \
+  StyleSheetChangeEvent.webidl \
+  StyleSheetApplicableStateChangeEvent.webidl \
+  ElementReplaceEvent.webidl \
+  MozSmsEvent.webidl \
+  MozMmsEvent.webidl \
+  DeviceStorageChangeEvent.webidl \
+  PopupBlockedEvent.webidl \
+  BlobEvent.webidl \
+  $(NULL)
+
+ifdef MOZ_B2G_BT
+webidl_files += \
+  BluetoothDeviceEvent.webidl \
+  $(NULL)
+endif
+
+ifdef MOZ_B2G_RIL
+webidl_files += \
+  CallEvent.webidl \
+  CFStateChangeEvent.webidl \
+  DataErrorEvent.webidl \
+  IccCardLockErrorEvent.webidl \
+  MozWifiStatusChangeEvent.webidl \
+  MozWifiConnectionInfoEvent.webidl \
+  MozCellBroadcastEvent.webidl \
+  MozVoicemailEvent.webidl \
+  USSDReceivedEvent.webidl \
+  $(NULL)
+endif
+
+ifdef MOZ_GAMEPAD
+webidl_files += \
+  GamepadEvent.webidl \
+  GamepadButtonEvent.webidl \
+  GamepadAxisMoveEvent.webidl \
+  $(NULL)
+endif
+
+ifdef MOZ_WEBSPEECH
+webidl_files += \
+  SpeechRecognitionEvent.webidl \
+  SpeechRecognitionError.webidl \
   $(NULL)
 endif
 

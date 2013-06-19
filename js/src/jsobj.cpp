@@ -9,7 +9,6 @@
  */
 #include "jsobjinlines.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "mozilla/Util.h"
@@ -26,7 +25,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsprototypes.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -44,13 +42,10 @@
 #include "jsboolinlines.h"
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 #include "builtin/Iterator-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
-#include "vm/Probes-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"

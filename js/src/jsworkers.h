@@ -23,6 +23,8 @@
 
 namespace js {
 
+struct AsmJSParallelTask;
+
 namespace ion {
   class IonBuilder;
 }

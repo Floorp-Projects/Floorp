@@ -7,8 +7,7 @@
 #ifndef jsnativestack_h__
 #define jsnativestack_h__
 
-#include "jspubtd.h"
-#include "jsutil.h"
+#include "js/Utility.h"
 
 namespace js {
 

@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 
     /* read in the input files' contents */
     rv = SECU_ReadDERFromFile(&pkcs7der, signFile,
-			      signver.options[opt_ASCII].activated);
+			      signver.options[opt_ASCII].activated, PR_FALSE);
     if (signFile != PR_STDIN)
 	PR_Close(signFile);
     if (rv != SECSuccess) {

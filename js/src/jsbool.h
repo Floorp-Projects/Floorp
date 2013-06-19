@@ -11,7 +11,6 @@
  */
 
 #include "jsapi.h"
-#include "jsobj.h"
 
 extern JSObject *
 js_InitBooleanClass(JSContext *cx, js::HandleObject obj);

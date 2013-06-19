@@ -7,13 +7,7 @@
 #ifndef Unicode_h__
 #define Unicode_h__
 
-#include "mozilla/StandardInteger.h"
-
 #include "jspubtd.h"
-
-#ifdef DEBUG
-#include <stdio.h> /* For EOF */
-#endif
 
 extern const bool js_isidstart[];
 extern const bool js_isident[];

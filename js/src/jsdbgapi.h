@@ -9,7 +9,6 @@
 /*
  * JS debugger API.
  */
-#include "jsapi.h"
 #include "jsprvtd.h"
 
 namespace JS {

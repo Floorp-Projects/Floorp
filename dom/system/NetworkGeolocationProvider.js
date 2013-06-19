@@ -213,8 +213,13 @@ WifiGeoPositionProvider.prototype = {
     if (accessToken !== "")
       providerUrl = providerUrl + "&access_token="+accessToken;
 
-    function sort(a, b) {
+    function bySignal(a, b) {
       return b.signal - a.signal;
+    };
+
+    function noOptOut(ap) {
+      let optOut = (ap.ssid === "" || ap.ssid.endsWith("_nomap"));
+      return !optOut;
     };
 
     function encode(ap) {
@@ -225,7 +230,10 @@ WifiGeoPositionProvider.prototype = {
     };
 
     if (accessPoints) {
-        providerUrl = providerUrl + accessPoints.sort(sort).map(encode).join("");
+        providerUrl += accessPoints.filter(noOptOut)
+                                   .sort(bySignal)
+                                   .map(encode)
+                                   .join("");
     }
 
     providerUrl = encodeURI(providerUrl);
