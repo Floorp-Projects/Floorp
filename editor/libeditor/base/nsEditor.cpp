@@ -73,6 +73,7 @@
 #include "nsIEditorObserver.h"          // for nsIEditorObserver
 #include "nsIEditorSpellCheck.h"        // for nsIEditorSpellCheck
 #include "nsIFrame.h"                   // for nsIFrame
+#include "nsIHTMLDocument.h"            // for nsIHTMLDocument
 #include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc
 #include "nsIMEStateManager.h"          // for nsIMEStateManager
 #include "nsINameSpaceManager.h"        // for kNameSpaceID_None, etc
@@ -399,6 +400,8 @@ nsEditor::GetDesiredSpellCheckState()
     return false;
   }
 
+  // For plaintext editors, we just want to check whether the textarea/input
+  // itself is editable.
   if (content->IsRootOfNativeAnonymousSubtree()) {
     content = content->GetParent();
   }
@@ -406,6 +409,14 @@ nsEditor::GetDesiredSpellCheckState()
   nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(content);
   if (!element) {
     return false;
+  }
+
+  if (!IsPlaintextEditor()) {
+    // Some of the page content might be editable and some not, if spellcheck=
+    // is explicitly set anywhere, so if there's anything editable on the page,
+    // return true and let the spellchecker figure it out.
+    nsCOMPtr<nsIHTMLDocument> doc = do_QueryInterface(content->GetCurrentDoc());
+    return doc && doc->IsEditingOn();
   }
 
   bool enable;
