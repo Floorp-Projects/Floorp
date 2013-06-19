@@ -52,9 +52,9 @@ is(form.foo0, input0, "Form.foo0 is still here");
 
 input0.setAttribute("form", "");
 ok(!("foo0" in form.elements), "foo0 is not in form.elements");
-todo_is(form.foo0, undefined, "Form.foo0 should not still be here");
-todo_is(form.tmp0, undefined, "Form.tmp0 should not still be here");
-todo_is(form.tmp1, undefined, "Form.tmp1 should not still be here");
+is(form.foo0, undefined, "Form.foo0 should not still be here");
+is(form.tmp0, undefined, "Form.tmp0 should not still be here");
+is(form.tmp1, undefined, "Form.tmp1 should not still be here");
 
 var input1 = document.getElementById("input1");
 ok(input1, "input1 exists");
@@ -73,17 +73,18 @@ ok(input2, "input2 exists");
 is(form.foo2, input2, "Form.foo2 should exist");
 input2.parentNode.removeChild(input2);
 ok(!("foo2" in form.elements), "foo2 is not in form.elements");
-todo_is(form.foo2, undefined, "Form.foo2 should not longer be there");
+is(form.foo2, undefined, "Form.foo2 should not longer be there");
 
 var img0 = document.getElementById("img0");
 ok(img0, "img0 exists");
 is(form.bar0, img0, "Form.bar0 should exist");
 
 img0.setAttribute("name", "old_bar0");
+is(form.old_bar0, img0, "Form.bar0 is still here");
 is(form.bar0, img0, "Form.bar0 is still here");
 
 img0.parentNode.removeChild(img0);
-todo_is(form.bar0, undefined, "Form.bar0 should not be here");
+is(form.bar0, undefined, "Form.bar0 should not be here");
 
 </script>
 </pre>

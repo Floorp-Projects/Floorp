@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElementBinding.h"
 #include "nsIHTMLDocument.h"
 #include "nsEventStateManager.h"
 #include "nsEventStates.h"
@@ -252,6 +253,8 @@ HTMLFormElement::HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   mImageNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
   mPastNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
+
+  SetIsDOMBinding();
 }
 
 HTMLFormElement::~HTMLFormElement()
@@ -311,7 +314,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
                                                 nsGenericHTMLElement)
   tmp->Clear();
+  ++tmp->mExpandoAndGeneration.generation;
+  tmp->mExpandoAndGeneration.expando = JS::UndefinedValue();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(HTMLFormElement,
+                                               nsGenericHTMLElement)
+  if (tmp->PreservingWrapper()) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mExpandoAndGeneration.expando);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(HTMLFormElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLFormElement, Element)
@@ -334,10 +346,16 @@ NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(HTMLFormElement)
 
+nsIHTMLCollection*
+HTMLFormElement::Elements()
+{
+  return mControls;
+}
+
 NS_IMETHODIMP
 HTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 {
-  *aElements = mControls;
+  *aElements = Elements();
   NS_ADDREF(*aElements);
   return NS_OK;
 }
@@ -399,11 +417,10 @@ NS_IMPL_BOOL_ATTR(HTMLFormElement, NoValidate, novalidate)
 NS_IMPL_STRING_ATTR(HTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(HTMLFormElement, Target, target)
 
-NS_IMETHODIMP
-HTMLFormElement::Submit()
+void
+HTMLFormElement::Submit(ErrorResult& aRv)
 {
   // Send the submit event
-  nsresult rv = NS_OK;
   nsRefPtr<nsPresContext> presContext = GetPresContext();
   if (mPendingSubmission) {
     // aha, we have a pending submission that was not flushed
@@ -413,8 +430,15 @@ HTMLFormElement::Submit()
     mPendingSubmission = nullptr;
   }
 
-  rv = DoSubmitOrReset(nullptr, NS_FORM_SUBMIT);
-  return rv;
+  aRv = DoSubmitOrReset(nullptr, NS_FORM_SUBMIT);
+}
+
+NS_IMETHODIMP
+HTMLFormElement::Submit()
+{
+  ErrorResult rv;
+  Submit(rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
@@ -429,7 +453,7 @@ HTMLFormElement::Reset()
 NS_IMETHODIMP
 HTMLFormElement::CheckValidity(bool* retVal)
 {
-  *retVal = CheckFormValidity(nullptr);
+  *retVal = CheckValidity();
   return NS_OK;
 }
 
@@ -1082,6 +1106,14 @@ HTMLFormElement::GetElementCount() const
   return count;
 }
 
+Element*
+HTMLFormElement::IndexedGetter(uint32_t aIndex, bool &aFound)
+{
+  Element* element = mControls->mElements.SafeElementAt(aIndex, nullptr);
+  aFound = element != nullptr;
+  return element;
+}
+
 NS_IMETHODIMP_(nsIFormControl*)
 HTMLFormElement::GetElementAt(int32_t aIndex) const
 {
@@ -1434,8 +1466,8 @@ HTMLFormElement::HandleDefaultSubmitRemoval()
   }
 }
 
-static nsresult
-RemoveElementFromTableInternal(
+nsresult
+HTMLFormElement::RemoveElementFromTableInternal(
   nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
   nsIContent* aChild, const nsAString& aName)
 {
@@ -1448,6 +1480,7 @@ RemoveElementFromTableInternal(
   // we're trying to remove...
   if (supports == aChild) {
     aTable.Remove(aName);
+    ++mExpandoAndGeneration.generation;
     return NS_OK;
   }
 
@@ -1471,6 +1504,7 @@ RemoveElementFromTableInternal(
     // If the list is empty we remove if from our hash, this shouldn't
     // happen tho
     aTable.Remove(aName);
+    ++mExpandoAndGeneration.generation;
   } else if (length == 1) {
     // Only one element left, replace the list in the hash with the
     // single element.
@@ -1499,32 +1533,56 @@ HTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
   // If the element is being removed from the form, we have to remove it from
   // the past names map.
   if (aRemoveReason == ElementRemoved) {
+    uint32_t oldCount = mPastNameLookupTable.Count();
     mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+    if (oldCount != mPastNameLookupTable.Count()) {
+      ++mExpandoAndGeneration.generation;
+    }
   }
 
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
 already_AddRefed<nsISupports>
-HTMLFormElement::FindNamedItem(const nsAString& aName,
-                               nsWrapperCache** aCache)
+HTMLFormElement::NamedGetter(const nsAString& aName, bool &aFound)
 {
+  aFound = true;
+
   nsCOMPtr<nsISupports> result = DoResolveName(aName, true);
   if (result) {
-    // FIXME Get the wrapper cache from DoResolveName.
-    *aCache = nullptr;
     AddToPastNamesMap(aName, result);
     return result.forget();
   }
 
   result = mImageNameLookupTable.GetWeak(aName);
   if (result) {
-    *aCache = nullptr;
     AddToPastNamesMap(aName, result);
     return result.forget();
   }
 
   result = mPastNameLookupTable.GetWeak(aName);
+  if (result) {
+    return result.forget();
+  }
+
+  aFound = false;
+  return nullptr;
+}
+
+void
+HTMLFormElement::GetSupportedNames(nsTArray<nsString >& aRetval)
+{
+  // TODO https://www.w3.org/Bugs/Public/show_bug.cgi?id=22320
+}
+
+already_AddRefed<nsISupports>
+HTMLFormElement::FindNamedItem(const nsAString& aName,
+                               nsWrapperCache** aCache)
+{
+  // FIXME Get the wrapper cache from DoResolveName.
+
+  bool found;
+  nsCOMPtr<nsISupports> result = NamedGetter(aName, found);
   if (result) {
     *aCache = nullptr;
     return result.forget();
@@ -1765,13 +1823,17 @@ HTMLFormElement::SetEncoding(const nsAString& aEncoding)
   return SetEnctype(aEncoding);
 }
 
+int32_t
+HTMLFormElement::Length()
+{
+  return mControls->Length();
+}
+
 NS_IMETHODIMP    
 HTMLFormElement::GetLength(int32_t* aLength)
 {
-  uint32_t length;
-  nsresult rv = mControls->GetLength(&length);
-  *aLength = length;
-  return rv;
+  *aLength = Length();
+  return NS_OK;
 }
 
 void
@@ -2456,10 +2518,10 @@ nsFormControlList::NamedItemInternal(const nsAString& aName,
   return mNameLookupTable.GetWeak(aName);
 }
 
-static nsresult
-AddElementToTableInternal(
+nsresult
+HTMLFormElement::AddElementToTableInternal(
   nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
-  nsIContent* aChild, const nsAString& aName, HTMLFormElement* aForm)
+  nsIContent* aChild, const nsAString& aName)
 {
   nsCOMPtr<nsISupports> supports;
   aTable.Get(aName, getter_AddRefs(supports));
@@ -2467,6 +2529,7 @@ AddElementToTableInternal(
   if (!supports) {
     // No entry found, add the element
     aTable.Put(aName, aChild);
+    ++mExpandoAndGeneration.generation;
   } else {
     // Found something in the hash, check its type
     nsCOMPtr<nsIContent> content = do_QueryInterface(supports);
@@ -2482,7 +2545,7 @@ AddElementToTableInternal(
 
       // Found an element, create a list, add the element to the list and put
       // the list in the hash
-      nsSimpleContentList *list = new nsSimpleContentList(aForm);
+      nsSimpleContentList *list = new nsSimpleContentList(this);
 
       // If an element has a @form, we can assume it *might* be able to not have
       // a parent and still be in the form.
@@ -2558,7 +2621,7 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
     return NS_OK;
   }
 
-  return AddElementToTableInternal(mNameLookupTable, aChild, aName, mForm);
+  return mForm->AddElementToTableInternal(mNameLookupTable, aChild, aName);
 }
 
 nsresult
@@ -2582,7 +2645,7 @@ nsFormControlList::RemoveElementFromTable(nsGenericHTMLFormElement* aChild,
     return NS_OK;
   }
 
-  return RemoveElementFromTableInternal(mNameLookupTable, aChild, aName);
+  return mForm->RemoveElementFromTableInternal(mNameLookupTable, aChild, aName);
 }
 
 nsresult
@@ -2718,7 +2781,7 @@ nsresult
 HTMLFormElement::AddImageElementToTable(HTMLImageElement* aChild,
                                         const nsAString& aName)
 {
-  return AddElementToTableInternal(mImageNameLookupTable, aChild, aName, this);
+  return AddElementToTableInternal(mImageNameLookupTable, aChild, aName);
 }
 
 nsresult
@@ -2758,5 +2821,11 @@ HTMLFormElement::AddToPastNamesMap(const nsAString& aName,
   }
 }
  
+JSObject*
+HTMLFormElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return HTMLFormElementBinding::Wrap(aCx, aScope, this);
+}
+
 } // namespace dom
 } // namespace mozilla
