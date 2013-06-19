@@ -893,6 +893,7 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 {
   mMonitor.AssertCurrentThreadOwns();
 
+  mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* stream = mStreams[i];
     if (!stream->MainThreadNeedsUpdates()) {
@@ -907,7 +908,9 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
       stream->mFinished &&
       StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime;
   }
-  mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
+  if (!mPendingUpdateRunnables.IsEmpty()) {
+    mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
+  }
 
   // Don't send the message to the main thread if it's not going to have
   // any work to do.
