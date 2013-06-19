@@ -5,6 +5,7 @@ MARIONETTE_TIMEOUT = 60000;
 
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", false);
+SpecialPowers.setBoolPref("dom.sms.requestStatusReport", true);
 SpecialPowers.addPermission("sms", true, document);
 
 const SENDER = "15555215554"; // the emulator's number
@@ -185,6 +186,7 @@ function cleanUp() {
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.clearUserPref("dom.sms.enabled");
   SpecialPowers.clearUserPref("dom.sms.strict7BitEncoding");
+  SpecialPowers.clearUserPref("dom.sms.requestStatusReport");
   finish();
 }
 
