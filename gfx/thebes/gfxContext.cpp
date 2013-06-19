@@ -1403,47 +1403,42 @@ gfxContext::Mask(gfxPattern *pattern)
   if (mCairo) {
     cairo_mask(mCairo, pattern->CairoPattern());
   } else {
-    bool needsClip = false;
     if (pattern->Extend() == gfxPattern::EXTEND_NONE) {
       // In this situation the mask will be fully transparent (i.e. nothing
       // will be drawn) outside of the bounds of the surface. We can support
       // that by clipping out drawing to that area.
-      Rect surfaceSourceRect;
-      if (!pattern->IsAzure() &&
-          pattern->GetType() == gfxPattern::PATTERN_SURFACE)
-      {
-        needsClip = true;
-
-        nsRefPtr<gfxASurface> surf = pattern->GetSurface();
-        gfxPoint offset = surf->GetDeviceOffset();
-
-        surfaceSourceRect = Rect(-offset.x, -offset.y, surf->GetSize().width, surf->GetSize().height);
-      } else if (pattern->IsAzure()) {
+      Point offset;
+      if (pattern->IsAzure()) {
         // This is an Azure pattern. i.e. this was the result of a PopGroup and
         // then the extend mode was changed to EXTEND_NONE.
         // XXX - We may need some additional magic here in theory to support
         // device offsets in these patterns, but no problems have been observed
         // yet because of this. And it would complicate things a little further.
-        needsClip = true;
+        offset = Point(0.f, 0.f);
+      } else if (pattern->GetType() == gfxPattern::PATTERN_SURFACE) {
+        nsRefPtr<gfxASurface> asurf = pattern->GetSurface();
+        gfxPoint deviceOffset = asurf->GetDeviceOffset();
+        offset = Point(-deviceOffset.x, -deviceOffset.y);
 
-        RefPtr<SourceSurface> surf = pattern->GetAzureSurface();
-        surfaceSourceRect = Rect(0, 0, surf->GetSize().width, surf->GetSize().height);
+        // this lets GetAzureSurface work
+        pattern->GetPattern(mDT);
       }
 
-      if (needsClip) {
+      if (pattern->IsAzure() || pattern->GetType() == gfxPattern::PATTERN_SURFACE) {
+        RefPtr<SourceSurface> mask = pattern->GetAzureSurface();
         Matrix mat = ToMatrix(pattern->GetInverseMatrix());
+        Matrix old = GetDTTransform();
+        // add in the inverse of the pattern transform so that when we
+        // MaskSurface we are transformed to the place matching the pattern transform
         mat = mat * GetDTTransform();
 
-        mDT->SetTransform(mat);
-        mDT->PushClipRect(surfaceSourceRect);
-        mDT->SetTransform(GetDTTransform());
+        ChangeTransform(mat);
+        mDT->MaskSurface(GeneralPattern(this), mask, offset, DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+        ChangeTransform(old);
+        return;
       }
     }
     mDT->Mask(GeneralPattern(this), *pattern->GetPattern(mDT), DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
-
-    if (needsClip) {
-      mDT->PopClip();
-    }
   }
 }
 
