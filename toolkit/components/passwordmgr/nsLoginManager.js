@@ -134,6 +134,12 @@ LoginManager.prototype = {
 
         // Form submit observer checks forms for new logins and pw changes.
         Services.obs.addObserver(this._observer, "xpcom-shutdown", false);
+
+        // XXX gross hacky workaround for bug 881996. The WPL does nothing.
+        var progress = Cc["@mozilla.org/docloaderservice;1"].
+                       getService(Ci.nsIWebProgress);
+        progress.addProgressListener(this._webProgressListener,
+                                     Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
     },
 
 
@@ -178,6 +184,17 @@ LoginManager.prototype = {
                 log("Oops! Unexpected notification:", topic);
             }
         }
+    },
+
+
+    _webProgressListener : {
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                                Ci.nsISupportsWeakReference]),
+        onStateChange    : function() { /* NOP */ },
+        onProgressChange : function() { throw "Unexpected onProgressChange"; },
+        onLocationChange : function() { throw "Unexpected onLocationChange"; },
+        onStatusChange   : function() { throw "Unexpected onStatusChange";   },
+        onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
     },
 
 
