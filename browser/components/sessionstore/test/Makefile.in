@@ -15,6 +15,7 @@ include $(DEPTH)/config/autoconf.mk
 # browser_589246.js is disabled for leaking browser windows (bug 752467)
 # browser_580512.js is disabled for leaking browser windows (bug 752467)
 # browser_capabilities.js is disabled for using resources outside of the build network (bug 882575)
+# browser_707862.js & browser_705597.js are disabled whilst waiting for review (bug 861700 & bug 883592)
 
 MOCHITEST_BROWSER_FILES = \
 	head.js \
@@ -132,8 +133,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_687710_2.js \
 	browser_694378.js \
 	browser_701377.js \
-	browser_705597.js \
-	browser_707862.js \
 	browser_739531.js \
 	browser_739531_sample.html \
 	browser_739805.js \

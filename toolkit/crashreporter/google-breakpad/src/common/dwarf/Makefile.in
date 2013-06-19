@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_CRASHREPORTER
-DISABLED_HOST_LIBRARY_NAME = host_breakpad_dwarf_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 

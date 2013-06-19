@@ -174,7 +174,7 @@ Bindings::clone(JSContext *cx, InternalBindingsHandle self,
 }
 
 /* static */ Bindings
-RootMethods<Bindings>::initial()
+GCMethods<Bindings>::initial()
 {
     return Bindings();
 }
@@ -2236,12 +2236,6 @@ js_GetScriptLineExtent(JSScript *script)
         lineno = maxLineNo;
 
     return 1 + lineno - script->lineno;
-}
-
-unsigned
-js::CurrentLine(JSContext *cx)
-{
-    return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
 }
 
 void

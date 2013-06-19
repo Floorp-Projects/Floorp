@@ -6,7 +6,7 @@
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
 #include "nsIDOMFile.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "nsContentUtils.h"
 
@@ -109,13 +109,13 @@ nsFormData::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 
 /* static */ already_AddRefed<nsFormData>
 nsFormData::Constructor(const GlobalObject& aGlobal,
-                        const Optional<nsHTMLFormElement*>& aFormElement,
+                        const Optional<NonNull<HTMLFormElement> >& aFormElement,
                         ErrorResult& aRv)
 {
   nsRefPtr<nsFormData> formData = new nsFormData(aGlobal.Get());
   if (aFormElement.WasPassed()) {
-    MOZ_ASSERT(aFormElement.Value());
-    aRv = aFormElement.Value()->WalkFormElements(formData);
+    // TODO: this should ...Value().WalkFromElements(formData); - Bug 883827
+    aRv = aFormElement.Value().get()->WalkFormElements(formData);
   }
   return formData.forget();
 }

@@ -10,7 +10,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIConstraintValidation.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/ValidityState.h"
 
 namespace mozilla {

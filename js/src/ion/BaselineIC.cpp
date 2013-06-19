@@ -676,7 +676,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Reg
 static bool
 IsTopFrameConstructing(JSContext *cx)
 {
-    JS_ASSERT(cx->mainThread().currentlyRunningInJit());
+    JS_ASSERT(cx->currentlyRunningInJit());
     JitActivationIterator activations(cx->runtime());
     IonFrameIterator iter(activations);
     JS_ASSERT(iter.type() == IonFrame_Exit);

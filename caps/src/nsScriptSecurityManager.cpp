@@ -486,7 +486,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 JSBool
 nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSHandleObject obj,
                                            JSHandleId id, JSAccessMode mode,
-                                           JSMutableHandleValue vp)
+                                           JS::MutableHandle<JS::Value> vp)
 {
     // Get the security manager
     nsScriptSecurityManager *ssm =

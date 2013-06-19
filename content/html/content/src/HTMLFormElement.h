@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLFormElement_h__
-#define nsHTMLFormElement_h__
+#ifndef mozilla_dom_HTMLFormElement_h
+#define mozilla_dom_HTMLFormElement_h
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
@@ -28,7 +28,6 @@
 #endif
 #endif
 
-class nsFormControlList;
 class nsIMutableArray;
 class nsIURI;
 
@@ -38,15 +37,22 @@ class HTMLImageElement;
 }
 }
 
-class nsHTMLFormElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLFormElement,
-                          public nsIWebProgressListener,
-                          public nsIForm,
-                          public nsIRadioGroupContainer
+namespace mozilla {
+namespace dom {
+
+class nsFormControlList;
+
+class HTMLFormElement : public nsGenericHTMLElement,
+                        public nsIDOMHTMLFormElement,
+                        public nsIWebProgressListener,
+                        public nsIForm,
+                        public nsIRadioGroupContainer
 {
+  friend class nsFormControlList;
+
 public:
-  nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLFormElement();
+  HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLFormElement();
 
   nsresult Init();
 
@@ -127,8 +133,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLFormElement,
-                                           nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(HTMLFormElement,
+                                                         nsGenericHTMLElement)
 
   /**
    * Remove an element from this form's list of elements
@@ -311,21 +317,121 @@ public:
   already_AddRefed<nsISupports>
   FindNamedItem(const nsAString& aName, nsWrapperCache** aCache);
 
+  // WebIDL
+
+  void GetAcceptCharset(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::acceptcharset, aValue);
+  }
+
+  void SetAcceptCharset(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::acceptcharset, aValue, aRv);
+  }
+
+  // XPCOM GetAction() is OK
+  void SetAction(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::action, aValue, aRv);
+  }
+
+  // XPCOM GetAutocomplete() is OK
+  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
+  }
+
+  // XPCOM GetEnctype() is OK
+  void SetEnctype(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::enctype, aValue, aRv);
+  }
+
+  // XPCOM GetEncoding() is OK
+  void SetEncoding(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetEnctype(aValue, aRv);
+  }
+
+  // XPCOM GetMethod() is OK
+  void SetMethod(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::method, aValue, aRv);
+  }
+
+  void GetName(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aValue);
+  }
+
+  void SetName(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
+  }
+
+  bool NoValidate() const
+  {
+    return GetBoolAttr(nsGkAtoms::novalidate);
+  }
+
+  void SetNoValidate(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::novalidate, aValue, aRv);
+  }
+
+  void GetTarget(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::target, aValue);
+  }
+
+  void SetTarget(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::target, aValue, aRv);
+  }
+
+  // it's only out-of-line because the class definition is not available in the
+  // header
+  nsIHTMLCollection* Elements();
+
+  int32_t Length();
+
+  void Submit(ErrorResult& aRv);
+
+  // XPCOM Reset() is OK
+
+  bool CheckValidity()
+  {
+    return CheckFormValidity(nullptr);
+  }
+
+  Element*
+  IndexedGetter(uint32_t aIndex, bool &aFound);
+
+  already_AddRefed<nsISupports>
+  NamedGetter(const nsAString& aName, bool &aFound);
+
+  void GetSupportedNames(nsTArray<nsString >& aRetval);
+
+  js::ExpandoAndGeneration mExpandoAndGeneration;
+
 protected:
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
   void PostPasswordEvent();
   void EventHandled() { mFormPasswordEvent = nullptr; }
 
   class FormPasswordEvent : public nsAsyncDOMEvent
   {
   public:
-    FormPasswordEvent(nsHTMLFormElement* aEventNode,
+    FormPasswordEvent(HTMLFormElement* aEventNode,
                       const nsAString& aEventType)
       : nsAsyncDOMEvent(aEventNode, aEventType, true, true)
     {}
 
     NS_IMETHOD Run() MOZ_OVERRIDE
     {
-      static_cast<nsHTMLFormElement*>(mEventNode.get())->EventHandled();
+      static_cast<HTMLFormElement*>(mEventNode.get())->EventHandled();
       return nsAsyncDOMEvent::Run();
     }
   };
@@ -337,7 +443,7 @@ protected:
 
   class RemoveElementRunnable : public nsRunnable {
   public:
-    RemoveElementRunnable(nsHTMLFormElement* aForm)
+    RemoveElementRunnable(HTMLFormElement* aForm)
       : mForm(aForm)
     {}
 
@@ -347,7 +453,7 @@ protected:
     }
 
   private:
-    nsRefPtr<nsHTMLFormElement> mForm;
+    nsRefPtr<HTMLFormElement> mForm;
   };
 
   nsresult DoSubmitOrReset(nsEvent* aEvent,
@@ -362,7 +468,7 @@ protected:
   //
   //
   /**
-   * Attempt to submit (submission might be deferred) 
+   * Attempt to submit (submission might be deferred)
    * (called by DoSubmitOrReset)
    *
    * @param aPresContext the presentation context
@@ -376,7 +482,7 @@ protected:
    * @param aFormSubmission the submission object
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult BuildSubmission(nsFormSubmission** aFormSubmission, 
+  nsresult BuildSubmission(nsFormSubmission** aFormSubmission,
                            nsEvent* aEvent);
   /**
    * Perform the submission (called by DoSubmit and FlushPendingSubmission)
@@ -425,6 +531,16 @@ protected:
 
   // Insert a element into the past names map.
   void AddToPastNamesMap(const nsAString& aName, nsISupports* aChild);
+
+  nsresult
+  AddElementToTableInternal(
+    nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
+    nsIContent* aChild, const nsAString& aName);
+
+  nsresult
+  RemoveElementFromTableInternal(
+    nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
+    nsIContent* aChild, const nsAString& aName);
 
 public:
   /**
@@ -519,4 +635,7 @@ protected:
   static bool gPasswordManagerInitialized;
 };
 
-#endif // nsHTMLFormElement_h__
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLFormElement_h

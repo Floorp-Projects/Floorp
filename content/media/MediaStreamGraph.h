@@ -443,6 +443,12 @@ public:
     return mWrapper;
   }
 
+  // Return true if the main thread needs to observe updates from this stream.
+  virtual bool MainThreadNeedsUpdates() const
+  {
+    return true;
+  }
+
 protected:
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {
@@ -937,7 +943,7 @@ public:
   // Internal AudioNodeStreams can only pass their output to another
   // AudioNode, whereas external AudioNodeStreams can pass their output
   // to an nsAudioStream for playback.
-  enum AudioNodeStreamKind { INTERNAL_STREAM, EXTERNAL_STREAM };
+  enum AudioNodeStreamKind { SOURCE_STREAM, INTERNAL_STREAM, EXTERNAL_STREAM };
   /**
    * Create a stream that will process audio for an AudioNode.
    * Takes ownership of aEngine.  aSampleRate is the sampling rate used

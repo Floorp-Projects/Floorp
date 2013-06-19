@@ -29,7 +29,7 @@
 #include "nsPresState.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozAutoDocUpdate.h"
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
@@ -371,7 +371,7 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // TODO: removing this code and have the submit event sent by the form
           // see bug 592124.
           // Hold a strong ref while dispatching
-          nsRefPtr<nsHTMLFormElement> form(mForm);
+          nsRefPtr<HTMLFormElement> form(mForm);
           presShell->HandleDOMEventWithTarget(mForm, &event, &status);
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
