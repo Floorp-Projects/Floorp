@@ -71,7 +71,7 @@
 </hbox>
 
 <!-- Tracking -->
-<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" align="start">
   <caption label="&tracking.label;"/>
   <radiogroup id="doNotTrackSelection" orient="vertical"
               preference="privacy.donottrackheader.value"

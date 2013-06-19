@@ -9,18 +9,15 @@
  */
 #include "jsatom.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
+#include <string.h>
+
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jslock.h"
 #include "jsstr.h"
 #include "jstypes.h"
-#include "jsversion.h"
 
 #include "gc/Marking.h"
 #include "vm/Xdr.h"

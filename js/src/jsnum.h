@@ -9,9 +9,7 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <math.h>
-
-#include "jsobj.h"
+#include "jscntxt.h"
 
 #include "vm/NumericConversions.h"
 

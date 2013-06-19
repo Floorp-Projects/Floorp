@@ -9,7 +9,6 @@
  */
 #include "jsexn.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "mozilla/PodOperations.h"
@@ -19,7 +18,6 @@
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsobj.h"

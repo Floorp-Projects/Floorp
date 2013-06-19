@@ -485,7 +485,7 @@ find_certificate(CERTCertDBHandle *handle, const char *name, PRBool ascii)
         return NULL;
     }
 
-    if (SECU_ReadDERFromFile(&der, certFile, ascii) == SECSuccess) {
+    if (SECU_ReadDERFromFile(&der, certFile, ascii, PR_FALSE) == SECSuccess) {
         cert = CERT_DecodeCertFromPackage((char*)der.data, der.len);
         SECITEM_FreeItem(&der, PR_FALSE);
     }
