@@ -7,40 +7,27 @@
 /*
  * JS lexical scanner.
  */
-#include <stdio.h>      /* first to avoid trouble on some systems */
-#include <errno.h>
-#include <limits.h>
-#include <math.h>
-#ifdef HAVE_MEMORY_H
-#include <memory.h>
-#endif
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include "frontend/TokenStream.h"
 
 #include "mozilla/PodOperations.h"
 
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsscript.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/Parser.h"
-#include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Keywords.h"
-#include "vm/RegExpObject.h"
 #include "vm/StringBuffer.h"
-
-#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::frontend;

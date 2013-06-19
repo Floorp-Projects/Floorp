@@ -417,9 +417,6 @@ JSObject *
 GetJunkScope();
 } // namespace xpc
 
-nsCycleCollectionParticipant *
-xpc_JSZoneParticipant();
-
 namespace mozilla {
 namespace dom {
 

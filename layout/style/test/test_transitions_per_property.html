@@ -1178,6 +1178,15 @@ function test_radius_transition(prop) {
                  "calc(4.6875% + 16px) calc(9.375% + 4px)",
                  "64px 16px");
 
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "calc(5px) 10px", "");
+  is(cs.getPropertyValue(prop), "5px 10px",
+     "radius-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "calc(25px) calc(50px)", "");
+  is(cs.getPropertyValue(prop), "10px 20px",
+     "radius-valued property " + prop + ": interpolation of radius with calc() units");
+
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "0px 0px", "");
