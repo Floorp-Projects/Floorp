@@ -15,6 +15,7 @@
 #include "dom_quickstubs.h"
 
 #include "nsIMemoryReporter.h"
+#include "nsIObserverService.h"
 #include "amIAddonManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -530,6 +531,24 @@ XPCJSRuntime::UnmarkSkippableJSHolders()
 {
     XPCAutoLock lock(mMapLock);
     CycleCollectedJSRuntime::UnmarkSkippableJSHolders();
+}
+
+void
+XPCJSRuntime::PrepareForForgetSkippable()
+{
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "cycle-collector-forget-skippable", nullptr);
+    }
+}
+
+void
+XPCJSRuntime::PrepareForCollection()
+{
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "cycle-collector-begin", nullptr);
+    }
 }
 
 void
