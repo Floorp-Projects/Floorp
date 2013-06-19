@@ -468,7 +468,7 @@ LIRGenerator::visitGetDynamicName(MGetDynamicName *ins)
                                                tempFixed(CallTempReg3),
                                                tempFixed(CallTempReg4));
 
-    return assignSnapshot(lir) && defineReturn(lir, ins);
+    return assignSnapshot(lir) && assignSafepoint(lir, ins) && defineReturn(lir, ins);
 }
 
 bool

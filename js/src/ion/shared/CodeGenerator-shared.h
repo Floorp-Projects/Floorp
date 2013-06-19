@@ -286,6 +286,12 @@ class CodeGeneratorShared : public LInstructionVisitor
     void restoreVolatile(RegisterSet temps) {
         masm.PopRegsInMask(RegisterSet::VolatileNot(temps));
     }
+    void saveVolatile(const RegisterSet &temps, const RegisterSet &liveRegs) {
+        masm.PushRegsInMask(RegisterSet::Intersect(liveRegs, RegisterSet::VolatileNot(temps)));
+    }
+    void restoreVolatile(const RegisterSet &temps, const RegisterSet &liveRegs) {
+        masm.PopRegsInMask(RegisterSet::Intersect(liveRegs, RegisterSet::VolatileNot(temps)));
+    }
     void saveVolatile() {
         masm.PushRegsInMask(RegisterSet::Volatile());
     }
