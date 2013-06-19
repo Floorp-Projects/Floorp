@@ -2324,7 +2324,7 @@ HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     // bug 592124.
     // If there's only one text control, just submit the form
     // Hold strong ref across the event
-    nsRefPtr<nsHTMLFormElement> form = mForm;
+    nsRefPtr<mozilla::dom::HTMLFormElement> form = mForm;
     nsFormEvent event(true, NS_FORM_SUBMIT);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(mForm, &event, &status);
@@ -3165,7 +3165,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                               HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
                               mForm->CheckValidFormSubmission())) {
               // Hold a strong ref while dispatching
-              nsRefPtr<nsHTMLFormElement> form(mForm);
+              nsRefPtr<mozilla::dom::HTMLFormElement> form(mForm);
               presShell->HandleDOMEventWithTarget(mForm, &event, &status);
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }

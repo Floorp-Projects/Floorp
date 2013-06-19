@@ -125,7 +125,7 @@ IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
  * However, this speculation must be guarded before calling 'apply' in case it
  * is not the builtin Function.prototype.apply.
  */
-static bool
+static inline bool
 GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, HandleValue callee,
                                    Value *args, uint32_t argc)
 {
@@ -139,15 +139,6 @@ GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, Handle
     }
 
     return true;
-}
-
-static inline bool
-GuardFunApplyArgumentsOptimization(JSContext *cx)
-{
-    FrameRegs &regs = cx->regs();
-    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    return GuardFunApplyArgumentsOptimization(cx, cx->fp(), args.calleev(), args.array(),
-                                              args.length());
 }
 
 /*
@@ -597,7 +588,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 {
     do {
         // Don't call GetPcScript (needed for analysis) from inside Ion since it's expensive.
-        bool analyze = cx->mainThread().currentlyRunningInInterpreter();
+        bool analyze = cx->currentlyRunningInInterpreter();
 
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {
@@ -730,12 +721,6 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
         }
     }
 
-    bool done = false;
-    if (!GetElemOptimizedArguments(cx, cx->fp(), lref, rref, res, &done))
-        return false;
-    if (done)
-        return true;
-
     bool isObject = lref.isObject();
     JSObject *obj = ToObjectFromStack(cx, lref);
     if (!obj)
@@ -758,7 +743,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
             // that's ok, because optimized ion doesn't generate analysis info.  However,
             // baseline must generate this information, so it passes the script and pc in
             // as arguments.
-            if (script || cx->mainThread().currentlyRunningInInterpreter()) {
+            if (script || cx->currentlyRunningInInterpreter()) {
                 JS_ASSERT(!!script == !!pc);
                 if (!script)
                     types::TypeScript::GetPcScript(cx, script.address(), &pc);

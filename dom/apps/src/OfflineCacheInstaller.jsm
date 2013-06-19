@@ -78,7 +78,7 @@ function storeCache(applicationCache, url, file, itemType) {
 
 function readFile(aFile, aCallback) {
   let channel = NetUtil.newChannel(aFile);
-  channel.contentType = "pain/text";
+  channel.contentType = "plain/text";
   NetUtil.asyncFetch(channel, function(aStream, aResult) {
     if (!Components.isSuccessCode(aResult)) {
       Cu.reportError("OfflineCacheInstaller: Could not read file " + aFile.path);

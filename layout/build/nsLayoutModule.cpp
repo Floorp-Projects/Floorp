@@ -16,7 +16,6 @@
 #include "nsDOMCID.h"
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
-#include "nsGenericHTMLElement.h"
 #include "nsIComponentManager.h"
 #include "nsIContentIterator.h"
 #include "nsIContentSerializer.h"
@@ -548,8 +547,6 @@ MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDom
 MAKE_CTOR2(CreateContentIterator,         nsIContentIterator,          NS_NewContentIterator)
 MAKE_CTOR2(CreatePreContentIterator,      nsIContentIterator,          NS_NewPreContentIterator)
 MAKE_CTOR2(CreateSubtreeIterator,         nsIContentIterator,          NS_NewContentSubtreeIterator)
-// CreateHTMLImgElement, see below
-// CreateHTMLOptionElement, see below
 MAKE_CTOR(CreateTextEncoder,              nsIDocumentEncoder,          NS_NewTextEncoder)
 MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTMLCopyTextEncoder)
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
@@ -605,42 +602,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     return rv;                                                                \
 }                                                                             \
-
-static nsresult
-CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  *aResult = nullptr;
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-  // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsINodeInfo> ni;
-  nsIContent* inst = NS_NewHTMLImageElement(ni.forget());
-  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  if (inst) {
-    NS_ADDREF(inst);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-  }
-  return rv;
-}
-
-static nsresult
-CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  *aResult = nullptr;
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-  // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsINodeInfo> ni;
-  nsIContent* inst = NS_NewHTMLOptionElement(ni.forget());
-  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  if (inst) {
-    NS_ADDREF(inst);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-  }
-  return rv;
-}
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory)
 
@@ -730,8 +691,6 @@ NS_DEFINE_NAMED_CID(NS_DOMSELECTION_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SUBTREEITERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_HTMLIMAGEELEMENT_CID);
-NS_DEFINE_NAMED_CID(NS_HTMLOPTIONELEMENT_CID);
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXTWEBGL_CID);
 NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLCOPY_TEXT_ENCODER_CID);
@@ -1020,8 +979,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_CONTENTITERATOR_CID, false, NULL, CreateContentIterator },
   { &kNS_PRECONTENTITERATOR_CID, false, NULL, CreatePreContentIterator },
   { &kNS_SUBTREEITERATOR_CID, false, NULL, CreateSubtreeIterator },
-  { &kNS_HTMLIMAGEELEMENT_CID, false, NULL, CreateHTMLImgElement },
-  { &kNS_HTMLOPTIONELEMENT_CID, false, NULL, CreateHTMLOptionElement },
   { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, NULL, CreateCanvasRenderingContextWebGL },
   { &kNS_TEXT_ENCODER_CID, false, NULL, CreateTextEncoder },
   { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, NULL, CreateHTMLCopyTextEncoder },
@@ -1170,8 +1127,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/content/post-content-iterator;1", &kNS_CONTENTITERATOR_CID },
   { "@mozilla.org/content/pre-content-iterator;1", &kNS_PRECONTENTITERATOR_CID },
   { "@mozilla.org/content/subtree-content-iterator;1", &kNS_SUBTREEITERATOR_CID },
-  { "@mozilla.org/content/element/html;1?name=img", &kNS_HTMLIMAGEELEMENT_CID },
-  { "@mozilla.org/content/element/html;1?name=option", &kNS_HTMLOPTIONELEMENT_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
 #ifdef MOZ_PHOENIX // Not MOZ_FENNEC or MOZ_B2G yet.

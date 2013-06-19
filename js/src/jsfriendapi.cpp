@@ -404,14 +404,14 @@ js::IsOriginalScriptFunction(JSFunction *fun)
 JS_FRIEND_API(JSScript *)
 js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
 {
-    if (!cx->hasfp())
+    ScriptFrameIter iter(cx);
+    if (iter.done())
         return NULL;
 
-    StackFrame *fp = cx->fp();
-    if (!fp->isFunctionFrame())
+    if (!iter.isFunctionFrame())
         return NULL;
 
-    RootedFunction scriptedCaller(cx, fp->fun());
+    RootedFunction scriptedCaller(cx, iter.callee());
     RootedScript outermost(cx, scriptedCaller->nonLazyScript());
     for (StaticScopeIter i(cx, scriptedCaller); !i.done(); i++) {
         if (i.type() == StaticScopeIter::FUNCTION)

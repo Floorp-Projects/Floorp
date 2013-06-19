@@ -22,6 +22,8 @@
 
 #include "xpcpublic.h"
 
+using namespace JS;
+
 /**
  * JS locale callbacks implemented by XPCOM modules.  These are theoretically
  * safe for use on multiple threads.  Unfortunately, the intl code underlying
@@ -72,32 +74,32 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   }
 
   static JSBool
-  LocaleToUpperCase(JSContext *cx, JSHandleString src, JSMutableHandleValue rval)
+  LocaleToUpperCase(JSContext *cx, JSHandleString src, MutableHandleValue rval)
   {
     return ChangeCase(cx, src, rval, ToUpperCase);
   }
 
   static JSBool
-  LocaleToLowerCase(JSContext *cx, JSHandleString src, JSMutableHandleValue rval)
+  LocaleToLowerCase(JSContext *cx, JSHandleString src, MutableHandleValue rval)
   {
     return ChangeCase(cx, src, rval, ToLowerCase);
   }
 
   static JSBool
-  LocaleToUnicode(JSContext* cx, const char* src, JSMutableHandleValue rval)
+  LocaleToUnicode(JSContext* cx, const char* src, MutableHandleValue rval)
   {
     return This(JS_GetRuntime(cx))->ToUnicode(cx, src, rval);
   }
 
   static JSBool
-  LocaleCompare(JSContext *cx, JSHandleString src1, JSHandleString src2, JSMutableHandleValue rval)
+  LocaleCompare(JSContext *cx, JSHandleString src1, JSHandleString src2, MutableHandleValue rval)
   {
     return This(JS_GetRuntime(cx))->Compare(cx, src1, src2, rval);
   }
 
 private:
   static JSBool
-  ChangeCase(JSContext* cx, JSHandleString src, JSMutableHandleValue rval,
+  ChangeCase(JSContext* cx, JSHandleString src, MutableHandleValue rval,
              void(*changeCaseFnc)(const nsAString&, nsAString&))
   {
     nsDependentJSString depStr;
@@ -119,7 +121,7 @@ private:
   }
 
   JSBool
-  Compare(JSContext *cx, JSHandleString src1, JSHandleString src2, JSMutableHandleValue rval)
+  Compare(JSContext *cx, JSHandleString src1, JSHandleString src2, MutableHandleValue rval)
   {
     nsresult rv;
 
@@ -166,7 +168,7 @@ private:
   }
 
   JSBool
-  ToUnicode(JSContext* cx, const char* src, JSMutableHandleValue rval)
+  ToUnicode(JSContext* cx, const char* src, MutableHandleValue rval)
   {
     nsresult rv;
 

@@ -1,0 +1,19 @@
+include protocol PTestIndirectProtocolParamManage;
+// FIXME/bug 792908 protocol PTestIndirectProtocolParamSecond is
+// already included in PTestIndirectProtocolParam.ipdlh
+include protocol PTestIndirectProtocolParamSecond;
+include PTestIndirectProtocolParam;
+
+namespace mozilla {
+namespace _ipdltest {
+
+sync protocol PTestIndirectProtocolParamFirst {
+    manager PTestIndirectProtocolParamManage;
+parent:
+    sync Test(IndirectParamUnion actor);
+both:
+    __delete__();
+};
+
+}
+}

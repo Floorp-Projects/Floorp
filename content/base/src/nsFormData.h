@@ -14,13 +14,13 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
-class nsHTMLFormElement;
 class nsIDOMFile;
 
 namespace mozilla {
 class ErrorResult;
 
 namespace dom {
+class HTMLFormElement;
 class GlobalObject;
 } // namespace dom
 } // namespace mozilla
@@ -52,7 +52,7 @@ public:
   }
   static already_AddRefed<nsFormData>
   Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              const mozilla::dom::Optional<nsHTMLFormElement*>& aFormElement,
+              const mozilla::dom::Optional<mozilla::dom::NonNull<mozilla::dom::HTMLFormElement> >& aFormElement,
               mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, const nsAString& aValue);
   void Append(const nsAString& aName, nsIDOMBlob* aBlob,

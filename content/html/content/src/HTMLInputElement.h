@@ -17,7 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
 #include "nsDOMFile.h"
-#include "nsHTMLFormElement.h" // for ShouldShowInvalidUI()
+#include "mozilla/dom/HTMLFormElement.h" // for ShouldShowInvalidUI()
 #include "nsIFile.h"
 #include "nsIFilePicker.h"
 #include "nsIContentPrefService2.h"

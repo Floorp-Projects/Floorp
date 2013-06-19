@@ -6503,10 +6503,9 @@ Parser<FullParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag
         return NULL;
 
     const StableCharPtr chars(buf, length);
-    RegExpStatics *res = context->regExpStatics();
 
     Rooted<RegExpObject*> reobj(context);
-    if (context->hasfp())
+    if (RegExpStatics *res = context->regExpStatics())
         reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
     else
         reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
@@ -6528,10 +6527,9 @@ Parser<SyntaxParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFl
 {
     // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
     const StableCharPtr chars(buf, length);
-    RegExpStatics *res = context->regExpStatics();
 
     RegExpObject *reobj;
-    if (context->hasfp())
+    if (RegExpStatics *res = context->regExpStatics())
         reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
     else
         reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);

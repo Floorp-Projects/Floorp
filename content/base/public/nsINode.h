@@ -277,7 +277,7 @@ public:
   // - HTMLBodyElement:       mContentStyleRule
   // - HTMLDataListElement:   mOptions
   // - HTMLFieldSetElement:   mElements, mDependentElements, mFirstLegend
-  // - nsHTMLFormElement:     many!
+  // - HTMLFormElement:       many!
   // - HTMLFrameSetElement:   mRowSpecs, mColSpecs
   // - HTMLInputElement:      mInputData, mFiles, mFileList, mStaticDocfileList
   // - nsHTMLMapElement:      mAreas
