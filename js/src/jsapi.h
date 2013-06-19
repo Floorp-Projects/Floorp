@@ -9,9 +9,7 @@
 #ifndef jsapi_h___
 #define jsapi_h___
 
-#include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ThreadLocal.h"
@@ -23,13 +21,10 @@
 #include "js-config.h"
 #include "jsalloc.h"
 #include "jspubtd.h"
-#include "jsutil.h"
 
-#include "js/Anchor.h"
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "js/HashTable.h"
-#include "js/PropertyKey.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
 #include "js/Value.h"
