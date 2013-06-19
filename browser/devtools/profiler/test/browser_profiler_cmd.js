@@ -26,6 +26,7 @@ function test() {
       .then(testProfilerList)
       .then(testProfilerStop)
       .then(testProfilerClose)
+      .then(testProfilerCloseWhenClosed)
   }).then(finishUp);
 }
 
@@ -96,6 +97,33 @@ function testProfilerShow() {
 }
 
 function testProfilerClose() {
+  let deferred = Promise.defer();
+
+  helpers.audit(gOptions, [{
+    setup: "profiler close",
+    completed: false,
+    exec: { output: "" }
+  }]);
+
+  let toolbox = gDevTools.getToolbox(gOptions.target);
+  if (!toolbox) {
+    ok(true, "Profiler was closed.");
+    deferred.resolve();
+  } else {
+    toolbox.on("destroyed", function () {
+      ok(true, "Profiler was closed.");
+      deferred.resolve();
+    });
+  }
+
+  return deferred.promise;
+}
+
+function testProfilerCloseWhenClosed() {
+  // We need to call this test to make sure there are no
+  // errors when executing 'profiler close' on a closed
+  // toolbox. See bug 863636 for more info.
+
   let deferred = Promise.defer();
 
   helpers.audit(gOptions, [{
