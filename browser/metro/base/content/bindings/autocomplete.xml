@@ -56,6 +56,15 @@
     </implementation>
 
     <handlers>
+      <handler event="click" phase="capturing">
+        <![CDATA[
+        // If the urlbar is not already focused, focus it and select the contents.
+        if (Elements.urlbarState.getAttribute("mode") != "edit") {
+          BrowserUI._editURI(true);
+        }
+        ]]>
+      </handler>
+
       <handler event="dblclick" phase="capturing">
         <![CDATA[
           let selectAll = Services.prefs.getBoolPref("browser.urlbar.doubleClickSelectsAll");
