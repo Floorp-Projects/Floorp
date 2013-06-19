@@ -1037,11 +1037,15 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         JS_ASSERT(type == ExpressionBody);
         JS_ASSERT(JS_HAS_EXPR_CLOSURES);
 
+        tokenStream.getToken();
+        uint32_t begin = pos().begin;
+        tokenStream.ungetToken();
+
         Node kid = assignExpr();
         if (!kid)
             return null();
 
-        pn = handler.newUnary(PNK_RETURN, kid, JSOP_RETURN);
+        pn = handler.newUnary(PNK_RETURN, JSOP_RETURN, begin, kid);
         if (!pn)
             return null();
 
@@ -3181,9 +3185,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
     ParseNodeKind kind = (tt == TOK_RETURN) ? PNK_RETURN : PNK_YIELD;
     JSOp op = (tt == TOK_RETURN) ? JSOP_RETURN : JSOP_YIELD;
 
-    Node pn = handler.newUnary(kind, op);
-    if (!pn)
-        return null();
+    uint32_t begin = pos().begin;
 
 #if JS_HAS_GENERATORS
     if (tt == TOK_YIELD) {
@@ -3198,7 +3200,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
             pc->sc->asFunctionBox()->setIsGenerator();
         } else {
             pc->yieldCount++;
-            pc->yieldOffset = handler.getPosition(pn).begin;
+            pc->yieldOffset = begin;
         }
     }
 #endif
@@ -3208,6 +3210,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
     if (tt2 == TOK_ERROR)
         return null();
 
+    Node pn2;
     if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC
 #if JS_HAS_GENERATORS
         && (tt != TOK_YIELD ||
@@ -3216,20 +3219,24 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
 #endif
         )
     {
-        Node pn2 = useAssignExpr ? assignExpr() : expr();
+        pn2 = useAssignExpr ? assignExpr() : expr();
         if (!pn2)
             return null();
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
             pc->funHasReturnExpr = true;
-        handler.setUnaryKid(pn, pn2);
     } else {
+        pn2 = null();
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
             pc->funHasReturnVoid = true;
     }
+
+    Node pn = handler.newUnary(kind, op, begin, pn2);
+    if (!pn)
+        return null();
 
     if (pc->funHasReturnExpr && pc->sc->asFunctionBox()->isGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
@@ -3384,7 +3391,7 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
          * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop
          * the return value of the expression.
          */
-        Node semi = handler.newUnary(PNK_SEMI, pnlet);
+        Node semi = handler.newUnary(PNK_SEMI, JSOP_NOP, begin, pnlet);
 
         letContext = LetExpresion;
         ret = semi;
@@ -4485,12 +4492,13 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement()
 {
+    uint32_t begin = pos().begin;
     tokenStream.ungetToken();
     Node pn2 = expr();
     if (!pn2)
         return null();
 
-    Node pn = handler.newUnary(PNK_SEMI, pn2);
+    Node pn = handler.newUnary(PNK_SEMI, JSOP_NOP, begin, pn2);
 
     /* Check termination of this primitive statement. */
     return MatchOrInsertSemicolon(context, &tokenStream) ? pn : null();
@@ -4623,10 +4631,9 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         if (!pnexp)
             return null();
 
-        pn = handler.newUnary(PNK_THROW, pnexp, JSOP_THROW);
+        pn = handler.newUnary(PNK_THROW, JSOP_THROW, begin, pnexp);
         if (!pn)
             return null();
-        handler.setBeginPosition(pn, begin);
         break;
       }
 
@@ -4763,7 +4770,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       }
 
       case TOK_SEMI:
-        return handler.newUnary(PNK_SEMI);
+        return handler.newUnary(PNK_SEMI, JSOP_NOP, pos().begin, null());
 
       case TOK_DEBUGGER:
         pn = handler.newDebuggerStatement(pos());
@@ -5327,12 +5334,12 @@ Parser<SyntaxParseHandler>::setIncOpKid(Node pn, Node kid, TokenKind tt, bool pr
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::unaryOpExpr(ParseNodeKind kind, JSOp op)
+Parser<ParseHandler>::unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin)
 {
     Node kid = unaryExpr();
     if (!kid)
         return null();
-    return handler.newUnary(kind, kid, op);
+    return handler.newUnary(kind, op, begin, kid);
 }
 
 template <>
@@ -5400,32 +5407,35 @@ Parser<ParseHandler>::unaryExpr()
 
     JS_CHECK_RECURSION(context, return null());
 
-    switch (TokenKind tt = tokenStream.getToken(TSF_OPERAND)) {
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
+    uint32_t begin = pos().begin;
+    switch (tt) {
       case TOK_TYPEOF:
-        return unaryOpExpr(PNK_TYPEOF, JSOP_TYPEOF);
+        return unaryOpExpr(PNK_TYPEOF, JSOP_TYPEOF, begin);
       case TOK_VOID:
-        return unaryOpExpr(PNK_VOID, JSOP_VOID);
+        return unaryOpExpr(PNK_VOID, JSOP_VOID, begin);
       case TOK_NOT:
-        return unaryOpExpr(PNK_NOT, JSOP_NOT);
+        return unaryOpExpr(PNK_NOT, JSOP_NOT, begin);
       case TOK_BITNOT:
-        return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT);
+        return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT, begin);
       case TOK_PLUS:
-        return unaryOpExpr(PNK_POS, JSOP_POS);
+        return unaryOpExpr(PNK_POS, JSOP_POS, begin);
       case TOK_MINUS:
-        return unaryOpExpr(PNK_NEG, JSOP_NEG);
+        return unaryOpExpr(PNK_NEG, JSOP_NEG, begin);
 
       case TOK_INC:
       case TOK_DEC:
       {
-        uint32_t begin = pos().begin;
         TokenKind tt2 = tokenStream.getToken(TSF_OPERAND);
         pn2 = memberExpr(tt2, true);
         if (!pn2)
             return null();
-        pn = handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT, pn2);
+        pn = handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
+                              JSOP_NOP,
+                              begin,
+                              pn2);
         if (!pn)
             return null();
-        handler.setBeginPosition(pn, begin);
         if (!setIncOpKid(pn, pn2, tt, true))
             return null();
         break;
@@ -5433,7 +5443,6 @@ Parser<ParseHandler>::unaryExpr()
 
       case TOK_DELETE:
       {
-        uint32_t begin = pos().begin;
         pn2 = unaryExpr();
         if (!pn2)
             return null();
@@ -5441,10 +5450,9 @@ Parser<ParseHandler>::unaryExpr()
         if (!checkDeleteExpression(&pn2))
             return null();
 
-        pn = handler.newUnary(PNK_DELETE, pn2);
+        pn = handler.newUnary(PNK_DELETE, JSOP_NOP, begin, pn2);
         if (!pn)
             return null();
-        handler.setBeginPosition(pn, begin);
         break;
       }
       case TOK_ERROR:
@@ -5459,7 +5467,10 @@ Parser<ParseHandler>::unaryExpr()
         tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
         if (tt == TOK_INC || tt == TOK_DEC) {
             tokenStream.consumeKnownToken(tt);
-            pn2 = handler.newUnary((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT, pn);
+            pn2 = handler.newUnary((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
+                                   JSOP_NOP,
+                                   begin,
+                                   pn);
             if (!pn2)
                 return null();
             if (!setIncOpKid(pn2, pn, tt, false))
@@ -6553,7 +6564,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     break;
 
                 if (tt == TOK_COMMA) {
-                    tokenStream.matchToken(TOK_COMMA);
+                    tokenStream.consumeKnownToken(TOK_COMMA);
                     pn2 = handler.newElision();
                     if (!pn2)
                         return null();
@@ -6562,13 +6573,13 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     spread = true;
                     handler.setListFlag(pn, PNX_SPECIALARRAYINIT | PNX_NONCONST);
 
-                    tokenStream.getToken();
-
+                    tokenStream.consumeKnownToken(TOK_TRIPLEDOT);
+                    uint32_t begin = pos().begin;
                     Node inner = assignExpr();
                     if (!inner)
                         return null();
 
-                    pn2 = handler.newUnary(PNK_SPREAD, inner);
+                    pn2 = handler.newUnary(PNK_SPREAD, JSOP_NOP, begin, inner);
                     if (!pn2)
                         return null();
                 } else {
