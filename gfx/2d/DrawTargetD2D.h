@@ -134,7 +134,6 @@ public:
 
   static ID2D1Factory *factory();
   static void CleanupD2D();
-  static TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
   static IDWriteFactory *GetDWriteFactory();
 
   operator std::string() const {
@@ -192,9 +191,6 @@ private:
                         const DrawOptions &aOptions = DrawOptions());
 
   TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
-  TemporaryRef<ID2D1Geometry> ConvertRectToGeometry(const D2D1_RECT_F& aRect);
-  TemporaryRef<ID2D1Geometry> GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform);
-  TemporaryRef<ID2D1Geometry> Intersect(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB);
 
   // This returns the clipped geometry, in addition it returns aClipBounds which
   // represents the intersection of all pixel-aligned rectangular clips that

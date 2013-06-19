@@ -113,7 +113,7 @@ public:
                                                     Float(clipBounds.YMost())),
                                          byRef(rectGeom));
 
-      mClippedArea = mDT->Intersect(mClippedArea, rectGeom);
+      mClippedArea = IntersectGeometry(mClippedArea, rectGeom);
     }
   }
 
@@ -161,6 +161,11 @@ private:
   // This contains the area drawing is clipped to.
   RefPtr<ID2D1Geometry> mClippedArea;
 };
+
+ID2D1Factory *D2DFactory()
+{
+  return DrawTargetD2D::factory();
+}
 
 DrawTargetD2D::DrawTargetD2D()
   : mCurrentCachedLayer(0)
@@ -1722,40 +1727,6 @@ DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aP
   mDevice->Draw(4, 0);
 }
 
-TemporaryRef<ID2D1Geometry>
-DrawTargetD2D::ConvertRectToGeometry(const D2D1_RECT_F& aRect)
-{
-  RefPtr<ID2D1RectangleGeometry> rectGeom;
-  factory()->CreateRectangleGeometry(&aRect, byRef(rectGeom));
-  return rectGeom.forget();
-}
-
-TemporaryRef<ID2D1Geometry>
-DrawTargetD2D::GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform)
-{
-  RefPtr<ID2D1PathGeometry> tmpGeometry;
-  factory()->CreatePathGeometry(byRef(tmpGeometry));
-  RefPtr<ID2D1GeometrySink> currentSink;
-  tmpGeometry->Open(byRef(currentSink));
-  aGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                      aTransform, currentSink);
-  currentSink->Close();
-  return tmpGeometry;
-}
-
-TemporaryRef<ID2D1Geometry>
-DrawTargetD2D::Intersect(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
-{
-  RefPtr<ID2D1PathGeometry> pathGeom;
-  factory()->CreatePathGeometry(byRef(pathGeom));
-  RefPtr<ID2D1GeometrySink> sink;
-  pathGeom->Open(byRef(sink));
-  aGeometryA->CombineWithGeometry(aGeometryB, D2D1_COMBINE_MODE_INTERSECT, nullptr, sink);
-  sink->Close();
-
-  return pathGeom;
-}
-
 static D2D1_RECT_F
 IntersectRect(const D2D1_RECT_F& aRect1, const D2D1_RECT_F& aRect2)
 {
@@ -2311,80 +2282,6 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
   gfxWarning() << "Invalid pattern type detected.";
   return nullptr;
-}
-
-TemporaryRef<ID2D1StrokeStyle>
-DrawTargetD2D::CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
-{
-  RefPtr<ID2D1StrokeStyle> style;
-
-  D2D1_CAP_STYLE capStyle;
-  D2D1_LINE_JOIN joinStyle;
-
-  switch (aStrokeOptions.mLineCap) {
-  case CAP_BUTT:
-    capStyle = D2D1_CAP_STYLE_FLAT;
-    break;
-  case CAP_ROUND:
-    capStyle = D2D1_CAP_STYLE_ROUND;
-    break;
-  case CAP_SQUARE:
-    capStyle = D2D1_CAP_STYLE_SQUARE;
-    break;
-  }
-
-  switch (aStrokeOptions.mLineJoin) {
-  case JOIN_MITER:
-    joinStyle = D2D1_LINE_JOIN_MITER;
-    break;
-  case JOIN_MITER_OR_BEVEL:
-    joinStyle = D2D1_LINE_JOIN_MITER_OR_BEVEL;
-    break;
-  case JOIN_ROUND:
-    joinStyle = D2D1_LINE_JOIN_ROUND;
-    break;
-  case JOIN_BEVEL:
-    joinStyle = D2D1_LINE_JOIN_BEVEL;
-    break;
-  }
-
-
-  HRESULT hr;
-  if (aStrokeOptions.mDashPattern) {
-    typedef vector<Float> FloatVector;
-    // D2D "helpfully" multiplies the dash pattern by the line width.
-    // That's not what cairo does, or is what <canvas>'s dash wants.
-    // So fix the multiplication in advance.
-    Float lineWidth = aStrokeOptions.mLineWidth;
-    FloatVector dash(aStrokeOptions.mDashPattern,
-                     aStrokeOptions.mDashPattern + aStrokeOptions.mDashLength);
-    for (FloatVector::iterator it = dash.begin(); it != dash.end(); ++it) {
-      *it /= lineWidth;
-    }
-
-    hr = factory()->CreateStrokeStyle(
-      D2D1::StrokeStyleProperties(capStyle, capStyle,
-                                  capStyle, joinStyle,
-                                  aStrokeOptions.mMiterLimit,
-                                  D2D1_DASH_STYLE_CUSTOM,
-                                  aStrokeOptions.mDashOffset),
-      &dash[0], // data() is not C++98, although it's in recent gcc
-                // and VC10's STL
-      dash.size(),
-      byRef(style));
-  } else {
-    hr = factory()->CreateStrokeStyle(
-      D2D1::StrokeStyleProperties(capStyle, capStyle,
-                                  capStyle, joinStyle,
-                                  aStrokeOptions.mMiterLimit),
-      nullptr, 0, byRef(style));
-  }
-
-  if (FAILED(hr)) {
-    gfxWarning() << "Failed to create Direct2D stroke style.";
-  }
-
-  return style;
 }
 
 TemporaryRef<ID3D10Texture2D>
