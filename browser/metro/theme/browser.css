@@ -878,7 +878,6 @@ setting[type="radio"] > vbox {
   border-radius: 50%;
   box-shadow: 0 0 0 1px hsla(0,0%,0%,.04),
               0 0 9px 0 hsla(0,0%,0%,.1);
-  transition-property: left, right, transform, background-position, background-color, background-size, border-color, visibility, box-shadow, top;
   transition-duration: 550ms;
   transition-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1);
 }
@@ -950,12 +949,6 @@ setting[type="radio"] > vbox {
   background-position: left 12px center;
   transform: translateX(-40px) scale(1.2);
 }
-
-#overlay-back[mousedrag],
-#overlay-plus[mousedrag] {
-  transition-property: left, right, transform, background-position, background-color, background-size, border-color, visibility, box-shadow;
-}
-
 
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
