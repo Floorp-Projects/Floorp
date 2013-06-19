@@ -197,32 +197,30 @@ nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 JSScript*
 nsXULPrototypeCache::GetScript(nsIURI* aURI)
 {
-    CacheScriptEntry entry;
-    if (!mScriptTable.Get(aURI, &entry)) {
+    JSScript* script;
+    if (!mScriptTable.Get(aURI, &script)) {
         return nullptr;
     }
-    return entry.mScriptObject;
+    return script;
 }
 
 nsresult
 nsXULPrototypeCache::PutScript(nsIURI* aURI,
                                JS::Handle<JSScript*> aScriptObject)
 {
-    CacheScriptEntry existingEntry;
-    if (mScriptTable.Get(aURI, &existingEntry)) {
 #ifdef DEBUG
+    JSScript* existingScript;
+    if (mScriptTable.Get(aURI, &existingScript)) {
         nsAutoCString scriptName;
         aURI->GetSpec(scriptName);
         nsAutoCString message("Loaded script ");
         message += scriptName;
         message += " twice (bug 392650)";
         NS_WARNING(message.get());
-#endif
     }
+#endif
 
-    CacheScriptEntry entry = {aScriptObject};
-
-    mScriptTable.Put(aURI, entry);
+    mScriptTable.Put(aURI, aScriptObject);
 
     return NS_OK;
 }
@@ -658,11 +656,10 @@ nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration)
 }
 
 static PLDHashOperator
-MarkScriptsInGC(nsIURI* aKey, CacheScriptEntry& aScriptEntry, void* aClosure)
+MarkScriptsInGC(nsIURI* aKey, JSScript*& aScript, void* aClosure)
 {
     JSTracer* trc = static_cast<JSTracer*>(aClosure);
-    JS_CallScriptTracer(trc, &aScriptEntry.mScriptObject,
-                        "nsXULPrototypeCache script");
+    JS_CallScriptTracer(trc, &aScript, "nsXULPrototypeCache script");
     return PL_DHASH_NEXT;
 }
 

@@ -372,7 +372,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
   public:
 
     /* Public entry points for parsing. */
-    Node statement();
+    Node statement(bool canHaveDirectives = false);
     bool maybeParseDirective(Node pn, bool *cont);
 
     // Parse a function, given only its body. Used for the Function constructor.
