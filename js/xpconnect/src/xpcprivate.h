@@ -86,8 +86,8 @@
 #include <math.h>
 #include "xpcpublic.h"
 #include "jsapi.h"
-#include "jsdhash.h"
 #include "jsprf.h"
+#include "pldhash.h"
 #include "prprf.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
@@ -816,17 +816,17 @@ public:
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
    void DEBUG_AddWrappedNative(nsIXPConnectWrappedNative* wrapper)
         {XPCAutoLock lock(GetMapLock());
-         JSDHashEntryHdr *entry =
-            JS_DHashTableOperate(DEBUG_WrappedNativeHashtable,
-                                 wrapper, JS_DHASH_ADD);
-         if (entry) ((JSDHashEntryStub *)entry)->key = wrapper;}
+         PLDHashEntryHdr *entry =
+            PL_DHashTableOperate(DEBUG_WrappedNativeHashtable,
+                                 wrapper, PL_DHASH_ADD);
+         if (entry) ((PLDHashEntryStub *)entry)->key = wrapper;}
 
    void DEBUG_RemoveWrappedNative(nsIXPConnectWrappedNative* wrapper)
         {XPCAutoLock lock(GetMapLock());
-         JS_DHashTableOperate(DEBUG_WrappedNativeHashtable,
-                              wrapper, JS_DHASH_REMOVE);}
+         PL_DHashTableOperate(DEBUG_WrappedNativeHashtable,
+                              wrapper, PL_DHASH_REMOVE);}
 private:
-   JSDHashTable* DEBUG_WrappedNativeHashtable;
+   PLDHashTable* DEBUG_WrappedNativeHashtable;
 public:
 #endif
 

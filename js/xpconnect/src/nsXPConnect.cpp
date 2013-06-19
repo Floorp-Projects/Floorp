@@ -725,8 +725,8 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
         ReparentWrapperIfFound(scope, scope2, newParent, aCOMObj);
 }
 
-static JSDHashOperator
-MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
+static PLDHashOperator
+MoveableWrapperFinder(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       uint32_t number, void *arg)
 {
     nsTArray<nsRefPtr<XPCWrappedNative> > *array =
@@ -737,7 +737,7 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     // we don't have to move it.
     if (!wn->IsWrapperExpired())
         array->AppendElement(wn);
-    return JS_DHASH_NEXT;
+    return PL_DHASH_NEXT;
 }
 
 /* void rescueOrphansInScope(in JSContextPtr aJSContext, in JSObjectPtr  aScope); */
