@@ -85,9 +85,17 @@ TextTrackCue::~TextTrackCue()
 void
 TextTrackCue::CreateCueOverlay()
 {
-  mTrackElement->OwnerDoc()->CreateElem(NS_LITERAL_STRING("div"), nullptr,
-                                        kNameSpaceID_XHTML,
-                                        getter_AddRefs(mCueDiv));
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
+  if(!window) {
+    return;
+  }
+  nsIDocument* document = window->GetDoc();
+  if(!document) {
+    return;
+  }
+  document->CreateElem(NS_LITERAL_STRING("div"), nullptr,
+                       kNameSpaceID_XHTML,
+                       getter_AddRefs(mCueDiv));
   nsGenericHTMLElement* cueDiv =
     static_cast<nsGenericHTMLElement*>(mCueDiv.get());
   cueDiv->SetClassName(NS_LITERAL_STRING("caption-text"));
@@ -136,8 +144,16 @@ TextTrackCue::RenderCue()
 already_AddRefed<DocumentFragment>
 TextTrackCue::GetCueAsHTML()
 {
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
+  if(!window) {
+    return nullptr;
+  }
+  nsIDocument* document = window->GetDoc();
+  if(!document){
+    return nullptr;
+  }
   nsRefPtr<DocumentFragment> frag =
-    mTrackElement->OwnerDoc()->CreateDocumentFragment();
+    document->CreateDocumentFragment();
 
   ConvertNodeTreeToDOMTree(frag);
 
@@ -183,7 +199,7 @@ TextTrackCue::ConvertNodeTreeToDOMTree(nsIContent* aParentContent)
   nsTArray<WebVTTNodeParentPair> nodeParentPairStack;
 
   // mHead should actually be the head of a node tree.
-  if (mHead->kind != WEBVTT_HEAD_NODE) {
+  if (!mHead || mHead->kind != WEBVTT_HEAD_NODE) {
     return;
   }
   // Seed the stack for traversal.
@@ -239,9 +255,17 @@ TextTrackCue::ConvertInternalNodeToContent(const webvtt_node* aWebVTTNode)
   }
 
   nsCOMPtr<nsIContent> cueTextContent;
-  mTrackElement->OwnerDoc()->CreateElem(nsDependentAtomString(atom), nullptr,
-                                        kNameSpaceID_XHTML,
-                                        getter_AddRefs(cueTextContent));
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
+  if(!window) {
+    return nullptr;
+  }
+  nsIDocument* document = window->GetDoc();
+  if(!document){
+    return nullptr;
+  }
+  document->CreateElem(nsDependentAtomString(atom), nullptr,
+                       kNameSpaceID_XHTML,
+                       getter_AddRefs(cueTextContent));
 
   if (aWebVTTNode->kind == WEBVTT_VOICE) {
     const char* text =
@@ -280,7 +304,15 @@ already_AddRefed<nsIContent>
 TextTrackCue::ConvertLeafNodeToContent(const webvtt_node* aWebVTTNode)
 {
   nsCOMPtr<nsIContent> cueTextContent;
-  nsNodeInfoManager* nimgr = mTrackElement->NodeInfo()->NodeInfoManager();
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
+  if(!window) {
+    return nullptr;
+  }
+  nsIDocument* document = window->GetDoc();
+  if(!document) {
+    return nullptr;
+  }
+  nsNodeInfoManager* nimgr = document->NodeInfoManager();
   switch (aWebVTTNode->kind) {
     case WEBVTT_TEXT:
     {
