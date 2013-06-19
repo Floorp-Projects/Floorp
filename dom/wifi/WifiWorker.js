@@ -39,6 +39,10 @@ const SETTINGS_WIFI_DHCPSERVER_ENDIP   = "tethering.wifi.dhcpserver.endip";
 const SETTINGS_WIFI_DNS1               = "tethering.wifi.dns1";
 const SETTINGS_WIFI_DNS2               = "tethering.wifi.dns2";
 
+// Settings DB path for USB tethering.
+const SETTINGS_USB_DHCPSERVER_STARTIP  = "tethering.usb.dhcpserver.startip";
+const SETTINGS_USB_DHCPSERVER_ENDIP    = "tethering.usb.dhcpserver.endip";
+
 // Default value for WIFI tethering.
 const DEFAULT_WIFI_IP                  = "192.168.1.1";
 const DEFAULT_WIFI_PREFIX              = "24";
@@ -49,6 +53,10 @@ const DEFAULT_WIFI_SECURITY_TYPE       = "open";
 const DEFAULT_WIFI_SECURITY_PASSWORD   = "1234567890";
 const DEFAULT_DNS1                     = "8.8.8.8";
 const DEFAULT_DNS2                     = "8.8.4.4";
+
+// Default value for USB tethering.
+const DEFAULT_USB_DHCPSERVER_STARTIP   = "192.168.0.10";
+const DEFAULT_USB_DHCPSERVER_ENDIP     = "192.168.0.30";
 
 const WIFI_FIRMWARE_AP            = "AP";
 const WIFI_FIRMWARE_STATION       = "STA";
@@ -2333,6 +2341,9 @@ function WifiWorker() {
   lock.get(SETTINGS_WIFI_DNS2, this);
   lock.get(SETTINGS_WIFI_TETHERING_ENABLED, this);
 
+  lock.get(SETTINGS_USB_DHCPSERVER_STARTIP, this);
+  lock.get(SETTINGS_USB_DHCPSERVER_ENDIP, this);
+
   this._wifiTetheringSettingsToRead = [SETTINGS_WIFI_SSID,
                                        SETTINGS_WIFI_SECURITY_TYPE,
                                        SETTINGS_WIFI_SECURITY_PASSWORD,
@@ -2342,8 +2353,9 @@ function WifiWorker() {
                                        SETTINGS_WIFI_DHCPSERVER_ENDIP,
                                        SETTINGS_WIFI_DNS1,
                                        SETTINGS_WIFI_DNS2,
-                                       SETTINGS_WIFI_TETHERING_ENABLED];
-
+                                       SETTINGS_WIFI_TETHERING_ENABLED,
+                                       SETTINGS_USB_DHCPSERVER_STARTIP,
+                                       SETTINGS_USB_DHCPSERVER_ENDIP];
 }
 
 function translateState(state) {
@@ -2401,6 +2413,9 @@ WifiWorker.prototype = {
     this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_ENDIP] = DEFAULT_WIFI_DHCPSERVER_ENDIP;
     this.tetheringSettings[SETTINGS_WIFI_DNS1] = DEFAULT_DNS1;
     this.tetheringSettings[SETTINGS_WIFI_DNS2] = DEFAULT_DNS2;
+
+    this.tetheringSettings[SETTINGS_USB_DHCPSERVER_STARTIP] = DEFAULT_USB_DHCPSERVER_STARTIP;
+    this.tetheringSettings[SETTINGS_USB_DHCPSERVER_ENDIP] = DEFAULT_USB_DHCPSERVER_ENDIP;
   },
 
   // Internal methods.
@@ -2870,8 +2885,10 @@ WifiWorker.prototype = {
     let securityId;
     let interfaceIp;
     let prefix;
-    let dhcpStartIp;
-    let dhcpEndIp;
+    let wifiDhcpStartIp;
+    let wifiDhcpEndIp;
+    let usbDhcpStartIp;
+    let usbDhcpEndIp;
     let dns1;
     let dns2;
 
@@ -2880,8 +2897,10 @@ WifiWorker.prototype = {
     securityId = this.tetheringSettings[SETTINGS_WIFI_SECURITY_PASSWORD];
     interfaceIp = this.tetheringSettings[SETTINGS_WIFI_IP];
     prefix = this.tetheringSettings[SETTINGS_WIFI_PREFIX];
-    dhcpStartIp = this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_STARTIP];
-    dhcpEndIp = this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_ENDIP];
+    wifiDhcpStartIp = this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_STARTIP];
+    wifiDhcpEndIp = this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_ENDIP];
+    usbDhcpStartIp = this.tetheringSettings[SETTINGS_USB_DHCPSERVER_STARTIP];
+    usbDhcpEndIp = this.tetheringSettings[SETTINGS_USB_DHCPSERVER_ENDIP];
     dns1 = this.tetheringSettings[SETTINGS_WIFI_DNS1];
     dns2 = this.tetheringSettings[SETTINGS_WIFI_DNS2];
 
@@ -2903,7 +2922,8 @@ WifiWorker.prototype = {
     }
     // Using the default values here until application supports these settings.
     if (interfaceIp == "" || prefix == "" ||
-        dhcpStartIp == "" || dhcpEndIp == "") {
+        wifiDhcpStartIp == "" || wifiDhcpEndIp == "" ||
+        usbDhcpStartIp == "" || usbDhcpEndIp == "") {
       debug("Invalid subnet information.");
       return null;
     }
@@ -2914,8 +2934,10 @@ WifiWorker.prototype = {
       key: securityId,
       ip: interfaceIp,
       prefix: prefix,
-      startIp: dhcpStartIp,
-      endIp: dhcpEndIp,
+      wifiStartIp: wifiDhcpStartIp,
+      wifiEndIp: wifiDhcpEndIp,
+      usbStartIp: usbDhcpStartIp,
+      usbEndIp: usbDhcpEndIp,
       dns1: dns1,
       dns2: dns2,
       enable: enable,
@@ -3262,6 +3284,8 @@ WifiWorker.prototype = {
       case SETTINGS_WIFI_DHCPSERVER_ENDIP:
       case SETTINGS_WIFI_DNS1:
       case SETTINGS_WIFI_DNS2:
+      case SETTINGS_USB_DHCPSERVER_STARTIP:
+      case SETTINGS_USB_DHCPSERVER_ENDIP:
         if (aResult !== null) {
           this.tetheringSettings[aName] = aResult;
         }
