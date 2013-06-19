@@ -265,12 +265,19 @@ public:
     mImpl.construct(t1, t2);
   }
 
-  const InternalType& Value() const
+  const T& Value() const
   {
     return mImpl.ref();
   }
 
+  // Return InternalType here so we can work with it usefully.
   InternalType& Value()
+  {
+    return mImpl.ref();
+  }
+
+  // And an explicit way to get the InternalType even if we're const.
+  const InternalType& InternalValue() const
   {
     return mImpl.ref();
   }
@@ -284,6 +291,7 @@ private:
   Optional_base(const Optional_base& other) MOZ_DELETE;
   const Optional_base &operator=(const Optional_base &other) MOZ_DELETE;
 
+protected:
   Maybe<InternalType> mImpl;
 };
 
@@ -318,6 +326,20 @@ public:
   Optional(JSContext* cx, const T& aValue) :
     Optional_base<JS::Handle<T>, JS::Rooted<T> >(cx, aValue)
   {}
+
+  // Override the const Value() to return the right thing so we're not
+  // returning references to temporaries.
+  JS::Handle<T> Value() const
+  {
+    return this->mImpl.ref();
+  }
+
+  // And we have to override the non-const one too, since we're
+  // shadowing the one on the superclass.
+  JS::Rooted<T>& Value()
+  {
+    return this->mImpl.ref();
+  }
 };
 
 // A specialization of Optional for JSObject* to make sure that when someone
@@ -376,6 +398,51 @@ public:
   void Construct(const T1& t1)
   {
     Optional_base<JS::Value, JS::Value>::Construct(t1);
+  }
+};
+
+// A specialization of Optional for NonNull that lets us get a T& from Value()
+template<typename U> class NonNull;
+template<typename T>
+class Optional<NonNull<T> > : public Optional_base<T, NonNull<T> >
+{
+public:
+  // We want our Value to actually return a non-const reference, even
+  // if we're const.  At least for things that are normally pointer
+  // types...
+  T& Value() const
+  {
+    return *this->mImpl.ref().get();
+  }
+
+  // And we have to override the non-const one too, since we're
+  // shadowing the one on the superclass.
+  NonNull<T>& Value()
+  {
+    return this->mImpl.ref();
+  }
+};
+
+// A specialization of Optional for OwningNonNull that lets us get a
+// T& from Value()
+template<typename U> class OwningNonNull;
+template<typename T>
+class Optional<OwningNonNull<T> > : public Optional_base<T, OwningNonNull<T> >
+{
+public:
+  // We want our Value to actually return a non-const reference, even
+  // if we're const.  At least for things that are normally pointer
+  // types...
+  T& Value() const
+  {
+    return *this->mImpl.ref().get();
+  }
+
+  // And we have to override the non-const one too, since we're
+  // shadowing the one on the superclass.
+  OwningNonNull<T>& Value()
+  {
+    return this->mImpl.ref();
   }
 };
 
