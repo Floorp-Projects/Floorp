@@ -111,16 +111,14 @@ class FullParseHandler
         pn->pn_atom = atom;
         return pn;
     }
-    ParseNode *newNumber(double value, DecimalPoint decimalPoint = NoDecimal) {
-        ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos());
+    ParseNode *newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) {
+        ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos);
         if (!pn)
             return NULL;
         pn->initNumber(value, decimalPoint);
         return pn;
     }
-    ParseNode *newNumber(const Token &tok) {
-        return newNumber(tok.number(), tok.decimalPoint());
-    }
+
     ParseNode *newBooleanLiteral(bool cond, const TokenPos &pos) {
         return new_<BooleanLiteral>(cond, pos);
     }

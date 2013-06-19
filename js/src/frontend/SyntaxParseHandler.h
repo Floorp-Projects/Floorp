@@ -64,8 +64,7 @@ class SyntaxParseHandler
         }
         return NodeString;
     }
-    Node newNumber(double value, DecimalPoint decimalPoint = NoDecimal) { return NodeGeneric; }
-    Node newNumber(Token tok) { return NodeGeneric; }
+    Node newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) { return NodeGeneric; }
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }
     Node newThisLiteral(const TokenPos &pos) { return NodeGeneric; }
     Node newNullLiteral(const TokenPos &pos) { return NodeGeneric; }
