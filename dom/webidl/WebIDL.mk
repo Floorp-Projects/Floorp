@@ -109,6 +109,7 @@ webidl_files = \
   HTMLEmbedElement.webidl \
   HTMLFieldSetElement.webidl \
   HTMLFontElement.webidl \
+  HTMLFormElement.webidl \
   HTMLFrameElement.webidl \
   HTMLFrameSetElement.webidl \
   HTMLHeadElement.webidl \
