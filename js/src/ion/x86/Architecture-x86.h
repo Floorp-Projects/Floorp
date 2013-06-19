@@ -43,8 +43,8 @@ class Registers {
     typedef JSC::X86Registers::RegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "eax", "ecx", "edx", "ebx",
-                                       "esp", "ebp", "esi", "edi" };
+        static const char * const Names[] = { "eax", "ecx", "edx", "ebx",
+                                              "esp", "ebp", "esi", "edi" };
         return Names[code];
     }
 
@@ -107,8 +107,8 @@ class FloatRegisters {
     typedef JSC::X86Registers::XMMRegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
-                                       "xmm4", "xmm5", "xmm6", "xmm7" };
+        static const char * const Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
+                                              "xmm4", "xmm5", "xmm6", "xmm7" };
         return Names[code];
     }
 

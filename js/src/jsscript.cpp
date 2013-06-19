@@ -34,7 +34,6 @@
 #include "vm/Xdr.h"
 
 #include "jsinferinlines.h"
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/Interpreter-inl.h"
@@ -93,7 +92,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
     gc::AllocKind allocKind = gc::FINALIZE_OBJECT2_BACKGROUND;
     JS_ASSERT(gc::GetGCKindSlots(allocKind) == CallObject::RESERVED_SLOTS);
     RootedShape initial(cx,
-        EmptyShape::getInitialShape(cx, &CallClass, NULL, cx->global(), NULL,
+        EmptyShape::getInitialShape(cx, &CallObject::class_, NULL, cx->global(), NULL,
                                     allocKind, BaseShape::VAROBJ | BaseShape::DELEGATE));
     if (!initial)
         return false;
@@ -118,7 +117,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
             return false;
 #endif
 
-        StackBaseShape base(cx->compartment(), &CallClass, cx->global(), NULL,
+        StackBaseShape base(cx->compartment(), &CallObject::class_, cx->global(), NULL,
                             BaseShape::VAROBJ | BaseShape::DELEGATE);
 
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
@@ -658,7 +657,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (mode == XDR_ENCODE) {
             JSObject *obj = *objp;
             JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
-            isBlock = obj->isBlock() ? 1 : 0;
+            isBlock = obj->is<BlockObject>() ? 1 : 0;
         }
         if (!xdr->codeUint32(&isBlock))
             return false;
@@ -666,7 +665,10 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             /* Code the nested function's enclosing scope. */
             uint32_t funEnclosingScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                RootedObject staticScope(cx, (*objp)->toFunction()->nonLazyScript()->enclosingStaticScope());
+                JSScript *innerScript = (*objp)->toFunction()->getOrCreateScript(cx);
+                if (!innerScript)
+                    return false;
+                RootedObject staticScope(cx, innerScript->enclosingStaticScope());
                 StaticScopeIter ssi(cx, staticScope);
                 if (ssi.done() || ssi.type() == StaticScopeIter::FUNCTION) {
                     JS_ASSERT(ssi.done() == !fun);
@@ -784,7 +786,7 @@ js::XDRScript(XDRState<XDR_DECODE> *, HandleObject, HandleScript, HandleFunction
 js::ScriptSourceObject *
 JSScript::sourceObject() const
 {
-    return &sourceObject_->asScriptSource();
+    return &sourceObject_->as<ScriptSourceObject>();
 }
 
 bool
@@ -915,10 +917,10 @@ void
 ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 {
     // ScriptSource::setSource automatically takes care of the refcount
-    obj->asScriptSource().setSource(NULL);
+    obj->as<ScriptSourceObject>().setSource(NULL);
 }
 
-Class js::ScriptSourceClass = {
+Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */
@@ -934,10 +936,10 @@ Class js::ScriptSourceClass = {
 ScriptSourceObject *
 ScriptSourceObject::create(JSContext *cx, ScriptSource *source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &ScriptSourceClass, NULL, cx->global()));
+    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NULL, cx->global()));
     if (!object)
         return NULL;
-    JS::RootedScriptSource sourceObject(cx, &object->asScriptSource());
+    JS::RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
     sourceObject->setSlot(SOURCE_SLOT, PrivateValue(source));
     source->incref();
     return sourceObject;
@@ -1226,16 +1228,13 @@ SourceDataCache::purge()
 const jschar *
 ScriptSource::chars(JSContext *cx)
 {
-#ifdef USE_ZLIB
-    Rooted<JSStableString *> cached(cx, NULL);
-#endif
 #ifdef JS_THREADSAFE
     if (!ready())
         return cx->runtime()->sourceCompressorThread.currentChars();
 #endif
 #ifdef USE_ZLIB
     if (compressed()) {
-        cached = cx->runtime()->sourceDataCache.lookup(this);
+        JSStableString *cached = cx->runtime()->sourceDataCache.lookup(this);
         if (!cached) {
             const size_t nbytes = sizeof(jschar) * (length_ + 1);
             jschar *decompressed = static_cast<jschar *>(cx->malloc_(nbytes));
@@ -1257,10 +1256,8 @@ ScriptSource::chars(JSContext *cx)
         }
         return cached->chars().get();
     }
-    return data.source;
-#else
-    return data.source;
 #endif
+    return data.source;
 }
 
 JSStableString *
@@ -2324,8 +2321,11 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     assertSameCompartment(cx, innerFun);
                     clone = innerFun;
                 } else {
-                    if (!innerFun->getOrCreateScript(cx))
-                        return NULL;
+                    if (innerFun->isInterpretedLazy()) {
+                        AutoCompartment ac(cx, innerFun);
+                        if (!innerFun->getOrCreateScript(cx))
+                            return NULL;
+                    }
                     RootedObject staticScope(cx, innerFun->nonLazyScript()->enclosingStaticScope());
                     StaticScopeIter ssi(cx, staticScope);
                     RootedObject enclosingScope(cx);
@@ -2334,8 +2334,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     else
                         enclosingScope = fun;
 
-                    clone = CloneInterpretedFunction(cx, enclosingScope, innerFun,
-                            src->selfHosted ? TenuredObject : newKind);
+                    clone = CloneFunctionAndScript(cx, enclosingScope, innerFun);
                 }
             } else {
                 /*
@@ -2357,7 +2356,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     for (unsigned i = 0; i < nregexps; i++) {
         HeapPtrObject *vector = src->regexps()->vector;
         for (unsigned i = 0; i < nregexps; i++) {
-            JSObject *clone = CloneScriptRegExpObject(cx, vector[i]->asRegExp());
+            JSObject *clone = CloneScriptRegExpObject(cx, vector[i]->as<RegExpObject>());
             if (!clone || !regexps.append(clone))
                 return NULL;
         }
@@ -2772,11 +2771,14 @@ JSScript::markChildren(JSTracer *trc)
 void
 LazyScript::markChildren(JSTracer *trc)
 {
-    if (parent_)
-        MarkScriptUnbarriered(trc, &parent_, "lazyScriptParent");
+    if (sourceObject_)
+        MarkObject(trc, &sourceObject_, "sourceObject");
+
+    if (enclosingScope_)
+        MarkObject(trc, &enclosingScope_, "enclosingScope");
 
     if (script_)
-        MarkScriptUnbarriered(trc, &script_, "lazyScript");
+        MarkScript(trc, &script_, "realScript");
 
     HeapPtrAtom *freeVariables = this->freeVariables();
     for (size_t i = 0; i < numFreeVariables(); i++)
@@ -2792,6 +2794,9 @@ LazyScript::finalize(FreeOp *fop)
 {
     if (table_)
         fop->free_(table_);
+
+    if (originPrincipals_)
+        JS_DropPrincipals(fop->runtime(), originPrincipals_);
 }
 
 void
@@ -2940,8 +2945,58 @@ JSScript::formalLivesInArgumentsObject(unsigned argSlot)
     return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
 
+LazyScript::LazyScript(void *table, uint32_t numFreeVariables, uint32_t numInnerFunctions,
+                       JSVersion version, uint32_t begin, uint32_t end, uint32_t lineno, uint32_t column)
+  : script_(NULL),
+    enclosingScope_(NULL),
+    sourceObject_(NULL),
+    table_(table),
+    originPrincipals_(NULL),
+    version_(version),
+    numFreeVariables_(numFreeVariables),
+    numInnerFunctions_(numInnerFunctions),
+    strict_(false),
+    bindingsAccessedDynamically_(false),
+    hasDebuggerStatement_(false),
+    directlyInsideEval_(false),
+    usesArgumentsAndApply_(false),
+    hasBeenCloned_(false),
+    begin_(begin),
+    end_(end),
+    lineno_(lineno),
+    column_(column)
+{
+    JS_ASSERT(this->version() == version);
+    JS_ASSERT(begin <= end);
+}
+
+void
+LazyScript::initScript(JSScript *script)
+{
+    JS_ASSERT(script && !script_);
+    script_ = script;
+}
+
+void
+LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject,
+                      JSPrincipals *originPrincipals)
+{
+    JS_ASSERT(sourceObject && !sourceObject_ && !enclosingScope_ && !originPrincipals_);
+    enclosingScope_ = enclosingScope;
+    sourceObject_ = sourceObject;
+    originPrincipals_ = originPrincipals;
+    if (originPrincipals)
+        JS_HoldPrincipals(originPrincipals);
+}
+
+ScriptSourceObject *
+LazyScript::sourceObject() const
+{
+    return sourceObject_ ? &sourceObject_->as<ScriptSourceObject>() : NULL;
+}
+
 /* static */ LazyScript *
-LazyScript::Create(JSContext *cx, uint32_t numFreeVariables, uint32_t numInnerFunctions,
+LazyScript::Create(JSContext *cx, uint32_t numFreeVariables, uint32_t numInnerFunctions, JSVersion version,
                    uint32_t begin, uint32_t end, uint32_t lineno, uint32_t column)
 {
     JS_ASSERT(begin <= end);
@@ -2960,7 +3015,18 @@ LazyScript::Create(JSContext *cx, uint32_t numFreeVariables, uint32_t numInnerFu
     if (!res)
         return NULL;
 
-    return new (res) LazyScript(table, numFreeVariables, numInnerFunctions, begin, end, lineno, column);
+    return new (res) LazyScript(table, numFreeVariables, numInnerFunctions, version,
+                                begin, end, lineno, column);
+}
+
+uint32_t
+LazyScript::staticLevel(JSContext *cx) const
+{
+    for (StaticScopeIter ssi(cx, enclosingScope()); !ssi.done(); ssi++) {
+        if (ssi.type() == StaticScopeIter::FUNCTION)
+            return ssi.funScript()->staticLevel + 1;
+    }
+    return 1;
 }
 
 void

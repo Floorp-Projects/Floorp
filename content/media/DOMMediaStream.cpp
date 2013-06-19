@@ -8,6 +8,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
+#include "mozilla/dom/AudioNode.h"
 #include "MediaStreamGraph.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
@@ -38,6 +39,15 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(DOMMediaStream)
 
 NS_IMPL_ISUPPORTS_INHERITED1(DOMLocalMediaStream, DOMMediaStream,
                              nsIDOMLocalMediaStream)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(DOMAudioNodeMediaStream, DOMMediaStream,
+                                     mStreamNode)
+
+NS_IMPL_ADDREF_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
+NS_IMPL_RELEASE_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream)
+NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 class DOMMediaStream::StreamListener : public MediaStreamListener {
 public:
@@ -343,6 +353,21 @@ DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                             TrackTypeHints aHintContents)
 {
   nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
+  stream->InitTrackUnionStream(aWindow, aHintContents);
+  return stream.forget();
+}
+
+DOMAudioNodeMediaStream::DOMAudioNodeMediaStream(AudioNode* aNode)
+: mStreamNode(aNode)
+{
+}
+
+already_AddRefed<DOMAudioNodeMediaStream>
+DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
+                                                AudioNode* aNode,
+                                                TrackTypeHints aHintContents)
+{
+  nsRefPtr<DOMAudioNodeMediaStream> stream = new DOMAudioNodeMediaStream(aNode);
   stream->InitTrackUnionStream(aWindow, aHintContents);
   return stream.forget();
 }

@@ -41,6 +41,12 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
     return safepoints_.append(ins);
 }
 
+void
+LIRGraph::removeBlock(size_t i)
+{
+    blocks_.erase(blocks_.begin() + i);
+}
+
 Label *
 LBlock::label()
 {
@@ -164,7 +170,7 @@ LPhi::New(MIRGenerator *gen, MPhi *ins)
 void
 LInstruction::printName(FILE *fp, Opcode op)
 {
-    static const char *names[] =
+    static const char * const names[] =
     {
 #define LIROP(x) #x,
         LIR_OPCODE_LIST(LIROP)
@@ -182,7 +188,7 @@ LInstruction::printName(FILE *fp)
     printName(fp, op());
 }
 
-static const char *TypeChars[] =
+static const char * const TypeChars[] =
 {
     "i",            // INTEGER
     "o",            // OBJECT

@@ -107,7 +107,7 @@ private:
   nsTArray<nsRefPtr<FutureCallback> > mResolveCallbacks;
   nsTArray<nsRefPtr<FutureCallback> > mRejectCallbacks;
 
-  JS::Value mResult;
+  JS::Heap<JS::Value> mResult;
   FutureState mState;
   bool mTaskPending;
 };

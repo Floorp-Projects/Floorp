@@ -365,13 +365,28 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "ellipsis", function () {
 
 
 function openModalWindow(domWin, uri, args) {
-    // XXX Investigate supressing modal state when we're called without a
-    // window? Seems odd to affect whatever window happens to be active.
-    if (!domWin)
+    // There's an implied contract that says modal prompts should still work
+    // when no "parent" window is passed for the dialog (eg, the "Master
+    // Password" dialog does this).  These prompts must be shown even if there
+    // are *no* visible windows at all.
+    // There's also a requirement for prompts to be blocked if a window is
+    // passed and that window is hidden (eg, auth prompts are supressed if the
+    // passed window is the hidden window).
+    // See bug 875157 comment 30 for more...
+    if (domWin) {
+        // a domWin was passed, so we can apply the check for it being hidden.
+        let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+        if (!winUtils.isParentWindowMainWidgetVisible) {
+            throw Components.Exception("Cannot call openModalWindow on a hidden window",
+                                       Cr.NS_ERROR_NOT_AVAILABLE);
+        }
+    } else {
+        // We try and find a window to use as the parent, but don't consider
+        // if that is visible before showing the prompt.
         domWin = Services.ww.activeWindow;
-
-    // domWin may still be null here if there are _no_ windows open.
-
+        // domWin may still be null here if there are _no_ windows open.
+    }
     // Note that we don't need to fire DOMWillOpenModalDialog and
     // DOMModalDialogClosed events here, wwatcher's OpenWindowInternal
     // will do that. Similarly for enterModalState / leaveModalState.

@@ -34,7 +34,6 @@ namespace js {
 
 class AutoPropDescArrayRooter;
 class BaseProxyHandler;
-class CallObject;
 struct GCMarker;
 struct NativeIterator;
 class Nursery;
@@ -204,59 +203,37 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class ArrayBufferClass;
-extern Class BlockClass;
 extern Class BooleanClass;
-extern Class CallableObjectClass;
-extern Class DataViewClass;
 extern Class DateClass;
 extern Class ErrorClass;
-extern Class ElementIteratorClass;
 extern Class GeneratorClass;
 extern Class IntlClass;
 extern Class JSONClass;
-extern Class MapIteratorClass;
 extern Class MathClass;
-extern Class ModuleClass;
 extern Class NumberClass;
-extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
-extern Class RegExpClass;
 extern Class RegExpStaticsClass;
-extern Class SetIteratorClass;
-extern Class ScriptSourceClass;
 extern Class StopIterationClass;
 extern Class StringClass;
-extern Class StrictArgumentsObjectClass;
 extern Class WeakMapClass;
 extern Class WithClass;
 
-class ArgumentsObject;
 class ArrayBufferObject;
-class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
-class DataViewObject;
 class DebugScopeObject;
-class DeclEnvObject;
-class ElementIteratorObject;
 class GlobalObject;
 class MapObject;
-class MapIteratorObject;
-class Module;
 class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
-class PropertyIteratorObject;
 class ScopeObject;
 class SetObject;
-class SetIteratorObject;
 class StaticBlockObject;
 class StrictArgumentsObject;
 class StringObject;
-class RegExpObject;
 class WithObject;
 
 }  /* namespace js */
@@ -463,7 +440,6 @@ class JSObject : public js::ObjectImpl
      *    GC in order to compute the proto. Currently, it will not run JS code.
      */
     inline JSObject *getProto() const;
-    using js::ObjectImpl::getTaggedProto;
     static inline bool getProto(JSContext *cx, js::HandleObject obj,
                                 js::MutableHandleObject protop);
 
@@ -511,7 +487,7 @@ class JSObject : public js::ObjectImpl
      *
      * The scope chain of an object is the link in the search path when a
      * script does a name lookup on a scope object. For JS internal scope
-     * objects --- Call, DeclEnv and block --- the chain is stored in
+     * objects --- Call, DeclEnv and Block --- the chain is stored in
      * the first fixed slot of the object, and the object's parent is the
      * associated global. For other scope objects, the chain is stored in the
      * object's parent.
@@ -539,7 +515,6 @@ class JSObject : public js::ObjectImpl
     static bool setMetadata(JSContext *cx, js::HandleObject obj, js::HandleObject newMetadata);
 
     inline js::GlobalObject &global() const;
-    using js::ObjectImpl::compartment;
 
     /* Remove the type (and prototype) or parent from a new object. */
     static inline bool clearType(JSContext *cx, js::HandleObject obj);
@@ -952,7 +927,7 @@ class JSObject : public js::ObjectImpl
      *   }
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
-     * object, the following predicates are true: isClonedBlock, isBlock,
+     * object, the following predicates are true: isClonedBlock, is<BlockObject>,
      * isNestedScope and isScope. Each of these has a respective class that
      * derives and adds operations.
      *
@@ -969,82 +944,62 @@ class JSObject : public js::ObjectImpl
      * consider adding the missing XObject class.
      */
 
+    template <class T>
+    inline bool is() const { return getClass() == &T::class_; }
+
+    template <class T>
+    T &as() {
+        JS_ASSERT(is<T>());
+        return *static_cast<T *>(this);
+    }
+
+    template <class T>
+    const T &as() const {
+        JS_ASSERT(is<T>());
+        return *static_cast<const T *>(this);
+    }
+
     /* Direct subtypes of JSObject: */
-    inline bool isArray() const;
-    inline bool isArguments() const;
-    inline bool isArrayBuffer() const;
-    inline bool isDataView() const;
-    inline bool isDate() const;
-    inline bool isElementIterator() const;
-    inline bool isError() const;
-    inline bool isFunction() const;
-    inline bool isGenerator() const;
-    inline bool isGlobal() const;
-    inline bool isMapIterator() const;
-    inline bool isModule() const;
-    inline bool isObject() const;
-    inline bool isPrimitive() const;
-    inline bool isPropertyIterator() const;
+    inline bool isArray()            const { return hasClass(&js::ArrayClass); }
+    inline bool isDate()             const { return hasClass(&js::DateClass); }
+    inline bool isError()            const { return hasClass(&js::ErrorClass); }
+    inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
+    inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
+    inline bool isGlobal()           const;
+    inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
-    inline bool isRegExp() const;
-    inline bool isRegExpStatics() const;
-    inline bool isScope() const;
-    inline bool isScript() const;
-    inline bool isScriptSource() const;
-    inline bool isSetIterator() const;
-    inline bool isStopIteration() const;
-    inline bool isTypedArray() const;
-    inline bool isWeakMap() const;
+    inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
+    inline bool isScope()            const;
+    inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
+    inline bool isTypedArray()       const;
+    inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
 
     /* Subtypes of ScopeObject. */
-    inline bool isBlock() const;
-    inline bool isCall() const;
-    inline bool isDeclEnv() const;
     inline bool isNestedScope() const;
-    inline bool isWith() const;
+    inline bool isWith()        const { return hasClass(&js::WithClass); }
     inline bool isClonedBlock() const;
     inline bool isStaticBlock() const;
 
     /* Subtypes of PrimitiveObject. */
-    inline bool isBoolean() const;
-    inline bool isNumber() const;
-    inline bool isString() const;
-
-    /* Subtypes of ArgumentsObject. */
-    inline bool isNormalArguments() const;
-    inline bool isStrictArguments() const;
+    inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
+    inline bool isNumber()  const { return hasClass(&js::NumberClass); }
+    inline bool isString()  const { return hasClass(&js::StringClass); }
 
     /* Subtypes of Proxy. */
-    inline bool isDebugScope() const;
-    inline bool isWrapper() const;
-    inline bool isFunctionProxy() const;
+    inline bool isDebugScope()              const;
+    inline bool isWrapper()                 const;
+    inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
-    inline js::ArgumentsObject &asArguments();
-    inline js::ArrayBufferObject &asArrayBuffer();
-    inline const js::ArgumentsObject &asArguments() const;
-    inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
-    inline js::CallObject &asCall();
     inline js::ClonedBlockObject &asClonedBlock();
-    inline js::DataViewObject &asDataView();
-    inline js::DeclEnvObject &asDeclEnv();
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
-    inline js::MapIteratorObject &asMapIterator();
-    inline js::Module &asModule();
     inline js::NestedScopeObject &asNestedScope();
-    inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
-    inline js::PropertyIteratorObject &asPropertyIterator();
-    inline const js::PropertyIteratorObject &asPropertyIterator() const;
-    inline js::RegExpObject &asRegExp();
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
-    inline js::SetIteratorObject &asSetIterator();
-    inline js::ScriptSourceObject &asScriptSource();
-    inline js::StrictArgumentsObject &asStrictArguments();
     inline js::StaticBlockObject &asStaticBlock();
     inline js::StringObject &asString();
     inline js::WithObject &asWith();
@@ -1245,12 +1200,11 @@ CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, Hand
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
  */
-const unsigned DNP_CACHE_RESULT = 1;   /* an interpreter call from JSOP_INITPROP */
-const unsigned DNP_DONT_PURGE   = 2;   /* suppress js_PurgeScopeChain */
-const unsigned DNP_UNQUALIFIED  = 4;   /* Unqualified property set.  Only used in
+const unsigned DNP_DONT_PURGE   = 1;   /* suppress js_PurgeScopeChain */
+const unsigned DNP_UNQUALIFIED  = 2;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
-const unsigned DNP_SKIP_TYPE    = 8;   /* Don't update type information */
+const unsigned DNP_SKIP_TYPE    = 4;   /* Don't update type information */
 
 /*
  * Return successfully added or changed shape or NULL on error.
@@ -1336,9 +1290,6 @@ LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject
 
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
-
-/* JSGET_CACHE_RESULT is the analogue of DNP_CACHE_RESULT. */
-const unsigned JSGET_CACHE_RESULT = 1; // from a caching interpreter opcode
 
 /*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing shape

@@ -113,6 +113,7 @@ typedef struct {
   const char* name;
   const char* range;
   int value;
+  bool activated;
 } CINDItem;
 
 enum CINDType {
@@ -127,13 +128,13 @@ enum CINDType {
 
 static CINDItem sCINDItems[] = {
   {},
-  {"battchg", "0-5", 5},
-  {"call", "0,1", CallState::NO_CALL},
-  {"callheld", "0-2", CallHeldState::NO_CALLHELD},
-  {"callsetup", "0-3", CallSetupState::NO_CALLSETUP},
-  {"service", "0,1", 0},
-  {"signal", "0-5", 0},
-  {"roam", "0,1", 0}
+  {"battchg", "0-5", 5, true},
+  {"call", "0,1", CallState::NO_CALL, true},
+  {"callheld", "0-2", CallHeldState::NO_CALLHELD, true},
+  {"callsetup", "0-3", CallSetupState::NO_CALLSETUP, true},
+  {"service", "0,1", 0, true},
+  {"signal", "0-5", 0, true},
+  {"roam", "0,1", 0, true}
 };
 
 class mozilla::dom::bluetooth::Call {
@@ -219,10 +220,7 @@ public:
     // Range of battery level: [0, 1], double
     // Range of CIND::BATTCHG: [0, 5], int
     int level = ceil(aBatteryInfo.level() * 5.0);
-    if (level != sCINDItems[CINDType::BATTCHG].value) {
-      sCINDItems[CINDType::BATTCHG].value = level;
-      gBluetoothHfpManager->SendCommand("+CIEV: ", CINDType::BATTCHG);
-    }
+    gBluetoothHfpManager->UpdateCIND(CINDType::BATTCHG, level);
   }
 };
 
@@ -357,6 +355,13 @@ IsValidDtmf(const char aChar) {
   return false;
 }
 
+static bool
+IsMandatoryIndicator(const CINDType aType) {
+  return (aType == CINDType::CALL) ||
+         (aType == CINDType::CALLHELD) ||
+         (aType == CINDType::CALLSETUP);
+}
+
 BluetoothHfpManager::BluetoothHfpManager()
 {
   Reset();
@@ -379,6 +384,9 @@ BluetoothHfpManager::Reset()
   sCINDItems[CINDType::CALL].value = CallState::NO_CALL;
   sCINDItems[CINDType::CALLSETUP].value = CallSetupState::NO_CALLSETUP;
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::NO_CALLHELD;
+  for (uint8_t i = 1; i < ArrayLength(sCINDItems); i++) {
+    sCINDItems[i].activated = true;
+  }
 
   mCCWA = false;
   mCLIP = false;
@@ -629,10 +637,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
 
   bool roaming;
   voiceInfo->GetRoaming(&roaming);
-  if (roaming != sCINDItems[CINDType::ROAM].value) {
-    sCINDItems[CINDType::ROAM].value = roaming;
-    SendCommand("+CIEV: ", CINDType::ROAM);
-  }
+  UpdateCIND(CINDType::ROAM, roaming);
 
   bool service = false;
   nsString regState;
@@ -640,10 +645,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
   if (regState.EqualsLiteral("registered")) {
     service = true;
   }
-  if (service != sCINDItems[CINDType::SERVICE].value) {
-    sCINDItems[CINDType::SERVICE].value = service;
-    SendCommand("+CIEV: ", CINDType::SERVICE);
-  }
+  UpdateCIND(CINDType::SERVICE, service);
 
   uint8_t signal;
   JS::Value value;
@@ -653,11 +655,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
     return NS_ERROR_FAILURE;
   }
   signal = ceil(value.toNumber() / 20.0);
-
-  if (signal != sCINDItems[CINDType::SIGNAL].value) {
-    sCINDItems[CINDType::SIGNAL].value = signal;
-    SendCommand("+CIEV: ", CINDType::SIGNAL);
-  }
+  UpdateCIND(CINDType::SIGNAL, signal);
 
   /**
    * Possible return values for mode are:
@@ -839,7 +837,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     NS_ASSERTION(vgm >= 0 && vgm <= 15, "Received invalid VGM value");
     mCurrentVgm = vgm;
   } else if (msg.Find("AT+CHLD=?") != -1) {
-    SendLine("+CHLD: (1,2)");
+    SendLine("+CHLD: (0,1,2)");
   } else if (msg.Find("AT+CHLD=") != -1) {
     ParseAtCommand(msg, 8, atCommandValues);
 
@@ -849,14 +847,16 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     }
 
     /**
-     * The following two cases are supported:
+     * The following three cases are supported:
+     * AT+CHLD=0 - Releases all held calls or sets User Determined User Busy
+     *             (UDUB) for a waiting call
      * AT+CHLD=1 - Releases active calls and accepts the other (held or
      *             waiting) call
      * AT+CHLD=2 - Places active calls on hold and accepts the other (held
      *             or waiting) call
      *
      * The following cases are NOT supported yet:
-     * AT+CHLD=0, AT+CHLD=1<idx>, AT+CHLD=2<idx>, AT+CHLD=3, AT+CHLD=4
+     * AT+CHLD=1<idx>, AT+CHLD=2<idx>, AT+CHLD=3, AT+CHLD=4
      * Please see 4.33.2 in Bluetooth hands-free profile 1.6 for more
      * information.
      */
@@ -865,9 +865,14 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     if (atCommandValues[0].Length() > 1) {
       NS_WARNING("No index should be included in command [AT+CHLD]");
       valid = false;
-    } else if (chld == '0' || chld == '3' || chld == '4') {
+    } else if (chld == '3' || chld == '4') {
       NS_WARNING("The value of command [AT+CHLD] is not supported");
       valid = false;
+    } else if (chld == '0') {
+      // We need to rename these dialer commands for better readability
+      // and expandability.
+      // See bug 884190 for more information.
+      NotifyDialer(NS_LITERAL_STRING("CHLD=0"));
     } else if (chld == '1') {
       NotifyDialer(NS_LITERAL_STRING("CHUP+ATA"));
     } else if (chld == '2') {
@@ -1002,6 +1007,36 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
       message.AppendInt(TOA_UNKNOWN);
       message.AppendLiteral(",,4");
       SendLine(message.get());
+    }
+  } else if (msg.Find("AT+BIA=") != -1) {
+    ParseAtCommand(msg, 7, atCommandValues);
+
+    for (uint8_t i = 0; i < atCommandValues.Length(); i++) {
+      CINDType indicatorType = (CINDType) (i + 1);
+      if (indicatorType >= ArrayLength(sCINDItems)) {
+        // Ignore excess parameters at the end
+        break;
+      }
+
+      if (!IsMandatoryIndicator(indicatorType)) {
+        /**
+         * Accept only following indicator states:
+         * - "1": activate
+         * - "0": deactivate
+         * - "" : maintain current state
+         * Otherwise we regard the command incorrectly formatted.
+         */
+        if (atCommandValues[i].EqualsLiteral("1")) {
+          sCINDItems[indicatorType].activated = 1;
+        } else if (atCommandValues[i].EqualsLiteral("0")) {
+          sCINDItems[indicatorType].activated = 0;
+        } else if (!atCommandValues[i].EqualsLiteral("")) {
+          SendLine("ERROR");
+          return;
+        }
+      } else {
+        // Ignore requests to activate/deactivate mandatory indicators
+      }
     }
   } else {
     nsCString warningMsg;
@@ -1156,7 +1191,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
   message += aCommand;
 
   if (!strcmp(aCommand, "+CIEV: ")) {
-    if (!mCMER) {
+    if (!mCMER || !sCINDItems[aValue].activated) {
       // Indicator status update is disabled
       return true;
     }
@@ -1253,8 +1288,7 @@ BluetoothHfpManager::UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend)
 {
   if (sCINDItems[aType].value != aValue) {
     sCINDItems[aType].value = aValue;
-    // Indicator status update is enabled
-    if (aSend && mCMER) {
+    if (aSend) {
       SendCommand("+CIEV: ", aType);
     }
   }

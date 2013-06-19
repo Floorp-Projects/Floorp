@@ -12,7 +12,7 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 let profile_creation_lower = Date.now() - MILLISECONDS_PER_DAY;
 do_get_profile();
 
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/services/healthreport/profile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");

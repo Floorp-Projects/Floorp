@@ -457,7 +457,7 @@ KeyPath::DeserializeFromString(const nsAString& aString)
 }
 
 nsresult
-KeyPath::ToJSVal(JSContext* aCx, JS::Value* aValue) const
+KeyPath::ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aValue) const
 {
   if (IsArray()) {
     uint32_t len = mStrings.Length();
@@ -479,20 +479,31 @@ KeyPath::ToJSVal(JSContext* aCx, JS::Value* aValue) const
       }
     }
 
-    *aValue = OBJECT_TO_JSVAL(array);
+    aValue.setObject(*array);
     return NS_OK;
   }
 
   if (IsString()) {
     nsString tmp(mStrings[0]);
-    if (!xpc::StringToJsval(aCx, tmp, aValue)) {
+    if (!xpc::StringToJsval(aCx, tmp, aValue.address())) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
     return NS_OK;
   }
 
-  *aValue = JSVAL_NULL;
+  aValue.setNull();
   return NS_OK;
+}
+
+nsresult
+KeyPath::ToJSVal(JSContext* aCx, JS::Heap<JS::Value>& aValue) const
+{
+  JS::Rooted<JS::Value> value(aCx);
+  nsresult rv = ToJSVal(aCx, &value);
+  if (NS_SUCCEEDED(rv)) {
+    aValue = value;
+  }
+  return rv;
 }
 
 bool

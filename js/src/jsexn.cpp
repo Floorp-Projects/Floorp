@@ -9,7 +9,6 @@
  */
 #include "jsexn.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "mozilla/PodOperations.h"
@@ -19,7 +18,6 @@
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -892,7 +890,7 @@ js::GetErrorTypeName(JSContext* cx, int16_t exnType)
 
 #if defined ( DEBUG_mccabe ) && defined ( PRINTNAMES )
 /* For use below... get character strings for error name and exception name */
-static struct exnname { char *name; char *exception; } errortoexnname[] = {
+static const struct exnname { char *name; char *exception; } errortoexnname[] = {
 #define MSG_DEF(name, number, count, exception, format) \
     {#name, #exception},
 #include "js.msg"

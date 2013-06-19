@@ -122,7 +122,7 @@ function runTest(aCallback) {
       aCallback();
     }
     catch (err) {
-      unexpectedCallbackAndFinish(new Error)(err);
+      unexpectedCallbackAndFinish()(err);
     }
   });
 }
@@ -170,35 +170,45 @@ function checkMediaStreamTracks(constraints, mediaStream) {
  * while running the tests. The generated function kills off the test as well
  * gracefully.
  *
- * @param {Error} error
- *        A new Error object, generated at the callback site, from which a
- *        filename and line number can be extracted for diagnostic purposes
+ * @param {String} [message]
+ *        An optional message to show if no object gets passed into the
+ *        generated callback method.
  */
-function unexpectedCallbackAndFinish(error) {
+function unexpectedCallbackAndFinish(message) {
+  var stack = new Error().stack.split("\n");
+  stack.shift(); // Don't include this instantiation frame
+
   /**
    * @param {object} aObj
    *        The object fired back from the callback
    */
-  return function(aObj) {
-    var where = error.fileName + ":" + error.lineNumber;
+  return function (aObj) {
     if (aObj && aObj.name && aObj.message) {
-      ok(false, "Unexpected callback/event from " + where + " with name = '" +
-                aObj.name + "', message = '" + aObj.message + "'");
+      ok(false, "Unexpected callback for '" + aObj.name + "' with message = '" +
+         aObj.message + "' at " + JSON.stringify(stack));
     } else {
-      ok(false, "Unexpected callback/event from " + where + " with " + aObj);
+      ok(false, "Unexpected callback with message = '" + message +
+         "' at: " + JSON.stringify(stack));
     }
     SimpleTest.finish();
   }
 }
 
 /**
- * Generates a callback function suitable for putting int a success
- * callback in circumstances where success is unexpected. The callback,
- * if activated, will kill off the test gracefully.
+ * Generates a callback function fired only for unexpected events happening.
+ *
+ * @param {String} description
+          Description of the object for which the event has been fired
+ * @param {String} eventName
+          Name of the unexpected event
  */
+function unexpectedEventAndFinish(message, eventName) {
+  var stack = new Error().stack.split("\n");
+  stack.shift(); // Don't include this instantiation frame
 
-function unexpectedSuccessCallbackAndFinish(error, reason) {
-  return function() {
-    unexpectedCallbackAndFinish(error)(message);
+  return function () {
+    ok(false, "Unexpected event '" + eventName + "' fired with message = '" +
+       message + "' at: " + JSON.stringify(stack));
+    SimpleTest.finish();
   }
 }

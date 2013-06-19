@@ -7,7 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -124,8 +124,13 @@ function getHealthReportProviderValues(reporter, day=null) {
 }
 
 function run_test() {
-  makeFakeAppDir().then(run_next_test, do_throw);
+  run_next_test();
 }
+
+// run_test() needs to finish synchronously, so we do async init here.
+add_task(function test_init() {
+  yield makeFakeAppDir();
+});
 
 add_task(function test_constructor() {
   let reporter = yield getReporter("constructor");
@@ -275,6 +280,42 @@ add_task(function test_collect_daily() {
     reporter._lastDailyDate = null;
     yield reporter.collectMeasurements();
     do_check_eq(provider.collectDailyCount, 3);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+add_task(function test_remove_old_lastpayload() {
+  let reporter = getJustReporter("remove-old-lastpayload");
+  let lastPayloadPath = reporter._state._lastPayloadPath;
+  let paths = [lastPayloadPath, lastPayloadPath + ".tmp"];
+  let createFiles = function () {
+    return Task.spawn(function createFiles() {
+      for (let path of paths) {
+        yield OS.File.writeAtomic(path, "delete-me", {tmpPath: path + ".tmp"});
+        do_check_true(yield OS.File.exists(path));
+      }
+    });
+  };
+  try {
+    do_check_true(!reporter._state.removedOutdatedLastpayload);
+    yield createFiles();
+    yield reporter.init();
+    for (let path of paths) {
+      do_check_false(yield OS.File.exists(path));
+    }
+    yield reporter._state.save();
+    reporter._shutdown();
+
+    let o = yield CommonUtils.readJSON(reporter._state._filename);
+    do_check_true(o.removedOutdatedLastpayload);
+
+    yield createFiles();
+    reporter = getJustReporter("remove-old-lastpayload");
+    yield reporter.init();
+    for (let path of paths) {
+      do_check_true(yield OS.File.exists(path));
+    }
   } finally {
     reporter._shutdown();
   }

@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_baseline_ic_h__) && defined(JS_ION)
+#ifndef jsion_baseline_ic_h__
 #define jsion_baseline_ic_h__
+
+#ifdef JS_ION
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -923,7 +925,7 @@ class ICUpdatedStub : public ICStub
   public:
     bool initUpdatingChain(JSContext *cx, ICStubSpace *space);
 
-    bool addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj, jsid id,
+    bool addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj, HandleId id,
                                HandleValue val);
 
     void addOptimizedUpdateStub(ICStub *stub) {
@@ -2403,14 +2405,20 @@ class ICBinaryArith_Int32 : public ICStub
 {
     friend class ICStubSpace;
 
-    ICBinaryArith_Int32(IonCode *stubCode)
-      : ICStub(BinaryArith_Int32, stubCode) {}
+    ICBinaryArith_Int32(IonCode *stubCode, bool allowDouble)
+      : ICStub(BinaryArith_Int32, stubCode)
+    {
+        extra_ = allowDouble;
+    }
 
   public:
-    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code) {
+    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code, bool allowDouble) {
         if (!code)
             return NULL;
-        return space->allocate<ICBinaryArith_Int32>(code);
+        return space->allocate<ICBinaryArith_Int32>(code, allowDouble);
+    }
+    bool allowDouble() const {
+        return extra_;
     }
 
     // Compiler for this stub kind.
@@ -2433,7 +2441,7 @@ class ICBinaryArith_Int32 : public ICStub
             op_(op), allowDouble_(allowDouble) {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICBinaryArith_Int32::New(space, getStubCode());
+            return ICBinaryArith_Int32::New(space, getStubCode(), allowDouble_);
         }
     };
 };
@@ -2717,7 +2725,7 @@ class ICUnaryArith_Double : public ICStub
     friend class ICStubSpace;
 
     ICUnaryArith_Double(IonCode *stubCode)
-      : ICStub(UnaryArith_Int32, stubCode)
+      : ICStub(UnaryArith_Double, stubCode)
     {}
 
   public:
@@ -2733,7 +2741,7 @@ class ICUnaryArith_Double : public ICStub
 
       public:
         Compiler(JSContext *cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
@@ -5522,4 +5530,6 @@ class ICRest_Fallback : public ICFallbackStub
 } // namespace ion
 } // namespace js
 
-#endif
+#endif // JS_ION
+
+#endif // jsion_baseline_ic_h__

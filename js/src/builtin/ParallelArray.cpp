@@ -6,18 +6,14 @@
 
 #include "jsapi.h"
 #include "jsobj.h"
-#include "jsarray.h"
 
 #include "builtin/ParallelArray.h"
 
-#include "vm/ForkJoin.h"
 #include "vm/GlobalObject.h"
 #include "vm/String.h"
-#include "vm/ThreadPool.h"
 
+#include "jsgcinlines.h"
 #include "jsobjinlines.h"
-
-#include "vm/Interpreter-inl.h"
 
 using namespace js;
 

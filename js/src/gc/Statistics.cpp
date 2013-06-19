@@ -12,17 +12,11 @@
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
-#include "jscrashformat.h"
 #include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "prmjtime.h"
 #include "gc/Memory.h"
-
-#include "jscntxtinlines.h"
-#include "gc/Barrier-inl.h"
-#include "vm/Probes-inl.h"
 
 using namespace js;
 using namespace js::gcstats;
@@ -278,7 +272,7 @@ struct PhaseInfo
 
 static const Phase PHASE_NO_PARENT = PHASE_LIMIT;
 
-static PhaseInfo phases[] = {
+static const PhaseInfo phases[] = {
     { PHASE_GC_BEGIN, "Begin Callback", PHASE_NO_PARENT },
     { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread", PHASE_NO_PARENT },
     { PHASE_MARK_DISCARD_CODE, "Mark Discard Code", PHASE_NO_PARENT },

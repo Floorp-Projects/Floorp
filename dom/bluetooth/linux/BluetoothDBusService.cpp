@@ -227,42 +227,6 @@ GetPairedDevicesFilter(const BluetoothValue& aValue)
   return false;
 }
 
-class SendDiscoveryTask : public nsRunnable
-{
-public:
-  SendDiscoveryTask(const char* aMessageName,
-                    BluetoothReplyRunnable* aRunnable)
-    : mMessageName(aMessageName)
-    , mRunnable(aRunnable)
-  {
-    MOZ_ASSERT(aMessageName);
-    MOZ_ASSERT(aRunnable);
-  }
-
-  nsresult Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    DBusMessage *reply =
-      dbus_func_args(gThreadConnection->GetConnection(),
-                     NS_ConvertUTF16toUTF8(sAdapterPath).get(),
-                     DBUS_ADAPTER_IFACE, mMessageName,
-                     DBUS_TYPE_INVALID);
-
-    if (reply) {
-      dbus_message_unref(reply);
-    }
-
-    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
-
-    return NS_OK;
-  }
-
-private:
-  const char* mMessageName;
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
-};
-
 class DistributeBluetoothSignalTask : public nsRunnable
 {
 public:
@@ -418,7 +382,7 @@ ExtractHandles(DBusMessage *aReply, nsTArray<uint32_t>& aOutHandles)
   }
 }
 
-// static 
+// static
 bool
 BluetoothDBusService::AddServiceRecords(const char* serviceName,
                                         unsigned long long uuidMsb,
@@ -1832,6 +1796,23 @@ BluetoothDBusService::GetDefaultAdapterPathInternal(
   return NS_OK;
 }
 
+static void
+OnSendDiscoveryMessageReply(DBusMessage *aReply, void *aData)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsAutoString errorStr;
+
+  if (!aReply) {
+    errorStr.AssignLiteral("SendDiscovery failed");
+  }
+
+  nsRefPtr<BluetoothReplyRunnable> runnable =
+    dont_AddRef<BluetoothReplyRunnable>(static_cast<BluetoothReplyRunnable*>(aData));
+
+  DispatchBluetoothReply(runnable.get(), BluetoothValue(true), errorStr);
+}
+
 nsresult
 BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
                                            BluetoothReplyRunnable* aRunnable)
@@ -1844,11 +1825,17 @@ BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
     return NS_OK;
   }
 
-  nsRefPtr<nsRunnable> task(new SendDiscoveryTask(aMessageName, aRunnable));
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(task, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch firmware loading task!");
-    return NS_ERROR_FAILURE;
-  }
+  nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
+
+  bool success = dbus_func_args_async(mConnection, -1,
+                                      OnSendDiscoveryMessageReply,
+                                      static_cast<void*>(aRunnable),
+                                      NS_ConvertUTF16toUTF8(sAdapterPath).get(),
+                                      DBUS_ADAPTER_IFACE, aMessageName,
+                                      DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+
+  runnable.forget();
 
   return NS_OK;
 }
@@ -2662,7 +2649,7 @@ public:
                                                            mServiceUuid,
                                                            channel,
                                                            mManager));
-    NS_DispatchToMainThread(r);    
+    NS_DispatchToMainThread(r);
     return NS_OK;
   }
 

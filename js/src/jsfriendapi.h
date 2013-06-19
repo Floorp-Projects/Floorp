@@ -7,10 +7,7 @@
 #ifndef jsfriendapi_h___
 #define jsfriendapi_h___
 
-#include "mozilla/GuardObjects.h"
-
 #include "jsclass.h"
-#include "jscpucfg.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
@@ -30,6 +27,11 @@
 #endif
 
 #define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
+
+namespace JS {
+template <class T>
+class Heap;
+} /* namespace JS */
 
 extern JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
@@ -376,8 +378,6 @@ struct Atom {
 
 } /* namespace shadow */
 
-extern JS_FRIEND_DATA(js::Class) CallClass;
-extern JS_FRIEND_DATA(js::Class) DeclEnvClass;
 extern JS_FRIEND_DATA(js::Class) FunctionClass;
 extern JS_FRIEND_DATA(js::Class) FunctionProxyClass;
 extern JS_FRIEND_DATA(js::Class) OuterWindowProxyClass;
@@ -408,6 +408,9 @@ IsOuterObject(JSObject *obj) {
 
 JS_FRIEND_API(bool)
 IsScopeObject(JSObject *obj);
+
+JS_FRIEND_API(bool)
+IsCallObject(JSObject *obj);
 
 inline JSObject *
 GetObjectParent(JSObject *obj)
@@ -889,7 +892,7 @@ struct ExpandoAndGeneration {
       generation(0)
   {}
 
-  Value expando;
+  JS::Heap<JS::Value> expando;
   uint32_t generation;
 };
 

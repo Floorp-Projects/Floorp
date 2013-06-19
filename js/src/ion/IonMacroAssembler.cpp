@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/IonMacroAssembler.h"
+
 #include "jsinfer.h"
 
+#include "ion/AsmJS.h"
 #include "ion/Bailouts.h"
 #include "ion/BaselineIC.h"
 #include "ion/BaselineJIT.h"
@@ -83,6 +86,7 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
     if (types->hasType(types::Type::AnyObjectType())) {
         branchTestObject(Equal, tag, matched);
     } else if (types->getObjectCount()) {
+        JS_ASSERT(scratch != InvalidReg);
         branchTestObject(NotEqual, tag, miss);
         Register obj = extractObject(address, scratch);
 
@@ -1208,7 +1212,6 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
     }
 }
 
-#ifdef JS_ASMJS
 ABIArgIter::ABIArgIter(const MIRTypeVector &types)
   : gen_(),
     types_(types),
@@ -1226,4 +1229,3 @@ ABIArgIter::operator++(int)
     if (!done())
         gen_.next(types_[i_]);
 }
-#endif

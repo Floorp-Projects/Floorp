@@ -22,6 +22,10 @@
 
     var gFindBar = null;
     var gBrowser;
+    var gWin;
+
+    var noHighlightSnapshot;
+    var findSnapshot;
 
     var imports = ["SimpleTest", "ok", "snapshotWindow", "compareSnapshots",
                    "parentFinish"];
@@ -60,8 +64,8 @@
 
       // First, take a snapshot of the window without highlighting
       // to be used later to test the unhighlighting case
-      var gWin = gBrowser.contentWindow;
-      var noHighlightSnapshot = snapshotWindow(gWin);
+      gWin = gBrowser.contentWindow;
+      noHighlightSnapshot = snapshotWindow(gWin);
 
       gFindBar.open();
       gFindBar._findField.value = SEARCH_TEXT;
@@ -72,15 +76,30 @@
       // Turn on highlighting
       gFindBar.toggleHighlight(true);
       gFindBar.close();
-    
+      gFindBar.addEventListener('transitionend', part2);
+    }
+
+    function part2(aEvent) {
+      if (aEvent.propertyName != 'visibility') {
+        return;
+      }
+      gFindBar.removeEventListener('transitionend', part2);
       // Take snapshot of highlighing
-      var findSnapshot = snapshotWindow(gWin);
+      findSnapshot = snapshotWindow(gWin);
 
       // Now, remove the highlighting, and take a snapshot to compare
       // to our original state
       gFindBar.open();
       gFindBar.toggleHighlight(false);
       gFindBar.close();
+      gFindBar.addEventListener('transitionend', part3);
+    }
+
+    function part3(aEvent) {
+      if (aEvent.propertyName != 'visibility') {
+        return;
+      }
+      gFindBar.removeEventListener('transitionend', part3);
       var unhighlightSnapshot = snapshotWindow(gWin);
 
       // Select the matches that should have been highlighted manually

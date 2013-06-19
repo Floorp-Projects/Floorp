@@ -1,6 +1,6 @@
 This directory contains the Graphite2 library from http://hg.palaso.org/graphitedev
 
-Current version derived from upstream changeset 09707dd22634
+Current version derived from upstream changeset 6b8ddb7d599f
 
 See gfx/graphite2/moz-gr-update.sh for update procedure.
 

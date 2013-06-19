@@ -918,7 +918,7 @@ nsInlineFrame::AccessibleType()
   if (tagAtom == nsGkAtoms::input)  // Broken <input type=image ... />
     return a11y::eHTMLButtonType;
   if (tagAtom == nsGkAtoms::img)  // Create accessible for broken <img>
-    return a11y::eImageType;
+    return a11y::eHyperTextType;
   if (tagAtom == nsGkAtoms::label)  // Creat accessible for <label>
     return a11y::eHTMLLabelType;
 

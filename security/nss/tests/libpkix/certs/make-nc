@@ -1,0 +1,103 @@
+#!/bin/sh
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+mkdir tmp
+cd tmp
+dd if=/dev/urandom bs=512 count=1 of=noise
+echo "" > pwfile
+
+certutil -d . -N -f pwfile
+
+certutil -S -z noise -g 1024 -d . -n ca -s "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t C,C,C -x -m 1 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+5
+6
+9
+n
+y
+
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
+certutil -S -z noise -g 1024 -d . -n ica -s "CN=NSS Intermediate CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 20 -w -1 -v 118 -1 -2 -5 --extNC <<CERTSCRIPT
+5
+6
+9
+n
+y
+
+n
+3
+.example
+1
+n
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
+certutil -S -z noise -g 1024 -d . -n server1 -s "CN=test.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 40 -v 115 -1 -2 -5 -8 test.invalid <<CERTSCRIPT
+0
+2
+3
+4
+9
+n
+n
+
+y
+0
+1
+9
+n
+CERTSCRIPT
+
+certutil -S -z noise -g 1024 -d . -n server2 -s "CN=another_test.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 41 -v 115 -1 -2 -5 <<CERTSCRIPT
+0
+2
+3
+4
+9
+n
+n
+
+y
+0
+1
+9
+n
+CERTSCRIPT
+
+certutil -S -z noise -g 1024 -d . -n server3 -s "CN=test.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 42 -v 115 -1 -2 -5 -8 test.example <<CERTSCRIPT
+0
+2
+3
+4
+9
+n
+n
+
+y
+0
+1
+9
+n
+CERTSCRIPT
+
+certutil -d . -L -n ca -r > NameConstraints.ca.cert
+certutil -d . -L -n ica -r > NameConstraints.intermediate.cert
+certutil -d . -L -n server1 -r > NameConstraints.server1.cert
+certutil -d . -L -n server2 -r > NameConstraints.server2.cert
+certutil -d . -L -n server3 -r > NameConstraints.server3.cert
+
+echo "Created multiple files in subdirectory tmp: NameConstraints.ca.cert NameConstraints.intermediate.cert NameConstraints.server1.cert NameConstraints.server2.cert NameConstraints.server3.cert"

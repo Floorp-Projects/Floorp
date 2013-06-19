@@ -7,8 +7,6 @@
 #ifndef ScopeObject_h___
 #define ScopeObject_h___
 
-#include "mozilla/GuardObjects.h"
-
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jsweakmap.h"
@@ -189,6 +187,8 @@ class CallObject : public ScopeObject
     create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
   public:
+    static Class class_;
+
     /* These functions are internal and are exposed only for JITs. */
     static CallObject *
     create(JSContext *cx, HandleScript script, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
@@ -231,6 +231,8 @@ class DeclEnvObject : public ScopeObject
   public:
     static const uint32_t RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2;
+
+    static Class class_;
 
     static DeclEnvObject *
     createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap);
@@ -278,6 +280,8 @@ class BlockObject : public NestedScopeObject
   public:
     static const unsigned RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
+
+    static Class class_;
 
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;
@@ -617,4 +621,17 @@ class DebugScopes
 };
 
 }  /* namespace js */
+
+inline bool
+JSObject::isNestedScope() const
+{
+    return is<js::BlockObject>() || isWith();
+}
+
+inline bool
+JSObject::isScope() const
+{
+    return is<js::CallObject>() || is<js::DeclEnvObject>() || isNestedScope();
+}
+
 #endif /* ScopeObject_h___ */

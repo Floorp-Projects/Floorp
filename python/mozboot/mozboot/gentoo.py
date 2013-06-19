@@ -17,3 +17,9 @@ class GentooBootstrapper(BaseBootstrapper):
         self.run_as_root(['emerge', '--onlydeps', '--quiet', 'firefox'])
 
         self.run_as_root(['emerge', '--quiet', 'git', 'mercurial'])
+
+    def _update_package_manager(self):
+        self.run_as_root(['emerge', '--sync'])
+
+    def upgrade_mercurial(self):
+        self.run_as_root(['emerge', '--update', 'mercurial'])

@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_baseline_registers_h__) && defined(JS_ION)
+#ifndef jsion_baseline_registers_h__
 #define jsion_baseline_registers_h__
+
+#ifdef JS_ION
 
 #if defined(JS_CPU_X86)
 # include "x86/BaselineRegisters-x86.h"
@@ -21,5 +23,7 @@ namespace ion {
 } // namespace ion
 } // namespace js
 
-#endif
+#endif // JS_ION
+
+#endif // jsion_baseline_registers_h__
 

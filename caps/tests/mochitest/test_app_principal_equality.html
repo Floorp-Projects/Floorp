@@ -17,18 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777467
   SpecialPowers.addPermission("browser", true, document);
   SpecialPowers.addPermission("embed-apps", true, document);
 
-  var previousPrefs = {
-    mozBrowserFramesEnabled: undefined,
-    oop_by_default: undefined,
-  };
-  try {
-    previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
-  } catch(e) {}
-
-  try {
-    previousPrefs.oop_by_default = SpecialPowers.getBoolPref('dom.ipc.browser_frames.oop_by_default');
-  } catch(e) {}
-
   SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
   SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", false);
 </script>
@@ -66,13 +54,8 @@ addLoadEvent(function() {
   }
 
   // Cleanup.
-  if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
-    SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
-  }
-  if (previousPrefs.oop_by_default !== undefined) {
-    SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", previousPrefs.oop_by_default);
-  }
-
+  SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
+  SpecialPowers.clearUserPref('dom.ipc.browser_frames.oop_by_default');
   SpecialPowers.removePermission("browser", window.document);
   SpecialPowers.removePermission("embed-apps", window.document);
 

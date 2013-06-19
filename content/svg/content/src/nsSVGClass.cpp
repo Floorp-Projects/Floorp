@@ -7,21 +7,53 @@
 #include "nsSVGElement.h"
 #include "nsSMILValue.h"
 #include "SMILStringType.h"
+#include "mozilla/dom/SVGAnimatedString.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGClass::DOMAnimatedString, mSVGElement)
+struct DOMAnimatedString MOZ_FINAL : public SVGAnimatedString
+{
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGClass::DOMAnimatedString)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGClass::DOMAnimatedString)
+  DOMAnimatedString(nsSVGClass* aVal, nsSVGElement* aSVGElement)
+    : SVGAnimatedString(aSVGElement)
+    , mVal(aVal)
+  {}
 
-DOMCI_DATA(SVGAnimatedClass, nsSVGClass::DOMAnimatedString)
+  nsSVGClass* mVal; // kept alive because it belongs to content
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGClass::DOMAnimatedString)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedString)
+  void GetBaseVal(nsAString& aResult) MOZ_OVERRIDE
+  {
+    mVal->GetBaseValue(aResult, mSVGElement);
+  }
+
+  void SetBaseVal(const nsAString& aValue) MOZ_OVERRIDE
+  {
+    mVal->SetBaseValue(aValue, mSVGElement, true);
+  }
+
+  void GetAnimVal(nsAString& aResult) MOZ_OVERRIDE;
+};
+
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMAnimatedString, mSVGElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMAnimatedString)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMAnimatedString)
+
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMAnimatedString)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedString)
 NS_INTERFACE_MAP_END
+
+already_AddRefed<SVGAnimatedString>
+nsSVGClass::ToDOMAnimatedString(nsSVGElement* aSVGElement)
+{
+  nsRefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
+  return result.forget();
+}
 
 /* Implementation */
 
@@ -72,12 +104,11 @@ nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateClass();
 }
 
-NS_IMETHODIMP
-nsSVGClass::DOMAnimatedString::GetAnimVal(nsAString& aResult)
-{ 
+void
+DOMAnimatedString::GetAnimVal(nsAString& aResult)
+{
   mSVGElement->FlushAnimations();
   mVal->GetAnimValue(aResult, mSVGElement);
-  return NS_OK;
 }
 
 nsISMILAttr*

@@ -25,3 +25,7 @@ EXTRA_COMPONENTS += [
     'nsInputListAutoComplete.js',
     'satchel.manifest',
 ]
+
+EXTRA_PP_COMPONENTS += [
+    'nsFormHistory.js',
+]

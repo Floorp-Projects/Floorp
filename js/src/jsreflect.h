@@ -88,10 +88,10 @@ enum PropKind {
     PROP_LIMIT
 };
 
-extern char const *aopNames[];
-extern char const *binopNames[];
-extern char const *unopNames[];
-extern char const *nodeTypeNames[];
+extern char const * const aopNames[];
+extern char const * const binopNames[];
+extern char const * const unopNames[];
+extern char const * const nodeTypeNames[];
 
 } /* namespace js */
 
