@@ -41,27 +41,7 @@
 
 #include "nsLayoutUtils.h"
 
-nsGenericHTMLElement*
-NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                       mozilla::dom::FromParser aFromParser)
-{
-  /*
-   * HTMLImageElement's will be created without a nsINodeInfo passed in
-   * if someone says "var img = new Image();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
-   */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
-  if (!nodeInfo) {
-    nsCOMPtr<nsIDocument> doc = nsContentUtils::GetDocumentFromCaller();
-    NS_ENSURE_TRUE(doc, nullptr);
-
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
-                                                   kNameSpaceID_XHTML,
-                                                   nsIDOMNode::ELEMENT_NODE);
-  }
-
-  return new mozilla::dom::HTMLImageElement(nodeInfo.forget());
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Image)
 
 namespace mozilla {
 namespace dom {
