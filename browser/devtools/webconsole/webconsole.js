@@ -121,7 +121,7 @@ const MESSAGE_PREFERENCE_KEYS = [
 //  Error         Warning   Info    Log
   [ "network",    null,         null,   "networkinfo", ],  // Network
   [ "csserror",   "cssparser",  null,   null,          ],  // CSS
-  [ "exception",  "jswarn",     null,   null,          ],  // JS
+  [ "exception",  "jswarn",     null,   "jslog",       ],  // JS
   [ "error",      "warn",       "info", "log",         ],  // Web Developer
   [ null,         null,         null,   null,          ],  // Input
   [ null,         null,         null,   null,          ],  // Output
@@ -526,6 +526,7 @@ WebConsoleFrame.prototype = {
       cssparser: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "cssparser"),
       exception: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "exception"),
       jswarn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "jswarn"),
+      jslog: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "jslog"),
       error: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "error"),
       info: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "info"),
       warn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "warn"),
@@ -596,6 +597,14 @@ WebConsoleFrame.prototype = {
 
       aButton.setAttribute("checked", someChecked);
     }, this);
+
+    if (!this.owner._browserConsole) {
+      // The Browser Console displays nsIConsoleMessages which are messages that
+      // end up in the JS category, but they are not errors or warnings, they
+      // are just log messages. The Web Console does not show such messages.
+      let jslog = this.document.querySelector("menuitem[prefKey=jslog]");
+      jslog.hidden = true;
+    }
   },
 
   /**
