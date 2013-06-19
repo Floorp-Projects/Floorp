@@ -925,7 +925,7 @@
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
+              <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
                             label="&closeNotificationItem.label;"
                             xbl:inherits="oncommand=closeitemcommand"/>
             </xul:menupopup>
@@ -934,7 +934,7 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton popup-notification-closebutton tabbable"
+                           class="messageCloseButton close-icon popup-notification-closebutton tabbable"
                            xbl:inherits="oncommand=closebuttoncommand"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
@@ -1157,7 +1157,7 @@
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
+              <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
                             label="&closeNotificationItem.label;"
                             xbl:inherits="oncommand=closeitemcommand"/>
             </xul:menupopup>
@@ -1166,7 +1166,7 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton popup-notification-closebutton tabbable"
+                           class="messageCloseButton close-icon popup-notification-closebutton tabbable"
                            xbl:inherits="oncommand=closebuttoncommand"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
@@ -1443,7 +1443,7 @@
               <xul:menupopup anonid="menupopup"
                              xbl:inherits="oncommand=menucommand">
                 <children/>
-                <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
+                <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
                               label="&closeNotificationItem.label;"
                               xbl:inherits="oncommand=closeitemcommand"/>
               </xul:menupopup>
@@ -1494,120 +1494,6 @@
     </implementation>
   </binding>
 
-  <binding id="splitmenu">
-    <content>
-      <xul:hbox anonid="menuitem" flex="1"
-                class="splitmenu-menuitem"
-                xbl:inherits="iconic,label,disabled,onclick=oncommand,_moz-menuactive=active"/>
-      <xul:menu anonid="menu" class="splitmenu-menu"
-                xbl:inherits="disabled,_moz-menuactive=active"
-                oncommand="event.stopPropagation();">
-        <children includes="menupopup"/>
-      </xul:menu>
-    </content>
-
-    <implementation implements="nsIDOMEventListener">
-      <constructor><![CDATA[
-        this._parentMenupopup.addEventListener("DOMMenuItemActive", this, false);
-        this._parentMenupopup.addEventListener("popuphidden", this, false);
-      ]]></constructor>
-
-      <destructor><![CDATA[
-        this._parentMenupopup.removeEventListener("DOMMenuItemActive", this, false);
-        this._parentMenupopup.removeEventListener("popuphidden", this, false);
-      ]]></destructor>
-
-      <field name="menuitem" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
-      </field>
-      <field name="menu" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "menu");
-      </field>
-
-      <field name="_menuDelay">600</field>
-
-      <field name="_parentMenupopup"><![CDATA[
-        this._getParentMenupopup(this);
-      ]]></field>
-
-      <method name="_getParentMenupopup">
-        <parameter name="aNode"/>
-        <body><![CDATA[
-          let node = aNode.parentNode;
-          while (node) {
-            if (node.localName == "menupopup")
-              break;
-            node = node.parentNode;
-          }
-          return node;
-        ]]></body>
-      </method>
-
-      <method name="handleEvent">
-        <parameter name="event"/>
-        <body><![CDATA[
-          switch (event.type) {
-            case "DOMMenuItemActive":
-              if (this.getAttribute("active") == "true" &&
-                  event.target != this &&
-                  this._getParentMenupopup(event.target) == this._parentMenupopup)
-                this.removeAttribute("active");
-              break;
-            case "popuphidden":
-              if (event.target == this._parentMenupopup)
-                this.removeAttribute("active");
-              break;
-          }
-        ]]></body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="mouseover"><![CDATA[
-        if (this.getAttribute("active") != "true") {
-          this.setAttribute("active", "true");
-
-          let event = document.createEvent("Events");
-          event.initEvent("DOMMenuItemActive", true, false);
-          this.dispatchEvent(event);
-
-          if (this.getAttribute("disabled") != "true") {
-            let self = this;
-            setTimeout(function () {
-              if (self.getAttribute("active") == "true")
-                self.menu.open = true;
-            }, this._menuDelay);
-          }
-        }
-      ]]></handler>
-
-      <handler event="popupshowing"><![CDATA[
-        if (event.target == this.firstChild &&
-            this._parentMenupopup._currentPopup)
-          this._parentMenupopup._currentPopup.hidePopup();
-      ]]></handler>
-
-      <handler event="click" phase="capturing"><![CDATA[
-        if (this.getAttribute("disabled") == "true") {
-          // Prevent the command from being carried out
-          event.stopPropagation();
-          return;
-        }
-
-        let node = event.originalTarget;
-        while (true) {
-          if (node == this.menuitem)
-            break;
-          if (node == this)
-            return;
-          node = node.parentNode;
-        }
-
-        this._parentMenupopup.hidePopup();
-      ]]></handler>
-    </handlers>
-  </binding>
-
   <binding id="menuitem-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem">
     <implementation>
       <constructor><![CDATA[
@@ -1641,7 +1527,7 @@
                              onclick="document.getBindingParent(this).onLinkClick();"/>
           </xul:description>
         </xul:hbox>
-        <xul:toolbarbutton class="panel-promo-closebutton"
+        <xul:toolbarbutton class="panel-promo-closebutton close-icon"
                            oncommand="document.getBindingParent(this).onCloseButtonCommand();"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:hbox>
