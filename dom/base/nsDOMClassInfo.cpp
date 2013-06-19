@@ -526,7 +526,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // HTML element classes
-  NS_DEFINE_CLASSINFO_DATA(HTMLFormElement, nsHTMLFormElementSH,
+  NS_DEFINE_CLASSINFO_DATA(HTMLFormElement, HTMLFormElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
@@ -5891,10 +5891,10 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 // HTMLFormElement helper
 
 NS_IMETHODIMP
-nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                                JSContext *cx, JSObject *aObj, jsid aId,
-                                uint32_t flags, JSObject **objp,
-                                bool *_retval)
+HTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                              JSContext *cx, JSObject *aObj, jsid aId,
+                              uint32_t flags, JSObject **objp,
+                              bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
@@ -5907,7 +5907,7 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     nsDependentJSString name(id);
     nsWrapperCache* cache;
     nsCOMPtr<nsISupports> result =
-      static_cast<nsHTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
+      static_cast<HTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
 
     if (result) {
       *_retval = ::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nullptr,
@@ -5924,9 +5924,9 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
 
 NS_IMETHODIMP
-nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                                 JSContext *cx, JSObject *aObj, jsid aId,
-                                 jsval *vp, bool *_retval)
+HTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *aObj, jsid aId,
+                               jsval *vp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
@@ -5937,7 +5937,7 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     nsDependentJSString name(id);
     nsWrapperCache* cache;
     nsCOMPtr<nsISupports> result =
-      static_cast<nsHTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
+      static_cast<HTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
 
     if (result) {
       // Wrap result, result can be either an element or a list of
@@ -5965,10 +5965,10 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 }
 
 NS_IMETHODIMP
-nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj,
-                                  uint32_t enum_op, jsval *statep,
-                                  jsid *idp, bool *_retval)
+HTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
+                                JSContext *cx, JSObject *obj,
+                                uint32_t enum_op, jsval *statep,
+                                jsid *idp, bool *_retval)
 {
   switch (enum_op) {
   case JSENUMERATE_INIT:

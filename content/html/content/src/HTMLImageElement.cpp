@@ -25,7 +25,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsFocusManager.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -292,7 +292,7 @@ HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
     if (!tmp.IsEmpty()) {
       mForm->RemoveImageElementFromTable(this, tmp,
-                                         nsHTMLFormElement::AttributeUpdated);
+                                         HTMLFormElement::AttributeUpdated);
     }
   }
 
@@ -654,7 +654,7 @@ HTMLImageElement::SetForm(nsIDOMHTMLFormElement* aForm)
   NS_ASSERTION(!mForm,
                "We don't support switching from one non-null form to another.");
 
-  mForm = static_cast<nsHTMLFormElement*>(aForm);
+  mForm = static_cast<HTMLFormElement*>(aForm);
 }
 
 void
@@ -676,12 +676,12 @@ HTMLImageElement::ClearForm(bool aRemoveFromForm)
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveImageElementFromTable(this, nameVal,
-                                         nsHTMLFormElement::ElementRemoved);
+                                         HTMLFormElement::ElementRemoved);
     }
 
     if (!idVal.IsEmpty()) {
       mForm->RemoveImageElementFromTable(this, idVal,
-                                         nsHTMLFormElement::ElementRemoved);
+                                         HTMLFormElement::ElementRemoved);
     }
   }
 

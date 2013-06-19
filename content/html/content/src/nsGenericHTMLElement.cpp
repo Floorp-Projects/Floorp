@@ -64,7 +64,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "nsFocusManager.h"
 #include "nsAttrValueOrString.h"
 
@@ -651,8 +651,8 @@ nsGenericHTMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsHTMLFormElement*
-nsGenericHTMLElement::FindAncestorForm(nsHTMLFormElement* aCurrentForm)
+HTMLFormElement*
+nsGenericHTMLElement::FindAncestorForm(HTMLFormElement* aCurrentForm)
 {
   NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::form),
                "FindAncestorForm should not be called if @form is set!");
@@ -677,7 +677,7 @@ nsGenericHTMLElement::FindAncestorForm(nsHTMLFormElement* aCurrentForm)
         }
       }
 #endif
-      return static_cast<nsHTMLFormElement*>(content);
+      return static_cast<HTMLFormElement*>(content);
     }
 
     nsIContent *prevContent = content;
@@ -2158,7 +2158,7 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
                "We don't support switching from one non-null form to another.");
 
   // keep a *weak* ref to the form here
-  mForm = static_cast<nsHTMLFormElement*>(aForm);
+  mForm = static_cast<HTMLFormElement*>(aForm);
 }
 
 void
@@ -2180,12 +2180,12 @@ nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm)
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, nameVal,
-                                    nsHTMLFormElement::ElementRemoved);
+                                    HTMLFormElement::ElementRemoved);
     }
 
     if (!idVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, idVal,
-                                    nsHTMLFormElement::ElementRemoved);
+                                    HTMLFormElement::ElementRemoved);
     }
   }
 
@@ -2317,7 +2317,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
       if (!tmp.IsEmpty()) {
         mForm->RemoveElementFromTable(this, tmp,
-                                      nsHTMLFormElement::AttributeUpdated);
+                                      HTMLFormElement::AttributeUpdated);
       }
     }
 
@@ -2326,14 +2326,14 @@ nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
       if (!tmp.IsEmpty()) {
         mForm->RemoveElementFromTable(this, tmp,
-                                      nsHTMLFormElement::AttributeUpdated);
+                                      HTMLFormElement::AttributeUpdated);
       }
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
         mForm->RemoveElementFromTable(this, tmp,
-                                      nsHTMLFormElement::AttributeUpdated);
+                                      HTMLFormElement::AttributeUpdated);
       }
 
       mForm->RemoveElement(this, false);
@@ -2655,7 +2655,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     ClearForm(true);
   }
 
-  nsHTMLFormElement *oldForm = mForm;
+  HTMLFormElement *oldForm = mForm;
 
   if (!mForm) {
     // If @form is set, we have to use that to find the form.
@@ -2678,7 +2678,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
                      "associated with the id in @form!");
 
         if (element && element->IsHTML(nsGkAtoms::form)) {
-          mForm = static_cast<nsHTMLFormElement*>(element);
+          mForm = static_cast<HTMLFormElement*>(element);
         }
       }
      } else {
