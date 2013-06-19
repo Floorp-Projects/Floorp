@@ -106,7 +106,7 @@ DrawTargetDual::MaskSurface(const Pattern &aSource,
   DualPattern source(aSource);
   DualSurface mask(aMask);
   mA->MaskSurface(*source.mA, mask.mA, aOffset, aOptions);
-  mB->MaskSurface(*source.mB, mask.mA, aOffset, aOptions);
+  mB->MaskSurface(*source.mB, mask.mB, aOffset, aOptions);
 }
 
 void
