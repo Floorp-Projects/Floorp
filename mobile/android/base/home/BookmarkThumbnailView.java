@@ -9,6 +9,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
@@ -26,8 +28,27 @@ public class BookmarkThumbnailView extends ImageView {
     // Default filter color for "Add a bookmark" views.
     private static final int DEFAULT_COLOR = 0x46ECF0F3;
 
+    // Border for thumbnails.
+    private boolean mShowBorder = true;
+
+    // Stroke width for the border.
+    private final float mStrokeWidth = getResources().getDisplayMetrics().density * 2;
+
+    // Paint for drawing the border.
+    private static Paint sBorderPaint;
+
+    // Initializing the static border paint.
+    static {
+        sBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        sBorderPaint.setColor(0xFFCFD9E1);
+        sBorderPaint.setStyle(Paint.Style.STROKE);
+    }
+
     public BookmarkThumbnailView(Context context) {
         this(context, null);
+
+        // A border will be drawn if needed.
+        setWillNotDraw(false);
     }
 
     public BookmarkThumbnailView(Context context, AttributeSet attrs) {
@@ -57,6 +78,19 @@ public class BookmarkThumbnailView extends ImageView {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        if (mShowBorder) {
+            sBorderPaint.setStrokeWidth(mStrokeWidth);
+            canvas.drawRect(0, 0, getWidth(), getHeight(), sBorderPaint);
+        }
+    }
+
+    /**
      * Sets the background to a Drawable by applying the specified color as a filter.
      *
      * @param color the color filter to apply over the drawable.
@@ -67,5 +101,6 @@ public class BookmarkThumbnailView extends ImageView {
         Drawable drawable = getResources().getDrawable(R.drawable.favicon_bg);
         drawable.setColorFilter(colorFilter, Mode.SRC_ATOP);
         setBackgroundDrawable(drawable);
+        mShowBorder = false;
     }
 }
