@@ -184,7 +184,7 @@ getCert(const char *name, PRBool isAscii, const char * progName)
 	return cert;
     }
 
-    rv = SECU_ReadDERFromFile(&item, fd, isAscii);
+    rv = SECU_ReadDERFromFile(&item, fd, isAscii, PR_FALSE);
     PR_Close(fd);
     if (rv != SECSuccess) {
 	fprintf(stderr, "%s: SECU_ReadDERFromFile failed\n", progName);

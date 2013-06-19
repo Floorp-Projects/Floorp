@@ -205,9 +205,9 @@ nsFrame::GetLogModuleInfo()
 }
 
 void
-nsIFrame::DumpFrameTree(nsIFrame* aFrame)
+nsIFrame::DumpFrameTree()
 {
-    RootFrameList(aFrame->PresContext(), stdout, 0);
+  RootFrameList(PresContext(), stdout, 0);
 }
 
 void

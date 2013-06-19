@@ -96,6 +96,10 @@ public:
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
                            const DrawOptions &aOptions = DrawOptions());
+  virtual void MaskSurface(const Pattern &aSource,
+                           SourceSurface *aMask,
+                           Point aOffset,
+                           const DrawOptions &aOptions = DrawOptions());
 
   virtual void FillRect(const Rect &aRect,
                         const Pattern &aPattern,

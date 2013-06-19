@@ -135,6 +135,10 @@ TEST(Write, RelativeLoadAddress) {
   entry->initial_rules[ustr__ZDcfa()] = Module::Expr("he was a handsome man");
   entry->initial_rules[ToUniqueString("and")] =
       Module::Expr("what i want to know is");
+  entry->initial_rules[ToUniqueString("stallion")] =
+      Module::Expr(ToUniqueString("and break"), 8, false);
+  entry->initial_rules[ToUniqueString("onetwothreefourfive")] =
+      Module::Expr(ToUniqueString("pigeonsjustlikethat"), 42, true);
   entry->rule_changes[0x30f9e5c83323973eULL][ToUniqueString("how")] =
       Module::Expr("do you like your blueeyed boy");
   entry->rule_changes[0x30f9e5c83323973eULL][ToUniqueString("Mister")] =
@@ -156,7 +160,9 @@ TEST(Write, RelativeLoadAddress) {
                "9410dc39a798c580 1c2be6d6c5af2611 41676901 1\n"
                "STACK CFI INIT 6434d177ce326ca 49fc9ca7c7c13dc2"
                " .cfa: he was a handsome man"
-               " and: what i want to know is\n"
+               " and: what i want to know is"
+               " onetwothreefourfive: pigeonsjustlikethat 42 + ^"
+               " stallion: and break 8 +\n"
                "STACK CFI 6434d177ce326cb"
                " Mister: Death"
                " how: do you like your blueeyed boy\n",

@@ -81,9 +81,11 @@ ssl3_KeyAndMacDeriveBypass(
     unsigned int    effKeySize;		/* effective size of cipher keys */
     unsigned int    macSize;		/* size of MAC secret */
     unsigned int    IVSize;		/* size of IV */
+    PRBool          explicitIV = PR_FALSE;
     SECStatus       rv    = SECFailure;
     SECStatus       status = SECSuccess;
     PRBool          isFIPS = PR_FALSE;
+    PRBool          isTLS12 = pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2;
 
     SECItem         srcr;
     SECItem         crsr;
@@ -115,7 +117,13 @@ ssl3_KeyAndMacDeriveBypass(
     if (keySize == 0) {
 	effKeySize = IVSize = 0; /* only MACing */
     }
-    block_needed = 2 * (macSize + effKeySize + ((!isExport) * IVSize));
+    if (cipher_def->type == type_block &&
+	pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_1) {
+	/* Block ciphers in >= TLS 1.1 use a per-record, explicit IV. */
+	explicitIV = PR_TRUE;
+    }
+    block_needed =
+	2 * (macSize + effKeySize + ((!isExport && !explicitIV) * IVSize));
 
     /*
      * clear out our returned keys so we can recover on failure
@@ -150,8 +158,13 @@ ssl3_KeyAndMacDeriveBypass(
 	keyblk.data = key_block;
 	keyblk.len  = block_needed;
 
-	status = TLS_PRF(&pwSpec->msItem, "key expansion", &srcr, &keyblk,
-			  isFIPS);
+	if (isTLS12) {
+	    status = TLS_P_hash(HASH_AlgSHA256, &pwSpec->msItem,
+				"key expansion", &srcr, &keyblk, isFIPS);
+	} else {
+	    status = TLS_PRF(&pwSpec->msItem, "key expansion", &srcr, &keyblk,
+			     isFIPS);
+	}
 	if (status != SECSuccess) {
 	    goto key_and_mac_derive_fail;
 	}
@@ -239,22 +252,34 @@ ssl3_KeyAndMacDeriveBypass(
 	i += keySize;
 
 	if (IVSize > 0) {
-	    /* 
-	    ** client_write_IV[CipherSpec.IV_size]
-	    */
-	    buildSSLKey(&key_block[i], IVSize, &pwSpec->client.write_iv_item, \
-	                "Domestic Client Write IV");
-	    i += IVSize;
+	    if (explicitIV) {
+		static unsigned char zero_block[32];
+		PORT_Assert(IVSize <= sizeof zero_block);
+		buildSSLKey(&zero_block[0], IVSize, \
+			    &pwSpec->client.write_iv_item, \
+			    "Domestic Client Write IV");
+		buildSSLKey(&zero_block[0], IVSize, \
+			    &pwSpec->server.write_iv_item, \
+			    "Domestic Server Write IV");
+	    } else {
+		/* 
+		** client_write_IV[CipherSpec.IV_size]
+		*/
+		buildSSLKey(&key_block[i], IVSize, \
+			    &pwSpec->client.write_iv_item, \
+			    "Domestic Client Write IV");
+		i += IVSize;
 
-	    /* 
-	    ** server_write_IV[CipherSpec.IV_size]
-	    */
-	    buildSSLKey(&key_block[i], IVSize, &pwSpec->server.write_iv_item, \
-	                "Domestic Server Write IV");
-	    i += IVSize;
+		/* 
+		** server_write_IV[CipherSpec.IV_size]
+		*/
+		buildSSLKey(&key_block[i], IVSize, \
+			    &pwSpec->server.write_iv_item, \
+			    "Domestic Server Write IV");
+		i += IVSize;
+	    }
 	}
 	PORT_Assert(i <= block_bytes);
-
     } else if (!isTLS) { 
 	/*
 	** Generate SSL3 Export write keys and IVs.
@@ -417,6 +442,7 @@ ssl3_MasterKeyDeriveBypass(
     unsigned char * key_block    = pwSpec->key_block;
     SECStatus       rv    = SECSuccess;
     PRBool          isFIPS = PR_FALSE;
+    PRBool          isTLS12 = pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2;
 
     SECItem         crsr;
 
@@ -452,7 +478,12 @@ ssl3_MasterKeyDeriveBypass(
 	master.data = key_block;
 	master.len = SSL3_MASTER_SECRET_LENGTH;
 
-	rv = TLS_PRF(pms, "master secret", &crsr, &master, isFIPS);
+	if (isTLS12) {
+	    rv = TLS_P_hash(HASH_AlgSHA256, pms, "master secret", &crsr,
+			    &master, isFIPS);
+	} else {
+	    rv = TLS_PRF(pms, "master secret", &crsr, &master, isFIPS);
+	}
 	if (rv != SECSuccess) {
 	    PORT_SetError(SSL_ERROR_SESSION_KEY_GEN_FAILURE);
 	}

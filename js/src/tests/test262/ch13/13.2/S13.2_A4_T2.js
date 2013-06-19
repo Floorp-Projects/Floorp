@@ -33,7 +33,7 @@ if (__gunc.prototype.constructor !== __gunc) {
 var __constructor_was__enumed;
 
 for (__prop in __gunc.prototype){
-    if (__prop = 'constructor')
+    if (__prop === 'constructor')
         __constructor_was__enumed = true;
 }
 
