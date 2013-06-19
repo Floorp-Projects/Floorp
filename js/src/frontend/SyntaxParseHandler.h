@@ -49,13 +49,15 @@ class SyntaxParseHandler
 
     void trace(JSTracer *trc) {}
 
-    Node newName(PropertyName *name, ParseContext<SyntaxParseHandler> *pc) {
+    Node newName(PropertyName *name, bool inBlock, uint32_t blockid, const TokenPos &pos) {
         lastAtom = name;
         return NodeName;
     }
-    DefinitionNode newPlaceholder(JSAtom *atom, ParseContext<SyntaxParseHandler> *pc) {
+
+    DefinitionNode newPlaceholder(JSAtom *atom, bool inBlock, uint32_t blockid, const TokenPos &pos) {
         return Definition::PLACEHOLDER;
     }
+
     Node newIdentifier(JSAtom *atom, const TokenPos &pos) { return NodeString; }
     Node newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) { return NodeGeneric; }
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }

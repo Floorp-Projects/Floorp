@@ -936,7 +936,7 @@ Parser<FullParseHandler>::checkFunctionArguments()
      * parameters are free from 'arguments'.
      */
     if (!argumentsHasBinding && pc->sc->bindingsAccessedDynamically() && !hasRest) {
-        ParseNode *pn = NameNode::create(PNK_NAME, arguments, &handler, pc);
+        ParseNode *pn = newName(arguments);
         if (!pn)
             return false;
         if (!pc->define(context, arguments, pn, Definition::VAR))
@@ -1248,7 +1248,7 @@ Parser<ParseHandler>::getOrCreateLexicalDependency(ParseContext<ParseHandler> *p
     if (p)
         return p.value().get<ParseHandler>();
 
-    DefinitionNode dn = handler.newPlaceholder(atom, pc);
+    DefinitionNode dn = handler.newPlaceholder(atom, pc->inBlock(), pc->blockid(), pos());
     if (!dn)
         return ParseHandler::nullDefinition();
     DefinitionSingle def = DefinitionSingle::new_<ParseHandler>(dn);
@@ -1459,7 +1459,7 @@ Parser<ParseHandler>::defineArg(Node funcpn, HandlePropertyName name,
         pc->prepareToAddDuplicateArg(name, prevDecl);
     }
 
-    Node argpn = handler.newName(name, pc);
+    Node argpn = newName(name);
     if (!argpn)
         return false;
 
@@ -1574,7 +1574,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                  * left-hand-side expression and accumulate it in list.
                  */
                 HandlePropertyName name = context->names().empty;
-                Node rhs = handler.newName(name, pc);
+                Node rhs = newName(name);
                 if (!rhs)
                     return false;
 
@@ -2805,7 +2805,7 @@ Parser<ParseHandler>::bindVarOrConst(JSContext *cx, BindData<ParseHandler> *data
              */
             HandlePropertyName arguments = cx->names().arguments;
             if (name == arguments) {
-                Node pn = parser->handler.newName(arguments, pc);
+                Node pn = parser->newName(arguments);
                 if (!pc->define(parser->context, arguments, pn, Definition::VAR))
                     return false;
                 funbox->setArgumentsHasLocalBinding();
@@ -3457,7 +3457,7 @@ Parser<ParseHandler>::newBindingNode(PropertyName *name, bool functionScope, Var
 
     /* Make a new node for this declarator name (or destructuring pattern). */
     JS_ASSERT(tokenStream.currentToken().type == TOK_NAME);
-    return handler.newName(name, pc);
+    return newName(name);
 }
 
 template <typename ParseHandler>
@@ -5698,7 +5698,8 @@ CompExprTransplanter::transplant(ParseNode *pn)
                      * generator) a use of a new placeholder in the generator's
                      * lexdeps.
                      */
-                    Definition *dn2 = parser->handler.newPlaceholder(atom, parser->pc);
+                    Definition *dn2 = parser->handler.newPlaceholder(
+                        atom, parser->pc->inBlock(), parser->pc->blockid(), parser->pos());
                     if (!dn2)
                         return false;
                     dn2->pn_pos = root->pn_pos;
@@ -6358,12 +6359,19 @@ Parser<ParseHandler>::bracketedExpr()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::newName(PropertyName *name)
+{
+    return handler.newName(name, pc->inBlock(), pc->blockid(), pos());
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::identifierName()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME));
 
     RootedPropertyName name(context, tokenStream.currentToken().name());
-    Node pn = handler.newName(name, pc);
+    Node pn = newName(name);
     if (!pn)
         return null();
 
@@ -6595,7 +6603,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
                     if (tt == TOK_NAME) {
                         atom = tokenStream.currentToken().name();
-                        pn3 = handler.newName(atom->asPropertyName(), pc);
+                        pn3 = newName(atom->asPropertyName());
                         if (!pn3)
                             return null();
                     } else if (tt == TOK_STRING) {
@@ -6699,7 +6707,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 handler.setListFlag(pn, PNX_DESTRUCT | PNX_NONCONST);
                 PropertyName *name = handler.isName(pn3);
                 JS_ASSERT(atom);
-                pn3 = handler.newName(name, pc);
+                pn3 = newName(name);
                 if (!pn3)
                     return null();
                 pnval = pn3;
