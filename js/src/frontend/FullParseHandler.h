@@ -85,20 +85,17 @@ class FullParseHandler
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
     const Token &currentToken() { return tokenStream.currentToken(); }
 
-    ParseNode *newName(PropertyName *name, ParseContext<FullParseHandler> *pc) {
-        ParseNode *pn = NameNode::create(PNK_NAME, name, this, pc);
-        if (!pn)
-            return NULL;
-        pn->setOp(JSOP_NAME);
-        return pn;
+    ParseNode *newName(PropertyName *name, bool inBlock, uint32_t blockid, const TokenPos &pos) {
+        return new_<NameNode>(PNK_NAME, JSOP_NAME, name, inBlock, blockid, pos);
     }
 
-    Definition *newPlaceholder(JSAtom *atom, ParseContext<FullParseHandler> *pc) {
-        Definition *dn = (Definition *) NameNode::create(PNK_NAME, atom, this, pc);
+    Definition *newPlaceholder(JSAtom *atom, bool inBlock, uint32_t blockid,
+                               const TokenPos &pos)
+    {
+        Definition *dn =
+            (Definition *) new_<NameNode>(PNK_NAME, JSOP_NOP, atom, inBlock, blockid, pos);
         if (!dn)
             return NULL;
-
-        dn->setOp(JSOP_NOP);
         dn->setDefn(true);
         dn->pn_dflags |= PND_PLACEHOLDER;
         return dn;

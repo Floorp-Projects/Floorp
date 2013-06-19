@@ -955,10 +955,20 @@ struct CodeNode : public ParseNode
 
 struct NameNode : public ParseNode
 {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom,
-                            FullParseHandler *handler, ParseContext<FullParseHandler> *pc);
+    NameNode(ParseNodeKind kind, JSOp op, JSAtom *atom, bool inBlock, uint32_t blockid,
+             const TokenPos &pos)
+      : ParseNode(kind, op, PN_NAME, pos)
+    {
+        pn_atom = atom;
+        pn_expr = NULL;
+        pn_cookie.makeFree();
+        pn_dflags = inBlock ? PND_BLOCKCHILD : 0;
+        pn_blockid = blockid;
+        JS_ASSERT(pn_blockid == blockid);  // check for bitfield overflow
+    }
 
-    inline void initCommon(ParseContext<FullParseHandler> *pc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom,
+                            FullParseHandler *handler, bool inBlock, uint32_t blockid);
 
     static bool test(const ParseNode &node) {
         return node.isArity(PN_NAME);
