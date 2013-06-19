@@ -2035,19 +2035,15 @@ EmitElemOperands(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
          */
         left = pn->maybeExpr();
         if (!left) {
-            left = NullaryNode::create(PNK_STRING, &bce->parser->handler);
+            left = bce->parser->handler.new_<NullaryNode>(
+                PNK_STRING, JSOP_BINDNAME, pn->pn_pos, pn->pn_atom);
             if (!left)
                 return false;
-            left->setOp(JSOP_BINDNAME);
-            left->pn_pos = pn->pn_pos;
-            left->pn_atom = pn->pn_atom;
         }
-        right = NullaryNode::create(PNK_STRING, &bce->parser->handler);
+        right = bce->parser->handler.new_<NullaryNode>(
+            PNK_STRING, JSOP_STRING, pn->pn_pos, pn->pn_atom);
         if (!right)
             return false;
-        right->setOp(JSOP_STRING);
-        right->pn_pos = pn->pn_pos;
-        right->pn_atom = pn->pn_atom;
     } else {
         JS_ASSERT(pn->isArity(PN_BINARY));
         left = pn->pn_left;
@@ -6016,8 +6012,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_REGEXP:
-        JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitRegExp(cx, bce->regexpList.add(pn->pn_objbox), bce);
+        ok = EmitRegExp(cx, bce->regexpList.add(pn->as<RegExpLiteral>().objbox()), bce);
         break;
 
       case PNK_TRUE:

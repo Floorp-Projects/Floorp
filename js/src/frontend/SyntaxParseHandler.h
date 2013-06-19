@@ -69,6 +69,10 @@ class SyntaxParseHandler
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }
     Node newThisLiteral(const TokenPos &pos) { return NodeGeneric; }
     Node newNullLiteral(const TokenPos &pos) { return NodeGeneric; }
+
+    template <class Boxer>
+    Node newRegExp(JSObject *reobj, const TokenPos &pos, Boxer &boxer) { return NodeGeneric; }
+
     Node newConditional(Node cond, Node thenExpr, Node elseExpr) { return NodeGeneric; }
 
     Node newElision() { return NodeGeneric; }
