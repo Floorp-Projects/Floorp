@@ -136,7 +136,7 @@ protected:
     mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     mozilla::gfx::Matrix mTransform;
     mozilla::RefPtr<mozilla::gfx::GradientStops> mStops;
-    mozilla::gfx::ExtendMode mExtend;
+    GraphicsExtend mExtend;
     mozilla::gfx::Filter mFilter;
 };
 
