@@ -547,9 +547,9 @@ protected:
 
   /** Reflow pushed floats
    */
-  nsresult ReflowPushedFloats(nsBlockReflowState& aState,
-                              nsOverflowAreas&    aOverflowAreas,
-                              nsReflowStatus&     aStatus);
+  void ReflowPushedFloats(nsBlockReflowState& aState,
+                          nsOverflowAreas&    aOverflowAreas,
+                          nsReflowStatus&     aStatus);
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */
@@ -579,7 +579,7 @@ protected:
   /** set up the conditions necessary for an resize reflow
     * the primary task is to mark the minimumly sufficient lines dirty. 
     */
-  nsresult PrepareResizeReflow(nsBlockReflowState& aState);
+  void PrepareResizeReflow(nsBlockReflowState& aState);
 
   /** reflow all lines that have been marked dirty */
   nsresult ReflowDirtyLines(nsBlockReflowState& aState);
@@ -712,11 +712,11 @@ protected:
                          line_iterator       aLine,
                          bool*               aKeepReflowGoing);
 
-  nsresult SplitLine(nsBlockReflowState& aState,
-                     nsLineLayout& aLineLayout,
-                     line_iterator aLine,
-                     nsIFrame* aFrame,
-                     LineReflowStatus* aLineReflowStatus);
+  void SplitLine(nsBlockReflowState& aState,
+                 nsLineLayout& aLineLayout,
+                 line_iterator aLine,
+                 nsIFrame* aFrame,
+                 LineReflowStatus* aLineReflowStatus);
 
   /**
    * Pull a frame from the next available location (one of our lines or

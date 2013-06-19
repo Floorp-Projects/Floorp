@@ -993,8 +993,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   DrainPushedFloats(state);
   nsOverflowAreas fcBounds;
   nsReflowStatus fcStatus = NS_FRAME_COMPLETE;
-  rv = ReflowPushedFloats(state, fcBounds, fcStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ReflowPushedFloats(state, fcBounds, fcStatus);
 
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our width has changed, mark the lines dirty that we need to
@@ -1580,7 +1579,7 @@ IsAlignedLeft(uint8_t aAlignment,
          !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
 }
 
-nsresult
+void
 nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 {
   const nsStyleText* styleText = StyleText();
@@ -1684,7 +1683,6 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       line->MarkDirty();
     }
   }
-  return NS_OK;
 }
 
 //----------------------------------------
@@ -3757,8 +3755,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       else {
         // It's not the first child on this line so go ahead and split
         // the line. We will see the frame again on the next-line.
-        rv = SplitLine(aState, aLineLayout, aLine, aFrame, aLineReflowStatus);
-        NS_ENSURE_SUCCESS(rv, rv);
+        SplitLine(aState, aLineLayout, aLine, aFrame, aLineReflowStatus);
 
         // If we're splitting the line because the frame didn't fit and it
         // was pushed, then mark the line as having word wrapped. We need to
@@ -3786,8 +3783,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       aLine->SetBreakTypeAfter(breakType);
       if (NS_FRAME_IS_COMPLETE(frameReflowStatus)) {
         // Split line, but after the frame just reflowed
-        rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
-        NS_ENSURE_SUCCESS(rv, rv);
+        SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
 
         if (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
             !aLineLayout.GetLineEndsInBR()) {
@@ -3815,8 +3811,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         *aLineReflowStatus == LINE_REFLOW_STOP) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
-      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
-      NS_ENSURE_SUCCESS(rv, rv);
+      SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
     }
   }
 
@@ -3911,7 +3906,7 @@ CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
   return true;
 }
 
-nsresult
+void
 nsBlockFrame::SplitLine(nsBlockReflowState& aState,
                         nsLineLayout& aLineLayout,
                         line_iterator aLine,
@@ -3983,7 +3978,6 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     VerifyLines(true);
 #endif
   }
-  return NS_OK;
 }
 
 bool
@@ -5907,12 +5901,11 @@ nsBlockFrame::FindTrailingClear()
   return NS_STYLE_CLEAR_NONE;
 }
 
-nsresult
+void
 nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
                                  nsOverflowAreas&    aOverflowAreas,
                                  nsReflowStatus&     aStatus)
 {
-  nsresult rv = NS_OK;
   // Pushed floats live at the start of our float list; see comment
   // above nsBlockFrame::DrainPushedFloats.
   for (nsIFrame* f = mFloats.FirstChild(), *next;
@@ -5973,8 +5966,6 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     aState.mFloatBreakType = static_cast<nsBlockFrame*>(GetPrevInFlow())
                                ->FindTrailingClear();
   }
-
-  return rv;
 }
 
 void
