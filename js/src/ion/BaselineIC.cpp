@@ -5175,7 +5175,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
 
     RootedObject obj(cx, &val.toObject());
 
-    if (obj->isArray() && res.isInt32()) {
+    if (obj->is<ArrayObject>() && res.isInt32()) {
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(Array.length) stub");
         ICGetProp_ArrayLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -5530,7 +5530,7 @@ ICGetProp_ArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Unbox R0 and guard it's an array.
     Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, &ArrayClass, &failure);
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, &ArrayObject::class_, &failure);
 
     // Load obj->elements->length.
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratch);
