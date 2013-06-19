@@ -224,7 +224,7 @@ struct ParseContext : public GenericParseContext
 
     inline bool init();
 
-    bool inBlock() const { return !topStmt || topStmt->type == STMT_BLOCK; }
+    InBlockBool inBlock() const { return InBlockBool(!topStmt || topStmt->type == STMT_BLOCK); }
     unsigned blockid();
 
     // True if we are at the topmost level of a entire script or function body.
