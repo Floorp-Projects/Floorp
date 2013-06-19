@@ -350,7 +350,7 @@ class IonOOLPropertyOpExitFrameLayout
     // id for JSHandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -398,7 +398,7 @@ class IonOOLProxyGetExitFrameLayout
     // id for JSHandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;

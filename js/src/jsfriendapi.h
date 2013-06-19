@@ -125,7 +125,7 @@ extern JS_FRIEND_API(JSString *)
 JS_BasicObjectToString(JSContext *cx, JSHandleObject obj);
 
 extern JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+js_GetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JS::MutableHandleValue vp);
 
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);

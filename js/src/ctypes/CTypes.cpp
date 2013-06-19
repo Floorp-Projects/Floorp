@@ -174,7 +174,7 @@ namespace CType {
   static JSBool CreateArray(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ToString(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool HasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue v, JSBool* bp);
+  static JSBool HasInstance(JSContext* cx, JSHandleObject obj, MutableHandleValue v, JSBool* bp);
 
 
   /*
@@ -3747,7 +3747,7 @@ CType::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 JSBool
-CType::HasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue v, JSBool* bp)
+CType::HasInstance(JSContext* cx, JSHandleObject obj, MutableHandleValue v, JSBool* bp)
 {
   JS_ASSERT(CType::IsCType(obj));
 
