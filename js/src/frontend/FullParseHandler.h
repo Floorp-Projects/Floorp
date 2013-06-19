@@ -85,11 +85,13 @@ class FullParseHandler
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
     const Token &currentToken() { return tokenStream.currentToken(); }
 
-    ParseNode *newName(PropertyName *name, bool inBlock, uint32_t blockid, const TokenPos &pos) {
+    ParseNode *newName(PropertyName *name, InBlockBool inBlock, uint32_t blockid,
+                       const TokenPos &pos)
+    {
         return new_<NameNode>(PNK_NAME, JSOP_NAME, name, inBlock, blockid, pos);
     }
 
-    Definition *newPlaceholder(JSAtom *atom, bool inBlock, uint32_t blockid,
+    Definition *newPlaceholder(JSAtom *atom, InBlockBool inBlock, uint32_t blockid,
                                const TokenPos &pos)
     {
         Definition *dn =
