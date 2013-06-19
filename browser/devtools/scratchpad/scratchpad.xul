@@ -288,10 +288,10 @@
 <notificationbox id="scratchpad-notificationbox" flex="1">
   <hbox flex="1">
     <vbox id="scratchpad-editor" flex="1"/>
-    <splitter class="devtools-side-splitter"
-              collapse="after"
-              state="collapsed"/>
-    <tabbox id="scratchpad-sidebar" class="devtools-sidebar-tabs" width="300">
+    <splitter class="devtools-side-splitter"/>
+    <tabbox id="scratchpad-sidebar" class="devtools-sidebar-tabs"
+                                    width="300"
+                                    hidden="true">
       <tabs/>
       <tabpanels flex="1"/>
     </tabbox>
