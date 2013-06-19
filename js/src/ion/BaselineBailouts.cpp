@@ -1215,7 +1215,7 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     RootedScript innerScript(cx, NULL);
     RootedScript outerScript(cx, NULL);
 
-    JS_ASSERT(cx->mainThread().currentlyRunningInJit());
+    JS_ASSERT(cx->currentlyRunningInJit());
     IonFrameIterator iter(cx->mainThread().ionTop);
 
     uint32_t frameno = 0;

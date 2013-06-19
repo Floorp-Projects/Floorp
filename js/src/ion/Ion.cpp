@@ -1856,7 +1856,6 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         fp->clearRunningInJit();
     }
 
-    JS_ASSERT(fp == cx->fp());
     JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
 
     // The trampoline wrote the return value but did not set the HAS_RVAL flag.

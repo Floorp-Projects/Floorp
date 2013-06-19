@@ -5965,7 +5965,7 @@ JS_TriggerOperationCallback(JSRuntime *rt)
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-    return cx->hasfp();
+    return cx->currentlyRunning();
 }
 
 JS_PUBLIC_API(JSBool)

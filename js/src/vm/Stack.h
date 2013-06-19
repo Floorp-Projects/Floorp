@@ -183,6 +183,8 @@ class AbstractFramePtr
     inline JSObject *scopeChain() const;
     inline CallObject &callObj() const;
     inline bool initFunctionScopeObjects(JSContext *cx);
+    inline void pushOnScopeChain(ScopeObject &scope);
+
     inline JSCompartment *compartment() const;
 
     inline StaticBlockObject *maybeBlockChain() const;
@@ -1604,6 +1606,9 @@ class InterpreterActivation : public Activation
     StackFrame *current() const {
         JS_ASSERT(current_);
         return current_;
+    }
+    FrameRegs &regs() const {
+        return regs_;
     }
 };
 
