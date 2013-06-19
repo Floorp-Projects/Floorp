@@ -127,7 +127,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
             scopeChain = fp->scopeChain();
 
         // For OSR, pass the number of locals + stack values.
-        uint32_t numStackValues = osr ? fp->script()->nfixed + cx->regs().stackDepth() : 0;
+        uint32_t numStackValues = osr ? fp->script()->nfixed + cx->stack.regs().stackDepth() : 0;
         JS_ASSERT_IF(osr, !IsJSDEnabled(cx));
 
         AutoFlushInhibitor afi(cx->compartment()->ionCompartment());
@@ -138,7 +138,6 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
         fp->clearRunningInJit();
     }
 
-    JS_ASSERT(fp == cx->fp());
     JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
 
     // The trampoline wrote the return value but did not set the HAS_RVAL flag.
@@ -247,7 +246,7 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     // is enabled, so that we don't have to OSR and don't have to update the
     // frame pointer stored in JSD's frames list.
     if (IsJSDEnabled(cx)) {
-        if (JSOp(*cx->regs().pc) == JSOP_LOOPENTRY) // No OSR.
+        if (JSOp(*cx->stack.regs().pc) == JSOP_LOOPENTRY) // No OSR.
             return Method_Skipped;
     } else if (script->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile) {
         return Method_Skipped;

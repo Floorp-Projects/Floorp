@@ -1416,9 +1416,8 @@ Class js::GeneratorClass = {
  * if they are non-null.
  */
 JSObject *
-js_NewGenerator(JSContext *cx)
+js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
 {
-    FrameRegs &stackRegs = cx->regs();
     JS_ASSERT(stackRegs.stackDepth() == 0);
     StackFrame *stackfp = stackRegs.fp();
 
@@ -1549,7 +1548,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         gen->state = futureState;
 
         StackFrame *fp = gfg.fp();
-        gen->regs = cx->regs();
+        gen->regs = cx->stack.regs();
 
         cx->enterGenerator(gen);   /* OOM check above. */
         ok = RunScript(cx, fp);

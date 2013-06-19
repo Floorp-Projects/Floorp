@@ -346,7 +346,7 @@ struct JSGenerator
 };
 
 extern JSObject *
-js_NewGenerator(JSContext *cx);
+js_NewGenerator(JSContext *cx, const js::FrameRegs &regs);
 
 namespace js {
 

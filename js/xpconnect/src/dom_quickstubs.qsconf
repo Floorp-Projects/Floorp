@@ -60,14 +60,6 @@ members = [
 
     'nsIDOMTouchList.*',
 
-    # dom/interfaces/html
-    'nsIDOMHTMLFormElement.elements',
-    'nsIDOMHTMLFormElement.name',
-    'nsIDOMHTMLFormElement.submit',
-    'nsIDOMHTMLFormElement.length',
-    'nsIDOMHTMLFormElement.target',
-    'nsIDOMHTMLFormElement.action',
-
     # dom/interfaces/storage
     'nsIDOMToString.toString',
     'nsIDOMStorage.setItem',

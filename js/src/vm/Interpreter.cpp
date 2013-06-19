@@ -83,9 +83,9 @@ static JS_NEVER_INLINE bool
 #else
 static bool
 #endif
-ToBooleanOp(JSContext *cx)
+ToBooleanOp(const FrameRegs &regs)
 {
-    return ToBoolean(cx->regs().sp[-1]);
+    return ToBoolean(regs.sp[-1]);
 }
 
 template <bool Eq>
@@ -94,9 +94,8 @@ static JS_NEVER_INLINE bool
 #else
 static bool
 #endif
-LooseEqualityOp(JSContext *cx)
+LooseEqualityOp(JSContext *cx, FrameRegs &regs)
 {
-    FrameRegs &regs = cx->regs();
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
     bool cond;
@@ -254,14 +253,14 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_HAS_NO_SUCH_METHOD */
 
 inline bool
-GetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, MutableHandleValue lval,
-                     MutableHandleValue vp)
+GetPropertyOperation(JSContext *cx, StackFrame *fp, HandleScript script, jsbytecode *pc,
+                     MutableHandleValue lval, MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
 
     if (op == JSOP_LENGTH) {
-        if (IsOptimizedArguments(cx->fp(), lval.address())) {
-            vp.setInt32(cx->fp()->numActualArgs());
+        if (IsOptimizedArguments(fp, lval.address())) {
+            vp.setInt32(fp->numActualArgs());
             return true;
         }
 
@@ -353,10 +352,10 @@ Interpret(JSContext *cx, StackFrame *entryFrame);
 bool
 js::RunScript(JSContext *cx, StackFrame *fp)
 {
-    JS_ASSERT(fp == cx->fp());
+    JS_ASSERT(fp == cx->stack.fp());
     RootedScript script(cx, fp->script());
 
-    JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
+    JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->stack.regs().pc == script->code);
     JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
 
     JS_CHECK_RECURSION(cx, return false);
@@ -379,10 +378,10 @@ js::RunScript(JSContext *cx, StackFrame *fp)
         JSContext *cx;
         StackFrame *fp;
         CheckStackBalance(JSContext *cx)
-          : cx(cx), fp(cx->fp())
+          : cx(cx), fp(cx->stack.fp())
         {}
         ~CheckStackBalance() {
-            JS_ASSERT(fp == cx->fp());
+            JS_ASSERT(fp == cx->stack.fp());
         }
     } check(cx);
 #endif
@@ -808,29 +807,23 @@ js::TypeOfValue(JSContext *cx, const Value &vref)
  * of the with block with sp + stackIndex.
  */
 static bool
-EnterWith(JSContext *cx, int stackIndex)
+EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stackDepth)
 {
-    StackFrame *fp = cx->fp();
-    Value *sp = cx->regs().sp;
-    JS_ASSERT(stackIndex < 0);
-    JS_ASSERT(int(cx->regs().stackDepth()) + stackIndex >= 0);
-
     RootedObject obj(cx);
-    if (sp[-1].isObject()) {
-        obj = &sp[-1].toObject();
+    if (val.isObject()) {
+        obj = &val.toObject();
     } else {
-        obj = js_ValueToNonNullObject(cx, sp[-1]);
+        obj = js_ValueToNonNullObject(cx, val);
         if (!obj)
             return false;
-        sp[-1].setObject(*obj);
     }
 
-    WithObject *withobj = WithObject::create(cx, obj, fp->scopeChain(),
-                                             cx->regs().stackDepth() + stackIndex);
+    RootedObject scopeChain(cx, frame.scopeChain());
+    WithObject *withobj = WithObject::create(cx, obj, scopeChain, stackDepth);
     if (!withobj)
         return false;
 
-    fp->pushOnScopeChain(*withobj);
+    frame.pushOnScopeChain(*withobj);
     return true;
 }
 
@@ -838,8 +831,8 @@ EnterWith(JSContext *cx, int stackIndex)
 void
 js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), cx->fp() == frame.asStackFrame());
-    JS_ASSERT_IF(frame.isStackFrame(), stackDepth <= cx->regs().stackDepth());
+    JS_ASSERT_IF(frame.isStackFrame(), cx->stack.fp() == frame.asStackFrame());
+    JS_ASSERT_IF(frame.isStackFrame(), stackDepth <= cx->stack.regs().stackDepth());
 
     for (ScopeIter si(frame, cx); !si.done(); ++si) {
         switch (si.type()) {
@@ -1109,7 +1102,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame)
     JS_END_MACRO
 
     /* Repoint cx->regs to a local variable for faster access. */
-    FrameRegs regs = cx->regs();
+    FrameRegs regs = cx->stack.regs();
     PreserveRegsGuard interpGuard(cx, regs);
 
     /*
@@ -1410,7 +1403,11 @@ BEGIN_CASE(JSOP_POPV)
 END_CASE(JSOP_POPV)
 
 BEGIN_CASE(JSOP_ENTERWITH)
-    if (!EnterWith(cx, -1))
+{
+    RootedValue &val = rootValue0;
+    val = regs.sp[-1];
+
+    if (!EnterWith(cx, regs.fp(), val, regs.stackDepth() - 1))
         goto error;
 
     /*
@@ -1423,6 +1420,7 @@ BEGIN_CASE(JSOP_ENTERWITH)
      * enter/leave balance in [leavewith].
      */
     regs.sp[-1].setObject(*regs.fp()->scopeChain());
+}
 END_CASE(JSOP_ENTERWITH)
 
 BEGIN_CASE(JSOP_LEAVEWITH)
@@ -1497,7 +1495,7 @@ END_CASE(JSOP_GOTO)
 
 BEGIN_CASE(JSOP_IFEQ)
 {
-    bool cond = ToBooleanOp(cx);
+    bool cond = ToBooleanOp(regs);
     regs.sp--;
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
@@ -1508,7 +1506,7 @@ END_CASE(JSOP_IFEQ)
 
 BEGIN_CASE(JSOP_IFNE)
 {
-    bool cond = ToBooleanOp(cx);
+    bool cond = ToBooleanOp(regs);
     regs.sp--;
     if (cond != false) {
         len = GET_JUMP_OFFSET(regs.pc);
@@ -1519,7 +1517,7 @@ END_CASE(JSOP_IFNE)
 
 BEGIN_CASE(JSOP_OR)
 {
-    bool cond = ToBooleanOp(cx);
+    bool cond = ToBooleanOp(regs);
     if (cond == true) {
         len = GET_JUMP_OFFSET(regs.pc);
         DO_NEXT_OP(len);
@@ -1529,7 +1527,7 @@ END_CASE(JSOP_OR)
 
 BEGIN_CASE(JSOP_AND)
 {
-    bool cond = ToBooleanOp(cx);
+    bool cond = ToBooleanOp(regs);
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
         DO_NEXT_OP(len);
@@ -1755,12 +1753,12 @@ END_CASE(JSOP_BITAND)
 #undef BITWISE_OP
 
 BEGIN_CASE(JSOP_EQ)
-    if (!LooseEqualityOp<true>(cx))
+    if (!LooseEqualityOp<true>(cx, regs))
         goto error;
 END_CASE(JSOP_EQ)
 
 BEGIN_CASE(JSOP_NE)
-    if (!LooseEqualityOp<false>(cx))
+    if (!LooseEqualityOp<false>(cx, regs))
         goto error;
 END_CASE(JSOP_NE)
 
@@ -1945,7 +1943,7 @@ END_CASE(JSOP_MOD)
 
 BEGIN_CASE(JSOP_NOT)
 {
-    bool cond = ToBooleanOp(cx);
+    bool cond = ToBooleanOp(regs);
     regs.sp--;
     PUSH_BOOLEAN(!cond);
 }
@@ -2085,8 +2083,9 @@ BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
+
     MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-    if (!GetPropertyOperation(cx, script, regs.pc, lval, lval))
+    if (!GetPropertyOperation(cx, regs.fp(), script, regs.pc, lval, lval))
         goto error;
 
     TypeScript::Monitor(cx, script, regs.pc, lval);
@@ -2140,10 +2139,17 @@ BEGIN_CASE(JSOP_CALLELEM)
 {
     MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
     HandleValue rval = HandleValue::fromMarkedLocation(&regs.sp[-1]);
-
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
-    if (!GetElementOperation(cx, op, lval, rval, res))
+
+    bool done = false;
+    if (!GetElemOptimizedArguments(cx, regs.fp(), lval, rval, res, &done))
         goto error;
+
+    if (!done) {
+        if (!GetElementOperation(cx, op, lval, rval, res))
+            goto error;
+    }
+
     TypeScript::Monitor(cx, script, regs.pc, res);
     regs.sp--;
 }
@@ -2195,9 +2201,13 @@ BEGIN_CASE(JSOP_EVAL)
 END_CASE(JSOP_EVAL)
 
 BEGIN_CASE(JSOP_FUNAPPLY)
-    if (!GuardFunApplyArgumentsOptimization(cx))
+{
+    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    if (!GuardFunApplyArgumentsOptimization(cx, regs.fp(), args.calleev(), args.array(),
+                                            args.length()))
         goto error;
     /* FALL THROUGH */
+}
 
 BEGIN_CASE(JSOP_NEW)
 BEGIN_CASE(JSOP_CALL)
@@ -2993,7 +3003,7 @@ BEGIN_CASE(JSOP_GENERATOR)
     JS_ASSERT(!cx->isExceptionPending());
     regs.fp()->initGeneratorFrame();
     regs.pc += JSOP_GENERATOR_LENGTH;
-    JSObject *obj = js_NewGenerator(cx);
+    JSObject *obj = js_NewGenerator(cx, regs);
     if (!obj)
         goto error;
     regs.fp()->setReturnValue(ObjectValue(*obj));
@@ -3046,7 +3056,7 @@ END_CASE(JSOP_ARRAYPUSH)
     } /* for (;;) */
 
   error:
-    JS_ASSERT(&cx->regs() == &regs);
+    JS_ASSERT(&cx->stack.regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
 
     if (cx->isExceptionPending()) {
@@ -3073,7 +3083,7 @@ END_CASE(JSOP_ARRAYPUSH)
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            UnwindScope(cx, cx->fp(), tn->stackDepth);
+            UnwindScope(cx, regs.fp(), tn->stackDepth);
 
             /*
              * Set pc to the first bytecode after the the try note to point
@@ -3148,7 +3158,7 @@ END_CASE(JSOP_ARRAYPUSH)
     }
 
   forced_return:
-    UnwindScope(cx, cx->fp(), 0);
+    UnwindScope(cx, regs.fp(), 0);
     regs.setToEndOfScript();
 
     if (entryFrame != regs.fp())
@@ -3248,11 +3258,15 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
     if (fun->isArrow()) {
         // Note that this will assert if called from Ion code. Ion can't yet
         // emit code for a bound arrow function (bug 851913).
-        AbstractFramePtr frame = cx->fp();
+        AbstractFramePtr frame;
+        if (cx->currentlyRunningInInterpreter()) {
+            frame = cx->interpreterFrame();
+        } else {
 #ifdef JS_ION
-        if (cx->mainThread().currentlyRunningInJit())
+            JS_ASSERT(cx->currentlyRunningInJit());
             frame = ion::GetTopBaselineFrame(cx);
 #endif
+        }
 
         if (!ComputeThis(cx, frame))
             return NULL;
@@ -3288,8 +3302,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
             return false;
     } else {
         JS_ASSERT(script->compileAndGo);
-        JS_ASSERT_IF(cx->mainThread().currentlyRunningInInterpreter(),
-                     cx->fp()->isGlobalFrame() || cx->fp()->isEvalInFunction());
+        JS_ASSERT(!script->function());
     }
 
     /*

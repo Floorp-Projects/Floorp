@@ -43,16 +43,6 @@
 #define NS_HTMLCOPY_TEXT_ENCODER_CID \
 { 0x7f915b01, 0x98fc, 0x11d4, { 0x8e, 0xb0, 0xa8, 0x03, 0xf8, 0x0f, 0xf1, 0xbc } }
 
-#define NS_HTMLIMAGEELEMENT_CID                   \
-{ /* d6008c40-4dad-11d2-b328-00805f8a3859 */      \
- 0xd6008c40, 0x4dad, 0x11d2,                      \
- {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59}}
-
-#define NS_HTMLOPTIONELEMENT_CID                  \
-{ /* a6cf90f5-15b3-11d2-932e-00805f8add32 */      \
- 0xa6cf90f5, 0x15b3, 0x11d2,                      \
- {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
 #define NS_NAMESPACEMANAGER_CID                   \
 { /* d9783472-8fe9-11d2-9d3c-0060088f9ff7 */      \
  0xd9783472, 0x8fe9, 0x11d2,                      \

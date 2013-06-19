@@ -211,7 +211,7 @@ class Bindings
 };
 
 template <>
-struct RootMethods<Bindings> {
+struct GCMethods<Bindings> {
     static Bindings initial();
     static ThingRootKind kind() { return THING_ROOT_BINDINGS; }
     static bool poisoned(const Bindings &bindings) {
@@ -1452,9 +1452,6 @@ PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp = NULL);
 extern unsigned
 PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc,
                unsigned *columnp = NULL);
-
-extern unsigned
-CurrentLine(JSContext *cx);
 
 /*
  * This function returns the file and line number of the script currently

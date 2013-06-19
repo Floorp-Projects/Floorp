@@ -438,7 +438,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
 {
   mStream = aContext->Graph()->CreateAudioNodeStream(
       new AudioBufferSourceNodeEngine(this, aContext->Destination()),
-      MediaStreamGraph::INTERNAL_STREAM);
+      MediaStreamGraph::SOURCE_STREAM);
   mStream->AddMainThreadListener(this);
 }
 
