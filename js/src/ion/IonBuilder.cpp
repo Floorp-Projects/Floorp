@@ -4714,7 +4714,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
 
     // Acquire known call target if existent.
     AutoObjectVector originals(cx);
-    bool gotLambda;
+    bool gotLambda = false;
     types::StackTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     if (calleeTypes) {
         if (!getPolyCallTargets(calleeTypes, originals, 4, &gotLambda))
