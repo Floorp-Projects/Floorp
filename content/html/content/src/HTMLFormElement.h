@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLFormElement_h__
-#define nsHTMLFormElement_h__
+#ifndef mozilla_dom_HTMLFormElement_h
+#define mozilla_dom_HTMLFormElement_h
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
@@ -28,7 +28,6 @@
 #endif
 #endif
 
-class nsFormControlList;
 class nsIMutableArray;
 class nsIURI;
 
@@ -38,15 +37,20 @@ class HTMLImageElement;
 }
 }
 
-class nsHTMLFormElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLFormElement,
-                          public nsIWebProgressListener,
-                          public nsIForm,
-                          public nsIRadioGroupContainer
+namespace mozilla {
+namespace dom {
+
+class nsFormControlList;
+
+class HTMLFormElement : public nsGenericHTMLElement,
+                        public nsIDOMHTMLFormElement,
+                        public nsIWebProgressListener,
+                        public nsIForm,
+                        public nsIRadioGroupContainer
 {
 public:
-  nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLFormElement();
+  HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLFormElement();
 
   nsresult Init();
 
@@ -127,7 +131,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLFormElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLFormElement,
                                            nsGenericHTMLElement)
 
   /**
@@ -318,14 +322,14 @@ protected:
   class FormPasswordEvent : public nsAsyncDOMEvent
   {
   public:
-    FormPasswordEvent(nsHTMLFormElement* aEventNode,
+    FormPasswordEvent(HTMLFormElement* aEventNode,
                       const nsAString& aEventType)
       : nsAsyncDOMEvent(aEventNode, aEventType, true, true)
     {}
 
     NS_IMETHOD Run() MOZ_OVERRIDE
     {
-      static_cast<nsHTMLFormElement*>(mEventNode.get())->EventHandled();
+      static_cast<HTMLFormElement*>(mEventNode.get())->EventHandled();
       return nsAsyncDOMEvent::Run();
     }
   };
@@ -337,7 +341,7 @@ protected:
 
   class RemoveElementRunnable : public nsRunnable {
   public:
-    RemoveElementRunnable(nsHTMLFormElement* aForm)
+    RemoveElementRunnable(HTMLFormElement* aForm)
       : mForm(aForm)
     {}
 
@@ -347,7 +351,7 @@ protected:
     }
 
   private:
-    nsRefPtr<nsHTMLFormElement> mForm;
+    nsRefPtr<HTMLFormElement> mForm;
   };
 
   nsresult DoSubmitOrReset(nsEvent* aEvent,
@@ -519,4 +523,7 @@ protected:
   static bool gPasswordManagerInitialized;
 };
 
-#endif // nsHTMLFormElement_h__
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLFormElement_h

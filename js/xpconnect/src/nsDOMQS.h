@@ -8,7 +8,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "HTMLOptGroupElement.h"
@@ -231,7 +231,7 @@ UnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,                     \
 } /* namespace mozilla */
 
 DEFINE_UNWRAP_CAST_HTML(canvas, mozilla::dom::HTMLCanvasElement)
-DEFINE_UNWRAP_CAST_HTML(form, nsHTMLFormElement)
+DEFINE_UNWRAP_CAST_HTML(form, mozilla::dom::HTMLFormElement)
 DEFINE_UNWRAP_CAST_HTML(img, mozilla::dom::HTMLImageElement)
 DEFINE_UNWRAP_CAST_HTML(optgroup, mozilla::dom::HTMLOptGroupElement)
 DEFINE_UNWRAP_CAST_HTML(option, mozilla::dom::HTMLOptionElement)

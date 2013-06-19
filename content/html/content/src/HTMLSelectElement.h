@@ -16,7 +16,7 @@
 #include "nsCheapSets.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 
 class nsIDOMHTMLOptionElement;
 class nsISelectControlFrame;
@@ -150,7 +150,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aVal, aRv);
   }
-  nsHTMLFormElement* GetForm() const
+  HTMLFormElement* GetForm() const
   {
     return nsGenericHTMLFormElement::GetForm();
   }

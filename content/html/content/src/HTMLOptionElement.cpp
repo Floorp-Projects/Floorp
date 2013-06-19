@@ -79,7 +79,7 @@ HTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-nsHTMLFormElement*
+mozilla::dom::HTMLFormElement*
 HTMLOptionElement::GetForm()
 {
   HTMLSelectElement* selectControl = GetSelect();
