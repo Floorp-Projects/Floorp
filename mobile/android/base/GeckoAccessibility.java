@@ -10,6 +10,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ActivityManager;
@@ -286,7 +287,6 @@ public class GeckoAccessibility {
                                 AccessibilityNodeInfo.obtain(sVirtualCursorNode) :
                                 AccessibilityNodeInfo.obtain(host, virtualDescendantId);
 
-
                             switch (virtualDescendantId) {
                             case View.NO_ID:
                                 // This is the parent LayerView node, populate it with children.
@@ -304,6 +304,11 @@ public class GeckoAccessibility {
                                 info.addAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
                                 info.addAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
                                 info.addAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
+                                info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
+                                info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER |
+                                                              AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD |
+                                                              AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH);
                                 break;
                             }
                             return info;
@@ -332,10 +337,36 @@ public class GeckoAccessibility {
                                 GeckoAppShell.
                                     sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
                                 return true;
-                            } else if (action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                            } else if (action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY &&
+                                       virtualViewId == VIRTUAL_CURSOR_POSITION) {
                                 // XXX: Self brailling gives this action with a bogus argument instead of an actual click action
+                                int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
+                                if (granularity < 0) {
+                                    GeckoAppShell.
+                                        sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
+                                } else {
+                                    JSONObject movementData = new JSONObject();
+                                    try {
+                                        movementData.put("direction", "Next");
+                                        movementData.put("granularity", granularity);
+                                    } catch (JSONException e) {
+                                        return true;
+                                    }
+                                    GeckoAppShell.
+                                        sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveCaret", movementData.toString()));
+                                }
+                                return true;
+                            } else if (action == AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY &&
+                                       virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                JSONObject movementData = new JSONObject();
+                                try {
+                                    movementData.put("direction", "Previous");
+                                    movementData.put("granularity", arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT));
+                                } catch (JSONException e) {
+                                    return true;
+                                }
                                 GeckoAppShell.
-                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveCaret", movementData.toString()));
                                 return true;
                             }
                             return host.performAccessibilityAction(action, arguments);
