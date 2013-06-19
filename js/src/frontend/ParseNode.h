@@ -953,9 +953,14 @@ struct CodeNode : public ParseNode
 #endif
 };
 
+enum InBlockBool {
+    NotInBlock = false,
+    InBlock = true
+};
+
 struct NameNode : public ParseNode
 {
-    NameNode(ParseNodeKind kind, JSOp op, JSAtom *atom, bool inBlock, uint32_t blockid,
+    NameNode(ParseNodeKind kind, JSOp op, JSAtom *atom, InBlockBool inBlock, uint32_t blockid,
              const TokenPos &pos)
       : ParseNode(kind, op, PN_NAME, pos)
     {
@@ -966,9 +971,6 @@ struct NameNode : public ParseNode
         pn_blockid = blockid;
         JS_ASSERT(pn_blockid == blockid);  // check for bitfield overflow
     }
-
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom,
-                            FullParseHandler *handler, bool inBlock, uint32_t blockid);
 
     static bool test(const ParseNode &node) {
         return node.isArity(PN_NAME);
