@@ -78,8 +78,8 @@ function addWrappedObserver(f, topic) {
 }
 
 function registerPingHandler(handler) {
-  httpserver.registerPathHandler(TelemetryPing.submissionPath(),
-				 wrapWithExceptionHandler(handler));
+  httpserver.registerPrefixHandler("/submit/telemetry/",
+				   wrapWithExceptionHandler(handler));
 }
 
 function nonexistentServerObserver(aSubject, aTopic, aData) {
