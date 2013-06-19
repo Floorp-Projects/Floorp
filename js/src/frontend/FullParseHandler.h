@@ -103,14 +103,11 @@ class FullParseHandler
         dn->pn_dflags |= PND_PLACEHOLDER;
         return dn;
     }
-    ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
-        ParseNode *pn = new_<NullaryNode>(kind, pos());
-        if (!pn)
-            return NULL;
-        pn->setOp(op);
-        pn->pn_atom = atom;
-        return pn;
+
+    ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, const TokenPos &pos) {
+        return new_<NullaryNode>(kind, JSOP_NOP, pos, atom);
     }
+
     ParseNode *newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) {
         ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos);
         if (!pn)
@@ -122,9 +119,15 @@ class FullParseHandler
     ParseNode *newBooleanLiteral(bool cond, const TokenPos &pos) {
         return new_<BooleanLiteral>(cond, pos);
     }
+
+    ParseNode *newStringLiteral(JSAtom *atom, const TokenPos &pos) {
+        return new_<NullaryNode>(PNK_STRING, JSOP_STRING, pos, atom);
+    }
+
     ParseNode *newThisLiteral(const TokenPos &pos) {
         return new_<ThisLiteral>(pos);
     }
+
     ParseNode *newNullLiteral(const TokenPos &pos) {
         return new_<NullLiteral>(pos);
     }

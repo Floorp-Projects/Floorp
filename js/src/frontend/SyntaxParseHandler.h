@@ -57,15 +57,16 @@ class SyntaxParseHandler
     DefinitionNode newPlaceholder(JSAtom *atom, ParseContext<SyntaxParseHandler> *pc) {
         return Definition::PLACEHOLDER;
     }
-    Node newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
-        if (kind == PNK_STRING) {
-            lastAtom = atom;
-            lastStringPos = tokenStream.currentToken().pos;
-        }
-        return NodeString;
-    }
+    Node newAtom(ParseNodeKind kind, JSAtom *atom, const TokenPos &pos) { return NodeString; }
     Node newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) { return NodeGeneric; }
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }
+
+    Node newStringLiteral(JSAtom *atom, const TokenPos &pos) {
+        lastAtom = atom;
+        lastStringPos = pos;
+        return NodeString;
+    }
+
     Node newThisLiteral(const TokenPos &pos) { return NodeGeneric; }
     Node newNullLiteral(const TokenPos &pos) { return NodeGeneric; }
 
