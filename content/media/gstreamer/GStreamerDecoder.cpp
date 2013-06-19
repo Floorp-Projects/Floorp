@@ -20,8 +20,7 @@ bool
 GStreamerDecoder::CanHandleMediaType(const nsACString& aMIMEType,
                                      const nsAString* aCodecs)
 {
-  return MediaDecoder::IsGStreamerEnabled() &&
-    GStreamerFormatHelper::Instance()->CanHandleMediaType(aMIMEType, aCodecs);
+  return GStreamerFormatHelper::Instance()->CanHandleMediaType(aMIMEType, aCodecs);
 }
 
 } // namespace mozilla

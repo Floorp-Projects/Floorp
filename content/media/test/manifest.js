@@ -695,25 +695,19 @@ function mediaTestCleanup() {
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;
-  var oldGStreamer = undefined;
   var oldOpus = undefined;
-
-  try { oldGStreamer = branch.getBoolPref("gstreamer.enabled"); } catch(ex) { }
-  try { oldDefault   = branch.getIntPref("preload.default"); } catch(ex) { }
-  try { oldAuto      = branch.getIntPref("preload.auto"); } catch(ex) { }
-  try { oldOpus      = branch.getBoolPref("opus.enabled"); } catch(ex) { }
-
+  try {
+    oldDefault = branch.getIntPref("preload.default");
+    oldAuto    = branch.getIntPref("preload.auto");
+    oldOpus    = branch.getBoolPref("opus.enabled");
+  } catch(ex) { }
   branch.setIntPref("preload.default", 2); // preload_metadata
   branch.setIntPref("preload.auto", 3); // preload_enough
   // test opus playback iff the pref exists
   if (oldOpus !== undefined)
     branch.setBoolPref("opus.enabled", true);
-  if (oldGStreamer !== undefined)
-    branch.setBoolPref("gstreamer.enabled", true);
 
   window.addEventListener("unload", function() {
-    if (oldGStreamer !== undefined)
-      branch.setBoolPref("gstreamer.enabled", oldGStreamer);
     branch.setIntPref("preload.default", oldDefault);
     branch.setIntPref("preload.auto", oldAuto);
     if (oldOpus !== undefined)
