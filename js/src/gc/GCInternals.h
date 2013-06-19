@@ -105,6 +105,40 @@ EndVerifyPostBarriers(JSRuntime *rt);
 
 void
 FinishVerifier(JSRuntime *rt);
+
+class AutoStopVerifyingBarriers
+{
+    JSRuntime *runtime;
+    bool restartPreVerifier;
+    bool restartPostVerifier;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoStopVerifyingBarriers(JSRuntime *rt, bool isShutdown
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : runtime(rt)
+    {
+        restartPreVerifier = !isShutdown && rt->gcVerifyPreData;
+        restartPostVerifier = !isShutdown && rt->gcVerifyPostData;
+        if (rt->gcVerifyPreData)
+            EndVerifyPreBarriers(rt);
+        if (rt->gcVerifyPostData)
+            EndVerifyPostBarriers(rt);
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~AutoStopVerifyingBarriers() {
+        if (restartPreVerifier)
+            StartVerifyPreBarriers(runtime);
+        if (restartPostVerifier)
+            StartVerifyPostBarriers(runtime);
+    }
+};
+#else
+struct AutoStopVerifyingBarriers
+{
+    AutoStopVerifyingBarriers(JSRuntime *, bool) {}
+};
 #endif /* JS_GC_ZEAL */
 
 } /* namespace gc */

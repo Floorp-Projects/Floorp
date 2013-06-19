@@ -72,14 +72,14 @@ extern "C" {
 /** @cond OPUS_INTERNAL_DOC */
 /**Export control for opus functions */
 
-#if defined(__GNUC__) && defined(OPUS_BUILD)
-# define OPUS_EXPORT __attribute__ ((visibility ("default")))
-#elif defined(WIN32)
+#if defined(WIN32)
 # ifdef OPUS_BUILD
 #   define OPUS_EXPORT __declspec(dllexport)
 # else
 #   define OPUS_EXPORT __declspec(dllimport)
 # endif
+#elif defined(__GNUC__) && defined(OPUS_BUILD)
+# define OPUS_EXPORT __attribute__ ((visibility ("default")))
 #else
 # define OPUS_EXPORT
 #endif

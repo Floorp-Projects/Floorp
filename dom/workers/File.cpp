@@ -113,7 +113,7 @@ private:
   }
 
   static JSBool
-  GetSize(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetSize(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JS::MutableHandle<JS::Value> aVp)
   {
     nsIDOMBlob* blob = GetInstancePrivate(aCx, aObj, "size");
     if (!blob) {
@@ -132,7 +132,7 @@ private:
   }
 
   static JSBool
-  GetType(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetType(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JS::MutableHandle<JS::Value> aVp)
   {
     nsIDOMBlob* blob = GetInstancePrivate(aCx, aObj, "type");
     if (!blob) {
@@ -302,7 +302,7 @@ private:
   }
 
   static JSBool
-  GetMozFullPath(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetMozFullPath(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JS::MutableHandle<JS::Value> aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "mozFullPath");
     if (!file) {
@@ -328,7 +328,7 @@ private:
   }
 
   static JSBool
-  GetName(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetName(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JS::MutableHandle<JS::Value> aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "name");
     if (!file) {
@@ -350,7 +350,7 @@ private:
   }
 
   static JSBool
-  GetLastModifiedDate(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetLastModifiedDate(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JS::MutableHandle<JS::Value> aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "lastModifiedDate");
     if (!file) {

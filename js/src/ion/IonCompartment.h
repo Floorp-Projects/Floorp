@@ -26,7 +26,30 @@ enum EnterJitType {
     EnterJitOptimized = 1
 };
 
-typedef void (*EnterIonCode)(void *code, int argc, Value *argv, StackFrame *fp,
+struct EnterJitData
+{
+    explicit EnterJitData(JSContext *cx)
+      : scopeChain(cx),
+        result(cx)
+    {}
+
+    uint8_t *jitcode;
+    StackFrame *osrFrame;
+
+    void *calleeToken;
+
+    Value *maxArgv;
+    unsigned maxArgc;
+    unsigned numActualArgs;
+    unsigned osrNumStackValues;
+
+    RootedObject scopeChain;
+    RootedValue result;
+
+    bool constructing;
+};
+
+typedef void (*EnterIonCode)(void *code, unsigned argc, Value *argv, StackFrame *fp,
                              CalleeToken calleeToken, JSObject *scopeChain,
                              size_t numStackValues, Value *vp);
 

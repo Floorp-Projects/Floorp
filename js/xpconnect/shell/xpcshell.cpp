@@ -84,6 +84,7 @@
 #endif
 
 using namespace mozilla;
+using namespace JS;
 
 class XPCShellDirProvider : public nsIDirectoryServiceProvider2
 {
@@ -145,7 +146,7 @@ JSPrincipals *gJSPrincipals = nullptr;
 nsAutoString *gWorkingDirectory = nullptr;
 
 static JSBool
-GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, MutableHandleValue vp)
 {
 #if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
@@ -851,7 +852,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
+env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS

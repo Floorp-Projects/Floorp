@@ -366,7 +366,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
 
   nsCOMPtr<DecodeErrorCallback> failureCallback;
   if (aFailureCallback.WasPassed()) {
-    failureCallback = aFailureCallback.Value().get();
+    failureCallback = &aFailureCallback.Value();
   }
   nsAutoPtr<WebAudioDecodeJob> job(
     new WebAudioDecodeJob(contentType, this,

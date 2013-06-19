@@ -1351,65 +1351,6 @@ HasPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
                        JS::Handle<jsid> id);
 
 template<class T>
-class NonNull
-{
-public:
-  NonNull()
-#ifdef DEBUG
-    : inited(false)
-#endif
-  {}
-
-  operator T&() {
-    MOZ_ASSERT(inited);
-    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
-    return *ptr;
-  }
-
-  operator const T&() const {
-    MOZ_ASSERT(inited);
-    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
-    return *ptr;
-  }
-
-  void operator=(T* t) {
-    ptr = t;
-    MOZ_ASSERT(ptr);
-#ifdef DEBUG
-    inited = true;
-#endif
-  }
-
-  template<typename U>
-  void operator=(U* t) {
-    ptr = t->ToAStringPtr();
-    MOZ_ASSERT(ptr);
-#ifdef DEBUG
-    inited = true;
-#endif
-  }
-
-  T* Ptr() {
-    MOZ_ASSERT(inited);
-    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
-    return ptr;
-  }
-
-  // Make us work with smart-ptr helpers that expect a get()
-  T* get() const {
-    MOZ_ASSERT(inited);
-    MOZ_ASSERT(ptr);
-    return ptr;
-  }
-
-protected:
-  T* ptr;
-#ifdef DEBUG
-  bool inited;
-#endif
-};
-
-template<class T>
 class OwningNonNull
 {
 public:
@@ -2029,7 +1970,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
                      JS::Handle<JSObject*> instance,
                      JSBool* bp);
 JSBool
-InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
+InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JS::MutableHandle<JS::Value> vp,
                      JSBool* bp);
 
 // Helper for lenient getters/setters to report to console.  If this

@@ -818,6 +818,9 @@ abstract public class BrowserApp extends GeckoApp
                 toolbarLayout.scrollTo(0, toolbarLayout.getHeight() - marginTop);
             }
         });
+
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.onMetricsChanged(aMetrics);
     }
 
     @Override
