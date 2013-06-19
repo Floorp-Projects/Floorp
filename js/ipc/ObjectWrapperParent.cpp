@@ -388,7 +388,7 @@ jsval_to_nsString(JSContext* cx, jsid from, nsString* to)
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                      JSMutableHandleValue vp)
+                                      MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_AddProperty (%s)...",
               JSVAL_TO_CSTR(cx, id)));
@@ -415,7 +415,7 @@ ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandl
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                      JSMutableHandleValue vp)
+                                      MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_GetProperty (%s)...",
               JSVAL_TO_CSTR(cx, id)));
@@ -442,7 +442,7 @@ ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandl
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, 
-                                      JSBool strict, JSMutableHandleValue vp)
+                                      JSBool strict, MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_SetProperty (%s)...",
               JSVAL_TO_CSTR(cx, id)));
@@ -614,7 +614,7 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandle
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_Convert(JSContext *cx, JSHandleObject obj, JSType type,
-                                  JSMutableHandleValue vp)
+                                  MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_Convert (to %s)...",
               JS_GetTypeName(cx, type)));
@@ -708,7 +708,7 @@ ObjectWrapperParent::CPOW_Construct(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue v,
+ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, MutableHandleValue v,
                                       JSBool *bp)
 {
     CPOW_LOG(("Calling CPOW_HasInstance..."));
