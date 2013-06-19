@@ -6978,7 +6978,7 @@ IonBuilder::jsop_length_fastPath()
         types::StackTypeSet *objTypes = obj->resultTypeSet();
 
         if (objTypes &&
-            objTypes->getKnownClass() == &ArrayClass &&
+            objTypes->getKnownClass() == &ArrayObject::class_ &&
             !objTypes->hasObjectFlags(cx, types::OBJECT_FLAG_LENGTH_OVERFLOW))
         {
             current->pop();

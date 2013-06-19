@@ -810,7 +810,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         if (!str)
             return NULL;
         clone = StringObject::create(cx, str);
-    } else if (srcObj->isArray()) {
+    } else if (srcObj->is<ArrayObject>()) {
         clone = NewDenseEmptyArray(cx, NULL, TenuredObject);
     } else {
         JS_ASSERT(srcObj->isNative());

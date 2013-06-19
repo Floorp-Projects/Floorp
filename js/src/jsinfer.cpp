@@ -2087,7 +2087,7 @@ StackTypeSet::convertDoubleElements(JSContext *cx)
         // double in their element types (as the conversion may render the type
         // information incorrect), nor for non-array objects (as their elements
         // may point to emptyObjectElements, which cannot be converted).
-        if (!types->hasType(Type::DoubleType()) || type->clasp != &ArrayClass) {
+        if (!types->hasType(Type::DoubleType()) || type->clasp != &ArrayObject::class_) {
             dontConvert = true;
             alwaysConvert = false;
             continue;
@@ -3154,7 +3154,7 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
      * If the array is heterogenous, keep the existing type object, which has
      * unknown properties.
      */
-    JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->is<ArrayObject>());
 
     unsigned len = obj->getDenseInitializedLength();
     if (len == 0)
@@ -3183,7 +3183,7 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
         Rooted<Type> origType(cx, type);
         /* Make a new type to use for future arrays with the same elements. */
         RootedObject objProto(cx, obj->getProto());
-        Rooted<TypeObject*> objType(cx, newTypeObject(cx, &ArrayClass, objProto));
+        Rooted<TypeObject*> objType(cx, newTypeObject(cx, &ArrayObject::class_, objProto));
         if (!objType) {
             cx->compartment()->types.setPendingNukeTypes(cx);
             return;
@@ -5983,7 +5983,7 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
     if (obj->isIndexed())
         type->flags |= OBJECT_FLAG_SPARSE_INDEXES;
 
-    if (obj->isArray() && obj->getArrayLength() > INT32_MAX)
+    if (obj->is<ArrayObject>() && obj->getArrayLength() > INT32_MAX)
         type->flags |= OBJECT_FLAG_LENGTH_OVERFLOW;
 
     obj->type_ = type;

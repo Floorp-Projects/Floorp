@@ -2358,7 +2358,7 @@ class TypedArrayTemplate
         SkipRoot skipDest(cx, &dest);
         SkipRoot skipSrc(cx, &src);
 
-        if (ar->isArray() && !ar->isIndexed() && ar->getDenseInitializedLength() >= len) {
+        if (ar->is<ArrayObject>() && !ar->isIndexed() && ar->getDenseInitializedLength() >= len) {
             JS_ASSERT(ar->getArrayLength() == len);
 
             src = ar->getDenseElements();

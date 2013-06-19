@@ -309,7 +309,7 @@ NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
 bool
 ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->is<ArrayObject>());
 
     AutoDetectInvalidation adi(cx, rval.address());
 
@@ -329,7 +329,7 @@ ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 bool
 ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
-    JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->is<ArrayObject>());
 
     Value argv[] = { UndefinedValue(), ObjectValue(*obj), v };
     AutoValueArray ava(cx, argv, 3);
@@ -343,7 +343,7 @@ ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 bool
 ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->is<ArrayObject>());
 
     AutoDetectInvalidation adi(cx, rval.address());
 
@@ -363,9 +363,9 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 JSObject *
 ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res)
 {
-    JS_ASSERT(obj1->isArray());
-    JS_ASSERT(obj2->isArray());
-    JS_ASSERT_IF(res, res->isArray());
+    JS_ASSERT(obj1->is<ArrayObject>());
+    JS_ASSERT(obj2->is<ArrayObject>());
+    JS_ASSERT_IF(res, res->is<ArrayObject>());
 
     if (res) {
         // Fast path if we managed to allocate an object inline.
@@ -703,7 +703,7 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
                   HandleObject res)
 {
     if (res) {
-        JS_ASSERT(res->isArray());
+        JS_ASSERT(res->is<ArrayObject>());
         JS_ASSERT(!res->getDenseInitializedLength());
         JS_ASSERT(res->type() == templateObj->type());
         JS_ASSERT(res->type()->unknownProperties());

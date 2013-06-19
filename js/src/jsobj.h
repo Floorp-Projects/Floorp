@@ -205,7 +205,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 
 } /* namespace js::baseops */
 
-extern Class ArrayClass;
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
@@ -1045,7 +1044,6 @@ class JSObject : public js::ObjectImpl
     }
 
     /* Direct subtypes of JSObject: */
-    inline bool isArray()            const { return hasClass(&js::ArrayClass); }
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }

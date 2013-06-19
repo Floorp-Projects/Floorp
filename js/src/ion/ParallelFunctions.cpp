@@ -466,7 +466,7 @@ ion::InitRestParameter(ForkJoinSlice *slice, uint32_t length, Value *rest,
     // before this point. We can do the allocation here like in the sequential
     // path, but duplicating the initGCThing logic is too tedious.
     JS_ASSERT(res);
-    JS_ASSERT(res->isArray());
+    JS_ASSERT(res->is<ArrayObject>());
     JS_ASSERT(!res->getDenseInitializedLength());
     JS_ASSERT(res->type() == templateObj->type());
     JS_ASSERT(res->type()->unknownProperties());
