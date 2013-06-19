@@ -243,9 +243,9 @@
     </vbox>
 
     <html:div id="overlay-back" class="overlay-button"
-              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
+              observes="cmd_back"></html:div>
     <html:div id="overlay-plus" class="overlay-button"
-              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
+              observes="cmd_back"></html:div>
 
     <!-- popup for content navigator helper -->
     <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
