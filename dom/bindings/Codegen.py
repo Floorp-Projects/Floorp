@@ -8017,7 +8017,7 @@ class CGDictionary(CGThing):
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
-            memberData = "%s.Value()" % memberLoc
+            memberData = "%s.InternalValue()" % memberLoc
 
         if self.workers:
             propDef = (

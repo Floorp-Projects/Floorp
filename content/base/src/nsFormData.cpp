@@ -114,8 +114,7 @@ nsFormData::Constructor(const GlobalObject& aGlobal,
 {
   nsRefPtr<nsFormData> formData = new nsFormData(aGlobal.Get());
   if (aFormElement.WasPassed()) {
-    // TODO: this should ...Value().WalkFromElements(formData); - Bug 883827
-    aRv = aFormElement.Value().get()->WalkFormElements(formData);
+    aRv = aFormElement.Value().WalkFormElements(formData);
   }
   return formData.forget();
 }
