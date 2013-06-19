@@ -136,6 +136,7 @@ class TestEmitterBasic(unittest.TestCase):
             LIBRARY_NAME='lib_name',
             LIBS=['fans.lib', 'tans.lib'],
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
+            SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
             SSRCS=['fans.S', 'tans.S'],
             XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
