@@ -178,22 +178,6 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-GstBusSyncReply
-GStreamerReader::ErrorCb(GstBus *aBus, GstMessage *aMessage, gpointer aUserData)
-{
-  return static_cast<GStreamerReader*>(aUserData)->Error(aBus, aMessage);
-}
-
-GstBusSyncReply
-GStreamerReader::Error(GstBus *aBus, GstMessage *aMessage)
-{
-  if (GST_MESSAGE_TYPE(aMessage) == GST_MESSAGE_ERROR) {
-    Eos();
-  }
-
-  return GST_BUS_PASS;
-}
-
 void GStreamerReader::PlayBinSourceSetupCb(GstElement* aPlayBin,
                                            GParamSpec* pspec,
                                            gpointer aUserData)
@@ -362,9 +346,6 @@ nsresult GStreamerReader::ReadMetadata(VideoInfo* aInfo,
   *aInfo = mInfo;
 
   *aTags = nullptr;
-
-  // Watch the pipeline for fatal errors
-  gst_bus_set_sync_handler(mBus, GStreamerReader::ErrorCb, this);
 
   /* set the pipeline to PLAYING so that it starts decoding and queueing data in
    * the appsinks */
@@ -1023,10 +1004,10 @@ void GStreamerReader::NewAudioBuffer()
 void GStreamerReader::EosCb(GstAppSink* aSink, gpointer aUserData)
 {
   GStreamerReader* reader = reinterpret_cast<GStreamerReader*>(aUserData);
-  reader->Eos();
+  reader->Eos(aSink);
 }
 
-void GStreamerReader::Eos()
+void GStreamerReader::Eos(GstAppSink* aSink)
 {
   /* We reached the end of the stream */
   {
