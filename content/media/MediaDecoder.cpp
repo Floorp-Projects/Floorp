@@ -372,6 +372,7 @@ MediaDecoder::MediaDecoder() :
   mIsDormant(false),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
+  mCalledResourceLoaded(false),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
   mTriggerPlaybackEndedWhenSourceStreamFinishes(false),
@@ -742,13 +743,21 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
   }
 
-  StartProgress();
+  if (!mCalledResourceLoaded) {
+    StartProgress();
+  } else if (mOwner) {
+    // Resource was loaded during metadata loading, when progress
+    // events are being ignored. Fire the final progress event.
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
+  }
 
   // Only inform the element of FirstFrameLoaded if not doing a load() in order
   // to fulfill a seek, otherwise we'll get multiple loadedfirstframe events.
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  bool notifyResourceIsLoaded = !mCalledResourceLoaded &&
+                                IsDataCachedToEndOfResource();
   if (mOwner) {
-    mOwner->FirstFrameLoaded();
+    mOwner->FirstFrameLoaded(notifyResourceIsLoaded);
   }
 
   // This can run cache callbacks.
@@ -767,9 +776,43 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     }
   }
 
+  if (notifyResourceIsLoaded) {
+    ResourceLoaded();
+  }
+
   // Run NotifySuspendedStatusChanged now to give us a chance to notice
   // that autoplay should run.
   NotifySuspendedStatusChanged();
+}
+
+void MediaDecoder::ResourceLoaded()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Don't handle ResourceLoaded if we are shutting down, or if
+  // we need to ignore progress data due to seeking (in the case
+  // that the seek results in reaching end of file, we get a bogus call
+  // to ResourceLoaded).
+  if (mShuttingDown)
+    return;
+
+  {
+    // If we are seeking or loading then the resource loaded notification we get
+    // should be ignored, since it represents the end of the seek request.
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    if (mIgnoreProgressData || mCalledResourceLoaded || mPlayState == PLAY_STATE_LOADING)
+      return;
+
+    Progress(false);
+
+    mCalledResourceLoaded = true;
+    StopProgress();
+  }
+
+  // Ensure the final progress event gets fired
+  if (mOwner) {
+    mOwner->ResourceLoaded();
+  }
 }
 
 void MediaDecoder::NetworkError()
@@ -977,12 +1020,12 @@ void MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   }
 
   if (NS_SUCCEEDED(aStatus)) {
-    UpdateReadyStateForData();
-    // A final progress event will be fired by the MediaResource calling
-    // DownloadSuspended on the element.
-  } else if (aStatus != NS_BASE_STREAM_CLOSED) {
+    ResourceLoaded();
+  }
+  else if (aStatus != NS_BASE_STREAM_CLOSED) {
     NetworkError();
   }
+  UpdateReadyStateForData();
 }
 
 void MediaDecoder::NotifyPrincipalChanged()
