@@ -4883,7 +4883,7 @@ nsIFrame::SchedulePaint(uint32_t aFlags)
 
   // No need to schedule a paint for an external document since they aren't
   // painted directly.
-  if (!pres || (pres->Document() && pres->Document()->IsResourceDoc())) {
+  if (!pres || (pres->Document() && pres->Document()->GetDisplayDocument())) {
     return;
   }
   
