@@ -17,8 +17,8 @@ const CU = Components.utils;
 CU.import("resource://tps/logger.jsm");
 CU.import("resource://gre/modules/Services.jsm");
 CU.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
+CU.import("resource://gre/modules/BookmarkJSONUtils.jsm");
+CU.import("resource://gre/modules/Task.jsm");
 CU.import("resource://services-common/async.js");
 
 var DumpBookmarks = function TPS_Bookmarks__DumpBookmarks() {
