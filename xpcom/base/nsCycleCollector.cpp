@@ -116,12 +116,10 @@
 #include "plstr.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
-#include "nsIObserverService.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
-#include "mozilla/Services.h"
 #include "mozilla/Attributes.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIXPConnect.h"
@@ -2191,9 +2189,8 @@ nsCycleCollector::SelectPurple(GCGraphBuilder &builder)
 void
 nsCycleCollector::ForgetSkippable(bool removeChildlessNodes)
 {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-        obs->NotifyObservers(nullptr, "cycle-collector-forget-skippable", nullptr);
+    if (mJSRuntime) {
+        mJSRuntime->PrepareForForgetSkippable();
     }
     mPurpleBuf.RemoveSkippable(removeChildlessNodes);
     if (mForgetSkippableCB) {
@@ -2695,10 +2692,9 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
 
     mCollectionInProgress = true;
 
-    nsCOMPtr<nsIObserverService> obs =
-        mozilla::services::GetObserverService();
-    if (obs)
-        obs->NotifyObservers(nullptr, "cycle-collector-begin", nullptr);
+    if (mJSRuntime) {
+        mJSRuntime->PrepareForCollection();
+    }
 
     mFollowupCollection = false;
 

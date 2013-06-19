@@ -171,6 +171,9 @@ public:
   bool NeedCollect() const;
   void Collect(uint32_t reason) const;
 
+  virtual void PrepareForForgetSkippable() {}
+  virtual void PrepareForCollection() {}
+
 private:
   typedef const CCParticipantVTable<JSGCThingParticipant>::Type GCThingParticipantVTable;
   const GCThingParticipantVTable mGCThingCycleCollectorGlobal;
