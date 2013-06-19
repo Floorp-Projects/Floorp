@@ -110,7 +110,6 @@ var BrowserUI = {
     FlyoutPanelsUI.init();
     PageThumbs.init();
     SettingsCharm.init();
-    NavButtonSlider.init();
 
     // show the right toolbars, awesomescreen, etc for the os viewstate
     BrowserUI._adjustDOMforViewState();
