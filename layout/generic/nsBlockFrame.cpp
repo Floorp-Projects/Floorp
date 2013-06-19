@@ -3156,9 +3156,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // Continue the block frame now if it didn't completely fit in
         // the available space.
         if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
-          bool madeContinuation;
-          rv = CreateContinuationFor(aState, nullptr, frame, madeContinuation);
-          NS_ENSURE_SUCCESS(rv, rv);
+          bool madeContinuation =
+            CreateContinuationFor(aState, nullptr, frame);
           
           nsIFrame* nextFrame = frame->GetNextInFlow();
           NS_ASSERTION(nextFrame, "We're supposed to have a next-in-flow by now");
@@ -3801,11 +3800,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
-    nsIAtom* frameType = aFrame->GetType();
-
-    bool madeContinuation;
-    rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
-    NS_ENSURE_SUCCESS(rv, rv);
+    CreateContinuationFor(aState, aLine, aFrame);
 
     // Remember that the line has wrapped
     if (!aLineLayout.GetLineEndsInBR()) {
@@ -3816,7 +3811,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // don't split the line and don't stop the line reflow...
     // But if we are going to stop anyways we'd better split the line.
     if ((!(frameReflowStatus & NS_INLINE_BREAK_FIRST_LETTER_COMPLETE) && 
-         nsGkAtoms::placeholderFrame != frameType) ||
+         nsGkAtoms::placeholderFrame != aFrame->GetType()) ||
         *aLineReflowStatus == LINE_REFLOW_STOP) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
@@ -3828,16 +3823,15 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   return NS_OK;
 }
 
-nsresult
+bool
 nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
                                     nsLineBox*          aLine,
-                                    nsIFrame*           aFrame,
-                                    bool&             aMadeNewFrame)
+                                    nsIFrame*           aFrame)
 {
-  aMadeNewFrame = false;
+  nsIFrame* newFrame = nullptr;
 
   if (!aFrame->GetNextInFlow()) {
-    nsIFrame* newFrame = aState.mPresContext->PresShell()->FrameConstructor()->
+    newFrame = aState.mPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aState.mPresContext, aFrame, this);
 
     mFrames.InsertFrame(nullptr, aFrame, newFrame);
@@ -3845,13 +3839,11 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
     if (aLine) { 
       aLine->NoteFrameAdded(newFrame);
     }
-
-    aMadeNewFrame = true;
   }
 #ifdef DEBUG
   VerifyLines(false);
 #endif
-  return NS_OK;
+  return !!newFrame;
 }
 
 nsresult
