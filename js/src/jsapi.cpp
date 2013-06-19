@@ -68,6 +68,7 @@
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
+#include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
 #include "vm/WeakMapObject.h"
 #include "vm/Xdr.h"
@@ -1815,7 +1816,7 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_OCLASP(RegExp)},
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
+    {js_InitIteratorClasses,            EAGER_ATOM_AND_OCLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
