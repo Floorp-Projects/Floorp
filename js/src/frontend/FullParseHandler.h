@@ -85,14 +85,14 @@ class FullParseHandler
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
     const Token &currentToken() { return tokenStream.currentToken(); }
 
-    ParseNode *newName(PropertyName *name, ParseContext<FullParseHandler> *pc,
-                       ParseNodeKind kind = PNK_NAME) {
-        ParseNode *pn = NameNode::create(kind, name, this, pc);
+    ParseNode *newName(PropertyName *name, ParseContext<FullParseHandler> *pc) {
+        ParseNode *pn = NameNode::create(PNK_NAME, name, this, pc);
         if (!pn)
             return NULL;
         pn->setOp(JSOP_NAME);
         return pn;
     }
+
     Definition *newPlaceholder(JSAtom *atom, ParseContext<FullParseHandler> *pc) {
         Definition *dn = (Definition *) NameNode::create(PNK_NAME, atom, this, pc);
         if (!dn)
@@ -104,8 +104,8 @@ class FullParseHandler
         return dn;
     }
 
-    ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, const TokenPos &pos) {
-        return new_<NullaryNode>(kind, JSOP_NOP, pos, atom);
+    ParseNode *newIdentifier(JSAtom *atom, const TokenPos &pos) {
+        return new_<NullaryNode>(PNK_NAME, JSOP_NOP, pos, atom);
     }
 
     ParseNode *newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) {

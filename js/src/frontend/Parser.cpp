@@ -6586,7 +6586,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     } else if (atom == context->names().set) {
                         op = JSOP_INITPROP_SETTER;
                     } else {
-                        pn3 = handler.newAtom(PNK_NAME, atom, pos());
+                        pn3 = handler.newIdentifier(atom, pos());
                         if (!pn3)
                             return null();
                         break;
@@ -6626,7 +6626,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                             return null();
                     } else {
                         tokenStream.ungetToken();
-                        pn3 = handler.newAtom(PNK_NAME, atom, pos());
+                        pn3 = handler.newIdentifier(atom, pos());
                         if (!pn3)
                             return null();
                         break;
