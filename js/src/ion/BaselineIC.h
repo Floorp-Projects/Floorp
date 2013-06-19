@@ -2375,7 +2375,10 @@ class ICBinaryArith_Fallback : public ICFallbackStub
     friend class ICStubSpace;
 
     ICBinaryArith_Fallback(IonCode *stubCode)
-      : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
+      : ICFallbackStub(BinaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
@@ -2384,6 +2387,13 @@ class ICBinaryArith_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICBinaryArith_Fallback>(code);
+    }
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
@@ -2663,7 +2673,10 @@ class ICUnaryArith_Fallback : public ICFallbackStub
     friend class ICStubSpace;
 
     ICUnaryArith_Fallback(IonCode *stubCode)
-      : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
+      : ICFallbackStub(UnaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
@@ -2672,6 +2685,13 @@ class ICUnaryArith_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICUnaryArith_Fallback>(code);
+    }
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
