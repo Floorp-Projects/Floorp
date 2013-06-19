@@ -718,10 +718,6 @@ typedef JS::Handle<JSString*> JSHandleString;
 typedef JS::Handle<JS::Value> JSHandleValue;
 typedef JS::Handle<jsid> JSHandleId;
 
-typedef JS::MutableHandle<JSFunction*> JSMutableHandleFunction;
-typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
-typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
-
 /* JSClass operation signatures. */
 
 /*
@@ -730,7 +726,7 @@ typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
  * *vp out parameter, on success, is the new property value after the action.
  */
 typedef JSBool
-(* JSPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
+(* JSPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JS::MutableHandle<JS::Value> vp);
 
 /*
  * Set a property named by id in obj, treating the assignment as strict
@@ -740,7 +736,7 @@ typedef JSBool
  * set.
  */
 typedef JSBool
-(* JSStrictPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+(* JSStrictPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JS::MutableHandle<JS::Value> vp);
 
 /*
  * Delete a property named by id in obj.
@@ -794,7 +790,7 @@ typedef JSBool
  */
 typedef JSBool
 (* JSNewEnumerateOp)(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
-                     JSMutableHandleValue statep, JS::MutableHandleId idp);
+                     JS::MutableHandle<JS::Value> statep, JS::MutableHandleId idp);
 
 /*
  * The old-style JSClass.enumerate op should define all lazy properties not
@@ -839,7 +835,7 @@ typedef JSBool
  * *vp on success, and returning false on error or exception.
  */
 typedef JSBool
-(* JSConvertOp)(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp);
+(* JSConvertOp)(JSContext *cx, JSHandleObject obj, JSType type, JS::MutableHandle<JS::Value> vp);
 
 typedef struct JSFreeOp JSFreeOp;
 
@@ -882,7 +878,7 @@ struct JSStringFinalizer {
  */
 typedef JSBool
 (* JSCheckAccessOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSAccessMode mode,
-                    JSMutableHandleValue vp);
+                    JS::MutableHandle<JS::Value> vp);
 
 /*
  * Check whether v is an instance of obj.  Return false on error or exception,
@@ -890,7 +886,7 @@ typedef JSBool
  * *bp otherwise.
  */
 typedef JSBool
-(* JSHasInstanceOp)(JSContext *cx, JSHandleObject obj, JSMutableHandleValue vp, JSBool *bp);
+(* JSHasInstanceOp)(JSContext *cx, JSHandleObject obj, JS::MutableHandle<JS::Value> vp, JSBool *bp);
 
 /*
  * Function type for trace operation of the class called to enumerate all
@@ -1030,17 +1026,17 @@ typedef const JSErrorFormatString *
                     const unsigned errorNumber);
 
 typedef JSBool
-(* JSLocaleToUpperCase)(JSContext *cx, JSHandleString src, JSMutableHandleValue rval);
+(* JSLocaleToUpperCase)(JSContext *cx, JSHandleString src, JS::MutableHandle<JS::Value> rval);
 
 typedef JSBool
-(* JSLocaleToLowerCase)(JSContext *cx, JSHandleString src, JSMutableHandleValue rval);
+(* JSLocaleToLowerCase)(JSContext *cx, JSHandleString src, JS::MutableHandle<JS::Value> rval);
 
 typedef JSBool
 (* JSLocaleCompare)(JSContext *cx, JSHandleString src1, JSHandleString src2,
-                    JSMutableHandleValue rval);
+                    JS::MutableHandle<JS::Value> rval);
 
 typedef JSBool
-(* JSLocaleToUnicode)(JSContext *cx, const char *src, JSMutableHandleValue rval);
+(* JSLocaleToUnicode)(JSContext *cx, const char *src, JS::MutableHandle<JS::Value> rval);
 
 /*
  * Security protocol types.
@@ -2967,10 +2963,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
+JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded);
@@ -2982,7 +2978,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_ResolveStub(JSContext *cx, JSHandleObject obj, JSHandleId id);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp);
+JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, JS::MutableHandle<JS::Value> vp);
 
 struct JSConstDoubleSpec {
     double          dval;
