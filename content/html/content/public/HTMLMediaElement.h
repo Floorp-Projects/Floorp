@@ -229,16 +229,10 @@ public:
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
 
-  // Called by the decoder when some data has been downloaded or
-  // buffering/seeking has ended. aNextFrameAvailable is true when
-  // the data for the next frame is available. This method will
-  // decide whether to set the ready state to HAVE_CURRENT_DATA,
-  // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
+  // Called every time readyState might need to be updated.
+  // aNextFrame indicates whether the next frame is available. This method will
+  // choose the correct value for readyState.
   virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
-
-  // Use this method to change the mReadyState member, so required
-  // events can be fired.
-  void ChangeReadyState(nsMediaReadyState aState);
 
   // Return true if we can activate autoplay assuming enough data has arrived.
   bool CanActivateAutoplay();
@@ -633,6 +627,12 @@ protected:
                               MediaDecoder* aCloneDonor);
 
   /**
+   * Use this method to change the mReadyState member, so required
+   * events can be fired. Only UpdateReadyStateForData should call this.
+   */
+  void ChangeReadyState(nsMediaReadyState aState);
+
+  /**
    * Call this after setting up mLoadingSrc and mDecoder.
    */
   void AddMediaElementToURITable();
@@ -1016,9 +1016,15 @@ protected:
   // Set to false when completed, or not yet started.
   bool mBegun;
 
+  // True when the decoder has called MetadataLoaded
+  bool mMetadataLoaded;
+
   // True when the decoder has loaded enough data to display the
   // first frame of the content.
-  bool mLoadedFirstFrame;
+  bool mFirstFrameLoaded;
+
+  // True when loadeddata has been fired for this resource.
+  bool mFiredLoadedData;
 
   // Indicates whether current playback is a result of user action
   // (ie. calling of the Play method), or automatic playback due to

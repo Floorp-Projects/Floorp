@@ -740,6 +740,8 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     // our new size.
     Invalidate();
     mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
+    // Dispatch an initial progress event to represent the data read so far
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   }
 
   StartProgress();
