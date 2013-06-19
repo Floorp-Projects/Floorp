@@ -207,7 +207,7 @@ public:
   already_AddRefed<mozilla::dom::SVGAnimatedLength> Y();
   already_AddRefed<mozilla::dom::SVGAnimatedLength> Width();
   already_AddRefed<mozilla::dom::SVGAnimatedLength> Height();
-  already_AddRefed<nsIDOMSVGAnimatedString> Result();
+  already_AddRefed<mozilla::dom::SVGAnimatedString> Result();
 
 protected:
   virtual bool OperatesOnPremultipledAlpha(int32_t) { return true; }

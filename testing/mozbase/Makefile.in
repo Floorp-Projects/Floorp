@@ -25,6 +25,7 @@ MOZBASE_PACKAGES = \
   mozrunner \
   mozdevice \
   moznetwork \
+  mozsystemmonitor \
   $(NULL)
 
 MOZBASE_EXTRAS = \

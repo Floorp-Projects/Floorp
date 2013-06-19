@@ -9,23 +9,21 @@
  */
 #include "jsatom.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
+#include <string.h>
+
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jslock.h"
 #include "jsstr.h"
 #include "jstypes.h"
-#include "jsversion.h"
 
 #include "gc/Marking.h"
 #include "vm/Xdr.h"
 
 #include "jsatominlines.h"
+#include "jscompartmentinlines.h"
 
 #include "vm/String-inl.h"
 
@@ -42,7 +40,7 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes)
     return js_ValueToPrintable(cx, StringValue(atom), bytes);
 }
 
-const char * js::TypeStrings[] = {
+const char * const js::TypeStrings[] = {
     js_undefined_str,
     js_object_str,
     js_function_str,

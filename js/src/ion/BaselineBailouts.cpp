@@ -560,7 +560,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             v = iter.read();
             JS_ASSERT(v.isObject() || v.isUndefined());
             if (v.isObject())
-                argsObj = &v.toObject().asArguments();
+                argsObj = &v.toObject().as<ArgumentsObject>();
         }
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
@@ -1060,7 +1060,7 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     RootedFunction callee(cx, iter.maybeCallee());
     if (callee) {
         IonSpew(IonSpew_BaselineBailouts, "  Callee function (%s:%u)",
-                callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno);
+                callee->getExistingScript()->filename(), callee->getExistingScript()->lineno);
     } else {
         IonSpew(IonSpew_BaselineBailouts, "  No callee!");
     }
@@ -1098,7 +1098,7 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         caller = scr;
         callerPC = callPC;
         fun = nextCallee;
-        scr = fun->nonLazyScript();
+        scr = fun->getExistingScript();
         snapIter.nextFrame();
 
         frameNo++;

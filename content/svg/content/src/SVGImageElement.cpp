@@ -103,7 +103,7 @@ SVGImageElement::PreserveAspectRatio()
   return ratio.forget();
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGImageElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

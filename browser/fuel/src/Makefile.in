@@ -10,6 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DISABLED_EXTRA_COMPONENTS = fuelApplication.manifest
-EXTRA_PP_COMPONENTS = fuelApplication.js
+DISABLED_EXTRA_PP_COMPONENTS = fuelApplication.js
 
 include $(topsrcdir)/config/rules.mk

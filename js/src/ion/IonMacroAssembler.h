@@ -4,8 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_macro_assembler_h__) && defined(JS_ION)
+#ifndef jsion_macro_assembler_h__
 #define jsion_macro_assembler_h__
+
+#ifdef JS_ION
+
+#include "jstypedarray.h"
+#include "jscompartment.h"
 
 #if defined(JS_CPU_X86)
 # include "ion/x86/MacroAssembler-x86.h"
@@ -14,16 +19,12 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
+#include "ion/AsmJS.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonInstrumentation.h"
 #include "ion/ParallelFunctions.h"
 #include "ion/VMFunctions.h"
-
 #include "vm/ForkJoin.h"
-
-#include "jstypedarray.h"
-#include "jscompartment.h"
-
 #include "vm/Shape.h"
 
 namespace js {
@@ -973,7 +974,6 @@ JSOpToCondition(JSOp op, bool isSigned)
 
 typedef Vector<MIRType, 8> MIRTypeVector;
 
-#ifdef JS_ASMJS
 class ABIArgIter
 {
     ABIArgGenerator gen_;
@@ -993,9 +993,10 @@ class ABIArgIter
     MIRType mirType() const { JS_ASSERT(!done()); return types_[i_]; }
     uint32_t stackBytesConsumedSoFar() const { return gen_.stackBytesConsumedSoFar(); }
 };
-#endif
 
 } // namespace ion
 } // namespace js
+
+#endif // JS_ION
 
 #endif // jsion_macro_assembler_h__

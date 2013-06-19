@@ -6,30 +6,27 @@
 
 #include "jsmath.h"
 #include "jsworkers.h"
+#include "prmjtime.h"
 
 #include "frontend/ParseNode.h"
 #include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
 
-#include "jsobjinlines.h"
 #include "frontend/ParseNode-inl.h"
-
-using namespace js;
-using namespace js::frontend;
-using namespace mozilla;
 
 #include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 
-using namespace js::ion;
-
 #ifdef MOZ_VTUNE
 # include "jitprofiling.h"
 #endif
 
-#ifdef JS_ASMJS
+using namespace js;
+using namespace js::frontend;
+using namespace js::ion;
+using namespace mozilla;
 
 /*****************************************************************************/
 // ParseNode utilities
@@ -170,15 +167,13 @@ LoopControlMaybeLabel(ParseNode *pn)
 static inline PropertyName *
 LabeledStatementLabel(ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_COLON));
-    return pn->pn_atom->asPropertyName();
+    return pn->as<LabeledStatement>().label();
 }
 
 static inline ParseNode *
 LabeledStatementStatement(ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_COLON));
-    return pn->expr();
+    return pn->as<LabeledStatement>().statement();
 }
 
 static double
@@ -934,6 +929,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         MIRTypeVector argTypes_;
         RetType returnType_;
         mutable Label code_;
+        unsigned compileTime_;
 
       public:
         Func(ParseNode *fn, ParseNode *body, MoveRef<MIRTypeVector> types, RetType returnType)
@@ -941,7 +937,8 @@ class MOZ_STACK_CLASS ModuleCompiler
             body_(body),
             argTypes_(types),
             returnType_(returnType),
-            code_()
+            code_(),
+            compileTime_(0)
         {}
 
         Func(MoveRef<Func> rhs)
@@ -949,7 +946,8 @@ class MOZ_STACK_CLASS ModuleCompiler
             body_(rhs->body_),
             argTypes_(Move(rhs->argTypes_)),
             returnType_(rhs->returnType_),
-            code_(rhs->code_)
+            code_(rhs->code_),
+            compileTime_(rhs->compileTime_)
         {}
 
         ~Func()
@@ -966,6 +964,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         const MIRTypeVector &argMIRTypes() const { return argTypes_; }
         RetType returnType() const { return returnType_; }
         Label *codeLabel() const { return &code_; }
+        unsigned compileTime() const { return compileTime_; }
+        void accumulateCompileTime(unsigned ms) { compileTime_ += ms; }
     };
 
     class Global
@@ -1102,10 +1102,19 @@ class MOZ_STACK_CLASS ModuleCompiler
     typedef HashMap<ExitDescriptor, unsigned, ExitDescriptor, ContextAllocPolicy> ExitMap;
 
   private:
+    struct SlowFunction
+    {
+        PropertyName *name;
+        unsigned ms;
+        unsigned line;
+        unsigned column;
+    };
+
     typedef HashMap<PropertyName*, AsmJSMathBuiltin> MathNameMap;
     typedef HashMap<PropertyName*, Global> GlobalMap;
     typedef Vector<Func> FuncVector;
     typedef Vector<AsmJSGlobalAccess> GlobalAccessVector;
+    typedef Vector<SlowFunction> SlowFunctionVector;
 
     JSContext *                    cx_;
     MacroAssembler                 masm_;
@@ -1125,6 +1134,10 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     char *                         errorString_;
     ParseNode *                    errorNode_;
+
+    int64_t                        usecBefore_;
+    SlowFunctionVector             slowFunctions_;
+
     TokenStream &                  tokenStream_;
 
     DebugOnly<int>                 currentPass_;
@@ -1149,6 +1162,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         globalAccesses_(cx),
         errorString_(NULL),
         errorNode_(NULL),
+        usecBefore_(PRMJ_Now()),
+        slowFunctions_(cx),
         tokenStream_(ts),
         currentPass_(1)
     {}
@@ -1158,7 +1173,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             tokenStream_.reportAsmJSError(errorNode_->pn_pos.begin,
                                           JSMSG_USE_ASM_TYPE_FAIL,
                                           errorString_);
-            JS_smprintf_free(errorString_);
+            js_free(errorString_);
         }
 
         // Avoid spurious Label assertions on compilation failure.
@@ -1235,6 +1250,18 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (bytes.ptr())
             failf(pn, fmt, bytes.ptr());
         return false;
+    }
+
+    static const unsigned SLOW_FUNCTION_THRESHOLD_MS = 250;
+
+    bool maybeReportCompileTime(ParseNode *fn, unsigned ms) {
+        if (ms < SLOW_FUNCTION_THRESHOLD_MS)
+            return true;
+        SlowFunction sf;
+        sf.name = FunctionName(fn);
+        sf.ms = ms;
+        tokenStream_.srcCoords.lineNumAndColumnIndex(fn->pn_pos.begin, &sf.line, &sf.column);
+        return slowFunctions_.append(sf);
     }
 
     /*************************************************** Read-only interface */
@@ -1456,6 +1483,30 @@ class MOZ_STACK_CLASS ModuleCompiler
         masm_.flush();
 #endif
         module_->exportedFunction(exportIndex).initCodeOffset(masm_.size());
+    }
+
+    void buildCompilationTimeReport(ScopedJSFreePtr<char> *out) {
+        int64_t usecAfter = PRMJ_Now();
+        int msTotal = (usecAfter - usecBefore_) / PRMJ_USEC_PER_MSEC;
+        ScopedJSFreePtr<char> slowFuns;
+        if (!slowFunctions_.empty()) {
+            slowFuns.reset(JS_smprintf("; %d functions compiled slowly: ", slowFunctions_.length()));
+            if (!slowFuns)
+                return;
+            for (unsigned i = 0; i < slowFunctions_.length(); i++) {
+                SlowFunction &func = slowFunctions_[i];
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(cx_, func.name, &name))
+                    return;
+                slowFuns.reset(JS_smprintf("%s%s:%u:%u (%ums)%s", slowFuns.get(),
+                                           name.ptr(), func.line, func.column, func.ms,
+                                           i+1 < slowFunctions_.length() ? ", " : ""));
+                if (!slowFuns)
+                    return;
+            }
+        }
+        out->reset(JS_smprintf("total compilation time %dms%s",
+                               msTotal, slowFuns ? slowFuns.get() : ""));
     }
 
     bool finish(ScopedJSDeletePtr<AsmJSModule> *module) {
@@ -3085,8 +3136,12 @@ CheckModuleExports(ModuleCompiler &m, ParseNode *fn, ParseNode **stmtIter)
 {
     ParseNode *returnNode = SkipEmptyStatements(*stmtIter);
 
-    if (!returnNode || !returnNode->isKind(PNK_RETURN))
-        return m.fail(fn, "asm.js module must end with a return export statement");
+    if (!returnNode || !returnNode->isKind(PNK_RETURN)) {
+        if (returnNode && NextNode(returnNode) != NULL)
+            return m.fail(returnNode, "invalid asm.js statement");
+        else
+            return m.fail(fn, "asm.js module must end with a return export statement");
+    }
 
     ParseNode *returnExpr = UnaryKid(returnNode);
 
@@ -3246,9 +3301,19 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
     if (!CheckArrayAccess(f, lhs, &viewType, &pointerDef))
         return false;
 
+    Use use;
+    switch (TypedArrayStoreType(viewType)) {
+      case ArrayStore_Intish:
+        use = Use::ToInt32;
+        break;
+      case ArrayStore_Doublish:
+        use = Use::ToNumber;
+        break;
+    }
+
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, Use::NoCoercion, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, use, &rhsDef, &rhsType))
         return false;
 
     switch (TypedArrayStoreType(viewType)) {
@@ -4284,7 +4349,7 @@ CheckDoWhile(FunctionCompiler &f, ParseNode *whileStmt, const LabelVector *maybe
 static bool
 CheckLabel(FunctionCompiler &f, ParseNode *labeledStmt, LabelVector *maybeLabels)
 {
-    JS_ASSERT(labeledStmt->isKind(PNK_COLON));
+    JS_ASSERT(labeledStmt->isKind(PNK_LABEL));
     PropertyName *label = LabeledStatementLabel(labeledStmt);
     ParseNode *stmt = LabeledStatementStatement(labeledStmt);
 
@@ -4555,7 +4620,7 @@ CheckStatement(FunctionCompiler &f, ParseNode *stmt, LabelVector *maybeLabels)
       case PNK_WHILE:         return CheckWhile(f, stmt, maybeLabels);
       case PNK_FOR:           return CheckFor(f, stmt, maybeLabels);
       case PNK_DOWHILE:       return CheckDoWhile(f, stmt, maybeLabels);
-      case PNK_COLON:         return CheckLabel(f, stmt, maybeLabels);
+      case PNK_LABEL:         return CheckLabel(f, stmt, maybeLabels);
       case PNK_IF:            return CheckIf(f, stmt);
       case PNK_SWITCH:        return CheckSwitch(f, stmt);
       case PNK_RETURN:        return CheckReturn(f, stmt);
@@ -4631,6 +4696,8 @@ CheckVariableDecls(ModuleCompiler &m, FunctionCompiler::LocalMap *locals, ParseN
 static MIRGenerator *
 CheckFunctionBody(ModuleCompiler &m, ModuleCompiler::Func &func, LifoAlloc &lifo)
 {
+    int64_t before = PRMJ_Now();
+
     // CheckFunctionSignature already has already checked the
     // function head as well as argument type declarations. The ParseNode*
     // stored in f.body points to the first non-argument statement.
@@ -4673,6 +4740,8 @@ CheckFunctionBody(ModuleCompiler &m, ModuleCompiler::Func &func, LifoAlloc &lifo
     f.returnVoid();
     JS_ASSERT(!tempAlloc->rootList());
 
+    func.accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
+
     return mirGen;
 }
 
@@ -4680,6 +4749,8 @@ static bool
 GenerateAsmJSCode(ModuleCompiler &m, ModuleCompiler::Func &func,
                   MIRGenerator &mirGen, LIRGraph &lir)
 {
+    int64_t before = PRMJ_Now();
+
     m.masm().bind(func.codeLabel());
 
     ScopedJSDeletePtr<CodeGenerator> codegen(GenerateCode(&mirGen, &lir, &m.masm()));
@@ -4712,6 +4783,10 @@ GenerateAsmJSCode(ModuleCompiler &m, ModuleCompiler::Func &func,
     // Align internal function headers.
     m.masm().align(CodeAlignment);
 
+    func.accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
+    if (!m.maybeReportCompileTime(func.fn(), func.compileTime()))
+        return false;
+
     // Unlike regular IonMonkey which links and generates a new IonCode for
     // every function, we accumulate all the functions in the module in a
     // single MacroAssembler and link at end. Linking asm.js doesn't require a
@@ -4741,12 +4816,16 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
 
         IonContext icx(m.cx()->compartment(), &mirGen->temp());
 
+        int64_t before = PRMJ_Now();
+
         if (!OptimizeMIR(mirGen))
             return m.fail(func.fn(), "internal compiler failure (probably out of memory)");
 
         LIRGraph *lir = GenerateLIR(mirGen);
         if (!lir)
             return m.fail(func.fn(), "internal compiler failure (probably out of memory)");
+
+        func.accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
         if (!GenerateAsmJSCode(m, func, *mirGen, *lir))
             return false;
@@ -4796,8 +4875,12 @@ GenerateCodeForFinishedJob(ModuleCompiler &m, ParallelGroupState &group, AsmJSPa
     if (!task)
         return false;
 
+    ModuleCompiler::Func &func = m.function(task->funcNum);
+
+    func.accumulateCompileTime(task->compileTime);
+
     // Perform code generation on the main thread.
-    if (!GenerateAsmJSCode(m, m.function(task->funcNum), *task->mir, *task->lir))
+    if (!GenerateAsmJSCode(m, func, *task->mir, *task->lir))
         return false;
     group.compiledJobs++;
 
@@ -5231,9 +5314,14 @@ GenerateEntries(ModuleCompiler &m)
 }
 
 static inline bool
-TryEnablingIon(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_t argc, Value *argv) {
+TryEnablingIon(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_t argc, Value *argv)
+{
+    if (!exitDatum->fun->hasScript())
+        return true;
 
     JSScript *script = exitDatum->fun->nonLazyScript();
+    if (!script)
+        return true;
 
     // Test if the function is Ion compiled
     if (!script->hasIonScript())
@@ -5742,6 +5830,13 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     masm.pop(JSReturnReg_Data);
     masm.pop(JSReturnReg_Type);
 
+#ifdef DEBUG
+    masm.branchTestMagicValue(Assembler::Equal, JSReturnOperand, JS_ION_ERROR, throwLabel);
+    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, &ionFailed);
+#else
+    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
+#endif
+
     switch (exit.use().which()) {
       case Use::NoCoercion:
         break;
@@ -5992,7 +6087,8 @@ GenerateExits(ModuleCompiler &m)
 }
 
 static bool
-CheckModule(JSContext *cx, TokenStream &ts, ParseNode *fn, ScopedJSDeletePtr<AsmJSModule> *module)
+CheckModule(JSContext *cx, TokenStream &ts, ParseNode *fn, ScopedJSDeletePtr<AsmJSModule> *module,
+            ScopedJSFreePtr<char> *compilationTimeReport)
 {
     ModuleCompiler m(cx, ts);
     if (!m.init())
@@ -6053,13 +6149,15 @@ CheckModule(JSContext *cx, TokenStream &ts, ParseNode *fn, ScopedJSDeletePtr<Asm
     if (!GenerateExits(m))
         return false;
 
-    return m.finish(module);
+    if (!m.finish(module))
+        return false;
+
+    m.buildCompilationTimeReport(compilationTimeReport);
+    return true;
 }
 
-#endif // defined(JS_ASMJS)
-
 static bool
-Warn(JSContext *cx, int code, const char *str = NULL)
+Warn(JSContext *cx, int code, const char *str)
 {
     return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
                                         NULL, code, str);
@@ -6082,7 +6180,6 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
     if (cx->compartment()->debugMode())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
 
-#ifdef JS_ASMJS
     if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime()))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
@@ -6093,8 +6190,9 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
     }
 # endif
 
+    ScopedJSFreePtr<char> compilationTimeReport;
     ScopedJSDeletePtr<AsmJSModule> module;
-    if (!CheckModule(cx, ts, fn, &module))
+    if (!CheckModule(cx, ts, fn, &module, &compilationTimeReport))
         return !cx->isExceptionPending();
 
     module->initPostLinkFailureInfo(options, scriptSource, bufStart, bufEnd);
@@ -6117,10 +6215,7 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
 
     SetAsmJSModuleObject(moduleFun, moduleObj);
 
-    return Warn(cx, JSMSG_USE_ASM_TYPE_OK);
-#else
-    return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform not supported (yet)");
-#endif
+    return Warn(cx, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport);
 }
 
 JSBool
@@ -6128,13 +6223,9 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-#ifdef JS_ASMJS
     bool available = JSC::MacroAssembler().supportsFloatingPoint() &&
                      !cx->compartment()->debugMode() &&
                      cx->hasOption(JSOPTION_ASMJS);
-#else
-    bool available = false;
-#endif
 
     args.rval().set(BooleanValue(available));
     return true;
@@ -6179,7 +6270,7 @@ AsmJSModule::~AsmJSModule()
             if (!exitDatum.fun)
                 continue;
 
-            if (!exitDatum.fun->isInterpreted())
+            if (!exitDatum.fun->hasScript())
                 continue;
 
             JSScript *script = exitDatum.fun->nonLazyScript();

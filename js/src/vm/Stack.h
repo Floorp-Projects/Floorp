@@ -7,10 +7,10 @@
 #ifndef Stack_h__
 #define Stack_h__
 
+#include "jsautooplen.h"
 #include "jsfun.h"
 #include "jsscript.h"
 #include "ion/IonFrameIterator.h"
-#include "jsautooplen.h"
 
 struct JSContext;
 struct JSCompartment;
@@ -233,7 +233,7 @@ class AbstractFramePtr
     inline Value returnValue() const;
     inline void setReturnValue(const Value &rval) const;
 
-    inline bool hasPushedSPSFrame() const;
+    bool hasPushedSPSFrame() const;
 
     inline void popBlock(JSContext *cx) const;
     inline void popWith(JSContext *cx) const;

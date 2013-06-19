@@ -993,8 +993,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   DrainPushedFloats(state);
   nsOverflowAreas fcBounds;
   nsReflowStatus fcStatus = NS_FRAME_COMPLETE;
-  rv = ReflowPushedFloats(state, fcBounds, fcStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ReflowPushedFloats(state, fcBounds, fcStatus);
 
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our width has changed, mark the lines dirty that we need to
@@ -1580,7 +1579,7 @@ IsAlignedLeft(uint8_t aAlignment,
          !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
 }
 
-nsresult
+void
 nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 {
   const nsStyleText* styleText = StyleText();
@@ -1684,7 +1683,6 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       line->MarkDirty();
     }
   }
-  return NS_OK;
 }
 
 //----------------------------------------
@@ -3156,9 +3154,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // Continue the block frame now if it didn't completely fit in
         // the available space.
         if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
-          bool madeContinuation;
-          rv = CreateContinuationFor(aState, nullptr, frame, madeContinuation);
-          NS_ENSURE_SUCCESS(rv, rv);
+          bool madeContinuation =
+            CreateContinuationFor(aState, nullptr, frame);
           
           nsIFrame* nextFrame = frame->GetNextInFlow();
           NS_ASSERTION(nextFrame, "We're supposed to have a next-in-flow by now");
@@ -3758,8 +3755,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       else {
         // It's not the first child on this line so go ahead and split
         // the line. We will see the frame again on the next-line.
-        rv = SplitLine(aState, aLineLayout, aLine, aFrame, aLineReflowStatus);
-        NS_ENSURE_SUCCESS(rv, rv);
+        SplitLine(aState, aLineLayout, aLine, aFrame, aLineReflowStatus);
 
         // If we're splitting the line because the frame didn't fit and it
         // was pushed, then mark the line as having word wrapped. We need to
@@ -3787,8 +3783,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       aLine->SetBreakTypeAfter(breakType);
       if (NS_FRAME_IS_COMPLETE(frameReflowStatus)) {
         // Split line, but after the frame just reflowed
-        rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
-        NS_ENSURE_SUCCESS(rv, rv);
+        SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
 
         if (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
             !aLineLayout.GetLineEndsInBR()) {
@@ -3801,11 +3796,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
-    nsIAtom* frameType = aFrame->GetType();
-
-    bool madeContinuation;
-    rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
-    NS_ENSURE_SUCCESS(rv, rv);
+    CreateContinuationFor(aState, aLine, aFrame);
 
     // Remember that the line has wrapped
     if (!aLineLayout.GetLineEndsInBR()) {
@@ -3816,42 +3807,38 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // don't split the line and don't stop the line reflow...
     // But if we are going to stop anyways we'd better split the line.
     if ((!(frameReflowStatus & NS_INLINE_BREAK_FIRST_LETTER_COMPLETE) && 
-         nsGkAtoms::placeholderFrame != frameType) ||
+         nsGkAtoms::placeholderFrame != aFrame->GetType()) ||
         *aLineReflowStatus == LINE_REFLOW_STOP) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
-      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
-      NS_ENSURE_SUCCESS(rv, rv);
+      SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
     }
   }
 
   return NS_OK;
 }
 
-nsresult
+bool
 nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
                                     nsLineBox*          aLine,
-                                    nsIFrame*           aFrame,
-                                    bool&             aMadeNewFrame)
+                                    nsIFrame*           aFrame)
 {
-  aMadeNewFrame = false;
+  nsIFrame* newFrame = nullptr;
 
   if (!aFrame->GetNextInFlow()) {
-    nsIFrame* newFrame = aState.mPresContext->PresShell()->FrameConstructor()->
+    newFrame = aState.mPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aState.mPresContext, aFrame, this);
 
     mFrames.InsertFrame(nullptr, aFrame, newFrame);
 
-    if (aLine) { 
+    if (aLine) {
       aLine->NoteFrameAdded(newFrame);
     }
-
-    aMadeNewFrame = true;
   }
 #ifdef DEBUG
   VerifyLines(false);
 #endif
-  return NS_OK;
+  return !!newFrame;
 }
 
 nsresult
@@ -3919,7 +3906,7 @@ CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
   return true;
 }
 
-nsresult
+void
 nsBlockFrame::SplitLine(nsBlockReflowState& aState,
                         nsLineLayout& aLineLayout,
                         line_iterator aLine,
@@ -3991,7 +3978,6 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     VerifyLines(true);
 #endif
   }
-  return NS_OK;
 }
 
 bool
@@ -5915,12 +5901,11 @@ nsBlockFrame::FindTrailingClear()
   return NS_STYLE_CLEAR_NONE;
 }
 
-nsresult
+void
 nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
                                  nsOverflowAreas&    aOverflowAreas,
                                  nsReflowStatus&     aStatus)
 {
-  nsresult rv = NS_OK;
   // Pushed floats live at the start of our float list; see comment
   // above nsBlockFrame::DrainPushedFloats.
   for (nsIFrame* f = mFloats.FirstChild(), *next;
@@ -5981,8 +5966,6 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     aState.mFloatBreakType = static_cast<nsBlockFrame*>(GetPrevInFlow())
                                ->FindTrailingClear();
   }
-
-  return rv;
 }
 
 void

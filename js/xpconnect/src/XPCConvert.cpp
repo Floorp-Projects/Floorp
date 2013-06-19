@@ -819,7 +819,6 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     // object will create (and fill the cache) from its WrapObject call.
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
-    bool tryConstructSlimWrapper = false;
     RootedObject flat(cx);
     if (cache) {
         flat = cache->GetWrapper();
@@ -839,38 +838,8 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                 return CreateHolderIfNeeded(flat, d, dest);
             }
         }
-
-        if (!dest) {
-            if (!flat) {
-                tryConstructSlimWrapper = true;
-            } else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
-                if (js::IsObjectInContextCompartment(flat, cx)) {
-                    *d = OBJECT_TO_JSVAL(flat);
-                    return true;
-                }
-            }
-        }
     } else {
         flat = nullptr;
-    }
-
-    // If we're not handing this wrapper to an nsIXPConnectJSObjectHolder, and
-    // the object supports slim wrappers, try to create one here.
-    if (tryConstructSlimWrapper) {
-        RootedValue slim(cx);
-        if (ConstructSlimWrapper(aHelper, xpcscope, &slim)) {
-            *d = slim;
-            return true;
-        }
-
-        if (JS_IsExceptionPending(cx))
-            return false;
-
-        // Even if ConstructSlimWrapper returns false it might have created a
-        // wrapper (while calling the PreCreate hook). In that case we need to
-        // fall through because we either have a slim wrapper that needs to be
-        // morphed or an XPCWrappedNative.
-        flat = cache->GetWrapper();
     }
 
     // We can't simply construct a slim wrapper. Go ahead and create an
@@ -893,8 +862,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
         }
     }
 
-    NS_ASSERTION(!flat || IS_WRAPPER_CLASS(js::GetObjectClass(flat)),
-                 "What kind of wrapper is this?");
+    NS_ASSERTION(!flat || IS_WN_REFLECTOR(flat), "What kind of wrapper is this?");
 
     nsresult rv;
     XPCWrappedNative* wrapper;
@@ -904,7 +872,9 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                                             getter_AddRefs(strongWrapper));
 
         wrapper = strongWrapper;
-    } else if (IS_WN_WRAPPER_OBJECT(flat)) {
+    } else {
+        MOZ_ASSERT(IS_WN_REFLECTOR(flat));
+
         wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
 
         // If asked to return the wrapper we'll return a strong reference,
@@ -916,17 +886,6 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
             wrapper->FindTearOff(iface, false, &rv);
         else
             rv = NS_OK;
-    } else {
-        NS_ASSERTION(IS_SLIM_WRAPPER(flat),
-                     "What kind of wrapper is this?");
-
-        SLIM_LOG(("***** morphing from XPCConvert::NativeInterface2JSObject"
-                  "(%p)\n",
-                  static_cast<nsISupports*>(xpc_GetJSPrivate(flat))));
-
-        rv = XPCWrappedNative::Morph(flat, iface, cache,
-                                     getter_AddRefs(strongWrapper));
-        wrapper = strongWrapper;
     }
 
     if (NS_FAILED(rv) && pErr)
@@ -1025,7 +984,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
 
         // Is this really a native xpcom object with a wrapper?
         XPCWrappedNative* wrappedNative = nullptr;
-        if (IS_WN_WRAPPER(inner))
+        if (IS_WN_REFLECTOR(inner))
             wrappedNative = XPCWrappedNative::Get(inner);
         if (wrappedNative) {
             iface = wrappedNative->GetIdentityObject();
@@ -1156,8 +1115,8 @@ XPCConvert::JSValToXPCException(jsval sArg,
         JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!unwrapped)
             return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-        XPCWrappedNative* wrapper = IS_WN_WRAPPER(unwrapped) ? XPCWrappedNative::Get(unwrapped)
-                                                             : nullptr;
+        XPCWrappedNative* wrapper = IS_WN_REFLECTOR(unwrapped) ? XPCWrappedNative::Get(unwrapped)
+                                                               : nullptr;
         if (wrapper) {
             nsISupports* supports = wrapper->GetIdentityObject();
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);

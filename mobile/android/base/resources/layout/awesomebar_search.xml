@@ -41,7 +41,6 @@
           android:singleLine="true"
           android:gravity="center_vertical|left"
           gecko:autoUpdateTheme="false">
-              <requestFocus/>
     </view>
 
     <LinearLayout android:layout_width="4dp"

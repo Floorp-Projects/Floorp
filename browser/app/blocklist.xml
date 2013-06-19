@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1370548649000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1370990544000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -222,6 +222,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i364" id="{FE1DEEEA-DB6D-44b8-83F0-34FC0F9D1052}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i59" id="ghostviewer@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -251,6 +255,10 @@
                   </emItem>
       <emItem  blockID="i256" id="/^[0-9a-f]+@[0-9a-f]+\.info/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i370" id="happylyrics@hpyproductions.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i22" id="ShopperReports@ShopperReports.com">
@@ -803,7 +811,7 @@
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p248">
-                  <match name="filename" exp="Scorch\.plugin" />                      <versionRange  minVersion="0" maxVersion="6.2.0" severity="1"></versionRange>
+                  <match name="filename" exp="Scorch\.plugin" />                      <versionRange  minVersion="0" maxVersion="6.2.0b88" severity="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p250">
                   <match name="filename" exp="npFoxitReaderPlugin\.dll" />                      <versionRange  minVersion="0" maxVersion="2.2.1.530" severity="0" vulnerabilitystatus="2"></versionRange>
@@ -929,6 +937,9 @@
                               <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>
                   </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p366">
+                  <match name="filename" exp="Scorch\.plugin" />                      <versionRange  minVersion="6.2.0" maxVersion="6.2.0" severity="1"></versionRange>
                   </pluginItem>
     </pluginItems>
 

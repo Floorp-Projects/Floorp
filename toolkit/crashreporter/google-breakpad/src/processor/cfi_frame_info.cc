@@ -54,7 +54,7 @@ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
                                   RegisterValueMap<V> *caller_registers) const {
   // If there are not rules for both .ra and .cfa in effect at this address,
   // don't use this CFI data for stack walking.
-  if (cfa_rule_.invalid() || ra_rule_.invalid())
+  if (cfa_rule_.isExprInvalid() || ra_rule_.isExprInvalid())
     return false;
 
   RegisterValueMap<V> working;
@@ -105,10 +105,10 @@ template bool CFIFrameInfo::FindCallerRegs<uint64_t>(
 string CFIFrameInfo::Serialize() const {
   std::ostringstream stream;
 
-  if (!cfa_rule_.invalid()) {
+  if (!cfa_rule_.isExprInvalid()) {
     stream << ".cfa: " << cfa_rule_;
   }
-  if (!ra_rule_.invalid()) {
+  if (!ra_rule_.isExprInvalid()) {
     if (static_cast<std::streamoff>(stream.tellp()) != 0)
       stream << " ";
     stream << ".ra: " << ra_rule_;

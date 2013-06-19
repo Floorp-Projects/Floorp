@@ -23,8 +23,6 @@ using namespace js;
 using namespace js::ion;
 using namespace mozilla;
 
-#ifdef JS_ASMJS
-
 static bool
 LinkFail(JSContext *cx, const char *str)
 {
@@ -188,7 +186,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
         if (!IsTypedArrayBuffer(bufferVal))
             return LinkFail(cx, "bad ArrayBuffer argument");
 
-        heap = &bufferVal.toObject().asArrayBuffer();
+        heap = &bufferVal.toObject().as<ArrayBufferObject>();
 
         if (!IsPowerOfTwo(heap->byteLength()) || heap->byteLength() < AsmJSAllocationGranularity)
             return LinkFail(cx, "ArrayBuffer byteLength must be a power of two greater than or equal to 4096");
@@ -391,7 +389,8 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     const jschar *chars = src->chars().get();
 
     RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
-                                       cx->global(), name));
+                                       cx->global(), name, JSFunction::FinalizeKind,
+                                       TenuredObject));
     if (!fun)
         return false;
 
@@ -529,5 +528,3 @@ js::IsAsmJSModuleNative(js::Native native)
 {
     return native == LinkAsmJS;
 }
-
-#endif  // defined(JS_ASMJS)

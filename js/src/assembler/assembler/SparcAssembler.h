@@ -1140,7 +1140,7 @@ namespace JSC {
         {
             ASSERT(reg <= 31);
             ASSERT(reg >= 0);
-            static char const * names[] = {
+            static char const * const names[] = {
                 "%g0", "%g1", "%g2", "%g3",
                 "%g4", "%g5", "%g6", "%g7",
                 "%o0", "%o1", "%o2", "%o3",
@@ -1157,7 +1157,7 @@ namespace JSC {
         {
             ASSERT(reg <= 31);
             ASSERT(reg >= 0);
-            static char const * names[] = {
+            static char const * const names[] = {
                 "%f0",   "%f1",   "%f2",   "%f3",
                 "%f4",   "%f5",   "%f6",   "%f7",
                 "%f8",   "%f9",  "%f10",  "%f11",
@@ -1176,7 +1176,7 @@ namespace JSC {
             ASSERT(cc >= 0);
 
             uint32_t    ccIndex = cc;
-            static char const * inames[] = {
+            static char const * const inames[] = {
                 "   ", "e  ",
                 "le ", "l  ",
                 "leu", "cs ",
@@ -1195,7 +1195,7 @@ namespace JSC {
             ASSERT(cc >= 0);
 
             uint32_t    ccIndex = cc;
-            static char const * fnames[] = {
+            static char const * const fnames[] = {
                 "   ", "ne ",
                 "   ", "ul ",
                 "l  ", "ug ",

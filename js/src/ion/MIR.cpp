@@ -28,7 +28,7 @@ using mozilla::BitwiseCast;
 void
 MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
 {
-    static const char *names[] =
+    static const char * const names[] =
     {
 #define NAME(x) #x,
         MIR_OPCODE_LIST(NAME)
@@ -323,6 +323,9 @@ MDefinition::replaceAllUsesWith(MDefinition *dom)
     JS_ASSERT(dom != NULL);
     if (dom == this)
         return;
+
+    for (size_t i = 0; i < numOperands(); i++)
+        getOperand(i)->setUseRemovedUnchecked();
 
     for (MUseIterator i(usesBegin()); i != usesEnd(); ) {
         JS_ASSERT(i->producer() == this);
@@ -916,7 +919,7 @@ MBinaryBitwiseInstruction::foldUnnecessaryBitop()
 }
 
 void
-MBinaryBitwiseInstruction::infer()
+MBinaryBitwiseInstruction::infer(BaselineInspector *, jsbytecode *)
 {
     if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object)) {
         specialization_ = MIRType_None;
@@ -935,7 +938,7 @@ MBinaryBitwiseInstruction::specializeForAsmJS()
 }
 
 void
-MShiftInstruction::infer()
+MShiftInstruction::infer(BaselineInspector *, jsbytecode *)
 {
     if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object))
         specialization_ = MIRType_None;
@@ -944,7 +947,7 @@ MShiftInstruction::infer()
 }
 
 void
-MUrsh::infer()
+MUrsh::infer(BaselineInspector *inspector, jsbytecode *pc)
 {
     if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object)) {
         specialization_ = MIRType_None;
@@ -952,13 +955,14 @@ MUrsh::infer()
         return;
     }
 
-    if (type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
+    if (inspector->expectedResultType(pc) == MIRType_Double) {
+        specialization_ = MIRType_Double;
+        setResultType(MIRType_Double);
         return;
     }
 
-    specialization_ = MIRType_Double;
-    setResultType(MIRType_Double);
+    specialization_ = MIRType_Int32;
+    setResultType(MIRType_Int32);
 }
 
 static inline bool

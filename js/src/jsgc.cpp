@@ -8,6 +8,8 @@
 
 #include "jsgc.h"
 
+#include "prmjtime.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
@@ -97,7 +99,7 @@ static const uint64_t GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
 static const int IGC_MARK_SLICE_MULTIPLIER = 2;
 
 /* This array should be const, but that doesn't link right under GCC. */
-AllocKind gc::slotsToThingKind[] = {
+const AllocKind gc::slotsToThingKind[] = {
     /* 0 */  FINALIZE_OBJECT0,  FINALIZE_OBJECT2,  FINALIZE_OBJECT2,  FINALIZE_OBJECT4,
     /* 4 */  FINALIZE_OBJECT4,  FINALIZE_OBJECT8,  FINALIZE_OBJECT8,  FINALIZE_OBJECT8,
     /* 8 */  FINALIZE_OBJECT8,  FINALIZE_OBJECT12, FINALIZE_OBJECT12, FINALIZE_OBJECT12,
@@ -168,14 +170,15 @@ static const AllocKind FinalizePhaseStrings[] = {
 };
 
 static const AllocKind FinalizePhaseScripts[] = {
-    FINALIZE_SCRIPT
+    FINALIZE_SCRIPT,
+    FINALIZE_LAZY_SCRIPT
 };
 
 static const AllocKind FinalizePhaseIonCode[] = {
     FINALIZE_IONCODE
 };
 
-static const AllocKind* FinalizePhases[] = {
+static const AllocKind * const FinalizePhases[] = {
     FinalizePhaseStrings,
     FinalizePhaseScripts,
     FinalizePhaseIonCode
@@ -213,13 +216,12 @@ static const AllocKind BackgroundPhaseStrings[] = {
 };
 
 static const AllocKind BackgroundPhaseShapes[] = {
-    FINALIZE_LAZY_SCRIPT,
     FINALIZE_SHAPE,
     FINALIZE_BASE_SHAPE,
     FINALIZE_TYPE_OBJECT
 };
 
-static const AllocKind* BackgroundPhases[] = {
+static const AllocKind * const BackgroundPhases[] = {
     BackgroundPhaseObjects,
     BackgroundPhaseStrings,
     BackgroundPhaseShapes
@@ -1440,7 +1442,7 @@ ArenaLists::queueScriptsForSweep(FreeOp *fop)
 {
     gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SCRIPT);
     queueForForegroundSweep(fop, FINALIZE_SCRIPT);
-    queueForBackgroundSweep(fop, FINALIZE_LAZY_SCRIPT);
+    queueForForegroundSweep(fop, FINALIZE_LAZY_SCRIPT);
 }
 
 void
@@ -2571,7 +2573,6 @@ PurgeRuntime(JSRuntime *rt)
     rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
 
     rt->gsnCache.purge();
-    rt->propertyCache.purge(rt);
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
     rt->sourceDataCache.purge();

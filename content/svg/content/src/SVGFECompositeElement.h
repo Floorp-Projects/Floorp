@@ -55,8 +55,8 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedString> In2();
+  already_AddRefed<SVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedString> In2();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
   already_AddRefed<nsIDOMSVGAnimatedNumber> K1();
   already_AddRefed<nsIDOMSVGAnimatedNumber> K2();

@@ -6,16 +6,17 @@
 
 #include "jsfriendapi.h"
 
-#include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/StandardInteger.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jsobj.h"
 #include "jswrapper.h"
 #include "jsweakmap.h"
 #include "jswatchpoint.h"
+#include "prmjtime.h"
 
 #include "builtin/TestingFunctions.h"
 
@@ -350,6 +351,12 @@ JS_FRIEND_API(bool)
 js::IsScopeObject(JSObject *obj)
 {
     return obj->isScope();
+}
+
+JS_FRIEND_API(bool)
+js::IsCallObject(JSObject *obj)
+{
+    return obj->is<CallObject>();
 }
 
 JS_FRIEND_API(JSObject *)

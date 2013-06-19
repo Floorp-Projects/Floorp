@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/Eval.h"
+
+#include "mozilla/HashFunctions.h"
+
 #include "jscntxt.h"
 #include "jsonparser.h"
 
-#include "builtin/Eval.h"
 #include "frontend/BytecodeCompiler.h"
-#include "mozilla/HashFunctions.h"
 #include "vm/GlobalObject.h"
 
 #include "vm/Interpreter-inl.h"

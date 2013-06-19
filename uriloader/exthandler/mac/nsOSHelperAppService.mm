@@ -507,21 +507,23 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     }
 
     CFStringRef cfType = ::CFStringCreateWithCString(NULL, mimeType.get(), kCFStringEncodingUTF8);
-    CFStringRef cfTypeDesc = NULL;
-    if (::LSCopyKindStringForMIMEType(cfType, &cfTypeDesc) == noErr) {
-      nsAutoTArray<UniChar, 255> buffer;
-      CFIndex typeDescLength = ::CFStringGetLength(cfTypeDesc);
-      buffer.SetLength(typeDescLength);
-      ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength),
-                              buffer.Elements());
-      nsAutoString typeDesc;
-      typeDesc.Assign(buffer.Elements(), typeDescLength);
-      mimeInfoMac->SetDescription(typeDesc);
+    if (cfType) {
+      CFStringRef cfTypeDesc = NULL;
+      if (::LSCopyKindStringForMIMEType(cfType, &cfTypeDesc) == noErr) {
+        nsAutoTArray<UniChar, 255> buffer;
+        CFIndex typeDescLength = ::CFStringGetLength(cfTypeDesc);
+        buffer.SetLength(typeDescLength);
+        ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength),
+                                buffer.Elements());
+        nsAutoString typeDesc;
+        typeDesc.Assign(buffer.Elements(), typeDescLength);
+        mimeInfoMac->SetDescription(typeDesc);
+      }
+      if (cfTypeDesc) {
+        ::CFRelease(cfTypeDesc);
+      }
+      ::CFRelease(cfType);
     }
-    if (cfTypeDesc) {
-      ::CFRelease(cfTypeDesc);
-    }
-    ::CFRelease(cfType);
   }
 
   PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));

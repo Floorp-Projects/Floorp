@@ -494,23 +494,16 @@ let SessionStoreInternal = {
   },
 
   _initWindow: function ssi_initWindow(aWindow) {
-    if (!aWindow || this._loadState == STATE_RUNNING) {
-      // make sure that all browser windows which try to initialize
-      // SessionStore are really tracked by it
-      if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
-        this.onLoad(aWindow);
+    if (aWindow) {
+      this.onLoad(aWindow);
+    } else if (this._loadState == STATE_STOPPED) {
       // If init is being called with a null window, it's possible that we
       // just want to tell sessionstore that a session is live (as is the case
       // with starting Firefox with -private, for example; see bug 568816),
       // so we should mark the load state as running to make sure that
       // things like setBrowserState calls will succeed in restoring the session.
-      if (!aWindow && this._loadState == STATE_STOPPED)
-        this._loadState = STATE_RUNNING;
-      return;
+      this._loadState = STATE_RUNNING;
     }
-
-    // As this is called at delayedStartup, restoration must be initiated here
-    this.onLoad(aWindow);
   },
 
   /**
@@ -747,7 +740,7 @@ let SessionStoreInternal = {
       this._deferredInitialState._firstTabs = true;
       this._restoreCount = this._deferredInitialState.windows ?
         this._deferredInitialState.windows.length : 0;
-      this.restoreWindow(aWindow, this._deferredInitialState, true);
+      this.restoreWindow(aWindow, this._deferredInitialState, false);
       this._deferredInitialState = null;
     }
     else if (this._restoreLastWindow && aWindow.toolbar.visible &&

@@ -10,10 +10,7 @@
  * JS function definitions.
  */
 #include "jsprvtd.h"
-#include "jspubtd.h"
 #include "jsobj.h"
-#include "jsatom.h"
-#include "jsstr.h"
 
 #include "gc/Barrier.h"
 
@@ -142,7 +139,6 @@ class JSFunction : public JSObject
 
     // Can be called multiple times by the parser.
     void setArgCount(uint16_t nargs) {
-        JS_ASSERT(this->nargs == 0 || this->nargs == nargs);
         this->nargs = nargs;
     }
 
@@ -186,13 +182,6 @@ class JSFunction : public JSObject
         flags |= EXPR_CLOSURE;
     }
 
-    void markNotLazy() {
-        JS_ASSERT(isInterpretedLazy());
-        JS_ASSERT(hasScript());
-        flags |= INTERPRETED;
-        flags &= ~INTERPRETED_LAZY;
-    }
-
     JSAtom *atom() const { return hasGuessedAtom() ? NULL : atom_.get(); }
     js::PropertyName *name() const { return hasGuessedAtom() || !atom_ ? NULL : atom_->asPropertyName(); }
     inline void initAtom(JSAtom *atom);
@@ -216,12 +205,32 @@ class JSFunction : public JSObject
 
     static bool createScriptForLazilyInterpretedFunction(JSContext *cx, js::HandleFunction fun);
 
+    // Function Scripts
+    //
+    // Interpreted functions may either have an explicit JSScript (hasScript())
+    // or be lazy with sufficient information to construct the JSScript if
+    // necessary (isInterpretedLazy()).
+    //
+    // A lazy function will have a LazyScript if the function came from parsed
+    // source, or NULL if the function is a clone of a self hosted function.
+    //
+    // There are several methods to get the script of an interpreted function:
+    //
+    // - For all interpreted functions, getOrCreateScript() will get the
+    //   JSScript, delazifying the function if necessary. This is the safest to
+    //   use, but has extra checks, requires a cx and may trigger a GC.
+    //
+    // - For functions which may have a LazyScript but whose JSScript is known
+    //   to exist, getExistingScript() will get the script and delazify the
+    //   function if necessary.
+    //
+    // - For functions known to have a JSScript, nonLazyScript() will get it.
+
     JSScript *getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
         JS_ASSERT(cx);
         if (isInterpretedLazy()) {
             JS::RootedFunction self(cx, this);
-            js::MaybeCheckStackRoots(cx);
             if (!createScriptForLazilyInterpretedFunction(cx, self))
                 return NULL;
             JS_ASSERT(self->hasScript());
@@ -231,34 +240,17 @@ class JSFunction : public JSObject
         return u.i.s.script_;
     }
 
-    static bool maybeGetOrCreateScript(JSContext *cx, js::HandleFunction fun,
-                                       js::MutableHandle<JSScript*> script)
-    {
-        if (fun->isNative()) {
-            script.set(NULL);
-            return true;
-        }
-        script.set(fun->getOrCreateScript(cx));
-        return fun->hasScript();
-    }
+    inline JSScript *getExistingScript();
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.s.script_);
     }
 
-    JSScript *maybeNonLazyScript() const {
-        return hasScript() ? nonLazyScript() : NULL;
-    }
-
     js::HeapPtrScript &mutableScript() {
         JS_ASSERT(isInterpreted());
         return *(js::HeapPtrScript *)&u.i.s.script_;
     }
-
-    // A lazily interpreted function will have an associated LazyScript if the
-    // script has not yet been parsed. For functions whose scripts are lazily
-    // cloned from self hosted code, there is no LazyScript.
 
     js::LazyScript *lazyScript() const {
         JS_ASSERT(isInterpretedLazy() && u.i.s.lazy_);
@@ -443,8 +435,7 @@ XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope,
                        HandleScript enclosingScript, MutableHandleObject objp);
 
 extern JSObject *
-CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleFunction fun,
-                         NewObjectKind newKind = GenericObject);
+CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun);
 
 /*
  * Report an error that call.thisv is not compatible with the specified class,

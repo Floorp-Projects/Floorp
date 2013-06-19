@@ -117,10 +117,12 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
 
         // maxAscent/maxDescent get used for frame heights, and some fonts
         // don't have the HHEA table ascent/descent set (bug 279032).
-        if (aMetrics->emAscent > aMetrics->maxAscent)
-            aMetrics->maxAscent = aMetrics->emAscent;
-        if (aMetrics->emDescent > aMetrics->maxDescent)
-            aMetrics->maxDescent = aMetrics->emDescent;
+        // We use NS_round here to parallel the pixel-rounded values that
+        // freetype gives us for ftMetrics.ascender/descender.
+        aMetrics->maxAscent =
+            std::max(aMetrics->maxAscent, NS_round(aMetrics->emAscent));
+        aMetrics->maxDescent =
+            std::max(aMetrics->maxDescent, NS_round(aMetrics->emDescent));
     } else {
         aMetrics->emAscent = aMetrics->maxAscent;
         aMetrics->emDescent = aMetrics->maxDescent;

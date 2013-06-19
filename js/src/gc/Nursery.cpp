@@ -9,11 +9,14 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jstypedarray.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
+
+#include "jscompartmentinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "gc/Nursery-inl.h"
@@ -360,7 +363,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     }
 
     /* ArrayBuffer stores byte-length, not Value count. */
-    if (src->isArrayBuffer()) {
+    if (src->is<ArrayBufferObject>()) {
         size_t nbytes = sizeof(ObjectElements) + srcHeader->initializedLength;
         if (src->hasDynamicElements()) {
             dstHeader = static_cast<ObjectElements *>(alloc->malloc_(nbytes));
@@ -496,6 +499,9 @@ void
 js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     JS_AbortIfWrongThread(rt);
+
+    if (rt->mainThread.suppressGC)
+        return;
 
     if (!isEnabled())
         return;

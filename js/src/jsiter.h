@@ -11,9 +11,6 @@
  * JavaScript iterators.
  */
 #include "jscntxt.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
-#include "jsversion.h"
 
 #include "gc/Barrier.h"
 #include "vm/Stack.h"
@@ -143,6 +140,8 @@ class PropertyIteratorObject : public JSObject
 class ElementIteratorObject : public JSObject
 {
   public:
+    static Class class_;
+
     static JSObject *create(JSContext *cx, Handle<Value> target);
     static const JSFunctionSpec methods[];
 

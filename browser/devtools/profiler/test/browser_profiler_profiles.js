@@ -48,8 +48,11 @@ function onNamedProfileCreated(name, uid) {
   is(gPanel.profiles.size, 3, "There are three profiles now");
   is(gPanel.getProfileByUID(uid).name, "Custom Profile", "Name is correct");
 
-  let label = gPanel.document.querySelector("li#profile-" + uid + "> h1");
-  is(label.textContent, "Custom Profile", "Name is correct on the label");
+  let profile = gPanel.profiles.get(uid);
+  let data = gPanel.sidebar.getItemByProfile(profile).attachment;
+
+  is(data.uid, uid, "UID is correct");
+  is(data.name, "Custom Profile", "Name is correct on the label");
 
   let btn = gPanel.document.getElementById("profile-" + uid);
   ok(btn, "Profile item has been added to the sidebar");

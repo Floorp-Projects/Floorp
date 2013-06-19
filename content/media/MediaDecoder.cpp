@@ -1046,32 +1046,6 @@ void MediaDecoder::NotifyBytesConsumed(int64_t aBytes)
   }
 }
 
-void MediaDecoder::NextFrameUnavailableBuffering()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mOwner || mShuttingDown || !mDecoderStateMachine)
-    return;
-
-  mOwner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING);
-}
-
-void MediaDecoder::NextFrameAvailable()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mOwner || mShuttingDown || !mDecoderStateMachine)
-    return;
-
-  mOwner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
-}
-
-void MediaDecoder::NextFrameUnavailable()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mOwner || mShuttingDown || !mDecoderStateMachine)
-    return;
-  mOwner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
-}
-
 void MediaDecoder::UpdateReadyStateForData()
 {
   MOZ_ASSERT(NS_IsMainThread());

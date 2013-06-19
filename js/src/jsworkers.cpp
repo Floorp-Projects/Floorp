@@ -8,6 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "prmjtime.h"
+
 #ifdef JS_PARALLEL_COMPILATION
 # include "ion/AsmJS.h"
 # include "ion/IonBuilder.h"
@@ -346,12 +348,17 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
     do {
         ion::IonContext icx(asmData->mir->compartment, &asmData->mir->temp());
 
+        int64_t before = PRMJ_Now();
+
         if (!OptimizeMIR(asmData->mir))
             break;
 
         asmData->lir = GenerateLIR(asmData->mir);
         if (!asmData->lir)
             break;
+
+        int64_t after = PRMJ_Now();
+        asmData->compileTime = (after - before) / PRMJ_USEC_PER_MSEC;
 
         success = true;
     } while(0);

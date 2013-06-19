@@ -7,11 +7,6 @@
 #ifndef Monitor_h__
 #define Monitor_h__
 
-#include <stdlib.h>
-
-#include "mozilla/DebugOnly.h"
-
-#include "js/Utility.h"
 #include "jslock.h"
 
 namespace js {

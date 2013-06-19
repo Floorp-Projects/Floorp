@@ -158,7 +158,7 @@ Tools.jsprofiler = {
   icon: "chrome://browser/skin/devtools/tool-profiler.png",
   url: "chrome://browser/content/devtools/profiler.xul",
   label: l10n("profiler.label", profilerStrings),
-  tooltip: l10n("profiler.tooltip", profilerStrings),
+  tooltip: l10n("profiler.tooltip2", profilerStrings),
 
   isTargetSupported: function (target) {
     return true;

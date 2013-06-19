@@ -65,13 +65,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDisplacementMapElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEDisplacementMapElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEDisplacementMapElement::In2()
 {
   return mStringAttributes[IN2].ToDOMAnimatedString(this);

@@ -7,6 +7,8 @@
 #ifndef js_ion_registerallocator_h__
 #define js_ion_registerallocator_h__
 
+#include "mozilla/Attributes.h"
+
 #include "Ion.h"
 #include "MIR.h"
 #include "MIRGraph.h"
@@ -140,7 +142,7 @@ struct AllocationIntegrityState
 class CodePosition
 {
   private:
-    CodePosition(const uint32_t &bits)
+    MOZ_CONSTEXPR CodePosition(const uint32_t &bits)
       : bits_(bits)
     { }
 
@@ -159,7 +161,7 @@ class CodePosition
         OUTPUT
     };
 
-    CodePosition() : bits_(0)
+    MOZ_CONSTEXPR CodePosition() : bits_(0)
     { }
 
     CodePosition(uint32_t instruction, SubPosition where) {
@@ -323,16 +325,16 @@ class RegisterAllocator
   protected:
     bool init();
 
-    CodePosition outputOf(uint32_t pos) {
+    CodePosition outputOf(uint32_t pos) const {
         return CodePosition(pos, CodePosition::OUTPUT);
     }
-    CodePosition outputOf(LInstruction *ins) {
+    CodePosition outputOf(const LInstruction *ins) const {
         return CodePosition(ins->id(), CodePosition::OUTPUT);
     }
-    CodePosition inputOf(uint32_t pos) {
+    CodePosition inputOf(uint32_t pos) const {
         return CodePosition(pos, CodePosition::INPUT);
     }
-    CodePosition inputOf(LInstruction *ins) {
+    CodePosition inputOf(const LInstruction *ins) const {
         return CodePosition(ins->id(), CodePosition::INPUT);
     }
 
@@ -346,11 +348,11 @@ class RegisterAllocator
         return getMoveGroupAfter(pos.ins());
     }
 
-    size_t findFirstNonCallSafepoint(CodePosition from)
+    size_t findFirstNonCallSafepoint(CodePosition from) const
     {
         size_t i = 0;
         for (; i < graph.numNonCallSafepoints(); i++) {
-            LInstruction *ins = graph.getNonCallSafepoint(i);
+            const LInstruction *ins = graph.getNonCallSafepoint(i);
             if (from <= inputOf(ins))
                 break;
         }

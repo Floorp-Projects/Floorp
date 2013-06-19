@@ -32,6 +32,7 @@ jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
 jfieldID AndroidGeckoEvent::jCharactersField = 0;
 jfieldID AndroidGeckoEvent::jCharactersExtraField = 0;
+jfieldID AndroidGeckoEvent::jDataField = 0;
 jfieldID AndroidGeckoEvent::jKeyCodeField = 0;
 jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jDomKeyLocationField = 0;
@@ -235,6 +236,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
     jCharactersExtraField = getField("mCharactersExtra", "Ljava/lang/String;");
+    jDataField = getField("mData", "Ljava/lang/String;");
     jKeyCodeField = getField("mKeyCode", "I");
     jMetaStateField = getField("mMetaState", "I");
     jDomKeyLocationField = getField("mDomKeyLocation", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
@@ -512,6 +514,20 @@ AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
 }
 
 void
+AndroidGeckoEvent::ReadDataField(JNIEnv *jenv)
+{
+    jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jDataField);
+    if (!s) {
+        mData.SetIsVoid(true);
+        return;
+    }
+
+    int len = jenv->GetStringLength(s);
+    mData.SetLength(len);
+    jenv->GetStringRegion(s, 0, len, mData.BeginWriting());
+}
+
+void
 AndroidGeckoEvent::UnionRect(nsIntRect const& aRect)
 {
     mRect = aRect.Union(mRect);
@@ -664,6 +680,23 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case COMPOSITOR_CREATE: {
             mWidth = jenv->GetIntField(jobj, jWidthField);
             mHeight = jenv->GetIntField(jobj, jHeightField);
+            break;
+        }
+
+        case CALL_OBSERVER: {
+            ReadCharactersField(jenv);
+            ReadCharactersExtraField(jenv);
+            ReadDataField(jenv);
+            break;
+        }
+
+        case LOW_MEMORY: {
+            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
+            break;
+        }
+
+        case NETWORK_LINK_CHANGE: {
+            ReadCharactersField(jenv);
             break;
         }
 
@@ -925,7 +958,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, floa
 }
 
 void
-AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
+AndroidGeckoLayerClient::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                           bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
                                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
@@ -937,9 +970,9 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float
     AutoLocalJNIFrame jniFrame(env);
 
     // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
-    LayerRect dpUnrounded = LayerRect::FromCSSRect(aDisplayPort, aDisplayResolution, aDisplayResolution);
-    dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset);
-    LayerIntRect dp = LayerRect::RoundToInt(dpUnrounded);
+    LayerRect dpUnrounded = aDisplayPort * CSSToLayerScale(aDisplayResolution);
+    dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset.ToUnknownPoint());
+    LayerIntRect dp = gfx::RoundedToInt(dpUnrounded);
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncFrameMetricsMethod,
             aScrollOffset.x, aScrollOffset.y, aZoom,

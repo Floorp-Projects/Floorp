@@ -70,7 +70,7 @@ SVGTextPathElement::SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGTextPathElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

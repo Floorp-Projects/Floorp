@@ -466,6 +466,21 @@ public:
    */
   virtual void SetIsFirstPaint() {}
 
+  /**
+   * Make sure that the previous transaction has been entirely
+   * completed.
+   *
+   * Note: This may sychronously wait on a remote compositor
+   * to complete rendering.
+   */
+  virtual void FlushRendering() { }
+
+  /**
+   * Checks if we need to invalidate the OS widget to trigger
+   * painting when updating this layer manager.
+   */
+  virtual bool NeedsWidgetInvalidation() { return true; }
+
   // We always declare the following logging symbols, because it's
   // extremely tricky to conditionally declare them.  However, for
   // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial

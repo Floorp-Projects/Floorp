@@ -54,7 +54,20 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * points.
      */                                                                         \
     _(Unused)                                                                   \
-    _(DOMFunction)   /* Contains or uses a common DOM method function */
+    _(DOMFunction)   /* Contains or uses a common DOM method function */        \
+                                                                                \
+    /* Marks if an instruction has fewer uses than the original code.
+     * E.g. UCE can remove code.
+     * Every instruction where an use is/was removed from an instruction and
+     * as a result the number of operands doesn't equal the original code
+     * need to get marked as UseRemoved. This is important for truncation
+     * analysis to know, since if all original uses are still present,
+     * it can ignore resumepoints.
+     * Currently this is done for every pass after IonBuilder and before
+     * Truncate Doubles. So every time removeUse is called, UseRemoved needs
+     * to get set.
+     */                                                                         \
+    _(UseRemoved)
 
 class MDefinition;
 class MInstruction;
@@ -2703,7 +2716,7 @@ class MBinaryBitwiseInstruction
     virtual MDefinition *foldIfZero(size_t operand) = 0;
     virtual MDefinition *foldIfNegOne(size_t operand) = 0;
     virtual MDefinition *foldIfEqual()  = 0;
-    virtual void infer();
+    virtual void infer(BaselineInspector *inspector, jsbytecode *pc);
 
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
@@ -2799,7 +2812,7 @@ class MShiftInstruction
     MDefinition *foldIfEqual() {
         return this;
     }
-    virtual void infer();
+    virtual void infer(BaselineInspector *inspector, jsbytecode *pc);
 };
 
 class MLsh : public MShiftInstruction
@@ -2863,7 +2876,7 @@ class MUrsh : public MShiftInstruction
         return this;
     }
 
-    void infer();
+    void infer(BaselineInspector *inspector, jsbytecode *pc);
 
     bool canOverflow() {
         // solution is only negative when lhs < 0 and rhs & 0x1f == 0

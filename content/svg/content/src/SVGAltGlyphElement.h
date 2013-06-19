@@ -33,7 +33,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
   void GetGlyphRef(nsAString & aGlyphRef);
   void SetGlyphRef(const nsAString & aGlyphRef, ErrorResult& rv);
   void GetFormat(nsAString & aFormat);

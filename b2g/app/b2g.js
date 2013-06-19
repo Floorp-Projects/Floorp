@@ -377,23 +377,32 @@ pref("dom.ipc.processCount", 100000);
 
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
-// Temporary permission hack for WebSMS
+// WebSMS
 pref("dom.sms.enabled", true);
 pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
 pref("dom.sms.requestStatusReport", true); // Enabled by default.
 
-// Temporary permission hack for WebContacts
+// WebContacts
 pref("dom.mozContacts.enabled", true);
 pref("dom.navigator-property.disable.mozContacts", false);
 pref("dom.global-constructor.disable.mozContact", false);
+
+// Shortnumber matching needed for e.g. Brazil:
+// 01187654321 can be found with 87654321
+pref("dom.phonenumber.substringmatching.BR", 8);
+pref("dom.phonenumber.substringmatching.CO", 10);
+pref("dom.phonenumber.substringmatching.VE", 7);
 
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);
 
 // SimplePush
 pref("services.push.enabled", true);
+// Is the network connection allowed to be up?
+// This preference should be used in UX to enable/disable push.
+pref("services.push.connection.enabled", true);
 // serverURL to be assigned by services team
-pref("services.push.serverURL", "");
+pref("services.push.serverURL", "wss://push.services.mozilla.com/");
 pref("services.push.userAgentID", "");
 // Exponential back-off start is 5 seconds like in HTTP/1.1.
 // Maximum back-off is pingInterval.
@@ -635,6 +644,8 @@ pref("dom.disable_window_open_dialog_feature", true);
 
 // Screen reader support
 pref("accessibility.accessfu.activate", 2);
+// Whether to skip images with empty alt text
+pref("accessibility.accessfu.skip_empty_images", true);
 
 // Enable hit-target fluffing
 pref("ui.touch.radius.enabled", false);

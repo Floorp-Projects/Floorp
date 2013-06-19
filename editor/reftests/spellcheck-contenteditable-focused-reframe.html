@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <div contenteditable id="testBox" onfocus="reframe(this);">blahblahblah</div>
+  <script type="text/javascript">
+    function reframe(textbox) {
+      textbox.style.display = "none";
+      textbox.style.display = "";
+      textbox.clientWidth;
+    }
+    //Adding focus to the textbox should trigger a spellcheck
+    document.getElementById("testBox").focus();
+    document.getElementById("testBox").blur();
+  </script>
+  
+</body>
+</html>

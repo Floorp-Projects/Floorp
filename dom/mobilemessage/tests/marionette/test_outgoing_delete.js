@@ -4,6 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
+SpecialPowers.setBoolPref("dom.sms.requestStatusReport", true);
 SpecialPowers.addPermission("sms", true, document);
 
 const SENDER = "15555215554"; // the emulator's number
@@ -152,7 +153,8 @@ function verifySmsDeleted(smsId) {
 function cleanUp() {
   sms.onsent = null;
   SpecialPowers.removePermission("sms", document);
-  SpecialPowers.setBoolPref("dom.sms.enabled", false);
+  SpecialPowers.clearUserPref("dom.sms.enabled", false);
+  SpecialPowers.clearUserPref("dom.sms.requestStatusReport");
   finish();
 }
 

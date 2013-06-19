@@ -36,7 +36,6 @@ TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
 LIBS += \
-  $(EXTRA_DSO_LIBS) \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
 

@@ -31,6 +31,7 @@
 #include "nsBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsInterfaceHashtable.h"
+#include "nsJSThingHashtable.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -60,7 +61,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsIChannelEventSink.h"
-#include "nsIDocumentRegister.h"
 #include "imgIRequest.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "nsIDOMTouchEvent.h"
@@ -505,7 +505,6 @@ class nsDocument : public nsIDocument,
                    public nsStubMutationObserver,
                    public nsIDOMDocumentTouch,
                    public nsIInlineEventHandlers,
-                   public nsIDocumentRegister,
                    public nsIObserver
 {
 public:
@@ -641,14 +640,6 @@ public:
     return mChannel;
   }
 
-  /**
-   * Get this document's inline style sheet.  May return null if there
-   * isn't one
-   */
-  virtual nsHTMLCSSStyleSheet* GetInlineStyleSheet() const MOZ_OVERRIDE {
-    return mStyleAttrStyleSheet;
-  }
-  
   /**
    * Set the object from which a document can get a script context.
    * This is the context within which all scripts (during document
@@ -803,9 +794,6 @@ public:
 
   // nsIInlineEventHandlers
   NS_DECL_NSIINLINEEVENTHANDLERS
-
-  // nsIDocumentRegister
-  NS_DECL_NSIDOCUMENTREGISTER
 
   // nsIObserver
   NS_DECL_NSIOBSERVER
@@ -1216,7 +1204,7 @@ protected:
 
   // Hashtable for custom element prototypes in web components.
   // Custom prototypes are in the document's compartment.
-  nsDataHashtable<nsStringHashKey, JSObject*> mCustomPrototypes;
+  nsJSThingHashtable<nsStringHashKey, JSObject*> mCustomPrototypes;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
@@ -1308,7 +1296,6 @@ protected:
 
   // The channel that got passed to StartDocumentLoad(), if any
   nsCOMPtr<nsIChannel> mChannel;
-  nsRefPtr<nsHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   // A document "without a browsing context" that owns the content of
   // HTMLTemplateElement.

@@ -246,17 +246,15 @@ ThebesLayerComposite::GetCompositionBounds()
       // the content resolution.
       Layer* rootLayer = Manager()->GetRoot();
       const gfx3DMatrix& rootTransform = rootLayer->GetTransform();
-      float scaleX = rootTransform.GetXScale();
-      float scaleY = rootTransform.GetYScale();
+      LayerToCSSScale scale(rootTransform.GetXScale(),
+                            rootTransform.GetYScale());
 
       // Get the content document bounds, in screen-space.
       const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
-      const LayerIntRect content = LayerIntRect::FromCSSRectRounded(metrics.mScrollableRect,
-                                                                    1 / scaleX,
-                                                                    1 / scaleY);
+      const LayerIntRect content = RoundedToInt(metrics.mScrollableRect / scale);
       gfx::Point scrollOffset =
-        gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width) / scaleX,
-                   (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height) / scaleY);
+        gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width) / scale.scale,
+                   (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height) / scale.scale);
       const nsIntPoint contentOrigin(
         content.x - NS_lround(scrollOffset.x),
         content.y - NS_lround(scrollOffset.y));

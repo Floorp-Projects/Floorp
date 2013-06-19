@@ -14,7 +14,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "jsapi.h"
@@ -29,10 +28,8 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jspropertycache.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsversion.h"
 #include "builtin/Eval.h"
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
@@ -42,9 +39,9 @@
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsinferinlines.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
+
 #include "builtin/Iterator-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -256,6 +253,76 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
 
+inline bool
+GetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, MutableHandleValue lval,
+                     MutableHandleValue vp)
+{
+    JSOp op = JSOp(*pc);
+
+    if (op == JSOP_LENGTH) {
+        if (IsOptimizedArguments(cx->fp(), lval.address())) {
+            vp.setInt32(cx->fp()->numActualArgs());
+            return true;
+        }
+
+        if (GetLengthProperty(lval, vp))
+            return true;
+    }
+
+    JSObject *obj = ToObjectFromStack(cx, lval);
+    if (!obj)
+        return false;
+
+    bool wasObject = lval.isObject();
+
+    RootedId id(cx, NameToId(script->getName(pc)));
+    RootedObject nobj(cx, obj);
+
+    if (obj->getOps()->getProperty) {
+        if (!JSObject::getGeneric(cx, nobj, nobj, id, vp))
+            return false;
+    } else {
+        if (!GetPropertyHelper(cx, nobj, id, 0, vp))
+            return false;
+    }
+
+#if JS_HAS_NO_SUCH_METHOD
+    if (op == JSOP_CALLPROP &&
+        JS_UNLIKELY(vp.isPrimitive()) &&
+        wasObject)
+    {
+        if (!OnUnknownMethod(cx, nobj, IdToValue(id), vp))
+            return false;
+    }
+#endif
+
+    return true;
+}
+
+inline bool
+SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lval,
+                     HandleValue rval)
+{
+    JS_ASSERT(*pc == JSOP_SETPROP);
+
+    RootedObject obj(cx, ToObjectFromStack(cx, lval));
+    if (!obj)
+        return false;
+
+    RootedValue rref(cx, rval);
+
+    RootedId id(cx, NameToId(script->getName(pc)));
+    if (JS_LIKELY(!obj->getOps()->setProperty)) {
+        if (!baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rref, script->strict))
+            return false;
+    } else {
+        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 js::ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip, MaybeConstruct construct)
 {
@@ -279,6 +346,9 @@ js::ValueToCallable(JSContext *cx, const Value &v, int numToSkip, MaybeConstruct
     ReportIsNotFunction(cx, v, numToSkip, construct);
     return NULL;
 }
+
+static JS_NEVER_INLINE bool
+Interpret(JSContext *cx, StackFrame *entryFrame);
 
 bool
 js::RunScript(JSContext *cx, StackFrame *fp)
@@ -342,7 +412,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
     }
 #endif
 
-    return Interpret(cx, fp) != Interpret_Error;
+    return Interpret(cx, fp);
 }
 
 /*
@@ -908,31 +978,8 @@ inline InterpreterFrames::~InterpreterFrames()
     context->runtime()->interpreterFrames = older;
 }
 
-#if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
-void
-js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
-                                JSObject *found, PropertyCacheEntry *entry)
-{
-    jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc);
-
-    uint64_t sample = cx->runtime()->gcNumber;
-
-    PropertyName *name = GetNameFromBytecode(cx, script, pc, JSOp(*pc));
-    JSObject *pobj;
-    Shape *prop;
-    if (baseops::LookupProperty<NoGC>(cx, start, NameToId(name), &pobj, &prop)) {
-        JS_ASSERT(prop);
-        JS_ASSERT(pobj == found);
-        JS_ASSERT(entry->prop == prop);
-    }
-
-    JS_ASSERT(cx->runtime()->gcNumber == sample);
-}
-#endif /* DEBUG && !JS_THREADSAFE */
-
 /*
- * Ensure that the intrepreter switch can close call-bytecode cases in the
+ * Ensure that the interpreter switch can close call-bytecode cases in the
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
@@ -956,8 +1003,8 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 bool
 js::IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval)
 {
-    if (iterobj->isPropertyIterator()) {
-        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
+    if (iterobj->is<PropertyIteratorObject>()) {
+        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
             return true;
@@ -973,8 +1020,8 @@ js::IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValu
 bool
 js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
-    if (iterobj->isPropertyIterator()) {
-        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
+    if (iterobj->is<PropertyIteratorObject>()) {
+        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             rval.setString(*ni->current());
@@ -985,13 +1032,12 @@ js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     return js_IteratorNext(cx, iterobj, rval);
 }
 
-JS_NEVER_INLINE InterpretStatus
-js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool useNewType)
+static JS_NEVER_INLINE bool
+Interpret(JSContext *cx, StackFrame *entryFrame)
 {
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-    if (interpMode == JSINTERP_NORMAL)
-        gc::MaybeVerifyBarriers(cx, true);
+    gc::MaybeVerifyBarriers(cx, true);
 
     JS_ASSERT(!cx->compartment()->activeAnalysis);
 
@@ -1060,8 +1106,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
             interrupts.enable();                                              \
-        JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP,                        \
-                     script->hasAnyBreakpointsOrStepMode());                  \
     JS_END_MACRO
 
     /* Repoint cx->regs to a local variable for faster access. */
@@ -1128,42 +1172,27 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
     /* State communicated between non-local jumps: */
     bool interpReturnOK;
 
-    /* Don't call the script prologue if executing between Method and Trace JIT. */
-    if (interpMode == JSINTERP_NORMAL) {
-        StackFrame *fp = regs.fp();
-        if (!fp->isGeneratorFrame()) {
-            if (!fp->prologue(cx))
-                goto error;
-        } else {
-            Probes::enterScript(cx, script, script->function(), fp);
-        }
-        if (cx->compartment()->debugMode()) {
-            JSTrapStatus status = ScriptDebugPrologue(cx, fp);
-            switch (status) {
-              case JSTRAP_CONTINUE:
-                break;
-              case JSTRAP_RETURN:
-                interpReturnOK = true;
-                goto forced_return;
-              case JSTRAP_THROW:
-              case JSTRAP_ERROR:
-                goto error;
-              default:
-                JS_NOT_REACHED("bad ScriptDebugPrologue status");
-            }
+    if (!entryFrame->isGeneratorFrame()) {
+        if (!entryFrame->prologue(cx))
+            goto error;
+    } else {
+        Probes::enterScript(cx, script, script->function(), entryFrame);
+    }
+    if (cx->compartment()->debugMode()) {
+        JSTrapStatus status = ScriptDebugPrologue(cx, entryFrame);
+        switch (status) {
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            interpReturnOK = true;
+            goto forced_return;
+          case JSTRAP_THROW:
+          case JSTRAP_ERROR:
+            goto error;
+          default:
+            JS_NOT_REACHED("bad ScriptDebugPrologue status");
         }
     }
-
-    /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
-    if (interpMode == JSINTERP_REJOIN)
-        interpMode = JSINTERP_NORMAL;
-
-    /*
-     * The RETHROW mode acts like a bailout mode, except that it resume an
-     * exception instead of resuming the script.
-     */
-    if (interpMode == JSINTERP_RETHROW)
-        goto error;
 
     /*
      * It is important that "op" be initialized before calling DO_OP because
@@ -1240,7 +1269,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
         if (script->hasAnyBreakpointsOrStepMode())
             moreInterrupts = true;
 
-        if (script->hasBreakpointsAt(regs.pc) && interpMode != JSINTERP_SKIP_TRAP) {
+        if (script->hasBreakpointsAt(regs.pc)) {
             RootedValue rval(cx);
             JSTrapStatus status = Debugger::onTrap(cx, &rval);
             switch (status) {
@@ -1259,8 +1288,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
             JS_ASSERT(status == JSTRAP_CONTINUE);
             JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
         }
-
-        interpMode = JSINTERP_NORMAL;
 
         switchMask = moreInterrupts ? -1 : 0;
         switchOp = int(op);
@@ -2100,7 +2127,7 @@ BEGIN_CASE(JSOP_SETPROP)
     HandleValue lval = HandleValue::fromMarkedLocation(&regs.sp[-2]);
     HandleValue rval = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
-    if (!SetPropertyOperation(cx, regs.pc, lval, rval))
+    if (!SetPropertyOperation(cx, script, regs.pc, lval, rval))
         goto error;
 
     regs.sp[-2] = regs.sp[-1];
@@ -3022,9 +3049,6 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(&cx->regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
 
-    /* When rejoining, we must not err before finishing Interpret's prologue. */
-    JS_ASSERT(interpMode != JSINTERP_REJOIN);
-
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
         if (cx->compartment()->debugMode()) {
@@ -3149,7 +3173,7 @@ END_CASE(JSOP_ARRAYPUSH)
   leave_on_safe_point:
 #endif
 
-    return interpReturnOK ? Interpret_Ok : Interpret_Error;
+    return interpReturnOK;
 }
 
 bool
@@ -3259,7 +3283,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
     RootedFunction fun(cx, funArg);
     if (fun->isNative() || fun->environment() != scopeChain) {
-        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain, TenuredObject);
         if (!fun)
             return false;
     } else {

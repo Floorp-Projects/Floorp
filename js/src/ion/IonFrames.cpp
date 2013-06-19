@@ -1225,6 +1225,11 @@ InlineFrameIteratorMaybeGC<allowGC>::resetOn(const IonFrameIterator *iter)
 template void InlineFrameIteratorMaybeGC<NoGC>::resetOn(const IonFrameIterator *iter);
 template void InlineFrameIteratorMaybeGC<CanGC>::resetOn(const IonFrameIterator *iter);
 
+// Disable PGO.
+#if defined(_MSC_VER)
+# pragma optimize("g", off)
+#endif
+
 template <AllowGC allowGC>
 void
 InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
@@ -1267,7 +1272,12 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         si_.nextFrame();
 
         callee_ = funval.toObject().toFunction();
-        script_ = callee_->nonLazyScript();
+
+        // Inlined functions may be clones that still point to the lazy script
+        // for the executed script, if they are clones. The actual script
+        // exists though, just make sure the function points to it.
+        script_ = callee_->getExistingScript();
+
         pc_ = script_->code + si_.pcOffset();
     }
 
@@ -1275,6 +1285,11 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
 }
 template void InlineFrameIteratorMaybeGC<NoGC>::findNextFrame();
 template void InlineFrameIteratorMaybeGC<CanGC>::findNextFrame();
+
+// Reenable default optimization flags.
+#if defined(_MSC_VER)
+# pragma optimize("", on)
+#endif
 
 template <AllowGC allowGC>
 bool

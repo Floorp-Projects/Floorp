@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(47d4db10-a258-11e2-9e96-0800200c9a66)]
+interface nsIDOMIccCardLockErrorEvent : nsIDOMEvent
+{
+  readonly attribute DOMString lockType;
+  readonly attribute long retryCount;
+
+  [noscript] void initIccCardLockErrorEvent(in DOMString aType,
+                                            in boolean aCanBubble,
+                                            in boolean aCancelable,
+                                            in DOMString aLockType,
+                                            in int32_t aRetryCount);
+};
+
+dictionary IccCardLockErrorEventInit : EventInit
+{
+  DOMString  lockType;
+  long       retryCount;
+};

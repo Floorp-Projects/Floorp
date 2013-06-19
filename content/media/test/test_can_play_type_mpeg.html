@@ -33,24 +33,17 @@ function IsWindows7() {
 }
 
 function getMediaPref(name) {
-  // Can't use SpecialPowers.getBoolPref because it throws when pref isn't
-  // present, and for example on non-Windows systems the WMF prefs won't be
-  // present.
   var pref = false;
-  var prefService = SpecialPowers.wrap(SpecialPowers.Components)
-                                 .classes["@mozilla.org/preferences-service;1"]
-                                 .getService(SpecialPowers.Ci.nsIPrefService);
-  var branch = prefService.getBranch("media.");
   try {
-    pref = branch.getBoolPref(name);
+    pref = SpecialPowers.getBoolPref(name);
   } catch(ex) { }
   return pref;
 }
 
-var haveMp4 = (getMediaPref("windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
-               getMediaPref("omx.enabled") ||
-               getMediaPref("gstreamer.enabled");
-// TODO:  Add "getMediaPref("plugins.enabled")" once MP4 works on Gingerbread.
+var haveMp4 = (getMediaPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
+               getMediaPref("media.omx.enabled") ||
+               getMediaPref("media.gstreamer.enabled");
+// TODO:  Add "getMediaPref("media.plugins.enabled")" once MP4 works on Gingerbread.
              
 check_mp4(document.getElementById('v'), haveMp4);
 

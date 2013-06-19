@@ -7,15 +7,11 @@
 #ifndef jsgc_statistics_h___
 #define jsgc_statistics_h___
 
-#include <string.h>
-
 #include "mozilla/DebugOnly.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsfriendapi.h"
 #include "jspubtd.h"
-#include "jsutil.h"
 
 #include "js/GCAPI.h"
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2010 Mozilla Foundation
+ * Copyright (c) 2007-2013 Mozilla Foundation
  * Portions of comments Copyright 2004-2010 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -6544,19 +6544,6 @@ public class Tokenizer implements Locator {
             throws SAXException {
         return buf[pos];
     }
-
-    // [NOCPP[
-
-    /**
-     * Returns the alreadyComplainedAboutNonAscii.
-     * 
-     * @return the alreadyComplainedAboutNonAscii
-     */
-    public boolean isAlreadyComplainedAboutNonAscii() {
-        return true;
-    }
-
-    // ]NOCPP]
 
     public boolean internalEncodingDeclaration(String internalCharset)
             throws SAXException {

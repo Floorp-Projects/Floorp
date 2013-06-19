@@ -4,20 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
-
-#include "js/TemplateLib.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/ObjectImpl.h"
 
-#include "jsatominlines.h"
+#include "jsobjinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "gc/Marking.h"
 #include "vm/ObjectImpl-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 
@@ -246,6 +241,24 @@ js::ObjectImpl::checkShapeConsistency()
     }
 }
 #endif
+
+void
+js::ObjectImpl::initializeSlotRange(uint32_t start, uint32_t length)
+{
+    /*
+     * No bounds check, as this is used when the object's shape does not
+     * reflect its allocated slots (updateSlotsForSpan).
+     */
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+
+    JSRuntime *rt = runtime();
+    uint32_t offset = start;
+    for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
+        sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
+    for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
+        sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
+}
 
 void
 js::ObjectImpl::initSlotRange(uint32_t start, const Value *vector, uint32_t length)
@@ -495,7 +508,7 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
 JSObject *
 js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
 {
-    MOZ_ASSERT(obj->hasClass(&ArrayBufferClass));
+    MOZ_ASSERT(obj->hasClass(&ArrayBufferObject::class_));
     if (obj->getPrivate())
         return static_cast<JSObject *>(obj->getPrivate());
     JSObject *delegate = NewObjectWithGivenProto(cx, &ObjectClass, obj->getProto(), NULL);
