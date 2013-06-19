@@ -895,6 +895,9 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* stream = mStreams[i];
+    if (!stream->MainThreadNeedsUpdates()) {
+      continue;
+    }
     StreamUpdate* update = mStreamUpdates.AppendElement();
     update->mGraphUpdateIndex = stream->mGraphUpdateIndices.GetAt(mCurrentTime);
     update->mStream = stream;
