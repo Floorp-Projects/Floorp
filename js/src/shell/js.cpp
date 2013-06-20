@@ -170,6 +170,7 @@ FILE *gOutFile = NULL;
 
 static bool reportWarnings = true;
 static bool compileOnly = false;
+static bool fuzzingSafe = false;
 
 #ifdef DEBUG
 static bool OOM_printAllocationCount = false;
@@ -3647,26 +3648,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "setDebuggerHandler(f)",
 "  Set handler for debugger keyword to f."),
 
-    JS_FN_HELP("setThrowHook", SetThrowHook, 1, 0,
-"setThrowHook(f)",
-"  Set throw hook to f."),
-
-    JS_FN_HELP("trap", Trap, 3, 0,
-"trap([fun, [pc,]] exp)",
-"  Trap bytecode execution."),
-
-    JS_FN_HELP("untrap", Untrap, 2, 0,
-"untrap(fun[, pc])",
-"  Remove a trap."),
-
-    JS_FN_HELP("line2pc", LineToPC, 0, 0,
-"line2pc([fun,] line)",
-"  Map line number to PC."),
-
-    JS_FN_HELP("pc2line", PCToLine, 0, 0,
-"pc2line(fun[, pc])",
-"  Map PC to line number."),
-
     JS_FN_HELP("throwError", ThrowError, 0, 0,
 "throwError()",
 "  Throw an error from JS_ReportError."),
@@ -3799,10 +3780,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Read filename into returned string. Filename is relative to the directory\n"
                "  containing the current script."),
 
-    JS_FN_HELP("system", System, 1, 0,
-"system(command)",
-"  Execute command on the current host, returning result code."),
-
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
 "  Compiles a string to bytecode, potentially throwing."),
@@ -3824,10 +3801,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("elapsed", Elapsed, 0, 0,
 "elapsed()",
 "  Execution time elapsed for the current context."),
-
-    JS_FN_HELP("parent", Parent, 1, 0,
-"parent(obj)",
-"  Returns the parent of obj."),
 
     JS_FN_HELP("decompileFunction", DecompileFunction, 1, 0,
 "decompileFunction(func)",
@@ -3885,11 +3858,39 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FS_HELP_END
 };
 
-static const JSFunctionSpecWithHelp self_hosting_functions[] = {
+static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
 "  cached, so repeatedly getting the same value creates multiple distinct clones."),
+
+    JS_FN_HELP("parent", Parent, 1, 0,
+"parent(obj)",
+"  Returns the parent of obj."),
+
+    JS_FN_HELP("line2pc", LineToPC, 0, 0,
+"line2pc([fun,] line)",
+"  Map line number to PC."),
+
+    JS_FN_HELP("pc2line", PCToLine, 0, 0,
+"pc2line(fun[, pc])",
+"  Map PC to line number."),
+
+    JS_FN_HELP("setThrowHook", SetThrowHook, 1, 0,
+"setThrowHook(f)",
+"  Set throw hook to f."),
+
+    JS_FN_HELP("system", System, 1, 0,
+"system(command)",
+"  Execute command on the current host, returning result code."),
+
+    JS_FN_HELP("trap", Trap, 3, 0,
+"trap([fun, [pc,]] exp)",
+"  Trap bytecode execution."),
+
+    JS_FN_HELP("untrap", Untrap, 2, 0,
+"untrap(fun[, pc])",
+"  Remove a trap."),
 
     JS_FS_HELP_END
 };
@@ -4832,11 +4833,8 @@ NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
         if (!js::DefineTestingFunctions(cx, glob))
             return NULL;
 
-        if (getenv("MOZ_SELFHOSTEDJS") &&
-            !JS_DefineFunctionsWithHelp(cx, glob, self_hosting_functions))
-        {
+        if (!fuzzingSafe && !JS_DefineFunctionsWithHelp(cx, glob, fuzzing_unsafe_functions))
             return NULL;
-        }
 
         RootedObject it(cx, JS_DefineObject(cx, glob, "it", &its_class, NULL, 0));
         if (!it)
@@ -5129,6 +5127,9 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     }
 
+    if (op->getBoolOption("fuzzing-safe"))
+        fuzzingSafe = true;
+
     RootedObject glob(cx);
     glob = NewGlobalObject(cx, NULL);
     if (!glob)
@@ -5300,6 +5301,8 @@ main(int argc, char **argv, char **envp)
                             "(default: 10)", -1)
         || !op.addBoolOption('\0', "no-fpu", "Pretend CPU does not support floating-point operations "
                              "to test JIT codegen (no-op on platforms other than x86).")
+        || !op.addBoolOption('\0', "fuzzing-safe", "Don't expose functions that aren't safe for "
+                             "fuzzers to call")
 #ifdef JSGC_GENERATIONAL
         || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
 #endif
