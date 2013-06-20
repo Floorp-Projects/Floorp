@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_heap_api_h___
-#define js_heap_api_h___
+#ifndef js_HeapAPI_h
+#define js_HeapAPI_h
 
 #include "jspubtd.h"
 
@@ -159,4 +159,4 @@ IsIncrementalBarrierNeededOnGCThing(shadow::Runtime *rt, void *thing, JSGCTraceK
 
 } /* namespace JS */
 
-#endif /* js_heap_api_h___ */
+#endif /* js_HeapAPI_h */
