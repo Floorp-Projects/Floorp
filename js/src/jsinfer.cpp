@@ -1215,25 +1215,6 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     }
 
     /*
-     * Short circuit indexed accesses on objects which are definitely typed
-     * arrays. Inference only covers the behavior of indexed accesses when
-     * getting integer properties, and the types for these are known ahead of
-     * time for typed arrays. Propagate the possible element types of the array
-     * to sites reading from it.
-     */
-    if (object->singleton && object->singleton->isTypedArray() && JSID_IS_VOID(id)) {
-        if (access != PROPERTY_WRITE) {
-            int arrayKind = object->proto->getClass() - TypedArray::protoClasses;
-            JS_ASSERT(arrayKind >= 0 && arrayKind < TypedArray::TYPE_MAX);
-
-            bool maybeDouble = (arrayKind == TypedArray::TYPE_FLOAT32 ||
-                                arrayKind == TypedArray::TYPE_FLOAT64);
-            target->addType(cx, maybeDouble ? Type::DoubleType() : Type::Int32Type());
-        }
-        return;
-    }
-
-    /*
      * Get the possible types of the property. For assignments, we do not
      * automatically update the 'own' bit on accessed properties, except for
      * indexed elements. This exception allows for JIT fast paths to avoid
@@ -1243,31 +1224,6 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     HeapTypeSet *types = object->getProperty(cx, id, markOwn);
     if (!types)
         return;
-
-    /*
-     * Try to resolve reads from the VM state ahead of time, e.g. for reads
-     * of defined global variables or from the prototype of the object. This
-     * reduces the need to monitor cold code as it first executes.
-     *
-     * This is speculating that the type of a defined property in a singleton
-     * object or prototype will not change between analysis and execution.
-     */
-    if (access != PROPERTY_WRITE) {
-        RootedObject singleton(cx, object->singleton);
-
-        /*
-         * Don't eagerly resolve reads from the prototype if the instance type
-         * is known to shadow the prototype's property.
-         */
-        if (!singleton && !types->ownProperty(false))
-            singleton = object->proto;
-
-        if (singleton) {
-            Type type = GetSingletonPropertyType(cx, singleton, id);
-            if (!type.isUnknown())
-                target->addType(cx, type);
-        }
-    }
 
     /* Capture the effects of a standard property access. */
     if (access == PROPERTY_WRITE) {
@@ -1337,8 +1293,6 @@ TypeConstraintProp<access>::newType(JSContext *cx, TypeSet *source, Type type)
 
         if (id == JSID_VOID)
             MarkPropertyAccessUnknown(cx, script, pc, target);
-        else
-            target->addType(cx, Type::Int32Type());
         return;
     }
 
@@ -5178,8 +5132,10 @@ AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
          * This code may not have run yet, break any type barriers involved
          * in performing the call (for the greater good!).
          */
-        analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
-        analysis->breakTypeBarriers(cx, calleepc - script->code, true);
+        if (cx->compartment()->types.compiledInfo.outputIndex == RecompileInfo::NoCompilerRunning) {
+            analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
+            analysis->breakTypeBarriers(cx, calleepc - script->code, true);
+        }
 
         StackTypeSet *funcallTypes = analysis->poppedTypes(pc, GET_ARGC(pc) + 1);
         StackTypeSet *scriptTypes = analysis->poppedTypes(pc, GET_ARGC(pc));

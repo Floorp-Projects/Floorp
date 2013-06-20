@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_gc_api_h___
-#define js_gc_api_h___
+#ifndef js_GCAPI_h
+#define js_GCAPI_h
 
 #include "HeapAPI.h"
 
@@ -291,4 +291,4 @@ ExposeValueToActiveJS(const Value &v)
 
 } /* namespace JS */
 
-#endif /* js_gc_api_h___ */
+#endif /* js_GCAPI_h */

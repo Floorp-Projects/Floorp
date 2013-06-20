@@ -4708,15 +4708,34 @@ then
     [ QTDIR=$withval])
 
     if test -z "$QTDIR"; then
-        PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
-        PKG_CHECK_MODULES(MOZ_QT5, Qt5Widgets Qt5Multimedia Qt5PrintSupport,
-                      MOZ_ENABLE_QT5=1,
-                      MOZ_ENABLE_QT5=)
-        if test "$MOZ_ENABLE_QT5"; then
-            echo "Using qt5"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT5_CFLAGS"
-            MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT5_LIBS"
-        fi
+        AC_CHECK_PROGS(HOST_QMAKE, $HOST_QMAKE qmake, "")
+    else
+        HOST_QMAKE="$QTDIR/bin/qmake"
+    fi
+    QT_VERSION=`$HOST_QMAKE -v | grep 'Using Qt version' | grep -oP '\d+\.\d+\.\d+'`
+
+    if test -z "$QTDIR"; then
+        case $QT_VERSION in
+        5.*)
+            AC_MSG_RESULT("Using qt5: $QT_VERSION")
+            PKG_CHECK_MODULES(MOZ_QT, Qt5Gui Qt5Network Qt5Core Qt5OpenGL Qt5Widgets Qt5PrintSupport, ,
+            [
+              AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qtbase development packages, (On Ubuntu, you might try installing the packages qtbase5-dev libqt5opengl5-dev.)])
+            ])
+            QT5INCDIR=`pkg-config --variable=includedir Qt5Gui`
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QT5INCDIR/QtGui/$QT_VERSION/QtGui"
+            ;;
+        4.*)
+            AC_MSG_RESULT("Using qt4: $QT_VERSION")
+            PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL, ,
+            [
+              AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qt4 development package, (On Ubuntu, you might try installing the packages libqt4-dev libqt4-opengl-dev.)])
+            ])
+            ;;
+        *)
+            AC_MSG_ERROR([* * * Unsupported Qt Version: $QT_VERSION])
+            ;;
+        esac
 
         AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
         AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
@@ -4729,18 +4748,25 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDeclarative"
 
-        # QtWidgets was introduced only in Qt5
-        if test -d $QTDIR/include/QtWidgets; then
-            echo "Using qt5"
+        case $QT_VERSION in
+        5.*)
+            AC_MSG_RESULT("Using qt5: $QT_VERSION")
             MOZ_QT_LIBS="-L$QTDIR/lib/ -lQt5Gui -lQt5Network -lQt5Core -lQt5Xml -lQt5OpenGL"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtGui/5.0.1/QtGui"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtGui/$QT_VERSION/QtGui"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
             MOZ_QT_LIBS="$MOZ_QT_LIBS -lQt5Widgets -lQt5PrintSupport"
-        else
+            ;;
+        4.*)
+            AC_MSG_RESULT("Using qt4: $QT_VERSION")
             MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtXml -lQtOpenGL"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/Qt"
-        fi
+            ;;
+        *)
+            AC_MSG_ERROR([* * * Unsupported Qt Version: $QT_VERSION])
+            ;;
+        esac
+
         HOST_MOC="$QTDIR/bin/moc"
         HOST_RCC="$QTDIR/bin/rcc"
     fi

@@ -1835,8 +1835,6 @@ abstract public class GeckoApp
         // Undo whatever we did in onPause.
         super.onResume();
 
-        SiteIdentityPopup.getInstance().dismiss();
-
         int newOrientation = getResources().getConfiguration().orientation;
 
         if (mOrientation != newOrientation) {
@@ -1995,7 +1993,6 @@ abstract public class GeckoApp
             mPromptService.destroy();
         if (mTextSelection != null)
             mTextSelection.destroy();
-        SiteIdentityPopup.clearInstance();
         if (mNotificationHelper != null)
             mNotificationHelper.destroy();
 
@@ -2059,7 +2056,6 @@ abstract public class GeckoApp
             mOrientation = newConfig.orientation;
             if (mFormAssistPopup != null)
                 mFormAssistPopup.hide();
-            SiteIdentityPopup.getInstance().dismiss();
             refreshChrome();
         }
     }
@@ -2241,12 +2237,6 @@ abstract public class GeckoApp
         if (mFullScreenPluginView != null) {
             GeckoAppShell.onFullScreenPluginHidden(mFullScreenPluginView);
             removeFullScreenPluginView(mFullScreenPluginView);
-            return;
-        }
-
-        SiteIdentityPopup identityPopup = SiteIdentityPopup.getInstance();
-        if (identityPopup.isShowing()) {
-            identityPopup.dismiss();
             return;
         }
 

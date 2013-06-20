@@ -574,7 +574,7 @@ IonScript::IonScript()
 {
 }
 
-static const int DataAlignment = 4;
+static const int DataAlignment = sizeof(void *);
 
 IonScript *
 IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,

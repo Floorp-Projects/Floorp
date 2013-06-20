@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_jsipc_ContextWrapperChild_h__
-#define mozilla_jsipc_ContextWrapperChild_h__
+#ifndef mozilla_jsipc_ContextWrapperChild_h
+#define mozilla_jsipc_ContextWrapperChild_h
 
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/jsipc/ObjectWrapperChild.h"
@@ -77,4 +77,4 @@ private:
 
 }}
 
-#endif
+#endif /* mozilla_jsipc_ContextWrapperChild_h */

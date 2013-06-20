@@ -30,7 +30,6 @@ nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(EventTarget* aOwn
   if (mEvent) {
     mEvent->message = aEventType;
   }
-  SetIsDOMBinding();
 }
 
 NS_IMPL_ADDREF_INHERITED(nsDOMNotifyAudioAvailableEvent, nsDOMEvent)

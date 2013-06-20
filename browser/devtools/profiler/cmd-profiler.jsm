@@ -68,7 +68,8 @@ gcli.addCommand({
   params: [
     {
       name: "name",
-      type: "string"
+      type: "string",
+      manual: gcli.lookup("profilerStartManual")
     }
   ],
 
@@ -114,7 +115,8 @@ gcli.addCommand({
   params: [
     {
       name: "name",
-      type: "string"
+      type: "string",
+      manual: gcli.lookup("profilerStopManual")
     }
   ],
 
@@ -196,7 +198,8 @@ gcli.addCommand({
   params: [
     {
       name: "name",
-      type: "string"
+      type: "string",
+      manual: gcli.lookup("profilerShowManual")
     }
   ],
 

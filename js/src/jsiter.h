@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsiter_h___
-#define jsiter_h___
+#ifndef jsiter_h
+#define jsiter_h
 
 /*
  * JavaScript iterators.
@@ -359,4 +359,4 @@ GeneratorHasMarkableFrame(JSGenerator *gen);
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, js::HandleObject obj);
 
-#endif /* jsiter_h___ */
+#endif /* jsiter_h */

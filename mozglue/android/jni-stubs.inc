@@ -58,25 +58,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv * arg0, jclass arg1) {
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_removeObserver_t)(JNIEnv *, jclass, jstring);
-static Java_org_mozilla_gecko_GeckoAppShell_removeObserver_t f_Java_org_mozilla_gecko_GeckoAppShell_removeObserver;
-extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv * arg0, jclass arg1, jstring arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_removeObserver) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_removeObserver(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_removeObserver", &f_Java_org_mozilla_gecko_GeckoAppShell_removeObserver);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef jobject (*Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue_t f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue;
 extern "C" NS_EXPORT jobject JNICALL

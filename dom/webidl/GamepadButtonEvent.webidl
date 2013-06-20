@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.gamepad.enabled",
+[Pref="dom.gamepad.non_standard_events.enabled",
  Constructor(DOMString type, optional GamepadButtonEventInit eventInitDict),
  HeaderFile="GeneratedEventClasses.h"]
 interface GamepadButtonEvent : GamepadEvent

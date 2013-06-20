@@ -19,6 +19,12 @@ interface Gamepad {
   readonly attribute unsigned long index;
 
   /**
+   * The mapping in use for this device. The empty string
+   * indicates that no mapping is in use.
+   */
+  readonly attribute DOMString mapping;
+
+  /**
    * true if this gamepad is currently connected to the system.
    */
   readonly attribute boolean connected;

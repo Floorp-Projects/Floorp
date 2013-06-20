@@ -1108,3 +1108,11 @@ js_ReportIsNotFunction(JSContext *cx, const JS::Value& v)
 {
     return ReportIsNotFunction(cx, v);
 }
+
+#if defined(DEBUG) && defined(JS_THREADSAFE)
+JS_PUBLIC_API(bool)
+js::IsInRequest(JSContext *cx)
+{
+    return !!cx->runtime()->requestDepth;
+}
+#endif
