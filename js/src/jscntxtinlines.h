@@ -572,6 +572,35 @@ JSContext::setCompartment(JSCompartment *comp)
 {
     compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
+    allocator_ = zone_ ? &zone_->allocator : NULL;
+}
+
+#ifdef JSGC_GENERATIONAL
+inline bool
+js::ThreadSafeContext::hasNursery() const
+{
+    return isJSContext();
+}
+
+inline js::Nursery &
+js::ThreadSafeContext::nursery()
+{
+    JS_ASSERT(hasNursery());
+    return runtime_->gcNursery;
+}
+#endif /* JSGC_GENERATIONAL */
+
+inline js::Allocator *const
+js::ThreadSafeContext::allocator()
+{
+    JS_ASSERT_IF(isJSContext(), &asJSContext()->zone()->allocator == allocator_);
+    return allocator_;
+}
+
+inline js::AllowGC
+js::ThreadSafeContext::allowGC()
+{
+    return isJSContext() ? CanGC : NoGC;
 }
 
 #endif /* jscntxtinlines_h */

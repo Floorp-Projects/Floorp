@@ -466,7 +466,7 @@ struct ArenaLists
     }
 
     template <AllowGC allowGC>
-    static void *refillFreeList(JSContext *cx, AllocKind thingKind);
+    static void *refillFreeList(ThreadSafeContext *cx, AllocKind thingKind);
 
     /*
      * Moves all arenas from |fromArenaLists| into |this|.  In
@@ -499,14 +499,6 @@ struct ArenaLists
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
-
-    /*
-     * Invoked from IonMonkey-compiled parallel worker threads to
-     * perform an allocation.  In this case, |this| will be
-     * thread-local, but the compartment |comp| is shared between all
-     * threads.
-     */
-    void *parallelAllocate(JS::Zone *zone, AllocKind thingKind, size_t thingSize);
 
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);

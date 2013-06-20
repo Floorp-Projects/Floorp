@@ -1650,7 +1650,6 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
   : ThreadSafeContext(shared->runtime(), perThreadData, Context_ForkJoin),
     sliceId(sliceId),
     numSlices(numSlices),
-    allocator(allocator),
     bailoutRecord(bailoutRecord),
     shared(shared)
 {
@@ -1659,6 +1658,7 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
      * trigger GCs and is otherwise not thread-safe to access.
      */
     zone_ = shared->zone();
+    allocator_ = allocator;
 }
 
 bool
