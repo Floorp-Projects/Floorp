@@ -21,7 +21,6 @@ nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwn
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
     static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
-  SetIsDOMBinding();
 }
 
 nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
