@@ -103,10 +103,10 @@ private:
   friend class BluetoothHfpManagerObserver;
 
   BluetoothHfpManager();
-  nsresult HandleIccInfoChanged();
-  nsresult HandleShutdown();
-  nsresult HandleVolumeChanged(const nsAString& aData);
-  nsresult HandleVoiceConnectionChanged();
+  void HandleIccInfoChanged();
+  void HandleShutdown();
+  void HandleVolumeChanged(const nsAString& aData);
+  void HandleVoiceConnectionChanged();
 
   bool Init();
   void Notify(const hal::BatteryInformation& aBatteryInfo);
