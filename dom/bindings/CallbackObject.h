@@ -145,12 +145,11 @@ protected:
     // is gone
     nsAutoMicroTask mMt;
 
-    // We construct our JS::Rooted right after our JSAutoRequest; let's just
-    // hope that the change in ordering wrt the mCxPusher constructor here is
-    // ok.
-    Maybe<JS::Rooted<JSObject*> > mRootedCallable;
-
     nsCxPusher mCxPusher;
+
+    // Constructed the rooter within the scope of mCxPusher above, so that it's
+    // always within a request during its lifetime.
+    Maybe<JS::Rooted<JSObject*> > mRootedCallable;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,
     // Put mAc after mCxPusher so that we exit the compartment before we pop the

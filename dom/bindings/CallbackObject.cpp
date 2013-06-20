@@ -43,8 +43,6 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   , mErrorResult(aRv)
   , mExceptionHandling(aExceptionHandling)
 {
-  xpc_UnmarkGrayObject(aCallback);
-
   // We need to produce a useful JSContext here.  Ideally one that the callback
   // is in some sense associated with, so that we can sort of treat it as a
   // "script entry point".  Though once we actually have script entry points,
@@ -90,13 +88,19 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
     cx = nsContentUtils::GetSafeJSContext();
   }
 
-  // Go ahead and stick our callable in a Rooted, to make sure it can't go
-  // gray again.  We can do this even though we're not in the right compartment
-  // yet, because Rooted<> does not care about compartments.
-  mRootedCallable.construct(cx, aCallback);
-
   // Make sure our JSContext is pushed on the stack.
   mCxPusher.Push(cx);
+
+  // Unmark the callable, and stick it in a Rooted before it can go gray again.
+  // Nothing before us in this function can trigger a CC, so it's safe to wait
+  // until here it do the unmark. This allows us to order the following two
+  // operations _after_ the Push() above, which lets us take advantage of the
+  // JSAutoRequest embedded in the pusher.
+  //
+  // We can do this even though we're not in the right compartment yet, because
+  // Rooted<> does not care about compartments.
+  xpc_UnmarkGrayObject(aCallback);
+  mRootedCallable.construct(cx, aCallback);
 
   // After this point we guarantee calling ScriptEvaluated() if we
   // have an nsIScriptContext.
