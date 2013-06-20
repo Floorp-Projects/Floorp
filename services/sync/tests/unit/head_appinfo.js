@@ -3,8 +3,6 @@
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-
 let gSyncProfile;
 
 gSyncProfile = do_get_profile();
