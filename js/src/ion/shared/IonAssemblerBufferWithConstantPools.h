@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_assembler_buffer_with_constant_pools_h__
-#define jsion_ion_assembler_buffer_with_constant_pools_h__
+#ifndef ion_shared_IonAssemblerBufferWithConstantPools_h
+#define ion_shared_IonAssemblerBufferWithConstantPools_h
 #include "ion/shared/IonAssemblerBuffer.h"
 #include "assembler/wtf/SegmentedVector.h"
 #include "ion/IonSpewer.h"
@@ -1147,4 +1147,4 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
 };
 } // ion
 } // js
-#endif // jsion_ion_assembler_buffer_with_constant_pools_h__
+#endif /* ion_shared_IonAssemblerBufferWithConstantPools_h */

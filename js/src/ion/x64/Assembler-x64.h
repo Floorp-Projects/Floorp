@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_cpu_x64_assembler_h__
-#define jsion_cpu_x64_assembler_h__
+#ifndef ion_x64_Assembler_x64_h
+#define ion_x64_Assembler_x64_h
 
 #include "ion/shared/Assembler-shared.h"
 #include "ion/CompactBuffer.h"
@@ -758,4 +758,4 @@ GetFloatArgReg(uint32_t intArg, uint32_t floatArg, FloatRegister *out)
 } // namespace ion
 } // namespace js
 
-#endif // jsion_cpu_x64_assembler_h__
+#endif /* ion_x64_Assembler_x64_h */

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_codegen_x86_shared_h__
-#define jsion_codegen_x86_shared_h__
+#ifndef ion_shared_CodeGenerator_x86_shared_h
+#define ion_shared_CodeGenerator_x86_shared_h
 
 #include "ion/shared/CodeGenerator-shared.h"
 
@@ -141,5 +141,4 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorX86Shared>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_codegen_x86_shared_h__
-
+#endif /* ion_shared_CodeGenerator_x86_shared_h */

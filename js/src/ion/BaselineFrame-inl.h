@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_baseline_frame_inl_h__
-#define jsion_baseline_frame_inl_h__
+#ifndef ion_BaselineFrame_inl_h
+#define ion_BaselineFrame_inl_h
 
 #ifdef JS_ION
 
@@ -82,5 +82,4 @@ BaselineFrame::callObj() const
 
 #endif // JS_ION
 
-#endif // jsion_baseline_frame_inl_h__
-
+#endif /* ion_BaselineFrame_inl_h */

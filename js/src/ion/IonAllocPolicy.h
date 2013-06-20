@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_alloc_policy_h__
-#define jsion_ion_alloc_policy_h__
+#ifndef ion_IonAllocPolicy_h
+#define ion_IonAllocPolicy_h
 
 #include "mozilla/GuardObjects.h"
 
@@ -161,5 +161,4 @@ class TempObjectPool
 } // namespace ion
 } // namespace js
 
-#endif // jsion_temp_alloc_policy_h__
-
+#endif /* ion_IonAllocPolicy_h */
