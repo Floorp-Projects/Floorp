@@ -221,7 +221,7 @@ class JSFunction : public JSObject
     //   use, but has extra checks, requires a cx and may trigger a GC.
     //
     // - For functions which may have a LazyScript but whose JSScript is known
-    //   to exist, getExistingScript() will get the script and delazify the
+    //   to exist, existingScript() will get the script and delazify the
     //   function if necessary.
     //
     // - For functions known to have a JSScript, nonLazyScript() will get it.
@@ -240,7 +240,7 @@ class JSFunction : public JSObject
         return u.i.s.script_;
     }
 
-    inline JSScript *getExistingScript();
+    inline JSScript *existingScript();
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
