@@ -19,8 +19,7 @@
 
 namespace js {
 
-// The basis of the asm.js type system is the EcmaScript-defined coercions
-// ToInt32 and ToNumber.
+// These EcmaScript-defined coercions form the basis of the asm.js type system.
 enum AsmJSCoercion
 {
     AsmJS_ToInt32,

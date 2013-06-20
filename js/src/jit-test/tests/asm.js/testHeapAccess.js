@@ -166,4 +166,4 @@ new Float64Array(BUF_64KB)[0] = 3.5;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return +-f64[0] } return f'), this, null, BUF_64KB)(), -3.5);
 
 // Bug 882012
-assertEq(asmLink(asmCompile('stdlib', 'foreign', 'heap', USE_ASM + "var identity=foreign.identity;var doubles=new stdlib.Float64Array(heap);function g(){doubles[0]=identity(2.0);return +doubles[0];}return g"), this, {identity: function(x){return x;}}, BUF_64KB)(), 2.0);
+assertEq(asmLink(asmCompile('stdlib', 'foreign', 'heap', USE_ASM + "var id=foreign.id;var doubles=new stdlib.Float64Array(heap);function g(){doubles[0]=+id(2.0);return +doubles[0];}return g"), this, {id: function(x){return x;}}, BUF_64KB)(), 2.0);
