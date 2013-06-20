@@ -167,6 +167,7 @@ pref("media.wakelock_timeout", 2000);
 #ifdef MOZ_WMF
 pref("media.windows-media-foundation.enabled", true);
 pref("media.windows-media-foundation.use-dxva", true);
+pref("media.windows-media-foundation.play-stand-alone", true);
 #endif
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
