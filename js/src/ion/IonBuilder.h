@@ -509,6 +509,8 @@ class IonBuilder : public MIRGenerator
     // Utility intrinsics.
     InliningStatus inlineThrowError(CallInfo &callInfo);
     InliningStatus inlineIsCallable(CallInfo &callInfo);
+    InliningStatus inlineNewObjectWithClassPrototype(CallInfo &callInfo);
+    InliningStatus inlineHaveSameClass(CallInfo &callInfo);
     InliningStatus inlineToObject(CallInfo &callInfo);
     InliningStatus inlineDump(CallInfo &callInfo);
 

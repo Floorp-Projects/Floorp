@@ -289,6 +289,23 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
     return obj;
 }
 
+JSObject *
+NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
+{
+    JS_ASSERT(!templateObject->hasSingletonType());
+
+    JSObject *obj = NewObjectWithGivenProto(cx,
+                                            templateObject->getClass(),
+                                            templateObject->getProto(),
+                                            cx->global());
+    if (!obj)
+        return NULL;
+
+    obj->setType(templateObject->type());
+
+    return obj;
+}
+
 bool
 ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
