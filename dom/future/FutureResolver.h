@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_PromiseResolver_h
-#define mozilla_dom_PromiseResolver_h
+#ifndef mozilla_dom_FutureResolver_h
+#define mozilla_dom_FutureResolver_h
 
-#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Future.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
@@ -18,53 +18,53 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class PromiseResolver MOZ_FINAL : public nsISupports,
-                                  public nsWrapperCache
+class FutureResolver MOZ_FINAL : public nsISupports,
+                                 public nsWrapperCache
 {
-  friend class PromiseResolverTask;
-  friend class WrapperPromiseCallback;
-  friend class ResolvePromiseCallback;
-  friend class RejectPromiseCallback;
+  friend class FutureResolverTask;
+  friend class WrapperFutureCallback;
+  friend class ResolveFutureCallback;
+  friend class RejectFutureCallback;
 
 private:
-  enum PromiseTaskSync {
+  enum FutureTaskSync {
     SyncTask,
     AsyncTask
   };
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PromiseResolver)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FutureResolver)
 
-  PromiseResolver(Promise* aPromise);
+  FutureResolver(Future* aFuture);
 
-  Promise* GetParentObject() const
+  Future* GetParentObject() const
   {
-    return mPromise;
+    return mFuture;
   }
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   void Resolve(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aValue,
-               PromiseTaskSync aSync = AsyncTask);
+               FutureTaskSync aSync = AsyncTask);
 
   void Reject(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aValue,
-              PromiseTaskSync aSync = AsyncTask);
+              FutureTaskSync aSync = AsyncTask);
 
 private:
   void ResolveInternal(JSContext* aCx,
                        const Optional<JS::Handle<JS::Value> >& aValue,
-                       PromiseTaskSync aSync = AsyncTask);
+                       FutureTaskSync aSync = AsyncTask);
 
   void RejectInternal(JSContext* aCx,
                       const Optional<JS::Handle<JS::Value> >& aValue,
-                      PromiseTaskSync aSync = AsyncTask);
+                      FutureTaskSync aSync = AsyncTask);
 
   void RunTask(JS::Handle<JS::Value> aValue,
-               Promise::PromiseState aState, PromiseTaskSync aSync);
+               Future::FutureState aState, FutureTaskSync aSync);
 
-  nsRefPtr<Promise> mPromise;
+  nsRefPtr<Future> mFuture;
 
   bool mResolvePending;
 };
@@ -72,4 +72,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_PromiseResolver_h
+#endif // mozilla_dom_FutureResolver_h
