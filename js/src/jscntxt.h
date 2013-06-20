@@ -1562,7 +1562,12 @@ struct ThreadSafeContext : js::ContextFriendFields,
     static size_t offsetOfAllocator() { return offsetof(ThreadSafeContext, allocator_); }
 
     inline Allocator *const allocator();
-    inline AllowGC allowGC();
+
+    /* GC support. */
+    inline AllowGC allowGC() const;
+
+    template <typename T>
+    inline bool isInsideCurrentZone(T thing) const;
 
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime_->onOutOfMemory(p, nbytes, isJSContext() ? asJSContext() : NULL);
