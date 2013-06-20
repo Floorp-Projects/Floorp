@@ -26,8 +26,8 @@
  * methods' implementations, potentially under time pressure.
  */
 
-#ifndef js_CallArgs_h___
-#define js_CallArgs_h___
+#ifndef js_CallArgs_h
+#define js_CallArgs_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -400,4 +400,4 @@ JS_THIS(JSContext *cx, JS::Value *vp)
  */
 #define JS_THIS_VALUE(cx,vp)    ((vp)[1])
 
-#endif /* js_CallArgs_h___ */
+#endif /* js_CallArgs_h */

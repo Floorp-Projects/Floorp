@@ -29,6 +29,7 @@
 #include "nsIDOMNavigatorTime.h"
 #include "nsWeakReference.h"
 #include "DeviceStorage.h"
+#include "nsWrapperCache.h"
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -141,12 +142,15 @@ class Navigator : public nsIDOMNavigator
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
                 , public nsIMozNavigatorAudioChannelManager
 #endif
+                , public nsWrapperCache
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
   virtual ~Navigator();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Navigator,
+                                                         nsIDOMNavigator)
   NS_DECL_NSIDOMNAVIGATOR
   NS_DECL_NSIDOMCLIENTINFORMATION
   NS_DECL_NSIDOMNAVIGATORDEVICESTORAGE
@@ -187,7 +191,10 @@ public:
   static void Init();
 
   void Invalidate();
-  nsPIDOMWindow *GetWindow();
+  nsPIDOMWindow *GetWindow()
+  {
+    return mWindow;
+  }
 
   void RefreshMIMEArray();
 
@@ -241,7 +248,7 @@ private:
   nsCOMPtr<nsIDOMNavigatorSystemMessages> mMessagesManager;
   nsTArray<nsRefPtr<nsDOMDeviceStorage> > mDeviceStorageStores;
   nsRefPtr<time::TimeManager> mTimeManager;
-  nsWeakPtr mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
 };
 
 } // namespace dom

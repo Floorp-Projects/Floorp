@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Object_h___
-#define Object_h___
+#ifndef builtin_Object_h
+#define builtin_Object_h
 
 #include "jsobj.h"
 
@@ -20,4 +20,4 @@ obj_construct(JSContext *cx, unsigned argc, js::Value *vp);
 
 } /* namespace js */
 
-#endif
+#endif /* builtin_Object_h */

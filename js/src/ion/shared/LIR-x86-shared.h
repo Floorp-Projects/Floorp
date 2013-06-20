@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_x86_shared_h__
-#define jsion_lir_x86_shared_h__
+#ifndef ion_shared_LIR_x86_shared_h
+#define ion_shared_LIR_x86_shared_h
 
 namespace js {
 namespace ion {
@@ -280,5 +280,4 @@ class LMulI : public LBinaryMath<0, 1>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_lir_x86_shared_h__
-
+#endif /* ion_shared_LIR_x86_shared_h */

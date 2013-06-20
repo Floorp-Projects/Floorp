@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_assembler_x86_shared__
-#define jsion_assembler_x86_shared__
+#ifndef ion_shared_Assembler_x86_shared_h
+#define ion_shared_Assembler_x86_shared_h
 #include <cstddef>
 #include "assembler/assembler/X86Assembler.h"
 
@@ -1358,5 +1358,4 @@ class AssemblerX86Shared
 } // namespace ion
 } // namespace js
 
-#endif // jsion_assembler_x86_shared__
-
+#endif /* ion_shared_Assembler_x86_shared_h */

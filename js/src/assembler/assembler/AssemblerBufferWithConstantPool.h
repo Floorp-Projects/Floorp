@@ -28,8 +28,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef AssemblerBufferWithConstantPool_h
-#define AssemblerBufferWithConstantPool_h
+#ifndef assembler_assembler_AssemblerBufferWithConstantPool_h
+#define assembler_assembler_AssemblerBufferWithConstantPool_h
 
 #include "assembler/wtf/Platform.h"
 
@@ -383,4 +383,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // AssemblerBufferWithConstantPool_h
+#endif /* assembler_assembler_AssemblerBufferWithConstantPool_h */

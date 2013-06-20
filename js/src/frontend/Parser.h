@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Parser_h__
-#define Parser_h__
+#ifndef frontend_Parser_h
+#define frontend_Parser_h
 
 /*
  * JS parser definitions.
@@ -566,4 +566,4 @@ Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, JSOp op);
  */
 #define TS(p) (&(p)->tokenStream)
 
-#endif /* Parser_h__ */
+#endif /* frontend_Parser_h */

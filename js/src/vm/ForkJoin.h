@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ForkJoin_h__
-#define ForkJoin_h__
+#ifndef vm_ForkJoin_h
+#define vm_ForkJoin_h
 
 #include "jscntxt.h"
 #include "vm/ThreadPool.h"
@@ -495,4 +495,4 @@ js::ForkJoinSlice::Current()
 #endif
 }
 
-#endif // ForkJoin_h__
+#endif /* vm_ForkJoin_h */

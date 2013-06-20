@@ -2245,7 +2245,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // SIZE & POSITION THE FLEX LINE (IN CROSS AXIS)
+  // Calculate the cross size of our (single) flex line:
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)
   CrossAxisPositionTracker
@@ -2263,7 +2263,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // additional share of our flex container's desired cross-size. (if it's
   // not NS_AUTOHEIGHT and there's any cross-size left over to distribute)
 
-  // Figure out our flex container's cross size
+  // Calculate the content-box cross size of our flex container:
   nscoord contentBoxCrossSize =
     axisTracker.GetCrossComponent(nsSize(aReflowState.ComputedWidth(),
                                          aReflowState.ComputedHeight()));
@@ -2294,10 +2294,9 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   frameCrossSize = contentBoxCrossSize +
     axisTracker.GetMarginSizeInCrossAxis(aReflowState.mComputedBorderPadding);
 
-  // Might be nscoord_MIN if we don't have any baseline-aligned flex items;
-  // that's OK, we'll correct it below.
-  // This is w.r.t. the top of our content box; we'll add borderpadding when
-  // we actually stick it in |aDesiredSize|.
+  // Set the flex container's baseline, from its baseline-aligned items.
+  // (This might give us nscoord_MIN if we don't have any baseline-aligned
+  // flex items.  That's OK, we'll update it below.)
   nscoord flexContainerAscent =
     lineCrossAxisPosnTracker.GetCrossStartToFurthestBaseline();
   if (flexContainerAscent != nscoord_MIN) {

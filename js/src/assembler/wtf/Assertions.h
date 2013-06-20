@@ -23,8 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WTF_Assertions_h
-#define WTF_Assertions_h
+#ifndef assembler_wtf_Assertions_h
+#define assembler_wtf_Assertions_h
 
 #include "Platform.h"
 #include "mozilla/Assertions.h"
@@ -46,5 +46,4 @@
 #define CRASH() MOZ_CRASH()
 #define COMPILE_ASSERT(exp, name) MOZ_STATIC_ASSERT(exp, #name)
 
-#endif  // WTF_Assertions_h
-
+#endif /* assembler_wtf_Assertions_h */
