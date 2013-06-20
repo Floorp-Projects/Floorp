@@ -11,10 +11,13 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES = \
+  ../unit/data/simple.mar \
   ../unit/data/simple_no_pib.mar \
   $(NULL)
 
 MOCHITEST_CHROME_FILES += \
+  test_0017_check_staging_basic.xul \
+  test_0027_check_staging_billboard.xul \
   test_0011_check_basic.xul \
   test_0012_check_basic_license.xul \
   test_0013_check_incompat_basic.xul \
@@ -33,12 +36,14 @@ MOCHITEST_CHROME_FILES += \
   test_0034_available_incompat_basic_license.xul \
   test_0035_available_incompat_basic_addons.xul \
   test_0036_available_incompat_basic_license_addons.xul \
+  test_0037_available_staging_basic.xul \
   test_0041_available_billboard.xul \
   test_0042_available_billboard_license.xul \
   test_0043_available_incompat_billboard.xul \
   test_0044_available_incompat_billboard_license.xul \
   test_0045_available_incompat_billboard_addons.xul \
   test_0046_available_incompat_billboard_license_addons.xul \
+  test_0047_available_staging_billboard.xul \
   test_0051_check_error_xml_malformed.xul \
   test_0052_check_no_updates.xul \
   test_0053_check_billboard_license_noAttr.xul \
@@ -57,11 +62,14 @@ MOCHITEST_CHROME_FILES += \
   test_0084_error_patchApplyFailure_verify_failed.xul \
   test_0091_installed.xul \
   test_0092_finishedBackground.xul \
-  test_0093_stagedBackground.xul \
-  test_0094_stagedServiceBackground.xul \
-  test_0095_restartNotification.xul \
-  test_0096_restartNotification_remote.xul \
-  test_0097_restartNotification_remoteInvalidNumber.xul \
+  test_0093_restartNotification.xul \
+  test_0094_restartNotification_remote.xul \
+  test_0095_restartNotification_remoteInvalidNumber.xul \
+  test_0096_restartNotification_stagedBackground.xul \
+  test_0097_restartNotification_stagedServiceBackground.xul \
+  test_0101_background_restartNotification.xul \
+  test_0102_background_restartNotification_staging.xul \
+  test_0103_background_restartNotification_stagingService.xul \
   test_0111_neverButton_basic.xul \
   test_0112_neverButton_billboard.xul \
   test_0113_showNeverForVersionRemovedWithPref.xul \
