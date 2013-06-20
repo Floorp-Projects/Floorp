@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_caches_h__
-#define jsion_caches_h__
+#ifndef ion_IonCaches_h
+#define ion_IonCaches_h
 
 #include "IonCode.h"
 #include "Registers.h"
@@ -931,4 +931,4 @@ IONCACHE_KIND_LIST(CACHE_CASTS)
 } // namespace ion
 } // namespace js
 
-#endif // jsion_caches_h__
+#endif /* ion_IonCaches_h */

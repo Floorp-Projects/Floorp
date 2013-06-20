@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsdbgapi_h___
-#define jsdbgapi_h___
+#ifndef jsdbgapi_h
+#define jsdbgapi_h
 /*
  * JS debugger API.
  */
@@ -458,4 +458,4 @@ JS_DumpCompartmentPCCounts(JSContext *cx);
 extern JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx);
 
-#endif /* jsdbgapi_h___ */
+#endif /* jsdbgapi_h */

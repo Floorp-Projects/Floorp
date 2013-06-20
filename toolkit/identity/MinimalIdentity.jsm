@@ -147,6 +147,10 @@ IDService.prototype = {
    */
   unwatch: function unwatch(aRpId, aTargetMM) {
     let rp = this._rpFlows[aRpId];
+    if (!rp) {
+      return;
+    }
+
     let options = makeMessageObject({
       id: aRpId,
       origin: rp.origin,
@@ -171,6 +175,10 @@ IDService.prototype = {
    */
   request: function request(aRPId, aOptions) {
     let rp = this._rpFlows[aRPId];
+    if (!rp) {
+      reportError("request() called before watch()");
+      return;
+    }
 
     // Notify UX to display identity picker.
     // Pass the doc id to UX so it can pass it back to us later.
@@ -189,6 +197,10 @@ IDService.prototype = {
    */
   logout: function logout(aRpCallerId) {
     let rp = this._rpFlows[aRpCallerId];
+    if (!rp) {
+      reportError("logout() called before watch()");
+      return;
+    }
 
     let options = makeMessageObject(rp);
     Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-logout", null);

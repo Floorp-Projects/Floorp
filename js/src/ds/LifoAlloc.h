@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef LifoAlloc_h__
-#define LifoAlloc_h__
+#ifndef ds_LifoAlloc_h
+#define ds_LifoAlloc_h
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
@@ -408,4 +408,4 @@ class LifoAllocScope
 
 } // namespace js
 
-#endif
+#endif /* ds_LifoAlloc_h */

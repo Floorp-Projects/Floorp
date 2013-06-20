@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_root_h__
-#define jsgc_root_h__
+#ifndef js_RootingAPI_h
+#define js_RootingAPI_h
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
@@ -497,6 +497,12 @@ struct GCMethods<T *>
 #endif
 };
 
+#if defined(DEBUG) && defined(JS_THREADSAFE)
+/* This helper allows us to assert that Rooted<T> is scoped within a request. */
+extern JS_PUBLIC_API(bool)
+IsInRequest(JSContext *cx);
+#endif
+
 } /* namespace js */
 
 namespace JS {
@@ -513,6 +519,10 @@ template <typename T>
 class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 {
     void init(JSContext *cxArg) {
+        MOZ_ASSERT(cxArg);
+#ifdef JS_THREADSAFE
+        MOZ_ASSERT(js::IsInRequest(cxArg));
+#endif
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
         js::ContextFriendFields *cx = js::ContextFriendFields::get(cxArg);
         commonInit(cx->thingGCRooters);
@@ -520,6 +530,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     }
 
     void init(js::PerThreadDataFriendFields *pt) {
+        MOZ_ASSERT(pt);
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
         commonInit(pt->thingGCRooters);
 #endif
@@ -931,4 +942,4 @@ class CompilerRootNode
 
 }  /* namespace js */
 
-#endif  /* jsgc_root_h___ */
+#endif  /* js_RootingAPI_h */

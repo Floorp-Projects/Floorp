@@ -15,7 +15,6 @@ nsDOMMutationEvent::nsDOMMutationEvent(mozilla::dom::EventTarget* aOwner,
                aEvent ? aEvent : new nsMutationEvent(false, 0))
 {
   mEventIsInternal = (aEvent == nullptr);
-  SetIsDOMBinding();
 }
 
 nsDOMMutationEvent::~nsDOMMutationEvent()

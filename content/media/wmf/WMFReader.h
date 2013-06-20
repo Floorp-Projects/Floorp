@@ -115,6 +115,8 @@ private:
   // checks a pref, so we cache its value in mIsMP3Enabled and use that on
   // the decode thread.
   const bool mIsMP3Enabled;
+
+  bool mCOMInitialized;
 };
 
 } // namespace mozilla

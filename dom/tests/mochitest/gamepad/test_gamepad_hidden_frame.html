@@ -12,6 +12,7 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 var index = GamepadService.addGamepad("test gamepad", // id
+                                      SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
                                       4, // buttons
                                       2);// axes
 

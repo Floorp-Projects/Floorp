@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ScopeObject_inl_h___
-#define ScopeObject_inl_h___
+#ifndef vm_ScopeObject_inl_h
+#define vm_ScopeObject_inl_h
 
 #include "ScopeObject.h"
 
@@ -270,4 +270,4 @@ ClonedBlockObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAl
 
 }  /* namespace js */
 
-#endif /* ScopeObject_inl_h___ */
+#endif /* vm_ScopeObject_inl_h */

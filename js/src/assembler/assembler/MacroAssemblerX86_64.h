@@ -27,8 +27,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MacroAssemblerX86_64_h
-#define MacroAssemblerX86_64_h
+#ifndef assembler_assembler_MacroAssemblerX86_64_h
+#define assembler_assembler_MacroAssemblerX86_64_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -601,4 +601,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // MacroAssemblerX86_64_h
+#endif /* assembler_assembler_MacroAssemblerX86_64_h */

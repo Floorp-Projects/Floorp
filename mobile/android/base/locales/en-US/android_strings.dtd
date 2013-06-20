@@ -154,6 +154,8 @@ size. -->
 <!-- Localization note (datareporting_crashreporter_title_short) : This string matches
      (crashReporterSection.label) in en-US/chrome/browser/preferences/advanced.dtd.-->
 <!ENTITY datareporting_crashreporter_title_short "Crash Reporter">
+<!ENTITY datareporting_wifi_title "&vendorShortName; location services">
+<!ENTITY datareporting_wifi_summary "Help improve geolocation services for the Open Web by letting &brandShortName; collect and send anonymous cellular tower data">
 
 <!ENTITY pref_update_autodownload "Automatic updates">
 <!ENTITY pref_update_autodownload_wifi "Only over Wi-Fi">

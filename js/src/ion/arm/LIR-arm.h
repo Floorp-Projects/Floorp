@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_arm_h__
-#define jsion_lir_arm_h__
+#ifndef ion_arm_LIR_arm_h
+#define ion_arm_LIR_arm_h
 
 namespace js {
 namespace ion {
@@ -362,4 +362,4 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_lir_arm_h__
+#endif /* ion_arm_LIR_arm_h */

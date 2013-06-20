@@ -27,8 +27,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef X86Assembler_h
-#define X86Assembler_h
+#ifndef assembler_assembler_X86Assembler_h
+#define assembler_assembler_X86Assembler_h
 
 #include <stdarg.h>
 
@@ -3501,4 +3501,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER) && CPU(X86)
 
-#endif // X86Assembler_h
+#endif /* assembler_assembler_X86Assembler_h */

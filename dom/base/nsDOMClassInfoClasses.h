@@ -18,12 +18,6 @@ DOMCI_CLASS(DOMConstructor)
 DOMCI_CLASS(DOMException)
 DOMCI_CLASS(Element)
 
-// Event classes
-DOMCI_CLASS(Event)
-#define MOZ_GENERATED_EVENT_LIST
-#define MOZ_GENERATED_EVENT(_event_interface) DOMCI_CLASS(_event_interface)
-#include "GeneratedEvents.h"
-#undef MOZ_GENERATED_EVENT_LIST
 DOMCI_CLASS(DeviceAcceleration)
 DOMCI_CLASS(DeviceRotationRate)
 

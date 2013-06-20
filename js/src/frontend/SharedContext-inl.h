@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SharedContext_inl_h__
-#define SharedContext_inl_h__
+#ifndef frontend_SharedContext_inl_h
+#define frontend_SharedContext_inl_h
 
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
@@ -95,4 +95,4 @@ frontend::FinishPopStatement(ContextT *ct)
 
 } // namespace js
 
-#endif // SharedContext_inl_h__
+#endif /* frontend_SharedContext_inl_h */

@@ -517,6 +517,7 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
 
     nsAutoPtr<ModuleEntry> entry(new ModuleEntry);
 
+    JSAutoRequest ar(mContext);
     RootedValue dummy(mContext);
     rv = ObjectForLocation(file, uri, &entry->obj,
                            &entry->location, false, &dummy);

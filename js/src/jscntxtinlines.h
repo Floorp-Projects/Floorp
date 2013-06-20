@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscntxtinlines_h___
-#define jscntxtinlines_h___
+#ifndef jscntxtinlines_h
+#define jscntxtinlines_h
 
 #include "jscntxt.h"
 
@@ -574,4 +574,4 @@ JSContext::setCompartment(JSCompartment *comp)
     zone_ = comp ? comp->zone() : NULL;
 }
 
-#endif /* jscntxtinlines_h___ */
+#endif /* jscntxtinlines_h */

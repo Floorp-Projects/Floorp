@@ -313,8 +313,6 @@ NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& 
 
 NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(bool aEnable)
 {
-    nsresult rv;
-    
     NS_ENSURE_STATE(mDocShell);
     
     return mDocShell->SetUseGlobalHistory(aEnable);

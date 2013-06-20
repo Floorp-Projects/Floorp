@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_baseline_jit_h__
-#define jsion_baseline_jit_h__
+#ifndef ion_BaselineJIT_h
+#define ion_BaselineJIT_h
 
 #ifdef JS_ION
 
@@ -337,5 +337,4 @@ MarkActiveBaselineScripts(Zone *zone);
 
 #endif // JS_ION
 
-#endif // jsion_baseline_jit_h__
-
+#endif /* ion_BaselineJIT_h */

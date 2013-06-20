@@ -6,8 +6,8 @@
 
 /* Definitions related to javascript type inference. */
 
-#ifndef jsinfer_h___
-#define jsinfer_h___
+#ifndef jsinfer_h
+#define jsinfer_h
 
 #include "jsalloc.h"
 #include "jsfriendapi.h"
@@ -1505,4 +1505,4 @@ MOZ_NORETURN void TypeFailure(JSContext *cx, const char *fmt, ...);
 } /* namespace types */
 } /* namespace js */
 
-#endif // jsinfer_h___
+#endif /* jsinfer_h */
