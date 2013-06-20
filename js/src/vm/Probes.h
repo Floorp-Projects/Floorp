@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Probes_h__
-#define Probes_h__
+#ifndef vm_Probes_h
+#define vm_Probes_h
 
 #include "jspubtd.h"
 #include "jsobj.h"
@@ -170,4 +170,4 @@ Probes::finalizeObject(JSObject *obj)
 
 } /* namespace js */
 
-#endif  // Probes_h__
+#endif /* vm_Probes_h */

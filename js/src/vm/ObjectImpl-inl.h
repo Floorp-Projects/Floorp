@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ObjectImpl_inl_h___
-#define ObjectImpl_inl_h___
+#ifndef vm_ObjectImpl_inl_h
+#define vm_ObjectImpl_inl_h
 
 #include "mozilla/Assertions.h"
 
@@ -462,4 +462,4 @@ js::ObjectImpl::initPrivate(void *data)
     privateRef(numFixedSlots()) = data;
 }
 
-#endif /* ObjectImpl_inl_h__ */
+#endif /* vm_ObjectImpl_inl_h */
