@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsscriptinlines_h___
-#define jsscriptinlines_h___
+#ifndef jsscriptinlines_h
+#define jsscriptinlines_h
 
 #include "jsautooplen.h"
 #include "jscntxt.h"
@@ -212,4 +212,4 @@ JSScript::setOriginalFunctionObject(JSObject *fun) {
     enclosingScopeOrOriginalFunction_ = fun;
 }
 
-#endif /* jsscriptinlines_h___ */
+#endif /* jsscriptinlines_h */

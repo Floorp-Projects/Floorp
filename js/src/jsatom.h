@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsatom_h___
-#define jsatom_h___
+#ifndef jsatom_h
+#define jsatom_h
 
 #include "mozilla/HashFunctions.h"
 
@@ -239,4 +239,4 @@ XDRAtom(XDRState<mode> *xdr, js::MutableHandleAtom atomp);
 
 } /* namespace js */
 
-#endif /* jsatom_h___ */
+#endif /* jsatom_h */

@@ -6,8 +6,8 @@
 
 /* A higher-order macro for enumerating all JSProtoKey values. */
 
-#ifndef jsprototypes_h___
-#define jsprototypes_h___
+#ifndef jsprototypes_h
+#define jsprototypes_h
 
 #include "jsversion.h"
 
@@ -57,4 +57,4 @@
     macro(ParallelArray,         36,     js_InitParallelArrayClass) \
     macro(Intl,                  37,     js_InitIntlClass) \
 
-#endif /* jsprototypes_h___ */
+#endif /* jsprototypes_h */
