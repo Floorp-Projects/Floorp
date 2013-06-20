@@ -241,6 +241,7 @@ FENNEC_JAVA_FILES = \
   widget/ActivityChooserModel.java \
   widget/AddonsSection.java \
   widget/ButtonToast.java \
+  widget/ArrowPopup.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
@@ -440,6 +441,7 @@ endif
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/abouthome_content.xml \
+  res/layout/arrow_popup.xml \
   res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
@@ -457,7 +459,6 @@ RES_LAYOUT = \
   res/layout/bookmark_edit.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
-  res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
   res/layout/doorhanger_button.xml \
   res/layout/find_in_page_content.xml \
@@ -476,7 +477,7 @@ RES_LAYOUT = \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
-  res/layout/site_identity_popup.xml \
+  res/layout/site_identity.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_panel.xml \

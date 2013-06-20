@@ -7,36 +7,25 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.widget.ArrowPopup;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 import java.util.HashSet;
 
-public class DoorHangerPopup extends PopupWindow
+public class DoorHangerPopup extends ArrowPopup
                              implements GeckoEventListener, Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoDoorHangerPopup";
 
     private GeckoApp mActivity;
     private View mAnchor;
-    private LinearLayout mContent;
-
-    private boolean mInflated; 
-    private ImageView mArrow;
-    private int mArrowWidth;
-    private int mYOffset;
 
     // Stores a set of all active DoorHanger notifications. A DoorHanger is
     // uniquely identified by its tabId and value.
@@ -47,16 +36,11 @@ public class DoorHangerPopup extends PopupWindow
         mActivity = aActivity;
         mAnchor = aAnchor;
 
-        mInflated = false;
-        mArrowWidth = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        mYOffset = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_offset);
         mDoorHangers = new HashSet<DoorHanger>();
 
         registerEventListener("Doorhanger:Add");
         registerEventListener("Doorhanger:Remove");
         Tabs.registerOnTabsChangedListener(this);
-
-        setAnimationStyle(R.style.PopupAnimation);
     }
 
     void destroy() {
@@ -139,21 +123,6 @@ public class DoorHangerPopup extends PopupWindow
                 updatePopup();
                 break;
         }
-    }
-
-    private void init() {
-        setBackgroundDrawable(new BitmapDrawable());
-        setOutsideTouchable(true);
-        setWindowLayoutMode(HardwareUtils.isTablet() ? ViewGroup.LayoutParams.WRAP_CONTENT : ViewGroup.LayoutParams.FILL_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        LayoutInflater inflater = LayoutInflater.from(mActivity);
-        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.doorhangerpopup, null);
-        mArrow = (ImageView) layout.findViewById(R.id.doorhanger_arrow);
-        mContent = (LinearLayout) layout.findViewById(R.id.doorhanger_container);
-        
-        setContentView(layout);
-        mInflated = true;
     }
 
     /**
