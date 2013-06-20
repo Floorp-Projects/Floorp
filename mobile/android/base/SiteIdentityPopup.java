@@ -5,26 +5,25 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.widget.ArrowPopup;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.res.Resources;
-import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
 /**
  * SiteIdentityPopup is a singleton class that displays site identity data in
  * an arrow panel popup hanging from the lock icon in the browser toolbar.
  */
-public class SiteIdentityPopup extends PopupWindow {
+public class SiteIdentityPopup extends ArrowPopup {
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
     public static final String UNKNOWN = "unknown";
@@ -34,26 +33,18 @@ public class SiteIdentityPopup extends PopupWindow {
     private static SiteIdentityPopup sInstance;
 
     private Resources mResources;
-    private boolean mInflated;
 
     private TextView mHost;
     private TextView mOwner;
     private TextView mSupplemental;
     private TextView mVerifier;
     private TextView mEncrypted;
-
     private ImageView mLarry;
-    private ImageView mArrow;
-
-    private int mYOffset;
 
     private SiteIdentityPopup() {
         super(GeckoAppShell.getContext());
 
         mResources = GeckoAppShell.getContext().getResources();
-        mYOffset = mResources.getDimensionPixelSize(R.dimen.menu_popup_offset);
-        mInflated = false;
-        setAnimationStyle(R.style.PopupAnimation);
     }
 
     public static synchronized SiteIdentityPopup getInstance() {
@@ -67,29 +58,21 @@ public class SiteIdentityPopup extends PopupWindow {
         sInstance = null;
     }
 
-    private void init() {
-        setBackgroundDrawable(new BitmapDrawable());
-        setOutsideTouchable(true);
+    @Override
+    protected void init() {
+        super.init();
 
         // Make the popup focusable so it doesn't inadvertently trigger click events elsewhere
         // which may reshow the popup (see bug 785156)
         setFocusable(true);
 
-        setWindowLayoutMode(HardwareUtils.isTablet() ? LayoutParams.WRAP_CONTENT : LayoutParams.FILL_PARENT,
-                LayoutParams.WRAP_CONTENT);
-
-        LayoutInflater inflater = LayoutInflater.from(GeckoAppShell.getContext());
-        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.site_identity_popup, null);
-        setContentView(layout);
+        LinearLayout layout = (LinearLayout) mInflater.inflate(R.layout.site_identity, null);
+        mContent.addView(layout);
 
         mHost = (TextView) layout.findViewById(R.id.host);
         mOwner = (TextView) layout.findViewById(R.id.owner);
         mVerifier = (TextView) layout.findViewById(R.id.verifier);
-
         mLarry = (ImageView) layout.findViewById(R.id.larry);
-        mArrow = (ImageView) layout.findViewById(R.id.arrow);
-
-        mInflated = true;
     }
 
     public void show(View v) {
@@ -166,7 +149,7 @@ public class SiteIdentityPopup extends PopupWindow {
             offset = 0 - popupWidth + arrowWidth*3/2 + v.getWidth()/2;
         }
 
-        LayoutParams layoutParams = (LayoutParams) mArrow.getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mArrow.getLayoutParams();
         layoutParams.setMargins(leftMargin, 0, 0, 0);
 
         showAsDropDown(v, offset, -mYOffset);
