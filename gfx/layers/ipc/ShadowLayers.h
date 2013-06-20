@@ -324,6 +324,8 @@ public:
   bool HasShadowManager() const { return !!mShadowManager; }
   PLayerTransactionChild* GetShadowManager() const { return mShadowManager; }
 
+  virtual void WindowOverlayChanged() { mWindowOverlayChanged = true; }
+
   /**
    * The following Alloc/Open/Destroy interfaces abstract over the
    * details of working with surfaces that are shared across
@@ -444,6 +446,7 @@ private:
 
   bool mIsFirstPaint;
   bool mDrawColoredBorders;
+  bool mWindowOverlayChanged;
 };
 
 class CompositableClient;
