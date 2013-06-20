@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.ArrowPopup;
 
 import org.json.JSONException;
@@ -16,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /**
@@ -40,7 +38,7 @@ public class SiteIdentityPopup extends ArrowPopup {
     private ImageView mLarry;
 
     SiteIdentityPopup(BrowserApp aActivity) {
-        super(aActivity);
+        super(aActivity, null);
 
         mResources = aActivity.getResources();
     }
@@ -63,19 +61,10 @@ public class SiteIdentityPopup extends ArrowPopup {
         mLarry = (ImageView) layout.findViewById(R.id.larry);
     }
 
-    public void show(View v) {
-        Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab == null) {
-            Log.e(LOGTAG, "Selected tab is null");
-            return;
-        }
-
-        JSONObject identityData = selectedTab.getIdentityData();
-        if (identityData == null) {
-            Log.e(LOGTAG, "Tab has no identity data");
-            return;
-        }
-
+    /*
+     * @param identityData A JSONObject that holds the current tab's identity data.
+     */
+    public void updateIdentity(JSONObject identityData) {
         String mode;
         try {
             mode = identityData.getString("mode");
@@ -124,22 +113,5 @@ public class SiteIdentityPopup extends ArrowPopup {
             mHost.setTextColor(mResources.getColor(R.color.identity_identified));
             mOwner.setTextColor(mResources.getColor(R.color.identity_identified));
         }
-
-        int[] anchorLocation = new int[2];
-        v.getLocationOnScreen(anchorLocation);
-
-        int arrowWidth = mResources.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        int leftMargin = anchorLocation[0] + (v.getWidth() - arrowWidth) / 2;
-
-        int offset = 0;
-        if (HardwareUtils.isTablet()) {
-            int popupWidth = mResources.getDimensionPixelSize(R.dimen.doorhanger_width);
-            offset = 0 - popupWidth + arrowWidth*3/2 + v.getWidth()/2;
-        }
-
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mArrow.getLayoutParams();
-        layoutParams.setMargins(leftMargin, 0, 0, 0);
-
-        showAsDropDown(v, offset, -mYOffset);
     }
 }

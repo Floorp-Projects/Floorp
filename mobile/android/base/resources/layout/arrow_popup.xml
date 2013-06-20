@@ -22,7 +22,7 @@
     <ImageView android:id="@+id/arrow"
                android:layout_width="@dimen/menu_popup_arrow_width"
                android:layout_height="12dip"
-               android:layout_marginLeft="4dip"
+               android:layout_marginLeft="20dip"
                android:layout_alignParentTop="true"
                android:src="@drawable/menu_popup_arrow_top"
                android:scaleType="fitXY"/>
