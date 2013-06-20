@@ -38,16 +38,10 @@ js::AutoCompartment::~AutoCompartment()
     cx_->leaveCompartment(origin_);
 }
 
-void
-js::Allocator::updateMallocCounter(size_t nbytes)
-{
-    zone->rt->updateMallocCounter(zone, nbytes);
-}
-
 inline void *
 js::Allocator::parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize)
 {
-    return arenas.parallelAllocate(zone, thingKind, thingSize);
+    return arenas.parallelAllocate(zone_, thingKind, thingSize);
 }
 
 namespace js {
