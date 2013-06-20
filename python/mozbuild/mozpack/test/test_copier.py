@@ -4,6 +4,7 @@
 
 from mozpack.copier import (
     FileCopier,
+    FilePurger,
     FileRegistry,
     Jarrer,
 )
@@ -19,6 +20,7 @@ from tempfile import mkdtemp
 from mozpack.test.test_files import (
     MockDest,
     MatchTestTemplate,
+    TestWithTmpDir,
 )
 
 
@@ -129,6 +131,36 @@ class TestFileCopier(unittest.TestCase):
         copier.copy(self.tmpdir)
         self.assertEqual(self.all_files(self.tmpdir), set(copier.paths()))
         self.assertEqual(self.all_dirs(self.tmpdir), set(['qux']))
+
+
+class TestFilePurger(TestWithTmpDir):
+    def test_file_purger(self):
+        existing = os.path.join(self.tmpdir, 'existing')
+        extra = os.path.join(self.tmpdir, 'extra')
+        empty_dir = os.path.join(self.tmpdir, 'dir')
+
+        with open(existing, 'a'):
+            pass
+
+        with open(extra, 'a'):
+            pass
+
+        os.mkdir(empty_dir)
+        with open(os.path.join(empty_dir, 'foo'), 'a'):
+            pass
+
+        self.assertTrue(os.path.exists(existing))
+        self.assertTrue(os.path.exists(extra))
+
+        purger = FilePurger()
+        purger.add('existing')
+        result = purger.purge(self.tmpdir)
+        self.assertEqual(result.removed_files_count, 2)
+        self.assertEqual(result.removed_directories_count, 1)
+
+        self.assertTrue(os.path.exists(existing))
+        self.assertFalse(os.path.exists(extra))
+        self.assertFalse(os.path.exists(empty_dir))
 
 
 class TestJarrer(unittest.TestCase):
