@@ -26,24 +26,25 @@
 namespace js {
 
 /*
- * Encapsulates the data needed to perform allocation.  Typically
- * there is precisely one of these per compartment
- * (|compartment.allocator|).  However, in parallel execution mode,
- * there will be one per worker thread.  In general, if a piece of
- * code must perform execution and should work safely either in
- * parallel or sequential mode, you should make it take an
- * |Allocator*| rather than a |JSContext*|.
+ * Encapsulates the data needed to perform allocation.  Typically there is
+ * precisely one of these per zone (|cx->zone().allocator|).  However, in
+ * parallel execution mode, there will be one per worker thread.
  */
 class Allocator
 {
+    /*
+     * Since allocators can be accessed from worker threads, the parent zone_
+     * should not be accessed in general. ArenaLists is allowed to actually do
+     * the allocation, however.
+     */
+    friend class gc::ArenaLists;
+
     JS::Zone *zone_;
 
   public:
     explicit Allocator(JS::Zone *zone);
 
     js::gc::ArenaLists arenas;
-
-    inline void *parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize);
 };
 
 typedef Vector<JSCompartment *, 1, SystemAllocPolicy> CompartmentVector;
