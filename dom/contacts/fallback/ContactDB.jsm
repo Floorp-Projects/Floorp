@@ -16,7 +16,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 const DB_NAME = "contacts";
 const DB_VERSION = 11;
@@ -891,8 +890,8 @@ ContactDB.prototype = {
       } else {
         // XXX: "contains" should be handled separately, this is "startsWith"
         if (options.filterOp === 'contains' && key !== 'tel') {
-          console.warn("ContactDB: 'contains' only works for 'tel'. " +
-                       "Falling back to 'startsWith'.");
+          dump("ContactDB: 'contains' only works for 'tel'. Falling back " +
+               "to 'startsWith'.\n");
         }
         // not case sensitive
         let lowerCase = options.filterValue.toString().toLowerCase();
