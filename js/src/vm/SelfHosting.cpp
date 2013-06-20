@@ -505,8 +505,8 @@ intrinsic_NewClassPrototype(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js::intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 1);
