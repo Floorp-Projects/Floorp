@@ -25,10 +25,6 @@ DISABLED_EXTRA_COMPONENTS = \
   satchel.manifest \
   $(NULL)
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-	nsFormHistory.js \
-	$(NULL)
-
 EXTRA_JS_MODULES = \
   nsFormAutoCompleteResult.jsm \
   $(NULL)

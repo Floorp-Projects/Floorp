@@ -13,9 +13,4 @@ ifdef ENABLE_MARIONETTE
 DEFINES += -DENABLE_MARIONETTE=1
 endif
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-    MarionetteComponents.manifest \
-    marionettecomponent.js \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk
