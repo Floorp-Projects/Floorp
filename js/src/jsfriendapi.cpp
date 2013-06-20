@@ -904,7 +904,7 @@ JS::IncrementalObjectBarrier(JSObject *obj)
     if (!obj)
         return;
 
-    JS_ASSERT(!obj->zone()->rt->isHeapBusy());
+    JS_ASSERT(!obj->zone()->rt->isHeapMajorCollecting());
 
     AutoMarkInDeadZone amn(obj->zone());
 
@@ -922,7 +922,7 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
                  ? static_cast<JSObject *>(cell)->zone()
                  : cell->tenuredZone();
 
-    JS_ASSERT(!zone->rt->isHeapBusy());
+    JS_ASSERT(!zone->rt->isHeapMajorCollecting());
 
     AutoMarkInDeadZone amn(zone);
 
