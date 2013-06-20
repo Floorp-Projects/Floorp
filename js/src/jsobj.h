@@ -540,17 +540,8 @@ class JSObject : public js::ObjectImpl
     static const char *className(JSContext *cx, js::HandleObject obj);
 
     /* Accessors for elements. */
-
-    struct MaybeContext {
-        js::Allocator *allocator;
-        JSContext *context;
-
-        MaybeContext(JSContext *cx) : allocator(NULL), context(cx) {}
-        MaybeContext(js::Allocator *alloc) : allocator(alloc), context(NULL) {}
-    };
-
     inline bool ensureElements(JSContext *cx, uint32_t cap);
-    bool growElements(MaybeContext cx, uint32_t newcap);
+    bool growElements(js::ThreadSafeContext *tcx, uint32_t newcap);
     void shrinkElements(JSContext *cx, uint32_t cap);
     inline void setDynamicElements(js::ObjectElements *header);
 
@@ -586,10 +577,10 @@ class JSObject : public js::ObjectImpl
      */
     enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
     inline EnsureDenseResult ensureDenseElements(JSContext *cx, uint32_t index, uint32_t extra);
-    inline EnsureDenseResult parExtendDenseElements(js::Allocator *alloc, js::Value *v,
+    inline EnsureDenseResult parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v,
                                                     uint32_t extra);
-    template<typename MallocProviderType>
-    inline EnsureDenseResult extendDenseElements(MallocProviderType *cx,
+
+    inline EnsureDenseResult extendDenseElements(js::ThreadSafeContext *tcx,
                                                  uint32_t requiredCapacity, uint32_t extra);
 
     /* Convert a single dense element to a sparse property. */

@@ -226,6 +226,8 @@ struct Runtime
 
 namespace js {
 
+struct ThreadSafeContext;
+
 class Allocator;
 
 class SkipRoot;
@@ -273,7 +275,7 @@ template <> struct RootKind<JS::Value> : SpecificRootKind<JS::Value, THING_ROOT_
 struct ContextFriendFields
 {
   protected:
-    JSRuntime *const    runtime_;
+    JSRuntime *const     runtime_;
 
     /* The current compartment. */
     JSCompartment       *compartment_;

@@ -1134,8 +1134,40 @@ js_HandleExecutionInterrupt(JSContext *cx)
     return result;
 }
 
-JSContext::JSContext(JSRuntime *rt)
+js::ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
   : ContextFriendFields(rt),
+    contextKind_(kind),
+    perThreadData(pt)
+{ }
+
+bool
+ThreadSafeContext::isJSContext() const
+{
+    return contextKind_ == Context_JS;
+}
+
+JSContext *
+ThreadSafeContext::asJSContext()
+{
+    JS_ASSERT(isJSContext());
+    return reinterpret_cast<JSContext *>(this);
+}
+
+bool
+ThreadSafeContext::isForkJoinSlice() const
+{
+    return contextKind_ == Context_ForkJoin;
+}
+
+ForkJoinSlice *
+ThreadSafeContext::asForkJoinSlice()
+{
+    JS_ASSERT(isForkJoinSlice());
+    return reinterpret_cast<ForkJoinSlice *>(this);
+}
+
+JSContext::JSContext(JSRuntime *rt)
+  : ThreadSafeContext(rt, &rt->mainThread, Context_JS),
     defaultVersion(JSVERSION_DEFAULT),
     hasVersionOverride(false),
     throwing(false),

@@ -290,12 +290,9 @@ struct ParallelBailoutRecord {
 
 struct ForkJoinShared;
 
-struct ForkJoinSlice
+struct ForkJoinSlice : ThreadSafeContext
 {
   public:
-    // PerThreadData corresponding to the current worker thread.
-    PerThreadData *perThreadData;
-
     // Which slice should you process? Ranges from 0 to |numSlices|.
     const uint32_t sliceId;
 
@@ -320,7 +317,7 @@ struct ForkJoinSlice
                   ParallelBailoutRecord *bailoutRecord);
 
     // True if this is the main thread, false if it is one of the parallel workers.
-    bool isMainThread();
+    bool isMainThread() const;
 
     // When the code would normally trigger a GC, we don't trigger it
     // immediately but instead record that request here.  This will

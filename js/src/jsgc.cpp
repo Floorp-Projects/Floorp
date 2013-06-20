@@ -1140,7 +1140,7 @@ Zone::reduceGCTriggerBytes(size_t amount)
 }
 
 Allocator::Allocator(Zone *zone)
-  : zone(zone)
+  : zone_(zone)
 {}
 
 inline void
