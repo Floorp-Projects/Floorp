@@ -228,6 +228,11 @@ static char const *const gH264Codecs[9] = {
   "mp4a.40.2",    // AAC-LC
   nullptr
 };
+
+static char const *const gMpegAudioCodecs[2] = {
+  "mp3",          // MP3
+  nullptr
+};
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
@@ -336,8 +341,12 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
 #endif
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
-    codecList = gH264Codecs;
     result = CANPLAY_MAYBE;
+    if (nsDependentCString(aMIMEType).EqualsASCII("audio/mpeg")) {
+      codecList = gMpegAudioCodecs;
+    } else {
+      codecList = gH264Codecs;
+    }
   }
 #endif
 #ifdef MOZ_WMF
