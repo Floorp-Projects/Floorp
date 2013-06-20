@@ -162,7 +162,7 @@ JSScript::writeBarrierPre(JSScript *script)
 
     JS::Zone *zone = script->zone();
     if (zone->needsBarrier()) {
-        JS_ASSERT(!zone->rt->isHeapBusy());
+        JS_ASSERT(!zone->rt->isHeapMajorCollecting());
         JSScript *tmp = script;
         MarkScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == script);
@@ -184,7 +184,7 @@ js::LazyScript::writeBarrierPre(js::LazyScript *lazy)
 
     JS::Zone *zone = lazy->zone();
     if (zone->needsBarrier()) {
-        JS_ASSERT(!zone->rt->isHeapBusy());
+        JS_ASSERT(!zone->rt->isHeapMajorCollecting());
         js::LazyScript *tmp = lazy;
         MarkLazyScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == lazy);
