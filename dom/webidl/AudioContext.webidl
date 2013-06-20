@@ -67,7 +67,7 @@ interface AudioContext : EventTarget {
     DynamicsCompressorNode createDynamicsCompressor();
 
     [Creator, Throws]
-    WaveTable createWaveTable(Float32Array real, Float32Array imag);
+    PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag);
 
 };
 

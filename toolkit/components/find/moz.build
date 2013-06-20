@@ -14,3 +14,5 @@ CPP_SOURCES += [
     'nsFindService.cpp',
 ]
 
+LIBRARY_NAME = 'mozfind_s'
+

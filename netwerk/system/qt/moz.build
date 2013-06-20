@@ -12,3 +12,5 @@ CPP_SOURCES += [
     'nsQtNetworkManager.cpp',
 ]
 
+LIBRARY_NAME = 'neckosystem_s'
+

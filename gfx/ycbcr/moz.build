@@ -65,3 +65,6 @@ if CONFIG['OS_TEST'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
     CPP_SOURCES += [
         'yuv_convert_arm.cpp',
     ]
+
+LIBRARY_NAME = 'ycbcr'
+

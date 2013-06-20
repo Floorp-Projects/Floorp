@@ -8,7 +8,11 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
+// This include trips -Wreserved-user-defined-literal on clang. Ignoring it
+// trips -Wpragmas on GCC (unknown warning), but ignoring that trips
+// -Wunknown-pragmas on clang (unknown pragma).
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wreserved-user-defined-literal"
 #include <gst/video/video.h>

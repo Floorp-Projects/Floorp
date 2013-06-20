@@ -812,7 +812,7 @@ private:
   }
 
   static JSBool
-  Resolve(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsigned aFlags,
+  Resolve(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId, unsigned aFlags,
           JS::MutableHandle<JSObject*> aObjp)
   {
     JSBool resolved;

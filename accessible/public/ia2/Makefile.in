@@ -7,7 +7,6 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
-LIBRARY_NAME  = IA2Marshal
 DEFFILE       = $(win_srcdir)/IA2Marshal.def
 
 IA2DIR        = $(topsrcdir)/other-licenses/ia2

@@ -85,51 +85,63 @@ class FullParseHandler
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
     const Token &currentToken() { return tokenStream.currentToken(); }
 
-    ParseNode *newName(PropertyName *name, ParseContext<FullParseHandler> *pc,
-                       ParseNodeKind kind = PNK_NAME) {
-        ParseNode *pn = NameNode::create(kind, name, this, pc);
-        if (!pn)
-            return NULL;
-        pn->setOp(JSOP_NAME);
-        return pn;
+    ParseNode *newName(PropertyName *name, InBlockBool inBlock, uint32_t blockid,
+                       const TokenPos &pos)
+    {
+        return new_<NameNode>(PNK_NAME, JSOP_NAME, name, inBlock, blockid, pos);
     }
-    Definition *newPlaceholder(JSAtom *atom, ParseContext<FullParseHandler> *pc) {
-        Definition *dn = (Definition *) NameNode::create(PNK_NAME, atom, this, pc);
+
+    Definition *newPlaceholder(JSAtom *atom, InBlockBool inBlock, uint32_t blockid,
+                               const TokenPos &pos)
+    {
+        Definition *dn =
+            (Definition *) new_<NameNode>(PNK_NAME, JSOP_NOP, atom, inBlock, blockid, pos);
         if (!dn)
             return NULL;
-
-        dn->setOp(JSOP_NOP);
         dn->setDefn(true);
         dn->pn_dflags |= PND_PLACEHOLDER;
         return dn;
     }
-    ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
-        ParseNode *pn = new_<NullaryNode>(kind, pos());
-        if (!pn)
-            return NULL;
-        pn->setOp(op);
-        pn->pn_atom = atom;
-        return pn;
+
+    ParseNode *newIdentifier(JSAtom *atom, const TokenPos &pos) {
+        return new_<NullaryNode>(PNK_NAME, JSOP_NOP, pos, atom);
     }
-    ParseNode *newNumber(double value, DecimalPoint decimalPoint = NoDecimal) {
-        ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos());
+
+    ParseNode *newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) {
+        ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos);
         if (!pn)
             return NULL;
         pn->initNumber(value, decimalPoint);
         return pn;
     }
-    ParseNode *newNumber(const Token &tok) {
-        return newNumber(tok.number(), tok.decimalPoint());
-    }
+
     ParseNode *newBooleanLiteral(bool cond, const TokenPos &pos) {
         return new_<BooleanLiteral>(cond, pos);
     }
+
+    ParseNode *newStringLiteral(JSAtom *atom, const TokenPos &pos) {
+        return new_<NullaryNode>(PNK_STRING, JSOP_STRING, pos, atom);
+    }
+
     ParseNode *newThisLiteral(const TokenPos &pos) {
         return new_<ThisLiteral>(pos);
     }
+
     ParseNode *newNullLiteral(const TokenPos &pos) {
         return new_<NullLiteral>(pos);
     }
+
+    // The Boxer object here is any object that can allocate ObjectBoxes.
+    // Specifically, a Boxer has a .newObjectBox(T) method that accepts a
+    // Rooted<RegExpObject*> argument and returns an ObjectBox*.
+    template <class Boxer>
+    ParseNode *newRegExp(HandleObject reobj, const TokenPos &pos, Boxer &boxer) {
+        ObjectBox *objbox = boxer.newObjectBox(reobj);
+        if (!objbox)
+            return null();
+        return new_<RegExpLiteral>(objbox, pos);
+    }
+
     ParseNode *newConditional(ParseNode *cond, ParseNode *thenExpr, ParseNode *elseExpr) {
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
@@ -138,20 +150,25 @@ class FullParseHandler
         return new_<NullaryNode>(PNK_ELISION, pos());
     }
 
-    ParseNode *newUnary(ParseNodeKind kind, ParseNode *kid, JSOp op = JSOP_NOP) {
-        return new_<UnaryNode>(kind, op, kid->pn_pos, kid);
+    void markAsSetCall(ParseNode *pn) {
+        pn->pn_xflags |= PNX_SETCALL;
     }
-    ParseNode *newUnary(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        return new_<UnaryNode>(kind, op, tokenStream.currentToken().pos, (ParseNode *) NULL);
+
+    ParseNode *newDelete(uint32_t begin, ParseNode *expr) {
+        if (expr->getKind() == PNK_NAME) {
+            expr->pn_dflags |= PND_DEOPTIMIZED;
+            expr->setOp(JSOP_DELNAME);
+        }
+        return newUnary(PNK_DELETE, JSOP_NOP, begin, expr);
     }
-    void setUnaryKid(ParseNode *pn, ParseNode *kid) {
-        pn->pn_kid = kid;
-        pn->pn_pos.end = kid->pn_pos.end;
+
+    ParseNode *newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode *kid) {
+        TokenPos pos = {begin, kid ? kid->pn_pos.end : begin + 1};
+        return new_<UnaryNode>(kind, op, pos, kid);
     }
 
     ParseNode *newBinary(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        return new_<BinaryNode>(kind, op, tokenStream.currentToken().pos,
-                                (ParseNode *) NULL, (ParseNode *) NULL);
+        return new_<BinaryNode>(kind, op, pos(), (ParseNode *) NULL, (ParseNode *) NULL);
     }
     ParseNode *newBinary(ParseNodeKind kind, ParseNode *left,
                          JSOp op = JSOP_NOP) {
@@ -195,8 +212,59 @@ class FullParseHandler
     ParseNode *newPropertyAccess(ParseNode *pn, PropertyName *name, uint32_t end) {
         return new_<PropertyAccess>(pn, name, pn->pn_pos.begin, end);
     }
-    ParseNode *newPropertyByValue(ParseNode *pn, ParseNode *kid, uint32_t end) {
-        return new_<PropertyByValue>(pn, kid, pn->pn_pos.begin, end);
+
+  private:
+    /*
+     * Examine the RHS of a MemberExpression obj[pn], to optimize expressions
+     * like obj["name"] or obj["0"].
+     *
+     * If pn is a number or string constant that's not an index, store the
+     * corresponding PropertyName in *namep. Otherwise store NULL in *namep.
+     *
+     * Also, if pn is a string constant whose value is the ToString of an
+     * index, morph it to a number.
+     *
+     * Return false on OOM.
+     */
+    bool foldConstantIndex(ParseNode *pn, PropertyName **namep) {
+        if (pn->isKind(PNK_STRING)) {
+            JSAtom *atom = pn->pn_atom;
+            uint32_t index;
+
+            if (atom->isIndex(&index)) {
+                pn->setKind(PNK_NUMBER);
+                pn->setOp(JSOP_DOUBLE);
+                pn->pn_dval = index;
+            } else {
+                *namep = atom->asPropertyName();
+                return true;
+            }
+        } else if (pn->isKind(PNK_NUMBER)) {
+            double number = pn->pn_dval;
+            if (number != ToUint32(number)) {
+                JSContext *cx = tokenStream.getContext();
+                JSAtom *atom = ToAtom<NoGC>(cx, DoubleValue(number));
+                if (!atom)
+                    return false;
+                *namep = atom->asPropertyName();
+                return true;
+            }
+        }
+
+        *namep = NULL;
+        return true;
+    }
+
+  public:
+    ParseNode *newPropertyByValue(ParseNode *lhs, ParseNode *index, uint32_t end) {
+        if (foldConstants) {
+            PropertyName *name;
+            if (!foldConstantIndex(index, &name))
+                return null();
+            if (name)
+                return newPropertyAccess(lhs, name, end);
+        }
+        return new_<PropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
     }
 
     inline bool addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
@@ -287,6 +355,9 @@ class FullParseHandler
     }
     PropertyName *isName(ParseNode *pn) {
         return pn->isKind(PNK_NAME) ? pn->pn_atom->asPropertyName() : NULL;
+    }
+    bool isCall(ParseNode *pn) {
+        return pn->isKind(PNK_CALL);
     }
     PropertyName *isGetProp(ParseNode *pn) {
         return pn->isOp(JSOP_GETPROP) ? pn->pn_atom->asPropertyName() : NULL;

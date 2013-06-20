@@ -9,7 +9,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME  = peerconnection
 MODULE_NAME   = peerconnection
 
 IS_COMPONENT   = 1

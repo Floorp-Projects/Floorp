@@ -96,6 +96,7 @@ namespace js {
 
 class Bindings;
 class Nursery;
+class StaticBlockObject;
 
 /* Limit on the number of slotful properties in an object. */
 static const uint32_t SHAPE_INVALID_SLOT = JS_BIT(24) - 1;

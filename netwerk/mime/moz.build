@@ -24,3 +24,5 @@ CPP_SOURCES += [
     'nsMIMEHeaderParamImpl.cpp',
 ]
 
+LIBRARY_NAME = 'nkmime_s'
+

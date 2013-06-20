@@ -2648,7 +2648,7 @@ ASTSerializer::literal(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_REGEXP:
       {
-        RootedObject re1(cx, pn->pn_objbox ? pn->pn_objbox->object : NULL);
+        RootedObject re1(cx, pn->as<RegExpLiteral>().objbox()->object);
         LOCAL_ASSERT(re1 && re1->is<RegExpObject>());
 
         RootedObject proto(cx);

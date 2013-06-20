@@ -11,22 +11,15 @@
 
 #include "jsobjinlines.h"
 
-inline js::BooleanObject &
-JSObject::asBoolean()
-{
-    JS_ASSERT(isBoolean());
-    return *static_cast<js::BooleanObject *>(this);
-}
-
 namespace js {
 
 inline BooleanObject *
 BooleanObject::create(JSContext *cx, bool b)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &BooleanClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)
         return NULL;
-    BooleanObject &boolobj = obj->asBoolean();
+    BooleanObject &boolobj = obj->as<BooleanObject>();
     boolobj.setPrimitiveValue(b);
     return &boolobj;
 }

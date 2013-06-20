@@ -22,6 +22,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsVariant.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
@@ -126,6 +127,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
 #endif
 #ifdef MOZ_B2G_RIL
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
+#endif
+#ifdef MOZ_GAMEPAD
+  NS_INTERFACE_MAP_ENTRY(nsINavigatorGamepads)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorNetwork)
 #ifdef MOZ_B2G_RIL
@@ -1341,6 +1345,42 @@ Navigator::GetMozIccManager(nsIDOMMozIccManager** aIccManager)
 }
 
 #endif // MOZ_B2G_RIL
+
+#ifdef MOZ_GAMEPAD
+//*****************************************************************************
+//    Navigator::nsINavigatorGamepads
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetGamepads(nsIVariant** aRetVal)
+{
+  NS_ENSURE_ARG_POINTER(aRetVal);
+  *aRetVal = nullptr;
+
+  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryReferent(mWindow));
+  NS_ENSURE_TRUE(pwin && pwin->GetDocShell(), NS_OK);
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(pwin.get());
+
+  nsAutoTArray<nsRefPtr<Gamepad>, 2> gamepads;
+  win->GetGamepads(gamepads);
+
+  nsRefPtr<nsVariant> out = new nsVariant();
+  NS_ENSURE_STATE(out);
+
+  if (gamepads.Length() == 0) {
+    nsresult rv = out->SetAsEmptyArray();
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    out->SetAsArray(nsIDataType::VTYPE_INTERFACE,
+                    &NS_GET_IID(nsISupports),
+                    gamepads.Length(),
+                    const_cast<void*>(static_cast<const void*>(gamepads.Elements())));
+  }
+  out.forget(aRetVal);
+
+  return NS_OK;
+}
+#endif
 
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorNetwork

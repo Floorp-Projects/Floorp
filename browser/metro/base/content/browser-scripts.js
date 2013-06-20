@@ -135,6 +135,7 @@ let ScriptContexts = {};
   ["SanitizeUI", "chrome://browser/content/sanitizeUI.js"],
   ["SSLExceptions", "chrome://browser/content/exceptions.js"],
   ["ItemPinHelper", "chrome://browser/content/helperui/ItemPinHelper.js"],
+  ["NavButtonSlider", "chrome://browser/content/NavButtonSlider.js"],
 #ifdef MOZ_SERVICES_SYNC
   ["Sync", "chrome://browser/content/sync.js"],
   ["SyncPairDevice", "chrome://browser/content/sync.js"],

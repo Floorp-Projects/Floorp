@@ -1749,6 +1749,11 @@ abstract public class GeckoApp
                 alertCookie = "";
         }
         handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+
+        if (intent.hasExtra(NotificationHelper.NOTIFICATION_ID)) {
+            String id = intent.getStringExtra(NotificationHelper.NOTIFICATION_ID);
+            mNotificationHelper.hideNotification(id);
+        }
     }
 
     @Override
@@ -1991,6 +1996,8 @@ abstract public class GeckoApp
         if (mTextSelection != null)
             mTextSelection.destroy();
         SiteIdentityPopup.clearInstance();
+        if (mNotificationHelper != null)
+            mNotificationHelper.destroy();
 
         Tabs.getInstance().detachFromActivity(this);
 

@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= breakpad_solaris_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 

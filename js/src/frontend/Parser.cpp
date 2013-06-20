@@ -352,7 +352,7 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::report(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...)
 {
-    uint32_t offset = (pn ? handler.getPosition(pn) : tokenStream.currentToken().pos).begin;
+    uint32_t offset = (pn ? handler.getPosition(pn) : pos()).begin;
 
     va_list args;
     va_start(args, errorNumber);
@@ -503,7 +503,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
         //
         JSObject *scope = outerpc->sc->asGlobalSharedContext()->scopeChain();
         while (scope) {
-            if (scope->isWith())
+            if (scope->is<WithObject>())
                 inWith = true;
             scope = scope->enclosingScope();
         }
@@ -936,7 +936,7 @@ Parser<FullParseHandler>::checkFunctionArguments()
      * parameters are free from 'arguments'.
      */
     if (!argumentsHasBinding && pc->sc->bindingsAccessedDynamically() && !hasRest) {
-        ParseNode *pn = NameNode::create(PNK_NAME, arguments, &handler, pc);
+        ParseNode *pn = newName(arguments);
         if (!pn)
             return false;
         if (!pc->define(context, arguments, pn, Definition::VAR))
@@ -1037,11 +1037,15 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         JS_ASSERT(type == ExpressionBody);
         JS_ASSERT(JS_HAS_EXPR_CLOSURES);
 
+        tokenStream.getToken();
+        uint32_t begin = pos().begin;
+        tokenStream.ungetToken();
+
         Node kid = assignExpr();
         if (!kid)
             return null();
 
-        pn = handler.newUnary(PNK_RETURN, kid, JSOP_RETURN);
+        pn = handler.newUnary(PNK_RETURN, JSOP_RETURN, begin, kid);
         if (!pn)
             return null();
 
@@ -1244,7 +1248,7 @@ Parser<ParseHandler>::getOrCreateLexicalDependency(ParseContext<ParseHandler> *p
     if (p)
         return p.value().get<ParseHandler>();
 
-    DefinitionNode dn = handler.newPlaceholder(atom, pc);
+    DefinitionNode dn = handler.newPlaceholder(atom, pc->inBlock(), pc->blockid(), pos());
     if (!dn)
         return ParseHandler::nullDefinition();
     DefinitionSingle def = DefinitionSingle::new_<ParseHandler>(dn);
@@ -1455,7 +1459,7 @@ Parser<ParseHandler>::defineArg(Node funcpn, HandlePropertyName name,
         pc->prepareToAddDuplicateArg(name, prevDecl);
     }
 
-    Node argpn = handler.newName(name, pc);
+    Node argpn = newName(name);
     if (!argpn)
         return false;
 
@@ -1570,7 +1574,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                  * left-hand-side expression and accumulate it in list.
                  */
                 HandlePropertyName name = context->names().empty;
-                Node rhs = handler.newName(name, pc);
+                Node rhs = newName(name);
                 if (!rhs)
                     return false;
 
@@ -1950,7 +1954,7 @@ bool
 Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *funbox,
                                                    ParseNode *prelude, ParseNode *body)
 {
-    pn->pn_pos.end = tokenStream.currentToken().pos.end;
+    pn->pn_pos.end = pos().end;
 
 #if JS_HAS_DESTRUCTURING
     /*
@@ -2267,12 +2271,12 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
             report(ParseError, false, null(), JSMSG_CURLY_AFTER_BODY);
             return false;
         }
-        funbox->bufEnd = tokenStream.currentToken().pos.begin + 1;
+        funbox->bufEnd = pos().begin + 1;
 #if JS_HAS_EXPR_CLOSURES
     } else {
         if (tokenStream.hadError())
             return false;
-        funbox->bufEnd = tokenStream.currentToken().pos.end;
+        funbox->bufEnd = pos().end;
         if (kind == Statement && !MatchOrInsertSemicolon(context, &tokenStream))
             return false;
     }
@@ -2545,7 +2549,7 @@ Parser<ParseHandler>::statements()
         pn = pc->blockNode;
     pc->blockNode = saveBlock;
 
-    handler.setEndPosition(pn, tokenStream.currentToken().pos.end);
+    handler.setEndPosition(pn, pos().end);
     return pn;
 }
 
@@ -2801,7 +2805,7 @@ Parser<ParseHandler>::bindVarOrConst(JSContext *cx, BindData<ParseHandler> *data
              */
             HandlePropertyName arguments = cx->names().arguments;
             if (name == arguments) {
-                Node pn = parser->handler.newName(arguments, pc);
+                Node pn = parser->newName(arguments);
                 if (!pc->define(parser->context, arguments, pn, Definition::VAR))
                     return false;
                 funbox->setArgumentsHasLocalBinding();
@@ -2866,18 +2870,14 @@ template <>
 bool
 Parser<FullParseHandler>::makeSetCall(ParseNode *pn, unsigned msg)
 {
+    JS_ASSERT(pn->isKind(PNK_CALL));
     JS_ASSERT(pn->isArity(PN_LIST));
     JS_ASSERT(pn->isOp(JSOP_CALL) || pn->isOp(JSOP_EVAL) ||
               pn->isOp(JSOP_FUNCALL) || pn->isOp(JSOP_FUNAPPLY));
+
     if (!report(ParseStrictError, pc->sc->strict, pn, msg))
         return false;
-
-    ParseNode *pn2 = pn->pn_head;
-    if (pn2->isKind(PNK_FUNCTION) && (pn2->pn_funbox->inGenexpLambda)) {
-        report(ParseError, false, pn, msg);
-        return false;
-    }
-    pn->pn_xflags |= PNX_SETCALL;
+    handler.markAsSetCall(pn);
     return true;
 }
 
@@ -3181,9 +3181,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
     ParseNodeKind kind = (tt == TOK_RETURN) ? PNK_RETURN : PNK_YIELD;
     JSOp op = (tt == TOK_RETURN) ? JSOP_RETURN : JSOP_YIELD;
 
-    Node pn = handler.newUnary(kind, op);
-    if (!pn)
-        return null();
+    uint32_t begin = pos().begin;
 
 #if JS_HAS_GENERATORS
     if (tt == TOK_YIELD) {
@@ -3198,7 +3196,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
             pc->sc->asFunctionBox()->setIsGenerator();
         } else {
             pc->yieldCount++;
-            pc->yieldOffset = handler.getPosition(pn).begin;
+            pc->yieldOffset = begin;
         }
     }
 #endif
@@ -3208,6 +3206,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
     if (tt2 == TOK_ERROR)
         return null();
 
+    Node pn2;
     if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC
 #if JS_HAS_GENERATORS
         && (tt != TOK_YIELD ||
@@ -3216,20 +3215,24 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
 #endif
         )
     {
-        Node pn2 = useAssignExpr ? assignExpr() : expr();
+        pn2 = useAssignExpr ? assignExpr() : expr();
         if (!pn2)
             return null();
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
             pc->funHasReturnExpr = true;
-        handler.setUnaryKid(pn, pn2);
     } else {
+        pn2 = null();
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
             pc->funHasReturnVoid = true;
     }
+
+    Node pn = handler.newUnary(kind, op, begin, pn2);
+    if (!pn)
+        return null();
 
     if (pc->funHasReturnExpr && pc->sc->asFunctionBox()->isGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
@@ -3343,7 +3346,7 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
     if (!blockObj)
         return null();
 
-    uint32_t begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = pos().begin;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_LET);
 
@@ -3384,7 +3387,7 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
          * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop
          * the return value of the expression.
          */
-        Node semi = handler.newUnary(PNK_SEMI, pnlet);
+        Node semi = handler.newUnary(PNK_SEMI, JSOP_NOP, begin, pnlet);
 
         letContext = LetExpresion;
         ret = semi;
@@ -3446,7 +3449,7 @@ Parser<ParseHandler>::newBindingNode(PropertyName *name, bool functionScope, Var
             if (handler.dependencyCovered(pn, pc->blockid(), functionScope)) {
                 handler.setBlockId(pn, pc->blockid());
                 pc->lexdeps->remove(p);
-                handler.setPosition(pn, tokenStream.currentToken().pos);
+                handler.setPosition(pn, pos());
                 return pn;
             }
         }
@@ -3454,7 +3457,7 @@ Parser<ParseHandler>::newBindingNode(PropertyName *name, bool functionScope, Var
 
     /* Make a new node for this declarator name (or destructuring pattern). */
     JS_ASSERT(tokenStream.currentToken().type == TOK_NAME);
-    return handler.newName(name, pc);
+    return newName(name);
 }
 
 template <typename ParseHandler>
@@ -3490,7 +3493,7 @@ Parser<ParseHandler>::switchStatement()
     bool seenDefault = false;
     TokenKind tt;
     while ((tt = tokenStream.getToken()) != TOK_RC) {
-        uint32_t caseBegin = tokenStream.currentToken().pos.begin;
+        uint32_t caseBegin = pos().begin;
 
         Node caseExpr;
         switch (tt) {
@@ -3556,8 +3559,8 @@ Parser<ParseHandler>::switchStatement()
     if (!pn)
         return null();
 
-    handler.setEndPosition(pn, tokenStream.currentToken().pos.end);
-    handler.setEndPosition(caseList, tokenStream.currentToken().pos.end);
+    handler.setEndPosition(pn, pos().end);
+    handler.setEndPosition(caseList, pos().end);
     return pn;
 }
 
@@ -3652,7 +3655,7 @@ Parser<FullParseHandler>::forStatement()
             tokenStream.ungetToken();
     }
 
-    TokenPos lp_pos = tokenStream.currentToken().pos;
+    TokenPos lp_pos = pos();
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
     /*
@@ -3722,8 +3725,6 @@ Parser<FullParseHandler>::forStatement()
 
     JS_ASSERT_IF(forDecl, pn1->isArity(PN_LIST));
     JS_ASSERT(!!blockObj == (forDecl && pn1->isOp(JSOP_NOP)));
-
-    const TokenPos pos = tokenStream.currentToken().pos;
 
     /* If non-null, the parent that should be returned instead of forHead. */
     ParseNode *forParent = NULL;
@@ -3939,13 +3940,12 @@ Parser<FullParseHandler>::forStatement()
             return null();
     }
 
-    forHead->pn_pos = pos;
     forHead->setOp(JSOP_NOP);
     forHead->pn_kid1 = pn1;
     forHead->pn_kid2 = pn2;
     forHead->pn_kid3 = pn3;
     forHead->pn_pos.begin = lp_pos.begin;
-    forHead->pn_pos.end   = tokenStream.currentToken().pos.end;
+    forHead->pn_pos.end   = pos().end;
     pn->pn_left = forHead;
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
@@ -4091,7 +4091,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::tryStatement()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_TRY));
-    uint32_t begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = pos().begin;
 
     /*
      * try nodes are ternary.
@@ -4221,8 +4221,8 @@ Parser<ParseHandler>::tryStatement()
 
             if (!handler.addCatchBlock(catchList, pnblock, catchName, catchGuard, catchBody))
                 return null();
-            handler.setEndPosition(catchList, tokenStream.currentToken().pos.end);
-            handler.setEndPosition(pnblock, tokenStream.currentToken().pos.end);
+            handler.setEndPosition(catchList, pos().end);
+            handler.setEndPosition(pnblock, pos().end);
 
             tt = tokenStream.getToken(TSF_OPERAND);
         } while (tt == TOK_CATCH);
@@ -4267,7 +4267,7 @@ Parser<FullParseHandler>::withStatement()
     }
 
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_WITH));
-    uint32_t begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = pos().begin;
 
     // In most cases, we want the constructs forbidden in strict mode code to be
     // a subset of those that JSOPTION_EXTRA_WARNINGS warns about, and we should
@@ -4305,7 +4305,7 @@ Parser<FullParseHandler>::withStatement()
         DefinitionNode defn = r.front().value().get<FullParseHandler>();
         DefinitionNode lexdep = handler.resolve(defn);
         handler.deoptimizeUsesWithin(lexdep,
-                                     TokenPos::make(begin, tokenStream.currentToken().pos.begin));
+                                     TokenPos::make(begin, pos().begin));
     }
 
     Node pn = handler.newBinary(PNK_WITH, objectExpr, innerBlock);
@@ -4459,7 +4459,7 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::labeledStatement()
 {
-    uint32_t begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = pos().begin;
     RootedPropertyName label(context, tokenStream.currentToken().name());
     for (StmtInfoPC *stmt = pc->topStmt; stmt; stmt = stmt->down) {
         if (stmt->type == STMT_LABEL && stmt->label == label) {
@@ -4488,12 +4488,13 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement()
 {
+    uint32_t begin = pos().begin;
     tokenStream.ungetToken();
     Node pn2 = expr();
     if (!pn2)
         return null();
 
-    Node pn = handler.newUnary(PNK_SEMI, pn2);
+    Node pn = handler.newUnary(PNK_SEMI, JSOP_NOP, begin, pn2);
 
     /* Check termination of this primitive statement. */
     return MatchOrInsertSemicolon(context, &tokenStream) ? pn : null();
@@ -4513,7 +4514,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_IF:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = pos().begin;
 
         /* An IF node has three kids: condition, then, and optional else. */
         Node cond = condition();
@@ -4555,7 +4556,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_WHILE:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = pos().begin;
         StmtInfoPC stmtInfo(context);
         PushStatementPC(pc, &stmtInfo, STMT_WHILE_LOOP);
         Node cond = condition();
@@ -4574,7 +4575,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_DO:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = pos().begin;
         StmtInfoPC stmtInfo(context);
         PushStatementPC(pc, &stmtInfo, STMT_DO_LOOP);
         Node body = statement();
@@ -4611,7 +4612,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_THROW:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = pos().begin;
 
         /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
         TokenKind tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
@@ -4626,10 +4627,9 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         if (!pnexp)
             return null();
 
-        pn = handler.newUnary(PNK_THROW, pnexp, JSOP_THROW);
+        pn = handler.newUnary(PNK_THROW, JSOP_THROW, begin, pnexp);
         if (!pn)
             return null();
-        handler.setBeginPosition(pn, begin);
         break;
       }
 
@@ -4644,12 +4644,11 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_BREAK:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = pos().begin;
         RootedPropertyName label(context);
         if (!MatchLabel(context, &tokenStream, &label))
             return null();
-        uint32_t end = tokenStream.currentToken().pos.end;
-        pn = handler.newBreak(label, begin, end);
+        pn = handler.newBreak(label, begin, pos().end);
         if (!pn)
             return null();
         StmtInfoPC *stmt = pc->topStmt;
@@ -4677,12 +4676,11 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_CONTINUE:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = pos().begin;
         RootedPropertyName label(context);
         if (!MatchLabel(context, &tokenStream, &label))
             return null();
-        uint32_t end = tokenStream.currentToken().pos.end;
-        pn = handler.newContinue(label, begin, end);
+        pn = handler.newContinue(label, begin, pos().end);
         if (!pn)
             return null();
         StmtInfoPC *stmt = pc->topStmt;
@@ -4768,10 +4766,10 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       }
 
       case TOK_SEMI:
-        return handler.newUnary(PNK_SEMI);
+        return handler.newUnary(PNK_SEMI, JSOP_NOP, pos().begin, null());
 
       case TOK_DEBUGGER:
-        pn = handler.newDebuggerStatement(tokenStream.currentToken().pos);
+        pn = handler.newDebuggerStatement(pos());
         if (!pn)
             return null();
         pc->sc->setBindingsAccessedDynamically();
@@ -5252,7 +5250,7 @@ Parser<ParseHandler>::assignExpr()
 
         if (tokenStream.getToken() == TOK_ERROR)
             return null();
-        size_t offset = tokenStream.currentToken().pos.begin;
+        size_t offset = pos().begin;
         tokenStream.ungetToken();
 
         return functionDef(NullPtr(), start, offset, Normal, Arrow);
@@ -5332,69 +5330,12 @@ Parser<SyntaxParseHandler>::setIncOpKid(Node pn, Node kid, TokenKind tt, bool pr
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::unaryOpExpr(ParseNodeKind kind, JSOp op)
+Parser<ParseHandler>::unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin)
 {
     Node kid = unaryExpr();
     if (!kid)
         return null();
-    return handler.newUnary(kind, kid, op);
-}
-
-template <>
-bool
-Parser<FullParseHandler>::checkDeleteExpression(ParseNode **pn_)
-{
-    ParseNode *&pn = *pn_;
-
-    /*
-     * Under ECMA3, deleting any unary expression is valid -- it simply
-     * returns true. Here we fold constants before checking for a call
-     * expression, in order to rule out delete of a generator expression.
-     */
-    if (foldConstants && !FoldConstants(context, &pn, this))
-        return false;
-    switch (pn->getKind()) {
-      case PNK_CALL:
-        if (!(pn->pn_xflags & PNX_SETCALL)) {
-            /*
-             * Call MakeSetCall to check for errors, but clear PNX_SETCALL
-             * because the optimizer will eliminate the useless delete.
-             */
-            if (!makeSetCall(pn, JSMSG_BAD_DELETE_OPERAND))
-                return false;
-            pn->pn_xflags &= ~PNX_SETCALL;
-        }
-        break;
-      case PNK_NAME:
-        if (!report(ParseStrictError, pc->sc->strict, pn, JSMSG_DEPRECATED_DELETE_OPERAND))
-            return null();
-        pc->sc->setBindingsAccessedDynamically();
-        pn->pn_dflags |= PND_DEOPTIMIZED;
-        pn->setOp(JSOP_DELNAME);
-        break;
-      default:;
-    }
-    return true;
-}
-
-template <>
-bool
-Parser<SyntaxParseHandler>::checkDeleteExpression(Node *pn)
-{
-    PropertyName *name = handler.isName(*pn);
-    if (name)
-        return report(ParseStrictError, pc->sc->strict, *pn, JSMSG_DEPRECATED_DELETE_OPERAND);
-
-    // Treat deletion of non-lvalues as ambiguous, so that any error associated
-    // with deleting a call expression is reported.
-    if (*pn != SyntaxParseHandler::NodeGetProp &&
-        *pn != SyntaxParseHandler::NodeLValue &&
-        strictMode())
-    {
-        return abortIfSyntaxParser();
-    }
-
-    return true;
+    return handler.newUnary(kind, op, begin, kid);
 }
 
 template <typename ParseHandler>
@@ -5405,53 +5346,58 @@ Parser<ParseHandler>::unaryExpr()
 
     JS_CHECK_RECURSION(context, return null());
 
-    switch (TokenKind tt = tokenStream.getToken(TSF_OPERAND)) {
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
+    uint32_t begin = pos().begin;
+    switch (tt) {
       case TOK_TYPEOF:
-        return unaryOpExpr(PNK_TYPEOF, JSOP_TYPEOF);
+        return unaryOpExpr(PNK_TYPEOF, JSOP_TYPEOF, begin);
       case TOK_VOID:
-        return unaryOpExpr(PNK_VOID, JSOP_VOID);
+        return unaryOpExpr(PNK_VOID, JSOP_VOID, begin);
       case TOK_NOT:
-        return unaryOpExpr(PNK_NOT, JSOP_NOT);
+        return unaryOpExpr(PNK_NOT, JSOP_NOT, begin);
       case TOK_BITNOT:
-        return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT);
+        return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT, begin);
       case TOK_PLUS:
-        return unaryOpExpr(PNK_POS, JSOP_POS);
+        return unaryOpExpr(PNK_POS, JSOP_POS, begin);
       case TOK_MINUS:
-        return unaryOpExpr(PNK_NEG, JSOP_NEG);
+        return unaryOpExpr(PNK_NEG, JSOP_NEG, begin);
 
       case TOK_INC:
       case TOK_DEC:
       {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
         TokenKind tt2 = tokenStream.getToken(TSF_OPERAND);
         pn2 = memberExpr(tt2, true);
         if (!pn2)
             return null();
-        pn = handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT, pn2);
+        pn = handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
+                              JSOP_NOP,
+                              begin,
+                              pn2);
         if (!pn)
             return null();
-        handler.setBeginPosition(pn, begin);
         if (!setIncOpKid(pn, pn2, tt, true))
             return null();
         break;
       }
 
-      case TOK_DELETE:
-      {
-        uint32_t begin = tokenStream.currentToken().pos.begin;
-        pn2 = unaryExpr();
-        if (!pn2)
+      case TOK_DELETE: {
+        Node expr = unaryExpr();
+        if (!expr)
             return null();
 
-        if (!checkDeleteExpression(&pn2))
+        // Per spec, deleting any unary expression is valid -- it simply returns
+        // true -- except for a few cases that are illegal in strict mode.
+        if (foldConstants && !FoldConstants(context, &expr, this))
             return null();
+        if (handler.isName(expr)) {
+            if (!report(ParseStrictError, pc->sc->strict, expr, JSMSG_DEPRECATED_DELETE_OPERAND))
+                return null();
+            pc->sc->setBindingsAccessedDynamically();
+        }
 
-        pn = handler.newUnary(PNK_DELETE, pn2);
-        if (!pn)
-            return null();
-        handler.setBeginPosition(pn, begin);
-        break;
+        return handler.newDelete(begin, expr);
       }
+
       case TOK_ERROR:
         return null();
 
@@ -5464,7 +5410,10 @@ Parser<ParseHandler>::unaryExpr()
         tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
         if (tt == TOK_INC || tt == TOK_DEC) {
             tokenStream.consumeKnownToken(tt);
-            pn2 = handler.newUnary((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT, pn);
+            pn2 = handler.newUnary((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
+                                   JSOP_NOP,
+                                   begin,
+                                   pn);
             if (!pn2)
                 return null();
             if (!setIncOpKid(pn2, pn, tt, false))
@@ -5589,7 +5538,7 @@ GenexpGuard<ParseHandler>::checkValidBody(Node pn, unsigned err)
         uint32_t offset = pc->yieldOffset
                           ? pc->yieldOffset
                           : (pn ? parser->handler.getPosition(pn)
-                                : parser->tokenStream.currentToken().pos).begin;
+                                : parser->pos()).begin;
 
         parser->reportWithOffset(ParseError, false, offset, err, js_yield_str);
         return false;
@@ -5749,7 +5698,8 @@ CompExprTransplanter::transplant(ParseNode *pn)
                      * generator) a use of a new placeholder in the generator's
                      * lexdeps.
                      */
-                    Definition *dn2 = parser->handler.newPlaceholder(atom, parser->pc);
+                    Definition *dn2 = parser->handler.newPlaceholder(
+                        atom, parser->pc->inBlock(), parser->pc->blockid(), parser->pos());
                     if (!dn2)
                         return false;
                     dn2->pn_pos = root->pn_pos;
@@ -6179,7 +6129,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         JS_ASSERT(!genfn->pn_body);
         genfn->pn_body = body;
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
-        genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
+        genfn->pn_pos.end = body->pn_pos.end = pos().end;
 
         RootedPropertyName funName(context);
         if (!leaveFunction(genfn, funName, outerpc))
@@ -6282,50 +6232,6 @@ Parser<ParseHandler>::argumentList(Node listNode)
     return true;
 }
 
-template <>
-PropertyName *
-Parser<FullParseHandler>::foldPropertyByValue(ParseNode *pn)
-{
-    /*
-     * Optimize property name lookups. If the name is a PropertyName,
-     * then make a name-based node so the emitter will use a name-based
-     * bytecode. Otherwise make a node using the property expression
-     * by value. If the node is a string containing an index, convert
-     * it to a number to save work later.
-     */
-
-    uint32_t index;
-    if (foldConstants) {
-        if (pn->isKind(PNK_STRING)) {
-            JSAtom *atom = pn->pn_atom;
-            if (atom->isIndex(&index)) {
-                pn->setKind(PNK_NUMBER);
-                pn->setOp(JSOP_DOUBLE);
-                pn->pn_dval = index;
-            } else {
-                return atom->asPropertyName();
-            }
-        } else if (pn->isKind(PNK_NUMBER)) {
-            double number = pn->pn_dval;
-            if (number != ToUint32(number)) {
-                JSAtom *atom = ToAtom<NoGC>(context, DoubleValue(number));
-                if (!atom)
-                    return NULL;
-                return atom->asPropertyName();
-            }
-        }
-    }
-
-    return NULL;
-}
-
-template <>
-PropertyName *
-Parser<SyntaxParseHandler>::foldPropertyByValue(Node pn)
-{
-    return NULL;
-}
-
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
@@ -6365,8 +6271,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
                 return null();
             if (tt == TOK_NAME) {
                 PropertyName *field = tokenStream.currentToken().name();
-                uint32_t end = tokenStream.currentToken().pos.end;
-                nextMember = handler.newPropertyAccess(lhs, field, end);
+                nextMember = handler.newPropertyAccess(lhs, field, pos().end);
                 if (!nextMember)
                     return null();
             } else {
@@ -6387,13 +6292,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             if (foldConstants && !FoldConstants(context, &propExpr, this))
                 return null();
 
-            PropertyName *name = foldPropertyByValue(propExpr);
-
-            uint32_t end = tokenStream.currentToken().pos.end;
-            if (name)
-                nextMember = handler.newPropertyAccess(lhs, name, end);
-            else
-                nextMember = handler.newPropertyByValue(lhs, propExpr, end);
+            nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
                 return null();
         } else if (allowCallSyntax && tt == TOK_LP) {
@@ -6460,12 +6359,19 @@ Parser<ParseHandler>::bracketedExpr()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::newName(PropertyName *name)
+{
+    return handler.newName(name, pc->inBlock(), pc->blockid(), pos());
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::identifierName()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME));
 
     RootedPropertyName name(context, tokenStream.currentToken().name());
-    Node pn = handler.newName(name, pc);
+    Node pn = newName(name);
     if (!pn)
         return null();
 
@@ -6477,32 +6383,28 @@ Parser<ParseHandler>::identifierName()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::atomNode(ParseNodeKind kind, JSOp op)
+Parser<ParseHandler>::stringLiteral()
 {
     JSAtom *atom = tokenStream.currentToken().atom();
-    Node pn = handler.newAtom(kind, atom, op);
-    if (!pn)
-        return null();
 
     // Large strings are fast to parse but slow to compress. Stop compression on
     // them, so we don't wait for a long time for compression to finish at the
     // end of compilation.
     const size_t HUGE_STRING = 50000;
-    if (sct && sct->active() && kind == PNK_STRING && atom->length() >= HUGE_STRING)
+    if (sct && sct->active() && atom->length() >= HUGE_STRING)
         sct->abort();
 
-    return pn;
+    return handler.newStringLiteral(atom, pos());
 }
 
-template <>
-ParseNode *
-Parser<FullParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag flags)
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::newRegExp()
 {
-    ParseNode *pn = NullaryNode::create(PNK_REGEXP, &handler);
-    if (!pn)
-        return NULL;
-
-    const StableCharPtr chars(buf, length);
+    // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
+    size_t length = tokenStream.getTokenbuf().length();
+    const StableCharPtr chars(tokenStream.getTokenbuf().begin(), length);
+    RegExpFlag flags = tokenStream.currentToken().regExpFlags();
 
     Rooted<RegExpObject*> reobj(context);
     if (RegExpStatics *res = context->regExpStatics())
@@ -6511,30 +6413,9 @@ Parser<FullParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag
         reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
 
     if (!reobj)
-        return NULL;
+        return null();
 
-    pn->pn_objbox = newObjectBox(reobj);
-    if (!pn->pn_objbox)
-        return NULL;
-
-    pn->setOp(JSOP_REGEXP);
-    return pn;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag flags)
-{
-    // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
-    const StableCharPtr chars(buf, length);
-
-    RegExpObject *reobj;
-    if (RegExpStatics *res = context->regExpStatics())
-        reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
-    else
-        reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
-
-    return reobj ? SyntaxParseHandler::NodeGeneric : SyntaxParseHandler::NodeFailure;
+    return handler.newRegExp(reobj, pos(), *this);
 }
 
 template <typename ParseHandler>
@@ -6550,10 +6431,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
     switch (tt) {
       case TOK_FUNCTION:
-        pn = functionExpr();
-        if (!pn)
-            return null();
-        break;
+        return functionExpr();
 
       case TOK_LB:
       {
@@ -6584,7 +6462,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     break;
 
                 if (tt == TOK_COMMA) {
-                    tokenStream.matchToken(TOK_COMMA);
+                    tokenStream.consumeKnownToken(TOK_COMMA);
                     pn2 = handler.newElision();
                     if (!pn2)
                         return null();
@@ -6593,13 +6471,13 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     spread = true;
                     handler.setListFlag(pn, PNX_SPECIALARRAYINIT | PNX_NONCONST);
 
-                    tokenStream.getToken();
-
+                    tokenStream.consumeKnownToken(TOK_TRIPLEDOT);
+                    uint32_t begin = pos().begin;
                     Node inner = assignExpr();
                     if (!inner)
                         return null();
 
-                    pn2 = handler.newUnary(PNK_SPREAD, inner);
+                    pn2 = handler.newUnary(PNK_SPREAD, JSOP_NOP, begin, inner);
                     if (!pn2)
                         return null();
                 } else {
@@ -6672,7 +6550,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
         }
-        handler.setEndPosition(pn, tokenStream.currentToken().pos.end);
+        handler.setEndPosition(pn, pos().end);
         return pn;
       }
 
@@ -6706,7 +6584,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                 if (!atom)
                     return null();
-                pn3 = handler.newNumber(tokenStream.currentToken());
+                pn3 = newNumber(tokenStream.currentToken());
                 break;
               case TOK_NAME:
                 {
@@ -6716,7 +6594,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     } else if (atom == context->names().set) {
                         op = JSOP_INITPROP_SETTER;
                     } else {
-                        pn3 = handler.newAtom(PNK_NAME, atom);
+                        pn3 = handler.newIdentifier(atom, pos());
                         if (!pn3)
                             return null();
                         break;
@@ -6725,7 +6603,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
                     if (tt == TOK_NAME) {
                         atom = tokenStream.currentToken().name();
-                        pn3 = handler.newName(atom->asPropertyName(), pc);
+                        pn3 = newName(atom->asPropertyName());
                         if (!pn3)
                             return null();
                     } else if (tt == TOK_STRING) {
@@ -6733,7 +6611,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
                         uint32_t index;
                         if (atom->isIndex(&index)) {
-                            pn3 = handler.newNumber(index);
+                            pn3 = handler.newNumber(index, NoDecimal, pos());
                             if (!pn3)
                                 return null();
                             tmp = DoubleValue(index);
@@ -6741,7 +6619,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                             if (!atom)
                                 return null();
                         } else {
-                            pn3 = handler.newName(atom->asPropertyName(), pc, PNK_STRING);
+                            pn3 = stringLiteral();
                             if (!pn3)
                                 return null();
                         }
@@ -6751,12 +6629,12 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                         atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                         if (!atom)
                             return null();
-                        pn3 = handler.newNumber(tokenStream.currentToken());
+                        pn3 = newNumber(tokenStream.currentToken());
                         if (!pn3)
                             return null();
                     } else {
                         tokenStream.ungetToken();
-                        pn3 = handler.newAtom(PNK_NAME, atom);
+                        pn3 = handler.newIdentifier(atom, pos());
                         if (!pn3)
                             return null();
                         break;
@@ -6782,11 +6660,11 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 atom = tokenStream.currentToken().atom();
                 uint32_t index;
                 if (atom->isIndex(&index)) {
-                    pn3 = handler.newNumber(index);
+                    pn3 = handler.newNumber(index, NoDecimal, pos());
                     if (!pn3)
                         return null();
                 } else {
-                    pn3 = handler.newAtom(PNK_STRING, atom);
+                    pn3 = stringLiteral();
                     if (!pn3)
                         return null();
                 }
@@ -6829,7 +6707,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 handler.setListFlag(pn, PNX_DESTRUCT | PNX_NONCONST);
                 PropertyName *name = handler.isName(pn3);
                 JS_ASSERT(atom);
-                pn3 = handler.newName(name, pc);
+                pn3 = newName(name);
                 if (!pn3)
                     return null();
                 pnval = pn3;
@@ -6901,16 +6779,13 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         }
 
       end_obj_init:
-        handler.setEndPosition(pn, tokenStream.currentToken().pos.end);
+        handler.setEndPosition(pn, pos().end);
         return pn;
       }
 
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
-        pn = letBlock(LetExpresion);
-        if (!pn)
-            return null();
-        break;
+        return letBlock(LetExpresion);
 #endif
 
       case TOK_LP:
@@ -6924,37 +6799,29 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
         if (!genexp)
             MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
-        break;
+        return pn;
       }
 
       case TOK_STRING:
-        pn = atomNode(PNK_STRING, JSOP_STRING);
-        if (!pn)
-            return null();
-        break;
+        return stringLiteral();
 
       case TOK_NAME:
-        pn = identifierName();
-        break;
+        return identifierName();
 
       case TOK_REGEXP:
-        pn = newRegExp(tokenStream.getTokenbuf().begin(),
-                       tokenStream.getTokenbuf().length(),
-                       tokenStream.currentToken().regExpFlags());
-        break;
+        return newRegExp();
 
       case TOK_NUMBER:
-        pn = handler.newNumber(tokenStream.currentToken());
-        break;
+        return newNumber(tokenStream.currentToken());
 
       case TOK_TRUE:
-        return handler.newBooleanLiteral(true, tokenStream.currentToken().pos);
+        return handler.newBooleanLiteral(true, pos());
       case TOK_FALSE:
-        return handler.newBooleanLiteral(false, tokenStream.currentToken().pos);
+        return handler.newBooleanLiteral(false, pos());
       case TOK_THIS:
-        return handler.newThisLiteral(tokenStream.currentToken().pos);
+        return handler.newThisLiteral(pos());
       case TOK_NULL:
-        return handler.newNullLiteral(tokenStream.currentToken().pos);
+        return handler.newNullLiteral(pos());
 
       case TOK_RP:
         // Not valid expression syntax, but this is valid in an arrow function
@@ -6965,7 +6832,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             // Now just return something that will allow parsing to continue.
             // It doesn't matter what; when we reach the =>, we will rewind and
             // reparse the whole arrow function. See Parser::assignExpr.
-            return handler.newNullLiteral(tokenStream.currentToken().pos);
+            return handler.newNullLiteral(pos());
         }
         report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
         return null();
@@ -6980,7 +6847,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             tokenStream.ungetToken();  // put back right paren
 
             // Return an arbitrary expression node. See case TOK_RP above.
-            return handler.newNullLiteral(tokenStream.currentToken().pos);
+            return handler.newNullLiteral(pos());
         }
         report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
         return null();
@@ -6993,7 +6860,6 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
         return null();
     }
-    return pn;
 }
 
 template <typename ParseHandler>
@@ -7001,7 +6867,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::parenExpr(bool *genexp)
 {
     JS_ASSERT(tokenStream.currentToken().type == TOK_LP);
-    uint32_t begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = pos().begin;
 
     if (genexp)
         *genexp = false;
@@ -7032,7 +6898,7 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
                        JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
                 return null();
             }
-            handler.setEndPosition(pn, tokenStream.currentToken().pos.end);
+            handler.setEndPosition(pn, pos().end);
             *genexp = true;
         }
     } else

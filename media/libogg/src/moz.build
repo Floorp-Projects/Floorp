@@ -10,3 +10,6 @@ CSRCS += [
     'ogg_bitwise.c',
     'ogg_framing.c',
 ]
+
+LIBRARY_NAME = 'ogg'
+

@@ -89,6 +89,13 @@ pref("dom.workers.maxPerDomain", 20);
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
+// Whether the Gamepad API is enabled
+#ifdef RELEASE_BUILD
+pref("dom.gamepad.enabled", false);
+#else
+pref("dom.gamepad.enabled", true);
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
