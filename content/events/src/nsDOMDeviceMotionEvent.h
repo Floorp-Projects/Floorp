@@ -49,7 +49,6 @@ public:
                          nsPresContext* aPresContext, nsEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent)
   {
-    SetIsDOMBinding();
   }
 
   NS_DECL_ISUPPORTS_INHERITED

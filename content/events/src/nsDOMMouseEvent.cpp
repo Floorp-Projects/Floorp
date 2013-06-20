@@ -154,7 +154,6 @@ nsDOMMouseEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
   nsRefPtr<nsDOMMouseEvent> e = new nsDOMMouseEvent(t, nullptr, nullptr);
-  e->SetIsDOMBinding();
   bool trusted = e->Init(t);
   e->InitMouseEvent(aType, aParam.mBubbles, aParam.mCancelable,
                     aParam.mView, aParam.mDetail, aParam.mScreenX,
@@ -435,6 +434,5 @@ nsresult NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                              nsInputEvent *aEvent)
 {
   nsDOMMouseEvent* it = new nsDOMMouseEvent(aOwner, aPresContext, aEvent);
-  it->SetIsDOMBinding();
   return CallQueryInterface(it, aInstancePtrResult);
 }
