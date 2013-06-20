@@ -265,11 +265,23 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         if (mir->mode() == MResumePoint::ResumeAfter)
           bailPC = GetNextPc(pc);
 
-        // For fun.apply({}, arguments) the reconstructStackDepth will have stackdepth 4,
-        // but it could be that we inlined the funapply. In that case exprStackSlots,
-        // will have the real arguments in the slots and not be 4.
-        JS_ASSERT_IF(GetIonContext()->cx && JSOp(*bailPC) != JSOP_FUNAPPLY,
-                     exprStack == js_ReconstructStackDepth(GetIonContext()->cx, script, bailPC));
+#ifdef DEBUG
+        if (GetIonContext()->cx) {
+            uint32_t stackDepth = js_ReconstructStackDepth(GetIonContext()->cx, script, bailPC);
+            if (JSOp(*bailPC) == JSOP_FUNCALL) {
+                // For fun.call(this, ...); the reconstructStackDepth will
+                // include the this. When inlining that is not included.
+                // So the exprStackSlots will be one less.
+                JS_ASSERT(stackDepth - exprStack <= 1);
+            } else if (JSOp(*bailPC) != JSOP_FUNAPPLY) {
+                // For fun.apply({}, arguments) the reconstructStackDepth will
+                // have stackdepth 4, but it could be that we inlined the
+                // funapply. In that case exprStackSlots, will have the real
+                // arguments in the slots and not be 4.
+                JS_ASSERT(exprStack == stackDepth);
+            }
+        }
+#endif
 
 #ifdef TRACK_SNAPSHOTS
         LInstruction *ins = instruction();

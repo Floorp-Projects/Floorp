@@ -4542,10 +4542,15 @@ IonBuilder::jsop_funcall(uint32_t argc)
         argc -= 1;
     }
 
-    // Call without inlining.
     CallInfo callInfo(cx, false);
     if (!callInfo.init(current, argc))
         return false;
+
+    // Try inlining call
+    if (argc > 0 && makeInliningDecision(target, callInfo) && target->isInterpreted())
+        return inlineScriptedCall(callInfo, target);
+
+    // Call without inlining.
     return makeCall(target, callInfo, false);
 }
 
