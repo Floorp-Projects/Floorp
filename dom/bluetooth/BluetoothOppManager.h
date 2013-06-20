@@ -96,7 +96,7 @@ public:
 private:
   BluetoothOppManager();
   bool Init();
-  nsresult HandleShutdown();
+  void HandleShutdown();
 
   void StartFileTransfer();
   void StartSendingNextFile();
