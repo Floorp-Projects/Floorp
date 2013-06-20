@@ -138,6 +138,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_error_source_click.js \
 	browser_console_clear_on_reload.js \
 	browser_console_keyboard_accessibility.js \
+	browser_console_filters.js \
 	head.js \
 	$(NULL)
 
