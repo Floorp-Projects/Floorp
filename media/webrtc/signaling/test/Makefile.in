@@ -129,6 +129,11 @@ LOCAL_INCLUDES += \
  -I$(topsrcdir)/media/mtransport \
  -I$(topsrcdir)/media/mtransport/test \
  -I$(topsrcdir)/media/webrtc/signaling/include \
+ -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/core/sdp \
+ -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/cpr/include \
+ -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/core/includes \
+ -I$(topsrcdir)/media/webrtc/signaling/src/common/browser_logging \
+ -I$(topsrcdir)/media/webrtc/signaling/src/media \
  -I$(topsrcdir)/media/webrtc/signaling/src/media-conduit \
  -I$(topsrcdir)/media/webrtc/signaling/src/mediapipeline \
  -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/include \
@@ -145,6 +150,7 @@ LIBS += $(MOZ_ZLIB_LIBS)
 endif
 
 CPP_UNIT_TESTS = \
+  sdp_unittests.cpp \
   signaling_unittests.cpp \
   mediapipeline_unittest.cpp \
   mediaconduit_unittests.cpp \
