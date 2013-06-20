@@ -70,6 +70,24 @@ function assertAreaPlacements(areaId, expectedPlacements) {
   }
 }
 
+function todoAssertAreaPlacements(areaId, expectedPlacements) {
+  let actualPlacements = getAreaWidgetIds(areaId);
+  let isPassing = actualPlacements.length == expectedPlacements.length;
+  let minItems = Math.min(expectedPlacements.length, actualPlacements.length);
+  for (let i = 0; i < minItems; i++) {
+    if (typeof expectedPlacements[i] == "string") {
+      isPassing = isPassing && actualPlacements[i] == expectedPlacements[i];
+    } else if (expectedPlacements[i] instanceof RegExp) {
+      isPassing = isPassing && expectedPlacements[i].test(actualPlacements[i]);
+    } else {
+      ok(false, "Unknown type of expected placement passed to " +
+                " assertAreaPlacements. Is your test broken?");
+    }
+  }
+  todo(isPassing, "The area placements for " + areaId +
+                  " should equal the expected placements.")
+}
+
 function getAreaWidgetIds(areaId) {
   let widgetAry = CustomizableUI.getWidgetsInArea(areaId);
   return widgetAry.map(x => x.id);
@@ -146,7 +164,9 @@ function testRunner(testAry, asyncCleanup) {
 
 function runTests(testAry, asyncCleanup) {
   Task.spawn(testRunner(gTests, asyncCleanup)).then(finish, ex => {
-    ok(false, "Unexpected exception: " + ex);
+    // The stack of ok() here is misleading due to Promises. The stack of the
+    // actual exception is likely much more valuable, hence concatentating it.
+    ok(false, "Unexpected exception: " + ex + " With stack: " + ex.stack);
     finish();
   });
 }
