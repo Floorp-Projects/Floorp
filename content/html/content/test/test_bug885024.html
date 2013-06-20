@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html data-expando-prop="xyz">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=885024
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 885024</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=885024">Mozilla Bug 885024</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<img form="t">
+
+<form id="form">
+  <div id="div"></div>
+</form>
+
+<pre id="test">
+  <script type="application/javascript">
+    var img = document.createElement('img');
+    img.setAttribute('id', 'img');
+
+    var div = document.getElementById('div');
+    div.appendChild(img);
+
+    var form = document.getElementById('form');
+    ok(form, "form exists");
+    ok(form.img, "form.img exists");
+
+    var img2 = document.createElement('img');
+    img2.setAttribute('id', 'img2');
+    img2.setAttribute('form', 'blabla');
+    ok(form, "form exists2");
+    div.appendChild(img2);
+    ok(form.img2, "form.img2 exists");
+
+  </script>
+</pre>
+</body>
+</html>
