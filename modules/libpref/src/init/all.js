@@ -4015,7 +4015,11 @@ pref("layers.acceleration.draw-fps", false);
 
 pref("layers.draw-borders", false);
 
+#ifdef XP_MACOSX
+pref("layers.offmainthreadcomposition.enabled", true);
+#else
 pref("layers.offmainthreadcomposition.enabled", false);
+#endif
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);
