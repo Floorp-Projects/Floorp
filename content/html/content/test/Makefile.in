@@ -384,6 +384,8 @@ MOCHITEST_FILES = \
 		allowMedia.sjs \
 		test_bug874758.html \
 		test_bug885024.html \
+		test_track.html \
+		test_track_disabled.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
