@@ -1169,6 +1169,13 @@ WebGLContext::ClearScreen()
     mIsScreenCleared = true;
 }
 
+#ifdef DEBUG
+// For NaNs, etc.
+static bool IsSameFloat(float a, float b) {
+    return (a == b) || (IsNaN(a) && IsNaN(b));
+}
+#endif
+
 void
 WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask)
 {
@@ -1200,10 +1207,10 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask)
                    colorWriteMask[1] == mColorWriteMask[1] &&
                    colorWriteMask[2] == mColorWriteMask[2] &&
                    colorWriteMask[3] == mColorWriteMask[3]);
-        MOZ_ASSERT(colorClearValue[0] == mColorClearValue[0] &&
-                   colorClearValue[1] == mColorClearValue[1] &&
-                   colorClearValue[2] == mColorClearValue[2] &&
-                   colorClearValue[3] == mColorClearValue[3]);
+        MOZ_ASSERT(IsSameFloat(mColorClearValue[0], colorClearValue[0]) &&
+                   IsSameFloat(mColorClearValue[0], colorClearValue[0]) &&
+                   IsSameFloat(mColorClearValue[0], colorClearValue[0]) &&
+                   IsSameFloat(mColorClearValue[0], colorClearValue[0]));
 
 
         realGLboolean depthWriteMask = 2;
@@ -1212,8 +1219,8 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask)
         gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &depthWriteMask);
         gl->fGetFloatv(LOCAL_GL_DEPTH_CLEAR_VALUE, &depthClearValue);
 
-        MOZ_ASSERT(depthWriteMask  == mDepthWriteMask);
-        MOZ_ASSERT(depthClearValue == mDepthClearValue);
+        MOZ_ASSERT(depthWriteMask == mDepthWriteMask);
+        MOZ_ASSERT(IsSameFloat(mDepthClearValue, depthClearValue));
 
 
         GLuint stencilWriteMaskFront = 0xdeadbad1;
