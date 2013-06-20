@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_macro_assembler_x64_h__
-#define jsion_macro_assembler_x64_h__
+#ifndef ion_x64_MacroAssembler_x64_h
+#define ion_x64_MacroAssembler_x64_h
 
 #include "ion/shared/MacroAssembler-x86-shared.h"
 #include "ion/MoveResolver.h"
@@ -1115,5 +1115,4 @@ typedef MacroAssemblerX64 MacroAssemblerSpecific;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_macro_assembler_x64_h__
-
+#endif /* ion_x64_MacroAssembler_x64_h */
