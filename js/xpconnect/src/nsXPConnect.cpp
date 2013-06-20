@@ -958,7 +958,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
         printf("!xpc - deferring destruction of JSContext @ %p\n",
                (void *)aJSContext);
 #endif
-        ccx->SetDestroyJSContextInDestructor(true);
+        ccx->SetDestroyJSContextInDestructor();
         return NS_OK;
     }
     // else continue on and synchronously destroy the JSContext ...
