@@ -1,0 +1,31 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+/**
+ * The nsIDOMRecordErrorEvent interface is used for media recorder sent events
+ * and for indeciate what's wrong in the object
+ * The name value is defined in the
+ * http://www.w3.org/TR/2012/WD-dom-20121206/#error-names-table
+ */
+[scriptable, builtinclass, uuid(606e6f94-bf02-11e2-8a01-e722108c6d66)]
+interface nsIDOMRecordErrorEvent : nsIDOMEvent
+{
+  /**
+   * The error name in this event.
+   */
+  readonly attribute DOMString name;
+
+  [noscript]
+  void initRecordErrorEvent(in DOMString aType,
+                            in boolean aCanBubble,
+                            in boolean aCancelable,
+                            in DOMString aName);
+};
+
+dictionary RecordErrorEventInit : EventInit {
+  DOMString name;
+};
