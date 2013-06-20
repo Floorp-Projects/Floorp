@@ -1643,6 +1643,146 @@ gsmsdp_set_ice_attribute (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, char
 }
 
 /*
+ * gsmsdp_set_rtcp_fb_ack_attribute
+ *
+ * Description:
+ *
+ * Adds an rtcp-fb:...ack attribute attributes to the specified SDP.
+ *
+ * Parameters:
+ *
+ * level        - The media level of the SDP where the media attribute exists.
+ * sdp_p        - Pointer to the SDP to set the ice candidate attribute against.
+ * ack_type     - Type of ack feedback mechanism in use
+ */
+void
+gsmsdp_set_rtcp_fb_ack_attribute (uint16_t level,
+                                  void *sdp_p,
+                                  u16 payload_type,
+                                  sdp_rtcp_fb_ack_type_e ack_type)
+{
+    uint16_t      a_instance = 0;
+    sdp_result_e  result;
+
+    result = sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, &a_instance);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to add attribute");
+        return;
+    }
+
+    result = sdp_attr_set_rtcp_fb_ack(sdp_p, level, payload_type,
+                                      a_instance, ack_type);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to set attribute");
+    }
+}
+
+/*
+ * gsmsdp_set_rtcp_fb_nack_attribute
+ *
+ * Description:
+ *
+ * Adds an rtcp-fb:...nack attribute attributes to the specified SDP.
+ *
+ * Parameters:
+ *
+ * level        - The media level of the SDP where the media attribute exists.
+ * sdp_p        - Pointer to the SDP to set the ice candidate attribute against.
+ * nack_type    - Type of nack feedback mechanism in use
+ */
+void
+gsmsdp_set_rtcp_fb_nack_attribute (uint16_t level,
+                                   void *sdp_p,
+                                   u16 payload_type,
+                                   sdp_rtcp_fb_nack_type_e nack_type)
+{
+    uint16_t      a_instance = 0;
+    sdp_result_e  result;
+
+    result = sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, &a_instance);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to add attribute");
+        return;
+    }
+
+    result = sdp_attr_set_rtcp_fb_nack(sdp_p, level, payload_type,
+                                       a_instance, nack_type);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to set attribute");
+    }
+}
+
+/*
+ * gsmsdp_set_rtcp_fb_trr_int_attribute
+ *
+ * Description:
+ *
+ * Adds an rtcp-fb:...trr-int attribute attributes to the specified SDP.
+ *
+ * Parameters:
+ *
+ * level        - The media level of the SDP where the media attribute exists.
+ * sdp_p        - Pointer to the SDP to set the ice candidate attribute against.
+ * trr_interval - Interval to set trr-int value to
+ */
+void
+gsmsdp_set_rtcp_fb_trr_int_attribute (uint16_t level,
+                                      void *sdp_p,
+                                      u16 payload_type,
+                                      u32 trr_interval)
+{
+    uint16_t      a_instance = 0;
+    sdp_result_e  result;
+
+    result = sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, &a_instance);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to add attribute");
+        return;
+    }
+
+    result = sdp_attr_set_rtcp_fb_trr_int(sdp_p, level, payload_type,
+                                          a_instance, trr_interval);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to set attribute");
+    }
+}
+
+/*
+ * gsmsdp_set_rtcp_fb_ccm_attribute
+ *
+ * Description:
+ *
+ * Adds an rtcp-fb:...ccm attribute attributes to the specified SDP.
+ *
+ * Parameters:
+ *
+ * level        - The media level of the SDP where the media attribute exists.
+ * sdp_p        - Pointer to the SDP to set the ice candidate attribute against.
+ * ccm_type     - Type of ccm feedback mechanism in use
+ */
+void
+gsmsdp_set_rtcp_fb_ccm_attribute (uint16_t level,
+                                  void *sdp_p,
+                                  u16 payload_type,
+                                  sdp_rtcp_fb_ccm_type_e ccm_type)
+{
+    uint16_t      a_instance = 0;
+    sdp_result_e  result;
+
+    result = sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, &a_instance);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to add attribute");
+        return;
+    }
+
+    result = sdp_attr_set_rtcp_fb_ccm(sdp_p, level, payload_type,
+                                      a_instance, ccm_type);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to set attribute");
+    }
+}
+
+/*
  * gsmsdp_set_rtcp_mux_attribute
  *
  * Description:
@@ -4666,6 +4806,19 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
             break;
         }
 
+        /* TODO (abr) -- temporarily hardcode rtcb-fb attributes to match our
+           actual behavior. This really needs to be a negotiation, with the
+           results of the negotiation propagating into the codec configuration.
+           See Bug 880067. */
+        if (media_type == SDP_MEDIA_VIDEO) {
+            gsmsdp_set_rtcp_fb_nack_attribute(media->level, sdp_p->src_sdp,
+                                              SDP_ALL_PAYLOADS,
+                                              SDP_RTCP_FB_NACK_UNSPECIFIED);
+            gsmsdp_set_rtcp_fb_ccm_attribute(media->level, sdp_p->src_sdp,
+                                             SDP_ALL_PAYLOADS,
+                                             SDP_RTCP_FB_CCM_FIR);
+        }
+
         if (unsupported_line) {
             /* add this line to unsupported line */
             gsmsdp_add_unsupported_stream_to_local_sdp(sdp_p, i);
@@ -5230,6 +5383,20 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
                     level = level - 1;
                 }
             }
+
+            /* TODO (abr) -- temporarily hardcode rtcb-fb attributes to match
+               our actual behavior. This really needs to be a negotiation, with
+               the results of the negotiation propagating into the codec
+               configuration.  See Bug 880067. */
+            if (media_cap->type == SDP_MEDIA_VIDEO) {
+                gsmsdp_set_rtcp_fb_nack_attribute(level, dcb_p->sdp->src_sdp,
+                                                  SDP_ALL_PAYLOADS,
+                                                  SDP_RTCP_FB_NACK_UNSPECIFIED);
+                gsmsdp_set_rtcp_fb_ccm_attribute(level, dcb_p->sdp->src_sdp,
+                                                 SDP_ALL_PAYLOADS,
+                                                 SDP_RTCP_FB_CCM_FIR);
+            }
+
         }
         /* next capability */
         media_cap++;
