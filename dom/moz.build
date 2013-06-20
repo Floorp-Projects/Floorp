@@ -71,7 +71,7 @@ PARALLEL_DIRS += [
     'workers',
     'camera',
     'audiochannel',
-    'future',
+    'promise',
     'wappush'
 ]
 
