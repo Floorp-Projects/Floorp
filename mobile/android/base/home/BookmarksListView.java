@@ -22,8 +22,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 
 import java.util.LinkedList;
 
@@ -71,7 +71,7 @@ public class BookmarksListView extends HomeListView
         super.onAttachedToWindow();
 
         // Intialize the adapter.
-        mCursorAdapter = new BookmarksListAdapter(getContext());
+        mCursorAdapter = new BookmarksListAdapter(getContext(), null);
 
         // We need to add the header before we set the adapter, hence make it null
         refreshListWithCursor(null);
@@ -134,7 +134,7 @@ public class BookmarksListView extends HomeListView
         if (type == Bookmarks.TYPE_FOLDER) {
             // If we're clicking on a folder, update adapter to move to that folder
             final int folderId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-            final String folderTitle = mCursorAdapter.getFolderTitle(position);
+            final String folderTitle = mCursorAdapter.getFolderTitle(cursor);
             mCursorAdapter.moveToChildFolder(folderId, folderTitle);
         } else {
             // Otherwise, just open the URL
@@ -176,7 +176,7 @@ public class BookmarksListView extends HomeListView
     /**
      * Adapter to back the ListView with a list of bookmarks.
      */
-    private class BookmarksListAdapter extends SimpleCursorAdapter {
+    private class BookmarksListAdapter extends CursorAdapter {
         private static final int VIEW_TYPE_ITEM = 0;
         private static final int VIEW_TYPE_FOLDER = 1;
 
@@ -186,9 +186,9 @@ public class BookmarksListView extends HomeListView
         // back up the folder heirarchy.
         private LinkedList<Pair<Integer, String>> mParentStack;
 
-        public BookmarksListAdapter(Context context) {
+        public BookmarksListAdapter(Context context, Cursor cursor) {
             // Initializing with a null cursor.
-            super(context, -1, null, new String[] {}, new int[] {});
+            super(context, cursor);
 
             mParentStack = new LinkedList<Pair<Integer, String>>();
 
@@ -242,12 +242,25 @@ public class BookmarksListView extends HomeListView
         public int getItemViewType(int position) {
             Cursor c = getCursor();
 
-            if (c.moveToPosition(position) &&
-                c.getInt(c.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER) {
+            if (!c.moveToPosition(position)) {
+                throw new IllegalStateException("Couldn't move cursor to position " + position);
+            }
+
+            return getItemViewType(c);
+        }
+
+        /**
+         * Returns the type of the item at the given position in the cursor.
+         *
+         * @param cursor A cursor moved to the required position.
+         * @return The type of the item.
+         */
+        public int getItemViewType(Cursor cursor) {
+            if (cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER) {
                 return VIEW_TYPE_FOLDER;
             }
 
-            // Default to retuning normal item type
+            // Default to returning normal item type.
             return VIEW_TYPE_ITEM;
         }
 
@@ -260,17 +273,12 @@ public class BookmarksListView extends HomeListView
         }
 
         /**
-         * Get the title of the folder for a given position.
+         * Get the title of the folder given a cursor moved to the position.
          *
-         * @param position The position of the view.
+         * @param cursor A cursor moved to the required position.
          * @return The title of the folder at the position.
          */
-        public String getFolderTitle(int position) {
-            Cursor c = getCursor();
-            if (!c.moveToPosition(position)) {
-                return "";
-            }
-
+        public String getFolderTitle(Cursor c) {
             String guid = c.getString(c.getColumnIndexOrThrow(Bookmarks.GUID));
 
             // If we don't have a special GUID, just return the folder title from the DB.
@@ -294,35 +302,31 @@ public class BookmarksListView extends HomeListView
             return c.getString(c.getColumnIndexOrThrow(Bookmarks.TITLE));
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final int viewType = getItemViewType(position);
-
-            if (convertView == null) {
-                if (viewType == VIEW_TYPE_ITEM) {
-                    convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.home_item_row, null);
-                } else {
-                    convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_folder_row, null);
-                }
-            }
-
-            Cursor cursor = getCursor();
-            if (!cursor.moveToPosition(position)) {
-                throw new IllegalStateException("Couldn't move cursor to position " + position);
-            }
+        public void bindView(View view, Context context, Cursor cursor) {
+            final int viewType = getItemViewType(cursor);
 
             if (viewType == VIEW_TYPE_ITEM) {
-                TwoLinePageRow row = (TwoLinePageRow) convertView;
+                TwoLinePageRow row = (TwoLinePageRow) view;
                 row.updateFromCursor(cursor);
             } else {
-                BookmarkFolderView row = (BookmarkFolderView) convertView;
-                row.setText(getFolderTitle(position));
+                BookmarkFolderView row = (BookmarkFolderView) view;
+                row.setText(getFolderTitle(cursor));
+            }
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            final int viewType = getItemViewType(cursor);
+
+            final int resId;
+            if (viewType == VIEW_TYPE_ITEM) {
+                resId = R.layout.home_item_row;
+            } else {
+                resId = R.layout.bookmark_folder_row;
             }
 
-            return convertView;
+            return LayoutInflater.from(parent.getContext()).inflate(resId, null);
         }
     }
 
