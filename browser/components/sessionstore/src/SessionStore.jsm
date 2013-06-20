@@ -4052,13 +4052,14 @@ let SessionStoreInternal = {
    * @returns boolean
    */
   _shouldSaveTabState: function ssi_shouldSaveTabState(aTabState) {
-    // If the tab has only the transient about:blank history entry, no other
+    // If the tab has only a transient about: history entry, no other
     // session history, and no userTypedValue, then we don't actually want to
     // store this tab's data.
     return aTabState.entries.length &&
            !(aTabState.entries.length == 1 &&
-             aTabState.entries[0].url == "about:blank" &&
-             !aTabState.userTypedValue);
+                (aTabState.entries[0].url == "about:blank" ||
+                 aTabState.entries[0].url == "about:newtab") &&
+                 !aTabState.userTypedValue);
   },
 
   /**
