@@ -288,7 +288,6 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   listener_ = listener;
   waiting_connect_ = true;
   processing_incoming_ = false;
-  closed_ = false;
 }
 
 bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
@@ -712,18 +711,6 @@ bool Channel::ChannelImpl::Send(Message* message) {
   Logging::current()->OnSendMessage(message, L"");
 #endif
 
-  // If the channel has been closed, ProcessOutgoingMessages() is never going
-  // to pop anything off output_queue; output_queue will only get emptied when
-  // the channel is destructed.  We might as well delete message now, instead
-  // of waiting for the channel to be destructed.
-  if (closed_) {
-#ifdef IPC_MESSAGE_LOG_ENABLED
-    Logging::current()->OnSendMessageFailed(message, L"");
-#endif
-    delete message;
-    return false;
-  }
-
   output_queue_.push(message);
   if (!waiting_connect_) {
     if (!is_blocked_on_write_) {
@@ -838,8 +825,6 @@ void Channel::ChannelImpl::Close() {
     HANDLE_EINTR(close(*i));
   }
   input_overflow_fds_.clear();
-
-  closed_ = true;
 }
 
 //------------------------------------------------------------------------------
