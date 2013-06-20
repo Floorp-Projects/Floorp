@@ -7789,8 +7789,12 @@ class CGDictionary(CGThing):
                        for m in self.memberInfo]
         if memberInits:
             body += (
-                "JS::Rooted<JS::Value> temp(cx);\n"
-                "bool isNull = val.isNullOrUndefined();\n")
+                "bool isNull = val.isNullOrUndefined();\n"
+                "// We only need |temp| if !isNull, in which case we have |cx|.\n"
+                "Maybe<JS::Rooted<JS::Value> > temp;\n"
+                "if (!isNull) {\n"
+                "  temp.construct(cx);\n"
+                "}\n")
             body += "\n\n".join(memberInits) + "\n"
 
         body += "return true;"
@@ -7959,8 +7963,8 @@ class CGDictionary(CGThing):
 
     def getMemberConversion(self, memberInfo):
         (member, conversionInfo) = memberInfo
-        replacements = { "val": "temp",
-                         "mutableVal": "&temp",
+        replacements = { "val": "temp.ref()",
+                         "mutableVal": "&temp.ref()",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
@@ -7971,16 +7975,16 @@ class CGDictionary(CGThing):
         if conversionInfo.dealWithOptional:
             replacements["declName"] = "(" + replacements["declName"] + ".Value())"
         if member.defaultValue:
-            replacements["haveValue"] = "!temp.isUndefined()"
+            replacements["haveValue"] = "!isNull && !temp.ref().isUndefined()"
 
         # NOTE: jsids are per-runtime, so don't use them in workers
         if self.workers:
             propName = member.identifier.name
-            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.address())' %
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.ref().address())' %
                        propName)
         else:
             propId = self.makeIdName(member.identifier.name);
-            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.address())" %
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.ref().address())" %
                        propId)
 
         conversionReplacements = {
@@ -7988,9 +7992,7 @@ class CGDictionary(CGThing):
             "convert": string.Template(conversionInfo.template).substitute(replacements),
             "propGet": propGet
             }
-        conversion = ("if (isNull) {\n"
-                      "  temp.setUndefined();\n"
-                      "} else if (!${propGet}) {\n"
+        conversion = ("if (!isNull && !${propGet}) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
@@ -7998,7 +8000,7 @@ class CGDictionary(CGThing):
                 "${convert}")
         else:
             conversion += (
-                "if (!temp.isUndefined()) {\n"
+                "if (!isNull && !temp.ref().isUndefined()) {\n"
                 "  ${prop}.Construct();\n"
                 "${convert}\n"
                 "}")
