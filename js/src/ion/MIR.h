@@ -6189,6 +6189,7 @@ class MFunctionEnvironment
         : MUnaryInstruction(function)
     {
         setResultType(MIRType_Object);
+        setMovable();
     }
 
     INSTRUCTION_HEADER(FunctionEnvironment)
@@ -6203,6 +6204,11 @@ class MFunctionEnvironment
 
     TypePolicy *typePolicy() {
         return this;
+    }
+
+    // A function's environment is fixed.
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
