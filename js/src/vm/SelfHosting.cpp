@@ -29,6 +29,84 @@
 using namespace js;
 using namespace js::selfhosted;
 
+namespace js {
+
+/*
+ * A linked-list container for self-hosted prototypes that have need of a
+ * Class for reserved slots. These are freed when self-hosting is destroyed at
+ * the destruction of the last context.
+ */
+struct SelfHostedClass
+{
+    /* The head of the linked list. */
+    static SelfHostedClass *head;
+
+    /* Next class in the list. */
+    SelfHostedClass *next;
+
+    /* Class of instances. */
+    Class class_;
+
+    /*
+     * Create a new self-hosted proto with its class set to a new dynamically
+     * allocated class with numSlots reserved slots.
+     */
+    static JSObject *newPrototype(JSContext *cx, uint32_t numSlots);
+
+    static bool is(Class *clasp);
+
+    SelfHostedClass(const char *name, uint32_t numSlots);
+};
+
+} /* namespace js */
+
+SelfHostedClass *SelfHostedClass::head = NULL;
+
+JSObject *
+SelfHostedClass::newPrototype(JSContext *cx, uint32_t numSlots)
+{
+    /* Allocate a new self hosted class and prepend it to the list. */
+    SelfHostedClass *shClass = cx->new_<SelfHostedClass>("Self-hosted Class", numSlots);
+    if (!shClass)
+        return NULL;
+    shClass->next = head;
+    head = shClass;
+
+    Rooted<GlobalObject *> global(cx, cx->global());
+    RootedObject proto(cx, global->createBlankPrototype(cx, &shClass->class_));
+    if (!proto)
+        return NULL;
+
+    return proto;
+}
+
+bool
+SelfHostedClass::is(Class *clasp)
+{
+    SelfHostedClass *shClass = head;
+    while (shClass) {
+        if (clasp == &shClass->class_)
+            return true;
+        shClass = shClass->next;
+    }
+    return false;
+}
+
+SelfHostedClass::SelfHostedClass(const char *name, uint32_t numSlots)
+{
+    mozilla::PodZero(this);
+
+    class_.name = name;
+    class_.flags = JSCLASS_HAS_RESERVED_SLOTS(numSlots);
+    class_.addProperty = JS_PropertyStub;
+    class_.delProperty = JS_DeletePropertyStub;
+    class_.getProperty = JS_PropertyStub;
+    class_.setProperty = JS_StrictPropertyStub;
+    class_.enumerate = JS_EnumerateStub;
+    class_.resolve = JS_ResolveStub;
+    class_.convert = JS_ConvertStub;
+}
+
 static void
 selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
@@ -412,6 +490,49 @@ js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+intrinsic_NewClassPrototype(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isInt32());
+
+    JSObject *proto = SelfHostedClass::newPrototype(cx, args[0].toPrivateUint32());
+    if (!proto)
+        return false;
+
+    args.rval().setObject(*proto);
+    return true;
+}
+
+static JSBool
+intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+
+    RootedObject proto(cx, &args[0].toObject());
+    JSObject *result = NewObjectWithGivenProto(cx, proto->getClass(), proto, cx->global());
+    if (!result)
+        return false;
+
+    args.rval().setObject(*result);
+    return true;
+}
+
+JSBool
+js::intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[1].isObject());
+
+    args.rval().setBoolean(args[0].toObject().getClass() == args[1].toObject().getClass());
+    return true;
+}
+
 /*
  * ParallelTestsShouldPass(): Returns false if we are running in a
  * mode (such as --ion-eager) that is known to cause additional
@@ -488,6 +609,10 @@ const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("UnsafeSetElement",        intrinsic_UnsafeSetElement,        3,0),
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
+
+    JS_FN("NewClassPrototype",       intrinsic_NewClassPrototype,       1,0),
+    JS_FN("NewObjectWithClassPrototype", intrinsic_NewObjectWithClassPrototype, 1,0),
+    JS_FN("HaveSameClass",           intrinsic_HaveSameClass,           2,0),
 
     JS_FN("ForkJoin",                intrinsic_ForkJoin,                2,0),
     JS_FN("ForkJoinSlices",          intrinsic_ForkJoinSlices,          0,0),
@@ -587,6 +712,14 @@ void
 JSRuntime::finishSelfHosting()
 {
     selfHostingGlobal_ = NULL;
+
+    SelfHostedClass *head = SelfHostedClass::head;
+    while (head) {
+        SelfHostedClass *tmp = head;
+        head = head->next;
+        js_delete(tmp);
+    }
+    SelfHostedClass::head = NULL;
 }
 
 void
@@ -626,6 +759,20 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
             return false;
         }
     }
+
+    if (SelfHostedClass::is(obj->getClass())) {
+        for (uint32_t i = 0; i < JSCLASS_RESERVED_SLOTS(obj->getClass()); i++) {
+            val = obj->getReservedSlot(i);
+            if (!CloneValue(cx, &val, clonedObjects))
+                return false;
+            clone->setReservedSlot(i, val);
+        }
+
+        /* Privates are not cloned, so be careful! */
+        if (obj->hasPrivate())
+            clone->setPrivate(obj->getPrivate());
+    }
+
     return true;
 }
 
