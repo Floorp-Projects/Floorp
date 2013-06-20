@@ -65,12 +65,12 @@ public:
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  Then(const Optional<OwningNonNull<AnyCallback> >& aResolveCallback,
-       const Optional<OwningNonNull<AnyCallback> >& aRejectCallback);
-
+  Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback);
 
   already_AddRefed<Promise>
-  Catch(const Optional<OwningNonNull<AnyCallback> >& aRejectCallback);
+  Catch(AnyCallback* aRejectCallback);
+
+  void Done(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback);
 
 private:
   enum PromiseState {
