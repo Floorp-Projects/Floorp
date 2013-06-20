@@ -12,7 +12,7 @@ relativesrcdir   = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
-  test_promise.html \
+  test_future.html \
   test_resolve.html \
   $(NULL)
 
