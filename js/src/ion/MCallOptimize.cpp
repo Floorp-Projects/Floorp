@@ -93,6 +93,22 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     if (native == intrinsic_NewDenseArray)
         return inlineNewDenseArray(callInfo);
 
+    // Slot intrinsics.
+    if (native == intrinsic_UnsafeSetReservedSlot)
+        return inlineUnsafeSetReservedSlot(callInfo);
+    if (native == intrinsic_UnsafeGetReservedSlot)
+        return inlineUnsafeGetReservedSlot(callInfo);
+
+    // Parallel intrinsics.
+    if (native == intrinsic_ShouldForceSequential)
+        return inlineForceSequentialOrInParallelSection(callInfo);
+    if (native == testingFunc_inParallelSection)
+        return inlineForceSequentialOrInParallelSection(callInfo);
+    if (native == intrinsic_NewParallelArray)
+        return inlineNewParallelArray(callInfo);
+    if (native == ParallelArrayObject::construct)
+        return inlineParallelArray(callInfo);
+
     // Utility intrinsics.
     if (native == intrinsic_ThrowError)
         return inlineThrowError(callInfo);
@@ -104,16 +120,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     if (native == intrinsic_Dump)
         return inlineDump(callInfo);
 #endif
-
-    // Parallel intrinsics.
-    if (native == intrinsic_ShouldForceSequential)
-        return inlineForceSequentialOrInParallelSection(callInfo);
-    if (native == testingFunc_inParallelSection)
-        return inlineForceSequentialOrInParallelSection(callInfo);
-    if (native == intrinsic_NewParallelArray)
-        return inlineNewParallelArray(callInfo);
-    if (native == ParallelArrayObject::construct)
-        return inlineParallelArray(callInfo);
 
     return InliningStatus_NotInlined;
 }
@@ -1286,6 +1292,61 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
                                                          templateObject);
     current->add(newObject);
     current->push(newObject);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineUnsafeSetReservedSlot(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 3 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Undefined)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(1)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // Don't inline if we don't have a constant slot.
+    MDefinition *arg = callInfo.getArg(1)->toPassArg()->getArgument();
+    if (!arg->isConstant())
+        return InliningStatus_NotInlined;
+    uint32_t slot = arg->toConstant()->value().toPrivateUint32();
+
+    callInfo.unwrapArgs();
+
+    MStoreFixedSlot *store = MStoreFixedSlot::New(callInfo.getArg(0), slot, callInfo.getArg(2));
+    current->add(store);
+    current->push(store);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(1)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // Don't inline if we don't have a constant slot.
+    MDefinition *arg = callInfo.getArg(1)->toPassArg()->getArgument();
+    if (!arg->isConstant())
+        return InliningStatus_NotInlined;
+    uint32_t slot = arg->toConstant()->value().toPrivateUint32();
+
+    callInfo.unwrapArgs();
+
+    MLoadFixedSlot *load = MLoadFixedSlot::New(callInfo.getArg(0), slot);
+    current->add(load);
+    current->push(load);
+
+    // We don't track reserved slot types, so always emit a barrier.
+    pushTypeBarrier(load, getInlineReturnTypeSet(), true);
 
     return InliningStatus_Inlined;
 }
