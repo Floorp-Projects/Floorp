@@ -36,8 +36,7 @@ ion::ParNewGCThing(gc::AllocKind allocKind)
 {
     ForkJoinSlice *slice = ForkJoinSlice::Current();
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
-    void *t = slice->allocator->parallelNewGCThing(allocKind, thingSize);
-    return static_cast<JSObject *>(t);
+    return gc::NewGCThing<JSObject, NoGC>(slice, allocKind, thingSize, gc::DefaultHeap);
 }
 
 // Check that the object was created by the current thread
@@ -47,7 +46,7 @@ ion::ParWriteGuard(ForkJoinSlice *slice, JSObject *object)
 {
     JS_ASSERT(ForkJoinSlice::Current() == slice);
     return !IsInsideNursery(object->runtime(), object) &&
-           slice->allocator->arenas.containsArena(slice->runtime(), object->arenaHeader());
+           slice->allocator()->arenas.containsArena(slice->runtime(), object->arenaHeader());
 }
 
 #ifdef DEBUG

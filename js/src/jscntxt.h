@@ -1539,6 +1539,31 @@ struct ThreadSafeContext : js::ContextFriendFields,
     bool isForkJoinSlice() const;
     ForkJoinSlice *asForkJoinSlice();
 
+#ifdef JSGC_GENERATIONAL
+    inline bool hasNursery() const;
+    inline js::Nursery &nursery();
+#endif
+
+    /*
+     * Allocator used when allocating GCThings on this context. If we are a
+     * JSContext, this is the Zone allocator of the JSContext's zone. If we
+     * are the per-thread data of a ForkJoinSlice, this is a per-thread
+     * allocator.
+     *
+     * This does not live in PerThreadData because the notion of an allocator
+     * is only per-thread in PJS. The runtime (and the main thread) can have
+     * more than one zone, each with its own allocator, and it's up to the
+     * context to specify what compartment and zone we are operating in.
+     */
+  protected:
+    Allocator *allocator_;
+
+  public:
+    static size_t offsetOfAllocator() { return offsetof(ThreadSafeContext, allocator_); }
+
+    inline Allocator *const allocator();
+    inline AllowGC allowGC();
+
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime_->onOutOfMemory(p, nbytes, isJSContext() ? asJSContext() : NULL);
     }

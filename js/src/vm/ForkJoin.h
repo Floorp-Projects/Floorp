@@ -299,11 +299,6 @@ struct ForkJoinSlice : ThreadSafeContext
     // How many slices are there in total?
     const uint32_t numSlices;
 
-    // Allocator to use when allocating on this thread.  See
-    // |ion::ParFunctions::ParNewGCThing()|.  This should move into
-    // |perThreadData|.
-    Allocator *const allocator;
-
     // Bailout record used to record the reason this thread stopped executing
     ParallelBailoutRecord *const bailoutRecord;
 
@@ -313,7 +308,7 @@ struct ForkJoinSlice : ThreadSafeContext
 #endif
 
     ForkJoinSlice(PerThreadData *perThreadData, uint32_t sliceId, uint32_t numSlices,
-                  Allocator *arenaLists, ForkJoinShared *shared,
+                  Allocator *allocator, ForkJoinShared *shared,
                   ParallelBailoutRecord *bailoutRecord);
 
     // True if this is the main thread, false if it is one of the parallel workers.
