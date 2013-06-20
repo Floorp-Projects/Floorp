@@ -586,10 +586,7 @@ class MIRGraph
         return blocks_.end();
     }
     void removeBlocksAfter(MBasicBlock *block);
-    void removeBlock(MBasicBlock *block) {
-        blocks_.remove(block);
-        numBlocks_--;
-    }
+    void removeBlock(MBasicBlock *block);
     void moveBlockToEnd(MBasicBlock *block) {
         JS_ASSERT(block->id());
         blocks_.remove(block);
