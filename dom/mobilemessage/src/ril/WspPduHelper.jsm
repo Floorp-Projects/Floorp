@@ -239,7 +239,7 @@ this.Octet = {
       throw new RangeError();
     }
     if (end == data.offset) {
-      return [];
+      return null;
     }
 
     let result;
@@ -2291,38 +2291,40 @@ this.PduHelper = {
 
         let octetArray = Octet.decodeMultiple(data, contentEnd);
         let content = null;
-        let charset = headers["content-type"].params &&
-                      headers["content-type"].params.charset
-                    ? headers["content-type"].params.charset.charset
-                    : null;
+        if (octetArray) {
+          let charset = headers["content-type"].params &&
+                        headers["content-type"].params.charset
+                      ? headers["content-type"].params.charset.charset
+                      : null;
 
-        let mimeType = headers["content-type"].media;
+          let mimeType = headers["content-type"].media;
 
-        if (mimeType) {
-          if (mimeType == "application/smil") {
-            // If the content is a SMIL type, convert it to a string.
-            // We hope to save and expose the SMIL content in a string way.
-            content = this.decodeStringContent(octetArray, charset);
-          } else if (mimeType.indexOf("text/") == 0 && charset != "utf-8") {
-            // If the content is a "text/plain" type, we have to make sure
-            // the encoding of the blob content should always be "utf-8".
-            let tmpStr = this.decodeStringContent(octetArray, charset);
-            let encoder = new TextEncoder("UTF-8");
-            content = new Blob([encoder.encode(tmpStr)], {type : mimeType});
+          if (mimeType) {
+            if (mimeType == "application/smil") {
+              // If the content is a SMIL type, convert it to a string.
+              // We hope to save and expose the SMIL content in a string way.
+              content = this.decodeStringContent(octetArray, charset);
+            } else if (mimeType.indexOf("text/") == 0 && charset != "utf-8") {
+              // If the content is a "text/plain" type, we have to make sure
+              // the encoding of the blob content should always be "utf-8".
+              let tmpStr = this.decodeStringContent(octetArray, charset);
+              let encoder = new TextEncoder("UTF-8");
+              content = new Blob([encoder.encode(tmpStr)], {type : mimeType});
 
-            // Make up the missing encoding info.
-            if (!headers["content-type"].params) {
-              headers["content-type"].params = {};
+              // Make up the missing encoding info.
+              if (!headers["content-type"].params) {
+                headers["content-type"].params = {};
+              }
+              if (!headers["content-type"].params.charset) {
+                headers["content-type"].params.charset = {};
+              }
+              headers["content-type"].params.charset.charset = "utf-8";
             }
-            if (!headers["content-type"].params.charset) {
-              headers["content-type"].params.charset = {};
-            }
-            headers["content-type"].params.charset.charset = "utf-8";
           }
-        }
 
-        if (!content) {
-          content = new Blob([octetArray], {type : mimeType});
+          if (!content) {
+            content = new Blob([octetArray], {type : mimeType});
+          }
         }
 
         parts[i] = {
