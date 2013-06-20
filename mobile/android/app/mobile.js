@@ -740,9 +740,5 @@ pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
 pref("dom.payment.provider.0.requestMethod", "GET");
 #endif
 
-// This needs more tests and stability fixes first, as well as UI.
-pref("media.navigator.enabled", false);
-pref("media.peerconnection.enabled", false);
-
 // Make <audio> and <video> talk to the AudioChannelService.
 pref("media.useAudioChannelService", true);
