@@ -383,6 +383,7 @@ MOCHITEST_FILES = \
 		test_bug879319.html \
 		allowMedia.sjs \
 		test_bug874758.html \
+		test_bug885024.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
