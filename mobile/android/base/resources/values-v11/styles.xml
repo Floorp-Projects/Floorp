@@ -21,6 +21,8 @@
 
     <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView"/>
 
+    <style name="Widget.BaseGridView" parent="android:style/Widget.Holo.GridView"/>
+
     <style name="Widget.BaseTextView" parent="android:style/Widget.Holo.Light.TextView"/>
 
 

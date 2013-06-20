@@ -202,6 +202,7 @@
 
   <string name="history_removed">&history_removed;</string>
 
+  <string name="bookmark_add">&bookmark_add;</string>
   <string name="bookmark_edit_title">&bookmark_edit_title;</string>
   <string name="bookmark_edit_name">&bookmark_edit_name;</string>
   <string name="bookmark_edit_location">&bookmark_edit_location;</string>

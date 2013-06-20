@@ -35,8 +35,12 @@
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:panelBackground">@drawable/menu_panel_bg</item>
         <item name="android:listViewStyle">@style/Widget.ListView</item>
+        <item name="android:gridViewStyle">@style/Widget.GridView</item>
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
+        <item name="bookmarkThumbnailViewStyle">@style/Widget.BookmarkThumbnailView</item>
+        <item name="topBookmarkItemViewStyle">@style/Widget.TopBookmarkItemView</item>
+        <item name="topBookmarksViewStyle">@style/Widget.TopBookmarksView</item>
     </style>
 
 </resources>
