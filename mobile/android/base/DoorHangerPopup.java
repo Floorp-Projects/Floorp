@@ -24,7 +24,6 @@ public class DoorHangerPopup extends ArrowPopup
                              implements GeckoEventListener, Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoDoorHangerPopup";
 
-    private GeckoApp mActivity;
     private View mAnchor;
 
     // Stores a set of all active DoorHanger notifications. A DoorHanger is
@@ -33,7 +32,6 @@ public class DoorHangerPopup extends ArrowPopup
 
     DoorHangerPopup(GeckoApp aActivity, View aAnchor) {
         super(aActivity);
-        mActivity = aActivity;
         mAnchor = aAnchor;
 
         mDoorHangers = new HashSet<DoorHanger>();
