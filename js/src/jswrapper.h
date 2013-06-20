@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jswrapper_h___
-#define jswrapper_h___
+#ifndef jswrapper_h
+#define jswrapper_h
 
 #include "mozilla/Attributes.h"
 
@@ -297,4 +297,4 @@ struct JS_FRIEND_API(AutoMaybeTouchDeadZones)
 
 } /* namespace js */
 
-#endif
+#endif /* jswrapper_h */

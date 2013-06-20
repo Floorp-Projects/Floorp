@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_registerallocator_h__
-#define js_ion_registerallocator_h__
+#ifndef ion_RegisterAllocator_h
+#define ion_RegisterAllocator_h
 
 #include "mozilla/Attributes.h"
 
@@ -363,4 +363,4 @@ class RegisterAllocator
 } // namespace ion
 } // namespace js
 
-#endif
+#endif /* ion_RegisterAllocator_h */

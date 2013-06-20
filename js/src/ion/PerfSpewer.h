@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_perfspewer_h__
-#define js_ion_perfspewer_h__
+#ifndef ion_PerfSpewer_h
+#define ion_PerfSpewer_h
 
 #include <stdio.h>
 
@@ -75,5 +75,4 @@ class PerfSpewer
 } // namespace ion
 } // namespace js
 
-#endif // js_ion_perfspewer_h__
-
+#endif /* ion_PerfSpewer_h */

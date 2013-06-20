@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GlobalObject_h___
-#define GlobalObject_h___
+#ifndef vm_GlobalObject_h
+#define vm_GlobalObject_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -481,4 +481,4 @@ JSObject::asGlobal()
     return *static_cast<js::GlobalObject *>(this);
 }
 
-#endif /* GlobalObject_h___ */
+#endif /* vm_GlobalObject_h */

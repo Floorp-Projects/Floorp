@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_cpu_registersets_h__
-#define jsion_cpu_registersets_h__
+#ifndef ion_RegisterSets_h
+#define ion_RegisterSets_h
 
 #include "Registers.h"
 #include "ion/IonAllocPolicy.h"
@@ -826,4 +826,4 @@ typedef Vector<AsmJSBoundsCheck, 0, IonAllocPolicy> AsmJSBoundsCheckVector;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_cpu_registersets_h__
+#endif /* ion_RegisterSets_h */

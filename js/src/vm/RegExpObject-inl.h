@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RegExpObject_inl_h___
-#define RegExpObject_inl_h___
+#ifndef vm_RegExpObject_inl_h
+#define vm_RegExpObject_inl_h
 
 #include "mozilla/Util.h"
 
@@ -169,4 +169,4 @@ MatchPairs::checkAgainst(size_t inputLength)
 
 } /* namespace js */
 
-#endif
+#endif /* vm_RegExpObject_inl_h */

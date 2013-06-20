@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_bitset_h__
-#define jsion_bitset_h__
+#ifndef ion_BitSet_h
+#define ion_BitSet_h
 
 #include "IonAllocPolicy.h"
 
@@ -170,4 +170,4 @@ class BitSet::Iterator
 }
 }
 
-#endif
+#endif /* ion_BitSet_h */

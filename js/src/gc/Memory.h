@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_memory_h___
-#define jsgc_memory_h___
+#ifndef gc_Memory_h
+#define gc_Memory_h
 
 #include <stddef.h>
 #include "jsgc.h"
@@ -36,4 +36,4 @@ size_t GetPageFaultCount();
 } // namespace gc
 } // namespace js
 
-#endif // jsgc_memory_h___
+#endif /* gc_Memory_h */
