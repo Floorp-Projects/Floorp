@@ -68,6 +68,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   listener_ = listener;
   waiting_connect_ = (mode == MODE_SERVER);
   processing_incoming_ = false;
+  closed_ = false;
 }
 
 HANDLE Channel::ChannelImpl::GetServerPipeHandle() const {
@@ -104,6 +105,8 @@ void Channel::ChannelImpl::Close() {
 
   if (thread_check_.get())
     thread_check_.reset();
+
+  closed_ = true;
 }
 
 bool Channel::ChannelImpl::Send(Message* message) {
@@ -120,6 +123,14 @@ bool Channel::ChannelImpl::Send(Message* message) {
 #ifdef IPC_MESSAGE_LOG_ENABLED
   Logging::current()->OnSendMessage(message, L"");
 #endif
+
+  if (closed_) {
+#ifdef IPC_MESSAGE_LOG_ENABLED
+    Logging::current()->OnSendMessageFailed(message, L"");
+#endif
+    delete message;
+    return false;
+  }
 
   output_queue_.push(message);
   // ensure waiting to write
