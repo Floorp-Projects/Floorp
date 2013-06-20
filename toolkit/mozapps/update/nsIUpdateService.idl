@@ -352,7 +352,7 @@ interface nsIUpdateChecker : nsISupports
  * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
-[scriptable, uuid(900b4a18-3bef-4f3e-bcf5-84dce0021c6d)]
+[scriptable, uuid(814f185b-cac6-494b-8fd6-63cf7380d857)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
@@ -395,13 +395,8 @@ interface nsIApplicationUpdateService : nsISupports
   AString downloadUpdate(in nsIUpdate update, in boolean background);
 
   /**
-   * Apply an update in the background.
-   */
-  void applyUpdateInBackground(in nsIUpdate update);
-
-  /**
    * Get the Active Updates directory
-   * @returns The active updates directory.
+   * @returns An nsIFile for the active updates directory.
    */
   nsIFile getUpdatesDirectory();
 
