@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GlobalObject_inl_h___
-#define GlobalObject_inl_h___
+#ifndef vm_GlobalObject_inl_h
+#define vm_GlobalObject_inl_h
 
 #include "vm/GlobalObject.h"
 
@@ -219,4 +219,4 @@ GlobalObject::setIntrinsicsHolder(JSObject *obj)
 
 } // namespace js
 
-#endif
+#endif /* vm_GlobalObject_inl_h */

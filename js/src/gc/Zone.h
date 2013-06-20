@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_zone_h___
-#define gc_zone_h___
+#ifndef gc_Zone_h
+#define gc_Zone_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
@@ -415,4 +415,4 @@ typedef CompartmentsIterT<ZonesIter> CompartmentsIter;
 
 } /* namespace js */
 
-#endif /* gc_zone_h___ */
+#endif /* gc_Zone_h */

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DateTime_h___
-#define DateTime_h___
+#ifndef vm_DateTime_h
+#define vm_DateTime_h
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
@@ -157,4 +157,4 @@ class DateTimeInfo
 
 }  /* namespace js */
 
-#endif /* DateTime_h___ */
+#endif /* vm_DateTime_h */

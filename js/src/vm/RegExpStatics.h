@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RegExpStatics_h__
-#define RegExpStatics_h__
+#ifndef vm_RegExpStatics_h
+#define vm_RegExpStatics_h
 
 #include <stddef.h>
 
@@ -22,4 +22,4 @@ size_t SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSize
 
 } /* namespace js */
 
-#endif /* RegExpStatics_h__ */
+#endif /* vm_RegExpStatics_h */

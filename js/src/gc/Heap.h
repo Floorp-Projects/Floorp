@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_heap_h___
-#define gc_heap_h___
+#ifndef gc_Heap_h
+#define gc_Heap_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
@@ -1063,4 +1063,4 @@ InFreeList(ArenaHeader *aheader, void *thing)
 } /* namespace gc */
 } /* namespace js */
 
-#endif /* gc_heap_h___ */
+#endif /* gc_Heap_h */

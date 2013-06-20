@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ObjectImpl_h___
-#define ObjectImpl_h___
+#ifndef vm_ObjectImpl_h
+#define vm_ObjectImpl_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/GuardObjects.h"
@@ -1639,4 +1639,4 @@ template <> struct GCMethods<PropertyId>
 
 } /* namespace js */
 
-#endif /* ObjectImpl_h__ */
+#endif /* vm_ObjectImpl_h */
