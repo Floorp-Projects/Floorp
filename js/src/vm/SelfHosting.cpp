@@ -387,6 +387,31 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+JSBool
+js::intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 3);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[1].isInt32());
+
+    args[0].toObject().setReservedSlot(args[1].toPrivateUint32(), args[2]);
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
+js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[1].isInt32());
+
+    args.rval().set(args[0].toObject().getReservedSlot(args[1].toPrivateUint32()));
+    return true;
+}
+
 /*
  * ParallelTestsShouldPass(): Returns false if we are running in a
  * mode (such as --ion-eager) that is known to cause additional
@@ -449,23 +474,26 @@ intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
 }
 
 const JSFunctionSpec intrinsic_functions[] = {
-    JS_FN("ToObject",             intrinsic_ToObject,             1,0),
-    JS_FN("ToInteger",            intrinsic_ToInteger,            1,0),
-    JS_FN("IsCallable",           intrinsic_IsCallable,           1,0),
-    JS_FN("ThrowError",           intrinsic_ThrowError,           4,0),
-    JS_FN("AssertionFailed",      intrinsic_AssertionFailed,      1,0),
-    JS_FN("SetScriptHints",       intrinsic_SetScriptHints,       2,0),
-    JS_FN("MakeConstructible",    intrinsic_MakeConstructible,    1,0),
-    JS_FN("MakeWrappable",        intrinsic_MakeWrappable,        1,0),
-    JS_FN("DecompileArg",         intrinsic_DecompileArg,         2,0),
-    JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0,0),
+    JS_FN("ToObject",                intrinsic_ToObject,                1,0),
+    JS_FN("ToInteger",               intrinsic_ToInteger,               1,0),
+    JS_FN("IsCallable",              intrinsic_IsCallable,              1,0),
+    JS_FN("ThrowError",              intrinsic_ThrowError,              4,0),
+    JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
+    JS_FN("SetScriptHints",          intrinsic_SetScriptHints,          2,0),
+    JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       1,0),
+    JS_FN("MakeWrappable",           intrinsic_MakeWrappable,           1,0),
+    JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
+    JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
 
-    JS_FN("ForkJoin",             intrinsic_ForkJoin,             2,0),
-    JS_FN("ForkJoinSlices",       intrinsic_ForkJoinSlices,       0,0),
-    JS_FN("NewParallelArray",     intrinsic_NewParallelArray,     3,0),
-    JS_FN("NewDenseArray",        intrinsic_NewDenseArray,        1,0),
-    JS_FN("UnsafeSetElement",     intrinsic_UnsafeSetElement,     3,0),
-    JS_FN("ShouldForceSequential", intrinsic_ShouldForceSequential, 0,0),
+    JS_FN("UnsafeSetElement",        intrinsic_UnsafeSetElement,        3,0),
+    JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
+    JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
+
+    JS_FN("ForkJoin",                intrinsic_ForkJoin,                2,0),
+    JS_FN("ForkJoinSlices",          intrinsic_ForkJoinSlices,          0,0),
+    JS_FN("NewParallelArray",        intrinsic_NewParallelArray,        3,0),
+    JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
+    JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
 
     // See builtin/Intl.h for descriptions of the intl_* functions.
