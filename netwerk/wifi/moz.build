@@ -44,3 +44,6 @@ if CONFIG['MOZ_ENABLE_DBUS']:
     CPP_SOURCES += [
         'nsWifiScannerDBus.cpp',
     ]
+
+LIBRARY_NAME = 'neckowifi_s'
+

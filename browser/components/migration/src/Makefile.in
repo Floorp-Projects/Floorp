@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= migration_s
-
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 

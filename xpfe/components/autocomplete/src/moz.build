@@ -10,3 +10,5 @@ CPP_SOURCES += [
     'nsAutoComplete.cpp',
 ]
 
+LIBRARY_NAME = 'xpautocomplete'
+

@@ -104,7 +104,7 @@ MaybeCheckEvalFreeVariables(JSContext *cx, HandleScript evalCaller, HandleObject
     // scope chain.
     if (pc.sc->hasDebuggerStatement()) {
         RootedObject scope(cx, scopeChain);
-        while (scope->isScope() || scope->isDebugScope()) {
+        while (scope->is<ScopeObject>() || scope->is<DebugScopeObject>()) {
             if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
                 RootedScript script(cx, scope->as<CallObject>().callee().nonLazyScript());
                 if (script->argumentsHasVarBinding()) {

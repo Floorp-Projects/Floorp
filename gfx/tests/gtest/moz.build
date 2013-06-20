@@ -6,3 +6,5 @@
 
 MODULE = 'gfxtest'
 
+LIBRARY_NAME = 'gfxtest'
+

@@ -6,3 +6,5 @@
 
 MODULE = 'tremor'
 
+LIBRARY_NAME = 'tremor'
+

@@ -563,8 +563,8 @@ JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(const char *)
 JS_GetDebugClassName(JSObject *obj)
 {
-    if (obj->isDebugScope())
-        return obj->asDebugScope().scope().getClass()->name;
+    if (obj->is<DebugScopeObject>())
+        return obj->as<DebugScopeObject>().scope().getClass()->name;
     return obj->getClass()->name;
 }
 
@@ -679,7 +679,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
     uint32_t i = 0;
     JSPropertyDesc *pd = NULL;
 
-    if (obj->isDebugScope()) {
+    if (obj->is<DebugScopeObject>()) {
         AutoIdVector props(cx);
         if (!Proxy::enumerate(cx, obj, props))
             return false;
@@ -1266,7 +1266,7 @@ JSAbstractFramePtr::callObject(JSContext *cx)
      *    JS_GetFrameCallObject will return the innermost function's callobj.
      */
     while (o) {
-        ScopeObject &scope = o->asDebugScope().scope();
+        ScopeObject &scope = o->as<DebugScopeObject>().scope();
         if (scope.is<CallObject>())
             return o;
         o = o->enclosingScope();

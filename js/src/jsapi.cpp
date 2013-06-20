@@ -68,7 +68,9 @@
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
+#include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
+#include "vm/WeakMapObject.h"
 #include "vm/Xdr.h"
 #include "yarr/BumpPointerAllocator.h"
 
@@ -1594,10 +1596,8 @@ JS_WrapId(JSContext *cx, jsid *idp)
  */
 
 JS_PUBLIC_API(JSObject *)
-JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
+JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
 {
-    RootedObject origobj(cx, origobjArg);
-    RootedObject target(cx, targetArg);
     AssertHeapIsIdle(cx);
     JS_ASSERT(origobj != target);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
@@ -1667,16 +1667,11 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
  */
 JS_FRIEND_API(JSObject *)
 js_TransplantObjectWithWrapper(JSContext *cx,
-                               JSObject *origobjArg,
-                               JSObject *origwrapperArg,
-                               JSObject *targetobjArg,
-                               JSObject *targetwrapperArg)
+                               HandleObject origobj,
+                               HandleObject origwrapper,
+                               HandleObject targetobj,
+                               HandleObject targetwrapper)
 {
-    RootedObject origobj(cx, origobjArg);
-    RootedObject origwrapper(cx, origwrapperArg);
-    RootedObject targetobj(cx, targetobjArg);
-    RootedObject targetwrapper(cx, targetwrapperArg);
-
     AutoMaybeTouchDeadZones agc(cx);
     AutoDisableProxyCheck adpc(cx->runtime());
 
@@ -1813,19 +1808,19 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitFunctionClass,              EAGER_ATOM_AND_CLASP(Function)},
     {js_InitObjectClass,                EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
-    {js_InitBooleanClass,               EAGER_ATOM_AND_CLASP(Boolean)},
+    {js_InitBooleanClass,               EAGER_ATOM_AND_OCLASP(Boolean)},
     {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
     {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
-    {js_InitNumberClass,                EAGER_ATOM_AND_CLASP(Number)},
-    {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
+    {js_InitNumberClass,                EAGER_ATOM_AND_OCLASP(Number)},
+    {js_InitStringClass,                EAGER_ATOM_AND_OCLASP(String)},
     {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_OCLASP(RegExp)},
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
+    {js_InitIteratorClasses,            EAGER_ATOM_AND_OCLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
-    {js_InitWeakMapClass,               EAGER_ATOM_AND_CLASP(WeakMap)},
+    {js_InitWeakMapClass,               EAGER_ATOM_AND_OCLASP(WeakMap)},
     {js_InitMapClass,                   EAGER_ATOM_AND_OCLASP(Map)},
     {js_InitSetClass,                   EAGER_ATOM_AND_OCLASP(Set)},
 #ifdef ENABLE_PARALLEL_JS
@@ -1847,22 +1842,22 @@ static const JSStdName standard_class_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(eval), CLASP(Object)},
 
     /* Global properties and functions defined by the Number class. */
-    {js_InitNumberClass,        EAGER_ATOM(NaN), CLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(Infinity), CLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(isNaN), CLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(isFinite), CLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(parseFloat), CLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(parseInt), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(NaN), OCLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(Infinity), OCLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(isNaN), OCLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(isFinite), OCLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(parseFloat), OCLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(parseInt), OCLASP(Number)},
 
     /* String global functions. */
-    {js_InitStringClass,        EAGER_ATOM(escape), CLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(unescape), CLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(decodeURI), CLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(encodeURI), CLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(decodeURIComponent), CLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(encodeURIComponent), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(escape), OCLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(unescape), OCLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(decodeURI), OCLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(encodeURI), OCLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(decodeURIComponent), OCLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(encodeURIComponent), OCLASP(String)},
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        EAGER_ATOM(uneval), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(uneval), OCLASP(String)},
 #endif
 
     /* Exception constructors. */
@@ -1920,10 +1915,15 @@ static const JSStdName object_prototype_names[] = {
     {NULL,                      0, NULL}
 };
 
+#undef CLASP
+#undef TYPED_ARRAY_CLASP
+#undef EAGER_ATOM
+#undef EAGER_CLASS_ATOM
+#undef EAGER_ATOM_AND_CLASP
+
 JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolved)
+JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, JSBool *resolved)
 {
-    RootedObject obj(cx, objArg);
     JSRuntime *rt;
     JSAtom *atom;
     const JSStdName *stdnm;
@@ -2016,9 +2016,8 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolv
 }
 
 JS_PUBLIC_API(JSBool)
-JS_EnumerateStandardClasses(JSContext *cx, JSObject *objArg)
+JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -2047,130 +2046,6 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *objArg)
 
     return true;
 }
-
-static JSIdArray *
-NewIdArray(JSContext *cx, int length)
-{
-    JSIdArray *ida;
-
-    ida = (JSIdArray *)
-        cx->calloc_(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida)
-        ida->length = length;
-    return ida;
-}
-
-/*
- * Unlike realloc(3), this function frees ida on failure.
- */
-static JSIdArray *
-SetIdArrayLength(JSContext *cx, JSIdArray *ida, int length)
-{
-    JSIdArray *rida;
-
-    rida = (JSIdArray *)
-           JS_realloc(cx, ida,
-                      offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (!rida) {
-        JS_DestroyIdArray(cx, ida);
-    } else {
-        rida->length = length;
-    }
-    return rida;
-}
-
-static JSIdArray *
-AddNameToArray(JSContext *cx, PropertyName *name, JSIdArray *ida, int *ip)
-{
-    int i = *ip;
-    int length = ida->length;
-    if (i >= length) {
-        ida = SetIdArrayLength(cx, ida, Max(length * 2, 8));
-        if (!ida)
-            return NULL;
-        JS_ASSERT(i < ida->length);
-    }
-    ida->vector[i].init(NameToId(name));
-    *ip = i + 1;
-    return ida;
-}
-
-static JSIdArray *
-EnumerateIfResolved(JSContext *cx, Handle<JSObject*> obj, Handle<PropertyName*> name,
-                    JSIdArray *ida, int *ip, JSBool *foundp)
-{
-    *foundp = obj->nativeContains(cx, name);
-    if (*foundp)
-        ida = AddNameToArray(cx, name, ida, ip);
-    return ida;
-}
-
-JS_PUBLIC_API(JSIdArray *)
-JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *objArg, JSIdArray *ida)
-{
-    RootedObject obj(cx, objArg);
-    JSRuntime *rt;
-    int i, j, k;
-    JSBool found;
-    JSClassInitializerOp init;
-
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, ida);
-    rt = cx->runtime();
-    if (ida) {
-        i = ida->length;
-    } else {
-        ida = NewIdArray(cx, 8);
-        if (!ida)
-            return NULL;
-        i = 0;
-    }
-
-    /* Check whether 'undefined' has been resolved and enumerate it if so. */
-    ida = EnumerateIfResolved(cx, obj, cx->names().undefined, ida, &i, &found);
-    if (!ida)
-        return NULL;
-
-    /* Enumerate only classes that *have* been resolved. */
-    Rooted<PropertyName*> name(cx);
-    for (j = 0; standard_class_atoms[j].init; j++) {
-        name = OFFSET_TO_NAME(rt, standard_class_atoms[j].atomOffset);
-        ida = EnumerateIfResolved(cx, obj, name, ida, &i, &found);
-        if (!ida)
-            return NULL;
-
-        if (found) {
-            init = standard_class_atoms[j].init;
-
-            for (k = 0; standard_class_names[k].init; k++) {
-                if (standard_class_names[k].init == init) {
-                    name = StdNameToPropertyName(cx, &standard_class_names[k]);
-                    ida = AddNameToArray(cx, name, ida, &i);
-                    if (!ida)
-                        return NULL;
-                }
-            }
-
-            if (init == js_InitObjectClass) {
-                for (k = 0; object_prototype_names[k].init; k++) {
-                    name = StdNameToPropertyName(cx, &object_prototype_names[k]);
-                    ida = AddNameToArray(cx, name, ida, &i);
-                    if (!ida)
-                        return NULL;
-                }
-            }
-        }
-    }
-
-    /* Trim to exact length. */
-    return SetIdArrayLength(cx, ida, i);
-}
-
-#undef CLASP
-#undef EAGER_ATOM
-#undef EAGER_CLASS_ATOM
-#undef EAGER_ATOM_CLASP
 
 JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objpArg)
@@ -3351,7 +3226,7 @@ JS_SetPrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSObject *obj)
 {
-    JS_ASSERT(!obj->isScope());
+    JS_ASSERT(!obj->is<ScopeObject>());
     return obj->getParent();
 }
 
@@ -3362,7 +3237,7 @@ JS_SetParent(JSContext *cx, JSObject *objArg, JSObject *parentArg)
     RootedObject parent(cx, parentArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    JS_ASSERT(!obj->isScope());
+    JS_ASSERT(!obj->is<ScopeObject>());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
 

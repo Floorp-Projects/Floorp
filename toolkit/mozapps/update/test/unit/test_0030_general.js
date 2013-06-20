@@ -22,7 +22,7 @@ var gIncrementalDownloadErrorType = 0;
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();
   // The mock XMLHttpRequest is MUCH faster

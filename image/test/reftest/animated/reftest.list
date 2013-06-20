@@ -1,0 +1,12 @@
+# Tests of the allowed disposal operators for both GIF and APNG: keep, clear,
+# and restore previous.
+== delaytest.html?clear.gif nodelaytest.html?green.png
+== delaytest.html?clear.png nodelaytest.html?green.png
+== delaytest.html?keep.gif nodelaytest.html?green.png
+== delaytest.html?keep.png nodelaytest.html?green.png
+== delaytest.html?restore-previous.gif nodelaytest.html?green.png
+== delaytest.html?restore-previous.png nodelaytest.html?green.png
+
+# Test of the blending/compositing operator that only APNG supports.
+== delaytest.html?over.png nodelaytest.html?grey.png
+!= delaytest.html?source.png nodelaytest.html?grey.png

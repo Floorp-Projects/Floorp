@@ -37,3 +37,6 @@ else:
     CPP_SOURCES += [
         'nsUserInfoUnix.cpp',
     ]
+
+LIBRARY_NAME = 'appstartup_s'
+

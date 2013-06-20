@@ -15,3 +15,6 @@ CPP_SOURCES += [
 EXTRA_PP_COMPONENTS += [
     'gtkqticonsconverter.js',
 ]
+
+LIBRARY_NAME = 'imgiconqt_s'
+

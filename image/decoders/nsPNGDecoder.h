@@ -97,8 +97,8 @@ public:
     AnimFrameInfo(png_structp aPNG, png_infop aInfo);
 #endif
 
-    RasterImage::FrameDisposalMethod mDispose;
-    RasterImage::FrameBlendMethod mBlend;
+    FrameBlender::FrameDisposalMethod mDispose;
+    FrameBlender::FrameBlendMethod mBlend;
     int32_t mTimeout;
   };
 

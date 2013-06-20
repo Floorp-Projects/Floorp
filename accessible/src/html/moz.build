@@ -17,3 +17,5 @@ CPP_SOURCES += [
     'HTMLTableAccessible.cpp',
 ]
 
+LIBRARY_NAME = 'accessibility_html_s'
+

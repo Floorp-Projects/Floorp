@@ -276,6 +276,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(FunctionDispatch)
     SAFE_OP(TypeObjectDispatch)
     SAFE_OP(IsCallable)
+    SAFE_OP(HaveSameClass)
     UNSAFE_OP(EffectiveAddress)
     UNSAFE_OP(AsmJSUnsignedToDouble)
     UNSAFE_OP(AsmJSNeg)

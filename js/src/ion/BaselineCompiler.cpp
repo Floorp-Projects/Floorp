@@ -2322,7 +2322,7 @@ static const VMFunction EnterBlockInfo = FunctionInfo<EnterBlockFn>(ion::EnterBl
 bool
 BaselineCompiler::emitEnterBlock()
 {
-    StaticBlockObject &blockObj = script->getObject(pc)->asStaticBlock();
+    StaticBlockObject &blockObj = script->getObject(pc)->as<StaticBlockObject>();
 
     if (JSOp(*pc) == JSOP_ENTERBLOCK) {
         for (size_t i = 0; i < blockObj.slotCount(); i++)

@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+
+[scriptable, uuid(bd2593a6-7df9-4dc7-8abe-20171c36a7a7)]
+interface nsINavigatorGamepads : nsISupports
+{
+  nsIVariant getGamepads();
+};

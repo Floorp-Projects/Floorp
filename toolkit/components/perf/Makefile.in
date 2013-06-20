@@ -15,7 +15,6 @@ EXTRA_JS_MODULES = \
     PerfMeasurement.jsm \
     $(NULL)
 
-LIBRARY_NAME = jsperf
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
