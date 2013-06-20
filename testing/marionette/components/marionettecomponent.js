@@ -35,7 +35,7 @@ function MarionetteComponent() {
 
   let dumper = false;
   let formatter = new Log4Moz.BasicFormatter();
-  this.logger.addAppender(new Log4Moz.RotatingFileAppender(logf, formatter));
+  this.logger.addAppender(new Log4Moz.BoundedFileAppender(logf.path, formatter));
 #ifdef DEBUG
   dumper = true;
 #endif
