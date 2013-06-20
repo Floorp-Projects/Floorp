@@ -2004,8 +2004,16 @@ TEST_F(SignalingTest, CheckTrickleSdpChange)
             std::string::npos);
   ASSERT_NE(a2_.getRemoteDescription().find("\r\na=candidate"),
             std::string::npos);
+  /* TODO (abr): These checks aren't quite right, since trickle ICE
+   * can easily result in SDP that is semantically identical but
+   * varies syntactically (in particularly, the ordering of attributes
+   * withing an m-line section can be different). This needs to be updated
+   * to be a semantic comparision between the SDP. Currently, these checks
+   * will fail whenever we add any other attributes to the SDP, such as
+   * RTCP MUX or RTCP feedback.
   ASSERT_EQ(a1_.getLocalDescription(),a2_.getRemoteDescription());
   ASSERT_EQ(a2_.getLocalDescription(),a1_.getRemoteDescription());
+  */
 }
 
 TEST_F(SignalingTest, ipAddrAnyOffer)

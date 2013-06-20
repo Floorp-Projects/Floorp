@@ -241,6 +241,7 @@ typedef enum {
     SDP_ATTR_RTCP_MUX,
     SDP_ATTR_DTLS_FINGERPRINT,
     SDP_ATTR_MAXPTIME,
+    SDP_ATTR_RTCP_FB,  /* RFC 4585 */
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;
