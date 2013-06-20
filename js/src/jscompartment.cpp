@@ -669,7 +669,7 @@ CreateLazyScriptsForCompartment(JSContext *cx)
             if (fun->isInterpretedLazy()) {
                 LazyScript *lazy = fun->lazyScriptOrNull();
                 if (lazy && lazy->maybeScript())
-                    fun->getExistingScript();
+                    fun->existingScript();
             }
         }
     }
