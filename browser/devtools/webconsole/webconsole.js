@@ -203,6 +203,7 @@ function WebConsoleFrame(aWebConsoleOwner)
   this._outputQueue = [];
   this._pruneCategoriesQueue = {};
   this._networkRequests = {};
+  this.filterPrefs = {};
 
   this._toggleFilter = this._toggleFilter.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
@@ -308,6 +309,13 @@ WebConsoleFrame.prototype = {
    * @type object
    */
   filterPrefs: null,
+
+  /**
+   * Prefix used for filter preferences.
+   * @private
+   * @type string
+   */
+  _filterPrefsPrefix: FILTER_PREFS_PREFIX,
 
   /**
    * The nesting depth of the currently active console group.
@@ -519,48 +527,31 @@ WebConsoleFrame.prototype = {
    */
   _initDefaultFilterPrefs: function WCF__initDefaultFilterPrefs()
   {
-    this.filterPrefs = {
-      network: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "network"),
-      networkinfo: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "networkinfo"),
-      csserror: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "csserror"),
-      cssparser: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "cssparser"),
-      exception: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "exception"),
-      jswarn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "jswarn"),
-      jslog: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "jslog"),
-      error: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "error"),
-      info: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "info"),
-      warn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "warn"),
-      log: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "log"),
-      secerror: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "secerror"),
-      secwarn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "secwarn"),
-    };
+    let prefs = ["network", "networkinfo", "csserror", "cssparser", "exception",
+                 "jswarn", "jslog", "error", "info", "warn", "log", "secerror",
+                 "secwarn"];
+    for (let pref of prefs) {
+      this.filterPrefs[pref] = Services.prefs
+                               .getBoolPref(this._filterPrefsPrefix + pref);
+    }
   },
 
   /**
-   * Sets the click events for all binary toggle filter buttons.
+   * Sets the events for the filter input field.
    * @private
    */
   _setFilterTextBoxEvents: function WCF__setFilterTextBoxEvents()
   {
-    let timer = null;
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let timerEvent = this.adjustVisibilityOnSearchStringChange.bind(this);
 
     let onChange = function _onChange() {
-      let timer;
-
       // To improve responsiveness, we let the user finish typing before we
       // perform the search.
-      if (timer == null) {
-        let timerClass = Cc["@mozilla.org/timer;1"];
-        timer = timerClass.createInstance(Ci.nsITimer);
-      }
-      else {
-        timer.cancel();
-      }
-
+      timer.cancel();
       timer.initWithCallback(timerEvent, SEARCH_DELAY,
                              Ci.nsITimer.TYPE_ONE_SHOT);
-    }.bind(this);
+    };
 
     this.filterBox.addEventListener("command", onChange, false);
     this.filterBox.addEventListener("input", onChange, false);
@@ -750,7 +741,7 @@ WebConsoleFrame.prototype = {
   {
     this.filterPrefs[aToggleType] = aState;
     this.adjustVisibilityForMessageType(aToggleType, aState);
-    Services.prefs.setBoolPref(FILTER_PREFS_PREFIX + aToggleType, aState);
+    Services.prefs.setBoolPref(this._filterPrefsPrefix + aToggleType, aState);
   },
 
   /**
