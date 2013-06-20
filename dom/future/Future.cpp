@@ -252,8 +252,8 @@ Future::RunTask()
   mResolveCallbacks.Clear();
   mRejectCallbacks.Clear();
 
-  Optional<JS::Handle<JS::Value> > value(nsContentUtils::GetSafeJSContext(),
-                                         mResult);
+  JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
+  Optional<JS::Handle<JS::Value> > value(nsContentUtils::GetSafeJSContext(), mResult);
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     callbacks[i]->Call(value);

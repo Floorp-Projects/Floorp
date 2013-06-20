@@ -2456,6 +2456,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(context != nullptr, "Have no context for deserialization");
     NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
+    JSAutoRequest ar(context->GetNativeContext());
     JS::Rooted<JSScript*> newScriptObject(context->GetNativeContext());
     rv = context->Deserialize(aStream, &newScriptObject);
     if (NS_FAILED(rv)) {
@@ -2571,6 +2572,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Ok, compile it to create a prototype script object!
 
+    JSAutoRequest ar(context->GetNativeContext());
     JS::Rooted<JSScript*> newScriptObject(context->GetNativeContext());
 
     // If the script was inline, tell the JS parser to save source for
