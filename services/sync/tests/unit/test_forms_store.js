@@ -8,7 +8,8 @@ Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let baseuri = "http://fake/uri/";
-  let store = new FormEngine(Service)._store;
+  let engine = new FormEngine(Service);
+  let store = engine._store;
 
   function applyEnsureNoFailures(records) {
     do_check_eq(store.applyIncomingBatch(records).length, 0);
@@ -36,6 +37,9 @@ function run_test() {
       do_throw("Should have only gotten one!");
   }
   do_check_true(store.itemExists(id));
+
+  _("Should be able to find this entry as a dupe");
+  do_check_eq(engine._findDupe({name: "name!!", value: "value??"}), id);
 
   let rec = store.createRecord(id);
   _("Got record for id", id, rec);
@@ -120,9 +124,7 @@ function run_test() {
     value: "entry"
   }]);
 
-  Utils.runInTransaction(Svc.Form.DBConnection, function() {
-    store.wipe();
-  });
+  store.wipe();
 
   for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
