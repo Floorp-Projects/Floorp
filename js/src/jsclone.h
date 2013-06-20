@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsclone_h___
-#define jsclone_h___
+#ifndef jsclone_h
+#define jsclone_h
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -204,4 +204,4 @@ struct JSStructuredCloneWriter {
     friend JSBool JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 };
 
-#endif /* jsclone_h___ */
+#endif /* jsclone_h */

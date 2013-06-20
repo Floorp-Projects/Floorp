@@ -5,8 +5,6 @@
 
 /*
  * Double hashing implementation.
- *
- * Try to keep this file in sync with js/src/jsdhash.cpp.
  */
 #include <stdio.h>
 #include <stdlib.h>

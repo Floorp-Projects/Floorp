@@ -1364,6 +1364,7 @@ nsresult
 nsJSContext::ExecuteScript(JSScript* aScriptObject_,
                            JSObject* aScopeObject_)
 {
+  JSAutoRequest ar(mContext);
   JS::Rooted<JSObject*> aScopeObject(mContext, aScopeObject_);
   JS::Rooted<JSScript*> aScriptObject(mContext, aScriptObject_);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);

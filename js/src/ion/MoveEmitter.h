@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_move_emitter_h__
-#define jsion_move_emitter_h__
+#ifndef ion_MoveEmitter_h
+#define ion_MoveEmitter_h
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
 # include "ion/shared/MoveEmitter-x86-shared.h"
@@ -15,5 +15,4 @@
 # error "CPU Not Supported"
 #endif
 
-#endif // jsion_move_emitter_h__
-
+#endif /* ion_MoveEmitter_h */

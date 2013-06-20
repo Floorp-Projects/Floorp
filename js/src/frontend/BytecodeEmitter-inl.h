@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BytecodeEmitter_inl_h__
-#define BytecodeEmitter_inl_h__
+#ifndef frontend_BytecodeEmitter_inl_h
+#define frontend_BytecodeEmitter_inl_h
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
@@ -22,4 +22,4 @@ BytecodeEmitter::tokenStream()
 } // namespace frontend
 } // namespace js
 
-#endif // BytecodeEmitter_inl_h__
+#endif /* frontend_BytecodeEmitter_inl_h */

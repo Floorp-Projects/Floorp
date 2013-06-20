@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsdtoa_h___
-#define jsdtoa_h___
+#ifndef jsdtoa_h
+#define jsdtoa_h
 /*
  * Public interface to portable double-precision floating point to string
  * and back conversion package.
@@ -107,4 +107,4 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
 char *
 js_dtobasestr(DtoaState *state, int base, double d);
 
-#endif /* jsdtoa_h___ */
+#endif /* jsdtoa_h */

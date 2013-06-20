@@ -24,6 +24,7 @@ LOCAL_INCLUDES = \
   $(NULL)
 
 GTEST_CPPSRCS = \
+  TestLayers.cpp \
   TestTiledLayerBuffer.cpp \
   $(NULL)
 

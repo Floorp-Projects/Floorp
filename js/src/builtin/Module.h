@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Module_h___
-#define Module_h___
+#ifndef builtin_Module_h
+#define builtin_Module_h
 
 #include "jsobj.h"
 
@@ -35,4 +35,4 @@ class Module : public JSObject {
 
 } // namespace js
 
-#endif // Module_h___
+#endif /* builtin_Module_h */

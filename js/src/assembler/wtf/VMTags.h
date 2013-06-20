@@ -23,8 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef VMTags_h
-#define VMTags_h
+#ifndef assembler_wtf_VMTags_h
+#define assembler_wtf_VMTags_h
 
 // On Mac OS X, the VM subsystem allows tagging memory requested from mmap and vm_map
 // in order to aid tools that inspect system memory use. 
@@ -87,4 +87,4 @@
 
 #endif // OS(DARWIN)
 
-#endif // VMTags_h
+#endif /* assembler_wtf_VMTags_h */

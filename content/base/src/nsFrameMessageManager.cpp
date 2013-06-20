@@ -620,8 +620,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
   JSContext *cxToUse = mContext ? mContext
                                 : (aContext ? aContext
                                             : nsContentUtils::GetSafeJSContext());
-  JS::Rooted<JSObject*> objectsArray(cxToUse, aObjectsArray);
   AutoPushJSContext ctx(cxToUse);
+  JS::Rooted<JSObject*> objectsArray(cxToUse, aObjectsArray);
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     MMListenerRemover lr(this);

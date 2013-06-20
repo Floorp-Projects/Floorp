@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SharedContext_h__
-#define SharedContext_h__
+#ifndef frontend_SharedContext_h
+#define frontend_SharedContext_h
 
 #include "jstypes.h"
 #include "jsatom.h"
@@ -384,4 +384,4 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
 
 } // namespace js
 
-#endif // SharedContext_h__
+#endif /* frontend_SharedContext_h */

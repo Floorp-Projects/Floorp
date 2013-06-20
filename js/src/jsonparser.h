@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsonparser_h___
-#define jsonparser_h___
+#ifndef jsonparser_h
+#define jsonparser_h
 
 #include "mozilla/Attributes.h"
 
@@ -213,4 +213,4 @@ class MOZ_STACK_CLASS JSONParser : private AutoGCRooter
 
 } /* namespace js */
 
-#endif /* jsonparser_h___ */
+#endif /* jsonparser_h */

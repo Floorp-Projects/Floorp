@@ -6,8 +6,8 @@
 
 /* A higher-order macro for enumerating keyword tokens. */
 
-#ifndef Keywords_h_
-#define Keywords_h_
+#ifndef vm_Keywords_h
+#define vm_Keywords_h
 
 #include "jsversion.h"
 
@@ -84,4 +84,4 @@
     FOR_LET_KEYWORD(macro) \
     FOR_YIELD_KEYWORD(macro)
 
-#endif /* Keywords_h_ */
+#endif /* vm_Keywords_h */

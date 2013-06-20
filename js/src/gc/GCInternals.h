@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_internal_h___
-#define jsgc_internal_h___
+#ifndef gc_GCInternals_h
+#define gc_GCInternals_h
 
 #include "jsapi.h"
 
@@ -144,4 +144,4 @@ struct AutoStopVerifyingBarriers
 } /* namespace gc */
 } /* namespace js */
 
-#endif /* jsgc_internal_h___ */
+#endif /* gc_GCInternals_h */

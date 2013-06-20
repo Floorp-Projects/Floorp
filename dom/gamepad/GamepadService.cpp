@@ -31,6 +31,8 @@ namespace dom {
 
 namespace {
 const char* kGamepadEnabledPref = "dom.gamepad.enabled";
+const char* kGamepadEventsEnabledPref =
+  "dom.gamepad.non_standard_events.enabled";
 // Amount of time to wait before cleaning up gamepad resources
 // when no pages are listening for events.
 const int kCleanupDelayMS = 2000;
@@ -50,6 +52,8 @@ GamepadService::GamepadService()
     mShuttingDown(false)
 {
   mEnabled = IsAPIEnabled();
+  mNonstandardEventsEnabled =
+    Preferences::GetBool(kGamepadEventsEnabledPref, false);
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   observerService->AddObserver(this,
@@ -131,6 +135,7 @@ GamepadService::RemoveListener(nsGlobalWindow* aWindow)
 
 uint32_t
 GamepadService::AddGamepad(const char* aId,
+                           GamepadMappingType aMapping,
                            uint32_t aNumButtons,
                            uint32_t aNumAxes)
 {
@@ -139,6 +144,7 @@ GamepadService::AddGamepad(const char* aId,
     new Gamepad(nullptr,
                 NS_ConvertUTF8toUTF16(nsDependentCString(aId)),
                 0,
+                aMapping,
                 aNumButtons,
                 aNumAxes);
   int index = -1;
@@ -217,8 +223,10 @@ GamepadService::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
     nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetButton(aButton, aPressed, aValue);
-      // Fire event
-      FireButtonEvent(listeners[i], gamepad, aButton, aValue);
+      if (mNonstandardEventsEnabled) {
+        // Fire event
+        FireButtonEvent(listeners[i], gamepad, aButton, aValue);
+      }
     }
   }
 }
@@ -275,8 +283,10 @@ GamepadService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
     nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetAxis(aAxis, aValue);
-      // Fire event
-      FireAxisMoveEvent(listeners[i], gamepad, aAxis, aValue);
+      if (mNonstandardEventsEnabled) {
+        // Fire event
+        FireAxisMoveEvent(listeners[i], gamepad, aAxis, aValue);
+      }
     }
   }
 }
@@ -505,13 +515,15 @@ GamepadServiceTest::GamepadServiceTest()
   /* member initializers and constructor code */
 }
 
-/* uint32_t addGamepad (in string id, in uint32_t numButtons, in uint32_t numAxes); */
+/* uint32_t addGamepad (in string id, in unsigned long mapping, in unsigned long numButtons, in unsigned long numAxes); */
 NS_IMETHODIMP GamepadServiceTest::AddGamepad(const char* aID,
+                                             uint32_t aMapping,
                                              uint32_t aNumButtons,
                                              uint32_t aNumAxes,
                                              uint32_t* aRetval)
 {
   *aRetval = gGamepadServiceSingleton->AddGamepad(aID,
+                                                  static_cast<GamepadMappingType>(aMapping),
                                                   aNumButtons,
                                                   aNumAxes);
   return NS_OK;

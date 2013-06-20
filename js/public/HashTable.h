@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_HashTable_h__
-#define js_HashTable_h__
+#ifndef js_HashTable_h
+#define js_HashTable_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
@@ -542,18 +543,11 @@ struct DefaultHasher<double>
     typedef double Lookup;
     static HashNumber hash(double d) {
         JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-        union {
-            struct {
-                uint32_t lo;
-                uint32_t hi;
-            } s;
-            double d;
-        } u;
-        u.d = d;
-        return u.s.lo ^ u.s.hi;
+        uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
+        return HashNumber(u ^ (u >> 32));
     }
     static bool match(double lhs, double rhs) {
-        return lhs == rhs;
+        return mozilla::BitwiseCast<uint64_t>(lhs) == mozilla::BitwiseCast<uint64_t>(rhs);
     }
 };
 
@@ -1464,5 +1458,4 @@ class HashTable : private AllocPolicy
 }  // namespace detail
 }  // namespace js
 
-#endif  // js_HashTable_h__
-
+#endif  /* js_HashTable_h */
