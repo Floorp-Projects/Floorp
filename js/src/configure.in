@@ -2457,7 +2457,11 @@ AC_SUBST(VISIBILITY_FLAGS)
 
 MOZ_GCC_PR49911
 MOZ_GCC_PR39608
-MOZ_LLVM_PR8927
+if test "$OS_TARGET" != WINNT; then
+    # Only run this test with clang on non-Windows platforms, because clang
+    # cannot do enough code gen for now to make this test work correctly.
+    MOZ_LLVM_PR8927
+fi
 
 dnl Checks for header files.
 dnl ========================================================
