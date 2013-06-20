@@ -1542,7 +1542,11 @@ MobileMessageDatabaseService.prototype = {
                                                messageRecord.threadId,
                                                messageId,
                                                messageRecord.read);
-              };
+
+              Services.obs.notifyObservers(null,
+                                           "mobile-message-deleted",
+                                           JSON.stringify({ id: messageId }));
+            };
           } else if (DEBUG) {
             debug("Message id " + messageId + " does not exist");
           }
