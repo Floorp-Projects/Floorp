@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Parser_inl_h__
-#define Parser_inl_h__
+#ifndef frontend_Parser_inl
+#define frontend_Parser_inl
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
@@ -118,5 +118,4 @@ CheckStrictBinding(JSContext *cx, ParseHandler *handler, ParseContext<ParseHandl
 } // namespace frontend
 } // namespace js
 
-#endif // Parser_inl_h__
-
+#endif /* frontend_Parser_inl */

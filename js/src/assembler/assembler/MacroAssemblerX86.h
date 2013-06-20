@@ -27,8 +27,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MacroAssemblerX86_h
-#define MacroAssemblerX86_h
+#ifndef assembler_assembler_MacroAssemblerX86_h
+#define assembler_assembler_MacroAssemblerX86_h
 
 #include "assembler/wtf/Platform.h"
 
@@ -260,4 +260,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // MacroAssemblerX86_h
+#endif /* assembler_assembler_MacroAssemblerX86_h */
