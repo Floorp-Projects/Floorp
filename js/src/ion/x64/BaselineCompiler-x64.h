@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_baselinecompiler_x64_h__
-#define jsion_baselinecompiler_x64_h__
+#ifndef ion_x64_BaselineCompiler_x64_h
+#define ion_x64_BaselineCompiler_x64_h
 
 #include "ion/shared/BaselineCompiler-x86-shared.h"
 
@@ -23,4 +23,4 @@ typedef BaselineCompilerX64 BaselineCompilerSpecific;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_baselinecompiler_x64_h__
+#endif /* ion_x64_BaselineCompiler_x64_h */

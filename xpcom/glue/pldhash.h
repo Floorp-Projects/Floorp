@@ -7,8 +7,6 @@
 #define pldhash_h___
 /*
  * Double hashing, a la Knuth 6.
- *
- * Try to keep this file in sync with js/src/jsdhash.h.
  */
 #include "mozilla/Types.h"
 #include "nscore.h"

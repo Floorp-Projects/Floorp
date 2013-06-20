@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_backtrackingallocator_h__
-#define js_ion_backtrackingallocator_h__
+#ifndef ion_BacktrackingAllocator_h
+#define ion_BacktrackingAllocator_h
 
 #include "LiveRangeAllocator.h"
 
@@ -234,4 +234,4 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
 } // namespace ion
 } // namespace js
 
-#endif
+#endif /* ion_BacktrackingAllocator_h */

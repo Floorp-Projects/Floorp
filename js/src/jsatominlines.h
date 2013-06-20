@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsatominlines_h___
-#define jsatominlines_h___
+#ifndef jsatominlines_h
+#define jsatominlines_h
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
@@ -201,4 +201,4 @@ ClassName(JSProtoKey key, JSContext *cx)
 
 } // namespace js
 
-#endif /* jsatominlines_h___ */
+#endif /* jsatominlines_h */

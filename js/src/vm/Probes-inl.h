@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Probes_inl_h__
-#define Probes_inl_h__
+#ifndef vm_Probes_inl_h
+#define vm_Probes_inl_h
 
 #include "vm/Probes.h"
 
@@ -124,4 +124,4 @@ Probes::stopExecution(JSScript *script)
 
 } /* namespace js */
  
-#endif  // Probes_inl_h__
+#endif /* vm_Probes_inl_h */

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsnum_h___
-#define jsnum_h___
+#ifndef jsnum_h
+#define jsnum_h
 
 #include "mozilla/FloatingPoint.h"
 
@@ -265,4 +265,4 @@ SafeMul(int32_t one, int32_t two, int32_t *res)
 
 } /* namespace js */
 
-#endif /* jsnum_h___ */
+#endif /* jsnum_h */

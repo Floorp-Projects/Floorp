@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsfuninlines_h___
-#define jsfuninlines_h___
+#ifndef jsfuninlines_h
+#define jsfuninlines_h
 
 #include "jsfun.h"
 #include "jsscript.h"
@@ -283,4 +283,4 @@ js::Class::isCallable() const
     return this == &js::FunctionClass || call;
 }
 
-#endif /* jsfuninlines_h___ */
+#endif /* jsfuninlines_h */

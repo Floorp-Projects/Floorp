@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SPSProfiler_h__
-#define SPSProfiler_h__
+#ifndef vm_SPSProfiler_h
+#define vm_SPSProfiler_h
 
 #include <stddef.h>
 
@@ -390,4 +390,4 @@ class SPSInstrumentation
 
 } /* namespace js */
 
-#endif /* SPSProfiler_h__ */
+#endif /* vm_SPSProfiler_h */

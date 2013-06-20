@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_move_resolver_x86_shared_h__
-#define jsion_move_resolver_x86_shared_h__
+#ifndef ion_MoveEmitter_x86_shared_h
+#define ion_MoveEmitter_x86_shared_h
 
 #include "ion/MoveResolver.h"
 #include "ion/IonMacroAssembler.h"
@@ -61,5 +61,4 @@ typedef MoveEmitterX86 MoveEmitter;
 } // ion
 } // js
 
-#endif // jsion_move_resolver_x86_shared_h__
-
+#endif /* ion_MoveEmitter_x86_shared_h */

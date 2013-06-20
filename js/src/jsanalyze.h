@@ -6,8 +6,8 @@
 
 /* Definitions for javascript analysis. */
 
-#ifndef jsanalyze_h___
-#define jsanalyze_h___
+#ifndef jsanalyze_h
+#define jsanalyze_h
 
 #include "mozilla/PodOperations.h"
 
@@ -1096,4 +1096,4 @@ template <> struct IsPod<js::analyze::SSAUseChain>      : TrueType {};
 
 } /* namespace mozilla */
 
-#endif // jsanalyze_h___
+#endif /* jsanalyze_h */

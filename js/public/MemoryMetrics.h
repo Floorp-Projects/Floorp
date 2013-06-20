@@ -457,4 +457,4 @@ PeakSizeOfTemporary(const JSRuntime *rt);
 
 } // namespace JS
 
-#endif // js_MemoryMetrics_h
+#endif /* js_MemoryMetrics_h */
