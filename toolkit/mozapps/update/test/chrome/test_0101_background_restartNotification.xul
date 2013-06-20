@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: restart notification pref promptWaitTime"
+<window title="Update Wizard pages: background finish with a background download"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript"
@@ -27,28 +27,12 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let patches = getLocalPatchString("complete", null, null, null, null, null,
-                                    STATE_PENDING);
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version,
-                                     Services.appinfo.platformVersion);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  writeStatusFile(STATE_SUCCEEDED);
-  
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 1);
-    
-  reloadUpdateManagerData();
 
-  is(gUpdateManager.activeUpdate.state, "pending",
-     "The active update should have a state of pending");
+  let url = URL_UPDATE + "?showDetails=1" + getVersionParams();
+  setUpdateURLOverride(url);
 
-  ok(gUpdateManager.activeUpdate.promptWaitTime == 1, "Checking that the " +
-     "update's promptWaitTime attribute value was set from the " +
-     PREF_APP_UPDATE_PROMPTWAITTIME + " preference");
-    
-  gUP.showUpdateDownloaded(gUpdateManager.activeUpdate, true);
-
+  gAUS.notify(null);
 }
 
 ]]>

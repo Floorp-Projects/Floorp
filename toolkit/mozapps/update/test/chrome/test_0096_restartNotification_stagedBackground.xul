@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: restart notification xml promptWaitTime"
+<window title="Update Wizard pages: restart notification staged w/o service"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript"
@@ -28,29 +28,28 @@ function runTest() {
   debugDump("entering");
 
   let patches = getLocalPatchString("complete", null, null, null, null, null,
-                                    STATE_PENDING);
+                                    STATE_APPLIED);
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
-                                     Services.appinfo.platformVersion,
-                                     null, null, null,
-                                     null, null, null,
-                                     null, false, null,
-                                     false, false,
-                                     false, 1);
+                                     Services.appinfo.platformVersion);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  writeStatusFile(STATE_SUCCEEDED);
-    
+  writeStatusFile(STATE_APPLIED);
+
+  Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 1);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, false);
+
   reloadUpdateManagerData();
 
-  is(gUpdateManager.activeUpdate.state, "pending",
-     "The active update should have a state of pending");
+  is(gUpdateManager.activeUpdate.state, STATE_APPLIED,
+     "The active update should have a state of " + STATE_APPLIED);
 
   ok(gUpdateManager.activeUpdate.promptWaitTime == 1, "Checking that the " +
-     "update's promptWaitTime attribute value was set by the XML");
-    
-  gUP.showUpdateDownloaded(gUpdateManager.activeUpdate, true);
+     "update's promptWaitTime attribute value was set from the " +
+     PREF_APP_UPDATE_PROMPTWAITTIME + " preference");
 
+  gUpdateManager.refreshUpdateStatus(gUpdateManager.activeUpdate);
 }
 
 ]]>

@@ -81,9 +81,6 @@ const MAR_WRONG_CHANNEL_FILE = "data/wrong_product_channel_mar.mar";
 const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
 const MAINTENANCE_SERVICE_BIN_FILE = "maintenanceservice.exe";
 const MAINTENANCE_SERVICE_INSTALLER_BIN_FILE = "maintenanceservice_installer.exe";
-const UPDATE_SETTINGS_INI_FILE = "update-settings.ini";
-const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
-                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n"
 const UPDATES_DIR_SUFFIX = "_mar";
 
 const LOG_COMPLETE_SUCCESS = "data/complete_log_success";
@@ -609,8 +606,14 @@ function runUpdate() {
   if (/ /.test(callbackAppPath))
     callbackAppPath = '"' + callbackAppPath + '"';
 
+  // Backup the updater-settings.ini file if it exists by moving it.
   let updateSettingsIni = getApplyDirFile(null, true);
-  updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI_BAK);
+  }
+  updateSettingsIni = getApplyDirFile(null, true);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   let args = [updatesDirPath, applyToDirPath, 0];
@@ -638,6 +641,13 @@ function runUpdate() {
 
   if (gDisableReplaceFallback) {
     env.set("MOZ_NO_REPLACE_FALLBACK", "");
+  }
+
+  // Restore the backed up updater-settings.ini if it exists.
+  let updateSettingsIni = getApplyDirFile(null, true);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI);
   }
 
   return process.exitValue;
@@ -951,8 +961,14 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
   copyBinToApplyToDir(MAINTENANCE_SERVICE_BIN_FILE);
   copyBinToApplyToDir(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
 
+  // Backup the updater-settings.ini file if it exists by moving it.
   let updateSettingsIni = getApplyDirFile(null, true);
-  updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI_BAK);
+  }
+  updateSettingsIni = getApplyDirFile(null, true);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   // Firefox does not wait for the service command to finish, but
@@ -983,6 +999,13 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     
     // Make sure all of the logs are written out.
     waitForServiceStop(false);
+
+    // Restore the backed up updater-settings.ini if it exists.
+    let updateSettingsIni = getApplyDirFile(null, true);
+    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
+    if (updateSettingsIni.exists()) {
+      updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI);
+    }
 
     do_check_eq(status, aExpectedStatus);
 
