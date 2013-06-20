@@ -601,11 +601,11 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   VOID_TO_NPVARIANT(*result);
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
-  JS::Rooted<JS::Value> fv(cx);
 
   nsCxPusher pusher;
   pusher.Push(cx);
   JSAutoCompartment ac(cx, npjsobj->mJSObj);
+  JS::Rooted<JS::Value> fv(cx);
 
   AutoJSExceptionReporter reporter(cx);
 
