@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CTYPES_H
-#define CTYPES_H
+#ifndef ctypes_CTypes_h
+#define ctypes_CTypes_h
 
 #include "jscntxt.h"
 #include "jsapi.h"
@@ -509,4 +509,4 @@ namespace UInt64 {
 }
 }
 
-#endif
+#endif /* ctypes_CTypes_h */

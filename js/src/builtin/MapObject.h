@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MapObject_h__
-#define MapObject_h__
+#ifndef builtin_MapObject_h
+#define builtin_MapObject_h
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -164,4 +164,4 @@ js_InitMapClass(JSContext *cx, js::HandleObject obj);
 extern JSObject *
 js_InitSetClass(JSContext *cx, js::HandleObject obj);
 
-#endif  /* MapObject_h__ */
+#endif /* builtin_MapObject_h */
