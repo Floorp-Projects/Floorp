@@ -28,6 +28,7 @@ class BluetoothA2dpManager : public BluetoothProfileManagerBase
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   static BluetoothA2dpManager* Get();
   ~BluetoothA2dpManager();

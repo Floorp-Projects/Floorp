@@ -25,66 +25,23 @@ USING_BLUETOOTH_NAMESPACE
 
 namespace {
   StaticRefPtr<BluetoothA2dpManager> gBluetoothA2dpManager;
-  StaticRefPtr<BluetoothA2dpManagerObserver> sA2dpObserver;
   bool gInShutdown = false;
 } // anonymous namespace
 
-class mozilla::dom::bluetooth::BluetoothA2dpManagerObserver : public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  BluetoothA2dpManagerObserver()
-  {
-  }
-
-  bool Init()
-  {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    MOZ_ASSERT(obs);
-    if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
-      NS_WARNING("Failed to add shutdown observer!");
-      return false;
-    }
-
-    return true;
-  }
-
-  bool Shutdown()
-  {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (!obs ||
-        NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
-      NS_WARNING("Can't unregister observers, or already unregistered!");
-      return false;
-    }
-
-    return true;
-  }
-
-  ~BluetoothA2dpManagerObserver()
-  {
-    Shutdown();
-  }
-};
-
 NS_IMETHODIMP
-BluetoothA2dpManagerObserver::Observe(nsISupports* aSubject,
-                                      const char* aTopic,
-                                      const PRUnichar* aData)
+BluetoothA2dpManager::Observe(nsISupports* aSubject,
+                              const char* aTopic,
+                              const PRUnichar* aData)
 {
   MOZ_ASSERT(gBluetoothA2dpManager);
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    return gBluetoothA2dpManager->HandleShutdown();
+    return HandleShutdown();
   }
 
   MOZ_ASSERT(false, "BluetoothA2dpManager got unexpected topic!");
   return NS_ERROR_UNEXPECTED;
 }
-
-NS_IMPL_ISUPPORTS1(BluetoothA2dpManagerObserver, nsIObserver)
 
 BluetoothA2dpManager::BluetoothA2dpManager()
   : mConnected(false)
@@ -98,10 +55,11 @@ BluetoothA2dpManager::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  sA2dpObserver = new BluetoothA2dpManagerObserver();
-  if (!sA2dpObserver->Init()) {
-    NS_WARNING("Cannot set up A2dp Observers!");
-    sA2dpObserver = nullptr;
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, false);
+  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+    BT_WARNING("Failed to add shutdown observer!");
+    return false;
   }
 
   return true;
@@ -109,14 +67,11 @@ BluetoothA2dpManager::Init()
 
 BluetoothA2dpManager::~BluetoothA2dpManager()
 {
-  Cleanup();
-}
-
-void
-BluetoothA2dpManager::Cleanup()
-{
-  sA2dpObserver->Shutdown();
-  sA2dpObserver = nullptr;
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(obs);
+  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+    BT_WARNING("Failed to remove shutdown observer!");
+  }
 }
 
 static SinkState
@@ -340,5 +295,5 @@ BluetoothA2dpManager::GetAddress(nsAString& aDeviceAddress)
   aDeviceAddress = mDeviceAddress;
 }
 
-NS_IMPL_ISUPPORTS0(BluetoothA2dpManager)
+NS_IMPL_ISUPPORTS1(BluetoothA2dpManager, nsIObserver)
 
