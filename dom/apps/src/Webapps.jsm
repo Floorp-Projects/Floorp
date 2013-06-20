@@ -258,6 +258,8 @@ this.DOMApplicationRegistry = {
 
     // Install the permissions for this app, as if we were updating
     // to cleanup the old ones if needed.
+    // TODO It's not clear what this should do when there are multiple profiles.
+#ifdef MOZ_B2G
     this._readManifests([{ id: aId }], (function(aResult) {
       let data = aResult[0];
       PermissionsInstaller.installPermissions({
@@ -268,6 +270,7 @@ this.DOMApplicationRegistry = {
         debug("Error installing permissions for " + aId);
       });
     }).bind(this));
+#endif
   },
 
   updateOfflineCacheForApp: function updateOfflineCacheForApp(aId) {
@@ -1237,11 +1240,13 @@ this.DOMApplicationRegistry = {
         this._saveApps((function() {
           // Update the handlers and permissions for this app.
           this.updateAppHandlers(aOldManifest, aData, app);
+#ifdef MOZ_B2G
           PermissionsInstaller.installPermissions(
             { manifest: aData,
               origin: app.origin,
               manifestURL: app.manifestURL },
             true);
+#endif
           this.broadcastMessage("Webapps:PackageEvent",
                                 { type: "applied",
                                   manifestURL: app.manifestURL,
@@ -1462,13 +1467,14 @@ this.DOMApplicationRegistry = {
         this._writeFile(manFile, JSON.stringify(aNewManifest), function() { });
         manifest = new ManifestHelper(aNewManifest, app.origin);
 
+#ifdef MOZ_B2G
         // Update the permissions for this app.
         PermissionsInstaller.installPermissions({
           manifest: app.manifest,
           origin: app.origin,
           manifestURL: aData.manifestURL
         }, true);
-
+#endif
         app.name = manifest.name;
         app.csp = manifest.csp || "";
         app.updateTime = Date.now();
@@ -2012,12 +2018,14 @@ this.DOMApplicationRegistry = {
     // For package apps, the permissions are not in the mini-manifest, so
     // don't update the permissions yet.
     if (!aData.isPackage) {
+#ifdef MOZ_B2G
       PermissionsInstaller.installPermissions({ origin: appObject.origin,
                                                 manifestURL: appObject.manifestURL,
                                                 manifest: jsonManifest },
                                               isReinstall, (function() {
         this.uninstall(aData, aData.mm);
       }).bind(this));
+#endif
     }
 
     ["installState", "downloadAvailable",
@@ -2075,12 +2083,13 @@ this.DOMApplicationRegistry = {
         app.downloadAvailable = false;
         this._saveApps((function() {
           this.updateAppHandlers(null, aManifest, appObject);
-
+#ifdef MOZ_B2G
           // Update the permissions for this app.
           PermissionsInstaller.installPermissions({ manifest: aManifest,
                                                     origin: appObject.origin,
                                                     manifestURL: appObject.manifestURL },
                                                   true);
+#endif
           debug("About to fire Webapps:PackageEvent 'installed'");
           this.broadcastMessage("Webapps:PackageEvent",
                                 { type: "installed",
