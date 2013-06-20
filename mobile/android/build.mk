@@ -4,7 +4,7 @@
 
 include  $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
-installer:
+installer: 
 	@$(MAKE) -C mobile/android/installer installer
 
 package:
@@ -14,10 +14,6 @@ fast-package:
 	@$(MAKE) package MOZ_FAST_PACKAGE=1
 
 ifeq ($(OS_TARGET),Android)
-# $(ADB) is defined in config/android-common.mk, but that file is not
-# in scope when this file is read, so we define it locally.
-ADB=$(ANDROID_PLATFORM_TOOLS)/adb
-
 ifneq ($(MOZ_ANDROID_INSTALL_TARGET),)
 ANDROID_SERIAL = $(MOZ_ANDROID_INSTALL_TARGET)
 endif
@@ -25,7 +21,7 @@ ifneq ($(ANDROID_SERIAL),)
 export ANDROID_SERIAL
 else
 # Determine if there's more than one device connected
-android_devices=$(filter device,$(shell $(ADB) devices))
+android_devices=$(filter device,$(shell $(ANDROID_PLATFORM_TOOLS)/adb devices))
 ifeq ($(android_devices),)
 install::
 	@echo "No devices are connected.  Connect a device or start an emulator."
@@ -34,14 +30,14 @@ else
 ifneq ($(android_devices),device)
 install::
 	@echo "Multiple devices are connected. Define ANDROID_SERIAL to specify the install target."
-	$(ADB) devices
+	$(ANDROID_PLATFORM_TOOLS)/adb devices
 	@exit 1
 endif
 endif
 endif
 
 install::
-	$(ADB) install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
+	$(ANDROID_PLATFORM_TOOLS)/adb install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
 else
 	@echo "Mobile can't be installed directly."
 	@exit 1
