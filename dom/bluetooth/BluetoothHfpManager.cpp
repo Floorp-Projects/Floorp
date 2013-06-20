@@ -17,7 +17,6 @@
 
 #include "MobileConnection.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/Hal.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
@@ -63,7 +62,6 @@ USING_BLUETOOTH_NAMESPACE
 
 namespace {
   StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
-  StaticRefPtr<BluetoothHfpManagerObserver> sHfpObserver;
   bool gInShutdown = false;
   static const char kHfpCrlf[] = "\xd\xa";
 
@@ -153,77 +151,6 @@ class mozilla::dom::bluetooth::Call {
     int mType;
 };
 
-class mozilla::dom::bluetooth::BluetoothHfpManagerObserver : public nsIObserver
-                                                           , public BatteryObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  BluetoothHfpManagerObserver()
-  {
-  }
-
-  bool Init()
-  {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    MOZ_ASSERT(obs);
-    if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
-      NS_WARNING("Failed to add settings change observer!");
-      return false;
-    }
-
-    if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
-      NS_WARNING("Failed to add shutdown observer!");
-      return false;
-    }
-
-    if (NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED, false))) {
-      NS_WARNING("Failed to add mobile connection iccinfo change observer!");
-      return false;
-    }
-
-    if (NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_VOICE_CHANGED, false))) {
-      NS_WARNING("Failed to add mobile connection voice change observer!");
-      return false;
-    }
-
-    hal::RegisterBatteryObserver(this);
-
-    return true;
-  }
-
-  bool Shutdown()
-  {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (!obs ||
-        NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
-        NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)) ||
-        NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED)) ||
-        NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_VOICE_CHANGED))) {
-      NS_WARNING("Can't unregister observers, or already unregistered!");
-      return false;
-    }
-
-    hal::UnregisterBatteryObserver(this);
-
-    return true;
-  }
-
-  ~BluetoothHfpManagerObserver()
-  {
-    Shutdown();
-  }
-
-  void Notify(const hal::BatteryInformation& aBatteryInfo)
-  {
-    // Range of battery level: [0, 1], double
-    // Range of CIND::BATTCHG: [0, 5], int
-    int level = ceil(aBatteryInfo.level() * 5.0);
-    gBluetoothHfpManager->UpdateCIND(CINDType::BATTCHG, level);
-  }
-};
-
 class BluetoothHfpManager::GetVolumeTask : public nsISettingsServiceCallback
 {
 public:
@@ -260,27 +187,35 @@ NS_IMPL_ISUPPORTS1(BluetoothHfpManager::GetVolumeTask,
                    nsISettingsServiceCallback);
 
 NS_IMETHODIMP
-BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
-                                     const char* aTopic,
-                                     const PRUnichar* aData)
+BluetoothHfpManager::Observe(nsISupports* aSubject,
+                             const char* aTopic,
+                             const PRUnichar* aData)
 {
-  MOZ_ASSERT(gBluetoothHfpManager);
-
   if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
-    return gBluetoothHfpManager->HandleVolumeChanged(nsDependentString(aData));
+    return HandleVolumeChanged(nsDependentString(aData));
   } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    return gBluetoothHfpManager->HandleShutdown();
+    return HandleShutdown();
   } else if (!strcmp(aTopic, MOBILE_CONNECTION_ICCINFO_CHANGED)) {
-    return gBluetoothHfpManager->HandleIccInfoChanged();
+    return HandleIccInfoChanged();
   } else if (!strcmp(aTopic, MOBILE_CONNECTION_VOICE_CHANGED)) {
-    return gBluetoothHfpManager->HandleVoiceConnectionChanged();
+    return HandleVoiceConnectionChanged();
   }
 
   MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManagerObserver, nsIObserver)
+void
+BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
+{
+  // Range of battery level: [0, 1], double
+  // Range of CIND::BATTCHG: [0, 5], int
+  int level = ceil(aBatteryInfo.level() * 5.0);
+  if (level != sCINDItems[CINDType::BATTCHG].value) {
+    sCINDItems[CINDType::BATTCHG].value = level;
+    SendCommand("+CIEV:", CINDType::BATTCHG);
+  }
+}
 
 class BluetoothHfpManager::RespondToBLDNTask : public Task
 {
@@ -410,10 +345,18 @@ BluetoothHfpManager::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  sHfpObserver = new BluetoothHfpManagerObserver();
-  if (!sHfpObserver->Init()) {
-    NS_WARNING("Cannot set up Hfp Observers!");
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, false);
+
+  if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false)) ||
+      NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)) ||
+      NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED_ID, false)) ||
+      NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_VOICE_CHANGED_ID, false))) {
+    BT_WARNING("Failed to add observers!");
+    return false;
   }
+
+  hal::RegisterBatteryObserver(this);
 
   mListener = new BluetoothTelephonyListener();
   if (!mListener->StartListening()) {
@@ -446,19 +389,22 @@ BluetoothHfpManager::Init()
 
 BluetoothHfpManager::~BluetoothHfpManager()
 {
-  Cleanup();
-}
-
-void
-BluetoothHfpManager::Cleanup()
-{
   if (!mListener->StopListening()) {
     NS_WARNING("Failed to stop listening RIL");
   }
   mListener = nullptr;
 
-  sHfpObserver->Shutdown();
-  sHfpObserver = nullptr;
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(obs);
+
+  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
+      NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)) ||
+      NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED_ID)) ||
+      NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_VOICE_CHANGED_ID))) {
+    BT_WARNING("Failed to remove observers!");
+  }
+
+  hal::UnregisterBatteryObserver(this);
 }
 
 //static
@@ -1805,5 +1751,5 @@ BluetoothHfpManager::IsScoConnected()
   return false;
 }
 
-NS_IMPL_ISUPPORTS0(BluetoothHfpManager)
+NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
 
