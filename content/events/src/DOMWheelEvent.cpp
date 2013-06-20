@@ -28,7 +28,6 @@ DOMWheelEvent::DOMWheelEvent(EventTarget* aOwner,
     static_cast<widget::WheelEvent*>(mEvent)->inputSource =
       nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
-  SetIsDOMBinding();
 }
 
 DOMWheelEvent::~DOMWheelEvent()
