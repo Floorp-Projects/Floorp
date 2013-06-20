@@ -68,7 +68,7 @@ ForkJoinSlice::releaseContext()
 }
 
 bool
-ForkJoinSlice::isMainThread()
+ForkJoinSlice::isMainThread() const
 {
     return true;
 }
@@ -387,6 +387,7 @@ class ForkJoinShared : public TaskExecutor, public Monitor
     void setAbortFlag(bool fatal);
 
     JSRuntime *runtime() { return cx_->runtime(); }
+    JS::Zone *zone() { return cx_->zone(); }
 
     JSContext *acquireContext() { PR_Lock(cxLock_); return cx_; }
     void releaseContext() { PR_Unlock(cxLock_); }
@@ -1326,7 +1327,7 @@ ForkJoinShared::init()
         return false;
 
     for (unsigned i = 0; i < numSlices_; i++) {
-        Allocator *allocator = cx_->runtime()->new_<Allocator>(cx_->zone());
+        Allocator *allocator = cx_->new_<Allocator>(cx_->zone());
         if (!allocator)
             return false;
 
@@ -1411,6 +1412,7 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 
     PerThreadData thisThread(cx_->runtime());
     TlsPerThreadData.set(&thisThread);
+
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
     // lock has not been initialized in these cases.
     thisThread.ionStackLimit = stackLimit;
@@ -1645,16 +1647,22 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
                              uint32_t sliceId, uint32_t numSlices,
                              Allocator *allocator, ForkJoinShared *shared,
                              ParallelBailoutRecord *bailoutRecord)
-    : perThreadData(perThreadData),
-      sliceId(sliceId),
-      numSlices(numSlices),
-      allocator(allocator),
-      bailoutRecord(bailoutRecord),
-      shared(shared)
-{ }
+  : ThreadSafeContext(shared->runtime(), perThreadData, Context_ForkJoin),
+    sliceId(sliceId),
+    numSlices(numSlices),
+    allocator(allocator),
+    bailoutRecord(bailoutRecord),
+    shared(shared)
+{
+    /*
+     * Unsafely set the zone. This is used to track malloc counters and to
+     * trigger GCs and is otherwise not thread-safe to access.
+     */
+    zone_ = shared->zone();
+}
 
 bool
-ForkJoinSlice::isMainThread()
+ForkJoinSlice::isMainThread() const
 {
     return perThreadData == &shared->runtime()->mainThread;
 }

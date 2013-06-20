@@ -34,9 +34,9 @@ namespace js {
  * parallel or sequential mode, you should make it take an
  * |Allocator*| rather than a |JSContext*|.
  */
-class Allocator : public MallocProvider<Allocator>
+class Allocator
 {
-    JS::Zone *zone;
+    JS::Zone *zone_;
 
   public:
     explicit Allocator(JS::Zone *zone);
@@ -44,10 +44,6 @@ class Allocator : public MallocProvider<Allocator>
     js::gc::ArenaLists arenas;
 
     inline void *parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize);
-
-    void *onOutOfMemory(void *p, size_t nbytes);
-    inline void updateMallocCounter(size_t nbytes);
-    void reportAllocationOverflow();
 };
 
 typedef Vector<JSCompartment *, 1, SystemAllocPolicy> CompartmentVector;
