@@ -1383,9 +1383,11 @@ this.PlacesUtils = {
 
       // last character-set
       var uri = PlacesUtils._uri(aPlacesNode.uri);
-      var lastCharset = PlacesUtils.history.getCharsetForURI(uri);
-      if (lastCharset)
+      try {
+        var lastCharset = PlacesUtils.annotations.getPageAnnotation(
+                            uri, PlacesUtils.CHARSET_ANNO);
         aJSNode.charset = lastCharset;
+      } catch (e) {}
     }
 
     function addSeparatorProperties(aPlacesNode, aJSNode) {

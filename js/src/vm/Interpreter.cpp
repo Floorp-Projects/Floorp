@@ -580,7 +580,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.isScope());
+    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.is<ScopeObject>());
 
     if (script->isEmpty()) {
         if (result)
@@ -835,7 +835,7 @@ js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
             frame.popBlock(cx);
             break;
           case ScopeIter::With:
-            if (si.scope().asWith().stackDepth() < stackDepth)
+            if (si.scope().as<WithObject>().stackDepth() < stackDepth)
                 return;
             frame.popWith(cx);
             break;
@@ -2959,7 +2959,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
 BEGIN_CASE(JSOP_ENTERLET0)
 BEGIN_CASE(JSOP_ENTERLET1)
 {
-    StaticBlockObject &blockObj = script->getObject(regs.pc)->asStaticBlock();
+    StaticBlockObject &blockObj = script->getObject(regs.pc)->as<StaticBlockObject>();
 
     if (op == JSOP_ENTERBLOCK) {
         JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());

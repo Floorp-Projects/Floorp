@@ -30,3 +30,5 @@ CPP_SOURCES += [
     'updatelogging.cpp',
 ]
 
+LIBRARY_NAME = 'updatecommon'
+

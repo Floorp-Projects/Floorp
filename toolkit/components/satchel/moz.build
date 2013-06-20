@@ -29,3 +29,6 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'nsFormHistory.js',
 ]
+
+LIBRARY_NAME = 'satchel'
+

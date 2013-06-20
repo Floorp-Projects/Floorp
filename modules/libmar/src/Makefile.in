@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= mar
 FORCE_STATIC_LIB = 1
 ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1

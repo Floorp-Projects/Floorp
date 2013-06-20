@@ -16,3 +16,5 @@ CPP_SOURCES += [
     'IdentityCryptoService.cpp',
 ]
 
+LIBRARY_NAME = 'identity'
+

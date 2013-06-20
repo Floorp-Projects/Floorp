@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 # to generate this library
 ifndef LINK_GTEST
 
-LIBRARY_NAME	= dummyvccorlib
-
 include $(DEPTH)/config/autoconf.mk
 
 FORCE_SHARED_LIB=1

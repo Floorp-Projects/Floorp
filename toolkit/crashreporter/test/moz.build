@@ -16,3 +16,6 @@ CPP_SOURCES += [
     'nsTestCrasher.cpp',
     'pathname_stripper.cc',
 ]
+
+LIBRARY_NAME = 'testcrasher'
+

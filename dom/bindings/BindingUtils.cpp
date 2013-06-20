@@ -1592,8 +1592,8 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
   if (ww != aObj) {
     MOZ_ASSERT(cache->HasSystemOnlyWrapper());
 
-    JSObject *newwrapper =
-      xpc::WrapperFactory::WrapSOWObject(aCx, newobj);
+    JS::RootedObject newwrapper(aCx,
+      xpc::WrapperFactory::WrapSOWObject(aCx, newobj));
     if (!newwrapper) {
       MOZ_CRASH();
     }

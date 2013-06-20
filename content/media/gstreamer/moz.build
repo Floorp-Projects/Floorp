@@ -21,3 +21,5 @@ CPP_SOURCES += [
     'GStreamerLoader.cpp',
 ]
 
+LIBRARY_NAME = 'gkcongstreamer_s'
+

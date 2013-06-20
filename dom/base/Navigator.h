@@ -59,6 +59,10 @@ class nsIDOMTelephony;
 #include "nsIDOMNavigatorCamera.h"
 #include "DOMCameraManager.h"
 
+#ifdef MOZ_GAMEPAD
+#include "nsINavigatorGamepads.h"
+#endif
+
 //*****************************************************************************
 // Navigator: Script "navigator" object
 //*****************************************************************************
@@ -116,6 +120,9 @@ class Navigator : public nsIDOMNavigator
 #ifdef MOZ_B2G_RIL
                 , public nsIDOMNavigatorTelephony
 #endif
+#ifdef MOZ_GAMEPAD
+                , public nsINavigatorGamepads
+#endif
                 , public nsIDOMMozNavigatorNetwork
 #ifdef MOZ_B2G_RIL
                 , public nsIMozNavigatorMobileConnection
@@ -154,6 +161,9 @@ public:
 #endif
 #ifdef MOZ_B2G_RIL
   NS_DECL_NSIDOMNAVIGATORTELEPHONY
+#endif
+#ifdef MOZ_GAMEPAD
+  NS_DECL_NSINAVIGATORGAMEPADS
 #endif
   NS_DECL_NSIDOMMOZNAVIGATORNETWORK
 #ifdef MOZ_B2G_RIL

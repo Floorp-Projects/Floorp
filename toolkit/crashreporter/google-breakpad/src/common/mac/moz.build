@@ -21,3 +21,6 @@ HOST_LIBRARY_NAME = 'host_breakpad_mac_common_s'
 CMMSRCS += [
     'MachIPC.mm',
 ]
+
+LIBRARY_NAME = 'breakpad_mac_common_s'
+

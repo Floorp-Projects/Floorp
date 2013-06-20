@@ -203,38 +203,22 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class BooleanClass;
 extern Class DateClass;
 extern Class ErrorClass;
-extern Class GeneratorClass;
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
-extern Class NumberClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpStaticsClass;
-extern Class StopIterationClass;
-extern Class StringClass;
-extern Class WeakMapClass;
-extern Class WithClass;
 
 class ArrayBufferObject;
-class BooleanObject;
-class ClonedBlockObject;
-class DebugScopeObject;
 class GlobalObject;
 class MapObject;
-class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
-class NumberObject;
-class ScopeObject;
 class SetObject;
-class StaticBlockObject;
 class StrictArgumentsObject;
-class StringObject;
-class WithObject;
 
 }  /* namespace js */
 
@@ -927,9 +911,9 @@ class JSObject : public js::ObjectImpl
      *   }
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
-     * object, the following predicates are true: isClonedBlock, is<BlockObject>,
-     * isNestedScope and isScope. Each of these has a respective class that
-     * derives and adds operations.
+     * object, the following predicates are true: is<ClonedBlockObject>,
+     * is<BlockObject>, is<NestedScopeObject> and is<ScopeObject>. Each of
+     * these has a respective class that derives and adds operations.
      *
      * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
      * triplet (along with any class YObject that derives XObject).
@@ -964,45 +948,20 @@ class JSObject : public js::ObjectImpl
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isError()            const { return hasClass(&js::ErrorClass); }
     inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
-    inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
     inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
-    inline bool isScope()            const;
-    inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
     inline bool isTypedArray()       const;
-    inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
-
-    /* Subtypes of ScopeObject. */
-    inline bool isNestedScope() const;
-    inline bool isWith()        const { return hasClass(&js::WithClass); }
-    inline bool isClonedBlock() const;
-    inline bool isStaticBlock() const;
-
-    /* Subtypes of PrimitiveObject. */
-    inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
-    inline bool isNumber()  const { return hasClass(&js::NumberClass); }
-    inline bool isString()  const { return hasClass(&js::StringClass); }
 
     /* Subtypes of Proxy. */
-    inline bool isDebugScope()              const;
     inline bool isWrapper()                 const;
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
-    inline js::BooleanObject &asBoolean();
-    inline js::ClonedBlockObject &asClonedBlock();
-    inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
-    inline js::NestedScopeObject &asNestedScope();
-    inline js::NumberObject &asNumber();
-    inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
-    inline js::StaticBlockObject &asStaticBlock();
-    inline js::StringObject &asString();
-    inline js::WithObject &asWith();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 

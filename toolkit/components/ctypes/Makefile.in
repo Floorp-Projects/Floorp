@@ -15,7 +15,6 @@ EXTRA_JS_MODULES = \
     ctypes.jsm \
     $(NULL)
 
-LIBRARY_NAME = jsctypes
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
