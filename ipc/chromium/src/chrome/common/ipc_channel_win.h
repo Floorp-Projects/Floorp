@@ -86,6 +86,9 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // problems.  TODO(darin): make this unnecessary
   bool processing_incoming_;
 
+  // This flag is set after Close() is run on the channel.
+  bool closed_;
+
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
 
   scoped_ptr<NonThreadSafe> thread_check_;
