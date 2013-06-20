@@ -777,7 +777,7 @@ IDBDatabase::MozCreateFileHandle(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = IDBRequest::Create(nullptr, this, nullptr, aCx);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(nullptr, this, nullptr);
 
   nsRefPtr<CreateFileHelper> helper =
     new CreateFileHelper(this, request, aName, aType);
