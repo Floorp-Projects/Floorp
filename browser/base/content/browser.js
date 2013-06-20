@@ -4313,9 +4313,10 @@ var TabsProgressListener = {
       aBrowser.addEventListener("pagehide", function onPageHide(event) {
         if (event.target.defaultView.frameElement)
           return;
-        event.target.documentElement.removeAttribute("hasBrowserHandlers");
         aBrowser.removeEventListener("click", BrowserOnClick, true);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
+        if (event.target.documentElement)
+          event.target.documentElement.removeAttribute("hasBrowserHandlers");
       }, true);
 
       // We also want to make changes to page UI for unprivileged about pages.
