@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_root_h__
-#define jsgc_root_h__
+#ifndef js_RootingAPI_h
+#define js_RootingAPI_h
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
@@ -931,4 +931,4 @@ class CompilerRootNode
 
 }  /* namespace js */
 
-#endif  /* jsgc_root_h___ */
+#endif  /* js_RootingAPI_h */
