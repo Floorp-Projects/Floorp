@@ -45,8 +45,8 @@ function runTest() {
     
   reloadUpdateManagerData();
 
-  is(gUpdateManager.activeUpdate.state, "pending",
-     "The active update should have a state of pending");
+  is(gUpdateManager.activeUpdate.state, STATE_PENDING,
+     "The active update should have a state of " + STATE_PENDING);
 
   ok(gUpdateManager.activeUpdate.promptWaitTime == 1, "Checking that the " +
      "update's promptWaitTime attribute value was set from the " +

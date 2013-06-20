@@ -9,7 +9,6 @@ const PREF_APP_UPDATE_MIGRATE_APP_DIR = "app.update.migrated.updateDir";
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 120000;
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
 function clearTaskbarIDHash(exePath, appInfoName) {
   let registry = AUS_Cc["@mozilla.org/windows-registry-key;1"].
@@ -56,15 +55,14 @@ function run_test() {
 
   standardInit();
 
-  var appinfo = Components.classes["@mozilla.org/xre/app-info;1"].
-                getService(Components.interfaces.nsIXULAppInfo).
-                QueryInterface(Components.interfaces.nsIXULRuntime);
+  var appinfo = AUS_Cc["@mozilla.org/xre/app-info;1"].
+                getService(AUS_Ci.nsIXULAppInfo).
+                QueryInterface(AUS_Ci.nsIXULRuntime);
 
    // Obtain the old update root leaf
-  var exeFile = FileUtils.getFile("XREExeF", []);
   var updateLeafName;
+  var exeFile = FileUtils.getFile(XRE_EXECUTABLE_FILE, []);
   var programFiles = FileUtils.getFile("ProgF", []);
-  var exeFile = FileUtils.getFile("XREExeF", []);
   if (exeFile.path.substring(0, programFiles.path.length).toLowerCase() ==
       programFiles.path.toLowerCase()) {
     updateLeafName = exeFile.parent.leafName;
@@ -138,7 +136,7 @@ function run_test() {
     } else {
       oldFile.append(relPath);
     }
-    oldFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    oldFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   });
   // Do the migration
   initUpdateServiceStub();
@@ -169,10 +167,10 @@ function run_test() {
 }
 
 function end_test() {
-  var appinfo = Components.classes["@mozilla.org/xre/app-info;1"].
-                getService(Components.interfaces.nsIXULAppInfo).
-                QueryInterface(Components.interfaces.nsIXULRuntime);
-  var exeFile = FileUtils.getFile("XREExeF", []);
+  var appinfo = AUS_Cc["@mozilla.org/xre/app-info;1"].
+                getService(AUS_Ci.nsIXULAppInfo).
+                QueryInterface(AUS_Ci.nsIXULRuntime);
+  var exeFile = FileUtils.getFile(XRE_EXECUTABLE_FILE, []);
   clearTaskbarIDHash(exeFile.parent.path, appinfo.name);
   cleanUp();
 }

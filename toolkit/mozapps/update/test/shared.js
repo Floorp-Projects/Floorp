@@ -13,7 +13,6 @@ const AUS_Cu = Components.utils;
 const AUS_Cm = Components.manager;
 
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
-const PREF_APP_UPDATE_STAGE_ENABLED       = "app.update.staging.enabled";
 const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS = "app.update.backgroundMaxErrors";
 const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
@@ -31,6 +30,7 @@ const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SERVICE_ENABLED     = "app.update.service.enabled";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
+const PREF_APP_UPDATE_STAGING_ENABLED     = "app.update.staging.enabled";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -51,26 +51,27 @@ const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
 const NS_GRE_DIR                   = "GreD";
 const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
+const XRE_EXECUTABLE_FILE          = "XREExeF";
 const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 
 const CRC_ERROR   = 4;
 const WRITE_ERROR = 7;
 
-const FILE_BACKUP_LOG     = "backup-update.log";
-const FILE_LAST_LOG       = "last-update.log";
-const FILE_UPDATER_INI    = "updater.ini";
-const FILE_UPDATES_DB     = "updates.xml";
-const FILE_UPDATE_ACTIVE  = "active-update.xml";
-const FILE_UPDATE_ARCHIVE = "update.mar";
-const FILE_UPDATE_LOG     = "update.log";
-const FILE_UPDATE_STATUS  = "update.status";
-const FILE_UPDATE_VERSION = "update.version";
+const DIR_UPDATED                    = "updated";
+const FILE_BACKUP_LOG                = "backup-update.log";
+const FILE_LAST_LOG                  = "last-update.log";
+const FILE_UPDATE_ACTIVE             = "active-update.xml";
+const FILE_UPDATE_ARCHIVE            = "update.mar";
+const FILE_UPDATE_LOG                = "update.log";
+const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
+const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
+const FILE_UPDATE_STATUS             = "update.status";
+const FILE_UPDATE_VERSION            = "update.version";
+const FILE_UPDATER_INI               = "updater.ini";
+const FILE_UPDATES_DB                = "updates.xml";
 
-const MODE_RDONLY   = 0x01;
-const MODE_WRONLY   = 0x02;
-const MODE_CREATE   = 0x08;
-const MODE_APPEND   = 0x10;
-const MODE_TRUNCATE = 0x20;
+const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
+                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n"
 
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;
@@ -79,17 +80,25 @@ const PR_TRUNCATE    = 0x20;
 const PR_SYNC        = 0x40;
 const PR_EXCL        = 0x80;
 
-const PERMS_FILE      = 0644;
-const PERMS_DIRECTORY = 0755;
-
 const DEFAULT_UPDATE_VERSION = "999999.0";
 
 var gChannel;
 
 #include sharedUpdateXML.js
 
+AUS_Cu.import("resource://gre/modules/FileUtils.jsm");
 AUS_Cu.import("resource://gre/modules/Services.jsm");
 AUS_Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const PERMS_FILE      = FileUtils.PERMS_FILE;
+const PERMS_DIRECTORY = FileUtils.PERMS_DIRECTORY;
+
+const MODE_RDONLY   = FileUtils.MODE_RDONLY;
+const MODE_WRONLY   = FileUtils.MODE_WRONLY;
+const MODE_RDWR     = FileUtils.MODE_RDWR;
+const MODE_CREATE   = FileUtils.MODE_CREATE;
+const MODE_APPEND   = FileUtils.MODE_APPEND;
+const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
 
 const URI_UPDATES_PROPERTIES = "chrome://mozapps/locale/update/updates.properties";
 const gUpdateBundle = Services.strings.createBundle(URI_UPDATES_PROPERTIES);
@@ -534,6 +543,15 @@ function getCurrentProcessDir() {
 }
 
 /**
+ * Gets the application base directory.
+ *
+ * @return  nsIFile object for the application base directory.
+ */
+function getAppBaseDir() {
+  return Services.dirsvc.get(XRE_EXECUTABLE_FILE, AUS_Ci.nsIFile).parent;
+}
+
+/**
  * Returns the Gecko Runtime Engine directory. This is used to locate the the
  * updater binary (Windows and Linux) or updater package (Mac OS X). For
  * XULRunner applications this is different than the currently running process
@@ -543,6 +561,21 @@ function getCurrentProcessDir() {
  */
 function getGREDir() {
   return Services.dirsvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
+}
+
+/**
+ * Get the "updated" directory inside the directory where we apply the
+ * background updates.
+ * @return The active updates directory inside the updated directory, as a
+ *         nsIFile object.
+ */
+function getUpdatedDir() {
+  let dir = getAppBaseDir();
+#ifdef XP_MACOSX
+  dir = dir.parent.parent; // the bundle directory
+#endif
+  dir.append(DIR_UPDATED);
+  return dir;
 }
 
 /**
