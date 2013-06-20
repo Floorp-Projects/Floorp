@@ -58,11 +58,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
-  static const int DEFAULT_VIDEO_FPS = 60;
-  static const int DEFAULT_VIDEO_MIN_FPS = 10;
-  static const int DEFAULT_VIDEO_WIDTH = 640;
-  static const int DEFAULT_VIDEO_HEIGHT = 480;
-
 protected:
   friend class MediaEngineDefault;
 
