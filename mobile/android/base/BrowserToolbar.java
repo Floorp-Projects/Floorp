@@ -291,7 +291,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 if (mSiteSecurity.getVisibility() != View.VISIBLE)
                     return;
 
-                SiteIdentityPopup.getInstance().show(mSiteSecurity);
+                mActivity.getSiteIdentityPopup().show(mSiteSecurity);
             }
         };
 

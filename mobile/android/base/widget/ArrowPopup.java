@@ -5,10 +5,10 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.HardwareUtils;
 
-import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +19,7 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 public class ArrowPopup extends PopupWindow {
-    protected LayoutInflater mInflater;
+    protected GeckoApp mActivity;
     protected boolean mInflated;
 
     protected LinearLayout mContent;
@@ -28,13 +28,13 @@ public class ArrowPopup extends PopupWindow {
     protected int mArrowWidth;
     protected int mYOffset;
 
-    public ArrowPopup(Context aContext) {
-        super(aContext);
-        mInflater = LayoutInflater.from(aContext);
+    public ArrowPopup(GeckoApp aActivity) {
+        super(aActivity);
+        mActivity = aActivity;
 
         mInflated = false;
-        mArrowWidth = aContext.getResources().getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        mYOffset = aContext.getResources().getDimensionPixelSize(R.dimen.menu_popup_offset);
+        mArrowWidth = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
+        mYOffset = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_offset);
 
         setAnimationStyle(R.style.PopupAnimation);
     }
@@ -46,7 +46,8 @@ public class ArrowPopup extends PopupWindow {
         setWindowLayoutMode(HardwareUtils.isTablet() ? ViewGroup.LayoutParams.WRAP_CONTENT : ViewGroup.LayoutParams.FILL_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        RelativeLayout layout = (RelativeLayout) mInflater.inflate(R.layout.arrow_popup, null);
+        LayoutInflater inflater = LayoutInflater.from(mActivity);
+        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.arrow_popup, null);
         setContentView(layout);
 
         mArrow = (ImageView) layout.findViewById(R.id.arrow);

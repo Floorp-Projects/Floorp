@@ -30,8 +30,6 @@ public class SiteIdentityPopup extends ArrowPopup {
     public static final String VERIFIED = "verified";
     public static final String IDENTIFIED = "identified";
 
-    private static SiteIdentityPopup sInstance;
-
     private Resources mResources;
 
     private TextView mHost;
@@ -41,21 +39,10 @@ public class SiteIdentityPopup extends ArrowPopup {
     private TextView mEncrypted;
     private ImageView mLarry;
 
-    private SiteIdentityPopup() {
-        super(GeckoAppShell.getContext());
+    SiteIdentityPopup(BrowserApp aActivity) {
+        super(aActivity);
 
-        mResources = GeckoAppShell.getContext().getResources();
-    }
-
-    public static synchronized SiteIdentityPopup getInstance() {
-        if (sInstance == null) {
-            sInstance = new SiteIdentityPopup();
-        }
-        return sInstance;
-    }
-
-    public static synchronized void clearInstance() {
-        sInstance = null;
+        mResources = aActivity.getResources();
     }
 
     @Override
@@ -66,7 +53,8 @@ public class SiteIdentityPopup extends ArrowPopup {
         // which may reshow the popup (see bug 785156)
         setFocusable(true);
 
-        LinearLayout layout = (LinearLayout) mInflater.inflate(R.layout.site_identity, null);
+        LayoutInflater inflater = LayoutInflater.from(mActivity);
+        LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.site_identity, null);
         mContent.addView(layout);
 
         mHost = (TextView) layout.findViewById(R.id.host);
