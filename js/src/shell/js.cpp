@@ -1519,7 +1519,7 @@ static JSTrapStatus
 TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
             jsval closure)
 {
-    RootedString str(cx, JSVAL_TO_STRING(closure));
+    JSString *str = JSVAL_TO_STRING(closure);
     RootedValue rval(cx, *rvalArg);
 
     ScriptFrameIter iter(cx);
