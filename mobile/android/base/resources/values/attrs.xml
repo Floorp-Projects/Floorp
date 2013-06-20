@@ -171,13 +171,6 @@
         <attr name="android:listSelector"/>
     </declare-styleable>
 
-    <declare-styleable name="IconTabWidget">
-        <attr name="display">
-            <flag name="text" value="0x00" />
-            <flag name="icon" value="0x01" />
-        </attr>
-    </declare-styleable>
-
     <declare-styleable name="GeckoView">
         <attr name="url" format="string"/>
     </declare-styleable>
