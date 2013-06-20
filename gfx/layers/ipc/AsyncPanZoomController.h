@@ -227,7 +227,7 @@ public:
    * Return the scale factor needed to fit the viewport in |aMetrics|
    * into its composition bounds.
    */
-  static CSSToScreenScale CalculateIntrinsicScale(const FrameMetrics& aMetrics);
+  static gfxSize CalculateIntrinsicScale(const FrameMetrics& aMetrics);
 
   /**
    * Return the resolution that content should be rendered at given
@@ -456,7 +456,7 @@ protected:
    *
    * *** The monitor must be held while calling this.
    */
-  void SetZoomAndResolution(const ScreenToScreenScale& aZoom);
+  void SetZoomAndResolution(float aScale);
 
   /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
