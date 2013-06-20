@@ -18,10 +18,6 @@ DISABLED_EXTRA_COMPONENTS = \
   storage-Legacy.js \
   $(NULL)
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-  storage-mozStorage.js \
-  $(NULL)
-
 EXTRA_JS_MODULES = \
   LoginManagerContent.jsm \
   $(NULL)

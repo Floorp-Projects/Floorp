@@ -26,11 +26,6 @@ DISABLED_EXTRA_COMPONENTS = \
   $(NULL)
 
 # Same as JS components that are run through the pre-processor.
-DISABLED_EXTRA_PP_COMPONENTS = \
-  nsUrlClassifierLib.js \
-  nsUrlClassifierListManager.js \
-  $(NULL)
-
 EXTRA_JS_MODULES = \
   SafeBrowsing.jsm \
   $(NULL)
