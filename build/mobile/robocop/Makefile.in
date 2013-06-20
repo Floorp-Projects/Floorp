@@ -13,6 +13,8 @@ dir-tests    := $(DEPTH)/$(mobile-tests)
 
 include $(DEPTH)/config/autoconf.mk
 
+ANDROID_APK_NAME := robocop-debug
+
 ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.6.jar
 
 JAVAFILES = \
@@ -81,9 +83,10 @@ GARBAGE += \
   $(java-tests-dep) \
   $(_JAVA_HARNESS) \
   classes.dex \
-  robocop.ap_ \
-  robocop-debug-signed.apk \
-  robocop-debug-signed-unaligned.apk \
+  $(ANDROID_APK_NAME).ap_ \
+  $(ANDROID_APK_NAME)-unsigned-unaligned.apk \
+  $(ANDROID_APK_NAME)-unaligned.apk \
+  $(ANDROID_APK_NAME).apk \
   $(robocop-deps) \
   $(NULL)
 
@@ -100,23 +103,28 @@ include $(topsrcdir)/config/android-common.mk
 
 GENERATED_DIRS_tools = classes $(dir-tests)
 
-libs:: robocop-debug-signed.apk
+tools:: $(ANDROID_APK_NAME).apk
 
-classes.dex: robocop.ap_
+classes.dex: $(ANDROID_APK_NAME).ap_
 classes.dex: $(robocop-deps)
 classes.dex: $(java-harness-dep)
 classes.dex: $(java-tests-dep)
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(java-tests-dep)
 	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH) $(ANDROID_COMPT_LIB)
 
-robocop.ap_: AndroidManifest.xml $(TESTPATH)/assets/*
+$(ANDROID_APK_NAME).ap_: AndroidManifest.xml $(TESTPATH)/assets/*
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
 
-robocop-debug-signed-unaligned.apk: robocop.ap_ classes.dex
-	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
+$(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
+	cp $< $@
+	$(ZIP) -0 $@ classes.dex
 
-robocop-debug-signed.apk: robocop-debug-signed-unaligned.apk
-	$(ZIPALIGN) -f -v 4 $^ $@
+$(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
+	cp $< $@
+	$(DEBUG_JARSIGNER) $@
+
+$(ANDROID_APK_NAME).apk: $(ANDROID_APK_NAME)-unaligned.apk
+	$(ZIPALIGN) -f -v 4 $< $@
 
 # PP_java-tests not fully usable here
 # Intermediate step toward a library rule.
