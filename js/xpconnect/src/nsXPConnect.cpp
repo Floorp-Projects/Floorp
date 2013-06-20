@@ -1346,16 +1346,6 @@ nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObjectArg,
     return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
-nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
-{
-    XPCCallContext *ccx = XPCJSRuntime::Get()->GetCallContext();
-    *aJSContext = ccx->GetJSContext();
-
-    // Set to the caller in XPC_WN_Helper_{Call,Construct}
-    *aObj = ccx->GetFlattenedJSObject();
-}
-
 namespace xpc {
 
 bool
