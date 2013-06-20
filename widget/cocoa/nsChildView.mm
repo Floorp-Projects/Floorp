@@ -3317,6 +3317,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // texture buffer when, for example, the window buttons are hovered.
       // So we notify our nsChildView about any areas needing repainting.
       mGeckoChild->NotifyDirtyRegion([self nativeDirtyRegionWithBoundingRect:[self bounds]]);
+
+      if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
+        ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
+        manager->WindowOverlayChanged();
+      }
     }
 
     mGeckoChild->WillPaintWindow();

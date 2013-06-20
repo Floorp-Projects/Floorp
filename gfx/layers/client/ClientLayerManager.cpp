@@ -224,6 +224,9 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     // EndTransaction will complete it.
     return false;
   }
+  if (mWidget) {
+    mWidget->PrepareWindowEffects();
+  }
   ForwardTransaction();
   MakeSnapshotIfRequired();
   return true;
