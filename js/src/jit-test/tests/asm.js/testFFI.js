@@ -32,6 +32,7 @@ assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { var 
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { return inc(); return } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { inc(inc()) } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { g(inc()) } function g() {} return f');
+assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { inc()|inc() } return f');
 
 assertAsmLinkFail(asmCompile('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { return inc()|0 } return f'), null, {});
 assertAsmLinkFail(asmCompile('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { return inc()|0 } return f'), null, {inc:0});
