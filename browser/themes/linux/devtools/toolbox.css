@@ -248,6 +248,14 @@
 }
 
 .options-citation-label {
-  font-size: 0.9rem !important;
+  font-size: 1rem !important;
   /* !important is required otherwise font-size will still be 1.4rem */
+  font-style: italic;
+  padding: 4px 0 0; /* To align it with the checkbox */
+  color: #444;
+}
+
+.options-citation-label + label {
+  padding: 3px 0 0 !important; /* To align it with the checkbox */
+  font-style: italic;
 }
