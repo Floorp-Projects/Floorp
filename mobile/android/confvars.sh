@@ -65,3 +65,6 @@ MOZ_PAY=1
 
 # Enable UI for healthreporter
 MOZ_SERVICES_HEALTHREPORT=1
+
+# Enable the production cert for verifying signed packaged apps.
+MOZ_B2G_CERTDATA=1
