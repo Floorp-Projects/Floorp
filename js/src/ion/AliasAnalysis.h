@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_alias_analysis_h__
-#define jsion_alias_analysis_h__
+#ifndef ion_AliasAnalysis_h
+#define ion_AliasAnalysis_h
 
 #include "MIR.h"
 #include "MIRGraph.h"
@@ -59,4 +59,4 @@ class AliasAnalysis
 } // namespace js
 } // namespace ion
 
-#endif // jsion_alias_analysis_h__
+#endif /* ion_AliasAnalysis_h */

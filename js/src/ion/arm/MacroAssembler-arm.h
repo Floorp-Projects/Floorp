@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_macro_assembler_arm_h__
-#define jsion_macro_assembler_arm_h__
+#ifndef ion_arm_MacroAssembler_arm_h
+#define ion_arm_MacroAssembler_arm_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -1340,4 +1340,4 @@ typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_macro_assembler_arm_h__
+#endif /* ion_arm_MacroAssembler_arm_h */
