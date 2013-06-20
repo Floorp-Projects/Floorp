@@ -13,6 +13,9 @@ const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kPlaceholderClass = "panel-customization-placeholder";
+// TODO(bug 885574): Merge this constant with the one in CustomizableWidgets.jsm,
+//                   maybe just use a pref for this.
+const kColumnsInMenuPanel = 3;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
@@ -449,6 +452,9 @@ CustomizeMode.prototype = {
     aWrapper.removeEventListener("mouseup", this);
 
     let toolbarItem = aWrapper.firstChild;
+    if (!toolbarItem) {
+      ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
+    }
 
     if (aWrapper.hasAttribute("itemchecked")) {
       toolbarItem.checked = true;
@@ -493,21 +499,47 @@ CustomizeMode.prototype = {
     }.bind(this));
   },
 
+  // TODO(bug 885575): Remove once CustomizeUI can handle moving wrapped widgets.
+  _wrapToolbarItemsSync: function() {
+    let window = this.window;
+    // Add drag-and-drop event handlers to all of the customizable areas.
+    this.areas = [];
+    for (let area of CustomizableUI.areas) {
+      let target = CustomizableUI.getCustomizeTargetForArea(area, window);
+      target.addEventListener("dragstart", this, true);
+      target.addEventListener("dragover", this, true);
+      target.addEventListener("dragexit", this, true);
+      target.addEventListener("drop", this, true);
+      target.addEventListener("dragend", this, true);
+      for (let child of target.children) {
+        if (this.isCustomizableItem(child)) {
+          this.wrapToolbarItem(child, getPlaceForItem(child));
+        }
+      }
+      this.areas.push(target);
+    }
+  },
+
   _unwrapToolbarItems: function() {
     return Task.spawn(function() {
-      for (let target of this.areas) {
-        for (let toolbarItem of target.children) {
-          if (this.isWrappedToolbarItem(toolbarItem)) {
-            this.unwrapToolbarItem(toolbarItem);
-          }
-        }
-        target.removeEventListener("dragstart", this, true);
-        target.removeEventListener("dragover", this, true);
-        target.removeEventListener("dragexit", this, true);
-        target.removeEventListener("drop", this, true);
-        target.removeEventListener("dragend", this, true);
-      }
+      this._unwrapToolbarItemsSync();
     }.bind(this));
+  },
+
+  // TODO(bug 885575): Merge into _unwrapToolbarItems.
+  _unwrapToolbarItemsSync: function() {
+    for (let target of this.areas) {
+      for (let toolbarItem of target.children) {
+        if (this.isWrappedToolbarItem(toolbarItem)) {
+          this.unwrapToolbarItem(toolbarItem);
+        }
+      }
+      target.removeEventListener("dragstart", this, true);
+      target.removeEventListener("dragover", this, true);
+      target.removeEventListener("dragexit", this, true);
+      target.removeEventListener("drop", this, true);
+      target.removeEventListener("dragend", this, true);
+    }
   },
 
   persistCurrentSets: function()  {
@@ -719,115 +751,122 @@ CustomizeMode.prototype = {
   _onDragDrop: function(aEvent) {
     __dumpDragData(aEvent);
 
-    this._setDragActive(this._dragOverItem, false);
-    this._removePanelCustomizationPlaceholders();
-
+    let targetArea = this._getCustomizableParent(aEvent.currentTarget);
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
     let {id: draggedItemId} =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
-
-    draggedWrapper.hidden = false;
-    draggedWrapper.removeAttribute("mousedown");
-
-    let targetArea = this._getCustomizableParent(aEvent.currentTarget);
     let originArea = this._getCustomizableParent(draggedWrapper);
-
     // Do nothing if the target area or origin area are not customizable.
     if (!targetArea || !originArea) {
       return;
     }
-
     let targetNode = this._getDragOverNode(aEvent.target, targetArea);
+    if (targetNode.tagName == "toolbarpaletteitem") {
+      targetNode = targetNode.firstChild;
+    }
+
+    this._setDragActive(this._dragOverItem, false);
+    this._removePanelCustomizationPlaceholders();
+
+    // TODO(bug 885575): Remove once CustomizeUI can handle moving wrapped widgets.
+    this._unwrapToolbarItemsSync();
+    let paletteChild = this.visiblePalette.firstChild;
+    let nextChild;
+    while (paletteChild) {
+      nextChild = paletteChild.nextElementSibling;
+      this.unwrapToolbarItem(paletteChild);
+      paletteChild = nextChild;
+    }
+
+    try {
+      this._applyDrop(aEvent, targetArea, originArea, draggedItemId, targetNode);
+    } catch (ex) {
+      ERROR(ex, ex.stack);
+    }
+
+    // TODO(bug 885575): Remove once CustomizeUI can handle moving wrapped widgets.
+    this._wrapToolbarItemsSync();
+    // Re-wrap palette items.
+    let paletteChild = this.visiblePalette.firstChild;
+    let nextChild;
+    while (paletteChild) {
+      nextChild = paletteChild.nextElementSibling;
+      this.wrapToolbarItem(paletteChild, "palette");
+      paletteChild = nextChild;
+    }
+    this._showPanelCustomizationPlaceholders();
+  },
+
+  _applyDrop: function(aEvent, aTargetArea, aOriginArea, aDraggedItemId, aTargetNode) {
+    let document = aEvent.target.ownerDocument;
+    let draggedItem = document.getElementById(aDraggedItemId);
+    draggedItem.hidden = false;
+    draggedItem.removeAttribute("mousedown");
 
     // Do nothing if the target was dropped onto itself (ie, no change in area
     // or position).
-    if (draggedWrapper == targetNode) {
+    if (draggedItem == aTargetNode) {
       return;
     }
 
     // Is the target area the customization palette? If so, we have two cases -
-    // either the originArea was the palette, or a customizable area.
-    if (targetArea.id == kPaletteId) {
-      if (originArea.id !== kPaletteId) {
-        if (!CustomizableUI.isWidgetRemovable(draggedItemId)) {
+    // either the origin area was the palette, or a customizable area.
+    if (aTargetArea.id == kPaletteId) {
+      if (aOriginArea.id !== kPaletteId) {
+        if (!CustomizableUI.isWidgetRemovable(aDraggedItemId)) {
           return;
         }
 
-        let widget = this.unwrapToolbarItem(draggedWrapper);
-        CustomizableUI.removeWidgetFromArea(draggedItemId);
-        draggedWrapper = this.wrapToolbarItem(widget, "palette");
+        CustomizableUI.removeWidgetFromArea(aDraggedItemId);
       }
 
-      // If the targetNode is the palette itself, just append
-      if (targetNode == this.visiblePalette) {
-        this.visiblePalette.appendChild(draggedWrapper);
+      // If the target node is the palette itself, just append
+      if (aTargetNode == this.visiblePalette) {
+        this.visiblePalette.appendChild(draggedItem);
       } else {
-        this.visiblePalette.insertBefore(draggedWrapper, targetNode);
+        this.visiblePalette.insertBefore(draggedItem, aTargetNode);
       }
-      this._showPanelCustomizationPlaceholders();
       return;
     }
 
-    if (!CustomizableUI.canWidgetMoveToArea(draggedItemId, targetArea.id)) {
+    if (!CustomizableUI.canWidgetMoveToArea(aDraggedItemId, aTargetArea.id)) {
       return;
     }
 
     // Is the target the customization area itself? If so, we just add the
     // widget to the end of the area.
-    if (targetNode == targetArea.customizationTarget) {
-      let widget = this.unwrapToolbarItem(draggedWrapper);
-      CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id);
-      this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
-      this._showPanelCustomizationPlaceholders();
+    if (aTargetNode == aTargetArea.customizationTarget) {
+      CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id);
       return;
     }
 
     // We need to determine the place that the widget is being dropped in
     // the target.
     let placement;
-    if (!targetNode.classList.contains(kPlaceholderClass)) {
-      let targetNodeId = (targetNode.nodeName == "toolbarpaletteitem") ?
-                            targetNode.firstChild && targetNode.firstChild.id :
-                            targetNode.id;
+    if (!aTargetNode.classList.contains(kPlaceholderClass)) {
+      let targetNodeId = (aTargetNode.nodeName == "toolbarpaletteitem") ?
+                            aTargetNode.firstChild && aTargetNode.firstChild.id :
+                            aTargetNode.id;
       placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     }
     if (!placement) {
-      LOG("Could not get a position for " + targetNode + "#" + targetNode.id + "." + targetNode.className);
+      LOG("Could not get a position for " + aTargetNode + "#" + aTargetNode.id + "." + aTargetNode.className);
     }
     let position = placement ? placement.position :
-                               targetArea.childElementCount;
+                               aTargetArea.childElementCount;
 
 
     // Is the target area the same as the origin? Since we've already handled
     // the possibility that the target is the customization palette, we know
     // that the widget is moving within a customizable area.
-    if (targetArea == originArea) {
-      let properPlace = getPlaceForItem(targetNode);
-      // We unwrap the moving widget, as well as the widget that we're dropping
-      // on (the target) so that moveWidgetWithinArea can correctly insert the
-      // moving widget before the target widget.
-      let widget = this.unwrapToolbarItem(draggedWrapper);
-      let targetWidget = this.unwrapToolbarItem(targetNode);
-      CustomizableUI.moveWidgetWithinArea(draggedItemId, position);
-      this.wrapToolbarItem(targetWidget, properPlace);
-      this.wrapToolbarItem(widget, properPlace);
-      this._showPanelCustomizationPlaceholders();
+    if (aTargetArea == aOriginArea) {
+      CustomizableUI.moveWidgetWithinArea(aDraggedItemId, position);
       return;
     }
 
-    // A little hackery - we quickly unwrap the item and use CustomizableUI's
-    // addWidgetToArea to move the widget to the right place for every window,
-    // then we re-wrap the widget. We have to unwrap the target widget too so
-    // that addWidgetToArea inserts the new widget into the right place.
-    let properPlace = getPlaceForItem(targetNode);
-    let widget = this.unwrapToolbarItem(draggedWrapper);
-    let targetWidget = this.unwrapToolbarItem(targetNode);
-    CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id, position);
-    this.wrapToolbarItem(targetWidget, properPlace);
-    draggedWrapper = this.wrapToolbarItem(widget, properPlace);
-    this._showPanelCustomizationPlaceholders();
+    CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id, position);
   },
 
   _onDragExit: function(aEvent) {
@@ -975,13 +1014,15 @@ CustomizeMode.prototype = {
   },
 
   _showPanelCustomizationPlaceholders: function() {
-    const kColumns = 3;
     this._removePanelCustomizationPlaceholders();
     let doc = this.document;
     let contents = this.panelUIContents;
+    let visibleCombinedButtons = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > .panel-combined-item");
     let visibleChildren = contents.querySelectorAll("toolbarpaletteitem:not([hidden])");
-    let hangingItems = visibleChildren.length % kColumns;
-    let newPlaceholders = kColumns - hangingItems;
+    // TODO(bug 885578): Still doesn't handle a hole when there is a wide
+    //                   widget located at the bottom of the panel.
+    let hangingItems = (visibleChildren.length - visibleCombinedButtons.length) % kColumnsInMenuPanel;
+    let newPlaceholders = kColumnsInMenuPanel - hangingItems;
     while (newPlaceholders--) {
       let placeholder = doc.createElement("toolbarpaletteitem");
       placeholder.classList.add(kPlaceholderClass);
