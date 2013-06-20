@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=833386
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Test for Bug 833386 - HTMLTrackElement</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/content/html/content/test/reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    /* TODO:: See https://bugzilla.mozilla.org/show_bug.cgi?id=880064 and https://www.w3.org/Bugs/Public/show_bug.cgi?id=22221
+    reflectLimitedEnumerated({
+      element: document.createElement("track"),
+      attribute: "kind",
+      validValues: ["subtitles", "captions", "descriptions", "chapters", "metadata"],
+      invalidValues: ["foo", "bar", "\u0000", "null", "", "subtitle", "caption", "description", "chapter", "meta"],
+      defaultValue: "subtitles"
+    });*/
+    // Default attribute
+    reflectBoolean({
+      element: document.createElement("track"),
+      attribute: "default"
+    });
+    // Label attribute
+    reflectString({
+      element: document.createElement("track"),
+      attribute: "label",
+      otherValues: [ "foo", "BAR", "_FoO", "\u0000", "null", "white space" ]
+    });
+    // Source attribute
+    reflectURL({
+      element: document.createElement("track"),
+      attribute: "src",
+      otherValues: ["foo", "bar", "\u0000", "null", ""]
+    });
+    // Source Language attribute
+    reflectString({
+      element: document.createElement("track"),
+      attribute: "srclang",
+      otherValues: ["foo", "bar", "\u0000", "null", ""]
+    });
+
+    var track = document.createElement("track");
+    is(track.readyState, 0, "Default ready state should be 0 (NONE).");
+
+    // Following are manual track.kind tests until the reflect.js problems get
+    // cleared up above.
+    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=880064 and
+    //      https://www.w3.org/Bugs/Public/show_bug.cgi?id=22221
+    is(track.kind, "subtitles", "Default track kind should be subtitles.");
+
+    // Kind should not be able to be set to bogus value.
+    track.kind = "bogus";
+    is(track.kind, "subtitles", "Track kind should not be able to be set to a bogus value.");
+
+    checkKind("captions", "Kind should be set to captions.");
+    checkKind("descriptions", "Kind should be set to descriptions.");
+    checkKind("chapters", "Kind should be set to chapters.");
+    checkKind("metadata", "Kind should be set to metadata.");
+
+    function checkKind(kind, message) {
+      track.kind = kind;
+      is(track.kind, kind, message);
+    }
+
+    SimpleTest.finish();
+  }
+);
+</script>
+</pre>
+</body>
+</html>
