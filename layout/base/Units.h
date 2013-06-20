@@ -57,6 +57,7 @@ typedef gfx::ScaleFactor<LayoutDevicePixel, LayerPixel> LayoutDeviceToLayerScale
 typedef gfx::ScaleFactor<LayerPixel, LayoutDevicePixel> LayerToLayoutDeviceScale;
 typedef gfx::ScaleFactor<LayerPixel, ScreenPixel> LayerToScreenScale;
 typedef gfx::ScaleFactor<ScreenPixel, LayerPixel> ScreenToLayerScale;
+typedef gfx::ScaleFactor<ScreenPixel, ScreenPixel> ScreenToScreenScale;
 
 /*
  * The pixels that content authors use to specify sizes in.

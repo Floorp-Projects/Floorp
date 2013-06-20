@@ -371,13 +371,13 @@ public:
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
 
-    void SetFirstPaintViewport(const LayerIntPoint& aOffset, float aZoom, const CSSRect& aCssPageRect);
+    void SetFirstPaintViewport(const LayerIntPoint& aOffset, const CSSToLayerScale& aZoom, const CSSRect& aCssPageRect);
     void SetPageRect(const CSSRect& aCssPageRect);
-    void SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
-                          ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
+    void SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
+                          bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
                           gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
     void SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
-                          bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
+                          bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
 
     void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen);

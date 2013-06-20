@@ -788,6 +788,22 @@ struct ParamTraits<nsIntSize>
   }
 };
 
+template<class T, class U>
+struct ParamTraits< mozilla::gfx::ScaleFactor<T, U> >
+{
+  typedef mozilla::gfx::ScaleFactor<T, U> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.scale);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->scale));
+  }
+};
+
 template<class T>
 struct ParamTraits< mozilla::gfx::PointTyped<T> >
 {

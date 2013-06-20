@@ -2114,7 +2114,7 @@ AndroidBridge::IsTablet()
 }
 
 void
-AndroidBridge::SetFirstPaintViewport(const LayerIntPoint& aOffset, float aZoom, const CSSRect& aCssPageRect)
+AndroidBridge::SetFirstPaintViewport(const LayerIntPoint& aOffset, const CSSToLayerScale& aZoom, const CSSRect& aCssPageRect)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
@@ -2134,8 +2134,8 @@ AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 }
 
 void
-AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
-                                ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
+AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
+                                bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
                                 gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
@@ -2143,12 +2143,12 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplay
         return;
 
     client->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
-                             aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins,
+                             aScrollOffset, aScale, aFixedLayerMargins,
                              aOffset);
 }
 
 void AndroidBridge::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
-                                     bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
+                                     bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                                      bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
