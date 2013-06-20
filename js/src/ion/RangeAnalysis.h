@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_range_analysis_h__
-#define jsion_range_analysis_h__
+#ifndef ion_RangeAnalysis_h
+#define ion_RangeAnalysis_h
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
@@ -369,5 +369,4 @@ class Range : public TempObject {
 } // namespace ion
 } // namespace js
 
-#endif // jsion_range_analysis_h__
-
+#endif /* ion_RangeAnalysis_h */

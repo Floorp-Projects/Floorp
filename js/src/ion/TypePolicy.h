@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_type_policy_h__
-#define jsion_type_policy_h__
+#ifndef ion_TypePolicy_h
+#define ion_TypePolicy_h
 
 #include "IonTypes.h"
 
@@ -254,5 +254,4 @@ CoercesToDouble(MIRType type)
 } // namespace ion
 } // namespace js
 
-#endif // jsion_type_policy_h__
-
+#endif /* ion_TypePolicy_h */

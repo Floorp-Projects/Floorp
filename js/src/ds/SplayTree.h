@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jssplaytree_h_
-#define jssplaytree_h_
+#ifndef ds_SplayTree_h
+#define ds_SplayTree_h
 
 #include "LifoAlloc.h"
 
@@ -277,4 +277,4 @@ class SplayTree
 
 }  /* namespace js */
 
-#endif /* jssplaytree_h_ */
+#endif /* ds_SplayTree_h */

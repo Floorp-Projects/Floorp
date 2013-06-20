@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BytecodeEmitter_h__
-#define BytecodeEmitter_h__
+#ifndef frontend_BytecodeEmitter_h
+#define frontend_BytecodeEmitter_h
 
 /*
  * JS bytecode generation.
@@ -297,4 +297,4 @@ BytecodeEmitter::countFinalSourceNotes()
 } /* namespace frontend */
 } /* namespace js */
 
-#endif /* BytecodeEmitter_h__ */
+#endif /* frontend_BytecodeEmitter_h */

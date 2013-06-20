@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsfriendapi_h___
-#define jsfriendapi_h___
+#ifndef jsfriendapi_h
+#define jsfriendapi_h
 
 #include "jsclass.h"
 #include "jspubtd.h"
@@ -1757,4 +1757,4 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 extern JS_FRIEND_API(JSBool)
 js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);
 
-#endif /* jsfriendapi_h___ */
+#endif /* jsfriendapi_h */

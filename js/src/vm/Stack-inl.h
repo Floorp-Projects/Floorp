@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Stack_inl_h__
-#define Stack_inl_h__
+#ifndef vm_Stack_inl_h
+#define vm_Stack_inl_h
 
 #include "mozilla/PodOperations.h"
 
@@ -907,4 +907,4 @@ InterpreterActivation::~InterpreterActivation()
 
 } /* namespace js */
 
-#endif /* Stack_inl_h__ */
+#endif /* vm_Stack_inl_h */

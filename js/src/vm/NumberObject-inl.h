@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NumberObject_inl_h___
-#define NumberObject_inl_h___
+#ifndef vm_NumberObject_inl_h
+#define vm_NumberObject_inl_h
 
 #include "NumberObject.h"
 
@@ -26,4 +26,4 @@ NumberObject::create(JSContext *cx, double d)
 
 } // namespace js
 
-#endif /* NumberObject_inl_h__ */
+#endif /* vm_NumberObject_inl_h */

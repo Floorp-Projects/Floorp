@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_HashTable_h__
-#define js_HashTable_h__
+#ifndef js_HashTable_h
+#define js_HashTable_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -1464,5 +1464,4 @@ class HashTable : private AllocPolicy
 }  // namespace detail
 }  // namespace js
 
-#endif  // js_HashTable_h__
-
+#endif  /* js_HashTable_h */

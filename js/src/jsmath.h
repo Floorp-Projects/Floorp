@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsmath_h___
-#define jsmath_h___
+#ifndef jsmath_h
+#define jsmath_h
 
 #include "jsapi.h"
 
@@ -174,4 +174,4 @@ math_imul(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 
-#endif /* jsmath_h___ */
+#endif /* jsmath_h */

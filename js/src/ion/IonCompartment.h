@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_compartment_h__
-#define jsion_ion_compartment_h__
+#ifndef ion_IonCompartment_h
+#define ion_IonCompartment_h
 
 #ifdef JS_ION
 
@@ -343,5 +343,4 @@ void FinishInvalidation(FreeOp *fop, JSScript *script);
 
 #endif // JS_ION
 
-#endif // jsion_ion_compartment_h__
-
+#endif /* ion_IonCompartment_h */

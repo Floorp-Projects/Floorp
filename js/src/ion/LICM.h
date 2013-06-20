@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_licm_h__
-#define jsion_licm_h__
+#ifndef ion_LICM_h
+#define ion_LICM_h
 
 #include "ion/IonAllocPolicy.h"
 #include "ion/IonAnalysis.h"
@@ -87,4 +87,4 @@ class Loop
 } // namespace ion
 } // namespace js
 
-#endif // jsion_licm_h__
+#endif /* ion_LICM_h */

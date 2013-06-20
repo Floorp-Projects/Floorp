@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsfun_h___
-#define jsfun_h___
+#ifndef jsfun_h
+#define jsfun_h
 /*
  * JS function definitions.
  */
@@ -469,4 +469,4 @@ extern JSObject*
 js_fun_bind(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
             js::Value *boundArgs, unsigned argslen);
 
-#endif /* jsfun_h___ */
+#endif /* jsfun_h */
