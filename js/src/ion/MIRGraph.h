@@ -311,9 +311,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool isLoopHeader() const {
         return kind_ == LOOP_HEADER;
     }
-    MBasicBlock *backedge() const {
+    bool hasUniqueBackedge() const {
         JS_ASSERT(isLoopHeader());
-        JS_ASSERT(numPredecessors() == 1 || numPredecessors() == 2);
+        JS_ASSERT(numPredecessors() >= 2);
+        return numPredecessors() == 2;
+    }
+    MBasicBlock *backedge() const {
+        JS_ASSERT(hasUniqueBackedge());
         return getPredecessor(numPredecessors() - 1);
     }
     MBasicBlock *loopHeaderOfBackedge() const {
@@ -328,7 +332,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         if (!numSuccessors())
             return false;
         MBasicBlock *lastSuccessor = getSuccessor(numSuccessors() - 1);
-        return lastSuccessor->isLoopHeader() && lastSuccessor->backedge() == this;
+        return lastSuccessor->isLoopHeader() &&
+               lastSuccessor->hasUniqueBackedge() &&
+               lastSuccessor->backedge() == this;
     }
     bool isSplitEdge() const {
         return kind_ == SPLIT_EDGE;
