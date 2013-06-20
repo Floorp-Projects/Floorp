@@ -17,6 +17,7 @@
 #include "vm/Debugger.h"
 
 #include "jscompartmentinlines.h"
+#include "jsobjinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "gc/Nursery-inl.h"
