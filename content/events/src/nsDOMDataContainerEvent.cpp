@@ -14,7 +14,6 @@ nsDOMDataContainerEvent::nsDOMDataContainerEvent(
   : nsDOMEvent(aOwner, aPresContext, aEvent)
 {
   mData.Init();
-  SetIsDOMBinding();
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDataContainerEvent,

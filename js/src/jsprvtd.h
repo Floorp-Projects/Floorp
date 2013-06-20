@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsprvtd_h___
-#define jsprvtd_h___
+#ifndef jsprvtd_h
+#define jsprvtd_h
 /*
  * JS private typename definitions.
  *
@@ -298,4 +298,4 @@ typedef JSObject *
 (* JSIteratorOp)(JSContext *cx, JSHandleObject obj, JSBool keysonly);
 
 
-#endif /* jsprvtd_h___ */
+#endif /* jsprvtd_h */

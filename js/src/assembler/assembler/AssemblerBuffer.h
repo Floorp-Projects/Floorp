@@ -27,8 +27,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef AssemblerBuffer_h
-#define AssemblerBuffer_h
+#ifndef assembler_assembler_AssemblerBuffer_h
+#define assembler_assembler_AssemblerBuffer_h
 
 #include "assembler/wtf/Platform.h"
 
@@ -336,4 +336,4 @@ namespace JSC {
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // AssemblerBuffer_h
+#endif /* assembler_assembler_AssemblerBuffer_h */

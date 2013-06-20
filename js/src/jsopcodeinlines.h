@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsopcodeinlines_h__
-#define jsopcodeinlines_h__
+#ifndef jsopcodeinlines_h
+#define jsopcodeinlines_h
 
 #include "jsautooplen.h"
 
@@ -178,4 +178,4 @@ public:
 
 }
 
-#endif /* jsopcodeinlines_h__ */
+#endif /* jsopcodeinlines_h */

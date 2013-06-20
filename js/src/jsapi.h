@@ -6,8 +6,8 @@
 
 /* JavaScript API. */
 
-#ifndef jsapi_h___
-#define jsapi_h___
+#ifndef jsapi_h
+#define jsapi_h
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/RangedPtr.h"
@@ -5123,4 +5123,4 @@ using JS::Zone;
 
 } /* namespace js */
 
-#endif /* jsapi_h___ */
+#endif /* jsapi_h */

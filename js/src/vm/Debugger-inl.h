@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Debugger_inl_h__
-#define Debugger_inl_h__
+#ifndef vm_Debugger_inl_h
+#define vm_Debugger_inl_h
 
 #include "vm/Debugger.h"
 
@@ -22,4 +22,4 @@ js::Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
     return ok;
 }
 
-#endif  // Debugger_inl_h__
+#endif /* vm_Debugger_inl_h */

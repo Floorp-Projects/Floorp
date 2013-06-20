@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_marking_h___
-#define gc_marking_h___
+#ifndef gc_Marking_h
+#define gc_Marking_h
 
 #include "jsgc.h"
 #include "jscntxt.h"
@@ -410,4 +410,4 @@ TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
 
 } /* namespace js */
 
-#endif /* gc_marking_h___ */
+#endif /* gc_Marking_h */

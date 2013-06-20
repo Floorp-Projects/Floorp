@@ -4182,11 +4182,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
         if (status == InliningStatus_NotInlined) {
             JS_ASSERT(target->isNative());
             JS_ASSERT(current == inlineBlock);
-            // Undo operations
-            inlineInfo.unwrapArgs();
-            inlineBlock->entryResumePoint()->discardOperand(funIndex);
-            inlineBlock->rewriteSlot(funIndex, callInfo.fun());
-            inlineBlock->discard(funcDef);
+            inlineBlock->discardAllResumePoints();
             graph().removeBlock(inlineBlock);
             choiceSet[i] = false;
             continue;
@@ -4546,10 +4542,15 @@ IonBuilder::jsop_funcall(uint32_t argc)
         argc -= 1;
     }
 
-    // Call without inlining.
     CallInfo callInfo(cx, false);
     if (!callInfo.init(current, argc))
         return false;
+
+    // Try inlining call
+    if (argc > 0 && makeInliningDecision(target, callInfo) && target->isInterpreted())
+        return inlineScriptedCall(callInfo, target);
+
+    // Call without inlining.
     return makeCall(target, callInfo, false);
 }
 

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_jsipc_ObjectWrapperParent_h__
-#define mozilla_jsipc_ObjectWrapperParent_h__
+#ifndef mozilla_jsipc_ObjectWrapperParent_h
+#define mozilla_jsipc_ObjectWrapperParent_h
 
 #include "mozilla/jsipc/PObjectWrapperParent.h"
 #include "jsapi.h"
@@ -142,4 +142,4 @@ public:
 
 }}
 
-#endif
+#endif /* mozilla_jsipc_ObjectWrapperParent_h */

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FullParseHandler_h__
-#define FullParseHandler_h__
+#ifndef frontend_FullParseHandler_h
+#define frontend_FullParseHandler_h
 
 #include "mozilla/PodOperations.h"
 
@@ -542,4 +542,4 @@ FullParseHandler::makeAssignment(ParseNode *pn, ParseNode *rhs)
 } // frontend
 } // js
 
-#endif /* FullParseHandler_h__ */
+#endif /* frontend_FullParseHandler_h */

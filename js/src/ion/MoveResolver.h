@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_move_group_resolver_h__
-#define jsion_move_group_resolver_h__
+#ifndef ion_MoveResolver_h
+#define ion_MoveResolver_h
 
 #include "Registers.h"
 #include "InlineList.h"
@@ -213,5 +213,4 @@ class MoveResolver
 } // namespace ion
 } // namespace js
 
-#endif // jsion_move_group_resolver_h__
-
+#endif /* ion_MoveResolver_h */

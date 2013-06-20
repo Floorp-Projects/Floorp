@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Interpreter_inl_h__
-#define Interpreter_inl_h__
+#ifndef vm_Interpreter_inl_h
+#define vm_Interpreter_inl_h
 
 #include "jsapi.h"
 #include "jsbool.h"
@@ -1033,4 +1033,4 @@ class FastInvokeGuard
 
 }  /* namespace js */
 
-#endif /* Interpreter_inl_h__ */
+#endif /* vm_Interpreter_inl_h */

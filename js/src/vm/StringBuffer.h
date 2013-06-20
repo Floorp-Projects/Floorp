@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef StringBuffer_h___
-#define StringBuffer_h___
+#ifndef vm_StringBuffer_h
+#define vm_StringBuffer_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -149,4 +149,4 @@ BooleanToStringBuffer(JSContext *cx, bool b, StringBuffer &sb)
 
 }  /* namespace js */
 
-#endif /* StringBuffer_h___ */
+#endif /* vm_StringBuffer_h */

@@ -296,31 +296,6 @@ public:
   }
 };
 
-// Makes sure that the wrapper is preserved if new properties are added.
-class nsEventSH : public nsDOMGenericSH
-{
-protected:
-  nsEventSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
-  {
-  }
-
-  virtual ~nsEventSH()
-  {
-  }
-public:
-  NS_IMETHOD PreCreate(nsISupports* aNativeObj, JSContext* aCx,
-                       JSObject* aGlobalObj, JSObject** aParentObj) MOZ_OVERRIDE;
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative* aWrapper, JSContext* aCx,
-                         JSObject* aObj, jsid Id, jsval* aVp, bool* aRetval) MOZ_OVERRIDE;
-
-  virtual void PreserveWrapper(nsISupports *aNative) MOZ_OVERRIDE;
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsEventSH(aData);
-  }
-};
-
 // Window scriptable helper
 
 class nsWindowSH : public nsDOMGenericSH

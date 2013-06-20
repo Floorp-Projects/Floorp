@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RegExpStatics_inl_h__
-#define RegExpStatics_inl_h__
+#ifndef vm_RegExpStatics_inl_h
+#define vm_RegExpStatics_inl_h
 
 #include "vm/RegExpStatics.h"
 
@@ -583,4 +583,4 @@ JSContext::regExpStatics()
     return global()->getRegExpStatics();
 }
 
-#endif
+#endif /* vm_RegExpStatics_inl_h */

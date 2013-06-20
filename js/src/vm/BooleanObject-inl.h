@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BooleanObject_inl_h___
-#define BooleanObject_inl_h___
+#ifndef vm_BooleanObject_inl_h
+#define vm_BooleanObject_inl_h
 
 #include "vm/BooleanObject.h"
 
@@ -26,4 +26,4 @@ BooleanObject::create(JSContext *cx, bool b)
 
 } // namespace js
 
-#endif /* BooleanObject_inl_h__ */
+#endif /* vm_BooleanObject_inl_h */

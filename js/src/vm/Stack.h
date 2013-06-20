@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Stack_h__
-#define Stack_h__
+#ifndef vm_Stack_h
+#define vm_Stack_h
 
 #include "jsautooplen.h"
 #include "jsfun.h"
@@ -1921,4 +1921,4 @@ class AllFramesIter : public ScriptFrameIter
 };
 
 }  /* namespace js */
-#endif /* Stack_h__ */
+#endif /* vm_Stack_h */
