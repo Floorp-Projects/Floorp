@@ -4,7 +4,7 @@
 -->
 <html>
 <head>
-  <title>Basic Promise Test</title>
+  <title>Basic Future Test</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -16,13 +16,13 @@
 <pre id="test">
 <script type="application/javascript"><!--
 
-function promiseResolve() {
-  ok(Promise, "Promise object should exist");
+function futureResolve() {
+  ok(Future, "Future object should exist");
 
-  var promise = new Promise(function(resolver) {
-    ok(resolver, "PromiseResolver exists");
-    ok("reject" in resolver, "PromiseResolver.reject exists");
-    ok("resolve" in resolver, "PromiseResolver.resolve exists");
+  var future = new Future(function(resolver) {
+    ok(resolver, "FutureResolver exists");
+    ok("reject" in resolver, "FutureResolver.reject exists");
+    ok("resolve" in resolver, "FutureResolver.resolve exists");
 
     resolver.resolve(42);
   }).done(function(what) {
@@ -35,8 +35,8 @@ function promiseResolve() {
   });
 }
 
-function promiseReject() {
-  var promise = new Promise(function(resolver) {
+function futureReject() {
+  var future = new Future(function(resolver) {
     resolver.reject(42);
   }).done(function(what) {
     ok(false, "Done - resolveCb has been called");
@@ -48,8 +48,8 @@ function promiseReject() {
   });
 }
 
-function promiseException() {
-  var promise = new Promise(function(resolver) {
+function futureException() {
+  var future = new Future(function(resolver) {
     throw 42;
   }).done(function(what) {
     ok(false, "Done - resolveCb has been called");
@@ -61,16 +61,16 @@ function promiseException() {
   });
 }
 
-function promiseGC() {
+function futureGC() {
   var resolver;
-  var promise = new Promise(function(r) {
+  var future = new Future(function(r) {
     resolver = r;
   }).done(function(what) {
-    ok(true, "Done - promise is still alive");
+    ok(true, "Done - future is still alive");
     runTest();
   });
 
-  promise = null;
+  future = null;
 
   SpecialPowers.gc();
   SpecialPowers.forceGC();
@@ -79,9 +79,9 @@ function promiseGC() {
   resolver.resolve(42);
 }
 
-function promiseAsync() {
+function futureAsync() {
   var global = "foo";
-  var f = new Promise(function(r) {
+  var f = new Future(function(r) {
     is(global, "foo", "Global should be foo");
     r.resolve(42);
     is(global, "foo", "Global should still be foo");
@@ -95,13 +95,13 @@ function promiseAsync() {
   is(global, "foo", "Global should still be foo (2)");
 }
 
-function promiseDoubleDone() {
+function futureDoubleDone() {
   var steps = 0;
-  var promise = new Promise(function(resolver) {
+  var future = new Future(function(resolver) {
     resolver.resolve(42);
   });
 
-  promise.done(function(what) {
+  future.done(function(what) {
     ok(true, "Done.resolve has been called");
     is(what, 42, "Value == 42");
     steps++;
@@ -109,7 +109,7 @@ function promiseDoubleDone() {
     ok(false, "Done.reject has been called");
   });
 
-  promise.done(function(what) {
+  future.done(function(what) {
     ok(true, "Done.resolve has been called");
     is(steps, 1, "Done.resolve - step == 1");
     is(what, 42, "Value == 42");
@@ -119,8 +119,8 @@ function promiseDoubleDone() {
   });
 }
 
-function promiseDoneException() {
-  var promise = new Promise(function(resolver) {
+function futureDoneException() {
+  var future = new Future(function(resolver) {
     resolver.resolve(42);
   });
 
@@ -131,18 +131,18 @@ function promiseDoneException() {
     runTest();
   };
 
-  promise.done(function(what) {
+  future.done(function(what) {
     ok(true, "Done.resolve has been called");
     throw "booh";
   });
 }
 
-function promiseThenCatchDone() {
-  var promise = new Promise(function(resolver) {
+function futureThenCatchDone() {
+  var future = new Future(function(resolver) {
     resolver.resolve(42);
   });
 
-  var promise2 = promise.then(function(what) {
+  var future2 = future.then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 42, "Value == 42");
     return what + 1;
@@ -150,9 +150,9 @@ function promiseThenCatchDone() {
     ok(false, "Then.reject has been called");
   });
 
-  isnot(promise, promise2, "These 2 promise objs are different");
+  isnot(future, future2, "These 2 future objs are different");
 
-  promise2.then(function(what) {
+  future2.then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 43, "Value == 43");
     return what + 1;
@@ -169,12 +169,12 @@ function promiseThenCatchDone() {
   });
 }
 
-function promiseRejectThenCatchDone() {
-  var promise = new Promise(function(resolver) {
+function futureRejectThenCatchDone() {
+  var future = new Future(function(resolver) {
     resolver.reject(42);
   });
 
-  var promise2 = promise.then(function(what) {
+  var future2 = future.then(function(what) {
     ok(false, "Then.resolve has been called");
   }, function(what) {
     ok(true, "Then.reject has been called");
@@ -182,9 +182,9 @@ function promiseRejectThenCatchDone() {
     return what + 1;
   });
 
-  isnot(promise, promise2, "These 2 promise objs are different");
+  isnot(future, future2, "These 2 future objs are different");
 
-  promise2.then(function(what) {
+  future2.then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 43, "Value == 43");
     return what+1;
@@ -197,12 +197,12 @@ function promiseRejectThenCatchDone() {
   });
 }
 
-function promiseRejectThenCatchDone2() {
-  var promise = new Promise(function(resolver) {
+function futureRejectThenCatchDone2() {
+  var future = new Future(function(resolver) {
     resolver.reject(42);
   });
 
-  promise.then(function(what) {
+  future.then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 42, "Value == 42");
     return what+1;
@@ -217,12 +217,12 @@ function promiseRejectThenCatchDone2() {
   });
 }
 
-function promiseRejectThenCatchExceptionDone() {
-  var promise = new Promise(function(resolver) {
+function futureRejectThenCatchExceptionDone() {
+  var future = new Future(function(resolver) {
     resolver.reject(42);
   });
 
-  promise.then(function(what) {
+  future.then(function(what) {
     ok(false, "Then.resolve has been called");
   }, function(what) {
     ok(true, "Then.reject has been called");
@@ -239,9 +239,9 @@ function promiseRejectThenCatchExceptionDone() {
   });
 }
 
-function promiseThenCatchOrderingResolve() {
+function futureThenCatchOrderingResolve() {
   var global = 0;
-  var f = new Promise(function(r) {
+  var f = new Future(function(r) {
     r.resolve(42);
   });
 
@@ -262,9 +262,9 @@ function promiseThenCatchOrderingResolve() {
   });
 }
 
-function promiseThenCatchOrderingReject() {
+function futureThenCatchOrderingReject() {
   var global = 0;
-  var f = new Promise(function(r) {
+  var f = new Future(function(r) {
     r.reject(42);
   })
 
@@ -285,64 +285,64 @@ function promiseThenCatchOrderingReject() {
   });
 }
 
-function promiseNestedPromise() {
-  new Promise(function(resolver) {
-    resolver.resolve(new Promise(function(r) {
-      ok(true, "Nested promise is executed");
+function futureNestedFuture() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
       r.resolve(42);
     }));
   }).then(function(value) {
-    is(value, 42, "Nested promise is executed and then == 42");
+    is(value, 42, "Nested future is executed and then == 42");
     runTest();
   });
 }
 
-function promiseNestedNestedPromise() {
-  new Promise(function(resolver) {
-    resolver.resolve(new Promise(function(r) {
-      ok(true, "Nested promise is executed");
+function futureNestedNestedFuture() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
       r.resolve(42);
     }).then(function(what) { return what+1; }));
   }).then(function(value) {
-    is(value, 43, "Nested promise is executed and then == 43");
+    is(value, 43, "Nested future is executed and then == 43");
     runTest();
   });
 }
 
-function promiseWrongNestedPromise() {
-  new Promise(function(resolver) {
-    resolver.resolve(new Promise(function(r) {
-      ok(true, "Nested promise is executed");
+function futureWrongNestedFuture() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
       r.resolve(42);
     }));
     resolver.reject(42);
   }).then(function(value) {
-    is(value, 42, "Nested promise is executed and then == 42");
+    is(value, 42, "Nested future is executed and then == 42");
     runTest();
   }, function(value) {
      ok(false, "This is wrong");
   });
 }
 
-function promiseLoop() {
-  new Promise(function(resolver) {
-    resolver.resolve(new Promise(function(r) {
-      ok(true, "Nested promise is executed");
-      r.resolve(new Promise(function(r) {
-        ok(true, "Nested nested promise is executed");
+function futureLoop() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
+      r.resolve(new Future(function(r) {
+        ok(true, "Nested nested future is executed");
         r.resolve(42);
       }));
     }));
   }).then(function(value) {
-    is(value, 42, "Nested nested promise is executed and then == 42");
+    is(value, 42, "Nested nested future is executed and then == 42");
     runTest();
   }, function(value) {
      ok(false, "This is wrong");
   });
 }
 
-function promiseReject() {
-  var promise = Promise.reject(42).done(function(what) {
+function futureReject() {
+  var future = Future.reject(42).done(function(what) {
     ok(false, "This should not be called");
   }, function(what) {
     is(what, 42, "Value == 42");
@@ -350,8 +350,8 @@ function promiseReject() {
   });
 }
 
-function promiseResolve() {
-  var promise = Promise.resolve(42).done(function(what) {
+function futureResolve() {
+  var future = Future.resolve(42).done(function(what) {
     is(what, 42, "Value == 42");
     runTest();
   }, function() {
@@ -359,9 +359,9 @@ function promiseResolve() {
   });
 }
 
-function promiseResolveNestedPromise() {
-  var promise = Promise.resolve(new Promise(function(r) {
-    ok(true, "Nested promise is executed");
+function futureResolveNestedFuture() {
+  var future = Future.resolve(new Future(function(r) {
+    ok(true, "Nested future is executed");
     r.resolve(42);
   }, function() {
     ok(false, "This should not be called");
@@ -373,18 +373,18 @@ function promiseResolveNestedPromise() {
   });
 }
 
-var tests = [ promiseResolve, promiseReject,
-              promiseException, promiseGC, promiseAsync,
-              promiseDoubleDone, promiseDoneException,
-              promiseThenCatchDone, promiseRejectThenCatchDone,
-              promiseRejectThenCatchDone2,
-              promiseRejectThenCatchExceptionDone,
-              promiseThenCatchOrderingResolve,
-              promiseThenCatchOrderingReject,
-              promiseNestedPromise, promiseNestedNestedPromise,
-              promiseWrongNestedPromise, promiseLoop,
-              promiseReject, promiseResolve,
-              promiseResolveNestedPromise,
+var tests = [ futureResolve, futureReject,
+              futureException, futureGC, futureAsync,
+              futureDoubleDone, futureDoneException,
+              futureThenCatchDone, futureRejectThenCatchDone,
+              futureRejectThenCatchDone2,
+              futureRejectThenCatchExceptionDone,
+              futureThenCatchOrderingResolve,
+              futureThenCatchOrderingReject,
+              futureNestedFuture, futureNestedNestedFuture,
+              futureWrongNestedFuture, futureLoop,
+              futureReject, futureResolve,
+              futureResolveNestedFuture,
             ];
 
 function runTest() {
@@ -397,13 +397,13 @@ function runTest() {
   test();
 }
 
-var p = SpecialPowers.getBoolPref("dom.promise.enabled");
-SpecialPowers.setBoolPref("dom.promise.enabled", false);
-ok(!("Promise" in window), "Promise object should not exist if disabled by pref");
-SpecialPowers.setBoolPref("dom.promise.enabled", p);
+var p = SpecialPowers.getBoolPref("dom.future.enabled");
+SpecialPowers.setBoolPref("dom.future.enabled", false);
+ok(!("Future" in window), "Future object should not exist if disabled by pref");
+SpecialPowers.setBoolPref("dom.future.enabled", p);
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
+SpecialPowers.pushPrefEnv({"set": [["dom.future.enabled", true]]}, runTest);
 // -->
 </script>
 </pre>
