@@ -36,7 +36,8 @@ BluetoothA2dpManager::Observe(nsISupports* aSubject,
   MOZ_ASSERT(gBluetoothA2dpManager);
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    return HandleShutdown();
+    HandleShutdown();
+    return NS_OK;
   }
 
   MOZ_ASSERT(false, "BluetoothA2dpManager got unexpected topic!");
@@ -119,14 +120,13 @@ BluetoothA2dpManager::Get()
   return gBluetoothA2dpManager;
 }
 
-nsresult
+void
 BluetoothA2dpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   gInShutdown = true;
   Disconnect();
   gBluetoothA2dpManager = nullptr;
-  return NS_OK;
 }
 
 bool
@@ -241,7 +241,7 @@ BluetoothA2dpManager::NotifyStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_NAMED_LITERAL_STRING(type, BLUETOOTH_A2DP_STATUS_CHANGED);
+  NS_NAMED_LITERAL_STRING(type, BLUETOOTH_A2DP_STATUS_CHANGED_ID);
   InfallibleTArray<BluetoothNamedValue> parameters;
 
   BluetoothValue v = mConnected;
@@ -271,7 +271,7 @@ BluetoothA2dpManager::NotifyAudioManager()
   data.AppendInt(mConnected);
 
   if (NS_FAILED(obs->NotifyObservers(this,
-                                     BLUETOOTH_A2DP_STATUS_CHANGED,
+                                     BLUETOOTH_A2DP_STATUS_CHANGED_ID,
                                      data.BeginReading()))) {
     NS_WARNING("Failed to notify bluetooth-a2dp-status-changed observsers!");
   }

@@ -35,8 +35,6 @@ public:
 
   bool Connect(const nsAString& aDeviceAddress);
   void Disconnect();
-  void HandleSinkPropertyChanged(const BluetoothSignal& aSignal);
-  nsresult HandleShutdown();
 
   virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
                                    const nsAString& aServiceUuid,
@@ -44,12 +42,15 @@ public:
   virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
   virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;
 
+  void HandleSinkPropertyChanged(const BluetoothSignal& aSignal);
+
 private:
   BluetoothA2dpManager();
   bool Init();
   void Cleanup();
 
   void HandleSinkStateChanged(SinkState aState);
+  void HandleShutdown();
 
   void NotifyStatusChanged();
   void NotifyAudioManager();

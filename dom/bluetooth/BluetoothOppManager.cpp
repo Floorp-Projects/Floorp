@@ -73,7 +73,8 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
   MOZ_ASSERT(sInstance);
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    return HandleShutdown();
+    HandleShutdown();
+    return NS_OK;
   }
 
   MOZ_ASSERT(false, "BluetoothOppManager got unexpected topic!");
@@ -226,6 +227,7 @@ BluetoothOppManager::Get()
 
   if (!sInstance) {
     sInstance = new BluetoothOppManager();
+    NS_ENSURE_TRUE(sInstance->Init(), nullptr);
   }
 
   return sInstance;
@@ -288,14 +290,13 @@ BluetoothOppManager::Disconnect()
   }
 }
 
-nsresult
+void
 BluetoothOppManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   sInShutdown = true;
   Disconnect();
   sInstance = nullptr;
-  return NS_OK;
 }
 
 bool
