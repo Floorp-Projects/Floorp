@@ -277,9 +277,6 @@ private:
   // Only used for top level workers.
   nsTArray<nsRefPtr<WorkerRunnable> > mQueuedRunnables;
 
-  // Only for ChromeWorkers without window and only touched on the main thread.
-  nsTArray<nsCString> mHostObjectURIs;
-
   // Protected by mMutex.
   JSSettings mJSSettings;
 
@@ -618,10 +615,6 @@ public:
   AssertInnerWindowIsCorrect() const
   { }
 #endif
-
-  void RegisterHostObjectURI(const nsACString& aURI);
-  void UnregisterHostObjectURI(const nsACString& aURI);
-  void StealHostObjectURIs(nsTArray<nsCString>& aArray);
 };
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
