@@ -155,34 +155,30 @@ XPCJSContextStack::GetSafeJSContext()
     mSafeJSContext = JS_NewContext(rt, 8192);
     if (!mSafeJSContext)
         MOZ_CRASH();
+    JSAutoRequest req(mSafeJSContext);
 
     JS::RootedObject glob(mSafeJSContext);
-    {
-        // scoped JS Request
-        JSAutoRequest req(mSafeJSContext);
+    JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
 
-        JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
+    glob = xpc::CreateGlobalObject(mSafeJSContext, &global_class, principal, JS::SystemZone);
+    if (!glob)
+        MOZ_CRASH();
 
-        glob = xpc::CreateGlobalObject(mSafeJSContext, &global_class, principal, JS::SystemZone);
-        if (!glob)
-            MOZ_CRASH();
+    // Make sure the context is associated with a proper compartment
+    // and not the default compartment.
+    JS_SetGlobalObject(mSafeJSContext, glob);
 
-        // Make sure the context is associated with a proper compartment
-        // and not the default compartment.
-        JS_SetGlobalObject(mSafeJSContext, glob);
+    // Note: make sure to set the private before calling
+    // InitClasses
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = new SandboxPrivate(principal, glob);
+    JS_SetPrivate(glob, sop.forget().get());
 
-        // Note: make sure to set the private before calling
-        // InitClasses
-        nsCOMPtr<nsIScriptObjectPrincipal> sop = new SandboxPrivate(principal, glob);
-        JS_SetPrivate(glob, sop.forget().get());
-
-        // After this point either glob is null and the
-        // nsIScriptObjectPrincipal ownership is either handled by the
-        // nsCOMPtr or dealt with, or we'll release in the finalize
-        // hook.
-        if (NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
-            MOZ_CRASH();
-    }
+    // After this point either glob is null and the
+    // nsIScriptObjectPrincipal ownership is either handled by the
+    // nsCOMPtr or dealt with, or we'll release in the finalize
+    // hook.
+    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
+        MOZ_CRASH();
 
     // Save it off so we can destroy it later.
     mOwnSafeJSContext = mSafeJSContext;
