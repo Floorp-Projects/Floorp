@@ -7,6 +7,7 @@
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
@@ -29,7 +30,6 @@
 #include "RawReader.h"
 #endif
 #ifdef MOZ_GSTREAMER
-#include "mozilla/Preferences.h"
 #include "GStreamerDecoder.h"
 #include "GStreamerReader.h"
 #endif
@@ -533,7 +533,8 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (MediaDecoder::IsMediaPluginsEnabled() && IsMediaPluginsType(aType)) ||
 #endif
 #ifdef MOZ_WMF
-    IsWMFSupportedType(aType) ||
+    (IsWMFSupportedType(aType) &&
+     Preferences::GetBool("media.windows-media-foundation.play-stand-alone", true)) ||
 #endif
     false;
 }
