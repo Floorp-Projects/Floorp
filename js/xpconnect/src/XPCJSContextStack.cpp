@@ -145,20 +145,16 @@ XPCJSContextStack::GetSafeJSContext()
     nsRefPtr<nsNullPrincipal> principal = new nsNullPrincipal();
     nsresult rv = principal->Init();
     if (NS_FAILED(rv))
-        return NULL;
+        MOZ_CRASH();
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    XPCJSRuntime* xpcrt = xpc->GetRuntime();
-    if (!xpcrt)
-        return NULL;
-
-    JSRuntime *rt = xpcrt->Runtime();
+    JSRuntime *rt = xpc->GetRuntime()->Runtime();
     if (!rt)
-        return NULL;
+        MOZ_CRASH();
 
     mSafeJSContext = JS_NewContext(rt, 8192);
     if (!mSafeJSContext)
-        return NULL;
+        MOZ_CRASH();
 
     JS::RootedObject glob(mSafeJSContext);
     {
@@ -168,31 +164,24 @@ XPCJSContextStack::GetSafeJSContext()
         JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
 
         glob = xpc::CreateGlobalObject(mSafeJSContext, &global_class, principal, JS::SystemZone);
+        if (!glob)
+            MOZ_CRASH();
 
-        if (glob) {
-            // Make sure the context is associated with a proper compartment
-            // and not the default compartment.
-            JS_SetGlobalObject(mSafeJSContext, glob);
+        // Make sure the context is associated with a proper compartment
+        // and not the default compartment.
+        JS_SetGlobalObject(mSafeJSContext, glob);
 
-            // Note: make sure to set the private before calling
-            // InitClasses
-            nsCOMPtr<nsIScriptObjectPrincipal> sop = new SandboxPrivate(principal, glob);
-            JS_SetPrivate(glob, sop.forget().get());
-        }
+        // Note: make sure to set the private before calling
+        // InitClasses
+        nsCOMPtr<nsIScriptObjectPrincipal> sop = new SandboxPrivate(principal, glob);
+        JS_SetPrivate(glob, sop.forget().get());
 
         // After this point either glob is null and the
         // nsIScriptObjectPrincipal ownership is either handled by the
         // nsCOMPtr or dealt with, or we'll release in the finalize
         // hook.
-        if (glob && NS_FAILED(xpc->InitClasses(mSafeJSContext, glob))) {
-            glob = nullptr;
-        }
-    }
-    if (mSafeJSContext && !glob) {
-        // Destroy the context outside the scope of JSAutoRequest that
-        // uses the context in its destructor.
-        JS_DestroyContext(mSafeJSContext);
-        mSafeJSContext = nullptr;
+        if (NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
+            MOZ_CRASH();
     }
 
     // Save it off so we can destroy it later.
