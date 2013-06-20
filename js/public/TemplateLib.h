@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_template_lib_h__
-#define js_template_lib_h__
+#ifndef js_TemplateLib_h
+#define js_TemplateLib_h
 
 #include "jstypes.h"
 
@@ -114,4 +114,4 @@ template <class T> struct IsRelocatableHeapType { static const bool result = tru
 } /* namespace tl */
 } /* namespace js */
 
-#endif  /* js_template_lib_h__ */
+#endif  /* js_TemplateLib_h */
