@@ -16,11 +16,6 @@ DISABLED_EXTRA_COMPONENTS = \
 
 ifdef MOZ_UPDATER
 
-DISABLED_EXTRA_PP_COMPONENTS += \
-  nsUpdateService.js \
-  nsUpdateServiceStub.js \
-  $(NULL)
-
 DISABLED_EXTRA_COMPONENTS += \
   nsUpdateService.manifest \
   $(NULL)

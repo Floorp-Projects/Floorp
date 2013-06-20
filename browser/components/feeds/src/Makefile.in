@@ -23,11 +23,6 @@ DISABLED_EXTRA_COMPONENTS = \
 	WebContentConverter.js \
   $(NULL)
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-	FeedWriter.js \
-	$(NULL)
-
-
 LOCAL_INCLUDES = -I$(srcdir)/../../build
 
 include $(topsrcdir)/config/rules.mk
