@@ -12,11 +12,10 @@
 #include "BluetoothSocketObserver.h"
 #include "BluetoothTelephonyListener.h"
 #include "mozilla/ipc/UnixSocket.h"
-#include "nsIObserver.h"
+#include "mozilla/Hal.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothHfpManagerObserver;
 class BluetoothReplyRunnable;
 class BluetoothSocket;
 class Call;
@@ -53,9 +52,11 @@ enum BluetoothCmeError {
 
 class BluetoothHfpManager : public BluetoothSocketObserver
                           , public BluetoothProfileManagerBase
+                          , public BatteryObserver
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   static BluetoothHfpManager* Get();
   ~BluetoothHfpManager();
@@ -108,7 +109,7 @@ private:
   nsresult HandleVoiceConnectionChanged();
 
   bool Init();
-  void Cleanup();
+  void Notify(const hal::BatteryInformation& aBatteryInfo);
   void Reset();
   void ResetCallArray();
   uint32_t FindFirstCall(uint16_t aState);
