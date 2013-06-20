@@ -27,7 +27,7 @@
 
     <!-- DoorHangers -->
     <declare-styleable name="DoorHanger">
-        <attr name="doorhangerWidth" format="dimension">
+        <attr name="arrowPopupWidth" format="dimension">
              <enum name="fill_parent" value="-1" />
              <enum name="match_parent" value="-1" />
              <enum name="wrap_content" value="-2" />

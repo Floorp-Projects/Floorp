@@ -4,13 +4,13 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="?attr/doorhangerWidth"
+                android:layout_width="?attr/arrowPopupWidth"
                 android:layout_height="wrap_content">
 
-    <ScrollView android:layout_width="?attr/doorhangerWidth"
+    <ScrollView android:layout_width="?attr/arrowPopupWidth"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:background="@drawable/doorhanger_popup_bg">
+                android:background="@drawable/arrow_popup_bg">
 
         <LinearLayout android:id="@+id/content"
                       android:layout_width="fill_parent"
