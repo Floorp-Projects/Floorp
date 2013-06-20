@@ -15,6 +15,7 @@
 namespace mozilla {
 
 struct CSSPixel;
+struct LayoutDevicePixel;
 struct LayerPixel;
 struct ScreenPixel;
 
@@ -24,6 +25,13 @@ typedef gfx::SizeTyped<CSSPixel> CSSSize;
 typedef gfx::IntSizeTyped<CSSPixel> CSSIntSize;
 typedef gfx::RectTyped<CSSPixel> CSSRect;
 typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
+
+typedef gfx::PointTyped<LayoutDevicePixel> LayoutDevicePoint;
+typedef gfx::IntPointTyped<LayoutDevicePixel> LayoutDeviceIntPoint;
+typedef gfx::SizeTyped<LayoutDevicePixel> LayoutDeviceSize;
+typedef gfx::IntSizeTyped<LayoutDevicePixel> LayoutDeviceIntSize;
+typedef gfx::RectTyped<LayoutDevicePixel> LayoutDeviceRect;
+typedef gfx::IntRectTyped<LayoutDevicePixel> LayoutDeviceIntRect;
 
 typedef gfx::PointTyped<LayerPixel> LayerPoint;
 typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
@@ -39,10 +47,14 @@ typedef gfx::IntSizeTyped<ScreenPixel> ScreenIntSize;
 typedef gfx::RectTyped<ScreenPixel> ScreenRect;
 typedef gfx::IntRectTyped<ScreenPixel> ScreenIntRect;
 
+typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
+typedef gfx::ScaleFactor<LayoutDevicePixel, CSSPixel> LayoutDeviceToCSSScale;
 typedef gfx::ScaleFactor<CSSPixel, LayerPixel> CSSToLayerScale;
 typedef gfx::ScaleFactor<LayerPixel, CSSPixel> LayerToCSSScale;
 typedef gfx::ScaleFactor<CSSPixel, ScreenPixel> CSSToScreenScale;
 typedef gfx::ScaleFactor<ScreenPixel, CSSPixel> ScreenToCSSScale;
+typedef gfx::ScaleFactor<LayoutDevicePixel, LayerPixel> LayoutDeviceToLayerScale;
+typedef gfx::ScaleFactor<LayerPixel, LayoutDevicePixel> LayerToLayoutDeviceScale;
 typedef gfx::ScaleFactor<LayerPixel, ScreenPixel> LayerToScreenScale;
 typedef gfx::ScaleFactor<ScreenPixel, LayerPixel> ScreenToLayerScale;
 
@@ -98,12 +110,23 @@ struct CSSPixel {
 };
 
 /*
+ * The pixels that are referred to as "device pixels" in layout code. In
+ * general this is obtained by converting a value in app units value by the
+ * nsDeviceContext::AppUnitsPerDevPixel() value. The size of these pixels
+ * are affected by:
+ * 1) the "full zoom" (see nsPresContext::SetFullZoom)
+ * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
+ */
+struct LayoutDevicePixel {
+};
+
+/*
  * The pixels that layout rasterizes and delivers to the graphics code.
  * These are generally referred to as "device pixels" in layout code. Layer
  * pixels are affected by:
  * 1) the "display resolution" (see nsIPresShell::SetResolution)
  * 2) the "full zoom" (see nsPresContext::SetFullZoom)
- * 3) the "widget scale" (nsIWidget::GetDefaultScale)
+ * 3) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
 struct LayerPixel {
 };
