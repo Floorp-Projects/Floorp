@@ -174,23 +174,18 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
 }
 
 already_AddRefed<Promise>
-Promise::Then(const Optional<OwningNonNull<AnyCallback> >& aResolveCallback,
-              const Optional<OwningNonNull<AnyCallback> >& aRejectCallback)
+Promise::Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
 {
   nsRefPtr<Promise> promise = new Promise(GetParentObject());
 
   nsRefPtr<PromiseCallback> resolveCb =
     PromiseCallback::Factory(promise->mResolver,
-                             aResolveCallback.WasPassed()
-                               ? aResolveCallback.Value().get()
-                               : nullptr,
+                             aResolveCallback,
                              PromiseCallback::Resolve);
 
   nsRefPtr<PromiseCallback> rejectCb =
     PromiseCallback::Factory(promise->mResolver,
-                             aRejectCallback.WasPassed()
-                               ? aRejectCallback.Value().get()
-                               : nullptr,
+                             aRejectCallback,
                              PromiseCallback::Reject);
 
   AppendCallbacks(resolveCb, rejectCb);
@@ -199,10 +194,29 @@ Promise::Then(const Optional<OwningNonNull<AnyCallback> >& aResolveCallback,
 }
 
 already_AddRefed<Promise>
-Promise::Catch(const Optional<OwningNonNull<AnyCallback> >& aRejectCallback)
+Promise::Catch(AnyCallback* aRejectCallback)
 {
-  Optional<OwningNonNull<AnyCallback> > resolveCb;
-  return Then(resolveCb, aRejectCallback);
+  return Then(nullptr, aRejectCallback);
+}
+
+void
+Promise::Done(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
+{
+  if (!aResolveCallback && !aRejectCallback) {
+    return;
+  }
+
+  nsRefPtr<PromiseCallback> resolveCb;
+  if (aResolveCallback) {
+    resolveCb = new SimpleWrapperPromiseCallback(this, aResolveCallback);
+  }
+
+  nsRefPtr<PromiseCallback> rejectCb;
+  if (aRejectCallback) {
+    rejectCb = new SimpleWrapperPromiseCallback(this, aRejectCallback);
+  }
+
+  AppendCallbacks(resolveCb, rejectCb);
 }
 
 void
