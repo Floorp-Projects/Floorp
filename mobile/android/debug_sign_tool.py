@@ -36,7 +36,7 @@ class DebugKeystore:
     """
     def __init__(self, keystore):
         self._keystore = os.path.abspath(os.path.expanduser(keystore))
-        self._alias = 'debug'
+        self._alias = 'androiddebugkey'
         self.verbose = False
         self.keytool = 'keytool'
         self.jarsigner = 'jarsigner'
@@ -49,24 +49,36 @@ class DebugKeystore:
     def alias(self):
         return self._alias
 
-    def _ensure_keystore(self):
-        if os.path.exists(self.keystore):
-            if self.verbose:
-                log.debug('Keystore exists at %s' % self.keystore)
+    def _check(self, args):
+        if self.verbose:
+            subprocess.check_call(args)
         else:
-            self.create_keystore()
+            subprocess.check_output(args)
 
-    def create_keystore(self):
-        try:
-            path = os.path.dirname(self.keystore)
-            os.makedirs(path)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
-
+    def keystore_contains_alias(self):
         args = [ self.keytool,
-                 '-genkey',
-                 '-v',
+                 '-list',
+                 '-keystore', self.keystore,
+                 '-storepass', 'android',
+                 '-alias', self.alias,
+               ]
+        if self.verbose:
+            args.append('-v')
+        contains = True
+        try:
+            self._check(args)
+        except subprocess.CalledProcessError as e:
+            contains = False
+        if self.verbose:
+            log.info('Keystore %s %s alias %s' %
+                     (self.keystore,
+                      'contains' if contains else 'does not contain',
+                      self.alias))
+        return contains
+
+    def create_alias_in_keystore(self):
+        args = [ self.keytool,
+                 '-genkeypair',
                  '-keystore', self.keystore,
                  '-storepass', 'android',
                  '-alias', self.alias,
@@ -75,12 +87,16 @@ class DebugKeystore:
                  '-keyalg', 'RSA',
                  '-validity', '365',
                ]
-        subprocess.check_call(args)
         if self.verbose:
-            log.info('Created keystore at %s' % self.keystore)
+            args.append('-v')
+        self._check(args)
+        if self.verbose:
+            log.info('Created alias %s in keystore %s' %
+                     (self.alias, self.keystore))
 
     def sign(self, apk):
-        self._ensure_keystore()
+        if not self.keystore_contains_alias():
+            self.create_alias_in_keystore()
 
         args = [ self.jarsigner,
                  '-digestalg', 'SHA1',
@@ -90,9 +106,12 @@ class DebugKeystore:
                  apk,
                  self.alias,
                ]
-        subprocess.check_call(args)
         if self.verbose:
-            log.info('Signed %s with keystore at %s' % (apk, self.keystore))
+            args.append('-verbose')
+        self._check(args)
+        if self.verbose:
+            log.info('Signed %s with alias %s from keystore %s' %
+                     (apk, self.alias, self.keystore))
 
 
 def parse_args(argv):
@@ -100,11 +119,11 @@ def parse_args(argv):
     parser.add_argument('apks', nargs='+',
                         metavar='APK',
                         help='Android packages to be signed')
-    parser.add_argument('-q', '--quiet',
+    parser.add_argument('-v', '--verbose',
                         dest='verbose',
-                        default=True,
-                        action='store_false',
-                        help='quiet output')
+                        default=False,
+                        action='store_true',
+                        help='verbose output')
     parser.add_argument('--keytool',
                         metavar='PATH',
                         default='keytool',
@@ -135,9 +154,10 @@ def main():
 
     if args.force:
         try:
-            keystore.create_keystore()
+            keystore.create_alias_in_keystore()
         except subprocess.CalledProcessError as e:
-            log.error('Failed to force-create keystore')
+            log.error('Failed to force-create alias %s in keystore %s' %
+                      (keystore.alias, keystore.keystore))
             log.error(e)
             return 1
 

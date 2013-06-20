@@ -1221,7 +1221,7 @@ jars:
 	$(NSINSTALL) -D jars
 
 $(AIDL_AUTOGEN_FILES): %.java: %.aidl
-	$(ANDROID_PLATFORM_TOOLS)/aidl -I$(srcdir)/braille $<
+	$(AIDL) -I$(srcdir)/braille $<
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
