@@ -28,7 +28,7 @@ var PerfTest = {
    * Must be called by every test on startup. Graph server will
    * search for result data between this declaration and the next.
    *
-   * @param UID string for this particular test, case sensitive.
+   * @param aUUID string for this particular test, case sensitive.
    * @param aName The name of the test.
    * @param aCategory Top level test calegory. For example 'General',
    * 'Graphics', 'Startup', 'Jim's Tests'.
@@ -36,10 +36,10 @@ var PerfTest = {
    * @param aDescription A detailed description (sentence or two) of
    * what the test does.
    */
-  declareTest: function declareTest(aUID, aName, aCategory, aSubCategory, aDescription) {
-    this._uid = aUID;
+  declareTest: function declareTest(aUUID, aName, aCategory, aSubCategory, aDescription) {
+    this._uid = aUUID;
     this._print(kDeclareId, this._toJsonStr({
-      id: aUID,
+      id: aUUID,
       version: kDataSetVersion,
       name: aName,
       category: aCategory,
@@ -225,9 +225,8 @@ StopWatch.prototype = {
   },
 
   /*
-   * Returns the total time ellapsed in milliseconds. If the stopwatch
-   * has not been stopped, stops it. Returns zero if no time has been
-   * accumulated.
+   * Returns the total time ellapsed in milliseconds. Returns zero if
+   * no time has been accumulated.
    */
   time: function time() {
     if (!this._userStartTime) {
