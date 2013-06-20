@@ -27,8 +27,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef PageAllocation_h
-#define PageAllocation_h
+#ifndef yarr_PageAllocation_h
+#define yarr_PageAllocation_h
 
 #include "wtfbridge.h"
 #include "OSAllocator.h"
@@ -128,4 +128,4 @@ private:
 
 using WTF::PageAllocation;
 
-#endif // PageAllocation_h
+#endif /* yarr_PageAllocation_h */
