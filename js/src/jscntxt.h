@@ -2354,6 +2354,7 @@ class ContextAllocPolicy
     void reportAllocOverflow() const { js_ReportAllocationOverflow(cx_); }
 };
 
+/* Exposed intrinsics so that Ion may inline them. */
 JSBool intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp);
