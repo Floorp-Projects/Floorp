@@ -74,9 +74,13 @@
         <item name="android:buttonStyle">@style/Widget.Button</item>
         <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
         <item name="android:editTextStyle">@style/Widget.EditText</item>
+        <item name="android:gridViewStyle">@style/Widget.GridView</item>
         <item name="android:textViewStyle">@style/Widget.TextView</item>
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
+        <item name="bookmarkThumbnailViewStyle">@style/Widget.BookmarkThumbnailView</item>
+        <item name="topBookmarkItemViewStyle">@style/Widget.TopBookmarkItemView</item>
+        <item name="topBookmarksViewStyle">@style/Widget.TopBookmarksView</item>
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>

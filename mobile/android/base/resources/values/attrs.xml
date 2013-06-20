@@ -5,6 +5,20 @@
 
 <resources>
 
+    <!-- Theme level attributes -->
+    <declare-styleable name="Theme">
+
+        <!-- Default style for the BookmarkThumbnailView -->
+        <attr name="bookmarkThumbnailViewStyle" format="reference" />
+
+        <!-- Default style for the TopBookmarkItemView -->
+        <attr name="topBookmarkItemViewStyle" format="reference" />
+
+        <!-- Default style for the TopBookmarksView -->
+        <attr name="topBookmarksViewStyle" format="reference" />
+
+    </declare-styleable>
+
     <declare-styleable name="AboutHomeSection">
         <attr name="title" format="string"/>
         <attr name="subtitle" format="string"/>
