@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsobj_h___
-#define jsobj_h___
+#ifndef jsobj_h
+#define jsobj_h
 
 /*
  * JS object definitions.
@@ -1432,4 +1432,4 @@ CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue va
 
 }  /* namespace js */
 
-#endif /* jsobj_h___ */
+#endif /* jsobj_h */

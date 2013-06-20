@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jspubtd_h___
-#define jspubtd_h___
+#ifndef jspubtd_h
+#define jspubtd_h
 
 /*
  * JS public API typedefs.
@@ -388,4 +388,4 @@ struct PerThreadDataFriendFields
 
 } /* namespace js */
 
-#endif /* jspubtd_h___ */
+#endif /* jspubtd_h */

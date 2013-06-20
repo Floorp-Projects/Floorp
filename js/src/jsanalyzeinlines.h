@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsanalyzeinlines_h___
-#define jsanalyzeinlines_h___
+#ifndef jsanalyzeinlines_h
+#define jsanalyzeinlines_h
 
 #include "jsanalyze.h"
 
@@ -117,4 +117,4 @@ CrossScriptSSA::getValueTypes(const CrossSSAValue &cv)
 } /* namespace analyze */
 } /* namespace js */
 
-#endif // jsanalyzeinlines_h___
+#endif /* jsanalyzeinlines_h */

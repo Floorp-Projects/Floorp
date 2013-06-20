@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsstr_h___
-#define jsstr_h___
+#ifndef jsstr_h
+#define jsstr_h
 
 #include "mozilla/PodOperations.h"
 
@@ -350,4 +350,4 @@ str_split(JSContext *cx, unsigned argc, Value *vp);
 extern JSBool
 js_String(JSContext *cx, unsigned argc, js::Value *vp);
 
-#endif /* jsstr_h___ */
+#endif /* jsstr_h */

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsdhash_h___
-#define jsdhash_h___
+#ifndef jsdhash_h
+#define jsdhash_h
 
 /*
  * Double hashing, a la Knuth 6.
@@ -610,4 +610,4 @@ extern JS_PUBLIC_API(void)
 JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp);
 #endif
 
-#endif /* jsdhash_h___ */
+#endif /* jsdhash_h */

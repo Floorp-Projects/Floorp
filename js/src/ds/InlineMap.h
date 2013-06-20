@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef InlineMap_h__
-#define InlineMap_h__
+#ifndef ds_InlineMap_h
+#define ds_InlineMap_h
 
 #include "js/HashTable.h"
 
@@ -373,4 +373,4 @@ class InlineMap
 
 } /* namespace js */
 
-#endif
+#endif /* ds_InlineMap_h */
