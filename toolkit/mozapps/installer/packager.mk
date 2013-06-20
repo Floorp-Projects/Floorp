@@ -502,6 +502,7 @@ NO_PKG_FILES += \
 	ssltunnel* \
 	certutil* \
 	pk12util* \
+	OCSPStaplingServer* \
 	winEmbed.exe \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \
