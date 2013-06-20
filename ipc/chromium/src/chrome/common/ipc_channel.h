@@ -125,11 +125,21 @@ class Channel : public Message::Sender {
   class ChannelImpl;
   ChannelImpl *channel_impl_;
 
-  // The Hello message is internal to the Channel class.  It is sent
-  // by the peer when the channel is connected.  The message contains
-  // just the process id (pid).  The message has a special routing_id
-  // (MSG_ROUTING_NONE) and type (HELLO_MESSAGE_TYPE).
   enum {
+#if defined(OS_MACOSX)
+    // If the channel receives a message that contains file descriptors, then
+    // it will reply back with this message, indicating that the message has
+    // been received. The sending channel can then close any descriptors that
+    // had been marked as auto_close. This works around a sendmsg() bug on BSD
+    // where the kernel can eagerly close file descriptors that are in message
+    // queues but not yet delivered.
+    RECEIVED_FDS_MESSAGE_TYPE = kuint16max - 1,
+#endif
+
+    // The Hello message is internal to the Channel class.  It is sent
+    // by the peer when the channel is connected.  The message contains
+    // just the process id (pid).  The message has a special routing_id
+    // (MSG_ROUTING_NONE) and type (HELLO_MESSAGE_TYPE).
     HELLO_MESSAGE_TYPE = kuint16max  // Maximum value of message type (uint16_t),
                                      // to avoid conflicting with normal
                                      // message types, which are enumeration
