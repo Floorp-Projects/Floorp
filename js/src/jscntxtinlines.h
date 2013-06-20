@@ -575,6 +575,13 @@ JSContext::setCompartment(JSCompartment *comp)
     allocator_ = zone_ ? &zone_->allocator : NULL;
 }
 
+template <typename T>
+inline bool
+js::ThreadSafeContext::isInsideCurrentZone(T thing) const
+{
+    return thing->isInsideZone(zone_);
+}
+
 #ifdef JSGC_GENERATIONAL
 inline bool
 js::ThreadSafeContext::hasNursery() const
@@ -598,9 +605,18 @@ js::ThreadSafeContext::allocator()
 }
 
 inline js::AllowGC
-js::ThreadSafeContext::allowGC()
+js::ThreadSafeContext::allowGC() const
 {
-    return isJSContext() ? CanGC : NoGC;
+    switch (contextKind_) {
+      case Context_JS:
+        return CanGC;
+      case Context_ForkJoin:
+        return NoGC;
+      default:
+        /* Silence warnings. */
+        JS_NOT_REACHED("Bad context kind");
+        return NoGC;
+    }
 }
 
 #endif /* jscntxtinlines_h */

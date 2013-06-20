@@ -28,6 +28,9 @@ struct JSRuntime;
 
 namespace js {
 
+// Defined in vm/ForkJoin.cpp
+extern bool InSequentialOrExclusiveParallelSection();
+
 class FreeOp;
 
 namespace gc {
@@ -87,6 +90,7 @@ static const size_t MAX_BACKGROUND_FINALIZE_KINDS = FINALIZE_LIMIT - FINALIZE_OB
  */
 struct Cell
 {
+  public:
     inline ArenaHeader *arenaHeader() const;
     inline AllocKind tenuredGetAllocKind() const;
     MOZ_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
@@ -953,6 +957,7 @@ Cell::arenaHeader() const
 inline JSRuntime *
 Cell::runtime() const
 {
+    JS_ASSERT(InSequentialOrExclusiveParallelSection());
     return chunk()->info.runtime;
 }
 
@@ -990,6 +995,7 @@ Cell::unmark(uint32_t color) const
 Zone *
 Cell::tenuredZone() const
 {
+    JS_ASSERT(InSequentialOrExclusiveParallelSection());
     JS_ASSERT(isTenured());
     return arenaHeader()->zone;
 }

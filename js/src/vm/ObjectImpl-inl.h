@@ -355,6 +355,7 @@ js::ObjectImpl::tenuredSizeOfThis() const
 JS_ALWAYS_INLINE JS::Zone *
 js::ObjectImpl::zone() const
 {
+    JS_ASSERT(InSequentialOrExclusiveParallelSection());
     return shape_->zone();
 }
 

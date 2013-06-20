@@ -45,7 +45,7 @@ bool
 ion::ParWriteGuard(ForkJoinSlice *slice, JSObject *object)
 {
     JS_ASSERT(ForkJoinSlice::Current() == slice);
-    return !IsInsideNursery(object->runtime(), object) &&
+    return !IsInsideNursery(slice->runtime(), object) &&
            slice->allocator()->arenas.containsArena(slice->runtime(), object->arenaHeader());
 }
 

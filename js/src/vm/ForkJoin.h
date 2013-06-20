@@ -346,6 +346,7 @@ struct ForkJoinSlice : ThreadSafeContext
     // Acquire and release the JSContext from the runtime.
     JSContext *acquireContext();
     void releaseContext();
+    bool hasAcquiredContext() const;
 
     // Check the current state of parallel execution.
     static inline ForkJoinSlice *Current();
@@ -364,6 +365,8 @@ struct ForkJoinSlice : ThreadSafeContext
 #endif
 
     ForkJoinShared *const shared;
+
+    bool acquiredContext_;
 };
 
 // Locks a JSContext for its scope. Be very careful, because locking a
@@ -412,6 +415,8 @@ InParallelSection()
     return false;
 #endif
 }
+
+bool InSequentialOrExclusiveParallelSection();
 
 bool ParallelTestsShouldPass(JSContext *cx);
 

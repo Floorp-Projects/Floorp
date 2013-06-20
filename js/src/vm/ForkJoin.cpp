@@ -121,6 +121,12 @@ ParallelBailoutRecord::addTrace(JSScript *script,
 }
 
 bool
+js::InSequentialOrExclusiveParallelSection()
+{
+    return true;
+}
+
+bool
 js::ParallelTestsShouldPass(JSContext *cx)
 {
     return false;
@@ -1651,7 +1657,8 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
     sliceId(sliceId),
     numSlices(numSlices),
     bailoutRecord(bailoutRecord),
-    shared(shared)
+    shared(shared),
+    acquiredContext_(false)
 {
     /*
      * Unsafely set the zone. This is used to track malloc counters and to
@@ -1676,13 +1683,24 @@ ForkJoinSlice::runtime()
 JSContext *
 ForkJoinSlice::acquireContext()
 {
-    return shared->acquireContext();
+    JSContext *cx = shared->acquireContext();
+    JS_ASSERT(!acquiredContext_);
+    acquiredContext_ = true;
+    return cx;
 }
 
 void
 ForkJoinSlice::releaseContext()
 {
+    JS_ASSERT(acquiredContext_);
+    acquiredContext_ = false;
     return shared->releaseContext();
+}
+
+bool
+ForkJoinSlice::hasAcquiredContext() const
+{
+    return acquiredContext_;
 }
 
 bool
@@ -2125,6 +2143,12 @@ parallel::SpewBailoutIR(uint32_t bblockId, uint32_t lirId,
 }
 
 #endif // DEBUG
+
+bool
+js::InSequentialOrExclusiveParallelSection()
+{
+    return !InParallelSection() || ForkJoinSlice::Current()->hasAcquiredContext();
+}
 
 bool
 js::ParallelTestsShouldPass(JSContext *cx)
