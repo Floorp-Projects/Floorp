@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WTF_Platform_h
-#define WTF_Platform_h
+#ifndef assembler_wtf_Platform_h
+#define assembler_wtf_Platform_h
 
 /* ==== PLATFORM handles OS, operating environment, graphics API, and
    CPU. This macro will be phased out in favor of platform adaptation
@@ -1233,4 +1233,4 @@
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 #endif
 
-#endif /* WTF_Platform_h */
+#endif /* assembler_wtf_Platform_h */

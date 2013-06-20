@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_macro_assembler_x86_shared_h__
-#define jsion_macro_assembler_x86_shared_h__
+#ifndef ion_shared_MacroAssembler_x86_shared_h
+#define ion_shared_MacroAssembler_x86_shared_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -503,5 +503,4 @@ class MacroAssemblerX86Shared : public Assembler
 } // namespace ion
 } // namespace js
 
-#endif // jsion_macro_assembler_x86_shared_h__
-
+#endif /* ion_shared_MacroAssembler_x86_shared_h */

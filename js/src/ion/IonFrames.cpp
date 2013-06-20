@@ -1255,6 +1255,10 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         // Recover the number of actual arguments from the script.
         if (JSOp(*pc_) != JSOP_FUNAPPLY)
             numActualArgs_ = GET_ARGC(pc_);
+        if (JSOp(*pc_) == JSOP_FUNCALL) {
+            JS_ASSERT(GET_ARGC(pc_) > 0);
+            numActualArgs_ = GET_ARGC(pc_) - 1;
+        }
 
         JS_ASSERT(numActualArgs_ != 0xbadbad);
 

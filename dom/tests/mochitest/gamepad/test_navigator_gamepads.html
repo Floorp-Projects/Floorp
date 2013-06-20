@@ -38,6 +38,7 @@ window.addEventListener("gamepadconnected", connecthandler);
 window.addEventListener("gamepaddisconnected", disconnecthandler);
 // Add a gamepad
 var index1 = GamepadService.addGamepad("test gamepad 1", // id
+                                       SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
                                        4, // buttons
                                        2);// axes
 var index2;
@@ -53,6 +54,7 @@ function check_first_gamepad(e) {
   is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
   // Add a second gamepad, should automatically show up.
   index2 = GamepadService.addGamepad("test gamepad 2", // id
+                                     SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
                                      4, // buttons
                                      2);// axes
 }

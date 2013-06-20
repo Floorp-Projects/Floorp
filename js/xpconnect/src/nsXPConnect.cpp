@@ -725,8 +725,8 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
         ReparentWrapperIfFound(scope, scope2, newParent, aCOMObj);
 }
 
-static JSDHashOperator
-MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
+static PLDHashOperator
+MoveableWrapperFinder(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       uint32_t number, void *arg)
 {
     nsTArray<nsRefPtr<XPCWrappedNative> > *array =
@@ -737,7 +737,7 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     // we don't have to move it.
     if (!wn->IsWrapperExpired())
         array->AppendElement(wn);
-    return JS_DHASH_NEXT;
+    return PL_DHASH_NEXT;
 }
 
 /* void rescueOrphansInScope(in JSContextPtr aJSContext, in JSObjectPtr  aScope); */
@@ -958,7 +958,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
         printf("!xpc - deferring destruction of JSContext @ %p\n",
                (void *)aJSContext);
 #endif
-        ccx->SetDestroyJSContextInDestructor(true);
+        ccx->SetDestroyJSContextInDestructor();
         return NS_OK;
     }
     // else continue on and synchronously destroy the JSContext ...
@@ -1344,16 +1344,6 @@ nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObjectArg,
 
     NS_ADDREF(*aHolder = objHolder);
     return NS_OK;
-}
-
-NS_IMETHODIMP_(void)
-nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
-{
-    XPCCallContext *ccx = XPCJSRuntime::Get()->GetCallContext();
-    *aJSContext = ccx->GetJSContext();
-
-    // Set to the caller in XPC_WN_Helper_{Call,Construct}
-    *aObj = ccx->GetFlattenedJSObject();
 }
 
 namespace xpc {

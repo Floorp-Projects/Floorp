@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_lowering_h__
-#define jsion_ion_lowering_h__
+#ifndef ion_Lowering_h
+#define ion_Lowering_h
 
 // This file declares the structures that are used for attaching LIR to a
 // MIRGraph.
@@ -249,5 +249,4 @@ class LIRGenerator : public LIRGeneratorSpecific
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_lowering_h__
-
+#endif /* ion_Lowering_h */

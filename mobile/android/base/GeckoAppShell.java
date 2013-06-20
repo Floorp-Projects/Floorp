@@ -174,7 +174,9 @@ public class GeckoAppShell
     public static void callObserver(String observerKey, String topic, String data) {
         sendEventToGecko(GeckoEvent.createCallObserverEvent(observerKey, topic, data));
     }
-    public static native void removeObserver(String observerKey);
+    public static void removeObserver(String observerKey) {
+        sendEventToGecko(GeckoEvent.createRemoveObserverEvent(observerKey));
+    }
     public static native Message getNextMessageFromQueue(MessageQueue queue);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
 

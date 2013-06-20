@@ -29,8 +29,6 @@ nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
 
   mData = static_cast<nsCompositionEvent*>(mEvent)->data;
   // TODO: Native event should have locale information.
-
-  SetIsDOMBinding();
 }
 
 nsDOMCompositionEvent::~nsDOMCompositionEvent()

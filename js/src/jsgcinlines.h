@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgcinlines_h___
-#define jsgcinlines_h___
+#ifndef jsgcinlines_h
+#define jsgcinlines_h
 
 #include "jsgc.h"
 #include "jscntxt.h"
@@ -595,4 +595,4 @@ js_NewGCBaseShape(JSContext *cx)
                                                       sizeof(js::BaseShape), js::gc::TenuredHeap);
 }
 
-#endif /* jsgcinlines_h___ */
+#endif /* jsgcinlines_h */

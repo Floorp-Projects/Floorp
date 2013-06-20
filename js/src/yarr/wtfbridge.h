@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jswtfbridge_h__
-#define jswtfbridge_h__
+#ifndef yarr_wtfbridge_h
+#define yarr_wtfbridge_h
 
 /*
  * WTF compatibility layer. This file provides various type and data
@@ -334,4 +334,4 @@ const size_t notFound = size_t(-1);
 
 #define JS_EXPORT_PRIVATE
 
-#endif
+#endif /* yarr_wtfbridge_h */

@@ -241,6 +241,7 @@ FENNEC_JAVA_FILES = \
   widget/ActivityChooserModel.java \
   widget/AddonsSection.java \
   widget/ButtonToast.java \
+  widget/ArrowPopup.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
@@ -440,6 +441,7 @@ endif
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/abouthome_content.xml \
+  res/layout/arrow_popup.xml \
   res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
@@ -457,7 +459,6 @@ RES_LAYOUT = \
   res/layout/bookmark_edit.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
-  res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
   res/layout/doorhanger_button.xml \
   res/layout/find_in_page_content.xml \
@@ -476,7 +477,7 @@ RES_LAYOUT = \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
-  res/layout/site_identity_popup.xml \
+  res/layout/site_identity.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_panel.xml \
@@ -615,6 +616,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/alert_camera.png \
   res/drawable-mdpi/alert_mic.png \
   res/drawable-mdpi/alert_mic_camera.png \
+  res/drawable-mdpi/arrow_popup_bg.9.png \
   res/drawable-mdpi/autocomplete_list_bg.9.png \
   res/drawable-mdpi/awesomebar_tab_center.9.png \
   res/drawable-mdpi/awesomebar_tab_left.9.png \
@@ -672,7 +674,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/address_bar_url_default_pb.9.png \
   res/drawable-mdpi/address_bar_url_pressed.9.png \
   res/drawable-mdpi/address_bar_url_pressed_pb.9.png \
-  res/drawable-mdpi/doorhanger_popup_bg.9.png \
   res/drawable-mdpi/find_close.png \
   res/drawable-mdpi/find_next.png \
   res/drawable-mdpi/find_prev.png \
@@ -738,6 +739,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_camera.png \
   res/drawable-hdpi/alert_mic.png \
   res/drawable-hdpi/alert_mic_camera.png \
+  res/drawable-hdpi/arrow_popup_bg.9.png \
   res/drawable-hdpi/awesomebar_tab_center.9.png \
   res/drawable-hdpi/awesomebar_tab_left.9.png \
   res/drawable-hdpi/awesomebar_tab_right.9.png \
@@ -776,7 +778,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/address_bar_url_default_pb.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
   res/drawable-hdpi/address_bar_url_pressed_pb.9.png \
-  res/drawable-hdpi/doorhanger_popup_bg.9.png \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
   res/drawable-hdpi/find_prev.png \
@@ -834,6 +835,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_camera.png \
   res/drawable-xhdpi/alert_mic.png \
   res/drawable-xhdpi/alert_mic_camera.png \
+  res/drawable-xhdpi/arrow_popup_bg.9.png \
   res/drawable-xhdpi/awesomebar_tab_center.9.png \
   res/drawable-xhdpi/awesomebar_tab_left.9.png \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
@@ -865,7 +867,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_count.png \
   res/drawable-xhdpi/tabs_count_foreground.png \
-  res/drawable-xhdpi/doorhanger_popup_bg.9.png \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
   res/drawable-xhdpi/find_prev.png \
@@ -988,21 +989,21 @@ RES_DRAWABLE_XHDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
-  res/drawable-large-mdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-large-mdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
   res/drawable-large-mdpi-v11/menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
-  res/drawable-large-hdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-large-hdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
   res/drawable-large-hdpi-v11/menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
-  res/drawable-large-xhdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-large-xhdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
   res/drawable-large-xhdpi-v11/menu.png \
@@ -1221,7 +1222,7 @@ jars:
 	$(NSINSTALL) -D jars
 
 $(AIDL_AUTOGEN_FILES): %.java: %.aidl
-	$(ANDROID_PLATFORM_TOOLS)/aidl -I$(srcdir)/braille $<
+	$(AIDL) -I$(srcdir)/braille $<
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \

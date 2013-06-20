@@ -6,8 +6,8 @@
 
 /* JS script descriptor. */
 
-#ifndef jsscript_h___
-#define jsscript_h___
+#ifndef jsscript_h
+#define jsscript_h
 
 #include "mozilla/PodOperations.h"
 
@@ -1490,4 +1490,4 @@ XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosi
 
 } /* namespace js */
 
-#endif /* jsscript_h___ */
+#endif /* jsscript_h */

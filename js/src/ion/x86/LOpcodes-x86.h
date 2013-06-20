@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_opcodes_x86_h__
-#define jsion_lir_opcodes_x86_h__
+#ifndef ion_x86_LOpcodes_x86_h
+#define ion_x86_LOpcodes_x86_h
 
 #define LIR_CPU_OPCODE_LIST(_)  \
     _(Unbox)                    \
@@ -21,5 +21,4 @@
     _(AsmJSLoadFuncPtr)         \
     _(AsmJSDivOrMod)
 
-#endif // jsion_lir_opcodes_x86_h__
-
+#endif /* ion_x86_LOpcodes_x86_h */

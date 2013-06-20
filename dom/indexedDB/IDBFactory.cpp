@@ -526,14 +526,14 @@ IDBFactory::OpenInternal(const nsAString& aName,
                          int64_t aVersion,
                          const nsACString& aASCIIOrigin,
                          bool aDeleting,
-                         JSContext* aCallingCx,
                          IDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
 
+  AutoJSContext cx;
   nsCOMPtr<nsPIDOMWindow> window;
-  JS::Rooted<JSObject*> scriptOwner(aCallingCx);
+  JS::Rooted<JSObject*> scriptOwner(cx);
   StoragePrivilege privilege;
 
   if (mWindow) {
@@ -548,7 +548,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
   }
 
   nsRefPtr<IDBOpenDBRequest> request =
-    IDBOpenDBRequest::Create(this, window, scriptOwner, aCallingCx);
+    IDBOpenDBRequest::Create(this, window, scriptOwner);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv;
@@ -646,7 +646,7 @@ IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
 }
 
 already_AddRefed<nsIIDBOpenDBRequest>
-IDBFactory::OpenForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
+IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
                              const NonNull<nsAString>& aName,
                              const Optional<uint64_t>& aVersion,
                              ErrorResult& aRv)
@@ -656,11 +656,11 @@ IDBFactory::OpenForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
     MOZ_CRASH();
   }
 
-  return Open(aCx, aPrincipal, aName, aVersion, false, aRv);
+  return Open(aPrincipal, aName, aVersion, false, aRv);
 }
 
 already_AddRefed<nsIIDBOpenDBRequest>
-IDBFactory::DeleteForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
+IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
                                const NonNull<nsAString>& aName,
                                ErrorResult& aRv)
 {
@@ -669,11 +669,11 @@ IDBFactory::DeleteForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
     MOZ_CRASH();
   }
 
-  return Open(aCx, aPrincipal, aName, Optional<uint64_t>(), true, aRv);
+  return Open(aPrincipal, aName, Optional<uint64_t>(), true, aRv);
 }
 
 already_AddRefed<nsIIDBOpenDBRequest>
-IDBFactory::Open(JSContext* aCx, nsIPrincipal* aPrincipal,
+IDBFactory::Open(nsIPrincipal* aPrincipal,
                  const nsAString& aName, const Optional<uint64_t>& aVersion,
                  bool aDelete, ErrorResult& aRv)
 {
@@ -704,7 +704,7 @@ IDBFactory::Open(JSContext* aCx, nsIPrincipal* aPrincipal,
   }
 
   nsRefPtr<IDBOpenDBRequest> request;
-  rv = OpenInternal(aName, version, origin, aDelete, aCx,
+  rv = OpenInternal(aName, version, origin, aDelete,
                     getter_AddRefs(request));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

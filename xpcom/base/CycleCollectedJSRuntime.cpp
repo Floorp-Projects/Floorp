@@ -922,6 +922,7 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
 {
   JSContext* iter = nullptr;
   JSContext* cx;
+  JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
   while ((cx = JS_ContextIterator(mJSRuntime, &iter))) {
     // Skip anything without an nsIScriptContext, as well as any scx whose
     // NativeGlobal() is not an outer window (this happens with XUL Prototype
