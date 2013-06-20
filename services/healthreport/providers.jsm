@@ -842,13 +842,6 @@ AddonsProvider.prototype = Object.freeze({
         continue;
       }
 
-      let optOutPref = "extensions." + addon.id + ".getAddons.cache.enabled";
-      if (!this._prefs.get(optOutPref, true)) {
-        this._log.debug("Ignoring add-on that's opted out of AMO updates: " +
-                        addon.id);
-        continue;
-      }
-
       let obj = {};
       for (let field of this.COPY_FIELDS) {
         obj[field] = addon[field];
