@@ -167,7 +167,10 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
   nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntPoint scrollOffset =
     aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel);
-  LayerIntPoint metricsScrollOffset = RoundedToInt(aMetrics->GetScrollOffsetInLayerPixels());
+  // metricsScrollOffset is in layer coordinates.
+  gfx::Point metricsScrollOffset = aMetrics->GetScrollOffsetInLayerPixels();
+  nsIntPoint roundedMetricsScrollOffset =
+    nsIntPoint(NS_lround(metricsScrollOffset.x), NS_lround(metricsScrollOffset.y));
 
   if (aRootFrameLoader->AsyncScrollEnabled() && !aMetrics->mDisplayPort.IsEmpty()) {
     // Only use asynchronous scrolling if it is enabled and there is a
@@ -175,8 +178,8 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
     // synchronously scrolled for identifying a scroll area before it is
     // being actively scrolled.
     nsIntPoint scrollCompensation(
-      (scrollOffset.x / aTempScaleX - metricsScrollOffset.x),
-      (scrollOffset.y / aTempScaleY - metricsScrollOffset.y));
+      (scrollOffset.x / aTempScaleX - roundedMetricsScrollOffset.x),
+      (scrollOffset.y / aTempScaleY - roundedMetricsScrollOffset.y));
 
     return ViewTransform(-scrollCompensation, aConfig.mXScale, aConfig.mYScale);
   } else {
@@ -368,7 +371,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   if (metrics.IsScrollable()) {
     nscoord auPerDevPixel = aFrameLoader->GetPrimaryFrameOfOwningContent()
                                         ->PresContext()->AppUnitsPerDevPixel();
-    nscoord auPerCSSPixel = auPerDevPixel * metrics.mDevPixelsPerCSSPixel.scale;
+    nscoord auPerCSSPixel = auPerDevPixel * metrics.mDevPixelsPerCSSPixel;
     nsContentView* view = FindViewForId(oldContentViews, scrollId);
     if (view) {
       // View already exists. Be sure to propagate scales for any values

@@ -905,7 +905,7 @@ AndroidProgressiveUpdateData::Init(jobject jobj)
 }
 
 void
-AndroidGeckoLayerClient::SetFirstPaintViewport(const LayerIntPoint& aOffset, const CSSToLayerScale& aZoom, const CSSRect& aCssPageRect)
+AndroidGeckoLayerClient::SetFirstPaintViewport(const LayerIntPoint& aOffset, float aZoom, const CSSRect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -913,7 +913,7 @@ AndroidGeckoLayerClient::SetFirstPaintViewport(const LayerIntPoint& aOffset, con
         return;
 
     AutoLocalJNIFrame jniFrame(env, 0);
-    return env->CallVoidMethod(wrapped_obj, jSetFirstPaintViewport, (float)aOffset.x, (float)aOffset.y, aZoom.scale,
+    return env->CallVoidMethod(wrapped_obj, jSetFirstPaintViewport, (float)aOffset.x, (float)aOffset.y, aZoom,
                                aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost());
 }
 
@@ -931,8 +931,8 @@ AndroidGeckoLayerClient::SetPageRect(const CSSRect& aCssPageRect)
 }
 
 void
-AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                                          bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
+AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                                          ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                                           gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
@@ -945,7 +945,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, cons
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncViewportInfoMethod,
                                                       aDisplayPort.x, aDisplayPort.y,
                                                       aDisplayPort.width, aDisplayPort.height,
-                                                      aDisplayResolution.scale, aLayersUpdated);
+                                                      aDisplayResolution, aLayersUpdated);
     if (jniFrame.CheckForException())
         return;
 
@@ -955,7 +955,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, cons
     viewTransform.Init(viewTransformJObj);
 
     aScrollOffset = ScreenPoint(viewTransform.GetX(env), viewTransform.GetY(env));
-    aScale.scale = viewTransform.GetScale(env);
+    aScaleX = aScaleY = viewTransform.GetScale(env);
     viewTransform.GetFixedLayerMargins(env, aFixedLayerMargins);
 
     aOffset.x = viewTransform.GetOffsetX(env);
@@ -964,7 +964,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, cons
 
 void
 AndroidGeckoLayerClient::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
-                                          bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
+                                          bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
                                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     NS_ASSERTION(!isNull(), "SyncFrameMetrics called on null layer client!");
@@ -975,14 +975,14 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const ScreenPoint& aScrollOffset, floa
     AutoLocalJNIFrame jniFrame(env);
 
     // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
-    LayerRect dpUnrounded = aDisplayPort * aDisplayResolution;
+    LayerRect dpUnrounded = aDisplayPort * CSSToLayerScale(aDisplayResolution);
     dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset.ToUnknownPoint());
     LayerIntRect dp = gfx::RoundedToInt(dpUnrounded);
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncFrameMetricsMethod,
             aScrollOffset.x, aScrollOffset.y, aZoom,
             aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost(),
-            aLayersUpdated, dp.x, dp.y, dp.width, dp.height, aDisplayResolution.scale,
+            aLayersUpdated, dp.x, dp.y, dp.width, dp.height, aDisplayResolution,
             aIsFirstPaint);
 
     if (jniFrame.CheckForException())

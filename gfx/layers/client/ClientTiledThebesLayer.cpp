@@ -57,9 +57,8 @@ ClientTiledThebesLayer::BeginPaint()
 
   // Compute the critical display port in layer space.
   mPaintData.mLayerCriticalDisplayPort.SetEmpty();
-  const FrameMetrics& metrics = GetParent()->GetFrameMetrics();
   const gfx::Rect& criticalDisplayPort =
-    (metrics.mCriticalDisplayPort * metrics.mDevPixelsPerCSSPixel).ToUnknownRect();
+    GetParent()->GetFrameMetrics().mCriticalDisplayPort.ToUnknownRect();
   if (!criticalDisplayPort.IsEmpty()) {
     gfxRect transformedCriticalDisplayPort =
       mPaintData.mTransformScreenToLayer.TransformBounds(
@@ -76,8 +75,8 @@ ClientTiledThebesLayer::BeginPaint()
   mPaintData.mResolution.SizeTo(1, 1);
   for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
     const FrameMetrics& metrics = parent->GetFrameMetrics();
-    mPaintData.mResolution.width *= metrics.mResolution.scale;
-    mPaintData.mResolution.height *= metrics.mResolution.scale;
+    mPaintData.mResolution.width *= metrics.mResolution.width;
+    mPaintData.mResolution.height *= metrics.mResolution.height;
   }
 
   // Calculate the scroll offset since the last transaction, and the

@@ -318,7 +318,7 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
 
   CSSRect cssContentRect = metrics.mScrollableRect;
 
-  CSSToScreenScale scale(metrics.mZoom.scale * aScale);
+  CSSToScreenScale scale(metrics.mZoom.width * aScale);
   CSSIntRect cssCompositionBounds = RoundedIn(metrics.mCompositionBounds / scale);
 
   return GetRectLength(cssContentRect) < GetRectLength(CSSRect(cssCompositionBounds));
