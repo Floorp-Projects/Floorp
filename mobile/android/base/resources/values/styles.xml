@@ -18,6 +18,8 @@
 
     <style name="Widget.BaseListLiew" parent="android:style/Widget.ListView"/>
 
+    <style name="Widget.BaseGridView" parent="android:style/Widget.GridView"/>
+
     <style name="Widget.BaseTextView" parent="android:style/Widget.TextView"/>
 
     <!--
@@ -49,6 +51,13 @@
 
     <style name="Widget.ExpandableListView" parent="Widget.ListView">
         <item name="android:groupIndicator">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.GridView" parent="Widget.BaseGridView">
+        <item name="android:verticalSpacing">0dip</item>
+        <item name="android:horizontalSpacing">0dip</item>
+        <item name="android:cacheColorHint">@android:color/transparent</item>
+        <item name="android:listSelector">@drawable/action_bar_button</item>
     </style>
 
     <style name="Widget.ListItem">
@@ -86,6 +95,37 @@
         <item name="android:paddingLeft">10dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
+    </style>
+
+    <style name="Widget.TopBookmarksView" parent="Widget.GridView">
+        <item name="android:padding">7dp</item>
+    </style>
+
+    <style name="Widget.TopBookmarkItemView">
+      <item name="android:layout_width">fill_parent</item>
+      <item name="android:layout_height">fill_parent</item>
+      <item name="android:padding">5dip</item>
+      <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget.BookmarkThumbnailView">
+      <item name="android:padding">0dip</item>
+      <item name="android:scaleType">center</item>
+    </style>
+
+    <style name="Widget.TopBookmarkItemPin">
+      <item name="android:minWidth">30dip</item>
+      <item name="android:minHeight">30dip</item>
+      <item name="android:padding">0dip</item>
+    </style>
+
+    <style name="Widget.TopBookmarkItemTitle">
+      <item name="android:textColor">@color/top_bookmark_item_title</item>
+      <item name="android:textSize">12sp</item>
+      <item name="android:singleLine">true</item>
+      <item name="android:ellipsize">none</item>
+      <item name="android:paddingTop">5dip</item>
+      <item name="android:gravity">left</item>
     </style>
 
     <!--

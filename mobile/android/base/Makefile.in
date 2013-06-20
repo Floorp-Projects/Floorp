@@ -216,11 +216,14 @@ FENNEC_JAVA_FILES = \
   home/BookmarksListView.java \
   home/BookmarksPage.java \
   home/BookmarkFolderView.java \
+  home/BookmarkThumbnailView.java \
   home/HomeFragment.java \
   home/HomeListView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
   home/FadedTextView.java \
+  home/TopBookmarkItemView.java \
+  home/TopBookmarksView.java \
   home/TwoLinePageRow.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \
@@ -464,6 +467,7 @@ RES_LAYOUT = \
   res/layout/tabs_item_cell.xml \
   res/layout/tabs_item_row.xml \
   res/layout/text_selection_handles.xml \
+  res/layout/top_bookmark_item_view.xml \
   res/layout/two_line_page_row.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
@@ -982,6 +986,7 @@ RES_COLOR = \
   res/color/select_item_multichoice.xml \
   res/color/tertiary_text.xml \
   res/color/tertiary_text_inverse.xml \
+  res/color/top_bookmark_item_title.xml \
   res/color/url_bar_title.xml \
   res/color/url_bar_title_hint.xml \
   $(NULL)
