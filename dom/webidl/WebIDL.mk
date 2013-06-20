@@ -441,6 +441,7 @@ webidl_files += \
   DeviceStorageChangeEvent.webidl \
   PopupBlockedEvent.webidl \
   BlobEvent.webidl \
+  RecordErrorEvent.webidl \
   $(NULL)
 
 ifdef MOZ_B2G_BT
