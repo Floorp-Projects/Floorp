@@ -6,17 +6,17 @@
 
 TEST_DIRS += ['tests']
 
-XPIDL_MODULE = 'dom_promise'
+XPIDL_MODULE = 'dom_future'
 
 MODULE = 'dom'
 
 EXPORTS.mozilla.dom += [
-    'Promise.h',
-    'PromiseResolver.h',
+    'Future.h',
+    'FutureResolver.h',
 ]
 
 CPP_SOURCES += [
-    'Promise.cpp',
-    'PromiseResolver.cpp',
-    'PromiseCallback.cpp',
+    'Future.cpp',
+    'FutureResolver.cpp',
+    'FutureCallback.cpp',
 ]
