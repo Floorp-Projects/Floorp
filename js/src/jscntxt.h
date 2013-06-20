@@ -2363,6 +2363,7 @@ JSBool intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+JSBool intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);
 
 JSBool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
