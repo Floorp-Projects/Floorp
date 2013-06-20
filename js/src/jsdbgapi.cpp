@@ -1336,8 +1336,6 @@ JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
                                            const char *filename, unsigned lineno,
                                            MutableHandleValue rval)
 {
-    SkipRoot skipChars(cx, &chars);
-
     if (!CheckDebugMode(cx))
         return false;
 
