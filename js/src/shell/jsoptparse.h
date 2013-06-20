@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsoptparse_h__
-#define jsoptparse_h__
+#ifndef shell_jsoptparse_h
+#define shell_jsoptparse_h
 
 #include <stdio.h>
 
@@ -291,4 +291,4 @@ class OptionParser
 } /* namespace cli */
 } /* namespace js */
 
-#endif /* jsoptparse_h__ */
+#endif /* shell_jsoptparse_h */

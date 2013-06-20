@@ -6,8 +6,8 @@
 
 /* JS execution context. */
 
-#ifndef jscntxt_h___
-#define jscntxt_h___
+#ifndef jscntxt_h
+#define jscntxt_h
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/PodOperations.h"
@@ -2380,4 +2380,4 @@ JSBool intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp);
 #pragma warning(pop)
 #endif
 
-#endif /* jscntxt_h___ */
+#endif /* jscntxt_h */
