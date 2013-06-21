@@ -916,7 +916,6 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
   // any work to do.
   if (aFinalUpdate ||
       !mUpdateRunnables.IsEmpty() ||
-      !mCurrentTaskMessageQueue.IsEmpty() ||
       !mStreamUpdates.IsEmpty()) {
     EnsureStableStateEventPosted();
   }
