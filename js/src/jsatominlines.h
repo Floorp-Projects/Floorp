@@ -42,26 +42,6 @@ AtomToId(JSAtom *atom)
 }
 
 template <AllowGC allowGC>
-inline JSAtom *
-ToAtom(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v)
-{
-    if (!v.isString()) {
-        JSString *str = js::ToStringSlow<allowGC>(cx, v);
-        if (!str)
-            return NULL;
-        JS::Anchor<JSString *> anchor(str);
-        return AtomizeString<allowGC>(cx, str);
-    }
-
-    JSString *str = v.toString();
-    if (str->isAtom())
-        return &str->asAtom();
-
-    JS::Anchor<JSString *> anchor(str);
-    return AtomizeString<allowGC>(cx, str);
-}
-
-template <AllowGC allowGC>
 inline bool
 ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
           typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
