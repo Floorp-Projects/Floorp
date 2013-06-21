@@ -2436,7 +2436,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     let labels = [
       "configurable", "enumerable", "writable",
-      "frozen", "sealed", "extensible", "native-getter"];
+      "frozen", "sealed", "extensible", "WebIDL"];
 
     for (let label of labels) {
       let labelElement = this.document.createElement("label");
