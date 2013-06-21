@@ -346,15 +346,19 @@ TabChild::Observe(nsISupports *aSubject,
         // Calculate a really simple resolution that we probably won't
         // be keeping, as well as putting the scroll offset back to
         // the top-left of the page.
-        mLastMetrics.mZoom = gfxSize(1.0, 1.0);
+        mLastMetrics.mZoom = ScreenToScreenScale(1.0);
         mLastMetrics.mViewport = CSSRect(CSSPoint(), kDefaultViewportSize);
         mLastMetrics.mCompositionBounds = ScreenIntRect(ScreenIntPoint(), mInnerSize);
         CSSToScreenScale resolution =
           AsyncPanZoomController::CalculateResolution(mLastMetrics);
-        mLastMetrics.mResolution = gfxSize(resolution.scale, resolution.scale);
+        // We use ScreenToLayerScale(1) below in order to ask gecko to render
+        // what's currently visible on the screen. This is effectively turning
+        // the async zoom amount into the gecko zoom amount.
+        mLastMetrics.mResolution =
+          resolution / mLastMetrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
         mLastMetrics.mScrollOffset = CSSPoint(0, 0);
-        utils->SetResolution(mLastMetrics.mResolution.width,
-                             mLastMetrics.mResolution.height);
+        utils->SetResolution(mLastMetrics.mResolution.scale,
+                             mLastMetrics.mResolution.scale);
 
         HandlePossibleViewportChange();
       }
@@ -597,13 +601,13 @@ TabChild::HandlePossibleViewportChange()
   nsresult rv = utils->GetIsFirstPaint(&isFirstPaint);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv) || isFirstPaint) {
-    gfxSize intrinsicScale =
+    CSSToScreenScale intrinsicScale =
         AsyncPanZoomController::CalculateIntrinsicScale(metrics);
     // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
     // 0.0 to mean "did not calculate a zoom".  In that case, we default
     // it to the intrinsic scale.
     if (viewportInfo.GetDefaultZoom() < 0.01f) {
-      viewportInfo.SetDefaultZoom(intrinsicScale.width);
+      viewportInfo.SetDefaultZoom(intrinsicScale.scale);
     }
 
     double defaultZoom = viewportInfo.GetDefaultZoom();
@@ -611,8 +615,7 @@ TabChild::HandlePossibleViewportChange()
                defaultZoom <= viewportInfo.GetMaxZoom());
     // GetViewportInfo() returns a resolution-dependent scale factor.
     // Convert that to a resolution-indepedent zoom.
-    metrics.mZoom = gfxSize(defaultZoom / intrinsicScale.width,
-                            defaultZoom / intrinsicScale.height);
+    metrics.mZoom = ScreenToScreenScale(defaultZoom / intrinsicScale.scale);
   }
 
   metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
@@ -621,9 +624,8 @@ TabChild::HandlePossibleViewportChange()
     // we have no idea how long painting will take.
     metrics, gfx::Point(0.0f, 0.0f), gfx::Point(0.0f, 0.0f), 0.0);
   CSSToScreenScale resolution = AsyncPanZoomController::CalculateResolution(metrics);
-  metrics.mResolution = gfxSize(resolution.scale / metrics.mDevPixelsPerCSSPixel,
-                                resolution.scale / metrics.mDevPixelsPerCSSPixel);
-  utils->SetResolution(metrics.mResolution.width, metrics.mResolution.height);
+  metrics.mResolution = resolution / metrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
+  utils->SetResolution(metrics.mResolution.scale, metrics.mResolution.scale);
 
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.

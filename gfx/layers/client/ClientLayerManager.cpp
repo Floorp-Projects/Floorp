@@ -408,8 +408,8 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
     // This is derived from the code in
     // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
     const gfx3DMatrix& rootTransform = GetRoot()->GetTransform();
-    CSSToLayerScale paintScale(metrics.mDevPixelsPerCSSPixel / rootTransform.GetXScale(),
-                               metrics.mDevPixelsPerCSSPixel / rootTransform.GetYScale());
+    CSSToLayerScale paintScale = metrics.mDevPixelsPerCSSPixel
+        / LayerToLayoutDeviceScale(rootTransform.GetXScale(), rootTransform.GetYScale());
     const CSSRect& metricsDisplayPort =
       (aDrawingCritical && !metrics.mCriticalDisplayPort.IsEmpty()) ?
         metrics.mCriticalDisplayPort : metrics.mDisplayPort;
