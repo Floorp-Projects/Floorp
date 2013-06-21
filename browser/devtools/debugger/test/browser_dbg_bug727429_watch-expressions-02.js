@@ -62,9 +62,9 @@ function test()
 
   function performTest()
   {
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
+    is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 27,
+    is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 27,
       "There should be 27 visible nodes in the watch expressions container");
 
     test1(function() {
@@ -90,9 +90,9 @@ function test()
 
   function finishTest()
   {
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
+    is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 27,
+    is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 27,
       "There should be 27 visible nodes in the watch expressions container");
 
     closeDebuggerAndFinish();
@@ -253,9 +253,9 @@ function test()
                                  expected_arguments,
                                  total)
   {
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, total,
+    is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, total,
       "There should be " + total + " hidden nodes in the watch expressions container");
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+    is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
       "There should be 0 visible nodes in the watch expressions container");
 
     let label = gDebugger.L10N.getStr("watchExpressionsScopeLabel");

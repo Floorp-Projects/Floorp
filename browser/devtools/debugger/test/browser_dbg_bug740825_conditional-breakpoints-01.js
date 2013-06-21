@@ -144,9 +144,9 @@ function test()
       is(gSources._conditionalPopupVisible, false,
         "The breakpoint conditional expression popup should not be shown.");
 
-      is(gDebugger.DebuggerView.StackFrames._container._list.querySelectorAll(".dbg-stackframe").length, 0,
+      is(gDebugger.DebuggerView.StackFrames.widget._list.querySelectorAll(".dbg-stackframe").length, 0,
         "There should be no visible stackframes.");
-      is(gDebugger.DebuggerView.Sources._container._list.querySelectorAll(".dbg-breakpoint").length, 13,
+      is(gDebugger.DebuggerView.Sources.widget._list.querySelectorAll(".dbg-breakpoint").length, 13,
         "There should be thirteen visible breakpoints.");
 
       testReload();
@@ -351,7 +351,7 @@ function test()
         window.clearInterval(intervalID);
         return closeDebuggerAndFinish();
       }
-      if (gSources._container._list.querySelectorAll(".dbg-breakpoint").length != total) {
+      if (gSources.widget._list.querySelectorAll(".dbg-breakpoint").length != total) {
         return;
       }
       // We got all the breakpoints, it's safe to callback.

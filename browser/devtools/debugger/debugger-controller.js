@@ -1561,9 +1561,6 @@ DebuggerController.Breakpoints = new Breakpoints();
  * Export some properties to the global scope for easier access.
  */
 Object.defineProperties(window, {
-  "create": {
-    get: function() ViewHelpers.create,
-  },
   "dispatchEvent": {
     get: function() ViewHelpers.dispatchEvent,
   },

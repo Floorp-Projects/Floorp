@@ -100,7 +100,7 @@ function test()
 
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch._container._parent,
+      gWatch.widget._parent,
       gDebugger);
 
     is(gWatch.getAllStrings().length, 1,
@@ -159,12 +159,10 @@ function test()
     is(gWatch.getItemForElement(element), gWatch.getItemAtIndex(index),
       "The correct watch expression item was accessed");
 
-    ok(gWatch.getItemAtIndex(index) instanceof gDebugger.MenuItem,
+    ok(gWatch.widget.getItemAtIndex(index) instanceof XULElement,
       "The correct watch expression element was accessed (1)");
-    ok(gWatch._container.getItemAtIndex(index) instanceof XULElement,
+    is(element, gWatch.widget.getItemAtIndex(index),
       "The correct watch expression element was accessed (2)");
-    is(element, gWatch._container.getItemAtIndex(index),
-      "The correct watch expression element was accessed (3)");
 
     is(gWatch.getItemForElement(element).attachment.arrowNode.hidden, false,
       "The arrow node should be visible");
