@@ -123,6 +123,23 @@ gfxPattern::GetMatrix() const
     cairo_pattern_get_matrix(mPattern, &mat);
     return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
   } else {
+    // invert at the higher precision of gfxMatrix
+    // cause we need to convert at some point anyways
+    gfxMatrix mat = ThebesMatrix(mTransform);
+    mat.Invert();
+    return mat;
+  }
+}
+
+gfxMatrix
+gfxPattern::GetInverseMatrix() const
+{
+  if (mPattern) {
+    cairo_matrix_t mat;
+    cairo_pattern_get_matrix(mPattern, &mat);
+    cairo_matrix_invert(&mat);
+    return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
+  } else {
     return ThebesMatrix(mTransform);
   }
 }
