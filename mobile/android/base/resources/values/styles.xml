@@ -110,7 +110,7 @@
 
     <style name="Widget.BookmarkThumbnailView">
       <item name="android:padding">0dip</item>
-      <item name="android:scaleType">center</item>
+      <item name="android:scaleType">centerCrop</item>
     </style>
 
     <style name="Widget.TopBookmarkItemPin">
