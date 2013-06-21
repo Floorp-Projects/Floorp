@@ -853,10 +853,10 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
          */
         for (unsigned i = pn->pn_cookie.level(); i; i--) {
             skippedScopes += ClonedBlockDepth(bceOfDef);
-            JSFunction *funOfDef = bceOfDef->sc->asFunctionBox()->function();
-            if (funOfDef->isHeavyweight()) {
+            FunctionBox *funbox = bceOfDef->sc->asFunctionBox();
+            if (funbox->isHeavyweight()) {
                 skippedScopes++;
-                if (funOfDef->isNamedLambda())
+                if (funbox->function()->isNamedLambda())
                     skippedScopes++;
             }
             bceOfDef = bceOfDef->parent;
@@ -1136,7 +1136,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
             return false;
         if (funbox->function()->isNamedLambda() && funbox->function()->atom() == pn->pn_atom)
             return false;
-        if (funbox->function()->isHeavyweight()) {
+        if (funbox->isHeavyweight()) {
             hops++;
             if (funbox->function()->isNamedLambda())
                 hops++;
@@ -1389,7 +1389,7 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (dn->pn_cookie.level() != bce->script->staticLevel)
             return true;
 
-        RootedFunction fun(cx, bce->sc->asFunctionBox()->function());
+        DebugOnly<JSFunction *> fun = bce->sc->asFunctionBox()->function();
         JS_ASSERT(fun->isLambda());
         JS_ASSERT(pn->pn_atom == fun->atom());
 
@@ -1417,7 +1417,7 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * heavyweight, ensuring that the function name is represented in
          * the scope chain so that assignment will throw a TypeError.
          */
-        if (!fun->isHeavyweight()) {
+        if (!bce->sc->asFunctionBox()->isHeavyweight()) {
             op = JSOP_CALLEE;
             pn->pn_dflags |= PND_CONST;
         }
@@ -2624,7 +2624,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->isFunctionBox() || bce->sc->asFunctionBox()->function()->isHeavyweight()))
+        (!bce->sc->isFunctionBox() || bce->sc->asFunctionBox()->isHeavyweight()))
     {
         bce->switchToProlog();
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))

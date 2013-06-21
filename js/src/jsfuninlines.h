@@ -223,6 +223,20 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
 
 } /* namespace js */
 
+inline bool
+JSFunction::isHeavyweight() const
+{
+    JS_ASSERT(!isInterpretedLazy());
+
+    if (isNative())
+        return false;
+
+    // Note: this should be kept in sync with FunctionBox::isHeavyweight().
+    return nonLazyScript()->bindings.hasAnyAliasedBindings() ||
+           nonLazyScript()->funHasExtensibleScope ||
+           nonLazyScript()->funNeedsDeclEnvObject;
+}
+
 inline JSScript *
 JSFunction::existingScript()
 {
@@ -238,10 +252,6 @@ JSFunction::existingScript()
         flags &= ~INTERPRETED_LAZY;
         flags |= INTERPRETED;
         initScript(script);
-
-        if (script->function()->isHeavyweight())
-            setIsHeavyweight();
-        nargs = script->function()->nargs;
     }
     JS_ASSERT(hasScript());
     return u.i.s.script_;

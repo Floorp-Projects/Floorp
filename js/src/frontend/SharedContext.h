@@ -74,11 +74,11 @@ class FunctionContextFlags
     friend class FunctionBox;
 
     // We parsed a yield statement in the function.
-    bool            isGenerator:1;
+    bool isGenerator:1;
 
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
-    bool            mightAliasLocals:1;
+    bool mightAliasLocals:1;
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -87,7 +87,11 @@ class FunctionContextFlags
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    bool            hasExtensibleScope:1;
+    bool hasExtensibleScope:1;
+
+    // This function refers directly to its name in a way which requires the
+    // name to be a separate object on the scope chain.
+    bool needsDeclEnvObject:1;
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -110,7 +114,7 @@ class FunctionContextFlags
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    bool            argumentsHasLocalBinding:1;
+    bool argumentsHasLocalBinding:1;
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -121,13 +125,14 @@ class FunctionContextFlags
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    bool            definitelyNeedsArgsObj:1;
+    bool definitelyNeedsArgsObj:1;
 
   public:
     FunctionContextFlags()
      :  isGenerator(false),
         mightAliasLocals(false),
         hasExtensibleScope(false),
+        needsDeclEnvObject(false),
         argumentsHasLocalBinding(false),
         definitelyNeedsArgsObj(false)
     { }
@@ -226,12 +231,14 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool isGenerator()              const { return funCxFlags.isGenerator; }
     bool mightAliasLocals()         const { return funCxFlags.mightAliasLocals; }
     bool hasExtensibleScope()       const { return funCxFlags.hasExtensibleScope; }
+    bool needsDeclEnvObject()       const { return funCxFlags.needsDeclEnvObject; }
     bool argumentsHasLocalBinding() const { return funCxFlags.argumentsHasLocalBinding; }
     bool definitelyNeedsArgsObj()   const { return funCxFlags.definitelyNeedsArgsObj; }
 
     void setIsGenerator()                  { funCxFlags.isGenerator              = true; }
     void setMightAliasLocals()             { funCxFlags.mightAliasLocals         = true; }
     void setHasExtensibleScope()           { funCxFlags.hasExtensibleScope       = true; }
+    void setNeedsDeclEnvObject()           { funCxFlags.needsDeclEnvObject       = true; }
     void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }
     void setDefinitelyNeedsArgsObj()       { JS_ASSERT(funCxFlags.argumentsHasLocalBinding);
                                              funCxFlags.definitelyNeedsArgsObj   = true; }
@@ -246,6 +253,14 @@ class FunctionBox : public ObjectBox, public SharedContext
         bufStart = tokenStream.currentToken().pos.begin;
         startLine = tokenStream.getLineno();
         startColumn = tokenStream.getColumn();
+    }
+
+    bool isHeavyweight()
+    {
+        // Note: this should be kept in sync with JSFunction::isHeavyweight().
+        return bindings.hasAnyAliasedBindings() ||
+               hasExtensibleScope() ||
+               needsDeclEnvObject();
     }
 };
 
