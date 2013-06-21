@@ -31,7 +31,7 @@ public:
         DeleteOnce();
     }
 
-    class Attachment
+    struct Attachment
     {
         // deleting a texture or renderbuffer immediately detaches it
         WebGLRefPtr<WebGLTexture> mTexturePtr;
@@ -40,10 +40,7 @@ public:
         WebGLint mTextureLevel;
         WebGLenum mTextureCubeMapFace;
 
-        friend class WebGLFramebuffer;
-
-    public:
-        Attachment(WebGLenum aAttachmentPoint)
+        Attachment(WebGLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0)
             : mAttachmentPoint(aAttachmentPoint)
         {}
 
@@ -109,12 +106,7 @@ public:
                               WebGLTexture *wtex,
                               WebGLint level);
 
-    bool HasIncompleteAttachment() const {
-        return (mColorAttachment.IsDefined() && !mColorAttachment.IsComplete()) ||
-               (mDepthAttachment.IsDefined() && !mDepthAttachment.IsComplete()) ||
-               (mStencilAttachment.IsDefined() && !mStencilAttachment.IsComplete()) ||
-               (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.IsComplete());
-    }
+    bool HasIncompleteAttachment() const;
 
     bool HasDepthStencilConflict() const {
         return int(mDepthAttachment.IsDefined()) +
@@ -122,14 +114,10 @@ public:
                int(mDepthStencilAttachment.IsDefined()) >= 2;
     }
 
-    bool HasAttachmentsOfMismatchedDimensions() const {
-        return (mDepthAttachment.IsDefined() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment)) ||
-               (mStencilAttachment.IsDefined() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment)) ||
-               (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment));
-    }
+    bool HasAttachmentsOfMismatchedDimensions() const;
 
-    const Attachment& ColorAttachment() const {
-        return mColorAttachment;
+    const Attachment& ColorAttachment(uint32_t colorAttachmentId) const {
+        return mColorAttachments[colorAttachmentId];
     }
 
     const Attachment& DepthAttachment() const {
@@ -151,7 +139,7 @@ public:
     void DetachRenderbuffer(const WebGLRenderbuffer *rb);
 
     const WebGLRectangleObject *RectangleObject() {
-        return mColorAttachment.RectangleObject();
+        return mColorAttachments[0].RectangleObject();
     }
 
     WebGLContext *GetParentObject() const {
@@ -166,13 +154,17 @@ public:
 
     bool CheckAndInitializeRenderbuffers();
 
+    bool CheckColorAttachementNumber(WebGLenum attachment, const char * functionName) const;
+
     WebGLuint mGLName;
     bool mHasEverBeenBound;
 
+    void EnsureColorAttachments(size_t colorAttachmentId);
+
     // we only store pointers to attached renderbuffers, not to attached textures, because
     // we will only need to initialize renderbuffers. Textures are already initialized.
-    Attachment mColorAttachment,
-               mDepthAttachment,
+    nsTArray<Attachment> mColorAttachments;
+    Attachment mDepthAttachment,
                mStencilAttachment,
                mDepthStencilAttachment;
 };
