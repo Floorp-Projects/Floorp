@@ -88,6 +88,7 @@ SocialUI = {
           this._updateMenuItems();
 
           SocialFlyout.unload();
+          SocialChatBar.closeWindows();
           SocialChatBar.update();
           SocialShare.update();
           SocialSidebar.update();
@@ -346,6 +347,14 @@ SocialUI = {
 
 SocialChatBar = {
   init: function() {
+  },
+  closeWindows: function() {
+    // close all windows of type Social:Chat
+    let windows = Services.wm.getEnumerator("Social:Chat");
+    while (windows.hasMoreElements()) {
+      let win = windows.getNext();
+      win.close();
+    }
   },
   get chatbar() {
     return document.getElementById("pinnedchats");
