@@ -1673,6 +1673,13 @@ ContentPermissionPrompt.prototype = {
     var requestingWindow = aRequest.window.top;
     var chromeWin = this._getChromeWindow(requestingWindow).wrappedJSObject;
     var browser = chromeWin.gBrowser.getBrowserForDocument(requestingWindow.document);
+    if (!browser) {
+      // find the requesting browser or iframe
+      browser = requestingWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIWebNavigation)
+                                  .QueryInterface(Ci.nsIDocShell)
+                                  .chromeEventHandler;
+    }
     var requestPrincipal = aRequest.principal;
 
     // Transform the prompt actions into PopupNotification actions.

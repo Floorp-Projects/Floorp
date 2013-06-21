@@ -3056,24 +3056,29 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
               0 0 3px 2px -moz-mac-focusring;
 }
 
+.default-notification-icon,
 #default-notification-icon {
   list-style-image: url(chrome://global/skin/icons/information-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .default-notification-icon,
   #default-notification-icon {
     list-style-image: url(chrome://global/skin/icons/information-32.png);
   }
 }
 
+.identity-notification-icon,
 #identity-notification-icon {
   list-style-image: url(chrome://mozapps/skin/profile/profileicon.png);
 }
 /* XXX: need HiDPI version */
 
+.geo-notification-icon,
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .geo-notification-icon,
   #geo-notification-icon {
     list-style-image: url(chrome://browser/skin/Geolocation-16@2x.png);
   }
@@ -3083,10 +3088,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
+.indexedDB-notification-icon,
 #indexedDB-notification-icon {
   list-style-image: url(chrome://global/skin/icons/question-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .indexedDB-notification-icon,
   #indexedDB-notification-icon {
     list-style-image: url(chrome://global/skin/icons/question-32.png);
   }
@@ -3110,10 +3117,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+.webapps-notification-icon,
 #webapps-notification-icon {
   list-style-image: url(chrome://browser/skin/webapps-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .webapps-notification-icon,
   #webapps-notification-icon {
     list-style-image: url(chrome://browser/skin/webapps-16@2x.png);
   }
@@ -3177,37 +3186,45 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+.webRTC-shareDevices-notification-icon,
 #webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .webRTC-shareDevices-notification-icon,
   #webRTC-shareDevices-notification-icon {
     list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
   }
 }
 
+.webRTC-sharingDevices-notification-icon,
 #webRTC-sharingDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .webRTC-sharingDevices-notification-icon,
   #webRTC-sharingDevices-notification-icon {
     list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16@2x.png);
   }
 }
 
+.web-notifications-notification-icon,
 #web-notifications-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .web-notifications-notification-icon,
   #web-notifications-notification-icon {
     list-style-image: url(chrome://browser/skin/notification-16@2x.png);
   }
 }
 
+.pointerLock-notification-icon,
 #pointerLock-notification-icon {
   list-style-image: url(chrome://browser/skin/pointerLock-16.png);
 }
 @media (min-resolution: 2dppx) {
+  .pointerLock-notification-icon,
   #pointerLock-notification-icon {
     list-style-image: url(chrome://browser/skin/pointerLock-16@2x.png);
   }

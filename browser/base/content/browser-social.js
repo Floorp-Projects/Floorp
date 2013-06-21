@@ -1013,7 +1013,7 @@ SocialToolbar = {
       if (tbi) {
         // SocialMark is the last button allways
         let next = SocialMark.button.previousSibling;
-        while (next != tbi.firstChild) {
+        while (next != this.button) {
           tbi.removeChild(next);
           next = SocialMark.button.previousSibling;
         }

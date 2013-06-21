@@ -12,6 +12,8 @@
           <xul:image class="chat-status-icon" xbl:inherits="src=image"/>
           <xul:label class="chat-title" flex="1" xbl:inherits="value=label" crop="center"/>
         </xul:hbox>
+        <xul:toolbarbutton id="notification-icon" class="notification-anchor-icon chat-toolbarbutton"
+                   oncommand="document.getBindingParent(this).showNotifications(); event.stopPropagation();"/>
         <xul:toolbarbutton anonid="minimize" class="chat-minimize-button chat-toolbarbutton"
                            oncommand="document.getBindingParent(this).toggle();"/>
         <xul:toolbarbutton anonid="swap" class="chat-swap-button chat-toolbarbutton"
@@ -29,6 +31,8 @@
     <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
         let Social = Components.utils.import("resource:///modules/Social.jsm", {}).Social;
+        this.content.__defineGetter__("popupnotificationanchor",
+                                      () => document.getAnonymousElementByAttribute(this, "id", "notification-icon"));
         Social.setErrorListener(this.content, function(aBrowser) {
           aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
         });
@@ -127,6 +131,13 @@
           this.contentDocument.documentElement.dispatchEvent(evt);
         </setter>
       </property>
+      
+      <method name="showNotifications">
+        <body><![CDATA[
+        PopupNotifications._reshowNotifications(this.content.popupnotificationanchor,
+                                                this.content);
+        ]]></body>
+      </method>
 
       <method name="swapDocShells">
         <parameter name="aTarget"/>
