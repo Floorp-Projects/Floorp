@@ -106,6 +106,7 @@ class SyntaxParseHandler
         return expr == NodeString ? NodeStringExprStatement : NodeGeneric;
     }
 
+    Node newIfStatement(uint32_t begin, Node cond, Node then, Node else_) { return NodeGeneric; }
     Node newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
     Node newContinue(PropertyName *label, uint32_t begin, uint32_t end) { return NodeGeneric; }
     Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) { return NodeGeneric; }
