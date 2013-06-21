@@ -1861,7 +1861,6 @@ TokenKindToString(TokenKind tt)
       case TOK_INSTANCEOF:      return "TOK_INSTANCEOF";
       case TOK_DEBUGGER:        return "TOK_DEBUGGER";
       case TOK_YIELD:           return "TOK_YIELD";
-      case TOK_LEXICALSCOPE:    return "TOK_LEXICALSCOPE";
       case TOK_LET:             return "TOK_LET";
       case TOK_RESERVED:        return "TOK_RESERVED";
       case TOK_STRICT_RESERVED: return "TOK_STRICT_RESERVED";

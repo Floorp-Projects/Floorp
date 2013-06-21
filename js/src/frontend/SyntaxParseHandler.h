@@ -83,8 +83,6 @@ class SyntaxParseHandler
     Node newDelete(uint32_t begin, Node expr) { return NodeGeneric; }
 
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
-        if (kind == PNK_SEMI && kid == NodeString)
-            return NodeStringExprStatement;
         return NodeGeneric;
     }
 
@@ -101,6 +99,15 @@ class SyntaxParseHandler
     Node newTernary(ParseNodeKind kind, Node first, Node second, Node third, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
+
+    Node newEmptyStatement(const TokenPos &pos) { return NodeGeneric; }
+
+    Node newExprStatement(Node expr, uint32_t end) {
+        return expr == NodeString ? NodeStringExprStatement : NodeGeneric;
+    }
+
+    Node newReturnStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
+    Node newThrowStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
 
     Node newLabeledStatement(PropertyName *label, Node stmt, uint32_t begin) {
         return NodeGeneric;
