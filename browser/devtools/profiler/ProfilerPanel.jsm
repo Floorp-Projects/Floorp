@@ -270,12 +270,12 @@ ProfileUI.prototype = {
 
 function SidebarView(el) {
   EventEmitter.decorate(this);
-  this.node = new SideMenuWidget(el);
+  this.widget = new SideMenuWidget(el);
 }
 
-ViewHelpers.create({ constructor: SidebarView, proto: MenuContainer.prototype }, {
+SidebarView.prototype = Heritage.extend(WidgetMethods, {
   getItemByProfile: function (profile) {
-    return this.orderedItems.filter((item) => item.attachment.uid === profile.uid)[0];
+    return this.getItemForPredicate(item => item.attachment.uid === profile.uid);
   },
 
   setProfileState: function (profile, state) {
@@ -402,7 +402,7 @@ ProfilerPanel.prototype = {
 
         this.controller = new ProfilerController(this.target);
         this.sidebar = new SidebarView(this.document.querySelector("#profiles-list"));
-        this.sidebar.node.addEventListener("select", (ev) => {
+        this.sidebar.widget.addEventListener("select", (ev) => {
           if (!ev.detail)
             return;
 

@@ -322,19 +322,19 @@ function ChromeGlobalsView() {
   this._onClick = this._onClick.bind(this);
 }
 
-create({ constructor: ChromeGlobalsView, proto: MenuContainer.prototype }, {
+ChromeGlobalsView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
   initialize: function() {
     dumpn("Initializing the ChromeGlobalsView");
 
-    this.node = document.getElementById("chrome-globals");
+    this.widget = document.getElementById("chrome-globals");
     this.emptyText = L10N.getStr("noGlobalsText");
     this.unavailableText = L10N.getStr("noMatchingGlobalsText");
 
-    this.node.addEventListener("select", this._onSelect, false);
-    this.node.addEventListener("click", this._onClick, false);
+    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("click", this._onClick, false);
 
     // Show an empty label by default.
     this.empty();
@@ -346,8 +346,8 @@ create({ constructor: ChromeGlobalsView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the ChromeGlobalsView");
 
-    this.node.removeEventListener("select", this._onSelect, false);
-    this.node.removeEventListener("click", this._onClick, false);
+    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("click", this._onClick, false);
   },
 
   /**
@@ -378,7 +378,7 @@ function StackFramesView() {
   this._afterScroll = this._afterScroll.bind(this);
 }
 
-create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
+StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
@@ -393,9 +393,9 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
     document.getElementById("debuggerPopupset").appendChild(menupopup);
     document.getElementById("debuggerCommands").appendChild(commandset);
 
-    this.node = new BreadcrumbsWidget(document.getElementById("stackframes"));
-    this.node.addEventListener("select", this._onSelect, false);
-    this.node.addEventListener("scroll", this._onScroll, true);
+    this.widget = new BreadcrumbsWidget(document.getElementById("stackframes"));
+    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("scroll", this._onScroll, true);
     window.addEventListener("resize", this._onScroll, true);
 
     this.autoFocusOnFirstItem = false;
@@ -408,8 +408,8 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the StackFramesView");
 
-    this.node.removeEventListener("select", this._onSelect, false);
-    this.node.removeEventListener("scroll", this._onScroll, true);
+    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("scroll", this._onScroll, true);
     window.removeEventListener("resize", this._onScroll, true);
   },
 
@@ -559,8 +559,8 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   /**
    * Function called each time a stack frame item is removed.
    *
-   * @param MenuItem aItem
-   *        The corresponding menu item.
+   * @param object aItem
+   *        The corresponding item.
    */
   _onStackframeRemoved: function(aItem) {
     dumpn("Finalizing stackframe item: " + aItem);
@@ -610,7 +610,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   _afterScroll: function() {
     // TODO: Accessing private widget properties. Figure out what's the best
     // way to expose such things. Bug 876271.
-    let list = this.node._list;
+    let list = this.widget._list;
     let scrollPosition = list.scrollPosition;
     let scrollWidth = list.scrollWidth;
 
@@ -939,10 +939,10 @@ FilterView.prototype = {
     DebuggerView.FilteredSources.syncFileSearch();
 
     // Hide all the groups with no visible children.
-    view.node.hideEmptyGroups();
+    view.widget.hideEmptyGroups();
 
     // Ensure the currently selected item is visible.
-    view.node.ensureSelectionIsVisible({ withGroup: true });
+    view.widget.ensureSelectionIsVisible({ withGroup: true });
 
     // Remember the previously searched file to avoid redundant filtering.
     this._prevSearchedFile = aFile;
@@ -1283,7 +1283,7 @@ function FilteredSourcesView() {
   this._onSelect = this._onSelect.bind(this);
 }
 
-create({ constructor: FilteredSourcesView, proto: ResultsPanelContainer.prototype }, {
+FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype, {
   /**
    * Initialization function, called when the debugger is started.
    */
@@ -1291,8 +1291,8 @@ create({ constructor: FilteredSourcesView, proto: ResultsPanelContainer.prototyp
     dumpn("Initializing the FilteredSourcesView");
 
     this.anchor = document.getElementById("searchbox");
-    this.node.addEventListener("select", this._onSelect, false);
-    this.node.addEventListener("click", this._onClick, false);
+    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("click", this._onClick, false);
   },
 
   /**
@@ -1301,8 +1301,8 @@ create({ constructor: FilteredSourcesView, proto: ResultsPanelContainer.prototyp
   destroy: function() {
     dumpn("Destroying the FilteredSourcesView");
 
-    this.node.removeEventListener("select", this._onSelect, false);
-    this.node.removeEventListener("click", this._onClick, false);
+    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("click", this._onClick, false);
     this.anchor = null;
   },
 
@@ -1358,7 +1358,7 @@ create({ constructor: FilteredSourcesView, proto: ResultsPanelContainer.prototyp
   /**
    * The select listener for this container.
    *
-   * @param MenuItem aItem
+   * @param object aItem
    *        The item associated with the element to select.
    */
   _onSelect: function({ detail: locationItem }) {
@@ -1379,7 +1379,7 @@ function FilteredFunctionsView() {
   this._onSelect = this._onSelect.bind(this);
 }
 
-create({ constructor: FilteredFunctionsView, proto: ResultsPanelContainer.prototype }, {
+FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototype, {
   /**
    * Initialization function, called when the debugger is started.
    */
@@ -1387,8 +1387,8 @@ create({ constructor: FilteredFunctionsView, proto: ResultsPanelContainer.protot
     dumpn("Initializing the FilteredFunctionsView");
 
     this.anchor = document.getElementById("searchbox");
-    this.node.addEventListener("select", this._onSelect, false);
-    this.node.addEventListener("click", this._onClick, false);
+    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("click", this._onClick, false);
   },
 
   /**
@@ -1397,8 +1397,8 @@ create({ constructor: FilteredFunctionsView, proto: ResultsPanelContainer.protot
   destroy: function() {
     dumpn("Destroying the FilteredFunctionsView");
 
-    this.node.removeEventListener("select", this._onSelect, false);
-    this.node.removeEventListener("click", this._onClick, false);
+    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("click", this._onClick, false);
     this.anchor = null;
   },
 

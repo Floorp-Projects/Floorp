@@ -491,11 +491,11 @@ let DebuggerView = {
 };
 
 /**
- * A stacked list of items, compatible with MenuContainer instances, used for
+ * A stacked list of items, compatible with WidgetMethods instances, used for
  * displaying views like the watch expressions, filtering or search results etc.
  *
- * You should never need to access these methods directly, use the wrapper
- * MenuContainer instances.
+ * You should never need to access these methods directly, use the wrapped
+ * WidgetMethods instead.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
@@ -508,7 +508,7 @@ function ListWidget(aNode) {
   this._parent.appendChild(this._list);
 
   // Delegate some of the associated node's methods to satisfy the interface
-  // required by MenuContainer instances.
+  // required by WidgetMethods instances.
   ViewHelpers.delegateWidgetAttributeMethods(this, aNode);
   ViewHelpers.delegateWidgetEventMethods(this, aNode);
 }
@@ -711,12 +711,12 @@ ListWidget.prototype = {
 
 /**
  * A custom items container, used for displaying views like the
- * FilteredSources, FilteredFunctions etc., inheriting the generic MenuContainer.
+ * FilteredSources, FilteredFunctions etc., inheriting the generic WidgetMethods.
  */
 function ResultsPanelContainer() {
 }
 
-create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
+ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Sets the anchor node for this container panel.
    * @param nsIDOMNode aNode
@@ -734,17 +734,17 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
         this._panel.setAttribute("noautofocus", "true");
         document.documentElement.appendChild(this._panel);
       }
-      if (!this.node) {
-        this.node = new ListWidget(this._panel);
-        this.node.itemType = "vbox";
-        this.node.itemFactory = this._createItemView;
+      if (!this.widget) {
+        this.widget = new ListWidget(this._panel);
+        this.widget.itemType = "vbox";
+        this.widget.itemFactory = this._createItemView;
       }
     }
     // Cleanup the anchor and remove the previously created panel.
     else {
       this._panel.remove();
       this._panel = null;
-      this.node = null;
+      this.widget = null;
     }
   },
 

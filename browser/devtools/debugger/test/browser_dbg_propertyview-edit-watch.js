@@ -57,9 +57,9 @@ function testFrameEval() {
       is(varT.querySelector(".value").getAttribute("value"), "\"Browser Debugger Watch Expressions Test\"",
         "Should have the right initial value for 't'.");
 
-      is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
+      is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
         "There should be 5 hidden nodes in the watch expressions container");
-      is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+      is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
         "There should be 0 visible nodes in the watch expressions container");
 
       let label = gDebugger.L10N.getStr("watchExpressionsScopeLabel");
@@ -330,9 +330,9 @@ function testExprDeletion(aVar, aTest, aCallback, aArgResult,
 }
 
 function test1(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
     "There should be 5 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
@@ -361,9 +361,9 @@ function test1(scope) {
 }
 
 function test2(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
     "There should be 5 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
@@ -392,9 +392,9 @@ function test2(scope) {
 }
 
 function test3(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 4,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 4,
     "There should be 4 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
@@ -419,9 +419,9 @@ function test3(scope) {
 }
 
 function test4(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 3,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 3,
     "There should be 3 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
@@ -442,9 +442,9 @@ function test4(scope) {
 }
 
 function test5(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 2,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 2,
     "There should be 2 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
@@ -461,9 +461,9 @@ function test5(scope) {
 }
 
 function test6(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 1,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 1,
     "There should be 1 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
@@ -476,9 +476,9 @@ function test6(scope) {
 }
 
 function test7(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
     "There should be 0 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   is(scope, undefined, "There should be no watch expressions scope available.");
