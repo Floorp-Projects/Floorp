@@ -3616,6 +3616,43 @@ Parser<ParseHandler>::expressionStatement()
 }
 
 template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::ifStatement()
+{
+    uint32_t begin = pos().begin;
+
+    /* An IF node has three kids: condition, then, and optional else. */
+    Node cond = condition();
+    if (!cond)
+        return null();
+
+    if (tokenStream.peekToken(TSF_OPERAND) == TOK_SEMI &&
+        !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
+    {
+        return null();
+    }
+
+    StmtInfoPC stmtInfo(context);
+    PushStatementPC(pc, &stmtInfo, STMT_IF);
+    Node thenBranch = statement();
+    if (!thenBranch)
+        return null();
+
+    Node elseBranch;
+    if (tokenStream.matchToken(TOK_ELSE, TSF_OPERAND)) {
+        stmtInfo.type = STMT_ELSE;
+        elseBranch = statement();
+        if (!elseBranch)
+            return null();
+    } else {
+        elseBranch = null();
+    }
+
+    PopStatementPC(context, pc);
+    return handler.newIfStatement(begin, cond, thenBranch, elseBranch);
+}
+
+template <typename ParseHandler>
 bool
 Parser<ParseHandler>::matchInOrOf(bool *isForOfp)
 {
@@ -4647,43 +4684,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return handler.newEmptyStatement(pos());
 
       case TOK_IF:
-      {
-        uint32_t begin = pos().begin;
-
-        /* An IF node has three kids: condition, then, and optional else. */
-        Node cond = condition();
-        if (!cond)
-            return null();
-
-        if (tokenStream.peekToken(TSF_OPERAND) == TOK_SEMI &&
-            !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
-        {
-            return null();
-        }
-
-        StmtInfoPC stmtInfo(context);
-        PushStatementPC(pc, &stmtInfo, STMT_IF);
-        Node thenBranch = statement();
-        if (!thenBranch)
-            return null();
-
-        Node elseBranch;
-        if (tokenStream.matchToken(TOK_ELSE, TSF_OPERAND)) {
-            stmtInfo.type = STMT_ELSE;
-            elseBranch = statement();
-            if (!elseBranch)
-                return null();
-        } else {
-            elseBranch = null();
-        }
-
-        PopStatementPC(context, pc);
-        pn = handler.newTernary(PNK_IF, cond, thenBranch, elseBranch);
-        if (!pn)
-            return null();
-        handler.setBeginPosition(pn, begin);
-        return pn;
-      }
+        return ifStatement();
 
       case TOK_SWITCH:
         return switchStatement();
