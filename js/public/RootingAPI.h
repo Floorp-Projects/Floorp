@@ -170,9 +170,21 @@ struct JS_PUBLIC_API(NullPtr)
 };
 
 /*
- * Encapsulated pointer class for use on the heap.
+ * An encapsulated pointer class for heap based GC thing pointers.
  *
- * Implements post barriers for heap-based GC thing pointers outside the engine.
+ * This implements post-barriers for GC thing pointers stored on the heap. It is
+ * designed to be used for all heap-based GC thing pointers outside the JS
+ * engine.
+ *
+ * The template parameter T must be a JS GC thing pointer, masked pointer or
+ * possible pointer, such as a JS::Value or jsid.
+ *
+ * The class must be used to declare data members of heap classes only.
+ * Stack-based GC thing pointers should used Rooted<T>.
+ *
+ * Write barriers are implemented by overloading the assingment operator.
+ * Assiging to a Heap<T> triggers the appropriate calls into the GC to notify it
+ * of the change.
  */
 template <typename T>
 class Heap : public js::HeapBase<T>
