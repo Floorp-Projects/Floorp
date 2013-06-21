@@ -210,7 +210,6 @@ extern Class JSONClass;
 extern Class MathClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
-extern Class RegExpStaticsClass;
 
 class ArrayBufferObject;
 class GlobalObject;
@@ -1040,7 +1039,6 @@ class JSObject : public js::ObjectImpl
     /* Direct subtypes of JSObject: */
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
-    inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
     inline bool isTypedArray()       const;
 
     /* Subtypes of Proxy. */
