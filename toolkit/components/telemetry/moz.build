@@ -30,3 +30,7 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'TelemetryPing.js',
 ]
+
+EXTRA_JS_MODULES += [
+    'ThirdPartyCookieProbe.jsm',
+]
