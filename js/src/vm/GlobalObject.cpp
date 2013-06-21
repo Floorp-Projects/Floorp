@@ -101,7 +101,7 @@ TestProtoSetterThis(const Value &v)
         return true;
 
     /* Otherwise, only accept non-proxies. */
-    return !v.toObject().isProxy();
+    return !v.toObject().is<ProxyObject>();
 }
 
 static bool
@@ -138,10 +138,10 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
      * which due to their complicated delegate-object shenanigans can't easily
      * have a mutable [[Prototype]].
      */
-    if (obj->isProxy() || obj->is<ArrayBufferObject>()) {
+    if (obj->is<ProxyObject>() || obj->is<ArrayBufferObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Object", "__proto__ setter",
-                             obj->isProxy() ? "Proxy" : "ArrayBuffer");
+                             obj->is<ProxyObject>() ? "Proxy" : "ArrayBuffer");
         return false;
     }
 

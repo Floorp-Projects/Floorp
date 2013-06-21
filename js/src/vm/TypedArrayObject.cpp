@@ -2140,8 +2140,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return NULL; // must be arrayBuffer
         }
 
-        JS_ASSERT(bufobj->is<ArrayBufferObject>() || bufobj->isProxy());
-        if (bufobj->isProxy()) {
+        JS_ASSERT(bufobj->is<ArrayBufferObject>() || bufobj->is<ProxyObject>());
+        if (bufobj->is<ProxyObject>()) {
             /*
              * Normally, NonGenericMethodGuard handles the case of transparent
              * wrappers. However, we have a peculiar situation: we want to

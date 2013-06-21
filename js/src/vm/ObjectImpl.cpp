@@ -156,7 +156,7 @@ PropDesc::wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappe
     desc->value_ = value;
     desc->get_ = get;
     desc->set_ = set;
-    return !obj->isProxy() || desc->makeObject(cx);
+    return !obj->is<ProxyObject>() || desc->makeObject(cx);
 }
 
 static ObjectElements emptyElementsHeader(0, 0);
@@ -568,9 +568,8 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
 
     Rooted<PropertyId> pid(cx, pid_);
 
-    if (static_cast<JSObject *>(obj.get())->isProxy()) {
+    if (Downcast(obj)->is<ProxyObject>())
         MOZ_ASSUME_UNREACHABLE("NYI: proxy [[GetOwnProperty]]");
-    }
 
     RootedShape shape(cx, obj->nativeLookup(cx, pid));
     if (!shape) {
@@ -662,9 +661,8 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
     do {
         MOZ_ASSERT(obj);
 
-        if (Downcast(current)->isProxy()) {
+        if (Downcast(current)->is<ProxyObject>())
             MOZ_ASSUME_UNREACHABLE("NYI: proxy [[GetP]]");
-        }
 
         AutoPropDescRooter desc(cx);
         if (!GetOwnProperty(cx, current, pid, resolveFlags, &desc.getPropDesc()))
@@ -725,9 +723,8 @@ js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
     do {
         MOZ_ASSERT(current);
 
-        if (Downcast(current)->isProxy()) {
+        if (Downcast(current)->is<ProxyObject>())
             MOZ_ASSUME_UNREACHABLE("NYI: proxy [[GetP]]");
-        }
 
         PropDesc desc;
         if (!GetOwnElement(cx, current, index, resolveFlags, &desc))
@@ -788,9 +785,8 @@ js::HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned 
     do {
         MOZ_ASSERT(current);
 
-        if (Downcast(current)->isProxy()) {
+        if (Downcast(current)->is<ProxyObject>())
             MOZ_ASSUME_UNREACHABLE("NYI: proxy [[HasProperty]]");
-        }
 
         PropDesc prop;
         if (!GetOwnElement(cx, current, index, resolveFlags, &prop))
@@ -952,9 +948,8 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
     do {
         MOZ_ASSERT(current);
 
-        if (Downcast(current)->isProxy()) {
+        if (Downcast(current)->is<ProxyObject>())
             MOZ_ASSUME_UNREACHABLE("NYI: proxy [[SetP]]");
-        }
 
         PropDesc ownDesc;
         if (!GetOwnElement(cx, current, index, resolveFlags, &ownDesc))
