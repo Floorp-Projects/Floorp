@@ -351,7 +351,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
     const FrameMetrics& metrics = container->GetFrameMetrics();
-    float paintScale = metrics.mDevPixelsPerCSSPixel / rootTransform.GetXScale();
+    CSSToLayerScale paintScale = metrics.mDevPixelsPerCSSPixel
+      / LayerToLayoutDeviceScale(rootTransform.GetXScale(), rootTransform.GetYScale());
     CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
@@ -405,15 +406,15 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx3DMatrix treeTransform;
 
-  CSSToLayerScale geckoZoom(metrics.mDevPixelsPerCSSPixel / aRootTransform.GetXScale(),
-                            metrics.mDevPixelsPerCSSPixel / aRootTransform.GetYScale());
+  CSSToLayerScale geckoZoom = metrics.mDevPixelsPerCSSPixel /
+    LayerToLayoutDeviceScale(aRootTransform.GetXScale(), aRootTransform.GetYScale());
 
   LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.mScrollOffset * geckoZoom);
 
   if (mIsFirstPaint) {
     mContentRect = metrics.mScrollableRect;
     SetFirstPaintViewport(scrollOffsetLayerPixels,
-                          geckoZoom.scale,
+                          geckoZoom,
                           mContentRect);
     mIsFirstPaint = false;
   } else if (!metrics.mScrollableRect.IsEqualEdges(mContentRect)) {
@@ -435,8 +436,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   ScreenPoint offset(0, 0);
   ScreenPoint userScroll(0, 0);
   CSSToScreenScale userZoom;
-  SyncViewportInfo(displayPort, geckoZoom.scale, mLayersUpdated,
-                   userScroll, userZoom.scale, userZoom.scale, fixedLayerMargins,
+  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
+                   userScroll, userZoom, fixedLayerMargins,
                    offset);
   mLayersUpdated = false;
 
@@ -544,7 +545,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 
 void
 AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                                               float aZoom,
+                                               const CSSToLayerScale& aZoom,
                                                const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
@@ -562,10 +563,10 @@ AsyncCompositionManager::SetPageRect(const CSSRect& aCssPageRect)
 
 void
 AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                                          float aDisplayResolution,
+                                          const CSSToLayerScale& aDisplayResolution,
                                           bool aLayersUpdated,
                                           ScreenPoint& aScrollOffset,
-                                          float& aScaleX, float& aScaleY,
+                                          CSSToScreenScale& aScale,
                                           gfx::Margin& aFixedLayerMargins,
                                           ScreenPoint& aOffset)
 {
@@ -574,7 +575,7 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                             aDisplayResolution,
                                             aLayersUpdated,
                                             aScrollOffset,
-                                            aScaleX, aScaleY,
+                                            aScale,
                                             aFixedLayerMargins,
                                             aOffset);
 #endif
@@ -586,7 +587,7 @@ AsyncCompositionManager::SyncFrameMetrics(const ScreenPoint& aScrollOffset,
                                           const CSSRect& aCssPageRect,
                                           bool aLayersUpdated,
                                           const CSSRect& aDisplayPort,
-                                          float aDisplayResolution,
+                                          const CSSToLayerScale& aDisplayResolution,
                                           bool aIsFirstPaint,
                                           gfx::Margin& aFixedLayerMargins,
                                           ScreenPoint& aOffset)

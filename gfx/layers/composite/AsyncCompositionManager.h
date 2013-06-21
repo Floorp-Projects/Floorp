@@ -115,14 +115,14 @@ private:
                                         bool* aWantNextFrame);
 
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                             float aZoom,
+                             const CSSToLayerScale& aZoom,
                              const CSSRect& aCssPageRect);
   void SetPageRect(const CSSRect& aCssPageRect);
   void SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                        float aDisplayResolution,
+                        const CSSToLayerScale& aDisplayResolution,
                         bool aLayersUpdated,
                         ScreenPoint& aScrollOffset,
-                        float& aScaleX, float& aScaleY,
+                        CSSToScreenScale& aScale,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
   void SyncFrameMetrics(const ScreenPoint& aScrollOffset,
@@ -130,7 +130,7 @@ private:
                         const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
                         const CSSRect& aDisplayPort,
-                        float aDisplayResolution,
+                        const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
