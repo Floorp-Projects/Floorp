@@ -111,12 +111,6 @@ struct Cell
 };
 
 /*
- * This is the maximum number of arenas we allow in the FreeCommitted state
- * before we trigger a GC_SHRINK to release free arenas to the OS.
- */
-const static uint32_t FreeCommittedArenasThreshold = (32 << 20) / ArenaSize;
-
-/*
  * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
  * wastes space but allows to avoid expensive devisions by thing's size when
  * accessing the bitmap. In addition this allows to use some bits for colored
