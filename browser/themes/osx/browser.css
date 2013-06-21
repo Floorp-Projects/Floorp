@@ -3911,6 +3911,13 @@ chatbox {
   border-top-right-radius: @toolbarbuttonCornerRadius@;
 }
 
+window > chatbox {
+  border-top-left-radius: @toolbarbuttonCornerRadius@;
+  border-top-right-radius: @toolbarbuttonCornerRadius@;
+  border-bottom-left-radius: @toolbarbuttonCornerRadius@;
+  border-bottom-right-radius: @toolbarbuttonCornerRadius@;
+}
+
 panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
 panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical.png");
