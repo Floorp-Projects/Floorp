@@ -199,6 +199,16 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos::make(expr->pn_pos.begin, end), expr);
     }
 
+    ParseNode *newIfStatement(uint32_t begin, ParseNode *cond, ParseNode *thenBranch,
+                              ParseNode *elseBranch)
+    {
+        ParseNode *pn = new_<TernaryNode>(PNK_IF, JSOP_NOP, cond, thenBranch, elseBranch);
+        if (!pn)
+            return null();
+        pn->pn_pos.begin = begin;
+        return pn;
+    }
+
     ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
         TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
         return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
