@@ -3329,6 +3329,25 @@ PushBlocklikeStatement(StmtInfoPC *stmt, StmtType type, ParseContext<ParseHandle
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::blockStatement()
+{
+    JS_ASSERT(tokenStream.currentToken().type == TOK_LC);
+
+    StmtInfoPC stmtInfo(context);
+    if (!PushBlocklikeStatement(&stmtInfo, STMT_BLOCK, pc))
+        return null();
+
+    Node list = statements();
+    if (!list)
+        return null();
+
+    MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_COMPOUND);
+    PopStatementPC(context, pc);
+    return list;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::newBindingNode(PropertyName *name, bool functionScope, VarContext varContext)
 {
     /*
@@ -4799,19 +4818,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
     switch (tokenStream.getToken(TSF_OPERAND)) {
       case TOK_LC:
-      {
-        StmtInfoPC stmtInfo(context);
-        if (!PushBlocklikeStatement(&stmtInfo, STMT_BLOCK, pc))
-            return null();
-
-        pn = statements();
-        if (!pn)
-            return null();
-
-        MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_COMPOUND);
-        PopStatementPC(context, pc);
-        return pn;
-      }
+        return blockStatement();
 
       case TOK_VAR:
         pn = variables(PNK_VAR);
