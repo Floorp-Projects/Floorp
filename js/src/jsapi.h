@@ -2699,7 +2699,14 @@ typedef enum JSGCParamKey {
     JSGC_ANALYSIS_PURGE_TRIGGER = 19,
 
     /* Lower limit after which we limit the heap growth. */
-    JSGC_ALLOCATION_THRESHOLD = 20
+    JSGC_ALLOCATION_THRESHOLD = 20,
+
+    /*
+     * We decommit memory lazily. If more than this number of megabytes is
+     * available to be decommitted, then JS_MaybeGC will trigger a shrinking GC
+     * to decommit it.
+     */
+    JSGC_DECOMMIT_THRESHOLD = 21
 } JSGCParamKey;
 
 typedef enum JSGCMode {

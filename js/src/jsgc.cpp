@@ -1982,7 +1982,7 @@ js::MaybeGC(JSContext *cx)
     int64_t now = PRMJ_Now();
     if (rt->gcNextFullGCTime && rt->gcNextFullGCTime <= now) {
         if (rt->gcChunkAllocationSinceLastGC ||
-            rt->gcNumArenasFreeCommitted > FreeCommittedArenasThreshold)
+            rt->gcNumArenasFreeCommitted > rt->gcDecommitThreshold)
         {
             JS::PrepareForFullGC(rt);
             GCSlice(rt, GC_SHRINK, JS::gcreason::MAYBEGC);

@@ -781,6 +781,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcLowFrequencyHeapGrowth(1.5),
     gcDynamicHeapGrowth(false),
     gcDynamicMarkSlice(false),
+    gcDecommitThreshold(32 * 1024 * 1024),
     gcShouldCleanUpEverything(false),
     gcGrayBitsValid(false),
     gcIsNeeded(0),
@@ -2890,6 +2891,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       case JSGC_ALLOCATION_THRESHOLD:
         rt->gcAllocationThreshold = value * 1024 * 1024;
+        break;
+      case JSGC_DECOMMIT_THRESHOLD:
+        rt->gcDecommitThreshold = value * 1024 * 1024;
         break;
       default:
         JS_ASSERT(key == JSGC_MODE);

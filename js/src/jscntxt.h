@@ -897,6 +897,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     double              gcLowFrequencyHeapGrowth;
     bool                gcDynamicHeapGrowth;
     bool                gcDynamicMarkSlice;
+    uint64_t            gcDecommitThreshold;
 
     /* During shutdown, the GC needs to clean up every possible object. */
     bool                gcShouldCleanUpEverything;
