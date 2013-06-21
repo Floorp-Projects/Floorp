@@ -431,7 +431,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     let menuEntry = this._createMenuEntry.apply(this, arguments);
 
     // Append a stack frame item to this container.
-    this.push(frameView, {
+    this.push([frameView], {
       index: 0, /* specifies on which position should the item be appended */
       attachment: {
         popup: menuEntry,

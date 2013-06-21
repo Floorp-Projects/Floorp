@@ -108,6 +108,18 @@ this.ViewHelpers = {
   },
 
   /**
+   * Checks if the specified object is an instance of a DOM node.
+   *
+   * @return boolean
+   *         True if it's a node, false otherwise.
+   */
+  isNode: function(aObject) {
+    return aObject instanceof Ci.nsIDOMNode ||
+           aObject instanceof Ci.nsIDOMElement ||
+           aObject instanceof Ci.nsIDOMDocumentFragment;
+  },
+
+  /**
    * Prevents event propagation when navigation keys are pressed.
    *
    * @param Event e
@@ -361,17 +373,15 @@ ViewHelpers.Prefs.prototype = {
 function Item(aAttachment, aContents = []) {
   this.attachment = aAttachment;
 
-  // Allow the insertion of prebuilt nodes.
-  if (aContents instanceof Ci.nsIDOMNode ||
-      aContents instanceof Ci.nsIDOMDocumentFragment) {
-    this._prebuiltTarget = aContents;
-  }
-  // Delegate the item view creation to a widget.
-  else {
-    let [aLabel, aValue, aDescription] = aContents;
-    this._label = aLabel + "";
-    this._value = aValue + "";
-    this._description = (aDescription || "") + "";
+  let [aLabel, aValue, aDescription] = aContents;
+  this._label = aLabel + "";
+  this._value = aValue + "";
+  this._description = (aDescription || "") + "";
+
+  // Allow the insertion of prebuilt nodes, otherwise delegate the item view
+  // creation to a widget.
+  if (ViewHelpers.isNode(aLabel)) {
+    this._prebuiltTarget = aLabel;
   }
 
   XPCOMUtils.defineLazyGetter(this, "_itemsByElement", () => new Map());
