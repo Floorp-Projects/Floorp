@@ -2854,12 +2854,20 @@ JSTerm.prototype = {
   lastInputValue: "",
 
   /**
-   * Indicate input node changed since last focus.
+   * Tells if the input node changed since the last focus.
    *
    * @private
    * @type boolean
    */
   _inputChanged: false,
+
+  /**
+   * Tells if the autocomplete popup was navigated since the last open.
+   *
+   * @private
+   * @type boolean
+   */
+  _autocompletePopupNavigated: false,
 
   /**
    * History of code that was executed.
@@ -3060,8 +3068,6 @@ JSTerm.prototype = {
     // attempt to execute the content of the inputNode
     aExecuteString = aExecuteString || this.inputNode.value;
     if (!aExecuteString) {
-      this.writeOutput(l10n.getStr("executeEmptyInput"), CATEGORY_OUTPUT,
-                       SEVERITY_LOG);
       return;
     }
 
@@ -3598,6 +3604,8 @@ JSTerm.prototype = {
   /**
    * Clear the Web Console output.
    *
+   * This method emits the "messages-cleared" notification.
+   *
    * @param boolean aClearStorage
    *        True if you want to clear the console messages storage associated to
    *        this Web Console.
@@ -3620,10 +3628,14 @@ JSTerm.prototype = {
     if (aClearStorage) {
       this.webConsoleClient.clearMessagesCache();
     }
+
+    this.emit("messages-cleared");
   },
 
   /**
    * Remove all of the private messages from the Web Console output.
+   *
+   * This method emits the "private-messages-cleared" notification.
    */
   clearPrivateMessages: function JST_clearPrivateMessages()
   {
@@ -3694,16 +3706,20 @@ JSTerm.prototype = {
    */
   _keyPress: function JST__keyPress(aEvent)
   {
+    let inputNode = this.inputNode;
+    let inputUpdated = false;
+
     if (aEvent.ctrlKey) {
-      let inputNode = this.inputNode;
-      let closePopup = false;
       switch (aEvent.charCode) {
         case 97:
           // control-a
+          this.clearCompletion();
+
           if (Services.appinfo.OS == "WINNT") {
-            closePopup = true;
+            // Allow Select All on Windows.
             break;
           }
+
           let lineBeginPos = 0;
           if (this.hasMultilineInput()) {
             // find index of closest newline <= to cursor
@@ -3717,8 +3733,8 @@ JSTerm.prototype = {
           }
           inputNode.setSelectionRange(lineBeginPos, lineBeginPos);
           aEvent.preventDefault();
-          closePopup = true;
           break;
+
         case 101:
           // control-e
           if (Services.appinfo.OS == "WINNT") {
@@ -3737,7 +3753,9 @@ JSTerm.prototype = {
           }
           inputNode.setSelectionRange(lineEndPos, lineEndPos);
           aEvent.preventDefault();
+          this.clearCompletion();
           break;
+
         case 110:
           // Control-N differs from down arrow: it ignores autocomplete state.
           // Note that we preserve the default 'down' navigation within
@@ -3746,9 +3764,14 @@ JSTerm.prototype = {
               this.canCaretGoNext() &&
               this.historyPeruse(HISTORY_FORWARD)) {
             aEvent.preventDefault();
+            // Ctrl-N is also used to focus the Network category button on MacOSX.
+            // The preventDefault() call doesn't prevent the focus from moving
+            // away from the input.
+            inputNode.focus();
           }
-          closePopup = true;
+          this.clearCompletion();
           break;
+
         case 112:
           // Control-P differs from up arrow: it ignores autocomplete state.
           // Note that we preserve the default 'up' navigation within
@@ -3757,16 +3780,15 @@ JSTerm.prototype = {
               this.canCaretGoPrevious() &&
               this.historyPeruse(HISTORY_BACK)) {
             aEvent.preventDefault();
+            // Ctrl-P may also be used to focus some category button on MacOSX.
+            // The preventDefault() call doesn't prevent the focus from moving
+            // away from the input.
+            inputNode.focus();
           }
-          closePopup = true;
+          this.clearCompletion();
           break;
         default:
           break;
-      }
-      if (closePopup) {
-        if (this.autocompletePopup.isOpen) {
-          this.clearCompletion();
-        }
       }
       return;
     }
@@ -3777,9 +3799,7 @@ JSTerm.prototype = {
       return;
     }
 
-    let inputUpdated = false;
-
-    switch(aEvent.keyCode) {
+    switch (aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE:
         if (this.autocompletePopup.isOpen) {
           this.clearCompletion();
@@ -3787,18 +3807,29 @@ JSTerm.prototype = {
         }
         else if (this.sidebar) {
           this._sidebarDestroy();
+          aEvent.preventDefault();
         }
         break;
 
-      // Bug 873250 - always enter, ignore autocomplete
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-        this.execute();
+        if (this._autocompletePopupNavigated &&
+            this.autocompletePopup.isOpen &&
+            this.autocompletePopup.selectedIndex > -1) {
+          this.acceptProposedCompletion();
+        }
+        else {
+          this.execute();
+          this._inputChanged = false;
+        }
         aEvent.preventDefault();
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_UP:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_BACKWARD);
+          if (inputUpdated) {
+            this._autocompletePopupNavigated = true;
+          }
         }
         else if (this.canCaretGoPrevious()) {
           inputUpdated = this.historyPeruse(HISTORY_BACK);
@@ -3811,6 +3842,9 @@ JSTerm.prototype = {
       case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_FORWARD);
+          if (inputUpdated) {
+            this._autocompletePopupNavigated = true;
+          }
         }
         else if (this.canCaretGoNext()) {
           inputUpdated = this.historyPeruse(HISTORY_FORWARD);
@@ -3820,6 +3854,33 @@ JSTerm.prototype = {
         }
         break;
 
+      case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
+      case Ci.nsIDOMKeyEvent.DOM_VK_END:
+      case Ci.nsIDOMKeyEvent.DOM_VK_LEFT:
+        if (this.autocompletePopup.isOpen || this.lastCompletion.value) {
+          this.clearCompletion();
+        }
+        break;
+
+      case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT: {
+        let cursorAtTheEnd = this.inputNode.selectionStart ==
+                             this.inputNode.selectionEnd &&
+                             this.inputNode.selectionStart ==
+                             this.inputNode.value.length;
+        let haveSuggestion = this.autocompletePopup.isOpen ||
+                             this.lastCompletion.value;
+        let useCompletion = cursorAtTheEnd || this._autocompletePopupNavigated;
+        if (haveSuggestion && useCompletion &&
+            this.complete(this.COMPLETE_HINT_ONLY) &&
+            this.lastCompletion.value &&
+            this.acceptProposedCompletion()) {
+          aEvent.preventDefault();
+        }
+        if (this.autocompletePopup.isOpen) {
+          this.clearCompletion();
+        }
+        break;
+      }
       case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
         // Generate a completion and accept the first proposed value.
         if (this.complete(this.COMPLETE_HINT_ONLY) &&
@@ -4096,9 +4157,11 @@ JSTerm.prototype = {
 
     if (items.length > 1 && !popup.isOpen) {
       popup.openPopup(inputNode);
+      this._autocompletePopupNavigated = false;
     }
     else if (items.length < 2 && popup.isOpen) {
       popup.hidePopup();
+      this._autocompletePopupNavigated = false;
     }
 
     if (items.length == 1) {
@@ -4144,6 +4207,7 @@ JSTerm.prototype = {
     this.updateCompleteNode("");
     if (this.autocompletePopup.isOpen) {
       this.autocompletePopup.hidePopup();
+      this._autocompletePopupNavigated = false;
     }
   },
 
@@ -4411,10 +4475,12 @@ CommandController.prototype = {
         let selectedItem = this.owner.outputNode.selectedItem;
         return selectedItem && "url" in selectedItem;
       }
+      case "consoleCmd_clearOutput":
       case "cmd_fontSizeEnlarge":
       case "cmd_fontSizeReduce":
       case "cmd_fontSizeReset":
       case "cmd_selectAll":
+      case "cmd_find":
         return true;
       case "cmd_close":
         return this.owner.owner._browserConsole;
@@ -4433,6 +4499,12 @@ CommandController.prototype = {
         break;
       case "consoleCmd_copyURL":
         this.copyURL();
+        break;
+      case "consoleCmd_clearOutput":
+        this.owner.jsterm.clearOutput(true);
+        break;
+      case "cmd_find":
+        this.owner.filterBox.focus();
         break;
       case "cmd_selectAll":
         this.selectAll();
