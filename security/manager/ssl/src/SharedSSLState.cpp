@@ -133,7 +133,6 @@ SharedSSLState::SharedSSLState()
 : mClientAuthRemember(new nsClientAuthRememberService)
 , mMutex("SharedSSLState::mMutex")
 , mSocketCreated(false)
-, mOCSPStaplingEnabled(false)
 {
   mIOLayerHelpers.Init();
   mClientAuthRemember->Init();
