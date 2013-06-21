@@ -124,7 +124,7 @@ JNI.prototype = {
 
   callStaticVoidMethod: function(aClass, aMethod) {
     let args = Array.prototype.slice.apply(arguments, [2]);
-    this._callStaticVoidMethod(aClass, aMethodId.methodId, this.getArgs(aMethod, args));
+    this._callStaticVoidMethod(aClass, aMethod.methodId, this.getArgs(aMethod, args));
     if (this.exceptionCheck())
        throw("Error calling static void method");
   },
