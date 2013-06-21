@@ -184,15 +184,31 @@
 /* Close button */
 
 .devtools-closebutton {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  margin-top: 0;
-  margin-bottom: 0;
+  list-style-image: url("chrome://browser/skin/devtools/close.png");
+  -moz-appearance: none;
+  border: none;
+  margin: 0 4px;
+  min-width: 16px;
+  width: 16px;
+  opacity: 0.6;
 }
 
 .devtools-closebutton > .toolbarbutton-icon {
   /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
      use evil CSS to give the impression of smaller content */
   margin: -4px;
+}
+
+.devtools-closebutton > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-closebutton:hover {
+  opacity: 0.8;
+}
+
+.devtools-closebutton:hover:active {
+  opacity: 1;
 }
 
 /* Splitters */

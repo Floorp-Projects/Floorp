@@ -566,7 +566,7 @@
 /* Variables and properties editing */
 
 .variables-view-delete {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  list-style-image: url("chrome://browser/skin/devtools/close-dark.png");
   opacity: 0;
 }
 

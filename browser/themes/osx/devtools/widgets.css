@@ -566,8 +566,7 @@
 /* Variables and properties editing */
 
 .variables-view-delete {
-  list-style-image: url("chrome://browser/skin/devtools/toolbarbutton-close.png");
-  -moz-image-region: rect(0,32px,16px,16px);
+  list-style-image: url("chrome://browser/skin/devtools/close-dark.png");
   opacity: 0;
 }
 

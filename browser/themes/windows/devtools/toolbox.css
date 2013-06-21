@@ -27,21 +27,15 @@
   list-style-image: url("chrome://browser/skin/devtools/undock.png");
 }
 
-#toolbox-close {
-  list-style-image: url("chrome://browser/skin/devtools/close.png");
-}
-
 #toolbox-dock-window,
 #toolbox-dock-bottom,
-#toolbox-dock-side,
-#toolbox-close {
+#toolbox-dock-side {
   opacity: 0.6;
 }
 
 #toolbox-dock-window:hover,
 #toolbox-dock-bottom:hover,
-#toolbox-dock-side:hover,
-#toolbox-close:hover {
+#toolbox-dock-side:hover {
   opacity: 1;
 }
 
