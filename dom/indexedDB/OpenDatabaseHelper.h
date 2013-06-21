@@ -105,7 +105,7 @@ protected:
   nsresult StartSetVersion();
   nsresult StartDelete();
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
   void DispatchSuccessEvent();
   void DispatchErrorEvent();
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;

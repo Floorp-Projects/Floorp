@@ -88,7 +88,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -607,7 +607,7 @@ IDBCursor::GetValue(JSContext* aCx,
     }
 
     JS::Rooted<JS::Value> val(aCx);
-    if (!IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, val.address())) {
+    if (!IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, &val)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
 
@@ -1004,12 +1004,12 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 nsresult
 ContinueHelper::GetSuccessResult(JSContext* aCx,
-                                 jsval* aVal)
+                                 JS::MutableHandle<JS::Value> aVal)
 {
   UpdateCursorState();
 
   if (mKey.IsUnset()) {
-    *aVal = JSVAL_NULL;
+    aVal.setNull();
   }
   else {
     nsresult rv = WrapNative(aCx, mCursor, aVal);
