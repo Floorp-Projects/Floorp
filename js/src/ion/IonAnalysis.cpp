@@ -786,10 +786,9 @@ ion::BuildDominatorTree(MIRGraph &graph)
         MBasicBlock *block = worklist.popCopy();
         block->setDomIndex(index);
 
-        for (size_t i = 0; i < block->numImmediatelyDominatedBlocks(); i++) {
-            if (!worklist.append(block->getImmediatelyDominatedBlock(i)))
-                return false;
-        }
+        if (!worklist.append(block->immediatelyDominatedBlocksBegin(),
+                             block->immediatelyDominatedBlocksEnd()))
+            return false;
         index++;
     }
 
@@ -1358,10 +1357,9 @@ ion::EliminateRedundantChecks(MIRGraph &graph)
         MBasicBlock *block = worklist.popCopy();
 
         // Add all immediate dominators to the front of the worklist.
-        for (size_t i = 0; i < block->numImmediatelyDominatedBlocks(); i++) {
-            if (!worklist.append(block->getImmediatelyDominatedBlock(i)))
-                return false;
-        }
+        if (!worklist.append(block->immediatelyDominatedBlocksBegin(),
+                             block->immediatelyDominatedBlocksEnd()))
+            return false;
 
         for (MDefinitionIterator iter(block); iter; ) {
             bool eliminated = false;
