@@ -24,6 +24,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
 
@@ -37,7 +38,7 @@ using mozilla::ArrayLength;
 using mozilla::PodArrayZero;
 using mozilla::PodZero;
 
-/* Forward declarations for ErrorClass's initializer. */
+/* Forward declarations for ErrorObject::class_'s initializer. */
 static JSBool
 Exception(JSContext *cx, unsigned argc, Value *vp);
 
@@ -51,7 +52,7 @@ static JSBool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp);
 
-Class js::ErrorClass = {
+Class ErrorObject::class_ = {
     js_Error_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
@@ -240,14 +241,14 @@ struct SuppressErrorsGuard
 };
 
 static void
-SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv);
+SetExnPrivate(ErrorObject &exnObject, JSExnPrivate *priv);
 
 static bool
 InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
                HandleString filename, unsigned lineno, unsigned column,
                JSErrorReport *report, int exnType)
 {
-    JS_ASSERT(exnObject->isError());
+    JS_ASSERT(exnObject->is<ErrorObject>());
     JS_ASSERT(!exnObject->getPrivate());
 
     JSCheckAccessOp checkAccess = cx->runtime()->securityCallbacks->checkObjectAccess;
@@ -329,21 +330,14 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
         priv->stackElems[i].ulineno = frames[i].ulineno;
     }
 
-    SetExnPrivate(exnObject, priv);
+    SetExnPrivate(exnObject->as<ErrorObject>(), priv);
     return true;
-}
-
-static inline JSExnPrivate *
-GetExnPrivate(JSObject *obj)
-{
-    JS_ASSERT(obj->isError());
-    return (JSExnPrivate *) obj->getPrivate();
 }
 
 static void
 exn_trace(JSTracer *trc, JSObject *obj)
 {
-    if (JSExnPrivate *priv = GetExnPrivate(obj)) {
+    if (JSExnPrivate *priv = obj->as<ErrorObject>().getExnPrivate()) {
         if (priv->message)
             MarkString(trc, &priv->message, "exception message");
         if (priv->filename)
@@ -359,21 +353,20 @@ exn_trace(JSTracer *trc, JSObject *obj)
 
 /* NB: An error object's private must be set through this function. */
 static void
-SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv)
+SetExnPrivate(ErrorObject &exnObject, JSExnPrivate *priv)
 {
-    JS_ASSERT(!exnObject->getPrivate());
-    JS_ASSERT(exnObject->isError());
+    JS_ASSERT(!exnObject.getExnPrivate());
     if (JSErrorReport *report = priv->errorReport) {
         if (JSPrincipals *prin = report->originPrincipals)
             JS_HoldPrincipals(prin);
     }
-    exnObject->setPrivate(priv);
+    exnObject.setPrivate(priv);
 }
 
 static void
 exn_finalize(FreeOp *fop, JSObject *obj)
 {
-    if (JSExnPrivate *priv = GetExnPrivate(obj)) {
+    if (JSExnPrivate *priv = obj->as<ErrorObject>().getExnPrivate()) {
         if (JSErrorReport *report = priv->errorReport) {
             /* HOLD called by SetExnPrivate. */
             if (JSPrincipals *prin = report->originPrincipals)
@@ -396,7 +389,7 @@ exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     unsigned attrs;
 
     objp.set(NULL);
-    priv = GetExnPrivate(obj);
+    priv = obj->as<ErrorObject>().getExnPrivate();
     if (priv && JSID_IS_ATOM(id)) {
         RootedString str(cx, JSID_TO_STRING(id));
 
@@ -475,10 +468,10 @@ js_ErrorFromException(jsval exn)
     // JSErrorReport's principal or also tries to do toString on our object and
     // will fail if they can't unwrap it.
     JSObject *obj = UncheckedUnwrap(JSVAL_TO_OBJECT(exn));
-    if (!obj->isError())
+    if (!obj->is<ErrorObject>())
         return NULL;
 
-    JSExnPrivate *priv = GetExnPrivate(obj);
+    JSExnPrivate *priv = obj->as<ErrorObject>().getExnPrivate();
     if (!priv)
         return NULL;
 
@@ -550,7 +543,8 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &ErrorClass, &protov.toObject(), NULL));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &ErrorObject::class_, &protov.toObject(),
+                     NULL));
     if (!obj)
         return false;
 
@@ -783,7 +777,8 @@ InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObje
 {
     JSProtoKey key = GetExceptionProtoKey(type);
     RootedAtom name(cx, ClassName(key, cx));
-    RootedObject errorProto(cx, global->createBlankPrototypeInheriting(cx, &ErrorClass, *proto));
+    RootedObject errorProto(cx, global->createBlankPrototypeInheriting(cx, &ErrorObject::class_,
+                            *proto));
     if (!errorProto)
         return NULL;
 
@@ -956,7 +951,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         return false;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    RootedObject errObject(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
+    RootedObject errObject(cx, NewObjectWithGivenProto(cx, &ErrorObject::class_, errProto, NULL));
     if (!errObject)
         return false;
     tv[1] = OBJECT_TO_JSVAL(errObject);
@@ -1047,8 +1042,7 @@ js_ReportUncaughtException(JSContext *cx)
     const char *filename_str = js_fileName_str;
     JSAutoByteString filename;
     if (!reportp && exnObject &&
-        (exnObject->isError() ||
-         IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
+        (exnObject->is<ErrorObject>() || IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
     {
         RootedString name(cx);
         if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
@@ -1139,7 +1133,7 @@ extern JSObject *
 js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
 {
     assertSameCompartment(cx, scope);
-    JSExnPrivate *priv = GetExnPrivate(errobj);
+    JSExnPrivate *priv = errobj->as<ErrorObject>().getExnPrivate();
 
     size_t size = offsetof(JSExnPrivate, stackElems) +
                   priv->stackDepth * sizeof(JSStackTraceElem);
@@ -1174,10 +1168,10 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     RootedObject proto(cx, scope->global().getOrCreateCustomErrorPrototype(cx, copy->exnType));
     if (!proto)
         return NULL;
-    RootedObject copyobj(cx, NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL));
+    RootedObject copyobj(cx, NewObjectWithGivenProto(cx, &ErrorObject::class_, proto, NULL));
     if (!copyobj)
         return NULL;
-    SetExnPrivate(copyobj, copy);
+    SetExnPrivate(copyobj->as<ErrorObject>(), copy);
     copy.forget();
     autoFreeErrorReport.forget();
     return copyobj;
