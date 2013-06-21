@@ -396,6 +396,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         Strict,
         ContainsDynamicNameAccess,
         FunHasExtensibleScope,
+        FunNeedsDeclEnvObject,
         FunHasAnyAliasedFormal,
         ArgumentsHasVarBinding,
         NeedsArgsObj,
@@ -477,6 +478,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << ContainsDynamicNameAccess);
         if (script->funHasExtensibleScope)
             scriptBits |= (1 << FunHasExtensibleScope);
+        if (script->funNeedsDeclEnvObject)
+            scriptBits |= (1 << FunNeedsDeclEnvObject);
         if (script->funHasAnyAliasedFormal)
             scriptBits |= (1 << FunHasAnyAliasedFormal);
         if (script->argumentsHasVarBinding())
@@ -576,6 +579,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->bindingsAccessedDynamically = true;
         if (scriptBits & (1 << FunHasExtensibleScope))
             script->funHasExtensibleScope = true;
+        if (scriptBits & (1 << FunNeedsDeclEnvObject))
+            script->funNeedsDeclEnvObject = true;
         if (scriptBits & (1 << FunHasAnyAliasedFormal))
             script->funHasAnyAliasedFormal = true;
         if (scriptBits & (1 << ArgumentsHasVarBinding))
@@ -1894,6 +1899,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
+    script->funNeedsDeclEnvObject = funbox ? funbox->needsDeclEnvObject() : false;
     script->hasSingletons = bce->hasSingletons;
 
     if (funbox) {
@@ -2408,6 +2414,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->explicitUseStrict = src->explicitUseStrict;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
+    dst->funNeedsDeclEnvObject = src->funNeedsDeclEnvObject;
     dst->funHasAnyAliasedFormal = src->funHasAnyAliasedFormal;
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
