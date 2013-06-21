@@ -5773,7 +5773,8 @@ if test "$MOZ_GSTREAMER"; then
     PKG_CHECK_MODULES(GSTREAMER,
                       gstreamer-$GST_API_VERSION >= $GST_VERSION
                       gstreamer-app-$GST_API_VERSION
-                      gstreamer-plugins-base-$GST_API_VERSION)
+                      gstreamer-plugins-base-$GST_API_VERSION, ,
+                      AC_MSG_ERROR([gstreamer and gstreamer-plugins-base development packages are needed to build gstreamer backend. Install them or disable gstreamer support with --disable-gstreamer]))
     if test -n "$GSTREAMER_LIBS"; then
        _SAVE_LDFLAGS=$LDFLAGS
        LDFLAGS="$LDFLAGS $GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
@@ -5781,11 +5782,11 @@ if test "$MOZ_GSTREAMER"; then
        if test -n "$_HAVE_LIBGSTVIDEO" ; then
           GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
        else
-          AC_MSG_ERROR([gstreamer video backend requires libgstvideo])
+          AC_MSG_ERROR([gstreamer-plugins-base found, but no libgstvideo. Something has gone terribly wrong. Try reinstalling gstreamer-plugins-base; failing that, disable the gstreamer backend with --disable-gstreamer.])
        fi
        LDFLAGS=$_SAVE_LDFLAGS
     else
-       AC_MSG_ERROR([gstreamer backend requires the gstreamer packages])
+       AC_MSG_ERROR([gstreamer and gstreamer-plugins-base development packages are needed to build gstreamer backend. Install them or disable gstreamer support with --disable-gstreamer])
     fi
 fi
 AC_SUBST(GSTREAMER_CFLAGS)
