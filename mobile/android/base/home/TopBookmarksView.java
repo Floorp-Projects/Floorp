@@ -16,6 +16,7 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -53,7 +54,23 @@ public class TopBookmarksView extends GridView {
     protected TopBookmarksAdapter mAdapter;
 
     // Temporary cache to store the thumbnails until the next layout pass.
-    private Map<String, Bitmap> mThumbnailsCache;
+    private Map<String, Thumbnail> mThumbnailsCache;
+
+    /**
+     *  Class to hold the bitmap of cached thumbnails/favicons.
+     */
+    private class Thumbnail {
+        // Thumbnail or favicon.
+        private final boolean isThumbnail;
+
+        // Bitmap of thumbnail/favicon.
+        private final Bitmap bitmap;
+
+        public Thumbnail(Bitmap bitmap, boolean isThumbnail) {
+            this.bitmap = bitmap;
+            this.isThumbnail = isThumbnail;
+        }
+    }
 
     public TopBookmarksView(Context context) {
         this(context, null);
@@ -207,7 +224,7 @@ public class TopBookmarksView extends GridView {
      *
      * @param thumbnails A map of urls and their thumbnail bitmaps.
      */
-    private void updateThumbnails(Map<String, Bitmap> thumbnails) {
+    private void updateThumbnails(Map<String, Thumbnail> thumbnails) {
         final int count = mAdapter.getCount();
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
@@ -226,8 +243,14 @@ public class TopBookmarksView extends GridView {
                 view.displayThumbnail(R.drawable.abouthome_thumbnail_add);
             } else {
                 // Show the thumbnail.
-                Bitmap bitmap = (thumbnails != null ? thumbnails.get(url) : null);
-                view.displayThumbnail(bitmap);
+                Thumbnail thumbnail = (thumbnails != null ? thumbnails.get(url) : null);
+                if (thumbnail == null) {
+                    view.displayThumbnail(null);
+                } else if (thumbnail.isThumbnail) {
+                    view.displayThumbnail(thumbnail.bitmap);
+                } else {
+                    view.displayFavicon(thumbnail.bitmap);
+                }
             }
         }
     }
@@ -317,13 +340,13 @@ public class TopBookmarksView extends GridView {
     /**
      * An AsyncTask to load the thumbnails from a cursor.
      */
-    private class LoadThumbnailsTask extends UiAsyncTask<Cursor, Void, Map<String,Bitmap>> {
+    private class LoadThumbnailsTask extends UiAsyncTask<Cursor, Void, Map<String, Thumbnail>> {
         public LoadThumbnailsTask() {
             super(ThreadUtils.getBackgroundHandler());
         }
 
         @Override
-        protected Map<String, Bitmap> doInBackground(Cursor... params) {
+        protected Map<String, Thumbnail> doInBackground(Cursor... params) {
             // TopBookmarksAdapter's cursor.
             final Cursor adapterCursor = params[0];
             if (adapterCursor == null || !adapterCursor.moveToFirst()) {
@@ -340,30 +363,38 @@ public class TopBookmarksView extends GridView {
                 return null;
             }
 
-            Map<String, Bitmap> thumbnails = new HashMap<String, Bitmap>();
-            Cursor cursor = BrowserDB.getThumbnailsForUrls(getContext().getContentResolver(), urls);
-            if (cursor == null || !cursor.moveToFirst()) {
-                return null;
-            }
+            final Map<String, Thumbnail> thumbnails = new HashMap<String, Thumbnail>();
+
+            // Query the DB for thumbnails.
+            final ContentResolver cr = getContext().getContentResolver();
+            final Cursor cursor = BrowserDB.getThumbnailsForUrls(cr, urls);
 
             try {
-                do {
-                    final String url = cursor.getString(cursor.getColumnIndexOrThrow(Thumbnails.URL));
-                    final byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(Thumbnails.DATA));
-                    if (b == null) {
-                        continue;
-                    }
+                if (cursor != null && cursor.moveToFirst()) {
+                    do {
+                        // Try to get the thumbnail, if cursor is valid.
+                        String url = cursor.getString(cursor.getColumnIndexOrThrow(Thumbnails.URL));
+                        final byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(Thumbnails.DATA));
+                        final Bitmap bitmap = (b == null ? null : BitmapUtils.decodeByteArray(b));
 
-                    Bitmap thumbnail = BitmapUtils.decodeByteArray(b);
-                    if (thumbnail == null) {
-                        continue;
-                    }
-
-                    thumbnails.put(url, thumbnail);
-                } while (cursor.moveToNext());
+                        if (bitmap != null) {
+                            thumbnails.put(url, new Thumbnail(bitmap, true));
+                        }
+                    } while (cursor.moveToNext());
+                }
             } finally {
                 if (cursor != null) {
                     cursor.close();
+                }
+            }
+
+            // Query the DB for favicons for the urls without thumbnails.
+            for (String url : urls) {
+                if (!thumbnails.containsKey(url)) {
+                    final Bitmap bitmap = BrowserDB.getFaviconForUrl(cr, url);
+                    if (bitmap != null) {
+                        thumbnails.put(url, new Thumbnail(bitmap, true));
+                    }
                 }
             }
 
@@ -371,7 +402,7 @@ public class TopBookmarksView extends GridView {
         }
 
         @Override
-        public void onPostExecute(Map<String, Bitmap> thumbnails) {
+        public void onPostExecute(Map<String, Thumbnail> thumbnails) {
             // If there's a layout scheduled on this view, wait for it to happen
             // by storing the thumbnails in a cache. If not, update them right away.
             if (isLayoutRequested()) {
