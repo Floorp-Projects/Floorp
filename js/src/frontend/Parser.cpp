@@ -4775,6 +4775,22 @@ Parser<ParseHandler>::tryStatement()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::debuggerStatement()
+{
+    TokenPos p;
+    p.begin = pos().begin;
+    if (!MatchOrInsertSemicolon(context, &tokenStream))
+        return null();
+    p.end = pos().end;
+
+    pc->sc->setBindingsAccessedDynamically();
+    pc->sc->setHasDebuggerStatement();
+
+    return handler.newDebuggerStatement(p);
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::statement(bool canHaveDirectives)
 {
     Node pn;
@@ -4863,12 +4879,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return functionStmt();
 
       case TOK_DEBUGGER:
-        pn = handler.newDebuggerStatement(pos());
-        if (!pn)
-            return null();
-        pc->sc->setBindingsAccessedDynamically();
-        pc->sc->setHasDebuggerStatement();
-        break;
+        return debuggerStatement();
 
       /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
       case TOK_CATCH:

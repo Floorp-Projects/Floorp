@@ -429,6 +429,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node labeledStatement();
     Node throwStatement();
     Node tryStatement();
+    Node debuggerStatement();
+
 #if JS_HAS_BLOCK_SCOPE
     Node letStatement();
 #endif
