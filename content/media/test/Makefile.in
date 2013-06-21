@@ -114,7 +114,6 @@ MOCHITEST_FILES = \
 		test_source_write.html \
 		test_source_null.html \
 		test_standalone.html \
-		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
 		test_audiowrite.html \
