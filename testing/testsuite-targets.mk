@@ -470,7 +470,6 @@ endif
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/ffxcp/FfxCP.apk $(PKG_STAGE)/bin
 
 stage-jetpack: make-stage-dir
-	$(NSINSTALL) $(topsrcdir)/testing/jetpack/jetpack-location.txt $(PKG_STAGE)/jetpack
 	$(MAKE) -C $(DEPTH)/addon-sdk stage-tests-package
 
 stage-peptest: make-stage-dir
