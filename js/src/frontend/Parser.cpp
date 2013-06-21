@@ -4783,13 +4783,7 @@ Parser<ParseHandler>::tryStatement()
         return null();
     }
 
-    Node pn = handler.newTernary(PNK_TRY, innerBlock, catchList, finallyBlock);
-    if (!pn)
-        return null();
-
-    handler.setBeginPosition(pn, begin);
-    handler.setEndPosition(pn, finallyBlock ? finallyBlock : catchList);
-    return pn;
+    return handler.newTryStatement(begin, innerBlock, catchList, finallyBlock);
 }
 
 template <typename ParseHandler>

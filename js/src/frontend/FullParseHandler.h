@@ -277,6 +277,13 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_THROW, JSOP_THROW, pos, expr);
     }
 
+    ParseNode *newTryStatement(uint32_t begin, ParseNode *body, ParseNode *catchList,
+                               ParseNode *finallyBlock) {
+        TokenPos pos = TokenPos::make(begin,
+                                      (finallyBlock ? finallyBlock : catchList)->pn_pos.end);
+        return new_<TernaryNode>(PNK_TRY, JSOP_NOP, body, catchList, finallyBlock, pos);
+    }
+
     ParseNode *newDebuggerStatement(const TokenPos &pos) {
         return new_<DebuggerStatement>(pos);
     }

@@ -120,6 +120,9 @@ class SyntaxParseHandler
     }
 
     Node newThrowStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
+    Node newTryStatement(uint32_t begin, Node body, Node catchList, Node finallyBlock) {
+        return NodeGeneric;
+    }
     Node newDebuggerStatement(const TokenPos &pos) { return NodeGeneric; }
 
     Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end) {
