@@ -384,6 +384,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return immediatelyDominated_[i];
     }
 
+    MBasicBlock **immediatelyDominatedBlocksBegin() {
+        return immediatelyDominated_.begin();
+    }
+
+    MBasicBlock **immediatelyDominatedBlocksEnd() {
+        return immediatelyDominated_.end();
+    }
+
     size_t numDominated() const {
         return numDominated_;
     }
