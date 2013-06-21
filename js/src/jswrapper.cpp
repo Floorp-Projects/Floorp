@@ -836,7 +836,7 @@ js::NewDeadProxyObject(JSContext *cx, JSObject *parent)
 bool
 js::IsDeadProxyObject(JSObject *obj)
 {
-    return IsProxy(obj) && GetProxyHandler(obj) == &DeadObjectProxy::singleton;
+    return obj->is<ProxyObject>() && GetProxyHandler(obj) == &DeadObjectProxy::singleton;
 }
 
 static void
@@ -862,7 +862,7 @@ js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
     NukeSlot(wrapper, JSSLOT_PROXY_PRIVATE, NullValue());
     SetProxyHandler(wrapper, &DeadObjectProxy::singleton);
 
-    if (IsFunctionProxy(wrapper)) {
+    if (wrapper->is<FunctionProxyObject>()) {
         NukeSlot(wrapper, JSSLOT_PROXY_CALL, NullValue());
         NukeSlot(wrapper, JSSLOT_PROXY_CONSTRUCT, NullValue());
     }

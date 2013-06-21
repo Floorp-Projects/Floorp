@@ -387,9 +387,12 @@ struct Atom {
 
 } /* namespace shadow */
 
-extern JS_FRIEND_DATA(js::Class) FunctionProxyClass;
-extern JS_FRIEND_DATA(js::Class) OuterWindowProxyClass;
-extern JS_FRIEND_DATA(js::Class) ObjectProxyClass;
+// These are equal to |&{Function,Object,OuterWindow}ProxyObject::class_|.  Use
+// them in places where you don't want to #include vm/ProxyObject.h.
+extern JS_FRIEND_DATA(js::Class*) FunctionProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class*) ObjectProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class*) OuterWindowProxyClassPtr;
+
 extern JS_FRIEND_DATA(js::Class) ObjectClass;
 
 inline js::Class *
@@ -492,9 +495,9 @@ inline bool
 GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto)
 {
     js::Class *clasp = GetObjectClass(obj);
-    if (clasp == &js::ObjectProxyClass ||
-        clasp == &js::OuterWindowProxyClass ||
-        clasp == &js::FunctionProxyClass)
+    if (clasp == js::ObjectProxyClassPtr ||
+        clasp == js::OuterWindowProxyClassPtr ||
+        clasp == js::FunctionProxyClassPtr)
     {
         return JS_GetPrototype(cx, obj, proto.address());
     }

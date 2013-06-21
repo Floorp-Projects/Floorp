@@ -424,7 +424,7 @@ IonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 static bool
 IsCacheableDOMProxy(JSObject *obj)
 {
-    if (!obj->isProxy())
+    if (!obj->is<ProxyObject>())
         return false;
 
     BaseProxyHandler *handler = GetProxyHandler(obj);
@@ -1348,7 +1348,7 @@ DetermineGetPropKind(JSContext *cx, IonCache &cache, JSObject *receiver,
     {
         // With Proxies, we cannot garantee any property access as the proxy can
         // mask any property from the prototype chain.
-        JS_ASSERT(!checkObj->isProxy());
+        JS_ASSERT(!checkObj->is<ProxyObject>());
         *readSlot = true;
     } else if (IsCacheableGetPropCallNative(checkObj, holder, shape) ||
                IsCacheableGetPropCallPropertyOp(checkObj, holder, shape))

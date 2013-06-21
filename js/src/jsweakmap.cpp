@@ -258,7 +258,7 @@ TryPreserveReflector(JSContext *cx, HandleObject obj)
 {
     if (obj->getClass()->ext.isWrappedNative ||
         (obj->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
-        (obj->isProxy() && GetProxyHandler(obj)->family() == GetDOMProxyHandlerFamily()))
+        (obj->is<ProxyObject>() && GetProxyHandler(obj)->family() == GetDOMProxyHandlerFamily()))
     {
         JS_ASSERT(cx->runtime()->preserveWrapperCallback);
         if (!cx->runtime()->preserveWrapperCallback(cx, obj)) {

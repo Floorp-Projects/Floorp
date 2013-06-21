@@ -10,6 +10,7 @@
 #include "jsiter.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/ProxyObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/Xdr.h"
@@ -1588,10 +1589,10 @@ DebugScopeObject::isForDeclarative() const
 }
 
 bool
-js_IsDebugScopeSlow(JSObject *obj)
+js_IsDebugScopeSlow(ObjectProxyObject *proxy)
 {
-    return obj->getClass() == &ObjectProxyClass &&
-           GetProxyHandler(obj) == &DebugScopeProxy::singleton;
+    JS_ASSERT(proxy->hasClass(&ObjectProxyObject::class_));
+    return GetProxyHandler(proxy) == &DebugScopeProxy::singleton;
 }
 
 /*****************************************************************************/
