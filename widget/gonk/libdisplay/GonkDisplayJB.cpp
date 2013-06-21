@@ -47,6 +47,8 @@ GonkDisplayJB::GonkDisplayJB()
         mWidth = mFBDevice->width;
         mHeight = mFBDevice->height;
         xdpi = mFBDevice->xdpi;
+        /* The emulator actually reports RGBA_8888, but EGL doesn't return
+         * any matching configuration. We force RGBX here to fix it. */
         surfaceformat = HAL_PIXEL_FORMAT_RGBX_8888;
     }
 
