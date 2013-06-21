@@ -671,43 +671,6 @@ SocialShare = {
 
     if (!aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https')))
       return false;
-
-    // The share button and context menus are disabled if the current tab has
-    // defined no-store. However, a share from other content is still possible
-    // (eg. via mozSocial or future use of web activities).  If the URI is not
-    // the current tab URI, we cannot validate the no-store header on the URI.
-    if (aURI != gBrowser.currentURI)
-      return true;
-
-    // we want to ensure this is a successful load and that the page is locally
-    // cacheable since that is a common mechanism for sensitive pages to avoid
-    // storing sensitive data in cache.
-    let channel = gBrowser.docShell.currentDocumentChannel;
-    let httpChannel;
-    try {
-      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
-    } catch (e) {
-      /* Not an HTTP channel. */
-      Cu.reportError("cannot share without httpChannel");
-      return false;
-    }
-
-    // Continue only if we have a 2xx status code.
-    try {
-      if (!httpChannel.requestSucceeded)
-        return false;
-    } catch (e) {
-      // Can't get response information from the httpChannel
-      // because mResponseHead is not available.
-      return false;
-    }
-
-    // Cache-Control: no-store.
-    if (httpChannel.isNoStoreResponse()) {
-      Cu.reportError("cannot share cache-control: no-share");
-      return false;
-    }
-
     return true;
   },
 
