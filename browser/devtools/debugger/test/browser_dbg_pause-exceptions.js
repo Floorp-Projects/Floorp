@@ -18,9 +18,9 @@ requestLongerTimeout(2);
 function test()
 {
   gPrevPref = Services.prefs.getBoolPref(
-    "devtools.debugger.ui.pause-on-exceptions");
+    "devtools.debugger.pause-on-exceptions");
   Services.prefs.setBoolPref(
-    "devtools.debugger.ui.pause-on-exceptions", true);
+    "devtools.debugger.pause-on-exceptions", true);
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;

@@ -92,8 +92,8 @@ function test()
     waitForBreakpoint(12, function() {
       waitForCaretPos(10, function() {
         waitForPopup(false, function() {
-          testBreakpoint(gSources.selectedBreakpoint,
-                         gSources.selectedClient,
+          testBreakpoint(gSources.selectedBreakpointItem,
+                         gSources.selectedBreakpointClient,
                          gSources.selectedValue, 12, false, false, false);
 
           executeSoon(addBreakpoint2);
@@ -110,8 +110,8 @@ function test()
     waitForBreakpoint(13, function() {
       waitForCaretPos(12, function() {
         waitForPopup(false, function() {
-          testBreakpoint(gSources.selectedBreakpoint,
-                         gSources.selectedClient,
+          testBreakpoint(gSources.selectedBreakpointItem,
+                         gSources.selectedBreakpointClient,
                          gSources.selectedValue, 13, false, false, true);
 
           executeSoon(modBreakpoint2);
@@ -128,8 +128,8 @@ function test()
     waitForBreakpoint(13, function() {
       waitForCaretPos(12, function() {
         waitForPopup(true, function() {
-          testBreakpoint(gSources.selectedBreakpoint,
-                         gSources.selectedClient,
+          testBreakpoint(gSources.selectedBreakpointItem,
+                         gSources.selectedBreakpointClient,
                          gSources.selectedValue, 13, true, true, true);
 
           executeSoon(addBreakpoint3);
@@ -146,8 +146,8 @@ function test()
     waitForBreakpoint(14, function() {
       waitForCaretPos(13, function() {
         waitForPopup(true, function() {
-          testBreakpoint(gSources.selectedBreakpoint,
-                         gSources.selectedClient,
+          testBreakpoint(gSources.selectedBreakpointItem,
+                         gSources.selectedBreakpointClient,
                          gSources.selectedValue, 14, true, true, true);
 
           executeSoon(modBreakpoint3);
@@ -164,7 +164,7 @@ function test()
     waitForBreakpoint(14, function() {
       waitForCaretPos(13, function() {
         waitForPopup(false, function() {
-          is(gSources.selectedClient.conditionalExpression, "bamboocha",
+          is(gSources.selectedBreakpointClient.conditionalExpression, "bamboocha",
             "The bamboocha expression wasn't fonud on the conditional breakpoint");
 
           executeSoon(setContextMenu);
@@ -210,8 +210,8 @@ function test()
     waitForBreakpoint(15, function() {
       waitForCaretPos(14, function() {
         waitForPopup(false, function() {
-          testBreakpoint(gSources.selectedBreakpoint,
-                         gSources.selectedClient,
+          testBreakpoint(gSources.selectedBreakpointItem,
+                         gSources.selectedBreakpointClient,
                          gSources.selectedValue, 15, false, false, true);
 
           executeSoon(delBreakpoint4);
@@ -228,7 +228,7 @@ function test()
     waitForBreakpoint(null, function() {
       waitForCaretPos(14, function() {
         waitForPopup(false, function() {
-          is(gSources.selectedBreakpoint, null,
+          is(gSources.selectedBreakpointItem, null,
             "There should be no selected breakpoint in the breakpoints pane.")
           is(gSources._conditionalPopupVisible, false,
             "The breakpoint conditional expression popup should not be shown.");
@@ -246,8 +246,8 @@ function test()
     waitForBreakpoint(14, function() {
       waitForCaretPos(13, function() {
         waitForPopup(false, function() {
-          testBreakpoint(gSources.selectedBreakpoint,
-                         gSources.selectedClient,
+          testBreakpoint(gSources.selectedBreakpointItem,
+                         gSources.selectedBreakpointClient,
                          gSources.selectedValue, 14, false, true, true);
 
           executeSoon(testHighlights1);
@@ -258,11 +258,11 @@ function test()
 
   function testHighlights1()
   {
-    isnot(gSources.selectedBreakpoint, null,
+    isnot(gSources.selectedBreakpointItem, null,
       "There should be a selected breakpoint in the breakpoints pane.");
-    is(gSources.selectedBreakpoint.attachment.sourceLocation, gSources.selectedValue,
+    is(gSources.selectedBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
       "The selected breakpoint should have the correct location.");
-    is(gSources.selectedBreakpoint.attachment.lineNumber, 14,
+    is(gSources.selectedBreakpointItem.attachment.lineNumber, 14,
       "The selected breakpoint should have the correct line number.");
     is(gSources._conditionalPopupVisible, false,
       "The breakpoint conditional expression popup should not be shown.");
@@ -275,11 +275,11 @@ function test()
 
     waitForCaretPos(12, function() {
       waitForPopup(false, function() {
-        isnot(gSources.selectedBreakpoint, null,
+        isnot(gSources.selectedBreakpointItem, null,
           "There should be a selected breakpoint in the breakpoints pane.");
-        is(gSources.selectedBreakpoint.attachment.sourceLocation, gSources.selectedValue,
+        is(gSources.selectedBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
           "The selected breakpoint should have the correct location.");
-        is(gSources.selectedBreakpoint.attachment.lineNumber, 13,
+        is(gSources.selectedBreakpointItem.attachment.lineNumber, 13,
           "The selected breakpoint should have the correct line number.");
         is(gSources._conditionalPopupVisible, false,
           "The breakpoint conditional expression popup should not be shown.");
@@ -292,11 +292,11 @@ function test()
 
         waitForCaretPos(11, function() {
           waitForPopup(false, function() {
-            isnot(gSources.selectedBreakpoint, null,
+            isnot(gSources.selectedBreakpointItem, null,
               "There should be a selected breakpoint in the breakpoints pane.");
-            is(gSources.selectedBreakpoint.attachment.sourceLocation, gSources.selectedValue,
+            is(gSources.selectedBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
               "The selected breakpoint should have the correct location.");
-            is(gSources.selectedBreakpoint.attachment.lineNumber, 12,
+            is(gSources.selectedBreakpointItem.attachment.lineNumber, 12,
               "The selected breakpoint should have the correct line number.");
             is(gSources._conditionalPopupVisible, false,
               "The breakpoint conditional expression popup should not be shown.");
@@ -309,7 +309,7 @@ function test()
 
             waitForCaretPos(10, function() {
               waitForPopup(false, function() {
-                is(gSources.selectedBreakpoint, null,
+                is(gSources.selectedBreakpointItem, null,
                   "There should not be a selected breakpoint in the breakpoints pane.");
                 is(gSources._conditionalPopupVisible, false,
                   "The breakpoint conditional expression popup should not be shown.");
@@ -322,7 +322,7 @@ function test()
 
                 waitForCaretPos(14, function() {
                   waitForPopup(false, function() {
-                    is(gSources.selectedBreakpoint, null,
+                    is(gSources.selectedBreakpointItem, null,
                       "There should not be a selected breakpoint in the breakpoints pane.");
                     is(gSources._conditionalPopupVisible, false,
                       "The breakpoint conditional expression popup should not be shown.");
@@ -350,11 +350,11 @@ function test()
 
     waitForCaretPos(13, function() {
       waitForPopup(true, function() {
-        isnot(gSources.selectedBreakpoint, null,
+        isnot(gSources.selectedBreakpointItem, null,
           "There should be a selected breakpoint in the breakpoints pane.");
-        is(gSources.selectedBreakpoint.attachment.sourceLocation, gSources.selectedValue,
+        is(gSources.selectedBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
           "The selected breakpoint should have the correct location.");
-        is(gSources.selectedBreakpoint.attachment.lineNumber, 14,
+        is(gSources.selectedBreakpointItem.attachment.lineNumber, 14,
           "The selected breakpoint should have the correct line number.");
         is(gSources._conditionalPopupVisible, true,
           "The breakpoint conditional expression popup should be shown.");
@@ -369,11 +369,11 @@ function test()
 
         waitForCaretPos(12, function() {
           waitForPopup(true, function() {
-            isnot(gSources.selectedBreakpoint, null,
+            isnot(gSources.selectedBreakpointItem, null,
               "There should be a selected breakpoint in the breakpoints pane.");
-            is(gSources.selectedBreakpoint.attachment.sourceLocation, gSources.selectedValue,
+            is(gSources.selectedBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
               "The selected breakpoint should have the correct location.");
-            is(gSources.selectedBreakpoint.attachment.lineNumber, 13,
+            is(gSources.selectedBreakpointItem.attachment.lineNumber, 13,
               "The selected breakpoint should have the correct line number.");
             is(gSources._conditionalPopupVisible, true,
               "The breakpoint conditional expression popup should be shown.");
@@ -388,11 +388,11 @@ function test()
 
             waitForCaretPos(11, function() {
               waitForPopup(false, function() {
-                isnot(gSources.selectedBreakpoint, null,
+                isnot(gSources.selectedBreakpointItem, null,
                   "There should be a selected breakpoint in the breakpoints pane.");
-                is(gSources.selectedBreakpoint.attachment.sourceLocation, gSources.selectedValue,
+                is(gSources.selectedBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
                   "The selected breakpoint should have the correct location.");
-                is(gSources.selectedBreakpoint.attachment.lineNumber, 12,
+                is(gSources.selectedBreakpointItem.attachment.lineNumber, 12,
                   "The selected breakpoint should have the correct line number.");
                 is(gSources._conditionalPopupVisible, false,
                   "The breakpoint conditional expression popup should be shown.");
@@ -417,7 +417,7 @@ function test()
 
     waitForBreakpoint(null, function() {
       waitForPopup(false, function() {
-        is(gSources.selectedBreakpoint, null,
+        is(gSources.selectedBreakpointItem, null,
           "There should be no selected breakpoint in the breakpoints pane.")
         is(gSources._conditionalPopupVisible, false,
           "The breakpoint conditional expression popup should not be shown.");
@@ -434,7 +434,7 @@ function test()
 
     waitForBreakpoint(null, function() {
       waitForPopup(false, function() {
-        is(gSources.selectedBreakpoint, null,
+        is(gSources.selectedBreakpointItem, null,
           "There should be no selected breakpoint in the breakpoints pane.")
         is(gSources._conditionalPopupVisible, false,
           "The breakpoint conditional expression popup should not be shown.");
@@ -502,8 +502,8 @@ function test()
         window.clearInterval(intervalID);
         return closeDebuggerAndFinish();
       }
-      if ((gSources.selectedClient !== expected) &&
-          (gSources.selectedClient || bogusClient).location.line !== expected) {
+      if ((gSources.selectedBreakpointClient !== expected) &&
+          (gSources.selectedBreakpointClient || bogusClient).location.line !== expected) {
         return;
       }
       // We arrived at the expected line, it's safe to callback.

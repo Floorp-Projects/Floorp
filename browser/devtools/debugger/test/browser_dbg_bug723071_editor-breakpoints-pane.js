@@ -270,7 +270,7 @@ function test()
         "Breakpoint element " + id + " found successfully.");
       is(line.getAttribute("value"), this.line,
         "The expected information wasn't found in the breakpoint element.");
-      is(text.getAttribute("value"), gDebugger.DebuggerView.getEditorLine(this.line - 1).trim(),
+      is(text.getAttribute("value"), gDebugger.DebuggerView.getEditorLineText(this.line - 1).trim(),
         "The expected line text wasn't found in the breakpoint element.");
       is(check.getAttribute("checked"), "true",
         "The breakpoint enable checkbox is checked as expected.");

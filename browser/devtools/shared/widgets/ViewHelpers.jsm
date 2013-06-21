@@ -373,6 +373,8 @@ this.MenuItem = function MenuItem(aAttachment, aContents = []) {
     this._value = aValue + "";
     this._description = (aDescription || "") + "";
   }
+
+  XPCOMUtils.defineLazyGetter(this, "_itemsByElement", () => new Map());
 };
 
 MenuItem.prototype = {
@@ -397,16 +399,16 @@ MenuItem.prototype = {
   append: function(aElement, aOptions = {}) {
     let item = new MenuItem(aOptions.attachment);
 
-    // Handle any additional options before appending the child node.
+    // Entangle the item with the newly inserted child node.
+    this._entangleItem(item, this._target.appendChild(aElement));
+
+    // Handle any additional options after entangling the item.
     if (aOptions.attributes) {
-      this.setAttributes(aOptions.attributes);
+      aOptions.attributes.forEach(e => item._target.setAttribute(e[0], e[1]));
     }
     if (aOptions.finalize) {
       item.finalize = aOptions.finalize;
     }
-
-    // Entangle the item with the newly inserted child node.
-    this._entangleItem(item, this._target.appendChild(aElement));
 
     // Return the item associated with the displayed element.
     return item;
@@ -427,40 +429,6 @@ MenuItem.prototype = {
   },
 
   /**
-   * Visually marks this menu item as selected.
-   */
-  markSelected: function() {
-    if (!this._target) {
-      return;
-    }
-    this._target.classList.add("selected");
-  },
-
-  /**
-   * Visually marks this menu item as deselected.
-   */
-  markDeselected: function() {
-    if (!this._target) {
-      return;
-    }
-    this._target.classList.remove("selected");
-  },
-
-  /**
-   * Batch sets attributes on an element.
-   *
-   * @param array aAttributes
-   *        An array of [name, value] tuples representing the attributes.
-   * @param nsIDOMNode aElement [optional]
-   *        A custom element to set the attributes to.
-   */
-  setAttributes: function(aAttributes, aElement = this._target) {
-    for (let [name, value] of aAttributes) {
-      aElement.setAttribute(name, value);
-    }
-  },
-
-  /**
    * Entangles an item (model) with a displayed node element (view).
    *
    * @param MenuItem aItem
@@ -469,10 +437,6 @@ MenuItem.prototype = {
    *        The element displaying the item.
    */
   _entangleItem: function(aItem, aElement) {
-    if (!this._itemsByElement) {
-      this._itemsByElement = new Map(); // This needs to be iterable.
-    }
-
     this._itemsByElement.set(aElement, aItem);
     aItem._target = aElement;
   },
@@ -586,17 +550,19 @@ MenuContainer.prototype = {
   get node() this._container,
 
   /**
-   * Prepares an item to be added to this container. This allows for a large
-   * number of items to be batched up before being sorted and added.
+   * Prepares an item to be added to this container. This allows, for example,
+   * for a large number of items to be batched up before being sorted & added.
    *
-   * If the "staged" flag is not set to true, the item will be immediately
+   * If the "staged" flag is *not* set to true, the item will be immediately
    * inserted at the correct position in this container, so that all the items
-   * remain sorted. This can (possibly) be much slower than batching up
+   * still remain sorted. This can (possibly) be much slower than batching up
    * multiple items.
    *
    * By default, this container assumes that all the items should be displayed
    * sorted by their label. This can be overridden with the "index" flag,
-   * specifying on which position should an item be appended.
+   * specifying on which position should an item be appended. The "staged" and
+   * "index" flags are mutually exclusive, meaning that all staged items
+   * will always be appended.
    *
    * Furthermore, this container makes sure that all the items are unique
    * (two items with the same label or value are not allowed) and non-degenerate
@@ -694,6 +660,16 @@ MenuContainer.prototype = {
   },
 
   /**
+   * Removes the item at the specified index from this container.
+   *
+   * @param number aIndex
+   *        The index of the item to remove.
+   */
+  removeAt: function(aIndex) {
+    this.remove(this.getItemAtIndex(aIndex));
+  },
+
+  /**
    * Removes all items from this container.
    */
   empty: function() {
@@ -771,8 +747,8 @@ MenuContainer.prototype = {
    * Sorts all the items in this container based on a predicate.
    *
    * @param function aPredicate [optional]
-   *        Items are sorted according to the return value of the function, which
-   *        will become the new default sorting predicate in this container.
+   *        Items are sorted according to the return value of the function,
+   *        which will become the new default sorting predicate in this container.
    *        If unspecified, all items will be sorted by their label.
    */
   sortContents: function(aPredicate = this._currentSortPredicate) {
@@ -865,7 +841,7 @@ MenuContainer.prototype = {
    */
   containsLabel: function(aLabel) {
     return this._itemsByLabel.has(aLabel) ||
-           this._stagedItems.some(function({item}) item._label == aLabel);
+           this._stagedItems.some(({ item }) => item._label == aLabel);
   },
 
   /**
@@ -879,11 +855,12 @@ MenuContainer.prototype = {
    */
   containsValue: function(aValue) {
     return this._itemsByValue.has(aValue) ||
-           this._stagedItems.some(function({item}) item._value == aValue);
+           this._stagedItems.some(({ item }) => item._value == aValue);
   },
 
   /**
-   * Gets the preferred selected value to be displayed in this container.
+   * Gets the "preferred value". This is the latest selected item's value,
+   * remembered just before emptying this container.
    * @return string
    */
   get preferredValue() this._preferredValue,
@@ -938,9 +915,15 @@ MenuContainer.prototype = {
 
   /**
    * Selects the element with the entangled item in this container.
-   * @param MenuItem aItem
+   * @param MenuItem | function aItem
    */
   set selectedItem(aItem) {
+    // A predicate is allowed to select a specific item.
+    // If no item is matched, then the current selection is removed.
+    if (typeof aItem == "function") {
+      aItem = this.getItemForPredicate(aItem);
+    }
+
     // A falsy item is allowed to invalidate the current selection.
     let targetElement = aItem ? aItem._target : null;
     let prevElement = this._container.selectedItem;
@@ -957,6 +940,10 @@ MenuContainer.prototype = {
     }
     this._container.selectedItem = targetElement;
     ViewHelpers.dispatchEvent(targetElement || prevElement, "select", aItem);
+
+    // Updates this container to reflect the information provided by the
+    // currently selected item.
+    this.refresh();
   },
 
   /**
@@ -1195,6 +1182,29 @@ MenuContainer.prototype = {
   },
 
   /**
+   * Gets a visible item in this container validating a specified predicate.
+   *
+   * @param function aPredicate
+   *        The first item which validates this predicate is returned
+   * @return MenuItem
+   *         The matched item, or null if nothing is found.
+   */
+  getItemForPredicate: function(aPredicate, aOwner = this) {
+    for (let [element, item] of aOwner._itemsByElement) {
+      let match;
+      if (aPredicate(item) && !element.hidden) {
+        match = item;
+      } else {
+        match = this.getItemForPredicate(aPredicate, item);
+      }
+      if (match) {
+        return match;
+      }
+    }
+    return null;
+  },
+
+  /**
    * Finds the index of an item in the container.
    *
    * @param MenuItem aItem
@@ -1412,7 +1422,7 @@ MenuContainer.prototype = {
       aItem._target.focus();
     }
     if (aOptions.attributes) {
-      aItem.setAttributes(aOptions.attributes, aItem._target);
+      aOptions.attributes.forEach(e => aItem._target.setAttribute(e[0], e[1]));
     }
     if (aOptions.finalize) {
       aItem.finalize = aOptions.finalize;
@@ -1565,9 +1575,6 @@ MenuContainer.prototype = {
  */
 MenuItem.prototype.__iterator__ =
 MenuContainer.prototype.__iterator__ = function() {
-  if (!this._itemsByElement) {
-    return;
-  }
   for (let [, item] of this._itemsByElement) {
     yield item;
   }
