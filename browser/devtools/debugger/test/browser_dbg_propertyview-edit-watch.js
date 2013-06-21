@@ -96,7 +96,9 @@ function testFrameEval() {
         "Should have the one close button visible for 'aArg'.");
       is(scope.get("aArg").name, "aArg",
         "Should have the right name for 'aArg'.");
-      is(scope.get("aArg").value, undefined,
+      is(scope.get("aArg").value.type, "undefined",
+        "Should have the right value for 'aArg'.");
+      is(scope.get("aArg").value.class, undefined,
         "Should have the right value for 'aArg'.");
 
       is(scope.get("document.title")._isContentVisible, true,
