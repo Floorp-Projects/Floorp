@@ -434,8 +434,14 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
   ScreenPoint offset(0, 0);
-  ScreenPoint userScroll(0, 0);
-  CSSToScreenScale userZoom;
+
+  // Ideally we would initialize userZoom to AsyncPanZoomController::CalculateResolution(metrics)
+  // but this causes a reftest-ipc test to fail (see bug 883646 comment 27). The reason for this
+  // appears to be that metrics.mZoom is poorly initialized in some scenarios. In these scenarios,
+  // however, we can assume there is no async zooming in progress and so the following statement
+  // works fine.
+  CSSToScreenScale userZoom(metrics.mDevPixelsPerCSSPixel.scale * metrics.mResolution.scale);
+  ScreenPoint userScroll = metrics.mScrollOffset * userZoom;
   SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
                    userScroll, userZoom, fixedLayerMargins,
                    offset);
