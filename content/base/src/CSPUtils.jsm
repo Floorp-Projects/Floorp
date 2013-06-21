@@ -838,16 +838,26 @@ CSPRep.prototype = {
   function cspsd_makeExplicit() {
     let SD = this._specCompliant ? CSPRep.SRC_DIRECTIVES_NEW : CSPRep.SRC_DIRECTIVES_OLD;
 
-    var defaultSrcDir = this._directives[SD.DEFAULT_SRC];
-
     // It's ok for a 1.0 spec compliant policy to not have a default source,
     // in this case it should use default-src *
     // However, our original CSP implementation required a default src
     // or an allow directive.
-    if (!defaultSrcDir && !this._specCompliant) {
-      this.log(WARN_FLAG, CSPLocalizer.getStr("allowOrDefaultSrcRequired"));
-      return false;
+    if (!this._directives[SD.DEFAULT_SRC]) {
+      if(!this._specCompliant) {
+        this.warn(CSPLocalizer.getStr("allowOrDefaultSrcRequired"));
+        return false;
+      }
+
+      // bug 780978 will remove these lines and needs to make sure that
+      // CSPRep.permits() enforces this logic: prefixed headers default to
+      // "disallowed" and unprefixed headers default to "allowed" when
+      // neither specific -src nor default-src directive is provided.
+      this._directives[SD.DEFAULT_SRC]
+            = CSPSourceList.fromString("*", this, this._self, true);
+      this._directives[SD.DEFAULT_SRC]._isImplicit = true;
     }
+
+    var defaultSrcDir = this._directives[SD.DEFAULT_SRC];
 
     for (var dir in SD) {
       var dirv = SD[dir];
