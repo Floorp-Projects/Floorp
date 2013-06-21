@@ -37,6 +37,7 @@
 #include "ion/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Interpreter.h"
+#include "vm/RegExpStaticsObject.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
@@ -5343,7 +5344,7 @@ JSObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExt
     // Note that sizes->private_ is measured elsewhere.
     if (is<ArgumentsObject>()) {
         sizes->argumentsData = as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
-    } else if (isRegExpStatics()) {
+    } else if (is<RegExpStaticsObject>()) {
         sizes->regExpStatics = js::SizeOfRegExpStaticsData(this, mallocSizeOf);
     } else if (is<PropertyIteratorObject>()) {
         sizes->propertyIteratorData = as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
