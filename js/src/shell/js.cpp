@@ -697,7 +697,8 @@ ResolvePath(JSContext *cx, HandleString filenameStr, bool scriptRelative)
 
     /* Get the currently executing script's name. */
     RootedScript script(cx, GetTopScript(cx));
-    JS_ASSERT(script && script->filename());
+    if (!script->filename())
+        return NULL;
     if (strcmp(script->filename(), "-e") == 0 || strcmp(script->filename(), "typein") == 0)
         scriptRelative = false;
 
@@ -792,11 +793,15 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
     RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
         str = JS_ValueToString(cx, args[i]);
-        if (!str)
+        if (!str) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "load");
             return false;
+        }
         str = ResolvePath(cx, str, scriptRelative);
-        if (!str)
+        if (!str) {
+            JS_ReportError(cx, "unable to resolve path");
             return false;
+        }
         JSAutoByteString filename(cx, str);
         if (!filename)
             return false;
