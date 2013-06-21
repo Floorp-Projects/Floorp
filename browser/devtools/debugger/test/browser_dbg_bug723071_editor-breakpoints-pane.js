@@ -85,8 +85,8 @@ function test()
     ok(!gPane.getBreakpoint("chocolate", 3), "getBreakpoint('chocolate', 3) returns falsey");
     is(gEditor.getBreakpoints().length, 0, "no breakpoints in the editor");
 
-    gBreakpointsParent = gSources._container._parent;
-    gBreakpointsList = gSources._container._list;
+    gBreakpointsParent = gSources.widget._parent;
+    gBreakpointsList = gSources.widget._list;
 
     is(gBreakpointsParent.childNodes.length, 1, // one sources list
       "Found junk in the breakpoints container.");
@@ -270,7 +270,7 @@ function test()
         "Breakpoint element " + id + " found successfully.");
       is(line.getAttribute("value"), this.line,
         "The expected information wasn't found in the breakpoint element.");
-      is(text.getAttribute("value"), gDebugger.DebuggerView.getEditorLine(this.line - 1).trim(),
+      is(text.getAttribute("value"), gDebugger.DebuggerView.getEditorLineText(this.line - 1).trim(),
         "The expected line text wasn't found in the breakpoint element.");
       is(check.getAttribute("checked"), "true",
         "The breakpoint enable checkbox is checked as expected.");

@@ -192,35 +192,12 @@ function debug_tab_pane(aURL, aOnDebugging, aBeforeTabAdded) {
   });
 }
 
-function debug_remote(aURL, aOnDebugging, aBeforeTabAdded) {
-  // Make any necessary preparations (start the debugger server etc.)
-  if (aBeforeTabAdded) {
-    aBeforeTabAdded();
-  }
-
-  let tab = addTab(aURL, function() {
-    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
-
-    info("Opening Remote Debugger");
-    let win = DebuggerUI.toggleRemoteDebugger();
-
-    // Wait for the initial resume...
-    win.panelWin.gClient.addOneTimeListener("resumed", function() {
-      info("Remote Debugger has started");
-      win._dbgwin.DebuggerView.Variables.lazyEmpty = false;
-      win._dbgwin.DebuggerView.Variables.lazyAppend = false;
-      win._dbgwin.DebuggerView.Variables.lazyExpand = false;
-      aOnDebugging(tab, debuggee, win);
-    });
-  });
-}
-
 function debug_chrome(aURL, aOnClosing, aOnDebugging) {
   let tab = addTab(aURL, function() {
     let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
 
     info("Opening Browser Debugger");
-    let win = DebuggerUI.toggleChromeDebugger(aOnClosing, function(process) {
+    let win = BrowserDebuggerProcess.init(aOnClosing, function(process) {
 
       // The remote debugging process has started...
       info("Browser Debugger has started");

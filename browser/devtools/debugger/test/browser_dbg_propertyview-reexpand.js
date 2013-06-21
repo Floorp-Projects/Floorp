@@ -60,7 +60,7 @@ function testVariablesExpand()
     gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
     Services.tm.currentThread.dispatch({ run: function() {
 
-      var frames = gDebugger.DebuggerView.StackFrames._container._list,
+      var frames = gDebugger.DebuggerView.StackFrames.widget._list,
           scopes = gDebugger.DebuggerView.Variables._list,
           innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
           mathScope = scopes.querySelectorAll(".variables-view-scope")[1],
