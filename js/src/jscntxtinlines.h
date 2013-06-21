@@ -582,28 +582,6 @@ js::ThreadSafeContext::isInsideCurrentZone(T thing) const
     return thing->isInsideZone(zone_);
 }
 
-#ifdef JSGC_GENERATIONAL
-inline bool
-js::ThreadSafeContext::hasNursery() const
-{
-    return isJSContext();
-}
-
-inline js::Nursery &
-js::ThreadSafeContext::nursery()
-{
-    JS_ASSERT(hasNursery());
-    return runtime_->gcNursery;
-}
-#endif /* JSGC_GENERATIONAL */
-
-inline js::Allocator *const
-js::ThreadSafeContext::allocator()
-{
-    JS_ASSERT_IF(isJSContext(), &asJSContext()->zone()->allocator == allocator_);
-    return allocator_;
-}
-
 inline js::AllowGC
 js::ThreadSafeContext::allowGC() const
 {

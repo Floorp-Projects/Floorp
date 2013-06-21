@@ -331,9 +331,9 @@ js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
         return 0;
     }
 
-    Allocator *alloc = &src->zone()->allocator;
+    Zone *zone = src->zone();
     size_t count = src->numDynamicSlots();
-    dst->slots = alloc->pod_malloc<HeapSlot>(count);
+    dst->slots = zone->pod_malloc<HeapSlot>(count);
     PodCopy(dst->slots, src->slots, count);
     return count * sizeof(HeapSlot);
 }
@@ -344,7 +344,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     if (src->hasEmptyElements())
         return 0;
 
-    Allocator *alloc = &src->zone()->allocator;
+    Zone *zone = src->zone();
     ObjectElements *srcHeader = src->getElementsHeader();
     ObjectElements *dstHeader;
 
@@ -359,7 +359,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     if (src->is<ArrayBufferObject>()) {
         size_t nbytes = sizeof(ObjectElements) + srcHeader->initializedLength;
         if (src->hasDynamicElements()) {
-            dstHeader = static_cast<ObjectElements *>(alloc->malloc_(nbytes));
+            dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
             if (!dstHeader)
                 MOZ_CRASH();
         } else {
@@ -382,7 +382,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     }
 
     size_t nbytes = nslots * sizeof(HeapValue);
-    dstHeader = static_cast<ObjectElements *>(alloc->malloc_(nbytes));
+    dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
     if (!dstHeader)
         MOZ_CRASH();
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));

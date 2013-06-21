@@ -1540,8 +1540,14 @@ struct ThreadSafeContext : js::ContextFriendFields,
     ForkJoinSlice *asForkJoinSlice();
 
 #ifdef JSGC_GENERATIONAL
-    inline bool hasNursery() const;
-    inline js::Nursery &nursery();
+    inline bool hasNursery() const {
+        return isJSContext();
+    }
+
+    inline js::Nursery &nursery() {
+        JS_ASSERT(hasNursery());
+        return runtime_->gcNursery;
+    }
 #endif
 
     /*
