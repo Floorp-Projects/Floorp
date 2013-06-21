@@ -198,19 +198,15 @@ struct TokenPos {
     uint32_t          begin;          /* offset of the token's first char */
     uint32_t          end;            /* offset of 1 past the token's last char */
 
-    static TokenPos make(uint32_t begin, uint32_t end) {
-        JS_ASSERT(begin <= end);
-        TokenPos pos = {begin, end};
-        return pos;
-    }
+    TokenPos() {}
+    TokenPos(uint32_t begin, uint32_t end) : begin(begin), end(end) {}
 
     /* Return a TokenPos that covers left, right, and anything in between. */
     static TokenPos box(const TokenPos &left, const TokenPos &right) {
         JS_ASSERT(left.begin <= left.end);
         JS_ASSERT(left.end <= right.begin);
         JS_ASSERT(right.begin <= right.end);
-        TokenPos pos = {left.begin, right.end};
-        return pos;
+        return TokenPos(left.begin, right.end);
     }
 
     bool operator==(const TokenPos& bpos) const {
