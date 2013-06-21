@@ -11,9 +11,9 @@
   - A good criteria is the language in which you'd find the best
   - documentation on web development on the web. -->
 
-<!-- LOCALIZATION NOTE (netmonitorUI.emptyNotice): This is the label displayed
+<!-- LOCALIZATION NOTE (netmonitorUI.emptyNotice2): This is the label displayed
   -  in the network table when empty. -->
-<!ENTITY netmonitorUI.emptyNotice         "Reload the page to see detailed information about network activity.">
+<!ENTITY netmonitorUI.emptyNotice2        "Perform a request or reload the page to see detailed information about network activity.">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.toolbar.status): This is the label displayed
   -  in the network table toolbar, above the "status" column. -->

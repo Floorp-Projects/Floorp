@@ -17,20 +17,7 @@ this.EXPORTED_SYMBOLS = ["BreadcrumbsWidget"];
 
 /**
  * A breadcrumb-like list of items.
- *
- * You can use this widget alone, but it works great with a MenuContainer!
- * In that case, you should never need to access the methods in the
- * BreadcrumbsWidget directly, use the wrapper MenuContainer instance instead.
- *
- * @see ViewHelpers.jsm
- *
- * function MyView() {
- *   this.node = new BreadcrumbsWidget(document.querySelector(".my-node"));
- * }
- * ViewHelpers.create({ constructor: MyView, proto: MenuContainer.prototype }, {
- *   myMethod: function() {},
- *   ...
- * });
+ * This widget should be used in tandem with the WidgetMethods in ViewHelpers.jsm
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.

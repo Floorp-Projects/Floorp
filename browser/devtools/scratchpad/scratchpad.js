@@ -273,7 +273,7 @@ var Scratchpad = {
   get sidebar()
   {
     if (!this._sidebar) {
-      this._sidebar = new ScratchpadSidebar();
+      this._sidebar = new ScratchpadSidebar(this);
     }
     return this._sidebar;
   },
@@ -475,7 +475,7 @@ var Scratchpad = {
         this.sidebar.open(aString, aResult).then(resolve, reject);
       }
     }, reject);
-    
+
     return deferred.promise;
   },
 
@@ -882,7 +882,7 @@ var Scratchpad = {
 
   /**
    * Clear a range of files from the list.
-   * 
+   *
    * @param integer aIndex
    *        Index of file in menu to remove.
    * @param integer aLength
@@ -1481,12 +1481,12 @@ var Scratchpad = {
  * Encapsulates management of the sidebar containing the VariablesView for
  * object inspection.
  */
-function ScratchpadSidebar()
+function ScratchpadSidebar(aScratchpad)
 {
   let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
   let tabbox = document.querySelector("#scratchpad-sidebar");
   this._sidebar = new ToolSidebar(tabbox, this);
-  this._splitter = document.querySelector(".devtools-side-splitter");
+  this._scratchpad = aScratchpad;
 }
 
 ScratchpadSidebar.prototype = {
@@ -1494,11 +1494,6 @@ ScratchpadSidebar.prototype = {
    * The ToolSidebar for this sidebar.
    */
   _sidebar: null,
-
-  /*
-   * The splitter element between the sidebar and the editor.
-   */
-  _splitter: null,
 
   /*
    * The VariablesView for this sidebar.
@@ -1531,7 +1526,11 @@ ScratchpadSidebar.prototype = {
       if (!this.variablesView) {
         let window = this._sidebar.getWindowForTab("variablesview");
         let container = window.document.querySelector("#variables");
-        this.variablesView = new VariablesView(container);
+        this.variablesView = new VariablesView(container, {
+          searchEnabled: true,
+          searchPlaceholder: this._scratchpad.strings
+                             .GetStringFromName("propertiesFilterPlaceholder")
+        });
       }
       this._update(aObject).then(() => deferred.resolve());
     };
@@ -1555,7 +1554,6 @@ ScratchpadSidebar.prototype = {
     if (!this.visible) {
       this.visible = true;
       this._sidebar.show();
-      this._splitter.setAttribute("state", "open");
     }
   },
 
@@ -1567,7 +1565,6 @@ ScratchpadSidebar.prototype = {
     if (this.visible) {
       this.visible = false;
       this._sidebar.hide();
-      this._splitter.setAttribute("state", "collapsed");
     }
   },
 
