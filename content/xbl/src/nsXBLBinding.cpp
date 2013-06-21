@@ -1254,7 +1254,7 @@ nsXBLBinding::AllowScripts()
     return false;
   }
 
-  nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(doc->GetWindow());
   if (!global) {
     return false;
   }
