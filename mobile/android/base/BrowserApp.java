@@ -444,6 +444,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:MaybeLater");
         registerEventListener("Telemetry:Gather");
         registerEventListener("Settings:Show");
+        registerEventListener("Updater:Launch");
 
         Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -717,6 +718,7 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Feedback:MaybeLater");
         unregisterEventListener("Telemetry:Gather");
         unregisterEventListener("Settings:Show");
+        unregisterEventListener("Updater:Launch");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1094,6 +1096,8 @@ abstract public class BrowserApp extends GeckoApp
                 Intent settingsIntent = new Intent(this, GeckoPreferences.class);
                 GeckoPreferences.setResourceToOpen(settingsIntent, resource);
                 startActivity(settingsIntent);
+            } else if (event.equals("Updater:Launch")) {
+                handleUpdaterLaunch();
             } else {
                 super.handleMessage(event, message);
             }
@@ -1842,5 +1846,34 @@ abstract public class BrowserApp extends GeckoApp
     protected String getDefaultProfileName() {
         String profile = GeckoProfile.findDefaultProfile(this);
         return (profile != null ? profile : "default");
+    }
+
+    /**
+     * Launch UI that lets the user update Firefox.
+     *
+     * This depends on the current channel: Release and Beta both direct to the
+     * Google Play Store.  If updating is enabled, Aurora, Nightly, and custom
+     * builds open about:, which provides an update interface.
+     *
+     * If updating is not enabled, this simply logs an error.
+     *
+     * @return true if update UI was launched.
+     */
+    protected boolean handleUpdaterLaunch() {
+        if ("release".equals(AppConstants.MOZ_UPDATE_CHANNEL) ||
+            "beta".equals(AppConstants.MOZ_UPDATE_CHANNEL)) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("market://details?id=" + getPackageName()));
+            startActivity(intent);
+            return true;
+        }
+
+        if (AppConstants.MOZ_UPDATER) {
+            Tabs.getInstance().loadUrlInTab("about:");
+            return true;
+        }
+
+        Log.w(LOGTAG, "No candidate updater found; ignoring launch request.");
+        return false;
     }
 }
