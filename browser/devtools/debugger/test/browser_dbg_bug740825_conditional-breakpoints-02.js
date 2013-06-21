@@ -345,7 +345,7 @@ function test()
   function testHighlights2()
   {
     EventUtils.sendMouseEvent({ type: "click" },
-      gSources._container._list.querySelectorAll(".dbg-breakpoint")[2],
+      gSources.widget._list.querySelectorAll(".dbg-breakpoint")[2],
       gDebugger);
 
     waitForCaretPos(13, function() {
@@ -364,7 +364,7 @@ function test()
           "The source editor caret position should be at column 0");
 
         EventUtils.sendMouseEvent({ type: "click" },
-          gSources._container._list.querySelectorAll(".dbg-breakpoint")[1],
+          gSources.widget._list.querySelectorAll(".dbg-breakpoint")[1],
           gDebugger);
 
         waitForCaretPos(12, function() {
@@ -383,7 +383,7 @@ function test()
               "The source editor caret position should be at column 0");
 
             EventUtils.sendMouseEvent({ type: "click" },
-              gSources._container._list.querySelectorAll(".dbg-breakpoint")[0],
+              gSources.widget._list.querySelectorAll(".dbg-breakpoint")[0],
               gDebugger);
 
             waitForCaretPos(11, function() {

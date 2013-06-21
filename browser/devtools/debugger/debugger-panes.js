@@ -27,14 +27,14 @@ function SourcesView() {
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
 }
 
-create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
+SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
   initialize: function() {
     dumpn("Initializing the SourcesView");
 
-    this.node = new SideMenuWidget(document.getElementById("sources"));
+    this.widget = new SideMenuWidget(document.getElementById("sources"));
     this.emptyText = L10N.getStr("noSourcesText");
     this.unavailableText = L10N.getStr("noMatchingSourcesText");
 
@@ -46,8 +46,8 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
 
     window.addEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
     window.addEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
-    this.node.addEventListener("select", this._onSourceSelect, false);
-    this.node.addEventListener("click", this._onSourceClick, false);
+    this.widget.addEventListener("select", this._onSourceSelect, false);
+    this.widget.addEventListener("click", this._onSourceClick, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -68,8 +68,8 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
 
     window.removeEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
     window.removeEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
-    this.node.removeEventListener("select", this._onSourceSelect, false);
-    this.node.removeEventListener("click", this._onSourceClick, false);
+    this.widget.removeEventListener("select", this._onSourceSelect, false);
+    this.widget.removeEventListener("click", this._onSourceClick, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -149,9 +149,9 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
 
     // Append a breakpoint child item to the corresponding source item.
     let breakpointItem = sourceItem.append(breakpointView.container, {
-      attachment: Object.create(aOptions, {
-        view: { value: breakpointView },
-        popup: { value: contextMenu }
+      attachment: Heritage.extend(aOptions, {
+        view: breakpointView,
+        popup: contextMenu
       }),
       attributes: [
         ["contextmenu", contextMenu.menupopupId]
@@ -202,7 +202,7 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
    *        The breakpoint source location.
    * @param number aLineNumber
    *        The breakpoint line number.
-   * @return MenuItem
+   * @return object
    *         The corresponding breakpoint item if found, null otherwise.
    */
   getBreakpoint: function(aSourceLocation, aLineNumber) {
@@ -370,7 +370,7 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
   /**
    * Marks a breakpoint as selected in this sources container.
    *
-   * @param MenuItem aItem
+   * @param object aItem
    *        The breakpoint item to select.
    */
   _selectBreakpoint: function(aItem) {
@@ -382,7 +382,7 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
     this._selectedBreakpoint.target.classList.add("selected");
 
     // Ensure the currently selected breakpoint is visible.
-    this.node.ensureElementIsVisible(aItem.target);
+    this.widget.ensureElementIsVisible(aItem.target);
   },
 
   /**
@@ -562,8 +562,8 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
   /**
    * Function called each time a breakpoint item is removed.
    *
-   * @param MenuItem aItem
-   *        The corresponding menu item.
+   * @param object aItem
+   *        The corresponding item.
    */
   _onBreakpointRemoved: function(aItem) {
     dumpn("Finalizing breakpoint item: " + aItem);
@@ -1251,19 +1251,18 @@ function WatchExpressionsView() {
   this._onKeyPress = this._onKeyPress.bind(this);
 }
 
-create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
+WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
   initialize: function() {
     dumpn("Initializing the WatchExpressionsView");
 
-    this.node = new ListWidget(document.getElementById("expressions"));
-    this.node.permaText = L10N.getStr("addWatchExpressionText");
-    this.node.itemFactory = this._createItemView;
-    this.node.setAttribute("context", "debuggerWatchExpressionsContextMenu");
-
-    this.node.addEventListener("click", this._onClick, false);
+    this.widget = new ListWidget(document.getElementById("expressions"));
+    this.widget.permaText = L10N.getStr("addWatchExpressionText");
+    this.widget.itemFactory = this._createItemView;
+    this.widget.setAttribute("context", "debuggerWatchExpressionsContextMenu");
+    this.widget.addEventListener("click", this._onClick, false);
   },
 
   /**
@@ -1272,7 +1271,7 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the WatchExpressionsView");
 
-    this.node.removeEventListener("click", this._onClick, false);
+    this.widget.removeEventListener("click", this._onClick, false);
   },
 
   /**
@@ -1509,19 +1508,19 @@ function GlobalSearchView() {
   this._onMatchClick = this._onMatchClick.bind(this);
 }
 
-create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
+GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
   initialize: function() {
     dumpn("Initializing the GlobalSearchView");
 
-    this.node = new ListWidget(document.getElementById("globalsearch"));
+    this.widget = new ListWidget(document.getElementById("globalsearch"));
     this._splitter = document.querySelector("#globalsearch + .devtools-horizontal-splitter");
 
-    this.node.emptyText = L10N.getStr("noMatchingStringsText");
-    this.node.itemFactory = this._createItemView;
-    this.node.addEventListener("scroll", this._onScroll, false);
+    this.widget.emptyText = L10N.getStr("noMatchingStringsText");
+    this.widget.itemFactory = this._createItemView;
+    this.widget.addEventListener("scroll", this._onScroll, false);
   },
 
   /**
@@ -1530,7 +1529,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the GlobalSearchView");
 
-    this.node.removeEventListener("scroll", this._onScroll, false);
+    this.widget.removeEventListener("scroll", this._onScroll, false);
   },
 
   /**
@@ -1538,7 +1537,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
    * @return boolean
    */
   get hidden()
-    this.node.getAttribute("hidden") == "true" ||
+    this.widget.getAttribute("hidden") == "true" ||
     this._splitter.getAttribute("hidden") == "true",
 
   /**
@@ -1546,7 +1545,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
    * @param boolean aFlag
    */
   set hidden(aFlag) {
-    this.node.setAttribute("hidden", aFlag);
+    this.widget.setAttribute("hidden", aFlag);
     this._splitter.setAttribute("hidden", aFlag);
   },
 
@@ -1857,7 +1856,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
       return;
     }
     let { top, height } = aTarget.getBoundingClientRect();
-    let { clientHeight } = this.node._parent;
+    let { clientHeight } = this.widget._parent;
 
     if (top - height <= clientHeight || this._forceExpandResults) {
       sourceResultsItem.instance.expand();
@@ -1873,7 +1872,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
   _scrollMatchIntoViewIfNeeded: function(aMatch) {
     // TODO: Accessing private widget properties. Figure out what's the best
     // way to expose such things. Bug 876271.
-    let boxObject = this.node._parent.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    let boxObject = this.widget._parent.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     boxObject.ensureElementIsVisible(aMatch);
   },
 
@@ -2245,7 +2244,7 @@ LineResults.prototype.__iterator__ = function() {
  */
 SourceResults.getItemForElement =
 LineResults.getItemForElement = function(aElement) {
-  return MenuContainer.prototype.getItemForElement.call(this, aElement);
+  return WidgetMethods.getItemForElement.call(this, aElement);
 };
 
 /**
