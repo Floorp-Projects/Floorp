@@ -23,6 +23,7 @@
 #include "nsIXPCScriptable.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsIXPCScriptable.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -820,6 +821,84 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp)
   return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
+static JSBool
+Blob(JSContext *cx, unsigned argc, jsval *vp)
+{
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  nsCOMPtr<nsISupports> native =
+    do_CreateInstance("@mozilla.org/dom/multipart-blob;1");
+  if (!native) {
+    JS_ReportError(cx, "Could not create native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+  NS_ASSERTION(initializer, "what?");
+
+  nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not initialize native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not get XPConnent service!");
+    return false;
+  }
+
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
+  rv = xpc->WrapNativeToJSVal(cx, global, native, nullptr,
+                              &NS_GET_IID(nsISupports), true,
+                              args.rval().address(), nullptr);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not wrap native object!");
+    return false;
+  }
+
+  return true;
+}
+
+static JSBool
+File(JSContext *cx, unsigned argc, jsval *vp)
+{
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  nsCOMPtr<nsISupports> native =
+    do_CreateInstance("@mozilla.org/dom/multipart-file;1");
+  if (!native) {
+    JS_ReportError(cx, "Could not create native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+  NS_ASSERTION(initializer, "what?");
+
+  nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not initialize native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not get XPConnent service!");
+    return false;
+  }
+
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
+  rv = xpc->WrapNativeToJSVal(cx, global, native, nullptr,
+                              &NS_GET_IID(nsISupports), true,
+                              args.rval().address(), nullptr);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not wrap native object!");
+    return false;
+  }
+
+  return true;
+}
+
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -842,6 +921,8 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("getChildGlobalObject", GetChildGlobalObject, 0,0),
     JS_FS("atob",            Atob,           1,0),
     JS_FS("btoa",            Btoa,           1,0),
+    JS_FS("Blob",            Blob,           2,JSFUN_CONSTRUCTOR),
+    JS_FS("File",            File,           2,JSFUN_CONSTRUCTOR),
     JS_FS_END
 };
 
