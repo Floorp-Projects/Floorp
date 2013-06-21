@@ -903,6 +903,15 @@ struct TernaryNode : public ParseNode
         pn_kid3 = kid3;
     }
 
+    TernaryNode(ParseNodeKind kind, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3,
+                const TokenPos &pos)
+      : ParseNode(kind, op, PN_TERNARY, pos)
+    {
+        pn_kid1 = kid1;
+        pn_kid2 = kid2;
+        pn_kid3 = kid3;
+    }
+
     static inline TernaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
         return (TernaryNode *) ParseNode::create(kind, PN_TERNARY, handler);
     }

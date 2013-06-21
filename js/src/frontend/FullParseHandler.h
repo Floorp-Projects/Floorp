@@ -180,13 +180,15 @@ class FullParseHandler
         return new_<BinaryNode>(kind, op, pos, left, right);
     }
     ParseNode *newBinaryOrAppend(ParseNodeKind kind, ParseNode *left, ParseNode *right,
-                                 ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP) {
+                                 ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP)
+    {
         return ParseNode::newBinaryOrAppend(kind, op, left, right, this, pc, foldConstants);
     }
 
     ParseNode *newTernary(ParseNodeKind kind,
                           ParseNode *first, ParseNode *second, ParseNode *third,
-                          JSOp op = JSOP_NOP) {
+                          JSOp op = JSOP_NOP)
+    {
         return new_<TernaryNode>(kind, op, first, second, third);
     }
 
@@ -216,6 +218,23 @@ class FullParseHandler
     ParseNode *newWhileStatement(uint32_t begin, ParseNode *cond, ParseNode *body) {
         TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
         return new_<BinaryNode>(PNK_WHILE, JSOP_NOP, pos, cond, body);
+    }
+
+    ParseNode *newForStatement(uint32_t begin) {
+        return new_<BinaryNode>(PNK_FOR, JSOP_NOP, TokenPos::make(begin, begin + 1),
+                                (ParseNode *) NULL, (ParseNode *) NULL);
+    }
+
+    ParseNode *newForHead(bool isForInOrOf, ParseNode *pn1, ParseNode *pn2, ParseNode *pn3,
+                          const TokenPos &pos)
+    {
+        ParseNodeKind kind = isForInOrOf ? PNK_FORIN : PNK_FORHEAD;
+        return new_<TernaryNode>(kind, JSOP_NOP, pn1, pn2, pn3, pos);
+    }
+
+    ParseNode *newSwitchStatement(uint32_t begin, ParseNode *discriminant, ParseNode *caseList) {
+        TokenPos pos = TokenPos::make(begin, caseList->pn_pos.end);
+        return new_<BinaryNode>(PNK_SWITCH, JSOP_NOP, pos, discriminant, caseList);
     }
 
     ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {

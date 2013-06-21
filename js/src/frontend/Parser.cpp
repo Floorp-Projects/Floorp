@@ -3774,23 +3774,21 @@ ParseNode *
 Parser<FullParseHandler>::forStatement()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
+    uint32_t begin = pos().begin;
 
     StmtInfoPC forStmt(context);
     PushStatementPC(pc, &forStmt, STMT_FOR_LOOP);
 
-    /* A FOR node is binary, left is loop control and right is the body. */
-    ParseNode *pn = BinaryNode::create(PNK_FOR, &handler);
-    if (!pn)
-        return null();
-
-    pn->setOp(JSOP_ITER);
-    pn->pn_iflags = 0;
+    bool isForEach = false;
+    unsigned iflags = 0;
 
     if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->names().each)
-            pn->pn_iflags = JSITER_FOREACH;
-        else
+        if (tokenStream.currentToken().name() == context->names().each) {
+            iflags = JSITER_FOREACH;
+            isForEach = true;
+        } else {
             tokenStream.ungetToken();
+        }
     }
 
     TokenPos lp_pos = pos();
@@ -3811,11 +3809,6 @@ Parser<FullParseHandler>::forStatement()
     {
         TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
         if (tt == TOK_SEMI) {
-            if (pn->pn_iflags & JSITER_FOREACH) {
-                report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
-                return null();
-            }
-
             pn1 = NULL;
         } else {
             /*
@@ -3864,7 +3857,11 @@ Parser<FullParseHandler>::forStatement()
     JS_ASSERT_IF(forDecl, pn1->isArity(PN_LIST));
     JS_ASSERT(!!blockObj == (forDecl && pn1->isOp(JSOP_NOP)));
 
-    /* If non-null, the parent that should be returned instead of forHead. */
+    ParseNode *pn = handler.newForStatement(begin);
+    if (!pn)
+        return null();
+
+    /* If non-null, the parent that should be returned instead of pn. */
     ParseNode *forParent = NULL;
 
     /*
@@ -3873,11 +3870,11 @@ Parser<FullParseHandler>::forStatement()
      * as we've excluded 'in' from being parsed in RelExpr by setting
      * pc->parsingForInit.
      */
-    ParseNode *forHead;        /* initialized by both branches. */
     StmtInfoPC letStmt(context); /* used if blockObj != NULL. */
     ParseNode *pn2, *pn3;      /* forHead->pn_kid1 and pn_kid2. */
     bool forOf;
-    if (pn1 && matchInOrOf(&forOf)) {
+    bool isForInOrOf = pn1 && matchInOrOf(&forOf);
+    if (isForInOrOf) {
         /*
          * Parse the rest of the for/in or for/of head.
          *
@@ -3888,17 +3885,15 @@ Parser<FullParseHandler>::forStatement()
          */
         forStmt.type = STMT_FOR_IN_LOOP;
 
-        /* Set pn_iflags and rule out invalid combinations. */
-        if (forOf && pn->pn_iflags != 0) {
-            JS_ASSERT(pn->pn_iflags == JSITER_FOREACH);
+        /* Set iflags and rule out invalid combinations. */
+        if (forOf && isForEach) {
             report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
             return null();
         }
-        pn->pn_iflags |= (forOf ? JSITER_FOR_OF : JSITER_ENUMERATE);
+        iflags |= (forOf ? JSITER_FOR_OF : JSITER_ENUMERATE);
 
         /* Check that the left side of the 'in' or 'of' is valid. */
-        bool forEach = bool(pn->pn_iflags & JSITER_FOREACH);
-        if (!isValidForStatementLHS(pn1, versionNumber(), forDecl, forEach, forOf)) {
+        if (!isValidForStatementLHS(pn1, versionNumber(), forDecl, isForEach, forOf)) {
             report(ParseError, false, pn1, JSMSG_BAD_FOR_LEFTSIDE);
             return null();
         }
@@ -4014,20 +4009,20 @@ Parser<FullParseHandler>::forStatement()
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
                  */
-                JS_ASSERT(pn->isOp(JSOP_ITER));
-                if (!(pn->pn_iflags & JSITER_FOREACH) && !forOf)
-                    pn->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
+                if (!isForEach && !forOf)
+                    iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
 #endif
 
           default:;
         }
-
-        forHead = TernaryNode::create(PNK_FORIN, &handler);
-        if (!forHead)
-            return null();
     } else {
+        if (isForEach) {
+            report(ParseError, false, pn, JSMSG_BAD_FOR_EACH_LOOP);
+            return null();
+        }
+
         if (blockObj) {
             /*
              * Desugar 'for (let A; B; C) D' into 'let (A) { for (; B; C) D }'
@@ -4046,12 +4041,6 @@ Parser<FullParseHandler>::forStatement()
             block->pn_expr = pn;
             forParent = let;
         }
-
-        if (pn->pn_iflags & JSITER_FOREACH) {
-            report(ParseError, false, pn, JSMSG_BAD_FOR_EACH_LOOP);
-            return null();
-        }
-        pn->setOp(JSOP_NOP);
 
         /* Parse the loop condition or null into pn2. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
@@ -4072,19 +4061,12 @@ Parser<FullParseHandler>::forStatement()
             if (!pn3)
                 return null();
         }
-
-        forHead = TernaryNode::create(PNK_FORHEAD, &handler);
-        if (!forHead)
-            return null();
     }
 
-    forHead->setOp(JSOP_NOP);
-    forHead->pn_kid1 = pn1;
-    forHead->pn_kid2 = pn2;
-    forHead->pn_kid3 = pn3;
-    forHead->pn_pos.begin = lp_pos.begin;
-    forHead->pn_pos.end   = pos().end;
-    pn->pn_left = forHead;
+    TokenPos headPos = TokenPos::make(lp_pos.begin, pos().end);
+    ParseNode *forHead = handler.newForHead(isForInOrOf, pn1, pn2, pn3, headPos);
+    if (!forHead)
+        return null();
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
@@ -4093,9 +4075,12 @@ Parser<FullParseHandler>::forStatement()
     if (!body)
         return null();
 
-    /* Record the absolute line number for source note emission. */
-    pn->pn_pos.end = body->pn_pos.end;
+    /* A FOR node is binary, left is loop control and right is the body. */
+    pn->setOp(isForInOrOf ? JSOP_ITER : JSOP_NOP);
+    pn->pn_left = forHead;
     pn->pn_right = body;
+    pn->pn_iflags = iflags;
+    pn->pn_pos.end = body->pn_pos.end;
 
     if (forParent) {
         forParent->pn_pos.begin = pn->pn_pos.begin;
@@ -4228,7 +4213,8 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::switchStatement()
 {
-    JS_ASSERT(tokenStream.currentToken().type == TOK_SWITCH);
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_SWITCH));
+    uint32_t begin = pos().begin;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
 
@@ -4319,13 +4305,9 @@ Parser<ParseHandler>::switchStatement()
 
     PopStatementPC(context, pc);
 
-    Node pn = handler.newBinary(PNK_SWITCH, discriminant, caseList);
-    if (!pn)
-        return null();
-
-    handler.setEndPosition(pn, pos().end);
     handler.setEndPosition(caseList, pos().end);
-    return pn;
+
+    return handler.newSwitchStatement(begin, discriminant, caseList);
 }
 
 template <typename ParseHandler>
