@@ -426,6 +426,6 @@ class JS_FRIEND_API(AutoWaivePolicy) {
 } /* namespace js */
 
 extern JS_FRIEND_API(JSObject *)
-js_InitProxyClass(JSContext *cx, JSHandleObject obj);
+js_InitProxyClass(JSContext *cx, JS::HandleObject obj);
 
 #endif /* jsproxy_h */
