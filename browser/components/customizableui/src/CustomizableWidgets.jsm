@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
-const kWidePanelItemClass = "panel-combined-item";
 
 let gModuleName = "[CustomizableWidgets]";
 #include logging.js
@@ -30,39 +29,6 @@ function setAttributes(aNode, aAttrs) {
         value = CustomizableUI.getLocalizedProperty(aAttrs, name);
       aNode.setAttribute(name, value);
     }
-  }
-}
-
-// This function is called whenever an item gets moved in the menu panel. It
-// adjusts the position of widgets within the panel to reduce single-column
-// buttons from being placed in a row by themselves.
-function adjustPosition(aNode) {
-  // TODO(bug 885574): Merge this constant with the one in CustomizeMode.jsm,
-  //                   maybe just use a pref for this.
-  const kColumnsInMenuPanel = 3;
-
-  // Make sure that there are n % columns = 0 narrow buttons before the widget.
-  let prevSibling = aNode.previousElementSibling;
-  let previousSiblingCount = 0;
-  while (prevSibling) {
-    if (!prevSibling.classList.contains(kWidePanelItemClass)) {
-      previousSiblingCount++;
-    }
-    prevSibling = prevSibling.previousElementSibling;
-  }
-  if (previousSiblingCount % kColumnsInMenuPanel) {
-    let previousElement = aNode.previousElementSibling;
-    if (!previousElement ||
-        previousElement.classList.contains(kWidePanelItemClass)) {
-      return;
-    }
-
-    let position = Array.prototype.indexOf.call(aNode.parentNode.children, aNode);
-    // We don't need to move all of the items in this pass, because
-    // this move will trigger adjustPosition to get called again. The
-    // function will stop recursing when it finds that there is no
-    // more work that is needed.
-    CustomizableUI.moveWidgetWithinArea(aNode.id, position - 1);
   }
 }
 
@@ -266,7 +232,6 @@ const CustomizableWidgets = [{
       if (inPanel)
         node.setAttribute("flex", "1");
       node.classList.add("chromeclass-toolbar-additional");
-      node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton) {
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
@@ -310,10 +275,6 @@ const CustomizableWidgets = [{
 
       let listener = {
         onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
 
@@ -321,10 +282,6 @@ const CustomizableWidgets = [{
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
 
@@ -341,10 +298,6 @@ const CustomizableWidgets = [{
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
@@ -404,7 +357,6 @@ const CustomizableWidgets = [{
       if (inPanel)
         node.setAttribute("flex", "1");
       node.classList.add("chromeclass-toolbar-additional");
-      node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton) {
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
@@ -428,20 +380,12 @@ const CustomizableWidgets = [{
 
       let listener = {
         onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           // When a widget is demoted to the palette ('removed'), it's visual
@@ -456,10 +400,6 @@ const CustomizableWidgets = [{
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
