@@ -117,9 +117,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // problems.  TODO(darin): make this unnecessary
   bool processing_incoming_;
 
-  // This flag is set after we've closed the channel.
-  bool closed_;
-
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
 
   DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
