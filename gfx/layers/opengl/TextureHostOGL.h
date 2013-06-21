@@ -47,6 +47,7 @@ class TextureSourceOGL
 public:
   virtual bool IsValid() const = 0;
   virtual void BindTexture(GLenum aTextureUnit) = 0;
+  virtual void ReleaseTexture() = 0;
   virtual gfx::IntSize GetSize() const = 0;
   virtual gl::ShaderProgramType GetShaderProgram() const {
     MOZ_NOT_REACHED("unhandled shader type");
@@ -138,6 +139,11 @@ public:
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE
   {
     mTexture->BindTexture(aTextureUnit);
+  }
+
+  void ReleaseTexture() MOZ_OVERRIDE
+  {
+    mTexture->ReleaseTexture();
   }
 
   gfx::IntSize GetSize() const MOZ_OVERRIDE;
@@ -263,6 +269,10 @@ public:
     {
       mTexImage->BindTexture(aUnit);
     }
+    void ReleaseTexture() MOZ_OVERRIDE
+    {
+      mTexImage->ReleaseTexture();
+    }
     virtual bool IsValid() const MOZ_OVERRIDE
     {
       return !!mTexImage;
@@ -373,7 +383,7 @@ public:
     // Lock already bound us!
     MOZ_ASSERT(activetex == LOCAL_GL_TEXTURE0);
   }
-  void ReleaseTexture() {}
+  void ReleaseTexture() MOZ_OVERRIDE {}
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType()
   {
@@ -460,7 +470,7 @@ public:
     mGL->fActiveTexture(activetex);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
   }
-  void ReleaseTexture() {
+  void ReleaseTexture() MOZ_OVERRIDE {
   }
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
@@ -518,6 +528,7 @@ public:
     mGL->fActiveTexture(aTextureUnit);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
   }
+  virtual void ReleaseTexture() MOZ_OVERRIDE {}
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
   {
     return mSize;
@@ -613,6 +624,7 @@ public:
 #endif
 
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
+  void ReleaseTexture() MOZ_OVERRIDE {}
 
   virtual gfx::SurfaceFormat GetFormat() const;
 
