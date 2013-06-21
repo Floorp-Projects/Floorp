@@ -4579,6 +4579,32 @@ Parser<ParseHandler>::labeledStatement()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::throwStatement()
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_THROW));
+    uint32_t begin = pos().begin;
+
+    /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
+    TokenKind tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
+    if (tt == TOK_ERROR)
+        return null();
+    if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
+        report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
+        return null();
+    }
+
+    Node throwExpr = expr();
+    if (!throwExpr)
+        return null();
+
+    if (!MatchOrInsertSemicolon(context, &tokenStream))
+        return null();
+
+    return handler.newThrowStatement(throwExpr, TokenPos::make(begin, pos().end));
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::tryStatement()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_TRY));
@@ -4828,27 +4854,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return withStatement();
 
       case TOK_THROW:
-      {
-        uint32_t begin = pos().begin;
-
-        /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
-        TokenKind tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
-        if (tt == TOK_ERROR)
-            return null();
-        if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
-            report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
-            return null();
-        }
-
-        Node pnexp = expr();
-        if (!pnexp)
-            return null();
-
-        pn = handler.newThrowStatement(pnexp, TokenPos::make(begin, pos().end));
-        if (!pn)
-            return null();
-        break;
-      }
+        return throwStatement();
 
       case TOK_TRY:
         return tryStatement();
