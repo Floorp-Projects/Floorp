@@ -517,7 +517,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
 
 template <typename ParseHandler>
 FunctionBox *
-Parser<ParseHandler>::newFunctionBox(JSFunction *fun, ParseContext<ParseHandler> *outerpc,
+Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction *fun, ParseContext<ParseHandler> *outerpc,
                                      Directives inheritedDirectives)
 {
     JS_ASSERT(fun && !IsPoisonedPtr(fun));
@@ -538,6 +538,8 @@ Parser<ParseHandler>::newFunctionBox(JSFunction *fun, ParseContext<ParseHandler>
     }
 
     traceListHead = funbox;
+    if (fn)
+        handler.setFunctionBox(fn, funbox);
 
     return funbox;
 }
@@ -860,7 +862,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     argsbody->makeEmpty();
     fn->pn_body = argsbody;
 
-    FunctionBox *funbox = newFunctionBox(fun, /* outerpc = */ NULL, inheritedDirectives);
+    FunctionBox *funbox = newFunctionBox(fn, fun, /* outerpc = */ NULL, inheritedDirectives);
     if (!funbox)
         return null();
     handler.setFunctionBox(fn, funbox);
@@ -1797,10 +1799,9 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
     // so we can skip over them after accounting for their free variables.
     if (LazyScript *lazyOuter = handler.lazyOuterFunction()) {
         JSFunction *fun = handler.nextLazyInnerFunction();
-        FunctionBox *funbox = newFunctionBox(fun, pc, Directives(/* strict = */ false));
+        FunctionBox *funbox = newFunctionBox(pn, fun, pc, Directives(/* strict = */ false));
         if (!funbox)
             return false;
-        handler.setFunctionBox(pn, funbox);
 
         if (!addFreeVariablesFromLazyFunction(fun, pc))
             return false;
@@ -2002,7 +2003,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *f
     }
 #endif
 
-    pn->pn_funbox = funbox;
+    JS_ASSERT(pn->pn_funbox == funbox);
     pn->pn_body->append(body);
     pn->pn_body->pn_pos = body->pn_pos;
 
@@ -2061,7 +2062,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     ParseContext<FullParseHandler> *outerpc = pc;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pc, inheritedDirectives);
+    FunctionBox *funbox = newFunctionBox(pn, fun, pc, inheritedDirectives);
     if (!funbox)
         return false;
 
@@ -2099,8 +2100,6 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
             parser->tokenStream.tell(&position);
             tokenStream.seek(position, parser->tokenStream);
         }
-
-        pn->pn_funbox = funbox;
 
         if (!addFreeVariablesFromLazyFunction(fun, pc))
             return false;
@@ -2144,7 +2143,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     ParseContext<SyntaxParseHandler> *outerpc = pc;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pc, inheritedDirectives);
+    FunctionBox *funbox = newFunctionBox(pn, fun, pc, inheritedDirectives);
     if (!funbox)
         return false;
 
@@ -2177,10 +2176,9 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
         return null();
 
     Directives directives(/* strict = */ strict);
-    FunctionBox *funbox = newFunctionBox(fun, /* outerpc = */ NULL, directives);
+    FunctionBox *funbox = newFunctionBox(pn, fun, /* outerpc = */ NULL, directives);
     if (!funbox)
         return null();
-    handler.setFunctionBox(pn, funbox);
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, funbox,
@@ -5988,7 +5986,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
 
         /* Create box for fun->object early to protect against last-ditch GC. */
         Directives directives(/* strict = */ outerpc->sc->strict);
-        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, directives);
+        FunctionBox *genFunbox = newFunctionBox(genfn, fun, outerpc, directives);
         if (!genFunbox)
             return null();
 
@@ -6009,7 +6007,6 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
 
         genFunbox->setIsGenerator();
         genFunbox->inGenexpLambda = true;
-        genfn->pn_funbox = genFunbox;
         genfn->pn_blockid = genpc.bodyid;
 
         ParseNode *body = comprehensionTail(pn, outerpc->blockid(), true, outerpc);

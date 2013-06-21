@@ -379,7 +379,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      */
     ObjectBox *newObjectBox(JSObject *obj);
     ModuleBox *newModuleBox(Module *module, ParseContext<ParseHandler> *pc);
-    FunctionBox *newFunctionBox(JSFunction *fun, ParseContext<ParseHandler> *pc,
+    FunctionBox *newFunctionBox(Node fn, JSFunction *fun, ParseContext<ParseHandler> *pc,
                                 Directives directives);
 
     /*
