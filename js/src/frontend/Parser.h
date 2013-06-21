@@ -417,11 +417,11 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node functionExpr();
     Node statements();
 
-    Node switchStatement();
     Node forStatement();
+    Node switchStatement();
+    Node withStatement();
     Node labeledStatement();
     Node tryStatement();
-    Node withStatement();
 #if JS_HAS_BLOCK_SCOPE
     Node letStatement();
 #endif
