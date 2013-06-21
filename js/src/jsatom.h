@@ -230,7 +230,7 @@ extern JSAtom *
 AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 template <AllowGC allowGC>
-inline JSAtom *
+extern JSAtom *
 ToAtom(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v);
 
 template<XDRMode mode>
