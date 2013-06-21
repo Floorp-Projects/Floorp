@@ -4401,27 +4401,27 @@ Parser<ParseHandler>::breakStatement()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
+Parser<ParseHandler>::returnStatementOrYieldExpression()
 {
-    TokenKind tt = tokenStream.currentToken().type;
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_RETURN) ||
+              tokenStream.isCurrentTokenType(TOK_YIELD));
+    bool isYield = tokenStream.isCurrentTokenType(TOK_YIELD);
+    uint32_t begin = pos().begin;
+
     if (!pc->sc->isFunctionBox()) {
         report(ParseError, false, null(), JSMSG_BAD_RETURN_OR_YIELD,
-               (tt == TOK_RETURN) ? js_return_str : js_yield_str);
+               isYield ? js_yield_str : js_return_str);
         return null();
     }
 
-    bool isYield = (tt == TOK_YIELD);
-    uint32_t begin = pos().begin;
-
-#if JS_HAS_GENERATORS
     if (isYield) {
+        JS_ASSERT(JS_HAS_GENERATORS);
         if (!abortIfSyntaxParser())
             return null();
 
-        /*
-         * If we're within parens, we won't know if this is a generator expression until we see
-         * a |for| token, so we have to delay flagging the current function.
-         */
+        // If we're within parens, we won't know if this is a generator
+        // expression until we see a |for| token, so we have to delay flagging
+        // the current function.
         if (pc->parenDepth == 0) {
             pc->sc->asFunctionBox()->setIsGenerator();
         } else {
@@ -4429,40 +4429,42 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
             pc->yieldOffset = begin;
         }
     }
-#endif
 
-    /* This is ugly, but we don't want to require a semicolon. */
-    TokenKind tt2 = tokenStream.peekTokenSameLine(TSF_OPERAND);
-    if (tt2 == TOK_ERROR)
+    // Parse an optional operand.
+    //
+    // Checking whether yield has an operand is especially wonky since
+    // there is not a mandatory semicolon.
+    //
+    // ES6 does not permit yield without an operand. We will have to sunset
+    // this extension in order to conform to the ES6 syntax, which treats
+    // "yield \n expr;" as a single ExpressionStatement.
+    Node exprNode;
+    TokenKind next = tokenStream.peekTokenSameLine(TSF_OPERAND);
+    if (next == TOK_ERROR)
         return null();
-
-    Node pn2;
-    if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC
-#if JS_HAS_GENERATORS
-        && (!isYield ||
-            (tt2 != tt && tt2 != TOK_RB && tt2 != TOK_RP &&
-             tt2 != TOK_COLON && tt2 != TOK_COMMA))
-#endif
-        )
+    if (next == TOK_EOF || next == TOK_EOL || next == TOK_SEMI || next == TOK_RC ||
+        (isYield && (next == TOK_YIELD || next == TOK_RB || next == TOK_RP ||
+                     next == TOK_COLON || next == TOK_COMMA)))
     {
-        pn2 = useAssignExpr ? assignExpr() : expr();
-        if (!pn2)
-            return null();
-#if JS_HAS_GENERATORS
-        if (tt == TOK_RETURN)
-#endif
-            pc->funHasReturnExpr = true;
-    } else {
-        pn2 = null();
-#if JS_HAS_GENERATORS
-        if (tt == TOK_RETURN)
-#endif
+        exprNode = null();
+        if (!isYield)
             pc->funHasReturnVoid = true;
+    } else {
+        exprNode = isYield ? assignExpr() : expr();
+        if (!exprNode)
+            return null();
+        if (!isYield)
+            pc->funHasReturnExpr = true;
+    }
+
+    if (!isYield) {
+        if (!MatchOrInsertSemicolon(context, &tokenStream))
+            return null();
     }
 
     Node pn = isYield
-              ? handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, pn2)
-              : handler.newReturnStatement(pn2, TokenPos::make(begin, pos().end));
+              ? handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, exprNode)
+              : handler.newReturnStatement(exprNode, TokenPos::make(begin, pos().end));
     if (!pn)
         return null();
 
@@ -4826,10 +4828,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return breakStatement();
 
       case TOK_RETURN:
-        pn = returnOrYield(false);
-        if (!pn)
-            return null();
-        break;
+        return returnStatementOrYieldExpression();
 
       case TOK_WITH:
         return withStatement();
@@ -5198,7 +5197,7 @@ Parser<ParseHandler>::assignExpr()
 
 #if JS_HAS_GENERATORS
     if (tokenStream.matchToken(TOK_YIELD, TSF_OPERAND))
-        return returnOrYield(true);
+        return returnStatementOrYieldExpression();
     if (tokenStream.hadError())
         return null();
 #endif
