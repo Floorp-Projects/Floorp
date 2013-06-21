@@ -443,6 +443,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:OpenPlayStore");
         registerEventListener("Feedback:MaybeLater");
         registerEventListener("Telemetry:Gather");
+        registerEventListener("Settings:Show");
 
         Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -715,6 +716,7 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Feedback:OpenPlayStore");
         unregisterEventListener("Feedback:MaybeLater");
         unregisterEventListener("Telemetry:Gather");
+        unregisterEventListener("Settings:Show");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1083,6 +1085,15 @@ abstract public class BrowserApp extends GeckoApp
                 final String url = message.getString("url");
                 GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                               Intent.ACTION_SEND, title);
+            } else if (event.equals("Settings:Show")) {
+                // null strings return "null" (http://code.google.com/p/android/issues/detail?id=13830)
+                String resource = null;
+                if (!message.isNull(GeckoPreferences.INTENT_EXTRA_RESOURCES)) {
+                    resource = message.getString(GeckoPreferences.INTENT_EXTRA_RESOURCES);
+                }
+                Intent settingsIntent = new Intent(this, GeckoPreferences.class);
+                GeckoPreferences.setResourceToOpen(settingsIntent, resource);
+                startActivity(settingsIntent);
             } else {
                 super.handleMessage(event, message);
             }
