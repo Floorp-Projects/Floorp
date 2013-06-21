@@ -54,12 +54,6 @@ public:
     mInObserverList = true;
   }
 
-  void ResumeListening()
-  {
-    // GetReferencedElement adds us back to our target's observer list.
-    GetReferencedElement();
-  }
-
   virtual ~SVGRootRenderingObserver()
   {
     StopListening();
@@ -86,9 +80,12 @@ protected:
       mVectorImage->InvalidateObserver();
     }
 
-    // We may have been removed from the observer list by our caller. Rather
-    // than add ourselves back here, we wait until Draw gets called, ensuring
-    // that we coalesce invalidations between Draw calls.
+    // Our caller might've removed us from rendering-observer list.
+    // Add ourselves back!
+    if (!mInObserverList) {
+      nsSVGEffects::AddRenderingObserver(elem, this);
+      mInObserverList = true;
+    } 
   }
 
   // Private data
@@ -732,10 +729,6 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter,
                              aFlags);
-
-  // Allow ourselves to fire FrameChanged and OnStopFrame again.
-  MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
-  mRenderingObserver->ResumeListening();
 
   return NS_OK;
 }
