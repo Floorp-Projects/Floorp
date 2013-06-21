@@ -489,7 +489,7 @@ ProfilerPanel.prototype = {
     box.appendChild(h3);
     box.appendChild(span);
 
-    this.sidebar.push(box, { attachment: { uid: uid, name: name, state: PROFILE_IDLE } });
+    this.sidebar.push([box], { attachment: { uid: uid, name: name, state: PROFILE_IDLE } });
 
     let profile = new ProfileUI(uid, name, this);
     this.profiles.set(uid, profile);
