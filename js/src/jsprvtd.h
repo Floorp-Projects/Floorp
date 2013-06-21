@@ -284,18 +284,18 @@ typedef void
  * if an error or exception was thrown on cx.
  */
 typedef JSObject *
-(* JSObjectOp)(JSContext *cx, JSHandleObject obj);
+(* JSObjectOp)(JSContext *cx, JS::Handle<JSObject*> obj);
 
 /* Signature for class initialization ops. */
 typedef JSObject *
-(* JSClassInitializerOp)(JSContext *cx, JSHandleObject obj);
+(* JSClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
 /*
  * Hook that creates an iterator object for a given object. Returns the
  * iterator object or null if an error or exception was thrown on cx.
  */
 typedef JSObject *
-(* JSIteratorOp)(JSContext *cx, JSHandleObject obj, JSBool keysonly);
+(* JSIteratorOp)(JSContext *cx, JS::HandleObject obj, JSBool keysonly);
 
 
 #endif /* jsprvtd_h */
