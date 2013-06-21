@@ -150,7 +150,7 @@ GetDOMClass(JSObject* obj)
     return &DOMJSClass::FromJSClass(clasp)->mClass;
   }
 
-  if (js::IsObjectProxyClass(clasp) || js::IsFunctionProxyClass(clasp)) {
+  if (js::IsProxyClass(clasp)) {
     js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
     if (handler->family() == ProxyFamily()) {
       return &static_cast<DOMProxyHandler*>(handler)->mClass;

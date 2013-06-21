@@ -672,7 +672,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
         RootedObject obj(cx, &val.toObject());
 
         /* 'val' must have been produced by the JSON parser, so not a proxy. */
-        JS_ASSERT(!obj->isProxy());
+        JS_ASSERT(!obj->is<ProxyObject>());
         if (obj->is<ArrayObject>()) {
             /* Step 2a(ii). */
             uint32_t length = obj->as<ArrayObject>().length();

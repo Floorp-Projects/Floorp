@@ -574,7 +574,7 @@ JS_GetCustomIteratorCount(JSContext *cx)
 JS_FRIEND_API(JSBool)
 JS_IsDeadWrapper(JSObject *obj)
 {
-    if (!IsProxy(obj)) {
+    if (!obj->is<ProxyObject>()) {
         return false;
     }
 

@@ -29,7 +29,7 @@ using mozilla::ArrayLength;
 static inline HeapSlot &
 GetCall(JSObject *proxy)
 {
-    JS_ASSERT(IsFunctionProxy(proxy));
+    JS_ASSERT(proxy->is<FunctionProxyObject>());
     return proxy->getSlotRef(JSSLOT_PROXY_CALL);
 }
 
@@ -44,7 +44,7 @@ GetConstruct(JSObject *proxy)
 static inline HeapSlot &
 GetFunctionProxyConstruct(JSObject *proxy)
 {
-    JS_ASSERT(IsFunctionProxy(proxy));
+    JS_ASSERT(proxy->is<FunctionProxyObject>());
     JS_ASSERT(proxy->slotSpan() > JSSLOT_PROXY_CONSTRUCT);
     return proxy->getSlotRef(JSSLOT_PROXY_CONSTRUCT);
 }
@@ -88,7 +88,7 @@ js::AutoEnterPolicy::recordLeave()
 JS_FRIEND_API(void)
 js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id)
 {
-    MOZ_ASSERT(proxy->isProxy());
+    MOZ_ASSERT(proxy->is<ProxyObject>());
     MOZ_ASSERT(cx->runtime()->enteredPolicy);
     MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredProxy.ref().get() == proxy);
     MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredId.ref().get() == id);
@@ -211,7 +211,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         } else if ((desc.attrs & JSPROP_SETTER) || desc.setter != JS_StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
-            if (!proxy->isProxy() || GetProxyHandler(proxy) != this)
+            if (!proxy->is<ProxyObject>() || GetProxyHandler(proxy) != this)
                 return true;
             if (desc.attrs & JSPROP_SHARED)
                 return true;
@@ -238,7 +238,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         } else if ((desc.attrs & JSPROP_SETTER) || desc.setter != JS_StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
-            if (!proxy->isProxy() || GetProxyHandler(proxy) != this)
+            if (!proxy->is<ProxyObject>() || GetProxyHandler(proxy) != this)
                 return true;
             if (desc.attrs & JSPROP_SHARED)
                 return true;
@@ -320,7 +320,7 @@ BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &a
 const char *
 BaseProxyHandler::className(JSContext *cx, HandleObject proxy)
 {
-    return IsFunctionProxy(proxy) ? "Function" : "Object";
+    return proxy->is<FunctionProxyObject>() ? "Function" : "Object";
 }
 
 JSString *
@@ -402,7 +402,7 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, unsigned 
 {
     // If obj is a proxy, we can do better than just guessing. This is
     // important for certain types of wrappers that wrap other wrappers.
-    if (obj->isProxy())
+    if (obj->is<ProxyObject>())
         return Proxy::getOwnPropertyDescriptor(cx, obj, id, desc, flags);
 
     if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
@@ -1039,7 +1039,7 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     Value fval = GetCall(proxy);
-    if (IsFunctionProxy(proxy) &&
+    if (proxy->is<FunctionProxyObject>() &&
         (fval.isPrimitive() || !fval.toObject().is<JSFunction>())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
@@ -3052,21 +3052,21 @@ proxy_TraceFunction(JSTracer *trc, JSObject *obj)
 static JSObject *
 proxy_WeakmapKeyDelegate(JSObject *obj)
 {
-    JS_ASSERT(obj->isProxy());
+    JS_ASSERT(obj->is<ProxyObject>());
     return GetProxyHandler(obj)->weakmapKeyDelegate(obj);
 }
 
 static JSBool
 proxy_Convert(JSContext *cx, HandleObject proxy, JSType hint, MutableHandleValue vp)
 {
-    JS_ASSERT(proxy->isProxy());
+    JS_ASSERT(proxy->is<ProxyObject>());
     return Proxy::defaultValue(cx, proxy, hint, vp);
 }
 
 static void
 proxy_Finalize(FreeOp *fop, JSObject *obj)
 {
-    JS_ASSERT(obj->isProxy());
+    JS_ASSERT(obj->is<ProxyObject>());
     GetProxyHandler(obj)->finalize(fop, obj);
 }
 
@@ -3089,7 +3089,7 @@ proxy_HasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, JSBoo
         proxy_WeakmapKeyDelegate                    \
     }
 
-JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
+Class js::ObjectProxyObject::class_ = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
@@ -3141,7 +3141,9 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     }
 };
 
-JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
+JS_FRIEND_DATA(Class*) js::ObjectProxyClassPtr = &ObjectProxyObject::class_;
+
+Class js::OuterWindowProxyObject::class_ = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4),
     JS_PropertyStub,         /* addProperty */
@@ -3198,12 +3200,14 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     }
 };
 
+JS_FRIEND_DATA(Class*) js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
+
 static JSBool
 proxy_Call(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject proxy(cx, &args.callee());
-    JS_ASSERT(proxy->isProxy());
+    JS_ASSERT(proxy->is<ProxyObject>());
     return Proxy::call(cx, proxy, args);
 }
 
@@ -3212,11 +3216,11 @@ proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject proxy(cx, &args.callee());
-    JS_ASSERT(proxy->isProxy());
+    JS_ASSERT(proxy->is<ProxyObject>());
     return Proxy::construct(cx, proxy, args);
 }
 
-JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
+Class js::FunctionProxyObject::class_ = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(6),
     JS_PropertyStub,         /* addProperty */
@@ -3267,6 +3271,8 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     }
 };
 
+JS_FRIEND_DATA(Class*) js::FunctionProxyClassPtr = &FunctionProxyObject::class_;
+
 static JSObject *
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
                JSObject *parent_, ProxyCallable callable)
@@ -3278,9 +3284,10 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tagge
     JS_ASSERT_IF(parent, cx->compartment() == parent->compartment());
     Class *clasp;
     if (callable)
-        clasp = &FunctionProxyClass;
+        clasp = &FunctionProxyObject::class_;
     else
-        clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
+        clasp = handler->isOuterWindow() ? &OuterWindowProxyObject::class_
+                                         : &ObjectProxyObject::class_;
 
     /*
      * Eagerly mark properties unknown for proxies, so we don't try to track
@@ -3293,7 +3300,8 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tagge
             return NULL;
     }
 
-    NewObjectKind newKind = clasp == &OuterWindowProxyClass ? SingletonObject : GenericObject;
+    NewObjectKind newKind =
+        clasp == &OuterWindowProxyObject::class_ ? SingletonObject : GenericObject;
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
     if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
@@ -3346,7 +3354,7 @@ js::RenewProxyObject(JSContext *cx, JSObject *obj,
 {
     JS_ASSERT_IF(IsCrossCompartmentWrapper(obj), IsDeadProxyObject(obj));
     JS_ASSERT(obj->getParent() == cx->global());
-    JS_ASSERT(obj->getClass() == &ObjectProxyClass);
+    JS_ASSERT(obj->getClass() == &ObjectProxyObject::class_);
     JS_ASSERT(obj->getTaggedProto().isLazy());
 #ifdef DEBUG
     AutoSuppressGC suppressGC(cx);
@@ -3482,6 +3490,6 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
         return NULL;
     }
 
-    MarkStandardClassInitializedNoProto(obj, &ObjectProxyClass);
+    MarkStandardClassInitializedNoProto(obj, &ObjectProxyObject::class_);
     return ctor;
 }

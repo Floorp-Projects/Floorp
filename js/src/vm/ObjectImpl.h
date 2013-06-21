@@ -1282,8 +1282,6 @@ class ObjectImpl : public gc::Cell
         MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
-    inline bool isProxy() const;
-
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();

@@ -420,7 +420,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return JS_FALSE;
-    if (obj->isProxy()) {
+    if (obj->is<ProxyObject>()) {
         // The vanilla getter lookup code below requires that the object is
         // native. Handle proxies separately.
         args.rval().setUndefined();
@@ -456,7 +456,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return JS_FALSE;
-    if (obj->isProxy()) {
+    if (obj->is<ProxyObject>()) {
         // The vanilla setter lookup code below requires that the object is
         // native. Handle proxies separately.
         args.rval().setUndefined();
@@ -612,7 +612,7 @@ obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
     if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
         JSObject *obj = &args.thisv().toObject(), *obj2;
         Shape *prop;
-        if (!obj->isProxy() &&
+        if (!obj->is<ProxyObject>() &&
             HasOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
         {
             args.rval().setBoolean(!!prop);
@@ -633,7 +633,7 @@ obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
     /* Non-standard code for proxies. */
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (obj->isProxy()) {
+    if (obj->is<ProxyObject>()) {
         bool has;
         if (!Proxy::hasOwn(cx, obj, idRoot, &has))
             return false;

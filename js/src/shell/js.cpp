@@ -2685,7 +2685,7 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
             desc.setter = JS_StrictPropertyStub;
         desc.shortid = shape->shortid();
         propFlags = shape->getFlags();
-    } else if (IsProxy(referent)) {
+    } else if (referent->is<ProxyObject>()) {
         if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, &desc, 0))
             return false;
         if (!desc.obj)

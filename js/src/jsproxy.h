@@ -259,12 +259,17 @@ class Proxy
 
 inline bool IsObjectProxyClass(const Class *clasp)
 {
-    return clasp == &js::ObjectProxyClass || clasp == &js::OuterWindowProxyClass;
+    return clasp == js::ObjectProxyClassPtr || clasp == js::OuterWindowProxyClassPtr;
 }
 
 inline bool IsFunctionProxyClass(const Class *clasp)
 {
-    return clasp == &js::FunctionProxyClass;
+    return clasp == js::FunctionProxyClassPtr;
+}
+
+inline bool IsProxyClass(const Class *clasp)
+{
+    return IsObjectProxyClass(clasp) || IsFunctionProxyClass(clasp);
 }
 
 inline bool IsObjectProxy(JSObject *obj)
@@ -279,8 +284,7 @@ inline bool IsFunctionProxy(JSObject *obj)
 
 inline bool IsProxy(JSObject *obj)
 {
-    Class *clasp = GetObjectClass(obj);
-    return IsObjectProxyClass(clasp) || IsFunctionProxyClass(clasp);
+    return IsProxyClass(GetObjectClass(obj));
 }
 
 /* Shared between object and function proxies. */

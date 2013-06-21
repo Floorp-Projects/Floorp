@@ -3066,7 +3066,7 @@ static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
 static bool
 IsCacheableDOMProxy(JSObject *obj)
 {
-    if (!obj->isProxy())
+    if (!obj->is<ProxyObject>())
         return false;
 
     BaseProxyHandler *handler = GetProxyHandler(obj);
@@ -8570,7 +8570,7 @@ ICGetPropCallDOMProxyNativeCompiler::ICGetPropCallDOMProxyNativeCompiler(JSConte
 {
     JS_ASSERT(kind == ICStub::GetProp_CallDOMProxyNative ||
               kind == ICStub::GetProp_CallDOMProxyWithGenerationNative);
-    JS_ASSERT(obj_->isProxy());
+    JS_ASSERT(obj_->is<ProxyObject>());
     JS_ASSERT(GetProxyHandler(obj_)->family() == GetDOMProxyHandlerFamily());
 }
 

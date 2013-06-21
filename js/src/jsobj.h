@@ -993,11 +993,6 @@ class JSObject : public js::ObjectImpl
      * Note that X represents a low-level representation and does not query the
      * [[Class]] property of object defined by the spec (for this, see
      * js::ObjectClassIs).
-     *
-     * SpiderMonkey has not been completely switched to the is/as/XObject
-     * pattern so in some cases there is no XObject class and the engine
-     * instead pokes directly at reserved slots and getPrivate. In such cases,
-     * consider adding the missing XObject class.
      */
 
     template <class T>
@@ -1017,11 +1012,9 @@ class JSObject : public js::ObjectImpl
 
     /* Direct subtypes of JSObject: */
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
-    using js::ObjectImpl::isProxy;
 
     /* Subtypes of Proxy. */
     inline bool isWrapper()                 const;
-    inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
