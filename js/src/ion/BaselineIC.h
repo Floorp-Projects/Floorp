@@ -4379,7 +4379,7 @@ class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyN
 
 class ICGetPropCallDOMProxyNativeCompiler : public ICStubCompiler {
     ICStub *firstMonitorStub_;
-    RootedObject obj_;
+    Rooted<ProxyObject*> proxy_;
     RootedObject holder_;
     RootedFunction getter_;
     uint32_t pcOffset_;
@@ -4390,7 +4390,7 @@ class ICGetPropCallDOMProxyNativeCompiler : public ICStubCompiler {
 
   public:
     ICGetPropCallDOMProxyNativeCompiler(JSContext *cx, ICStub::Kind kind,
-                                        ICStub *firstMonitorStub, HandleObject obj,
+                                        ICStub *firstMonitorStub, Handle<ProxyObject*> proxy,
                                         HandleObject holder, HandleFunction getter,
                                         uint32_t pcOffset);
 
@@ -4444,18 +4444,18 @@ class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
 
     class Compiler : public ICStubCompiler {
         ICStub *firstMonitorStub_;
-        RootedObject obj_;
+        Rooted<ProxyObject*> proxy_;
         RootedPropertyName name_;
         uint32_t pcOffset_;
 
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj, HandlePropertyName name,
-                 uint32_t pcOffset)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, Handle<ProxyObject*> proxy,
+                 HandlePropertyName name, uint32_t pcOffset)
           : ICStubCompiler(cx, ICStub::GetProp_CallNative),
             firstMonitorStub_(firstMonitorStub),
-            obj_(cx, obj),
+            proxy_(cx, proxy),
             name_(cx, name),
             pcOffset_(pcOffset)
         {}

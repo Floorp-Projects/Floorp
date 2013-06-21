@@ -287,32 +287,30 @@ inline bool IsProxy(JSObject *obj)
     return IsProxyClass(GetObjectClass(obj));
 }
 
-/* Shared between object and function proxies. */
 /*
- * NOTE: JSSLOT_PROXY_PRIVATE is 0, because that way slot 0 is usable by API
+ * These are part of the API.
+ *
+ * NOTE: PROXY_PRIVATE_SLOT is 0 because that way slot 0 is usable by API
  * clients for both proxy and non-proxy objects.  So an API client that only
  * needs to store one slot's worth of data doesn't need to branch on what sort
  * of object it has.
  */
-const uint32_t JSSLOT_PROXY_PRIVATE = 0;
-const uint32_t JSSLOT_PROXY_HANDLER = 1;
-const uint32_t JSSLOT_PROXY_EXTRA   = 2;
-/* Function proxies only. */
-const uint32_t JSSLOT_PROXY_CALL = 4;
-const uint32_t JSSLOT_PROXY_CONSTRUCT = 5;
+const uint32_t PROXY_PRIVATE_SLOT = 0;
+const uint32_t PROXY_HANDLER_SLOT = 1;
+const uint32_t PROXY_EXTRA_SLOT   = 2;
 
 inline BaseProxyHandler *
 GetProxyHandler(JSObject *obj)
 {
     JS_ASSERT(IsProxy(obj));
-    return (BaseProxyHandler *) GetReservedSlot(obj, JSSLOT_PROXY_HANDLER).toPrivate();
+    return (BaseProxyHandler *) GetReservedSlot(obj, PROXY_HANDLER_SLOT).toPrivate();
 }
 
 inline const Value &
 GetProxyPrivate(JSObject *obj)
 {
     JS_ASSERT(IsProxy(obj));
-    return GetReservedSlot(obj, JSSLOT_PROXY_PRIVATE);
+    return GetReservedSlot(obj, PROXY_PRIVATE_SLOT);
 }
 
 inline JSObject *
@@ -326,14 +324,14 @@ inline const Value &
 GetProxyExtra(JSObject *obj, size_t n)
 {
     JS_ASSERT(IsProxy(obj));
-    return GetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n);
+    return GetReservedSlot(obj, PROXY_EXTRA_SLOT + n);
 }
 
 inline void
 SetProxyHandler(JSObject *obj, BaseProxyHandler *handler)
 {
     JS_ASSERT(IsProxy(obj));
-    SetReservedSlot(obj, JSSLOT_PROXY_HANDLER, PrivateValue(handler));
+    SetReservedSlot(obj, PROXY_HANDLER_SLOT, PrivateValue(handler));
 }
 
 inline void
@@ -341,7 +339,7 @@ SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 {
     JS_ASSERT(IsProxy(obj));
     JS_ASSERT(n <= 1);
-    SetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n, extra);
+    SetReservedSlot(obj, PROXY_EXTRA_SLOT + n, extra);
 }
 
 enum ProxyCallable {
