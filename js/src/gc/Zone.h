@@ -99,7 +99,9 @@ namespace JS {
  * zone.)
  */
 
-struct Zone : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS::Zone>
+struct Zone : private JS::shadow::Zone,
+              public js::gc::GraphNodeBase<JS::Zone>,
+              public js::MallocProvider<JS::Zone>
 {
     JSRuntime                    *rt;
     js::Allocator                allocator;
@@ -281,6 +283,13 @@ struct Zone : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS::Zone>
      }
 
     void onTooMuchMalloc();
+
+    void *onOutOfMemory(void *p, size_t nbytes) {
+        return rt->onOutOfMemory(p, nbytes);
+    }
+    void reportAllocationOverflow() {
+        js_ReportAllocationOverflow(NULL);
+    }
 
     void markTypes(JSTracer *trc);
 

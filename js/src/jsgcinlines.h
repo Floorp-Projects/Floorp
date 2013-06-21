@@ -47,6 +47,13 @@ struct AutoMarkInDeadZone
     bool scheduled;
 };
 
+inline Allocator *const
+ThreadSafeContext::allocator()
+{
+    JS_ASSERT_IF(isJSContext(), &asJSContext()->zone()->allocator == allocator_);
+    return allocator_;
+}
+
 namespace gc {
 
 /* Capacity for slotsToThingKind */
@@ -538,19 +545,6 @@ NewGCThing(js::ThreadSafeContext *tcx, AllocKind kind, size_t thingSize, Initial
         Zone *zone = tcx->asJSContext()->zone();
         JS_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
                      t->arenaHeader()->allocatedDuringIncremental);
-    }
-#endif
-
-#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    if (tcx->hasNursery()) {
-        JSContext *cx = tcx->asJSContext();
-
-        if (cx->runtime()->gcVerifyPostData &&
-            ShouldNurseryAllocate(cx->runtime()->gcVerifierNursery, kind, heap))
-        {
-            JS_ASSERT(!IsAtomsCompartment(cx->compartment()));
-            cx->runtime()->gcVerifierNursery.insertPointer(t);
-        }
     }
 #endif
 
