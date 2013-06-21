@@ -27,6 +27,8 @@ class CentOSBootstrapper(BaseBootstrapper):
             'curl-devel',
             'dbus-glib-devel',
             'glibc-static',
+            'gstreamer-devel',
+            'gstreamer-plugins-base-devel',
             'gtk2-devel',
             'libstdc++-static',
             'libXt-devel',
