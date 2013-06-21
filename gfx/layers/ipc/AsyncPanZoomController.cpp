@@ -1177,7 +1177,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       / LayerToLayoutDeviceScale(currentTransform.GetXScale(), currentTransform.GetYScale());
 
   LayerPoint translation = (scrollOffset * rootScale) - metricsScrollOffset;
-  *aNewTransform = ViewTransform(-translation, localScale);
+  *aNewTransform = ViewTransform(-translation, localScale / frame.mDevPixelsPerCSSPixel);
   aScrollOffset = scrollOffset * localScale;
 
   mLastSampleTime = aSampleTime;

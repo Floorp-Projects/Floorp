@@ -458,7 +458,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   }
 
   LayerPoint translation = (userScroll / zoomAdjust) - geckoScroll;
-  treeTransform = gfx3DMatrix(ViewTransform(-translation, userZoom));
+  treeTransform = gfx3DMatrix(ViewTransform(-translation, userZoom / metrics.mDevPixelsPerCSSPixel));
 
   // Translate fixed position layers so that they stay in the correct position
   // when userScroll and geckoScroll differ.
