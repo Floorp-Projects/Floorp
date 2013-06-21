@@ -81,6 +81,11 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover {
   cursor: pointer;
 }
 
+.chat-titlebar > .notification-anchor-icon {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
 .chat-titlebar[minimized="true"] {
   border-bottom: none;
 }
