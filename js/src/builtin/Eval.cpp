@@ -405,7 +405,7 @@ static inline bool
 WarnOnTooManyArgs(JSContext *cx, const CallArgs &args)
 {
     if (args.length() > 1) {
-        Rooted<JSScript*> script(cx, cx->stack.currentScript());
+        Rooted<JSScript*> script(cx, cx->currentScript());
         if (script && !script->warnedAboutTwoArgumentEval) {
             static const char TWO_ARGUMENT_WARNING[] =
                 "Support for eval(code, scopeObject) has been removed. "

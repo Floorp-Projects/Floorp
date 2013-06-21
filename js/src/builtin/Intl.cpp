@@ -443,8 +443,8 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
     JS_ASSERT(initializerValue.isObject());
     JS_ASSERT(initializerValue.toObject().is<JSFunction>());
 
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, 3, &args))
+    InvokeArgs args(cx);
+    if (!args.init(3))
         return false;
 
     args.setCallee(initializerValue);
@@ -509,8 +509,8 @@ GetInternals(JSContext *cx, HandleObject obj, MutableHandleObject internals)
     JS_ASSERT(getInternalsValue.isObject());
     JS_ASSERT(getInternalsValue.toObject().is<JSFunction>());
 
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, 1, &args))
+    InvokeArgs args(cx);
+    if (!args.init(1))
         return false;
 
     args.setCallee(getInternalsValue);

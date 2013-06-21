@@ -91,16 +91,10 @@ enum RegExpFlag
     AllFlags        = 0x0f
 };
 
-class ExecuteArgsGuard;
-class InvokeFrameGuard;
-class InvokeArgsGuard;
 class StringBuffer;
 
 class FrameRegs;
 class StackFrame;
-class StackSegment;
-class StackSpace;
-class ContextStack;
 class ScriptFrameIter;
 
 class Proxy;

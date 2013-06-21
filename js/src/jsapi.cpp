@@ -963,9 +963,6 @@ JSRuntime::init(uint32_t maxbytes)
 
     dateTimeInfo.updateTimeZoneAdjustment();
 
-    if (!stackSpace.init())
-        return false;
-
     if (!scriptDataTable.init())
         return false;
 
@@ -5784,8 +5781,8 @@ JS_New(JSContext *cx, JSObject *ctorArg, unsigned argc, jsval *argv)
     // is not a simple variation of JSOP_CALL. We have to determine what class
     // of object to create, create it, and clamp the return value to an object,
     // among other details. InvokeConstructor does the hard work.
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
+    InvokeArgs args(cx);
+    if (!args.init(argc))
         return NULL;
 
     args.setCallee(ObjectValue(*ctor));

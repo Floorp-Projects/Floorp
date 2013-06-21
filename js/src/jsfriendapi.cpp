@@ -800,7 +800,7 @@ js::SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
 JS_FRIEND_API(bool)
 js::IsContextRunningJS(JSContext *cx)
 {
-    return !cx->stack.empty();
+    return cx->currentlyRunning();
 }
 
 JS_FRIEND_API(JS::GCSliceCallback)

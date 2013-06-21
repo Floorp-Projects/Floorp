@@ -229,8 +229,8 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 static JSBool
 NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 {
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, 2, &args))
+    InvokeArgs args(cx);
+    if (!args.init(2))
         return JS_FALSE;
 
     JS_ASSERT(vp[0].isObject());
@@ -298,6 +298,45 @@ GetPropertyOperation(JSContext *cx, StackFrame *fp, HandleScript script, jsbytec
     return true;
 }
 
+static inline bool
+NameOperation(JSContext *cx, StackFrame *fp, jsbytecode *pc, MutableHandleValue vp)
+{
+    JSObject *obj = fp->scopeChain();
+    PropertyName *name = fp->script()->getName(pc);
+
+    /*
+     * Skip along the scope chain to the enclosing global object. This is
+     * used for GNAME opcodes where the bytecode emitter has determined a
+     * name access must be on the global. It also insulates us from bugs
+     * in the emitter: type inference will assume that GNAME opcodes are
+     * accessing the global object, and the inferred behavior should match
+     * the actual behavior even if the id could be found on the scope chain
+     * before the global object.
+     */
+    if (IsGlobalOp(JSOp(*pc)))
+        obj = &obj->global();
+
+    Shape *shape = NULL;
+    JSObject *scope = NULL, *pobj = NULL;
+    if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
+        if (FetchNameNoGC(pobj, shape, vp))
+            return true;
+    }
+
+    RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
+    RootedPropertyName nameRoot(cx, name);
+    RootedShape shapeRoot(cx);
+
+    if (!LookupName(cx, nameRoot, objRoot, &scopeRoot, &pobjRoot, &shapeRoot))
+        return false;
+
+    /* Kludge to allow (typeof foo == "undefined") tests. */
+    JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
+    if (op2 == JSOP_TYPEOF)
+        return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+    return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+}
+
 inline bool
 SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lval,
                      HandleValue rval)
@@ -350,28 +389,16 @@ static JS_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state);
 
 StackFrame *
-InvokeState::pushInterpreterFrame(JSContext *cx)
+InvokeState::pushInterpreterFrame(JSContext *cx, FrameGuard *fg)
 {
-    ifg_.construct();
-
-    if (!cx->stack.pushInvokeFrame(cx, args_, initial_, ifg_.addr()))
-        return NULL;
-
-    return ifg_.ref().fp();
+    return cx->runtime()->interpreterStack().pushInvokeFrame(cx, args_, initial_, fg);
 }
 
 StackFrame *
-ExecuteState::pushInterpreterFrame(JSContext *cx)
+ExecuteState::pushInterpreterFrame(JSContext *cx, FrameGuard *fg)
 {
-    efg_.construct();
-
-    if (!cx->stack.pushExecuteFrame(cx, script_, thisv_, scopeChain_, type_, evalInFrame_,
-                                    efg_.addr()))
-    {
-        return NULL;
-    }
-
-    return efg_.ref().fp();
+    return cx->runtime()->interpreterStack().pushExecuteFrame(cx, script_, thisv_, scopeChain_,
+                                                              type_, evalInFrame_, fg);
 }
 
 bool
@@ -420,7 +447,7 @@ js::RunScript(JSContext *cx, RunState &state)
 bool
 js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
-    JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(args.length() <= ARGS_LENGTH_MAX);
     JS_ASSERT(!cx->compartment()->activeAnalysis);
 
     /* We should never enter a new script while cx->iterValue is live. */
@@ -480,8 +507,8 @@ bool
 js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, Value *argv,
            Value *rval)
 {
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
+    InvokeArgs args(cx);
+    if (!args.init(argc))
         return false;
 
     args.setCallee(fval);
@@ -547,8 +574,8 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
 bool
 js::InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *argv, Value *rval)
 {
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
+    InvokeArgs args(cx);
+    if (!args.init(argc))
         return false;
 
     args.setCallee(fval);
@@ -824,8 +851,8 @@ EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stack
 void
 js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), cx->stack.fp() == frame.asStackFrame());
-    JS_ASSERT_IF(frame.isStackFrame(), stackDepth <= cx->stack.regs().stackDepth());
+    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
+    JS_ASSERT_IF(frame.isStackFrame(), stackDepth <= cx->interpreterRegs().stackDepth());
 
     for (ScopeIter si(frame, cx); !si.done(); ++si) {
         switch (si.type()) {
@@ -1018,6 +1045,26 @@ js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     return js_IteratorNext(cx, iterobj, rval);
 }
 
+FrameGuard::FrameGuard(RunState &state, FrameRegs &regs)
+  : state_(state),
+    regs_(regs),
+    stack_(NULL),
+    fp_(NULL)
+{ }
+
+FrameGuard::~FrameGuard()
+{
+    if (state_.isGenerator()) {
+        JSGenerator *gen = state_.asGenerator()->gen();
+        gen->fp->unsetPushedSPSFrame();
+        gen->regs = regs_;
+        return;
+    }
+
+    if (fp_)
+        stack_->releaseFrame(fp_);
+}
+
 static JS_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state)
 {
@@ -1094,16 +1141,21 @@ Interpret(JSContext *cx, RunState &state)
             interrupts.enable();                                              \
     JS_END_MACRO
 
-    StackFrame *entryFrame = state.pushInterpreterFrame(cx);
+    FrameRegs regs;
+    FrameGuard fg(state, regs);
+
+    StackFrame *entryFrame = state.pushInterpreterFrame(cx, &fg);
     if (!entryFrame)
         return false;
 
-    JS_ASSERT_IF(!state.isGenerator(), cx->stack.regs().pc == state.script()->code);
-    JS_ASSERT_IF(entryFrame->isEvalFrame(), state.script()->isActiveEval);
+    if (!state.isGenerator()) {
+        regs.prepareToRun(*entryFrame, state.script());
+        JS_ASSERT(regs.pc == state.script()->code);
+    } else {
+        regs = state.asGenerator()->gen()->regs;
+    }
 
-    /* Repoint cx->regs to a local variable for faster access. */
-    FrameRegs regs = cx->stack.regs();
-    PreserveRegsGuard interpGuard(cx, regs);
+    JS_ASSERT_IF(entryFrame->isEvalFrame(), state.script()->isActiveEval);
 
     InterpreterActivation activation(cx, entryFrame, regs);
 
@@ -1453,8 +1505,7 @@ BEGIN_CASE(JSOP_STOP)
   jit_return_pop_frame:
 #endif
 
-        activation.popFrame(regs.fp());
-        cx->stack.popInlineFrame(regs);
+        activation.popInlineFrame(regs.fp());
         SET_SCRIPT(regs.fp()->script());
 
 #if defined(JS_ION)
@@ -1983,7 +2034,7 @@ BEGIN_CASE(JSOP_DELNAME)
     name = script->getName(regs.pc);
 
     RootedObject &scopeObj = rootObject0;
-    scopeObj = cx->stack.currentScriptedScopeChain();
+    scopeObj = regs.fp()->scopeChain();
 
     PUSH_BOOLEAN(true);
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
@@ -2292,10 +2343,8 @@ BEGIN_CASE(JSOP_FUNCALL)
     TypeMonitorCall(cx, args, construct);
 
     funScript = fun->nonLazyScript();
-    if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
+    if (!activation.pushInlineFrame(args, funScript, initial))
         goto error;
-
-    activation.pushFrame(regs.fp());
 
     if (newType)
         regs.fp()->setUseNewType();
@@ -2337,7 +2386,7 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     name = script->getName(regs.pc);
 
     RootedObject &scopeObj = rootObject0;
-    scopeObj = cx->stack.currentScriptedScopeChain();
+    scopeObj = regs.fp()->scopeChain();
 
     RootedObject &scope = rootObject1;
     if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
@@ -2357,7 +2406,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 {
     RootedValue &rval = rootValue0;
 
-    if (!NameOperation(cx, regs.pc, &rval))
+    if (!NameOperation(cx, regs.fp(), regs.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
@@ -3060,7 +3109,6 @@ END_CASE(JSOP_ARRAYPUSH)
     } /* for (;;) */
 
   error:
-    JS_ASSERT(&cx->stack.regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
 
     if (cx->isExceptionPending()) {
