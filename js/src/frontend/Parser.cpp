@@ -4537,13 +4537,7 @@ Parser<FullParseHandler>::withStatement()
                                      TokenPos::make(begin, pos().begin));
     }
 
-    Node pn = handler.newBinary(PNK_WITH, objectExpr, innerBlock);
-    if (!pn)
-        return null();
-
-    handler.setBeginPosition(pn, begin);
-    handler.setEndPosition(pn, innerBlock);
-    return pn;
+    return handler.newWithStatement(begin, objectExpr, innerBlock);
 }
 
 template <>
