@@ -187,3 +187,89 @@ add_task(function test_notifications_change()
   yield downloadTwo.start();
   do_check_false(receivedOnDownloadChanged);
 });
+
+/**
+ * Checks that download is removed on history expiration.
+ */
+add_task(function test_history_expiration()
+{
+  function cleanup() {
+    Services.prefs.clearUserPref("places.history.expiration.max_pages");
+  }
+  do_register_cleanup(cleanup);
+
+  // Set max pages to 0 to make the download expire.
+  Services.prefs.setIntPref("places.history.expiration.max_pages", 0);
+
+  // Add expirable visit for downloads.
+  yield promiseAddDownloadToHistory();
+  yield promiseAddDownloadToHistory(TEST_INTERRUPTIBLE_URI);
+
+  let list = yield promiseNewDownloadList();
+  let downloadOne = yield promiseSimpleDownload();
+  let downloadTwo = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  list.add(downloadOne);
+  list.add(downloadTwo);
+
+  let deferred = Promise.defer();
+  let removeNotifications = 0;
+  let downloadView = {
+    onDownloadRemoved: function (aDownload) {
+      if (++removeNotifications == 2) {
+        deferred.resolve();
+      }
+    },
+  };
+  list.addView(downloadView);
+
+  // Start download one.
+  yield downloadOne.start();
+
+  // Start download two and then cancel it.
+  downloadTwo.start();
+  let promiseCanceled = downloadTwo.cancel();
+
+  // Force a history expiration.
+  let expire = Cc["@mozilla.org/places/expiration;1"]
+                 .getService(Ci.nsIObserver);
+  expire.observe(null, "places-debug-start-expiration", -1);
+
+  yield deferred.promise;
+  yield promiseCanceled;
+
+  cleanup();
+});
+
+/**
+ * Checks all downloads are removed after clearing history.
+ */
+add_task(function test_history_clear()
+{
+  // Add expirable visit for downloads.
+  yield promiseAddDownloadToHistory();
+  yield promiseAddDownloadToHistory();
+
+  let list = yield promiseNewDownloadList();
+  let downloadOne = yield promiseSimpleDownload();
+  let downloadTwo = yield promiseSimpleDownload();
+  list.add(downloadOne);
+  list.add(downloadTwo);
+
+  let deferred = Promise.defer();
+  let removeNotifications = 0;
+  let downloadView = {
+    onDownloadRemoved: function (aDownload) {
+      if (++removeNotifications == 2) {
+        deferred.resolve();
+      }
+    },
+  };
+  list.addView(downloadView);
+
+  yield downloadOne.start();
+  yield downloadTwo.start();
+
+  PlacesUtils.history.removeAllPages();
+
+  yield deferred.promise;
+});
