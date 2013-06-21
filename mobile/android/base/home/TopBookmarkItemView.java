@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.ImageView.ScaleType;
 
 /**
  * A view that displays the thumbnail and the title/url for a bookmark.
@@ -143,6 +144,7 @@ public class TopBookmarkItemView extends RelativeLayout {
      * @param resId Resource ID of the drawable to show.
      */
     public void displayThumbnail(int resId) {
+        mThumbnailView.setScaleType(ScaleType.CENTER);
         mThumbnailView.setImageResource(resId);
         mThumbnailView.setBackgroundColor(0x0);
     }
@@ -175,6 +177,7 @@ public class TopBookmarkItemView extends RelativeLayout {
             return;
         }
 
+        mThumbnailView.setScaleType(ScaleType.CENTER);
         mThumbnailView.setImageBitmap(favicon);
         mThumbnailView.setBackgroundColor(Favicons.getInstance().getFaviconColor(favicon, mUrl));
     }
