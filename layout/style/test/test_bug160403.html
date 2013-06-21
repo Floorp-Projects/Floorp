@@ -60,11 +60,11 @@ element.setAttribute("style", "border-top-style: dotted; border-right-style: dot
 isnot(style.getPropertyValue("border-style"), "", "serialize shorthand when all values not inherit/initial");
 element.setAttribute("style", "border-top-style: inherit; border-right-style: inherit; border-bottom-style: inherit; border-left-style: inherit");
 is(style.getPropertyValue("border-style"), "inherit", "serialize shorthand as inherit");
-element.setAttribute("style", "border-top-style: -moz-initial; border-right-style: -moz-initial; border-bottom-style: -moz-initial; border-left-style: -moz-initial");
+element.setAttribute("style", "border-top-style: initial; border-right-style: initial; border-bottom-style: initial; border-left-style: initial");
 is(style.getPropertyValue("border-style"), "initial", "serialize shorthand as initial");
 element.setAttribute("style", "border-top-style: dotted; border-right-style: dotted; border-bottom-style: dotted; border-left-style: inherit");
 is(style.getPropertyValue("border-style"), "", "don't serialize shorthand when partly inherit");
-element.setAttribute("style", "border-top-style: -moz-initial; border-right-style: dotted; border-bottom-style: -moz-initial; border-left-style: -moz-initial");
+element.setAttribute("style", "border-top-style: initial; border-right-style: dotted; border-bottom-style: initial; border-left-style: initial");
 is(style.getPropertyValue("border-style"), "", "don't serialize shorthand when partly initial");
 
 </script>
