@@ -20,6 +20,8 @@ class DebianBootstrapper(BaseBootstrapper):
             'autoconf2.13',
             'libasound2-dev',
             'libcurl4-openssl-dev',
+            'libgstreamer0.10-dev',
+            'libgstreamer-plugins-base0.10-dev',
             'libiw-dev',
             'libnotify-dev',
             'libxt-dev',

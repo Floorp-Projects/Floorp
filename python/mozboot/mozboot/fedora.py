@@ -23,6 +23,8 @@ class FedoraBootstrapper(BaseBootstrapper):
             'alsa-lib-devel',
             'autoconf213',
             'glibc-static',
+            'gstreamer-devel',
+            'gstreamer-plugins-base-devel',
             'libstdc++-static',
             'libXt-devel',
             'mercurial',
