@@ -34,6 +34,9 @@
              oncommand="goDoCommand('consoleCmd_openURL');"/>
     <command id="consoleCmd_copyURL"
              oncommand="goDoCommand('consoleCmd_copyURL');"/>
+    <command id="consoleCmd_clearOutput"
+             oncommand="goDoCommand('consoleCmd_clearOutput');"/>
+    <command id="cmd_find" oncommand="goDoCommand('cmd_find');"/>
     <command id="cmd_fullZoomEnlarge" oncommand="goDoCommand('cmd_fontSizeEnlarge');"/>
     <command id="cmd_fullZoomReduce" oncommand="goDoCommand('cmd_fontSizeReduce');"/>
     <command id="cmd_fullZoomReset" oncommand="goDoCommand('cmd_fontSizeReset');"/>
@@ -47,6 +50,8 @@
     <key key="&fullZoomEnlargeCmd.commandkey3;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
     <key id="key_fullZoomReset" key="&fullZoomResetCmd.commandkey;" command="cmd_fullZoomReset" modifiers="accel"/>
     <key key="&fullZoomResetCmd.commandkey2;" command="cmd_fullZoomReset" modifiers="accel"/>
+    <key key="&findCmd.key;" command="cmd_find" modifiers="accel"/>
+    <key key="&clearOutputCmd.key;" command="consoleCmd_clearOutput" modifiers="accel"/>
     <key key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
   </keyset>
   <keyset id="editMenuKeys"/>
@@ -72,7 +77,13 @@
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
                        category="net" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageNet.tooltip;">
+                       tooltiptext="&btnPageNet.tooltip;"
+#ifdef XP_MACOSX
+                       accesskey="&btnPageNet.accesskeyMacOSX;"
+#else
+                       accesskey="&btnPageNet.accesskey;"
+#endif
+                       tabindex="3">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                       prefKey="network"/>
@@ -85,7 +96,9 @@
         </toolbarbutton>
         <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
                        category="css" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageCSS.tooltip;">
+                       tooltiptext="&btnPageCSS.tooltip;"
+                       accesskey="&btnPageCSS.accesskey;"
+                       tabindex="4">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                       prefKey="csserror"/>
@@ -95,7 +108,9 @@
         </toolbarbutton>
         <toolbarbutton label="&btnPageJS.label;" type="menu-button"
                        category="js" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageJS.tooltip;">
+                       tooltiptext="&btnPageJS.tooltip;"
+                       accesskey="&btnPageJS.accesskey;"
+                       tabindex="5">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
                       autocheck="false" prefKey="exception"/>
@@ -105,7 +120,9 @@
         </toolbarbutton>
         <toolbarbutton label="&btnPageSecurity.label;" type="menu-button"
                        category="security" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageSecurity.tooltip;">
+                       tooltiptext="&btnPageSecurity.tooltip;"
+                       accesskey="&btnPageSecurity.accesskey;"
+                       tabindex="6">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
                       autocheck="false" prefKey="secerror"/>
@@ -115,7 +132,9 @@
         </toolbarbutton>
         <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
                        category="logging" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageLogging.tooltip;">
+                       tooltiptext="&btnPageLogging.tooltip;"
+                       accesskey="&btnPageLogging.accesskey;"
+                       tabindex="7">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
                       autocheck="false" prefKey="error"/>
@@ -129,23 +148,25 @@
         </toolbarbutton>
 
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
-                       label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
+                       label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"
+                       accesskey="&btnClear.accesskey;"
+                       tabindex="8"/>
 
         <spacer flex="1"/>
 
         <textbox class="compact hud-filter-box devtools-searchinput" type="search"
-                 placeholder="&filterOutput.placeholder;"/>
+                 placeholder="&filterOutput.placeholder;" tabindex="2"/>
       </toolbar>
 
       <richlistbox class="hud-output-node" orient="vertical" flex="1"
                    seltype="multiple" context="output-contextmenu"
-                   style="direction:ltr;"/>
+                   style="direction:ltr;" tabindex="1"/>
 
       <hbox class="jsterm-input-container" style="direction:ltr">
         <stack class="jsterm-stack-node" flex="1">
           <textbox class="jsterm-complete-node" multiline="true" rows="1"
                    tabindex="-1"/>
-          <textbox class="jsterm-input-node" multiline="true" rows="1"/>
+          <textbox class="jsterm-input-node" multiline="true" rows="1" tabindex="0"/>
         </stack>
       </hbox>
     </vbox>
