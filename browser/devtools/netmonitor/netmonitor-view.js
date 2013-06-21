@@ -47,13 +47,13 @@ const DEFAULT_EDITOR_CONFIG = {
   showLineNumbers: true
 };
 const GENERIC_VARIABLES_VIEW_SETTINGS = {
-  lazyEmpty: false,
+  lazyEmpty: true,
   lazyEmptyDelay: 10, // ms
   searchEnabled: true,
-  descriptorTooltip: false,
   editableValueTooltip: "",
   editableNameTooltip: "",
   preventDisableOnChage: true,
+  preventDescriptorModifiers: true,
   eval: () => {},
   switch: () => {}
 };
@@ -1446,7 +1446,7 @@ NetworkDetailsView.prototype = {
     headersScope.expanded = true;
 
     for (let header of aResponse.headers) {
-      let headerVar = headersScope.addItem(header.name, { null: true }, true);
+      let headerVar = headersScope.addItem(header.name, {}, true);
       gNetwork.getString(header.value).then((aString) => headerVar.setGrip(aString));
     }
   },
@@ -1489,7 +1489,7 @@ NetworkDetailsView.prototype = {
     cookiesScope.expanded = true;
 
     for (let cookie of aResponse.cookies) {
-      let cookieVar = cookiesScope.addItem(cookie.name, { null: true }, true);
+      let cookieVar = cookiesScope.addItem(cookie.name, {}, true);
       gNetwork.getString(cookie.value).then((aString) => cookieVar.setGrip(aString));
 
       // By default the cookie name and value are shown. If this is the only
@@ -1591,7 +1591,7 @@ NetworkDetailsView.prototype = {
     paramsScope.expanded = true;
 
     for (let param of paramsArray) {
-      let headerVar = paramsScope.addItem(param.name, { null: true }, true);
+      let headerVar = paramsScope.addItem(param.name, {}, true);
       headerVar.setGrip(param.value);
     }
   },
