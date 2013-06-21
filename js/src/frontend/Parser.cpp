@@ -3667,7 +3667,7 @@ Parser<ParseHandler>::doWhileStatement()
         (void) tokenStream.matchToken(TOK_SEMI);
     }
 
-    return handler.newDoWhileStatement(body, cond, TokenPos::make(begin, pos().end));
+    return handler.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
 }
 
 template <typename ParseHandler>
@@ -4045,7 +4045,7 @@ Parser<FullParseHandler>::forStatement()
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
-    TokenPos headPos = TokenPos::make(begin, pos().end);
+    TokenPos headPos(begin, pos().end);
     ParseNode *forHead = handler.newForHead(isForInOrOf, pn1, pn2, pn3, headPos);
     if (!forHead)
         return null();
@@ -4341,7 +4341,7 @@ Parser<ParseHandler>::continueStatement()
     if (!MatchOrInsertSemicolon(context, &tokenStream))
         return null();
 
-    return handler.newContinueStatement(label, TokenPos::make(begin, pos().end));
+    return handler.newContinueStatement(label, TokenPos(begin, pos().end));
 }
 
 template <typename ParseHandler>
@@ -4378,7 +4378,7 @@ Parser<ParseHandler>::breakStatement()
     if (!MatchOrInsertSemicolon(context, &tokenStream))
         return null();
 
-    return handler.newBreakStatement(label, TokenPos::make(begin, pos().end));
+    return handler.newBreakStatement(label, TokenPos(begin, pos().end));
 }
 
 template <typename ParseHandler>
@@ -4446,7 +4446,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
 
     Node pn = isYield
               ? handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, exprNode)
-              : handler.newReturnStatement(exprNode, TokenPos::make(begin, pos().end));
+              : handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
     if (!pn)
         return null();
 
@@ -4515,8 +4515,7 @@ Parser<FullParseHandler>::withStatement()
     for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
         DefinitionNode defn = r.front().value().get<FullParseHandler>();
         DefinitionNode lexdep = handler.resolve(defn);
-        handler.deoptimizeUsesWithin(lexdep,
-                                     TokenPos::make(begin, pos().begin));
+        handler.deoptimizeUsesWithin(lexdep, TokenPos(begin, pos().begin));
     }
 
     return handler.newWithStatement(begin, objectExpr, innerBlock);
@@ -4582,7 +4581,7 @@ Parser<ParseHandler>::throwStatement()
     if (!MatchOrInsertSemicolon(context, &tokenStream))
         return null();
 
-    return handler.newThrowStatement(throwExpr, TokenPos::make(begin, pos().end));
+    return handler.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
 }
 
 template <typename ParseHandler>
