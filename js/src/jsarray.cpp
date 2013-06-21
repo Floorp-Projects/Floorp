@@ -1009,17 +1009,17 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    InvokeArgsGuard ag;
-    if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
+    InvokeArgs args2(cx);
+    if (!args2.init(0))
         return false;
 
-    ag.setCallee(join);
-    ag.setThis(ObjectValue(*obj));
+    args2.setCallee(join);
+    args2.setThis(ObjectValue(*obj));
 
     /* Do the call. */
-    if (!Invoke(cx, ag))
+    if (!Invoke(cx, args2))
         return false;
-    args.rval().set(ag.rval());
+    args.rval().set(args2.rval());
     return true;
 }
 
@@ -1421,20 +1421,20 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return false;
 
-    InvokeArgsGuard &ag = fig.args();
-    if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 2, &ag))
+    InvokeArgs &args = fig.args();
+    if (!args.init(2))
         return false;
 
-    ag.setCallee(fval);
-    ag.setThis(UndefinedValue());
-    ag[0] = a;
-    ag[1] = b;
+    args.setCallee(fval);
+    args.setThis(UndefinedValue());
+    args[0] = a;
+    args[1] = b;
 
     if (!fig.invoke(cx))
         return false;
 
     double cmp;
-    if (!ToNumber(cx, ag.rval(), &cmp))
+    if (!ToNumber(cx, args.rval(), &cmp))
         return false;
 
     /*
@@ -2637,7 +2637,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
     /* Step 9. */
     JS_ASSERT(!InParallelSection());
     FastInvokeGuard fig(cx, ObjectValue(*callable));
-    InvokeArgsGuard &ag = fig.args();
+    InvokeArgs &args2 = fig.args();
     RootedValue kValue(cx);
     while (k < len) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
@@ -2650,17 +2650,17 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
 
         /* Step c.ii-iii. */
         if (!kNotPresent) {
-            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
+            if (!args2.init(3))
                 return false;
-            ag.setCallee(ObjectValue(*callable));
-            ag.setThis(thisv);
-            ag[0] = kValue;
-            ag[1] = NumberValue(k);
-            ag[2] = ObjectValue(*obj);
+            args2.setCallee(ObjectValue(*callable));
+            args2.setThis(thisv);
+            args2[0] = kValue;
+            args2[1] = NumberValue(k);
+            args2[2] = ObjectValue(*obj);
             if (!fig.invoke(cx))
                 return false;
 
-            if (ToBoolean(ag.rval())) {
+            if (ToBoolean(args2.rval())) {
                 if (!SetArrayElement(cx, arr, to, kValue))
                     return false;
                 to++;

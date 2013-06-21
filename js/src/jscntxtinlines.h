@@ -16,6 +16,7 @@
 
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
+#include "ion/IonFrames.h" // For GetPcScript
 #include "vm/Interpreter.h"
 #include "vm/Probes.h"
 #include "vm/RegExpObject.h"
@@ -122,25 +123,6 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
 
     return NULL;
 }
-
-struct PreserveRegsGuard
-{
-    PreserveRegsGuard(JSContext *cx, FrameRegs &regs)
-      : prevContextRegs(cx->stack.maybeRegs()), cx(cx), regs_(regs) {
-        cx->stack.repointRegs(&regs_);
-    }
-    ~PreserveRegsGuard() {
-        JS_ASSERT(cx->stack.maybeRegs() == &regs_);
-        *prevContextRegs = regs_;
-        cx->stack.repointRegs(prevContextRegs);
-    }
-
-    FrameRegs *prevContextRegs;
-
-  private:
-    JSContext *cx;
-    FrameRegs &regs_;
-};
 
 #ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
@@ -573,6 +555,48 @@ JSContext::setCompartment(JSCompartment *comp)
     compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
     allocator_ = zone_ ? &zone_->allocator : NULL;
+}
+
+inline JSScript *
+JSContext::currentScript(jsbytecode **ppc,
+                         MaybeAllowCrossCompartment allowCrossCompartment) const
+{
+    if (ppc)
+        *ppc = NULL;
+
+    js::Activation *act = mainThread().activation();
+    while (act && (act->cx() != this || !act->isActive()))
+        act = act->prev();
+
+    if (!act)
+        return NULL;
+
+    JS_ASSERT(act->cx() == this);
+
+#ifdef JS_ION
+    if (act->isJit()) {
+        JSScript *script = NULL;
+        js::ion::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
+        if (!allowCrossCompartment && script->compartment() != compartment())
+            return NULL;
+        return script;
+    }
+#endif
+
+    JS_ASSERT(act->isInterpreter());
+
+    js::StackFrame *fp = act->asInterpreter()->current();
+    JS_ASSERT(!fp->runningInJit());
+
+    JSScript *script = fp->script();
+    if (!allowCrossCompartment && script->compartment() != compartment())
+        return NULL;
+
+    if (ppc) {
+        *ppc = act->asInterpreter()->regs().pc;
+        JS_ASSERT(*ppc >= script->code && *ppc < script->code + script->length);
+    }
+    return script;
 }
 
 template <typename T>

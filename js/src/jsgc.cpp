@@ -2558,6 +2558,7 @@ PurgeRuntime(JSRuntime *rt)
         comp->purge();
 
     rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
+    rt->interpreterStack().purge(rt);
 
     rt->gsnCache.purge();
     rt->newObjectCache.purge();
@@ -4132,8 +4133,6 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
      * is set at the beginning of the mark phase. During incremental GC, we also
      * set it at the start of every phase.
      */
-    rt->stackSpace.markActiveCompartments();
-
     for (ActivationIterator iter(rt); !iter.done(); ++iter)
         iter.activation()->compartment()->zone()->active = true;
 
