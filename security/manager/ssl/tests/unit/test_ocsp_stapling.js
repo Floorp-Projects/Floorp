@@ -143,6 +143,7 @@ function run_test() {
   do_check_true(ocspCertDir.exists());
   gOCSPServerProcess.run(false, [ocspCertDir.path], 1);
 
+  do_register_cleanup(cleanup);
   do_test_pending();
 }
 
@@ -150,6 +151,7 @@ function handleServerCallback(aRequest, aResponse) {
   aResponse.write("OK!");
   aResponse.seizePower();
   aResponse.finish();
+  gHttpServer.stop(function() {});
   run_test_body();
 }
 
@@ -205,7 +207,6 @@ function run_test_body() {
   // SEC_ERROR_OCSP_OLD_RESPONSE = (SEC_ERROR_BASE + 132)
   add_connection_test("ocsp-stapling-expired.example.com", getXPCOMStatusFromNSS(132), true);
   add_connection_test("ocsp-stapling-expired-fresh-ca.example.com", getXPCOMStatusFromNSS(132), true);
-  do_register_cleanup(function() { gHttpServer.stop(cleanup); });
   run_next_test();
   do_test_finished();
 }
