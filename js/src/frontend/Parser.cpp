@@ -3723,9 +3723,9 @@ Parser<ParseHandler>::matchInOrOf(bool *isForOfp)
 template <>
 bool
 Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion version,
-                                                 bool forDecl, bool forEach, bool forOf)
+                                                 bool isForDecl, bool isForEach, bool isForOf)
 {
-    if (forDecl) {
+    if (isForDecl) {
         if (pn1->pn_count > 1)
             return false;
         if (pn1->isOp(JSOP_DEFCONST))
@@ -3733,7 +3733,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
 #if JS_HAS_DESTRUCTURING
         // In JS 1.7 only, for (var [K, V] in EXPR) has a special meaning.
         // Hence all other destructuring decls are banned there.
-        if (version == JSVERSION_1_7 && !forEach && !forOf) {
+        if (version == JSVERSION_1_7 && !isForEach && !isForOf) {
             ParseNode *lhs = pn1->pn_head;
             if (lhs->isKind(PNK_ASSIGN))
                 lhs = lhs->pn_left;
@@ -3759,7 +3759,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
       case PNK_OBJECT:
         // In JS 1.7 only, for ([K, V] in EXPR) has a special meaning.
         // Hence all other destructuring left-hand sides are banned there.
-        if (version == JSVERSION_1_7 && !forEach && !forOf)
+        if (version == JSVERSION_1_7 && !isForEach && !isForOf)
             return pn1->isKind(PNK_ARRAY) && pn1->pn_count == 2;
         return true;
 #endif
@@ -3791,16 +3791,15 @@ Parser<FullParseHandler>::forStatement()
         }
     }
 
-    TokenPos lp_pos = pos();
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
     /*
      * True if we have 'for (var/let/const ...)', except in the oddball case
      * where 'let' begins a let-expression in 'for (let (...) ...)'.
      */
-    bool forDecl = false;
+    bool isForDecl = false;
 
-    /* Non-null when forDecl is true for a 'for (let ...)' statement. */
+    /* Non-null when isForDecl is true for a 'for (let ...)' statement. */
     RootedStaticBlockObject blockObj(context);
 
     /* Set to 'x' in 'for (x ;... ;...)' or 'for (x in ...)'. */
@@ -3826,7 +3825,7 @@ Parser<FullParseHandler>::forStatement()
              */
             pc->parsingForInit = true;
             if (tt == TOK_VAR || tt == TOK_CONST) {
-                forDecl = true;
+                isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
                 pn1 = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST);
             }
@@ -3837,7 +3836,7 @@ Parser<FullParseHandler>::forStatement()
                 if (tokenStream.peekToken() == TOK_LP) {
                     pn1 = letBlock(LetExpresion);
                 } else {
-                    forDecl = true;
+                    isForDecl = true;
                     blockObj = StaticBlockObject::create(context);
                     if (!blockObj)
                         return null();
@@ -3854,15 +3853,21 @@ Parser<FullParseHandler>::forStatement()
         }
     }
 
-    JS_ASSERT_IF(forDecl, pn1->isArity(PN_LIST));
-    JS_ASSERT(!!blockObj == (forDecl && pn1->isOp(JSOP_NOP)));
+    JS_ASSERT_IF(isForDecl, pn1->isArity(PN_LIST));
+    JS_ASSERT(!!blockObj == (isForDecl && pn1->isOp(JSOP_NOP)));
 
-    ParseNode *pn = handler.newForStatement(begin);
-    if (!pn)
-        return null();
+    // The form 'for (let <vars>; <expr2>; <expr3>) <stmt>' generates an
+    // implicit block even if stmt is not a BlockStatement.
+    // If the loop has that exact form, then:
+    // - forLetImpliedBlock is the node for the implicit block scope.
+    // - forLetDecl is the node for the decl 'let <vars>'.
+    // Otherwise both are null.
+    ParseNode *forLetImpliedBlock = NULL;
+    ParseNode *forLetDecl = NULL;
 
-    /* If non-null, the parent that should be returned instead of pn. */
-    ParseNode *forParent = NULL;
+    // If non-null, the node for the decl 'var v = expr1' in the weirdo form
+    // 'for (var v = expr1 in expr2) stmt'.
+    ParseNode *hoistedVar = NULL;
 
     /*
      * We can be sure that it's a for/in loop if there's still an 'in'
@@ -3871,9 +3876,9 @@ Parser<FullParseHandler>::forStatement()
      * pc->parsingForInit.
      */
     StmtInfoPC letStmt(context); /* used if blockObj != NULL. */
-    ParseNode *pn2, *pn3;      /* forHead->pn_kid1 and pn_kid2. */
-    bool forOf;
-    bool isForInOrOf = pn1 && matchInOrOf(&forOf);
+    ParseNode *pn2, *pn3;      /* forHead->pn_kid2 and pn_kid3. */
+    bool isForOf;
+    bool isForInOrOf = pn1 && matchInOrOf(&isForOf);
     if (isForInOrOf) {
         /*
          * Parse the rest of the for/in or for/of head.
@@ -3886,14 +3891,14 @@ Parser<FullParseHandler>::forStatement()
         forStmt.type = STMT_FOR_IN_LOOP;
 
         /* Set iflags and rule out invalid combinations. */
-        if (forOf && isForEach) {
+        if (isForOf && isForEach) {
             report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
             return null();
         }
-        iflags |= (forOf ? JSITER_FOR_OF : JSITER_ENUMERATE);
+        iflags |= (isForOf ? JSITER_FOR_OF : JSITER_ENUMERATE);
 
         /* Check that the left side of the 'in' or 'of' is valid. */
-        if (!isValidForStatementLHS(pn1, versionNumber(), forDecl, isForEach, forOf)) {
+        if (!isValidForStatementLHS(pn1, versionNumber(), isForDecl, isForEach, isForOf)) {
             report(ParseError, false, pn1, JSMSG_BAD_FOR_LEFTSIDE);
             return null();
         }
@@ -3904,7 +3909,7 @@ Parser<FullParseHandler>::forStatement()
          * any, else NULL. Note that the "declaration with initializer" case
          * rewrites the loop-head, moving the decl and setting pn1 to NULL.
          */
-        if (forDecl) {
+        if (isForDecl) {
             pn2 = pn1->pn_head;
             if ((pn2->isKind(PNK_NAME) && pn2->maybeExpr())
 #if JS_HAS_DESTRUCTURING
@@ -3926,9 +3931,7 @@ Parser<FullParseHandler>::forStatement()
                 }
 #endif /* JS_HAS_BLOCK_SCOPE */
 
-                ParseNode *pnseq = handler.newList(PNK_SEQ, pn1);
-                if (!pnseq)
-                    return null();
+                hoistedVar = pn1;
 
                 /*
                  * All of 'var x = i' is hoisted above 'for (x in o)'.
@@ -3947,9 +3950,6 @@ Parser<FullParseHandler>::forStatement()
                               pn2->isKind(PNK_NAME));
                 }
 #endif
-                pnseq->pn_pos.begin = pn->pn_pos.begin;
-                pnseq->append(pn);
-                forParent = pnseq;
             }
         } else {
             /* Not a declaration. */
@@ -3981,7 +3981,7 @@ Parser<FullParseHandler>::forStatement()
             pn1 = block;
         }
 
-        if (forDecl) {
+        if (isForDecl) {
             /*
              * pn2 is part of a declaration. Make a copy that can be passed to
              * EmitAssignment. Take care to do this after PushLetScope.
@@ -4009,7 +4009,7 @@ Parser<FullParseHandler>::forStatement()
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
                  */
-                if (!isForEach && !forOf)
+                if (!isForEach && !isForOf)
                     iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
@@ -4019,7 +4019,7 @@ Parser<FullParseHandler>::forStatement()
         }
     } else {
         if (isForEach) {
-            report(ParseError, false, pn, JSMSG_BAD_FOR_EACH_LOOP);
+            reportWithOffset(ParseError, false, begin, JSMSG_BAD_FOR_EACH_LOOP);
             return null();
         }
 
@@ -4028,18 +4028,13 @@ Parser<FullParseHandler>::forStatement()
              * Desugar 'for (let A; B; C) D' into 'let (A) { for (; B; C) D }'
              * to induce the correct scoping for A.
              */
-            ParseNode *block = pushLetScope(blockObj, &letStmt);
-            if (!block)
+            forLetImpliedBlock = pushLetScope(blockObj, &letStmt);
+            if (!forLetImpliedBlock)
                 return null();
             letStmt.isForLetBlock = true;
 
-            ParseNode *let = handler.newBinary(PNK_LET, pn1, block);
-            if (!let)
-                return null();
-
+            forLetDecl = pn1;
             pn1 = NULL;
-            block->pn_expr = pn;
-            forParent = let;
         }
 
         /* Parse the loop condition or null into pn2. */
@@ -4063,36 +4058,46 @@ Parser<FullParseHandler>::forStatement()
         }
     }
 
-    TokenPos headPos = TokenPos::make(lp_pos.begin, pos().end);
+    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
+
+    TokenPos headPos = TokenPos::make(begin, pos().end);
     ParseNode *forHead = handler.newForHead(isForInOrOf, pn1, pn2, pn3, headPos);
     if (!forHead)
         return null();
-
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
     /* Parse the loop body. */
     ParseNode *body = statement();
     if (!body)
         return null();
 
-    /* A FOR node is binary, left is loop control and right is the body. */
-    pn->setOp(isForInOrOf ? JSOP_ITER : JSOP_NOP);
-    pn->pn_left = forHead;
-    pn->pn_right = body;
-    pn->pn_iflags = iflags;
-    pn->pn_pos.end = body->pn_pos.end;
-
-    if (forParent) {
-        forParent->pn_pos.begin = pn->pn_pos.begin;
-        forParent->pn_pos.end = pn->pn_pos.end;
-    }
-
 #if JS_HAS_BLOCK_SCOPE
     if (blockObj)
         PopStatementPC(context, pc);
 #endif
     PopStatementPC(context, pc);
-    return forParent ? forParent : pn;
+
+    ParseNode *forLoop = handler.newForStatement(begin, forHead, body, iflags);
+    if (!forLoop)
+        return null();
+
+    if (hoistedVar) {
+        ParseNode *pnseq = handler.newList(PNK_SEQ, hoistedVar);
+        if (!pnseq)
+            return null();
+        pnseq->pn_pos = forLoop->pn_pos;
+        pnseq->append(forLoop);
+        return pnseq;
+    }
+    if (forLetImpliedBlock) {
+        forLetImpliedBlock->pn_expr = forLoop;
+        forLetImpliedBlock->pn_pos = forLoop->pn_pos;
+        ParseNode *let = handler.newBinary(PNK_LET, forLetDecl, forLetImpliedBlock);
+        if (!let)
+            return null();
+        let->pn_pos = forLoop->pn_pos;
+        return let;
+    }
+    return forLoop;
 }
 
 template <>
@@ -4119,7 +4124,7 @@ Parser<SyntaxParseHandler>::forStatement()
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
     /* True if we have 'for (var ...)'. */
-    bool forDecl = false;
+    bool isForDecl = false;
     bool simpleForDecl = true;
 
     /* Set to 'x' in 'for (x ;... ;...)' or 'for (x in ...)'. */
@@ -4133,7 +4138,7 @@ Parser<SyntaxParseHandler>::forStatement()
             /* Set lhsNode to a var list or an initializing expression. */
             pc->parsingForInit = true;
             if (tt == TOK_VAR) {
-                forDecl = true;
+                isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
                 lhsNode = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST, &simpleForDecl);
             }
@@ -4158,13 +4163,13 @@ Parser<SyntaxParseHandler>::forStatement()
      * as we've excluded 'in' from being parsed in RelExpr by setting
      * pc->parsingForInit.
      */
-    bool forOf;
-    if (lhsNode && matchInOrOf(&forOf)) {
+    bool isForOf;
+    if (lhsNode && matchInOrOf(&isForOf)) {
         /* Parse the rest of the for/in or for/of head. */
         forStmt.type = STMT_FOR_IN_LOOP;
 
         /* Check that the left side of the 'in' or 'of' is valid. */
-        if (!forDecl &&
+        if (!isForDecl &&
             lhsNode != SyntaxParseHandler::NodeName &&
             lhsNode != SyntaxParseHandler::NodeGetProp &&
             lhsNode != SyntaxParseHandler::NodeLValue)
@@ -4178,7 +4183,7 @@ Parser<SyntaxParseHandler>::forStatement()
             return null();
         }
 
-        if (!forDecl && !setAssignmentLhsOps(lhsNode, JSOP_NOP))
+        if (!isForDecl && !setAssignmentLhsOps(lhsNode, JSOP_NOP))
             return null();
 
         if (!expr())
@@ -5871,12 +5876,12 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             return null();
         }
 
-        bool forOf;
-        if (!matchInOrOf(&forOf)) {
+        bool isForOf;
+        if (!matchInOrOf(&isForOf)) {
             report(ParseError, false, null(), JSMSG_IN_AFTER_FOR_NAME);
             return null();
         }
-        if (forOf) {
+        if (isForOf) {
             if (pn2->pn_iflags != JSITER_ENUMERATE) {
                 JS_ASSERT(pn2->pn_iflags == (JSITER_FOREACH | JSITER_ENUMERATE));
                 report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
@@ -5909,7 +5914,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
 
             if (versionNumber() == JSVERSION_1_7 &&
                 !(pn2->pn_iflags & JSITER_FOREACH) &&
-                !forOf)
+                !isForOf)
             {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
                 if (!pn3->isKind(PNK_ARRAY) || pn3->pn_count != 2) {

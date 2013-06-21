@@ -220,9 +220,17 @@ class FullParseHandler
         return new_<BinaryNode>(PNK_WHILE, JSOP_NOP, pos, cond, body);
     }
 
-    ParseNode *newForStatement(uint32_t begin) {
-        return new_<BinaryNode>(PNK_FOR, JSOP_NOP, TokenPos::make(begin, begin + 1),
-                                (ParseNode *) NULL, (ParseNode *) NULL);
+    ParseNode *newForStatement(uint32_t begin, ParseNode *forHead, ParseNode *body,
+                               unsigned iflags)
+    {
+        /* A FOR node is binary, left is loop control and right is the body. */
+        JSOp op = forHead->isKind(PNK_FORIN) ? JSOP_ITER : JSOP_NOP;
+        BinaryNode *pn = new_<BinaryNode>(PNK_FOR, op, TokenPos::make(begin, body->pn_pos.end),
+                                          forHead, body);
+        if (!pn)
+            return null();
+        pn->pn_iflags = iflags;
+        return pn;
     }
 
     ParseNode *newForHead(bool isForInOrOf, ParseNode *pn1, ParseNode *pn2, ParseNode *pn3,
