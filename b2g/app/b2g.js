@@ -563,6 +563,7 @@ pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 120);
 pref("javascript.options.mem.high_water_mark", 6);
 pref("javascript.options.mem.gc_allocation_threshold_mb", 1);
+pref("javascript.options.mem.gc_decommit_threshold_mb", 1);
 
 // Show/Hide scrollbars when active/inactive
 pref("ui.showHideScrollbars", 1);
