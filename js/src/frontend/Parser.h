@@ -418,6 +418,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node statements();
 
     Node ifStatement();
+    Node doWhileStatement();
+    Node whileStatement();
     Node forStatement();
     Node switchStatement();
     Node withStatement();

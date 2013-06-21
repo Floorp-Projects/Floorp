@@ -209,6 +209,15 @@ class FullParseHandler
         return pn;
     }
 
+    ParseNode *newDoWhileStatement(ParseNode *body, ParseNode *cond, const TokenPos &pos) {
+        return new_<BinaryNode>(PNK_DOWHILE, JSOP_NOP, pos, body, cond);
+    }
+
+    ParseNode *newWhileStatement(uint32_t begin, ParseNode *cond, ParseNode *body) {
+        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
+        return new_<BinaryNode>(PNK_WHILE, JSOP_NOP, pos, cond, body);
+    }
+
     ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
         TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
         return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
