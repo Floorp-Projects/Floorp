@@ -53,7 +53,7 @@ const STR = Services.strings.createBundle(DBG_STRINGS_URI);
  *        e.g. { lazyEmpty: true, searchEnabled: true ... }
  */
 this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
-  this._store = [];
+  this._store = []; // Can't use a Map because Scope names needn't be unique.
   this._itemsByElement = new WeakMap();
   this._prevHierarchy = new Map();
   this._currHierarchy = new Map();
