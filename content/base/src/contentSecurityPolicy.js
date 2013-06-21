@@ -558,10 +558,24 @@ ContentSecurityPolicy.prototype = {
     if (res != Ci.nsIContentPolicy.ACCEPT) {
       CSPdebug("blocking request for " + aContentLocation.asciiSpec);
       try {
-        let directive = this._policy._directives[cspContext];
-        let violatedPolicy = (directive._isImplicit
-                                ? 'default-src' : cspContext)
-                                + ' ' + directive.toString();
+        let directive = "unknown directive",
+            violatedPolicy = "unknown policy";
+
+        // The policy might not explicitly declare each source directive (so
+        // the cspContext may be implicit).  If so, we have to report
+        // violations as appropriate: specific or the default-src directive.
+        if (this._policy._directives.hasOwnProperty(cspContext)) {
+          directive = this._policy._directives[cspContext];
+          violatedPolicy = cspContext + ' ' + directive.toString();
+        } else if (this._policy._directives.hasOwnProperty("default-src")) {
+          directive = this._policy._directives["default-src"];
+          violatedPolicy = "default-src " + directive.toString();
+        } else {
+          violatedPolicy = "unknown directive";
+          CSPdebug('ERROR in blocking content: ' +
+                   'CSP is not sure which part of the policy caused this block');
+        }
+
         this._asyncReportViolation(aContentLocation, aOriginalUri, violatedPolicy);
       } catch(e) {
         CSPdebug('---------------- ERROR: ' + e);
