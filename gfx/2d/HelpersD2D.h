@@ -116,6 +116,13 @@ static inline Rect ToRect(const D2D1_RECT_F &aRect)
   return Rect(aRect.left, aRect.top, aRect.right - aRect.left, aRect.bottom - aRect.top);
 }
 
+static inline Matrix ToMatrix(const D2D1_MATRIX_3X2_F &aTransform)
+{
+  return Matrix(aTransform._11, aTransform._12,
+                aTransform._21, aTransform._22,
+                aTransform._31, aTransform._32);
+}
+
 static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
