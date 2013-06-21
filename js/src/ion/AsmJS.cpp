@@ -4036,24 +4036,20 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
     }
 
     if (lhsType.isSigned() && rhsType.isSigned()) {
-        if (expr->isKind(PNK_DIV)) {
+        if (expr->isKind(PNK_DIV))
             *def = f.binary<MDiv>(lhsDef, rhsDef, MIRType_Int32);
-            *type = Type::Intish;
-        } else {
+        else
             *def = f.binary<MMod>(lhsDef, rhsDef, MIRType_Int32);
-            *type = Type::Int;
-        }
+        *type = Type::Intish;
         return true;
     }
 
     if (lhsType.isUnsigned() && rhsType.isUnsigned()) {
-        if (expr->isKind(PNK_DIV)) {
+        if (expr->isKind(PNK_DIV))
             *def = f.binary<MAsmJSUDiv>(lhsDef, rhsDef);
-            *type = Type::Intish;
-        } else {
+        else
             *def = f.binary<MAsmJSUMod>(lhsDef, rhsDef);
-            *type = Type::Int;
-        }
+        *type = Type::Intish;
         return true;
     }
 
