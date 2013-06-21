@@ -116,6 +116,14 @@ let healthReportWrapper = {
     iframe.contentWindow.postMessage(data, reportUrl);
   },
 
+  showSettings: function () {
+    console.log("AboutHealthReport: showing settings.");
+    sendMessageToJava({
+      type: "Settings:Show",
+      resource: "preferences_datareporting",
+    });
+  },
+
   handleRemoteCommand: function (evt) {
     switch (evt.detail.command) {
       case "DisableDataSubmission":
@@ -129,6 +137,9 @@ let healthReportWrapper = {
         break;
       case "RequestCurrentPayload":
         this.refreshPayload();
+        break;
+      case "ShowSettings":
+        this.showSettings();
         break;
       default:
         Cu.reportError("Unexpected remote command received: " + evt.detail.command +
