@@ -2074,12 +2074,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   color: hsl(210,11%,16%);
 }
 
-/* Web Console */
-
-.web-console-frame {
-  border-bottom: 1px solid #aaa;
-}
-
 /* Error counter */
 
 #developer-toolbar-toolbox-button[error-count]:before {

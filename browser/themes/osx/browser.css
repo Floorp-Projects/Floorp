@@ -3563,12 +3563,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   color: hsl(210,11%,16%);
 }
 
-/* Web Console */
-
-.web-console-frame {
-  border-bottom: 1px solid #aaa;
-}
-
 /* Developer Toolbar */
 
 #developer-toolbar-closebutton {

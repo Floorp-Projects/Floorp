@@ -2797,12 +2797,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 
-/* Web Console */
-
-.web-console-frame {
-  border-bottom: 1px solid #aaa;
-}
-
 /* Error counter */
 
 #developer-toolbar-toolbox-button[error-count]:before {
