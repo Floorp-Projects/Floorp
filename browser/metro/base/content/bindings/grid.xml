@@ -3,6 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+
 <bindings
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xbl="http://www.mozilla.org/xbl"
@@ -13,16 +14,13 @@
            extends="chrome://global/content/bindings/general.xml#basecontrol">
 
     <content>
-      <html:div id="grid-div" anonid="grid" class="richgrid-grid" xbl:inherits="compact">
+      <html:div id="grid-div" anonid="grid" class="richgrid-grid">
         <children/>
       </html:div>
     </content>
 
     <implementation implements="nsIDOMXULSelectControlElement">
       <property name="_grid" readonly="true" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'grid');"/>
-
-      <property name="isBound" readonly="true" onget="return !!this._grid"/>
-
       <field name="controller">null</field>
 
       <!-- nsIDOMXULMultiSelectControlElement (not fully implemented) -->
@@ -87,8 +85,6 @@
         <parameter name="aItem"/>
         <body>
           <![CDATA[
-            if(!this.isBound)
-              return;
             if (this.controller)
               this.controller.handleItemClick(aItem);
           ]]>
@@ -100,8 +96,6 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if(!this.isBound)
-              return;
             // we'll republish this as a selectionchange event on the grid
             aEvent.stopPropagation();
             this.toggleItemSelection(aItem);
@@ -186,7 +180,7 @@
         <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
-            let addition = this.createItemElement(aLabel, aValue);
+            let addition = this._createItemElement(aLabel, aValue);
             this.appendChild(addition);
             if (!aSkipArrange)
               this.arrangeItems();
@@ -201,6 +195,7 @@
             while (this.firstChild) {
               this.removeChild(this.firstChild);
             }
+            this._grid.style.width = "0px";
           ]]>
         </body>
       </method>
@@ -213,7 +208,7 @@
         <body>
           <![CDATA[
             let existing = this.getItemAtIndex(anIndex);
-            let addition = this.createItemElement(aLabel, aValue);
+            let addition = this._createItemElement(aLabel, aValue);
             if (existing) {
               this.insertBefore(addition, existing);
             } else {
@@ -343,39 +338,39 @@
       <field name="_columnCount">0</field>
       <property name="columnCount" readonly="true" onget="return this._columnCount;"/>
 
-      <property name="_containerSize">
+      <!--  define a height where we consider an item not yet rendered
+            10 is the height of the empty item (padding/border etc. only) -->
+      <field name="_itemHeightRenderThreshold">10</field>
+
+      <property name="_containerRect">
         <getter><![CDATA[
             // return the rect that represents our bounding box
-            let containerNode = this.parentNode;
 
             // Autocomplete is a binding within a binding, so we have to step
             // up an additional parentNode.
-            if (containerNode.id == "results-vbox" ||
-                containerNode.id == "searches-vbox")
-                containerNode = containerNode.parentNode;
-
-            let rect = containerNode.getBoundingClientRect();
-            // return falsy if the container has no height
-            return rect.height ? {
-              width: rect.width,
-              height: rect.height
-            } : null;
+            let container = null;
+            if (this.parentNode.id == "results-vbox" ||
+                this.parentNode.id == "searches-vbox")
+              container = this.parentNode.parentNode.getBoundingClientRect();
+            else
+              container = this.parentNode.getBoundingClientRect();
+            return container;
         ]]></getter>
       </property>
 
-      <property name="_itemSize">
+      <property name="_itemRect">
         <getter><![CDATA[
-            // return the dimensions that represent an item in the grid
+            // return the rect that represents an item in the grid
 
-            // grab tile/item dimensions
-            this._tileSizes = this._getTileSizes();
-
-            let type = this.getAttribute("tiletype") || "default";
-            let dims = this._tileSizes && this._tileSizes[type];
-            if (!dims) {
-              throw new Error("Missing tile sizes for '" + type + "' type");
+            // TODO: when we remove the need for DOM item measurement, 0 items will not be a problem
+            let item = this.itemCount ? this.getItemAtIndex(0) : null;
+            if (item) {
+              let gridItemRect = item.getBoundingClientRect();
+              if (gridItemRect.height > this._itemHeightRenderThreshold) {
+                return gridItemRect;
+              }
             }
-            return dims;
+            return null;
         ]]></getter>
       </property>
 
@@ -383,18 +378,13 @@
       <property name="_canLayout" readonly="true">
         <getter>
           <![CDATA[
-            if (!(this._grid && this._grid.style)) {
-               return false;
-            }
-
-            let gridItemSize = this._itemSize;
-
+            let gridItemRect = this._itemRect;
             // If we don't have valid item dimensions we can't arrange yet
-            if (!(gridItemSize && gridItemSize.height)) {
+            if (!(gridItemRect && gridItemRect.height)) {
               return false;
             }
 
-            let container = this._containerSize;
+            let container = this._containerRect;
             // If we don't have valid container dimensions we can't arrange yet
             if (!(container && container.height)) {
               return false;
@@ -430,14 +420,15 @@
             if (this.hasAttribute("deferlayout")) {
               return;
             }
+
             if (!this._canLayout) {
               // try again later
               this._scheduleArrangeItems();
               return;
             }
 
-            let itemDims = this._itemSize;
-            let containerDims = this._containerSize;
+            let gridItemRect = this._itemRect;
+            let container = this._containerRect;
 
             // reset the flags
             if (this._scheduledArrangeItemsTimerId) {
@@ -446,30 +437,21 @@
             }
             this._scheduledArrangeItemsTries = 0;
 
-            // clear explicit width and columns before calculating from avail. height again
-            let gridStyle = this._grid.style;
-            gridStyle.removeProperty('min-width');
-            gridStyle.removeProperty('-moz-column-count');
+            // We favor overflowing horizontally, not vertically
+            let maxRowCount = Math.floor(container.height / gridItemRect.height) - 1;
 
-            if (!this.children.length) {
-              // no items, we're done
-              return;
+            this._rowCount = this.getAttribute("rows");
+            this._columnCount = this.getAttribute("columns");
+
+            if (!this._rowCount) {
+              this._rowCount = Math.min(this.itemCount, maxRowCount);
+            }
+            if (!this._columnCount){
+              this._columnCount = Math.ceil(this.itemCount / this._rowCount);
             }
 
-            // We favor overflowing horizontally, not vertically
-            let maxRowCount = Math.max(1, Math.floor(containerDims.height / itemDims.height));
+            this._grid.style.width = (this._columnCount * gridItemRect.width) + "px";
 
-            this._rowCount = this.getAttribute("rows") || Math.min(this.itemCount, maxRowCount);
-            this._columnCount = Math.max(
-              1,            // at least 1 column
-              this.getAttribute("columns") || Math.ceil(this.itemCount / this._rowCount)
-            );
-
-            // width is typically auto, cap max columns by truncating items collection
-            // or, setting max-width style property with overflow hidden
-            gridStyle.MozColumnCount = this._columnCount;
-            gridStyle.minWidth = (this._columnCount * itemDims.width) + 'px';
-            // dump(this.getAttribute("id") + ": arrangeItems with itemCount: "+this.itemCount+", itemDims: " + JSON.stringify(itemDims)+ ", container: "+JSON.stringify(containerDims)+", rowCount: "+this._rowCount+", columnCount: " +this._columnCount + "\n");
           ]]>
         </body>
       </method>
@@ -504,7 +486,6 @@
         <![CDATA[
           if (this.controller && this.controller.gridBoundCallback != undefined)
             this.controller.gridBoundCallback();
-
           // set up cross-slide gesture handling for multiple-selection grids
           if ("undefined" !== typeof CrossSlide && "multiple" == this.getAttribute("seltype")) {
             this._xslideHandler = new CrossSlide.Handler(this, {
@@ -514,9 +495,8 @@
             this.addEventListener("touchmove", this._xslideHandler, false);
             this.addEventListener("touchend", this._xslideHandler, false);
           }
-
           // XXX This event was never actually implemented (bug 223411).
-          let event = document.createEvent("Events");
+          var event = document.createEvent("Events");
           event.initEvent("contentgenerated", true, true);
           this.dispatchEvent(event);
         ]]>
@@ -531,62 +511,6 @@
           }
         ]]>
       </destructor>
-
-      <property name="tileWidth" readonly="true" onget="return this._itemSize.width"/>
-      <property name="tileHeight" readonly="true" onget="return this._itemSize.height"/>
-
-      <field name="_tileStyleSheetName">"tiles.css"</field>
-      <method name="_getTileSizes">
-        <body>
-          <![CDATA[
-            // Tile sizes are constants, this avoids the need to measure a rendered item before grid layout
-            // The defines.inc used by the theme CSS is the single source of truth for these values
-            // This method locates and parses out (just) those dimensions from the stylesheet
-
-            let typeSizes = this.ownerDocument.defaultView._richgridTileSizes;
-            if (typeSizes && typeSizes["default"]) {
-              return typeSizes;
-            }
-
-            // cache sizes on the global window object, for reuse between bound nodes
-            typeSizes = this.ownerDocument.defaultView._richgridTileSizes = {};
-
-            let sheets = this.ownerDocument.styleSheets;
-            // the (first matching) rules that will give us tile type => width/height values
-            let typeSelectors = {
-              "richgriditem" : "default",
-              "richgriditem[customImage]": "thumbnail",
-              "richgriditem[compact]": "compact"
-            };
-            let rules, sheet;
-            for (let i=0; (sheet=sheets[i]); i++) {
-              if (sheet.href && sheet.href.endsWith( this._tileStyleSheetName )) {
-                rules = sheet.cssRules;
-                break;
-              }
-            }
-            if (rules) {
-              // walk the stylesheet rules until we've matched all our selectors
-              for (let i=0, rule;(rule=rules[i]); i++) {
-                let type = rule.selectorText && typeSelectors[rule.selectorText];
-                if (type) {
-                  let sizes = typeSizes[type] = {};
-                  typeSelectors[type] = null;
-                  delete typeSelectors[type];
-                  // we assume px unit for tile dimension values
-                  sizes.width =  parseInt(rule.style.getPropertyValue("width"));
-                  sizes.height = parseInt(rule.style.getPropertyValue("height"));
-                }
-                if (!Object.keys(typeSelectors).length)
-                  break;
-              }
-            } else {
-              throw new Error("Failed to find stylesheet to parse out richgriditem dimensions\n");
-            }
-            return typeSizes;
-          ]]>
-        </body>
-      </method>
       <method name="_isIndexInBounds">
         <parameter name="anIndex"/>
         <body>
@@ -596,12 +520,13 @@
         </body>
       </method>
 
-      <method name="createItemElement">
+      <method name="_createItemElement">
         <parameter name="aLabel"/>
         <parameter name="aValue"/>
         <body>
           <![CDATA[
             let item = this.ownerDocument.createElement("richgriditem");
+            item.control = this;
             item.setAttribute("label", aLabel);
             if (aValue)
               item.setAttribute("value", aValue);
@@ -616,7 +541,7 @@
             if (this.suppressOnSelect || this._suppressOnSelect)
               return;
 
-            let event = document.createEvent("Events");
+            var event = document.createEvent("Events");
             event.initEvent("select", true, true);
             this.dispatchEvent(event);
           ]]>
@@ -630,7 +555,7 @@
             if (this.suppressOnSelect || this._suppressOnSelect)
               return;
 
-            let event = document.createEvent("Events");
+            var event = document.createEvent("Events");
             event.initEvent("selectionchange", true, true);
             this.dispatchEvent(event);
           ]]>
@@ -705,30 +630,22 @@
       </handler>
     </handlers>
   </binding>
-
   <binding id="richgrid-item">
     <content>
-      <html:div anonid="anon-tile" class="tile-content" xbl:inherits="customImage">
-        <html:div class="tile-start-container" xbl:inherits="customImage">
-          <html:div class="tile-icon-box"><xul:image anonid="anon-tile-icon" xbl:inherits="src=iconURI"/></html:div>
-        </html:div>
-        <html:div anonid="anon-tile-label" class="tile-desc" xbl:inherits="xbl:text=label"/>
-      </html:div>
+      <xul:vbox anonid="anon-richgrid-item" class="richgrid-item-content" xbl:inherits="customImage">
+        <xul:hbox class="richgrid-icon-container" xbl:inherits="customImage">
+          <xul:box class="richgrid-icon-box"><xul:image anonid="anon-richgrid-item-icon" xbl:inherits="src=iconURI"/></xul:box>
+          <xul:box flex="1" />
+        </xul:hbox>
+        <xul:description anonid="anon-richgrid-item-label" class="richgrid-item-desc" xbl:inherits="value=label" crop="end"/>
+      </xul:vbox>
     </content>
 
     <implementation>
-      <property name="isBound" readonly="true" onget="return !!this._icon"/>
-      <constructor>
-        <![CDATA[
-            this.refresh();
-        ]]>
-      </constructor>
-      <property name="_boundNode" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile').parentNode;"/>
-      <property name="_contentBox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-content');"/>
-      <property name="_textbox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-desc');"/>
-      <property name="_top" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-start-container');"/>
-      <property name="_icon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile-icon');"/>
-      <property name="_label" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile-label');"/>
+      <property name="_box" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item');"/>
+      <property name="_textbox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'richgrid-item-desc');"/>
+      <property name="_icon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-icon');"/>
+      <property name="_label" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-label');"/>
       <property name="iconSrc"
                 onset="this._icon.src = val; this.setAttribute('iconURI', val);"
                 onget="return this._icon.src;" />
@@ -746,11 +663,16 @@
                 onget="return this.hasAttribute('pinned')"
                 onset="if (val) { this.setAttribute('pinned', val) } else this.removeAttribute('pinned');"/>
 
+      <constructor>
+        <![CDATA[
+            this.refresh();
+        ]]>
+      </constructor>
       <method name="refresh">
         <body>
           <![CDATA[
             // Prevent an exception in case binding is not done yet.
-            if(!this.isBound)
+            if (!this._icon)
               return;
 
             // Seed the binding properties from bound-node attribute values
@@ -772,7 +694,7 @@
 
       <property name="control">
         <getter><![CDATA[
-          let parent = this.parentNode;
+          var parent = this.parentNode;
           while (parent) {
             if (parent instanceof Components.interfaces.nsIDOMXULSelectControlElement)
               return parent;
@@ -786,10 +708,12 @@
         <setter><![CDATA[
           if (val) {
             this.setAttribute("customColor", val);
-            this._contentBox.style.backgroundColor = val;
+            this._box.style.backgroundColor = val;
+            this._textbox.style.backgroundColor = val;
           } else {
             this.removeAttribute("customColor");
-            this._contentBox.style.removeProperty("background-color");
+            this._box.style.removeProperty("background-color");
+            this._textbox.style.removeProperty("background-color");
           }
         ]]></setter>
       </property>
@@ -798,21 +722,19 @@
         <setter><![CDATA[
           if (val) {
             this.setAttribute("customImage", val);
-            this._top.style.backgroundImage = val;
+            this._box.style.backgroundImage = val;
           } else {
             this.removeAttribute("customImage");
-            this._top.style.removeProperty("background-image");
+            this._box.style.removeProperty("background-image");
           }
         ]]></setter>
       </property>
 
       <method name="refreshBackgroundImage">
         <body><![CDATA[
-          if(!this.isBound)
-            return;
           if (this.backgroundImage) {
-            this._top.style.removeProperty("background-image");
-            this._top.style.setProperty("background-image", this.backgroundImage);
+            this._box.style.removeProperty("background-image");
+            this._box.style.setProperty("background-image", this.backgroundImage);
           }
         ]]></body>
       </method>
@@ -850,11 +772,12 @@
       <handler event="contextmenu">
         <![CDATA[
           // fires for right-click, long-click and (keyboard) contextmenu input
+          // TODO: handle cross-slide event when it becomes available,
+          // .. using contextmenu is a stop-gap measure to allow us to
           // toggle the selected state of tiles in a grid
           this.control.handleItemContextMenu(this, event);
         ]]>
       </handler>
     </handlers>
   </binding>
-
 </bindings>

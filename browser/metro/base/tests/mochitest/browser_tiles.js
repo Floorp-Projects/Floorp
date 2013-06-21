@@ -8,7 +8,6 @@ function test() {
     info(chromeRoot + "browser_tilegrid.xul");
     yield addTab(chromeRoot + "browser_tilegrid.xul");
     doc = Browser.selectedTab.browser.contentWindow.document;
-    info("browser_tilegrid.xul loaded, doc populated, running tests");
   }).then(runTests);
 }
 
@@ -21,7 +20,7 @@ gTests.push({
     ok(grid, "#grid1 is found");
     is(typeof grid.clearSelection, "function", "#grid1 has the binding applied");
 
-    is(grid.children.length, 2, "#grid1 has a 2 items");
+    is(grid.children.length, 1, "#grid1 has a single item");
     is(grid.children[0].control, grid, "#grid1 item's control points back at #grid1'");
   }
 });
@@ -29,7 +28,6 @@ gTests.push({
 gTests.push({
   desc: "item clicks are handled",
   run: function() {
-
     let grid = doc.querySelector("#grid1");
     is(typeof grid.handleItemClick, "function", "grid.handleItemClick is a function");
     let handleStub = stubMethod(grid, 'handleItemClick');
@@ -57,46 +55,16 @@ gTests.push({
     is(controllerHandleStub.callCount, 1, "controller.handleItemClick was called when we clicked an item");
     is(controllerHandleStub.calledWith[0], doc.getElementById(itemId), "controller.handleItemClick was passed the grid item");
     grid.controller = origController;
-
   }
 });
 
 gTests.push({
   desc: "arrangeItems",
   run: function() {
-    let container = doc.getElementById("alayout");
      // implements an arrangeItems method, with optional cols, rows signature
-    let grid = doc.querySelector("#grid_layout");
-
+    let grid = doc.querySelector("#grid1");
     is(typeof grid.arrangeItems, "function", "arrangeItems is a function on the grid");
-    ok(grid.tileHeight, "grid has truthy tileHeight value");
-    ok(grid.tileWidth, "grid has truthy tileWidth value");
-
-    // make the container big enough for 2 rows
-    container.style.height = 3 * grid.tileHeight + 20 + "px";
-
-    // add some items
-    grid.appendItem("test title", "about:blank", true);
-    grid.appendItem("test title", "about:blank", true);
-    grid.appendItem("test title", "about:blank", true);
-    grid.appendItem("test title", "about:blank", true);
-    grid.appendItem("test title", "about:blank", true);
-
-    grid.arrangeItems();
-    // they should all fit nicely in a 3x2 grid
-    is(grid.rowCount, 3, "rowCount is calculated correctly for a given container height and tileheight");
-    is(grid.columnCount, 2, "columnCount is calculated correctly for a given container maxWidth and tilewidth");
-
-    // squish the available height
-    // should overflow (clip) a 2x2 grid
-
-    dump("grid tileheight:" +grid.tileHeight+"\n");
-    let under3rowsHeight = (3 * grid.tileHeight -20) + "px";
-    dump("Squishing grid container to less than 3x tileheight:" +under3rowsHeight + "\n");
-    container.style.height = under3rowsHeight;
-    grid.arrangeItems();
-
-    is(grid.rowCount, 2, "rowCount is re-calculated correctly for a given container height");
+    todo(false, "Test outcome of arrangeItems with cols and rows arguments");
   }
 });
 
