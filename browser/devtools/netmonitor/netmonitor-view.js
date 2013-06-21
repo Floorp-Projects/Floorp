@@ -350,6 +350,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#requests-menu-empty-notice").hidden = true;
 
     this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**
@@ -403,6 +404,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**
@@ -486,6 +488,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         }
         break;
     }
+
+    this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**
@@ -596,6 +601,26 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       .replace("#2", L10N.numberWithDecimals((totalBytes || 0) / 1024, 2))
       .replace("#3", L10N.numberWithDecimals((totalMillis || 0) / 1000, 2))
     );
+  },
+
+  /**
+   * Adds odd/even attributes to all the visible items in this container.
+   */
+  refreshZebra: function() {
+    let visibleItems = this.orderedVisibleItems;
+
+    for (let i = 0, len = visibleItems.length; i < len; i++) {
+      let requestItem = visibleItems[i];
+      let requestTarget = requestItem.target;
+
+      if (i % 2 == 0) {
+        requestTarget.setAttribute("even", "");
+        requestTarget.removeAttribute("odd");
+      } else {
+        requestTarget.setAttribute("odd", "");
+        requestTarget.removeAttribute("even");
+      }
+    }
   },
 
   /**
@@ -718,6 +743,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.sortContents();
     this.filterContents();
     this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**

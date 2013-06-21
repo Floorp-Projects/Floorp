@@ -191,6 +191,13 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
   info("> Request: " + aRequestItem.attachment.toSource());
 
+  let requestsMenu = aRequestItem.ownerView;
+  let widgetIndex = requestsMenu.indexOfItem(aRequestItem);
+  let visibleIndex = requestsMenu.orderedVisibleItems.indexOf(aRequestItem);
+
+  info("Widget index of item: " + widgetIndex);
+  info("Visible index of item: " + visibleIndex);
+
   let { fuzzyUrl, status, statusText, type, fullMimeType, size, time } = aData;
   let { attachment, target } = aRequestItem
 
@@ -258,5 +265,19 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     info("Tooltip time: " + tooltip);
     ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is incorrect.");
     ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is incorrect.");
+  }
+
+  if (visibleIndex != -1) {
+    if (visibleIndex % 2 == 0) {
+      ok(aRequestItem.target.hasAttribute("even"),
+        "Unexpected 'even' attribute for " + aRequestItem.value);
+      ok(!aRequestItem.target.hasAttribute("odd"),
+        "Unexpected 'odd' attribute for " + aRequestItem.value);
+    } else {
+      ok(!aRequestItem.target.hasAttribute("even"),
+        "Unexpected 'even' attribute for " + aRequestItem.value);
+      ok(aRequestItem.target.hasAttribute("odd"),
+        "Unexpected 'odd' attribute for " + aRequestItem.value);
+    }
   }
 }
