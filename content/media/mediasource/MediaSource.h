@@ -27,6 +27,10 @@ class SourceBufferList;
 class SourceBuffer;
 class TimeRanges;
 
+#define MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID \
+  { 0x3839d699, 0x22c5, 0x439f, \
+  { 0x94, 0xca, 0x0e, 0x0b, 0x26, 0xf9, 0xca, 0xbf } }
+
 class MediaSource MOZ_FINAL : public nsDOMEventTargetHelper
 {
 public:
@@ -49,6 +53,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaSource, nsDOMEventTargetHelper)
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)
 
   nsPIDOMWindow* GetParentObject() const;
 
@@ -121,6 +126,8 @@ private:
   nsString mContentType;
   MediaSourceReadyState mReadyState;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource, MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)
 
 } // namespace dom
 } // namespace mozilla
