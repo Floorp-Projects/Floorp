@@ -1,3 +1,3 @@
 (function() {
-    a = (b => eval("dis(); [arguments]"))();
+    a = (b => eval("0; [arguments]"))();
 })();
