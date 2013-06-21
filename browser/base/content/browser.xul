@@ -1121,11 +1121,8 @@
                          tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
 #endif
           <stack class="gclitoolbar-stack-node" flex="1">
-            <hbox class="gclitoolbar-prompt">
-              <label class="gclitoolbar-prompt-label">&#187;</label>
-            </hbox>
-            <hbox class="gclitoolbar-complete-node"/>
             <textbox class="gclitoolbar-input-node" rows="1"/>
+            <hbox class="gclitoolbar-complete-node"/>
           </stack>
           <toolbarbutton id="developer-toolbar-toolbox-button"
                          class="developer-toolbar-button"

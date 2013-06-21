@@ -3555,47 +3555,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   font-size: 120%;
 }
 
-/* Developer toolbar */
-
-#developer-toolbar {
-  border-top: 1px solid hsla(210, 8%, 5%, .65);
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-#developer-toolbar:-moz-locale-dir(ltr) {
-  padding-left: 2px;
-  padding-right: 16px; /* use -moz-padding-end when/if bug 631729 gets fixed */
-}
-
-#developer-toolbar:-moz-locale-dir(rtl) {
-  padding-left: 4px;
-  padding-right: 18px; /* use -moz-padding-end when/if bug 631729 gets fixed */
-}
-
 %include ../shared/devtools/responsivedesign.inc.css
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 
-.gclitoolbar-input-node,
-.gclitoolbar-complete-node,
-.gclitoolbar-prompt {
-  border-radius: @toolbarbuttonCornerRadius@;
-}
-
-.gclitoolbar-input-node {
-  border-color: hsl(210,11%,10%);
-  box-shadow: 0 1px 1px hsla(210,8%,5%,.3) inset,
-              0 0 0 1px hsla(210,16%,76%,.1) inset,
-              0 1px 0 hsla(210,16%,76%,.15);
-}
-
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
   color: hsl(210,11%,16%);
-}
-
-.gclitoolbar-prompt {
-  background-color: hsl(210,11%,16%);
 }
 
 /* Web Console */
@@ -3604,49 +3569,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border-bottom: 1px solid #aaa;
 }
 
-.web-console-frame[animated] {
-  transition: height 100ms;
-}
-
 /* Developer Toolbar */
 
-#developer-toolbar-toolbox-button {
-  min-width: 18px;
-}
-
-#developer-toolbar-toolbox-button > .toolbarbutton-text {
-  display: none;
-}
-
-.developer-toolbar-button {
-  -moz-appearance: none;
-  min-width: 78px;
-  min-height: 22px;
-  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
-  border-radius: @toolbarbuttonCornerRadius@;
-  color: inherit;
-  border: 1px solid transparent;
-  margin: 0 5px;
-  padding: 0 10px;
-  list-style-image: url("chrome://browser/skin/devtools/tools-icons-small.png");
-}
-
-.developer-toolbar-button[open=true],
-.developer-toolbar-button:active:hover,
-.developer-toolbar-button[checked=true] {
-  border-color: hsla(210,8%,5%,.6);
-  background: rgba(0,0,0,.6);
-  box-shadow: 0 1px 2px rgba(0,0,0,.5) inset, 0 1px 0 hsla(210,16%,76%,.15);
-}
-
-.developer-toolbar-button[checked=true] {
-  color: hsl(208,100%,60%) !important;
-  background: rgba(0,0,0,.4);
-  text-shadow: 0 0 6px hsl(208,100%,60%);
-}
-
-#developer-toolbar-toolbox-button {
-  -moz-image-region: rect(64px, 16px, 80px, 0);
+#developer-toolbar-closebutton {
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 /* Error counter */
