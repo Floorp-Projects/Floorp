@@ -585,7 +585,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
         return nullptr;
     }
 
-	SurfaceCaps dummyCaps = SurfaceCaps::Any();
+    SurfaceCaps dummyCaps = SurfaceCaps::Any();
     nsRefPtr<GLContextWGL> glContext = new GLContextWGL(dummyCaps,
                                                         nullptr, true,
                                                         pbuffer,
