@@ -126,7 +126,8 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JS::MutableHandle<JS::Value> aVp)
+  GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -146,7 +147,8 @@ private:
   }
 
   static JSBool
-  GetConstant(JSContext* aCx, JSHandleObject aObj, JSHandleId idval, JS::MutableHandle<JS::Value> aVp)
+  GetConstant(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> idval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(idval));
     aVp.set(INT_TO_JSVAL(JSID_TO_INT(idval)));

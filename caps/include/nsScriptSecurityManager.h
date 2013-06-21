@@ -372,8 +372,8 @@ private:
     bool SubjectIsPrivileged();
 
     static JSBool
-    CheckObjectAccess(JSContext *cx, JSHandleObject obj,
-                      JSHandleId id, JSAccessMode mode,
+    CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> obj,
+                      JS::Handle<jsid> id, JSAccessMode mode,
                       JS::MutableHandle<JS::Value> vp);
     
     // Decides, based on CSP, whether or not eval() and stuff can be executed.
