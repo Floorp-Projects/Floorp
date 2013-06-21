@@ -40,14 +40,6 @@ struct ViewTransform {
       gfx3DMatrix::ScalingMatrix(mScale.scale, mScale.scale, 1);
   }
 
-  bool operator==(const ViewTransform& rhs) const {
-    return mTranslation == rhs.mTranslation && mScale == rhs.mScale;
-  }
-
-  bool operator!=(const ViewTransform& rhs) const {
-    return !(*this == rhs);
-  }
-
   LayerPoint mTranslation;
   CSSToScreenScale mScale;
 };

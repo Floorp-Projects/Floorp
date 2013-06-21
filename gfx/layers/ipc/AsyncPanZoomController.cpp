@@ -106,21 +106,6 @@ static float gYSkateSizeMultiplier = 3.5f;
 static float gXStationarySizeMultiplier = 1.5f;
 static float gYStationarySizeMultiplier = 2.5f;
 
-static TimeStamp sFrameTime;
-
-static TimeStamp
-GetFrameTime() {
-  if (sFrameTime.IsNull()) {
-    return TimeStamp::Now();
-  }
-  return sFrameTime;
-}
-
-void
-AsyncPanZoomController::SetFrameTime(const TimeStamp& aTime) {
-  sFrameTime = aTime;
-}
-
 static void ReadAZPCPrefs()
 {
   Preferences::AddIntVarCache(&gPanRepaintInterval, "gfx.azpc.pan_repaint_interval", gPanRepaintInterval);
@@ -169,10 +154,10 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mMinZoom(MIN_ZOOM),
      mMaxZoom(MAX_ZOOM),
      mMonitor("AsyncPanZoomController"),
-     mLastSampleTime(GetFrameTime()),
+     mLastSampleTime(TimeStamp::Now()),
      mState(NOTHING),
-     mPreviousPaintStartTime(GetFrameTime()),
-     mLastAsyncScrollTime(GetFrameTime()),
+     mPreviousPaintStartTime(TimeStamp::Now()),
+     mLastAsyncScrollTime(TimeStamp::Now()),
      mLastAsyncScrollOffset(0, 0),
      mCurrentAsyncScrollOffset(0, 0),
      mAsyncScrollTimeoutTask(nullptr),
@@ -778,7 +763,7 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     ScrollBy(CSSPoint::FromUnknownPoint(displacement));
     ScheduleComposite();
 
-    TimeDuration timePaintDelta = GetFrameTime() - mPreviousPaintStartTime;
+    TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
     if (timePaintDelta.ToMilliseconds() > gPanRepaintInterval) {
       RequestContentRepaint();
     }
@@ -815,7 +800,7 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
     mX.GetDisplacementForDuration(inverseResolution.scale, aDelta),
     mY.GetDisplacementForDuration(inverseResolution.scale, aDelta)
   )));
-  TimeDuration timePaintDelta = GetFrameTime() - mPreviousPaintStartTime;
+  TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
   if (timePaintDelta.ToMilliseconds() > gFlingRepaintInterval) {
     RequestContentRepaint();
   }
@@ -832,7 +817,10 @@ void AsyncPanZoomController::SetCompositorParent(CompositorParent* aCompositorPa
 }
 
 void AsyncPanZoomController::ScrollBy(const CSSPoint& aOffset) {
-  mFrameMetrics.mScrollOffset += aOffset;
+  CSSPoint newOffset = mFrameMetrics.mScrollOffset + aOffset;
+  FrameMetrics metrics(mFrameMetrics);
+  metrics.mScrollOffset = newOffset;
+  mFrameMetrics = metrics;
 }
 
 void AsyncPanZoomController::ScaleWithFocus(float aZoom,
@@ -1010,7 +998,7 @@ void AsyncPanZoomController::ScheduleComposite() {
 }
 
 void AsyncPanZoomController::RequestContentRepaint() {
-  mPreviousPaintStartTime = GetFrameTime();
+  mPreviousPaintStartTime = TimeStamp::Now();
 
   double estimatedPaintSum = 0.0;
   for (uint32_t i = 0; i < mPreviousPaintDurations.Length(); i++) {
@@ -1219,7 +1207,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     }
 
     mPreviousPaintDurations.AppendElement(
-      GetFrameTime() - mPreviousPaintStartTime);
+      TimeStamp::Now() - mPreviousPaintStartTime);
   } else {
     // No paint was requested, but we got one anyways. One possible cause of this
     // is that content could have fired a scrollTo(). In this case, we should take
@@ -1389,7 +1377,7 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
     mStartZoomToMetrics = mFrameMetrics;
     mEndZoomToMetrics.mScrollOffset = zoomToRect.TopLeft();
 
-    mAnimationStartTime = GetFrameTime();
+    mAnimationStartTime = TimeStamp::Now();
 
     ScheduleComposite();
   }
