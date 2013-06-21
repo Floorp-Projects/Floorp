@@ -111,8 +111,8 @@ class SyntaxParseHandler
     Node newWhileStatement(uint32_t begin, Node cond, Node body) { return NodeGeneric; }
     Node newSwitchStatement(uint32_t begin, Node discriminant, Node caseList) { return NodeGeneric; }
     Node newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
-    Node newContinue(PropertyName *label, uint32_t begin, uint32_t end) { return NodeGeneric; }
-    Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) { return NodeGeneric; }
+    Node newContinueStatement(PropertyName *label, const TokenPos &pos) { return NodeGeneric; }
+    Node newBreakStatement(PropertyName *label, const TokenPos &pos) { return NodeGeneric; }
     Node newReturnStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
 
     Node newLabeledStatement(PropertyName *label, Node stmt, uint32_t begin) {

@@ -1026,8 +1026,8 @@ class LabeledStatement : public ParseNode
 class LoopControlStatement : public ParseNode
 {
   protected:
-    LoopControlStatement(ParseNodeKind kind, PropertyName *label, uint32_t begin, uint32_t end)
-      : ParseNode(kind, JSOP_NOP, PN_NULLARY, TokenPos::make(begin, end))
+    LoopControlStatement(ParseNodeKind kind, PropertyName *label, const TokenPos &pos)
+      : ParseNode(kind, JSOP_NOP, PN_NULLARY, pos)
     {
         JS_ASSERT(kind == PNK_BREAK || kind == PNK_CONTINUE);
         pn_u.loopControl.label = label;
@@ -1050,8 +1050,8 @@ class LoopControlStatement : public ParseNode
 class BreakStatement : public LoopControlStatement
 {
   public:
-    BreakStatement(PropertyName *label, uint32_t begin, uint32_t end)
-      : LoopControlStatement(PNK_BREAK, label, begin, end)
+    BreakStatement(PropertyName *label, const TokenPos &pos)
+      : LoopControlStatement(PNK_BREAK, label, pos)
     { }
 
     static bool test(const ParseNode &node) {
@@ -1065,8 +1065,8 @@ class BreakStatement : public LoopControlStatement
 class ContinueStatement : public LoopControlStatement
 {
   public:
-    ContinueStatement(PropertyName *label, uint32_t begin, uint32_t end)
-      : LoopControlStatement(PNK_CONTINUE, label, begin, end)
+    ContinueStatement(PropertyName *label, const TokenPos &pos)
+      : LoopControlStatement(PNK_CONTINUE, label, pos)
     { }
 
     static bool test(const ParseNode &node) {
