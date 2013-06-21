@@ -159,11 +159,11 @@ struct JSStructuredCloneWriter {
 
     bool writeString(uint32_t tag, JSString *str);
     bool writeId(jsid id);
-    bool writeArrayBuffer(JSHandleObject obj);
-    bool writeTypedArray(JSHandleObject obj);
-    bool startObject(JSHandleObject obj, bool *backref);
+    bool writeArrayBuffer(JS::HandleObject obj);
+    bool writeTypedArray(JS::HandleObject obj);
+    bool startObject(JS::HandleObject obj, bool *backref);
     bool startWrite(const js::Value &v);
-    bool traverseObject(JSHandleObject obj);
+    bool traverseObject(JS::HandleObject obj);
 
     bool parseTransferable();
     void reportErrorTransferable();

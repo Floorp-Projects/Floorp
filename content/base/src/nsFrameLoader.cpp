@@ -1797,7 +1797,7 @@ nsFrameLoader::GetWindowDimensions(nsRect& aRect)
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+    do_GetInterface(doc->GetWindow());
 
   if (!parentAsWebNav) {
     return NS_ERROR_FAILURE;
@@ -1973,7 +1973,7 @@ nsFrameLoader::TryRemoteBrowser()
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+    do_GetInterface(doc->GetWindow());
 
   if (!parentAsWebNav) {
     return false;

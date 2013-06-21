@@ -101,7 +101,7 @@ nsHtml5TreeOpExecutor::WillParse()
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::WillBuildModel(nsDTDMode aDTDMode)
 {
-  if (mDocShell && !GetDocument()->GetScriptGlobalObject() &&
+  if (mDocShell && !GetDocument()->GetWindow() &&
       !IsExternalViewSource()) {
     // Not loading as data but script global object not ready
     return MarkAsBroken(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -682,13 +682,13 @@ nsHtml5TreeOpExecutor::IsScriptEnabled()
 {
   if (!mDocument || !mDocShell)
     return true;
-  nsCOMPtr<nsIScriptGlobalObject> globalObject = mDocument->GetScriptGlobalObject();
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(mDocument->GetWindow());
   // Getting context is tricky if the document hasn't had its
   // GlobalObject set yet
   if (!globalObject) {
     nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(mDocShell);
     NS_ENSURE_TRUE(owner, true);
-    globalObject = owner->GetScriptGlobalObject();
+    globalObject = do_QueryInterface(mDocument->GetWindow());
     NS_ENSURE_TRUE(globalObject, true);
   }
   nsIScriptContext *scriptContext = globalObject->GetContext();

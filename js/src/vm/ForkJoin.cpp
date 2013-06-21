@@ -146,8 +146,8 @@ ExecuteSequentially(JSContext *cx, HandleValue funVal, bool *complete)
     FastInvokeGuard fig(cx, funVal);
     bool allComplete = true;
     for (uint32_t i = 0; i < numSlices; i++) {
-        InvokeArgsGuard &args = fig.args();
-        if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &args))
+        InvokeArgs &args = fig.args();
+        if (!args.init(3))
             return false;
         args.setCallee(funVal);
         args.setThis(UndefinedValue());
@@ -1947,7 +1947,7 @@ class ParallelSpewer
 
         if (cx) {
             jsbytecode *pc;
-            JSScript *script = cx->stack.currentScript(&pc);
+            JSScript *script = cx->currentScript(&pc);
             if (script && pc) {
                 NonBuiltinScriptFrameIter iter(cx);
                 if (iter.done()) {

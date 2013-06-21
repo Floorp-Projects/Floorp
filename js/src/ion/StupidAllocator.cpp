@@ -46,10 +46,8 @@ StupidAllocator::init()
     if (!RegisterAllocator::init())
         return false;
 
-    if (!virtualRegisters.reserve(graph.numVirtualRegisters()))
+    if (!virtualRegisters.appendN((LDefinition *)NULL, graph.numVirtualRegisters()))
         return false;
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++)
-        virtualRegisters.infallibleAppend((LDefinition *)NULL);
 
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         LBlock *block = graph.getBlock(i);
