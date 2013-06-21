@@ -163,7 +163,7 @@ class FullParseHandler
     }
 
     ParseNode *newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode *kid) {
-        TokenPos pos = {begin, kid ? kid->pn_pos.end : begin + 1};
+        TokenPos pos(begin, kid ? kid->pn_pos.end : begin + 1);
         return new_<UnaryNode>(kind, op, pos, kid);
     }
 
@@ -176,7 +176,7 @@ class FullParseHandler
     }
     ParseNode *newBinary(ParseNodeKind kind, ParseNode *left, ParseNode *right,
                          JSOp op = JSOP_NOP) {
-        TokenPos pos = TokenPos::make(left->pn_pos.begin, right->pn_pos.end);
+        TokenPos pos(left->pn_pos.begin, right->pn_pos.end);
         return new_<BinaryNode>(kind, op, pos, left, right);
     }
     ParseNode *newBinaryOrAppend(ParseNodeKind kind, ParseNode *left, ParseNode *right,
@@ -225,7 +225,7 @@ class FullParseHandler
 
     ParseNode *newExprStatement(ParseNode *expr, uint32_t end) {
         JS_ASSERT(expr->pn_pos.end <= end);
-        return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos::make(expr->pn_pos.begin, end), expr);
+        return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos(expr->pn_pos.begin, end), expr);
     }
 
     ParseNode *newIfStatement(uint32_t begin, ParseNode *cond, ParseNode *thenBranch,
@@ -243,7 +243,7 @@ class FullParseHandler
     }
 
     ParseNode *newWhileStatement(uint32_t begin, ParseNode *cond, ParseNode *body) {
-        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
+        TokenPos pos(begin, body->pn_pos.end);
         return new_<BinaryNode>(PNK_WHILE, JSOP_NOP, pos, cond, body);
     }
 
@@ -252,7 +252,7 @@ class FullParseHandler
     {
         /* A FOR node is binary, left is loop control and right is the body. */
         JSOp op = forHead->isKind(PNK_FORIN) ? JSOP_ITER : JSOP_NOP;
-        BinaryNode *pn = new_<BinaryNode>(PNK_FOR, op, TokenPos::make(begin, body->pn_pos.end),
+        BinaryNode *pn = new_<BinaryNode>(PNK_FOR, op, TokenPos(begin, body->pn_pos.end),
                                           forHead, body);
         if (!pn)
             return null();
@@ -268,12 +268,12 @@ class FullParseHandler
     }
 
     ParseNode *newSwitchStatement(uint32_t begin, ParseNode *discriminant, ParseNode *caseList) {
-        TokenPos pos = TokenPos::make(begin, caseList->pn_pos.end);
+        TokenPos pos(begin, caseList->pn_pos.end);
         return new_<BinaryNode>(PNK_SWITCH, JSOP_NOP, pos, discriminant, caseList);
     }
 
     ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
-        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
+        TokenPos pos(begin, body->pn_pos.end);
         return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
     }
 
@@ -291,8 +291,7 @@ class FullParseHandler
     }
 
     ParseNode *newWithStatement(uint32_t begin, ParseNode *expr, ParseNode *body) {
-        return new_<BinaryNode>(PNK_WITH, JSOP_NOP, TokenPos::make(begin, body->pn_pos.end),
-                                expr, body);
+        return new_<BinaryNode>(PNK_WITH, JSOP_NOP, TokenPos(begin, body->pn_pos.end), expr, body);
     }
 
     ParseNode *newLabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin) {
@@ -306,8 +305,7 @@ class FullParseHandler
 
     ParseNode *newTryStatement(uint32_t begin, ParseNode *body, ParseNode *catchList,
                                ParseNode *finallyBlock) {
-        TokenPos pos = TokenPos::make(begin,
-                                      (finallyBlock ? finallyBlock : catchList)->pn_pos.end);
+        TokenPos pos(begin, (finallyBlock ? finallyBlock : catchList)->pn_pos.end);
         return new_<TernaryNode>(PNK_TRY, JSOP_NOP, body, catchList, finallyBlock, pos);
     }
 
