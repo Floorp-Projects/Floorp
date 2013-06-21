@@ -28,7 +28,6 @@ DISABLED_EXTRA_COMPONENTS = \
 
 EXTRA_JS_MODULES = \
   TelemetryStopwatch.jsm \
-  ThirdPartyCookieProbe.jsm \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
