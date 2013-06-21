@@ -106,27 +106,23 @@ class SyntaxParseHandler
         return expr == NodeString ? NodeStringExprStatement : NodeGeneric;
     }
 
+    Node newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
+    Node newContinue(PropertyName *label, uint32_t begin, uint32_t end) { return NodeGeneric; }
+    Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) { return NodeGeneric; }
     Node newReturnStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
-    Node newThrowStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
 
     Node newLabeledStatement(PropertyName *label, Node stmt, uint32_t begin) {
         return NodeGeneric;
     }
-    Node newCaseOrDefault(uint32_t begin, Node expr, Node body) {
-        return NodeGeneric;
-    }
-    Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
-        return NodeGeneric;
-    }
-    Node newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
-        return NodeGeneric;
-    }
+
+    Node newThrowStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
     Node newDebuggerStatement(const TokenPos &pos) { return NodeGeneric; }
-    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end)
-    {
+
+    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end) {
         lastAtom = name;
         return NodeGetProp;
     }
+
     Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeLValue; }
 
     bool addCatchBlock(Node catchList, Node letBlock,

@@ -199,9 +199,26 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos::make(expr->pn_pos.begin, end), expr);
     }
 
+    ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
+        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
+        return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
+    }
+
+    ParseNode *newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
+        return new_<ContinueStatement>(label, begin, end);
+    }
+
+    ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
+        return new_<BreakStatement>(label, begin, end);
+    }
+
     ParseNode *newReturnStatement(ParseNode *expr, const TokenPos &pos) {
         JS_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
         return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr);
+    }
+
+    ParseNode *newLabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin) {
+        return new_<LabeledStatement>(label, stmt, begin);
     }
 
     ParseNode *newThrowStatement(ParseNode *expr, const TokenPos &pos) {
@@ -209,25 +226,10 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_THROW, JSOP_THROW, pos, expr);
     }
 
-    ParseNode *newLabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin) {
-        return new_<LabeledStatement>(label, stmt, begin);
-    }
-
-    ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
-        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
-        return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
-    }
-
-    ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
-        return new_<BreakStatement>(label, begin, end);
-    }
-    ParseNode *newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
-        return new_<ContinueStatement>(label, begin, end);
-    }
-
     ParseNode *newDebuggerStatement(const TokenPos &pos) {
         return new_<DebuggerStatement>(pos);
     }
+
     ParseNode *newPropertyAccess(ParseNode *pn, PropertyName *name, uint32_t end) {
         return new_<PropertyAccess>(pn, name, pn->pn_pos.begin, end);
     }
