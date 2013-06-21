@@ -820,6 +820,10 @@ var gBrowserInit = {
     // setup our MozApplicationManifest listener
     gBrowser.addEventListener("MozApplicationManifest",
                               OfflineApps, false);
+    // listen for offline apps on social
+    let socialBrowser = document.getElementById("social-sidebar-browser");
+    socialBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
 
     // setup simple gestures support
     gGestureSupport.init(true);
@@ -5622,6 +5626,14 @@ var OfflineApps = {
       if (browser.contentWindow == aContentWindow)
         return browser;
     }
+    // handle other browser/iframe elements that may need popupnotifications
+    let browser = aContentWindow
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocShell)
+                          .chromeEventHandler;
+    if (browser.getAttribute("popupnotificationanchor"))
+      return browser;
     return null;
   },
 
@@ -5651,6 +5663,15 @@ var OfflineApps = {
     }
 
     var browsers = gBrowser.browsers;
+    for (let browser of browsers) {
+      uri = this._getManifestURI(browser.contentWindow);
+      if (uri && uri.equals(aCacheUpdate.manifestURI)) {
+        return browser;
+      }
+    }
+
+    // is this from a non-tab browser/iframe?
+    browsers = document.querySelectorAll("iframe[popupnotificationanchor] | browser[popupnotificationanchor]");
     for (let browser of browsers) {
       uri = this._getManifestURI(browser.contentWindow);
       if (uri && uri.equals(aCacheUpdate.manifestURI)) {

@@ -2515,14 +2515,17 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   outline-offset: -3px;
 }
 
+.default-notification-icon,
 #default-notification-icon {
   list-style-image: url(chrome://global/skin/icons/information-16.png);
 }
 
+.identity-notification-icon,
 #identity-notification-icon {
   list-style-image: url(chrome://mozapps/skin/profile/profileicon.png);
 }
 
+.geo-notification-icon,
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
@@ -2531,6 +2534,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
+.indexedDB-notification-icon,
 #indexedDB-notification-icon {
   list-style-image: url(chrome://global/skin/icons/question-16.png);
 }
@@ -2575,18 +2579,22 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   }
 }
 
+.mixed-content-blocked-notification-icon,
 #mixed-content-blocked-notification-icon {
   list-style-image: url(chrome://browser/skin/mixed-content-blocked-16.png);
 }
 
+.webRTC-shareDevices-notification-icon,
 #webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 
+.webRTC-sharingDevices-notification-icon,
 #webRTC-sharingDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16.png);
 }
 
+.web-notifications-notification-icon,
 #web-notifications-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-16.png);
 }

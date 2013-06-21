@@ -743,6 +743,9 @@
                    hidden="true"
                    skipintoolbarset="true"
                    observes="socialActiveBroadcaster">
+        <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
+                   oncommand="PopupNotifications._reshowNotifications(this,
+                                document.getElementById('social-sidebar-browser'));"/>
         <toolbarbutton id="social-provider-button"
                        class="toolbarbutton-1"
                        type="menu">
@@ -1082,6 +1085,7 @@
                context="contentAreaContextMenu"
                disableglobalhistory="true"
                tooltip="aHTMLTooltip"
+               popupnotificationanchor="social-notification-icon"
                flex="1"
                style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>
