@@ -179,6 +179,8 @@ WebGLContext::WebGLContext()
     mGLMaxVaryingVectors = 0;
     mGLMaxFragmentUniformVectors = 0;
     mGLMaxVertexUniformVectors = 0;
+    mGLMaxColorAttachments = 1;
+    mGLMaxDrawBuffers = 1;
 
     // See OpenGL ES 2.0.25 spec, 6.2 State Tables, table 6.13
     mPixelStorePackAlignment = 4;
@@ -1019,7 +1021,16 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
             break;
     }
 
-    MOZ_NOT_REACHED("Query for unknown extension.");
+    if (Preferences::GetBool("webgl.enable-draft-extensions", false)) {
+        switch (ext) {
+            case WEBGL_draw_buffers:
+                return WebGLExtensionDrawBuffers::IsSupported(this);
+            default:
+                // For warnings-as-errors.
+                break;
+        }
+    }
+
     return false;
 }
 
@@ -1096,6 +1107,10 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     {
         ext = WEBGL_depth_texture;
     }
+    else if (CompareWebGLExtensionName(name, "WEBGL_draw_buffers"))
+    {
+        ext = WEBGL_draw_buffers;
+    }
 
     if (ext == WebGLExtensionID_unknown_extension) {
       return nullptr;
@@ -1143,6 +1158,9 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
             case OES_texture_float_linear:
                 obj = new WebGLExtensionTextureFloatLinear(this);
                 break;
+            case WEBGL_draw_buffers:
+                obj = new WebGLExtensionDrawBuffers(this);
+                break;
             default:
                 MOZ_ASSERT(false, "should not get there.");
         }
@@ -1156,6 +1174,8 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
 void
 WebGLContext::ClearScreen()
 {
+    bool colorAttachmentsMask[WebGLContext::sMaxColorAttachments] = {false};
+
     MakeContextCurrent();
     ScopedBindFramebuffer autoFB(gl, 0);
 
@@ -1165,7 +1185,9 @@ WebGLContext::ClearScreen()
     if (mOptions.stencil)
         clearMask |= LOCAL_GL_STENCIL_BUFFER_BIT;
 
-    ForceClearFramebufferWithDefaultValues(clearMask);
+    colorAttachmentsMask[0] = true;
+
+    ForceClearFramebufferWithDefaultValues(clearMask, colorAttachmentsMask);
     mIsScreenCleared = true;
 }
 
@@ -1177,13 +1199,16 @@ static bool IsSameFloat(float a, float b) {
 #endif
 
 void
-WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask)
+WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[sMaxColorAttachments])
 {
     MakeContextCurrent();
 
     bool initializeColorBuffer = 0 != (mask & LOCAL_GL_COLOR_BUFFER_BIT);
     bool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
+    bool drawBuffersIsEnabled = IsExtensionEnabled(WEBGL_draw_buffers);
+
+    GLenum currentDrawBuffers[WebGLContext::sMaxColorAttachments];
 
     // Fun GL fact: No need to worry about the viewport here, glViewport is just
     // setting up a coordinates transformation, it doesn't affect glClear at all.
@@ -1248,6 +1273,24 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask)
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);
 
     if (initializeColorBuffer) {
+
+        if (drawBuffersIsEnabled) {
+
+            GLenum drawBuffersCommand[WebGLContext::sMaxColorAttachments] = { LOCAL_GL_NONE };
+
+            for(int32_t i = 0; i < mGLMaxDrawBuffers; i++) {
+                GLint temp;
+                gl->fGetIntegerv(LOCAL_GL_DRAW_BUFFER0 + i, &temp);
+                currentDrawBuffers[i] = temp;
+
+                if (colorAttachmentsMask[i]) {
+                    drawBuffersCommand[i] = LOCAL_GL_COLOR_ATTACHMENT0 + i;
+                }
+            }
+
+            gl->fDrawBuffers(mGLMaxDrawBuffers, drawBuffersCommand);
+        }
+
         gl->fColorMask(1, 1, 1, 1);
         gl->fClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -1274,6 +1317,10 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask)
 
     // Restore GL state after clearing.
     if (initializeColorBuffer) {
+        if (drawBuffersIsEnabled) {
+            gl->fDrawBuffers(mGLMaxDrawBuffers, currentDrawBuffers);
+        }
+
         gl->fColorMask(mColorWriteMask[0],
                        mColorWriteMask[1],
                        mColorWriteMask[2],
@@ -1515,6 +1562,8 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"));
     if (IsExtensionSupported(cx, WEBGL_depth_texture))
         arr.AppendElement(NS_LITERAL_STRING("WEBGL_depth_texture"));
+    if (IsExtensionSupported(cx, WEBGL_draw_buffers))
+        arr.AppendElement(NS_LITERAL_STRING("WEBGL_draw_buffers"));
 }
 
 //

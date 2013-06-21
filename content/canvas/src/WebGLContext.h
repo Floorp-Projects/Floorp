@@ -127,6 +127,7 @@ class WebGLContext :
     friend class WebGLExtensionCompressedTextureATC;
     friend class WebGLExtensionCompressedTexturePVRTC;
     friend class WebGLExtensionDepthTexture;
+    friend class WebGLExtensionDrawBuffers;
 
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
@@ -230,11 +231,13 @@ public:
 
     const WebGLRectangleObject *FramebufferRectangleObject() const;
 
+    static const size_t sMaxColorAttachments = 16;
+
     // This is similar to GLContext::ClearSafely, but tries to minimize the
     // amount of work it does.
     // It only clears the buffers we specify, and can reset its state without
     // first having to query anything, as WebGL knows its state at all times.
-    void ForceClearFramebufferWithDefaultValues(GLbitfield mask);
+    void ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[sMaxColorAttachments]);
 
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
     void ClearScreen();
@@ -831,6 +834,8 @@ protected:
     int32_t mGLMaxVaryingVectors;
     int32_t mGLMaxFragmentUniformVectors;
     int32_t mGLMaxVertexUniformVectors;
+    int32_t mGLMaxColorAttachments;
+    int32_t mGLMaxDrawBuffers;
 
     // Cache the max number of elements that can be read from bound VBOs
     // (result of ValidateBuffers).
@@ -875,6 +880,7 @@ protected:
         WEBGL_debug_renderer_info,
         WEBGL_depth_texture,
         WEBGL_lose_context,
+        WEBGL_draw_buffers,
         WebGLExtensionID_unknown_extension
     };
     nsTArray<nsRefPtr<WebGLExtensionBase> > mExtensions;
@@ -918,7 +924,7 @@ protected:
     void Invalidate();
     void DestroyResourcesAndContext();
 
-    void MakeContextCurrent() { gl->MakeCurrent(); }
+    void MakeContextCurrent() const { gl->MakeCurrent(); }
 
     // helpers
     void TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum internalformat,

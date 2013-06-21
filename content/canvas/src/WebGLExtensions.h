@@ -150,6 +150,28 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionDrawBuffers
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionDrawBuffers(WebGLContext*);
+    virtual ~WebGLExtensionDrawBuffers();
+
+    void DrawBuffersWEBGL(const dom::Sequence<GLenum>& buffers);
+
+    static bool IsSupported(const WebGLContext*);
+
+    static const size_t sMinColorAttachments = 4;
+    static const size_t sMinDrawBuffers = 4;
+    /*
+     WEBGL_draw_buffers does not give a minal value for GL_MAX_DRAW_BUFFERS. But, we request
+     for GL_MAX_DRAW_BUFFERS = 4 at least to be able to use all requested color attachements.
+     See DrawBuffersWEBGL in WebGLExtensionDrawBuffers.cpp inner comments for more informations.
+     */
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 } // namespace mozilla
 
 #endif // WEBGLEXTENSIONS_H_
