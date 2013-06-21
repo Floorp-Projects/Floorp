@@ -23,7 +23,6 @@ class JSFunction : public JSObject
         INTERPRETED      = 0x0001,  /* function has a JSScript and environment. */
         NATIVE_CTOR      = 0x0002,  /* native that can be called as a constructor */
         EXTENDED         = 0x0004,  /* structure is FunctionExtended */
-        HEAVYWEIGHT      = 0x0008,  /* activation requires a Call object */
         IS_FUN_PROTO     = 0x0010,  /* function is Function.prototype for some global object */
         EXPR_CLOSURE     = 0x0020,  /* expression closure: function(x) x*x */
         HAS_GUESSED_ATOM = 0x0040,  /* function had no explicit name, but a
@@ -80,11 +79,8 @@ class JSFunction : public JSObject
 
   public:
 
-    bool isHeavyweight() {
-        /* The heavyweight flag is not set until the script is parsed. */
-        JS_ASSERT(!isInterpretedLazy());
-        return flags & HEAVYWEIGHT;
-    }
+    /* Call objects must be created for each invocation of a heavyweight function. */
+    inline bool isHeavyweight() const;
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
     bool isInterpreted()            const { return flags & (INTERPRETED | INTERPRETED_LAZY); }
@@ -171,10 +167,6 @@ class JSFunction : public JSObject
     void setIsFunctionPrototype() {
         JS_ASSERT(!isFunctionPrototype());
         flags |= IS_FUN_PROTO;
-    }
-
-    void setIsHeavyweight() {
-        flags |= HEAVYWEIGHT;
     }
 
     // Can be called multiple times by the parser.

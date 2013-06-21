@@ -1063,14 +1063,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
         if (JSScript *script = lazy->maybeScript()) {
             fun->initScript(script);
-
-            /*
-             * Set some bits that are normally filled in by the Parser after
-             * the full parse tree has been produced.
-             */
-            if (script->function()->isHeavyweight())
-                fun->setIsHeavyweight();
-            fun->nargs = script->function()->nargs;
             return true;
         }
 

@@ -311,17 +311,8 @@ ParseContext<ParseHandler>::generateFunctionBindings(JSContext *cx, InternalHand
     AppendPackedBindings(this, args_, packedBindings);
     AppendPackedBindings(this, vars_, packedBindings + args_.length());
 
-    if (!Bindings::initWithTemporaryStorage(cx, bindings, args_.length(), vars_.length(),
-                                            packedBindings))
-    {
-        return false;
-    }
-
-    FunctionBox *funbox = sc->asFunctionBox();
-    if (bindings->hasAnyAliasedBindings() || funbox->hasExtensibleScope())
-        funbox->function()->setIsHeavyweight();
-
-    return true;
+    return Bindings::initWithTemporaryStorage(cx, bindings, args_.length(), vars_.length(),
+                                              packedBindings);
 }
 
 template <typename ParseHandler>
@@ -1279,7 +1270,7 @@ ConvertDefinitionToNamedLambdaUse(JSContext *cx, ParseContext<FullParseHandler> 
      * produce an error (in strict mode).
      */
     if (dn->isClosed() || dn->isAssigned())
-        funbox->function()->setIsHeavyweight();
+        funbox->setNeedsDeclEnvObject();
     return true;
 }
 
