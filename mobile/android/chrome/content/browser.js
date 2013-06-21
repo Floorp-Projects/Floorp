@@ -5138,7 +5138,7 @@ let HealthReportStatusListener = {
         break;
       case "nsPref:changed":
         sendMessageToJava({ type: "Pref:Change", pref: aData, value: Services.prefs.getBoolPref(aData) });
-        break
+        break;
     }
   },
 
@@ -5164,19 +5164,11 @@ let HealthReportStatusListener = {
   ],
 
   /**
-   * Return true if either the add-on has opted out of AMO updates, and thus
-   * we shouldn't provide details to FHR, or it's an add-on type that we
-   * don't want to report details for.
+   * Return true if the add-on is not of a type for which we report full details.
    * These add-ons will still make it over to Java, but will be filtered out.
    */
   _shouldIgnore: function (aAddon) {
-    // TODO: check this pref. If it's false, the add-on has opted out of
-    // AMO updates, and should not be reported.
-    let optOutPref = "extensions." + aAddon.id + ".getAddons.cache.enabled";
-    if (this.FULL_DETAIL_TYPES.indexOf(aAddon.type) == -1) {
-      return true;
-    }
-    return false;
+    return this.FULL_DETAIL_TYPES.indexOf(aAddon.type) == -1;
   },
 
   _dateToDays: function (aDate) {
