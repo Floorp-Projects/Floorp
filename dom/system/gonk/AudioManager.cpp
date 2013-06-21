@@ -284,11 +284,11 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE_VOID(obs);
-  nsresult rv =
-    obs->AddObserver(this, BLUETOOTH_SCO_STATUS_CHANGED_ID, false) &&
-    obs->AddObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to add bluetooth status changed obervers!");
+  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_SCO_STATUS_CHANGED_ID, false))) {
+    NS_WARNING("Failed to add bluetooth sco status changed observer!");
+  }
+  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID, false))) {
+    NS_WARNING("Failed to add bluetooth a2dp status changed observer!");
   }
 
   for (int loop = 0; loop < AUDIO_STREAM_CNT; loop++) {
@@ -316,11 +316,11 @@ AudioManager::~AudioManager() {
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE_VOID(obs);
-  nsresult rv =
-    obs->RemoveObserver(this, BLUETOOTH_SCO_STATUS_CHANGED_ID) &&
-    obs->RemoveObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to remove bluetooth status changed obervers!");
+  if (NS_FAILED(obs->RemoveObserver(this, BLUETOOTH_SCO_STATUS_CHANGED_ID))) {
+    NS_WARNING("Failed to remove bluetooth sco status changed observer!");
+  }
+  if (NS_FAILED(obs->RemoveObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID))) {
+    NS_WARNING("Failed to remove bluetooth a2dp status changed observer!");
   }
 }
 
