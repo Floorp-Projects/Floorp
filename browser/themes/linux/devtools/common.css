@@ -46,7 +46,7 @@
 
 .devtools-menulist:-moz-focusring,
 .devtools-toolbarbutton:-moz-focusring {
-  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline: 1px dotted hsla(210,30%,85%,0.7);
   outline-offset: -4px;
 }
 

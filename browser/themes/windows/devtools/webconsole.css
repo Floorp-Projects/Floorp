@@ -101,6 +101,10 @@
 
 /* WebConsole colored drops */
 
+.webconsole-filter-button {
+  -moz-user-focus: normal;
+}
+
 .webconsole-filter-button[checked] {
   color: white !important;
 }
