@@ -1215,11 +1215,11 @@ extern JSBool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool
-XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
+XPC_WN_JSOp_Enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
                       JS::MutableHandleValue statep, JS::MutableHandleId idp);
 
 extern JSObject*
-XPC_WN_JSOp_ThisObject(JSContext *cx, JSHandleObject obj);
+XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
 
 // Macros to initialize Object or Function like XPC_WN classes
 #define XPC_WN_WithCall_ObjectOps                                             \

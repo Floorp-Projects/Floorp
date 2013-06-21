@@ -22,9 +22,10 @@ class XPCWrappedNative;
 namespace xpc {
 
 JSBool
-holder_get(JSContext *cx, JSHandleObject holder, JSHandleId id, JS::MutableHandleValue vp);
+holder_get(JSContext *cx, JS::HandleObject holder, JS::HandleId id, JS::MutableHandleValue vp);
 JSBool
-holder_set(JSContext *cx, JSHandleObject holder, JSHandleId id, JSBool strict, JS::MutableHandleValue vp);
+holder_set(JSContext *cx, JS::HandleObject holder, JS::HandleId id, JSBool strict,
+           JS::MutableHandleValue vp);
 
 namespace XrayUtils {
 
@@ -33,16 +34,16 @@ extern JSClass HolderClass;
 bool CloneExpandoChain(JSContext *cx, JSObject *src, JSObject *dst);
 
 bool
-IsTransparent(JSContext *cx, JSHandleObject wrapper, JSHandleId id);
+IsTransparent(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id);
 
 JSObject *
 GetNativePropertiesObject(JSContext *cx, JSObject *wrapper);
 
 bool
-IsXrayResolving(JSContext *cx, JSHandleObject wrapper, JSHandleId id);
+IsXrayResolving(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id);
 
 bool
-HasNativeProperty(JSContext *cx, JSHandleObject wrapper, JSHandleId id,
+HasNativeProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
                   bool *hasProp);
 }
 
