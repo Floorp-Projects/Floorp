@@ -6,22 +6,16 @@
 
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
 <!DOCTYPE window []>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <vbox id="alayout">
-      <richgrid id="grid_layout" seltype="single" flex="1">
-      </richgrid>
-  </vbox>
-  <vbox>
+  <vbox flex="1">
     <hbox>
       <richgrid id="grid1" seltype="single" flex="1">
         <richgriditem value="about:blank" id="grid1_item1" label="First item"/>
-        <richgriditem value="about:blank" id="grid1_item2" label="2nd item"/>
       </richgrid>
     </hbox>
     <hbox>

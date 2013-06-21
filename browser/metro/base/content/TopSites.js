@@ -328,8 +328,8 @@ TopSitesView.prototype = {
 
     for (let idx=0; idx < length; idx++) {
       let isNew = !tileset.children[idx],
+          item = tileset.children[idx] || document.createElement("richgriditem"),
           site = sites[idx];
-      let item = isNew ? tileset.createItemElement(site.title, site.url) : tileset.children[idx];
 
       this.updateTile(item, site);
       if (isNew) {
