@@ -124,6 +124,13 @@ let healthReportWrapper = {
     });
   },
 
+  launchUpdater: function () {
+    console.log("AboutHealthReport: launching updater.");
+    sendMessageToJava({
+      type: "Updater:Launch",
+    });
+  },
+
   handleRemoteCommand: function (evt) {
     switch (evt.detail.command) {
       case "DisableDataSubmission":
@@ -140,6 +147,9 @@ let healthReportWrapper = {
         break;
       case "ShowSettings":
         this.showSettings();
+        break;
+      case "LaunchUpdater":
+        this.launchUpdater();
         break;
       default:
         Cu.reportError("Unexpected remote command received: " + evt.detail.command +
