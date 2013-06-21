@@ -530,14 +530,14 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
      * Implement [[Prototype]]-getting -- particularly across compartment
      * boundaries -- by calling a cached __proto__ getter function.
      */
-    InvokeArgsGuard nested;
-    if (!cx->stack.pushInvokeArgs(cx, 0, &nested))
+    InvokeArgs args2(cx);
+    if (!args2.init(0))
         return false;
-    nested.setCallee(cx->global()->protoGetter());
-    nested.setThis(args[0]);
-    if (!Invoke(cx, nested))
+    args2.setCallee(cx->global()->protoGetter());
+    args2.setThis(args[0]);
+    if (!Invoke(cx, args2))
         return false;
-    args.rval().set(nested.rval());
+    args.rval().set(args2.rval());
     return true;
 }
 
