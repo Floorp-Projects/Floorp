@@ -1549,36 +1549,38 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
         return NULL;
 
     JS_ASSERT(!enclosing->is<ScopeObject>());
-    SetProxyExtra(obj, ENCLOSING_EXTRA, ObjectValue(*enclosing));
-    SetProxyExtra(obj, SNAPSHOT_EXTRA, NullValue());
 
-    return &obj->as<DebugScopeObject>();
+    DebugScopeObject *debugScope = &obj->as<DebugScopeObject>();
+    debugScope->setExtra(ENCLOSING_EXTRA, ObjectValue(*enclosing));
+    debugScope->setExtra(SNAPSHOT_EXTRA, NullValue());
+
+    return debugScope;
 }
 
 ScopeObject &
 DebugScopeObject::scope() const
 {
-    return GetProxyTargetObject(const_cast<DebugScopeObject*>(this))->as<ScopeObject>();
+    return target()->as<ScopeObject>();
 }
 
 JSObject &
 DebugScopeObject::enclosingScope() const
 {
-    return GetProxyExtra(const_cast<DebugScopeObject*>(this), ENCLOSING_EXTRA).toObject();
+    return extra(ENCLOSING_EXTRA).toObject();
 }
 
 JSObject *
 DebugScopeObject::maybeSnapshot() const
 {
     JS_ASSERT(!scope().as<CallObject>().isForEval());
-    return GetProxyExtra(const_cast<DebugScopeObject*>(this), SNAPSHOT_EXTRA).toObjectOrNull();
+    return extra(SNAPSHOT_EXTRA).toObjectOrNull();
 }
 
 void
 DebugScopeObject::initSnapshot(JSObject &o)
 {
     JS_ASSERT(maybeSnapshot() == NULL);
-    SetProxyExtra(this, SNAPSHOT_EXTRA, ObjectValue(o));
+    setExtra(SNAPSHOT_EXTRA, ObjectValue(o));
 }
 
 bool
@@ -1592,7 +1594,7 @@ bool
 js_IsDebugScopeSlow(ObjectProxyObject *proxy)
 {
     JS_ASSERT(proxy->hasClass(&ObjectProxyObject::class_));
-    return GetProxyHandler(proxy) == &DebugScopeProxy::singleton;
+    return proxy->handler() == &DebugScopeProxy::singleton;
 }
 
 /*****************************************************************************/

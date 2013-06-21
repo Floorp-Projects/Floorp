@@ -578,8 +578,7 @@ JS_IsDeadWrapper(JSObject *obj)
         return false;
     }
 
-    BaseProxyHandler *handler = GetProxyHandler(obj);
-    return handler->family() == &DeadObjectProxy::sDeadObjectFamily;
+    return obj->as<ProxyObject>().handler()->family() == &DeadObjectProxy::sDeadObjectFamily;
 }
 
 void

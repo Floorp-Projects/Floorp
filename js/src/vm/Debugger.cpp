@@ -2099,7 +2099,8 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
 
     /* Add the initial debuggees, if any. */
     for (unsigned i = 0; i < argc; i++) {
-        Rooted<GlobalObject*> debuggee(cx, &GetProxyPrivate(&args[i].toObject()).toObject().global());
+        Rooted<GlobalObject*>
+            debuggee(cx, &args[i].toObject().as<ProxyObject>().private_().toObject().global());
         if (!dbg->addDebuggeeGlobal(cx, debuggee))
             return false;
     }
