@@ -4,8 +4,6 @@
 "use strict";
 
 var Appbar = {
-  get consoleButton() { return document.getElementById('console-button'); },
-  get jsShellButton() { return document.getElementById('jsshell-button'); },
   get starButton()    { return document.getElementById('star-button'); },
   get pinButton()     { return document.getElementById('pin-button'); },
   get menuButton()    { return document.getElementById('menu-button'); },
@@ -24,8 +22,6 @@ var Appbar = {
     Elements.tabList.addEventListener('TabSelect', this, true);
     Elements.panelUI.addEventListener('ToolPanelShown', this, false);
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
-
-    this._updateDebugButtons();
 
     // tilegroup selection events for all modules get bubbled up
     window.addEventListener("selectionchange", this, false);
@@ -113,6 +109,10 @@ var Appbar = {
 
   onMenuButton: function(aEvent) {
       var typesArray = ["find-in-page"];
+
+      if (ConsolePanelView.enabled) typesArray.push("open-error-console");
+      if (!MetroUtils.immersive) typesArray.push("open-jsshell");
+
       try {
         // If we have a valid http or https URI then show the view on desktop
         // menu item.
@@ -150,17 +150,6 @@ var Appbar = {
       }
     } catch(ex) {
     }
-  },
-
-  onConsoleButton: function() {
-    PanelUI.show("console-container");
-  },
-
-  onJSShellButton: function() {
-    // XXX for debugging, this only works when running on the desktop.
-    if (!MetroUtils.immersive)
-      window.openDialog("chrome://browser/content/shell.xul", "_blank",
-                        "all=no,scrollbars=yes,resizable=yes,dialog=no");
   },
 
   dispatchContextualAction: function(aActionName){
@@ -259,9 +248,4 @@ var Appbar = {
       this.starButton.checked = isStarred;
     }.bind(this));
   },
-
-  _updateDebugButtons: function() {
-    this.consoleButton.disabled = !ConsolePanelView.enabled;
-    this.jsShellButton.disabled = MetroUtils.immersive;
-  },
-  };
+};
