@@ -72,7 +72,6 @@ enum TokenKind {
     TOK_THROW,                     /* throw keyword */
     TOK_DEBUGGER,                  /* debugger keyword */
     TOK_YIELD,                     /* yield from generator function */
-    TOK_LEXICALSCOPE,              /* block scope AST node label */
     TOK_LET,                       /* let keyword */
     TOK_EXPORT,                    /* export keyword */
     TOK_IMPORT,                    /* import keyword */

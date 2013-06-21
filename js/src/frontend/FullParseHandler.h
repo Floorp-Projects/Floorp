@@ -190,6 +190,25 @@ class FullParseHandler
         return new_<TernaryNode>(kind, op, first, second, third);
     }
 
+    ParseNode *newEmptyStatement(const TokenPos &pos) {
+        return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, pos, (ParseNode *) NULL);
+    }
+
+    ParseNode *newExprStatement(ParseNode *expr, uint32_t end) {
+        JS_ASSERT(expr->pn_pos.end <= end);
+        return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos::make(expr->pn_pos.begin, end), expr);
+    }
+
+    ParseNode *newReturnStatement(ParseNode *expr, const TokenPos &pos) {
+        JS_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
+        return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr);
+    }
+
+    ParseNode *newThrowStatement(ParseNode *expr, const TokenPos &pos) {
+        JS_ASSERT(pos.encloses(expr->pn_pos));
+        return new_<UnaryNode>(PNK_THROW, JSOP_THROW, pos, expr);
+    }
+
     ParseNode *newLabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin) {
         return new_<LabeledStatement>(label, stmt, begin);
     }
@@ -364,7 +383,7 @@ class FullParseHandler
     }
     JSAtom *isStringExprStatement(ParseNode *pn, TokenPos *pos) {
         if (JSAtom *atom = pn->isStringExprStatement()) {
-            *pos = pn->pn_pos;
+            *pos = pn->pn_kid->pn_pos;
             return atom;
         }
         return NULL;

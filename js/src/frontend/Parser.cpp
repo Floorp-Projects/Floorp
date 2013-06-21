@@ -1028,15 +1028,11 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         JS_ASSERT(type == ExpressionBody);
         JS_ASSERT(JS_HAS_EXPR_CLOSURES);
 
-        tokenStream.getToken();
-        uint32_t begin = pos().begin;
-        tokenStream.ungetToken();
-
         Node kid = assignExpr();
         if (!kid)
             return null();
 
-        pn = handler.newUnary(PNK_RETURN, JSOP_RETURN, begin, kid);
+        pn = handler.newReturnStatement(kid, handler.getPosition(kid));
         if (!pn)
             return null();
 
@@ -3167,13 +3163,11 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
         return null();
     }
 
-    ParseNodeKind kind = (tt == TOK_RETURN) ? PNK_RETURN : PNK_YIELD;
-    JSOp op = (tt == TOK_RETURN) ? JSOP_RETURN : JSOP_YIELD;
-
+    bool isYield = (tt == TOK_YIELD);
     uint32_t begin = pos().begin;
 
 #if JS_HAS_GENERATORS
-    if (tt == TOK_YIELD) {
+    if (isYield) {
         if (!abortIfSyntaxParser())
             return null();
 
@@ -3198,7 +3192,7 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
     Node pn2;
     if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC
 #if JS_HAS_GENERATORS
-        && (tt != TOK_YIELD ||
+        && (!isYield ||
             (tt2 != tt && tt2 != TOK_RB && tt2 != TOK_RP &&
              tt2 != TOK_COLON && tt2 != TOK_COMMA))
 #endif
@@ -3219,7 +3213,9 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
             pc->funHasReturnVoid = true;
     }
 
-    Node pn = handler.newUnary(kind, op, begin, pn2);
+    Node pn = isYield
+              ? handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, pn2)
+              : handler.newReturnStatement(pn2, TokenPos::make(begin, pos().end));
     if (!pn)
         return null();
 
@@ -3355,7 +3351,7 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
         return null();
     handler.setBeginPosition(pnlet, begin);
 
-    Node ret;
+    bool needExprStmt = false;
     if (letContext == LetStatement && !tokenStream.matchToken(TOK_LC, TSF_OPERAND)) {
         /*
          * Strict mode eliminates a grammar ambiguity with unparenthesized
@@ -3373,15 +3369,11 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
 
         /*
          * If this is really an expression in let statement guise, then we
-         * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop
+         * need to wrap the PNK_LET node in a PNK_SEMI node so that we pop
          * the return value of the expression.
          */
-        Node semi = handler.newUnary(PNK_SEMI, JSOP_NOP, begin, pnlet);
-
+        needExprStmt = true;
         letContext = LetExpresion;
-        ret = semi;
-    } else {
-        ret = pnlet;
     }
 
     Node expr;
@@ -3397,15 +3389,16 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
             return null();
     }
     handler.setLeaveBlockResult(block, expr, letContext != LetStatement);
-
-    handler.setBeginPosition(ret, vars);
-    handler.setEndPosition(ret, expr);
-
-    handler.setBeginPosition(pnlet, vars);
-    handler.setEndPosition(pnlet, expr);
-
     PopStatementPC(context, pc);
-    return ret;
+
+    handler.setEndPosition(pnlet, pos().end);
+
+    if (needExprStmt) {
+        if (!MatchOrInsertSemicolon(context, &tokenStream))
+            return null();
+        return handler.newExprStatement(pnlet, pos().end);
+    }
+    return pnlet;
 }
 
 #endif /* JS_HAS_BLOCK_SCOPE */
@@ -3824,7 +3817,7 @@ Parser<FullParseHandler>::forStatement()
         if (blockObj) {
             /*
              * Now that the pn3 has been parsed, push the let scope. To hold
-             * the blockObj for the emitter, wrap the TOK_LEXICALSCOPE node
+             * the blockObj for the emitter, wrap the PNK_LEXICALSCOPE node
              * created by PushLetScope around the for's initializer. This also
              * serves to indicate the let-decl to the emitter.
              */
@@ -4326,16 +4319,10 @@ Parser<FullParseHandler>::letStatement()
         /* Check for a let statement or let expression. */
         if (tokenStream.peekToken() == TOK_LP) {
             pn = letBlock(LetStatement);
-            if (!pn)
-                return null();
-
-            JS_ASSERT(pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
-            if (pn->isKind(PNK_LET) && pn->pn_expr->getOp() == JSOP_LEAVEBLOCK)
-                return pn;
-
-            /* Let expressions require automatic semicolon insertion. */
-            JS_ASSERT(pn->isKind(PNK_SEMI) || pn->isOp(JSOP_NOP));
-            break;
+            JS_ASSERT_IF(pn, pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
+            JS_ASSERT_IF(pn && pn->isKind(PNK_LET) && pn->pn_expr->getOp() != JSOP_LEAVEBLOCK,
+                         pn->isOp(JSOP_NOP));
+            return pn;
         }
 
         /*
@@ -4347,7 +4334,7 @@ Parser<FullParseHandler>::letStatement()
          *
          * If we are the first let declaration in this block (i.e., when the
          * enclosing maybe-scope StmtInfoPC isn't yet a scope statement) then
-         * we also need to set pc->blockNode to be our TOK_LEXICALSCOPE.
+         * we also need to set pc->blockNode to be our PNK_LEXICALSCOPE.
          */
         StmtInfoPC *stmt = pc->topStmt;
         if (stmt && (!stmt->maybeScope() || stmt->isForLetBlock)) {
@@ -4477,16 +4464,13 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement()
 {
-    uint32_t begin = pos().begin;
     tokenStream.ungetToken();
-    Node pn2 = expr();
-    if (!pn2)
+    Node pnexpr = expr();
+    if (!pnexpr)
         return null();
-
-    Node pn = handler.newUnary(PNK_SEMI, JSOP_NOP, begin, pn2);
-
-    /* Check termination of this primitive statement. */
-    return MatchOrInsertSemicolon(context, &tokenStream) ? pn : null();
+    if (!MatchOrInsertSemicolon(context, &tokenStream))
+        return null();
+    return handler.newExprStatement(pnexpr, pos().end);
 }
 
 template <typename ParseHandler>
@@ -4616,7 +4600,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         if (!pnexp)
             return null();
 
-        pn = handler.newUnary(PNK_THROW, JSOP_THROW, begin, pnexp);
+        pn = handler.newThrowStatement(pnexp, TokenPos::make(begin, pos().end));
         if (!pn)
             return null();
         break;
@@ -4755,7 +4739,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       }
 
       case TOK_SEMI:
-        return handler.newUnary(PNK_SEMI, JSOP_NOP, pos().begin, null());
+        return handler.newEmptyStatement(pos());
 
       case TOK_DEBUGGER:
         pn = handler.newDebuggerStatement(pos());
