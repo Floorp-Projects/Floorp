@@ -2552,11 +2552,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS,
   }
   infoObject->SetTLSEnabled(enabled);
 
-  enabled = infoObject->SharedState().IsOCSPStaplingEnabled();
-  if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_OCSP_STAPLING, enabled)) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, true)) {
     return NS_ERROR_FAILURE;
   }
