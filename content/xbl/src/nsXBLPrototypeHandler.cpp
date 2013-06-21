@@ -454,7 +454,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
       if (!doc)
         return NS_ERROR_FAILURE;
 
-      privateWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+      privateWindow = doc->GetWindow();
       if (!privateWindow)
         return NS_ERROR_FAILURE;
     }
