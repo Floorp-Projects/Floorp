@@ -16,6 +16,8 @@
 #include "ion/BaselineFrame.h"
 #include "ion/BaselineFrame-inl.h"
 #include "ion/IonFrameIterator-inl.h"
+
+#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "ArgumentsObject-inl.h"
@@ -199,6 +201,13 @@ StackFrame::popOffScopeChain()
 {
     JS_ASSERT(flags_ & HAS_SCOPECHAIN);
     scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
+}
+
+bool
+StackFrame::hasCallObj() const
+{
+    JS_ASSERT(isStrictEvalFrame() || fun()->isHeavyweight());
+    return flags_ & HAS_CALL_OBJ;
 }
 
 inline CallObject &

@@ -841,10 +841,7 @@ class StackFrame
      * time the call/args object are created).
      */
 
-    bool hasCallObj() const {
-        JS_ASSERT(isStrictEvalFrame() || fun()->isHeavyweight());
-        return flags_ & HAS_CALL_OBJ;
-    }
+    inline bool hasCallObj() const;
 
     bool hasCallObjUnchecked() const {
         return flags_ & HAS_CALL_OBJ;

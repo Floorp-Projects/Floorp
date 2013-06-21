@@ -16,9 +16,10 @@
 #include "gc/Heap.h"
 #include "gc/Marking.h"
 #include "js/TemplateLib.h"
+#include "vm/Interpreter.h"
+#include "vm/ObjectImpl.h"
 
-#include "Interpreter.h"
-#include "ObjectImpl.h"
+#include "gc/Barrier-inl.h"
 
 namespace js {
 
@@ -357,15 +358,6 @@ js::ObjectImpl::zone() const
 {
     JS_ASSERT(InSequentialOrExclusiveParallelSection());
     return shape_->zone();
-}
-
-JS_ALWAYS_INLINE JS::Zone *
-ZoneOfValue(const JS::Value &value)
-{
-    JS_ASSERT(value.isMarkable());
-    if (value.isObject())
-        return value.toObject().zone();
-    return static_cast<js::gc::Cell *>(value.toGCThing())->tenuredZone();
 }
 
 /* static */ inline void
