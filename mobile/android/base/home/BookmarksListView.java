@@ -19,7 +19,9 @@ import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.CursorAdapter;
@@ -50,6 +52,12 @@ public class BookmarksListView extends HomeListView
     // Check for adding a header view, if needed.
     private boolean mHasFolderHeader = false;
 
+    // The last motion event that was intercepted.
+    private MotionEvent mMotionEvent;
+
+    // The default touch slop.
+    private int mTouchSlop;
+
     public BookmarksListView(Context context) {
         this(context, null);
     }
@@ -60,6 +68,9 @@ public class BookmarksListView extends HomeListView
 
     public BookmarksListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        // Scaled touch slop for this context.
+        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
         // Folder title view, is always in open state.
         mFolderView = (BookmarkFolderView) LayoutInflater.from(context).inflate(R.layout.bookmark_folder_row, null);
@@ -101,6 +112,36 @@ public class BookmarksListView extends HomeListView
                 }
             });
         }
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event) {
+        switch(event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN: {
+                // Store the event by obtaining a copy.
+                mMotionEvent = MotionEvent.obtain(event);
+                break;
+            }
+
+            case MotionEvent.ACTION_MOVE: {
+                if ((mMotionEvent != null) &&
+                    (Math.abs(event.getY() - mMotionEvent.getY()) > mTouchSlop)) {
+                    // The user is scrolling. Pass the last event to this view,
+                    // and make this view scroll.
+                    onTouchEvent(mMotionEvent);
+                    return true;
+                }
+                break;
+            }
+
+            default: {
+                mMotionEvent = null;
+                break;
+            }
+        }
+
+        // Do default interception.
+        return super.onInterceptTouchEvent(event);
     }
 
     @Override
