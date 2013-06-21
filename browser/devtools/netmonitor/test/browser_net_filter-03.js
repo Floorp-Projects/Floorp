@@ -25,12 +25,12 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, false,
         "The details pane should not be hidden after toggle button was pressed.");
 
-      testButtons();
+      testButtons("all");
       testContents([0, 1, 2, 3, 4, 5, 6], 7, 0)
         .then(() => {
           info("Sorting by size, ascending.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
-          testButtons();
+          testButtons("all");
           return testContents([6, 4, 5, 0, 1, 2, 3], 7, 6);
         })
         .then(() => {
