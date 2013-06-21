@@ -250,12 +250,12 @@ class FullParseHandler
         return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
     }
 
-    ParseNode *newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
-        return new_<ContinueStatement>(label, begin, end);
+    ParseNode *newContinueStatement(PropertyName *label, const TokenPos &pos) {
+        return new_<ContinueStatement>(label, pos);
     }
 
-    ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
-        return new_<BreakStatement>(label, begin, end);
+    ParseNode *newBreakStatement(PropertyName *label, const TokenPos &pos) {
+        return new_<BreakStatement>(label, pos);
     }
 
     ParseNode *newReturnStatement(ParseNode *expr, const TokenPos &pos) {

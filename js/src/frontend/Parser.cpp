@@ -4317,6 +4317,90 @@ Parser<ParseHandler>::switchStatement()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::continueStatement()
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_CONTINUE));
+    uint32_t begin = pos().begin;
+
+    RootedPropertyName label(context);
+    if (!MatchLabel(context, &tokenStream, &label))
+        return null();
+
+    StmtInfoPC *stmt = pc->topStmt;
+    if (label) {
+        for (StmtInfoPC *stmt2 = NULL; ; stmt = stmt->down) {
+            if (!stmt) {
+                report(ParseError, false, null(), JSMSG_LABEL_NOT_FOUND);
+                return null();
+            }
+            if (stmt->type == STMT_LABEL) {
+                if (stmt->label == label) {
+                    if (!stmt2 || !stmt2->isLoop()) {
+                        report(ParseError, false, null(), JSMSG_BAD_CONTINUE);
+                        return null();
+                    }
+                    break;
+                }
+            } else {
+                stmt2 = stmt;
+            }
+        }
+    } else {
+        for (; ; stmt = stmt->down) {
+            if (!stmt) {
+                report(ParseError, false, null(), JSMSG_BAD_CONTINUE);
+                return null();
+            }
+            if (stmt->isLoop())
+                break;
+        }
+    }
+
+    if (!MatchOrInsertSemicolon(context, &tokenStream))
+        return null();
+
+    return handler.newContinueStatement(label, TokenPos::make(begin, pos().end));
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::breakStatement()
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_BREAK));
+    uint32_t begin = pos().begin;
+
+    RootedPropertyName label(context);
+    if (!MatchLabel(context, &tokenStream, &label))
+        return null();
+    StmtInfoPC *stmt = pc->topStmt;
+    if (label) {
+        for (; ; stmt = stmt->down) {
+            if (!stmt) {
+                report(ParseError, false, null(), JSMSG_LABEL_NOT_FOUND);
+                return null();
+            }
+            if (stmt->type == STMT_LABEL && stmt->label == label)
+                break;
+        }
+    } else {
+        for (; ; stmt = stmt->down) {
+            if (!stmt) {
+                report(ParseError, false, null(), JSMSG_TOUGH_BREAK);
+                return null();
+            }
+            if (stmt->isLoop() || stmt->type == STMT_SWITCH)
+                break;
+        }
+    }
+
+    if (!MatchOrInsertSemicolon(context, &tokenStream))
+        return null();
+
+    return handler.newBreakStatement(label, TokenPos::make(begin, pos().end));
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
 {
     TokenKind tt = tokenStream.currentToken().type;
@@ -4735,78 +4819,11 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       case TOK_SWITCH:
         return switchStatement();
 
-      case TOK_BREAK:
-      {
-        uint32_t begin = pos().begin;
-        RootedPropertyName label(context);
-        if (!MatchLabel(context, &tokenStream, &label))
-            return null();
-        pn = handler.newBreak(label, begin, pos().end);
-        if (!pn)
-            return null();
-        StmtInfoPC *stmt = pc->topStmt;
-        if (label) {
-            for (; ; stmt = stmt->down) {
-                if (!stmt) {
-                    report(ParseError, false, null(), JSMSG_LABEL_NOT_FOUND);
-                    return null();
-                }
-                if (stmt->type == STMT_LABEL && stmt->label == label)
-                    break;
-            }
-        } else {
-            for (; ; stmt = stmt->down) {
-                if (!stmt) {
-                    report(ParseError, false, null(), JSMSG_TOUGH_BREAK);
-                    return null();
-                }
-                if (stmt->isLoop() || stmt->type == STMT_SWITCH)
-                    break;
-            }
-        }
-        break;
-      }
-
       case TOK_CONTINUE:
-      {
-        uint32_t begin = pos().begin;
-        RootedPropertyName label(context);
-        if (!MatchLabel(context, &tokenStream, &label))
-            return null();
-        pn = handler.newContinue(label, begin, pos().end);
-        if (!pn)
-            return null();
-        StmtInfoPC *stmt = pc->topStmt;
-        if (label) {
-            for (StmtInfoPC *stmt2 = NULL; ; stmt = stmt->down) {
-                if (!stmt) {
-                    report(ParseError, false, null(), JSMSG_LABEL_NOT_FOUND);
-                    return null();
-                }
-                if (stmt->type == STMT_LABEL) {
-                    if (stmt->label == label) {
-                        if (!stmt2 || !stmt2->isLoop()) {
-                            report(ParseError, false, null(), JSMSG_BAD_CONTINUE);
-                            return null();
-                        }
-                        break;
-                    }
-                } else {
-                    stmt2 = stmt;
-                }
-            }
-        } else {
-            for (; ; stmt = stmt->down) {
-                if (!stmt) {
-                    report(ParseError, false, null(), JSMSG_BAD_CONTINUE);
-                    return null();
-                }
-                if (stmt->isLoop())
-                    break;
-            }
-        }
-        break;
-      }
+        return continueStatement();
+
+      case TOK_BREAK:
+        return breakStatement();
 
       case TOK_RETURN:
         pn = returnOrYield(false);
