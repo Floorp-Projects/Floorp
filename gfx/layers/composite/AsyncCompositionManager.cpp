@@ -351,12 +351,13 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
     const FrameMetrics& metrics = container->GetFrameMetrics();
+    float paintScale = metrics.mDevPixelsPerCSSPixel / rootTransform.GetXScale();
     CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     ScreenPoint offset(0, 0);
     SyncFrameMetrics(scrollOffset, treeTransform.mScale.scale, metrics.mScrollableRect,
-                     mLayersUpdated, displayPort, 1 / rootTransform.GetXScale(),
+                     mLayersUpdated, displayPort, paintScale,
                      mIsFirstPaint, fixedLayerMargins, offset);
 
     mIsFirstPaint = false;
@@ -404,8 +405,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx3DMatrix treeTransform;
 
-  CSSToLayerScale geckoZoom = LayerToCSSScale(aRootTransform.GetXScale(),
-                                              aRootTransform.GetYScale()).Inverse();
+  CSSToLayerScale geckoZoom(metrics.mDevPixelsPerCSSPixel / aRootTransform.GetXScale(),
+                            metrics.mDevPixelsPerCSSPixel / aRootTransform.GetYScale());
 
   LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.mScrollOffset * geckoZoom);
 
