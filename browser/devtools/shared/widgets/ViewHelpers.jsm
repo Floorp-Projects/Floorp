@@ -362,6 +362,8 @@ ViewHelpers.Prefs.prototype = {
  * The label, value and description properties are necessarily strings.
  * Iterable via "for (let childItem in parentItem) { }".
  *
+ * @param object aOwnerView
+ *        The owner view creating this item.
  * @param any aAttachment
  *        Some attached primitive/object.
  * @param nsIDOMNode | nsIDOMDocumentFragment | array aContents [optional]
@@ -370,7 +372,8 @@ ViewHelpers.Prefs.prototype = {
  *        - aValue: the actual internal value of the item
  *        - aDescription: an optional description of the item
  */
-function Item(aAttachment, aContents = []) {
+function Item(aOwnerView, aAttachment, aContents = []) {
+  this.ownerView = aOwnerView;
   this.attachment = aAttachment;
 
   let [aLabel, aValue, aDescription] = aContents;
@@ -407,7 +410,7 @@ Item.prototype = {
    *         The item associated with the displayed element.
    */
   append: function(aElement, aOptions = {}) {
-    let item = new Item(aOptions.attachment);
+    let item = new Item(this, aOptions.attachment);
 
     // Entangle the item with the newly inserted child node.
     this._entangleItem(item, this._target.appendChild(aElement));
@@ -608,7 +611,7 @@ this.WidgetMethods = {
    *         undefined if the item was staged for a later commit.
    */
   push: function(aContents, aOptions = {}) {
-    let item = new Item(aOptions.attachment, aContents);
+    let item = new Item(this, aOptions.attachment, aContents);
 
     // Batch the item to be added later.
     if (aOptions.staged) {
