@@ -131,7 +131,7 @@ browser.jar:
   skin/classic/browser/devtools/command-tilt.png      (devtools/command-tilt.png)
   skin/classic/browser/devtools/alerticon-warning.png (devtools/alerticon-warning.png)
   skin/classic/browser/devtools/ruleview.css          (devtools/ruleview.css)
-  skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
+* skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.png                  (devtools/webconsole.png)
   skin/classic/browser/devtools/checkbox-dark.png     (devtools/checkbox-dark.png)
