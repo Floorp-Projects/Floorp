@@ -41,7 +41,6 @@ let DebuggerView = {
   initialize: function(aCallback) {
     dumpn("Initializing the DebuggerView");
 
-    this._initializeWindow();
     this._initializePanes();
 
     this.Toolbar.initialize();
@@ -55,14 +54,7 @@ let DebuggerView = {
     this.WatchExpressions.initialize();
     this.GlobalSearch.initialize();
 
-    this.Variables = new VariablesView(document.getElementById("variables"));
-    this.Variables.searchPlaceholder = L10N.getStr("emptyVariablesFilterText");
-    this.Variables.emptyText = L10N.getStr("emptyVariablesText");
-    this.Variables.onlyEnumVisible = Prefs.variablesOnlyEnumVisible;
-    this.Variables.searchEnabled = Prefs.variablesSearchboxVisible;
-    this.Variables.eval = DebuggerController.StackFrames.evaluate;
-    this.Variables.lazyEmpty = true;
-
+    this._initializeVariablesView();
     this._initializeEditor(aCallback);
   },
 
@@ -86,45 +78,10 @@ let DebuggerView = {
     this.WatchExpressions.destroy();
     this.GlobalSearch.destroy();
 
-    this._destroyWindow();
     this._destroyPanes();
     this._destroyEditor();
+
     aCallback();
-  },
-
-  /**
-   * Initializes the UI for the window.
-   */
-  _initializeWindow: function() {
-    dumpn("Initializing the DebuggerView window");
-
-    let isRemote = window._isRemoteDebugger;
-    let isChrome = window._isChromeDebugger;
-
-    if (isRemote || isChrome) {
-      window.moveTo(Prefs.windowX, Prefs.windowY);
-      window.resizeTo(Prefs.windowWidth, Prefs.windowHeight);
-
-      if (isRemote) {
-        document.title = L10N.getStr("remoteDebuggerWindowTitle");
-      } else {
-        document.title = L10N.getStr("chromeDebuggerWindowTitle");
-      }
-    }
-  },
-
-  /**
-   * Destroys the UI for the window.
-   */
-  _destroyWindow: function() {
-    dumpn("Destroying the DebuggerView window");
-
-    if (window._isRemoteDebugger || window._isChromeDebugger) {
-      Prefs.windowX = window.screenX;
-      Prefs.windowY = window.screenY;
-      Prefs.windowWidth = window.outerWidth;
-      Prefs.windowHeight = window.outerHeight;
-    }
   },
 
   /**
@@ -157,6 +114,37 @@ let DebuggerView = {
     this._sourcesPane = null;
     this._instrumentsPane = null;
     this._instrumentsPaneToggleButton = null;
+  },
+
+  /**
+   * Initializes the VariablesView instance and attaches a controller.
+   */
+  _initializeVariablesView: function() {
+    this.Variables = new VariablesView(document.getElementById("variables"), {
+      searchPlaceholder: L10N.getStr("emptyVariablesFilterText"),
+      emptyText: L10N.getStr("emptyVariablesText"),
+      onlyEnumVisible: Prefs.variablesOnlyEnumVisible,
+      searchEnabled: Prefs.variablesSearchboxVisible,
+      eval: DebuggerController.StackFrames.evaluate,
+      lazyEmpty: true
+    });
+
+    // Attach a controller that handles interfacing with the debugger protocol.
+    VariablesViewController.attach(this.Variables, {
+      getGripClient: aObject => gThreadClient.pauseGrip(aObject)
+    });
+
+    // Relay events from the VariablesView.
+    this.Variables.on("fetched", (aEvent, aType) => {
+      switch (aType) {
+        case "variables":
+          window.dispatchEvent(document, "Debugger:FetchedVariables");
+          break;
+        case "properties":
+          window.dispatchEvent(document, "Debugger:FetchedProperties");
+          break;
+      }
+    });
   },
 
   /**
@@ -392,7 +380,7 @@ let DebuggerView = {
    * @return string
    *         The specified line's text.
    */
-  getEditorLine: function(aLine) {
+  getEditorLineText: function(aLine) {
     let line = aLine || this.editor.getCaretPosition().line;
     let start = this.editor.getLineStart(line);
     let end = this.editor.getLineEnd(line);
@@ -405,7 +393,7 @@ let DebuggerView = {
    * @return string
    *         The selected text.
    */
-  getEditorSelection: function() {
+  getEditorSelectionText: function() {
     let selection = this.editor.getSelection();
     return this.editor.getText(selection.start, selection.end);
   },
@@ -483,12 +471,13 @@ let DebuggerView = {
   Options: null,
   Filtering: null,
   FilteredSources: null,
+  FilteredFunctions: null,
+  GlobalSearch: null,
   ChromeGlobals: null,
   StackFrames: null,
   Sources: null,
-  WatchExpressions: null,
-  GlobalSearch: null,
   Variables: null,
+  WatchExpressions: null,
   _editor: null,
   _editorSource: null,
   _loadingText: "",
@@ -508,17 +497,11 @@ let DebuggerView = {
  * You should never need to access these methods directly, use the wrapper
  * MenuContainer instances.
  *
- * Custom methods introduced by this view, not necessary for a MenuContainer:
- *   - set emptyText(aValue:string)
- *   - set permaText(aValue:string)
- *   - set itemType(aType:string)
- *   - set itemFactory(aCallback:function)
- *
- * @param nsIDOMNode aAssociatedNode
- *        The element associated with the displayed container.
+ * @param nsIDOMNode aNode
+ *        The element associated with the widget.
  */
-function ListWidget(aAssociatedNode) {
-  this._parent = aAssociatedNode;
+function ListWidget(aNode) {
+  this._parent = aNode;
 
   // Create an internal list container.
   this._list = document.createElement("vbox");
@@ -526,8 +509,8 @@ function ListWidget(aAssociatedNode) {
 
   // Delegate some of the associated node's methods to satisfy the interface
   // required by MenuContainer instances.
-  ViewHelpers.delegateWidgetAttributeMethods(this, aAssociatedNode);
-  ViewHelpers.delegateWidgetEventMethods(this, aAssociatedNode);
+  ViewHelpers.delegateWidgetAttributeMethods(this, aNode);
+  ViewHelpers.delegateWidgetEventMethods(this, aNode);
 }
 
 ListWidget.prototype = {
@@ -731,13 +714,9 @@ ListWidget.prototype = {
  * FilteredSources, FilteredFunctions etc., inheriting the generic MenuContainer.
  */
 function ResultsPanelContainer() {
-  this._createItemView = this._createItemView.bind(this);
 }
 
 create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
-  onClick: null,
-  onSelect: null,
-
   /**
    * Sets the anchor node for this container panel.
    * @param nsIDOMNode aNode
@@ -759,19 +738,13 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
         this.node = new ListWidget(this._panel);
         this.node.itemType = "vbox";
         this.node.itemFactory = this._createItemView;
-        this.node.addEventListener("click", this.onClick, false);
       }
     }
     // Cleanup the anchor and remove the previously created panel.
     else {
-      if (this._panel) {
-        document.documentElement.removeChild(this._panel);
-        this._panel = null;
-      }
-      if (this.node) {
-        this.node.removeEventListener("click", this.onClick, false);
-        this.node = null;
-      }
+      this._panel.remove();
+      this._panel = null;
+      this.node = null;
     }
   },
 
@@ -782,26 +755,6 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
   get anchor() this._anchor,
 
   /**
-   * Sets the default top, left and position params when opening the panel.
-   * @param object aOptions
-   */
-  set options(aOptions) {
-    this._top = aOptions.top;
-    this._left = aOptions.left;
-    this._position = aOptions.position;
-  },
-
-  /**
-   * Gets the default params for when opening the panel.
-   * @return object
-   */
-  get options() ({
-    top: this._top,
-    left: this._left,
-    position: this._position
-  }),
-
-  /**
    * Sets the container panel hidden or visible. It's hidden by default.
    * @param boolean aFlag
    */
@@ -809,7 +762,7 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
     if (aFlag) {
       this._panel.hidePopup();
     } else {
-      this._panel.openPopup(this._anchor, this._position, this._left, this._top);
+      this._panel.openPopup(this._anchor, this.position, this.left, this.top);
       this.anchor.focus();
     }
   },
@@ -828,52 +781,30 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
   clearView: function() {
     this.hidden = true;
     this.empty();
-    window.dispatchEvent(document, "Debugger:ResultsPanelContainer:ViewCleared");
   },
 
   /**
-   * Focuses the next found item in this container.
+   * Selects the next found item in this container.
+   * Does not change the currently focused node.
    */
-  focusNext: function() {
+  selectNext: function() {
     let nextIndex = this.selectedIndex + 1;
     if (nextIndex >= this.itemCount) {
       nextIndex = 0;
     }
-    this.select(this.getItemAtIndex(nextIndex));
+    this.selectedItem = this.getItemAtIndex(nextIndex);
   },
 
   /**
-   * Focuses the previously found item in this container.
+   * Selects the previously found item in this container.
+   * Does not change the currently focused node.
    */
-  focusPrev: function() {
+  selectPrev: function() {
     let prevIndex = this.selectedIndex - 1;
     if (prevIndex < 0) {
       prevIndex = this.itemCount - 1;
     }
-    this.select(this.getItemAtIndex(prevIndex));
-  },
-
-  /**
-   * Updates the selected item in this container.
-   *
-   * @param MenuItem | number aItem
-   *        The item associated with the element to select.
-   */
-  select: function(aItem) {
-    if (typeof aItem == "number") {
-      this.select(this.getItemAtIndex(aItem));
-      return;
-    }
-
-    // Update the currently selected item in this container using the
-    // selectedItem setter in the MenuContainer prototype chain.
-    this.selectedItem = aItem;
-
-    // Invoke the attached selection callback if available in any
-    // inheriting prototype.
-    if (this.onSelect) {
-      this.onSelect({ target: aItem.target });
-    }
+    this.selectedItem = this.getItemAtIndex(prevIndex);
   },
 
   /**
@@ -892,6 +823,7 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
    */
   _createItemView: function(aElementNode, aAttachment, aLabel, aValue, aDescription) {
     let labelsGroup = document.createElement("hbox");
+
     if (aDescription) {
       let preLabelNode = document.createElement("label");
       preLabelNode.className = "plain results-panel-item-pre";
@@ -916,49 +848,7 @@ create({ constructor: ResultsPanelContainer, proto: MenuContainer.prototype }, {
 
   _anchor: null,
   _panel: null,
-  _position: RESULTS_PANEL_POPUP_POSITION,
-  _left: 0,
-  _top: 0
+  position: RESULTS_PANEL_POPUP_POSITION,
+  left: 0,
+  top: 0
 });
-
-/**
- * A simple way of displaying a "Connect to..." prompt.
- */
-function RemoteDebuggerPrompt() {
-  this.remote = {};
-}
-
-RemoteDebuggerPrompt.prototype = {
-  /**
-   * Shows the prompt and waits for a remote host and port to connect to.
-   *
-   * @param boolean aIsReconnectingFlag
-   *        True to show the reconnect message instead of the connect request.
-   */
-  show: function(aIsReconnectingFlag) {
-    let check = { value: Prefs.remoteAutoConnect };
-    let input = { value: Prefs.remoteHost + ":" + Prefs.remotePort };
-    let parts;
-
-    while (true) {
-      let result = Services.prompt.prompt(null,
-        L10N.getStr("remoteDebuggerPromptTitle"),
-        L10N.getStr(aIsReconnectingFlag
-          ? "remoteDebuggerReconnectMessage"
-          : "remoteDebuggerPromptMessage"), input,
-        L10N.getStr("remoteDebuggerPromptCheck"), check);
-
-      if (!result) {
-        return false;
-      }
-      if ((parts = input.value.split(":")).length == 2) {
-        let [host, port] = parts;
-
-        if (host.length && port.length) {
-          this.remote = { host: host, port: port, auto: check.value };
-          return true;
-        }
-      }
-    }
-  }
-};

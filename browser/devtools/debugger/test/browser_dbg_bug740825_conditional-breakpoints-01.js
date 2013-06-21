@@ -137,9 +137,9 @@ function test()
 
       isnot(gSources.selectedItem, null,
         "There should be a selected script in the scripts pane.")
-      is(gSources.selectedBreakpoint, null,
+      is(gSources.selectedBreakpointItem, null,
         "There should be no selected breakpoint in the scripts pane.")
-      is(gSources.selectedClient, null,
+      is(gSources.selectedBreakpointClient, null,
         "There should be no selected client in the scripts pane.");
       is(gSources._conditionalPopupVisible, false,
         "The breakpoint conditional expression popup should not be shown.");
@@ -159,7 +159,7 @@ function test()
   {
     resume(line, function() {
       waitForCaretPos(line - 1, function() {
-        testBreakpoint(gSources.selectedBreakpoint, gSources.selectedClient, url, line, true);
+        testBreakpoint(gSources.selectedBreakpointItem, gSources.selectedBreakpointClient, url, line, true);
         callback();
       });
     });
@@ -281,9 +281,9 @@ function test()
 
       isnot(gSources.selectedItem, null,
         "There should be a selected script in the scripts pane.")
-      is(gSources.selectedBreakpoint, null,
+      is(gSources.selectedBreakpointItem, null,
         "There should be no selected breakpoint in the scripts pane.")
-      is(gSources.selectedClient, null,
+      is(gSources.selectedBreakpointClient, null,
         "There should be no selected client in the scripts pane.");
       is(gSources._conditionalPopupVisible, false,
         "The breakpoint conditional expression popup should not be shown.");
@@ -330,8 +330,8 @@ function test()
         window.clearInterval(intervalID);
         return closeDebuggerAndFinish();
       }
-      if ((gSources.selectedClient !== expected) &&
-          (gSources.selectedClient || bogusClient).location.line !== expected) {
+      if ((gSources.selectedBreakpointClient !== expected) &&
+          (gSources.selectedBreakpointClient || bogusClient).location.line !== expected) {
         return;
       }
       // We arrived at the expected line, it's safe to callback.
