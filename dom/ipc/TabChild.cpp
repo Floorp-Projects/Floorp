@@ -621,12 +621,8 @@ TabChild::HandlePossibleViewportChange()
     // we have no idea how long painting will take.
     metrics, gfx::Point(0.0f, 0.0f), gfx::Point(0.0f, 0.0f), 0.0);
   CSSToScreenScale resolution = AsyncPanZoomController::CalculateResolution(metrics);
-  // XXX is this actually hysteresis?  This calculation is not well
-  // understood.  It's taken from the previous JS implementation.
-  gfxFloat hysteresis/*?*/ =
-    gfxFloat(oldBrowserWidth) / gfxFloat(oldScreenWidth);
-  metrics.mResolution = gfxSize(resolution.scale * hysteresis,
-                                resolution.scale * hysteresis);
+  metrics.mResolution = gfxSize(resolution.scale / metrics.mDevPixelsPerCSSPixel,
+                                resolution.scale / metrics.mDevPixelsPerCSSPixel);
   utils->SetResolution(metrics.mResolution.width, metrics.mResolution.height);
 
   // Force a repaint with these metrics. This, among other things, sets the
