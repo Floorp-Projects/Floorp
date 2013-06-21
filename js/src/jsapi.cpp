@@ -64,6 +64,7 @@
 #include "ion/AsmJS.h"
 #include "ion/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/ErrorObject.h"
 #include "vm/Interpreter.h"
@@ -1806,7 +1807,7 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitObjectClass,                EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
     {js_InitBooleanClass,               EAGER_ATOM_AND_OCLASP(Boolean)},
-    {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
+    {js_InitDateClass,                  EAGER_ATOM_AND_OCLASP(Date)},
     {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
     {js_InitNumberClass,                EAGER_ATOM_AND_OCLASP(Number)},
     {js_InitStringClass,                EAGER_ATOM_AND_OCLASP(String)},
