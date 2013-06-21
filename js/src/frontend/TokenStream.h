@@ -449,6 +449,7 @@ class MOZ_STACK_CLASS TokenStream
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
     unsigned getColumn() const { return userbuf.addressOfNextRawChar() - linebase - 1; }
+    JSPrincipals *getOriginPrincipals() const { return originPrincipals; }
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }

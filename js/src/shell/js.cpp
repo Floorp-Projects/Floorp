@@ -1070,7 +1070,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (!smurl)
                 return false;
             jschar *smurl_copy = js_strdup(cx, smurl);
-            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy, script->filename()))
+            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy))
                 return false;
         }
         if (!JS_ExecuteScript(cx, global, script, vp)) {

@@ -395,6 +395,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     traceListHead(NULL),
     pc(NULL),
     sct(NULL),
+    ss(NULL),
     keepAtoms(cx->perThreadData),
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
@@ -460,12 +461,11 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     bindings(),
     bufStart(0),
     bufEnd(0),
-    asmStart(0),
     ndefaults(0),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
     hasDestructuringArgs(false),
-    useAsm(false),
+    useAsm(directives.asmJS()),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     usesArguments(false),
     usesApply(false),
@@ -1948,6 +1948,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
 
         // Assignment must be monotonic to prevent reparsing iloops
         JS_ASSERT_IF(directives.strict(), newDirectives.strict());
+        JS_ASSERT_IF(directives.asmJS(), newDirectives.asmJS());
         directives = newDirectives;
 
         tokenStream.seek(start);
@@ -2394,6 +2395,55 @@ IsEscapeFreeStringLiteral(const TokenPos &pos, JSAtom *str)
     return pos.begin + str->length() + 2 == pos.end;
 }
 
+template <>
+bool
+Parser<SyntaxParseHandler>::asmJS(Node list)
+{
+    // While asm.js could technically be validated and compiled during syntax
+    // parsing, we have no guarantee that some later JS wouldn't abort the
+    // syntax parse and cause us to re-parse (and re-compile) the asm.js module.
+    // For simplicity, unconditionally abort the syntax parse when "use asm" is
+    // encountered so that asm.js is always validated/compiled exactly once
+    // during a full parse.
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template <>
+bool
+Parser<FullParseHandler>::asmJS(Node list)
+{
+    // If we are already inside "use asm" that means we are either actively
+    // compiling or we are reparsing after asm.js validation failure. In either
+    // case, nothing to do here.
+    if (pc->useAsmOrInsideUseAsm())
+        return true;
+
+    // If there is no ScriptSource, then we are doing a non-compiling parse and
+    // so we shouldn't (and can't, without a ScriptSource) compile.
+    if (ss == NULL)
+        return true;
+
+    pc->sc->asFunctionBox()->useAsm = true;
+
+#ifdef JS_ION
+    // Attempt to validate and compile this asm.js module. On success, the
+    // tokenStream has been advanced to the closing }. On failure, the
+    // tokenStream is in an indeterminate state and we must reparse the
+    // function from the beginning. Reparsing is triggered by marking that a
+    // new directive has been encountered and returning 'false'.
+    bool validated;
+    if (!CompileAsmJS(context->asJSContext(), *this, list, &validated))
+        return false;
+    if (!validated) {
+        pc->newDirectives->setAsmJS();
+        return false;
+    }
+#endif
+
+    return true;
+}
+
 /*
  * Recognize Directive Prologue members and directives. Assuming |pn| is a
  * candidate for membership in a directive prologue, recognize directives and
@@ -2415,7 +2465,7 @@ IsEscapeFreeStringLiteral(const TokenPos &pos, JSAtom *str)
  */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
+Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool *cont)
 {
     TokenPos directivePos;
     JSAtom *directive = handler.isStringExprStatement(pn, &directivePos);
@@ -2458,15 +2508,9 @@ Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
                 }
             }
         } else if (directive == context->names().useAsm) {
-            if (pc->sc->isFunctionBox()) {
-                pc->sc->asFunctionBox()->useAsm = true;
-                pc->sc->asFunctionBox()->asmStart = handler.getPosition(pn).begin;
-                if (!abortIfSyntaxParser())
-                    return false;
-            } else {
-                if (!report(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL))
-                    return false;
-            }
+            if (pc->sc->isFunctionBox())
+                return asmJS(list);
+            return report(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL);
         }
     }
     return true;
@@ -2509,7 +2553,7 @@ Parser<ParseHandler>::statements()
         }
 
         if (canHaveDirectives) {
-            if (!maybeParseDirective(next, &canHaveDirectives))
+            if (!maybeParseDirective(pn, next, &canHaveDirectives))
                 return null();
         }
 

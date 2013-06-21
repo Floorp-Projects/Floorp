@@ -386,11 +386,10 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
 
-    uint32_t length = info.bufEnd_ - info.bufStart_;
-    Rooted<JSStableString*> src(cx, info.scriptSource_->substring(cx, info.bufStart_, info.bufEnd_));
+    uint32_t length = info.bufEnd - info.bufStart;
+    Rooted<JSStableString*> src(cx, info.scriptSource->substring(cx, info.bufStart, info.bufEnd));
     if (!src)
         return false;
-    const jschar *chars = src->chars().get();
 
     RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
                                        cx->global(), name, JSFunction::FinalizeKind,
@@ -407,8 +406,13 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (module.bufferArgumentName())
         formals.infallibleAppend(module.bufferArgumentName());
 
-    if (!frontend::CompileFunctionBody(cx, &fun, info.options_, formals, chars, length,
-                                       /* isAsmJSRecompile = */ true))
+    CompileOptions options(cx);
+    options.setPrincipals(cx->compartment()->principals)
+           .setOriginPrincipals(info.originPrincipals)
+           .setCompileAndGo(false)
+           .setNoScriptRval(false);
+
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, src->chars().get(), length))
         return false;
 
     // Call the function we just recompiled.
