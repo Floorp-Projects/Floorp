@@ -11,6 +11,7 @@
 
 #include "jswrapper.h"
 
+#include "vm/DateObject.h"
 #include "vm/NumberObject.h"
 #include "vm/Probes.h"
 #include "vm/StringObject.h"
@@ -524,20 +525,6 @@ JSObject::ensureDenseElements(JSContext *cx, uint32_t index, uint32_t extra)
 
     ensureDenseInitializedLength(cx, index, extra);
     return ED_OK;
-}
-
-inline const js::Value &
-JSObject::getDateUTCTime() const
-{
-    JS_ASSERT(isDate());
-    return getFixedSlot(JSSLOT_DATE_UTC_TIME);
-}
-
-inline void
-JSObject::setDateUTCTime(const js::Value &time)
-{
-    JS_ASSERT(isDate());
-    setFixedSlot(JSSLOT_DATE_UTC_TIME, time);
 }
 
 /* static */ inline bool
@@ -1317,7 +1304,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Boolean: return obj->is<BooleanObject>();
       case ESClass_RegExp: return obj->is<RegExpObject>();
       case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
-      case ESClass_Date: return obj->isDate();
+      case ESClass_Date: return obj->is<DateObject>();
     }
     JS_NOT_REACHED("bad classValue");
     return false;

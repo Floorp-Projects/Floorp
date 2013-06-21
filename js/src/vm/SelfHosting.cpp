@@ -796,8 +796,8 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         RegExpObject &reobj = srcObj->as<RegExpObject>();
         RootedAtom source(cx, reobj.getSource());
         clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), NULL);
-    } else if (srcObj->isDate()) {
-        clone = JS_NewDateObjectMsec(cx, srcObj->getDateUTCTime().toNumber());
+    } else if (srcObj->is<DateObject>()) {
+        clone = JS_NewDateObjectMsec(cx, srcObj->as<DateObject>().UTCTime().toNumber());
     } else if (srcObj->is<BooleanObject>()) {
         clone = BooleanObject::create(cx, srcObj->as<BooleanObject>().unbox());
     } else if (srcObj->is<NumberObject>()) {

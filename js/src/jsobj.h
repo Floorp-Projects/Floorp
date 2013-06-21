@@ -206,7 +206,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class DateClass;
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
@@ -640,35 +639,6 @@ class JSObject : public js::ObjectImpl
 
   public:
     /*
-     * Date-specific getters and setters.
-     */
-
-    static const uint32_t JSSLOT_DATE_UTC_TIME = 0;
-    static const uint32_t JSSLOT_DATE_TZA = 1;
-
-    /*
-     * Cached slots holding local properties of the date.
-     * These are undefined until the first actual lookup occurs
-     * and are reset to undefined whenever the date's time is modified.
-     */
-    static const uint32_t JSSLOT_DATE_COMPONENTS_START = 2;
-
-    static const uint32_t JSSLOT_DATE_LOCAL_TIME    = JSSLOT_DATE_COMPONENTS_START + 0;
-    static const uint32_t JSSLOT_DATE_LOCAL_YEAR    = JSSLOT_DATE_COMPONENTS_START + 1;
-    static const uint32_t JSSLOT_DATE_LOCAL_MONTH   = JSSLOT_DATE_COMPONENTS_START + 2;
-    static const uint32_t JSSLOT_DATE_LOCAL_DATE    = JSSLOT_DATE_COMPONENTS_START + 3;
-    static const uint32_t JSSLOT_DATE_LOCAL_DAY     = JSSLOT_DATE_COMPONENTS_START + 4;
-    static const uint32_t JSSLOT_DATE_LOCAL_HOURS   = JSSLOT_DATE_COMPONENTS_START + 5;
-    static const uint32_t JSSLOT_DATE_LOCAL_MINUTES = JSSLOT_DATE_COMPONENTS_START + 6;
-    static const uint32_t JSSLOT_DATE_LOCAL_SECONDS = JSSLOT_DATE_COMPONENTS_START + 7;
-
-    static const uint32_t DATE_CLASS_RESERVED_SLOTS = JSSLOT_DATE_LOCAL_SECONDS + 1;
-
-    inline const js::Value &getDateUTCTime() const;
-    inline void setDateUTCTime(const js::Value &pthis);
-
-  public:
-    /*
      * Iterator-specific getters and setters.
      */
 
@@ -1076,7 +1046,6 @@ class JSObject : public js::ObjectImpl
 
     /* Direct subtypes of JSObject: */
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
-    inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
