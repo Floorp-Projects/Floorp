@@ -51,7 +51,7 @@
   display: none;
 }
 
-.variable-or-property:not([safe-getter]) > tooltip > label[value=native-getter],
+.variable-or-property:not([safe-getter]) > tooltip > label[value=WebIDL],
 .variable-or-property:not([non-extensible]) > tooltip > label[value=extensible],
 .variable-or-property:not([frozen]) > tooltip > label[value=frozen],
 .variable-or-property:not([sealed]) > tooltip > label[value=sealed] {

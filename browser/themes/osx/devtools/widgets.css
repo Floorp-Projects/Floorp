@@ -557,6 +557,12 @@
   text-decoration: line-through;
 }
 
+.variable-or-property[safe-getter] > tooltip > label[value=WebIDL] {
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #000;
+  color: #080;
+}
+
 /* Variables and properties editing */
 
 .variables-view-delete {
