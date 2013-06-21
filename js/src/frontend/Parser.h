@@ -422,6 +422,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node whileStatement();
     Node forStatement();
     Node switchStatement();
+    Node continueStatement();
+    Node breakStatement();
     Node withStatement();
     Node labeledStatement();
     Node tryStatement();
