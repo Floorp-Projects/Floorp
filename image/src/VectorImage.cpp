@@ -39,9 +39,10 @@ class SVGRootRenderingObserver MOZ_FINAL : public nsSVGRenderingObserver {
 public:
   SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
                            VectorImage*        aVectorImage)
-    : nsSVGRenderingObserver(),
-      mDocWrapper(aDocWrapper),
-      mVectorImage(aVectorImage)
+    : nsSVGRenderingObserver()
+    , mDocWrapper(aDocWrapper)
+    , mVectorImage(aVectorImage)
+    , mHonoringInvalidations(true)
   {
     MOZ_ASSERT(mDocWrapper, "Need a non-null SVG document wrapper");
     MOZ_ASSERT(mVectorImage, "Need a non-null VectorImage");
@@ -59,6 +60,11 @@ public:
     StopListening();
   }
 
+  void ResumeHonoringInvalidations()
+  {
+    mHonoringInvalidations = true;
+  }
+
 protected:
   virtual Element* GetTarget() MOZ_OVERRIDE
   {
@@ -70,12 +76,15 @@ protected:
     Element* elem = GetTarget();
     MOZ_ASSERT(elem, "missing root SVG node");
 
-    if (!mDocWrapper->ShouldIgnoreInvalidation()) {
+    if (mHonoringInvalidations && !mDocWrapper->ShouldIgnoreInvalidation()) {
       nsIFrame* frame = elem->GetPrimaryFrame();
       if (!frame || frame->PresContext()->PresShell()->IsDestroying()) {
         // We're being destroyed. Bail out.
         return;
       }
+
+      // Ignore further invalidations until we draw.
+      mHonoringInvalidations = false;
 
       mVectorImage->InvalidateObserver();
     }
@@ -91,6 +100,7 @@ protected:
   // Private data
   const nsRefPtr<SVGDocumentWrapper> mDocWrapper;
   VectorImage* const mVectorImage;   // Raw pointer because it owns me.
+  bool mHonoringInvalidations;
 };
 
 class SVGParseCompleteListener MOZ_FINAL : public nsStubDocumentObserver {
@@ -729,6 +739,9 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter,
                              aFlags);
+
+  MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
+  mRenderingObserver->ResumeHonoringInvalidations();
 
   return NS_OK;
 }
