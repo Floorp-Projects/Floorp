@@ -248,6 +248,9 @@ function testEdit(what, string, callback, expected)
           if (isNaN(expected[w1.name]) && typeof expected[w1.name] == "number") {
             ok(isNaN(w1.value),
               "The first expression value is correct after the edit (NaN).");
+          } else if (expected[w1.name] === undefined) {
+            is(w1.value.type, "undefined",
+              "The first expression value is correct after the edit (undefined).");
           } else {
             is(w1.value, expected[w1.name],
               "The first expression value is correct after the edit.");
@@ -258,6 +261,9 @@ function testEdit(what, string, callback, expected)
           if (isNaN(expected[w2.name]) && typeof expected[w2.name] == "number") {
             ok(isNaN(w2.value),
               "The second expression value is correct after the edit (NaN).");
+          } else if (expected[w2.name] === undefined) {
+            is(w2.value.type, "undefined",
+              "The second expression value is correct after the edit (undefined).");
           } else {
             is(w2.value, expected[w2.name],
               "The second expression value is correct after the edit.");
@@ -268,6 +274,9 @@ function testEdit(what, string, callback, expected)
           if (isNaN(expected[w3.name]) && typeof expected[w3.name] == "number") {
             ok(isNaN(w3.value),
               "The third expression value is correct after the edit (NaN).");
+          } else if (expected[w3.name] === undefined) {
+            is(w3.value.type, "undefined",
+              "The third expression value is correct after the edit (undefined).");
           } else {
             is(w3.value, expected[w3.name],
               "The third expression value is correct after the edit.");

@@ -107,7 +107,7 @@ Tools.inspector = {
 
 Tools.jsdebugger = {
   id: "jsdebugger",
-  key: l10n("open.commandkey", debuggerStrings),
+  key: l10n("debuggerMenu.commandkey", debuggerStrings),
   accesskey: l10n("debuggerMenu.accesskey", debuggerStrings),
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 3,
