@@ -69,7 +69,7 @@ struct AutoIncrCounters {
 };
 
 bool
-doResolve(JSHandleObject obj, JSHandleId id, unsigned flags, JS::MutableHandleObject objp)
+doResolve(JS::HandleObject obj, JS::HandleId id, unsigned flags, JS::MutableHandleObject objp)
 {
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
@@ -127,7 +127,7 @@ doResolve(JSHandleObject obj, JSHandleId id, unsigned flags, JS::MutableHandleOb
 }
 
 static JSBool
-my_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+my_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
            JS::MutableHandleObject objp)
 {
     return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(obj))->
