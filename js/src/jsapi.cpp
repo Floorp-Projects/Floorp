@@ -65,6 +65,7 @@
 #include "ion/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Debugger.h"
+#include "vm/ErrorObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
@@ -1809,7 +1810,7 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
     {js_InitNumberClass,                EAGER_ATOM_AND_OCLASP(Number)},
     {js_InitStringClass,                EAGER_ATOM_AND_OCLASP(String)},
-    {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
+    {js_InitExceptionClasses,           EAGER_ATOM_AND_OCLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_OCLASP(RegExp)},
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_OCLASP(StopIteration)},
@@ -1857,14 +1858,14 @@ static const JSStdName standard_class_names[] = {
 #endif
 
     /* Exception constructors. */
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(Error), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(InternalError), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(EvalError), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(RangeError), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(ReferenceError), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(SyntaxError), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(TypeError), CLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(Error), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(InternalError), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(EvalError), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(RangeError), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(ReferenceError), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(SyntaxError), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(TypeError), OCLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), OCLASP(Error)},
 
     {js_InitIteratorClasses,    EAGER_CLASS_ATOM(Iterator), &PropertyIteratorObject::class_},
 
