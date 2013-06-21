@@ -432,8 +432,11 @@ StackFrame::markValues(JSTracer *trc, Value *sp)
 {
     JS_ASSERT(sp >= slots());
     gc::MarkValueRootRange(trc, sp - slots(), slots(), "vm_stack");
-    if (hasArgs())
-        gc::MarkValueRootRange(trc, js::Max(numActualArgs(), numFormalArgs()), argv_, "fp argv");
+    if (hasArgs()) {
+        // Mark callee, |this| and arguments.
+        unsigned argc = Max(numActualArgs(), numFormalArgs());
+        gc::MarkValueRootRange(trc, argc + 2, argv_ - 2, "fp argv");
+    }
 }
 
 static void
