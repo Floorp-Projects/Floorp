@@ -424,6 +424,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node switchStatement();
     Node continueStatement();
     Node breakStatement();
+    Node returnStatementOrYieldExpression();
     Node withStatement();
     Node labeledStatement();
     Node tryStatement();
@@ -466,7 +467,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool argumentList(Node listNode);
     Node bracketedExpr();
     Node letBlock(LetContext letContext);
-    Node returnOrYield(bool useAssignExpr);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
 
     Node identifierName();
