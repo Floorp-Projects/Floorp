@@ -1273,5 +1273,5 @@ pref("media.webaudio.enabled", true);
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
-// Enable CustomizableUI debug logging.
-pref("browser.uiCustomization.debug", true);
+// CustomizableUI debug logging.
+pref("browser.uiCustomization.debug", false);
