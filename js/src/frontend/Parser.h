@@ -243,6 +243,7 @@ struct ParseContext : public GenericParseContext
         topStmt(NULL),
         topScopeStmt(NULL),
         blockChain(prs->context),
+        maybeFunction(maybeFunction),
         staticLevel(staticLevel),
         parenDepth(0),
         yieldCount(0),
@@ -297,7 +298,8 @@ struct ParseContext : public GenericParseContext
 template <typename ParseHandler>
 inline
 Directives::Directives(ParseContext<ParseHandler> *parent)
-  : strict_(parent->sc->strict)
+  : strict_(parent->sc->strict),
+    asmJS_(parent->useAsmOrInsideUseAsm())
 {}
 
 template <typename ParseHandler>
@@ -329,6 +331,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     ParseContext<ParseHandler> *pc;
 
     SourceCompressionToken *sct;        /* compression token for aborting */
+    ScriptSource        *ss;
 
     /* Root atoms and objects allocated for the parsed tree. */
     AutoKeepAtoms       keepAtoms;
@@ -364,6 +367,26 @@ class Parser : private AutoGCRooter, public StrictModeGetter
            Parser<SyntaxParseHandler> *syntaxParser,
            LazyScript *lazyOuterFunction);
     ~Parser();
+
+    // A Parser::Mark is the extension of the LifoAlloc::Mark to the entire
+    // Parser's state. Note: clients must still take care that any ParseContext
+    // that points into released ParseNodes is destroyed.
+    class Mark
+    {
+        friend class Parser;
+        LifoAlloc::Mark mark;
+        ObjectBox *traceListHead;
+    };
+    Mark mark() const {
+        Mark m;
+        m.mark = alloc.mark();
+        m.traceListHead = traceListHead;
+        return m;
+    }
+    void release(Mark m) {
+        alloc.release(m.mark);
+        traceListHead = m.traceListHead;
+    }
 
     friend void js::frontend::MarkParser(JSTracer *trc, AutoGCRooter *parser);
 
@@ -411,7 +434,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     /* Public entry points for parsing. */
     Node statement(bool canHaveDirectives = false);
-    bool maybeParseDirective(Node pn, bool *cont);
+    bool maybeParseDirective(Node list, Node pn, bool *cont);
 
     // Parse a function, given only its body. Used for the Function constructor.
     Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
@@ -588,6 +611,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
                        FunctionSyntaxKind kind = Expression);
 
     TokenPos pos() const { return tokenStream.currentToken().pos; }
+
+    bool asmJS(Node list);
 
     friend class CompExprTransplanter;
     friend class GenexpGuard<ParseHandler>;

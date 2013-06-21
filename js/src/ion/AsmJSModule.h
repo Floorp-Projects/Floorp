@@ -320,32 +320,37 @@ class AsmJSModule
     // This struct holds the data required to do this.
     struct PostLinkFailureInfo
     {
-        CompileOptions      options_;
-        ScriptSource *      scriptSource_;
-        uint32_t            bufStart_;      // offset of the function body's start
-        uint32_t            bufEnd_;        // offset of the function body's end
+        JSRuntime *         rt;
+        JSPrincipals *      originPrincipals;
+        ScriptSource *      scriptSource;
+        uint32_t            bufStart;      // offset of the function body's start
+        uint32_t            bufEnd;        // offset of the function body's end
 
-        PostLinkFailureInfo(JSContext *cx)
-          : options_(cx),
-            scriptSource_(),
-            bufStart_(),
-            bufEnd_()
-        { }
+        PostLinkFailureInfo()
+          : rt(), originPrincipals(), scriptSource(), bufStart(), bufEnd()
+        {}
 
-        void init(CompileOptions options, ScriptSource *scriptSource,
+        void init(JSRuntime *rt, JSPrincipals *originPrincipals, ScriptSource *scriptSource,
                   uint32_t bufStart, uint32_t bufEnd)
         {
-            options_      = options;
-            scriptSource_ = scriptSource;
-            bufStart_     = bufStart;
-            bufEnd_       = bufEnd;
+            JS_ASSERT(!this->rt);
 
-            scriptSource_->incref();
+            this->rt               = rt;
+            this->originPrincipals = originPrincipals;
+            this->scriptSource     = scriptSource;
+            this->bufStart         = bufStart;
+            this->bufEnd           = bufEnd;
+
+            if (originPrincipals)
+                JS_HoldPrincipals(originPrincipals);
+            scriptSource->incref();
         }
 
         ~PostLinkFailureInfo() {
-            if (scriptSource_)
-                scriptSource_->decref();
+            if (originPrincipals)
+                JS_DropPrincipals(rt, originPrincipals);
+            if (scriptSource)
+                scriptSource->decref();
         }
     };
 
@@ -397,11 +402,10 @@ class AsmJSModule
     HeapPtrPropertyName                   bufferArgumentName_;
 
     PostLinkFailureInfo                   postLinkFailureInfo_;
-
     FunctionCountsVector                  functionCounts_;
 
   public:
-    explicit AsmJSModule(JSContext *cx)
+    explicit AsmJSModule()
       : numGlobalVars_(0),
         numFFIs_(0),
         funcPtrTableAndExitBytes_(0),
@@ -413,7 +417,7 @@ class AsmJSModule
         totalBytes_(0),
         linked_(false),
         maybeHeap_(),
-        postLinkFailureInfo_(cx)
+        postLinkFailureInfo_()
     {}
 
     ~AsmJSModule();
@@ -644,7 +648,8 @@ class AsmJSModule
         return *(ExitDatum *)(globalData() + exitIndexToGlobalDataOffset(exitIndex));
     }
 
-    void setFunctionBytes(size_t functionBytes) {
+    void initFunctionBytes(size_t functionBytes) {
+        JS_ASSERT(functionBytes_ == 0);
         JS_ASSERT(functionBytes % AsmJSPageSize == 0);
         functionBytes_ = functionBytes;
     }
@@ -745,11 +750,13 @@ class AsmJSModule
     PropertyName *importArgumentName() const { return importArgumentName_; }
     PropertyName *bufferArgumentName() const { return bufferArgumentName_; }
 
-    void initPostLinkFailureInfo(CompileOptions options,
-                                 ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
-        postLinkFailureInfo_.init(options, scriptSource, bufStart, bufEnd);
+    void initPostLinkFailureInfo(JSRuntime *rt,
+                                 JSPrincipals *originPrincipals,
+                                 ScriptSource *scriptSource,
+                                 uint32_t bufStart,
+                                 uint32_t bufEnd) {
+        postLinkFailureInfo_.init(rt, originPrincipals, scriptSource, bufStart, bufEnd);
     }
-
     const PostLinkFailureInfo &postLinkFailureInfo() const {
         return postLinkFailureInfo_;
     }
