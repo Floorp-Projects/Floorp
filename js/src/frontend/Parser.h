@@ -486,7 +486,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool setAssignmentLhsOps(Node pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 
-    void addStatementToList(Node pn, Node kid);
     bool checkFunctionArguments();
     bool makeDefIntoUse(Definition *dn, Node pn, JSAtom *atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node *pn, FunctionSyntaxKind kind,

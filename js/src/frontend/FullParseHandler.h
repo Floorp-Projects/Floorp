@@ -192,6 +192,33 @@ class FullParseHandler
         return new_<TernaryNode>(kind, op, first, second, third);
     }
 
+    ParseNode *newStatementList(unsigned blockid, const TokenPos &pos) {
+        ParseNode *pn = new_<ListNode>(PNK_STATEMENTLIST, pos);
+        if (pn)
+            pn->pn_blockid = blockid;
+        return pn;
+    }
+
+    template <typename PC>
+    void addStatementToList(ParseNode *list, ParseNode *stmt, PC *pc) {
+        JS_ASSERT(list->isKind(PNK_STATEMENTLIST));
+
+        if (stmt->isKind(PNK_FUNCTION)) {
+            if (pc->atBodyLevel()) {
+                // PNX_FUNCDEFS notifies the emitter that the block contains
+                // body-level function definitions that should be processed
+                // before the rest of nodes.
+                list->pn_xflags |= PNX_FUNCDEFS;
+            } else {
+                // General deoptimization was done in Parser::functionDef.
+                JS_ASSERT_IF(pc->sc->isFunctionBox(),
+                             pc->sc->asFunctionBox()->hasExtensibleScope());
+            }
+        }
+
+        list->append(stmt);
+    }
+
     ParseNode *newEmptyStatement(const TokenPos &pos) {
         return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, pos, (ParseNode *) NULL);
     }

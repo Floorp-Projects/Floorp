@@ -100,6 +100,8 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newStatementList(unsigned blockid, const TokenPos &pos) { return NodeGeneric; }
+    void addStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler> *pc) {}
     Node newEmptyStatement(const TokenPos &pos) { return NodeGeneric; }
 
     Node newExprStatement(Node expr, uint32_t end) {

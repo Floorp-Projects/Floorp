@@ -927,10 +927,15 @@ struct TernaryNode : public ParseNode
 
 struct ListNode : public ParseNode
 {
-    ListNode(ParseNodeKind kind, JSOp op, ParseNode *kid)
-      : ParseNode(kind, op, PN_LIST)
+    ListNode(ParseNodeKind kind, const TokenPos &pos)
+      : ParseNode(kind, JSOP_NOP, PN_LIST, pos)
     {
-        pn_pos = kid->pn_pos;
+        makeEmpty();
+    }
+
+    ListNode(ParseNodeKind kind, JSOp op, ParseNode *kid)
+      : ParseNode(kind, op, PN_LIST, kid->pn_pos)
+    {
         initList(kid);
     }
 
