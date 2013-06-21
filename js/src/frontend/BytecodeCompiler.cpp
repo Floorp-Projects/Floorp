@@ -269,7 +269,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
              */
             JSFunction *fun = evalCaller->functionOrCallerFunction();
             Directives directives(/* strict = */ fun->strict());
-            ObjectBox *funbox = parser.newFunctionBox(fun, pc.addr(), directives);
+            ObjectBox *funbox = parser.newFunctionBox(/* fn = */ NULL, fun, pc.addr(), directives);
             if (!funbox)
                 return NULL;
             bce.objectList.add(funbox);

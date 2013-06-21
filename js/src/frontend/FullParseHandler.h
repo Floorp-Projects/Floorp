@@ -329,6 +329,7 @@ class FullParseHandler
         pn->pn_body = kid;
     }
     void setFunctionBox(ParseNode *pn, FunctionBox *funbox) {
+        JS_ASSERT(pn->isKind(PNK_FUNCTION));
         pn->pn_funbox = funbox;
     }
     void addFunctionArgument(ParseNode *pn, ParseNode *argpn) {
