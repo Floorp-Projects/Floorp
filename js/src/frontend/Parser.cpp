@@ -4844,47 +4844,34 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
         return letStatement();
-#endif /* JS_HAS_BLOCK_SCOPE */
+#endif
 
       case TOK_SEMI:
         return handler.newEmptyStatement(pos());
-
       case TOK_IF:
         return ifStatement();
-
       case TOK_DO:
         return doWhileStatement();
-
       case TOK_WHILE:
         return whileStatement();
-
       case TOK_FOR:
         return forStatement();
-
       case TOK_SWITCH:
         return switchStatement();
-
       case TOK_CONTINUE:
         return continueStatement();
-
       case TOK_BREAK:
         return breakStatement();
-
       case TOK_RETURN:
         return returnStatementOrYieldExpression();
-
       case TOK_WITH:
         return withStatement();
-
       case TOK_THROW:
         return throwStatement();
-
       case TOK_TRY:
         return tryStatement();
-
       case TOK_FUNCTION:
         return functionStmt();
-
       case TOK_DEBUGGER:
         return debuggerStatement();
 
