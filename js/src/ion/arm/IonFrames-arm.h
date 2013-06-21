@@ -344,10 +344,10 @@ class IonOOLPropertyOpExitFrameLayout
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *obj_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
     // space for MutableHandleValue result
@@ -392,10 +392,10 @@ class IonOOLProxyGetExitFrameLayout
     // The proxy object.
     JSObject *proxy_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *receiver_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
     // space for MutableHandleValue result

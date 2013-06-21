@@ -212,7 +212,7 @@ DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
     if (!proto && byteLength >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH)
         return SingletonObject;
     jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc);
+    JSScript *script = cx->currentScript(&pc);
     if (!script)
         return GenericObject;
     return types::UseNewTypeForInitializer(cx, script, pc, &DataViewObject::class_);
@@ -243,7 +243,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
             JS_ASSERT(obj->hasSingletonType());
         } else {
             jsbytecode *pc;
-            RootedScript script(cx, cx->stack.currentScript(&pc));
+            RootedScript script(cx, cx->currentScript(&pc));
             if (script) {
                 if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
                     return NULL;

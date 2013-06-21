@@ -158,23 +158,23 @@ static JSBool ConstructAbstract(JSContext* cx, unsigned argc, jsval* vp);
 
 namespace CType {
   static JSBool ConstructData(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool ConstructBasic(JSContext* cx, JSHandleObject obj, const CallArgs& args);
+  static JSBool ConstructBasic(JSContext* cx, HandleObject obj, const CallArgs& args);
 
   static void Trace(JSTracer* trc, JSObject* obj);
   static void Finalize(JSFreeOp *fop, JSObject* obj);
   static void FinalizeProtoClass(JSFreeOp *fop, JSObject* obj);
 
-  static JSBool PrototypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool PrototypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool NameGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool NameGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool SizeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool SizeGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool PtrGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp);
+  static JSBool PtrGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
   static JSBool CreateArray(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ToString(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool HasInstance(JSContext* cx, JSHandleObject obj, MutableHandleValue v, JSBool* bp);
+  static JSBool HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, JSBool* bp);
 
 
   /*
@@ -195,13 +195,13 @@ namespace ABI {
 
 namespace PointerType {
   static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSHandleObject obj, const CallArgs& args);
+  static JSBool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  static JSBool TargetTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool TargetTypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool ContentsGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ContentsGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool ContentsSetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, JSBool strict,
+  static JSBool ContentsSetter(JSContext* cx, HandleObject obj, HandleId idval, JSBool strict,
     MutableHandleValue vp);
   static JSBool IsNull(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool Increment(JSContext* cx, unsigned argc, jsval* vp);
@@ -213,26 +213,26 @@ namespace PointerType {
 
 namespace ArrayType {
   static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSHandleObject obj, const CallArgs& args);
+  static JSBool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  static JSBool ElementTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ElementTypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool LengthGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool LengthGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool Getter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp);
-  static JSBool Setter(JSContext* cx, JSHandleObject obj, JSHandleId idval, JSBool strict, MutableHandleValue vp);
+  static JSBool Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
+  static JSBool Setter(JSContext* cx, HandleObject obj, HandleId idval, JSBool strict, MutableHandleValue vp);
   static JSBool AddressOfElement(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 namespace StructType {
   static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSHandleObject obj, const CallArgs& args);
+  static JSBool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  static JSBool FieldsArrayGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool FieldsArrayGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool FieldGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool FieldGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool FieldSetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, JSBool strict,
+  static JSBool FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, JSBool strict,
                             MutableHandleValue vp);
   static JSBool AddressOfField(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool Define(JSContext* cx, unsigned argc, jsval* vp);
@@ -240,17 +240,17 @@ namespace StructType {
 
 namespace FunctionType {
   static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSHandleObject typeObj,
-    JSHandleObject dataObj, JSHandleObject fnObj, JSHandleObject thisObj, jsval errVal);
+  static JSBool ConstructData(JSContext* cx, HandleObject typeObj,
+    HandleObject dataObj, HandleObject fnObj, HandleObject thisObj, jsval errVal);
 
   static JSBool Call(JSContext* cx, unsigned argc, jsval* vp);
 
-  static JSBool ArgTypesGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ArgTypesGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool ReturnTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ReturnTypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
-  static JSBool ABIGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp);
-  static JSBool IsVariadicGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ABIGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
+  static JSBool IsVariadicGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
 }
 
@@ -266,21 +266,21 @@ namespace CClosure {
 namespace CData {
   static void Finalize(JSFreeOp *fop, JSObject* obj);
 
-  static JSBool ValueGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ValueGetter(JSContext* cx, HandleObject obj, HandleId idval,
                             MutableHandleValue vp);
-  static JSBool ValueSetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ValueSetter(JSContext* cx, HandleObject obj, HandleId idval,
                             JSBool strict, MutableHandleValue vp);
   static JSBool Address(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ReadString(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ReadStringReplaceMalformed(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
-  static JSString *GetSourceString(JSContext *cx, JSHandleObject typeObj,
+  static JSString *GetSourceString(JSContext *cx, HandleObject typeObj,
                                    void *data);
-  static JSBool ErrnoGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool ErrnoGetter(JSContext* cx, HandleObject obj, HandleId idval,
                             MutableHandleValue vp);
 
 #if defined(XP_WIN)
-  static JSBool LastErrorGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval,
+  static JSBool LastErrorGetter(JSContext* cx, HandleObject obj, HandleId idval,
                                 MutableHandleValue vp);
 #endif // defined(XP_WIN)
 }
@@ -3543,7 +3543,7 @@ CType::GetFFIType(JSContext* cx, JSObject* obj)
 }
 
 JSString*
-CType::GetName(JSContext* cx, JSHandleObject obj)
+CType::GetName(JSContext* cx, HandleObject obj)
 {
   JS_ASSERT(CType::IsCType(obj));
 
@@ -3593,7 +3593,7 @@ CType::GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
 }
 
 JSBool
-CType::PrototypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+CType::PrototypeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!(CType::IsCType(obj) || CType::IsCTypeProto(obj))) {
     JS_ReportError(cx, "not a CType or CTypeProto");
@@ -3608,7 +3608,7 @@ CType::PrototypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, Muta
 }
 
 JSBool
-CType::NameGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+CType::NameGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CType::IsCType(obj)) {
     JS_ReportError(cx, "not a CType");
@@ -3624,7 +3624,7 @@ CType::NameGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHa
 }
 
 JSBool
-CType::SizeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+CType::SizeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CType::IsCType(obj)) {
     JS_ReportError(cx, "not a CType");
@@ -3637,7 +3637,7 @@ CType::SizeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHa
 }
 
 JSBool
-CType::PtrGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+CType::PtrGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CType::IsCType(obj)) {
     JS_ReportError(cx, "not a CType");
@@ -3747,7 +3747,7 @@ CType::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 JSBool
-CType::HasInstance(JSContext* cx, JSHandleObject obj, MutableHandleValue v, JSBool* bp)
+CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, JSBool* bp)
 {
   JS_ASSERT(CType::IsCType(obj));
 
@@ -3909,7 +3909,7 @@ PointerType::CreateInternal(JSContext* cx, HandleObject baseType)
 
 JSBool
 PointerType::ConstructData(JSContext* cx,
-                           JSHandleObject obj,
+                           HandleObject obj,
                            const CallArgs& args)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_pointer) {
@@ -4001,8 +4001,8 @@ PointerType::GetBaseType(JSObject* obj)
 
 JSBool
 PointerType::TargetTypeGetter(JSContext* cx,
-                              JSHandleObject obj,
-                              JSHandleId idval,
+                              HandleObject obj,
+                              HandleId idval,
                               MutableHandleValue vp)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_pointer) {
@@ -4091,8 +4091,8 @@ PointerType::Decrement(JSContext* cx, unsigned argc, jsval* vp)
 
 JSBool
 PointerType::ContentsGetter(JSContext* cx,
-                            JSHandleObject obj,
-                            JSHandleId idval,
+                            HandleObject obj,
+                            HandleId idval,
                             MutableHandleValue vp)
 {
   if (!CData::IsCData(obj)) {
@@ -4129,8 +4129,8 @@ PointerType::ContentsGetter(JSContext* cx,
 
 JSBool
 PointerType::ContentsSetter(JSContext* cx,
-                            JSHandleObject obj,
-                            JSHandleId idval,
+                            HandleObject obj,
+                            HandleId idval,
                             JSBool strict,
                             MutableHandleValue vp)
 {
@@ -4254,7 +4254,7 @@ ArrayType::CreateInternal(JSContext* cx,
 
 JSBool
 ArrayType::ConstructData(JSContext* cx,
-                         JSHandleObject obj_,
+                         HandleObject obj_,
                          const CallArgs& args)
 {
   RootedObject obj(cx, obj_); // Make a mutable version
@@ -4449,7 +4449,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
 }
 
 JSBool
-ArrayType::ElementTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+ArrayType::ElementTypeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_array) {
     JS_ReportError(cx, "not an ArrayType");
@@ -4462,7 +4462,7 @@ ArrayType::ElementTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval
 }
 
 JSBool
-ArrayType::LengthGetter(JSContext* cx, JSHandleObject obj_, JSHandleId idval, MutableHandleValue vp)
+ArrayType::LengthGetter(JSContext* cx, HandleObject obj_, HandleId idval, MutableHandleValue vp)
 {
   JSObject *obj = obj_;
 
@@ -4482,7 +4482,7 @@ ArrayType::LengthGetter(JSContext* cx, JSHandleObject obj_, JSHandleId idval, Mu
 }
 
 JSBool
-ArrayType::Getter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   // This should never happen, but we'll check to be safe.
   if (!CData::IsCData(obj)) {
@@ -4518,7 +4518,7 @@ ArrayType::Getter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHa
 }
 
 JSBool
-ArrayType::Setter(JSContext* cx, JSHandleObject obj, JSHandleId idval, JSBool strict, MutableHandleValue vp)
+ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, JSBool strict, MutableHandleValue vp)
 {
   // This should never happen, but we'll check to be safe.
   if (!CData::IsCData(obj)) {
@@ -5118,7 +5118,7 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
 }
 
 JSBool
-StructType::FieldsArrayGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+StructType::FieldsArrayGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_struct) {
     JS_ReportError(cx, "not a StructType");
@@ -5148,7 +5148,7 @@ StructType::FieldsArrayGetter(JSContext* cx, JSHandleObject obj, JSHandleId idva
 }
 
 JSBool
-StructType::FieldGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+StructType::FieldGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CData::IsCData(obj)) {
     JS_ReportError(cx, "not a CData");
@@ -5171,7 +5171,7 @@ StructType::FieldGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, Mut
 }
 
 JSBool
-StructType::FieldSetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, JSBool strict, MutableHandleValue vp)
+StructType::FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, JSBool strict, MutableHandleValue vp)
 {
   if (!CData::IsCData(obj)) {
     JS_ReportError(cx, "not a CData");
@@ -5635,10 +5635,10 @@ FunctionType::CreateInternal(JSContext* cx,
 // PointerType::ConstructData().
 JSBool
 FunctionType::ConstructData(JSContext* cx,
-                            JSHandleObject typeObj,
-                            JSHandleObject dataObj,
-                            JSHandleObject fnObj,
-                            JSHandleObject thisObj,
+                            HandleObject typeObj,
+                            HandleObject dataObj,
+                            HandleObject fnObj,
+                            HandleObject thisObj,
                             jsval errVal)
 {
   JS_ASSERT(CType::GetTypeCode(typeObj) == TYPE_function);
@@ -5890,7 +5890,7 @@ CheckFunctionType(JSContext* cx, JSObject* obj)
 }
 
 JSBool
-FunctionType::ArgTypesGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+FunctionType::ArgTypesGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CheckFunctionType(cx, obj))
     return JS_FALSE;
@@ -5925,7 +5925,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval
 }
 
 JSBool
-FunctionType::ReturnTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+FunctionType::ReturnTypeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CheckFunctionType(cx, obj))
     return JS_FALSE;
@@ -5936,7 +5936,7 @@ FunctionType::ReturnTypeGetter(JSContext* cx, JSHandleObject obj, JSHandleId idv
 }
 
 JSBool
-FunctionType::ABIGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+FunctionType::ABIGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CheckFunctionType(cx, obj))
     return JS_FALSE;
@@ -5947,7 +5947,7 @@ FunctionType::ABIGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, Mut
 }
 
 JSBool
-FunctionType::IsVariadicGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+FunctionType::IsVariadicGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!CheckFunctionType(cx, obj))
     return JS_FALSE;
@@ -6394,7 +6394,7 @@ CData::IsCDataProto(JSObject* obj)
 }
 
 JSBool
-CData::ValueGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableHandleValue vp)
+CData::ValueGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
 {
   if (!IsCData(obj)) {
     JS_ReportError(cx, "not a CData");
@@ -6410,7 +6410,7 @@ CData::ValueGetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, MutableH
 }
 
 JSBool
-CData::ValueSetter(JSContext* cx, JSHandleObject obj, JSHandleId idval, JSBool strict, MutableHandleValue vp)
+CData::ValueSetter(JSContext* cx, HandleObject obj, HandleId idval, JSBool strict, MutableHandleValue vp)
 {
   if (!IsCData(obj)) {
     JS_ReportError(cx, "not a CData");
@@ -6639,7 +6639,7 @@ CData::ReadStringReplaceMalformed(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 JSString *
-CData::GetSourceString(JSContext *cx, JSHandleObject typeObj, void *data)
+CData::GetSourceString(JSContext *cx, HandleObject typeObj, void *data)
 {
   // Walk the types, building up the toSource() string.
   // First, we build up the type expression:
@@ -6693,7 +6693,7 @@ CData::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 JSBool
-CData::ErrnoGetter(JSContext* cx, JSHandleObject obj, JSHandleId, MutableHandleValue vp)
+CData::ErrnoGetter(JSContext* cx, HandleObject obj, HandleId, MutableHandleValue vp)
 {
   if (!IsCTypesGlobal(obj)) {
     JS_ReportError(cx, "this is not not global object ctypes");
@@ -6706,7 +6706,7 @@ CData::ErrnoGetter(JSContext* cx, JSHandleObject obj, JSHandleId, MutableHandleV
 
 #if defined(XP_WIN)
 JSBool
-CData::LastErrorGetter(JSContext* cx, JSHandleObject obj, JSHandleId, MutableHandleValue vp)
+CData::LastErrorGetter(JSContext* cx, HandleObject obj, HandleId, MutableHandleValue vp)
 {
   if (!IsCTypesGlobal(obj)) {
     JS_ReportError(cx, "not global object ctypes");
