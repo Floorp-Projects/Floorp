@@ -41,6 +41,7 @@ public:
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix GetMatrix() const;
+    gfxMatrix GetInverseMatrix() const;
 
     /* Get an Azure Pattern for the current Cairo pattern. aPattern transform
      * specifies the transform that was set on the DrawTarget when the pattern

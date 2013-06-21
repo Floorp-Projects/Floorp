@@ -1431,8 +1431,7 @@ gfxContext::Mask(gfxPattern *pattern)
       }
 
       if (needsClip) {
-        Matrix mat = ToMatrix(pattern->GetMatrix());
-        mat.Invert();
+        Matrix mat = ToMatrix(pattern->GetInverseMatrix());
         mat = mat * GetDTTransform();
 
         mDT->SetTransform(mat);
