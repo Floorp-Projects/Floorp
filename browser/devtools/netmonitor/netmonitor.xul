@@ -138,7 +138,8 @@
                 flex="100"/>
         <button id="requests-menu-filter-all-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn(null)"
+                checked="true"
+                onclick="NetMonitorView.RequestsMenu.filterOn('all')"
                 label="&netmonitorUI.footer.filterAll;">
         </button>
         <button id="requests-menu-filter-html-button"

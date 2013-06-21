@@ -361,10 +361,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Filters all network requests in this container by a specified type.
    *
    * @param string aType
-   *        Either null, "html", "css", "js", "xhr", "fonts", "images", "media"
+   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
    *        or "flash".
    */
-  filterOn: function(aType) {
+  filterOn: function(aType = "all") {
     let target = $("#requests-menu-filter-" + aType + "-button");
     let buttons = document.querySelectorAll(".requests-menu-footer-button");
 
@@ -372,16 +372,15 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       if (button != target) {
         button.removeAttribute("checked");
       } else {
-        button.setAttribute("checked", "");
+        button.setAttribute("checked", "true");
       }
     }
 
-    // Filter on nothing.
-    if (!target) {
-      this.filterContents(() => true);
-    }
     // Filter on whatever was requested.
-    else switch (aType) {
+    switch (aType) {
+      case "all":
+        this.filterContents(() => true);
+        break;
       case "html":
         this.filterContents(this._onHtml);
         break;
@@ -415,7 +414,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Sorts all network requests in this container by a specified detail.
    *
    * @param string aType
-   *        Either "status", "method", "file", "domain", "type", "size" or "waterfall".
+   *        Either "status", "method", "file", "domain", "type", "size" or
+   *        "waterfall".
    */
   sortBy: function(aType = "waterfall") {
     let target = $("#requests-menu-" + aType + "-button");
