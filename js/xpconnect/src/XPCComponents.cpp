@@ -2960,7 +2960,7 @@ sandbox_finalize(JSFreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-sandbox_convert(JSContext *cx, JSHandleObject obj, JSType type, MutableHandleValue vp)
+sandbox_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
 {
     if (type == JSTYPE_OBJECT) {
         vp.set(OBJECT_TO_JSVAL(obj));
@@ -3126,9 +3126,9 @@ bool BindPropertyOp(JSContext *cx, Op &op, PropertyDescriptor *desc, HandleId id
 }
 
 extern JSBool
-XPC_WN_Helper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, MutableHandleValue vp);
+XPC_WN_Helper_GetProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 extern JSBool
-XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, MutableHandleValue vp);
+XPC_WN_Helper_SetProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp);
 
 bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
@@ -4827,7 +4827,7 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
 }
 
 static JSBool
-ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
+ContentComponentsGetterOp(JSContext *cx, HandleObject obj, HandleId id,
                           MutableHandleValue vp)
 {
     // If chrome is accessing the Components object of content, allow.

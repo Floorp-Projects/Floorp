@@ -387,7 +387,7 @@ jsval_to_nsString(JSContext* cx, jsid from, nsString* to)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
+ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, HandleObject obj, HandleId id,
                                       MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_AddProperty (%s)...",
@@ -414,7 +414,7 @@ ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandl
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
+ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, HandleObject obj, HandleId id,
                                       MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_GetProperty (%s)...",
@@ -441,7 +441,7 @@ ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandl
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, 
+ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, HandleObject obj, HandleId id, 
                                       JSBool strict, MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_SetProperty (%s)...",
@@ -470,7 +470,7 @@ ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSHandleObject obj, JSHandl
 }    
     
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
+ObjectWrapperParent::CPOW_DelProperty(JSContext *cx, HandleObject obj, HandleId id,
                                       JSBool *succeeded)
 {
     CPOW_LOG(("Calling CPOW_DelProperty (%s)...",
@@ -551,7 +551,7 @@ ObjectWrapperParent::NewEnumerateDestroy(JSContext* cx, jsval state)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSHandleObject obj,
+ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, HandleObject obj,
                                        JSIterateOp enum_op, jsval *statep,
                                        jsid *idp)
 {
@@ -577,7 +577,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSHandleObject obj,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
+ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, HandleObject obj, HandleId id,
                                      unsigned flags, MutableHandleObject objp)
 {
     CPOW_LOG(("Calling CPOW_NewResolve (%s)...",
@@ -613,7 +613,7 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandle
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_Convert(JSContext *cx, JSHandleObject obj, JSType type,
+ObjectWrapperParent::CPOW_Convert(JSContext *cx, HandleObject obj, JSType type,
                                   MutableHandleValue vp)
 {
     CPOW_LOG(("Calling CPOW_Convert (to %s)...",
@@ -708,7 +708,7 @@ ObjectWrapperParent::CPOW_Construct(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, MutableHandleValue v,
+ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v,
                                       JSBool *bp)
 {
     CPOW_LOG(("Calling CPOW_HasInstance..."));
