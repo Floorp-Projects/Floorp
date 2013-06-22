@@ -42,9 +42,13 @@ a {
 }
 
 #brandLogo {
-  height: 154px;
-  width: 154px;
-  margin: 22px 0 31px;
+  height: 192px;
+  width: 192px;
+  margin: 22px auto 31px;
+  background-image: url("chrome://branding/content/about-logo.png");
+  background-size: 192px auto;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 #searchForm,
@@ -360,6 +364,10 @@ body[narrow] #restorePreviousSession::before {
  * rather than upscaling the original-size ones (bug 818940).
  */
 @media not all and (max-resolution: 1dppx) {
+  #brandLogo {
+    background-image: url("chrome://branding/content/about-logo@2x.png");
+  }
+
   #defaultSnippet1,
   #defaultSnippet2,
   #rightsSnippet {
