@@ -27,7 +27,7 @@
 
     <!-- DoorHangers -->
     <declare-styleable name="DoorHanger">
-        <attr name="doorhangerWidth" format="dimension">
+        <attr name="arrowPopupWidth" format="dimension">
              <enum name="fill_parent" value="-1" />
              <enum name="match_parent" value="-1" />
              <enum name="wrap_content" value="-2" />
@@ -169,13 +169,6 @@
         <attr name="android:choiceMode"/>
         <attr name="android:drawSelectorOnTop"/>
         <attr name="android:listSelector"/>
-    </declare-styleable>
-
-    <declare-styleable name="IconTabWidget">
-        <attr name="display">
-            <flag name="text" value="0x00" />
-            <flag name="icon" value="0x01" />
-        </attr>
     </declare-styleable>
 
     <declare-styleable name="GeckoView">

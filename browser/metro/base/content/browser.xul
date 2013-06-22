@@ -239,8 +239,13 @@
         <!-- Content touch selection overlay -->
         <!-- onclick addresses dom bug 835175 -->
         <box onclick="false" class="selection-overlay-hidden" id="content-selection-overlay"/>
-  </stack>
+      </stack>
     </vbox>
+
+    <html:div id="overlay-back" class="overlay-button"
+              observes="cmd_back"></html:div>
+    <html:div id="overlay-plus" class="overlay-button"
+              observes="cmd_back"></html:div>
 
     <!-- popup for content navigator helper -->
     <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
@@ -313,10 +318,10 @@
         <observes element="bcast_windowState" attribute="*"/>
         <observes element="bcast_urlbarState" attribute="*"/>
 
-        <toolbarbutton id="back-button" command="cmd_back"/>
+        <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
+        <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
 
         <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-          <toolbarbutton id="forward-button" command="cmd_forward"/>
           <hbox id="urlbar" flex="1">
             <box id="identity-box" role="button">
               <hbox id="identity-box-inner" align="center" mousethrough="always">
@@ -334,23 +339,22 @@
                      flex="1"
                      ontextentered="BrowserUI.handleUrlbarEnter(param);"
                      onkeydown="BrowserUI.navEditKeyPress();"
-                     onclick="BrowserUI._urlbarClicked(event);"
                      onblur="BrowserUI._urlbarBlurred();"/>
           </hbox>
-        </hbox>
 
-        <toolbarbutton id="tool-reload" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-        <toolbarbutton id="tool-stop" command="cmd_stop"/>
+          <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+          <toolbarbutton id="stop-button" command="cmd_stop"/>
+        </hbox>
 
         <!-- developer buttons -->
         <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
         <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
 
         <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
-        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
-        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)"/>
-      </toolbar>
+        <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
+        <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
+        <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
+       </toolbar>
     </appbar>
 
     <!-- Context button bar -->
@@ -364,16 +368,7 @@
       </toolbar>
     </appbar>
 
-    <!-- Chrome touch selection overlay -->
-    <!-- onclick addresses dom bug 835175 -->
-    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
-
     <autoscroller class="autoscroller" id="autoscrollerid"/>
-
-    <html:div id="overlay-back" class="overlay-button"
-              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
-    <html:div id="overlay-plus" class="overlay-button"
-              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
 
     <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
       <label id="about-product-label" value="&aboutHeader.product.label;"/>
@@ -606,6 +601,10 @@
       </dialog>
     </box>
 #endif
+
+    <!-- Chrome touch selection overlay -->
+    <!-- onclick addresses dom bug 835175 -->
+    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
 
     <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
       <!-- onclick is dom bug 835175 -->

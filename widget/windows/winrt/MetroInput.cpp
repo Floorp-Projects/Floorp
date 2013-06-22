@@ -438,8 +438,7 @@ MetroInput::OnCharacterReceived(uint32_t aCharCode)
   mModifierKeyState.Update();
   if (mModifierKeyState.IsAltGr()) {
     mModifierKeyState.Unset(MODIFIER_CONTROL
-                          | MODIFIER_ALT
-                          | MODIFIER_ALTGRAPH);
+                          | MODIFIER_ALT);
   }
   mModifierKeyState.InitInputEvent(keyEvent);
   keyEvent.time = ::GetMessageTime();

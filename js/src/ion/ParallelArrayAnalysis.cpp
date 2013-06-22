@@ -276,6 +276,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(FunctionDispatch)
     SAFE_OP(TypeObjectDispatch)
     SAFE_OP(IsCallable)
+    SAFE_OP(HaveSameClass)
     UNSAFE_OP(EffectiveAddress)
     UNSAFE_OP(AsmJSUnsignedToDouble)
     UNSAFE_OP(AsmJSNeg)
@@ -842,8 +843,8 @@ GetPossibleCallees(JSContext *cx,
     RootedScript rootedScript(cx);
     for (unsigned i = 0; i < objCount; i++) {
         JSObject *obj = calleeTypes->getSingleObject(i);
-        if (obj && obj->isFunction()) {
-            rootedFun = obj->toFunction();
+        if (obj && obj->is<JSFunction>()) {
+            rootedFun = &obj->as<JSFunction>();
         } else {
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
             if (!typeObj)

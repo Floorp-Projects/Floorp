@@ -7,7 +7,7 @@
 
 #include "nsAString.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/ValidityState.h"
 #include "nsIFormControl.h"
 #include "nsContentUtils.h"
@@ -136,8 +136,8 @@ nsIConstraintValidation::SetValidityState(ValidityStateType aState,
     nsCOMPtr<nsIFormControl> formCtrl = do_QueryInterface(this);
     NS_ASSERTION(formCtrl, "This interface should be used by form elements!");
 
-    nsHTMLFormElement* form =
-      static_cast<nsHTMLFormElement*>(formCtrl->GetFormElement());
+    mozilla::dom::HTMLFormElement* form =
+      static_cast<mozilla::dom::HTMLFormElement*>(formCtrl->GetFormElement());
     if (form) {
       form->UpdateValidity(IsValid());
     }
@@ -164,8 +164,8 @@ nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred)
     nsCOMPtr<nsIFormControl> formCtrl = do_QueryInterface(this);
     NS_ASSERTION(formCtrl, "This interface should be used by form elements!");
 
-    nsHTMLFormElement* form =
-      static_cast<nsHTMLFormElement*>(formCtrl->GetFormElement());
+    mozilla::dom::HTMLFormElement* form =
+      static_cast<mozilla::dom::HTMLFormElement*>(formCtrl->GetFormElement());
     if (form) {
       // If the element is going to be barred from constraint validation,
       // we can inform the form that we are now valid.

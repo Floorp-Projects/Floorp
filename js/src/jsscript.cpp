@@ -38,6 +38,7 @@
 
 #include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -174,7 +175,7 @@ Bindings::clone(JSContext *cx, InternalBindingsHandle self,
 }
 
 /* static */ Bindings
-RootMethods<Bindings>::initial()
+GCMethods<Bindings>::initial()
 {
     return Bindings();
 }
@@ -395,6 +396,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         Strict,
         ContainsDynamicNameAccess,
         FunHasExtensibleScope,
+        FunNeedsDeclEnvObject,
         FunHasAnyAliasedFormal,
         ArgumentsHasVarBinding,
         NeedsArgsObj,
@@ -476,6 +478,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << ContainsDynamicNameAccess);
         if (script->funHasExtensibleScope)
             scriptBits |= (1 << FunHasExtensibleScope);
+        if (script->funNeedsDeclEnvObject)
+            scriptBits |= (1 << FunNeedsDeclEnvObject);
         if (script->funHasAnyAliasedFormal)
             scriptBits |= (1 << FunHasAnyAliasedFormal);
         if (script->argumentsHasVarBinding())
@@ -575,6 +579,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->bindingsAccessedDynamically = true;
         if (scriptBits & (1 << FunHasExtensibleScope))
             script->funHasExtensibleScope = true;
+        if (scriptBits & (1 << FunNeedsDeclEnvObject))
+            script->funNeedsDeclEnvObject = true;
         if (scriptBits & (1 << FunHasAnyAliasedFormal))
             script->funHasAnyAliasedFormal = true;
         if (scriptBits & (1 << ArgumentsHasVarBinding))
@@ -656,7 +662,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         uint32_t isBlock;
         if (mode == XDR_ENCODE) {
             JSObject *obj = *objp;
-            JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
+            JS_ASSERT(obj->is<JSFunction>() || obj->is<StaticBlockObject>());
             isBlock = obj->is<BlockObject>() ? 1 : 0;
         }
         if (!xdr->codeUint32(&isBlock))
@@ -665,7 +671,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             /* Code the nested function's enclosing scope. */
             uint32_t funEnclosingScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                JSScript *innerScript = (*objp)->toFunction()->getOrCreateScript(cx);
+                JSScript *innerScript = (*objp)->as<JSFunction>().getOrCreateScript(cx);
                 if (!innerScript)
                     return false;
                 RootedObject staticScope(cx, innerScript->enclosingStaticScope());
@@ -699,7 +705,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             JS_ASSERT(isBlock == 1);
             uint32_t blockEnclosingScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                if (StaticBlockObject *block = (*objp)->asStaticBlock().enclosingBlock())
+                if (StaticBlockObject *block = (*objp)->as<StaticBlockObject>().enclosingBlock())
                     blockEnclosingScopeIndex = FindBlockIndex(script, *block);
                 else
                     blockEnclosingScopeIndex = UINT32_MAX;
@@ -1893,6 +1899,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
+    script->funNeedsDeclEnvObject = funbox ? funbox->needsDeclEnvObject() : false;
     script->hasSingletons = bce->hasSingletons;
 
     if (funbox) {
@@ -1979,13 +1986,13 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
      */
     JSObject *enclosing = enclosingStaticScope();
     while (enclosing) {
-        if (enclosing->isFunction()) {
-            JSFunction *fun = enclosing->toFunction();
+        if (enclosing->is<JSFunction>()) {
+            JSFunction *fun = &enclosing->as<JSFunction>();
             if (!fun->hasScript() || !fun->nonLazyScript())
                 return false;
             enclosing = fun->nonLazyScript()->enclosingStaticScope();
         } else {
-            enclosing = enclosing->asStaticBlock().enclosingStaticScope();
+            enclosing = enclosing->as<StaticBlockObject>().enclosingStaticScope();
         }
     }
     return true;
@@ -2238,12 +2245,6 @@ js_GetScriptLineExtent(JSScript *script)
     return 1 + lineno - script->lineno;
 }
 
-unsigned
-js::CurrentLine(JSContext *cx)
-{
-    return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
-}
-
 void
 js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                     JSPrincipals **origin)
@@ -2305,8 +2306,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         for (unsigned i = 0; i < nobjects; i++) {
             RootedObject obj(cx, vector[i]);
             RootedObject clone(cx);
-            if (obj->isStaticBlock()) {
-                Rooted<StaticBlockObject*> innerBlock(cx, &obj->asStaticBlock());
+            if (obj->is<StaticBlockObject>()) {
+                Rooted<StaticBlockObject*> innerBlock(cx, &obj->as<StaticBlockObject>());
 
                 RootedObject enclosingScope(cx);
                 if (StaticBlockObject *enclosingBlock = innerBlock->enclosingBlock())
@@ -2315,8 +2316,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     enclosingScope = fun;
 
                 clone = CloneStaticBlockObject(cx, enclosingScope, innerBlock);
-            } else if (obj->isFunction()) {
-                RootedFunction innerFun(cx, obj->toFunction());
+            } else if (obj->is<JSFunction>()) {
+                RootedFunction innerFun(cx, &obj->as<JSFunction>());
                 if (innerFun->isNative()) {
                     assertSameCompartment(cx, innerFun);
                     clone = innerFun;
@@ -2413,6 +2414,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->explicitUseStrict = src->explicitUseStrict;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
+    dst->funNeedsDeclEnvObject = src->funNeedsDeclEnvObject;
     dst->funHasAnyAliasedFormal = src->funHasAnyAliasedFormal;
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
@@ -2838,8 +2840,8 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
         pc += JSOP_ARGUMENTS_LENGTH;
         JS_ASSERT(*pc == JSOP_SETALIASEDVAR);
 
-        if (frame.callObj().asScope().aliasedVar(pc).isMagic(JS_OPTIMIZED_ARGUMENTS))
-            frame.callObj().asScope().setAliasedVar(cx, pc, cx->names().arguments, ObjectValue(*argsobj));
+        if (frame.callObj().as<ScopeObject>().aliasedVar(pc).isMagic(JS_OPTIMIZED_ARGUMENTS))
+            frame.callObj().as<ScopeObject>().setAliasedVar(cx, pc, cx->names().arguments, ObjectValue(*argsobj));
     } else {
         if (frame.unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
             frame.unaliasedLocal(var) = ObjectValue(*argsobj);

@@ -85,8 +85,14 @@ public:
   nsCString     mVersion;  // UTF-8
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;
+
+  uint32_t      GetBlocklistState();
+  void          InvalidateBlocklistState();
+
 private:
   nsCString     mNiceFileName; // UTF-8
+  uint16_t      mCachedBlocklistState;
+  bool          mCachedBlocklistStateValid;
 
   void InitMime(const char* const* aMimeTypes,
                 const char* const* aMimeDescriptions,

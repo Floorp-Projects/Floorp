@@ -12,10 +12,11 @@
 #define ERR_NO_AVAILABLE_RESOURCE "NoAvailableResourceError"
 
 #include "BluetoothCommon.h"
+#include "nsIObserver.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothProfileManagerBase : public nsISupports
+class BluetoothProfileManagerBase : public nsIObserver
 {
 public:
   virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,

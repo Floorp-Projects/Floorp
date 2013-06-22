@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_barrier_inl_h___
-#define jsgc_barrier_inl_h___
+#ifndef gc_Barrier_inl_h
+#define gc_Barrier_inl_h
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
@@ -412,12 +412,6 @@ class DenseRangeRef : public gc::BufferableRef
         JS_ASSERT(start < end);
     }
 
-    bool match(void *location) {
-        uint32_t len = owner->getDenseInitializedLength();
-        return location >= &owner->getDenseElement(Min(start, len)) &&
-               location <= &owner->getDenseElement(Min(end, len)) - 1;
-    }
-
     void mark(JSTracer *trc) {
         /* Apply forwarding, if we have already visited owner. */
         IsObjectMarked(&owner);
@@ -591,4 +585,4 @@ ReadBarrieredValue::toObject() const
 
 } /* namespace js */
 
-#endif /* jsgc_barrier_inl_h___ */
+#endif /* gc_Barrier_inl_h */

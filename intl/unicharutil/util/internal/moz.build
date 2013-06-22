@@ -10,3 +10,5 @@ CPP_SOURCES += [
     '$(INTL_UNICHARUTIL_UTIL_LCPPSRCS)',
 ]
 
+LIBRARY_NAME = 'unicharutil_s'
+

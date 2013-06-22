@@ -2776,7 +2776,7 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // Bail out now if there's no view or we can't run script because the
   // document is a zombie
-  if (!mView || !GetContent()->GetCurrentDoc()->GetScriptGlobalObject())
+  if (!mView || !GetContent()->GetCurrentDoc()->GetWindow())
     return;
 
   aLists.Content()->AppendNewToTop(new (aBuilder)

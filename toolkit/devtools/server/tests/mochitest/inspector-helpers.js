@@ -78,6 +78,18 @@ function attachURL(url, callback) {
   return cleanup;
 }
 
+function promiseOnce(target, event) {
+  let deferred = Promise.defer();
+  target.on(event, (...args) => {
+    if (args.length === 1) {
+      deferred.resolve(args[0]);
+    } else {
+      deferred.resolve(args);
+    }
+  });
+  return deferred.promise;
+}
+
 function sortOwnershipChildren(children) {
   return children.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -239,6 +251,12 @@ function assertUnload(mutations) {
 // that mutation out of the list
 function assertFrameLoad(mutations) {
   return assertAndStrip(mutations, "Should have had a frame load change.", isFrameLoad);
+}
+
+// Make sure there's a childList change in the mutation list and strip
+// that mutation out of the list
+function assertChildList(mutations) {
+  return assertAndStrip(mutations, "Should have had a frame load change.", isChildList);
 }
 
 // Load mutations aren't predictable, so keep accumulating mutations until

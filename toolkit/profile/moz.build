@@ -21,3 +21,5 @@ CPP_SOURCES += [
     'nsToolkitProfileService.cpp',
 ]
 
+LIBRARY_NAME = 'profile_s'
+

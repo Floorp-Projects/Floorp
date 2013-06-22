@@ -7,16 +7,14 @@ package org.mozilla.gecko.widget;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TabWidget;
 
 public class IconTabWidget extends TabWidget {
     private OnTabChangedListener mListener;
-    private boolean mIsIcon;
 
     public static interface OnTabChangedListener {
         public void onTabChanged(int tabIndex);
@@ -24,22 +22,11 @@ public class IconTabWidget extends TabWidget {
 
     public IconTabWidget(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.IconTabWidget);
-        int type = a.getInt(R.styleable.IconTabWidget_display, 0x00);
-        a.recycle();
-
-        mIsIcon = (type == 0x01);
     }
 
-    public Button addTab(int imageResId, int stringResId) {
-        Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.tabs_panel_indicator, null);
-        if (mIsIcon) {
-            button.setCompoundDrawablesWithIntrinsicBounds(imageResId, 0, 0, 0);
-            button.setContentDescription(getContext().getString(stringResId));
-        } else {
-            button.setText(getContext().getString(stringResId).toUpperCase());
-        }
+    public ImageButton addTab(int resId) {
+        ImageButton button = (ImageButton) LayoutInflater.from(getContext()).inflate(R.layout.tabs_panel_indicator, null);
+        button.setImageResource(resId);
 
         addView(button);
         button.setOnClickListener(new TabClickListener(getTabCount() - 1));

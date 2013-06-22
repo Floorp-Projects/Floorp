@@ -29,7 +29,7 @@ function testAddBreakpoint()
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      var frames = gDebugger.DebuggerView.StackFrames._container._list;
+      var frames = gDebugger.DebuggerView.StackFrames.widget._list;
 
       is(gDebugger.DebuggerController.activeThread.state, "paused",
          "The debugger statement was reached.");

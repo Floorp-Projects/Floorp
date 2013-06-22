@@ -27,8 +27,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef AbstractMacroAssembler_h
-#define AbstractMacroAssembler_h
+#ifndef assembler_assembler_AbstractMacroAssembler_h
+#define assembler_assembler_AbstractMacroAssembler_h
 
 #include "assembler/wtf/Platform.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
@@ -656,4 +656,4 @@ protected:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // AbstractMacroAssembler_h
+#endif /* assembler_assembler_AbstractMacroAssembler_h */

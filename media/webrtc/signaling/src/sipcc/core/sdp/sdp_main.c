@@ -167,7 +167,9 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
     {"fingerprint", sizeof("fingerprint"),
       sdp_parse_attr_fingerprint_attr, sdp_build_attr_simple_string},
     {"maxptime", sizeof("maxptime"),
-      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32}
+      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32},
+    {"rtcp-fb", sizeof("rtcp-fb"),
+      sdp_parse_attr_rtcp_fb, sdp_build_attr_rtcp_fb}
 };
 
 /* Note: These *must* be in the same order as the enum types. */
@@ -440,6 +442,47 @@ const sdp_namearray_t sdp_rtcp_unicast_mode_val[SDP_RTCP_MAX_UNICAST_MODE] =
     {"reflection", sizeof("reflection")},
     {"rsi",        sizeof("rsi")}
 };
+
+#define SDP_NAME(x) {x, sizeof(x)}
+/* Maintain the same order as defined in typdef sdp_rtcp_fb_type_e */
+const sdp_namearray_t sdp_rtcp_fb_type_val[SDP_MAX_RTCP_FB] =
+{
+    SDP_NAME("ack"),
+    SDP_NAME("ccm"),
+    SDP_NAME("nack"),
+    SDP_NAME("trr-int")
+};
+
+/* Maintain the same order as defined in typdef sdp_rtcp_fb_nack_type_e */
+const sdp_namearray_t sdp_rtcp_fb_nack_type_val[SDP_MAX_RTCP_FB_NACK] =
+{
+    SDP_NAME(""),
+    SDP_NAME("sli"),
+    SDP_NAME("pli"),
+    SDP_NAME("rpsi"),
+    SDP_NAME("app"),
+    SDP_NAME("rai"),
+    SDP_NAME("tllei"),
+    SDP_NAME("pslei"),
+    SDP_NAME("ecn")
+};
+
+/* Maintain the same order as defined in typdef sdp_rtcp_fb_ack_type_e */
+const sdp_namearray_t sdp_rtcp_fb_ack_type_val[SDP_MAX_RTCP_FB_ACK] =
+{
+    SDP_NAME("rpsi"),
+    SDP_NAME("app")
+};
+
+/* Maintain the same order as defined in typdef sdp_rtcp_fb_ccm_type_e */
+const sdp_namearray_t sdp_rtcp_fb_ccm_type_val[SDP_MAX_RTCP_FB_CCM] =
+{
+    SDP_NAME("fir"),
+    SDP_NAME("tmmbr"),
+    SDP_NAME("tstr"),
+    SDP_NAME("vbcm")
+};
+
 
 /*  Maintain same order as defined in typedef sdp_srtp_crypto_suite_t */
 const sdp_srtp_crypto_suite_list sdp_srtp_crypto_suite_array[SDP_SRTP_MAX_NUM_CRYPTO_SUITES] =

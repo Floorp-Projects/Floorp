@@ -24,7 +24,6 @@ DEFINES += -DARCH_ARMV6
 endif
 
 MODULE_NAME     = nsProfilerModule
-LIBRARY_NAME    = profiler
 EXPORT_LIBRARY  = 1
 LIBXUL_LIBRARY  = 1
 IS_COMPONENT    = 1

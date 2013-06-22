@@ -19,6 +19,9 @@ elif CONFIG['MOZ_WIDGET_GTK']:
         'nsGNOMEShellService.cpp',
     ]
 
+if CPP_SOURCES:
+    LIBRARY_NAME = 'shellservice_s'
+
 EXTRA_COMPONENTS += [
     'nsSetDefaultBrowser.js',
     'nsSetDefaultBrowser.manifest',

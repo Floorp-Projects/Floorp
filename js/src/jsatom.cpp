@@ -432,6 +432,32 @@ js::IndexToIdSlow<CanGC>(JSContext *cx, uint32_t index, MutableHandleId idp);
 template bool
 js::IndexToIdSlow<NoGC>(JSContext *cx, uint32_t index, FakeMutableHandle<jsid> idp);
 
+template <AllowGC allowGC>
+JSAtom *
+js::ToAtom(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v)
+{
+    if (!v.isString()) {
+        JSString *str = js::ToStringSlow<allowGC>(cx, v);
+        if (!str)
+            return NULL;
+        JS::Anchor<JSString *> anchor(str);
+        return AtomizeString<allowGC>(cx, str);
+    }
+
+    JSString *str = v.toString();
+    if (str->isAtom())
+        return &str->asAtom();
+
+    JS::Anchor<JSString *> anchor(str);
+    return AtomizeString<allowGC>(cx, str);
+}
+
+template JSAtom *
+js::ToAtom<CanGC>(JSContext *cx, HandleValue v);
+
+template JSAtom *
+js::ToAtom<NoGC>(JSContext *cx, Value v);
+
 template<XDRMode mode>
 bool
 js::XDRAtom(XDRState<mode> *xdr, MutableHandleAtom atomp)

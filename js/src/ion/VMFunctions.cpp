@@ -289,6 +289,23 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
     return obj;
 }
 
+JSObject *
+NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
+{
+    JS_ASSERT(!templateObject->hasSingletonType());
+
+    JSObject *obj = NewObjectWithGivenProto(cx,
+                                            templateObject->getClass(),
+                                            templateObject->getProto(),
+                                            cx->global());
+    if (!obj)
+        return NULL;
+
+    obj->setType(templateObject->type());
+
+    return obj;
+}
+
 bool
 ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
@@ -502,8 +519,8 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
 {
     rval.set(MagicValue(JS_IS_CONSTRUCTING));
 
-    if (callee->isFunction()) {
-        JSFunction *fun = callee->toFunction();
+    if (callee->is<JSFunction>()) {
+        JSFunction *fun = &callee->as<JSFunction>();
         if (fun->isInterpreted()) {
             JSScript *script = fun->getOrCreateScript(cx);
             if (!script || !script->ensureHasTypes(cx))
@@ -570,11 +587,6 @@ FilterArguments(JSContext *cx, JSString *str)
 void
 PostWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
-#ifdef JS_GC_ZEAL
-    /* The jitcode version of IsInsideNursery does not know about the verifier. */
-    if (rt->gcVerifyPostData && rt->gcVerifierNursery.isInside(obj))
-        return;
-#endif
     JS_ASSERT(!IsInsideNursery(rt, obj));
     rt->gcStoreBuffer.putWholeCell(obj);
 }

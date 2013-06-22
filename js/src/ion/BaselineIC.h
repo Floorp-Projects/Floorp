@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_baseline_ic_h__
-#define jsion_baseline_ic_h__
+#ifndef ion_BaselineIC_h
+#define ion_BaselineIC_h
 
 #ifdef JS_ION
 
@@ -2375,7 +2375,10 @@ class ICBinaryArith_Fallback : public ICFallbackStub
     friend class ICStubSpace;
 
     ICBinaryArith_Fallback(IonCode *stubCode)
-      : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
+      : ICFallbackStub(BinaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
@@ -2384,6 +2387,13 @@ class ICBinaryArith_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICBinaryArith_Fallback>(code);
+    }
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
@@ -2663,7 +2673,10 @@ class ICUnaryArith_Fallback : public ICFallbackStub
     friend class ICStubSpace;
 
     ICUnaryArith_Fallback(IonCode *stubCode)
-      : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
+      : ICFallbackStub(UnaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
@@ -2672,6 +2685,13 @@ class ICUnaryArith_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICUnaryArith_Fallback>(code);
+    }
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
@@ -5532,4 +5552,4 @@ class ICRest_Fallback : public ICFallbackStub
 
 #endif // JS_ION
 
-#endif // jsion_baseline_ic_h__
+#endif /* ion_BaselineIC_h */

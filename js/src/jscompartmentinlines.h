@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscompartment_inlines_h___
-#define jscompartment_inlines_h___
+#ifndef jscompartmentinlines_h
+#define jscompartmentinlines_h
 
 #include "jscompartment.h"
 
@@ -38,18 +38,6 @@ js::AutoCompartment::~AutoCompartment()
     cx_->leaveCompartment(origin_);
 }
 
-void
-js::Allocator::updateMallocCounter(size_t nbytes)
-{
-    zone->rt->updateMallocCounter(zone, nbytes);
-}
-
-inline void *
-js::Allocator::parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize)
-{
-    return arenas.parallelAllocate(zone, thingKind, thingSize);
-}
-
 namespace js {
 
 /*
@@ -80,4 +68,4 @@ class AutoEnterAtomsCompartment
 
 } /* namespace js */
 
-#endif /* jscompartment_inlines_h___ */
+#endif /* jscompartmentinlines_h */

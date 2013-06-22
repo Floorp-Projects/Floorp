@@ -22,10 +22,6 @@ FAIL_ON_WARNINGS = 1
 LIBRARY_NAME = telemetry
 MSVC_ENABLE_PGO := 1
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-  TelemetryPing.js \
-  $(NULL)
-
 DISABLED_EXTRA_COMPONENTS = \
   TelemetryPing.manifest \
   $(NULL)

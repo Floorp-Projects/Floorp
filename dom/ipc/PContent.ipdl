@@ -260,7 +260,7 @@ both:
     // The child creates the PBrowser as part of
     // TabChild::BrowserFrameProvideWindow (which happens when the child's
     // content calls window.open()), and the parent creates the PBrowser as part
-    // of ContentParent::CreateTab.
+    // of ContentParent::CreateBrowserOrApp.
     //
     // When the parent constructs a PBrowser, the child trusts the app token it
     // receives from the parent.  In that case, context can be any of the

@@ -930,8 +930,8 @@ class CGAddPropertyHook(CGAbstractClassHook):
     A hook for addProperty, used to preserve our wrapper from GC.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('JSHandleId', 'id'), Argument('JSMutableHandleValue', 'vp')]
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::Handle<jsid>', 'id'), Argument('JS::MutableHandle<JS::Value>', 'vp')]
         CGAbstractClassHook.__init__(self, descriptor, ADDPROPERTY_HOOK_NAME,
                                      'JSBool', args)
 
@@ -1187,8 +1187,8 @@ class CGNamedConstructors(CGThing):
 
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('JSMutableHandleValue', 'vp'), Argument('JSBool*', 'bp')]
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::MutableHandle<JS::Value>', 'vp'), Argument('JSBool*', 'bp')]
         CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
                                         'JSBool', args)
 
@@ -5206,7 +5206,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor, method):
         self.method = method
         name = CppKeywords.checkMethodName(method.identifier.name)
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('const JSJitMethodCallArgs&', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
@@ -5252,8 +5252,8 @@ class CGNewResolveHook(CGAbstractBindingMethod):
     """
     def __init__(self, descriptor):
         self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj_'),
-                Argument('JSHandleId', 'id'), Argument('unsigned', 'flags'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj_'),
+                Argument('JS::Handle<jsid>', 'id'), Argument('unsigned', 'flags'),
                 Argument('JS::MutableHandle<JSObject*>', 'objp')]
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
@@ -5343,7 +5343,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         self.attr = attr
         name = 'get_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
-                 Argument('JSHandleObject', 'obj'),
+                 Argument('JS::Handle<JSObject*>', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
                  Argument('JSJitGetterCallArgs', 'args') ]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
@@ -5431,7 +5431,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         self.attr = attr
         name = 'set_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
-                 Argument('JSHandleObject', 'obj'),
+                 Argument('JS::Handle<JSObject*>', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
                  Argument('JSJitSetterCallArgs', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
@@ -7789,8 +7789,12 @@ class CGDictionary(CGThing):
                        for m in self.memberInfo]
         if memberInits:
             body += (
-                "JS::Rooted<JS::Value> temp(cx);\n"
-                "bool isNull = val.isNullOrUndefined();\n")
+                "bool isNull = val.isNullOrUndefined();\n"
+                "// We only need |temp| if !isNull, in which case we have |cx|.\n"
+                "Maybe<JS::Rooted<JS::Value> > temp;\n"
+                "if (!isNull) {\n"
+                "  temp.construct(cx);\n"
+                "}\n")
             body += "\n\n".join(memberInits) + "\n"
 
         body += "return true;"
@@ -7959,8 +7963,8 @@ class CGDictionary(CGThing):
 
     def getMemberConversion(self, memberInfo):
         (member, conversionInfo) = memberInfo
-        replacements = { "val": "temp",
-                         "mutableVal": "&temp",
+        replacements = { "val": "temp.ref()",
+                         "mutableVal": "&temp.ref()",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
@@ -7971,16 +7975,16 @@ class CGDictionary(CGThing):
         if conversionInfo.dealWithOptional:
             replacements["declName"] = "(" + replacements["declName"] + ".Value())"
         if member.defaultValue:
-            replacements["haveValue"] = "!temp.isUndefined()"
+            replacements["haveValue"] = "!isNull && !temp.ref().isUndefined()"
 
         # NOTE: jsids are per-runtime, so don't use them in workers
         if self.workers:
             propName = member.identifier.name
-            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.address())' %
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.ref().address())' %
                        propName)
         else:
             propId = self.makeIdName(member.identifier.name);
-            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.address())" %
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.ref().address())" %
                        propId)
 
         conversionReplacements = {
@@ -7988,9 +7992,7 @@ class CGDictionary(CGThing):
             "convert": string.Template(conversionInfo.template).substitute(replacements),
             "propGet": propGet
             }
-        conversion = ("if (isNull) {\n"
-                      "  temp.setUndefined();\n"
-                      "} else if (!${propGet}) {\n"
+        conversion = ("if (!isNull && !${propGet}) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
@@ -7998,7 +8000,7 @@ class CGDictionary(CGThing):
                 "${convert}")
         else:
             conversion += (
-                "if (!temp.isUndefined()) {\n"
+                "if (!isNull && !temp.ref().isUndefined()) {\n"
                 "  ${prop}.Construct();\n"
                 "${convert}\n"
                 "}")
@@ -8017,7 +8019,7 @@ class CGDictionary(CGThing):
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
-            memberData = "%s.Value()" % memberLoc
+            memberData = "%s.InternalValue()" % memberLoc
 
         if self.workers:
             propDef = (

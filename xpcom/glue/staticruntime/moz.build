@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'nsStringAPI.cpp',
 ]
 
+LIBRARY_NAME = 'xpcomglue_staticruntime_s'
+

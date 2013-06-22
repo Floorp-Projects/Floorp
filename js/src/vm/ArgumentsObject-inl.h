@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ArgumentsObject_inl_h___
-#define ArgumentsObject_inl_h___
+#ifndef vm_ArgumentsObject_inl_h
+#define vm_ArgumentsObject_inl_h
 
 #include "vm/ArgumentsObject.h"
 
@@ -17,7 +17,7 @@ inline uint32_t
 ArgumentsObject::initialLength() const
 {
     uint32_t argc = uint32_t(getFixedSlot(INITIAL_LENGTH_SLOT).toInt32()) >> PACKED_BITS_COUNT;
-    JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(argc <= ARGS_LENGTH_MAX);
     return argc;
 }
 
@@ -161,4 +161,4 @@ NormalArgumentsObject::clearCallee()
 
 } /* namespace js */
 
-#endif /* ArgumentsObject_inl_h___ */
+#endif /* vm_ArgumentsObject_inl_h */

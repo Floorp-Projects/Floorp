@@ -1400,10 +1400,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!module_->addHeapAccesses(gen.heapAccesses()))
             return false;
 #endif
-        for (unsigned i = 0; i < gen.globalAccesses().length(); i++) {
-            if (!globalAccesses_.append(gen.globalAccesses()[i]))
-                return false;
-        }
+        if (!globalAccesses_.append(gen.globalAccesses()))
+            return false;
         return true;
     }
     bool addGlobalAccess(AsmJSGlobalAccess access) {
@@ -1486,9 +1484,11 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     void buildCompilationTimeReport(ScopedJSFreePtr<char> *out) {
-        int64_t usecAfter = PRMJ_Now();
-        int msTotal = (usecAfter - usecBefore_) / PRMJ_USEC_PER_MSEC;
+        int msTotal = 0;
         ScopedJSFreePtr<char> slowFuns;
+#ifndef JS_MORE_DETERMINISTIC
+        int64_t usecAfter = PRMJ_Now();
+        msTotal = (usecAfter - usecBefore_) / PRMJ_USEC_PER_MSEC;
         if (!slowFunctions_.empty()) {
             slowFuns.reset(JS_smprintf("; %d functions compiled slowly: ", slowFunctions_.length()));
             if (!slowFuns)
@@ -1505,6 +1505,7 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
+#endif
         out->reset(JS_smprintf("total compilation time %dms%s",
                                msTotal, slowFuns ? slowFuns.get() : ""));
     }
@@ -6241,7 +6242,7 @@ IsMaybeWrappedNativeFunction(const Value &v, Native native)
     if (!obj)
         return false;
 
-    return obj->isFunction() && obj->toFunction()->maybeNative() == native;
+    return obj->is<JSFunction>() && obj->as<JSFunction>().maybeNative() == native;
 }
 
 JSBool

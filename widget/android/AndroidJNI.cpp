@@ -91,20 +91,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    const jchar *observerKey = jenv->GetStringChars(jObserverKey, NULL);
-    nsString sObserverKey(observerKey);
-    sObserverKey.SetLength(jenv->GetStringLength(jObserverKey));
-    jenv->ReleaseStringChars(jObserverKey, observerKey);
-
-    nsAppShell::gAppShell->RemoveObserver(sObserverKey);
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstring jStackTrace)
 {
 #ifdef MOZ_CRASHREPORTER
@@ -956,7 +942,8 @@ Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
     const char *NATIVE_STACK_FEATURES[] = {"leaf", "threads", "privacy"};
     // Buffer one sample and let the profiler wait a long time
     profiler_start(100, 10000, NATIVE_STACK_FEATURES,
-        sizeof(NATIVE_STACK_FEATURES) / sizeof(char*));
+        sizeof(NATIVE_STACK_FEATURES) / sizeof(char*),
+        NULL, 0);
     return JNI_TRUE;
 }
 

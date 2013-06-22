@@ -1410,13 +1410,6 @@
             b._fastFind = this.fastFind;
             b.droppedLinkHandler = handleDroppedLink;
 
-            // Dispatch a new tab notification.  We do this once we're
-            // entirely done, so that things are in a consistent state
-            // even if the event listener opens or closes tabs.
-            var evt = document.createEvent("Events");
-            evt.initEvent("TabOpen", true, false);
-            t.dispatchEvent(evt);
-
             // If we just created a new tab that loads the default
             // newtab url, swap in a preloaded page if possible.
             // Do nothing if we're a private window.
@@ -1425,6 +1418,13 @@
                 !PrivateBrowsingUtils.isWindowPrivate(window)) {
               docShellsSwapped = gBrowserNewTabPreloader.newTab(t);
             }
+
+            // Dispatch a new tab notification.  We do this once we're
+            // entirely done, so that things are in a consistent state
+            // even if the event listener opens or closes tabs.
+            var evt = document.createEvent("Events");
+            evt.initEvent("TabOpen", true, false);
+            t.dispatchEvent(evt);
 
             // If we didn't swap docShells with a preloaded browser
             // then let's just continue loading the page normally.

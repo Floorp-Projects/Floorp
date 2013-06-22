@@ -117,7 +117,7 @@ $(ANDROID_APK_NAME).ap_: AndroidManifest.xml $(TESTPATH)/assets/*
 
 $(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
 	cp $< $@
-	$(ZIP) -v0 $@ classes.dex
+	$(ZIP) -0 $@ classes.dex
 
 $(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
 	cp $< $@

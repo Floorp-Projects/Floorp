@@ -342,31 +342,6 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
     return handler->new_<BinaryNode>(kind, op, left, right);
 }
 
-inline void
-NameNode::initCommon(ParseContext<FullParseHandler> *pc)
-{
-    pn_expr = NULL;
-    pn_cookie.makeFree();
-    pn_dflags = (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
-                ? PND_BLOCKCHILD
-                : 0;
-    pn_blockid = pc->blockid();
-}
-
-// Note: the parse context passed into this may not equal the associated
-// parser's current context.
-NameNode *
-NameNode::create(ParseNodeKind kind, JSAtom *atom, FullParseHandler *handler,
-                 ParseContext<FullParseHandler> *pc)
-{
-    ParseNode *pn = ParseNode::create(kind, PN_NAME, handler);
-    if (pn) {
-        pn->pn_atom = atom;
-        ((NameNode *)pn)->initCommon(pc);
-    }
-    return (NameNode *)pn;
-}
-
 const char *
 Definition::kindString(Kind kind)
 {
@@ -776,7 +751,7 @@ ObjectBox::ObjectBox(JSObject *object, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(!object->isFunction());
+    JS_ASSERT(!object->is<JSFunction>());
 }
 
 ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
@@ -784,7 +759,7 @@ ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(object->isFunction());
+    JS_ASSERT(object->is<JSFunction>());
     JS_ASSERT(asFunctionBox()->function() == function);
 }
 

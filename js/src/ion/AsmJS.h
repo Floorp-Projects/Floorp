@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_asmjs_h__
-#define jsion_asmjs_h__
+#ifndef ion_AsmJS_h
+#define ion_AsmJS_h
 
 #ifdef XP_MACOSX
 # include <pthread.h>
@@ -185,4 +185,4 @@ IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp);
 
 } // namespace js
 
-#endif // jsion_asmjs_h__
+#endif /* ion_AsmJS_h */

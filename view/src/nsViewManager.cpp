@@ -629,7 +629,9 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget)
 {
   if (aWidget) {
     nsView* view = nsView::GetViewFor(aWidget);
-    if (view && view->ForcedRepaint()) {
+    LayerManager *manager = aWidget->GetLayerManager();
+    if (view &&
+        (view->ForcedRepaint() || !manager->NeedsWidgetInvalidation())) {
       ProcessPendingUpdates();
       // Re-get the view pointer here since the ProcessPendingUpdates might have
       // destroyed it during CallWillPaintOnObservers.

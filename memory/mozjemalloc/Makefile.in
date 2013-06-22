@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 ifndef MOZ_JEMALLOC3
 DISABLED_CSRCS = jemalloc.c
 
-LIBRARY_NAME = jemalloc
 FORCE_STATIC_LIB= 1
 
 ifeq ($(OS_ARCH),SunOS)

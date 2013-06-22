@@ -17,7 +17,6 @@ EXPORTS += [
     'jpeglib.h',
 ]
 
-
 if CONFIG['LIBJPEG_TURBO_X64_ASM']:
     ASFILES += [
         'simd/jccolss2-64.asm',
@@ -127,7 +126,6 @@ CSRCS += [
     'jctrans.c',
 ]
 
-
 if CONFIG['LIBJPEG_TURBO_ARM_ASM']:
     CSRCS += [
         'simd/jsimd_arm.c',
@@ -144,3 +142,6 @@ else: # No SIMD support?
     CSRCS += [
         'jsimd_none.c',
     ]
+
+LIBRARY_NAME = 'mozjpeg'
+

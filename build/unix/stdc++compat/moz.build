@@ -11,3 +11,6 @@ CPP_SOURCES += [
 ]
 
 HOST_LIBRARY_NAME = 'host_stdc++compat'
+
+LIBRARY_NAME = 'stdc++compat'
+

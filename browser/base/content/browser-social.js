@@ -112,7 +112,7 @@ SocialUI = {
           break;
         case "social:profile-changed":
           if (this._matchesCurrentProvider(data)) {
-            SocialToolbar.updateProfile();
+            SocialToolbar.updateProvider();
             SocialMark.update();
             SocialChatBar.update();
           }
@@ -324,7 +324,10 @@ SocialUI = {
   get _chromeless() {
     // Is this a popup window that doesn't want chrome shown?
     let docElem = document.documentElement;
-    let chromeless = docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
+    // extrachrome is not restored during session restore, so we need
+    // to check for the toolbar as well.
+    let chromeless = docElem.getAttribute("chromehidden").contains("extrachrome") ||
+                     docElem.getAttribute('chromehidden').contains("toolbar");
     // This property is "fixed" for a window, so avoid doing the check above
     // multiple times...
     delete this._chromeless;
@@ -1073,7 +1076,6 @@ SocialToolbar = {
     userDetailsBroadcaster.setAttribute("label", loggedInStatusValue);
   },
 
-  // XXX doesn't this need to be called for profile changes, given its use of provider.profile?
   updateButton: function SocialToolbar_updateButton() {
     this._updateButtonHiddenState();
     let panel = document.getElementById("social-notification-panel");

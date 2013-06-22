@@ -517,8 +517,8 @@ MacroAssembler::parNewGCThing(const Register &result,
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
 
     // Load the allocator:
-    // tempReg1 = (Allocator*) forkJoinSlice->allocator
-    loadPtr(Address(threadContextReg, offsetof(js::ForkJoinSlice, allocator)),
+    // tempReg1 = (Allocator*) forkJoinSlice->allocator()
+    loadPtr(Address(threadContextReg, ThreadSafeContext::offsetOfAllocator()),
             tempReg1);
 
     // Get a pointer to the relevant free list:

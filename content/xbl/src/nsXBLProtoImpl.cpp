@@ -68,6 +68,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // This function also has the side effect of building up the prototype implementation if it has
   // not been built already.
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  JSAutoRequest ar(context->GetNativeContext());
   JS::Rooted<JSObject*> targetClassObject(context->GetNativeContext(), nullptr);
   bool targetObjectIsNew = false;
   nsresult rv = InitTargetObjects(aPrototypeBinding, context,

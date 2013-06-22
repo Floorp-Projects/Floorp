@@ -32,3 +32,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
         CPP_SOURCES += [
             'mmx_optimized.cpp',
         ]
+
+LIBRARY_NAME = 'soundtouch'
+

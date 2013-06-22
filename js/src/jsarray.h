@@ -6,8 +6,8 @@
 
 /* JS Array interface. */
 
-#ifndef jsarray_h___
-#define jsarray_h___
+#ifndef jsarray_h
+#define jsarray_h
 
 #include "jspubtd.h"
 #include "jsobj.h"
@@ -146,4 +146,4 @@ js_NewbornArrayPush(JSContext *cx, js::HandleObject obj, const js::Value &v);
 JSBool
 js_Array(JSContext *cx, unsigned argc, js::Value *vp);
 
-#endif /* jsarray_h___ */
+#endif /* jsarray_h */

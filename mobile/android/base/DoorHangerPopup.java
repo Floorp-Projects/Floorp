@@ -6,67 +6,39 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.widget.ArrowPopup;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 
 import java.util.HashSet;
 
-public class DoorHangerPopup extends PopupWindow
+public class DoorHangerPopup extends ArrowPopup
                              implements GeckoEventListener, Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoDoorHangerPopup";
-
-    private GeckoApp mActivity;
-    private View mAnchor;
-    private LinearLayout mContent;
-
-    private boolean mInflated; 
-    private ImageView mArrow;
-    private int mArrowWidth;
-    private int mYOffset;
 
     // Stores a set of all active DoorHanger notifications. A DoorHanger is
     // uniquely identified by its tabId and value.
     private HashSet<DoorHanger> mDoorHangers;
 
     DoorHangerPopup(GeckoApp aActivity, View aAnchor) {
-        super(aActivity);
-        mActivity = aActivity;
-        mAnchor = aAnchor;
+        super(aActivity, aAnchor);
 
-        mInflated = false;
-        mArrowWidth = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        mYOffset = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_offset);
         mDoorHangers = new HashSet<DoorHanger>();
 
         registerEventListener("Doorhanger:Add");
         registerEventListener("Doorhanger:Remove");
         Tabs.registerOnTabsChangedListener(this);
-
-        setAnimationStyle(R.style.PopupAnimation);
     }
 
     void destroy() {
         unregisterEventListener("Doorhanger:Add");
         unregisterEventListener("Doorhanger:Remove");
         Tabs.unregisterOnTabsChangedListener(this);
-    }
-
-    void setAnchor(View aAnchor) {
-        mAnchor = aAnchor;
     }
 
     @Override
@@ -139,21 +111,6 @@ public class DoorHangerPopup extends PopupWindow
                 updatePopup();
                 break;
         }
-    }
-
-    private void init() {
-        setBackgroundDrawable(new BitmapDrawable());
-        setOutsideTouchable(true);
-        setWindowLayoutMode(HardwareUtils.isTablet() ? ViewGroup.LayoutParams.WRAP_CONTENT : ViewGroup.LayoutParams.FILL_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        LayoutInflater inflater = LayoutInflater.from(mActivity);
-        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.doorhangerpopup, null);
-        mArrow = (ImageView) layout.findViewById(R.id.doorhanger_arrow);
-        mContent = (LinearLayout) layout.findViewById(R.id.doorhanger_container);
-        
-        setContentView(layout);
-        mInflated = true;
     }
 
     /**
@@ -269,10 +226,6 @@ public class DoorHangerPopup extends PopupWindow
             return;
         }
 
-        int[] anchorLocation = new int[2];
-        if (mAnchor != null)
-            mAnchor.getLocationInWindow(anchorLocation);
-
         // Make the popup focusable for accessibility. This gets done here
         // so the node can be accessibility focused, but on pre-ICS devices this
         // causes crashes, so it is done after the popup is shown.
@@ -280,18 +233,7 @@ public class DoorHangerPopup extends PopupWindow
             setFocusable(true);
         }
 
-        // If there's no anchor or the anchor is out of the window bounds,
-        // just show the popup at the top of the gecko app view.
-        if (mAnchor == null || anchorLocation[1] < 0) {
-            showAtLocation(mActivity.getView(), Gravity.TOP, 0, 0);
-        } else {
-            // On tablets, we need to position the popup so that the center of the arrow points to the
-            // center of the anchor view. On phones the popup stretches across the entire screen, so the
-            // arrow position is determined by its left margin.
-            int offset = HardwareUtils.isTablet() ? mAnchor.getWidth()/2 - mArrowWidth/2 -
-                         ((RelativeLayout.LayoutParams) mArrow.getLayoutParams()).leftMargin : 0;
-            showAsDropDown(mAnchor, offset, -mYOffset);
-        }
+        show();
 
         if (Build.VERSION.SDK_INT < 14) {
             // Make the popup focusable for keyboard accessibility.

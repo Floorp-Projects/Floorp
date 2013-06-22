@@ -76,9 +76,9 @@
       var columnCount = treeBoxObject.columns.count;
 
       for (var idx = 0; idx < columnCount; idx++)
-        accTreeForColumns.children.push({ role: ROLE_COLUMNHEADER, children: []});
+        accTreeForColumns.children.push({ COLUMNHEADER: [ ] });
       if (!aTree.hasAttribute("hidecolumnpicker"))
-        accTreeForColumns.children.push({ role: ROLE_PUSHBUTTON, children: []});
+        accTreeForColumns.children.push({ PUSHBUTTON: [ { MENUPOPUP: [] } ] });
 
       for (var idx = 0; idx < view.rowCount; idx++)
         accTreeForTree.children.push(getTreeItemAccTree(aRole, columnCount));

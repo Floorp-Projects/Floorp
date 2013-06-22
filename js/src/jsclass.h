@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsclass_h__
-#define jsclass_h__
+#ifndef jsclass_h
+#define jsclass_h
 /*
  * A JSClass acts as a vtable for JS objects that allows JSAPI clients to
  * control various aspects of the behavior of an object like property lookup.
@@ -387,7 +387,7 @@ IsPoisonedSpecialId(js::SpecialId iden)
     return false;
 }
 
-template <> struct RootMethods<SpecialId>
+template <> struct GCMethods<SpecialId>
 {
     static SpecialId initial() { return SpecialId(); }
     static ThingRootKind kind() { return THING_ROOT_ID; }
@@ -396,4 +396,4 @@ template <> struct RootMethods<SpecialId>
 
 }  /* namespace js */
 
-#endif  /* jsclass_h__ */
+#endif  /* jsclass_h */

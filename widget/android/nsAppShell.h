@@ -47,8 +47,6 @@ public:
     void OnResume();
 
     nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
-    void CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData);
-    void RemoveObserver(const nsAString &aObserverKey);
     void ResendLastResizeEvent(nsWindow* aDest);
 
     void SetBrowserApp(nsIAndroidBrowserApp* aBrowserApp) {

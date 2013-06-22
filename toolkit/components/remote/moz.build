@@ -24,3 +24,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CPP_SOURCES += [
         'nsQtRemoteService.cpp',
     ]
+
+LIBRARY_NAME = 'remoteservice'
+

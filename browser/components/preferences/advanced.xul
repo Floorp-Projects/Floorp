@@ -113,6 +113,7 @@
     <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
 #endif
+    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 
     <script type="application/javascript" src="chrome://browser/content/preferences/advanced.js"/>
 
@@ -357,9 +358,10 @@
               </hbox>
 #endif
 #endif
-              <radio value="auto"
-                     label="&updateAuto.label;"
-                     accesskey="&updateAuto.accesskey;"/>
+              <radio id="autoDesktop"
+                     value="auto"
+                     label="&updateAuto1.label;"
+                     accesskey="&updateAuto1.accesskey;"/>
               <hbox class="indent">
                 <checkbox id="warnIncompatible"
                           label="&updateAutoAddonWarn.label;"

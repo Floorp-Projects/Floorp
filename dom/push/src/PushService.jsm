@@ -460,6 +460,8 @@ this.PushService = {
     prefs.observe("serverURL", this);
     // Used to monitor if the user wishes to disable Push.
     prefs.observe("connection.enabled", this);
+
+    this._started = true;
   },
 
   _shutdownWS: function() {

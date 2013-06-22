@@ -375,7 +375,7 @@ INNER_MAKE_PACKAGE	= \
     $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(OMNIJAR_NAME)) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
   cp $(_ABS_DIST)/gecko.ap_ $(_ABS_DIST)/gecko.apk && \
-  $(ZIP) -vj0 $(_ABS_DIST)/gecko.apk $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
+  $(ZIP) -j0 $(_ABS_DIST)/gecko.apk $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
   cp $(_ABS_DIST)/gecko.apk $(_ABS_DIST)/gecko-unsigned-unaligned.apk && \
   $(RELEASE_JARSIGNER) $(_ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsopcode_h___
-#define jsopcode_h___
+#ifndef jsopcode_h
+#define jsopcode_h
 
 /*
  * JS bytecode definitions.
@@ -686,4 +686,4 @@ DumpIonScriptCounts(js::Sprinter *sp, ion::IonScriptCounts *ionCounts);
 
 #endif
 
-#endif /* jsopcode_h___ */
+#endif /* jsopcode_h */

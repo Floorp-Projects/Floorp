@@ -238,6 +238,7 @@ static uint32_t gValidateOrigin = 0xffffffff;
 // Hint for native dispatch of events on how long to delay after 
 // all documents have loaded in milliseconds before favoring normal
 // native event dispatch priorites over performance
+// Can be overridden with docshell.event_starvation_delay_hint pref.
 #define NS_EVENT_STARVATION_DELAY_HINT 2000
 
 #ifdef PR_LOGGING
@@ -251,11 +252,14 @@ const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 const char kAppstringsBundleURL[] = "chrome://global/locale/appstrings.properties";
 
 static void
-FavorPerformanceHint(bool perfOverStarvation, uint32_t starvationDelay)
+FavorPerformanceHint(bool perfOverStarvation)
 {
     nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-    if (appShell)
-        appShell->FavorPerformanceHint(perfOverStarvation, starvationDelay);
+    if (appShell) {
+        appShell->FavorPerformanceHint(perfOverStarvation,
+                                       Preferences::GetUint("docshell.event_starvation_delay_hint",
+                                                            NS_EVENT_STARVATION_DELAY_HINT));
+    }
 }
 
 //*****************************************************************************
@@ -6672,7 +6676,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         // over performance
         if (--gNumberOfDocumentsLoading == 0) {
           // Hint to use normal native event dispatch priorities 
-          FavorPerformanceHint(false, NS_EVENT_STARVATION_DELAY_HINT);
+          FavorPerformanceHint(false);
         }
     }
     /* Check if the httpChannel has any cache-control related response headers,
@@ -7679,7 +7683,7 @@ nsDocShell::RestoreFromHistory()
     // Tell the event loop to favor plevents over user events, see comments
     // in CreateContentViewer.
     if (++gNumberOfDocumentsLoading == 1)
-        FavorPerformanceHint(true, NS_EVENT_STARVATION_DELAY_HINT);
+        FavorPerformanceHint(true);
 
 
     if (oldMUDV && newMUDV) {
@@ -8077,7 +8081,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
       // Hint to favor performance for the plevent notification mechanism.
       // We want the pages to load as fast as possible even if its means 
       // native messages might be starved.
-      FavorPerformanceHint(true, NS_EVENT_STARVATION_DELAY_HINT);
+      FavorPerformanceHint(true);
     }
 
     if (onLocationChangeNeeded) {
@@ -12149,7 +12153,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
 
   // XXX When the linking node was HTMLFormElement, it is synchronous event.
   //     That is, the caller of this method is not |OnLinkClickEvent::Run()|
-  //     but |nsHTMLFormElement::SubmitSubmission(...)|.
+  //     but |HTMLFormElement::SubmitSubmission(...)|.
   if (nsGkAtoms::form == aContent->Tag() && ShouldBlockLoadingForBackButton()) {
     return NS_OK;
   }

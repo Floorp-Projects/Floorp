@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsfun_h___
-#define jsfun_h___
+#ifndef jsfun_h
+#define jsfun_h
 /*
  * JS function definitions.
  */
@@ -19,11 +19,12 @@ namespace js { class FunctionExtended; }
 class JSFunction : public JSObject
 {
   public:
+    static js::Class class_;
+
     enum Flags {
         INTERPRETED      = 0x0001,  /* function has a JSScript and environment. */
         NATIVE_CTOR      = 0x0002,  /* native that can be called as a constructor */
         EXTENDED         = 0x0004,  /* structure is FunctionExtended */
-        HEAVYWEIGHT      = 0x0008,  /* activation requires a Call object */
         IS_FUN_PROTO     = 0x0010,  /* function is Function.prototype for some global object */
         EXPR_CLOSURE     = 0x0020,  /* expression closure: function(x) x*x */
         HAS_GUESSED_ATOM = 0x0040,  /* function had no explicit name, but a
@@ -80,11 +81,8 @@ class JSFunction : public JSObject
 
   public:
 
-    bool isHeavyweight() {
-        /* The heavyweight flag is not set until the script is parsed. */
-        JS_ASSERT(!isInterpretedLazy());
-        return flags & HEAVYWEIGHT;
-    }
+    /* Call objects must be created for each invocation of a heavyweight function. */
+    inline bool isHeavyweight() const;
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
     bool isInterpreted()            const { return flags & (INTERPRETED | INTERPRETED_LAZY); }
@@ -173,10 +171,6 @@ class JSFunction : public JSObject
         flags |= IS_FUN_PROTO;
     }
 
-    void setIsHeavyweight() {
-        flags |= HEAVYWEIGHT;
-    }
-
     // Can be called multiple times by the parser.
     void setIsExprClosure() {
         flags |= EXPR_CLOSURE;
@@ -221,7 +215,7 @@ class JSFunction : public JSObject
     //   use, but has extra checks, requires a cx and may trigger a GC.
     //
     // - For functions which may have a LazyScript but whose JSScript is known
-    //   to exist, getExistingScript() will get the script and delazify the
+    //   to exist, existingScript() will get the script and delazify the
     //   function if necessary.
     //
     // - For functions known to have a JSScript, nonLazyScript() will get it.
@@ -240,7 +234,7 @@ class JSFunction : public JSObject
         return u.i.s.script_;
     }
 
-    inline JSScript *getExistingScript();
+    inline JSScript *existingScript();
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
@@ -338,29 +332,7 @@ class JSFunction : public JSObject
         JS_ASSERT_IF(isTenured(), kind == tenuredGetAllocKind());
         return kind;
     }
-
-  private:
-    /*
-     * These member functions are inherited from JSObject, but should never be applied to
-     * a value statically known to be a JSFunction.
-     */
-    inline JSFunction *toFunction() MOZ_DELETE;
-    inline const JSFunction *toFunction() const MOZ_DELETE;
 };
-
-inline JSFunction *
-JSObject::toFunction()
-{
-    JS_ASSERT(JS_ObjectIsFunction(NULL, this));
-    return static_cast<JSFunction *>(this);
-}
-
-inline const JSFunction *
-JSObject::toFunction() const
-{
-    JS_ASSERT(JS_ObjectIsFunction(NULL, const_cast<JSObject *>(this)));
-    return static_cast<const JSFunction *>(this);
-}
 
 extern JSString *
 fun_toStringHelper(JSContext *cx, js::HandleObject obj, unsigned indent);
@@ -469,4 +441,4 @@ extern JSObject*
 js_fun_bind(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
             js::Value *boundArgs, unsigned argslen);
 
-#endif /* jsfun_h___ */
+#endif /* jsfun_h */

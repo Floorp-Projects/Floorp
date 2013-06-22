@@ -653,14 +653,23 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     bool isCall = js_CodeSpec[op].format & JOF_INVOKE;
     BaselineScript *baselineScript = script->baselineScript();
 
-    // For fun.apply({}, arguments) the reconstructStackDepth will be atleast 4,
-    // but it could be that we inlined the funapply. In that case exprStackSlots,
-    // will have the real arguments in the slots and not always be equal.
 #ifdef DEBUG
     uint32_t expectedDepth = js_ReconstructStackDepth(cx, script,
                                                       resumeAfter ? GetNextPc(pc) : pc);
-    JS_ASSERT_IF(op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter,
-                 exprStackSlots == expectedDepth);
+    if (op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter) {
+        if (op == JSOP_FUNCALL) {
+            // For fun.call(this, ...); the reconstructStackDepth will
+            // include the this. When inlining that is not included.
+            // So the exprStackSlots will be one less.
+            JS_ASSERT(expectedDepth - exprStackSlots <= 1);
+        } else {
+            // For fun.apply({}, arguments) the reconstructStackDepth will
+            // have stackdepth 4, but it could be that we inlined the
+            // funapply. In that case exprStackSlots, will have the real
+            // arguments in the slots and not be 4.
+            JS_ASSERT(exprStackSlots == expectedDepth);
+        }
+    }
 
     IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
@@ -873,6 +882,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     unsigned actualArgc = GET_ARGC(pc);
     if (op == JSOP_FUNAPPLY)
         actualArgc = blFrame->numActualArgs();
+    if (op == JSOP_FUNCALL) {
+        JS_ASSERT(actualArgc > 0);
+        actualArgc--;
+    }
 
     JS_ASSERT(actualArgc + 2 <= exprStackSlots);
     for (unsigned i = 0; i < actualArgc + 1; i++) {
@@ -900,8 +913,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     Value callee = *builder.valuePointerAtStackOffset(calleeOffset);
     IonSpew(IonSpew_BaselineBailouts, "      CalleeStackSlot=%d", (int) calleeStackSlot);
     IonSpew(IonSpew_BaselineBailouts, "      Callee = %016llx", *((uint64_t *) &callee));
-    JS_ASSERT(callee.isObject() && callee.toObject().isFunction());
-    JSFunction *calleeFun = callee.toObject().toFunction();
+    JS_ASSERT(callee.isObject() && callee.toObject().is<JSFunction>());
+    JSFunction *calleeFun = &callee.toObject().as<JSFunction>();
     if (!builder.writePtr(CalleeToToken(calleeFun), "CalleeToken"))
         return false;
     nextCallee.set(calleeFun);
@@ -1060,7 +1073,7 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     RootedFunction callee(cx, iter.maybeCallee());
     if (callee) {
         IonSpew(IonSpew_BaselineBailouts, "  Callee function (%s:%u)",
-                callee->getExistingScript()->filename(), callee->getExistingScript()->lineno);
+                callee->existingScript()->filename(), callee->existingScript()->lineno);
     } else {
         IonSpew(IonSpew_BaselineBailouts, "  No callee!");
     }
@@ -1098,7 +1111,7 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         caller = scr;
         callerPC = callPC;
         fun = nextCallee;
-        scr = fun->getExistingScript();
+        scr = fun->existingScript();
         snapIter.nextFrame();
 
         frameNo++;
@@ -1191,7 +1204,7 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     // Check that we can get the current script's PC.
 #ifdef DEBUG
     jsbytecode *pc;
-    cx->stack.currentScript(&pc);
+    cx->currentScript(&pc);
     IonSpew(IonSpew_BaselineBailouts, "  Got pc=%p", pc);
 #endif
 
@@ -1215,7 +1228,7 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     RootedScript innerScript(cx, NULL);
     RootedScript outerScript(cx, NULL);
 
-    JS_ASSERT(cx->mainThread().currentlyRunningInJit());
+    JS_ASSERT(cx->currentlyRunningInJit());
     IonFrameIterator iter(cx->mainThread().ionTop);
 
     uint32_t frameno = 0;

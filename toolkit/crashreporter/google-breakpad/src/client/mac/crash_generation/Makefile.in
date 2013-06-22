@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= crash_generation_s
 XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..

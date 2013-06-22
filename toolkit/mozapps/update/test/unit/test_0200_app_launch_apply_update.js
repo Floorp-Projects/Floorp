@@ -100,22 +100,22 @@ function run_test() {
   let mar = do_get_file("data/simple.mar");
   mar.copyTo(updatesPatchDir, FILE_UPDATE_ARCHIVE);
 
-  // Backup the updater.ini
+  // Backup the updater.ini file if it exists by moving it. This prevents the
+  // post update executable from being launched if it is specified.
   let updaterIni = processDir.clone();
   updaterIni.append(FILE_UPDATER_INI);
-  updaterIni.moveTo(processDir, FILE_UPDATER_INI_BAK);
-  // Create a new updater.ini to avoid applications that provide a post update
-  // executable.
-  let updaterIniContents = "[Strings]\n" +
-                           "Title=Update Test\n" +
-                           "Info=Application Update XPCShell Test - " +
-                           "test_0200_general.js\n";
-  updaterIni = processDir.clone();
-  updaterIni.append(FILE_UPDATER_INI);
-  writeFile(updaterIni, updaterIniContents);
+  if (updaterIni.exists()) {
+    updaterIni.moveTo(processDir, FILE_UPDATER_INI_BAK);
+  }
 
+  // Backup the updater-settings.ini file if it exists by moving it.
   let updateSettingsIni = processDir.clone();
-  updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(processDir, FILE_UPDATE_SETTINGS_INI_BAK);
+  }
+  updateSettingsIni = processDir.clone();
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   let launchBin = getLaunchBin();
@@ -152,10 +152,19 @@ function end_test() {
   resetEnvironment();
 
   let processDir = getCurrentProcessDir();
-  // Restore the backed up updater.ini
+  // Restore the backup of the updater.ini if it exists.
   let updaterIni = processDir.clone();
   updaterIni.append(FILE_UPDATER_INI_BAK);
-  updaterIni.moveTo(processDir, FILE_UPDATER_INI);
+  if (updaterIni.exists()) {
+    updaterIni.moveTo(processDir, FILE_UPDATER_INI);
+  }
+
+  // Restore the backed up updater-settings.ini if it exists.
+  let updateSettingsIni = processDir.clone();
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(processDir, FILE_UPDATE_SETTINGS_INI);
+  }
 
   if (IS_WIN) {
     // Remove the copy of the application executable used for the test on

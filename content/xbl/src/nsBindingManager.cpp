@@ -1172,7 +1172,8 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
 
       nsIDocument* doc = aContent->OwnerDoc();
 
-      nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
+      nsCOMPtr<nsIScriptGlobalObject> global =
+        do_QueryInterface(doc->GetWindow());
       if (!global)
         return NS_NOINTERFACE;
 

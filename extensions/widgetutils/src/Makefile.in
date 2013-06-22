@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 XPI_NAME	= widgetutils
-LIBRARY_NAME    = widgetutils
 SHORT_LIBNAME = widgetutils
 FORCE_SHARED_LIB = 1
 IS_COMPONENT = 1
