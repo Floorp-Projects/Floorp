@@ -69,9 +69,9 @@ function testScriptSearching() {
 }
 
 function doSearch() {
-  is(gSearchView._container._list.childNodes.length, 0,
+  is(gSearchView.widget._list.childNodes.length, 0,
     "The global search pane shouldn't have any child nodes yet.");
-  is(gSearchView._container._parent.hidden, true,
+  is(gSearchView.widget._parent.hidden, true,
     "The global search pane shouldn't be visible yet.");
   is(gSearchView._splitter.hidden, true,
     "The global search pane splitter shouldn't be visible yet.");
@@ -91,9 +91,9 @@ function doSearch() {
         is(gSources.visibleItems.length, 2,
           "Not all the scripts are shown after the global search.");
 
-        isnot(gSearchView._container._list.childNodes.length, 0,
+        isnot(gSearchView.widget._list.childNodes.length, 0,
           "The global search pane should be visible now.");
-        isnot(gSearchView._container._parent.hidden, true,
+        isnot(gSearchView.widget._parent.hidden, true,
           "The global search pane should be visible now.");
         isnot(gSearchView._splitter.hidden, true,
           "The global search pane splitter should be visible now.");
@@ -116,9 +116,9 @@ function testLocationChange()
     info("Still attached to the tab.");
 
     executeSoon(function() {
-      is(gSearchView._container._list.childNodes.length, 0,
+      is(gSearchView.widget._list.childNodes.length, 0,
         "The global search pane shouldn't have any child nodes after a page navigation.");
-      is(gSearchView._container._parent.hidden, true,
+      is(gSearchView.widget._parent.hidden, true,
         "The global search pane shouldn't be visible after a page navigation.");
       is(gSearchView._splitter.hidden, true,
         "The global search pane splitter shouldn't be visible after a page navigation.");

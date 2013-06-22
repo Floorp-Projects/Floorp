@@ -97,7 +97,7 @@ function testSelectLine() {
       });
     });
 
-    let frames = gDebugger.DebuggerView.StackFrames._container._list;
+    let frames = gDebugger.DebuggerView.StackFrames.widget._list;
     let childNodes = frames.childNodes;
 
     is(frames.querySelectorAll(".dbg-stackframe").length, 4,

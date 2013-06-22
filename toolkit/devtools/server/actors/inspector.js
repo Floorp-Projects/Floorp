@@ -52,6 +52,8 @@ const events = require("sdk/event/core");
 const { Unknown } = require("sdk/platform/xpcom");
 const { Class } = require("sdk/core/heritage");
 
+const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 exports.register = function(handle) {
@@ -125,20 +127,30 @@ var NodeActor = protocol.ActorClass({
   form: function(detail) {
     let parentNode = this.walker.parentNode(this);
 
+    // Estimate the number of children.
+    let numChildren = this.rawNode.childNodes.length;
+    if (numChildren === 0 &&
+        (this.rawNode.contentDocument || this.rawNode.getSVGDocument)) {
+      // This might be an iframe with virtual children.
+      numChildren = 1;
+    }
+
     let form = {
       actor: this.actorID,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.namespaceURI,
       nodeName: this.rawNode.nodeName,
-      numChildren: this.rawNode.childNodes.length,
+      numChildren: numChildren,
 
       // doctype attributes
       name: this.rawNode.name,
       publicId: this.rawNode.publicId,
       systemId: this.rawNode.systemId,
 
-      attrs: this.writeAttrs()
+      attrs: this.writeAttrs(),
+
+      pseudoClassLocks: this.writePseudoClassLocks(),
     };
 
     if (this.rawNode.ownerDocument &&
@@ -168,6 +180,20 @@ var NodeActor = protocol.ActorClass({
             for (attr of this.rawNode.attributes)];
   },
 
+  writePseudoClassLocks: function() {
+    if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+      return undefined;
+    }
+    let ret = undefined;
+    for (let pseudo of PSEUDO_CLASSES) {
+      if (DOMUtils.hasPseudoClassLock(this.rawNode, pseudo)) {
+        ret = ret || [];
+        ret.push(pseudo);
+      }
+    }
+    return ret;
+  },
+
   /**
    * Returns a LongStringActor with the node's value.
    */
@@ -189,6 +215,44 @@ var NodeActor = protocol.ActorClass({
     request: { value: Arg(0) },
     response: {}
   }),
+
+  /**
+   * Modify a node's attributes.  Passed an array of modifications
+   * similar in format to "attributes" mutations.
+   * {
+   *   attributeName: <string>
+   *   attributeNamespace: <optional string>
+   *   newValue: <optional string> - If null or undefined, the attribute
+   *     will be removed.
+   * }
+   *
+   * Returns when the modifications have been made.  Mutations will
+   * be queued for any changes made.
+   */
+  modifyAttributes: method(function(modifications) {
+    let rawNode = this.rawNode;
+    for (let change of modifications) {
+      if (change.newValue == null) {
+        if (change.attributeNamespace) {
+          rawNode.removeAttributeNS(change.attributeNamespace, change.attributeName);
+        } else {
+          rawNode.removeAttribute(change.attributeName);
+        }
+      } else {
+        if (change.attributeNamespace) {
+          rawNode.setAttributeNS(change.attributeNamespace, change.attributeName, change.newValue);
+        } else {
+          rawNode.setAttribute(change.attributeName, change.newValue);
+        }
+      }
+    }
+  }, {
+    request: {
+      modifications: Arg(0, "array:json")
+    },
+    response: {}
+  }),
+
 });
 
 /**
@@ -289,6 +353,8 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     } else if (change.type === "characterData") {
       this._form.shortValue = change.newValue;
       this._form.incompleteValue = change.incompleteValue;
+    } else if (change.type === "pseudoClassLock") {
+      this._form.pseudoClassLocks = change.pseudoClassLocks;
     }
   },
 
@@ -329,6 +395,11 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 
   get attributes() this._form.attrs,
 
+  get pseudoClassLocks() this._form.pseudoClassLocks || [],
+  hasPseudoClassLock: function(pseudo) {
+    return this.pseudoClassLocks.some(locked => locked === pseudo);
+  },
+
   getNodeValue: protocol.custom(function() {
     if (!this.incompleteValue) {
       return delayedResolve(new ShortLongString(this.shortValue));
@@ -338,6 +409,13 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   }, {
     impl: "_getNodeValue"
   }),
+
+  /**
+   * Return a new AttributeModificationList for this node.
+   */
+  startModifyingAttributes: function() {
+    return AttributeModificationList(this);
+  },
 
   _cacheAttributes: function() {
     if (typeof(this._attrMap) != "undefined") {
@@ -405,11 +483,14 @@ let NodeFront = protocol.FrontClass(NodeActor, {
    */
   rawNode: function(rawNode) {
     if (!this.conn._transport._serverConnection) {
-      throw new Error("Tried to use rawNode on a remote connection.");
+      console.warn("Tried to use rawNode on a remote connection.");
+      return null;
     }
     let actor = this.conn._transport._serverConnection.getActor(this.actorID);
     if (!actor) {
-      throw new Error("Could not find client side for actor " + this.actorID);
+      // Can happen if we try to get the raw node for an already-expired
+      // actor.
+      return null;
     }
     return actor.rawNode;
   }
@@ -645,6 +726,7 @@ var WalkerActor = protocol.ActorClass({
     this.rootDoc = document;
     this._refMap = new Map();
     this._pendingMutations = [];
+    this._activePseudoClassLocks = new Set();
 
     // Nodes which have been removed from the client's known
     // ownership tree are considered "orphaned", and stored in
@@ -683,15 +765,21 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
-    protocol.Actor.prototype.destroy.call(this);
+    this.clearPseudoClassLocks();
+    this._activePseudoClassLocks = null;
     this.progressListener.destroy();
     this.rootDoc = null;
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   release: method(function() {}, { release: true }),
 
   unmanage: function(actor) {
     if (actor instanceof NodeActor) {
+      if (this._activePseudoClassLocks &&
+          this._activePseudoClassLocks.has(actor)) {
+        this.clearPsuedoClassLocks(actor);
+      }
       this._refMap.delete(actor.rawNode);
     }
     protocol.Actor.prototype.unmanage.call(this, actor);
@@ -1141,6 +1229,159 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   /**
+   * Add a pseudo-class lock to a node.
+   *
+   * @param NodeActor node
+   * @param string pseudo
+   *    A pseudoclass: ':hover', ':active', ':focus'
+   * @param options
+   *    Options object:
+   *    `parents`: True if the pseudo-class should be added
+   *      to parent nodes.
+   *
+   * @returns An empty packet.  A "pseudoClassLock" mutation will
+   *    be queued for any changed nodes.
+   */
+  addPseudoClassLock: method(function(node, pseudo, options={}) {
+    this._addPseudoClassLock(node, pseudo);
+
+    if (!options.parents) {
+      return;
+    }
+
+    let walker = documentWalker(node.rawNode);
+    let cur;
+    while ((cur = walker.parentNode())) {
+      let curNode = this._ref(cur);
+      this._addPseudoClassLock(curNode, pseudo);
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      pseudoClass: Arg(1),
+      parents: Option(2)
+    },
+    response: {}
+  }),
+
+  _queuePseudoClassMutation: function(node) {
+    this.queueMutation({
+      target: node.actorID,
+      type: "pseudoClassLock",
+      pseudoClassLocks: node.writePseudoClassLocks()
+    });
+  },
+
+  _addPseudoClassLock: function(node, pseudo) {
+    if (node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+      return false;
+    }
+    DOMUtils.addPseudoClassLock(node.rawNode, pseudo);
+    this._activePseudoClassLocks.add(node);
+    this._queuePseudoClassMutation(node);
+    return true;
+  },
+
+  /**
+   * Remove a pseudo-class lock from a node.
+   *
+   * @param NodeActor node
+   * @param string pseudo
+   *    A pseudoclass: ':hover', ':active', ':focus'
+   * @param options
+   *    Options object:
+   *    `parents`: True if the pseudo-class should be removed
+   *      from parent nodes.
+   *
+   * @returns An empty response.  "pseudoClassLock" mutations
+   *    will be emitted for any changed nodes.
+   */
+  removePseudoClassLock: method(function(node, pseudo, options={}) {
+    this._removePseudoClassLock(node, pseudo);
+
+    if (!options.parents) {
+      return;
+    }
+
+    let walker = documentWalker(node.rawNode);
+    let cur;
+    while ((cur = walker.parentNode())) {
+      let curNode = this._ref(cur);
+      this._removePseudoClassLock(curNode, pseudo);
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      pseudoClass: Arg(1),
+      parents: Option(2)
+    },
+    response: {}
+  }),
+
+  _removePseudoClassLock: function(node, pseudo) {
+    if (node.rawNode.nodeType != Ci.nsIDOMNode.ELEMENT_NODE) {
+      return false;
+    }
+    DOMUtils.removePseudoClassLock(node.rawNode, pseudo);
+    if (!node.writePseudoClassLocks()) {
+      this._activePseudoClassLocks.delete(node);
+    }
+    this._queuePseudoClassMutation(node);
+    return true;
+  },
+
+  /**
+   * Clear all the pseudo-classes on a given node
+   * or all nodes.
+   */
+  clearPseudoClassLocks: method(function(node) {
+    if (node) {
+      DOMUtils.clearPseudoClassLocks(node.rawNode);
+      this._activePseudoClassLocks.delete(node);
+      this._queuePseudoClassMutation(node);
+    } else {
+      for (let locked of this._activePseudoClassLocks) {
+        DOMUtils.clearPseudoClassLocks(locked.rawNode);
+        this._activePseudoClassLocks.delete(locked);
+        this._queuePseudoClassMutation(locked);
+      }
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode", { optional: true }),
+    },
+    response: {}
+  }),
+
+  /**
+   * Get a node's innerHTML property.
+   */
+  innerHTML: method(function(node) {
+    return LongStringActor(this.conn, node.rawNode.innerHTML);
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    },
+    response: {
+      value: RetVal("longstring")
+    }
+  }),
+
+  /**
+   * Get a node's outerHTML property.
+   */
+  outerHTML: method(function(node) {
+    return LongStringActor(this.conn, node.rawNode.outerHTML);
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    },
+    response: {
+      value: RetVal("longstring")
+    }
+  }),
+
+  /**
    * Get any pending mutation records.  Must be called by the client after
    * the `new-mutations` notification is received.  Returns an array of
    * mutation records.
@@ -1299,9 +1540,15 @@ var WalkerActor = protocol.ActorClass({
     this.queueMutation({
       type: "frameLoad",
       target: frameActor.actorID,
+    });
+
+    // Send a childList mutation on the frame.
+    this.queueMutation({
+      type: "childList",
+      target: frameActor.actorID,
       added: [],
       removed: []
-    });
+    })
   },
 
   // Returns true if domNode is in window or a subframe.
@@ -1349,6 +1596,19 @@ var WalkerActor = protocol.ActorClass({
       type: "documentUnload",
       target: documentActor.actorID
     });
+
+    let walker = documentWalker(doc);
+    let parentNode = walker.parentNode();
+    if (parentNode) {
+      // Send a childList mutation on the frame so that clients know
+      // they should reread the children list.
+      this.queueMutation({
+        type: "childList",
+        target: this._refMap.get(parentNode).actorID,
+        added: [],
+        removed: []
+      });
+    }
 
     // Need to force a release of this node, because those nodes can't
     // be accessed anymore.
@@ -1542,6 +1802,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
           // We try to give fronts instead of actorIDs, but these fronts need
           // to be destroyed now.
           emittedMutation.target = targetFront.actorID;
+          emittedMutation.targetParent = targetFront.parentNode();
 
           // Release the document node and all of its children, even retained.
           this._releaseFront(targetFront, true);
@@ -1583,11 +1844,16 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     this.getMutations({cleanup: this.autoCleanup}).then(null, console.error);
   }),
 
+  isLocal: function() {
+    return !!this.conn._transport._serverConnection;
+  },
+
   // XXX hack during transition to remote inspector: get a proper NodeFront
   // for a given local node.  Only works locally.
   frontForRawNode: function(rawNode){
-    if (!this.conn._transport._serverConnection) {
-      throw Error("Tried to use frontForRawNode on a remote connection.");
+    if (!this.isLocal()) {
+      console.warn("Tried to use frontForRawNode on a remote connection.");
+      return null;
     }
     let walkerActor = this.conn._transport._serverConnection.getActor(this.actorID);
     if (!walkerActor) {
@@ -1612,6 +1878,47 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     return returnNode;
   }
 });
+
+/**
+ * Convenience API for building a list of attribute modifications
+ * for the `modifyAttributes` request.
+ */
+var AttributeModificationList = Class({
+  initialize: function(node) {
+    this.node = node;
+    this.modifications = [];
+  },
+
+  apply: function() {
+    let ret = this.node.modifyAttributes(this.modifications);
+    return ret;
+  },
+
+  destroy: function() {
+    this.node = null;
+    this.modification = null;
+  },
+
+  setAttributeNS: function(ns, name, value) {
+    this.modifications.push({
+      attributeNamespace: ns,
+      attributeName: name,
+      newValue: value
+    });
+  },
+
+  setAttribute: function(name, value) {
+    this.setAttributeNS(undefined, name, value);
+  },
+
+  removeAttributeNS: function(ns, name) {
+    this.setAttributeNS(ns, name, undefined);
+  },
+
+  removeAttribute: function(name) {
+    this.setAttributeNS(undefined, name, undefined);
+  }
+})
 
 /**
  * Server side of the inspector actor, which is used to create

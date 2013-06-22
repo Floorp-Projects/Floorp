@@ -48,7 +48,7 @@ function test()
 }
 
 function testSimpleCall() {
-  var frames = gDebugger.DebuggerView.StackFrames._container._list,
+  var frames = gDebugger.DebuggerView.StackFrames.widget._list,
       childNodes = frames.childNodes;
 
   is(gDebugger.DebuggerController.activeThread.state, "paused",
@@ -85,7 +85,7 @@ function testLocationChange()
         is(gDebugger.editor.getText().length, 0,
           "The source editor not have any text displayed.");
 
-        let menulist = gDebugger.DebuggerView.Sources._container;
+        let menulist = gDebugger.DebuggerView.Sources.widget;
         let noScripts = gDebugger.L10N.getStr("noSourcesText");
         is(menulist.getAttribute("label"), noScripts,
           "The menulist should display a notice that there are no scripts availalble.");

@@ -647,11 +647,15 @@ add_task(function test_data_submission_success() {
 
     let now = new Date();
     let request = new DataSubmissionRequest(deferred, now);
+    reporter._state.addRemoteID("foo");
     reporter.requestDataUpload(request);
     yield deferred.promise;
     do_check_eq(request.state, request.SUBMISSION_SUCCESS);
     do_check_true(reporter.lastPingDate.getTime() > 0);
     do_check_true(reporter.haveRemoteData());
+    for (let remoteID of reporter._state.remoteIDs) {
+      do_check_neq(remoteID, "foo");
+    }
 
     // Ensure data from providers made it to payload.
     let o = yield reporter.getJSONPayload(true);
@@ -660,7 +664,7 @@ add_task(function test_data_submission_success() {
 
     let data = yield getHealthReportProviderValues(reporter, now);
     do_check_eq(data._v, 1);
-    do_check_eq(data.firstDocumentUploadAttempt, 1);
+    do_check_eq(data.continuationUploadAttempt, 1);
     do_check_eq(data.uploadSuccess, 1);
     do_check_eq(Object.keys(data).length, 3);
 
@@ -1009,36 +1013,39 @@ add_task(function test_state_invalid_json() {
 
 add_task(function test_state_multiple_remote_ids() {
   let [reporter, server] = yield getReporterAndServer("state_multiple_remote_ids");
-
+  let documents = [
+    [reporter.serverNamespace, "one", "{v:1}"],
+    [reporter.serverNamespace, "two", "{v:2}"],
+  ];
   let now = new Date(Date.now() - 5000);
 
-  server.setDocument(reporter.serverNamespace, "id1", "foo");
-  server.setDocument(reporter.serverNamespace, "id2", "bar");
-
   try {
-    yield reporter._state.addRemoteID("id1");
-    yield reporter._state.addRemoteID("id2");
+    for (let [ns, id, payload] of documents) {
+      server.setDocument(ns, id, payload);
+      do_check_true(server.hasDocument(ns, id));
+      yield reporter._state.addRemoteID(id);
+      do_check_eq(reporter._state.remoteIDs.indexOf(id), reporter._state.remoteIDs.length - 1);
+    }
     yield reporter._state.setLastPingDate(now);
     do_check_eq(reporter._state.remoteIDs.length, 2);
-    do_check_eq(reporter._state.remoteIDs[0], "id1");
-    do_check_eq(reporter._state.remoteIDs[1], "id2");
-    do_check_eq(reporter.lastSubmitID, "id1");
+    do_check_eq(reporter.lastSubmitID, documents[0][1]);
 
     let deferred = Promise.defer();
     let request = new DataSubmissionRequest(deferred, now);
     reporter.requestDataUpload(request);
     yield deferred.promise;
 
-    do_check_eq(reporter._state.remoteIDs.length, 2);
-    do_check_eq(reporter._state.remoteIDs[0], "id2");
+    do_check_eq(reporter._state.remoteIDs.length, 1);
+    for (let [,id,] of documents) {
+      do_check_eq(reporter._state.remoteIDs.indexOf(id), -1);
+      do_check_false(server.hasDocument(reporter.serverNamespace, id));
+    }
     do_check_true(reporter.lastPingDate.getTime() > now.getTime());
-    do_check_false(server.hasDocument(reporter.serverNamespace, "id1"));
-    do_check_true(server.hasDocument(reporter.serverNamespace, "id2"));
 
-    let o = CommonUtils.readJSON(reporter._state._filename);
-    do_check_eq(reporter._state.remoteIDs.length, 2);
-    do_check_eq(reporter._state.remoteIDs[0], "id2");
-    do_check_eq(reporter._state.remoteIDs[1], reporter._state.remoteIDs[1]);
+    let o = yield CommonUtils.readJSON(reporter._state._filename);
+    do_check_eq(o.remoteIDs.length, 1);
+    do_check_eq(o.remoteIDs[0], reporter._state.remoteIDs[0]);
+    do_check_eq(o.lastPingTime, reporter.lastPingDate.getTime());
   } finally {
     yield shutdownServer(server);
     reporter._shutdown();
@@ -1076,4 +1083,3 @@ add_task(function test_state_downgrade_upgrade() {
     reporter._shutdown();
   }
 });
-

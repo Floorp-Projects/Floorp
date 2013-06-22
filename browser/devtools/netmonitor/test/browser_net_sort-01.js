@@ -19,126 +19,151 @@ function test() {
         .then(() => {
           info("Testing swap(0, 0)");
           RequestsMenu.swapItemsAtIndices(0, 0);
+          RequestsMenu.refreshZebra();
           return testContents([0, 1, 2, 3, 4]);
         })
         .then(() => {
           info("Testing swap(0, 1)");
           RequestsMenu.swapItemsAtIndices(0, 1);
+          RequestsMenu.refreshZebra();
           return testContents([1, 0, 2, 3, 4]);
         })
         .then(() => {
           info("Testing swap(0, 2)");
           RequestsMenu.swapItemsAtIndices(0, 2);
+          RequestsMenu.refreshZebra();
           return testContents([1, 2, 0, 3, 4]);
         })
         .then(() => {
           info("Testing swap(0, 3)");
           RequestsMenu.swapItemsAtIndices(0, 3);
+          RequestsMenu.refreshZebra();
           return testContents([1, 2, 3, 0, 4]);
         })
         .then(() => {
           info("Testing swap(0, 4)");
           RequestsMenu.swapItemsAtIndices(0, 4);
+          RequestsMenu.refreshZebra();
           return testContents([1, 2, 3, 4, 0]);
         })
         .then(() => {
           info("Testing swap(1, 0)");
           RequestsMenu.swapItemsAtIndices(1, 0);
+          RequestsMenu.refreshZebra();
           return testContents([0, 2, 3, 4, 1]);
         })
         .then(() => {
           info("Testing swap(1, 1)");
           RequestsMenu.swapItemsAtIndices(1, 1);
+          RequestsMenu.refreshZebra();
           return testContents([0, 2, 3, 4, 1]);
         })
         .then(() => {
           info("Testing swap(1, 2)");
           RequestsMenu.swapItemsAtIndices(1, 2);
+          RequestsMenu.refreshZebra();
           return testContents([0, 1, 3, 4, 2]);
         })
         .then(() => {
           info("Testing swap(1, 3)");
           RequestsMenu.swapItemsAtIndices(1, 3);
+          RequestsMenu.refreshZebra();
           return testContents([0, 3, 1, 4, 2]);
         })
         .then(() => {
           info("Testing swap(1, 4)");
           RequestsMenu.swapItemsAtIndices(1, 4);
+          RequestsMenu.refreshZebra();
           return testContents([0, 3, 4, 1, 2]);
         })
         .then(() => {
           info("Testing swap(2, 0)");
           RequestsMenu.swapItemsAtIndices(2, 0);
+          RequestsMenu.refreshZebra();
           return testContents([2, 3, 4, 1, 0]);
         })
         .then(() => {
           info("Testing swap(2, 1)");
           RequestsMenu.swapItemsAtIndices(2, 1);
+          RequestsMenu.refreshZebra();
           return testContents([1, 3, 4, 2, 0]);
         })
         .then(() => {
           info("Testing swap(2, 2)");
           RequestsMenu.swapItemsAtIndices(2, 2);
+          RequestsMenu.refreshZebra();
           return testContents([1, 3, 4, 2, 0]);
         })
         .then(() => {
           info("Testing swap(2, 3)");
           RequestsMenu.swapItemsAtIndices(2, 3);
+          RequestsMenu.refreshZebra();
           return testContents([1, 2, 4, 3, 0]);
         })
         .then(() => {
           info("Testing swap(2, 4)");
           RequestsMenu.swapItemsAtIndices(2, 4);
+          RequestsMenu.refreshZebra();
           return testContents([1, 4, 2, 3, 0]);
         })
         .then(() => {
           info("Testing swap(3, 0)");
           RequestsMenu.swapItemsAtIndices(3, 0);
+          RequestsMenu.refreshZebra();
           return testContents([1, 4, 2, 0, 3]);
         })
         .then(() => {
           info("Testing swap(3, 1)");
           RequestsMenu.swapItemsAtIndices(3, 1);
+          RequestsMenu.refreshZebra();
           return testContents([3, 4, 2, 0, 1]);
         })
         .then(() => {
           info("Testing swap(3, 2)");
           RequestsMenu.swapItemsAtIndices(3, 2);
+          RequestsMenu.refreshZebra();
           return testContents([2, 4, 3, 0, 1]);
         })
         .then(() => {
           info("Testing swap(3, 3)");
           RequestsMenu.swapItemsAtIndices(3, 3);
+          RequestsMenu.refreshZebra();
           return testContents([2, 4, 3, 0, 1]);
         })
         .then(() => {
           info("Testing swap(3, 4)");
           RequestsMenu.swapItemsAtIndices(3, 4);
+          RequestsMenu.refreshZebra();
           return testContents([2, 3, 4, 0, 1]);
         })
         .then(() => {
           info("Testing swap(4, 0)");
           RequestsMenu.swapItemsAtIndices(4, 0);
+          RequestsMenu.refreshZebra();
           return testContents([2, 3, 0, 4, 1]);
         })
         .then(() => {
           info("Testing swap(4, 1)");
           RequestsMenu.swapItemsAtIndices(4, 1);
+          RequestsMenu.refreshZebra();
           return testContents([2, 3, 0, 1, 4]);
         })
         .then(() => {
           info("Testing swap(4, 2)");
           RequestsMenu.swapItemsAtIndices(4, 2);
+          RequestsMenu.refreshZebra();
           return testContents([4, 3, 0, 1, 2]);
         })
         .then(() => {
           info("Testing swap(4, 3)");
           RequestsMenu.swapItemsAtIndices(4, 3);
+          RequestsMenu.refreshZebra();
           return testContents([3, 4, 0, 1, 2]);
         })
         .then(() => {
           info("Testing swap(4, 4)");
           RequestsMenu.swapItemsAtIndices(4, 4);
+          RequestsMenu.refreshZebra();
           return testContents([3, 4, 0, 1, 2]);
         })
         .then(() => {
