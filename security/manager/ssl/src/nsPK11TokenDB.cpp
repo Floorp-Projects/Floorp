@@ -10,7 +10,6 @@
 #include "secerr.h"
 #include "nsReadableUtils.h"
 #include "nsNSSComponent.h"
-#include "nsServiceManagerUtils.h"
 
 #include "nsPK11TokenDB.h"
 

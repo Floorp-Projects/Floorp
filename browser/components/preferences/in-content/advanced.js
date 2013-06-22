@@ -769,6 +769,16 @@ var gAdvancedPane = {
   },
 
   /**
+   * Displays a dialog which describes the user's CRLs.
+   */
+  showCRLs: function ()
+  {
+    openDialog("chrome://pippki/content/crlManager.xul",
+               "mozilla:crlmanager",
+               "model=yes", null);
+  },
+
+  /**
    * Displays a dialog in which OCSP preferences can be configured.
    */
   showOCSP: function ()
