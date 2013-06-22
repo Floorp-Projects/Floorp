@@ -9,6 +9,8 @@ var gDebuggee = null;
 var gDebugger = null;
 
 function test() {
+  requestLongerTimeout(3);
+
   debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
