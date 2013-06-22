@@ -613,6 +613,13 @@ var BrowserApp = {
     // initialize the form history and passwords databases on upgrades
     Services.obs.notifyObservers(null, "FormHistory:Init", "");
     Services.obs.notifyObservers(null, "Passwords:Init", "");
+
+    // Migrate user-set "plugins.click_to_play" pref. See bug 884694.
+    // Because the default value is true, a user-set pref means that the pref was set to false.
+    if (Services.prefs.prefHasUserValue("plugins.click_to_play")) {
+      Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_ENABLED);
+      Services.prefs.clearUserPref("plugins.click_to_play");
+    }
   },
 
   shutdown: function shutdown() {
