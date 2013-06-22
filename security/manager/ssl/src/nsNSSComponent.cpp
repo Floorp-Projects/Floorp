@@ -819,22 +819,6 @@ nsNSSComponent::InitializePIPNSSBundle()
   return rv;
 }
 
-nsresult
-nsNSSComponent::RegisterPSMContentListener()
-{
-  // Called during init only, no mutex required.
-
-  nsresult rv = NS_OK;
-  if (!mPSMContentListener) {
-    nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
-    if (dispatcher) {
-      mPSMContentListener = do_CreateInstance(NS_PSMCONTENTLISTEN_CONTRACTID);
-      rv = dispatcher->RegisterContentListener(mPSMContentListener);
-    }
-  }
-  return rv;
-}
-
 /* Table of pref names and SSL cipher ID */
 typedef struct {
   const char* pref;
@@ -1396,8 +1380,6 @@ nsNSSComponent::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  RegisterPSMContentListener();
-
   nsCOMPtr<nsIEntropyCollector> ec
       = do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
 
@@ -1626,14 +1608,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent: XPCom shutdown observed\n"));
 
     // Cleanup code that requires services, it's too late in destructor.
-
-    if (mPSMContentListener) {
-      nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
-      if (dispatcher) {
-        dispatcher->UnRegisterContentListener(mPSMContentListener);
-      }
-      mPSMContentListener = nullptr;
-    }
 
     nsCOMPtr<nsIEntropyCollector> ec
         = do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
@@ -2125,7 +2099,7 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
 uint32_t
 getPSMContentType(const char * aContentType)
 { 
-  // Don't forget to update RegisterPSMContentListeners in nsNSSModule.cpp 
+  // Don't forget to update the registration of content listeners in nsNSSModule.cpp 
   // for every supported content type.
   
   if (!nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert"))
