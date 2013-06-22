@@ -169,8 +169,6 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // FIXME: like bug 558623, merge constructor+SendAsyncOpen into 1 IPC msg
-  gNeckoChild->SendPFTPChannelConstructor(this, tabChild, IPC::SerializedLoadContext(this));
   mListener = listener;
   mListenerContext = aContext;
 
@@ -178,13 +176,18 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nullptr);
 
-  URIParams uri;
-  SerializeURI(nsBaseChannel::URI(), uri);
-
   OptionalInputStreamParams uploadStream;
   SerializeInputStream(mUploadStream, uploadStream);
 
-  SendAsyncOpen(uri, mStartPos, mEntityID, uploadStream);
+  FTPChannelOpenArgs openArgs;
+  SerializeURI(nsBaseChannel::URI(), openArgs.uri());
+  openArgs.startPos() = mStartPos;
+  openArgs.entityID() = mEntityID;
+  openArgs.uploadStream() = uploadStream;
+
+  gNeckoChild->
+    SendPFTPChannelConstructor(this, tabChild, IPC::SerializedLoadContext(this),
+                               openArgs);
 
   // The socket transport layer in the chrome process now has a logical ref to
   // us until OnStopRequest is called.
@@ -517,12 +520,13 @@ FTPChannelChild::ConnectParent(uint32_t id)
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  if (!gNeckoChild->SendPFTPChannelConstructor(this, tabChild,
-                                               IPC::SerializedLoadContext(this)))
-    return NS_ERROR_FAILURE;
+  FTPChannelConnectArgs connectArgs(id);
 
-  if (!SendConnectChannel(id))
+  if (!gNeckoChild->SendPFTPChannelConstructor(this, tabChild,
+                                               IPC::SerializedLoadContext(this),
+                                               connectArgs)) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
