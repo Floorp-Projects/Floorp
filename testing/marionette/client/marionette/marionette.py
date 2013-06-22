@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
+import os
 import socket
 import sys
 import time
+import traceback
 
 from client import MarionetteClient
 from application_cache import ApplicationCache
@@ -602,26 +604,34 @@ class Marionette(object):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
+        stack = traceback.extract_stack()
+        frame = stack[-2:-1][0] # grab the second-to-last frame
         response = self._send_message('executeScript',
-                                     'value',
+                                      'value',
                                       value=script,
                                       args=args,
                                       newSandbox=new_sandbox,
                                       specialPowers=special_powers,
-                                      scriptTimeout=script_timeout)
+                                      scriptTimeout=script_timeout,
+                                      line=int(frame[1]),
+                                      filename=os.path.basename(frame[0]))
         return self.unwrapValue(response)
 
     def execute_async_script(self, script, script_args=None, new_sandbox=True, special_powers=False, script_timeout=None):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
+        stack = traceback.extract_stack()
+        frame = stack[-2:-1][0] # grab the second-to-last frame
         response = self._send_message('executeAsyncScript',
                                       'value',
                                       value=script,
                                       args=args,
                                       newSandbox=new_sandbox,
                                       specialPowers=special_powers,
-                                      scriptTimeout=script_timeout)
+                                      scriptTimeout=script_timeout,
+                                      line=int(frame[1]),
+                                      filename=os.path.basename(frame[0]))
         return self.unwrapValue(response)
 
     def find_element(self, method, target, id=None):

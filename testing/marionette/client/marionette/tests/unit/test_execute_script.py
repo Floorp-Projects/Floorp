@@ -6,6 +6,16 @@ from marionette_test import MarionetteTestCase
 from errors import JavascriptException, MarionetteException
 
 class TestExecuteContent(MarionetteTestCase):
+    def test_stack_trace(self):
+        try:
+            self.marionette.execute_script("""
+                let a = 1;
+                return b;
+                """)
+            self.assertFalse(True)
+        except JavascriptException, inst:
+            self.assertTrue('return b' in inst.stacktrace)
+
     def test_execute_simple(self):
         self.assertEqual(1, self.marionette.execute_script("return 1;"))
 
@@ -43,13 +53,13 @@ let prefs = Components.classes["@mozilla.org/preferences-service;1"]
 
         self.marionette.execute_script("global.barfoo = [42, 23];")
         self.assertEqual(self.marionette.execute_script("return global.barfoo;", new_sandbox=False), [42, 23])
-    
+
     def test_that_we_can_pass_in_floats(self):
-	expected_result = 1.2
-	result = self.marionette.execute_script("return arguments[0]", 
-					[expected_result])
-	self.assertTrue(isinstance(result, float))
-	self.assertEqual(result, expected_result)
+        expected_result = 1.2
+        result = self.marionette.execute_script("return arguments[0]",
+                                                [expected_result])
+        self.assertTrue(isinstance(result, float))
+        self.assertEqual(result, expected_result)
 
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
