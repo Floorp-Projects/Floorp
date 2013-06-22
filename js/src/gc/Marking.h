@@ -182,9 +182,6 @@ MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 }
 
 void
-MarkValueRootRangeMaybeNullPayload(JSTracer *trc, size_t len, Value *vec, const char *name);
-
-void
 MarkTypeRoot(JSTracer *trc, types::Type *v, const char *name);
 
 bool

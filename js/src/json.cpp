@@ -228,8 +228,8 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
             if (!keyStr)
                 return false;
 
-            InvokeArgsGuard args;
-            if (!cx->stack.pushInvokeArgs(cx, 1, &args))
+            InvokeArgs args(cx);
+            if (!args.init(1))
                 return false;
 
             args.setCallee(toJSON);
@@ -250,8 +250,8 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
         }
 
-        InvokeArgsGuard args;
-        if (!cx->stack.pushInvokeArgs(cx, 2, &args))
+        InvokeArgs args(cx);
+        if (!args.init(2))
             return false;
 
         args.setCallee(ObjectValue(*scx->replacer));
@@ -771,8 +771,8 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
     if (!key)
         return false;
 
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, 2, &args))
+    InvokeArgs args(cx);
+    if (!args.init(2))
         return false;
 
     args.setCallee(reviver);

@@ -2601,8 +2601,8 @@ static JSClass sGlobalScopePolluterClass = {
 
 // static
 JSBool
-nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                           JSHandleId id, JS::MutableHandle<JS::Value> vp)
+nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JS::Handle<JSObject*> obj,
+                                           JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
   // Someone is accessing a element by referencing its name/id in the
   // global scope, do a security check to make sure that's ok.
@@ -2624,7 +2624,7 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
 
 // Gets a subframe.
 static JSBool
-ChildWindowGetter(JSContext *cx, JSHandleObject obj, JSHandleId id,
+ChildWindowGetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                   JS::MutableHandle<JS::Value> vp)
 {
   MOZ_ASSERT(JSID_IS_STRING(id));
@@ -2661,8 +2661,8 @@ GetDocument(JSObject *obj)
 
 // static
 JSBool
-nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
-                                          JSHandleId id, unsigned flags,
+nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
+                                          JS::Handle<jsid> id, unsigned flags,
                                           JS::MutableHandle<JSObject*> objp)
 {
   if (!JSID_IS_STRING(id)) {
@@ -3108,7 +3108,8 @@ static const IDBConstant sIDBConstants[] = {
 };
 
 static JSBool
-IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JS::MutableHandle<JS::Value> vp)
+IDBConstantGetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                  JS::MutableHandle<JS::Value> vp)
 {
   JSString *idstr = JSID_TO_STRING(id);
   unsigned index;
@@ -4244,7 +4245,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 
 template<class Interface>
 static JSBool
-LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
+LocationSetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSBool strict,
                JS::MutableHandle<JS::Value> vp)
 {
   nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp.address());
@@ -4257,8 +4258,8 @@ LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 }
 
 static JSBool
-LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
-                        JS::MutableHandle<JS::Value> vp)
+LocationSetterUnwrapper(JSContext *cx, JS::Handle<JSObject*> obj_, JS::Handle<jsid> id,
+                        JSBool strict, JS::MutableHandle<JS::Value> vp)
 {
   JS::RootedObject obj(cx, obj_);
 
@@ -5616,8 +5617,8 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
 }
 
 JSBool
-nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
-                                         JSHandleId id, JS::MutableHandle<JS::Value> vp)
+nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj_,
+                                         JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
   JS::Rooted<JSObject*> obj(cx, obj_);
 
@@ -5713,8 +5714,9 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
 }
 
 JSBool
-nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                        unsigned flags, JS::MutableHandle<JSObject*> objp)
+nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
+                                        JS::Handle<jsid> id, unsigned flags,
+                                        JS::MutableHandle<JSObject*> objp)
 {
   JS::RootedValue v(cx);
 

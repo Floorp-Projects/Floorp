@@ -685,8 +685,8 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
                 return true;
             }
 
-            InvokeArgsGuard args;
-            if (!cx->stack.pushInvokeArgs(cx, 0, &args))
+            InvokeArgs args(cx);
+            if (!args.init(0))
                 return false;
 
             args.setCallee(get);
@@ -751,8 +751,8 @@ js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
                 return true;
             }
 
-            InvokeArgsGuard args;
-            if (!cx->stack.pushInvokeArgs(cx, 0, &args))
+            InvokeArgs args(cx);
+            if (!args.init(0))
                 return false;
 
             /* Push getter, receiver, and no args. */
@@ -986,8 +986,8 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
                     return true;
                 }
 
-                InvokeArgsGuard args;
-                if (!cx->stack.pushInvokeArgs(cx, 1, &args))
+                InvokeArgs args(cx);
+                if (!args.init(1))
                     return false;
 
                 /* Push set, receiver, and v as the sole argument. */

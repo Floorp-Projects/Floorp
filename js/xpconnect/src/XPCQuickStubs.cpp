@@ -394,7 +394,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 }
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
                              MutableHandleValue vp)
 {
     return JS_ReportErrorFlagsAndNumber(cx,

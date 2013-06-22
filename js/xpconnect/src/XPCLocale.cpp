@@ -74,13 +74,13 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   }
 
   static JSBool
-  LocaleToUpperCase(JSContext *cx, JSHandleString src, MutableHandleValue rval)
+  LocaleToUpperCase(JSContext *cx, HandleString src, MutableHandleValue rval)
   {
     return ChangeCase(cx, src, rval, ToUpperCase);
   }
 
   static JSBool
-  LocaleToLowerCase(JSContext *cx, JSHandleString src, MutableHandleValue rval)
+  LocaleToLowerCase(JSContext *cx, HandleString src, MutableHandleValue rval)
   {
     return ChangeCase(cx, src, rval, ToLowerCase);
   }
@@ -92,14 +92,14 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   }
 
   static JSBool
-  LocaleCompare(JSContext *cx, JSHandleString src1, JSHandleString src2, MutableHandleValue rval)
+  LocaleCompare(JSContext *cx, HandleString src1, HandleString src2, MutableHandleValue rval)
   {
     return This(JS_GetRuntime(cx))->Compare(cx, src1, src2, rval);
   }
 
 private:
   static JSBool
-  ChangeCase(JSContext* cx, JSHandleString src, MutableHandleValue rval,
+  ChangeCase(JSContext* cx, HandleString src, MutableHandleValue rval,
              void(*changeCaseFnc)(const nsAString&, nsAString&))
   {
     nsDependentJSString depStr;
@@ -121,7 +121,7 @@ private:
   }
 
   JSBool
-  Compare(JSContext *cx, JSHandleString src1, JSHandleString src2, MutableHandleValue rval)
+  Compare(JSContext *cx, HandleString src1, HandleString src2, MutableHandleValue rval)
   {
     nsresult rv;
 

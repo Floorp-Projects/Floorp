@@ -817,8 +817,8 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Allocate stack space for fval, obj, and the args. */
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
+    InvokeArgs args(cx);
+    if (!args.init(argc))
         return JS_FALSE;
 
     /* Push fval, thisv, and the args. */
@@ -833,13 +833,13 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
 
 #ifdef JS_ION
 static bool
-PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, InvokeArgsGuard &args,
+PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, InvokeArgs &args,
                               Value *vp)
 {
     unsigned length = frame.numActualArgs();
-    JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(length <= ARGS_LENGTH_MAX);
 
-    if (!cx->stack.pushInvokeArgs(cx, length, &args))
+    if (!args.init(length))
         return false;
 
     /* Push fval, obj, and aobj's elements as args. */
@@ -867,7 +867,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
     if (argc < 2 || vp[3].isNullOrUndefined())
         return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
-    InvokeArgsGuard args;
+    InvokeArgs args(cx);
 
     /*
      * GuardFunApplyArgumentsOptimization already called IsOptimizedArguments,
@@ -895,9 +895,9 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
                     ion::InlineFrameIterator iter(cx, &frame);
 
                     unsigned length = iter.numActualArgs();
-                    JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+                    JS_ASSERT(length <= ARGS_LENGTH_MAX);
 
-                    if (!cx->stack.pushInvokeArgs(cx, length, &args))
+                    if (!args.init(length))
                         return false;
 
                     /* Push fval, obj, and aobj's elements as args. */
@@ -932,9 +932,9 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         {
             StackFrame *fp = cx->interpreterFrame();
             unsigned length = fp->numActualArgs();
-            JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+            JS_ASSERT(length <= ARGS_LENGTH_MAX);
 
-            if (!cx->stack.pushInvokeArgs(cx, length, &args))
+            if (!args.init(length))
                 return false;
 
             /* Push fval, obj, and aobj's elements as args. */
@@ -961,12 +961,12 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         /* Step 6. */
-        if (length > StackSpace::ARGS_LENGTH_MAX) {
+        if (length > ARGS_LENGTH_MAX) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
             return false;
         }
 
-        if (!cx->stack.pushInvokeArgs(cx, length, &args))
+        if (!args.init(length))
             return false;
 
         /* Push fval, obj, and aobj's elements as args. */
@@ -1118,7 +1118,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
     unsigned argslen = fun->getBoundFunctionArgumentCount();
 
-    if (argc + argslen > StackSpace::ARGS_LENGTH_MAX) {
+    if (argc + argslen > ARGS_LENGTH_MAX) {
         js_ReportAllocationOverflow(cx);
         return false;
     }
@@ -1129,8 +1129,8 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     /* 15.3.4.5.1 step 2. */
     const Value &boundThis = fun->getBoundFunctionThis();
 
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, argc + argslen, &args))
+    InvokeArgs args(cx);
+    if (!args.init(argc + argslen))
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
