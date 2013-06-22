@@ -10,11 +10,19 @@
 #leftBox {
   background-image: url("chrome://branding/content/about-logo.png");
   background-repeat: no-repeat;
+  background-size: 192px auto;
   /* min-width and min-height create room for the logo */
   min-width: 210px;
   min-height: 210px;
-  margin-top:20px;
+  margin-top: 20px;
   -moz-margin-start: 30px;
+}
+
+
+@media (min-resolution: 2dppx) {
+  #leftBox {
+    background-image: url("chrome://branding/content/about-logo@2x.png");
+  }
 }
 
 #rightBox {
