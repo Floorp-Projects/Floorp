@@ -37,7 +37,7 @@ function testPause() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("paused", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.StackFrames._container._list;
+      let frames = gDebugger.DebuggerView.StackFrames.widget._list;
       let childNodes = frames.childNodes;
 
       is(gDebugger.DebuggerController.activeThread.paused, true,
