@@ -479,7 +479,7 @@
 }
 
 .variable-or-property:not(:focus) > .title > .token-boolean {
-  color: #777;
+  color: #1c00cf;
 }
 
 .variable-or-property:not(:focus) > .title > .token-number {
@@ -487,16 +487,16 @@
 }
 
 .variable-or-property:not(:focus) > .title > .token-string {
-  color: #1c00cf;
+  color: #282;
 }
 
 .variable-or-property:not(:focus) > .title > .token-other {
   color: #333;
 }
 
-/* Non enumerable, configurable and writable variables and properties */
+/* Custom configurable/enumerable/writable or frozen/sealed/extensible
+ * variables and properties */
 
-.variable-or-property[proto] > .title > .name,
 .variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]) > .title > .name {
   opacity: 0.5;
 }
@@ -505,17 +505,11 @@
   border-bottom: 1px dashed #99f;
 }
 
-.variable-or-property[non-configurable][non-writable] > .title > .name {
+.variable-or-property[non-writable] > .title > .name {
   border-bottom: 1px dashed #f99;
 }
 
-.variable-or-property[safe-getter] > .title > .name {
-  border-bottom: 1px dashed #8b0;
-}
-
-.variable-or-property[non-writable] > .title:after {
-  content: " ";
-  display: inline-block;
+.variable-or-property-non-writable-icon {
   background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
   width: 16px;
   height: 16px;
@@ -523,10 +517,23 @@
 }
 
 @media (min-resolution: 2dppx) {
-  .variable-or-property[non-writable] > .title:after {
+  .variable-or-property-non-writable-icon {
     background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
     background-size: 32px;
   }
+}
+
+.variable-or-property-frozen-label,
+.variable-or-property-sealed-label,
+.variable-or-property-non-extensible-label {
+  -moz-padding-end: 4px;
+  color: #666;
+}
+
+/* Special variables and properties */
+
+.variable-or-property[safe-getter] > .title > .name {
+  border-bottom: 1px dashed #8b0;
 }
 
 .variable-or-property[exception]:not(:focus) > .title > .name {
@@ -539,21 +546,6 @@
   text-shadow: 0 0 8px #cfc;
 }
 
-.variable-or-property[non-extensible]:not([non-writable]) > .title:after {
-  content: "N";
-  display: inline-block;
-}
-
-.variable-or-property[sealed]:not([non-writable]) > .title:after {
-  content: "S";
-  display: inline-block;
-}
-
-.variable-or-property[frozen]:not([non-writable]) > .title:after {
-  content: "F";
-  display: inline-block;
-}
-
 /* Variables and properties tooltips */
 
 .variable-or-property > tooltip > label {
@@ -562,15 +554,16 @@
 
 .variable-or-property[non-enumerable] > tooltip > label[value=enumerable],
 .variable-or-property[non-configurable] > tooltip > label[value=configurable],
-.variable-or-property[non-writable] > tooltip > label[value=writable] {
+.variable-or-property[non-writable] > tooltip > label[value=writable],
+.variable-or-property[non-extensible] > tooltip > label[value=extensible] {
+  color: #800;
   text-decoration: line-through;
 }
 
-.variable-or-property:not([safe-getter]) > tooltip > label[value=native-getter],
-.variable-or-property:not([non-extensible]) > tooltip > label[value=non-extensible],
-.variable-or-property:not([frozen]) > tooltip > label[value=frozen],
-.variable-or-property:not([sealed]) > tooltip > label[value=sealed] {
-  display: none;
+.variable-or-property[safe-getter] > tooltip > label[value=WebIDL] {
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #000;
+  color: #080;
 }
 
 /* Variables and properties editing */

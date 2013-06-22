@@ -21,20 +21,7 @@ this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
 
 /**
  * A simple side menu, with the ability of grouping menu items.
- *
- * You can use this widget alone, but it works great with a MenuContainer!
- * In that case, you should never need to access the methods in the
- * SideMenuWidget directly, use the wrapper MenuContainer instance instead.
- *
- * @see ViewHelpers.jsm
- *
- * function MyView() {
- *   this.node = new SideMenuWidget(document.querySelector(".my-node"));
- * }
- * ViewHelpers.create({ constructor: MyView, proto: MenuContainer.prototype }, {
- *   myMethod: function() {},
- *   ...
- * });
+ * This widget should be used in tandem with the WidgetMethods in ViewHelpers.jsm
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
