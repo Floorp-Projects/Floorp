@@ -66,6 +66,7 @@ CPP_SOURCES += [
     'nsStreamCipher.cpp',
     'nsTLSSocketProvider.cpp',
     'nsUsageArrayHelper.cpp',
+	'PSMContentListener.cpp',
     'PSMRunnable.cpp',
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',
