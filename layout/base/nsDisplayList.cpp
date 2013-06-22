@@ -3712,7 +3712,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = result * gfx3DMatrix::From2D(transformFromSVGParent);
   }
 
-  if (nsLayoutUtils::Are3DTransformsEnabled() && aProperties.mChildPerspective > 0.0) {
+  if (aProperties.mChildPerspective > 0.0) {
     gfx3DMatrix perspective;
     perspective._34 =
       -1.0 / NSAppUnitsToFloatPixels(aProperties.mChildPerspective, aAppUnitsPerPixel);
@@ -3722,11 +3722,11 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = result * nsLayoutUtils::ChangeMatrixBasis(aProperties.mToPerspectiveOrigin - aProperties.mToMozOrigin, perspective);
   }
 
-  gfxPoint3D rounded(hasSVGTransforms ? newOrigin.x : NS_round(newOrigin.x), 
-                     hasSVGTransforms ? newOrigin.y : NS_round(newOrigin.y), 
+  gfxPoint3D rounded(hasSVGTransforms ? newOrigin.x : NS_round(newOrigin.x),
+                     hasSVGTransforms ? newOrigin.y : NS_round(newOrigin.y),
                      0);
-  
-  if (frame && frame->Preserves3D() && nsLayoutUtils::Are3DTransformsEnabled()) {
+
+  if (frame && frame->Preserves3D()) {
       // Include the transform set on our parent
       NS_ASSERTION(frame->GetParent() &&
                    frame->GetParent()->IsTransformed() &&
