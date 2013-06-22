@@ -302,15 +302,6 @@ appUpdater.prototype =
         return;
       }
 
-      if (gAppUpdater.update.unsupported) {
-        if (gAppUpdater.update.detailsURL) {
-          let unsupportedLink = document.getElementById("unsupportedLink");
-          unsupportedLink.href = gAppUpdater.update.detailsURL;
-        }
-        gAppUpdater.selectPanel("unsupportedSystem");
-        return;
-      }
-
       if (!gAppUpdater.aus.canApplyUpdates) {
         gAppUpdater.selectPanel("manualUpdate");
         return;

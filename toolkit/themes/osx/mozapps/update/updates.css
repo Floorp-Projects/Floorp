@@ -71,21 +71,6 @@ wizardpage {
   -moz-margin-end: 6px;
 }
 
-.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-.inline-link:hover {
-  text-decoration: underline;
-}
-
-/* Unsupported Page */
-#unsupportedLabel, #unsupportedLinkLabel {
-  -moz-margin-start: 0;
-  -moz-padding-start: 0;
-}
-
 /* Update Found Basic Page */
 #updateName, #updateFinishedName {
   font-weight: bold;

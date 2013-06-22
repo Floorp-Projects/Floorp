@@ -44,7 +44,6 @@ const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_STAGING_ENABLED     = "app.update.staging.enabled";
-const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -182,7 +181,6 @@ const DEFAULT_SOCKET_MAX_ERRORS = 10;
 const DEFAULT_UPDATE_RETRY_TIMEOUT = 2000;
 
 var gLocale     = null;
-
 #ifdef MOZ_B2G
 var gVolumeMountLock = null;
 XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
@@ -1562,8 +1560,8 @@ function Update(update) {
   this.isCompleteUpdate = false;
   this.isOSUpdate = false;
   this.showPrompt = false;
+  this.showSurvey = false;
   this.showNeverForVersion = false;
-  this.unsupported = false;
   this.channel = "default";
   this.promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
 
@@ -1588,7 +1586,7 @@ function Update(update) {
     this._patches.push(patch);
   }
 
-  if (this._patches.length == 0 && !update.hasAttribute("unsupported"))
+  if (0 == this._patches.length)
     throw Cr.NS_ERROR_ILLEGAL_VALUE;
 
   // Fallback to the behavior prior to bug 530872 if the update does not have an
@@ -1633,8 +1631,8 @@ function Update(update) {
       if(!isNaN(attr.value))
         this.promptWaitTime = parseInt(attr.value);
     }
-    else if (attr.name == "unsupported")
-      this.unsupported = attr.value == "true";
+    else if (attr.name == "showSurvey")
+      this.showSurvey = attr.value == "true";
     else if (attr.name == "version") {
       // Prevent version from replacing displayVersion if displayVersion is
       // present in the update xml.
@@ -1773,6 +1771,7 @@ Update.prototype = {
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
     update.setAttribute("showPrompt", this.showPrompt);
     update.setAttribute("promptWaitTime", this.promptWaitTime);
+    update.setAttribute("showSurvey", this.showSurvey);
     update.setAttribute("type", this.type);
     // for backwards compatibility in case the user downgrades
     update.setAttribute("version", this.displayVersion);
@@ -1790,8 +1789,6 @@ Update.prototype = {
       update.setAttribute("previousAppVersion", this.previousAppVersion);
     if (this.statusText)
       update.setAttribute("statusText", this.statusText);
-    if (this.unsupported)
-      update.setAttribute("unsupported", this.unsupported);
     updates.documentElement.appendChild(update);
 
     for (var p in this._properties) {
@@ -2379,9 +2376,6 @@ UpdateService.prototype = {
     if (updates.length == 0)
       return null;
 
-    if (updates.length == 1 && updates[0].unsupported)
-      return updates[0];
-
     // Choose the newest of the available minor and major updates.
     var majorUpdate = null;
     var minorUpdate = null;
@@ -2459,6 +2453,10 @@ UpdateService.prototype = {
       return;
     }
 
+    var update = this.selectUpdate(updates, updates.length);
+    if (!update)
+      return;
+
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled) {
       LOG("UpdateService:_selectAndInstallUpdate - not prompting because " +
@@ -2467,22 +2465,6 @@ UpdateService.prototype = {
     }
 
     if (!gMetroUpdatesEnabled) {
-      return;
-    }
-
-    var update = this.selectUpdate(updates, updates.length);
-    if (!update) {
-      return;
-    }
-
-    if (update.unsupported) {
-      LOG("UpdateService:_selectAndInstallUpdate - update not supported for " +
-          "this system");
-      if (!getPref("getBoolPref", PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED, false)) {
-        LOG("UpdateService:_selectAndInstallUpdate - notifying that the " +
-            "update is not supported for this system");
-        this._showPrompt(update);
-      }
       return;
     }
 
@@ -3319,7 +3301,7 @@ Checker.prototype = {
     }
 
     if (updatesElement.nodeName != "updates") {
-      LOG("Checker:_updates get - unexpected node name!");
+      LOG("Checker:updates get - unexpected node name!");
       throw new Error("Unexpected node name, expected: updates, got: " +
                       updatesElement.nodeName);
     }
@@ -3336,7 +3318,7 @@ Checker.prototype = {
       try {
         var update = new Update(updateElement);
       } catch (e) {
-        LOG("Checker:_updates get - invalid <update/>, ignoring...");
+        LOG("Checker:updates get - invalid <update/>, ignoring...");
         continue;
       }
       update.serviceURL = this.getUpdateURL(this._forced);
@@ -3396,7 +3378,7 @@ Checker.prototype = {
       if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
         Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
 
-      // Tell the callback about the updates
+      // Tell the Update Service about the updates
       this._callback.onCheckComplete(event.target, updates, updates.length);
     }
     catch (e) {

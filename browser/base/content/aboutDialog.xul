@@ -82,9 +82,6 @@
               <hbox id="manualUpdate" align="center">
                 <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
               </hbox>
-              <hbox id="unsupportedSystem" align="center">
-                <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
-              </hbox>
             </deck>
 #endif
           </vbox>

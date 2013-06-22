@@ -25,12 +25,6 @@
                                            not have enough space to install it.">
 <!ENTITY  manualUpdateGetMsg.label        "You can always get the latest version of &brandShortName; at:">
 
-<!ENTITY  unsupported.title               "System Unsupported">
-<!ENTITY  unsupported.label               "Your &brandShortName; is out of date, but the latest version is not
-                                           supported on your system. Please upgrade your system, then try again.
-                                           You will not see this notice again, but you can">
-<!ENTITY  unsupportedLink.label           "learn more.">
-
 <!ENTITY  incompatibleCheck.title         "Checking Add-on Compatibility">
 <!ENTITY  incompatibleCheck.label         "Looking for newer versions of your add-ons…">
 
