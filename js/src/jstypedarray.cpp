@@ -2909,7 +2909,7 @@ DataViewObject::read(JSContext *cx, Handle<DataViewObject*> obj,
 
 template <typename NativeType>
 static inline bool
-WebIDLCast(JSContext *cx, const Value &value, NativeType *out)
+WebIDLCast(JSContext *cx, HandleValue value, NativeType *out)
 {
     int32_t temp;
     if (!ToInt32(cx, value, &temp))
@@ -2923,7 +2923,7 @@ WebIDLCast(JSContext *cx, const Value &value, NativeType *out)
 
 template <>
 inline bool
-WebIDLCast<float>(JSContext *cx, const Value &value, float *out)
+WebIDLCast<float>(JSContext *cx, HandleValue value, float *out)
 {
     double temp;
     if (!ToNumber(cx, value, &temp))
@@ -2934,7 +2934,7 @@ WebIDLCast<float>(JSContext *cx, const Value &value, float *out)
 
 template <>
 inline bool
-WebIDLCast<double>(JSContext *cx, const Value &value, double *out)
+WebIDLCast<double>(JSContext *cx, HandleValue value, double *out)
 {
     return ToNumber(cx, value, out);
 }
@@ -2956,7 +2956,7 @@ DataViewObject::write(JSContext *cx, Handle<DataViewObject*> obj,
         return false;
 
     NativeType value;
-    if (!WebIDLCast(cx, args[1], &value))
+    if (!WebIDLCast(cx, args.handleAt(1), &value))
         return false;
 
     bool toLittleEndian = args.length() >= 3 && ToBoolean(args[2]);

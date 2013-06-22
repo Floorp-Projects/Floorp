@@ -73,7 +73,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
           case PNK_NUMBER:
             if (pn->isKind(PNK_STRING)) {
                 double d;
-                if (!ToNumber(cx, StringValue(pn->pn_atom), &d))
+                if (!StringToNumber(cx, pn->pn_atom, &d))
                     return false;
                 pn->pn_dval = d;
                 pn->setKind(PNK_NUMBER);

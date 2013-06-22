@@ -1336,7 +1336,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
                 i = j;
         } else {
             double d;
-            if (!ToNumber(cx, args[1], &d))
+            if (!ToNumber(cx, args.handleAt(1), &d))
                 return false;
             if (!IsNaN(d)) {
                 d = ToInteger(d);
@@ -3059,7 +3059,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     uint32_t limit;
     if (args.hasDefined(1)) {
         double d;
-        if (!ToNumber(cx, args[1], &d))
+        if (!ToNumber(cx, args.handleAt(1), &d))
             return false;
         limit = ToUint32(d);
     } else {
