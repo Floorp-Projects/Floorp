@@ -148,6 +148,9 @@ MOCHITEST_CHROME_FILES = \
   test_workersDisabled.xul \
   workersDisabled_worker.js \
   dom_worker_helper.js \
+  test_bug883784.xul \
+  test_bug883784.jsm \
+  url_worker.js \
   $(NULL)
 
 libs:: $(_SUBDIRMOCHITEST_FILES)

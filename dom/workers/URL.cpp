@@ -131,17 +131,27 @@ public:
   {
     AssertIsOnMainThread();
 
+    nsCOMPtr<nsIPrincipal> principal;
+    nsIDocument* doc = nullptr;
+
     nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
-    nsIDocument* doc = window->GetExtantDoc();
-    if (!doc) {
-      SetDOMStringToNull(mURL);
-      return;
+    if (window) {
+      doc = window->GetExtantDoc();
+      if (!doc) {
+        SetDOMStringToNull(mURL);
+        return;
+      }
+
+      principal = doc->NodePrincipal();
+    } else {
+      MOZ_ASSERT(mWorkerPrivate->IsChromeWorker());
+      principal = mWorkerPrivate->GetPrincipal();
     }
 
     nsCString url;
     nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(
         NS_LITERAL_CSTRING(BLOBURI_SCHEME),
-        mBlob, doc->NodePrincipal(), url);
+        mBlob, principal, url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");
@@ -149,7 +159,12 @@ public:
       return;
     }
 
-    doc->RegisterHostObjectUri(url);
+    if (doc) {
+      doc->RegisterHostObjectUri(url);
+    } else {
+      mWorkerPrivate->RegisterHostObjectURI(url);
+    }
+
     mURL = NS_ConvertUTF8toUTF16(url);
   }
 };
@@ -172,23 +187,40 @@ public:
   {
     AssertIsOnMainThread();
 
+    nsCOMPtr<nsIPrincipal> principal;
+    nsIDocument* doc = nullptr;
+
     nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
-    nsIDocument* doc = window->GetExtantDoc();
-    if (!doc) {
-      return;
+    if (window) {
+      doc = window->GetExtantDoc();
+      if (!doc) {
+        return;
+      }
+
+      principal = doc->NodePrincipal();
+    } else {
+      MOZ_ASSERT(mWorkerPrivate->IsChromeWorker());
+      principal = mWorkerPrivate->GetPrincipal();
     }
 
     NS_ConvertUTF16toUTF8 url(mURL);
 
-    nsIPrincipal* principal =
+    nsIPrincipal* urlPrincipal =
       nsHostObjectProtocolHandler::GetDataEntryPrincipal(url);
 
     bool subsumes;
-    if (principal &&
-        NS_SUCCEEDED(doc->NodePrincipal()->Subsumes(principal, &subsumes)) &&
+    if (urlPrincipal &&
+        NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
         subsumes) {
-      doc->UnregisterHostObjectUri(url);
+      if (doc) {
+        doc->UnregisterHostObjectUri(url);
+      }
+
       nsHostObjectProtocolHandler::RemoveDataEntry(url);
+    }
+
+    if (!window) {
+      mWorkerPrivate->UnregisterHostObjectURI(url);
     }
   }
 };
