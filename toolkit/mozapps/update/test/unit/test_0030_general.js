@@ -243,13 +243,13 @@ function initMockIncrementalDownload() {
   var registrar = AUS_Cm.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   gIncrementalDownloadClassID = registrar.contractIDToCID(INC_CONTRACT_ID);
   gIncOldFactory = AUS_Cm.getClassObject(AUS_Cc[INC_CONTRACT_ID],
-                                         AUS_Ci.nsIFactory);
+                                     AUS_Ci.nsIFactory);
   registrar.unregisterFactory(gIncrementalDownloadClassID, gIncOldFactory);
   var components = [IncrementalDownload];
   registrar.registerFactory(gIncrementalDownloadClassID, "",
                             INC_CONTRACT_ID, newFactory);
   gIncOldFactory = AUS_Cm.getClassObject(AUS_Cc[INC_CONTRACT_ID],
-                                         AUS_Ci.nsIFactory);
+                                     AUS_Ci.nsIFactory);
 }
 
 function cleanupMockIncrementalDownload() {
