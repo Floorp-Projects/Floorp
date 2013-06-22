@@ -11,7 +11,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsNSSCertificate.h"
-#include "nsServiceManagerUtils.h"
 
 #include "nspr.h"
 #include "secerr.h"

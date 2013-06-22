@@ -117,6 +117,9 @@
   <preference id="security.disable_button.openCertManager"
               name="security.disable_button.openCertManager"
               type="bool"/>
+  <preference id="security.OCSP.disable_button.managecrl"
+              name="security.OCSP.disable_button.managecrl"
+              type="bool"/>
   <preference id="security.disable_button.openDeviceManager"
               name="security.disable_button.openDeviceManager"
               type="bool"/>
@@ -443,6 +446,10 @@
                   label="&viewCerts.label;" accesskey="&viewCerts.accesskey;"
                   oncommand="gAdvancedPane.showCertificates();"
                   preference="security.disable_button.openCertManager"/>
+          <button id="viewCRLButton"
+                  label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;"
+                  oncommand="gAdvancedPane.showCRLs();"
+                  preference="security.OCSP.disable_button.managecrl"/>
           <button id="verificationButton"
                   label="&verify2.label;" accesskey="&verify2.accesskey;"
                   oncommand="gAdvancedPane.showOCSP();"/>

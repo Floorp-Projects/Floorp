@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<!DOCTYPE dialog [
+    <!ENTITY % prefValDTD SYSTEM "chrome://pippki/locale/validation.dtd">
+    %prefValDTD;
+    <!ENTITY % prefCertMgrDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
+    %prefCertMgrDTD;
+]>
+
+<dialog id="crlviewer"
+        windowtype="mozilla:crlmanager"
+        title="&validation.crlmanager.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: 65ch;"
+        onload="onLoad();"
+        buttons="accept"
+        buttonlabelaccept="&certmgr.close.label;"
+        persist="screenX screenY width height">
+
+  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+
+  <script type="application/javascript" src="chrome://pippki/content/crlManager.js"/>
+
+  <description value="&validation.crlmanager.description;"/>
+  <separator class="thin"/>
+  <tree id="crltree" style="height: 10em;"
+   onselect="EnableCrlActions()" flex="1">
+    <treecols>
+      <treecol id="Col1" flex="3" label="&certmgr.certdetail.o;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Col2" flex="5" label="&certmgr.certdetail.ou;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Col3" flex="2" label="&validation.crllastupdate.label;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Col4" flex="2" label="&validation.crlnextupdate.label;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Col5" flex="2" label="&validation.crlautoupdateenabled.label;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Col6" flex="3" label="&validation.crlautoupdatestatus.label;"/>
+    </treecols>
+
+    <treechildren id="crlList"/>
+  </tree>
+  <separator class="thin"/>
+
+  <hbox id="dialogButtons">
+    <button id="deleteCrl" disabled="true"
+            label="&validation.deletecrl.label;"
+            accesskey="&validation.deletecrl.accesskey;"
+            oncommand="DeleteCrlSelected();"/>
+    <button id="editPrefs" class="push" disabled="true"
+            label="&validation.advanced.label;"
+            accesskey="&validation.advanced.accesskey;"
+            oncommand="EditAutoUpdatePrefs();"/>
+    <button id="updateCRL" class="push" disabled="true"
+            label="&validation.updatecrl.label;"
+            accesskey="&validation.updatecrl.accesskey;"
+            oncommand="UpdateCRL();"/>
+    <button id="importCRL" class="push"
+            label="&certmgr.restore2.label;"
+            accesskey="&certmgr.restore2.accesskey;"
+            oncommand="ImportCRL();"/>
+    <spacer flex="2"/>
+    <button dlgtype="accept"/>
+  </hbox>
+</dialog>
