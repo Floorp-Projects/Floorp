@@ -1790,7 +1790,7 @@ ObjectActor.prototype = {
       enumerable: desc.enumerable
     };
 
-    if (desc.value !== undefined) {
+    if ("value" in desc) {
       retval.writable = desc.writable;
       retval.value = this.threadActor.createValueGrip(desc.value);
     } else {
