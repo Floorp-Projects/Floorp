@@ -81,8 +81,6 @@ MOCHITEST_CHROME_FILES += \
   test_0141_notify_invalidCertAttrs_noUpdate.xul \
   test_0142_notify_invalidCertAttrs_hasUpdate.xul \
   test_0151_notify_backgroundCheckError.xul \
-  test_0161_check_unsupported.xul \
-  test_0162_notify_unsupported.xul \
   test_0900_deprecatedUpdateFormat_minor.xul \
   test_0901_deprecatedUpdateFormat_major.xul \
   test_9999_cleanup.xul \
