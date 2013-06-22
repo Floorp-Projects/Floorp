@@ -7,7 +7,6 @@
 #include "nsNSSComponent.h"
 #include "nsSmartCardMonitor.h"
 #include "nsIDOMSmartCardEvent.h"
-#include "nsServiceManagerUtils.h"
 #include "mozilla/unused.h"
 
 using namespace mozilla;

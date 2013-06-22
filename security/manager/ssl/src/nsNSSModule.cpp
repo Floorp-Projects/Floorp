@@ -27,11 +27,12 @@
 #include "nsCryptoHash.h"
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
-#include "nsNetCID.h"
+
 #include "nsCMSSecureMessage.h"
 #include "nsCertPicker.h"
 #include "nsCURILoader.h"
 #include "nsICategoryManager.h"
+#include "nsCRLManager.h"
 #include "nsNTLMAuthModule.h"
 #include "nsStreamCipher.h"
 #include "nsKeyModule.h"
@@ -44,9 +45,6 @@
 #include "nsNSSVersion.h"
 
 #include "nsXULAppAPI.h"
-
-#include "PSMContentListener.h"
-
 #define NS_IS_PROCESS_DEFAULT                                                 \
     (GeckoProcessType_Default == XRE_GetProcessType())
 
@@ -198,6 +196,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSDecoder)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSEncoder)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertPicker)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCRLManager)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsNTLMAuthModule, InitTest)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHMAC)
@@ -239,6 +238,7 @@ NS_DEFINE_NAMED_CID(NS_CMSMESSAGE_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HASH_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_PICKER_CID);
+NS_DEFINE_NAMED_CID(NS_CRLMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_NTLMAUTHMODULE_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMCIPHER_CID);
 NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECT_CID);
@@ -277,6 +277,7 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_CRYPTO_HASH_CID, false, nullptr, nsCryptoHashConstructor },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr, nsCryptoHMACConstructor },
   { &kNS_CERT_PICKER_CID, false, nullptr, nsCertPickerConstructor },
+  { &kNS_CRLMANAGER_CID, false, nullptr, nsCRLManagerConstructor },
   { &kNS_NTLMAUTHMODULE_CID, false, nullptr, nsNTLMAuthModuleConstructor },
   { &kNS_STREAMCIPHER_CID, false, nullptr, nsStreamCipherConstructor },
   { &kNS_KEYMODULEOBJECT_CID, false, nullptr, nsKeyObjectConstructor },
@@ -319,6 +320,7 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID },
   { NS_CERT_PICKER_CONTRACTID, &kNS_CERT_PICKER_CID },
   { "@mozilla.org/uriloader/psm-external-content-listener;1", &kNS_PSMCONTENTLISTEN_CID },
+  { NS_CRLMANAGER_CONTRACTID, &kNS_CRLMANAGER_CID },
   { NS_CRYPTO_FIPSINFO_SERVICE_CONTRACTID, &kNS_PKCS11MODULEDB_CID },
   { NS_NTLMAUTHMODULE_CONTRACTID, &kNS_NTLMAUTHMODULE_CID },
   { NS_STREAMCIPHER_CONTRACTID, &kNS_STREAMCIPHER_CID },
@@ -335,6 +337,9 @@ static const mozilla::Module::CategoryEntry kNSSCategories[] = {
   { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-server-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
   { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-user-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
   { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-email-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
+  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-pkcs7-crl", "@mozilla.org/uriloader/psm-external-content-listener;1" },
+  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-crl", "@mozilla.org/uriloader/psm-external-content-listener;1" },
+  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/pkix-crl", "@mozilla.org/uriloader/psm-external-content-listener;1" },
   { nullptr }
 };
 

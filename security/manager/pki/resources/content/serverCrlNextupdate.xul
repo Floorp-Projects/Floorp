@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE dialog [
+    <!ENTITY % pipPkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd">
+    %pipPkiDTD;
+]>
+
+<dialog
+  id="serverCrlNextupdate"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  style="width: 30em;"
+  buttons="accept"
+  defaultButton="accept"
+  ondialoghelp="openHelp('exp_crl');"
+  onload="onLoad();"
+>
+
+<stringbundleset id="stringbundleset">
+  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+  <stringbundle id="brand_bundle" src="chrome://branding/locale/brand.properties"/>
+</stringbundleset>
+
+<script type="application/javascript" src="chrome://pippki/content/pippki.js" />
+<script type="application/javascript" src="chrome://pippki/content/serverCrlNextupdate.js" />
+
+  <description id="message1"/>
+  <separator/>
+  <description id="message2"/>
+  <separator/>
+  <label value="&serverCrlNextupdate.message;"/>
+
+</dialog>

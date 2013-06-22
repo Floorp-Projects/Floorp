@@ -4,7 +4,6 @@
 
 #include "CertVerifier.h"
 #include "nsNSSComponent.h"
-#include "nsServiceManagerUtils.h"
 #include "cert.h"
 #include "secerr.h"
 

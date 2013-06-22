@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/validation.dtd">
+
+<dialog id="crlImportSuccess" 
+  title="&crl.import.status.title;"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+  onload="onLoad();"
+  buttons="accept,cancel"
+  ondialogaccept="return onAccept();"
+  ondialogcancel="return onCancel();">
+
+  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+
+  <script type="application/javascript" src="chrome://pippki/content/crlImportDialog.js" />
+  <script type="application/javascript" src="pippki.js" />
+
+  <vbox style="margin: 5px;" flex="1">
+
+    <text value="&crl.import.success.message;" />
+    <separator/>
+  
+    <text class="header" value="&crl.issuer.label;" />
+    <hbox>
+      <text value="&crl.issuer.org.label;" />
+      <text id="orgText" />
+    </hbox>
+    <hbox>
+      <text value="&crl.issuer.orgunit.label;" />
+      <text id="orgUnitText" />
+    </hbox>
+    <separator/>
+
+    <hbox>
+      <text value="&crl.import.nextupdate.label;" />
+      <text id="nextUpdate" />
+    </hbox>
+    <separator/>
+
+    <vbox>
+      <text id="status" />
+      <text id="question" />
+    </vbox>
+
+  </vbox>
+
+</dialog>

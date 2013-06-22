@@ -76,6 +76,8 @@
 <!ENTITY examineCert.label "View Certificate">
 <!ENTITY examineCert.accesskey "V">
 
+<!ENTITY serverCrlNextupdate.message "Please ask your system administrator for assistance">
+
 <!-- Strings for the CreateCertInfo dialog  -->
 <!ENTITY createCertInfo.title "Generating A Private Key">
 <!ENTITY createCertInfo.msg1 "Key Generation in progress… This may take a few minutes….">
