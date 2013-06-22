@@ -153,12 +153,12 @@ nsPrintOptions::GetPrefName(const char * aPrefName,
     return aPrefName;
   }
 
-  mPrefName.Truncate(); /* mPrefName = ""; */
+  mPrefName.AssignLiteral("print.");
 
   if (aPrinterName.Length()) {
-    mPrefName.Append("printer_");
+    mPrefName.AppendLiteral("printer_");
     AppendUTF16toUTF8(aPrinterName, mPrefName);
-    mPrefName.Append(".");
+    mPrefName.AppendLiteral(".");
   }
   mPrefName += aPrefName;
 
