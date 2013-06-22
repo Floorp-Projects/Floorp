@@ -351,12 +351,14 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
     const FrameMetrics& metrics = container->GetFrameMetrics();
+    CSSToLayerScale paintScale = metrics.mDevPixelsPerCSSPixel
+      / LayerToLayoutDeviceScale(rootTransform.GetXScale(), rootTransform.GetYScale());
     CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     ScreenPoint offset(0, 0);
     SyncFrameMetrics(scrollOffset, treeTransform.mScale.scale, metrics.mScrollableRect,
-                     mLayersUpdated, displayPort, 1 / rootTransform.GetXScale(),
+                     mLayersUpdated, displayPort, paintScale,
                      mIsFirstPaint, fixedLayerMargins, offset);
 
     mIsFirstPaint = false;
@@ -404,15 +406,15 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx3DMatrix treeTransform;
 
-  CSSToLayerScale geckoZoom = LayerToCSSScale(aRootTransform.GetXScale(),
-                                              aRootTransform.GetYScale()).Inverse();
+  CSSToLayerScale geckoZoom = metrics.mDevPixelsPerCSSPixel /
+    LayerToLayoutDeviceScale(aRootTransform.GetXScale(), aRootTransform.GetYScale());
 
   LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.mScrollOffset * geckoZoom);
 
   if (mIsFirstPaint) {
     mContentRect = metrics.mScrollableRect;
     SetFirstPaintViewport(scrollOffsetLayerPixels,
-                          geckoZoom.scale,
+                          geckoZoom,
                           mContentRect);
     mIsFirstPaint = false;
   } else if (!metrics.mScrollableRect.IsEqualEdges(mContentRect)) {
@@ -432,10 +434,16 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
   ScreenPoint offset(0, 0);
-  ScreenPoint userScroll(0, 0);
-  CSSToScreenScale userZoom;
-  SyncViewportInfo(displayPort, geckoZoom.scale, mLayersUpdated,
-                   userScroll, userZoom.scale, userZoom.scale, fixedLayerMargins,
+
+  // Ideally we would initialize userZoom to AsyncPanZoomController::CalculateResolution(metrics)
+  // but this causes a reftest-ipc test to fail (see bug 883646 comment 27). The reason for this
+  // appears to be that metrics.mZoom is poorly initialized in some scenarios. In these scenarios,
+  // however, we can assume there is no async zooming in progress and so the following statement
+  // works fine.
+  CSSToScreenScale userZoom(metrics.mDevPixelsPerCSSPixel.scale * metrics.mResolution.scale);
+  ScreenPoint userScroll = metrics.mScrollOffset * userZoom;
+  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
+                   userScroll, userZoom, fixedLayerMargins,
                    offset);
   mLayersUpdated = false;
 
@@ -456,7 +464,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   }
 
   LayerPoint translation = (userScroll / zoomAdjust) - geckoScroll;
-  treeTransform = gfx3DMatrix(ViewTransform(-translation, userZoom));
+  treeTransform = gfx3DMatrix(ViewTransform(-translation, userZoom / metrics.mDevPixelsPerCSSPixel));
 
   // Translate fixed position layers so that they stay in the correct position
   // when userScroll and geckoScroll differ.
@@ -543,7 +551,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 
 void
 AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                                               float aZoom,
+                                               const CSSToLayerScale& aZoom,
                                                const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
@@ -561,10 +569,10 @@ AsyncCompositionManager::SetPageRect(const CSSRect& aCssPageRect)
 
 void
 AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                                          float aDisplayResolution,
+                                          const CSSToLayerScale& aDisplayResolution,
                                           bool aLayersUpdated,
                                           ScreenPoint& aScrollOffset,
-                                          float& aScaleX, float& aScaleY,
+                                          CSSToScreenScale& aScale,
                                           gfx::Margin& aFixedLayerMargins,
                                           ScreenPoint& aOffset)
 {
@@ -573,7 +581,7 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                             aDisplayResolution,
                                             aLayersUpdated,
                                             aScrollOffset,
-                                            aScaleX, aScaleY,
+                                            aScale,
                                             aFixedLayerMargins,
                                             aOffset);
 #endif
@@ -585,7 +593,7 @@ AsyncCompositionManager::SyncFrameMetrics(const ScreenPoint& aScrollOffset,
                                           const CSSRect& aCssPageRect,
                                           bool aLayersUpdated,
                                           const CSSRect& aDisplayPort,
-                                          float aDisplayResolution,
+                                          const CSSToLayerScale& aDisplayResolution,
                                           bool aIsFirstPaint,
                                           gfx::Margin& aFixedLayerMargins,
                                           ScreenPoint& aOffset)
