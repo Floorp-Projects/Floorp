@@ -80,7 +80,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLObjectElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED11(HTMLObjectElement,
+  NS_INTERFACE_TABLE_INHERITED10(HTMLObjectElement,
                                  nsIDOMHTMLObjectElement,
                                  imgINotificationObserver,
                                  nsIRequestObserver,
@@ -89,7 +89,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
                                  nsIObjectLoadingContent,
                                  nsIImageLoadingContent,
                                  imgIOnloadBlocker,
-                                 nsIInterfaceRequestor,
                                  nsIChannelEventSink,
                                  nsIConstraintValidation)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE

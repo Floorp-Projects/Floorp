@@ -25,7 +25,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsFocusManager.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -41,27 +41,7 @@
 
 #include "nsLayoutUtils.h"
 
-nsGenericHTMLElement*
-NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                       mozilla::dom::FromParser aFromParser)
-{
-  /*
-   * HTMLImageElement's will be created without a nsINodeInfo passed in
-   * if someone says "var img = new Image();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
-   */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
-  if (!nodeInfo) {
-    nsCOMPtr<nsIDocument> doc = nsContentUtils::GetDocumentFromCaller();
-    NS_ENSURE_TRUE(doc, nullptr);
-
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
-                                                   kNameSpaceID_XHTML,
-                                                   nsIDOMNode::ELEMENT_NODE);
-  }
-
-  return new mozilla::dom::HTMLImageElement(nodeInfo.forget());
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Image)
 
 namespace mozilla {
 namespace dom {
@@ -312,7 +292,7 @@ HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
     if (!tmp.IsEmpty()) {
       mForm->RemoveImageElementFromTable(this, tmp,
-                                         nsHTMLFormElement::AttributeUpdated);
+                                         HTMLFormElement::AttributeUpdated);
     }
   }
 
@@ -674,7 +654,7 @@ HTMLImageElement::SetForm(nsIDOMHTMLFormElement* aForm)
   NS_ASSERTION(!mForm,
                "We don't support switching from one non-null form to another.");
 
-  mForm = static_cast<nsHTMLFormElement*>(aForm);
+  mForm = static_cast<HTMLFormElement*>(aForm);
 }
 
 void
@@ -696,12 +676,12 @@ HTMLImageElement::ClearForm(bool aRemoveFromForm)
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveImageElementFromTable(this, nameVal,
-                                         nsHTMLFormElement::ElementRemoved);
+                                         HTMLFormElement::ElementRemoved);
     }
 
     if (!idVal.IsEmpty()) {
       mForm->RemoveImageElementFromTable(this, idVal,
-                                         nsHTMLFormElement::ElementRemoved);
+                                         HTMLFormElement::ElementRemoved);
     }
   }
 

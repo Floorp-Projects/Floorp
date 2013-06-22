@@ -74,6 +74,15 @@ public final class RectUtils {
                          y + (rect.height() * scale));
     }
 
+    public static RectF scaleAndRound(RectF rect, float scale) {
+        float left = rect.left * scale;
+        float top = rect.top * scale;
+        return new RectF(Math.round(left),
+                         Math.round(top),
+                         Math.round(left + (rect.width() * scale)),
+                         Math.round(top + (rect.height() * scale)));
+    }
+
     /** Returns the nearest integer rect of the given rect. */
     public static Rect round(RectF rect) {
         Rect r = new Rect();

@@ -12,15 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/rdf/util/src/objs.mk
 include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
-LIBRARY_NAME = xul
 MSVC_ENABLE_PGO := 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-# This is going to be a framework named "XUL", not an ordinary library named
-# "libxul.dylib"
-LIBRARY_NAME=XUL
 # Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
 # setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
 # as-is so that dependencies of the form -ltracemalloc still work.
@@ -650,11 +646,13 @@ endif
 
 ifdef MAKE_FRAMEWORK
 EFFECTIVE_LIB_PREFIX=
+EFFECTIVE_LIB_SUFFIX=
 else
 EFFECTIVE_LIB_PREFIX=$(DLL_PREFIX)
+EFFECTIVE_LIB_SUFFIX=$(DLL_SUFFIX)
 endif
 
-GTEST_LIB = $(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME).$(DLL_SUFFIX)
+GTEST_LIB = $(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME)$(EFFECTIVE_LIB_SUFFIX)
 EXTRA_MDDEPEND_FILES = $(GTEST_LIB).pp
 
 include $(topsrcdir)/config/rules.mk

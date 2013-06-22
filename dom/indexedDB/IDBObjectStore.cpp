@@ -171,7 +171,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -215,7 +215,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -252,7 +252,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual nsresult
   PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
@@ -309,7 +309,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -415,7 +415,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -454,7 +454,7 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -583,12 +583,12 @@ JSClass ThreadLocalJSRuntime::sGlobalClass = {
 
 inline
 already_AddRefed<IDBRequest>
-GenerateRequest(IDBObjectStore* aObjectStore, JSContext* aCx)
+GenerateRequest(IDBObjectStore* aObjectStore)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   IDBDatabase* database = aObjectStore->Transaction()->Database();
   return IDBRequest::Create(aObjectStore, database,
-                            aObjectStore->Transaction(), aCx);
+                            aObjectStore->Transaction());
 }
 
 struct MOZ_STACK_CLASS GetAddInfoClosure
@@ -1219,7 +1219,7 @@ IDBObjectStore::ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
 bool
 IDBObjectStore::DeserializeValue(JSContext* aCx,
                                  StructuredCloneReadInfo& aCloneReadInfo,
-                                 jsval* aValue)
+                                 JS::MutableHandle<JS::Value> aValue)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "Should only be deserializing on the main thread!");
@@ -1228,7 +1228,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
   JSAutoStructuredCloneBuffer& buffer = aCloneReadInfo.mCloneBuffer;
 
   if (!buffer.data()) {
-    *aValue = JSVAL_VOID;
+    aValue.setUndefined();
     return true;
   }
 
@@ -1240,7 +1240,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
     nullptr
   };
 
-  return buffer.read(aCx, aValue, &callbacks, &aCloneReadInfo);
+  return buffer.read(aCx, aValue.address(), &callbacks, &aCloneReadInfo);
 }
 
 // static
@@ -1840,7 +1840,7 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
     return rv;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<AddHelper> helper =
@@ -1897,7 +1897,7 @@ IDBObjectStore::AddOrPutInternal(
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, nullptr);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   StructuredCloneWriteInfo cloneWriteInfo;
@@ -1998,7 +1998,7 @@ IDBObjectStore::GetInternal(IDBKeyRange* aKeyRange,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<GetHelper> helper =
@@ -2031,7 +2031,7 @@ IDBObjectStore::GetAllInternal(IDBKeyRange* aKeyRange,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<GetAllHelper> helper =
@@ -2070,7 +2070,7 @@ IDBObjectStore::DeleteInternal(IDBKeyRange* aKeyRange,
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<DeleteHelper> helper =
@@ -2105,7 +2105,7 @@ IDBObjectStore::ClearInternal(JSContext* aCx,
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<ClearHelper> helper(new ClearHelper(mTransaction, request, this));
@@ -2136,7 +2136,7 @@ IDBObjectStore::CountInternal(IDBKeyRange* aKeyRange,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CountHelper> helper =
@@ -2171,7 +2171,7 @@ IDBObjectStore::OpenCursorInternal(IDBKeyRange* aKeyRange,
   IDBCursor::Direction direction =
     static_cast<IDBCursor::Direction>(aDirection);
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(this, aCx);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenCursorHelper> helper =
@@ -3128,18 +3128,13 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 nsresult
 AddHelper::GetSuccessResult(JSContext* aCx,
-                            jsval* aVal)
+                            JS::MutableHandle<JS::Value> aVal)
 {
   NS_ASSERTION(!mKey.IsUnset(), "Badness!");
 
   mCloneWriteInfo.mCloneBuffer.clear();
 
-  JS::Rooted<JS::Value> value(aCx);
-  nsresult rv = mKey.ToJSVal(aCx, &value);
-  if (NS_SUCCEEDED(rv)) {
-    *aVal = value;
-  }
-  return rv;
+  return mKey.ToJSVal(aCx, aVal);
 }
 
 void
@@ -3296,7 +3291,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 
 nsresult
 GetHelper::GetSuccessResult(JSContext* aCx,
-                            jsval* aVal)
+                            JS::MutableHandle<JS::Value> aVal)
 {
   bool result = IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, aVal);
 
@@ -3447,9 +3442,9 @@ DeleteHelper::DoDatabaseWork(mozIStorageConnection* /*aConnection */)
 
 nsresult
 DeleteHelper::GetSuccessResult(JSContext* aCx,
-                               jsval* aVal)
+                               JS::MutableHandle<JS::Value> aVal)
 {
-  *aVal = JSVAL_VOID;
+  aVal.setUndefined();
   return NS_OK;
 }
 
@@ -3737,7 +3732,7 @@ OpenCursorHelper::EnsureCursor()
 
 nsresult
 OpenCursorHelper::GetSuccessResult(JSContext* aCx,
-                                   jsval* aVal)
+                                   JS::MutableHandle<JS::Value> aVal)
 {
   nsresult rv = EnsureCursor();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3747,7 +3742,7 @@ OpenCursorHelper::GetSuccessResult(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   else {
-    *aVal = JSVAL_VOID;
+    aVal.setUndefined();
   }
 
   return NS_OK;
@@ -4208,7 +4203,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 nsresult
 GetAllHelper::GetSuccessResult(JSContext* aCx,
-                               jsval* aVal)
+                               JS::MutableHandle<JS::Value> aVal)
 {
   NS_ASSERTION(mCloneReadInfos.Length() <= mLimit, "Too many results!");
 
@@ -4431,9 +4426,9 @@ CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 nsresult
 CountHelper::GetSuccessResult(JSContext* aCx,
-                              jsval* aVal)
+                              JS::MutableHandle<JS::Value> aVal)
 {
-  *aVal = JS_NumberValue(static_cast<double>(mCount));
+  aVal.setNumber(static_cast<double>(mCount));
   return NS_OK;
 }
 

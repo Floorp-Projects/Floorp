@@ -2590,16 +2590,16 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 6. */
-    InvokeArgsGuard ag;
-    if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
+    InvokeArgs args2(cx);
+    if (!args2.init(0))
         return false;
 
-    ag.setCallee(toISO);
-    ag.setThis(ObjectValue(*obj));
+    args2.setCallee(toISO);
+    args2.setThis(ObjectValue(*obj));
 
-    if (!Invoke(cx, ag))
+    if (!Invoke(cx, args2))
         return false;
-    args.rval().set(ag.rval());
+    args.rval().set(args2.rval());
     return true;
 }
 
@@ -3138,7 +3138,7 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     RootedObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
     if (!dateProto)

@@ -84,7 +84,7 @@ class Pickle {
   bool ReadString16(void** iter, string16* result) const;
   bool ReadData(void** iter, const char** data, int* length) const;
   bool ReadBytes(void** iter, const char** data, int length,
-                 uint32_t alignment = sizeof(uint32_t)) const;
+                 uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
@@ -149,7 +149,7 @@ class Pickle {
   bool WriteString16(const string16& value);
   bool WriteData(const char* data, int length);
   bool WriteBytes(const void* data, int data_len,
-                  uint32_t alignment = sizeof(uint32_t));
+                  uint32_t alignment = sizeof(memberAlignmentType));
 
   // Same as WriteData, but allows the caller to write directly into the
   // Pickle. This saves a copy in cases where the data is not already
@@ -206,6 +206,8 @@ class Pickle {
     return (iter <= end_of_region) && (end_of_region <= end_of_payload());
   }
 
+  typedef uint32_t memberAlignmentType;
+
  protected:
   uint32_t payload_size() const { return header_->payload_size; }
 
@@ -246,16 +248,25 @@ class Pickle {
   // the return result for true (i.e., successful resizing).
   bool Resize(uint32_t new_capacity);
 
-  // Aligns 'i' by rounding it up to the next multiple of 'alignment'
-  static uint32_t AlignInt(uint32_t i, int alignment) {
-    return i + (alignment - (i % alignment)) % alignment;
+  // Round 'bytes' up to the next multiple of 'alignment'.  'alignment' must be
+  // a power of 2.
+  template<uint32_t alignment> struct ConstantAligner {
+    static uint32_t align(int bytes) {
+      MOZ_STATIC_ASSERT((alignment & (alignment - 1)) == 0,
+			"alignment must be a power of two");
+      return (bytes + (alignment - 1)) & ~static_cast<uint32_t>(alignment - 1);
+    }
+  };
+
+  static uint32_t AlignInt(int bytes) {
+    return ConstantAligner<sizeof(memberAlignmentType)>::align(bytes);
   }
 
   // Moves the iterator by the given number of bytes, making sure it is aligned.
   // Pointer (iterator) is NOT aligned, but the change in the pointer
-  // is guaranteed to be a multiple of sizeof(uint32_t).
+  // is guaranteed to be a multiple of sizeof(memberAlignmentType).
   static void UpdateIter(void** iter, int bytes) {
-    *iter = static_cast<char*>(*iter) + AlignInt(bytes, sizeof(uint32_t));
+    *iter = static_cast<char*>(*iter) + AlignInt(bytes);
   }
 
   // Find the end of the pickled data that starts at range_start.  Returns NULL

@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'nsWebBrowserFind.cpp',
 ]
 
+LIBRARY_NAME = 'find_s'
+

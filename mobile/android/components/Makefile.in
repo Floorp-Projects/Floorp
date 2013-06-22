@@ -9,16 +9,6 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-        MobileComponents.manifest \
-        AboutRedirector.js \
-        BrowserCLH.js \
-        DirectoryProvider.js\
-        HelperAppDialog.js \
-        Sidebar.js \
-        SessionStore.js \
-        $(NULL)
-
 EXTRA_COMPONENTS = \
         AlertsService.js \
         ContentPermissionPrompt.js \

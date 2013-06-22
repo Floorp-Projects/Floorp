@@ -6,8 +6,8 @@
 
 /* JS::Value implementation. */
 
-#ifndef js_Value_h___
-#define js_Value_h___
+#ifndef js_Value_h
+#define js_Value_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
@@ -1401,14 +1401,14 @@ JS_PUBLIC_API(void) HeapValueRelocate(Value *valuep);
 
 namespace js {
 
-template <> struct RootMethods<const JS::Value>
+template <> struct GCMethods<const JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }
     static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
 };
 
-template <> struct RootMethods<JS::Value>
+template <> struct GCMethods<JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }
@@ -1832,4 +1832,4 @@ JSVAL_TO_PRIVATE(jsval v)
     return JSVAL_TO_PRIVATE_PTR_IMPL(JSVAL_TO_IMPL(v));
 }
 
-#endif /* js_Value_h___ */
+#endif /* js_Value_h */

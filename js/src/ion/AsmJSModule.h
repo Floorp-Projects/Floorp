@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_asmjsmodule_h__
-#define jsion_asmjsmodule_h__
+#ifndef ion_AsmJSModule_h
+#define ion_AsmJSModule_h
 
 #ifdef JS_ION
 
@@ -613,11 +613,7 @@ class AsmJSModule
     }
 
     bool addHeapAccesses(const ion::AsmJSHeapAccessVector &accesses) {
-        if (!heapAccesses_.reserve(heapAccesses_.length() + accesses.length()))
-            return false;
-        for (size_t i = 0; i < accesses.length(); i++)
-            heapAccesses_.infallibleAppend(accesses[i]);
-        return true;
+        return heapAccesses_.append(accesses);
     }
     unsigned numHeapAccesses() const {
         return heapAccesses_.length();
@@ -630,11 +626,7 @@ class AsmJSModule
     }
 #if defined(JS_CPU_ARM)
     bool addBoundsChecks(const ion::AsmJSBoundsCheckVector &checks) {
-        if (!boundsChecks_.reserve(boundsChecks_.length() + checks.length()))
-            return false;
-        for (size_t i = 0; i < checks.length(); i++)
-            boundsChecks_.infallibleAppend(checks[i]);
-        return true;
+        return boundsChecks_.append(checks);
     }
     void convertBoundsChecksToActualOffset(ion::MacroAssembler &masm) {
         for (unsigned i = 0; i < boundsChecks_.length(); i++)
@@ -750,5 +742,4 @@ SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj);
 
 #endif  // JS_ION
 
-#endif  // jsion_asmjsmodule_h__
-
+#endif /* ion_AsmJSModule_h */

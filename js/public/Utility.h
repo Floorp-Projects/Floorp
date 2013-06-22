@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_utility_h__
-#define js_utility_h__
+#ifndef js_Utility_h
+#define js_Utility_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -860,4 +860,4 @@ typedef size_t(*JSMallocSizeOfFun)(const void *p);
 # define STATIC_SKIP_INFERENCE STATIC_INVARIANT(skip_inference())
 #endif /* HAVE_STATIC_ANNOTATIONS */
 
-#endif /* js_utility_h__ */
+#endif /* js_Utility_h */

@@ -23,7 +23,6 @@ OS_CXXFLAGS += -fomit-frame-pointer
 MOZ_FRAMEPTR_FLAGS := -fomit-frame-pointer
 endif #}
 
-LIBRARY_NAME	= exception_handler_s
 XPI_NAME 	= crashreporter
 
 VPATH += $(srcdir)/../log

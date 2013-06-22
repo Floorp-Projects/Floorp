@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ionframes_arm_h__
-#define jsion_ionframes_arm_h__
+#ifndef ion_arm_IonFrames_arm_h
+#define ion_arm_IonFrames_arm_h
 
 #include "ion/shared/IonFrames-shared.h"
 //#include "ion/arm/Assembler-arm.h"
@@ -344,13 +344,13 @@ class IonOOLPropertyOpExitFrameLayout
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *obj_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -392,13 +392,13 @@ class IonOOLProxyGetExitFrameLayout
     // The proxy object.
     JSObject *proxy_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *receiver_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -540,4 +540,4 @@ class InvalidationBailoutStack
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ionframes_arm_h
+#endif /* ion_arm_IonFrames_arm_h */

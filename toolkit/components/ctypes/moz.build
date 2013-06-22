@@ -12,3 +12,5 @@ CPP_SOURCES += [
     'ctypes.cpp',
 ]
 
+LIBRARY_NAME = 'jsctypes'
+

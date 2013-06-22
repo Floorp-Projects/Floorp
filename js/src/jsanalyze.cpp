@@ -414,12 +414,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_THROW:
           case JSOP_EXCEPTION:
           case JSOP_DEBUGGER:
-          case JSOP_FUNCALL:
             isIonInlineable = false;
             break;
 
           /* Additional opcodes which can be both compiled both normally and inline. */
           case JSOP_ARGUMENTS:
+          case JSOP_FUNCALL:
           case JSOP_FUNAPPLY:
           case JSOP_CALLEE:
           case JSOP_NOP:

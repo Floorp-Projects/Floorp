@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_compartment_h__
-#define jsion_ion_compartment_h__
+#ifndef ion_IonCompartment_h
+#define ion_IonCompartment_h
 
 #ifdef JS_ION
 
@@ -26,7 +26,30 @@ enum EnterJitType {
     EnterJitOptimized = 1
 };
 
-typedef void (*EnterIonCode)(void *code, int argc, Value *argv, StackFrame *fp,
+struct EnterJitData
+{
+    explicit EnterJitData(JSContext *cx)
+      : scopeChain(cx),
+        result(cx)
+    {}
+
+    uint8_t *jitcode;
+    StackFrame *osrFrame;
+
+    void *calleeToken;
+
+    Value *maxArgv;
+    unsigned maxArgc;
+    unsigned numActualArgs;
+    unsigned osrNumStackValues;
+
+    RootedObject scopeChain;
+    RootedValue result;
+
+    bool constructing;
+};
+
+typedef void (*EnterIonCode)(void *code, unsigned argc, Value *argv, StackFrame *fp,
                              CalleeToken calleeToken, JSObject *scopeChain,
                              size_t numStackValues, Value *vp);
 
@@ -320,5 +343,4 @@ void FinishInvalidation(FreeOp *fop, JSScript *script);
 
 #endif // JS_ION
 
-#endif // jsion_ion_compartment_h__
-
+#endif /* ion_IonCompartment_h */

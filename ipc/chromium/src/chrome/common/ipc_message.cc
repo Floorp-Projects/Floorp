@@ -41,6 +41,9 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
   header()->rpc_remote_stack_depth_guess = static_cast<uint32_t>(-1);
   header()->rpc_local_stack_depth = static_cast<uint32_t>(-1);
   header()->seqno = 0;
+#if defined(OS_MACOSX)
+  header()->cookie = 0;
+#endif
   InitLoggingVariables(name);
 }
 

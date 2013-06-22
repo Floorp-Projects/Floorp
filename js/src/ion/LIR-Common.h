@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_common_h__
-#define jsion_lir_common_h__
+#ifndef ion_LIR_Common_h
+#define ion_LIR_Common_h
 
 #include "ion/shared/Assembler-shared.h"
 
@@ -4567,6 +4567,28 @@ class LIsCallable : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LHaveSameClass : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(HaveSameClass);
+    LHaveSameClass(const LAllocation &left, const LAllocation &right,
+                   const LDefinition &temp) {
+        setOperand(0, left);
+        setOperand(1, right);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return getOperand(1);
+    }
+    MHaveSameClass *mir() const {
+        return mir_->toHaveSameClass();
+    }
+};
+
 class LAsmJSLoadHeap : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -4748,5 +4770,4 @@ class LAsmJSCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_lir_common_h__
-
+#endif /* ion_LIR_Common_h */

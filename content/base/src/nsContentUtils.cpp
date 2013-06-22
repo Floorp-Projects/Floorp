@@ -1671,15 +1671,10 @@ nsContentUtils::GetWindowFromCaller()
 nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {
-  JSContext *cx = nullptr;
-  JS::Rooted<JSObject*> obj(cx);
-  sXPConnect->GetCaller(&cx, obj.address());
-  NS_ASSERTION(cx && obj, "Caller ensures something is running");
-
-  JSAutoCompartment ac(cx, obj);
+  AutoJSContext cx;
 
   nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(JS_GetGlobalForScopeChain(cx)));
   if (!win) {
     return nullptr;
   }
@@ -6105,10 +6100,10 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                                   nsIDocument* aDocument)
 {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
-  NS_ENSURE_TRUE(aDocument->GetScriptGlobalObject(), true);
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aDocument->GetWindow());
+  NS_ENSURE_TRUE(sgo, true);
 
-  AutoPushJSContext cx(aDocument->GetScriptGlobalObject()->
-                       GetContext()->GetNativeContext());
+  AutoPushJSContext cx(sgo->GetContext()->GetNativeContext());
   NS_ENSURE_TRUE(cx, true);
 
   // The pattern has to match the entire value.

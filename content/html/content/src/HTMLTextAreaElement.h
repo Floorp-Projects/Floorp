@@ -16,7 +16,7 @@
 #include "nsEventStates.h"
 #include "nsStubMutationObserver.h"
 #include "nsIConstraintValidation.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "nsGkAtoms.h"
 
 #include "nsTextEditorState.h"

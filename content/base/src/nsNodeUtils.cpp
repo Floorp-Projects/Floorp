@@ -531,6 +531,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           nsIXPConnect *xpc = nsContentUtils::XPConnect();
           if (xpc) {
             rv = xpc->ReparentWrappedNativeIfFound(cx, wrapper, aReparentScope, aNode);
+          } else {
+            rv = NS_ERROR_FAILURE;
           }
         }
         if (NS_FAILED(rv)) {

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Parser_h__
-#define Parser_h__
+#ifndef frontend_Parser_h
+#define frontend_Parser_h
 
 /*
  * JS parser definitions.
@@ -224,6 +224,7 @@ struct ParseContext : public GenericParseContext
 
     inline bool init();
 
+    InBlockBool inBlock() const { return InBlockBool(!topStmt || topStmt->type == STMT_BLOCK); }
     unsigned blockid();
 
     // True if we are at the topmost level of a entire script or function body.
@@ -361,11 +362,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
   private:
     Parser *thisForCtor() { return this; }
 
-    /*
-     * Create a parse node with the given kind and op using the current token's
-     * atom. 
-    */
-    Node atomNode(ParseNodeKind kind, JSOp op);
+    Node stringLiteral();
+    inline Node newName(PropertyName *name);
 
     inline bool abortIfSyntaxParser();
 
@@ -419,11 +417,21 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node functionExpr();
     Node statements();
 
-    Node switchStatement();
+    Node blockStatement();
+    Node ifStatement();
+    Node doWhileStatement();
+    Node whileStatement();
     Node forStatement();
-    Node labeledStatement();
-    Node tryStatement();
+    Node switchStatement();
+    Node continueStatement();
+    Node breakStatement();
+    Node returnStatementOrYieldExpression();
     Node withStatement();
+    Node labeledStatement();
+    Node throwStatement();
+    Node tryStatement();
+    Node debuggerStatement();
+
 #if JS_HAS_BLOCK_SCOPE
     Node letStatement();
 #endif
@@ -452,7 +460,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
                              size_t startOffset, FunctionType type, FunctionSyntaxKind kind,
                              bool strict, bool *becameStrict = NULL);
 
-    Node unaryOpExpr(ParseNodeKind kind, JSOp op);
+    Node unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin);
 
     Node condition();
     Node comprehensionTail(Node kid, unsigned blockid, bool isGenexp,
@@ -463,7 +471,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool argumentList(Node listNode);
     Node bracketedExpr();
     Node letBlock(LetContext letContext);
-    Node returnOrYield(bool useAssignExpr);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
 
     Node identifierName();
@@ -479,7 +486,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool setAssignmentLhsOps(Node pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 
-    void addStatementToList(Node pn, Node kid);
     bool checkFunctionArguments();
     bool makeDefIntoUse(Definition *dn, Node pn, JSAtom *atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node *pn, FunctionSyntaxKind kind,
@@ -493,22 +499,24 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool setIncOpKid(Node pn, Node kid, TokenKind tt, bool preorder);
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(HandlePropertyName name, Node pn);
-    bool checkDeleteExpression(Node *pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node *duplicatedArg = NULL);
     Node pushLexicalScope(StmtInfoPC *stmt);
     Node pushLexicalScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     Node pushLetScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
-    Node newRegExp(const jschar *chars, size_t length, RegExpFlag flags);
+    Node newRegExp();
     Node newBindingNode(PropertyName *name, bool functionScope, VarContext varContext = HoistVars);
     bool checkDestructuring(BindData<ParseHandler> *data, Node left, bool toplevel = true);
     bool bindDestructuringVar(BindData<ParseHandler> *data, Node pn);
     bool bindDestructuringLHS(Node pn);
     bool makeSetCall(Node pn, unsigned msg);
-    PropertyName *foldPropertyByValue(Node pn);
     Node cloneLeftHandSide(Node opn);
     Node cloneParseTree(Node opn);
+
+    Node newNumber(const Token &tok) {
+        return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
+    }
 
     static bool
     bindDestructuringArg(JSContext *cx, BindData<ParseHandler> *data,
@@ -532,6 +540,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool leaveFunction(Node fn, HandlePropertyName funName,
                        ParseContext<ParseHandler> *outerpc,
                        FunctionSyntaxKind kind = Expression);
+
+    TokenPos pos() const { return tokenStream.currentToken().pos; }
 
     friend class CompExprTransplanter;
     friend class GenexpGuard<ParseHandler>;
@@ -564,4 +574,4 @@ Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, JSOp op);
  */
 #define TS(p) (&(p)->tokenStream)
 
-#endif /* Parser_h__ */
+#endif /* frontend_Parser_h */

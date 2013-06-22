@@ -53,6 +53,26 @@ addTest(function testWalkerRoot() {
   }).then(runNextTest));
 });
 
+addTest(function testInnerHTML() {
+  promiseDone(gWalker.documentElement().then(docElement => {
+    return gWalker.innerHTML(docElement);
+  }).then(longstring => {
+    return longstring.string();
+  }).then(innerHTML => {
+    ok(innerHTML === gInspectee.documentElement.innerHTML, "innerHTML should match");
+  }).then(runNextTest));
+});
+
+addTest(function testOuterHTML() {
+  promiseDone(gWalker.documentElement().then(docElement => {
+    return gWalker.outerHTML(docElement);
+  }).then(longstring => {
+    return longstring.string();
+  }).then(outerHTML => {
+    ok(outerHTML === gInspectee.documentElement.outerHTML, "outerHTML should match");
+  }).then(runNextTest));
+});
+
 addTest(function testQuerySelector() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#longlist").then(node => {
     is(node.getAttribute("data-test"), "exists", "should have found the right node");

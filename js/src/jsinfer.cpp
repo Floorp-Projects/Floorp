@@ -1215,25 +1215,6 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     }
 
     /*
-     * Short circuit indexed accesses on objects which are definitely typed
-     * arrays. Inference only covers the behavior of indexed accesses when
-     * getting integer properties, and the types for these are known ahead of
-     * time for typed arrays. Propagate the possible element types of the array
-     * to sites reading from it.
-     */
-    if (object->singleton && object->singleton->isTypedArray() && JSID_IS_VOID(id)) {
-        if (access != PROPERTY_WRITE) {
-            int arrayKind = object->proto->getClass() - TypedArray::protoClasses;
-            JS_ASSERT(arrayKind >= 0 && arrayKind < TypedArray::TYPE_MAX);
-
-            bool maybeDouble = (arrayKind == TypedArray::TYPE_FLOAT32 ||
-                                arrayKind == TypedArray::TYPE_FLOAT64);
-            target->addType(cx, maybeDouble ? Type::DoubleType() : Type::Int32Type());
-        }
-        return;
-    }
-
-    /*
      * Get the possible types of the property. For assignments, we do not
      * automatically update the 'own' bit on accessed properties, except for
      * indexed elements. This exception allows for JIT fast paths to avoid
@@ -1243,31 +1224,6 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     HeapTypeSet *types = object->getProperty(cx, id, markOwn);
     if (!types)
         return;
-
-    /*
-     * Try to resolve reads from the VM state ahead of time, e.g. for reads
-     * of defined global variables or from the prototype of the object. This
-     * reduces the need to monitor cold code as it first executes.
-     *
-     * This is speculating that the type of a defined property in a singleton
-     * object or prototype will not change between analysis and execution.
-     */
-    if (access != PROPERTY_WRITE) {
-        RootedObject singleton(cx, object->singleton);
-
-        /*
-         * Don't eagerly resolve reads from the prototype if the instance type
-         * is known to shadow the prototype's property.
-         */
-        if (!singleton && !types->ownProperty(false))
-            singleton = object->proto;
-
-        if (singleton) {
-            Type type = GetSingletonPropertyType(cx, singleton, id);
-            if (!type.isUnknown())
-                target->addType(cx, type);
-        }
-    }
 
     /* Capture the effects of a standard property access. */
     if (access == PROPERTY_WRITE) {
@@ -1337,8 +1293,6 @@ TypeConstraintProp<access>::newType(JSContext *cx, TypeSet *source, Type type)
 
         if (id == JSID_VOID)
             MarkPropertyAccessUnknown(cx, script, pc, target);
-        else
-            target->addType(cx, Type::Int32Type());
         return;
     }
 
@@ -1434,12 +1388,12 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
     if (type.isSingleObject()) {
         RootedObject obj(cx, type.singleObject());
 
-        if (!obj->isFunction()) {
+        if (!obj->is<JSFunction>()) {
             /* Calls on non-functions are dynamically monitored. */
             return;
         }
 
-        if (obj->toFunction()->isNative()) {
+        if (obj->as<JSFunction>().isNative()) {
             /*
              * The return value and all side effects within native calls should
              * be dynamically monitored, except when the compiler is generating
@@ -1455,7 +1409,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
              * which specializes particular natives.
              */
 
-            Native native = obj->toFunction()->native();
+            Native native = obj->as<JSFunction>().native();
 
             if (native == js::array_push) {
                 for (size_t i = 0; i < callsite->argumentCount; i++) {
@@ -1506,7 +1460,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
             return;
         }
 
-        callee = obj->toFunction();
+        callee = &obj->as<JSFunction>();
     } else if (type.isTypeObject()) {
         callee = type.typeObject()->interpretedFunction;
         if (!callee)
@@ -1593,9 +1547,9 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
 
     if (type.isSingleObject()) {
         RootedObject object(cx, type.singleObject());
-        if (!object->isFunction() || !object->toFunction()->isInterpreted())
+        if (!object->is<JSFunction>() || !object->as<JSFunction>().isInterpreted())
             return;
-        callee = object->toFunction();
+        callee = &object->as<JSFunction>();
     } else if (type.isTypeObject()) {
         TypeObject *object = type.typeObject();
         if (!object->interpretedFunction)
@@ -2392,7 +2346,7 @@ TypeCompartment::newTypeObject(JSContext *cx, Class *clasp, Handle<TaggedProto> 
                                                            sizeof(TypeObject), gc::TenuredHeap);
     if (!object)
         return NULL;
-    new(object) TypeObject(clasp, proto, clasp == &FunctionClass, unknown);
+    new(object) TypeObject(clasp, proto, clasp == &JSFunction::class_, unknown);
 
     if (!cx->typeInferenceEnabled())
         object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
@@ -4430,10 +4384,13 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         // original function, despecialize the type produced here. This includes
         // functions that are deep cloned at each lambda, as well as inner
         // functions to run-once lambdas which may actually execute multiple times.
-        if (script->compileAndGo && !script->treatAsRunOnce && !UseNewTypeForClone(obj->toFunction()))
+        if (script->compileAndGo && !script->treatAsRunOnce &&
+            !UseNewTypeForClone(&obj->as<JSFunction>()))
+        {
             res->addType(cx, Type::ObjectType(obj));
-        else
+        } else {
             res->addType(cx, Type::AnyObjectType());
+        }
         break;
       }
 
@@ -5178,8 +5135,10 @@ AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
          * This code may not have run yet, break any type barriers involved
          * in performing the call (for the greater good!).
          */
-        analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
-        analysis->breakTypeBarriers(cx, calleepc - script->code, true);
+        if (cx->compartment()->types.compiledInfo.outputIndex == RecompileInfo::NoCompilerRunning) {
+            analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
+            analysis->breakTypeBarriers(cx, calleepc - script->code, true);
+        }
 
         StackTypeSet *funcallTypes = analysis->poppedTypes(pc, GET_ARGC(pc) + 1);
         StackTypeSet *scriptTypes = analysis->poppedTypes(pc, GET_ARGC(pc));
@@ -5189,17 +5148,17 @@ AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
         {
             JSObject *funcallObj = funcallTypes->getSingleton();
             JSObject *scriptObj = scriptTypes->getSingleton();
-            if (!funcallObj || !funcallObj->isFunction() ||
-                funcallObj->toFunction()->isInterpreted() ||
-                !scriptObj || !scriptObj->isFunction() ||
-                !scriptObj->toFunction()->isInterpreted())
+            if (!funcallObj || !funcallObj->is<JSFunction>() ||
+                funcallObj->as<JSFunction>().isInterpreted() ||
+                !scriptObj || !scriptObj->is<JSFunction>() ||
+                !scriptObj->as<JSFunction>().isInterpreted())
             {
                 return false;
             }
-            Native native = funcallObj->toFunction()->native();
+            Native native = funcallObj->as<JSFunction>().native();
             if (native != js_fun_call && native != js_fun_apply)
                 return false;
-            function = scriptObj->toFunction();
+            function = &scriptObj->as<JSFunction>();
         }
 
         /*
@@ -5467,7 +5426,7 @@ types::MarkIteratorUnknownSlow(JSContext *cx)
     /* Check whether we are actually at an ITER opcode. */
 
     jsbytecode *pc;
-    RootedScript script(cx, cx->stack.currentScript(&pc));
+    RootedScript script(cx, cx->currentScript(&pc));
     if (!script || !pc)
         return;
 
@@ -5528,8 +5487,8 @@ void
 types::TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
                            bool constructing)
 {
-    unsigned nargs = callee->toFunction()->nargs;
-    JSScript *script = callee->toFunction()->nonLazyScript();
+    unsigned nargs = callee->as<JSFunction>().nargs;
+    JSScript *script = callee->as<JSFunction>().nonLazyScript();
 
     if (!constructing)
         TypeScript::SetThis(cx, script, args.thisv());
@@ -5876,7 +5835,8 @@ JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool s
             return false;
     } else {
         RootedObject funProto(cx, fun->getProto());
-        TypeObject *type = cx->compartment()->types.newTypeObject(cx, &FunctionClass, funProto);
+        TypeObject *type =
+            cx->compartment()->types.newTypeObject(cx, &JSFunction::class_, funProto);
         if (!type)
             return false;
 
@@ -5977,8 +5937,8 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
     JS_ASSERT(cx->compartment() == obj->compartment());
 
     /* De-lazification of functions can GC, so we need to do it up here. */
-    if (obj->isFunction() && obj->toFunction()->isInterpretedLazy()) {
-        RootedFunction fun(cx, obj->toFunction());
+    if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpretedLazy()) {
+        RootedFunction fun(cx, &obj->as<JSFunction>());
         if (!fun->getOrCreateScript(cx))
             return NULL;
     }
@@ -6002,8 +5962,8 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 
     type->singleton = obj;
 
-    if (obj->isFunction() && obj->toFunction()->isInterpreted())
-        type->interpretedFunction = obj->toFunction();
+    if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted())
+        type->interpretedFunction = &obj->as<JSFunction>();
 
     if (obj->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
@@ -6150,7 +6110,7 @@ JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFun
             AddTypeProperty(cx, type, "lastIndex", types::Type::Int32Type());
         }
 
-        if (obj->isString())
+        if (obj->is<StringObject>())
             AddTypeProperty(cx, type, "length", Type::Int32Type());
     }
 

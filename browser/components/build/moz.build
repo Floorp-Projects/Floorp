@@ -14,3 +14,5 @@ CPP_SOURCES += [
     'nsModule.cpp',
 ]
 
+LIBRARY_NAME = 'browsercomps'
+

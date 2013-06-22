@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_frames_inl_h__
-#define jsion_frames_inl_h__
+#ifndef ion_IonFrames_inl_h
+#define ion_IonFrames_inl_h
 
 #ifdef JS_ION
 
@@ -151,5 +151,4 @@ GetTopBaselineFrame(JSContext *cx)
 
 #endif // JS_ION
 
-#endif // jsion_frames_inl_h__
-
+#endif /* ion_IonFrames_inl_h */

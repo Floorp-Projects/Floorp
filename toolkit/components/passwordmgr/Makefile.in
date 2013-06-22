@@ -18,8 +18,8 @@ DISABLED_EXTRA_COMPONENTS = \
   storage-Legacy.js \
   $(NULL)
 
-DISABLED_EXTRA_PP_COMPONENTS = \
-  storage-mozStorage.js \
+EXTRA_JS_MODULES = \
+  LoginManagerContent.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

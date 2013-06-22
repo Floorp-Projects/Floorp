@@ -22,3 +22,6 @@ CPP_SOURCES += [
     'nsHTMLContentSink.cpp',
     'nsHTMLDocument.cpp',
 ]
+
+LIBRARY_NAME = 'gkconhtmldoc_s'
+

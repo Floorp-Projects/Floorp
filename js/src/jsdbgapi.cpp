@@ -76,7 +76,7 @@ IsTopFrameConstructing(JSContext *cx, AbstractFramePtr frame)
 JSTrapStatus
 js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->fp());
+    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
     if (!frame.script()->selfHosted) {
         if (frame.isFramePushedByExecute()) {
@@ -113,7 +113,8 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 bool
 js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->fp());
+    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
+
     JSBool ok = okArg;
 
     // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.
@@ -562,8 +563,8 @@ JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(const char *)
 JS_GetDebugClassName(JSObject *obj)
 {
-    if (obj->isDebugScope())
-        return obj->asDebugScope().scope().getClass()->name;
+    if (obj->is<DebugScopeObject>())
+        return obj->as<DebugScopeObject>().scope().getClass()->name;
     return obj->getClass()->name;
 }
 
@@ -678,7 +679,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
     uint32_t i = 0;
     JSPropertyDesc *pd = NULL;
 
-    if (obj->isDebugScope()) {
+    if (obj->is<DebugScopeObject>()) {
         AutoIdVector props(cx);
         if (!Proxy::enumerate(cx, obj, props))
             return false;
@@ -1237,8 +1238,6 @@ JSObject *
 JSAbstractFramePtr::scopeChain(JSContext *cx)
 {
     AbstractFramePtr frame = Valueify(*this);
-    JS_ASSERT_IF(frame.isStackFrame(),
-                 cx->stack.space().containsSlow(frame.asStackFrame()));
     RootedObject scopeChain(cx, frame.scopeChain());
     AutoCompartment ac(cx, scopeChain);
     return GetDebugScopeForFrame(cx, frame);
@@ -1248,9 +1247,6 @@ JSObject *
 JSAbstractFramePtr::callObject(JSContext *cx)
 {
     AbstractFramePtr frame = Valueify(*this);
-    JS_ASSERT_IF(frame.isStackFrame(),
-                 cx->stack.space().containsSlow(frame.asStackFrame()));
-
     if (!frame.isFunctionFrame())
         return NULL;
 
@@ -1265,7 +1261,7 @@ JSAbstractFramePtr::callObject(JSContext *cx)
      *    JS_GetFrameCallObject will return the innermost function's callobj.
      */
     while (o) {
-        ScopeObject &scope = o->asDebugScope().scope();
+        ScopeObject &scope = o->as<DebugScopeObject>().scope();
         if (scope.is<CallObject>())
             return o;
         o = o->enclosingScope();

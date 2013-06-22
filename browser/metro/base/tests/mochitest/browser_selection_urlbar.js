@@ -54,7 +54,7 @@ gTests.push({
     let xpos = SelectionHelperUI.caretMark.xPos;
     let ypos = SelectionHelperUI.caretMark.yPos + 10;
     var touchdrag = new TouchDragAndHold();
-    yield touchdrag.start(gWindow, xpos, ypos, 800, ypos);
+    yield touchdrag.start(gWindow, xpos, ypos, 900, ypos);
     yield waitForCondition(function () {
       return getTrimmedSelection(edit).toString() == 
         "mochitests/content/metro/browser/metro/base/tests/mochitest/res/textblock01.html";

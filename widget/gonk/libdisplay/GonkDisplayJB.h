@@ -44,7 +44,9 @@ public:
 
 private:
     hw_module_t const*        mModule;
+    hw_module_t const*        mFBModule;
     hwc_composer_device_1_t*  mHwc;
+    framebuffer_device_t*     mFBDevice;
     android::sp<android::FramebufferSurface> mFBSurface;
     android::sp<ANativeWindow> mSTClient;
     android::sp<android::IGraphicBufferAlloc> mAlloc;

@@ -603,9 +603,9 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
   nsCOMPtr<nsIWebNavigation> webNav;
   nsIDocument* currentDoc = thisContent->GetCurrentDoc();
   if (currentDoc) {
-    webNav = do_GetInterface(currentDoc->GetScriptGlobalObject());
+    webNav = do_GetInterface(currentDoc->GetWindow());
   }
-  
+
   uint32_t supported;
   nsresult rv = info->IsTypeSupported(aMimeType, webNav, &supported);
 
@@ -1061,8 +1061,40 @@ nsObjectLoadingContent::GetContentTypeForMIMEType(const nsACString& aMIMEType,
 }
 
 // nsIInterfaceRequestor
+// We use a shim class to implement this so that JS consumers still
+// see an interface requestor even though WebIDL bindings don't expose
+// that stuff.
+class ObjectInterfaceRequestorShim MOZ_FINAL : public nsIInterfaceRequestor,
+                                               public nsIChannelEventSink
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ObjectInterfaceRequestorShim,
+                                           nsIInterfaceRequestor)
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_FORWARD_NSICHANNELEVENTSINK(mContent->)
+
+  ObjectInterfaceRequestorShim(nsIChannelEventSink* aContent)
+    : mContent(aContent)
+  {}
+
+protected:
+  nsRefPtr<nsIChannelEventSink> mContent;
+};
+
+NS_IMPL_CYCLE_COLLECTION_1(ObjectInterfaceRequestorShim, mContent)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ObjectInterfaceRequestorShim)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ObjectInterfaceRequestorShim)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ObjectInterfaceRequestorShim)
+
 NS_IMETHODIMP
-nsObjectLoadingContent::GetInterface(const nsIID & aIID, void **aResult)
+ObjectInterfaceRequestorShim::GetInterface(const nsIID & aIID, void **aResult)
 {
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
     nsIChannelEventSink* sink = this;
@@ -2079,7 +2111,9 @@ nsObjectLoadingContent::OpenChannel()
     channelPolicy->SetContentSecurityPolicy(csp);
     channelPolicy->SetLoadType(nsIContentPolicy::TYPE_OBJECT);
   }
-  rv = NS_NewChannel(getter_AddRefs(chan), mURI, nullptr, group, this,
+  nsRefPtr<ObjectInterfaceRequestorShim> shim =
+    new ObjectInterfaceRequestorShim(this);
+  rv = NS_NewChannel(getter_AddRefs(chan), mURI, nullptr, group, shim,
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
                      nsIChannel::LOAD_CLASSIFY_URI,
                      channelPolicy);
@@ -3153,8 +3187,8 @@ nsObjectLoadingContent::TeardownProtoChain()
 }
 
 bool
-nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JSHandleObject aObject,
-                                     JSHandleId aId, unsigned aFlags,
+nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                                     JS::Handle<jsid> aId, unsigned aFlags,
                                      JS::MutableHandle<JSObject*> aObjp)
 {
   // We don't resolve anything; we just try to make sure we're instantiated

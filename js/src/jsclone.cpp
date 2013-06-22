@@ -598,7 +598,7 @@ JSStructuredCloneWriter::writeTypedArray(HandleObject arr)
 }
 
 bool
-JSStructuredCloneWriter::writeArrayBuffer(JSHandleObject obj)
+JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
@@ -606,7 +606,7 @@ JSStructuredCloneWriter::writeArrayBuffer(JSHandleObject obj)
 }
 
 bool
-JSStructuredCloneWriter::startObject(JSHandleObject obj, bool *backref)
+JSStructuredCloneWriter::startObject(HandleObject obj, bool *backref)
 {
     /* Handle cycles in the object graph. */
     CloneMemory::AddPtr p = memory.lookupForAdd(obj);
@@ -625,7 +625,7 @@ JSStructuredCloneWriter::startObject(JSHandleObject obj, bool *backref)
 }
 
 bool
-JSStructuredCloneWriter::traverseObject(JSHandleObject obj)
+JSStructuredCloneWriter::traverseObject(HandleObject obj)
 {
     /*
      * Get enumerable property ids and put them in reverse order so that they
@@ -694,13 +694,13 @@ JSStructuredCloneWriter::startWrite(const Value &v)
             return writeArrayBuffer(obj);
         } else if (obj->isObject() || obj->isArray()) {
             return traverseObject(obj);
-        } else if (obj->isBoolean()) {
-            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->asBoolean().unbox());
-        } else if (obj->isNumber()) {
+        } else if (obj->is<BooleanObject>()) {
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->as<BooleanObject>().unbox());
+        } else if (obj->is<NumberObject>()) {
             return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
-                   out.writeDouble(obj->asNumber().unbox());
-        } else if (obj->isString()) {
-            return writeString(SCTAG_STRING_OBJECT, obj->asString().unbox());
+                   out.writeDouble(obj->as<NumberObject>().unbox());
+        } else if (obj->is<StringObject>()) {
+            return writeString(SCTAG_STRING_OBJECT, obj->as<StringObject>().unbox());
         }
 
         if (callbacks && callbacks->write)

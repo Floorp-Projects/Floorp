@@ -30,7 +30,7 @@ function createRootActor()
         };
 
         actor.thread.requestTypes["scripts"] = function (aRequest) {
-          return this._discoverScriptsAndSources().then(function () {
+          return this._discoverSources().then(function () {
             let scripts = [];
             for (let s of this.dbg.findScripts()) {
               if (!s.url) {

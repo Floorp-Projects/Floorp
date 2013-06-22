@@ -19,15 +19,18 @@
 #include "builtin/ParallelArray.h"
 #include "ion/IonFrames.h"
 #include "js/RootingAPI.h"
+#include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/NumberObject.h"
+#include "vm/StringObject.h"
 
 #include "jsanalyzeinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 
-#ifndef jsinferinlines_h___
-#define jsinferinlines_h___
+#ifndef jsinferinlines_h
+#define jsinferinlines_h
 
 inline bool
 js::TaggedProto::isObject() const
@@ -465,11 +468,11 @@ GetClassForProtoKey(JSProtoKey key)
         return &ArrayClass;
 
       case JSProto_Number:
-        return &NumberClass;
+        return &NumberObject::class_;
       case JSProto_Boolean:
-        return &BooleanClass;
+        return &BooleanObject::class_;
       case JSProto_String:
-        return &StringClass;
+        return &StringObject::class_;
       case JSProto_RegExp:
         return &RegExpObject::class_;
 
@@ -518,7 +521,7 @@ GetTypeCallerInitObject(JSContext *cx, JSProtoKey key)
 {
     if (cx->typeInferenceEnabled()) {
         jsbytecode *pc;
-        RootedScript script(cx, cx->stack.currentScript(&pc));
+        RootedScript script(cx, cx->currentScript(&pc));
         if (script)
             return TypeScript::InitObject(cx, script, pc, key);
     }
@@ -548,8 +551,8 @@ void TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
 inline void
 TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 {
-    if (args.callee().isFunction()) {
-        JSFunction *fun = args.callee().toFunction();
+    if (args.callee().is<JSFunction>()) {
+        JSFunction *fun = &args.callee().as<JSFunction>();
         if (fun->isInterpreted() && fun->nonLazyScript()->types && cx->typeInferenceEnabled())
             TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
     }
@@ -958,7 +961,7 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 /* static */ inline void
 TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
 {
-    *script = cx->stack.currentScript(pc);
+    *script = cx->currentScript(pc);
 }
 
 /* static */ inline void
@@ -1805,7 +1808,7 @@ js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32_t offset, uint3
 namespace js {
 
 template <>
-struct RootMethods<const types::Type>
+struct GCMethods<const types::Type>
 {
     static types::Type initial() { return types::Type::UnknownType(); }
     static ThingRootKind kind() { return THING_ROOT_TYPE; }
@@ -1816,7 +1819,7 @@ struct RootMethods<const types::Type>
 };
 
 template <>
-struct RootMethods<types::Type>
+struct GCMethods<types::Type>
 {
     static types::Type initial() { return types::Type::UnknownType(); }
     static ThingRootKind kind() { return THING_ROOT_TYPE; }
@@ -1832,4 +1835,4 @@ namespace JS {
 template<> class AnchorPermitted<js::types::TypeObject *> { };
 }  // namespace JS
 
-#endif // jsinferinlines_h___
+#endif /* jsinferinlines_h */

@@ -30,6 +30,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
+                                  "resource://gre/modules/LoginManagerContent.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
@@ -1075,11 +1078,13 @@ var BrowserApp = {
         continue;
       }
 
-      // Some preferences use integers or strings instead of booleans for
-      // indicating enabled/disabled. Since the Java UI uses the type to
-      // determine which ui elements to show, we need to normalize these
-      // preferences to be actual booleans.
+      // Some Gecko preferences use integers or strings to reference
+      // state instead of directly representing the value.
+      // Since the Java UI uses the type to determine which ui elements
+      // to show and how to handle them, we need to normalize these
+      // preferences to the correct type.
       switch (prefName) {
+        // (string) index for determining which multiple choice value to display.
         case "browser.chrome.titlebarMode":
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
@@ -2563,6 +2568,8 @@ Tab.prototype = {
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
+    this.browser.addEventListener("DOMAutoComplete", this, true);
+    this.browser.addEventListener("blur", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
     // Note that the XBL binding is untrusted
@@ -2712,6 +2719,8 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
+    this.browser.removeEventListener("DOMAutoComplete", this, true);
+    this.browser.removeEventListener("blur", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
     this.browser.removeEventListener("PluginBindingAttached", this, true);
@@ -3205,6 +3214,8 @@ Tab.prototype = {
       case "DOMContentLoaded": {
         let target = aEvent.originalTarget;
 
+        LoginManagerContent.onContentLoaded(aEvent);
+
         // ignore on frames and other documents
         if (target != this.browser.contentDocument)
           return;
@@ -3365,6 +3376,12 @@ Tab.prototype = {
         // tab is brought to the front.
         let tab = BrowserApp.getTabForWindow(aEvent.target.top);
         BrowserApp.selectTab(tab);
+        break;
+      }
+
+      case "DOMAutoComplete":
+      case "blur": {
+        LoginManagerContent.onUsernameInput(aEvent);
         break;
       }
 
@@ -5121,7 +5138,7 @@ let HealthReportStatusListener = {
         break;
       case "nsPref:changed":
         sendMessageToJava({ type: "Pref:Change", pref: aData, value: Services.prefs.getBoolPref(aData) });
-        break
+        break;
     }
   },
 
@@ -5147,19 +5164,11 @@ let HealthReportStatusListener = {
   ],
 
   /**
-   * Return true if either the add-on has opted out of AMO updates, and thus
-   * we shouldn't provide details to FHR, or it's an add-on type that we
-   * don't want to report details for.
+   * Return true if the add-on is not of a type for which we report full details.
    * These add-ons will still make it over to Java, but will be filtered out.
    */
   _shouldIgnore: function (aAddon) {
-    // TODO: check this pref. If it's false, the add-on has opted out of
-    // AMO updates, and should not be reported.
-    let optOutPref = "extensions." + aAddon.id + ".getAddons.cache.enabled";
-    if (this.FULL_DETAIL_TYPES.indexOf(aAddon.type) == -1) {
-      return true;
-    }
-    return false;
+    return this.FULL_DETAIL_TYPES.indexOf(aAddon.type) == -1;
   },
 
   _dateToDays: function (aDate) {

@@ -81,6 +81,6 @@ xpidl_to_native = [
     ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
     ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
     ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
-    ['nsIDOMGamepad', 'nsDOMGamepad', 'nsIDOMGamepad']
+    ['nsIDOMGamepad', 'Gamepad', 'nsIDOMGamepad']
   ]
 

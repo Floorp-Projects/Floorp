@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_heap_h___
-#define gc_heap_h___
+#ifndef gc_Heap_h
+#define gc_Heap_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
@@ -27,6 +27,9 @@ struct JSRuntime;
 }
 
 namespace js {
+
+// Defined in vm/ForkJoin.cpp
+extern bool InSequentialOrExclusiveParallelSection();
 
 class FreeOp;
 
@@ -87,6 +90,7 @@ static const size_t MAX_BACKGROUND_FINALIZE_KINDS = FINALIZE_LIMIT - FINALIZE_OB
  */
 struct Cell
 {
+  public:
     inline ArenaHeader *arenaHeader() const;
     inline AllocKind tenuredGetAllocKind() const;
     MOZ_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
@@ -105,12 +109,6 @@ struct Cell
     inline uintptr_t address() const;
     inline Chunk *chunk() const;
 };
-
-/*
- * This is the maximum number of arenas we allow in the FreeCommitted state
- * before we trigger a GC_SHRINK to release free arenas to the OS.
- */
-const static uint32_t FreeCommittedArenasThreshold = (32 << 20) / ArenaSize;
 
 /*
  * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
@@ -953,6 +951,7 @@ Cell::arenaHeader() const
 inline JSRuntime *
 Cell::runtime() const
 {
+    JS_ASSERT(InSequentialOrExclusiveParallelSection());
     return chunk()->info.runtime;
 }
 
@@ -990,6 +989,7 @@ Cell::unmark(uint32_t color) const
 Zone *
 Cell::tenuredZone() const
 {
+    JS_ASSERT(InSequentialOrExclusiveParallelSection());
     JS_ASSERT(isTenured());
     return arenaHeader()->zone;
 }
@@ -1063,4 +1063,4 @@ InFreeList(ArenaHeader *aheader, void *thing)
 } /* namespace gc */
 } /* namespace js */
 
-#endif /* gc_heap_h___ */
+#endif /* gc_Heap_h */

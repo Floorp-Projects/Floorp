@@ -22,6 +22,8 @@ LIBS = ['bar.lib', 'foo.lib']
 
 SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
 
+SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']
+
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']

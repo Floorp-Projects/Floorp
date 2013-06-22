@@ -298,7 +298,7 @@ nsFrameLoader::Create(Element* aOwner, bool aNetworkCreated)
 {
   NS_ENSURE_TRUE(aOwner, nullptr);
   nsIDocument* doc = aOwner->OwnerDoc();
-  NS_ENSURE_TRUE(!doc->GetDisplayDocument() &&
+  NS_ENSURE_TRUE(!doc->IsResourceDoc() &&
                  ((!doc->IsLoadedAsData() && aOwner->GetCurrentDoc()) ||
                    doc->IsStaticDocument()),
                  nullptr);
@@ -1792,12 +1792,12 @@ nsFrameLoader::GetWindowDimensions(nsRect& aRect)
     return NS_ERROR_FAILURE;
   }
 
-  if (doc->GetDisplayDocument()) {
+  if (doc->IsResourceDoc()) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+    do_GetInterface(doc->GetWindow());
 
   if (!parentAsWebNav) {
     return NS_ERROR_FAILURE;
@@ -1967,13 +1967,13 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  if (doc->GetDisplayDocument()) {
+  if (doc->IsResourceDoc()) {
     // Don't allow subframe loads in external reference documents
     return false;
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+    do_GetInterface(doc->GetWindow());
 
   if (!parentAsWebNav) {
     return false;

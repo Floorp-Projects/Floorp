@@ -12,3 +12,5 @@ EXPORTS.speex += [
     'speex_types.h',
 ]
 
+LIBRARY_NAME = 'speex_resampler'
+

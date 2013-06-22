@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ParseNode_h__
-#define ParseNode_h__
+#ifndef frontend_ParseNode_h
+#define frontend_ParseNode_h
 
 #include "mozilla/Attributes.h"
 
@@ -370,12 +370,12 @@ enum ParseNodeKind
  *                          PN_NAME node for x on left and right of PNK_COLON
  *                          node in PNK_OBJECT's list, has PNX_DESTRUCT flag
  * PNK_NAME,    name        pn_atom: name, string, or object atom
- * PNK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
- *                                 JSOP_REGEXP
- * PNK_REGEXP               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
+ * PNK_STRING               pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT
+ *                          If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
  *                          with pn_cookie telling (staticLevel, slot) (see
  *                          jsscript.h's UPVAR macros) and pn_dflags telling
  *                          const-ness and static analysis results
+ * PNK_REGEXP   nullary     pn_objbox: RegExp model object
  * PNK_NAME     name        If pn_used, PNK_NAME uses the lexdef member instead
  *                          of the expr member it overlays
  * PNK_NUMBER   dval        pn_dval: double value of numeric literal
@@ -432,11 +432,9 @@ struct ParseNode
   public:
     ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity)
       : pn_type(kind), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
-        pn_offset(0), pn_next(NULL), pn_link(NULL)
+        pn_pos(0, 0), pn_offset(0), pn_next(NULL), pn_link(NULL)
     {
         JS_ASSERT(kind < PNK_LIMIT);
-        pn_pos.begin = 0;
-        pn_pos.end = 0;
         memset(&pn_u, 0, sizeof pn_u);
     }
 
@@ -820,9 +818,16 @@ struct NullaryNode : public ParseNode
 {
     NullaryNode(ParseNodeKind kind, const TokenPos &pos)
       : ParseNode(kind, JSOP_NOP, PN_NULLARY, pos) {}
+    NullaryNode(ParseNodeKind kind, JSOp op, const TokenPos &pos)
+      : ParseNode(kind, op, PN_NULLARY, pos) {}
 
-    static inline NullaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
-        return (NullaryNode *) ParseNode::create(kind, PN_NULLARY, handler);
+    // This constructor is for a few mad uses in the emitter. It populates
+    // the pn_atom field even though that field belongs to a branch in pn_u
+    // that nullary nodes shouldn't use -- bogus.
+    NullaryNode(ParseNodeKind kind, JSOp op, const TokenPos &pos, JSAtom *atom)
+      : ParseNode(kind, op, PN_NULLARY, pos)
+    {
+        pn_atom = atom;
     }
 
     static bool test(const ParseNode &node) {
@@ -888,8 +893,17 @@ struct TernaryNode : public ParseNode
 {
     TernaryNode(ParseNodeKind kind, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
       : ParseNode(kind, op, PN_TERNARY,
-                  TokenPos::make((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
-                                 (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
+                  TokenPos((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
+                           (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
+    {
+        pn_kid1 = kid1;
+        pn_kid2 = kid2;
+        pn_kid3 = kid3;
+    }
+
+    TernaryNode(ParseNodeKind kind, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3,
+                const TokenPos &pos)
+      : ParseNode(kind, op, PN_TERNARY, pos)
     {
         pn_kid1 = kid1;
         pn_kid2 = kid2;
@@ -911,10 +925,15 @@ struct TernaryNode : public ParseNode
 
 struct ListNode : public ParseNode
 {
-    ListNode(ParseNodeKind kind, JSOp op, ParseNode *kid)
-      : ParseNode(kind, op, PN_LIST)
+    ListNode(ParseNodeKind kind, const TokenPos &pos)
+      : ParseNode(kind, JSOP_NOP, PN_LIST, pos)
     {
-        pn_pos = kid->pn_pos;
+        makeEmpty();
+    }
+
+    ListNode(ParseNodeKind kind, JSOp op, ParseNode *kid)
+      : ParseNode(kind, op, PN_LIST, kid->pn_pos)
+    {
         initList(kid);
     }
 
@@ -946,12 +965,24 @@ struct CodeNode : public ParseNode
 #endif
 };
 
+enum InBlockBool {
+    NotInBlock = false,
+    InBlock = true
+};
+
 struct NameNode : public ParseNode
 {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom,
-                            FullParseHandler *handler, ParseContext<FullParseHandler> *pc);
-
-    inline void initCommon(ParseContext<FullParseHandler> *pc);
+    NameNode(ParseNodeKind kind, JSOp op, JSAtom *atom, InBlockBool inBlock, uint32_t blockid,
+             const TokenPos &pos)
+      : ParseNode(kind, op, PN_NAME, pos)
+    {
+        pn_atom = atom;
+        pn_expr = NULL;
+        pn_cookie.makeFree();
+        pn_dflags = inBlock ? PND_BLOCKCHILD : 0;
+        pn_blockid = blockid;
+        JS_ASSERT(pn_blockid == blockid);  // check for bitfield overflow
+    }
 
     static bool test(const ParseNode &node) {
         return node.isArity(PN_NAME);
@@ -973,7 +1004,7 @@ class LabeledStatement : public ParseNode
 {
   public:
     LabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin)
-      : ParseNode(PNK_LABEL, JSOP_NOP, PN_NAME, TokenPos::make(begin, stmt->pn_pos.end))
+      : ParseNode(PNK_LABEL, JSOP_NOP, PN_NAME, TokenPos(begin, stmt->pn_pos.end))
     {
         pn_atom = label;
         pn_expr = stmt;
@@ -998,8 +1029,8 @@ class LabeledStatement : public ParseNode
 class LoopControlStatement : public ParseNode
 {
   protected:
-    LoopControlStatement(ParseNodeKind kind, PropertyName *label, uint32_t begin, uint32_t end)
-      : ParseNode(kind, JSOP_NOP, PN_NULLARY, TokenPos::make(begin, end))
+    LoopControlStatement(ParseNodeKind kind, PropertyName *label, const TokenPos &pos)
+      : ParseNode(kind, JSOP_NOP, PN_NULLARY, pos)
     {
         JS_ASSERT(kind == PNK_BREAK || kind == PNK_CONTINUE);
         pn_u.loopControl.label = label;
@@ -1022,8 +1053,8 @@ class LoopControlStatement : public ParseNode
 class BreakStatement : public LoopControlStatement
 {
   public:
-    BreakStatement(PropertyName *label, uint32_t begin, uint32_t end)
-      : LoopControlStatement(PNK_BREAK, label, begin, end)
+    BreakStatement(PropertyName *label, const TokenPos &pos)
+      : LoopControlStatement(PNK_BREAK, label, pos)
     { }
 
     static bool test(const ParseNode &node) {
@@ -1037,8 +1068,8 @@ class BreakStatement : public LoopControlStatement
 class ContinueStatement : public LoopControlStatement
 {
   public:
-    ContinueStatement(PropertyName *label, uint32_t begin, uint32_t end)
-      : LoopControlStatement(PNK_CONTINUE, label, begin, end)
+    ContinueStatement(PropertyName *label, const TokenPos &pos)
+      : LoopControlStatement(PNK_CONTINUE, label, pos)
     { }
 
     static bool test(const ParseNode &node) {
@@ -1062,7 +1093,7 @@ class ConditionalExpression : public ParseNode
   public:
     ConditionalExpression(ParseNode *condition, ParseNode *thenExpr, ParseNode *elseExpr)
       : ParseNode(PNK_CONDITIONAL, JSOP_NOP, PN_TERNARY,
-                  TokenPos::make(condition->pn_pos.begin, elseExpr->pn_pos.end))
+                  TokenPos(condition->pn_pos.begin, elseExpr->pn_pos.end))
     {
         JS_ASSERT(condition);
         JS_ASSERT(thenExpr);
@@ -1112,11 +1143,30 @@ class BooleanLiteral : public ParseNode
     { }
 };
 
+class RegExpLiteral : public NullaryNode
+{
+  public:
+    RegExpLiteral(ObjectBox *reobj, const TokenPos &pos)
+      : NullaryNode(PNK_REGEXP, JSOP_REGEXP, pos)
+    {
+        pn_objbox = reobj;
+    }
+
+    ObjectBox *objbox() const { return pn_objbox; }
+
+    static bool test(const ParseNode &node) {
+        bool match = node.isKind(PNK_REGEXP);
+        JS_ASSERT_IF(match, node.isArity(PN_NULLARY));
+        JS_ASSERT_IF(match, node.isOp(JSOP_REGEXP));
+        return match;
+    }
+};
+
 class PropertyAccess : public ParseNode
 {
   public:
     PropertyAccess(ParseNode *lhs, PropertyName *name, uint32_t begin, uint32_t end)
-      : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos::make(begin, end))
+      : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos(begin, end))
     {
         JS_ASSERT(lhs != NULL);
         JS_ASSERT(name != NULL);
@@ -1143,7 +1193,7 @@ class PropertyByValue : public ParseNode
 {
   public:
     PropertyByValue(ParseNode *lhs, ParseNode *propExpr, uint32_t begin, uint32_t end)
-      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
+      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos(begin, end))
     {
         pn_u.binary.left = lhs;
         pn_u.binary.right = propExpr;
@@ -1361,7 +1411,7 @@ class ObjectBox
 
     ObjectBox(JSObject *object, ObjectBox *traceLink);
     bool isModuleBox() { return object->is<Module>(); }
-    bool isFunctionBox() { return object->isFunction(); }
+    bool isFunctionBox() { return object->is<JSFunction>(); }
     ModuleBox *asModuleBox();
     FunctionBox *asFunctionBox();
     void trace(JSTracer *trc);
@@ -1389,4 +1439,4 @@ enum FunctionSyntaxKind { Expression, Statement, Arrow };
 } /* namespace frontend */
 } /* namespace js */
 
-#endif /* ParseNode_h__ */
+#endif /* frontend_ParseNode_h */

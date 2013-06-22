@@ -93,17 +93,11 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     if (native == intrinsic_NewDenseArray)
         return inlineNewDenseArray(callInfo);
 
-    // Utility intrinsics.
-    if (native == intrinsic_ThrowError)
-        return inlineThrowError(callInfo);
-    if (native == intrinsic_IsCallable)
-        return inlineIsCallable(callInfo);
-    if (native == intrinsic_ToObject)
-        return inlineToObject(callInfo);
-#ifdef DEBUG
-    if (native == intrinsic_Dump)
-        return inlineDump(callInfo);
-#endif
+    // Slot intrinsics.
+    if (native == intrinsic_UnsafeSetReservedSlot)
+        return inlineUnsafeSetReservedSlot(callInfo);
+    if (native == intrinsic_UnsafeGetReservedSlot)
+        return inlineUnsafeGetReservedSlot(callInfo);
 
     // Parallel intrinsics.
     if (native == intrinsic_ShouldForceSequential)
@@ -114,6 +108,22 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineNewParallelArray(callInfo);
     if (native == ParallelArrayObject::construct)
         return inlineParallelArray(callInfo);
+
+    // Utility intrinsics.
+    if (native == intrinsic_ThrowError)
+        return inlineThrowError(callInfo);
+    if (native == intrinsic_IsCallable)
+        return inlineIsCallable(callInfo);
+    if (native == intrinsic_NewObjectWithClassPrototype)
+        return inlineNewObjectWithClassPrototype(callInfo);
+    if (native == intrinsic_HaveSameClass)
+        return inlineHaveSameClass(callInfo);
+    if (native == intrinsic_ToObject)
+        return inlineToObject(callInfo);
+#ifdef DEBUG
+    if (native == intrinsic_Dump)
+        return inlineDump(callInfo);
+#endif
 
     return InliningStatus_NotInlined;
 }
@@ -1099,8 +1109,8 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
     types::StackTypeSet *ctorTypes = callInfo.getArg(0)->resultTypeSet();
     JSObject *targetObj = ctorTypes ? ctorTypes->getSingleton() : NULL;
     RootedFunction target(cx);
-    if (targetObj && targetObj->isFunction())
-        target = targetObj->toFunction();
+    if (targetObj && targetObj->is<JSFunction>())
+        target = &targetObj->as<JSFunction>();
     if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
         RootedScript scriptRoot(cx, script());
         target = CloneFunctionAtCallsite(cx, target, scriptRoot, pc);
@@ -1286,6 +1296,119 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
                                                          templateObject);
     current->add(newObject);
     current->push(newObject);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineUnsafeSetReservedSlot(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 3 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Undefined)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(1)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // Don't inline if we don't have a constant slot.
+    MDefinition *arg = callInfo.getArg(1)->toPassArg()->getArgument();
+    if (!arg->isConstant())
+        return InliningStatus_NotInlined;
+    uint32_t slot = arg->toConstant()->value().toPrivateUint32();
+
+    callInfo.unwrapArgs();
+
+    MStoreFixedSlot *store = MStoreFixedSlot::New(callInfo.getArg(0), slot, callInfo.getArg(2));
+    current->add(store);
+    current->push(store);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(1)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // Don't inline if we don't have a constant slot.
+    MDefinition *arg = callInfo.getArg(1)->toPassArg()->getArgument();
+    if (!arg->isConstant())
+        return InliningStatus_NotInlined;
+    uint32_t slot = arg->toConstant()->value().toPrivateUint32();
+
+    callInfo.unwrapArgs();
+
+    MLoadFixedSlot *load = MLoadFixedSlot::New(callInfo.getArg(0), slot);
+    current->add(load);
+    current->push(load);
+
+    // We don't track reserved slot types, so always emit a barrier.
+    pushTypeBarrier(load, getInlineReturnTypeSet(), true);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineNewObjectWithClassPrototype(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    MDefinition *arg = callInfo.getArg(0)->toPassArg()->getArgument();
+    if (!arg->isConstant())
+        return InliningStatus_NotInlined;
+    JSObject *proto = &arg->toConstant()->value().toObject();
+
+    JSObject *templateObject = NewObjectWithGivenProto(cx, proto->getClass(), proto, cx->global());
+    if (!templateObject)
+        return InliningStatus_Error;
+
+    MNewObject *newObj = MNewObject::New(templateObject,
+                                         /* templateObjectIsClassPrototype = */ true);
+    current->add(newObj);
+    current->push(newObj);
+
+    if (!resumeAfter(newObj))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(1)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    types::StackTypeSet *arg1Types = callInfo.getArg(0)->resultTypeSet();
+    types::StackTypeSet *arg2Types = callInfo.getArg(1)->resultTypeSet();
+    Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
+    Class *arg2Clasp = arg2Types ? arg1Types->getKnownClass() : NULL;
+    if (arg1Clasp && arg2Clasp) {
+        MConstant *constant = MConstant::New(BooleanValue(arg1Clasp == arg2Clasp));
+        current->add(constant);
+        current->push(constant);
+        return InliningStatus_Inlined;
+    }
+
+    callInfo.unwrapArgs();
+
+    MHaveSameClass *sameClass = MHaveSameClass::New(callInfo.getArg(0), callInfo.getArg(1));
+    current->add(sameClass);
+    current->push(sameClass);
 
     return InliningStatus_Inlined;
 }

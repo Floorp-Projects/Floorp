@@ -132,7 +132,10 @@ function part11() {
   } catch (e) {}
 }
 
-function part12() {
+function part12(type) {
+  if (type != "shown") {
+    return;
+  }
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
   notification.options.eventCallback = null;
   let centerAction = null;

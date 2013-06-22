@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'nsViewManager.cpp',
 ]
 
+LIBRARY_NAME = 'gkview_s'
+

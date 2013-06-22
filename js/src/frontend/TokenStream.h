@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TokenStream_h__
-#define TokenStream_h__
+#ifndef frontend_TokenStream_h
+#define frontend_TokenStream_h
 
 /*
  * JS lexical scanner interface.
@@ -72,7 +72,6 @@ enum TokenKind {
     TOK_THROW,                     /* throw keyword */
     TOK_DEBUGGER,                  /* debugger keyword */
     TOK_YIELD,                     /* yield from generator function */
-    TOK_LEXICALSCOPE,              /* block scope AST node label */
     TOK_LET,                       /* let keyword */
     TOK_EXPORT,                    /* export keyword */
     TOK_IMPORT,                    /* import keyword */
@@ -199,19 +198,15 @@ struct TokenPos {
     uint32_t          begin;          /* offset of the token's first char */
     uint32_t          end;            /* offset of 1 past the token's last char */
 
-    static TokenPos make(uint32_t begin, uint32_t end) {
-        JS_ASSERT(begin <= end);
-        TokenPos pos = {begin, end};
-        return pos;
-    }
+    TokenPos() {}
+    TokenPos(uint32_t begin, uint32_t end) : begin(begin), end(end) {}
 
     /* Return a TokenPos that covers left, right, and anything in between. */
     static TokenPos box(const TokenPos &left, const TokenPos &right) {
         JS_ASSERT(left.begin <= left.end);
         JS_ASSERT(left.end <= right.begin);
         JS_ASSERT(right.begin <= right.end);
-        TokenPos pos = {left.begin, right.end};
-        return pos;
+        return TokenPos(left.begin, right.end);
     }
 
     bool operator==(const TokenPos& bpos) const {
@@ -956,4 +951,4 @@ extern const char *
 TokenKindToString(js::frontend::TokenKind tt);
 #endif
 
-#endif /* TokenStream_h__ */
+#endif /* frontend_TokenStream_h */
