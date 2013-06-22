@@ -28,7 +28,7 @@ class AutoResolveRefLayers;
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
   ViewTransform(LayerPoint aTranslation = LayerPoint(),
-                CSSToScreenScale aScale = CSSToScreenScale())
+                LayoutDeviceToScreenScale aScale = LayoutDeviceToScreenScale())
     : mTranslation(aTranslation)
     , mScale(aScale)
   {}
@@ -41,7 +41,7 @@ struct ViewTransform {
   }
 
   LayerPoint mTranslation;
-  CSSToScreenScale mScale;
+  LayoutDeviceToScreenScale mScale;
 };
 
 /**
@@ -115,14 +115,14 @@ private:
                                         bool* aWantNextFrame);
 
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                             float aZoom,
+                             const CSSToLayerScale& aZoom,
                              const CSSRect& aCssPageRect);
   void SetPageRect(const CSSRect& aCssPageRect);
   void SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                        float aDisplayResolution,
+                        const CSSToLayerScale& aDisplayResolution,
                         bool aLayersUpdated,
                         ScreenPoint& aScrollOffset,
-                        float& aScaleX, float& aScaleY,
+                        CSSToScreenScale& aScale,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
   void SyncFrameMetrics(const ScreenPoint& aScrollOffset,
@@ -130,7 +130,7 @@ private:
                         const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
                         const CSSRect& aDisplayPort,
-                        float aDisplayResolution,
+                        const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
