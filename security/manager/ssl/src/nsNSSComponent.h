@@ -11,19 +11,15 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISignatureVerifier.h"
-#include "nsIURIContentListener.h"
-#include "nsIStreamListener.h"
 #include "nsIEntropyCollector.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsWeakReference.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMEventTarget.h"
 #endif
 #include "nsINSSErrorsService.h"
-#include "nsNetUtil.h"
 #include "nsNSSCallbacks.h"
 #include "ScopedNSSTypes.h"
 #include "nsNSSHelper.h"
@@ -53,9 +49,6 @@ class CertVerifier;
   { 0x6ffbb526, 0x205b, 0x49c5, \
     { 0xae, 0x3f, 0x59, 0x59, 0xc0, 0x84, 0x7, 0x5e } }
 
-#define NS_PSMCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
-#define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
-
 enum EnsureNSSOperator
 {
   nssLoadingComponent = 0,
@@ -67,35 +60,6 @@ enum EnsureNSSOperator
 };
 
 extern bool EnsureNSSInitialized(EnsureNSSOperator op);
-
-//--------------------------------------------
-// Now we need a content listener to register 
-//--------------------------------------------
-class PSMContentDownloader : public nsIStreamListener
-{
-public:
-  PSMContentDownloader() {NS_ASSERTION(false, "don't use this constructor."); }
-  PSMContentDownloader(uint32_t type);
-  virtual ~PSMContentDownloader();
-  void setSilentDownload(bool flag);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-
-  enum {UNKNOWN_TYPE = 0};
-  enum {X509_CA_CERT  = 1};
-  enum {X509_USER_CERT  = 2};
-  enum {X509_EMAIL_CERT  = 3};
-  enum {X509_SERVER_CERT  = 4};
-
-protected:
-  char* mByteData;
-  int32_t mBufferOffset;
-  int32_t mBufferSize;
-  uint32_t mType;
-  nsCOMPtr<nsIURI> mURI;
-};
 
 class nsNSSComponent;
 
@@ -262,20 +226,6 @@ private:
 
 public:
   static bool globalConstFlagUsePKIXVerification;
-};
-
-class PSMContentListener : public nsIURIContentListener,
-                            public nsSupportsWeakReference {
-public:
-  PSMContentListener();
-  virtual ~PSMContentListener();
-  nsresult init();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIURICONTENTLISTENER
-private:
-  nsCOMPtr<nsISupports> mLoadCookie;
-  nsCOMPtr<nsIURIContentListener> mParentContentListener;
 };
 
 class nsNSSErrors
