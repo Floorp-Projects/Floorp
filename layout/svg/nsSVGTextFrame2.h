@@ -280,6 +280,12 @@ public:
   void NotifyGlyphMetricsChange();
 
   /**
+   * Calls ScheduleReflowSVGNonDisplayText if this is a non-display frame,
+   * and nsSVGUtils::ScheduleReflowSVG otherwise.
+   */
+  void ScheduleReflowSVG();
+
+  /**
    * Reflows the anonymous block frame of this non-display nsSVGTextFrame2.
    *
    * When we are under nsSVGDisplayContainerFrame::ReflowSVG, we need to
@@ -396,6 +402,7 @@ private:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+    NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   private:
