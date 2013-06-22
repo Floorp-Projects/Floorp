@@ -1676,7 +1676,7 @@ SortNumerically(JSContext *cx, AutoValueVector *vec, size_t len, ComparatorMatch
             return false;
 
         double dv;
-        if (!ToNumber(cx, (*vec)[i], &dv))
+        if (!ToNumber(cx, vec->handleAt(i), &dv))
             return false;
 
         NumericElement el = { dv, i };

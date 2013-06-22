@@ -5565,12 +5565,12 @@ ValueToInt32(JSContext *cx, Value *val)
 }
 
 static int32_t
-ValueToNumber(JSContext *cx, Value *val)
+ValueToNumber(JSContext *cx, MutableHandleValue val)
 {
     double dbl;
-    if (!ToNumber(cx, val[0], &dbl))
+    if (!ToNumber(cx, val, &dbl))
         return false;
-    val[0] = DoubleValue(dbl);
+    val.set(DoubleValue(dbl));
 
     return true;
 }
