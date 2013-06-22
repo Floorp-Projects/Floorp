@@ -18,6 +18,7 @@
 #include "js/RootingAPI.h"
 #include "vm/ForkJoin.h"
 
+#include "jsgcinlines.h"
 #include "jsinferinlines.h"
 
 using namespace js;
@@ -218,6 +219,27 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
         freeStack(reservedG);
     }
     JS_ASSERT(diffG == 0);
+}
+
+void
+MacroAssembler::branchNurseryPtr(Condition cond, const Address &ptr1, const ImmMaybeNurseryPtr &ptr2,
+                                 Label *label)
+{
+#ifdef JSGC_GENERATIONAL
+    if (ptr2.value && gc::IsInsideNursery(GetIonContext()->cx->runtime(), (void *)ptr2.value))
+        embedsNurseryPointers_ = true;
+#endif
+    branchPtr(cond, ptr1, ptr2, label);
+}
+
+void
+MacroAssembler::moveNurseryPtr(const ImmMaybeNurseryPtr &ptr, const Register &reg)
+{
+#ifdef JSGC_GENERATIONAL
+    if (ptr.value && gc::IsInsideNursery(GetIonContext()->cx->runtime(), (void *)ptr.value))
+        embedsNurseryPointers_ = true;
+#endif
+    movePtr(ptr, reg);
 }
 
 template<typename T>
