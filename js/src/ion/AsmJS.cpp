@@ -1405,7 +1405,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     void setSecondPassComplete() {
         JS_ASSERT(currentPass_ == 2);
-        masm_.align(AsmJSPageSize);
+        masm_.align(gc::PageSize);
         module_->setFunctionBytes(masm_.size());
         currentPass_ = 3;
     }
@@ -1478,7 +1478,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 
         // The code must be page aligned, so include extra space so that we can
         // AlignBytes the allocation result below.
-        size_t allocedBytes = totalBytes + AsmJSPageSize;
+        size_t allocedBytes = totalBytes + gc::PageSize;
 
         // Allocate the slab of memory.
         JSC::ExecutableAllocator *execAlloc = cx_->compartment()->ionCompartment()->execAlloc();
@@ -1486,7 +1486,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         uint8_t *unalignedBytes = (uint8_t*)execAlloc->alloc(allocedBytes, &pool, JSC::ASMJS_CODE);
         if (!unalignedBytes)
             return false;
-        uint8_t *code = (uint8_t*)AlignBytes((uintptr_t)unalignedBytes, AsmJSPageSize);
+        uint8_t *code = (uint8_t*)AlignBytes((uintptr_t)unalignedBytes, gc::PageSize);
 
         // The ExecutablePool owns the memory and must be released by the AsmJSModule.
         module_->takeOwnership(pool, code, codeBytes, totalBytes);
@@ -6109,9 +6109,6 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
 {
     if (!JSC::MacroAssembler().supportsFloatingPoint())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
-
-    if (cx->runtime()->gcSystemPageSize != AsmJSPageSize)
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
 
     if (!cx->hasOption(JSOPTION_ASMJS))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
