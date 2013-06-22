@@ -527,6 +527,11 @@
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label {
   -moz-padding-end: 4px;
+}
+
+.variable-or-property:not(:focus) > .title > .variable-or-property-frozen-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-sealed-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-non-extensible-label {
   color: #666;
 }
 
