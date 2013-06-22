@@ -523,8 +523,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
              StringBuffer &sb)
 {
     RootedObject replacer(cx, replacer_);
-    RootedValue spaceRoot(cx, space_);
-    Value &space = spaceRoot.get();
+    RootedValue space(cx, space_);
 
     /* Step 4. */
     AutoIdVector propertyList(cx);
@@ -631,7 +630,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                 return false;
             space = NumberValue(d);
         } else if (ObjectClassIs(spaceObj, ESClass_String, cx)) {
-            JSString *str = ToStringSlow<CanGC>(cx, spaceRoot);
+            JSString *str = ToStringSlow<CanGC>(cx, space);
             if (!str)
                 return false;
             space = StringValue(str);
