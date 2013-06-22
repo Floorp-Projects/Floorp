@@ -27,7 +27,7 @@
 #include "nsCryptoHash.h"
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
-
+#include "nsNetCID.h"
 #include "nsCMSSecureMessage.h"
 #include "nsCertPicker.h"
 #include "nsCURILoader.h"
@@ -44,6 +44,9 @@
 #include "nsNSSVersion.h"
 
 #include "nsXULAppAPI.h"
+
+#include "PSMContentListener.h"
+
 #define NS_IS_PROCESS_DEFAULT                                                 \
     (GeckoProcessType_Default == XRE_GetProcessType())
 
