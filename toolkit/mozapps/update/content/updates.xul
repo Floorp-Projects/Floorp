@@ -82,6 +82,19 @@
     </vbox>
   </wizardpage>
 
+  <wizardpage id="unsupported" pageid="unsupported"
+              object="gUnsupportedPage"
+              onpageshow="gUnsupportedPage.onPageShow();">
+    <updateheader label="&unsupported.title;"/>
+    <vbox class="update-content" flex="1">
+      <description flex="1">&unsupported.label;
+        <label id="unsupportedLinkLabel" class="text-link inline-link" onclick="openUpdateURL(event);">
+          &unsupportedLink.label;
+        </label>
+      </description>
+    </vbox>
+  </wizardpage>
+
   <wizardpage id="incompatibleCheck" pageid="incompatibleCheck"
               next="updatesfoundbasic" object="gIncompatibleCheckPage"
               onpageshow="gIncompatibleCheckPage.onPageShow();">
