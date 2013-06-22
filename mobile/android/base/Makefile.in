@@ -669,7 +669,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tabs_count_foreground.png \
   res/drawable-mdpi/toast.9.png \
   res/drawable-mdpi/toast_button_focused.9.png \
-  res/drawable-mdpi/toast_button_focused.9.png \
   res/drawable-mdpi/toast_button_pressed.9.png \
   res/drawable-mdpi/toast_divider.9.png \
   res/drawable-mdpi/address_bar_url_default.9.png \
