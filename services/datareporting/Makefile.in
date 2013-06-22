@@ -20,12 +20,6 @@ EXTRA_COMPONENTS := \
   DataReporting.manifest \
   $(NULL)
 
-DISABLED_EXTRA_PP_COMPONENTS := \
-  DataReportingService.js \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 $(FINAL_TARGET)/components/DataReportingService.js: policy.jsm sessions.jsm ../common/observers.js
-
-

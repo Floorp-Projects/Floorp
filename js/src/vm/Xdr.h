@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Xdr_h___
-#define Xdr_h___
+#ifndef vm_Xdr_h
+#define vm_Xdr_h
 
 #include "mozilla/Endian.h"
 
@@ -26,7 +26,7 @@ namespace js {
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 147);
+static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 148);
 
 class XDRBuffer {
   public:
@@ -244,4 +244,4 @@ class XDRDecoder : public XDRState<XDR_DECODE> {
 
 } /* namespace js */
 
-#endif /* Xdr_h___ */
+#endif /* vm_Xdr_h */

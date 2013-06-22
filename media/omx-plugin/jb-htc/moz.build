@@ -10,3 +10,5 @@ CPP_SOURCES += [
     'OmxPluginJB-HTC.cpp',
 ]
 
+LIBRARY_NAME = 'omxpluginjb-htc'
+

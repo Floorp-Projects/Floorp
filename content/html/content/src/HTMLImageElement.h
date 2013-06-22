@@ -197,7 +197,7 @@ protected:
 
   // This is a weak reference that this element and the HTMLFormElement
   // cooperate in maintaining.
-  nsHTMLFormElement* mForm;
+  HTMLFormElement* mForm;
 };
 
 } // namespace dom

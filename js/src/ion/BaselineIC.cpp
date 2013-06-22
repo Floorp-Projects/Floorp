@@ -676,7 +676,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Reg
 static bool
 IsTopFrameConstructing(JSContext *cx)
 {
-    JS_ASSERT(cx->mainThread().currentlyRunningInJit());
+    JS_ASSERT(cx->currentlyRunningInJit());
     JitActivationIterator activations(cx->runtime());
     IonFrameIterator iter(activations);
     JS_ASSERT(iter.type() == IonFrame_Exit);
@@ -2468,6 +2468,9 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
         return false;
     }
 
+    if (ret.isDouble())
+        stub->setSawDoubleResult();
+
     // Check to see if a new stub should be generated.
     if (stub->numOptimizedStubs() >= ICBinaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
@@ -2970,6 +2973,9 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
         return false;
     }
 
+    if (res.isDouble())
+        stub->setSawDoubleResult();
+
     if (stub->numOptimizedStubs() >= ICUnaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard/replace stubs.
         return true;
@@ -3283,10 +3289,10 @@ IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
     if (!shape->hasGetterValue())
         return false;
 
-    if (!shape->getterValue().isObject() || !shape->getterObject()->isFunction())
+    if (!shape->getterValue().isObject() || !shape->getterObject()->is<JSFunction>())
         return false;
 
-    JSFunction *func = shape->getterObject()->toFunction();
+    JSFunction *func = &shape->getterObject()->as<JSFunction>();
     if (func->isNative()) {
         *isScripted = false;
         return true;
@@ -3398,10 +3404,10 @@ IsCacheableSetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
     if (!shape->hasSetterValue())
         return false;
 
-    if (!shape->setterValue().isObject() || !shape->setterObject()->isFunction())
+    if (!shape->setterValue().isObject() || !shape->setterObject()->is<JSFunction>())
         return false;
 
-    JSFunction *func = shape->setterObject()->toFunction();
+    JSFunction *func = &shape->setterObject()->as<JSFunction>();
     if (func->isNative()) {
         *isScripted = false;
         return true;
@@ -4782,7 +4788,7 @@ static bool
 TryAttachGlobalNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *stub,
                         HandleObject global, HandlePropertyName name)
 {
-    JS_ASSERT(global->isGlobal());
+    JS_ASSERT(global->is<GlobalObject>());
 
     RootedId id(cx, NameToId(name));
 
@@ -4820,14 +4826,14 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
         if (!shapes.append(scopeChain->lastProperty()))
             return false;
 
-        if (scopeChain->isGlobal()) {
+        if (scopeChain->is<GlobalObject>()) {
             shape = scopeChain->nativeLookup(cx, id);
             if (shape)
                 break;
             return true;
         }
 
-        if (!scopeChain->isScope() || scopeChain->isWith())
+        if (!scopeChain->is<ScopeObject>() || scopeChain->is<WithObject>())
             return true;
 
         // Check for an 'own' property on the scope. There is no need to
@@ -5291,7 +5297,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 
     // Try handling scripted getters.
     if (cacheableCall && isScripted && !isDOMProxy) {
-        RootedFunction callee(cx, shape->getterObject()->toFunction());
+        RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->hasScript());
 
@@ -5311,7 +5317,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 
     // Try handling JSNative getters.
     if (cacheableCall && !isScripted) {
-        RootedFunction callee(cx, shape->getterObject()->toFunction());
+        RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->isNative());
 
@@ -6221,7 +6227,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
 
     // Try handling scripted setters.
     if (cacheableCall && isScripted) {
-        RootedFunction callee(cx, shape->setterObject()->toFunction());
+        RootedFunction callee(cx, &shape->setterObject()->as<JSFunction>());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->hasScript());
 
@@ -6240,7 +6246,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
 
     // Try handling JSNative setters.
     if (cacheableCall && !isScripted) {
-        RootedFunction callee(cx, shape->setterObject()->toFunction());
+        RootedFunction callee(cx, &shape->setterObject()->as<JSFunction>());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->isNative());
 
@@ -6296,7 +6302,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
         if (!SetNameOperation(cx, script, pc, obj, rhs))
             return false;
     } else if (op == JSOP_SETALIASEDVAR) {
-        obj->asScope().setAliasedVar(cx, pc, name, rhs);
+        obj->as<ScopeObject>().setAliasedVar(cx, pc, name, rhs);
     } else if (script->strict) {
         if (!js::SetProperty<true>(cx, obj, id, rhs))
             return false;
@@ -6782,9 +6788,9 @@ TryAttachFunApplyStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
     if (argc != 2)
         return true;
 
-    if (!thisv.isObject() || !thisv.toObject().isFunction())
+    if (!thisv.isObject() || !thisv.toObject().is<JSFunction>())
         return true;
-    RootedFunction target(cx, thisv.toObject().toFunction());
+    RootedFunction target(cx, &thisv.toObject().as<JSFunction>());
 
     // right now, only handle situation where second argument is |arguments|
     if (argv[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script->needsArgsObj()) {
@@ -6830,10 +6836,10 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         return true;
 
     RootedObject obj(cx, &callee.toObject());
-    if (!obj->isFunction())
+    if (!obj->is<JSFunction>())
         return true;
 
-    RootedFunction fun(cx, obj->toFunction());
+    RootedFunction fun(cx, &obj->as<JSFunction>());
 
     if (fun->hasScript()) {
         // Never attach optimized scripted call stubs for JSOP_FUNAPPLY.
@@ -7075,7 +7081,8 @@ ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs,
     masm.branchTestObject(Assembler::NotEqual, val, failure);
     Register callee = masm.extractObject(val, ExtractTemp1);
 
-    masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &FunctionClass, failure);
+    masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
+                            failure);
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
 
     masm.branchPtr(Assembler::NotEqual, callee, ImmWord((void*) js_fun_apply), failure);
@@ -7090,7 +7097,8 @@ ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs,
     regs.add(val);
     regs.takeUnchecked(target);
 
-    masm.branchTestObjClass(Assembler::NotEqual, target, regs.getAny(), &FunctionClass, failure);
+    masm.branchTestObjClass(Assembler::NotEqual, target, regs.getAny(), &JSFunction::class_,
+                            failure);
 
     if (checkNative) {
         masm.branchIfInterpreted(target, failure);
@@ -7244,7 +7252,8 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
 
     // Ensure callee is a function.
     Register callee = masm.extractObject(R1, ExtractTemp0);
-    masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &FunctionClass, &failure);
+    masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
+                            &failure);
 
     // If calling a specific script, check if the script matches.  Otherwise, ensure that
     // callee function is scripted.  Leave calleeScript in |callee| reg.

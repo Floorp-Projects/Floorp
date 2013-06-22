@@ -640,12 +640,6 @@ public:
     return mChannel;
   }
 
-  /**
-   * Set the object from which a document can get a script context.
-   * This is the context within which all scripts (during document
-   * creation and during event handling) will run.
-   */
-  virtual nsIScriptGlobalObject* GetScriptGlobalObject() const MOZ_OVERRIDE;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
 
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) MOZ_OVERRIDE;

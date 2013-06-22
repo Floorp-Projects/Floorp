@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MacroAssemblerMIPS_h
-#define MacroAssemblerMIPS_h
+#ifndef assembler_assembler_MacroAssemblerMIPS_h
+#define assembler_assembler_MacroAssemblerMIPS_h
 
 #if ENABLE(ASSEMBLER) && CPU(MIPS)
 
@@ -2787,4 +2787,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER) && CPU(MIPS)
 
-#endif // MacroAssemblerMIPS_h
+#endif /* assembler_assembler_MacroAssemblerMIPS_h */

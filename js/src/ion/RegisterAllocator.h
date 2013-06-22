@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_registerallocator_h__
-#define js_ion_registerallocator_h__
+#ifndef ion_RegisterAllocator_h
+#define ion_RegisterAllocator_h
 
 #include "mozilla/Attributes.h"
 
@@ -65,12 +65,9 @@ struct AllocationIntegrityState
 
         InstructionInfo(const InstructionInfo &o)
         {
-            for (size_t i = 0; i < o.inputs.length(); i++)
-                inputs.append(o.inputs[i]);
-            for (size_t i = 0; i < o.temps.length(); i++)
-                temps.append(o.temps[i]);
-            for (size_t i = 0; i < o.outputs.length(); i++)
-                outputs.append(o.outputs[i]);
+            inputs.append(o.inputs);
+            temps.append(o.temps);
+            outputs.append(o.outputs);
         }
     };
     Vector<InstructionInfo, 0, SystemAllocPolicy> instructions;
@@ -79,8 +76,7 @@ struct AllocationIntegrityState
         Vector<InstructionInfo, 5, SystemAllocPolicy> phis;
         BlockInfo() {}
         BlockInfo(const BlockInfo &o) {
-            for (size_t i = 0; i < o.phis.length(); i++)
-                phis.append(o.phis[i]);
+            phis.append(o.phis);
         }
     };
     Vector<BlockInfo, 0, SystemAllocPolicy> blocks;
@@ -363,4 +359,4 @@ class RegisterAllocator
 } // namespace ion
 } // namespace js
 
-#endif
+#endif /* ion_RegisterAllocator_h */

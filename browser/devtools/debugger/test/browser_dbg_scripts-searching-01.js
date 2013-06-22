@@ -117,35 +117,35 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (6)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write(":13#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (7)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write(":#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (8)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write("::#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (9)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write(":::#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (10)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
 
@@ -153,35 +153,35 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (6)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write("#" + token + ":13");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (7)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write("#" + token + ":");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (8)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write("#" + token + "::");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (9)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write("#" + token + ":::");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (10)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
 
@@ -189,14 +189,14 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't remain at the correct token. (11)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     write("#__i do not exist__");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't remain at the correct token. (12)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
 
@@ -205,7 +205,7 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (12.1)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     clear();
@@ -213,14 +213,14 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor shouldn't jump to another token. (12.2)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     EventUtils.sendKey("ENTER", gDebugger);
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor shouldn't jump to another token. (12.3)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
 
@@ -266,7 +266,7 @@ function testScriptSearching() {
       "The editor didn't remain at the correct token. (19)");
     is(gSources.visibleItems.length, 1,
       "Not all the scripts are shown after the search. (20)");
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice that matches are found.");
 
     closeDebuggerAndFinish();

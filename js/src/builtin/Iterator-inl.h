@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Iterator_inl_h_
-#define Iterator_inl_h_
+#ifndef builtin_Iterator_inl_h
+#define builtin_Iterator_inl_h
 
 #include "jsiter.h"
 #include "vm/ObjectImpl-inl.h"
@@ -23,4 +23,4 @@ js::PropertyIteratorObject::setNativeIterator(js::NativeIterator *ni)
     setPrivate(ni);
 }
 
-#endif  // Iterator_inl_h_
+#endif /* builtin_Iterator_inl_h */

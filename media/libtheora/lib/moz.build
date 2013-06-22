@@ -6,3 +6,5 @@
 
 MODULE = 'theora'
 
+LIBRARY_NAME = 'theora'
+

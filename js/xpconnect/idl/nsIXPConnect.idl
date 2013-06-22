@@ -291,7 +291,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(4498aa26-62df-4a4f-8a45-7ddfd7f84834)]
+[uuid(dee6f80b-7ec5-4690-8622-a48af6a1ce52)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -608,12 +608,6 @@ interface nsIXPConnect : nsISupports
      */
     nsIXPConnectJSObjectHolder holdObject(in JSContextPtr aJSContext,
                                           in JSObjectPtr aObject);
-
-    /**
-     * Return the caller object of the current call from JS.
-     */
-    [noscript,notxpcom] void getCaller(out JSContextPtr aJSContext,
-                                       out JSObjectPtr aObject);
 
     /**
      * When we place the browser in JS debug mode, there can't be any

@@ -7,6 +7,7 @@
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
@@ -29,7 +30,6 @@
 #include "RawReader.h"
 #endif
 #ifdef MOZ_GSTREAMER
-#include "mozilla/Preferences.h"
 #include "GStreamerDecoder.h"
 #include "GStreamerReader.h"
 #endif
@@ -228,6 +228,11 @@ static char const *const gH264Codecs[9] = {
   "mp4a.40.2",    // AAC-LC
   nullptr
 };
+
+static char const *const gMpegAudioCodecs[2] = {
+  "mp3",          // MP3
+  nullptr
+};
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
@@ -336,8 +341,12 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
 #endif
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
-    codecList = gH264Codecs;
     result = CANPLAY_MAYBE;
+    if (nsDependentCString(aMIMEType).EqualsASCII("audio/mpeg")) {
+      codecList = gMpegAudioCodecs;
+    } else {
+      codecList = gH264Codecs;
+    }
   }
 #endif
 #ifdef MOZ_WMF
@@ -524,7 +533,8 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (MediaDecoder::IsMediaPluginsEnabled() && IsMediaPluginsType(aType)) ||
 #endif
 #ifdef MOZ_WMF
-    IsWMFSupportedType(aType) ||
+    (IsWMFSupportedType(aType) &&
+     Preferences::GetBool("media.windows-media-foundation.play-stand-alone", true)) ||
 #endif
     false;
 }

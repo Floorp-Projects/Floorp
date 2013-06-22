@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GlobalObject_inl_h___
-#define GlobalObject_inl_h___
+#ifndef vm_GlobalObject_inl_h
+#define vm_GlobalObject_inl_h
 
 #include "vm/GlobalObject.h"
 
@@ -56,13 +56,6 @@ GlobalObject::setCreateArrayFromBufferHelper(uint32_t slot, Handle<JSFunction*> 
 {
     JS_ASSERT(getSlotRef(slot).isUndefined());
     setSlot(slot, ObjectValue(*fun));
-}
-
-void
-GlobalObject::setBooleanValueOf(Handle<JSFunction*> valueOfFun)
-{
-    JS_ASSERT(getSlotRef(BOOLEAN_VALUEOF).isUndefined());
-    setSlot(BOOLEAN_VALUEOF, ObjectValue(*valueOfFun));
 }
 
 void
@@ -226,4 +219,4 @@ GlobalObject::setIntrinsicsHolder(JSObject *obj)
 
 } // namespace js
 
-#endif
+#endif /* vm_GlobalObject_inl_h */

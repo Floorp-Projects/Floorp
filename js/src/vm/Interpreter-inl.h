@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Interpreter_inl_h__
-#define Interpreter_inl_h__
+#ifndef vm_Interpreter_inl_h
+#define vm_Interpreter_inl_h
 
 #include "jsapi.h"
 #include "jsbool.h"
@@ -59,7 +59,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 {
     vp.setUndefined();
 
-    if (obj->isGlobal())
+    if (obj->is<GlobalObject>())
         return true;
 
     if (IsCacheableNonGlobalScope(obj))
@@ -125,7 +125,7 @@ IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
  * However, this speculation must be guarded before calling 'apply' in case it
  * is not the builtin Function.prototype.apply.
  */
-static bool
+static inline bool
 GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, HandleValue callee,
                                    Value *args, uint32_t argc)
 {
@@ -139,15 +139,6 @@ GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, Handle
     }
 
     return true;
-}
-
-static inline bool
-GuardFunApplyArgumentsOptimization(JSContext *cx)
-{
-    FrameRegs &regs = cx->regs();
-    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    return GuardFunApplyArgumentsOptimization(cx, cx->fp(), args.calleev(), args.array(),
-                                              args.length());
 }
 
 /*
@@ -256,8 +247,8 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             return false;
     } else {
         Rooted<JSObject*> normalized(cx, obj);
-        if (normalized->getClass() == &WithClass && !shape->hasDefaultGetter())
-            normalized = &normalized->asWith().object();
+        if (normalized->getClass() == &WithObject::class_ && !shape->hasDefaultGetter())
+            normalized = &normalized->as<WithObject>().object();
         if (!NativeGet(cx, normalized, obj2, shape, 0, vp))
             return false;
     }
@@ -277,7 +268,7 @@ FetchNameNoGC(JSObject *pobj, Shape *shape, MutableHandleValue vp)
 inline bool
 GetIntrinsicOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
 {
-    RootedPropertyName name(cx, cx->stack.currentScript()->getName(pc));
+    RootedPropertyName name(cx, cx->currentScript()->getName(pc));
     return cx->global()->getIntrinsicValue(cx, name, vp);
 }
 
@@ -286,45 +277,6 @@ SetIntrinsicOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleVal
 {
     RootedPropertyName name(cx, script->getName(pc));
     return cx->global()->setIntrinsicValue(cx, name, val);
-}
-
-inline bool
-NameOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
-{
-    JSObject *obj = cx->stack.currentScriptedScopeChain();
-    PropertyName *name = cx->stack.currentScript()->getName(pc);
-
-    /*
-     * Skip along the scope chain to the enclosing global object. This is
-     * used for GNAME opcodes where the bytecode emitter has determined a
-     * name access must be on the global. It also insulates us from bugs
-     * in the emitter: type inference will assume that GNAME opcodes are
-     * accessing the global object, and the inferred behavior should match
-     * the actual behavior even if the id could be found on the scope chain
-     * before the global object.
-     */
-    if (IsGlobalOp(JSOp(*pc)))
-        obj = &obj->global();
-
-    Shape *shape = NULL;
-    JSObject *scope = NULL, *pobj = NULL;
-    if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
-        if (FetchNameNoGC(pobj, shape, vp))
-            return true;
-    }
-
-    RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
-    RootedPropertyName nameRoot(cx, name);
-    RootedShape shapeRoot(cx);
-
-    if (!LookupName(cx, nameRoot, objRoot, &scopeRoot, &pobjRoot, &shapeRoot))
-        return false;
-
-    /* Kludge to allow (typeof foo == "undefined") tests. */
-    JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
-    if (op2 == JSOP_TYPEOF)
-        return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
-    return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
 }
 
 inline bool
@@ -343,7 +295,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
      * undeclared global variable. To do this, we call SetPropertyHelper
      * directly and pass DNP_UNQUALIFIED.
      */
-    if (scope->isGlobal()) {
+    if (scope->is<GlobalObject>()) {
         JS_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
         return baseops::SetPropertyHelper(cx, scope, scope, id, DNP_UNQUALIFIED, &valCopy, strict);
@@ -363,7 +315,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
         return false;
 
     /* Steps 8c, 8d. */
-    if (!prop || (obj2 != varobj && varobj->isGlobal())) {
+    if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
         RootedValue value(cx, UndefinedValue());
         if (!JSObject::defineProperty(cx, varobj, dn, value, JS_PropertyStub,
                                       JS_StrictPropertyStub, attrs)) {
@@ -597,7 +549,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 {
     do {
         // Don't call GetPcScript (needed for analysis) from inside Ion since it's expensive.
-        bool analyze = cx->mainThread().currentlyRunningInInterpreter();
+        bool analyze = cx->currentlyRunningInInterpreter();
 
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {
@@ -730,12 +682,6 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
         }
     }
 
-    bool done = false;
-    if (!GetElemOptimizedArguments(cx, cx->fp(), lref, rref, res, &done))
-        return false;
-    if (done)
-        return true;
-
     bool isObject = lref.isObject();
     JSObject *obj = ToObjectFromStack(cx, lref);
     if (!obj)
@@ -758,7 +704,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
             // that's ok, because optimized ion doesn't generate analysis info.  However,
             // baseline must generate this information, so it passes the script and pc in
             // as arguments.
-            if (script || cx->mainThread().currentlyRunningInInterpreter()) {
+            if (script || cx->currentlyRunningInInterpreter()) {
                 JS_ASSERT(!!script == !!pc);
                 if (!script)
                     types::TypeScript::GetPcScript(cx, script.address(), &pc);
@@ -955,8 +901,8 @@ UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
 inline JSFunction *
 ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO_CONSTRUCT)
 {
-    if (v.isObject() && v.toObject().isFunction())
-        return v.toObject().toFunction();
+    if (v.isObject() && v.toObject().is<JSFunction>())
+        return &v.toObject().as<JSFunction>();
 
     ReportIsNotFunction(cx, v, -1, construct);
     return NULL;
@@ -970,7 +916,7 @@ ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO
  */
 class FastInvokeGuard
 {
-    InvokeArgsGuard args_;
+    InvokeArgs args_;
     RootedFunction fun_;
     RootedScript script_;
 #ifdef JS_ION
@@ -982,7 +928,8 @@ class FastInvokeGuard
 
   public:
     FastInvokeGuard(JSContext *cx, const Value &fval)
-      : fun_(cx)
+      : args_(cx)
+      , fun_(cx)
       , script_(cx)
 #ifdef JS_ION
       , useIon_(ion::IsEnabled(cx))
@@ -993,14 +940,14 @@ class FastInvokeGuard
     }
 
     void initFunction(const Value &fval) {
-        if (fval.isObject() && fval.toObject().isFunction()) {
-            JSFunction *fun = fval.toObject().toFunction();
+        if (fval.isObject() && fval.toObject().is<JSFunction>()) {
+            JSFunction *fun = &fval.toObject().as<JSFunction>();
             if (fun->isInterpreted())
                 fun_ = fun;
         }
     }
 
-    InvokeArgsGuard &args() {
+    InvokeArgs &args() {
         return args_;
     }
 
@@ -1048,4 +995,4 @@ class FastInvokeGuard
 
 }  /* namespace js */
 
-#endif /* Interpreter_inl_h__ */
+#endif /* vm_Interpreter_inl_h */

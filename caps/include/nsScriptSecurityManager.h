@@ -372,9 +372,9 @@ private:
     bool SubjectIsPrivileged();
 
     static JSBool
-    CheckObjectAccess(JSContext *cx, JSHandleObject obj,
-                      JSHandleId id, JSAccessMode mode,
-                      JSMutableHandleValue vp);
+    CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> obj,
+                      JS::Handle<jsid> id, JSAccessMode mode,
+                      JS::MutableHandle<JS::Value> vp);
     
     // Decides, based on CSP, whether or not eval() and stuff can be executed.
     static JSBool
@@ -409,8 +409,7 @@ private:
                            uint32_t aAction);
 
     nsresult
-    LookupPolicy(JSContext* cx,
-                 nsIPrincipal* principal,
+    LookupPolicy(nsIPrincipal* principal,
                  ClassInfoData& aClassData, jsid aProperty,
                  uint32_t aAction,
                  ClassPolicy** aCachedClassPolicy,

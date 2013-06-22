@@ -413,8 +413,8 @@ MConstant::printOpcode(FILE *fp)
         fprintf(fp, "%f", value().toDouble());
         break;
       case MIRType_Object:
-        if (value().toObject().isFunction()) {
-            JSFunction *fun = value().toObject().toFunction();
+        if (value().toObject().is<JSFunction>()) {
+            JSFunction *fun = &value().toObject().as<JSFunction>();
             if (fun->displayAtom()) {
                 fputs("function ", fp);
                 FileEscapedString(fp, fun->displayAtom(), 0);
@@ -955,7 +955,7 @@ MUrsh::infer(BaselineInspector *inspector, jsbytecode *pc)
         return;
     }
 
-    if (inspector->expectedResultType(pc) == MIRType_Double) {
+    if (inspector->hasSeenDoubleResult(pc)) {
         specialization_ = MIRType_Double;
         setResultType(MIRType_Double);
         return;
@@ -1309,7 +1309,7 @@ MBinaryArithInstruction::infer(BaselineInspector *inspector,
         return inferFallback(inspector, pc);
 
     // If the operation has ever overflowed, use a double specialization.
-    if (inspector->expectedResultType(pc) == MIRType_Double)
+    if (inspector->hasSeenDoubleResult(pc))
         setResultType(MIRType_Double);
 
     // If the operation will always overflow on its constant operands, use a
@@ -2223,7 +2223,7 @@ InlinePropertyTable::trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet)
         if (choiceSet[i])
             continue;
 
-        JSFunction *target = targets[i]->toFunction();
+        JSFunction *target = &targets[i]->as<JSFunction>();
 
         // Eliminate all entries containing the vetoed function from the map.
         size_t j = 0;
@@ -2251,7 +2251,7 @@ InlinePropertyTable::trimToAndMaybePatchTargets(AutoObjectVector &targets,
         for (size_t j = 0; j < originals.length(); j++) {
             if (entries_[i]->func == originals[j]) {
                 if (entries_[i]->func != targets[j])
-                    entries_[i] = new Entry(entries_[i]->typeObj, targets[j]->toFunction());
+                    entries_[i] = new Entry(entries_[i]->typeObj, &targets[j]->as<JSFunction>());
                 foundFunc = true;
                 break;
             }

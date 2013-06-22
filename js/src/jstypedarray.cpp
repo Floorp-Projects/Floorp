@@ -471,20 +471,18 @@ class WeakObjectSlotRef : public js::gc::BufferableRef
     const char *desc;
 
   public:
-    WeakObjectSlotRef(JSObject *owner, size_t slot, const char desc[])
+    explicit WeakObjectSlotRef(JSObject *owner, size_t slot, const char desc[])
       : owner(owner), slot(slot), desc(desc)
     {
-    }
-
-    virtual bool match(void *location) {
-        return location == owner->getFixedSlot(slot).toPrivate();
     }
 
     virtual void mark(JSTracer *trc) {
         MarkObjectUnbarriered(trc, &owner, "weak TypeArrayView ref");
         JSObject *obj = static_cast<JSObject*>(owner->getFixedSlot(slot).toPrivate());
-        if (obj && obj != UNSET_BUFFER_LINK)
+        if (obj && obj != UNSET_BUFFER_LINK) {
+            JS_SET_TRACING_LOCATION(trc, (void*)&owner->getFixedSlotRef(slot));
             MarkObjectUnbarriered(trc, &obj, desc);
+        }
         owner->setFixedSlot(slot, PrivateValue(obj));
     }
 };
@@ -1732,7 +1730,7 @@ class TypedArrayTemplate
             return NewBuiltinClassInstance(cx, fastClass(), SingletonObject);
 
         jsbytecode *pc;
-        RootedScript script(cx, cx->stack.currentScript(&pc));
+        RootedScript script(cx, cx->currentScript(&pc));
         NewObjectKind newKind = script
                                 ? UseNewTypeForInitializer(cx, script, pc, fastClass())
                                 : GenericObject;
@@ -2165,19 +2163,19 @@ class TypedArrayTemplate
                 if (!FindProto(cx, fastClass(), &proto))
                     return NULL;
 
-                InvokeArgsGuard ag;
-                if (!cx->stack.pushInvokeArgs(cx, 3, &ag))
+                InvokeArgs args(cx);
+                if (!args.init(3))
                     return NULL;
 
-                ag.setCallee(cx->compartment()->maybeGlobal()->createArrayFromBuffer<NativeType>());
-                ag.setThis(ObjectValue(*bufobj));
-                ag[0] = NumberValue(byteOffset);
-                ag[1] = Int32Value(lengthInt);
-                ag[2] = ObjectValue(*proto);
+                args.setCallee(cx->compartment()->maybeGlobal()->createArrayFromBuffer<NativeType>());
+                args.setThis(ObjectValue(*bufobj));
+                args[0] = NumberValue(byteOffset);
+                args[1] = Int32Value(lengthInt);
+                args[2] = ObjectValue(*proto);
 
-                if (!Invoke(cx, ag))
+                if (!Invoke(cx, args))
                     return NULL;
-                return &ag.rval().toObject();
+                return &args.rval().toObject();
             }
         }
 
@@ -2772,16 +2770,16 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         if (!proto)
             return false;
 
-        InvokeArgsGuard ag;
-        if (!cx->stack.pushInvokeArgs(cx, args.length() + 1, &ag))
+        InvokeArgs args2(cx);
+        if (!args2.init(args.length() + 1))
             return false;
-        ag.setCallee(global->createDataViewForThis());
-        ag.setThis(ObjectValue(*bufobj));
-        PodCopy(ag.array(), args.array(), args.length());
-        ag[argc] = ObjectValue(*proto);
-        if (!Invoke(cx, ag))
+        args2.setCallee(global->createDataViewForThis());
+        args2.setThis(ObjectValue(*bufobj));
+        PodCopy(args2.array(), args.array(), args.length());
+        args2[argc] = ObjectValue(*proto);
+        if (!Invoke(cx, args2))
             return false;
-        args.rval().set(ag.rval());
+        args.rval().set(args2.rval());
         return true;
     }
 
@@ -3816,7 +3814,7 @@ JSObject *
 js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     /* Idempotency required: we initialize several things, possibly lazily. */
     RootedObject stop(cx);

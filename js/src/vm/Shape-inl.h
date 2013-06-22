@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Shape_inl_h__
-#define Shape_inl_h__
+#ifndef vm_Shape_inl_h
+#define vm_Shape_inl_h
 
 #include "mozilla/PodOperations.h"
 
@@ -338,8 +338,8 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, 
      * |with (it) color='red';| ends up here.
      * Avoid exposing the With object to native setters.
      */
-    if (obj->isWith()) {
-        RootedObject nobj(cx, &obj->asWith().object());
+    if (obj->is<WithObject>()) {
+        RootedObject nobj(cx, &obj->as<WithObject>().object());
         return CallJSPropertyOpSetter(cx, self->setterOp(), nobj, id, strict, vp);
     }
 
@@ -543,4 +543,4 @@ GetShapeAttributes(HandleShape shape)
 
 } /* namespace js */
 
-#endif /* Shape_inl_h__ */
+#endif /* vm_Shape_inl_h */

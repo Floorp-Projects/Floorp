@@ -166,6 +166,12 @@ VARIABLES = {
         Files on this list will be copied into SDK_LIB_DIR ($DIST/sdk/lib).
         """),
 
+    'SHARED_LIBRARY_LIBS': (StrictOrderingOnAppendList, list, [],
+        """Libraries linked into a shared library.
+
+        A list of static library paths which should be linked into the current shared library.
+        """),
+
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 

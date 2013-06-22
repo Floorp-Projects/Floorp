@@ -29,7 +29,7 @@ function testFrameParameters()
     gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
     Services.tm.currentThread.dispatch({ run: function() {
 
-      var frames = gDebugger.DebuggerView.StackFrames._container._list,
+      var frames = gDebugger.DebuggerView.StackFrames.widget._list,
           localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[0],
           localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
           localNonEnums = localScope.querySelector(".nonenum").childNodes;
@@ -226,7 +226,7 @@ function resumeAndFinish() {
   gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
     gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
 
-    var frames = gDebugger.DebuggerView.StackFrames._container._list;
+    var frames = gDebugger.DebuggerView.StackFrames.widget._list;
     is(frames.querySelectorAll(".dbg-stackframe").length, 0,
       "Should have no frames.");
 

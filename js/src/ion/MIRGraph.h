@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_mirgraph_h__
-#define jsion_mirgraph_h__
+#ifndef ion_MIRGraph_h
+#define ion_MIRGraph_h
 
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
@@ -311,9 +311,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool isLoopHeader() const {
         return kind_ == LOOP_HEADER;
     }
-    MBasicBlock *backedge() const {
+    bool hasUniqueBackedge() const {
         JS_ASSERT(isLoopHeader());
-        JS_ASSERT(numPredecessors() == 1 || numPredecessors() == 2);
+        JS_ASSERT(numPredecessors() >= 2);
+        return numPredecessors() == 2;
+    }
+    MBasicBlock *backedge() const {
+        JS_ASSERT(hasUniqueBackedge());
         return getPredecessor(numPredecessors() - 1);
     }
     MBasicBlock *loopHeaderOfBackedge() const {
@@ -328,7 +332,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         if (!numSuccessors())
             return false;
         MBasicBlock *lastSuccessor = getSuccessor(numSuccessors() - 1);
-        return lastSuccessor->isLoopHeader() && lastSuccessor->backedge() == this;
+        return lastSuccessor->isLoopHeader() &&
+               lastSuccessor->hasUniqueBackedge() &&
+               lastSuccessor->backedge() == this;
     }
     bool isSplitEdge() const {
         return kind_ == SPLIT_EDGE;
@@ -376,6 +382,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     MBasicBlock *getImmediatelyDominatedBlock(size_t i) const {
         return immediatelyDominated_[i];
+    }
+
+    MBasicBlock **immediatelyDominatedBlocksBegin() {
+        return immediatelyDominated_.begin();
+    }
+
+    MBasicBlock **immediatelyDominatedBlocksEnd() {
+        return immediatelyDominated_.end();
     }
 
     size_t numDominated() const {
@@ -586,10 +600,7 @@ class MIRGraph
         return blocks_.end();
     }
     void removeBlocksAfter(MBasicBlock *block);
-    void removeBlock(MBasicBlock *block) {
-        blocks_.remove(block);
-        numBlocks_--;
-    }
+    void removeBlock(MBasicBlock *block);
     void moveBlockToEnd(MBasicBlock *block) {
         JS_ASSERT(block->id());
         blocks_.remove(block);
@@ -719,5 +730,4 @@ class MDefinitionIterator
 } // namespace ion
 } // namespace js
 
-#endif // jsion_mirgraph_h__
-
+#endif /* ion_MIRGraph_h */

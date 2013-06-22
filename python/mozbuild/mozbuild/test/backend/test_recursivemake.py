@@ -176,6 +176,10 @@ class TestRecursiveMakeBackend(BackendTester):
                 'SDK_LIBRARY += bar.sdk',
                 'SDK_LIBRARY += foo.sdk',
             ],
+            'SHARED_LIBRARY_LIBS': [
+                'SHARED_LIBRARY_LIBS += bar.sll',
+                'SHARED_LIBRARY_LIBS += foo.sll',
+            ],
             'SIMPLE_PROGRAMS': [
                 'SIMPLE_PROGRAMS += bar.x',
                 'SIMPLE_PROGRAMS += foo.x',

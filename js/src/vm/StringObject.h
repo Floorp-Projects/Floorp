@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef StringObject_h___
-#define StringObject_h___
+#ifndef vm_StringObject_h
+#define vm_StringObject_h
 
 #include "jsobj.h"
 #include "jsstr.h"
@@ -19,6 +19,8 @@ class StringObject : public JSObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
+
+    static Class class_;
 
     /*
      * Creates a new String object boxing the given string.  The object's
@@ -65,4 +67,4 @@ class StringObject : public JSObject
 
 } // namespace js
 
-#endif /* StringObject_h__ */
+#endif /* vm_StringObject_h */

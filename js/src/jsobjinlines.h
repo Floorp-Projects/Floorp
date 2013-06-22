@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsobjinlines_h___
-#define jsobjinlines_h___
+#ifndef jsobjinlines_h
+#define jsobjinlines_h
 
 #include "jsobj.h"
 
@@ -227,16 +227,6 @@ JSObject::getMetadata() const
     return lastProperty()->getObjectMetadata();
 }
 
-inline JSObject *
-JSObject::enclosingScope()
-{
-    return isScope()
-           ? &asScope().enclosingScope()
-           : isDebugScope()
-           ? &asDebugScope().enclosingScope()
-           : getParent();
-}
-
 inline bool
 JSObject::isFixedSlot(size_t slot)
 {
@@ -291,7 +281,7 @@ JSObject::canRemoveLastProperty()
 inline const js::HeapSlot *
 JSObject::getRawSlots()
 {
-    JS_ASSERT(isGlobal());
+    JS_ASSERT(is<js::GlobalObject>());
     return slots;
 }
 
@@ -567,9 +557,8 @@ JSObject::ensureDenseInitializedLength(JSContext *cx, uint32_t index, uint32_t e
     }
 }
 
-template<typename MallocProviderType>
 JSObject::EnsureDenseResult
-JSObject::extendDenseElements(MallocProviderType *cx,
+JSObject::extendDenseElements(js::ThreadSafeContext *tcx,
                               uint32_t requiredCapacity, uint32_t extra)
 {
     /*
@@ -599,14 +588,14 @@ JSObject::extendDenseElements(MallocProviderType *cx,
         return ED_SPARSE;
     }
 
-    if (!growElements(cx, requiredCapacity))
+    if (!growElements(tcx, requiredCapacity))
         return ED_FAILED;
 
     return ED_OK;
 }
 
 inline JSObject::EnsureDenseResult
-JSObject::parExtendDenseElements(js::Allocator *alloc, js::Value *v, uint32_t extra)
+JSObject::parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v, uint32_t extra)
 {
     JS_ASSERT(isNative());
     JS_ASSERT_IF(isArray(), arrayLengthIsWritable());
@@ -618,7 +607,7 @@ JSObject::parExtendDenseElements(js::Allocator *alloc, js::Value *v, uint32_t ex
         return ED_SPARSE; /* Overflow. */
 
     if (requiredCapacity > header->capacity) {
-        EnsureDenseResult edr = extendDenseElements(alloc, requiredCapacity, extra);
+        EnsureDenseResult edr = extendDenseElements(tcx, requiredCapacity, extra);
         if (edr != ED_OK)
             return edr;
     }
@@ -795,8 +784,8 @@ inline bool JSObject::setDelegate(JSContext *cx)
 
 inline bool JSObject::isVarObj()
 {
-    if (isDebugScope())
-        return asDebugScope().scope().isVarObj();
+    if (is<js::DebugScopeObject>())
+        return as<js::DebugScopeObject>().scope().isVarObj();
     return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ);
 }
 
@@ -845,30 +834,7 @@ inline bool JSObject::watched() const
     return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
 }
 
-inline bool JSObject::isClonedBlock() const { return is<js::BlockObject>() && !!getProto(); }
-inline bool JSObject::isStaticBlock() const { return is<js::BlockObject>() && !getProto(); }
 inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
-
-inline js::NumberObject &
-JSObject::asNumber()
-{
-    JS_ASSERT(isNumber());
-    return *static_cast<js::NumberObject *>(this);
-}
-
-inline js::StringObject &
-JSObject::asString()
-{
-    JS_ASSERT(isString());
-    return *static_cast<js::StringObject *>(this);
-}
-
-inline bool
-JSObject::isDebugScope() const
-{
-    extern bool js_IsDebugScopeSlow(JSObject *obj);
-    return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
-}
 
 /* static */ inline JSObject *
 JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
@@ -1281,23 +1247,17 @@ GetOuterObject(JSContext *cx, HandleObject obj)
     return obj;
 }
 
-static inline bool
-IsStopIteration(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isStopIteration();
-}
-
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
 {
-    return v.isObject() && v.toObject().isFunction();
+    return v.isObject() && v.toObject().is<JSFunction>();
 }
 
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSFunction **fun)
 {
-    if (v.isObject() && v.toObject().isFunction()) {
-        *fun = v.toObject().toFunction();
+    if (v.isObject() && v.toObject().is<JSFunction>()) {
+        *fun = &v.toObject().as<JSFunction>();
         return true;
     }
     return false;
@@ -1357,19 +1317,19 @@ ToPrimitive(JSContext *cx, MutableHandleValue vp)
     JSObject *obj = &vp.toObject();
 
     /* Optimize new String(...).valueOf(). */
-    if (obj->isString()) {
+    if (obj->is<StringObject>()) {
         jsid id = NameToId(cx->names().valueOf);
-        if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
-            vp.setString(obj->asString().unbox());
+        if (ClassMethodIsNative(cx, obj, &StringObject::class_, id, js_str_toString)) {
+            vp.setString(obj->as<StringObject>().unbox());
             return true;
         }
     }
 
     /* Optimize new Number(...).valueOf(). */
-    if (obj->isNumber()) {
+    if (obj->is<NumberObject>()) {
         jsid id = NameToId(cx->names().valueOf);
-        if (ClassMethodIsNative(cx, obj, &NumberClass, id, js_num_valueOf)) {
-            vp.setNumber(obj->asNumber().unbox());
+        if (ClassMethodIsNative(cx, obj, &NumberObject::class_, id, js_num_valueOf)) {
+            vp.setNumber(obj->as<NumberObject>().unbox());
             return true;
         }
     }
@@ -1397,7 +1357,7 @@ ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp)
 inline bool
 IsInternalFunctionObject(JSObject *funobj)
 {
-    JSFunction *fun = funobj->toFunction();
+    JSFunction *fun = &funobj->as<JSFunction>();
     return fun->isLambda() && !funobj->getParent();
 }
 
@@ -1660,9 +1620,9 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
 
     switch (classValue) {
       case ESClass_Array: return obj->isArray();
-      case ESClass_Number: return obj->isNumber();
-      case ESClass_String: return obj->isString();
-      case ESClass_Boolean: return obj->isBoolean();
+      case ESClass_Number: return obj->is<NumberObject>();
+      case ESClass_String: return obj->is<StringObject>();
+      case ESClass_Boolean: return obj->is<BooleanObject>();
       case ESClass_RegExp: return obj->is<RegExpObject>();
       case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
       case ESClass_Date: return obj->isDate();
@@ -1749,4 +1709,4 @@ js::DestroyIdArray(FreeOp *fop, JSIdArray *ida)
     fop->free_(ida);
 }
 
-#endif /* jsobjinlines_h___ */
+#endif /* jsobjinlines_h */

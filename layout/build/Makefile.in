@@ -257,6 +257,11 @@ EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
 endif
 endif
 
+ifdef MOZ_GAMEPAD
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/dom/gamepad/$(LIB_PREFIX)domgamepad_s.$(LIB_SUFFIX)
+endif
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

@@ -19,3 +19,5 @@ CPP_SOURCES += [
     'nsXMLElement.cpp',
 ]
 
+LIBRARY_NAME = 'gkconxmlcon_s'
+

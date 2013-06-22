@@ -147,6 +147,8 @@
   <string name="datareporting_fhr_summary">&datareporting_fhr_summary;</string>
   <string name="datareporting_crashreporter_title_short">&datareporting_crashreporter_title_short;</string>
   <string name="datareporting_crashreporter_summary">&datareporting_crashreporter_summary;</string>
+  <string name="datareporting_wifi_title">&datareporting_wifi_title;</string>
+  <string name="datareporting_wifi_summary">&datareporting_wifi_summary;</string>
 
   <string name="go">&go;</string>
   <string name="search">&search;</string>

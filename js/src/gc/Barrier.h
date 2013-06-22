@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_barrier_h___
-#define jsgc_barrier_h___
+#ifndef gc_Barrier_h
+#define gc_Barrier_h
 
 #include "jsapi.h"
 
@@ -659,4 +659,4 @@ template <> struct IsRelocatableHeapType<HeapId>    { static const bool result =
 } /* namespace tl */
 } /* namespace js */
 
-#endif /* jsgc_barrier_h___ */
+#endif /* gc_Barrier_h */

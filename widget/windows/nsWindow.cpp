@@ -466,7 +466,8 @@ nsWindow::Create(nsIWidget *aParent,
     }
 
     if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-        WinUtils::GetWindowsVersion() <= WinUtils::WIN7_VERSION) {
+        WinUtils::GetWindowsVersion() <= WinUtils::WIN7_VERSION &&
+        HasBogusPopupsDropShadowOnMultiMonitor()) {
       extendedStyle |= WS_EX_COMPOSITED;
     }
 

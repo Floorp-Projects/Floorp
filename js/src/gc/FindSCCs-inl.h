@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef gc_FindSCCs_inl_h
+#define gc_FindSCCs_inl_h
+
 #include "jsfriendapi.h"
 
 #include "gc/FindSCCs.h"
@@ -145,3 +148,5 @@ ComponentFinder<Node>::mergeGroups(Node *first)
 
 } /* namespace gc */
 } /* namespace js */
+
+#endif /* gc_FindSCCs_inl_h */

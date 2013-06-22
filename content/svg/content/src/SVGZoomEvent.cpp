@@ -24,8 +24,6 @@ SVGZoomEvent::SVGZoomEvent(EventTarget* aOwner,
   , mPreviousScale(0)
   , mNewScale(0)
 {
-  SetIsDOMBinding();
-
   if (aEvent) {
     mEventIsInternal = false;
   }

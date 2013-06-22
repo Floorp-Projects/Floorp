@@ -538,7 +538,7 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
     // Give the subclass a chance to do something
     if (DescribeCustomObjects(obj, clasp, name)) {
       // Nothing else to do!
-    } else if (clasp == &js::FunctionClass) {
+    } else if (js::IsFunctionObject(obj)) {
       JSFunction* fun = JS_GetObjectFunction(obj);
       JSString* str = JS_GetFunctionDisplayId(fun);
       if (str) {
@@ -922,6 +922,7 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
 {
   JSContext* iter = nullptr;
   JSContext* cx;
+  JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
   while ((cx = JS_ContextIterator(mJSRuntime, &iter))) {
     // Skip anything without an nsIScriptContext, as well as any scx whose
     // NativeGlobal() is not an outer window (this happens with XUL Prototype

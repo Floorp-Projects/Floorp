@@ -42,9 +42,9 @@ EXPORTS.mozilla.dom += [
     'MediaStreamAudioDestinationNode.h',
     'OfflineAudioCompletionEvent.h',
     'PannerNode.h',
+    'PeriodicWave.h',
     'ScriptProcessorNode.h',
     'WaveShaperNode.h',
-    'WaveTable.h',
 ]
 
 CPP_SOURCES += [
@@ -69,10 +69,10 @@ CPP_SOURCES += [
     'MediaStreamAudioDestinationNode.cpp',
     'OfflineAudioCompletionEvent.cpp',
     'PannerNode.cpp',
+    'PeriodicWave.cpp',
     'ScriptProcessorNode.cpp',
     'ThreeDPoint.cpp',
     'WaveShaperNode.cpp',
-    'WaveTable.cpp',
     'WebAudioUtils.cpp',
 ]
 

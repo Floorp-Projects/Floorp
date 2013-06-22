@@ -126,3 +126,7 @@ user_pref("dom.navigator-property.disable.mozSettings", false);
 
 // Make sure the disk cache doesn't get auto disabled
 user_pref("network.http.bypass-cachelock-threshold", 200000);
+
+// Enable Gamepad
+user_pref("dom.gamepad.enabled", true);
+user_pref("dom.gamepad.non_standard_events.enabled", true);

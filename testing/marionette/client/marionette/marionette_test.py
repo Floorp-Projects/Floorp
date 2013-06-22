@@ -31,6 +31,57 @@ class CommonTestCase(unittest.TestCase):
         self.loglines = None
         self.duration = 0
 
+    def run(self, result=None):
+        orig_result = result
+        if result is None:
+            result = self.defaultTestResult()
+            startTestRun = getattr(result, 'startTestRun', None)
+            if startTestRun is not None:
+                startTestRun()
+
+        self._resultForDoCleanups = result
+        result.startTest(self)
+
+        testMethod = getattr(self, self._testMethodName)
+        try:
+            success = False
+            try:
+                self.setUp()
+            except KeyboardInterrupt:
+                raise
+            except:
+                result.addError(self, sys.exc_info())
+            else:
+                try:
+                    testMethod()
+                except KeyboardInterrupt:
+                    raise
+                except AssertionError:
+                    result.addFailure(self, sys.exc_info())
+                except:
+                    result.addError(self, sys.exc_info())
+                else:
+                    success = True
+                try:
+                    self.tearDown()
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    result.addError(self, sys.exc_info())
+                    success = False
+            # Here we could handle doCleanups() instead of calling cleanTest directly
+            self.cleanTest()
+
+            if success:
+                result.addSuccess(self)
+
+        finally:
+            result.stopTest(self)
+            if orig_result is None:
+                stopTestRun = getattr(result, 'stopTestRun', None)
+                if stopTestRun is not None:
+                    stopTestRun()
+
     @classmethod
     def match(cls, filename):
         """
@@ -95,10 +146,17 @@ permissions.forEach(function (perm) {
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
 
     def tearDown(self):
+        self._deleteSession()
+
+    def cleanTest(self):
+        self._deleteSession()
+
+    def _deleteSession(self):
         self.duration = time.time() - self.start_time
-        if self.marionette.session is not None:
-            self.loglines = self.marionette.get_logs()
-            self.marionette.delete_session()
+        if hasattr(self.marionette, 'session'):
+            if self.marionette.session is not None:
+                self.loglines = self.marionette.get_logs()
+                self.marionette.delete_session()
         self.marionette = None
 
 class MarionetteTestCase(CommonTestCase):

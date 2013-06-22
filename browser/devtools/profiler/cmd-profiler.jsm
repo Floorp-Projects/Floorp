@@ -49,6 +49,9 @@ gcli.addCommand({
   params: [],
 
   exec: function (args, context) {
+    if (!getPanel(context, "jsprofiler"))
+      return;
+
     return gDevTools.closeToolbox(context.environment.target)
       .then(function () null);
   }
@@ -65,7 +68,8 @@ gcli.addCommand({
   params: [
     {
       name: "name",
-      type: "string"
+      type: "string",
+      manual: gcli.lookup("profilerStartManual")
     }
   ],
 
@@ -111,7 +115,8 @@ gcli.addCommand({
   params: [
     {
       name: "name",
-      type: "string"
+      type: "string",
+      manual: gcli.lookup("profilerStopManual")
     }
   ],
 
@@ -193,7 +198,8 @@ gcli.addCommand({
   params: [
     {
       name: "name",
-      type: "string"
+      type: "string",
+      manual: gcli.lookup("profilerShowManual")
     }
   ],
 

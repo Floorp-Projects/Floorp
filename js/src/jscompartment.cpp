@@ -20,6 +20,7 @@
 #include "ion/IonCompartment.h"
 #endif
 #include "js/RootingAPI.h"
+#include "vm/StopIterationObject.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -234,7 +235,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
             return WrapForSameCompartment(cx, obj, vp);
 
         /* Translate StopIteration singleton. */
-        if (obj->isStopIteration())
+        if (obj->is<StopIterationObject>())
             return js_FindClassObject(cx, JSProto_StopIteration, vp);
 
         /* Unwrap the object, but don't unwrap outer windows. */
@@ -612,7 +613,7 @@ AddInnerLazyFunctionsFromScript(JSScript *script, AutoObjectVector &lazyFunction
     ObjectArray *objects = script->objects();
     for (size_t i = script->innerObjectsStart(); i < objects->length; i++) {
         JSObject *obj = objects->vector[i];
-        if (obj->isFunction() && obj->toFunction()->isInterpretedLazy()) {
+        if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpretedLazy()) {
             if (!lazyFunctions.append(obj))
                 return false;
         }
@@ -630,8 +631,8 @@ CreateLazyScriptsForCompartment(JSContext *cx)
     // been compiled.
     for (gc::CellIter i(cx->zone(), JSFunction::FinalizeKind); !i.done(); i.next()) {
         JSObject *obj = i.get<JSObject>();
-        if (obj->compartment() == cx->compartment() && obj->isFunction()) {
-            JSFunction *fun = obj->toFunction();
+        if (obj->compartment() == cx->compartment() && obj->is<JSFunction>()) {
+            JSFunction *fun = &obj->as<JSFunction>();
             if (fun->isInterpretedLazy()) {
                 LazyScript *lazy = fun->lazyScriptOrNull();
                 if (lazy && lazy->sourceObject() && !lazy->maybeScript()) {
@@ -646,7 +647,7 @@ CreateLazyScriptsForCompartment(JSContext *cx)
     // process with any newly exposed inner functions in created scripts.
     // A function cannot be delazified until its outer script exists.
     for (size_t i = 0; i < lazyFunctions.length(); i++) {
-        JSFunction *fun = lazyFunctions[i]->toFunction();
+        JSFunction *fun = &lazyFunctions[i]->as<JSFunction>();
 
         // lazyFunctions may have been populated with multiple functions for
         // a lazy script.
@@ -663,12 +664,12 @@ CreateLazyScriptsForCompartment(JSContext *cx)
     // Repoint any clones of the original functions to their new script.
     for (gc::CellIter i(cx->zone(), JSFunction::FinalizeKind); !i.done(); i.next()) {
         JSObject *obj = i.get<JSObject>();
-        if (obj->compartment() == cx->compartment() && obj->isFunction()) {
-            JSFunction *fun = obj->toFunction();
+        if (obj->compartment() == cx->compartment() && obj->is<JSFunction>()) {
+            JSFunction *fun = &obj->as<JSFunction>();
             if (fun->isInterpretedLazy()) {
                 LazyScript *lazy = fun->lazyScriptOrNull();
                 if (lazy && lazy->maybeScript())
-                    fun->getExistingScript();
+                    fun->existingScript();
             }
         }
     }

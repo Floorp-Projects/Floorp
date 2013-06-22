@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_frame_layouts_x86_h__
-#define js_ion_frame_layouts_x86_h__
+#ifndef ion_shared_IonFrames_x86_shared_h
+#define ion_shared_IonFrames_x86_shared_h
 
 #include "ion/shared/IonFrames-shared.h"
 
@@ -308,13 +308,13 @@ class IonOOLPropertyOpExitFrameLayout
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *obj_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -356,13 +356,13 @@ class IonOOLProxyGetExitFrameLayout
     // The proxy object.
     JSObject *proxy_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *receiver_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -535,5 +535,4 @@ class InvalidationBailoutStack
 }
 }
 
-#endif // js_ion_frame_layouts_x86_h__
-
+#endif /* ion_shared_IonFrames_x86_shared_h */

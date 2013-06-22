@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscntxtinlines_h___
-#define jscntxtinlines_h___
+#ifndef jscntxtinlines_h
+#define jscntxtinlines_h
 
 #include "jscntxt.h"
 
@@ -16,6 +16,7 @@
 
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
+#include "ion/IonFrames.h" // For GetPcScript
 #include "vm/Interpreter.h"
 #include "vm/Probes.h"
 #include "vm/RegExpObject.h"
@@ -48,7 +49,7 @@ NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryInd
 inline bool
 NewObjectCache::lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
 {
-    JS_ASSERT(!proto->isGlobal());
+    JS_ASSERT(!proto->is<GlobalObject>());
     return lookup(clasp, proto, kind, pentry);
 }
 
@@ -122,25 +123,6 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
 
     return NULL;
 }
-
-struct PreserveRegsGuard
-{
-    PreserveRegsGuard(JSContext *cx, FrameRegs &regs)
-      : prevContextRegs(cx->maybeRegs()), cx(cx), regs_(regs) {
-        cx->stack.repointRegs(&regs_);
-    }
-    ~PreserveRegsGuard() {
-        JS_ASSERT(cx->maybeRegs() == &regs_);
-        *prevContextRegs = regs_;
-        cx->stack.repointRegs(prevContextRegs);
-    }
-
-    FrameRegs *prevContextRegs;
-
-  private:
-    JSContext *cx;
-    FrameRegs &regs_;
-};
 
 #ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
@@ -395,7 +377,7 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
     JS_ASSERT_IF(native != FunctionProxyClass.construct &&
                  native != js::CallOrConstructBoundFunction &&
                  native != js::IteratorConstructor &&
-                 (!callee->isFunction() || callee->toFunction()->native() != obj_construct),
+                 (!callee->is<JSFunction>() || callee->as<JSFunction>().native() != obj_construct),
                  !args.rval().isPrimitive() && callee != &args.rval().toObject());
 
     return true;
@@ -458,7 +440,7 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 inline bool
 JSContext::canSetDefaultVersion() const
 {
-    return !stack.hasfp() && !hasVersionOverride;
+    return !currentlyRunning() && !hasVersionOverride;
 }
 
 inline void
@@ -518,7 +500,7 @@ JSContext::setDefaultCompartmentObject(JSObject *obj)
          * final leaveCompartment call to set the context's compartment back to
          * defaultCompartmentObject->compartment()).
          */
-        JS_ASSERT(!hasfp());
+        JS_ASSERT(!currentlyRunning());
         setCompartment(obj ? obj->compartment() : NULL);
         if (throwing)
             wrapPendingException();
@@ -572,6 +554,71 @@ JSContext::setCompartment(JSCompartment *comp)
 {
     compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
+    allocator_ = zone_ ? &zone_->allocator : NULL;
 }
 
-#endif /* jscntxtinlines_h___ */
+inline JSScript *
+JSContext::currentScript(jsbytecode **ppc,
+                         MaybeAllowCrossCompartment allowCrossCompartment) const
+{
+    if (ppc)
+        *ppc = NULL;
+
+    js::Activation *act = mainThread().activation();
+    while (act && (act->cx() != this || !act->isActive()))
+        act = act->prev();
+
+    if (!act)
+        return NULL;
+
+    JS_ASSERT(act->cx() == this);
+
+#ifdef JS_ION
+    if (act->isJit()) {
+        JSScript *script = NULL;
+        js::ion::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
+        if (!allowCrossCompartment && script->compartment() != compartment())
+            return NULL;
+        return script;
+    }
+#endif
+
+    JS_ASSERT(act->isInterpreter());
+
+    js::StackFrame *fp = act->asInterpreter()->current();
+    JS_ASSERT(!fp->runningInJit());
+
+    JSScript *script = fp->script();
+    if (!allowCrossCompartment && script->compartment() != compartment())
+        return NULL;
+
+    if (ppc) {
+        *ppc = act->asInterpreter()->regs().pc;
+        JS_ASSERT(*ppc >= script->code && *ppc < script->code + script->length);
+    }
+    return script;
+}
+
+template <typename T>
+inline bool
+js::ThreadSafeContext::isInsideCurrentZone(T thing) const
+{
+    return thing->isInsideZone(zone_);
+}
+
+inline js::AllowGC
+js::ThreadSafeContext::allowGC() const
+{
+    switch (contextKind_) {
+      case Context_JS:
+        return CanGC;
+      case Context_ForkJoin:
+        return NoGC;
+      default:
+        /* Silence warnings. */
+        JS_NOT_REACHED("Bad context kind");
+        return NoGC;
+    }
+}
+
+#endif /* jscntxtinlines_h */

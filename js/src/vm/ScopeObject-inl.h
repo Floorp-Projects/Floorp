@@ -4,14 +4,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ScopeObject_inl_h___
-#define ScopeObject_inl_h___
+#ifndef vm_ScopeObject_inl_h
+#define vm_ScopeObject_inl_h
 
 #include "ScopeObject.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+
+template<>
+inline bool
+JSObject::is<js::ClonedBlockObject>() const
+{
+    return is<js::BlockObject>() && !!getProto();
+}
+
+template<>
+inline bool
+JSObject::is<js::StaticBlockObject>() const
+{
+    return is<js::BlockObject>() && !getProto();
+}
+
+inline JSObject *
+JSObject::enclosingScope()
+{
+    return is<js::ScopeObject>()
+           ? &as<js::ScopeObject>().enclosingScope()
+           : is<js::DebugScopeObject>()
+           ? &as<js::DebugScopeObject>().enclosingScope()
+           : getParent();
+}
 
 namespace js {
 
@@ -20,12 +44,6 @@ ScopeCoordinate::ScopeCoordinate(jsbytecode *pc)
   : hops(GET_UINT16(pc)), slot(GET_UINT16(pc + 2))
 {
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
-}
-
-inline JSObject &
-ScopeObject::enclosingScope() const
-{
-    return getReservedSlot(SCOPE_CHAIN_SLOT).toObject();
 }
 
 inline void
@@ -39,14 +57,14 @@ ScopeObject::setEnclosingScope(HandleObject obj)
 inline const Value &
 ScopeObject::aliasedVar(ScopeCoordinate sc)
 {
-    JS_ASSERT(is<CallObject>() || isClonedBlock());
+    JS_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
     return getSlot(sc.slot);
 }
 
 inline void
 ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v)
 {
-    JS_ASSERT(is<CallObject>() || isClonedBlock());
+    JS_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
 
     // name may be null for non-singletons, whose types do not need to be tracked.
@@ -68,14 +86,14 @@ CallObject::isForEval() const
 {
     JS_ASSERT(getReservedSlot(CALLEE_SLOT).isObjectOrNull());
     JS_ASSERT_IF(getReservedSlot(CALLEE_SLOT).isObject(),
-                 getReservedSlot(CALLEE_SLOT).toObject().isFunction());
+                 getReservedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
     return getReservedSlot(CALLEE_SLOT).isNull();
 }
 
 inline JSFunction &
 CallObject::callee() const
 {
-    return *getReservedSlot(CALLEE_SLOT).toObject().toFunction();
+    return getReservedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
 }
 
 inline const Value &
@@ -171,7 +189,7 @@ inline StaticBlockObject *
 StaticBlockObject::enclosingBlock() const
 {
     JSObject *obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    return obj && obj->isStaticBlock() ? &obj->asStaticBlock() : NULL;
+    return obj && obj->is<StaticBlockObject>() ? &obj->as<StaticBlockObject>() : NULL;
 }
 
 inline JSObject *
@@ -233,7 +251,7 @@ StaticBlockObject::containsVarAtDepth(uint32_t depth)
 inline StaticBlockObject &
 ClonedBlockObject::staticBlock() const
 {
-    return getProto()->asStaticBlock();
+    return getProto()->as<StaticBlockObject>();
 }
 
 inline const Value &
@@ -252,46 +270,4 @@ ClonedBlockObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAl
 
 }  /* namespace js */
 
-inline js::ScopeObject &
-JSObject::asScope()
-{
-    JS_ASSERT(isScope());
-    return *static_cast<js::ScopeObject *>(this);
-}
-
-inline js::NestedScopeObject &
-JSObject::asNestedScope()
-{
-    JS_ASSERT(isWith() || is<js::BlockObject>());
-    return *static_cast<js::NestedScopeObject *>(this);
-}
-
-inline js::WithObject &
-JSObject::asWith()
-{
-    JS_ASSERT(isWith());
-    return *static_cast<js::WithObject *>(this);
-}
-
-inline js::StaticBlockObject &
-JSObject::asStaticBlock()
-{
-    JS_ASSERT(isStaticBlock());
-    return *static_cast<js::StaticBlockObject *>(this);
-}
-
-inline js::ClonedBlockObject &
-JSObject::asClonedBlock()
-{
-    JS_ASSERT(isClonedBlock());
-    return *static_cast<js::ClonedBlockObject *>(this);
-}
-
-inline js::DebugScopeObject &
-JSObject::asDebugScope()
-{
-    JS_ASSERT(isDebugScope());
-    return *static_cast<js::DebugScopeObject *>(this);
-}
-
-#endif /* ScopeObject_inl_h___ */
+#endif /* vm_ScopeObject_inl_h */

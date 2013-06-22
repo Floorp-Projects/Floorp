@@ -33,6 +33,11 @@ extern const sdp_namearray_t sdp_bw_modifier_val[];
 extern const sdp_namearray_t sdp_group_attr_val[];
 extern const sdp_namearray_t sdp_src_filter_mode_val[];
 extern const sdp_namearray_t sdp_rtcp_unicast_mode_val[];
+extern const sdp_namearray_t sdp_rtcp_fb_type_val[];
+extern const sdp_namearray_t sdp_rtcp_fb_nack_type_val[];
+extern const sdp_namearray_t sdp_rtcp_fb_ack_type_val[];
+extern const sdp_namearray_t sdp_rtcp_fb_ccm_type_val[];
+
 
 extern const  sdp_srtp_crypto_suite_list sdp_srtp_crypto_suite_array[];
 /* Function Prototypes */
@@ -138,6 +143,12 @@ extern sdp_result_e sdp_parse_attr_srtpcontext(sdp_t *sdp_p,
 extern sdp_result_e sdp_build_attr_srtpcontext(sdp_t *sdp_p,
                                                sdp_attr_t *attr_p,
                                                flex_string *fs);
+extern sdp_result_e sdp_parse_attr_rtcp_fb(sdp_t *sdp_p,
+                                           sdp_attr_t *attr_p,
+                                           const char *ptr);
+extern sdp_result_e sdp_build_attr_rtcp_fb(sdp_t *sdp_p,
+                                           sdp_attr_t *attr_p,
+                                           flex_string *fs);
 extern sdp_result_e sdp_parse_attr_mptime(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_mptime(

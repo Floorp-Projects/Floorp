@@ -102,7 +102,7 @@
                        tabindex="0"/>
       </toolbar>
       <label id="requests-menu-empty-notice"
-             value="&netmonitorUI.emptyNotice;"/>
+             value="&netmonitorUI.emptyNotice2;"/>
       <vbox id="requests-menu-contents" flex="1">
         <hbox id="requests-menu-item-template" hidden="true">
           <hbox class="requests-menu-subitem requests-menu-status-and-method"
@@ -138,7 +138,8 @@
                 flex="100"/>
         <button id="requests-menu-filter-all-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn(null)"
+                checked="true"
+                onclick="NetMonitorView.RequestsMenu.filterOn('all')"
                 label="&netmonitorUI.footer.filterAll;">
         </button>
         <button id="requests-menu-filter-html-button"

@@ -54,7 +54,8 @@ WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
     mHasVideo(false),
     mUseHwAccel(false),
     mMustRecaptureAudioPosition(true),
-    mIsMP3Enabled(WMFDecoder::IsMP3Supported())
+    mIsMP3Enabled(WMFDecoder::IsMP3Supported()),
+    mCOMInitialized(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(WMFReader);
@@ -79,15 +80,22 @@ void
 WMFReader::OnDecodeThreadStart()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-  NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+
+  // XXX WebAudio will call this on the main thread so CoInit will definitely
+  // fail. You cannot change the concurrency model once already set.
+  // The main thread will continue to be STA, which seems to work, but MSDN
+  // recommends that MTA be used.
+  mCOMInitialized = SUCCEEDED(CoInitializeEx(0, COINIT_MULTITHREADED));
+  NS_ENSURE_TRUE_VOID(mCOMInitialized);
 }
 
 void
 WMFReader::OnDecodeThreadFinish()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  CoUninitialize();
+  if (mCOMInitialized) {
+    CoUninitialize();
+  }
 }
 
 bool

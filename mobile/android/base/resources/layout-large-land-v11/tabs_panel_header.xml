@@ -3,14 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <Gecko.IconTabWidget android:id="@+id/tab_widget"
                          android:layout_width="wrap_content"
                          android:layout_height="fill_parent"
                          android:tabStripEnabled="false"
-                         android:divider="@drawable/tab_indicator_divider"
-                         gecko:display="icon"/>
+                         android:divider="@drawable/tab_indicator_divider"/>
 
 </merge>

@@ -1255,6 +1255,10 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         // Recover the number of actual arguments from the script.
         if (JSOp(*pc_) != JSOP_FUNAPPLY)
             numActualArgs_ = GET_ARGC(pc_);
+        if (JSOp(*pc_) == JSOP_FUNCALL) {
+            JS_ASSERT(GET_ARGC(pc_) > 0);
+            numActualArgs_ = GET_ARGC(pc_) - 1;
+        }
 
         JS_ASSERT(numActualArgs_ != 0xbadbad);
 
@@ -1271,12 +1275,12 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
 
         si_.nextFrame();
 
-        callee_ = funval.toObject().toFunction();
+        callee_ = &funval.toObject().as<JSFunction>();
 
         // Inlined functions may be clones that still point to the lazy script
         // for the executed script, if they are clones. The actual script
         // exists though, just make sure the function points to it.
-        script_ = callee_->getExistingScript();
+        script_ = callee_->existingScript();
 
         pc_ = script_->code + si_.pcOffset();
     }

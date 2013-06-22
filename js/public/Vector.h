@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsvector_h_
-#define jsvector_h_
+#ifndef js_Vector_h
+#define js_Vector_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TypeTraits.h"
@@ -1104,4 +1104,4 @@ Vector<T,N,AP>::swap(Vector &other)
 #pragma warning(pop)
 #endif
 
-#endif /* jsvector_h_ */
+#endif /* js_Vector_h */

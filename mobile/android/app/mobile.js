@@ -413,6 +413,7 @@ pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 105);
 pref("javascript.options.mem.high_water_mark", 16);
 pref("javascript.options.mem.gc_allocation_threshold_mb", 3);
+pref("javascript.options.mem.gc_decommit_threshold_mb", 1);
 #else
 pref("javascript.options.mem.high_water_mark", 32);
 #endif
@@ -443,7 +444,6 @@ pref("browser.ui.show-margins-threshold", 20);
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
 
-pref("plugins.click_to_play", true);
 // The default value for nsIPluginTag.enabledState (STATE_CLICKTOPLAY = 1)
 pref("plugin.default.state", 1);
 
@@ -740,10 +740,6 @@ pref("dom.payment.provider.0.uri", "https://marketplace.firefox.com/mozpay/?req=
 pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
 pref("dom.payment.provider.0.requestMethod", "GET");
 #endif
-
-// This needs more tests and stability fixes first, as well as UI.
-pref("media.navigator.enabled", false);
-pref("media.peerconnection.enabled", false);
 
 // Make <audio> and <video> talk to the AudioChannelService.
 pref("media.useAudioChannelService", true);

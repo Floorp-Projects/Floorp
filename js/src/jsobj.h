@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsobj_h___
-#define jsobj_h___
+#ifndef jsobj_h
+#define jsobj_h
 
 /*
  * JS object definitions.
@@ -203,38 +203,22 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 } /* namespace js::baseops */
 
 extern Class ArrayClass;
-extern Class BooleanClass;
 extern Class DateClass;
 extern Class ErrorClass;
-extern Class GeneratorClass;
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
-extern Class NumberClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpStaticsClass;
-extern Class StopIterationClass;
-extern Class StringClass;
-extern Class WeakMapClass;
-extern Class WithClass;
 
 class ArrayBufferObject;
-class BooleanObject;
-class ClonedBlockObject;
-class DebugScopeObject;
 class GlobalObject;
 class MapObject;
-class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
-class NumberObject;
-class ScopeObject;
 class SetObject;
-class StaticBlockObject;
 class StrictArgumentsObject;
-class StringObject;
-class WithObject;
 
 }  /* namespace js */
 
@@ -556,17 +540,8 @@ class JSObject : public js::ObjectImpl
     static const char *className(JSContext *cx, js::HandleObject obj);
 
     /* Accessors for elements. */
-
-    struct MaybeContext {
-        js::Allocator *allocator;
-        JSContext *context;
-
-        MaybeContext(JSContext *cx) : allocator(NULL), context(cx) {}
-        MaybeContext(js::Allocator *alloc) : allocator(alloc), context(NULL) {}
-    };
-
     inline bool ensureElements(JSContext *cx, uint32_t cap);
-    bool growElements(MaybeContext cx, uint32_t newcap);
+    bool growElements(js::ThreadSafeContext *tcx, uint32_t newcap);
     void shrinkElements(JSContext *cx, uint32_t cap);
     inline void setDynamicElements(js::ObjectElements *header);
 
@@ -602,10 +577,10 @@ class JSObject : public js::ObjectImpl
      */
     enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
     inline EnsureDenseResult ensureDenseElements(JSContext *cx, uint32_t index, uint32_t extra);
-    inline EnsureDenseResult parExtendDenseElements(js::Allocator *alloc, js::Value *v,
+    inline EnsureDenseResult parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v,
                                                     uint32_t extra);
-    template<typename MallocProviderType>
-    inline EnsureDenseResult extendDenseElements(MallocProviderType *cx,
+
+    inline EnsureDenseResult extendDenseElements(js::ThreadSafeContext *tcx,
                                                  uint32_t requiredCapacity, uint32_t extra);
 
     /* Convert a single dense element to a sparse property. */
@@ -669,15 +644,6 @@ class JSObject : public js::ObjectImpl
 
     inline const js::Value &getDateUTCTime() const;
     inline void setDateUTCTime(const js::Value &pthis);
-
-    /*
-     * Function-specific getters and setters.
-     */
-
-    friend class JSFunction;
-
-    inline JSFunction *toFunction();
-    inline const JSFunction *toFunction() const;
 
   public:
     /*
@@ -921,15 +887,15 @@ class JSObject : public js::ObjectImpl
      * specific types of objects may provide additional operations. To access,
      * these addition operations, callers should use the pattern:
      *
-     *   if (obj.isX()) {
-     *     XObject &x = obj.asX();
+     *   if (obj.is<XObject>()) {
+     *     XObject &x = obj.as<XObject>();
      *     x.foo();
      *   }
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
-     * object, the following predicates are true: isClonedBlock, is<BlockObject>,
-     * isNestedScope and isScope. Each of these has a respective class that
-     * derives and adds operations.
+     * object, the following predicates are true: is<ClonedBlockObject>,
+     * is<BlockObject>, is<NestedScopeObject> and is<ScopeObject>. Each of
+     * these has a respective class that derives and adds operations.
      *
      * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
      * triplet (along with any class YObject that derives XObject).
@@ -938,7 +904,7 @@ class JSObject : public js::ObjectImpl
      * [[Class]] property of object defined by the spec (for this, see
      * js::ObjectClassIs).
      *
-     * SpiderMonkey has not been completely switched to the isX/asX/XObject
+     * SpiderMonkey has not been completely switched to the is/as/XObject
      * pattern so in some cases there is no XObject class and the engine
      * instead pokes directly at reserved slots and getPrivate. In such cases,
      * consider adding the missing XObject class.
@@ -963,46 +929,15 @@ class JSObject : public js::ObjectImpl
     inline bool isArray()            const { return hasClass(&js::ArrayClass); }
     inline bool isDate()             const { return hasClass(&js::DateClass); }
     inline bool isError()            const { return hasClass(&js::ErrorClass); }
-    inline bool isFunction()         const { return hasClass(&js::FunctionClass); }
-    inline bool isGenerator()        const { return hasClass(&js::GeneratorClass); }
-    inline bool isGlobal()           const;
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
     inline bool isRegExpStatics()    const { return hasClass(&js::RegExpStaticsClass); }
-    inline bool isScope()            const;
-    inline bool isStopIteration()    const { return hasClass(&js::StopIterationClass); }
     inline bool isTypedArray()       const;
-    inline bool isWeakMap()          const { return hasClass(&js::WeakMapClass); }
-
-    /* Subtypes of ScopeObject. */
-    inline bool isNestedScope() const;
-    inline bool isWith()        const { return hasClass(&js::WithClass); }
-    inline bool isClonedBlock() const;
-    inline bool isStaticBlock() const;
-
-    /* Subtypes of PrimitiveObject. */
-    inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
-    inline bool isNumber()  const { return hasClass(&js::NumberClass); }
-    inline bool isString()  const { return hasClass(&js::StringClass); }
 
     /* Subtypes of Proxy. */
-    inline bool isDebugScope()              const;
     inline bool isWrapper()                 const;
     inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
-
-    inline js::BooleanObject &asBoolean();
-    inline js::ClonedBlockObject &asClonedBlock();
-    inline js::DebugScopeObject &asDebugScope();
-    inline js::GlobalObject &asGlobal();
-    inline js::MapObject &asMap();
-    inline js::NestedScopeObject &asNestedScope();
-    inline js::NumberObject &asNumber();
-    inline js::ScopeObject &asScope();
-    inline js::SetObject &asSet();
-    inline js::StaticBlockObject &asStaticBlock();
-    inline js::StringObject &asString();
-    inline js::WithObject &asWith();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 
@@ -1473,4 +1408,4 @@ CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue va
 
 }  /* namespace js */
 
-#endif /* jsobj_h___ */
+#endif /* jsobj_h */

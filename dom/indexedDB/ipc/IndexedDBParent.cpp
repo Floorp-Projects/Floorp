@@ -162,8 +162,7 @@ IndexedDBParent::RecvPIndexedDBDatabaseConstructor(
 
   nsRefPtr<IDBOpenDBRequest> request;
   nsresult rv =
-    mFactory->OpenInternal(aName, aVersion, false, nullptr,
-                           getter_AddRefs(request));
+    mFactory->OpenInternal(aName, aVersion, false, getter_AddRefs(request));
   NS_ENSURE_SUCCESS(rv, false);
 
   IndexedDBDatabaseParent* actor =
@@ -199,7 +198,7 @@ IndexedDBParent::RecvPIndexedDBDeleteDatabaseRequestConstructor(
   nsRefPtr<IDBOpenDBRequest> request;
 
   nsresult rv =
-    mFactory->OpenInternal(aName, 0, true, nullptr, getter_AddRefs(request));
+    mFactory->OpenInternal(aName, 0, true, getter_AddRefs(request));
   NS_ENSURE_SUCCESS(rv, false);
 
   rv = actor->SetOpenRequest(request);
@@ -2006,8 +2005,7 @@ IndexedDBIndexRequestParent::OpenCursor(const OpenCursorParams& aParams)
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
     nsresult rv =
-      mIndex->OpenCursorInternal(keyRange, direction, nullptr,
-                                 getter_AddRefs(request));
+      mIndex->OpenCursorInternal(keyRange, direction, getter_AddRefs(request));
     NS_ENSURE_SUCCESS(rv, false);
   }
 

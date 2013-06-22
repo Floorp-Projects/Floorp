@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1370990544000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1371672180000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -265,6 +265,10 @@
                         <versionRange  minVersion="3.1.22.0" maxVersion="3.1.22.0">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i376" id="{9e09ac65-43c0-4b9d-970f-11e2e9616c55}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i44" id="sigma@labs.mozilla">
                         </emItem>
       <emItem  blockID="i246" id="support@vide1flash2.com">
@@ -290,7 +294,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i115" id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                        <versionRange  minVersion="0" maxVersion="*">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
@@ -509,6 +513,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i372" id="5nc3QHFgcb@r06Ws9gvNNVRfH.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i356" id="{341f4dac-1966-47ff-aacf-0ce175f1498a}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -563,8 +571,16 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i380" id="{cc8f597b-0765-404e-a575-82aefbd81daf}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i314" id="crossriderapp8812@crossrider.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i378" id="{a7aae4f0-bc2e-a0dd-fb8d-68ce32c9261f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i73" id="a1g0a9g219d@a1.com">
@@ -579,12 +595,16 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i21" id="support@update-firefox.com">
+                        </emItem>
       <emItem  blockID="i322" id="jid0-Y6TVIzs0r7r4xkOogmJPNAGFGBw@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i21" id="support@update-firefox.com">
-                        </emItem>
+      <emItem  blockID="i374" id="update@firefox.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
     </emItems>
 
   <pluginItems>

@@ -2637,6 +2637,18 @@ LIRGenerator::visitIsCallable(MIsCallable *ins)
 }
 
 bool
+LIRGenerator::visitHaveSameClass(MHaveSameClass *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_Object);
+    JS_ASSERT(rhs->type() == MIRType_Object);
+
+    return define(new LHaveSameClass(useRegister(lhs), useRegister(rhs), temp()), ins);
+}
+
+bool
 LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     LAsmJSLoadHeap *lir = new LAsmJSLoadHeap(useRegisterAtStart(ins->ptr()));

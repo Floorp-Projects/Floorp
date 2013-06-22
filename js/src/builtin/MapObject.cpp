@@ -1000,13 +1000,6 @@ MapIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 
 /*** Map *****************************************************************************************/
 
-inline js::MapObject &
-JSObject::asMap()
-{
-    JS_ASSERT(hasClass(&MapObject::class_));
-    return *static_cast<js::MapObject *>(this);
-}
-
 Class MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
@@ -1065,7 +1058,7 @@ InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey 
 JSObject *
 MapObject::initClass(JSContext *cx, JSObject *obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedObject proto(cx,
         InitClass(cx, global, &class_, JSProto_Map, construct, properties, methods));
     if (proto) {
@@ -1112,7 +1105,7 @@ MarkKey(Range &r, const HashableValue &key, JSTracer *trc)
 void
 MapObject::mark(JSTracer *trc, JSObject *obj)
 {
-    if (ValueMap *map = obj->asMap().getData()) {
+    if (ValueMap *map = obj->as<MapObject>().getData()) {
         for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
             MarkKey(r, r.front().key, trc);
             gc::MarkValue(trc, &r.front().value, "value");
@@ -1128,17 +1121,7 @@ class OrderedHashTableRef : public gc::BufferableRef
     HashableValue key;
 
   public:
-    OrderedHashTableRef(TableType *t, const HashableValue &k) : table(t), key(k) {}
-
-    bool match(void *location) {
-        if (!table->has(key))
-            return false;
-        for (typename TableType::Range r = table->all(); !r.empty(); r.popFront()) {
-            if ((void*)&r.front() == location)
-                return true;
-        }
-        return false;
-    }
+    explicit OrderedHashTableRef(TableType *t, const HashableValue &k) : table(t), key(k) {}
 
     void mark(JSTracer *trc) {
         HashableValue prior = key;
@@ -1160,7 +1143,7 @@ WriteBarrierPost(JSRuntime *rt, TableType *table, const HashableValue &key)
 void
 MapObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    if (ValueMap *map = obj->asMap().getData())
+    if (ValueMap *map = obj->as<MapObject>().getData())
         fop->delete_(map);
 }
 
@@ -1231,7 +1214,7 @@ MapObject::extract(CallReceiver call)
 {
     JS_ASSERT(call.thisv().isObject());
     JS_ASSERT(call.thisv().toObject().hasClass(&MapObject::class_));
-    return *call.thisv().toObject().asMap().getData();
+    return *call.thisv().toObject().as<MapObject>().getData();
 }
 
 bool
@@ -1351,7 +1334,7 @@ MapObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 bool
 MapObject::iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind)
 {
-    Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().asMap());
+    Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().as<MapObject>());
     ValueMap &map = *mapobj->getData();
     Rooted<JSObject*> iterobj(cx, MapIteratorObject::create(cx, mapobj, &map, kind));
     if (!iterobj)
@@ -1402,7 +1385,7 @@ MapObject::entries(JSContext *cx, unsigned argc, Value *vp)
 bool
 MapObject::clear_impl(JSContext *cx, CallArgs args)
 {
-    Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().asMap());
+    Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().as<MapObject>());
     if (!mapobj->getData()->clear()) {
         js_ReportOutOfMemory(cx);
         return false;
@@ -1575,13 +1558,6 @@ SetIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 
 /*** Set *****************************************************************************************/
 
-inline js::SetObject &
-JSObject::asSet()
-{
-    JS_ASSERT(hasClass(&SetObject::class_));
-    return *static_cast<js::SetObject *>(this);
-}
-
 Class SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
@@ -1618,7 +1594,7 @@ const JSFunctionSpec SetObject::methods[] = {
 JSObject *
 SetObject::initClass(JSContext *cx, JSObject *obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedObject proto(cx,
         InitClass(cx, global, &class_, JSProto_Set, construct, properties, methods));
     if (proto) {
@@ -1791,7 +1767,7 @@ SetObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 bool
 SetObject::iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind)
 {
-    Rooted<SetObject*> setobj(cx, &args.thisv().toObject().asSet());
+    Rooted<SetObject*> setobj(cx, &args.thisv().toObject().as<SetObject>());
     ValueSet &set = *setobj->getData();
     Rooted<JSObject*> iterobj(cx, SetIteratorObject::create(cx, setobj, &set, kind));
     if (!iterobj)
@@ -1829,7 +1805,7 @@ SetObject::entries(JSContext *cx, unsigned argc, Value *vp)
 bool
 SetObject::clear_impl(JSContext *cx, CallArgs args)
 {
-    Rooted<SetObject*> setobj(cx, &args.thisv().toObject().asSet());
+    Rooted<SetObject*> setobj(cx, &args.thisv().toObject().as<SetObject>());
     if (!setobj->getData()->clear()) {
         js_ReportOutOfMemory(cx);
         return false;

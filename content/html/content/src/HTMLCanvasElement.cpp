@@ -889,10 +889,11 @@ HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect)
    * invalidating a canvas will feed into heuristics and cause JIT code to be
    * kept around longer, for smoother animations.
    */
-  nsIScriptGlobalObject *scope = OwnerDoc()->GetScriptGlobalObject();
-  if (scope) {
-    JSObject *obj = scope->GetGlobalJSObject();
-    if (obj) {
+  nsCOMPtr<nsIGlobalObject> global =
+    do_QueryInterface(OwnerDoc()->GetInnerWindow());
+
+  if (global) {
+    if (JSObject *obj = global->GetGlobalJSObject()) {
       js::NotifyAnimationActivity(obj);
     }
   }
