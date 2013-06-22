@@ -348,7 +348,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
 
   // Check for Nexus S to disable gralloc. We only check for this on ICS or
   // earlier, in hopes that JB will work.
-#ifdef ANDROID_VERSION <= 15
+#if ANDROID_VERSION <= 15
   char propValue[PROPERTY_VALUE_MAX];
   property_get("ro.product.device", propValue, "None");
   if (strcmp("crespo",propValue) == 0) {

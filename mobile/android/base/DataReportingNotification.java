@@ -48,16 +48,7 @@ public class DataReportingNotification {
             Intent prefIntent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
             prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS);
 
-            // Build launch intent based on Android version.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                prefIntent.putExtra("resource", "preferences_datareporting");
-            } else {
-                prefIntent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, GeckoPreferenceFragment.class.getName());
-
-                Bundle fragmentArgs = new Bundle();
-                fragmentArgs.putString("resource", "preferences_datareporting");
-                prefIntent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
-            }
+            GeckoPreferences.setResourceToOpen(prefIntent, "preferences_datareporting");
             prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, true);
 
             PendingIntent contentIntent = PendingIntent.getActivity(context, 0, prefIntent, PendingIntent.FLAG_UPDATE_CURRENT);
