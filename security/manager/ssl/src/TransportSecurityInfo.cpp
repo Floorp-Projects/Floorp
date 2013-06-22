@@ -17,6 +17,8 @@
 #include "nsNSSCertHelper.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIArray.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
 
