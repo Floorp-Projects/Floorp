@@ -1392,15 +1392,15 @@ GeneratorState::GeneratorState(JSContext *cx, JSGenerator *gen, JSGeneratorState
 
 GeneratorState::~GeneratorState()
 {
+    gen_->fp->setSuspended();
+
     if (entered_)
         cx_->leaveGenerator(gen_);
 }
 
 StackFrame *
-GeneratorState::pushInterpreterFrame(JSContext *cx)
+GeneratorState::pushInterpreterFrame(JSContext *cx, FrameGuard *)
 {
-    gfg_.construct();
-
     /*
      * Write barrier is needed since the generator stack can be updated,
      * and it's not barriered in any other way. We need to do it before
@@ -1414,21 +1414,17 @@ GeneratorState::pushInterpreterFrame(JSContext *cx)
      */
     GeneratorWriteBarrierPre(cx, gen_);
 
-    if (!cx->stack.pushGeneratorFrame(cx, gen_, gfg_.addr())) {
-        SetGeneratorClosed(cx, gen_);
-        return NULL;
-    }
-
     /*
      * Don't change the state until after the frame is successfully pushed
      * or else we might fail to scan some generator values.
      */
     gen_->state = futureState_;
-    gen_->regs = cx->stack.regs();
+
+    gen_->fp->clearSuspended();
 
     cx->enterGenerator(gen_);   /* OOM check above. */
     entered_ = true;
-    return gfg_.ref().fp();
+    return gen_->fp;
 }
 
 static void
@@ -1504,13 +1500,14 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
     JS_ASSERT(nbytes % sizeof(Value) == 0);
     JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(HeapValue) == 0);
 
-    JSGenerator *gen = (JSGenerator *) cx->malloc_(nbytes);
+    JSGenerator *gen = (JSGenerator *) cx->calloc_(nbytes);
     if (!gen)
         return NULL;
-    SetValueRangeToUndefined((Value *)gen, nbytes / sizeof(Value));
 
     /* Cut up floatingStack space. */
     HeapValue *genvp = gen->stackSnapshot;
+    SetValueRangeToUndefined((Value *)genvp, vplen);
+
     StackFrame *genfp = reinterpret_cast<StackFrame *>(genvp + vplen);
 
     /* Initialize JSGenerator. */
@@ -1523,7 +1520,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
     gen->regs.rebaseFromTo(stackRegs, *genfp);
     genfp->copyFrameAndValues<StackFrame::DoPostBarrier>(cx, (Value *)genvp, stackfp,
                                                          stackvp, stackRegs.sp);
-
+    genfp->setSuspended();
     obj->setPrivate(gen);
     return obj;
 }

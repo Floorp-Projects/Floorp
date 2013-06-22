@@ -12,7 +12,7 @@
 namespace js {
 
 bool
-DefineTestingFunctions(JSContext *cx, JSHandleObject obj);
+DefineTestingFunctions(JSContext *cx, HandleObject obj);
 
 JSBool
 testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp);

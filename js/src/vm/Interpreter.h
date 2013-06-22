@@ -206,7 +206,7 @@ class RunState
 
     JSScript *script() const { return script_; }
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx) = 0;
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx, FrameGuard *fg) = 0;
     virtual void setReturnValue(Value v) = 0;
 
   private:
@@ -220,7 +220,6 @@ class RunState
 // Eval or global script.
 class ExecuteState : public RunState
 {
-    mozilla::Maybe<ExecuteFrameGuard> efg_;
     ExecuteType type_;
 
     RootedValue thisv_;
@@ -244,7 +243,7 @@ class ExecuteState : public RunState
     JSObject *scopeChain() const { return scopeChain_; }
     ExecuteType type() const { return type_; }
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx, FrameGuard *fg);
 
     virtual void setReturnValue(Value v) {
         if (result_)
@@ -255,7 +254,6 @@ class ExecuteState : public RunState
 // Data to invoke a function.
 class InvokeState : public RunState
 {
-    mozilla::Maybe<InvokeFrameGuard> ifg_;
     CallArgs &args_;
     InitialFrameFlags initial_;
     bool useNewType_;
@@ -274,7 +272,7 @@ class InvokeState : public RunState
     bool constructing() const { return InitialFrameFlagsAreConstructing(initial_); }
     CallArgs &args() const { return args_; }
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx, FrameGuard *fg);
 
     virtual void setReturnValue(Value v) {
         args_.rval().set(v);
@@ -284,7 +282,6 @@ class InvokeState : public RunState
 // Generator script.
 class GeneratorState : public RunState
 {
-    mozilla::Maybe<GeneratorFrameGuard> gfg_;
     JSContext *cx_;
     JSGenerator *gen_;
     JSGeneratorState futureState_;
@@ -294,8 +291,10 @@ class GeneratorState : public RunState
     GeneratorState(JSContext *cx, JSGenerator *gen, JSGeneratorState futureState);
     ~GeneratorState();
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual StackFrame *pushInterpreterFrame(JSContext *cx, FrameGuard *fg);
     virtual void setReturnValue(Value) { }
+
+    JSGenerator *gen() const { return gen_; }
 };
 
 extern bool

@@ -83,8 +83,6 @@ class SyntaxParseHandler
     Node newDelete(uint32_t begin, Node expr) { return NodeGeneric; }
 
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
-        if (kind == PNK_SEMI && kid == NodeString)
-            return NodeStringExprStatement;
         return NodeGeneric;
     }
 
@@ -102,24 +100,38 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newStatementList(unsigned blockid, const TokenPos &pos) { return NodeGeneric; }
+    void addStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler> *pc) {}
+    Node newEmptyStatement(const TokenPos &pos) { return NodeGeneric; }
+
+    Node newExprStatement(Node expr, uint32_t end) {
+        return expr == NodeString ? NodeStringExprStatement : NodeGeneric;
+    }
+
+    Node newIfStatement(uint32_t begin, Node cond, Node then, Node else_) { return NodeGeneric; }
+    Node newDoWhileStatement(Node body, Node cond, const TokenPos &pos) { return NodeGeneric; }
+    Node newWhileStatement(uint32_t begin, Node cond, Node body) { return NodeGeneric; }
+    Node newSwitchStatement(uint32_t begin, Node discriminant, Node caseList) { return NodeGeneric; }
+    Node newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
+    Node newContinueStatement(PropertyName *label, const TokenPos &pos) { return NodeGeneric; }
+    Node newBreakStatement(PropertyName *label, const TokenPos &pos) { return NodeGeneric; }
+    Node newReturnStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
+
     Node newLabeledStatement(PropertyName *label, Node stmt, uint32_t begin) {
         return NodeGeneric;
     }
-    Node newCaseOrDefault(uint32_t begin, Node expr, Node body) {
-        return NodeGeneric;
-    }
-    Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
-        return NodeGeneric;
-    }
-    Node newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
+
+    Node newThrowStatement(Node expr, const TokenPos &pos) { return NodeGeneric; }
+    Node newTryStatement(uint32_t begin, Node body, Node catchList, Node finallyBlock) {
         return NodeGeneric;
     }
     Node newDebuggerStatement(const TokenPos &pos) { return NodeGeneric; }
-    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end)
-    {
+
+    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end) {
         lastAtom = name;
         return NodeGetProp;
     }
+
     Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeLValue; }
 
     bool addCatchBlock(Node catchList, Node letBlock,

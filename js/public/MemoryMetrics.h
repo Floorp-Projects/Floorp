@@ -135,7 +135,7 @@ struct RuntimeSizes
     size_t dtoa;
     size_t temporary;
     size_t regexpData;
-    size_t stack;
+    size_t interpreterStack;
     size_t gcMarker;
     size_t mathCache;
     size_t scriptData;

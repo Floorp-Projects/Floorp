@@ -17,7 +17,7 @@ inline uint32_t
 ArgumentsObject::initialLength() const
 {
     uint32_t argc = uint32_t(getFixedSlot(INITIAL_LENGTH_SLOT).toInt32()) >> PACKED_BITS_COUNT;
-    JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(argc <= ARGS_LENGTH_MAX);
     return argc;
 }
 

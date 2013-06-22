@@ -67,6 +67,7 @@
 #include "nsContentCreatorFunctions.h"
 
 // DOM includes
+#include "nsDOMBlobBuilder.h"
 #include "nsDOMException.h"
 #include "nsDOMFileReader.h"
 
@@ -543,6 +544,8 @@ MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTM
 MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXMLDocument)
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
+MAKE_CTOR(CreateDOMBlob,                  nsISupports,                 nsDOMMultipartFile::NewBlob)
+MAKE_CTOR(CreateDOMFile,                  nsISupports,                 nsDOMMultipartFile::NewFile)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
 MAKE_CTOR2(CreateContentIterator,         nsIContentIterator,          NS_NewContentIterator)
 MAKE_CTOR2(CreatePreContentIterator,      nsIContentIterator,          NS_NewPreContentIterator)
@@ -687,6 +690,8 @@ NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_IMAGEDOCUMENT_CID);
+NS_DEFINE_NAMED_CID(NS_DOMMULTIPARTBLOB_CID);
+NS_DEFINE_NAMED_CID(NS_DOMMULTIPARTFILE_CID);
 NS_DEFINE_NAMED_CID(NS_DOMSELECTION_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
@@ -975,6 +980,8 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLDOCUMENT_CID, false, NULL, CreateXMLDocument },
   { &kNS_SVGDOCUMENT_CID, false, NULL, CreateSVGDocument },
   { &kNS_IMAGEDOCUMENT_CID, false, NULL, CreateImageDocument },
+  { &kNS_DOMMULTIPARTBLOB_CID, false, NULL, CreateDOMBlob },
+  { &kNS_DOMMULTIPARTFILE_CID, false, NULL, CreateDOMFile },
   { &kNS_DOMSELECTION_CID, false, NULL, CreateDOMSelection },
   { &kNS_CONTENTITERATOR_CID, false, NULL, CreateContentIterator },
   { &kNS_PRECONTENTITERATOR_CID, false, NULL, CreatePreContentIterator },
@@ -1123,6 +1130,8 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_NAMESPACEMANAGER_CONTRACTID, &kNS_NAMESPACEMANAGER_CID },
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
   { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },
+  { NS_DOMMULTIPARTBLOB_CONTRACTID, &kNS_DOMMULTIPARTBLOB_CID },
+  { NS_DOMMULTIPARTFILE_CONTRACTID, &kNS_DOMMULTIPARTFILE_CID },
   { "@mozilla.org/content/dom-selection;1", &kNS_DOMSELECTION_CID },
   { "@mozilla.org/content/post-content-iterator;1", &kNS_CONTENTITERATOR_CID },
   { "@mozilla.org/content/pre-content-iterator;1", &kNS_PRECONTENTITERATOR_CID },

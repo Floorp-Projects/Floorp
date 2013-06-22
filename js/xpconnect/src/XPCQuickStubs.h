@@ -131,7 +131,8 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JS::MutableHandleValue vp);
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                             JSBool strict, JS::MutableHandleValue vp);
 
 JSBool
 xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp);
@@ -569,19 +570,21 @@ xpc_qsSameResult(int32_t result1, int32_t result2)
 
 // Apply |op| to |obj|, |id|, and |vp|. If |op| is a setter, treat the assignment as lenient.
 template<typename Op>
-inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSHandleObject obj, JSHandleId id, JS::MutableHandleValue vp);
+inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JS::HandleObject obj, JS::HandleId id,
+                              JS::MutableHandleValue vp);
 
 template<>
 inline JSBool
-ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSHandleObject obj, JSHandleId id, JS::MutableHandleValue vp)
+ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JS::HandleObject obj, JS::HandleId id,
+                              JS::MutableHandleValue vp)
 {
     return op(cx, obj, id, vp);
 }
 
 template<>
 inline JSBool
-ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSHandleObject obj,
-                                    JSHandleId id, JS::MutableHandleValue vp)
+ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JS::HandleObject obj,
+                                    JS::HandleId id, JS::MutableHandleValue vp)
 {
     return op(cx, obj, id, true, vp);
 }

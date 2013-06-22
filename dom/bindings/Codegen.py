@@ -930,8 +930,8 @@ class CGAddPropertyHook(CGAbstractClassHook):
     A hook for addProperty, used to preserve our wrapper from GC.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('JSHandleId', 'id'), Argument('JS::MutableHandle<JS::Value>', 'vp')]
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::Handle<jsid>', 'id'), Argument('JS::MutableHandle<JS::Value>', 'vp')]
         CGAbstractClassHook.__init__(self, descriptor, ADDPROPERTY_HOOK_NAME,
                                      'JSBool', args)
 
@@ -1187,7 +1187,7 @@ class CGNamedConstructors(CGThing):
 
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::MutableHandle<JS::Value>', 'vp'), Argument('JSBool*', 'bp')]
         CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
                                         'JSBool', args)
@@ -5206,7 +5206,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor, method):
         self.method = method
         name = CppKeywords.checkMethodName(method.identifier.name)
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('const JSJitMethodCallArgs&', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
@@ -5252,8 +5252,8 @@ class CGNewResolveHook(CGAbstractBindingMethod):
     """
     def __init__(self, descriptor):
         self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
-        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj_'),
-                Argument('JSHandleId', 'id'), Argument('unsigned', 'flags'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj_'),
+                Argument('JS::Handle<jsid>', 'id'), Argument('unsigned', 'flags'),
                 Argument('JS::MutableHandle<JSObject*>', 'objp')]
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
@@ -5343,7 +5343,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         self.attr = attr
         name = 'get_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
-                 Argument('JSHandleObject', 'obj'),
+                 Argument('JS::Handle<JSObject*>', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
                  Argument('JSJitGetterCallArgs', 'args') ]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
@@ -5431,7 +5431,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         self.attr = attr
         name = 'set_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
-                 Argument('JSHandleObject', 'obj'),
+                 Argument('JS::Handle<JSObject*>', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
                  Argument('JSJitSetterCallArgs', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
