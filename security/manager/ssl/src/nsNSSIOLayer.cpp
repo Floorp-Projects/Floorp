@@ -16,6 +16,7 @@
 #include "nsClientAuthRemember.h"
 #include "nsISSLErrorListener.h"
 
+#include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "SSLServerCertVerification.h"
 #include "nsNSSCertHelper.h"
