@@ -56,8 +56,18 @@ struct ScaleFactor {
   }
 
   template<class other>
+  ScaleFactor<src, other> operator/(const ScaleFactor<other, dst>& aOther) const {
+    return ScaleFactor<src, other>(scale / aOther.scale);
+  }
+
+  template<class other>
   ScaleFactor<src, other> operator*(const ScaleFactor<dst, other>& aOther) const {
     return ScaleFactor<src, other>(scale * aOther.scale);
+  }
+
+  template<class other>
+  ScaleFactor<other, dst> operator*(const ScaleFactor<other, src>& aOther) const {
+    return ScaleFactor<other, dst>(scale * aOther.scale);
   }
 };
 

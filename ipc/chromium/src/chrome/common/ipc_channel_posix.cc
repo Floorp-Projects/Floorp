@@ -31,6 +31,7 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 #include "chrome/common/ipc_logging.h"
 #include "chrome/common/ipc_message_utils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace IPC {
 
@@ -288,6 +289,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   listener_ = listener;
   waiting_connect_ = true;
   processing_incoming_ = false;
+  closed_ = false;
 #if defined(OS_MACOSX)
   last_pending_fd_id_ = 0;
 #endif
@@ -746,6 +748,19 @@ bool Channel::ChannelImpl::Send(Message* message) {
   Logging::current()->OnSendMessage(message, L"");
 #endif
 
+  // If the channel has been closed, ProcessOutgoingMessages() is never going
+  // to pop anything off output_queue; output_queue will only get emptied when
+  // the channel is destructed.  We might as well delete message now, instead
+  // of waiting for the channel to be destructed.
+  if (closed_) {
+    if (mozilla::ipc::LoggingEnabled()) {
+      fprintf(stderr, "Can't send message %s, because this channel is closed.\n",
+              message->name());
+    }
+    delete message;
+    return false;
+  }
+
   output_queue_.push(message);
   if (!waiting_connect_) {
     if (!is_blocked_on_write_) {
@@ -886,6 +901,8 @@ void Channel::ChannelImpl::Close() {
   }
   pending_fds_.clear();
 #endif
+
+  closed_ = true;
 }
 
 //------------------------------------------------------------------------------

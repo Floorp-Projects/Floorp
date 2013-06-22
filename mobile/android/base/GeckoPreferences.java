@@ -87,8 +87,8 @@ public class GeckoPreferences
 
         super.onCreate(savedInstanceState);
 
+        // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
             if (intentExtras != null && intentExtras.containsKey(INTENT_EXTRA_RESOURCES)) {
                 String resourceName = intentExtras.getString(INTENT_EXTRA_RESOURCES);
@@ -748,5 +748,32 @@ public class GeckoPreferences
     @Override
     public boolean isGeckoActivityOpened() {
         return false;
+    }
+
+    /**
+     * Given an Intent instance, add extras to specify which settings section to
+     * open.
+     *
+     * resource should be a valid Android XML resource identifier.
+     *
+     * The mechanism to open a section differs based on Android version.
+     */
+    public static void setResourceToOpen(final Intent intent, final String resource) {
+        if (intent == null) {
+            throw new IllegalArgumentException("intent must not be null");
+        }
+        if (resource == null) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            intent.putExtra("resource", resource);
+        } else {
+            intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, GeckoPreferenceFragment.class.getName());
+
+            Bundle fragmentArgs = new Bundle();
+            fragmentArgs.putString("resource", resource);
+            intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
+        }
     }
 }
