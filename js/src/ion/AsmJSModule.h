@@ -71,7 +71,7 @@ class AsmJSModule
             AsmJSMathBuiltin mathBuiltin_;
             double constantValue_;
         } u;
-        HeapPtrPropertyName name_;
+        RelocatablePtr<PropertyName> name_;
 
         friend class AsmJSModule;
         Global(Which which) : which_(which) {}
@@ -203,8 +203,8 @@ class AsmJSModule
 
       private:
 
-        HeapPtrFunction fun_;
-        HeapPtrPropertyName maybeFieldName_;
+        RelocatablePtr<JSFunction> fun_;
+        RelocatablePtr<PropertyName> maybeFieldName_;
         ArgCoercionVector argCoercions_;
         ReturnType returnType_;
         bool hasCodePtr_;
