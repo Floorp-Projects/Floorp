@@ -87,7 +87,7 @@ interface nsIUpdatePatch : nsISupports
  * that the front end and other application services can use to learn more
  * about what is going on.
  */
-[scriptable, uuid(6b0b7721-6746-443d-8cb0-c6199d7f28a6)]
+[scriptable, uuid(8f7185a7-056a-45a8-985c-1cb39cf7b7a8)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -178,9 +178,10 @@ interface nsIUpdate : nsISupports
   attribute boolean showNeverForVersion;
 
   /**
-   * Whether the update is no longer supported on this system.
+   * Whether to show the survey link in the update prompt. The url must also be
+   * present in the app.update.surveyURL preference.
    */
-  attribute boolean unsupported;
+  attribute boolean showSurvey;
   
   /**
    * Allows overriding the default amount of time in seconds before prompting the

@@ -82,8 +82,8 @@ TimerManager.prototype = {
    * See nsIObserver.idl
    */
   observe: function TM_observe(aSubject, aTopic, aData) {
-    // Prevent setting the timer interval to a value of less than 30 seconds.
-    var minInterval = 30000;
+    // Prevent setting the timer interval to a value of less than 60 seconds.
+    var minInterval = 60000;
     // Prevent setting the first timer interval to a value of less than 10
     // seconds.
     var minFirstInterval = 10000;
