@@ -18,6 +18,9 @@ const PREF_UPLOAD_ENABLED = "android.not_a_preference.healthreport.uploadEnabled
 // Name of Gecko Pref specifying report content location.
 const PREF_REPORTURL = "datareporting.healthreport.about.reportUrl";
 
+// Monotonically increasing wrapper API version number.
+const WRAPPER_VERSION = 1;
+
 const EVENT_HEALTH_REQUEST = "HealthReport:Request";
 const EVENT_HEALTH_RESPONSE = "HealthReport:Response";
 
@@ -37,6 +40,7 @@ let healthReportWrapper = {
     iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
     let report = this._getReportURI();
     iframe.src = report.spec;
+    console.log("AboutHealthReport: loading content from " + report.spec);
 
     sharedPrefs.addObserver(PREF_UPLOAD_ENABLED, this, false);
     Services.obs.addObserver(this, EVENT_HEALTH_RESPONSE, false);
@@ -57,7 +61,10 @@ let healthReportWrapper = {
 
   _getReportURI: function () {
     let url = Services.urlFormatter.formatURLPref(PREF_REPORTURL);
-    return Services.io.newURI(url, null, null);
+    // This handles URLs that already have query parameters.
+    let uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+    uri.query += ((uri.query != "") ? "&v=" : "v=") + WRAPPER_VERSION;
+    return uri;
   },
 
   onOptIn: function () {
