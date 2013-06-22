@@ -3136,6 +3136,15 @@ nsSVGTextFrame2::MutationObserver::ContentRemoved(
 }
 
 void
+nsSVGTextFrame2::MutationObserver::CharacterDataChanged(
+                                                 nsIDocument* aDocument,
+                                                 nsIContent* aContent,
+                                                 CharacterDataChangeInfo* aInfo)
+{
+  mFrame->NotifyGlyphMetricsChange();
+}
+
+void
 nsSVGTextFrame2::MutationObserver::AttributeChanged(
                                                 nsIDocument* aDocument,
                                                 mozilla::dom::Element* aElement,
@@ -3246,7 +3255,7 @@ nsSVGTextFrame2::NotifySVGChanged(uint32_t aFlags)
     // invalidate them. We also don't need to invalidate ourself, since our
     // changed ancestor will have invalidated its entire area, which includes
     // our area.
-    nsSVGUtils::ScheduleReflowSVG(this);
+    ScheduleReflowSVG();
   }
 
   if (needGlyphMetricsUpdate) {
@@ -4768,11 +4777,21 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
 }
 
 void
+nsSVGTextFrame2::ScheduleReflowSVG()
+{
+  if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    ScheduleReflowSVGNonDisplayText();
+  } else {
+    nsSVGUtils::ScheduleReflowSVG(this);
+  }
+}
+
+void
 nsSVGTextFrame2::NotifyGlyphMetricsChange()
 {
   mPositioningDirty = true;
   nsSVGEffects::InvalidateRenderingObservers(this);
-  nsSVGUtils::ScheduleReflowSVG(this);
+  ScheduleReflowSVG();
 }
 
 void
