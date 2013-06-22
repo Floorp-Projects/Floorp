@@ -7,6 +7,7 @@
 
 #include <gtk/gtk.h>
 
+#include "nsGtkUtils.h"
 #include "nsIFileURL.h"
 #include "nsIURI.h"
 #include "nsIWidget.h"
@@ -31,17 +32,6 @@ using namespace mozilla;
 #define MAX_PREVIEW_SIZE 180
 
 nsIFile *nsFilePicker::mPrevDisplayDirectory = nullptr;
-
-// Some GObject functions expect functions for gpointer arguments.
-// gpointer is void* but C++ doesn't like casting functions to void*.
-template<class T> static inline gpointer
-FuncToGpointer(T aFunction)
-{
-    return reinterpret_cast<gpointer>
-        (reinterpret_cast<uintptr_t>
-         // This cast just provides a warning if T is not a function.
-         (reinterpret_cast<void (*)()>(aFunction)));
-}
 
 void
 nsFilePicker::Shutdown()
