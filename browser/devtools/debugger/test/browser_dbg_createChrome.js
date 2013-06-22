@@ -64,8 +64,7 @@ function testSimpleCall() {
     is(profile.rootDir.path, gProcess._dbgProfile.rootDir.path,
       "The remote debugger profile doesn't have the correct rootDir!");
 
-    let chromeDebug = DebuggerUI.toggleChromeDebugger();
-    info("toggleChromeDebugger() returned " + chromeDebug);
+    gProcess.close();
   }}, 0);
 }
 
