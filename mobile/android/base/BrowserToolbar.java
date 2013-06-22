@@ -960,16 +960,9 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     }
     
     private void setSecurityMode(String mode) {
-        mShowSiteSecurity = true;
-
-        if (mode.equals(SiteIdentityPopup.IDENTIFIED)) {
-            mSiteSecurity.setImageLevel(1);
-        } else if (mode.equals(SiteIdentityPopup.VERIFIED)) {
-            mSiteSecurity.setImageLevel(2);
-        } else {
-            mSiteSecurity.setImageLevel(0);
-            mShowSiteSecurity = false;
-        }
+        int imageLevel = SiteIdentityPopup.getSecurityImageLevel(mode);
+        mSiteSecurity.setImageLevel(imageLevel);
+        mShowSiteSecurity = (imageLevel != SiteIdentityPopup.LEVEL_UKNOWN);
 
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }

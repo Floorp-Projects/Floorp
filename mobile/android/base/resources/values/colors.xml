@@ -68,6 +68,7 @@
   <color name="validation_message_text">#ffffff</color>
   <color name="identity_verified">#FF3298FF</color>
   <color name="identity_identified">#FF89C450</color>
+  <color name="identity_mixed_content">#FF000000</color>
   <color name="url_bar_text_highlight">#FFFF9500</color>
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="suggestion_primary">#dddddd</color>

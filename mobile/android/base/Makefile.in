@@ -688,6 +688,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/menu_item_check.png \
   res/drawable-mdpi/menu_item_more.png \
   res/drawable-mdpi/menu_item_uncheck.png \
+  res/drawable-mdpi/site_security_blocked_mixed_content.png \
+  res/drawable-mdpi/site_security_loaded_mixed_content.png \
   res/drawable-mdpi/site_security_identified.png \
   res/drawable-mdpi/site_security_verified.png \
   res/drawable-mdpi/tabs_normal.png \
@@ -792,6 +794,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_item_check.png \
   res/drawable-hdpi/menu_item_more.png \
   res/drawable-hdpi/menu_item_uncheck.png \
+  res/drawable-hdpi/site_security_blocked_mixed_content.png \
+  res/drawable-hdpi/site_security_loaded_mixed_content.png \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/tabs_normal.png \
@@ -888,6 +892,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
   res/drawable-xhdpi/tab_indicator_selected.9.png \
   res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
+  res/drawable-xhdpi/site_security_blocked_mixed_content.png \
+  res/drawable-xhdpi/site_security_loaded_mixed_content.png \
   res/drawable-xhdpi/site_security_identified.png \
   res/drawable-xhdpi/site_security_verified.png \
   res/drawable-xhdpi/tabs_normal.png \
