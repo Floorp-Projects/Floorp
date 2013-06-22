@@ -30,3 +30,4 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'TelemetryPing.js',
 ]
+
