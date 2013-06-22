@@ -225,6 +225,7 @@ private:
   nsresult setEnabledTLSVersions(nsIPrefBranch * pref);
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
+  nsresult RegisterPSMContentListener();
   nsresult RegisterObservers();
   nsresult DeregisterObservers();
 
@@ -239,6 +240,7 @@ private:
   
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
+  nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   bool mNSSInitialized;
   bool mObserversRegistered;
