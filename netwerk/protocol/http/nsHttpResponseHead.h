@@ -28,6 +28,8 @@ public:
     const nsHttpHeaderArray & Headers()   const { return mHeaders; }
     nsHttpHeaderArray    &Headers()             { return mHeaders; }
     nsHttpVersion         Version()       const { return mVersion; }
+// X11's Xlib.h #defines 'Status' to 'int' on some systems!
+#undef Status
     uint16_t              Status()        const { return mStatus; }
     const nsAFlatCString &StatusText()    const { return mStatusText; }
     int64_t               ContentLength() const { return mContentLength; }

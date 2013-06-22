@@ -25,6 +25,12 @@ struct RequestHeaderTuple {
   nsCString mHeader;
   nsCString mValue;
   bool      mMerge;
+
+  bool operator ==(const RequestHeaderTuple &other) const {
+    return mHeader.Equals(other.mHeader) &&
+           mValue.Equals(other.mValue) &&
+           mMerge == other.mMerge;
+  }
 };
 
 typedef nsTArray<RequestHeaderTuple> RequestHeaderTuples;

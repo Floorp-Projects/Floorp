@@ -69,6 +69,33 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
   mIPCClosed = true;
 }
 
+bool
+HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
+{
+  switch (aArgs.type()) {
+  case HttpChannelCreationArgs::THttpChannelOpenArgs:
+  {
+    const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
+    return DoAsyncOpen(a.uri(), a.original(), a.doc(), a.referrer(),
+                       a.apiRedirectTo(), a.loadFlags(), a.requestHeaders(),
+                       a.requestMethod(), a.uploadStream(),
+                       a.uploadStreamHasHeaders(), a.priority(),
+                       a.redirectionLimit(), a.allowPipelining(),
+                       a.forceAllowThirdPartyCookie(), a.resumeAt(),
+                       a.startPos(), a.entityID(), a.chooseApplicationCache(),
+                       a.appCacheClientID(), a.allowSpdy());
+  }
+  case HttpChannelCreationArgs::THttpChannelConnectArgs:
+  {
+    const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
+    return ConnectChannel(cArgs.channelId());
+  }
+  default:
+    NS_NOTREACHED("unknown open type");
+    return false;
+  }
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsISupports
 //-----------------------------------------------------------------------------
@@ -111,7 +138,7 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 //-----------------------------------------------------------------------------
 
 bool
-HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
+HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalURIParams&   aOriginalURI,
                                  const OptionalURIParams&   aDocURI,
                                  const OptionalURIParams&   aReferrerURI,
@@ -240,7 +267,7 @@ HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
 }
 
 bool
-HttpChannelParent::RecvConnectChannel(const uint32_t& channelId)
+HttpChannelParent::ConnectChannel(const uint32_t& channelId)
 {
   nsresult rv;
 
