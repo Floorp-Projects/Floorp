@@ -84,6 +84,10 @@
   color: inherit;
 }
 
+.jsterm-input-container {
+  background: white;
+}
+
 .jsterm-input-node,
 .jsterm-complete-node {
   font-family: monospace;
