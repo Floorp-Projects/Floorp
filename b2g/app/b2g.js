@@ -747,6 +747,14 @@ pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
 // Enable the disk space watcher
 pref("disk_space_watcher.enabled", true);
 
+// SNTP preferences.
+pref("network.sntp.maxRetryCount", 10);
+pref("network.sntp.refreshPeriod", 86400); // In seconds.
+pref("network.sntp.pools", // Servers separated by ';'.
+     "0.pool.ntp.org;1.pool.ntp.org;2.pool.ntp.org;3.pool.ntp.org");
+pref("network.sntp.port", 123);
+pref("network.sntp.timeout", 30); // In seconds.
+
 // Enable promise
 pref("dom.promise.enabled", false);
 
