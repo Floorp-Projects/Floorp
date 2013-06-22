@@ -35,7 +35,7 @@ let gTimerRegistry = new Map();
 /**
  * String utility to ensure that strings are a specified length. Strings
  * that are too long are truncated to the max length and the last char is
- * set to "_". Strings that are too short are left padded with spaces.
+ * set to "_". Strings that are too short are padded with spaces.
  *
  * @param {string} aStr
  *        The string to format to the correct length
@@ -45,10 +45,12 @@ let gTimerRegistry = new Map();
  *        The minimum allowed length of the returned string. If undefined,
  *        then aMaxLen will be used
  * @param {object} aOptions (optional)
- *        An object allowing format customization. The only customization
- *        allowed currently is 'truncate' which can take the value "start" to
- *        truncate strings from the start as opposed to the end or "center" to
- *        truncate strings in the center
+ *        An object allowing format customization. Allowed customizations:
+ *          'truncate' - can take the value "start" to truncate strings from
+ *             the start as opposed to the end or "center" to truncate
+ *             strings in the center.
+ *          'align' - takes an alignment when padding is needed for MinLen,
+ *             either "start" or "end".  Defaults to "start".
  * @return {string}
  *        The original string formatted to fit the specified lengths
  */
@@ -74,7 +76,8 @@ function fmt(aStr, aMaxLen, aMinLen, aOptions) {
     }
   }
   if (aStr.length < aMinLen) {
-    return Array(aMinLen - aStr.length + 1).join(" ") + aStr;
+    let padding = Array(aMinLen - aStr.length + 1).join(" ");
+    aStr = (aOptions.align === "end") ? padding + aStr : aStr + padding;
   }
   return aStr;
 }
@@ -379,7 +382,7 @@ function formatTrace(aTrace) {
   aTrace.forEach(function(frame) {
     reply += fmt(frame.filename, 20, 20, { truncate: "start" }) + " " +
              fmt(frame.lineNumber, 5, 5) + " " +
-             fmt(frame.functionName, 75, 75, { truncate: "center" }) + "\n";
+             fmt(frame.functionName, 0, 75, { truncate: "center" }) + "\n";
   });
   return reply;
 }

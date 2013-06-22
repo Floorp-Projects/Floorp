@@ -11,26 +11,6 @@
   - A good criteria is the language in which you'd find the best
   - documentation on web development on the web. -->
 
-<!-- LOCALIZATION NOTE (debuggerMenu.label): This is the label for the
-  -  application menu item that opens the debugger UI. -->
-<!ENTITY debuggerMenu.label2            "Debugger">
-
-<!-- LOCALIZATION NOTE (debuggerMenu.accesskey): This is accesskey for the
-  -  Tools menu entry of Debugger that opens the debugger UI. -->
-<!ENTITY debuggerMenu.accesskey         "D">
-
-<!-- LOCALIZATION NOTE (remoteDebuggerMenu.label): This is the label for the
-  -  application menu item that opens the remote debugger UI. -->
-<!ENTITY remoteDebuggerMenu.label       "Remote Debugger">
-
-<!-- LOCALIZATION NOTE (chromeDebuggerMenu.label): This is the label for the
-  -  application menu item that opens the browser debugger UI. -->
-<!ENTITY chromeDebuggerMenu.label       "Browser Debugger">
-
-<!-- LOCALIZATION NOTE (debuggerMenu.commandkey): This is the command key that
-  -  launches the debugger UI. Do not translate this one! -->
-<!ENTITY debuggerMenu.commandkey        "S">
-
 <!-- LOCALIZATION NOTE (debuggerUI.closeButton.tooltip): This is the tooltip for
   -  the button that closes the debugger UI. -->
 <!ENTITY debuggerUI.closeButton.tooltip "Close">

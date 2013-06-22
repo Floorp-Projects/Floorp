@@ -15,9 +15,6 @@ Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/commonjs/sdk/core/promise.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
-  "resource://gre/modules/devtools/dbg-server.jsm");
-
 this.DebuggerPanel = function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
