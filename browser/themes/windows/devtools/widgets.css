@@ -569,18 +569,20 @@
 /* Variables and properties editing */
 
 .variables-view-delete {
-  list-style-image: url("chrome://browser/skin/devtools/close-dark.png");
-  opacity: 0;
+  list-style-image: url("chrome://browser/skin/devtools/vview-delete.png");
+  -moz-image-region: rect(0,16px,16px,0);
 }
 
 .variables-view-delete:hover {
-  opacity: 1;
+  -moz-image-region: rect(0,32px,16px,16px);
 }
 
-*:hover > .title > .variables-view-delete:not(:hover),
-*:focus > .title > .variables-view-delete:not(:hover) {
-  opacity: 0.5;
-  transition: opacity 0.2s ease-in-out;
+.variables-view-delete:active {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+*:not(:hover) .variables-view-delete {
+  display: none;
 }
 
 .variables-view-delete > .toolbarbutton-text {
@@ -588,7 +590,7 @@
 }
 
 .variables-view-edit {
-  background: url("chrome://browser/skin/tabview/edit-light.png") center no-repeat;
+  background: url("chrome://browser/skin/devtools/vview-edit.png") center no-repeat;
   width: 20px;
   height: 16px;
   cursor: pointer;
