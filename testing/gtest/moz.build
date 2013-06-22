@@ -61,3 +61,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'gtest'
 
+GTEST_CPP_SOURCES += [
+    'SanityTest.cpp',
+]
+

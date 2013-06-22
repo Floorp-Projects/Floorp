@@ -22,10 +22,6 @@ EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 IS_COMPONENT = 1
 
-GTEST_CPPSRCS = \
-  SanityTest.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES += \
   -I$(srcdir)/gtest \
   -I$(srcdir)/gtest/include \
