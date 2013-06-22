@@ -131,14 +131,10 @@ struct ImmGCPtr
 // Used for immediates which require relocation and may be traced during minor GC.
 struct ImmMaybeNurseryPtr : public ImmGCPtr
 {
-    explicit ImmMaybeNurseryPtr(IonCode *code, gc::Cell *ptr)
+    explicit ImmMaybeNurseryPtr(gc::Cell *ptr)
     {
         this->value = reinterpret_cast<uintptr_t>(ptr);
         JS_ASSERT(!IsPoisonedPtr(ptr));
-#ifdef JSGC_GENERATIONAL
-        if (ptr && ptr->runtime()->gcNursery.isInside(ptr))
-            ptr->runtime()->gcStoreBuffer.putWholeCell(code);
-#endif
     }
 };
 
