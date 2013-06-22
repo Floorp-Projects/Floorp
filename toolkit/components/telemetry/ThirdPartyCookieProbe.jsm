@@ -95,16 +95,18 @@ this.ThirdPartyCookieProbe.prototype = {
 
   /**
    * Clear internal data, fill up corresponding histograms.
+   *
+   * @param {number} aNow (optional, used for testing purposes only)
+   * The current instant. Used to make tests time-independent.
    */
-  flush: function(aUptime) {
-    let now = Date.now();
-    let updays = (now - this._latestFlush) / MILLISECONDS_PER_DAY;
+  flush: function(aNow = Date.now()) {
+    let updays = (aNow - this._latestFlush) / MILLISECONDS_PER_DAY;
     if (updays <= 0) {
       // Unlikely, but regardless, don't risk division by zero
       // or weird stuff.
       return;
     }
-    this._latestFlush = now;
+    this._latestFlush = aNow;
     let acceptedSites = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_SITES_ACCEPTED");
     let rejectedSites = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_SITES_BLOCKED");
     let acceptedRequests = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED");
