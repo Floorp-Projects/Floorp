@@ -2373,6 +2373,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       if (!this._isUndefined || !(ownerView.getter && ownerView.setter)) {
         let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
         deleteNode.className = "plain variables-view-delete";
+        deleteNode.setAttribute("ordinal", 2);
         deleteNode.addEventListener("click", this._onDelete.bind(this), false);
         this._title.appendChild(deleteNode);
       }
