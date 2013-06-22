@@ -603,9 +603,9 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
   nsCOMPtr<nsIWebNavigation> webNav;
   nsIDocument* currentDoc = thisContent->GetCurrentDoc();
   if (currentDoc) {
-    webNav = do_GetInterface(currentDoc->GetScriptGlobalObject());
+    webNav = do_GetInterface(currentDoc->GetWindow());
   }
-  
+
   uint32_t supported;
   nsresult rv = info->IsTypeSupported(aMimeType, webNav, &supported);
 
@@ -3187,8 +3187,8 @@ nsObjectLoadingContent::TeardownProtoChain()
 }
 
 bool
-nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JSHandleObject aObject,
-                                     JSHandleId aId, unsigned aFlags,
+nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                                     JS::Handle<jsid> aId, unsigned aFlags,
                                      JS::MutableHandle<JSObject*> aObjp)
 {
   // We don't resolve anything; we just try to make sure we're instantiated

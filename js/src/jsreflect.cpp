@@ -2201,7 +2201,7 @@ ASTSerializer::leftAssociate(ParseNode *pn, MutableHandleValue dst)
         if (!expression(next, &right))
             return false;
 
-        TokenPos subpos = {pn->pn_pos.begin, next->pn_pos.end};
+        TokenPos subpos(pn->pn_pos.begin, next->pn_pos.end);
 
         if (logop) {
             if (!builder.logicalExpression(lor, left, right, &subpos, &left))

@@ -204,15 +204,6 @@ UnsignedPtrDiff(const void *bigger, const void *smaller)
     return size_t(bigger) - size_t(smaller);
 }
 
-/*
- * Ordinarily, a function taking a JSContext* 'cx' parameter reports errors on
- * the context. In some cases, functions optionally report and indicate this by
- * taking a nullable 'maybecx' parameter. In some cases, though, a function
- * always needs a 'cx', but optionally reports. This option is presented by the
- * MaybeReportError.
- */
-enum MaybeReportError { REPORT_ERROR = true, DONT_REPORT_ERROR = false };
-
 /*****************************************************************************/
 
 /* A bit array is an array of bits represented by an array of words (size_t). */

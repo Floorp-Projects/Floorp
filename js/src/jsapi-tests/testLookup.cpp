@@ -50,7 +50,7 @@ static JSClass DocumentAllClass = {
 };
 
 JSBool
-document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
                  JS::MutableHandleObject objp)
 {
     // If id is "all", resolve document.all=true.

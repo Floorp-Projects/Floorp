@@ -737,7 +737,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
             c->debugScopes->mark(trc);
     }
 
-    rt->stackSpace.mark(trc);
+    MarkInterpreterActivations(rt, trc);
 
 #ifdef JS_ION
     ion::MarkJitActivations(rt, trc);

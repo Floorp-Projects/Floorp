@@ -417,11 +417,21 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node functionExpr();
     Node statements();
 
-    Node switchStatement();
+    Node blockStatement();
+    Node ifStatement();
+    Node doWhileStatement();
+    Node whileStatement();
     Node forStatement();
-    Node labeledStatement();
-    Node tryStatement();
+    Node switchStatement();
+    Node continueStatement();
+    Node breakStatement();
+    Node returnStatementOrYieldExpression();
     Node withStatement();
+    Node labeledStatement();
+    Node throwStatement();
+    Node tryStatement();
+    Node debuggerStatement();
+
 #if JS_HAS_BLOCK_SCOPE
     Node letStatement();
 #endif
@@ -461,7 +471,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool argumentList(Node listNode);
     Node bracketedExpr();
     Node letBlock(LetContext letContext);
-    Node returnOrYield(bool useAssignExpr);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
 
     Node identifierName();
@@ -477,7 +486,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool setAssignmentLhsOps(Node pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 
-    void addStatementToList(Node pn, Node kid);
     bool checkFunctionArguments();
     bool makeDefIntoUse(Definition *dn, Node pn, JSAtom *atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node *pn, FunctionSyntaxKind kind,

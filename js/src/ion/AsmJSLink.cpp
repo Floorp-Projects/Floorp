@@ -411,8 +411,8 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     unsigned argc = args.length();
 
-    InvokeArgsGuard args2;
-    if (!cx->stack.pushInvokeArgs(cx, argc, &args2))
+    InvokeArgs args2(cx);
+    if (!args2.init(argc))
         return false;
 
     args2.setCallee(ObjectValue(*fun));
