@@ -87,6 +87,14 @@ function handleRequest(aRequest, aResponse) {
     return;
   }
 
+  if (params.unsupported) {
+    aResponse.write(getRemoteUpdatesXMLString("  <update type=\"major\" " +
+                                              "unsupported=\"true\" " +
+                                              "detailsURL=\"" + URL_HOST +
+                                              "\"></update>\n"));
+    return;
+  }
+
   var hash;
   var patches = "";
   if (!params.partialPatchOnly) {
