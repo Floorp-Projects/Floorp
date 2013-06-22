@@ -21,7 +21,7 @@ function fakeUIResponse() {
     if (topic === 'captive-portal-login') {
       let xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
                   .createInstance(Ci.nsIXMLHttpRequest);
-      xhr.open('GET', kServerURL + kCanonicalSitePath, true);
+      xhr.open('GET', gServerURL + kCanonicalSitePath, true);
       xhr.send();
       do_check_eq(++step, 2);
       let details = JSON.parse(data);
