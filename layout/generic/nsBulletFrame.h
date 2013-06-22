@@ -15,6 +15,7 @@
 #include "imgIRequest.h"
 #include "imgINotificationObserver.h"
 
+class imgIContainer;
 class imgRequestProxy;
 
 #define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
@@ -100,6 +101,8 @@ public:
   void SetFontSizeInflation(float aInflation);
 
   int32_t GetOrdinal() { return mOrdinal; }
+
+  already_AddRefed<imgIContainer> GetImage() const;
 
 protected:
   nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
