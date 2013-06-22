@@ -3320,6 +3320,34 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
   },
+  "COOKIES_3RDPARTY_NUM_SITES_ACCEPTED": {
+    "kind": "linear",
+    "low": "5",
+    "high": "145",
+    "n_buckets": "30",
+    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been accepted. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h."
+  },
+  "COOKIES_3RDPARTY_NUM_SITES_BLOCKED": {
+    "kind": "linear",
+    "low": "5",
+    "high": "145",
+    "n_buckets": "30",
+    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been rejected. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h."
+  },
+  "COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED": {
+    "kind": "linear",
+    "low": "10",
+    "high": "500",
+    "n_buckets": "50",
+    "description": "The total number of distinct attempts by third-party sites to place cookies which have been accepted.  Measures are normalized per 24h."
+  },
+  "COOKIES_3RDPARTY_NUM_ATTEMPTS_BLOCKED": {
+    "kind": "linear",
+    "low": "10",
+    "high": "500",
+    "n_buckets": "50",
+    "description": "The total number of distinct attempts by third-party sites to place cookies which have been rejected.  Measures are normalized per 24h."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_BLACKBOX_MS": {
     "kind": "exponential",
     "high": "10000",
