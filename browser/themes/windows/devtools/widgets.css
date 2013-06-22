@@ -479,11 +479,11 @@
 }
 
 .variable-or-property:not(:focus) > .title > .token-boolean {
-  color: #1c00cf;
+  color: #10c;
 }
 
 .variable-or-property:not(:focus) > .title > .token-number {
-  color: #c40a16;
+  color: #c00;
 }
 
 .variable-or-property:not(:focus) > .title > .token-string {

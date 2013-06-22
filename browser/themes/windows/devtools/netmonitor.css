@@ -368,6 +368,10 @@ box.requests-menu-status[code^="5"] {
   font-family: Menlo, Monaco, monospace;
 }
 
+.variable-or-property:not(:focus) > .title > .token-string {
+  color: #10c !important;
+}
+
 /* Headers tabpanel */
 
 #headers-summary-status,
