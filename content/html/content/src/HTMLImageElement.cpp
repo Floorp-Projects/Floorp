@@ -106,6 +106,7 @@ HTMLImageElement::SetItemValueText(const nsAString& aValue)
 
 // crossorigin is not "limited to only known values" per spec, so it's
 // just a string attr purposes of the DOM crossOrigin property.
+// TODO: It is now (bug 880997).
 NS_IMPL_STRING_ATTR(HTMLImageElement, CrossOrigin, crossorigin)
 
 bool

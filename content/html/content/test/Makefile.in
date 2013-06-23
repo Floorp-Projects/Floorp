@@ -212,7 +212,6 @@ MOCHITEST_FILES = \
 		test_bug659596.html \
 		test_bug659743.xml \
 		test_bug660663.html \
-		test_bug664299.html \
 		test_bug666200.html \
 		test_bug666666.html \
 		test_bug669012.html \
@@ -360,6 +359,7 @@ MOCHITEST_FILES = \
 		test_iframe_sandbox_workers.html \
 		file_iframe_sandbox_g_if1.html \
 		file_iframe_sandbox_worker.js \
+		test_img_attributes_reflection.html \
 		test_named_options.html \
 		test_htmlcollection.html \
 		test_formelements.html \
