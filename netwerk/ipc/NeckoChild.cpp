@@ -62,7 +62,8 @@ void NeckoChild::DestroyNeckoChild()
 
 PHttpChannelChild*
 NeckoChild::AllocPHttpChannel(PBrowserChild* browser,
-                              const SerializedLoadContext& loadContext)
+                              const SerializedLoadContext& loadContext,
+                              const HttpChannelCreationArgs& aOpenArgs)
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing HttpChildChannel
@@ -82,7 +83,8 @@ NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
 
 PFTPChannelChild*
 NeckoChild::AllocPFTPChannel(PBrowserChild* aBrowser,
-                             const SerializedLoadContext& aSerialized)
+                             const SerializedLoadContext& aSerialized,
+                             const FTPChannelCreationArgs& aOpenArgs)
 {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
   NS_RUNTIMEABORT("AllocPFTPChannel should not be called");

@@ -23,6 +23,7 @@
 #include "nsIConsoleService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsCRT.h"
+#include "nsNetUtil.h"
 #include "SharedSSLState.h"
 
 #include "ssl.h"

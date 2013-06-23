@@ -9,6 +9,8 @@ include protocol PNecko;
 include InputStreamParams;
 include URIParams;
 
+//FIXME: bug #792908 (NeckoChannelParams already included by PNecko)
+include NeckoChannelParams;
 include protocol PBlob; //FIXME: bug #792908
 
 include "SerializedLoadContext.h";
@@ -23,14 +25,11 @@ async protocol PFTPChannel
   manager PNecko;
 
 parent:
+  // Note: channels are opened during construction, so no open method here:
+  // see PNecko.ipdl
+
   __delete__();
 
-  AsyncOpen(URIParams uri,
-            uint64_t startPos,
-            nsCString entityID,
-            OptionalInputStreamParams uploadStream);
-
-  ConnectChannel(uint32_t channelId);
   Cancel(nsresult status);
   Suspend();
   Resume();
