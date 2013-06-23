@@ -8,6 +8,7 @@
 #include "prlog.h"
 #include "nsStyleSheetService.h"
 #include "nsIStyleSheet.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIURI.h"
@@ -255,7 +256,7 @@ nsStyleSheetService::GetInstance()
 }
 
 size_t
-nsStyleSheetService::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   if (!nsStyleSheetService::gInstance) {
     return 0;
@@ -267,13 +268,13 @@ nsStyleSheetService::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 
 static size_t
 SizeOfElementIncludingThis(nsIStyleSheet* aElement,
-                           nsMallocSizeOfFun aMallocSizeOf, void *aData)
+                           mozilla::MallocSizeOf aMallocSizeOf, void *aData)
 {
     return aElement->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 size_t
-nsStyleSheetService::SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const
+nsStyleSheetService::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += mSheets[AGENT_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,

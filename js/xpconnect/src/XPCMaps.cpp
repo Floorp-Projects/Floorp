@@ -139,7 +139,7 @@ Native2WrappedNativeMap::~Native2WrappedNativeMap()
 }
 
 size_t
-Native2WrappedNativeMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+Native2WrappedNativeMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     n += mallocSizeOf(this);
@@ -228,7 +228,7 @@ IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
 }
 
 size_t
-IID2NativeInterfaceMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+IID2NativeInterfaceMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     n += mallocSizeOf(this);
@@ -271,7 +271,7 @@ ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
 }
 
 size_t
-ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     n += mallocSizeOf(this);
@@ -311,7 +311,7 @@ ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
 }
 
 size_t
-ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     n += mallocSizeOf(this);
@@ -435,7 +435,7 @@ NativeSetMap::~NativeSetMap()
 }
 
 size_t
-NativeSetMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+NativeSetMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     n += mallocSizeOf(this);

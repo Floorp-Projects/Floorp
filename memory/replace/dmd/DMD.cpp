@@ -34,6 +34,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
 
 // MOZ_REPLACE_ONLY_MEMALIGN saves us from having to define
 // replace_{posix_memalign,aligned_alloc,valloc}.  It requires defining
@@ -1992,7 +1993,7 @@ PrintSortedTraceAndFrameRecords(const Writer& aWriter,
 }
 
 // Note that, unlike most SizeOf* functions, this function does not take a
-// |nsMallocSizeOfFun| argument.  That's because those arguments are primarily
+// |mozilla::MallocSizeOf| argument.  That's because those arguments are primarily
 // to aid DMD track heap blocks... but DMD deliberately doesn't track heap
 // blocks it allocated for itself!
 //

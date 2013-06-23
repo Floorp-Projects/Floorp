@@ -9,6 +9,7 @@
  */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
@@ -452,7 +453,7 @@ nsIdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty()
 // static
 size_t
 nsIdentifierMapEntry::SizeOfExcludingThis(nsIdentifierMapEntry* aEntry,
-                                          nsMallocSizeOfFun aMallocSizeOf,
+                                          MallocSizeOf aMallocSizeOf,
                                           void*)
 {
   return aEntry->GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
@@ -11066,14 +11067,14 @@ nsIDocument::DocSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 
 static size_t
 SizeOfStyleSheetsElementIncludingThis(nsIStyleSheet* aStyleSheet,
-                                      nsMallocSizeOfFun aMallocSizeOf,
+                                      MallocSizeOf aMallocSizeOf,
                                       void* aData)
 {
   return aStyleSheet->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 size_t
-nsDocument::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsDocument::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   // This SizeOfExcludingThis() overrides the one from nsINode.  But
   // nsDocuments can only appear at the top of the DOM tree, and we use the

@@ -20,6 +20,7 @@ class nsClientRectList;
 class nsFontFaceList;
 class nsIImageLoadingContent;
 
+#include "mozilla/MemoryReporting.h"
 #include "nsChangeHint.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
@@ -1569,7 +1570,7 @@ public:
    *    total = SizeOfTextRunsForFrames(rootFrame, mallocSizeOf, false);
    */
   static size_t SizeOfTextRunsForFrames(nsIFrame* aFrame,
-                                        nsMallocSizeOfFun aMallocSizeOf,
+                                        mozilla::MallocSizeOf aMallocSizeOf,
                                         bool clear);
 
   /**
