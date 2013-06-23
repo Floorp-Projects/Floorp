@@ -45,12 +45,22 @@
   -  filters. -->
 <!ENTITY btnPageNet.label   "Net">
 <!ENTITY btnPageNet.tooltip "Log network access">
+<!ENTITY btnPageNet.accesskey "N">
+<!-- LOCALIZATION NOTE (btnPageNet.accesskeyMacOSX): This string is used as
+  -  access key for the menu button that allows users to toggle the network
+  -  logging output. On MacOSX accesskeys are available with Ctrl-*. Please make
+  -  sure you do not use the following letters: A, E, N and P. These are used
+  -  for editing commands in text inputs. -->
+<!ENTITY btnPageNet.accesskeyMacOSX "t">
 <!ENTITY btnPageCSS.label   "CSS">
 <!ENTITY btnPageCSS.tooltip "Log CSS parsing errors">
+<!ENTITY btnPageCSS.accesskey "C">
 <!ENTITY btnPageJS.label    "JS">
 <!ENTITY btnPageJS.tooltip  "Log JavaScript exceptions">
+<!ENTITY btnPageJS.accesskey  "J">
 <!ENTITY btnPageSecurity.label "Security">
 <!ENTITY btnPageSecurity.tooltip "Log security errors and warnings">
+<!ENTITY btnPageSecurity.accesskey "S">
 
 <!-- LOCALIZATION NOTE (btnPageLogging): This is used as the text of the
   -  the toolbar. It shows or hides messages that the web developer inserted on
@@ -58,6 +68,7 @@
   -  console.error(). -->
 <!ENTITY btnPageLogging.label   "Logging">
 <!ENTITY btnPageLogging.tooltip "Log messages sent to the window.console object">
+<!ENTITY btnPageLogging.accesskey "L">
 <!ENTITY btnConsoleErrors       "Errors">
 <!ENTITY btnConsoleInfo         "Info">
 <!ENTITY btnConsoleWarnings     "Warnings">
@@ -66,6 +77,7 @@
 <!ENTITY filterOutput.placeholder "Filter output">
 <!ENTITY btnClear.label        "Clear">
 <!ENTITY btnClear.tooltip      "Clear the Web Console output">
+<!ENTITY btnClear.accesskey    "r">
 
 <!ENTITY fullZoomEnlargeCmd.commandkey  "+">
 <!ENTITY fullZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
@@ -80,4 +92,6 @@
 <!ENTITY copyURLCmd.label     "Copy Link Location">
 <!ENTITY copyURLCmd.accesskey "a">
 
-<!ENTITY closeCmd.key  "W">
+<!ENTITY closeCmd.key         "W">
+<!ENTITY findCmd.key          "F">
+<!ENTITY clearOutputCmd.key   "K">

@@ -59,7 +59,7 @@
         </xul:toolbar>
       </xul:box>
       <xul:box id="splitview-resizer-target" class="splitview-nav-container"
-              persist="width height">
+              persist="height">
         <ol class="splitview-nav" tabindex="0"></ol>
         <div class="splitview-nav placeholder empty">
           <p><strong>&noStyleSheet.label;</strong></p>
@@ -70,6 +70,7 @@
         </div>
       </xul:box> <!-- .splitview-nav-container -->
     </xul:box>   <!-- .splitview-controller -->
+    <xul:splitter class="devtools-side-splitter splitview-landscape-splitter"/>
     <xul:box class="splitview-side-details"/>
 
     <div id="splitview-templates" hidden="true">
@@ -95,11 +96,6 @@
         <xul:resizer class="splitview-portrait-resizer"
                     dir="bottom"
                     element="splitview-resizer-target"/>
-        <xul:toolbar id="splitview-details-toolbar" class="devtools-toolbar">
-          <xul:resizer class="splitview-landscape-resizer"
-                      dir="bottomend"
-                      element="splitview-resizer-target"/>
-        </xul:toolbar>
         <xul:box class="stylesheet-editor-input textbox"
                 data-placeholder="&editorTextbox.placeholder;"/>
       </xul:box>
