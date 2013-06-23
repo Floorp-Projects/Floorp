@@ -5,7 +5,7 @@
 
 #include "necko-config.h"
 
-#define ALLOW_LATE_NSHTTP_H_INCLUDE 1
+#define ALLOW_LATE_HTTPLOG_H_INCLUDE 1
 #include "base/basictypes.h"
 
 #include "nsCOMPtr.h"
@@ -37,6 +37,7 @@
 #include "nsCategoryCache.h"
 #include "nsIContentSniffer.h"
 #include "nsNetUtil.h"
+#include "mozilla/net/NeckoChild.h"
 
 #include "nsNetCID.h"
 
