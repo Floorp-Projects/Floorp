@@ -307,21 +307,6 @@ nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
 }
 
 bool
-nsLayoutUtils::Are3DTransformsEnabled()
-{
-  static bool s3DTransformsEnabled;
-  static bool s3DTransformPrefCached = false;
-
-  if (!s3DTransformPrefCached) {
-    s3DTransformPrefCached = true;
-    Preferences::AddBoolVarCache(&s3DTransformsEnabled,
-                                 "layout.3d-transforms.enabled");
-  }
-
-  return s3DTransformsEnabled;
-}
-
-bool
 nsLayoutUtils::AreAsyncAnimationsEnabled()
 {
   static bool sAreAsyncAnimationsEnabled;

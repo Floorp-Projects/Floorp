@@ -1580,11 +1580,6 @@ public:
                                          nsCSSProperty aProperty);
 
   /**
-   * Checks if CSS 3D transforms are currently enabled.
-   */
-  static bool Are3DTransformsEnabled();
-
-  /**
    * Checks if off-main-thread animations are enabled.
    */
   static bool AreAsyncAnimationsEnabled();

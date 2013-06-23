@@ -315,7 +315,6 @@ function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
   let promptWaitTime = aPromptWaitTime ? "promptWaitTime=\"" + aPromptWaitTime +
                                          "\" "
                                        : "";
-  let showSurvey = aShowSurvey ? "showSurvey=\"" + aShowSurvey + "\" " : "";
   let custom1 = aCustom1 ? aCustom1 + " " : "";
   let custom2 = aCustom2 ? aCustom2 + " " : "";
   return "  <update type=\"" + type + "\" " +
@@ -331,7 +330,6 @@ function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
                     showPrompt +
                     showNeverForVersion +
                     promptWaitTime +
-                    showSurvey +
                     custom1 +
                     custom2 +
                    "buildID=\"" + buildID + "\"";

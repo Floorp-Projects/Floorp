@@ -31,33 +31,8 @@ protocol PHttpChannel
   manager PNecko;
 
 parent:
-  AsyncOpen(URIParams           uri,
-            // - TODO: bug 571161: unclear if any HTTP channel clients ever
-            // set originalURI != uri (about:credits?); also not clear if
-            // chrome channel would ever need to know.  Get rid of next arg?
-            OptionalURIParams   original,
-            OptionalURIParams   doc,
-            OptionalURIParams   referrer,
-            OptionalURIParams   apiRedirectTo,
-            uint32_t            loadFlags,
-            RequestHeaderTuples requestHeaders,
-            nsHttpAtom          requestMethod,
-            OptionalInputStreamParams uploadStream,
-            bool                uploadStreamHasHeaders,
-            uint16_t            priority,
-            uint8_t             redirectionLimit,
-            bool                allowPipelining,
-            bool                forceAllowThirdPartyCookie,
-            bool                resumeAt,
-            uint64_t            startPos,
-            nsCString           entityID,
-            bool                chooseApplicationCache,
-            nsCString           appCacheClientID,
-            bool                allowSpdy);
-
-  // Used to connect redirected-to channel on the parent with redirected-to
-  // channel on the child.
-  ConnectChannel(uint32_t channelId);
+  // Note: channels are opened during construction, so no open method here:
+  // see PNecko.ipdl
 
   SetPriority(uint16_t priority);
 

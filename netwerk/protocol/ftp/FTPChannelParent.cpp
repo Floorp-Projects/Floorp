@@ -60,11 +60,35 @@ NS_IMPL_ISUPPORTS4(FTPChannelParent,
 // FTPChannelParent::PFTPChannelParent
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// FTPChannelParent methods
+//-----------------------------------------------------------------------------
+
 bool
-FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
-                                const uint64_t& aStartPos,
-                                const nsCString& aEntityID,
-                                const OptionalInputStreamParams& aUploadStream)
+FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs)
+{
+  switch (aArgs.type()) {
+  case FTPChannelCreationArgs::TFTPChannelOpenArgs:
+  {
+    const FTPChannelOpenArgs& a = aArgs.get_FTPChannelOpenArgs();
+    return DoAsyncOpen(a.uri(), a.startPos(), a.entityID(), a.uploadStream());
+  }
+  case FTPChannelCreationArgs::TFTPChannelConnectArgs:
+  {
+    const FTPChannelConnectArgs& cArgs = aArgs.get_FTPChannelConnectArgs();
+    return ConnectChannel(cArgs.channelId());
+  }
+  default:
+    NS_NOTREACHED("unknown open type");
+    return false;
+  }
+}
+
+bool
+FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
+                              const uint64_t& aStartPos,
+                              const nsCString& aEntityID,
+                              const OptionalInputStreamParams& aUploadStream)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri)
@@ -73,7 +97,7 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
 #ifdef DEBUG
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
-  LOG(("FTPChannelParent RecvAsyncOpen [this=%p uri=%s]\n",
+  LOG(("FTPChannelParent DoAsyncOpen [this=%p uri=%s]\n",
        this, uriSpec.get()));
 #endif
 
@@ -117,7 +141,7 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
 }
 
 bool
-FTPChannelParent::RecvConnectChannel(const uint32_t& channelId)
+FTPChannelParent::ConnectChannel(const uint32_t& channelId)
 {
   nsresult rv;
 

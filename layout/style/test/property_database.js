@@ -1108,7 +1108,6 @@ var gCSSProperties = {
 			"translate(calc(5px - 10% * 3))",
 			"translate(calc(5px - 3 * 10%), 50px)",
 			"translate(-50px, calc(5px - 10% * 3))",
-		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
 			"translatez(1px)", "translatez(4em)", "translatez(-4px)",
 			"translatez(0px)", "translatez(2px) translatez(5px)",
 			"translate3d(3px, 4px, 5px)", "translate3d(2em, 3px, 1em)",
@@ -1118,7 +1117,7 @@ var gCSSProperties = {
 			"rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)",
 			"rotatez(72rad)", "rotatex(0.125turn)", "perspective(1000px)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)",
-		] : []),
+		],
 		invalid_values: ["1px", "#0000ff", "red", "auto",
 			"translatex(1)", "translatey(1)", "translate(2)",
 			"translate(-3, -4)",
@@ -1135,8 +1134,7 @@ var gCSSProperties = {
 			"translatex(-moz-max(5px,10%))",
 			"translate(10px, calc(min(5px,10%)))",
 			"translate(calc(max(5px,10%)), 10%)",
-			"matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))"
-		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
+			"matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))",
 			"perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)",
@@ -1145,7 +1143,7 @@ var gCSSProperties = {
 			"rotatey(words)", "rotatex(7)", "translate3d(3px, 4px, 1px, 7px)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13px, 14em, 15px, 16)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20%, 10%, 15, 16)"
-		] : [])
+		],
 	},
 	"transform-origin": {
 		domProp: "transformOrigin",
@@ -1169,11 +1167,10 @@ var gCSSProperties = {
 			"calc(20px + 1em) calc(20px / 2)",
 			"calc(20px + 50%) calc(50% - 10px)",
 			"calc(-20px) calc(-50%)",
-			"calc(-20%) calc(-50%)"
-		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
+			"calc(-20%) calc(-50%)",
 			"6px 5px 5px",
 			"top center 10px"
-		] : []),
+		],
 		invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
 						 "border", "center red", "right diagonal",
 						 "#00ffff bottom"]
@@ -3740,7 +3737,6 @@ var gCSSProperties = {
 			"matrix(1, 2, 3, 4, 5%, 6%)",
 			"matrix(1, 2, 3, 4, 5px, 6em)",
 			"matrix(1, 0, 0, 1, calc(5px * 3), calc(10% - 3px))",
-		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
 			"translatez(1px)", "translatez(4em)", "translatez(-4px)",
 			"translatez(0px)", "translatez(2px) translatez(5px)",
 			"translate3d(3px, 4px, 5px)", "translate3d(2em, 3px, 1em)",
@@ -3753,7 +3749,7 @@ var gCSSProperties = {
 			/* valid only when prefixed */
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13px, 14em, 15px, 16)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20%, 10%, 15, 16)",
-		] : []),
+		],
 		invalid_values: ["1px", "#0000ff", "red", "auto",
 			"translatex(1)", "translatey(1)", "translate(2)",
 			"translate(-3, -4)",
@@ -3768,15 +3764,14 @@ var gCSSProperties = {
 			"translatex(-moz-max(5px,10%))",
 			"translate(10px, calc(min(5px,10%)))",
 			"translate(calc(max(5px,10%)), 10%)",
-			"matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))"
-		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
+			"matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))",
 			"perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15%, 16)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16px)",
 			"rotatey(words)", "rotatex(7)", "translate3d(3px, 4px, 1px, 7px)",
-		] : [])
+		],
 	},
 	"-moz-transform-origin": {
 		domProp: "MozTransformOrigin",
@@ -3801,11 +3796,10 @@ var gCSSProperties = {
 			"calc(20px + 1em) calc(20px / 2)",
 			"calc(20px + 50%) calc(50% - 10px)",
 			"calc(-20px) calc(-50%)",
-			"calc(-20%) calc(-50%)"
-		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
+			"calc(-20%) calc(-50%)",
 			"6px 5px 5px",
 			"top center 10px"
-		] : []),
+		],
 		invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
 						 "border", "center red", "right diagonal",
 						 "#00ffff bottom"]
