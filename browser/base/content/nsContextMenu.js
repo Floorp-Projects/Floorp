@@ -261,6 +261,7 @@ nsContextMenu.prototype = {
             .disabled = !this.hasBGImage;
 
     this.showItem("context-viewimageinfo", this.onImage);
+    this.showItem("context-viewimagedesc", this.onImage && this.imageDescURL !== "");
   },
 
   initMiscItems: function CM_initMiscItems() {
@@ -499,6 +500,7 @@ nsContextMenu.prototype = {
     this.onImage           = false;
     this.onLoadedImage     = false;
     this.onCompletedImage  = false;
+    this.imageDescURL      = "";
     this.onCanvas          = false;
     this.onVideo           = false;
     this.onAudio           = false;
@@ -548,6 +550,11 @@ nsContextMenu.prototype = {
           this.onCompletedImage = true;
 
         this.mediaURL = this.target.currentURI.spec;
+
+        var descURL = this.target.getAttribute("longdesc");
+        if (descURL) {
+          this.imageDescURL = makeURLAbsolute(this.target.ownerDocument.body.baseURI, descURL);
+        }
       }
       else if (this.target instanceof HTMLCanvasElement) {
         this.onCanvas = true;
@@ -872,6 +879,14 @@ nsContextMenu.prototype = {
   viewImageInfo: function() {
     BrowserPageInfo(this.target.ownerDocument.defaultView.top.document,
                     "mediaTab", this.target);
+  },
+
+  viewImageDesc: function(e) {
+    var doc = this.target.ownerDocument;
+    urlSecurityCheck(this.imageDescURL, this.browser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    openUILink(this.imageDescURL, e, { disallowInheritPrincipal: true,
+                             referrerURI: doc.documentURIObject });
   },
 
   viewFrameInfo: function() {
