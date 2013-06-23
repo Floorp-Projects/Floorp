@@ -214,10 +214,35 @@ public:
     mFlags &= ~aFlagsToUnset;
   }
 
+  void PreserveWrapper(nsISupports* aScriptObjectHolder)
+  {
+    if (PreservingWrapper()) {
+      return;
+    }
+
+    nsISupports* ccISupports;
+    aScriptObjectHolder->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                                        reinterpret_cast<void**>(&ccISupports));
+    MOZ_ASSERT(ccISupports);
+
+    nsXPCOMCycleCollectionParticipant* participant;
+    CallQueryInterface(ccISupports, &participant);
+    PreserveWrapper(ccISupports, participant);
+  }
+
+  void PreserveWrapper(void* aScriptObjectHolder, nsScriptObjectTracer* aTracer)
+  {
+    if (PreservingWrapper()) {
+      return;
+    }
+
+    HoldJSObjects(aScriptObjectHolder, aTracer);
+    SetPreservingWrapper(true);
 #ifdef DEBUG
-  void CheckCCWrapperTraversal(void* aScriptObjectHolder,
-                               nsScriptObjectTracer* aTracer);
-#endif // DEBUG
+    // Make sure the cycle collector will be able to traverse to the wrapper.
+    CheckCCWrapperTraversal(aScriptObjectHolder, aTracer);
+#endif
+  }
 
 private:
   JSObject *GetWrapperJSObject() const
@@ -255,6 +280,14 @@ private:
     MOZ_ASSERT((aFlagsToUnset & ~kWrapperFlagsMask) == 0, "Bad wrapper flag bits");
     mFlags &= ~aFlagsToUnset;
   }
+
+  static void HoldJSObjects(void* aScriptObjectHolder,
+                            nsScriptObjectTracer* aTracer);
+
+#ifdef DEBUG
+  void CheckCCWrapperTraversal(void* aScriptObjectHolder,
+                               nsScriptObjectTracer* aTracer);
+#endif // DEBUG
 
   /**
    * If this bit is set then we're preserving the wrapper, which in effect ties

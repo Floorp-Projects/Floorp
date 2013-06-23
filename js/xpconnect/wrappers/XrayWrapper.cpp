@@ -1282,7 +1282,7 @@ DOMXrayTraits::preserveWrapper(JSObject *target)
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(identity, &cache);
     if (cache)
-        nsContentUtils::PreserveWrapper(identity, cache);
+        cache->PreserveWrapper(identity);
 }
 
 JSObject*
