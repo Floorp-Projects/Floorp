@@ -10,9 +10,9 @@
 
 #gcli-output-root,
 #gcli-tooltip-root {
-  border: 1px solid hsl(210,11%,10%);
+  border: 1px solid hsl(206,37%,4%);
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-image: linear-gradient(hsla(209,11%,18%,0.9), hsl(210,11%,16%));
+  background-image: linear-gradient(hsla(209,18%,18%,0.9), hsl(209,23%,18%));
   border-radius: 3px;
 }
 
@@ -32,9 +32,9 @@
   margin-left: 8px;
   width: 20px;
   height: 10px;
-  border-left: 1px solid hsl(210,11%,10%);
-  border-right: 1px solid hsl(210,11%,10%);
-  background-color: hsl(210,11%,16%);
+  border-left: 1px solid hsl(206,37%,4%);
+  border-right: 1px solid hsl(206,37%,4%);
+  background-color: hsl(209,23%,18%);
 }
 
 .gcli-tt-description,
@@ -83,8 +83,8 @@
   font-weight: normal;
   font-size: 90%;
   border-radius: 3px;
-  background-color: hsl(210,11%,16%);
-  border: 1px solid hsl(210,11%,10%);
+  background-color: hsl(209,23%,18%);
+  border: 1px solid hsl(206,37%,4%);
 }
 
 .gcli-out-shortcut:before,
