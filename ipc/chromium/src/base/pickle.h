@@ -10,7 +10,6 @@
 #include "base/basictypes.h"
 #include "base/logging.h"
 #include "base/string16.h"
-#include "testing/gtest/include/gtest/gtest_prod.h"
 
 // This class provides facilities for basic binary value packing and unpacking.
 //
@@ -283,9 +282,6 @@ class Pickle {
   uint32_t header_size_;
   uint32_t capacity_;
   uint32_t variable_buffer_offset_;
-  FRIEND_TEST(PickleTest, Resize);
-  FRIEND_TEST(PickleTest, FindNext);
-  FRIEND_TEST(PickleTest, IteratorHasRoom);
 };
 
 #endif  // BASE_PICKLE_H__
