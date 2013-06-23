@@ -43,6 +43,9 @@ let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 const BROWSER_CONSOLE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
+// The preference prefix for all of the Browser Console filters.
+const BROWSER_CONSOLE_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
+
 this.EXPORTED_SYMBOLS = ["HUDService"];
 
 ///////////////////////////////////////////////////////////////////////////
@@ -205,6 +208,8 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
   if (element.getAttribute("windowtype") != "navigator:browser") {
     this.browserWindow = HUDService.currentContext();
   }
+
+  this.ui = new this.iframeWindow.WebConsoleFrame(this);
 }
 
 WebConsole.prototype = {
@@ -213,6 +218,7 @@ WebConsole.prototype = {
   browserWindow: null,
   hudId: null,
   target: null,
+  ui: null,
   _browserConsole: false,
   _destroyer: null,
 
@@ -252,7 +258,6 @@ WebConsole.prototype = {
    */
   init: function WC_init()
   {
-    this.ui = new this.iframeWindow.WebConsoleFrame(this);
     return this.ui.init().then(() => this);
   },
 
@@ -544,6 +549,8 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
     if (this._bc_init) {
       return this._bc_init;
     }
+
+    this.ui._filterPrefsPrefix = BROWSER_CONSOLE_FILTER_PREFS_PREFIX;
 
     let window = this.iframeWindow;
 

@@ -1393,7 +1393,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
     inputNode.addEventListener("blur", this._onBlur, false);
     inputNode.addEventListener("keypress", this._onKeyPress, false);
 
-    aElementNode.className = "dbg-expression title";
+    aElementNode.className = "dbg-expression";
     aElementNode.appendChild(arrowNode);
     aElementNode.appendChild(inputNode);
     aElementNode.appendChild(closeNode);

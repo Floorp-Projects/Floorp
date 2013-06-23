@@ -24,6 +24,9 @@ this.DebuggerPanel = function DebuggerPanel(iframeWindow, toolbox) {
   this._controller._target = this.target;
   this._bkp = this._controller.Breakpoints;
 
+  this.highlightWhenPaused = this.highlightWhenPaused.bind(this);
+  this.unhighlightWhenResumed = this.unhighlightWhenResumed.bind(this);
+
   EventEmitter.decorate(this);
 }
 
@@ -48,6 +51,8 @@ DebuggerPanel.prototype = {
       .then(() => this._controller.startupDebugger())
       .then(() => this._controller.connect())
       .then(() => {
+        this.target.on("thread-paused", this.highlightWhenPaused);
+        this.target.on("thread-resumed", this.unhighlightWhenResumed);
         this.isReady = true;
         this.emit("ready");
         return this;
@@ -62,6 +67,8 @@ DebuggerPanel.prototype = {
   get target() this._toolbox.target,
 
   destroy: function() {
+    this.target.off("thread-paused", this.highlightWhenPaused);
+    this.target.off("thread-resumed", this.unhighlightWhenResumed);
     this.emit("destroyed");
     return Promise.resolve(null);
   },
@@ -82,5 +89,13 @@ DebuggerPanel.prototype = {
 
   getAllBreakpoints: function() {
     return this._bkp.store;
+  },
+
+  highlightWhenPaused: function() {
+    this._toolbox.highlightTool("jsdebugger");
+  },
+
+  unhighlightWhenResumed: function() {
+    this._toolbox.unhighlightTool("jsdebugger");
   }
 };
