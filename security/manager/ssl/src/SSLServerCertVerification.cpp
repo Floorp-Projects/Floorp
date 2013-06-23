@@ -109,6 +109,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Telemetry.h"
 #include "nsIThreadPool.h"
+#include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"

@@ -4104,9 +4104,6 @@ pref("dom.idle-observers-api.enabled", true);
 // Time limit, in milliseconds, for nsEventStateManager::IsHandlingUserInput().
 // Used to detect long running handlers of user-generated events.
 pref("dom.event.handling-user-input-time-limit", 1000);
- 
-//3D Transforms
-pref("layout.3d-transforms.enabled", true);
 
 // Whether we should layerize all animated images (if otherwise possible).
 pref("layout.animated-image-layers.enabled", false);

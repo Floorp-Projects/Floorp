@@ -194,14 +194,13 @@ js::ToBooleanSlow(const Value &v)
 }
 
 /*
- * This slow path is only ever taken for Boolean objects from other
- * compartments. The only caller of the fast path, JSON's PreprocessValue,
- * makes sure of that.
+ * This slow path is only ever taken for proxies wrapping Boolean objects
+ * The only caller of the fast path, JSON's PreprocessValue, ensures that.
  */
 bool
 js::BooleanGetPrimitiveValueSlow(HandleObject wrappedBool, JSContext *cx)
 {
-    JS_ASSERT(wrappedBool->isCrossCompartmentWrapper());
+    JS_ASSERT(wrappedBool->isProxy());
     JSObject *obj = Wrapper::wrappedObject(wrappedBool);
     JS_ASSERT(obj);
     return obj->as<BooleanObject>().unbox();
