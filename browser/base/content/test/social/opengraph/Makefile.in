@@ -10,7 +10,7 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES := \
                  opengraph.html \
                  og_invalid_url.html \
                  shortlink_linkrel.html \
@@ -19,6 +19,3 @@ _BROWSER_FILES = \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

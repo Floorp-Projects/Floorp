@@ -9,18 +9,17 @@ VPATH          = @srcdir@
 relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+MOCHITEST_BROWSER_FILES := \
+  browser_Application.js \
+  browser_ApplicationPrefs.js \
+  browser_ApplicationStorage.js \
+  browser_ApplicationQuitting.js \
+  browser_Bookmarks.js \
+  browser_Browser.js \
+  ContentA.html \
+  ContentB.html \
+  ContentWithFrames.html \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
-
-_BROWSER_FILES =browser_Application.js \
-		browser_ApplicationPrefs.js \
-		browser_ApplicationStorage.js \
-		browser_ApplicationQuitting.js \
-		browser_Bookmarks.js \
-		browser_Browser.js \
-		ContentA.html \
-		ContentB.html \
-		ContentWithFrames.html \
-		$(NULL)
-
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
