@@ -6,6 +6,7 @@
 #ifndef MOZILLA_IMAGELIB_IMAGE_H_
 #define MOZILLA_IMAGELIB_IMAGE_H_
 
+#include "mozilla/MemoryReporting.h"
 #include "imgIContainer.h"
 #include "imgStatusTracker.h"
 #include "nsIURI.h"
@@ -77,8 +78,8 @@ public:
   /**
    * The components that make up SizeOfData().
    */
-  virtual size_t HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const = 0;
-  virtual size_t HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
   virtual size_t NonHeapSizeOfDecoded() const = 0;
   virtual size_t OutOfProcessSizeOfDecoded() const = 0;
 

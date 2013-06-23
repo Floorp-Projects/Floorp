@@ -21,6 +21,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOMPrivate.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIXPConnect.h"
 #include "mozilla/Services.h"
@@ -251,7 +252,7 @@ public:
 #endif
   static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
   static int64_t GetTelemetryMemoryUsed();
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
   struct Stat {
     uint32_t hitCount;
     uint32_t totalTime;
@@ -268,7 +269,7 @@ private:
   template<typename EntryType>
   struct impl {
     static size_t SizeOfEntryExcludingThis(EntryType *,
-                                           nsMallocSizeOfFun,
+                                           mozilla::MallocSizeOf,
                                            void *) {
       return 0;
     };
@@ -346,7 +347,7 @@ TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(TelemetryMallocSizeOf)
 
 size_t
-TelemetryImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += aMallocSizeOf(this);

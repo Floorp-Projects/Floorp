@@ -16,6 +16,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
@@ -314,7 +315,7 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
 }
 
 size_t
-nsUrlClassifierPrefixSet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsUrlClassifierPrefixSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += aMallocSizeOf(this);

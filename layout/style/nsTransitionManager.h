@@ -9,6 +9,7 @@
 #define nsTransitionManager_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
 
@@ -170,9 +171,9 @@ public:
 #ifdef MOZ_XUL
   virtual void RulesMatching(XULTreeRuleProcessorData* aData) MOZ_OVERRIDE;
 #endif
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
 
   // nsARefreshObserver
