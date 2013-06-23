@@ -39,8 +39,6 @@ namespace xpc {
 
 static const uint32_t JSSLOT_RESOLVING = 0;
 
-static XPCWrappedNative *GetWrappedNative(JSObject *obj);
-
 namespace XrayUtils {
 
 JSClass HolderClass = {
@@ -213,7 +211,7 @@ public:
                                              PropertyDescriptor *desc, unsigned flags);
 
     static XPCWrappedNative* getWN(JSObject *wrapper) {
-        return GetWrappedNative(getTargetObject(wrapper));
+        return XPCWrappedNative::Get(getTargetObject(wrapper));
     }
 
     virtual void preserveWrapper(JSObject *target);
@@ -506,13 +504,6 @@ GetHolder(JSObject *obj)
     return &js::GetProxyExtra(obj, 0).toObject();
 }
 
-static XPCWrappedNative *
-GetWrappedNative(JSObject *obj)
-{
-    MOZ_ASSERT(IS_WN_REFLECTOR(obj));
-    return static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
-}
-
 JSObject*
 XrayTraits::getHolder(JSObject *wrapper)
 {
@@ -731,8 +722,7 @@ mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
 void
 XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
 {
-    XPCWrappedNative *wn =
-      static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(target));
+    XPCWrappedNative *wn = XPCWrappedNative::Get(target);
     nsRefPtr<nsXPCClassInfo> ci;
     CallQueryInterface(wn->Native(), getter_AddRefs(ci));
     if (ci)
@@ -1941,7 +1931,7 @@ do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)
         if (GetXrayType(target) == XrayForDOMObject) {
             nativeSupports = UnwrapDOMObjectToISupports(target);
         } else {
-            XPCWrappedNative *wn = GetWrappedNative(target);
+            XPCWrappedNative *wn = XPCWrappedNative::Get(target);
             nativeSupports = wn->Native();
         }
     } else {
