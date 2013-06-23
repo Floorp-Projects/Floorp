@@ -9,6 +9,8 @@
 #ifndef xpcmaps_h___
 #define xpcmaps_h___
 
+#include "mozilla/MemoryReporting.h"
+
 #include "js/HashTable.h"
 
 // Maps...
@@ -143,7 +145,7 @@ private:
     Native2WrappedNativeMap();    // no implementation
     Native2WrappedNativeMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
 
 private:
     PLDHashTable *mTable;
@@ -262,7 +264,7 @@ private:
     IID2NativeInterfaceMap();    // no implementation
     IID2NativeInterfaceMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
 
 private:
     PLDHashTable *mTable;
@@ -381,7 +383,7 @@ private:
     ClassInfo2WrappedNativeProtoMap();    // no implementation
     ClassInfo2WrappedNativeProtoMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
 
 private:
     PLDHashTable *mTable;
@@ -454,7 +456,7 @@ private:
     NativeSetMap();    // no implementation
     NativeSetMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
 
 private:
     PLDHashTable *mTable;

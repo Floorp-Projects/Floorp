@@ -7,6 +7,7 @@
 #include "jsinfer.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsapi.h"
@@ -6693,7 +6694,7 @@ TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
 
 static void
 SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
-                              JSMallocSizeOfFun mallocSizeOf)
+                              mozilla::MallocSizeOf mallocSizeOf)
 {
     TypeScript *typeScript = script->types;
     if (!typeScript)
@@ -6715,13 +6716,13 @@ SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
 }
 
 void
-Zone::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *typePool)
+Zone::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool)
 {
     *typePool += types.typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
-JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf)
+JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, mozilla::MallocSizeOf mallocSizeOf)
 {
     sizes->analysisPool += analysisLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
@@ -6760,7 +6761,7 @@ JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, JSMallocSi
 }
 
 size_t
-TypeObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
+TypeObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     if (singleton) {
         /*
