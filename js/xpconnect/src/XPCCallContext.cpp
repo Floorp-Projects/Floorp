@@ -397,7 +397,7 @@ XPCCallContext::UnwrapThisIfAllowed(HandleObject obj, HandleObject fun, unsigned
     // Make sure we have an XPCWN, and grab it.
     if (!IS_WN_REFLECTOR(unwrapped))
         return nullptr;
-    XPCWrappedNative *wn = (XPCWrappedNative*)js::GetObjectPrivate(unwrapped);
+    XPCWrappedNative *wn = XPCWrappedNative::Get(unwrapped);
 
     // Next, get the call info off the function object.
     XPCNativeInterface *interface;

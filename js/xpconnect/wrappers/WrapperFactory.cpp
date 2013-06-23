@@ -199,7 +199,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     if (!IS_WN_REFLECTOR(obj) || !js::GetObjectParent(obj))
         return DoubleWrap(cx, obj, flags);
 
-    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+    XPCWrappedNative *wn = XPCWrappedNative::Get(obj);
 
     JSAutoCompartment ac(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -306,7 +306,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // So whenever we pull an XPCWN across compartments in this manner, we
     // give the destination object the union of the two native sets. We try
     // to do this cleverly in the common case to avoid too much overhead.
-    XPCWrappedNative *newwn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+    XPCWrappedNative *newwn = XPCWrappedNative::Get(obj);
     XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(newwn->GetSet(),
                                                         wn->GetSet(), false);
     if (!unionSet)
@@ -521,7 +521,7 @@ WrapperFactory::WrapForSameCompartment(JSContext *cx, HandleObject objArg)
         return obj;
 
     // Extract the WN. It should exist.
-    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+    XPCWrappedNative *wn = XPCWrappedNative::Get(obj);
     MOZ_ASSERT(wn, "Trying to wrap a dead WN!");
 
     // The WN knows what to do.
