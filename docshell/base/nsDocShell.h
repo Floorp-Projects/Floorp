@@ -655,7 +655,11 @@ protected:
 
     void ClearFrameHistory(nsISHEntry* aEntry);
 
-    nsresult MaybeInitTiming();
+    /**
+     * Initializes mTiming if it isn't yet.
+     * After calling this, mTiming is non-null.
+     */
+    void MaybeInitTiming();
 
     // Event type dispatched by RestorePresentation
     class RestorePresentationEvent : public nsRunnable {
