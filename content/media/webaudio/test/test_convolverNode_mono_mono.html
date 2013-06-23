@@ -30,8 +30,6 @@ SimpleTest.waitForExplicitFinish();
 // the result should be exactly zero because the inputs are exactly
 // zero.
 function runTest() {
-    SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
     if (window.testRunner) {
         testRunner.dumpAsText();
         testRunner.waitUntilDone();
@@ -62,7 +60,6 @@ function runTest() {
 }
 
 function finishJSTest() {
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 }
 

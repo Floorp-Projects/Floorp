@@ -9,7 +9,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 SimpleTest.waitForExplicitFinish();
 
 try { o0 = document.createElement('audio'); } catch(e) {  }
@@ -229,7 +228,6 @@ try { o7.connect(o4); } catch(e) {  }
 
 function done() {
   ok(true, "We did not crash.");
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 }
 
