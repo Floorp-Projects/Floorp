@@ -84,7 +84,7 @@ ol.splitview-nav > li.splitview-filtered {
 
 /* portrait mode */
 @media (max-width: 550px) {
-  #splitview-details-toolbar {
+  .splitview-landscape-splitter {
     display: none;
   }
 
