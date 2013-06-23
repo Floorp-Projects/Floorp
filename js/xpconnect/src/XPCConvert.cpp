@@ -823,7 +823,6 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     if (cache) {
         flat = cache->GetWrapper();
         if (cache->IsDOMBinding()) {
-
             if (!flat) {
                 JS::Rooted<JSObject*> global(cx, xpcscope->GetGlobalJSObject());
                 flat = cache->WrapObject(cx, global);
@@ -831,12 +830,10 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                     return false;
             }
 
-            if (flat) {
-                if (allowNativeWrapper && !JS_WrapObject(cx, flat.address()))
-                    return false;
+            if (allowNativeWrapper && !JS_WrapObject(cx, flat.address()))
+                return false;
 
-                return CreateHolderIfNeeded(flat, d, dest);
-            }
+            return CreateHolderIfNeeded(flat, d, dest);
         }
     } else {
         flat = nullptr;
