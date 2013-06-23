@@ -28,7 +28,6 @@
 #include "nsContentListDeclarations.h"
 #include "nsMathUtils.h"
 #include "nsReadableUtils.h"
-#include "nsWrapperCache.h"
 
 class imgICache;
 class imgIContainer;
@@ -61,6 +60,7 @@ class nsIDOMWindow;
 class nsIDragSession;
 class nsIEditor;
 class nsIFragmentContentSink;
+class nsIFrame;
 class nsIImageLoadingContent;
 class nsIInterfaceRequestor;
 class nsIIOService;
@@ -94,7 +94,7 @@ class nsScriptObjectTracer;
 class nsStringHashKey;
 class nsTextFragment;
 class nsViewportInfo;
-class nsIFrame;
+class nsWrapperCache;
 
 struct JSContext;
 struct JSPropertyDescriptor;
