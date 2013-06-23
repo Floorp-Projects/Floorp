@@ -309,6 +309,7 @@ pref(svg.text.css-frames.enabled,true) == text-layout-08.svg text-layout-08-ref.
 HTTP(..) == text-scale-02.svg text-scale-02-ref.svg
 HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
+== stroke-dasharray-01.svg stroke-dasharray-01-ref.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg 
 == stroke-linecap-square-w-zero-length-segs-01.svg pass.svg
