@@ -38,6 +38,7 @@ function OptionsPanel(iframeWindow, toolbox) {
   this.panelDoc = iframeWindow.document;
   this.panelWin = iframeWindow;
   this.toolbox = toolbox;
+  this.isReady = false;
 
   // Make restart method available from xul
   this.panelWin.restart = this.restart;
@@ -63,6 +64,7 @@ OptionsPanel.prototype = {
     let disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
     disableJSNode.addEventListener("click", this._disableJSClicked, false);
 
+    this.isReady = true;
     this.emit("ready");
     deferred.resolve(this);
     return deferred.promise;
