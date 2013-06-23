@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Util.h"
@@ -204,10 +205,10 @@ class HashMap
 
     // Don't just call |impl.sizeOfExcludingThis()| because there's no
     // guarantee that |impl| is the first field in HashMap.
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return impl.sizeOfExcludingThis(mallocSizeOf);
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
@@ -412,10 +413,10 @@ class HashSet
 
     // Don't just call |impl.sizeOfExcludingThis()| because there's no
     // guarantee that |impl| is the first field in HashSet.
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return impl.sizeOfExcludingThis(mallocSizeOf);
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
@@ -1340,12 +1341,12 @@ class HashTable : private AllocPolicy
         return gen;
     }
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     {
         return mallocSizeOf(table);
     }
 
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }

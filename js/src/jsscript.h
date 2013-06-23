@@ -9,6 +9,7 @@
 #ifndef jsscript_h
 #define jsscript_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsdbgapi.h"
@@ -346,7 +347,7 @@ struct ScriptSource
     }
     const jschar *chars(JSContext *cx);
     JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     // XDR handling
     template <XDRMode mode>
@@ -851,7 +852,7 @@ class JSScript : public js::gc::Cell
      * (which can be larger than the in-use size).
      */
     size_t computedSizeOfData();
-    size_t sizeOfData(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
 
     uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
 
@@ -1258,7 +1259,7 @@ class LazyScript : public js::gc::Cell
     void markChildren(JSTracer *trc);
     void finalize(js::FreeOp *fop);
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     {
         return mallocSizeOf(table_);
     }

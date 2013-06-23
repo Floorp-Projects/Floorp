@@ -6,6 +6,7 @@
 
 /* Private maps (hashtables). */
 
+#include "mozilla/MemoryReporting.h"
 #include "xpcprivate.h"
 
 #include "js/HashTable.h"
@@ -148,7 +149,7 @@ Native2WrappedNativeMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 
 /* static */ size_t
 Native2WrappedNativeMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr,
-                                                  JSMallocSizeOfFun mallocSizeOf, void *)
+                                                  mozilla::MallocSizeOf mallocSizeOf, void *)
 {
     return mallocSizeOf(((Native2WrappedNativeMap::Entry*)hdr)->value);
 }
@@ -237,7 +238,7 @@ IID2NativeInterfaceMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 
 /* static */ size_t
 IID2NativeInterfaceMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr,
-                                                 JSMallocSizeOfFun mallocSizeOf, void *)
+                                                 mozilla::MallocSizeOf mallocSizeOf, void *)
 {
     XPCNativeInterface *iface = ((IID2NativeInterfaceMap::Entry*)hdr)->value;
     return iface->SizeOfIncludingThis(mallocSizeOf);
@@ -320,7 +321,7 @@ ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSiz
 
 /* static */ size_t
 ClassInfo2WrappedNativeProtoMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr,
-                                                          JSMallocSizeOfFun mallocSizeOf, void *)
+                                                          mozilla::MallocSizeOf mallocSizeOf, void *)
 {
     return mallocSizeOf(((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value);
 }
@@ -443,7 +444,7 @@ NativeSetMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 }
 
 /* static */ size_t
-NativeSetMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *)
+NativeSetMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *)
 {
     XPCNativeSet *set = ((NativeSetMap::Entry*)hdr)->key_value;
     return set->SizeOfIncludingThis(mallocSizeOf);

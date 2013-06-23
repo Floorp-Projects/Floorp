@@ -6,6 +6,7 @@
 
 #include "vm/String.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 
@@ -40,7 +41,7 @@ JSString::isExternal() const
 }
 
 size_t
-JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
+JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     // JSRope: do nothing, we'll count all children chars when we hit the leaf strings.
     if (isRope())

@@ -9,6 +9,8 @@
 
 #ifdef JS_ION
 
+#include "mozilla/MemoryReporting.h"
+
 #include "IonCode.h"
 #include "jsweakcache.h"
 #include "js/Value.h"
@@ -80,7 +82,7 @@ struct ICStubSpace
 
     JS_DECLARE_NEW_METHODS(allocate, alloc, inline)
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return allocator_.sizeOfExcludingThis(mallocSizeOf);
     }
 };

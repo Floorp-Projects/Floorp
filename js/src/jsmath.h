@@ -7,6 +7,8 @@
 #ifndef jsmath_h
 #define jsmath_h
 
+#include "mozilla/MemoryReporting.h"
+
 #include "jsapi.h"
 
 namespace js {
@@ -44,7 +46,7 @@ class MathCache
         return (e.out = f(x));
     }
 
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
 } /* namespace js */
