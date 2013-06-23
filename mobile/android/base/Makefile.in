@@ -52,6 +52,7 @@ FENNEC_JAVA_FILES = \
   ANRReporter.java \
   ActivityHandlerHelper.java \
   AlertNotification.java \
+  AlignRightLinkPreference.java \
   AllCapsTextView.java \
   AndroidImport.java \
   AndroidImportPreference.java \
@@ -473,6 +474,7 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/preference_rightalign_icon.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
