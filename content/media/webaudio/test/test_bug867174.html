@@ -9,7 +9,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var ctx = new AudioContext();
@@ -28,7 +27,6 @@ addLoadEvent(function() {
 
     ok(true, "We did not crash.");
     sp.onaudioprocess = null;
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   };
 });

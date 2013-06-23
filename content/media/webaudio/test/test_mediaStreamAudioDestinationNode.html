@@ -13,8 +13,6 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
   var context = new AudioContext();
   var buffer = context.createBuffer(1, 2048, context.sampleRate);
   for (var i = 0; i < 2048; ++i) {
@@ -35,7 +33,6 @@ addLoadEvent(function() {
       is(elem.played.length, 1, "should have a played interval");
       is(elem.played.start(0), 0, "should have played immediately");
       isnot(elem.played.end(0), 0, "should have played for a non-zero interval");
-      SpecialPowers.clearUserPref("media.webaudio.enabled");
       SimpleTest.finish();
     }, 2000);
   };

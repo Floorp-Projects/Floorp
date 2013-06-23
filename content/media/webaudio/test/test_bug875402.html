@@ -9,7 +9,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 SimpleTest.waitForExplicitFinish();
 try { o1 = new OfflineAudioContext(1, 10, (new AudioContext()).sampleRate); } catch(e) {  }
 try { o2 = o1.createScriptProcessor(); } catch(e) {  }
@@ -36,7 +35,6 @@ setTimeout("try { o7.connect(o13, 0, 0) } catch(e) {  }",50)
 
 function done() {
   ok(true, "We did not crash.");
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 }
 

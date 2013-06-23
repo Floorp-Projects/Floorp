@@ -359,8 +359,6 @@ function checkResult(event) {
 
 SimpleTest.waitForExplicitFinish();
 function runTest() {
-    SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
     // Create 8-channel offline audio context.
     // Each test will render 8 sample-frames starting at sample-frame position testNumber * 8.
     var totalFrameLength = numberOfTests * singleTestFrameLength;
