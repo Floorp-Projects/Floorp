@@ -131,6 +131,9 @@ user_pref("network.http.bypass-cachelock-threshold", 200000);
 user_pref("dom.gamepad.enabled", true);
 user_pref("dom.gamepad.non_standard_events.enabled", true);
 
+// Enable Web Audio
+user_pref("media.webaudio.enabled", true);
+
 // Enable Web Audio legacy APIs
 user_pref("media.webaudio.legacy.AudioBufferSourceNode", true);
 user_pref("media.webaudio.legacy.AudioContext", true);

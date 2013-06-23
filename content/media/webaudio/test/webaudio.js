@@ -91,14 +91,11 @@ function getEmptyBuffer(context, length) {
 function runTest()
 {
   function done() {
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   }
 
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(function() {
-    SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
     if (!gTest.numberOfChannels) {
       gTest.numberOfChannels = 2; // default
     }

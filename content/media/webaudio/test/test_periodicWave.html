@@ -12,7 +12,6 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var ac = new AudioContext();
   var real = new Float32Array(4096);
   var imag = new Float32Array(4096);
@@ -26,7 +25,6 @@ addLoadEvent(function() {
   expectException(function() {
     ac.createPeriodicWave(new Float32Array(4097), new Float32Array(4097));
   }, DOMException.NOT_SUPPORTED_ERR);
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });
 

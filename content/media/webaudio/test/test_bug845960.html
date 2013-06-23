@@ -9,10 +9,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 (new AudioContext()).decodeAudioData(new ArrayBuffer(0), function() {});
 ok(true, "Should not crash when the optional failure callback is not specified");
-SpecialPowers.clearUserPref("media.webaudio.enabled");
 
 </script>
 </pre>
