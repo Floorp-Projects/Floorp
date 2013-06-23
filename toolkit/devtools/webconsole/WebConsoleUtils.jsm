@@ -795,8 +795,15 @@ function JSPropertyProvider(aScope, aInputValue)
       return null;
     }
 
-    // Skip Iterators and Generators.
-    if (WCU.isIteratorOrGenerator(obj)) {
+    try {
+      // Skip Iterators and Generators.
+      if (WCU.isIteratorOrGenerator(obj)) {
+        return null;
+      }
+    }
+    catch (ex) {
+      // The above can throw if |obj| is a dead object.
+      // TODO: we should use Cu.isDeadWrapper() - see bug 885800.
       return null;
     }
   }
