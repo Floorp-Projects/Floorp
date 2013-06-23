@@ -129,6 +129,6 @@ libs::
 		$(EXIT_ON_ERROR) \
 		for dir in $(ADDONSRC)/*; do \
 			base=`basename $$dir` ; \
-			(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
+			(cd $$dir && zip -q $(TESTXPI)/$$base.xpi *) \
 		done \
 	fi
