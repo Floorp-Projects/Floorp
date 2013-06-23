@@ -37,21 +37,25 @@ public:
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               nsIDOMElement* aTopFrameElement,
               uint32_t aAppId, bool aInBrowser)
-    : mIsNotNull(aToCopy.mIsNotNull)
+    : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
+    , mAppId(aAppId)
     , mIsContent(aToCopy.mIsContent)
     , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
     , mIsInBrowserElement(aInBrowser)
-    , mAppId(aAppId)
-    , mTopFrameElement(do_GetWeakReference(aTopFrameElement))
+#ifdef DEBUG
+    , mIsNotNull(aToCopy.mIsNotNull)
+#endif
   {}
 
 private:
-  bool          mIsNotNull;
+  nsWeakPtr     mTopFrameElement;
+  uint32_t      mAppId;
   bool          mIsContent;
   bool          mUsePrivateBrowsing;
   bool          mIsInBrowserElement;
-  uint32_t      mAppId;
-  nsWeakPtr     mTopFrameElement;
+#ifdef DEBUG
+  bool          mIsNotNull;
+#endif
 };
 
 } // namespace mozilla

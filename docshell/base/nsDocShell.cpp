@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Casting.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabChild.h"
@@ -809,7 +810,7 @@ nsDocShell::nsDocShell():
   ++gNumberOfDocShells;
   if (!PR_GetEnv("MOZ_QUIET")) {
       printf("++DOCSHELL %p == %ld [id = %llu]\n", (void*) this,
-             gNumberOfDocShells, mHistoryID);
+             gNumberOfDocShells, SafeCast<unsigned long long>(mHistoryID));
   }
 #endif
 }
@@ -838,7 +839,7 @@ nsDocShell::~nsDocShell()
     --gNumberOfDocShells;
     if (!PR_GetEnv("MOZ_QUIET")) {
         printf("--DOCSHELL %p == %ld [id = %llu]\n", (void*) this,
-               gNumberOfDocShells, mHistoryID);
+               gNumberOfDocShells, SafeCast<unsigned long long>(mHistoryID));
     }
 #endif
 }
