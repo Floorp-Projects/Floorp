@@ -57,11 +57,16 @@ interface PannerNode : AudioNode {
  */
 [PrefControlled]
 partial interface PannerNode {
+    [Pref="media.webaudio.legacy.PannerNode"]
     const unsigned short EQUALPOWER = 0;
+    [Pref="media.webaudio.legacy.PannerNode"]
     const unsigned short HRTF = 1;
 
+    [Pref="media.webaudio.legacy.PannerNode"]
     const unsigned short LINEAR_DISTANCE = 0;
+    [Pref="media.webaudio.legacy.PannerNode"]
     const unsigned short INVERSE_DISTANCE = 1;
+    [Pref="media.webaudio.legacy.PannerNode"]
     const unsigned short EXPONENTIAL_DISTANCE = 2;
 };
 

@@ -7,8 +7,8 @@
 function boom()
 {
   var bufferSource = AudioContext().createScriptProcessor().context.createBufferSource();
-  bufferSource.noteGrainOn(0, 0, 0);
-  bufferSource.noteOff(562949953421313);
+  bufferSource.start(0, 0, 0);
+  bufferSource.stop(562949953421313);
 }
 
 </script></head>

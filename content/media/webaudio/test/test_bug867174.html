@@ -16,7 +16,7 @@ addLoadEvent(function() {
 
   var source = ctx.createBufferSource();
   var buffer = ctx.createBuffer(2, 2048, 8000);
-  source.playbackRate.setTargetValueAtTime(0, 2, 3);
+  source.playbackRate.setTargetAtTime(0, 2, 3);
   var sp = ctx.createScriptProcessor();
   source.connect(sp);
   sp.connect(ctx.destination);
