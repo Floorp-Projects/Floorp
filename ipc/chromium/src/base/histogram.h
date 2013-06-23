@@ -45,7 +45,6 @@
 #include <string>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest_prod.h"
 #include "base/time.h"
 #include "base/lock.h"
 
@@ -379,9 +378,6 @@ class Histogram {
    private:
     void Accumulate(Sample value, Count count, size_t index);
 
-    // Allow tests to corrupt our innards for testing purposes.
-    FRIEND_TEST(HistogramTest, CorruptSampleCounts);
-
     // To help identify memory corruption, we reduntantly save the number of
     // samples we've accumulated into all of our buckets.  We can compare this
     // count to the sum of the counts in all buckets, and detect problems.  Note
@@ -533,12 +529,6 @@ class Histogram {
   SampleSet sample_;
 
  private:
-  // Allow tests to corrupt our innards for testing purposes.
-  FRIEND_TEST(HistogramTest, CorruptBucketBounds);
-  FRIEND_TEST(HistogramTest, CorruptSampleCounts);
-  FRIEND_TEST(HistogramTest, Crc32SampleHash);
-  FRIEND_TEST(HistogramTest, Crc32TableTest);
-
   friend class StatisticsRecorder;  // To allow it to delete duplicates.
 
   // Post constructor initialization.
