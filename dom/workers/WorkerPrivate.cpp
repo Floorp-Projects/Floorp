@@ -26,6 +26,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptNotify.h"
 #include "nsPrintfCString.h"
+#include "nsHostObjectProtocolHandler.h"
 
 #include <algorithm>
 #include "jsfriendapi.h"
@@ -529,18 +530,23 @@ class MainThreadReleaseRunnable : public nsRunnable
 {
   nsCOMPtr<nsIThread> mThread;
   nsTArray<nsCOMPtr<nsISupports> > mDoomed;
+  nsTArray<nsCString> mHostObjectURIs;
 
 public:
   MainThreadReleaseRunnable(nsCOMPtr<nsIThread>& aThread,
-                            nsTArray<nsCOMPtr<nsISupports> >& aDoomed)
+                            nsTArray<nsCOMPtr<nsISupports> >& aDoomed,
+                            nsTArray<nsCString>& aHostObjectURIs)
   {
     mThread.swap(aThread);
     mDoomed.SwapElements(aDoomed);
+    mHostObjectURIs.SwapElements(aHostObjectURIs);
   }
 
-  MainThreadReleaseRunnable(nsTArray<nsCOMPtr<nsISupports> >& aDoomed)
+  MainThreadReleaseRunnable(nsTArray<nsCOMPtr<nsISupports> >& aDoomed,
+                            nsTArray<nsCString>& aHostObjectURIs)
   {
     mDoomed.SwapElements(aDoomed);
+    mHostObjectURIs.SwapElements(aHostObjectURIs);
   }
 
   NS_IMETHOD
@@ -553,6 +559,10 @@ public:
       NS_ASSERTION(runtime, "This should never be null!");
 
       runtime->NoteIdleThread(mThread);
+    }
+
+    for (uint32_t i = 0, len = mHostObjectURIs.Length(); i < len; ++i) {
+      nsHostObjectProtocolHandler::RemoveDataEntry(mHostObjectURIs[i]);
     }
 
     return NS_OK;
@@ -592,8 +602,11 @@ public:
     nsTArray<nsCOMPtr<nsISupports> > doomed;
     mFinishedWorker->ForgetMainThreadObjects(doomed);
 
+    nsTArray<nsCString> hostObjectURIs;
+    mFinishedWorker->StealHostObjectURIs(hostObjectURIs);
+
     nsRefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(mThread, doomed);
+      new MainThreadReleaseRunnable(mThread, doomed, hostObjectURIs);
     if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
@@ -641,8 +654,11 @@ public:
     nsTArray<nsCOMPtr<nsISupports> > doomed;
     mFinishedWorker->ForgetMainThreadObjects(doomed);
 
+    nsTArray<nsCString> hostObjectURIs;
+    mFinishedWorker->StealHostObjectURIs(hostObjectURIs);
+
     nsRefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed);
+      new MainThreadReleaseRunnable(doomed, hostObjectURIs);
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
@@ -4294,6 +4310,29 @@ WorkerPrivate::AssertIsOnWorkerThread() const
   }
 }
 #endif
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::RegisterHostObjectURI(const nsACString& aURI)
+{
+  AssertIsOnMainThread();
+  mHostObjectURIs.AppendElement(aURI);
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::UnregisterHostObjectURI(const nsACString& aURI)
+{
+  AssertIsOnMainThread();
+  mHostObjectURIs.RemoveElement(aURI);
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::StealHostObjectURIs(nsTArray<nsCString>& aArray)
+{
+  aArray.SwapElements(mHostObjectURIs);
+}
 
 WorkerCrossThreadDispatcher*
 WorkerPrivate::GetCrossThreadDispatcher()

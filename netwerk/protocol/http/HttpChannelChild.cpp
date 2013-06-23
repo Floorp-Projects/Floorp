@@ -5,6 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "nsHttp.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/net/NeckoChild.h"
@@ -814,13 +817,13 @@ HttpChannelChild::ConnectParent(uint32_t id)
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  if (!gNeckoChild->SendPHttpChannelConstructor(
-                      this, tabChild, IPC::SerializedLoadContext(this))) {
+  HttpChannelConnectArgs connectArgs(id);
+  if (!gNeckoChild->
+        SendPHttpChannelConstructor(this, tabChild,
+                                    IPC::SerializedLoadContext(this),
+                                    connectArgs)) {
     return NS_ERROR_FAILURE;
   }
-
-  if (!SendConnectChannel(id))
-    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -1045,8 +1048,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // Send request to the chrome process...
   //
 
-  // FIXME: bug 558623: Combine constructor and SendAsyncOpen into one IPC msg
-
   mozilla::dom::TabChild* tabChild = nullptr;
   nsCOMPtr<nsITabChild> iTabChild;
   GetCallback(iTabChild);
@@ -1057,31 +1058,37 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  HttpChannelOpenArgs openArgs;
+  // No access to HttpChannelOpenArgs members, but they each have a
+  // function with the struct name that returns a ref.
+  SerializeURI(mURI, openArgs.uri());
+  SerializeURI(mOriginalURI, openArgs.original());
+  SerializeURI(mDocumentURI, openArgs.doc());
+  SerializeURI(mReferrer, openArgs.referrer());
+  SerializeURI(mAPIRedirectToURI, openArgs.apiRedirectTo());
+  openArgs.loadFlags() = mLoadFlags;
+  openArgs.requestHeaders() = mClientSetRequestHeaders;
+  openArgs.requestMethod() = mRequestHead.Method();
+  SerializeInputStream(mUploadStream, openArgs.uploadStream());
+  openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
+  openArgs.priority() = mPriority;
+  openArgs.redirectionLimit() = mRedirectionLimit;
+  openArgs.allowPipelining() = mAllowPipelining;
+  openArgs.forceAllowThirdPartyCookie() = mForceAllowThirdPartyCookie;
+  openArgs.resumeAt() = mSendResumeAt;
+  openArgs.startPos() = mStartPos;
+  openArgs.entityID() = mEntityID;
+  openArgs.chooseApplicationCache() = mChooseApplicationCache;
+  openArgs.appCacheClientID() = appCacheClientId;
+  openArgs.allowSpdy() = mAllowSpdy;
+
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
   gNeckoChild->SendPHttpChannelConstructor(this, tabChild,
-                                           IPC::SerializedLoadContext(this));
-
-  URIParams uri;
-  SerializeURI(mURI, uri);
-
-  OptionalURIParams originalURI, documentURI, referrer, redirectURI;
-  SerializeURI(mOriginalURI, originalURI);
-  SerializeURI(mDocumentURI, documentURI);
-  SerializeURI(mReferrer, referrer);
-  SerializeURI(mAPIRedirectToURI, redirectURI);
-
-  OptionalInputStreamParams uploadStream;
-  SerializeInputStream(mUploadStream, uploadStream);
-
-  SendAsyncOpen(uri, originalURI, documentURI, referrer, redirectURI, mLoadFlags,
-                mClientSetRequestHeaders, mRequestHead.Method(), uploadStream,
-                mUploadStreamHasHeaders, mPriority, mRedirectionLimit,
-                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
-                mStartPos, mEntityID, mChooseApplicationCache,
-                appCacheClientId, mAllowSpdy);
+                                           IPC::SerializedLoadContext(this),
+                                           openArgs);
 
   return NS_OK;
 }

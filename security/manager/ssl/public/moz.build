@@ -16,8 +16,6 @@ XPIDL_SOURCES += [
     'nsICMSMessage2.idl',
     'nsICMSMessageErrors.idl',
     'nsICMSSecureMessage.idl',
-    'nsICRLInfo.idl',
-    'nsICRLManager.idl',
     'nsICertOverrideService.idl',
     'nsICertPickDialogs.idl',
     'nsICertificateDialogs.idl',

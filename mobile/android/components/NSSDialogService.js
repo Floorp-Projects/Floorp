@@ -146,12 +146,6 @@ NSSDialogs.prototype = {
     this.showPrompt(p);
   },
 
-  crlImportStatusDialog: function(aCtx, aCrl) {
-    // this dialog is never shown in Fennec; in Desktop it is shown after importing a CRL
-    // via Preferences->Advanced->Encryption->Revocation Lists->Import.
-    throw "Unimplemented";
-  },
-
   viewCertDetails: function(details) {
     let p = this.getPrompt(this.getString("clientAuthAsk.message3"),
                     '',
