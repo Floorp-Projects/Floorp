@@ -7,6 +7,17 @@
 #include "nsWrapperCacheInlines.h"
 
 #include "nsCycleCollectionTraversalCallback.h"
+#include "nsCycleCollector.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+/* static */ void
+nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
+                              nsScriptObjectTracer* aTracer)
+{
+  cyclecollector::AddJSHolder(aScriptObjectHolder, aTracer);
+}
 
 #ifdef DEBUG
 

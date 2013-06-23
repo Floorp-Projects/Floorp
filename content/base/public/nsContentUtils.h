@@ -1263,32 +1263,6 @@ public:
   static bool AreJSObjectsHeld(void* aScriptObjectHolder); 
 #endif
 
-  static void PreserveWrapper(nsISupports* aScriptObjectHolder,
-                              nsWrapperCache* aCache)
-  {
-    if (!aCache->PreservingWrapper()) {
-      nsISupports *ccISupports;
-      aScriptObjectHolder->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                                          reinterpret_cast<void**>(&ccISupports));
-      MOZ_ASSERT(ccISupports);
-      nsXPCOMCycleCollectionParticipant* participant;
-      CallQueryInterface(ccISupports, &participant);
-      PreserveWrapper(ccISupports, aCache, participant);
-    }
-  }
-  static void PreserveWrapper(void* aScriptObjectHolder,
-                              nsWrapperCache* aCache,
-                              nsScriptObjectTracer* aTracer)
-  {
-    if (!aCache->PreservingWrapper()) {
-      HoldJSObjects(aScriptObjectHolder, aTracer);
-      aCache->SetPreservingWrapper(true);
-#ifdef DEBUG
-      // Make sure the cycle collector will be able to traverse to the wrapper.
-      aCache->CheckCCWrapperTraversal(aScriptObjectHolder, aTracer);
-#endif
-    }
-  }
   static void ReleaseWrapper(void* aScriptObjectHolder,
                              nsWrapperCache* aCache);
 

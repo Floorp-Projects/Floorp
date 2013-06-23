@@ -2532,7 +2532,7 @@ PreserveWrapper(JSContext *cx, JSObject *objArg)
 
     // For pre-Paris DOM bindings objects, we only support Node.
     if (nsCOMPtr<nsINode> node = do_QueryInterface(supports)) {
-        nsContentUtils::PreserveWrapper(supports, node);
+        node->PreserveWrapper(supports);
         return true;
     }
     return false;
