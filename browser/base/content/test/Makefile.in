@@ -61,7 +61,7 @@ endif
 # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
 # browser_bug386835.js is disabled for intermittent failures (bug 880226)
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES = \
                  head.js \
                  browser_typeAheadFind.js \
                  browser_keywordSearch.js \
@@ -340,36 +340,33 @@ _BROWSER_FILES = \
 
 # Disable tests on Windows due to frequent failures (bugs 825739, 841341)
 ifneq (windows,$(MOZ_WIDGET_TOOLKIT))
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
                  browser_bookmark_titles.js \
                  browser_popupNotification.js \
                  $(NULL)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
 		browser_bug462289.js \
 		$(NULL)
 else
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
 		browser_bug565667.js \
 		$(NULL)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 # Bug 766546.
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
   browser_bug561636.js \
   $(NULL)
 endif
 
 ifdef MOZ_DATA_REPORTING
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
   browser_datareporting_notification.js \
   $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
