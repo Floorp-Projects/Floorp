@@ -11,6 +11,7 @@
 #include "nsStyleContext.h"
 #include "nsDataHashtable.h"
 #include "nsGUIEvent.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
@@ -233,9 +234,9 @@ public:
 #ifdef MOZ_XUL
   virtual void RulesMatching(XULTreeRuleProcessorData* aData) MOZ_OVERRIDE;
 #endif
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
 
   // nsARefreshObserver

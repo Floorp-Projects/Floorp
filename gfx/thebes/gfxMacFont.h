@@ -6,6 +6,7 @@
 #ifndef GFX_MACFONT_H
 #define GFX_MACFONT_H
 
+#include "mozilla/MemoryReporting.h"
 #include "gfxFont.h"
 #include "gfxMacPlatformFontList.h"
 #include "mozilla/gfx/2D.h"
@@ -42,9 +43,9 @@ public:
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget);
 
-    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+    virtual void SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
-    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+    virtual void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
 
     virtual FontType GetType() const { return FONT_TYPE_MAC; }

@@ -5,6 +5,7 @@
 
 #include "FrameBlender.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "RasterImage.h"
 #include "imgFrame.h"
 
@@ -573,7 +574,7 @@ FrameBlender::Discard()
 
 size_t
 FrameBlender::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
-                                                      nsMallocSizeOfFun aMallocSizeOf) const
+                                                      MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   for (uint32_t i = 0; i < mFrames.Length(); ++i) {
