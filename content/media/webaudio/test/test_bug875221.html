@@ -17,7 +17,7 @@ try { (document.body || document.documentElement).appendChild(o0); } catch(e) { 
 try { o1 = new OfflineAudioContext(1, 10, (new AudioContext()).sampleRate); } catch(e) {  }
 try { o1.startRendering(); } catch(e) {  }
 try { o1.listener.dopplerFactor = 1; } catch(e) {  }
-try { o2 = o1.createJavaScriptNode(); } catch(e) {  }
+try { o2 = o1.createScriptProcessor(); } catch(e) {  }
 try { o3 = o1.createChannelMerger(4); } catch(e) {  }
 try { o1.listener.dopplerFactor = 3; } catch(e) {  }
 try { o1.listener.setPosition(0, 134217728, 64) } catch(e) {  }
