@@ -137,6 +137,13 @@ onconnect = function(e) {
         if (testPort)
           testPort.postMessage({topic:"got-share-data-message", result: event.data.result});
         break;
+      case "worker.update":
+        apiPort.postMessage({topic: 'social.manifest-get'});
+        break;
+      case "social.manifest":
+        event.data.data.version = 2;
+        apiPort.postMessage({topic: 'social.manifest-set', data: event.data.data});
+        break;
     }
   }
 }
