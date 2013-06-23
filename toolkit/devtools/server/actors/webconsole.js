@@ -551,7 +551,7 @@ WebConsoleActor.prototype =
             else {
               message = {
                 _type: "LogMessage",
-                message: aMessage.message,
+                message: this._createStringGrip(aMessage.message),
                 timeStamp: aMessage.timeStamp,
               };
             }
@@ -948,10 +948,15 @@ WebConsoleActor.prototype =
    */
   preparePageErrorForRemote: function WCA_preparePageErrorForRemote(aPageError)
   {
+    let lineText = aPageError.sourceLine;
+    if (lineText && lineText.length > DebuggerServer.LONG_STRING_INITIAL_LENGTH) {
+      lineText = lineText.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+    }
+
     return {
       errorMessage: this._createStringGrip(aPageError.errorMessage),
       sourceName: aPageError.sourceName,
-      lineText: this._createStringGrip(aPageError.sourceLine),
+      lineText: lineText,
       lineNumber: aPageError.lineNumber,
       columnNumber: aPageError.columnNumber,
       category: aPageError.category,
