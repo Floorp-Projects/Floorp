@@ -5086,8 +5086,7 @@ nsNodeSH::GetFlags(uint32_t *aFlags)
 void
 nsNodeSH::PreserveWrapper(nsISupports *aNative)
 {
-  nsINode *node = static_cast<nsINode*>(aNative);
-  nsContentUtils::PreserveWrapper(aNative, node);
+  static_cast<nsINode*>(aNative)->PreserveWrapper(aNative);
 }
 
 // EventTarget helper
@@ -5122,7 +5121,7 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
 {
   nsDOMEventTargetHelper *target =
     nsDOMEventTargetHelper::FromSupports(aNative);
-  nsContentUtils::PreserveWrapper(aNative, target);
+  target->PreserveWrapper(aNative);
 }
 
 // IDBEventTarget helper
