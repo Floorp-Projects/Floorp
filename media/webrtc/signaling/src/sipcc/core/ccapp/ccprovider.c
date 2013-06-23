@@ -631,13 +631,20 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
     char* data1 =(char*)ccData.info1;
     long strtol_result;
     char *strtol_end;
+    int sdpmode = 0;
 
     CCAPP_DEBUG(DEB_L_C_F_PREFIX"event=%d data=%s",
                 DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, call_id, line_id, fname), event,
                 ((event == CC_FEATURE_KEYPRESS) ? "..." : data));
 
     memset(&featdata, 0, sizeof(cc_feature_data_t));
-    updateVideoPref(event, line_id, call_id, video_pref);
+
+
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
+    if (!sdpmode) {
+        updateVideoPref(event, line_id, call_id, video_pref);
+    }
+
     switch(event) {
          case CC_FEATURE_ONHOOK:
              getLineIdAndCallId(&line_id, &call_id);
