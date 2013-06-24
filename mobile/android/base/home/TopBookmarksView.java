@@ -393,7 +393,7 @@ public class TopBookmarksView extends GridView {
                 if (!thumbnails.containsKey(url)) {
                     final Bitmap bitmap = BrowserDB.getFaviconForUrl(cr, url);
                     if (bitmap != null) {
-                        thumbnails.put(url, new Thumbnail(bitmap, true));
+                        thumbnails.put(url, new Thumbnail(bitmap, false));
                     }
                 }
             }
