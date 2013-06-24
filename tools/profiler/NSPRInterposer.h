@@ -44,9 +44,9 @@ private:
   bool Init(IOInterposeObserver* aObserver,
             IOInterposeObserver::Operation aOpsToInterpose);
 
-  static PRInt32 PR_CALLBACK Read(PRFileDesc* aFd, void* aBuf, PRInt32 aAmt);
-  static PRInt32 PR_CALLBACK Write(PRFileDesc* aFd, const void* aBuf,
-                                   PRInt32 aAmt);
+  static int32_t PR_CALLBACK Read(PRFileDesc* aFd, void* aBuf, int32_t aAmt);
+  static int32_t PR_CALLBACK Write(PRFileDesc* aFd, const void* aBuf,
+                                   int32_t aAmt);
   static PRStatus PR_CALLBACK FSync(PRFileDesc* aFd);
   static StaticAutoPtr<NSPRInterposer> sSingleton;
 

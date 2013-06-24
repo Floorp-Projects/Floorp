@@ -701,7 +701,7 @@ public:
   static PLDHashOperator EnumGamepadsForSync(const uint32_t& aKey,
                                              mozilla::dom::Gamepad* aData,
                                              void* aUserArg);
-  static PLDHashOperator EnumGamepadsForGet(const PRUint32& aKey,
+  static PLDHashOperator EnumGamepadsForGet(const uint32_t& aKey,
                                             mozilla::dom::Gamepad* aData,
                                             void* aUserArg);
 #endif
