@@ -38,7 +38,7 @@ class AnyContextFlags
     //  - direct eval
     //  - function::
     //  - with
-    // since both effectively allow any name to be accessed. Non-exmaples are:
+    // since both effectively allow any name to be accessed. Non-examples are:
     //  - upvars of nested functions
     //  - function statement
     // since the set of assigned name is known dynamically. 'with' could be in
