@@ -22,7 +22,7 @@ const PREF_BRANCH = "browser.newtab.";
 
 // The interval between swapping in a preload docShell and kicking off the
 // next preload in the background.
-const PRELOADER_INTERVAL_MS = 3000;
+const PRELOADER_INTERVAL_MS = 600;
 // The initial delay before we start preloading our first new tab page. The
 // timer is started after the first 'browser-delayed-startup' has been sent.
 const PRELOADER_INIT_DELAY_MS = 5000;
