@@ -251,6 +251,13 @@ public:
    */
   nsEventStatus HandleInputEvent(const InputData& aEvent);
 
+  /**
+   * Sync panning and zooming animation using a fixed frame time.
+   * This will ensure that we animate the APZC correctly with other external
+   * animations to the same timestamp.
+   */
+  static void SetFrameTime(const TimeStamp& aMilliseconds);
+
 protected:
   /**
    * Helper method for touches beginning. Sets everything up for panning and any

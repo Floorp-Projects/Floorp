@@ -26,6 +26,7 @@ LOCAL_INCLUDES = \
 GTEST_CPPSRCS = \
   TestLayers.cpp \
   TestTiledLayerBuffer.cpp \
+  TestAsyncPanZoomController.cpp \
   $(NULL)
 
 # Because of gkmedia on windows we wont find these
@@ -40,4 +41,5 @@ GTEST_CPPSRCS += \
 endif
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
