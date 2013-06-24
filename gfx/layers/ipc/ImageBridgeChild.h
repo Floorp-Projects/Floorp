@@ -148,6 +148,8 @@ public:
    */
   void ConnectAsync(ImageBridgeParent* aParent);
 
+  static void IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier);
+
   void BeginTransaction();
   void EndTransaction();
 

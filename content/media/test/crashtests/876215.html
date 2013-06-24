@@ -1,6 +1,6 @@
 <script>
 try { o1 = new window.OfflineAudioContext(1, 10, 44100); } catch(e) { }
-try { o6 = o1.createJavaScriptNode(0, 0, 2); } catch(e) { }
+try { o6 = o1.createScriptProcessor(0, 0, 2); } catch(e) { }
 try { o8 = o1.createBufferSource(); } catch(e) { }
 try { o8.connect(o1.destination); } catch(e) { }
 try { o8.connect(o6) } catch(e) { }
