@@ -2683,10 +2683,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-color: Highlight;
 }
 
-#customizeToolbarSheetPopup {
-  -moz-window-shadow: sheet;
-}
-
 /* Popup Icons */
 #identity-popup-icon {
   height: 64px;
