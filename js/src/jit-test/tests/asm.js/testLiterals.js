@@ -3,6 +3,8 @@ load(libdir + 'asm.js');
 assertAsmTypeFail(USE_ASM + 'function f(d) { d=+d; var e=0; e=d; return +e } return f');
 assertAsmTypeFail(USE_ASM + 'function f(d) { d=+d; var e=1e1; e=d; return +e } return f');
 assertAsmTypeFail(USE_ASM + 'function f(d) { d=+d; var e=+0; e=d; return +e } return f');
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() { var e=-0; return +e } return f'))(-0), -0);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() { var e=-0.0; return +e } return f'))(-0), -0);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=0.0; e=d; return +e } return f'))(0.1), 0.1);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=-0.0; e=d; return +e } return f'))(0.1), 0.1);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=10.0; e=d; return +e } return f'))(0.1), 0.1);
