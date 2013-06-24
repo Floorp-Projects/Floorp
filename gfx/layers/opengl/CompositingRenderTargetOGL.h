@@ -160,7 +160,7 @@ public:
   {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
     CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(aCompositor);
-    return mGL->GetTexImage(mTextureHandle, true, compositorOGL->GetFBOLayerProgramType());
+    return mGL->GetTexImage(mTextureHandle, true, compositorOGL->GetFBOFormat());
   }
 #endif
 

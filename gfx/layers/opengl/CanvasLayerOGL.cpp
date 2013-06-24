@@ -131,11 +131,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(aData.mSurface);
         mPixmap = xsurf->GetGLXPixmap();
         if (mPixmap) {
-            if (aData.mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
-                mLayerProgram = gl::RGBALayerProgramType;
-            } else {
-                mLayerProgram = gl::RGBXLayerProgramType;
-            }
+            mLayerProgram = ShaderProgramFromContentType(aData.mSurface->GetContentType());
             MakeTextureIfNeeded(gl(), mUploadTexture);
         }
     }
@@ -237,7 +233,7 @@ CanvasLayerOGL::UpdateSurface()
                                         gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED),
                                         gl());
         mTextureTarget = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
-        mLayerProgram = gl::RGBARectLayerProgramType;
+        mLayerProgram = RGBARectLayerProgramType;
       }
       mDrawTarget->Flush();
       return;
@@ -251,11 +247,13 @@ CanvasLayerOGL::UpdateSurface()
 
   if (updatedSurface) {
     mOGLManager->MakeCurrent();
-    mLayerProgram = gl()->UploadSurfaceToTexture(updatedSurface,
-                                                 mBounds,
-                                                 mUploadTexture,
-                                                 true,//false,
-                                                 nsIntPoint(0, 0));
+    gfx::SurfaceFormat format =
+      gl()->UploadSurfaceToTexture(updatedSurface,
+                                   mBounds,
+                                   mUploadTexture,
+                                   true,//false,
+                                   nsIntPoint(0, 0));
+    mLayerProgram = ShaderProgramFromSurfaceFormat(format);
     mTexture = mUploadTexture;
 
     if (temporarySurface)
@@ -296,12 +294,13 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     
     drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
 
-    mLayerProgram =
+    gfx::SurfaceFormat format =
       gl()->UploadSurfaceToTexture(mCanvasSurface,
                                    nsIntRect(0, 0, drawRect.width, drawRect.height),
                                    mUploadTexture,
                                    true,
                                    drawRect.TopLeft());
+    mLayerProgram = ShaderProgramFromSurfaceFormat(format);
     mTexture = mUploadTexture;
   }
 
@@ -318,7 +317,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->ApplyFilterToBoundTexture(mFilter);
 
   program->Activate();
-  if (mLayerProgram == gl::RGBARectLayerProgramType) {
+  if (mLayerProgram == RGBARectLayerProgramType) {
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(mDrawTarget->GetSize().width, mDrawTarget->GetSize().height);
   }

@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef MOZILLA_GFX_TEXTUREOGL_H
 #define MOZILLA_GFX_TEXTUREOGL_H
@@ -49,8 +49,8 @@ public:
   virtual void BindTexture(GLenum aTextureUnit) = 0;
   virtual void ReleaseTexture() = 0;
   virtual gfx::IntSize GetSize() const = 0;
-  virtual gl::ShaderProgramType GetShaderProgram() const {
-    MOZ_NOT_REACHED("unhandled shader type");
+  virtual gfx::SurfaceFormat GetTextureFormat() const {
+    MOZ_NOT_REACHED("unhandled texture format");
   }
   // TODO: Noone's implementing this anymore, should see if we need this.
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
@@ -60,18 +60,18 @@ public:
   virtual TextureImageTextureHostOGL* AsTextureImageTextureHost() { return nullptr; }
 };
 
-inline gl::ShaderProgramType
+inline ShaderProgramType
 GetProgramTypeForTexture(const TextureHost *aTextureHost)
 {
   switch (aTextureHost->GetFormat()) {
   case gfx::FORMAT_B8G8R8A8:
-    return gl::BGRALayerProgramType;;
+    return BGRALayerProgramType;;
   case gfx::FORMAT_B8G8R8X8:
-    return gl::BGRXLayerProgramType;;
+    return BGRXLayerProgramType;;
   case gfx::FORMAT_R8G8B8X8:
-    return gl::RGBXLayerProgramType;;
+    return RGBXLayerProgramType;;
   case gfx::FORMAT_R8G8B8A8:
-    return gl::RGBALayerProgramType;;
+    return RGBALayerProgramType;;
   default:
     MOZ_NOT_REACHED("unhandled program type");
   }
@@ -148,9 +148,9 @@ public:
 
   gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
-  gl::ShaderProgramType GetShaderProgram() const MOZ_OVERRIDE
+  gfx::SurfaceFormat GetTextureFormat() const MOZ_OVERRIDE
   {
-    return GetProgramTypeForTexture(this);
+    return GetFormat();
   }
 
   GLenum GetWrapMode() const MOZ_OVERRIDE
@@ -368,9 +368,9 @@ public:
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return mWrapMode; }
   virtual void SetWrapMode(GLenum aMode) { mWrapMode = aMode; }
 
-  gl::ShaderProgramType GetShaderProgram() const MOZ_OVERRIDE
+  gfx::SurfaceFormat GetTextureFormat() const MOZ_OVERRIDE
   {
-    return mShaderProgram;
+    return mFormat;
   }
 
   gfx::IntSize GetSize() const MOZ_OVERRIDE {
@@ -409,7 +409,6 @@ protected:
   GLenum mWrapMode;
   GLenum mTextureTarget;
   gl::SharedTextureHandle mSharedHandle;
-  gl::ShaderProgramType mShaderProgram;
   gl::GLContext::SharedTextureShareType mShareType;
 };
 
@@ -451,9 +450,9 @@ public:
     mWrapMode = aMode;
   }
 
-  gl::ShaderProgramType GetShaderProgram() const MOZ_OVERRIDE
+  gfx::SurfaceFormat GetTextureFormat() const MOZ_OVERRIDE
   {
-    return mShaderProgram;
+    return mFormat;
   }
 
   gfx::IntSize GetSize() const MOZ_OVERRIDE {
@@ -500,7 +499,7 @@ protected:
   GLuint mTextureHandle;
   GLuint mUploadTexture;
   GLenum mWrapMode;
-  gl::ShaderProgramType mShaderProgram;
+  ShaderProgramType mShaderProgram;
 };
 
 class TiledTextureHostOGL : public TextureHost
@@ -534,9 +533,9 @@ public:
     return mSize;
   }
 
-  gl::ShaderProgramType GetShaderProgram() const MOZ_OVERRIDE
+  gfx::SurfaceFormat GetTextureFormat() const MOZ_OVERRIDE
   {
-    return GetProgramTypeForTexture(this);
+    return GetFormat();
   }
 
   virtual void SwapTexturesImpl(const SurfaceDescriptor& aImage,
@@ -599,15 +598,13 @@ public:
     return mGraphicBuffer.get() ? gfx::IntSize(mGraphicBuffer->getWidth(), mGraphicBuffer->getHeight()) : gfx::IntSize(0, 0);
   }
 
-  gl::ShaderProgramType GetShaderProgram() const MOZ_OVERRIDE
+  gfx::SurfaceFormat GetTextureFormat() const MOZ_OVERRIDE
   {
     if (mTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL) {
-      return gl::RGBAExternalLayerProgramType;
+      return gfx::FORMAT_R8G8B8A8;
     }
     MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D);
-    return mFormat == gfx::FORMAT_B8G8R8A8 || mFormat == gfx::FORMAT_B8G8R8X8
-           ? gl::BGRALayerProgramType
-           : gl::RGBALayerProgramType;
+    return mFormat;
   }
 
   GLenum GetWrapMode() const MOZ_OVERRIDE
