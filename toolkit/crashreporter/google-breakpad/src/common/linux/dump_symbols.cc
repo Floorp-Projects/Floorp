@@ -71,7 +71,8 @@
 #include "common/using_std_string.h"
 #include "common/logging.h"
 
-#if defined(__ANDROID__) && !defined(SHT_ARM_EXIDX)
+#ifndef SHT_ARM_EXIDX
+// bionic and older glibc don't define it
 # define SHT_ARM_EXIDX (SHT_LOPROC + 1)
 #endif
 

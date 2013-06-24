@@ -224,8 +224,13 @@ var BrowserUI = {
       return false;
     if (CrashReporter.enabled) {
       var lastCrashID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).lastRunCrashID;
-      if (lastCrashID.length) {
-        this.CrashSubmit.submit(lastCrashID);
+      if (lastCrashID && lastCrashID.length) {
+        Util.dumpLn("Submitting last crash id:", lastCrashID);
+        try {
+          this.CrashSubmit.submit(lastCrashID);
+        } catch (ex) {
+          Util.dumpLn(ex);
+        }
         return true;
       }
     }
