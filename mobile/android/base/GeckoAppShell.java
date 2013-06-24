@@ -195,6 +195,14 @@ public class GeckoAppShell
                     Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
                                   + thread.getId() + " (\"" + thread.getName() + "\")", e);
 
+                    Thread mainThread = ThreadUtils.getUiThread();
+                    if (mainThread != null && thread != mainThread) {
+                        Log.e(LOGTAG, "Main thread stack:");
+                        for (StackTraceElement ste : mainThread.getStackTrace()) {
+                            Log.e(LOGTAG, ste.toString());
+                        }
+                    }
+
                     if (e instanceof OutOfMemoryError) {
                         SharedPreferences prefs =
                             getContext().getSharedPreferences(GeckoApp.PREFS_NAME, 0);
