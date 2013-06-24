@@ -9,7 +9,8 @@
 "excludetests": {
     "content/xbl/":"",
     "content/xul":"",
-    "content/media/":"",
+    "content/media/test":"",
+    "content/media/webspeech":"",
 
     "dom/imptests/editing/selecttest/test_addRange.html": "oom?, bug 775227",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-insertNode.html":"oom?, bug 775227",
