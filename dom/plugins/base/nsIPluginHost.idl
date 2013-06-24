@@ -20,7 +20,7 @@ interface nsIPluginPlayPreviewInfo : nsISupports
   readonly attribute AUTF8String redirectURL;
 };
 
-[scriptable, uuid(15f97490-7bdf-4947-885c-9258072af878)]
+[scriptable, uuid(e8fe94f0-b877-46d0-931a-090967fb1e83)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -98,8 +98,23 @@ interface nsIPluginHost : nsISupports
   ACString getPermissionStringForType(in AUTF8String mimeType);
 
   /**
+   * Get the nsIPluginTag for this MIME type. This method works with both
+   * enabled and disabled/blocklisted plugins, but an enabled plugin will
+   * always be returned if available.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if no plugin is available for this MIME
+   *         type.
+   */
+  nsIPluginTag getPluginTagForType(in AUTF8String mimeType);
+
+  /**
    * Get the nsIPluginTag state for this MIME type.
    */
   unsigned long getStateForType(in AUTF8String mimeType);
+
+  /**
+   * Get the blocklist state for a MIME type.
+   */
+  uint32_t getBlocklistStateForType(in string aMimeType);
 };
 
