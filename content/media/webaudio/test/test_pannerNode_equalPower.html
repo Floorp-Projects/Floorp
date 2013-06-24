@@ -14,9 +14,7 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   function checkFinished() {
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   }
   var ctx = new OfflineAudioContext(2, sampleRate * renderLengthSeconds, sampleRate);
