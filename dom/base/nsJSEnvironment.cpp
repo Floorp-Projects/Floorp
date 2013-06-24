@@ -968,10 +968,12 @@ static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 static const char js_disable_explicit_compartment_gc[] =
   JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
+static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "asmjs";
 static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit.content";
 static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
+static const char js_baselinejit_eager_str[]  = JS_OPTIONS_DOT_STR "baselinejit.unsafe_eager_compilation";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
-static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "asmjs";
+static const char js_ion_eager_str[]          = JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
 
 int
@@ -1010,7 +1012,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   bool useBaselineJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
                                                js_baselinejit_chrome_str :
                                                js_baselinejit_content_str);
+  bool useBaselineJITEager = Preferences::GetBool(js_baselinejit_eager_str);
   bool useIon = Preferences::GetBool(js_ion_content_str);
+  bool useIonEager = Preferences::GetBool(js_ion_eager_str);
   bool useAsmJS = Preferences::GetBool(js_asmjs_content_str);
   bool parallelIonCompilation = Preferences::GetBool(js_ion_parallel_compilation_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
@@ -1022,7 +1026,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useTypeInference = false;
       useHardening = false;
       useBaselineJIT = false;
+      useBaselineJITEager = false;
       useIon = false;
+      useIonEager = false;
       useAsmJS = false;
     }
   }
@@ -1071,6 +1077,12 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   ::JS_SetOptions(context->mContext, newDefaultJSOptions & JSOPTION_MASK);
 
   ::JS_SetParallelCompilationEnabled(context->mContext, parallelIonCompilation);
+
+  ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
+                               (useBaselineJITEager ? 0 : -1));
+
+  ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_ION_USECOUNT_TRIGGER,
+                               (useIonEager ? 0 : -1));
 
   // Save the new defaults for the next page load (InitContext).
   context->mDefaultJSOptions = newDefaultJSOptions;
