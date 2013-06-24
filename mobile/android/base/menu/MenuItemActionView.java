@@ -89,6 +89,11 @@ public class MenuItemActionView extends LinearLayout
     }
 
     public void setActionButton(Drawable drawable) {
-        mActionButton.setImageDrawable(drawable);
+        if (drawable != null) {
+            mActionButton.setImageDrawable(drawable);
+            mActionButton.setVisibility(View.VISIBLE);
+        } else {
+            mActionButton.setVisibility(View.GONE);
+        }
     }
 }

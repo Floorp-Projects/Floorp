@@ -53,9 +53,11 @@ public class GeckoActionProvider extends ActionProvider {
         MenuItemActionView view = new MenuItemActionView(mContext, null);
         view.setActionButtonClickListener(mCallbacks);
 
-        PackageManager packageManager = mContext.getPackageManager();
-        ResolveInfo defaultActivity = dataModel.getDefaultActivity();
-        view.setActionButton(defaultActivity == null ? null : defaultActivity.loadIcon(packageManager));
+        if (dataModel.getHistorySize() > 0) {
+            PackageManager packageManager = mContext.getPackageManager();
+            ResolveInfo defaultActivity = dataModel.getDefaultActivity();
+            view.setActionButton(defaultActivity == null ? null : defaultActivity.loadIcon(packageManager));
+        }
 
         return view;
     }
