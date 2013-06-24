@@ -53,6 +53,20 @@ self.onmessage = function onmessage(msg) {
 
 
 let Agent = {
+  // Checks if the specified file exists and has an age less than as
+  // specifed (in seconds).
+  isFileRecent: function Agent_isFileRecent(path, maxAge) {
+    try {
+      let stat = OS.File.stat(path);
+      let maxDate = new Date();
+      maxDate.setSeconds(maxDate.getSeconds() - maxAge);
+      return stat.lastModificationDate > maxDate;
+    } catch (ex if ex instanceof OS.File.Error) {
+      // file doesn't exist (or can't be stat'd) - must be stale.
+      return false;
+    }
+  },
+
   remove: function Agent_removeFile(path) {
     try {
       OS.File.remove(path);
