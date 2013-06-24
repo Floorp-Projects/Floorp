@@ -40,10 +40,20 @@ function do_run_test() {
   // add a permission without expiration
   pm.addFromPrincipal(principal, "test/expiration-perm-nexp", 1, pm.EXPIRE_NEVER, 0);
 
+  // add a permission for renewal
+  pm.addFromPrincipal(principal, "test/expiration-perm-renewable", 1, pm.EXPIRE_TIME, now + 100);
+  pm.addFromPrincipal(principal, "test/expiration-session-renewable", 1, pm.EXPIRE_SESSION, now + 100);
+
+  // And immediately renew them with longer timeouts
+  pm.updateExpireTime(principal, "test/expiration-perm-renewable", true, now + 100, now + 1e6);
+  pm.updateExpireTime(principal, "test/expiration-session-renewable", true, now + 1e6, now + 100);
+
   // check that the second two haven't expired yet
   do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-exp3"));
   do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-session-exp3"));
   do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-nexp"));
+  do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-renewable"));
+  do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-session-renewable"));
 
   // ... and the first one has
   do_timeout(10, continue_test);
@@ -62,6 +72,10 @@ function do_run_test() {
   do_check_null(pm.getPermissionObject(principal, "test/expiration-session-exp", false));
   do_check_null(pm.getPermissionObject(principal, "test/expiration-perm-exp2", false));
   do_check_null(pm.getPermissionObject(principal, "test/expiration-session-exp2", false));
+
+  // Check that the renewable permissions actually got renewed
+  do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-renewable"));
+  do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-session-renewable"));
 
   do_finish_generator_test(test_generator);
 }
