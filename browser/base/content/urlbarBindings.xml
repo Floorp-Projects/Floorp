@@ -1381,7 +1381,7 @@
   <binding id="plugin-popupnotification-center-item">
     <content align="center">
       <xul:vbox pack="center" anonid="itemBox" class="itemBox">
-        <xul:description anonid="center-item-label" />
+        <xul:description anonid="center-item-label" class="center-item-label" />
         <xul:hbox flex="1" pack="start" align="center" anonid="center-item-warning">
           <xul:image anonid="center-item-warning-icon" class="center-item-warning-icon"/>
           <xul:label anonid="center-item-warning-label"/>
@@ -1493,17 +1493,17 @@
       <xul:vbox flex="1" align="stretch" class="popup-notification-main-box"
                 xbl:inherits="popupid">
         <xul:hbox class="click-to-play-plugins-notification-description-box" flex="1" align="start">
-          <xul:description flex="1">
+          <xul:description class="click-to-play-plugins-outer-description" flex="1">
             <html:span anonid="click-to-play-plugins-notification-description" />
-            &#32;
-            <xul:label class="text-link" anonid="click-to-play-plugins-notification-link" />
+            <xul:label class="text-link click-to-play-plugins-notification-link" anonid="click-to-play-plugins-notification-link" />
           </xul:description>
           <xul:toolbarbutton anonid="closebutton"
                              class="messageCloseButton popup-notification-closebutton tabbable"
                              xbl:inherits="oncommand=closebuttoncommand"
                              tooltiptext="&closeNotification.tooltip;"/>
         </xul:hbox>
-        <xul:grid anonid="click-to-play-plugins-notification-center-box">
+        <xul:grid anonid="click-to-play-plugins-notification-center-box"
+                  class="click-to-play-plugins-notification-center-box">
           <xul:columns>
             <xul:column flex="1"/>
             <xul:column/>
@@ -1522,11 +1522,13 @@
                   class="click-to-play-plugins-notification-button-container"
                   pack="center" align="center">
           <xul:button anonid="primarybutton"
-                      class="popup-notification-menubutton"
-                      oncommand="document.getBindingParent(this)._onButton(this)"/>
+                      class="click-to-play-popup-button primary-button"
+                      oncommand="document.getBindingParent(this)._onButton(this)"
+                      flex="1"/>
           <xul:button anonid="secondarybutton"
-                      class="popup-notification-menubutton"
-                      oncommand="document.getBindingParent(this)._onButton(this);"/>
+                      class="click-to-play-popup-button"
+                      oncommand="document.getBindingParent(this)._onButton(this);"
+                      flex="1"/>
         </xul:hbox>
         <xul:box hidden="true">
           <children/>
@@ -1664,19 +1666,19 @@
             let linkElement =
               document.getAnonymousElementByAttribute(
                          this, "anonid", "click-to-play-plugins-notification-link");
-            linkElement.value = gNavigatorBundle.getString("pluginActivateDisabled.manage");
+            linkElement.textContent = gNavigatorBundle.getString("pluginActivateDisabled.manage");
             linkElement.setAttribute("onclick", "gPluginHandler.managePlugins()");
 
             let descElement = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
             descElement.textContent = gNavigatorBundle.getFormattedString(
-              "pluginActivateDisabled.message", [action.pluginName, this._brandShortName]);
+              "pluginActivateDisabled.message", [action.pluginName, this._brandShortName]) + " ";
             this._buttonContainer.hidden = true;
             return;
           }
           else if (action.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
             let descElement = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
             descElement.textContent = gNavigatorBundle.getFormattedString(
-              "pluginActivateBlocked.message", [action.pluginName, this._brandShortName]);
+              "pluginActivateBlocked.message", [action.pluginName, this._brandShortName]) + " ";
             this._setupLink("pluginActivate.learnMore", action.detailsLink);
             this._buttonContainer.hidden = true;
             return;
@@ -1758,7 +1760,7 @@
           var hostSpan = document.createElementNS("http://www.w3.org/1999/xhtml", "em");
           hostSpan.appendChild(document.createTextNode(host));
           span.appendChild(hostSpan);
-          span.appendChild(document.createTextNode(bases[1]));
+          span.appendChild(document.createTextNode(bases[1] + " "));
         ]]></body>
       </method>
       <method name="_setupLink">
@@ -1772,7 +1774,7 @@
           }
 
           link.hidden = false;
-          link.value = gNavigatorBundle.getString(linkString);
+          link.textContent = gNavigatorBundle.getString(linkString);
           link.href = linkUrl;
         ]]></body>
       </method>
