@@ -4,7 +4,7 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMTCPSocket;
+interface nsITCPSocketInternal;
 interface nsITCPServerSocketInternal;
 interface nsITCPServerSocketParent;
 interface nsITCPSocketIntermediary;
@@ -40,8 +40,8 @@ interface nsITCPSocketParent : nsISupports
   //        The socket on the parent side.
   // @param intermediary
   //        Intermediate class object. See nsITCPSocketIntermediary.
-  [implicit_jscontext] void setSocketAndIntermediary(in nsIDOMTCPSocket socket,
-                                                     in nsITCPSocketIntermediary intermediary);
+  void setSocketAndIntermediary(in nsITCPSocketInternal socket,
+                                in nsITCPSocketIntermediary intermediary);
 
   // When parent's buffered amount is updated and it wants to inform child to
   // update the bufferedAmount as well.
@@ -68,11 +68,11 @@ interface nsITCPSocketParent : nsISupports
 [scriptable, uuid(aa9bd46d-26bf-4ba8-9c18-ba02482c02f0)]
 interface nsITCPSocketIntermediary : nsISupports {
   // Open the connection to the server with the given parameters
-  nsIDOMTCPSocket open(in nsITCPSocketParent parent,
-                       in DOMString host, in unsigned short port,
-                       in boolean useSSL, in DOMString binaryType,
-                       in unsigned long appId,
-                       in boolean inBrowser);
+  nsITCPSocketInternal open(in nsITCPSocketParent parent,
+                            in DOMString host, in unsigned short port,
+                            in boolean useSSL, in DOMString binaryType,
+                            in unsigned long appId,
+                            in boolean inBrowser);
 
   // Listen on a port
   nsITCPServerSocketInternal listen(in nsITCPServerSocketParent parent,

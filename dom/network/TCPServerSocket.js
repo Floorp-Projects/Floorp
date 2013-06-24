@@ -149,7 +149,8 @@ TCPServerSocket.prototype = {
 
   callListenerAccept: function tss_callListenerSocket(socketChild) {
     // this method is called at child process when the socket is accepted at parent process.
-    let socket = TCPSocketInternal.createAcceptedChild(socketChild, this._binaryType, this.useGlobal);
+    let socket = new this.useGlobal.mozTCPSocket("", 0, {doNotConnect: true});
+    socket.getInternalSocket().initAcceptedChild(socketChild, this._binaryType, this.useGlobal);
     this._callListenerAcceptCommon(socket);
   },
 
@@ -180,8 +181,8 @@ TCPServerSocket.prototype = {
   onSocketAccepted: function tss_onSocketAccepted(server, trans) {
     // precondition: this._inChild == false
     try {
-      let that = TCPSocketInternal.createAcceptedParent(trans, this._binaryType,
-                                                        this.useGlobal);
+      let that = new this.useGlobal.mozTCPSocket("", 0, {doNotConnect: true});
+      that.getInternalSocket().initAcceptedParent(trans, this._binaryType, this.useGlobal);
       this._callListenerAcceptCommon(that);
     }
     catch(e) {
