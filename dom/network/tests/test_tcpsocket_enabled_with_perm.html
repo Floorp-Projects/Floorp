@@ -12,16 +12,16 @@
 <pre id="test">
 <script type="application/javascript">
 
-/** Test to ensure TCPSocket permission being turned on enables 
-  navigator.mozTCPSocket, and mozTCPSocket.open works when
+/** Test to ensure TCPSocket permission being turned on enables
+  mozTCPSocket, and mozTCPSocket constructor works when
   the tcp-socket permission has been granted.
 **/
 SpecialPowers.setBoolPref("dom.mozTCPSocket.enabled", true);
 SpecialPowers.addPermission("tcp-socket", true, document);
 
-ok('mozTCPSocket' in navigator, "navigator.mozTCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
+ok('mozTCPSocket' in window, "window.mozTCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
 
-ok(navigator.mozTCPSocket.open('localhost', 80), "navigator.mozTCPSocket.open should work for content that has the tcp-socket permission");
+ok(new mozTCPSocket('localhost', 80), "window.mozTCPSocket ctor should work for content that has the tcp-socket permission");
 
 SpecialPowers.setBoolPref("dom.mozTCPSocket.enabled", false);
 

@@ -19,7 +19,7 @@ function TCPSocketParentIntermediary() {
 TCPSocketParentIntermediary.prototype = {
   _setCallbacks: function(aParentSide, socket) {
     aParentSide.initJS(this);
-    this._socket = socket;
+    this._socket = socket.getInternalSocket();
 
     // Create handlers for every possible callback that attempt to trigger
     // corresponding callbacks on the child object.
@@ -41,12 +41,10 @@ TCPSocketParentIntermediary.prototype = {
 
   open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType,
                  aAppId, aInBrowser) {
-    let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
-    let socket = baseSocket.open(aHost, aPort, {useSecureTransport: aUseSSL, binaryType: aBinaryType});
-    if (!socket)
-      return null;
+    let socket = new global.mozTCPSocket(aHost, aPort, {useSecureTransport: aUseSSL, binaryType: aBinaryType});
 
-    let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
+    let socketInternal = socket.getInternalSocket();
+    socketInternal.initWithGlobal(global);
     socketInternal.setAppId(aAppId);
     socketInternal.setInBrowser(aInBrowser);
 
@@ -56,7 +54,7 @@ TCPSocketParentIntermediary.prototype = {
 
     // Handlers are set to the JS-implemented socket object on the parent side.
     this._setCallbacks(aParentSide, socket);
-    return socket;
+    return socketInternal;
   },
 
   listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType,
@@ -72,7 +70,7 @@ TCPSocketParentIntermediary.prototype = {
                             .createInstance(Ci.nsITCPSocketParent);
       var intermediary = new TCPSocketParentIntermediary();
 
-      let socketInternal = event.socket.QueryInterface(Ci.nsITCPSocketInternal);
+      let socketInternal = event.socket.getInternalSocket();
       socketInternal.setAppId(aAppId);
       socketInternal.setInBrowser(aInBrowser);
       socketInternal.setOnUpdateBufferedAmountHandler(
@@ -85,7 +83,7 @@ TCPSocketParentIntermediary.prototype = {
       // The members in the socket parent object are set with arguments,
       // so that the socket parent object can communicate data
       // with the JS socket object on the parent side via the intermediary object.
-      socketParent.setSocketAndIntermediary(event.socket, intermediary);
+      socketParent.setSocketAndIntermediary(socketInternal, intermediary);
       aTCPServerSocketParent.sendCallbackAccept(socketParent);
     };
 

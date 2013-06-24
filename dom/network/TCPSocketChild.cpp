@@ -9,7 +9,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
-#include "nsIDOMTCPSocket.h"
+#include "nsITCPSocketInternal.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"

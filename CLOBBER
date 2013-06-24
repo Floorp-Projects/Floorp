@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1121297 - Converted VolatileBuffer's CPP tests to GTests
+Renaming nsIDOMTCPSocket.idl and nsIDOMTCPServerSocket.idl for bug 885982 and bug 1118063.

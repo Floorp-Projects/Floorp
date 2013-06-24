@@ -7,7 +7,6 @@
 #include "TCPSocketParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
@@ -16,22 +15,6 @@
 
 namespace mozilla {
 namespace dom {
-
-/*static*/ bool
-TCPServerSocketParent::SocketEnabled(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
-{
-  if (!Preferences::GetBool("dom.mozTCPSocket.enabled")) {
-    return false;
-  }
-
-  nsPIDOMWindow* window = xpc::WindowGlobalOrNull(aGlobal);
-  if (!window) {
-    return true;
-  }
-
-  const char* permissions[] = {"tcp-socket", nullptr};
-  return CheckPermissions(aCx, aGlobal, permissions);
-}
 
 static void
 FireInteralError(mozilla::net::PTCPServerSocketParent* aActor,
