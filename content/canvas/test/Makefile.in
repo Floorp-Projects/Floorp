@@ -109,7 +109,7 @@ MOCHITEST_FILES = \
 	test_bug866575.html \
 	test_drawImage_edge_cases.html \
 	test_drawImage_document_domain.html \
-  test_mozDashOffset.html \
+	test_mozDashOffset.html \
 	file_drawImage_document_domain.html \
 	test_windingRuleUndefined.html \
 	$(NULL)
@@ -140,8 +140,11 @@ MOCHITEST_FILES += \
 	test_2d.line.join.parallel.html \
 	$(NULL)
 
+ifneq ($(MOZ_WIDGET_TOOLKIT), android)
+ifneq ($(MOZ_WIDGET_TOOLKIT), gonk)
 # This is an issue with Quartz's handling of radial gradients and some numeric
-# imprecision that results in errors here.
+# imprecision that results in errors here. SkiaGL (on Android/Gonk) also has
+# a similar problem.
 MOCHITEST_FILES += \
 	test_2d.gradient.radial.inside2.html \
 	test_2d.gradient.radial.inside3.html \
@@ -149,6 +152,8 @@ MOCHITEST_FILES += \
 	test_2d.gradient.radial.cone.front.html \
 	test_2d.gradient.radial.cone.top.html \
 	$(NULL)
+endif
+endif
 
 # This is another Quartz bug -- closed paths that don't lie fully within the
 # destination bounds seem to have problems with the BEVEL/SQUARE join/cap combo.
