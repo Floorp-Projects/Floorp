@@ -843,6 +843,10 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     }
   }
 
+  nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(thisContent,
+    NS_LITERAL_STRING("PluginInstantiated"));
+  NS_DispatchToCurrentThread(ev);
+
   return NS_OK;
 }
 
@@ -2781,6 +2785,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
 
   // Order of checks:
   // * Assume a default of click-to-play
+  // * If globally disabled, per-site permissions cannot override.
   // * If blocklisted, override the reason with the blocklist reason
   // * If not blocklisted but playPreview, override the reason with the
   //   playPreview reason.
@@ -2789,21 +2794,30 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   // * Blocklisted plugins are forced to CtP
   // * Check per-plugin permission and follow that.
 
+  aReason = eFallbackClickToPlay;
+
+  uint32_t enabledState = nsIPluginTag::STATE_DISABLED;
+  pluginHost->GetStateForType(mContentType, &enabledState);
+  if (nsIPluginTag::STATE_DISABLED == enabledState) {
+    aReason = eFallbackDisabled;
+    return false;
+  }
+
   // Before we check permissions, get the blocklist state of this plugin to set
   // the fallback reason correctly.
-  aReason = eFallbackClickToPlay;
   uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
   pluginHost->GetBlocklistStateForType(mContentType.get(), &blocklistState);
+  if (blocklistState == nsIBlocklistService::STATE_BLOCKED) {
+    // no override possible
+    aReason = eFallbackBlocklisted;
+    return false;
+  }
+
   if (blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
     aReason = eFallbackVulnerableUpdatable;
   }
   else if (blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
     aReason = eFallbackVulnerableNoUpdate;
-  }
-  else if (blocklistState == nsIBlocklistService::STATE_BLOCKED) {
-    // no override possible
-    aReason = eFallbackBlocklisted;
-    return false;
   }
 
   if (aReason == eFallbackClickToPlay && isPlayPreviewSpecified &&
@@ -2862,13 +2876,6 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
       MOZ_ASSERT(false);
       return false;
     }
-  }
-
-  uint32_t enabledState = nsIPluginTag::STATE_DISABLED;
-  pluginHost->GetStateForType(mContentType, &enabledState);
-  if (nsIPluginTag::STATE_DISABLED == enabledState) {
-    aReason = eFallbackDisabled;
-    return false;
   }
 
   // No site-specific permissions. Vulnerable plugins are automatically CtP
