@@ -11,6 +11,7 @@
 #include "AudioParam.h"
 #include "PeriodicWave.h"
 #include "mozilla/dom/OscillatorNodeBinding.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace dom {
@@ -47,6 +48,35 @@ public:
   }
   void SetType(OscillatorType aType, ErrorResult& aRv)
   {
+    if (!Preferences::GetBool("media.webaudio.legacy.OscillatorNode")) {
+      // Do not accept the alternate enum values unless the legacy pref
+      // has been turned on.
+      switch (aType) {
+      case OscillatorType::_0:
+      case OscillatorType::_1:
+      case OscillatorType::_2:
+      case OscillatorType::_3:
+      case OscillatorType::_4:
+        // Do nothing in order to emulate setting an invalid enum value.
+        return;
+      default:
+        // Shut up the compiler warning
+        break;
+      }
+    }
+
+    // Handle the alternate enum values
+    switch (aType) {
+    case OscillatorType::_0: aType = OscillatorType::Sine; break;
+    case OscillatorType::_1: aType = OscillatorType::Square; break;
+    case OscillatorType::_2: aType = OscillatorType::Sawtooth; break;
+    case OscillatorType::_3: aType = OscillatorType::Triangle; break;
+    case OscillatorType::_4: aType = OscillatorType::Custom; break;
+    default:
+      // Shut up the compiler warning
+      break;
+    }
+
     if (aType == OscillatorType::Custom) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
