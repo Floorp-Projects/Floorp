@@ -697,12 +697,10 @@ ExtractNumericLiteral(ParseNode *pn)
         d = NumberNodeValue(numberNode);
     }
 
-    if (NumberNodeHasFrac(numberNode))
+    if (NumberNodeHasFrac(numberNode) || IsNegativeZero(d))
         return NumLit(NumLit::Double, DoubleValue(d));
 
     int64_t i64 = int64_t(d);
-    if (d != double(i64))
-        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
 
     if (i64 >= 0) {
         if (i64 <= INT32_MAX)
