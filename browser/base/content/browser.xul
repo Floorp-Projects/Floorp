@@ -359,10 +359,6 @@
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
 
-    <panel id="customizeToolbarSheetPopup"
-           noautohide="true"
-           sheetstyle="&dialog.dimensions;"/>
-
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
 
     <tooltip id="back-button-tooltip">
