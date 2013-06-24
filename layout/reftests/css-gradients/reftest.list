@@ -70,9 +70,9 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880
 == radial-shape-farthest-corner-1a.html radial-shape-farthest-corner-1-ref.html
 fails-if(cocoaWidget&&/x86-/.test(xulRuntime.XPCOMABI)||gtk2Widget&&/x86_64-/.test(xulRuntime.XPCOMABI)) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
 == radial-shape-farthest-corner-1c.html radial-shape-farthest-corner-1-ref.html
-fuzzy-if(Android,17,13314) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
-fuzzy-if(Android,17,13314) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
-fuzzy-if(Android,17,13314) == radial-shape-farthest-side-1c.html radial-shape-farthest-side-1-ref.html
+fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
+fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
+fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1c.html radial-shape-farthest-side-1-ref.html
 == radial-size-1a.html radial-size-1-ref.html
 == radial-size-1b.html radial-size-1-ref.html
 == radial-zero-length-1a.html radial-zero-length-1-ref.html
