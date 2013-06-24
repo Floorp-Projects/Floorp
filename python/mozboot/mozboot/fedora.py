@@ -32,5 +32,5 @@ class FedoraBootstrapper(BaseBootstrapper):
             'wireless-tools-devel',
             'yasm')
 
-    def upgrade_mercurial(self):
+    def upgrade_mercurial(self, current):
         self.yum_update('mercurial')
