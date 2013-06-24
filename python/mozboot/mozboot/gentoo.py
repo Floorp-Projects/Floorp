@@ -21,5 +21,5 @@ class GentooBootstrapper(BaseBootstrapper):
     def _update_package_manager(self):
         self.run_as_root(['emerge', '--sync'])
 
-    def upgrade_mercurial(self):
+    def upgrade_mercurial(self, current):
         self.run_as_root(['emerge', '--update', 'mercurial'])
