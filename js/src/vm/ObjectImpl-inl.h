@@ -16,30 +16,9 @@
 #include "gc/Heap.h"
 #include "gc/Marking.h"
 #include "js/TemplateLib.h"
-#include "vm/Interpreter.h"
 #include "vm/ObjectImpl.h"
 
 #include "gc/Barrier-inl.h"
-
-namespace js {
-
-static MOZ_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, uint32_t len)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
-#endif
-}
-
-static MOZ_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) begin, end - begin);
-#endif
-}
-
-} // namespace js
 
 inline JSCompartment *
 js::ObjectImpl::compartment() const
@@ -47,64 +26,10 @@ js::ObjectImpl::compartment() const
     return lastProperty()->base()->compartment();
 }
 
-inline js::TaggedProto
-js::ObjectImpl::getTaggedProto() const
-{
-    return TaggedProto(getProto());
-}
-
-inline js::Shape *
-js::ObjectImpl::nativeLookup(JSContext *cx, PropertyId pid)
-{
-    return nativeLookup(cx, pid.asId());
-}
-
-inline js::Shape *
-js::ObjectImpl::nativeLookup(JSContext *cx, PropertyName *name)
-{
-    return nativeLookup(cx, NameToId(name));
-}
-
-inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, jsid id)
-{
-    return nativeLookup(cx, id) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, PropertyName *name)
-{
-    return nativeLookup(cx, name) != NULL;
-}
-
 inline bool
 js::ObjectImpl::nativeContains(JSContext *cx, Shape *shape)
 {
     return nativeLookup(cx, shape->propid()) == shape;
-}
-
-inline js::Shape *
-js::ObjectImpl::nativeLookupPure(PropertyId pid)
-{
-    return nativeLookupPure(pid.asId());
-}
-
-inline js::Shape *
-js::ObjectImpl::nativeLookupPure(PropertyName *name)
-{
-    return nativeLookupPure(NameToId(name));
-}
-
-inline bool
-js::ObjectImpl::nativeContainsPure(jsid id)
-{
-    return nativeLookupPure(id) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsPure(PropertyName *name)
-{
-    return nativeContainsPure(NameToId(name));
 }
 
 inline bool
@@ -123,88 +48,6 @@ js::ObjectImpl::isExtensible() const
     return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
 }
 
-inline uint32_t
-js::ObjectImpl::getDenseInitializedLength()
-{
-    MOZ_ASSERT(isNative());
-    return getElementsHeader()->initializedLength;
-}
-
-inline uint32_t
-js::ObjectImpl::getDenseCapacity()
-{
-    MOZ_ASSERT(isNative());
-    return getElementsHeader()->capacity;
-}
-
-inline js::HeapSlotArray
-js::ObjectImpl::getDenseElements()
-{
-    MOZ_ASSERT(isNative());
-    return HeapSlotArray(elements);
-}
-
-inline const js::Value &
-js::ObjectImpl::getDenseElement(uint32_t idx)
-{
-    MOZ_ASSERT(isNative() && idx < getDenseInitializedLength());
-    return elements[idx];
-}
-
-inline bool
-js::ObjectImpl::containsDenseElement(uint32_t idx)
-{
-    MOZ_ASSERT(isNative());
-    return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
-}
-
-inline void
-js::ObjectImpl::getSlotRangeUnchecked(uint32_t start, uint32_t length,
-                                      HeapSlot **fixedStart, HeapSlot **fixedEnd,
-                                      HeapSlot **slotsStart, HeapSlot **slotsEnd)
-{
-    MOZ_ASSERT(start + length >= start);
-
-    uint32_t fixed = numFixedSlots();
-    if (start < fixed) {
-        if (start + length < fixed) {
-            *fixedStart = &fixedSlots()[start];
-            *fixedEnd = &fixedSlots()[start + length];
-            *slotsStart = *slotsEnd = NULL;
-        } else {
-            uint32_t localCopy = fixed - start;
-            *fixedStart = &fixedSlots()[start];
-            *fixedEnd = &fixedSlots()[start + localCopy];
-            *slotsStart = &slots[0];
-            *slotsEnd = &slots[length - localCopy];
-        }
-    } else {
-        *fixedStart = *fixedEnd = NULL;
-        *slotsStart = &slots[start - fixed];
-        *slotsEnd = &slots[start - fixed + length];
-    }
-}
-
-inline void
-js::ObjectImpl::getSlotRange(uint32_t start, uint32_t length,
-                             HeapSlot **fixedStart, HeapSlot **fixedEnd,
-                             HeapSlot **slotsStart, HeapSlot **slotsEnd)
-{
-    MOZ_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
-    getSlotRangeUnchecked(start, length, fixedStart, fixedEnd, slotsStart, slotsEnd);
-}
-
-inline void
-js::ObjectImpl::invalidateSlotRange(uint32_t start, uint32_t length)
-{
-#ifdef DEBUG
-    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
-    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
-    Debug_SetSlotRangeToCrashOnTouch(fixedStart, fixedEnd);
-    Debug_SetSlotRangeToCrashOnTouch(slotsStart, slotsEnd);
-#endif /* DEBUG */
-}
-
 inline bool
 js::ObjectImpl::isNative() const
 {
@@ -215,22 +58,6 @@ inline bool
 js::ObjectImpl::isProxy() const
 {
     return js::IsProxy(const_cast<JSObject*>(this->asObjectPtr()));
-}
-
-inline js::HeapSlot &
-js::ObjectImpl::nativeGetSlotRef(uint32_t slot)
-{
-    MOZ_ASSERT(isNative());
-    MOZ_ASSERT(slot < slotSpan());
-    return getSlotRef(slot);
-}
-
-inline const js::Value &
-js::ObjectImpl::nativeGetSlot(uint32_t slot) const
-{
-    MOZ_ASSERT(isNative());
-    MOZ_ASSERT(slot < slotSpan());
-    return getSlot(slot);
 }
 
 #ifdef DEBUG
@@ -309,18 +136,6 @@ js::ObjectImpl::numDynamicSlots() const
     return dynamicSlotsCount(numFixedSlots(), slotSpan());
 }
 
-inline JSClass *
-js::ObjectImpl::getJSClass() const
-{
-    return Jsvalify(getClass());
-}
-
-inline const js::ObjectOps *
-js::ObjectImpl::getOps() const
-{
-    return &getClass()->ops;
-}
-
 inline bool
 js::ObjectImpl::isDelegate() const
 {
@@ -331,26 +146,6 @@ inline bool
 js::ObjectImpl::inDictionaryMode() const
 {
     return lastProperty()->inDictionary();
-}
-
-/* static */ inline uint32_t
-js::ObjectImpl::dynamicSlotsCount(uint32_t nfixed, uint32_t span)
-{
-    if (span <= nfixed)
-        return 0;
-    span -= nfixed;
-    if (span <= SLOT_CAPACITY_MIN)
-        return SLOT_CAPACITY_MIN;
-
-    uint32_t slots = RoundUpPow2(span);
-    MOZ_ASSERT(slots >= span);
-    return slots;
-}
-
-inline size_t
-js::ObjectImpl::tenuredSizeOfThis() const
-{
-    return js::gc::Arena::thingSize(tenuredGetAllocKind());
 }
 
 JS_ALWAYS_INLINE JS::Zone *
@@ -440,19 +235,6 @@ js::ObjectImpl::setPrivateGCThing(js::gc::Cell *cell)
     privateWriteBarrierPre(pprivate);
     *pprivate = reinterpret_cast<void *>(cell);
     privateWriteBarrierPost(pprivate);
-}
-
-inline void
-js::ObjectImpl::setPrivateUnbarriered(void *data)
-{
-    void **pprivate = &privateRef(numFixedSlots());
-    *pprivate = data;
-}
-
-inline void
-js::ObjectImpl::initPrivate(void *data)
-{
-    privateRef(numFixedSlots()) = data;
 }
 
 #endif /* vm_ObjectImpl_inl_h */

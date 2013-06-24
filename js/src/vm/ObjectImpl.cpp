@@ -16,6 +16,18 @@
 
 using namespace js;
 
+void
+js::ObjectImpl::assertIsNative() const
+{
+    MOZ_ASSERT(isNative());
+}
+
+void
+js::ObjectImpl::assertSlotIsWithinSpan(uint32_t slot) const
+{
+    MOZ_ASSERT(slot < slotSpan());
+}
+
 PropDesc::PropDesc()
   : pd_(UndefinedValue()),
     value_(UndefinedValue()),
