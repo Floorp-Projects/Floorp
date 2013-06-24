@@ -5,11 +5,11 @@
 interface nsIDOMTCPSocket;
 
 [Constructor(DOMString type, optional TCPServerSocketEventInit eventInitDict),
- Func="TCPServerSocketParent::SocketEnabled", Exposed=(Window,System)]
+ Func="TCPSocketUtils::SocketEnabled", Exposed=(Window,System)]
 interface TCPServerSocketEvent : Event {
-  readonly attribute nsIDOMTCPSocket socket; // mozTCPSocket
+  readonly attribute mozTCPSocket socket;
 };
 
 dictionary TCPServerSocketEventInit : EventInit {
-  nsIDOMTCPSocket? socket = null;
+  mozTCPSocket? socket = null;
 };

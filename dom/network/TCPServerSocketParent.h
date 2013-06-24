@@ -23,8 +23,6 @@ class TCPServerSocketParent : public mozilla::net::PTCPServerSocketParent
                             , public nsITCPServerSocketParent
 {
 public:
-  static bool SocketEnabled(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
-
   NS_DECL_CYCLE_COLLECTION_CLASS(TCPServerSocketParent)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSITCPSERVERSOCKETPARENT

@@ -21,7 +21,7 @@ dictionary ServerSocketOptions {
 };
 
 [Constructor(unsigned short port, optional ServerSocketOptions options, optional unsigned short backlog),
- JSImplementation="@mozilla.org/tcp-server-socket;1", Func="TCPServerSocketParent::SocketEnabled",
+ JSImplementation="@mozilla.org/tcp-server-socket;1", Func="TCPSocketUtils::SocketEnabled",
  Exposed=(Window,System)]
 interface mozTCPServerSocket : EventTarget {
   /**
