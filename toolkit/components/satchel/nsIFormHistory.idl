@@ -15,6 +15,8 @@ interface mozIStorageConnection;
  * Note: this interface provides no means to access stored values.
  * Stored values are used by the FormFillController to generate
  * autocomplete matches.
+ *
+ * @deprecated use FormHistory.jsm instead.
  */
 
 [scriptable, uuid(5d7d84d1-9798-4016-bf61-a32acf09b29d)]
