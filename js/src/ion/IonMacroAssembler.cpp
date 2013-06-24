@@ -144,7 +144,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     if (set.gprs().size() > 1) {
         adjustFrame(diffG);
         startDataTransferM(IsStore, StackPointer, DB, WriteBack);
-        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             transferReg(*iter);
         }
@@ -153,7 +153,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
 #endif
     {
         reserveStack(diffG);
-        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             storePtr(*iter, Address(StackPointer, diffG));
         }
@@ -165,7 +165,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     diffF += transferMultipleByRuns(set.fpus(), IsStore, StackPointer, DB);
 #else
     reserveStack(diffF);
-    for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
         diffF -= sizeof(double);
         storeDouble(*iter, Address(StackPointer, diffF));
     }
@@ -190,7 +190,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     } else
 #endif
     {
-        for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+        for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
             diffF -= sizeof(double);
             if (!ignore.has(*iter))
                 loadDouble(Address(StackPointer, diffF), *iter);
@@ -202,7 +202,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 #ifdef JS_CPU_ARM
     if (set.gprs().size() > 1 && ignore.empty(false)) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
-        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             transferReg(*iter);
         }
@@ -211,7 +211,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     } else
 #endif
     {
-        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);
