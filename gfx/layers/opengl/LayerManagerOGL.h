@@ -46,7 +46,6 @@ struct FPSState;
 class LayerManagerOGL : public LayerManager
 {
   typedef mozilla::gl::GLContext GLContext;
-  typedef mozilla::gl::ShaderProgramType ProgramType;
 
 public:
   LayerManagerOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
@@ -125,29 +124,29 @@ public:
   ShaderProgramOGL* GetBasicLayerProgram(bool aOpaque, bool aIsRGB,
                                          MaskType aMask = MaskNone)
   {
-    gl::ShaderProgramType format = gl::BGRALayerProgramType;
+    ShaderProgramType format = BGRALayerProgramType;
     if (aIsRGB) {
       if (aOpaque) {
-        format = gl::RGBXLayerProgramType;
+        format = RGBXLayerProgramType;
       } else {
-        format = gl::RGBALayerProgramType;
+        format = RGBALayerProgramType;
       }
     } else {
       if (aOpaque) {
-        format = gl::BGRXLayerProgramType;
+        format = BGRXLayerProgramType;
       }
     }
     return GetProgram(format, aMask);
   }
 
-  ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType,
+  ShaderProgramOGL* GetProgram(ShaderProgramType aType,
                                Layer* aMaskLayer) {
     if (aMaskLayer)
       return GetProgram(aType, Mask2d);
     return GetProgram(aType, MaskNone);
   }
 
-  ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType,
+  ShaderProgramOGL* GetProgram(ShaderProgramType aType,
                                MaskType aMask = MaskNone) {
     NS_ASSERTION(ProgramProfileOGL::ProgramExists(aType, aMask),
                  "Invalid program type.");
@@ -158,10 +157,14 @@ public:
     return GetProgram(GetFBOLayerProgramType(), aMask);
   }
 
-  gl::ShaderProgramType GetFBOLayerProgramType() {
+  ShaderProgramType GetFBOLayerProgramType() {
     if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB)
-      return gl::RGBARectLayerProgramType;
-    return gl::RGBALayerProgramType;
+      return RGBARectLayerProgramType;
+    return RGBALayerProgramType;
+  }
+
+  gfx::SurfaceFormat GetFBOTextureFormat() {
+    return gfx::FORMAT_R8G8B8A8;
   }
 
   GLContext* gl() const { return mGLContext; }
@@ -395,7 +398,7 @@ private:
    * Helper method for Initialize, creates all valid variations of a program
    * and adds them to mPrograms
    */
-  void AddPrograms(gl::ShaderProgramType aType);
+  void AddPrograms(ShaderProgramType aType);
 
   /**
    * Recursive helper method for use by ComputeRenderIntegrity. Subtracts

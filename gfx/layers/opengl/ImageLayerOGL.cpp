@@ -230,7 +230,7 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTextures[0].GetTextureID());
     gl()->ApplyFilterToBoundTexture(mFilter);
-    
+
     ShaderProgramOGL *program = mOGLManager->GetProgram(YCbCrLayerProgramType,
                                                         GetMaskLayer());
 
@@ -288,8 +288,7 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTexture.GetTextureID());
 
-    ShaderProgramOGL *program = 
-      mOGLManager->GetProgram(data->mLayerProgram, GetMaskLayer());
+    ShaderProgramOGL *program = mOGLManager->GetProgram(data->mLayerProgram, GetMaskLayer());
 
     gl()->ApplyFilterToBoundTexture(mFilter);
 
@@ -314,10 +313,11 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    ShaderProgramOGL* program = mOGLManager->GetProgram(handleDetails.mProgramType, GetMaskLayer());
+    ShaderProgramType programType = ShaderProgramFromSurfaceFormat(handleDetails.mTextureFormat);
+    ShaderProgramOGL* program = mOGLManager->GetProgram(programType, GetMaskLayer());
 
     program->Activate();
-    if (handleDetails.mProgramType == gl::RGBARectLayerProgramType) {
+    if (handleDetails.mTextureFormat == FORMAT_R8G8B8A8) {
       // 2DRect case, get the multiplier right for a sampler2DRect
       program->SetTexCoordMultiplier(data->mSize.width, data->mSize.height);
     }
@@ -459,12 +459,7 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
       static_cast<gfxXlibSurface*>(aImage->mSurface.get());
     GLXPixmap pixmap = xsurf->GetGLXPixmap();
     if (pixmap) {
-      if (aImage->mSurface->GetContentType()
-          == gfxASurface::CONTENT_COLOR_ALPHA) {
-        backendData->mLayerProgram = gl::RGBALayerProgramType;
-      } else {
-        backendData->mLayerProgram = gl::RGBXLayerProgramType;
-      }
+      backendData->mLayerProgram = ShaderProgramFromContentType(aImage->mSurface->GetContentType());
 
       aImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
 
@@ -474,10 +469,11 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
     }
   }
 #endif
-  backendData->mLayerProgram =
+  gfx::SurfaceFormat format =
     gl->UploadSurfaceToTexture(aImage->mSurface,
                                nsIntRect(0,0, aImage->mSize.width, aImage->mSize.height),
                                tex, true);
+  backendData->mLayerProgram = ShaderProgramFromSurfaceFormat(format);
 
   aImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
 }
@@ -547,13 +543,14 @@ ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
 
     GLuint texID = texture.GetTextureID();
 
-    data->mLayerProgram =
+    gfx::SurfaceFormat format =
       texGL->UploadSurfaceToTexture(cairoImage->mSurface,
                                     nsIntRect(0,0,
                                               data->mTextureSize.width,
                                               data->mTextureSize.height),
                                     texID, true, nsIntPoint(0,0), false,
                                     aTextureUnit);
+    data->mLayerProgram = ShaderProgramFromSurfaceFormat(format);
 
     cairoImage->SetBackendData(LAYERS_OPENGL, data);
 
