@@ -603,21 +603,6 @@ var gPluginHandler = {
     gPluginHandler._showClickToPlayNotification(browser);
   },
 
-  // returns true if there is a plugin on this page that needs activation
-  // and isn't in the "except these" list
-  _pluginNeedsActivationExceptThese: function PH_pluginNeedsActivationExceptThese(aExceptThese) {
-    let contentWindow = gBrowser.selectedBrowser.contentWindow;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-    let pluginNeedsActivation = cwu.plugins.some(function(plugin) {
-      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      return (gPluginHandler.canActivatePlugin(objLoadingContent) &&
-              aExceptThese.indexOf(plugin) < 0);
-    });
-
-    return pluginNeedsActivation;
-  },
-
   _clickToPlayNotificationEventCallback: function PH_ctpEventCallback(event) {
     if (event == "showing") {
       gPluginHandler._makeCenterActions(this);
