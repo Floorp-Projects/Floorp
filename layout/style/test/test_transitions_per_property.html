@@ -260,9 +260,9 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 }
 
 var div = document.getElementById("display");
-var transformDiv = document.getElementById("transformTest");
+var OMTAdiv = document.getElementById("transformTest");
 var cs = getComputedStyle(div, "");
-var transformCs = getComputedStyle(transformDiv, "");
+var OMTACs = getComputedStyle(OMTAdiv, "");
 var winUtils = SpecialPowers.getDOMWindowUtils(window);
 
 function computeMatrix(v) {
@@ -1674,8 +1674,8 @@ function test_transform_transition(prop) {
   // FIXME: should perhaps test that no clamping occurs
 
   // These tests check the computed value 2/3 of the way through the transition
-  transformDiv.style.setProperty("transition-duration", "300s", "");
-  transformDiv.style.setProperty("transition-timing-function", "linear", "");
+  OMTAdiv.style.setProperty("transition-duration", "300s", "");
+  OMTAdiv.style.setProperty("transition-timing-function", "linear", "");
   window.requestAnimationFrame(nextAsyncTransformTest);
 }
 
@@ -1684,17 +1684,16 @@ function nextAsyncTransformTest()
   var test = transformTests[transformTestIndex];
 
   if (transformTestIndex >= transformTests.length) {
-    transformDiv.style.removeProperty("transition");
-    SimpleTest.finish();
+    window.requestAnimationFrame(asyncOpacityTest);
     return;
   }
 
-  transformDiv.style.setProperty("transition-property", "none", "");
-  transformDiv.style.setProperty("transform", test.start, "");
-  transformCs.getPropertyValue("transform");
-  transformDiv.style.setProperty("transition-property", "transform", "");
-  transformDiv.style.setProperty("transform", test.end, "");
-  transformCs.getPropertyValue("transform");
+  OMTAdiv.style.setProperty("transition-property", "none", "");
+  OMTAdiv.style.setProperty("transform", test.start, "");
+  OMTACs.getPropertyValue("transform");
+  OMTAdiv.style.setProperty("transition-property", "transform", "");
+  OMTAdiv.style.setProperty("transform", test.end, "");
+  OMTACs.getPropertyValue("transform");
 
   window.requestAnimationFrame(checkAsyncTransformTest);
 }
@@ -1705,8 +1704,8 @@ function checkAsyncTransformTest() {
   }
   winUtils.advanceTimeAndRefresh(200000);
   var test = transformTests[transformTestIndex];
-  var async_transform = winUtils.getOMTAOrComputedStyle(transformDiv, "transform");
-  var computed_transform = transformCs.getPropertyValue("transform");
+  var async_transform = winUtils.getOMTAOrComputedStyle(OMTAdiv, "transform");
+  var computed_transform = OMTACs.getPropertyValue("transform");
   var async_split = s(async_transform);
   var cs_split = s(computed_transform);
   var pass = true;
@@ -1722,6 +1721,28 @@ function checkAsyncTransformTest() {
   transformTestIndex++;
   winUtils.restoreNormalRefresh();
   window.requestAnimationFrame(nextAsyncTransformTest);
+}
+
+function asyncOpacityTest() {
+  OMTAdiv.style.setProperty("transition-property", "none", "");
+  OMTAdiv.style.setProperty("opacity", 0, "");
+  OMTACs.getPropertyValue("opacity");
+  OMTAdiv.style.setProperty("transition-property", "opacity", "");
+  OMTAdiv.style.setProperty("opacity", 1, "");
+  OMTACs.getPropertyValue("opacity");
+
+  window.requestAnimationFrame(checkAsyncOpacityTest);
+}
+
+function checkAsyncOpacityTest() {
+  winUtils.advanceTimeAndRefresh(200000);
+  var async_opacity = winUtils.getOMTAOrComputedStyle(OMTAdiv, "opacity");
+  var computed_opacity = OMTACs.getPropertyValue("opacity");
+  is(async_opacity, computed_opacity,
+     "Async animated opacity should match computed opacity");
+  winUtils.restoreNormalRefresh();
+  OMTAdiv.style.removeProperty("transition");
+  SimpleTest.finish();
 }
 
 </script>
