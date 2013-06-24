@@ -471,14 +471,6 @@ nsSVGLength2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
                                aSVGElement);
 }
 
-nsresult
-nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
-                                  nsSVGElement *aSVGElement)
-{
-  *aResult = ToDOMAnimatedLength(aSVGElement).get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 nsSVGLength2::ToDOMAnimatedLength(nsSVGElement* aSVGElement)
 {
