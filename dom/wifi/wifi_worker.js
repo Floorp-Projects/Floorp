@@ -6,7 +6,7 @@
 
 "use strict";
 
-importScripts("libhardware_legacy.js", "systemlibs.js");
+importScripts("systemlibs.js", "libhardware_legacy.js");
 
 var cbuf = ctypes.char.array(4096)();
 var hwaddr = ctypes.uint8_t.array(6)();
