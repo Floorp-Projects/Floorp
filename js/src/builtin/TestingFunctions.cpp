@@ -907,18 +907,19 @@ js::testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp)
 
 static JSObject *objectMetadataFunction = NULL;
 
-static JSObject *
-ShellObjectMetadataCallback(JSContext *cx)
+static bool
+ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
     Value thisv = UndefinedValue();
 
     RootedValue rval(cx);
-    if (!Invoke(cx, thisv, ObjectValue(*objectMetadataFunction), 0, NULL, rval.address())) {
-        cx->clearPendingException();
-        return NULL;
-    }
+    if (!Invoke(cx, thisv, ObjectValue(*objectMetadataFunction), 0, NULL, rval.address()))
+        return false;
 
-    return rval.isObject() ? &rval.toObject() : NULL;
+    if (rval.isObject())
+        *pmetadata = &rval.toObject();
+
+    return true;
 }
 
 static JSBool
