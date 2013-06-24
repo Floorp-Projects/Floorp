@@ -59,7 +59,7 @@ interface nsIWifi : nsISupports
     void getWifiScanResults(in nsIWifiScanResultsReady callback);
 };
 
-[scriptable, uuid(caa76ee3-8ffe-4ea5-bc59-3b53a9df0d07)]
+[scriptable, uuid(3f21012d-6e75-4632-b87c-acdd7c57fbf3)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
@@ -125,6 +125,23 @@ interface nsIDOMWifiManager : nsISupports
      * onerror: We have failed to turn on/off wifi power saving mode.
      */
     nsIDOMDOMRequest setPowerSavingMode(in boolean enabled);
+
+    /**
+     * Given a network, configure using static IP instead of running DHCP
+     * @param network A network object with the SSID of the network to set static ip.
+     * @param info info should have following field:
+     *        - enabled True to enable static IP, false to use DHCP
+     *        - ipaddr configured static IP address
+     *        - proxy configured proxy server address
+     *        - maskLength configured mask length
+     *        - gateway configured gateway address
+     *        - dns1 configured first DNS server address
+     *        - dns2 configured seconf DNS server address
+     * onsuccess: We have successfully configure the static ip mode.
+     * onerror: We have failed to configure the static ip mode.
+     */
+    nsIDOMDOMRequest setStaticIpMode(in jsval network,
+                                     in jsval info);
 
     /**
      * Returns whether or not wifi is currently enabled.
