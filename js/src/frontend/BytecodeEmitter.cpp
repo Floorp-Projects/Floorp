@@ -2573,7 +2573,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         !funbox->isGenerator();
     if (runOnce) {
         bce->switchToProlog();
-        if (!Emit1(cx, bce, JSOP_RUNONCE) < 0)
+        if (Emit1(cx, bce, JSOP_RUNONCE) < 0)
             return false;
         bce->switchToMain();
     }

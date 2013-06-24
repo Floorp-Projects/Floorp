@@ -270,12 +270,10 @@ function runNextTest() {
   if (tests.length) {
     runTest(tests.shift(), runNextTest);
   } else {
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   }
 }
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 SimpleTest.waitForExplicitFinish();
 
 var cx = new AudioContext();

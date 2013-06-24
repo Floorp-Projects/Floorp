@@ -61,6 +61,21 @@ var gChatWindow = {
   }
 }
 
+// define a popupnotifications handler for this window.  we don't use
+// an iconbox here, and only support the browser frame for chat.
+XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
+  try {
+    return new tmp.PopupNotifications(document.getElementById("chatter").content,
+                                      document.getElementById("notification-popup"),
+                                      null);
+  } catch (ex) {
+    console.error(ex);
+    return null;
+  }
+});
+
 </script>
 
 #include browser-sets.inc
@@ -82,6 +97,9 @@ var gChatWindow = {
                               gContextMenu = null;">
 #include browser-context.inc
     </menupopup>
+
+#include popup-notifications.inc
+
   </popupset>
 
   <commandset id="editMenuCommands"/>

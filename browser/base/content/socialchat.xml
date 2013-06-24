@@ -144,6 +144,7 @@
         <body><![CDATA[
           aTarget.setAttribute('label', this.contentDocument.title);
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
+          aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
           this.content.socialErrorListener.remove();
           this.content.swapDocShells(aTarget.content);
           Social.setErrorListener(this.content, function(aBrowser) {

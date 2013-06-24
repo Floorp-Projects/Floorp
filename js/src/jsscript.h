@@ -454,6 +454,7 @@ class JSScript : public js::gc::Cell
     uint32_t        dataSize;   /* size of the used part of the data array */
 
     uint32_t        lineno;     /* base line number of script */
+    uint32_t        column;     /* base column of script, optionally set */
 
     uint32_t        mainOffset; /* offset of main entry point from code, after
                                    predef'ing prolog */
@@ -468,7 +469,6 @@ class JSScript : public js::gc::Cell
     uint32_t        useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
-    uint32_t        PADDING32;
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
@@ -760,6 +760,7 @@ class JSScript : public js::gc::Cell
 
     static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
 
+    void setSourceObject(js::ScriptSourceObject *object);
     js::ScriptSourceObject *sourceObject() const;
     js::ScriptSource *scriptSource() const { return sourceObject()->source(); }
     const char *filename() const { return scriptSource()->filename(); }

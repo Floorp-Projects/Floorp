@@ -7,9 +7,9 @@ Bug 861141 - Connect Breakpad on Android to faulty.lib's mmap interface.  r=ted.
 Adds a prototype for ReadSymbolDataInternal so it can be called from
 outside breakpad.
 
-diff --git a/toolkit/crashreporter/google-breakpad/src/common/linux/dump_symbols.h b/toolkit/crashreporter/google-breakpad/src/common/linux/dump_symbols.h
---- a/toolkit/crashreporter/google-breakpad/src/common/linux/dump_symbols.h
-+++ b/toolkit/crashreporter/google-breakpad/src/common/linux/dump_symbols.h
+diff --git src/common/linux/dump_symbols.h
+--- a/src/common/linux/dump_symbols.h
++++ b/src/common/linux/dump_symbols.h
 @@ -36,16 +36,17 @@
  #define COMMON_LINUX_DUMP_SYMBOLS_H__
  

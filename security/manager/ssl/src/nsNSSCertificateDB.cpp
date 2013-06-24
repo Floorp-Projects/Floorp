@@ -486,7 +486,6 @@ ImportCertsIntoPermanentStorage(const ScopedCERTCertList &certChain, const SECCe
                                const PRBool caOnly)
 {
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-  const PRTime now = PR_Now();
 
   int chainLen = 0;
   for (CERTCertListNode *chainNode = CERT_LIST_HEAD(certChain);
@@ -745,7 +744,6 @@ nsNSSCertificateDB::ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInte
 nsresult
 nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfaceRequestor *ctx)
 {
-  SECItem **rawArray;
   RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
   if (!certVerifier)
     return NS_ERROR_UNEXPECTED;
