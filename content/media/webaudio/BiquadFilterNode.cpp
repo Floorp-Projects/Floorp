@@ -10,6 +10,7 @@
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
 #include "blink/Biquad.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace dom {
@@ -201,6 +202,26 @@ BiquadFilterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 BiquadFilterNode::SetType(BiquadFilterType aType)
 {
+  if (!Preferences::GetBool("media.webaudio.legacy.BiquadFilterNode")) {
+    // Do not accept the alternate enum values unless the legacy pref
+    // has been turned on.
+    switch (aType) {
+    case BiquadFilterType::_0:
+    case BiquadFilterType::_1:
+    case BiquadFilterType::_2:
+    case BiquadFilterType::_3:
+    case BiquadFilterType::_4:
+    case BiquadFilterType::_5:
+    case BiquadFilterType::_6:
+    case BiquadFilterType::_7:
+      // Do nothing in order to emulate setting an invalid enum value.
+      return;
+    default:
+      // Shut up the compiler warning
+      break;
+    }
+  }
+
   // Handle the alternate enum values
   switch (aType) {
   case BiquadFilterType::_0: aType = BiquadFilterType::Lowpass; break;

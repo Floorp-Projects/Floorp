@@ -10,8 +10,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
 var context = new AudioContext();
 var gain = context.createGain().gain;
 
@@ -31,8 +29,6 @@ gain.exponentialRampToValueAtTime(0.1, 0.75);
 gain.setTargetAtTime(0.2, 1, 0.5);
 gain.setTargetValueAtTime(0.3, 1.25, 0.5);
 gain.cancelScheduledValues(1.5);
-
-SpecialPowers.clearUserPref("media.webaudio.enabled");
 
 </script>
 </pre>

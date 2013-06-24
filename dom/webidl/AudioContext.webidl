@@ -78,15 +78,15 @@ interface AudioContext : EventTarget {
 [PrefControlled]
 partial interface AudioContext {
     // Same as createGain()
-    [Creator]
+    [Creator,Pref="media.webaudio.legacy.AudioContext"]
     GainNode createGainNode();
     
     // Same as createDelay()
-    [Creator, Throws]
+    [Creator, Throws, Pref="media.webaudio.legacy.AudioContext"]
     DelayNode createDelayNode(optional double maxDelayTime = 1);
 
     // Same as createScriptProcessor()
-    [Creator, Throws]
+    [Creator, Throws, Pref="media.webaudio.legacy.AudioContext"]
     ScriptProcessorNode createJavaScriptNode(optional unsigned long bufferSize = 0,
                                              optional unsigned long numberOfInputChannels = 2,
                                              optional unsigned long numberOfOutputChannels = 2);

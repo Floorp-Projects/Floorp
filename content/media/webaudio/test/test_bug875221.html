@@ -9,7 +9,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 SimpleTest.waitForExplicitFinish();
 
 try { o0 = document.createElement('audio'); } catch(e) {  }
@@ -17,7 +16,7 @@ try { (document.body || document.documentElement).appendChild(o0); } catch(e) { 
 try { o1 = new OfflineAudioContext(1, 10, (new AudioContext()).sampleRate); } catch(e) {  }
 try { o1.startRendering(); } catch(e) {  }
 try { o1.listener.dopplerFactor = 1; } catch(e) {  }
-try { o2 = o1.createJavaScriptNode(); } catch(e) {  }
+try { o2 = o1.createScriptProcessor(); } catch(e) {  }
 try { o3 = o1.createChannelMerger(4); } catch(e) {  }
 try { o1.listener.dopplerFactor = 3; } catch(e) {  }
 try { o1.listener.setPosition(0, 134217728, 64) } catch(e) {  }
@@ -229,7 +228,6 @@ try { o7.connect(o4); } catch(e) {  }
 
 function done() {
   ok(true, "We did not crash.");
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 }
 
