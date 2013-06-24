@@ -6993,6 +6993,33 @@ JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled)
 #endif
 }
 
+JS_PUBLIC_API(void)
+JS_SetGlobalCompilerOption(JSContext *cx, JSCompilerOption opt, uint32_t value)
+{
+#ifdef JS_ION
+    ion::IonOptions defaultValues;
+
+    switch (opt) {
+      case JSCOMPILER_BASELINE_USECOUNT_TRIGGER:
+        if (value == uint32_t(-1))
+            value = defaultValues.baselineUsesBeforeCompile;
+        ion::js_IonOptions.baselineUsesBeforeCompile = value;
+        break;
+      case JSCOMPILER_ION_USECOUNT_TRIGGER:
+        if (value == uint32_t(-1))
+            value = defaultValues.usesBeforeCompile;
+        ion::js_IonOptions.usesBeforeCompile = value;
+        ion::js_IonOptions.eagerCompilation = (value == 0);
+        break;
+      case JSCOMPILER_PJS_ENABLE:
+        if (value == uint32_t(-1))
+            value = uint32_t(defaultValues.parallelCompilation);
+        ion::js_IonOptions.parallelCompilation = bool(value);
+        break;
+    }
+#endif
+}
+
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN)
