@@ -22,6 +22,7 @@
 #include "jsclist.h"
 #include "jsgc.h"
 
+#include "ds/FixedSizeHash.h"
 #include "ds/LifoAlloc.h"
 #include "frontend/ParseMaps.h"
 #include "gc/Nursery.h"
@@ -243,6 +244,33 @@ struct EvalCacheHashPolicy
 };
 
 typedef HashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
+
+struct LazyScriptHashPolicy
+{
+    struct Lookup {
+        JSContext *cx;
+        LazyScript *lazy;
+
+        Lookup(JSContext *cx, LazyScript *lazy)
+          : cx(cx), lazy(lazy)
+        {}
+    };
+
+    static const size_t NumHashes = 3;
+
+    static void hash(const Lookup &lookup, HashNumber hashes[NumHashes]);
+    static bool match(JSScript *script, const Lookup &lookup);
+
+    // Alternate methods for use when removing scripts from the hash without an
+    // explicit LazyScript lookup.
+    static void hash(JSScript *script, HashNumber hashes[NumHashes]);
+    static bool match(JSScript *script, JSScript *lookup) { return script == lookup; }
+
+    static void clear(JSScript **pscript) { *pscript = NULL; }
+    static bool isCleared(JSScript *script) { return !script; }
+};
+
+typedef FixedSizeHashSet<JSScript *, LazyScriptHashPolicy, 769> LazyScriptCache;
 
 class PropertyIteratorObject;
 
@@ -1260,6 +1288,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::NativeIterCache nativeIterCache;
     js::SourceDataCache sourceDataCache;
     js::EvalCache       evalCache;
+    js::LazyScriptCache lazyScriptCache;
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
