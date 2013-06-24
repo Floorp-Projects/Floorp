@@ -11,12 +11,10 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var ac = new AudioContext();
   ok(ac, "Create a AudioContext object");
   is(ac.sampleRate, 48000, "Correct sample rate");
   ok(ac instanceof EventTarget, "AudioContexts must be EventTargets");
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });
 

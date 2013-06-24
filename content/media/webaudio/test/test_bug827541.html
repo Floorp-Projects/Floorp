@@ -8,8 +8,6 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
   var iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
   document.body.appendChild(iframe);
   var frameWin = iframe.contentWindow;
@@ -18,7 +16,6 @@
   frameWin.AudioContext();
 
   ok(true, "This test should not leak");
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
 </script>
 </pre>
 </body>
