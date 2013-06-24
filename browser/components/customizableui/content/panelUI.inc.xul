@@ -37,7 +37,7 @@
       <label value="&appMenuHistory.showAll.label;"
              id="PanelUI-historyMore"
              class="text-link"
-             onclick="PlacesCommandHook.showPlacesOrganizer('History'); PanelUI.hide();"/>
+             onclick="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 
     <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);"></panelview>

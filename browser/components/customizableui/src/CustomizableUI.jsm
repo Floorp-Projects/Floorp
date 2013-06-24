@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
+XPCOMUtils.defineLazyServiceGetter(this, "gELS",
+  "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -317,9 +319,6 @@ let CustomizableUIInternal = {
       }
 
       if (aArea == CustomizableUI.AREA_PANEL) {
-        if (provider == CustomizableUI.PROVIDER_XUL) {
-          this.ensureButtonClosesPanel(node);
-        }
         node.classList.add("panel-contents-button");
       } else {
         node.classList.remove("panel-contents-button");
@@ -368,16 +367,14 @@ let CustomizableUIInternal = {
     this.endBatchUpdate();
   },
 
-  ensureButtonClosesPanel: function(aNode) {
-    //XXXunf This seems kinda hacky, but I can't find any other reliable method.
-    //XXXunf Is it worth going to the effort to remove these when appropriate?
-    // The "command" event only gets fired if there's not an attached command
-    // (via the "command" attribute). For menus, this is handled natively, but
-    // since the panel isn't implemented as a menu, we have to handle it
-    // ourselves.
+  ensureButtonsClosePanel: function(aPanel) {
+    gELS.addSystemEventListener(aPanel, "click", this, false);
+    gELS.addSystemEventListener(aPanel, "keypress", this, false);
+  },
 
-    aNode.addEventListener("mouseup", this.maybeAutoHidePanel, false);
-    aNode.addEventListener("keypress", this.maybeAutoHidePanel, false);
+  removePanelCloseListeners: function(aPanel) {
+    gELS.removeSystemEventListener(aPanel, "click", this, false);
+    gELS.removeSystemEventListener(aPanel, "keypress", this, false);
   },
 
   ensureButtonContextMenu: function(aNode, ourContextMenu) {
@@ -456,15 +453,14 @@ let CustomizableUIInternal = {
     let document = aPanel.ownerDocument;
 
     for (let btn of aPanel.querySelectorAll("toolbarbutton")) {
-      if (!btn.hasAttribute("noautoclose")) {
-        this.ensureButtonClosesPanel(btn);
-      }
       btn.classList.add("panel-contents-button");
       this.ensureButtonContextMenu(btn, true);
     }
 
     aPanel.toolbox = document.getElementById("navigator-toolbox");
     aPanel.customizationTarget = aPanel;
+
+    this.ensureButtonsClosePanel(aPanel);
 
     let placements = gPlacements.get(CustomizableUI.AREA_PANEL);
     this.buildArea(CustomizableUI.AREA_PANEL, placements, aPanel);
@@ -494,9 +490,6 @@ let CustomizableUIInternal = {
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
 
       if (aArea == CustomizableUI.AREA_PANEL) {
-        if (provider == CustomizableUI.PROVIDER_XUL) {
-          this.ensureButtonClosesPanel(widgetNode);
-        }
         widgetNode.classList.add("panel-contents-button");
       } else {
         widgetNode.classList.remove("panel-contents-button");
@@ -645,6 +638,10 @@ let CustomizableUIInternal = {
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
+      case "click":
+      case "keypress":
+        this.maybeAutoHidePanel(aEvent);
+        break;
       case "unload": {
         let window = aEvent.currentTarget;
         window.removeEventListener("unload", this);
@@ -887,20 +884,61 @@ let CustomizableUIInternal = {
     }
   },
 
+  /*
+   * If people put things in the panel which need more than single-click interaction,
+   * we don't want to close it. Right now we check for text inputs and menu buttons.
+   * Anything else we should take care of?
+   */
+  _isOnInteractiveElement: function(aEvent) {
+    let target = aEvent.originalTarget;
+    let panel = aEvent.currentTarget;
+    let inInput = false;
+    let inMenu = false;
+    while (!inInput && !inMenu && target != aEvent.currentTarget) {
+      inInput = target.localName == "input";
+      inMenu = target.type == "menu";
+      target = target.parentNode;
+    }
+    return inMenu || inInput;
+  },
+
+  hidePanelForNode: function(aNode) {
+    let panel = aNode;
+    while (panel && panel.localName != "panel")
+      panel = panel.parentNode;
+    if (panel) {
+      panel.hidePopup();
+    }
+  },
+
   maybeAutoHidePanel: function(aEvent) {
-    if (aEvent.type == "keypress" && 
-        !(aEvent.keyCode == aEvent.DOM_VK_ENTER ||
-          aEvent.keyCode == aEvent.DOM_VK_RETURN)) {
+    if (aEvent.type == "keypress") {
+      if (aEvent.keyCode != aEvent.DOM_VK_ENTER &&
+          aEvent.keyCode != aEvent.DOM_VK_RETURN) {
+        return;
+      }
+      // If the user hit enter/return, we don't check preventDefault - it makes sense
+      // that this was prevented, but we probably still want to close the panel.
+      // If consumers don't want this to happen, they should specify noautoclose.
+
+    } else { // mouse events:
+      if (aEvent.defaultPrevented || aEvent.button != 0) {
+        return;
+      }
+      let isInteractive = this._isOnInteractiveElement(aEvent);
+      LOG("maybeAutoHidePanel: interactive ? " + isInteractive);
+      if (isInteractive) {
+        return;
+      }
+    }
+
+    if (aEvent.target.getAttribute("noautoclose") == "true" ||
+        aEvent.target.getAttribute("widget-type") == "view") {
       return;
     }
 
-    if ((aEvent.type == "click" || aEvent.type == "mouseup") &&
-        aEvent.button != 0) {
-      return;
-    }
-
-    let ownerWindow = aEvent.target.ownerDocument.defaultView;
-    ownerWindow.PanelUI.hide();
+    // If we get here, we can actually hide the popup:
+    this.hidePanelForNode(aEvent.target);
   },
 
   getUnusedWidgets: function(aWindowPalette) {
@@ -1799,6 +1837,9 @@ this.CustomizableUI = {
   getLocalizedProperty: function(aWidget, aProp, aFormatArgs, aDef) {
     return CustomizableUIInternal.getLocalizedProperty(aWidget, aProp,
       aFormatArgs, aDef);
+  },
+  hidePanelForNode: function(aNode) {
+    CustomizableUIInternal.hidePanelForNode(aNode);
   }
 };
 Object.freeze(this.CustomizableUI);
@@ -1985,6 +2026,7 @@ function OverflowableToolbar(aToolbarNode) {
   window.gNavToolbox.addEventListener("aftercustomization", this);
   this._chevron.addEventListener("command", this);
   this._panel.addEventListener("popuphiding", this);
+  CustomizableUIInternal.ensureButtonsClosePanel(this._panel);
 
   // The toolbar could initialize in an overflowed state, in which case
   // the 'overflow' event may have been fired before the handler was registered.
@@ -2004,6 +2046,7 @@ OverflowableToolbar.prototype = {
     window.gNavToolbox.removeEventListener("aftercustomization", this);
     this._chevron.removeEventListener("command", this);
     this._panel.removeEventListener("popuphiding", this);
+    CustomizableUIInternal.removePanelCloseListeners(this._panel);
   },
 
   handleEvent: function(aEvent) {
@@ -2019,10 +2062,6 @@ OverflowableToolbar.prototype = {
         break;
       case "popuphiding":
         this._onPanelHiding(aEvent);
-        break;
-      case "mouseup":
-      case "keypress":
-        this._maybeAutoHidePanel(aEvent);
         break;
       case "customizationstarting":
         this._disable();
@@ -2061,33 +2100,11 @@ OverflowableToolbar.prototype = {
         this._collapsed.push({child: child, minSize: this._target.clientWidth});
         child.classList.add("overflowedItem");
 
-        child.addEventListener("mouseup", this);
-        child.addEventListener("keypress", this);
-
         this._list.insertBefore(child, this._list.firstChild);
         this._toolbar.setAttribute("overflowing", "true");
       }
       child = prevChild;
     };
-  },
-
-  _maybeAutoHidePanel: function(aEvent) {
-    LOG("_maybeAutoHidePanel: " + aEvent.type);
-
-    if (aEvent.currentTarget.hasAttribute("noautoclose"))
-      return;
-
-    if (aEvent.type == "keypress" &&
-        !(aEvent.keyCode == aEvent.DOM_VK_ENTER ||
-          aEvent.keyCode == aEvent.DOM_VK_RETURN)) {
-      return;
-    }
-
-    if (aEvent.type == "mouseup" && aEvent.button != 0) {
-      return;
-    }
-
-    this._panel.hidePopup();
   },
 
   _onResize: function(aEvent) {
@@ -2110,8 +2127,6 @@ OverflowableToolbar.prototype = {
       this._collapsed.pop();
       this._target.appendChild(child);
       child.classList.remove("overflowedItem");
-      child.removeEventListener("mouseup", this);
-      child.removeEventListener("keypress", this);
     }
 
     if (!this._collapsed.length) {
