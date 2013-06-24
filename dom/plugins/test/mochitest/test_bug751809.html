@@ -63,8 +63,9 @@
 
   function afterWindowFocus() {
     var plugin = document.getElementById('plugin');
+    var objLoadingContent = SpecialPowers.wrap(plugin);
 
-    synthesizeMouseAtCenter(plugin, {});
+    objLoadingContent.playPlugin();
     var condition = function() plugin.setColor !== undefined;
     waitForCondition(condition, afterPluginActivation, "Waited too long for plugin to activate");
   }

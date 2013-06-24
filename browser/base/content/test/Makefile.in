@@ -191,7 +191,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_plainTextLinks.js \
                  browser_pluginnotification.js \
                  browser_plugins_added_dynamically.js \
-                 browser_CTPScriptPlugin.js \
                  browser_CTP_drag_drop.js \
                  browser_pluginplaypreview.js \
                  browser_pluginplaypreview2.js \
@@ -265,13 +264,6 @@ MOCHITEST_BROWSER_FILES = \
                  plugin_test.html \
                  plugin_test2.html \
                  plugin_test3.html \
-                 plugin_test_noScriptNoPopup.html \
-                 plugin_test_scriptedPopup1.html \
-                 plugin_test_scriptedPopup2.html \
-                 plugin_test_scriptedPopup3.html \
-                 plugin_test_scriptedNoPopup1.html \
-                 plugin_test_scriptedNoPopup2.html \
-                 plugin_test_scriptedNoPopup3.html \
                  plugin_alternate_content.html \
                  plugin_both.html \
                  plugin_both2.html \
@@ -283,7 +275,6 @@ MOCHITEST_BROWSER_FILES = \
                  plugin_bug752516.html \
                  plugin_bug787619.html \
                  plugin_bug797677.html \
-                 plugin_bug818009.html \
                  plugin_bug820497.html \
                  plugin_hidden_to_visible.html \
                  plugin_two_types.html \
@@ -313,7 +304,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug744745.js \
                  browser_bug787619.js \
                  browser_bug812562.js \
-                 browser_bug818009.js \
                  browser_bug818118.js \
                  browser_bug820497.js \
                  blockPluginVulnerableUpdatable.xml \
