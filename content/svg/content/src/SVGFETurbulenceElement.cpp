@@ -23,6 +23,8 @@ static const unsigned short SVG_STITCHTYPE_UNKNOWN = 0;
 static const unsigned short SVG_STITCHTYPE_STITCH = 1;
 static const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
 
+static const int32_t MAX_OCTAVES = 10;
+
 JSObject*
 SVGFETurbulenceElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
@@ -137,7 +139,7 @@ SVGFETurbulenceElement::Filter(nsSVGFilterInstance* instance,
   float fX = mNumberPairAttributes[BASE_FREQ].GetAnimValue(nsSVGNumberPair::eFirst);
   float fY = mNumberPairAttributes[BASE_FREQ].GetAnimValue(nsSVGNumberPair::eSecond);
   float seed = mNumberAttributes[OCTAVES].GetAnimValue();
-  int32_t octaves = mIntegerAttributes[OCTAVES].GetAnimValue();
+  int32_t octaves = std::min(mIntegerAttributes[OCTAVES].GetAnimValue(), MAX_OCTAVES);
   uint16_t type = mEnumAttributes[TYPE].GetAnimValue();
   uint16_t stitch = mEnumAttributes[STITCHTILES].GetAnimValue();
 
