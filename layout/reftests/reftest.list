@@ -244,8 +244,8 @@ skip-if(B2G) include pagination/reftest.list
 # <style scoped>
 skip-if(B2G) include scoped-style/reftest.list
 
-# scrolling
-include scrolling/reftest.list
+# scrolling 
+skip-if(Android&&AndroidVersion>=15) include scrolling/reftest.list
 
 # selection
 include selection/reftest.list

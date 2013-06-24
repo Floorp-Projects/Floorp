@@ -3,7 +3,7 @@ skip-if(B2G) HTTP(..) == marker-basic.html marker-basic-ref.html
 skip-if(B2G) HTTP(..) == marker-string.html marker-string-ref.html
 skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtk2Widget) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
-skip-if(B2G) fuzzy-if(Android,9,2545) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion<15,9,2545) fuzzy-if(Android&&AndroidVersion>=15,24,4000) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
 fuzzy-if(OSX==10.8,1,1) HTTP(..) == anonymous-block.html anonymous-block-ref.html
 skip-if(B2G) HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
