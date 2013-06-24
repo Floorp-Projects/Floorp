@@ -3575,6 +3575,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %include ../shared/devtools/responsivedesign.inc.css
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
+%include ../shared/plugin-doorhanger.inc.css
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
   color: hsl(210,11%,16%);
@@ -3865,67 +3866,6 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
   panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
     list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical@2x.png");
  }
-}
-
-/**
- * Plugin Doorhanger Styles
- */
-
-#notification-popup[popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0px;
-}
-
-.click-to-play-plugins-notification-content {
-  width: 28em;
-}
-
-.click-to-play-plugins-notification-center-box {
-  background-color: rgba(255,255,255,0.3);
-}
-
-.plugin-popupnotification-centeritem {
-  border-top: 1px solid ThreeDShadow;
-}
-
-.center-item-label {
-  margin-bottom: 0;
-  text-overflow: ellipsis;
-}
-
-.center-item-warning-icon {
-  background-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 15px;
-  -moz-margin-start: 6px;
-}
-
-.click-to-play-plugins-notification-button-container {
-  border-top: 1px solid ThreeDShadow;
-}
-
-.click-to-play-popup-button {
-  width: 50%;
-}
-
-.click-to-play-plugins-notification-description-box {
-  margin-left: 10px;
-  margin-right: 10px;
-  margin-top: 2px;
-  padding-bottom: 2px;
-}
-
-.click-to-play-plugins-outer-description {
-  margin-top: 8px;
-}
-
-.click-to-play-plugins-notification-description-box > .popup-notification-closebutton {
-  margin: 0;
-}
-
-.click-to-play-plugins-notification-link,
-.center-item-link {
-  margin: 0;
 }
 
 #main-window[privatebrowsingmode=temporary] {
