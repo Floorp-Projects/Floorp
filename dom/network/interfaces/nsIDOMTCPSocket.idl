@@ -25,7 +25,7 @@
 //  be possible to do (similarly to the WebSocket API):
 //    var s = new MozTCPSocket(host, port); 
 
-[scriptable, uuid(b82e17da-6476-11e1-8813-57a2ffe9e42c)]
+[scriptable, uuid(1f99bc6f-73d3-44db-9dbf-5fc441704a7c)]
 interface nsIDOMTCPSocket : nsISupports
 {
   /**
