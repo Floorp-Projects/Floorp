@@ -43,6 +43,6 @@ class CentOSBootstrapper(BaseBootstrapper):
 
         self.run_as_root(['rpm', '-ivh', yasm])
 
-    def upgrade_mercurial(self):
+    def upgrade_mercurial(self, current):
         self.yum_update('mercurial')
 

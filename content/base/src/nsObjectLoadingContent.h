@@ -177,6 +177,13 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       return mURI;
     }
+  
+    /**
+     * The default state that this plugin would be without manual activation.
+     * @returns PLUGIN_ACTIVE if the default state would be active.
+     */
+    uint32_t DefaultFallbackType();
+
     uint32_t PluginFallbackType() const
     {
       return mFallbackType;
@@ -363,8 +370,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * If this object is allowed to play plugin content, or if it would display
      * click-to-play instead.
      * NOTE that this does not actually check if the object is a loadable plugin
+     * NOTE This ignores the current activated state. The caller should check this if appropriate.
      */
-    bool ShouldPlay(FallbackType &aReason);
+    bool ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentType);
 
     /**
      * Helper to check if our current URI passes policy
