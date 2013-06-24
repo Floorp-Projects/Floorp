@@ -21,12 +21,20 @@ import android.view.ViewGroup;
 public class BookmarksPage extends HomeFragment {
     public static final String LOGTAG = "GeckoBookmarksPage";
 
-    // The view shown by the fragment.
+    // List of bookmarks.
     private BookmarksListView mList;
+
+    // Grid of top bookmarks.
+    private TopBookmarksView mTopBookmarks;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_bookmarks_page, null);
+        BookmarksListView list = (BookmarksListView) inflater.inflate(R.layout.home_bookmarks_page, container, false);
+
+        mTopBookmarks = new TopBookmarksView(getActivity());
+        list.addHeaderView(mTopBookmarks);
+
+        return list;
     }
 
     @Override
@@ -45,6 +53,8 @@ public class BookmarksPage extends HomeFragment {
         mList.setOnUrlOpenListener(listener);
 
         registerForContextMenu(mList);
+
+        mTopBookmarks.setOnUrlOpenListener(listener);
     }
 
     @Override
