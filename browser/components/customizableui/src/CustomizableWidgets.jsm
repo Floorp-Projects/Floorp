@@ -108,7 +108,7 @@ const CustomizableWidgets = [{
               item.addEventListener("click", function(aEvent) {
                 if (aEvent.button == 0) {
                   doc.defaultView.openUILink(uri, aEvent);
-                  doc.defaultView.PanelUI.hide();
+                  CustomizableUI.hidePanelForNode(item);
                 }
               });
               if (icon)
@@ -494,6 +494,7 @@ const CustomizableWidgets = [{
         aEvent.preventDefault();
         aEvent.stopPropagation();
         win.FeedHandler.subscribeToFeed(feeds[0].href, aEvent);
+        CustomizableUI.hidePanelForNode(aEvent.target);
       }
     },
     onViewShowing: function(aEvent) {
