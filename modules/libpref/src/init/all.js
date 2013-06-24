@@ -1855,6 +1855,13 @@ pref("plugins.click_to_play", false);
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
 
+// How long in minutes we will allow a plugin to work after the user has chosen
+// to allow it "now"
+pref("plugin.sessionPermissionNow.intervalInMinutes", 60);
+// How long in days we will allow a plugin to work after the user has chosen
+// to allow it persistently.
+pref("plugin.persistentPermissionAlways.intervalInDays", 90);
+
 #ifndef DEBUG
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".

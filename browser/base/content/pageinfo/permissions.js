@@ -299,7 +299,7 @@ function clearPluginPermissionTemplate() {
 }
 
 function initPluginsRow() {
-  var vulnerableLabel = document.getElementById("browserBundle").getString("vulnerableNoUpdatePluginWarning");
+  let vulnerableLabel = document.getElementById("browserBundle").getString("pluginActivateVulnerable.label");
   let pluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
   let permissionMap = Map();

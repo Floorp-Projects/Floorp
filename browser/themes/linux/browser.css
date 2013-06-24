@@ -2246,7 +2246,7 @@ chatbox {
   border-top: 1px solid hsla(0,0%,100%,.2);
   -moz-border-start: 1px solid hsla(0,0%,100%,.2);
   margin: 0px;
-  padding: 15px 11px 14px 11px;
+  padding: 2px;
 }
 
 .center-item-box {
