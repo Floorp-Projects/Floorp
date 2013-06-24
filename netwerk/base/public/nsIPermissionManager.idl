@@ -37,7 +37,7 @@ interface nsIPrincipal;
 interface nsIDOMWindow;
 interface nsIPermission;
 
-[scriptable, uuid(f75e0a32-04cd-4ed4-ad2d-d08ca92bb98e)]
+[scriptable, uuid(c9fec678-f194-43c9-96b0-7bd9dbdd6bb0)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -230,6 +230,26 @@ interface nsIPermissionManager : nsISupports
    */
   void removePermissionsForApp(in unsigned long appId,
                                in boolean browserOnly);
+
+  /**
+   * If the current permission is set to expire, reset the expiration time. If
+   * there is no permission or the current permission does not expire, this
+   * method will silently return.
+   *
+   * @param sessionExpiretime  an integer representation of when this permission
+   *                           should be forgotten (milliseconds since
+   *                           Jan 1 1970 0:00:00), if it is currently
+   *                           EXPIRE_SESSION.
+   * @param sessionExpiretime  an integer representation of when this permission
+   *                           should be forgotten (milliseconds since
+   *                           Jan 1 1970 0:00:00), if it is currently
+   *                           EXPIRE_TIME.
+   */
+  void updateExpireTime(in nsIPrincipal principal,
+                        in string type,
+                        in boolean exactHost,
+                        in uint64_t sessionExpireTime,
+                        in uint64_t persistentExpireTime);
 };
 
 %{ C++

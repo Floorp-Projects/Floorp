@@ -2073,6 +2073,7 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 %include ../shared/devtools/responsivedesign.inc.css
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
+%include ../shared/plugin-doorhanger.inc.css
 
 .gcli-panel {
   padding: 0;
@@ -2212,106 +2213,6 @@ toolbar[iconsize="small"] .toolbarbutton-badge-container {
 chatbox {
   border-top-left-radius: 2.5px;
   border-top-right-radius: 2.5px;
-}
-
-.click-to-play-plugins-notification-content {
-  margin: -10px;
-}
-
-.click-to-play-plugins-notification-icon-box {
-  -moz-border-end: 1px solid hsla(0,0%,100%,.2);
-  padding-top: 16px;
-  -moz-padding-start: 16px;
-  -moz-padding-end: 6px;
-}
-
-.click-to-play-plugins-notification-separator {
-  -moz-border-start: 1px solid hsla(211,79%,6%,.1);
-  border-top: 1px solid hsla(211,79%,6%,.1);
-}
-
-.click-to-play-plugins-notification-description-box {
-  border-bottom: 1px solid hsla(0,0%,100%,.2);
-  -moz-border-start: 1px solid hsla(0,0%,100%,.2);
-  padding: 14px 10px 9px 10px;
-}
-
-.click-to-play-plugins-notification-center-box {
-  border-top: 1px solid hsla(0,0%,100%,.2);
-  border-bottom: 1px solid hsla(0,0%,100%,.2);
-  background-color: hsla(211,79%,6%,.05);
-}
-
-.click-to-play-plugins-notification-button-container {
-  border-top: 1px solid hsla(0,0%,100%,.2);
-  -moz-border-start: 1px solid hsla(0,0%,100%,.2);
-  margin: 0px;
-  padding: 15px 11px 14px 11px;
-}
-
-.center-item-box {
-  padding-top: 11px;
-  -moz-padding-start: 16px;
-  -moz-padding-end: 11px;
-  margin-bottom: -2px;
-  -moz-border-start: 1px solid hsla(0,0%,100%,.2);
-}
-
-.center-item-box[padbottom="true"] {
-  padding-bottom: 12px;
-}
-
-.center-item-icon {
-  background-image: url("chrome://mozapps/skin/plugins/pluginGeneric-16.png");
-  background-repeat: no-repeat;
-  height: 16px;
-  width: 16px;
-  margin-bottom: 4px;
-}
-
-.center-item-box[warn="true"] {
-  background-image: url("chrome://browser/skin/click-to-play-warning-stripes.png");
-  background-repeat: repeat-x;
-  padding-top: 7px;
-  -moz-padding-end: 11px;
-  padding-bottom: 9px;
-  -moz-padding-start: 16px;
-}
-
-.center-item-box[padbottom="true"][warn="true"] {
-  padding-bottom: 7px;
-}
-
-.center-item-box[showseparator="true"] {
-  border-top: 1px solid hsla(211,79%,6%,.1);
-}
-
-.center-item-box[warn="false"] > .center-item-warning {
-  display: none;
-}
-
-.center-item-warning > .text-link {
-  color: #3d8cd7;
-}
-
-.center-item-warning > .text-link[href=""] {
-  display: none;
-}
-
-.center-item-warning-icon {
-  background-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 15px;
-  margin-bottom: 4px;
-}
-
-.center-item-warning-description {
-  color: #828282;
-}
-
-.center-item-button {
-  min-width: 0;
 }
 
 #main-window[privatebrowsingmode=temporary] #TabsToolbar::before {

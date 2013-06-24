@@ -177,6 +177,9 @@ interface MozObjectLoadingContent {
   readonly attribute URI? srcURI;
 
   [ChromeOnly]
+  readonly attribute unsigned long defaultFallbackType;
+
+  [ChromeOnly]
   readonly attribute unsigned long pluginFallbackType;
 
   /**
