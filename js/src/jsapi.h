@@ -4999,6 +4999,15 @@ JS_ScheduleGC(JSContext *cx, uint32_t count);
 extern JS_PUBLIC_API(void)
 JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled);
 
+typedef enum JSCompilerOption {
+    JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
+    JSCOMPILER_ION_USECOUNT_TRIGGER,
+    JSCOMPILER_PJS_ENABLE
+} JSCompilerOption;
+
+extern JS_PUBLIC_API(void)
+JS_SetGlobalCompilerOption(JSContext *cx, JSCompilerOption opt, uint32_t value);
+
 /*
  * Convert a uint32_t index into a jsid.
  */
