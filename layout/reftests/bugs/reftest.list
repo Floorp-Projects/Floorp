@@ -300,7 +300,7 @@ skip-if(B2G) == 273681-1.html 273681-1-ref.html
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-random-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
+random-if(d2d) fuzzy-if(Android&&AndroidVersion>=15,8,200) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
 == 290129-1.html 290129-1-ref.html
 skip-if(B2G) == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
@@ -893,7 +893,7 @@ random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for font
 == 404309-1b.html 404309-1-ref.html
 # Disabled due to compartments for now.
 #!= data:application/xml,<foo/> data:text/plain, # ensure we pretty-print this XML instead of letting it appear blank (test for bug 404419)
-== 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
+fuzzy-if(Android&&AndroidVersion>=15,8,50) == 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
 == 404666-1.html 404666-1-ref.html
 == 404666-2.html 404666-2-ref.html
 == 405186-1.xhtml about:blank
@@ -930,7 +930,7 @@ random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for font
 == 409089-3.html 409089-3-ref.html
 == 409659-1a.html 409659-1-ref.html
 != 409659-1b.html 409659-1-ref.html
-!= 409659-1c.html 409659-1-ref.html
+fails-if(Android&&AndroidVersion>=15&&smallScreen) != 409659-1c.html 409659-1-ref.html #there is no difference in the visible area of the screen
 == 409659-1d.html 409659-1-ref.html
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
@@ -1467,7 +1467,7 @@ random == 536061.html 536061-ref.html # fixedpoint division in blur code makes t
 == 539323-3.html 539323-3-ref.html
 == 539880-1.html 539880-1-ref.html
 == 539880-1-dynamic.html 539880-1-ref.html
-skip-if(B2G) == 539949-1.html#test2 539949-1-ref.html#test2
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,12,1000) == 539949-1.html#test2 539949-1-ref.html#test2
 == 541382-1.html 541382-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 needs-focus != 542116-1.html 542116-1-ref.html
@@ -1484,7 +1484,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 550325-2.html 550325-1-ref.html
 == 550325-3.html 550325-1-ref.html
 == 550716-1.html 550716-1-ref.html
-skip-if(B2G) == 551463-1.html 551463-1-ref.html
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.html 551463-1-ref.html
 == 551699-1.html 551699-1-ref.html
 == 552334-1.html 552334-1-ref.html
 # 553571 depends on MS Indic shaping behavior and Win7 font support;
@@ -1600,8 +1600,8 @@ skip-if(B2G) == 600803-1.html 600803-1-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
 == 602200-1.html 602200-1-ref.html
-fails-if(Android) == 602200-2.html 602200-2-ref.html
-== 602200-3.html 602200-3-ref.html
+fails-if(Android&&AndroidVersion<15) == 602200-2.html 602200-2-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,20) == 602200-3.html 602200-3-ref.html
 fails-if(Android) == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
@@ -1636,7 +1636,7 @@ HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 skip-if(B2G) random-if(winWidget) fuzzy-if(OSX==10.8,19,17) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 fuzzy-if(d2d,5,1) == 622585-1.html 622585-1-ref.html # bug 789402
-== 625409-1.html 625409-1-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,100) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
@@ -1652,9 +1652,9 @@ skip-if(B2G) random-if(d2d) fails-if(Android) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
-skip-if(B2G) == 637852-1.html 637852-1-ref.html # bug 839735
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-1.html 637852-1-ref.html # bug 839735
 fails-if(Android) == 637852-2.html 637852-2-ref.html
-== 637852-3.html 637852-3-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-3.html 637852-3-ref.html
 skip-if(B2G) == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
@@ -1735,11 +1735,11 @@ fuzzy(40,850) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) te
 == 801681-2.html 801681-2-ref.html
 == 801994-1.html 801994-1-ref.html
 == 804323-1.html 804323-1-ref.html
-== 811301-1.html 811301-1-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,1200) == 811301-1.html 811301-1-ref.html
 == 812824-1.html 812824-1-ref.html
 == 814677.html 814677-ref.html
 skip-if(B2G) == 814952-1.html 814952-1-ref.html
-skip-if(B2G) == 815593-1.html 815593-1-ref.html
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,200) == 815593-1.html 815593-1-ref.html
 == 816359-1.html 816359-1-ref.html
 == 816458-1.html 816458-1-ref.html
 == 816948-1.html 816948-1-ref.html
@@ -1749,7 +1749,7 @@ skip-if(B2G) == 818276-1.html 818276-1-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
-fails-if(Android) == 836844-1.html 836844-1-ref.html
+fails-if(Android&&AndroidVersion<15) == 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
 == 844178.html 844178-ref.html
 == 846144-1.html 846144-1-ref.html
@@ -1760,4 +1760,4 @@ test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
 == 858803-1.html 858803-1-ref.html
 != 860370.html 860370-notref.html
 == 871338-1.html 871338-1-ref.html
-== 875060-1.html 875060-1-ref.html
+random-if(Android&&AndroidVersion>=15) == 875060-1.html 875060-1-ref.html #Bug 885303
