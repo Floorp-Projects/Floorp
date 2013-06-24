@@ -140,14 +140,14 @@ size. -->
 <!ENTITY datareporting_notification_summary_short "To improve your experience, &brandShortName;…">
 <!ENTITY datareporting_notification_ticker_text "&datareporting_notification_title;: &datareporting_notification_action_long;">
 
-<!-- Localization note (datareporting_fhr_title, datareporting_fhr_summary,
+<!-- Localization note (datareporting_fhr_title, datareporting_fhr_summary2,
      reporting_telemetry_title, datareporting_telemetry_summary,
      datareporting_crashreporter_summary) : These match the strings in
      en-US/chrome/browser/preferences/advanced.dtd (healthReportSection.label,
      healthReportDesc.label, telemetrySection.label, telemetryDesc.label,
      crashReporterDesc.label). -->
 <!ENTITY datareporting_fhr_title "&brandShortName; Health Report">
-<!ENTITY datareporting_fhr_summary "Shares data with &vendorShortName; about your browser health and helps you understand your browser performance">
+<!ENTITY datareporting_fhr_summary2 "Shares data with &vendorShortName; about your browser health and helps you understand your browser performance">
 <!ENTITY datareporting_abouthr_title "View my Health Report">
 <!ENTITY datareporting_telemetry_title "Telemetry">
 <!ENTITY datareporting_telemetry_summary "Shares performance, usage, hardware and customization data about your browser with &vendorShortName; to help us make &brandShortName; better">
