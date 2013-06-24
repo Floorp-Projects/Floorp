@@ -322,10 +322,12 @@ DrawTargetCG::MaskSurface(const Pattern &aSource,
   CGContextScaleCTM(cg, 1, -1);
 
   IntSize size = aMask->GetSize();
-  CGContextClipToMask(cg, CGRectMake(aOffset.x, aOffset.y, size.width, size.height), image);
-  
-  FillRect(Rect(0, 0, size.width, size.height), aSource, aDrawOptions);
-  
+  CGContextClipToMask(cg, CGRectMake(aOffset.x, -(aOffset.y + size.height), size.width, size.height), image);
+
+  CGContextScaleCTM(cg, 1, -1);
+
+  FillRect(Rect(aOffset.x, aOffset.y, size.width, size.height), aSource, aDrawOptions);
+
   fixer.Fix(mCg);
 
   CGContextRestoreGState(mCg);
