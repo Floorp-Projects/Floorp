@@ -314,8 +314,11 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
 void
 HTMLTrackElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  if (mMediaParent && aNullParent) {
-    mMediaParent = nullptr;
+  if (mMediaParent) {
+    mMediaParent->RemoveTextTrack(mTrack);
+    if (aNullParent) {
+      mMediaParent = nullptr;
+    }
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
