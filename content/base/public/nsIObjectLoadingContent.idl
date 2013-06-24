@@ -37,6 +37,8 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long TYPE_DOCUMENT = 3;
   const unsigned long TYPE_NULL     = 4;
 
+  const unsigned long PLUGIN_ACTIVE               = 0xFF;
+
   // The content type is not supported (e.g. plugin not installed)
   const unsigned long PLUGIN_UNSUPPORTED          = 0;
   // Showing alternate content
@@ -155,6 +157,10 @@ interface nsIObjectLoadingContent : nsISupports
    */
   readonly attribute nsIURI srcURI;
 
+  /**
+   * The plugin's current state of fallback content. This property
+   * only makes sense if the plugin is not activated.
+   */
   readonly attribute unsigned long pluginFallbackType;
 
   /**
