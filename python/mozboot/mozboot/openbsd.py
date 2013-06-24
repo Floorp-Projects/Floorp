@@ -28,6 +28,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
     def _update_package_manager(self):
         self.run_as_root(['port', 'sync'])
 
-    def upgrade_mercurial(self):
+    def upgrade_mercurial(self, current):
         self.run_as_root(['pkg_add', '-u', 'mercurial'])
 
