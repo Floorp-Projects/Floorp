@@ -34,9 +34,10 @@ let _callbackId = 1;
  * returned from Java as an Object; the specified token; and the
  * specified action.
  *
- * permission {String} should be a string with an Android permission
- * that packages must have to respond to the ordered broadcast, or
- * null to allow all packages to respond.
+ * permission {String} is an optional string with an Android permission
+ * that packages must have to respond to the ordered broadcast. A null
+ * value allows any package to respond. If the parameter is omitted (or
+ * {undefined}), then the intent is restricted to the current package.
  */
 function sendOrderedBroadcast(action, token, callback, permission) {
   let callbackId = _callbackId++;
@@ -79,6 +80,6 @@ function sendOrderedBroadcast(action, token, callback, permission) {
     action: action,
     responseEvent: responseEvent,
     token: { callbackId: callbackId, data: token || null },
-    permission: permission || null,
+    permission: permission,
   });
 };
