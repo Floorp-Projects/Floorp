@@ -398,19 +398,19 @@
         var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
         var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
 
+        var position = this.alignmentPosition;
+        var offset = this.alignmentOffset;
         // if this panel has a "sliding" arrow, we may have previously set margins...
         arrowbox.style.removeProperty("margin");
-
-        var position = this.alignmentPosition;
         if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
           container.orient = "";
           arrowbox.orient = "vertical";
           if (position.indexOf("_after") > 0) {
             arrowbox.pack = "end";
-            arrowbox.style.marginBottom = this.alignmentOffset + "px";
+            arrowbox.style.marginBottom = offset + "px";
           } else {
             arrowbox.pack = "start";
-            arrowbox.style.marginTop = this.alignmentOffset + "px";
+            arrowbox.style.marginTop = offset + "px";
           }
 
           // The assigned side stays the same regardless of direction.
