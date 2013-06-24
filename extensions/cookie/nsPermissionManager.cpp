@@ -1806,3 +1806,59 @@ nsPermissionManager::ReleaseAppId(uint32_t aAppId)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
+                                     const char* aType,
+                                     bool aExactHostMatch,
+                                     uint64_t aSessionExpireTime,
+                                     uint64_t aPersistentExpireTime)
+{
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_ARG_POINTER(aType);
+
+  uint64_t nowms = PR_Now() / 1000;
+  if (aSessionExpireTime < nowms || aPersistentExpireTime < nowms) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return NS_OK;
+  }
+
+  nsAutoCString host;
+  nsresult rv = GetHostForPrincipal(aPrincipal, host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int32_t typeIndex = GetTypeIndex(aType, false);
+  // If type == -1, the type isn't known,
+  // so just return NS_OK
+  if (typeIndex == -1) return NS_OK;
+
+  uint32_t appId;
+  rv = aPrincipal->GetAppId(&appId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isInBrowserElement;
+  rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PermissionHashKey* entry = GetPermissionHashKey(host, appId, isInBrowserElement,
+                                                  typeIndex, aExactHostMatch);
+  if (!entry) {
+    return NS_OK;
+  }
+
+  int32_t idx = entry->GetPermissionIndex(typeIndex);
+  if (-1 == idx) {
+    return NS_OK;
+  }
+
+  PermissionEntry& perm = entry->GetPermissions()[idx];
+  if (perm.mExpireType == EXPIRE_TIME) {
+    perm.mExpireTime = aPersistentExpireTime;
+  } else if (perm.mExpireType == EXPIRE_SESSION && perm.mExpireTime != 0) {
+    perm.mExpireTime = aSessionExpireTime;
+  }
+  return NS_OK;
+}

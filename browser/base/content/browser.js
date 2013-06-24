@@ -752,9 +752,9 @@ var gBrowserInit = {
 
     // Note that the XBL binding is untrusted
     gBrowser.addEventListener("PluginBindingAttached", gPluginHandler, true, true);
-    gBrowser.addEventListener("PluginScripted",        gPluginHandler, true);
     gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
+    gBrowser.addEventListener("PluginInstantiated",    gPluginHandler, true);
 
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 

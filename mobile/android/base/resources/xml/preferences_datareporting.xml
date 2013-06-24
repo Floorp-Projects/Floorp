@@ -24,7 +24,7 @@
 
     <CheckBoxPreference android:key="android.not_a_preference.healthreport.uploadEnabled"
                         android:title="@string/datareporting_fhr_title"
-                        android:summary="@string/datareporting_fhr_summary"
+                        android:summary="@string/datareporting_fhr_summary2"
                         android:defaultValue="true" />
 
     <org.mozilla.gecko.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"

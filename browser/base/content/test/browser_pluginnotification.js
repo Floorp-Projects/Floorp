@@ -4,8 +4,6 @@ const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://12
 
 var gTestBrowser = null;
 var gNextTest = null;
-var gClickToPlayPluginActualEvents = 0;
-var gClickToPlayPluginExpectedEvents = 5;
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -60,12 +58,11 @@ function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
   registerCleanupFunction(function() {
+    clearAllPluginPermissions();
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
-    Services.prefs.clearUserPref("plugins.click_to_play");
     getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
     getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   });
-  Services.prefs.setBoolPref("plugins.click_to_play", false);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
   var plugin = getTestPlugin();
@@ -75,22 +72,15 @@ function test() {
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   gTestBrowser.addEventListener("load", pageLoad, true);
-  gTestBrowser.addEventListener("PluginBindingAttached", handleBindingAttached, true, true);
   prepareTest(test1, gTestRoot + "plugin_unknown.html");
 }
 
 function finishTest() {
+  clearAllPluginPermissions();
   gTestBrowser.removeEventListener("load", pageLoad, true);
-  gTestBrowser.removeEventListener("PluginBindingAttached", handleBindingAttached, true, true);
   gBrowser.removeCurrentTab();
   window.focus();
   finish();
-}
-
-function handleBindingAttached(evt) {
-  evt.target instanceof Ci.nsIObjectLoadingContent;
-  if (evt.target.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY)
-    gClickToPlayPluginActualEvents++;
 }
 
 function pageLoad() {
@@ -106,9 +96,7 @@ function prepareTest(nextTest, url) {
 
 // Tests a page with an unknown plugin in it.
 function test1() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 1, Should have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 1, Should not have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 1, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 1, Should know about application/x-unknown");
   ok(!gTestBrowser.missingPlugins.has("application/x-test"), "Test 1, Should not know about application/x-test");
@@ -126,9 +114,7 @@ function test1() {
 
 // Tests a page with a working plugin in it.
 function test2() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 2, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 2, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 2, Should not be a missing plugin list");
 
   var plugin = getTestPlugin();
@@ -139,9 +125,7 @@ function test2() {
 
 // Tests a page with a disabled plugin in it.
 function test3() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 3, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 3, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 3, Should not be a missing plugin list");
 
   new TabOpenListener("about:addons", test4, prepareTest5);
@@ -175,12 +159,16 @@ function prepareTest5() {
 // Tests a page with a blocked plugin in it.
 function test5() {
   info("test5");
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 5, Should not have displayed the missing plugin notification");
-  ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 5, Should have displayed the blocked plugin notification");
-  ok(gTestBrowser.missingPlugins, "Test 5, Should be a missing plugin list");
-  ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 5, Should know about application/x-test");
-  ok(!gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 5, Should not know about application/x-unknown");
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 5: There should be a plugin notification for blocked plugins");
+  ok(notification.dismissed, "Test 5: The plugin notification should be dismissed by default");
+
+  notification.reshow();
+  is(notification.options.centerActions.length, 1, "Test 5: Only the blocked plugin should be present in the notification");
+  ok(PopupNotifications.panel.firstChild._buttonContainer.hidden, "Part 5: The blocked plugins notification should not have any buttons visible.");
+
+  ok(!gTestBrowser.missingPlugins, "Test 5, Should not be a missing plugin list");
   var pluginNode = gTestBrowser.contentDocument.getElementById("test");
   ok(pluginNode, "Test 5, Found plugin in page");
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -191,26 +179,21 @@ function test5() {
 
 // Tests a page with a blocked and unknown plugin in it.
 function test6() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 6, Should have displayed the missing plugin notification");
-  ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 6, Should have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 6, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 6, Should know about application/x-unknown");
-  ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 6, Should know about application/x-test");
+  ok(!gTestBrowser.missingPlugins.has("application/x-test"), "Test 6, application/x-test should not be a missing plugin");
 
   prepareTest(test7, gTestRoot + "plugin_both2.html");
 }
 
 // Tests a page with a blocked and unknown plugin in it (alternate order to above).
 function test7() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 7, Should have displayed the missing plugin notification");
-  ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 7, Should have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 7, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 7, Should know about application/x-unknown");
-  ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 7, Should know about application/x-test");
+  ok(!gTestBrowser.missingPlugins.has("application/x-test"), "Test 7, application/x-test should not be a missing plugin");
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   var plugin = getTestPlugin();
   plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
@@ -222,9 +205,7 @@ function test7() {
 
 // Tests a page with a working plugin that is click-to-play
 function test8() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 8, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 8, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 8, Should not be a missing plugin list");
   ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 8, Should have a click-to-play notification");
 
@@ -233,123 +214,10 @@ function test8() {
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 8, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
 
-  prepareTest(test9a, gTestRoot + "plugin_test2.html");
-}
-
-// Tests that activating one click-to-play plugin will activate only that plugin (part 1/3)
-function test9a() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 9a, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9a, Should not have displayed the blocked plugin notification");
-  ok(!gTestBrowser.missingPlugins, "Test 9a, Should not be a missing plugin list");
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 9a, Should have a click-to-play notification");
-  ok(notification.options.centerActions.length == 1, "Test 9a, Should have only one type of plugin in the notification");
-
-  var doc = gTestBrowser.contentDocument;
-  var plugin1 = doc.getElementById("test1");
-  var rect = doc.getAnonymousElementByAttribute(plugin1, "class", "mainBox").getBoundingClientRect();
-  ok(rect.width == 200, "Test 9a, Plugin with id=" + plugin1.id + " overlay rect should have 200px width before being clicked");
-  ok(rect.height == 200, "Test 9a, Plugin with id=" + plugin1.id + " overlay rect should have 200px height before being clicked");
-  var objLoadingContent = plugin1.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 9a, Plugin with id=" + plugin1.id + " should not be activated");
-
-  var plugin2 = doc.getElementById("test2");
-  var rect = doc.getAnonymousElementByAttribute(plugin2, "class", "mainBox").getBoundingClientRect();
-  ok(rect.width == 200, "Test 9a, Plugin with id=" + plugin2.id + " overlay rect should have 200px width before being clicked");
-  ok(rect.height == 200, "Test 9a, Plugin with id=" + plugin2.id + " overlay rect should have 200px height before being clicked");
-  var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 9a, Plugin with id=" + plugin2.id + " should not be activated");
-
-  EventUtils.synthesizeMouseAtCenter(plugin1, {}, gTestBrowser.contentWindow);
-  var objLoadingContent = plugin1.QueryInterface(Ci.nsIObjectLoadingContent);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test9b, "Test 9a, Waited too long for plugin to activate");
-}
-
-// Tests that activating one click-to-play plugin will activate only that plugin (part 2/3)
-function test9b() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 9b, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9b, Should not have displayed the blocked plugin notification");
-  ok(!gTestBrowser.missingPlugins, "Test 9b, Should not be a missing plugin list");
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 9b, Click to play notification should not be removed now");
-  ok(notification.options.centerActions.length == 1, "Test 9b, Should have only one type of plugin in the notification");
-
-  var doc = gTestBrowser.contentDocument;
-  var plugin1 = doc.getElementById("test1");
-  var pluginRect1 = doc.getAnonymousElementByAttribute(plugin1, "class", "mainBox").getBoundingClientRect();
-  ok(pluginRect1.width == 0, "Test 9b, Plugin with id=" + plugin1.id + " should have click-to-play overlay with zero width");
-  ok(pluginRect1.height == 0, "Test 9b, Plugin with id=" + plugin1.id + " should have click-to-play overlay with zero height");
-  var objLoadingContent = plugin1.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 9b, Plugin with id=" + plugin1.id + " should be activated");
-
-  var plugin2 = doc.getElementById("test2");
-  var pluginRect2 = doc.getAnonymousElementByAttribute(plugin2, "class", "mainBox").getBoundingClientRect();
-  ok(pluginRect2.width != 0, "Test 9b, Plugin with id=" + plugin2.id + " should not have click-to-play overlay with zero width");
-  ok(pluginRect2.height != 0, "Test 9b, Plugin with id=" + plugin2.id + " should not have click-to-play overlay with zero height");
-  var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 9b, Plugin with id=" + plugin2.id + " should not be activated");
-
-  EventUtils.synthesizeMouseAtCenter(plugin2, {}, gTestBrowser.contentWindow);
-  var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test9c, "Test 9b, Waited too long for plugin to activate");
-}
-
-//
-// Tests that activating one click-to-play plugin will activate only that plugin (part 3/3)
-function test9c() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 9c, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9c, Should not have displayed the blocked plugin notification");
-  ok(!gTestBrowser.missingPlugins, "Test 9c, Should not be a missing plugin list");
-  ok(!PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 9c, Click to play notification should be removed now");
-
-  var doc = gTestBrowser.contentDocument;
-  var plugin1 = doc.getElementById("test1");
-  var pluginRect1 = doc.getAnonymousElementByAttribute(plugin1, "class", "mainBox").getBoundingClientRect();
-  ok(pluginRect1.width == 0, "Test 9c, Plugin with id=" + plugin1.id + " should have click-to-play overlay with zero width");
-  ok(pluginRect1.height == 0, "Test 9c, Plugin with id=" + plugin1.id + " should have click-to-play overlay with zero height");
-  var objLoadingContent = plugin1.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 9c, Plugin with id=" + plugin1.id + " should be activated");
-
-  var plugin2 = doc.getElementById("test1");
-  var pluginRect2 = doc.getAnonymousElementByAttribute(plugin2, "class", "mainBox").getBoundingClientRect();
-  ok(pluginRect2.width == 0, "Test 9c, Plugin with id=" + plugin2.id + " should have click-to-play overlay with zero width");
-  ok(pluginRect2.height == 0, "Test 9c, Plugin with id=" + plugin2.id + " should have click-to-play overlay with zero height");
-  var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 9c, Plugin with id=" + plugin2.id + " should be activated");
-
-  prepareTest(test10a, gTestRoot + "plugin_test3.html");
-}
-
-// Tests that activating a hidden click-to-play plugin through the notification works (part 1/2)
-function test10a() {
-  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 10a, Should not have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 10a, Should not have displayed the blocked plugin notification");
-  ok(!gTestBrowser.missingPlugins, "Test 10a, Should not be a missing plugin list");
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 10a, Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 10a, Plugin should not be activated");
-
-  popupNotification.mainAction.callback();
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test10b, "Test 10a, Waited too long for plugin to activate");
-}
-
-// Tests that activating a hidden click-to-play plugin through the notification works (part 2/2)
-function test10b() {
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 10b, Plugin should be activated");
-
   prepareTest(test11a, gTestRoot + "plugin_test3.html");
 }
+
+// Tests 9 & 10 removed
 
 // Tests that the going back will reshow the notification for click-to-play plugins (part 1/4)
 function test11a() {
@@ -379,14 +247,11 @@ function test11c() {
 function test11d() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 11d, Should have a click-to-play notification");
-  is(gClickToPlayPluginActualEvents, gClickToPlayPluginExpectedEvents,
-     "There should be a PluginClickToPlay event for each plugin that was " +
-     "blocked due to the plugins.click_to_play pref");
 
   prepareTest(test12a, gHttpTestRoot + "plugin_clickToPlayAllow.html");
 }
 
-// Tests that the "Allow Always" permission works for click-to-play plugins (part 1/3)
+// Tests that the "Allow Always" permission works for click-to-play plugins
 function test12a() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 12a, Should have a click-to-play notification");
@@ -395,148 +260,38 @@ function test12a() {
   ok(!objLoadingContent.activated, "Test 12a, Plugin should not be activated");
 
   // Simulate clicking the "Allow Always" button.
-  popupNotification.secondaryActions[0].callback();
+  popupNotification.reshow();
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
   var condition = function() objLoadingContent.activated;
   waitForCondition(condition, test12b, "Test 12a, Waited too long for plugin to activate");
 }
 
-// Tests that the "Always" permission works for click-to-play plugins (part 2/3)
 function test12b() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 12b, Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 12b, Plugin should be activated");
-
-  prepareTest(test12c, gHttpTestRoot + "plugin_clickToPlayAllow.html");
-}
-
-// Tests that the "Always" permission works for click-to-play plugins (part 3/3)
-function test12c() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 12c, Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 12c, Plugin should be activated");
-
-  prepareTest(test12d, gHttpTestRoot + "plugin_two_types.html");
+  ok(popupNotification, "Test 12d, Should have a click-to-play notification");
+  prepareTest(test12c, gHttpTestRoot + "plugin_two_types.html");
 }
 
 // Test that the "Always" permission, when set for just the Test plugin,
 // does not also allow the Second Test plugin.
-function test12d() {
+function test12c() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 12d, Should have a click-to-play notification");
   var test = gTestBrowser.contentDocument.getElementById("test");
   var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
   var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
-  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 12d, Test plugin should be activated");
-  var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 12d, Second Test plugin (A) should not be activated");
-  var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 12d, Second Test plugin (B) should not be activated");
+  ok(test.activated, "Test 12d, Test plugin should be activated");
+  ok(!secondtestA.activated, "Test 12d, Second Test plugin (A) should not be activated");
+  ok(!secondtestB.activated, "Test 12d, Second Test plugin (B) should not be activated");
 
-  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
-  prepareTest(test13a, gHttpTestRoot + "plugin_clickToPlayDeny.html");
-}
-
-// Tests that the "Deny Always" permission works for click-to-play plugins (part 1/3)
-function test13a() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 13a, Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 13a, Plugin should not be activated");
-
-  // Simulate clicking the "Deny Always" button.
-  popupNotification.secondaryActions[1].callback();
-  test13b();
-}
-
-// Tests that the "Deny Always" permission works for click-to-play plugins (part 2/3)
-function test13b() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 13b, Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 13b, Plugin should not be activated");
-  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 13b, Plugin should not have visible overlay");
-
-  gNextTest = test13c;
-  gTestBrowser.reload();
-}
-
-// Tests that the "Deny Always" permission works for click-to-play plugins (part 3/3)
-function test13c() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 13c, Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 13c, Plugin should not be activated");
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 13c, Plugin should be disabled");
-
-  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility != "visible", "Test 13c, Plugin should have visible overlay");
-
-  prepareTest(test13d, gHttpTestRoot + "plugin_two_types.html");
-}
-
-// Test that the "Deny Always" permission, when set for just the Test plugin,
-// does not also block the Second Test plugin (i.e. it gets an overlay and
-// there's a notification and everything).
-function test13d() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 13d, Should have a click-to-play notification");
-
-  var test = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(test, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
-  ok(!objLoadingContent.activated, "Test 13d, Test plugin should not be activated");
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 13d, Test plugin should be disabled");
-
-  var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
-  var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
-  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtestA, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
-  ok(!objLoadingContent.activated, "Test 13d, Second Test plugin (A) should not be activated");
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 13d, Test plugin should be disabled");
-
-  var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
-  var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
-  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtestB, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
-  ok(!objLoadingContent.activated, "Test 13d, Second Test plugin (B) should not be activated");
-
-  var condition = function() objLoadingContent.activated;
-  // "click" "Activate All Plugins"
-  popupNotification.mainAction.callback();
-  waitForCondition(condition, test13e, "Test 13d, Waited too long for plugin to activate");
-}
-
-// Test that clicking "Activate All Plugins" won't activate plugins that
-// have previously been "Deny Always"-ed.
-function test13e() {
-  var test = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 13e, Test plugin should not be activated");
-
-  var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
-  var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 13e, Second Test plugin (A) should be activated");
-
-  var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
-  var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 13e, Second Test plugin (B) should be activated");
-
-  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
-  Services.prefs.setBoolPref("plugins.click_to_play", false);
+  clearAllPluginPermissions();
   var plugin = getTestPlugin();
   plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   prepareTest(test14, gTestRoot + "plugin_test2.html");
 }
+
+// Test 13 removed
 
 // Tests that the plugin's "activated" property is true for working plugins with click-to-play disabled.
 function test14() {
@@ -544,7 +299,6 @@ function test14() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 14, Plugin should be activated");
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   var plugin = getTestPlugin();
   plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
@@ -559,53 +313,10 @@ function test15() {
   var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(mainBox, "Test 15, Plugin with id=" + plugin.id + " overlay should exist");
 
-  prepareTest(test16a, gTestRoot + "plugin_add_dynamically.html");
-}
-
-// Tests that a plugin dynamically added to a page after one plugin is clicked
-// to play (which removes the notification) gets its own notification (1/4)
-function test16a() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 16a, Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentWindow.addPlugin();
-  var condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, test16b, "Test 16a, Waited too long for click-to-play-plugin notification");
-}
-
-// 2/4
-function test16b() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 16b, Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 16b, Plugin should not be activated");
-  EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test16c, "Test 16b, Waited too long for plugin to activate");
-}
-
-// 3/4
-function test16c() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 16c, Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 16c, Plugin should be activated");
-  var plugin = gTestBrowser.contentWindow.addPlugin();
-  var condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, test16d, "Test 16c, Waited too long for click-to-play-plugin notification");
-}
-
-// 4/4
-function test16d() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 16d, Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[1];
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 16d, Plugin should not be activated");
-
   prepareTest(test17, gTestRoot + "plugin_bug749455.html");
 }
+
+// Test 16 removed
 
 // Tests that mContentType is used for click-to-play plugins, and not the
 // inspected type.
@@ -680,15 +391,15 @@ function test18c() {
   ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
 
   // check that click "Always allow" works with blocklisted plugins
-  clickToPlayNotification.secondaryActions[0].callback();
+  clickToPlayNotification.reshow();
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
   var condition = function() objLoadingContent.activated;
   waitForCondition(condition, test18d, "Test 18d, Waited too long for plugin to activate");
 }
 
 // continue testing "Always allow"
 function test18d() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 18d, Should not have a click-to-play notification");
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 18d, Plugin should be activated");
@@ -698,13 +409,11 @@ function test18d() {
 
 // continue testing "Always allow"
 function test18e() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 18e, Should not have a click-to-play notification");
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
 
-  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
+  clearAllPluginPermissions();
   prepareTest(test18f, gHttpTestRoot + "plugin_test.html");
 }
 
@@ -741,25 +450,21 @@ function test18g() {
   });
 }
 
-// Tests that clicking the icon of the overlay activates the plugin
+// Tests that clicking the icon of the overlay activates the doorhanger
 function test19a() {
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 19a, Plugin should not be activated");
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed, "Test 19a, Doorhanger should start out dismissed");
 
   var icon = doc.getAnonymousElementByAttribute(plugin, "class", "icon");
   EventUtils.synthesizeMouseAtCenter(icon, {}, gTestBrowser.contentWindow);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test19b, "Test 19a, Waited too long for plugin to activate");
+  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed;
+  waitForCondition(condition, test19b, "Test 19a, Waited too long for doorhanger to activate");
 }
 
 function test19b() {
-  var doc = gTestBrowser.contentDocument;
-  var plugin = doc.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 19b, Plugin should be activated");
-
   prepareTest(test19c, gTestRoot + "plugin_test.html");
 }
 
@@ -770,22 +475,19 @@ function test19c() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 19c, Plugin should not be activated");
 
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed, "Test 19c, Doorhanger should start out dismissed");
+
   var text = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgClickToPlay");
   EventUtils.synthesizeMouseAtCenter(text, {}, gTestBrowser.contentWindow);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test19d, "Test 19c, Waited too long for plugin to activate");
+  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed;
+  waitForCondition(condition, test19d, "Test 19c, Waited too long for doorhanger to activate");
 }
 
 function test19d() {
-  var doc = gTestBrowser.contentDocument;
-  var plugin = doc.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 19d, Plugin should be activated");
-
   prepareTest(test19e, gTestRoot + "plugin_test.html");
 }
 
-// Tests that clicking the box of the overlay activates the plugin
+// Tests that clicking the box of the overlay activates the doorhanger
 // (just to be thorough)
 function test19e() {
   var doc = gTestBrowser.contentDocument;
@@ -793,17 +495,14 @@ function test19e() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 19e, Plugin should not be activated");
 
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed, "Test 19e, Doorhanger should start out dismissed");
+
   EventUtils.synthesizeMouse(plugin, 50, 50, {}, gTestBrowser.contentWindow);
-  var condition = function() objLoadingContent.activated;
+  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed;
   waitForCondition(condition, test19f, "Test 19e, Waited too long for plugin to activate");
 }
 
 function test19f() {
-  var doc = gTestBrowser.contentDocument;
-  var plugin = doc.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 19f, Plugin should be activated");
-
   prepareTest(test20a, gTestRoot + "plugin_hidden_to_visible.html");
 }
 
@@ -843,19 +542,31 @@ function test20b() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 20b, plugin should not be activated");
 
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed, "Test 20b, Doorhanger should start out dismissed");
+
   EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
-  var condition = function() objLoadingContent.activated;
+  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed;
   waitForCondition(condition, test20c, "Test 20b, Waited too long for plugin to activate");
 }
 
 function test20c() {
+  PopupNotifications.panel.firstChild._primaryButton.click();
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("plugin");
+  let condition = function() plugin.activated;
+  waitForCondition(condition, test20d, "Test 20c", "Waiting for plugin to activate");
+}
+
+function test20d() {
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("plugin");
   var pluginRect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
-  ok(pluginRect.width == 0, "Test 20c, plugin should have click-to-play overlay with zero width");
-  ok(pluginRect.height == 0, "Test 20c, plugin should have click-to-play overlay with zero height");
+  ok(pluginRect.width == 0, "Test 20d, plugin should have click-to-play overlay with zero width");
+  ok(pluginRect.height == 0, "Test 20d, plugin should have click-to-play overlay with zero height");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 20c, plugin should be activated");
+  ok(objLoadingContent.activated, "Test 20d, plugin should be activated");
+
+  clearAllPluginPermissions();
 
   prepareTest(test21a, gTestRoot + "plugin_two_types.html");
 }
@@ -864,7 +575,6 @@ function test20c() {
 function test21a() {
   var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 21a, Should have a click-to-play notification");
-  ok(notification.options.centerActions.length == 2, "Test 21a, Should have two types of plugin in the notification");
 
   var doc = gTestBrowser.contentDocument;
   var ids = ["test", "secondtestA", "secondtestB"];
@@ -878,19 +588,12 @@ function test21a() {
   }
 
   // we have to actually show the panel to get the bindings to instantiate
-  notification.options.eventCallback = test21b;
   notification.reshow();
-}
+  is(notification.options.centerActions.length, 2, "Test 21a, Should have two types of plugin in the notification");
 
-function test21b(type) {
-  if (type != "shown") {
-    return;
-  }
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  notification.options.eventCallback = null;
   var centerAction = null;
   for (var action of notification.options.centerActions) {
-    if (action.message == "Test") {
+    if (action.pluginName == "Test") {
       centerAction = action;
       break;
     }
@@ -898,7 +601,8 @@ function test21b(type) {
   ok(centerAction, "Test 21b, found center action for the Test plugin");
 
   var centerItem = null;
-  for (var item of centerAction.popupnotification.childNodes) {
+  for (var item of PopupNotifications.panel.firstChild.childNodes) {
+    is(item.value, "block", "Test 21b, all plugins should start out blocked");
     if (item.action == centerAction) {
       centerItem = item;
       break;
@@ -907,7 +611,8 @@ function test21b(type) {
   ok(centerItem, "Test 21b, found center item for the Test plugin");
 
   // "click" the button to activate the Test plugin
-  centerItem.runCallback.apply(centerItem);
+  centerItem.value = "allownow";
+  PopupNotifications.panel.firstChild._primaryButton.click();
 
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("test");
@@ -919,7 +624,9 @@ function test21b(type) {
 function test21c() {
   var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 21c, Should have a click-to-play notification");
-  ok(notification.options.centerActions.length == 1, "Test 21c, Should have one type of plugin in the notification");
+
+  notification.reshow();
+  ok(notification.options.centerActions.length == 2, "Test 21c, Should have one type of plugin in the notification");
 
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("test");
@@ -939,21 +646,9 @@ function test21c() {
     ok(!objLoadingContent.activated, "Test 21c, Plugin with id=" + plugin.id + " should not be activated");
   }
 
-  // we have to actually show the panel to get the bindings to instantiate
-  notification.options.eventCallback = test21d;
-  notification.reshow();
-}
-
-function test21d(type) {
-  if (type != "shown") {
-    return;
-  }
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  notification.options.eventCallback = null;
-
   var centerAction = null;
   for (var action of notification.options.centerActions) {
-    if (action.message == "Second Test") {
+    if (action.pluginName == "Second Test") {
       centerAction = action;
       break;
     }
@@ -961,16 +656,21 @@ function test21d(type) {
   ok(centerAction, "Test 21d, found center action for the Second Test plugin");
 
   var centerItem = null;
-  for (var item of centerAction.popupnotification.childNodes) {
+  for (var item of PopupNotifications.panel.firstChild.childNodes) {
     if (item.action == centerAction) {
+      is(item.value, "block", "Test 21d, test plugin 2 should start blocked");
       centerItem = item;
       break;
+    }
+    else {
+      is(item.value, "allownow", "Test 21d, test plugin should be enabled");
     }
   }
   ok(centerItem, "Test 21d, found center item for the Second Test plugin");
 
   // "click" the button to activate the Second Test plugins
-  centerItem.runCallback.apply(centerItem);
+  centerItem.value = "allownow";
+  PopupNotifications.panel.firstChild._primaryButton.click();
 
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("secondtestA");
@@ -980,9 +680,6 @@ function test21d(type) {
 }
 
 function test21e() {
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!notification, "Test 21e, Should not have a click-to-play notification");
-
   var doc = gTestBrowser.contentDocument;
   var ids = ["test", "secondtestA", "secondtestB"];
   for (var id of ids) {
@@ -994,9 +691,11 @@ function test21e() {
     ok(objLoadingContent.activated, "Test 21e, Plugin with id=" + plugin.id + " should be activated");
   }
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+
+  clearAllPluginPermissions();
+
   prepareTest(test22, gTestRoot + "plugin_test.html");
 }
 
@@ -1074,14 +773,13 @@ function test24a() {
   ok(!objLoadingContent.activated, "Test 24a, plugin should not be activated");
 
   // simulate "always allow"
-  notification.secondaryActions[0].callback();
+  notification.reshow();
+  PopupNotifications.panel.firstChild._primaryButton.click();
   prepareTest(test24b, gHttpTestRoot + "plugin_test.html");
 }
 
 // did the "always allow" work as intended?
 function test24b() {
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!notification, "Test 24b, Should not have a click-to-play notification");
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   ok(plugin, "Test 24b, Found plugin in page");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -1103,86 +801,25 @@ function test24c() {
   ok(!objLoadingContent.activated, "Test 24c, plugin should not be activated");
 
   // simulate "always allow"
-  notification.secondaryActions[0].callback();
+  notification.reshow();
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
   prepareTest(test24d, gHttpTestRoot + "plugin_test.html");
 }
 
 // We should still be able to always allow a plugin after we've seen that it's
 // blocklisted.
 function test24d() {
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!notification, "Test 24d, Should not have a click-to-play notification");
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   ok(plugin, "Test 24d, Found plugin in page");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 24d, plugin should be activated");
 
   // this resets the vulnerable plugin permission
-  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
   function() {
-    // this resets the normal plugin permission
-    Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
+    clearAllPluginPermissions();
     resetBlocklist();
-    prepareTest(test25a, gHttpTestRoot + "plugin_test.html");
+    finishTest();
   });
-}
-
-// Test that clicking "always allow" or "always deny" doesn't affect plugins
-// that already have permission given to them
-function test25a() {
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 25a, Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  ok(plugin, "Test 25a, Found plugin in page");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 25a, plugin should not be activated");
-
-  // simulate "always allow"
-  notification.secondaryActions[0].callback();
-  prepareTest(test25b, gHttpTestRoot + "plugin_two_types.html");
-}
-
-function test25b() {
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 25b, Should have a click-to-play notification");
-
-  var test = gTestBrowser.contentDocument.getElementById("test");
-  ok(test, "Test 25b, Found test plugin in page");
-  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 25b, test plugin should be activated");
-
-  var secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
-  ok(secondtest, "Test 25b, Found second test plugin in page");
-  var objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 25b, second test plugin should not be activated");
-
-  // simulate "always deny"
-  notification.secondaryActions[1].callback();
-  prepareTest(test25c, gHttpTestRoot + "plugin_two_types.html");
-}
-
-// we should have one plugin allowed to activate and the other plugin(s) denied
-// (so it should have an invisible overlay)
-function test25c() {
-  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!notification, "Test 25c, Should not have a click-to-play notification");
-
-  var test = gTestBrowser.contentDocument.getElementById("test");
-  ok(test, "Test 25c, Found test plugin in page");
-  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 25c, test plugin should be activated");
-
-  var secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
-  ok(secondtest, "Test 25c, Found second test plugin in page");
-  var objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 25c, second test plugin should not be activated");
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 25c, second test plugin should be disabled");
-  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtest, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 25c, second test plugin should have visible overlay");  
-
-  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
-  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-second-test"));
-
-  finishTest();
 }
