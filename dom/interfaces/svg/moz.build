@@ -7,7 +7,6 @@
 XPIDL_SOURCES += [
     'nsIDOMSVGAnimatedEnum.idl',
     'nsIDOMSVGAnimatedInteger.idl',
-    'nsIDOMSVGAnimatedLength.idl',
     'nsIDOMSVGAnimatedNumber.idl',
     'nsIDOMSVGElement.idl',
     'nsIDOMSVGLength.idl',
