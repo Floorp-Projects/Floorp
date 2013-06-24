@@ -4294,7 +4294,10 @@ nsXPCComponents_Utils::IsDeadWrapper(const jsval &obj, bool *out)
     if (JSVAL_IS_PRIMITIVE(obj))
         return NS_ERROR_INVALID_ARG;
 
-    *out = JS_IsDeadWrapper(JSVAL_TO_OBJECT(obj));
+    // Make sure to unwrap first. Once a proxy is nuked, it ceases to be a
+    // wrapper, meaning that, if passed to another compartment, we'll generate
+    // a CCW for it. Make sure that IsDeadWrapper sees through the confusion.
+    *out = JS_IsDeadWrapper(js::CheckedUnwrap(JSVAL_TO_OBJECT(obj)));
     return NS_OK;
 }
 
