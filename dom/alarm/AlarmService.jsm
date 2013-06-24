@@ -508,7 +508,17 @@ this.AlarmService = {
       case "webapps-clear-data":
         let params =
           aSubject.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
+        if (!params) {
+          debug("Error! Fail to remove alarms for an uninstalled app.");
+          return;
+        }
+
         let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        if (!manifestURL) {
+          debug("Error! Fail to remove alarms for an uninstalled app.");
+          return;
+        }
+
         this._db.getAll(
           manifestURL,
           function getAllSuccessCb(aAlarms) {
