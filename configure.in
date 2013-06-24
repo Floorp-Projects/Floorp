@@ -2498,48 +2498,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-dnl Check for int64, uint, and uint_t.
-dnl ========================================================
-AC_MSG_CHECKING(for int64)
-AC_CACHE_VAL(ac_cv_int64,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [int64 foo = 0;],
-                 [ac_cv_int64=true],
-                 [ac_cv_int64=false])])
-if test "$ac_cv_int64" = true ; then
-  AC_DEFINE(HAVE_INT64)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for uint)
-AC_CACHE_VAL(ac_cv_uint,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [uint foo = 0;],
-                 [ac_cv_uint=true],
-                 [ac_cv_uint=false])])
-if test "$ac_cv_uint" = true ; then
-  AC_DEFINE(HAVE_UINT)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for uint_t)
-AC_CACHE_VAL(ac_cv_uint_t,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [uint_t foo = 0;],
-                 [ac_cv_uint_t=true],
-                 [ac_cv_uint_t=false])])
-if test "$ac_cv_uint_t" = true ; then
-  AC_DEFINE(HAVE_UINT_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-
 dnl On the gcc trunk (as of 2001-02-09) _GNU_SOURCE, and thus __USE_GNU,
 dnl are defined when compiling C++ but not C.  Since the result of this
 dnl test is used only in C++, do it in C++.
