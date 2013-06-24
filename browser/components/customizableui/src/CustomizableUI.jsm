@@ -1800,7 +1800,7 @@ this.CustomizableUI = {
       CustomizableUIInternal
     );
   },
-  getWidgetsInArea: function(aArea) {
+  getWidgetIdsInArea: function(aArea) {
     if (!gAreas.has(aArea)) {
       throw new Error("Unknown customization area: " + aArea);
     }
@@ -1808,7 +1808,10 @@ this.CustomizableUI = {
       throw new Error("Area not yet restored");
     }
 
-    return gPlacements.get(aArea).map(
+    return gPlacements.get(aArea);
+  },
+  getWidgetsInArea: function(aArea) {
+    return this.getWidgetIdsInArea(aArea).map(
       CustomizableUIInternal.wrapWidget,
       CustomizableUIInternal
     );
