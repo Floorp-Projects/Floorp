@@ -1185,6 +1185,8 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_DOMACTIVITY_CONTRACTID, &kNS_DOMACTIVITY_CID },
   { NS_DOMPARSER_CONTRACTID, &kNS_DOMPARSER_CID },
   { "@mozilla.org/dom/localStorage-manager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
+  // Keeping the old ContractID for backward compatibility
+  { "@mozilla.org/dom/storagemanager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
   { "@mozilla.org/dom/sessionStorage-manager;1", &kNS_DOMSESSIONSTORAGEMANAGER_CID },
   { "@mozilla.org/dom/json;1", &kNS_DOMJSON_CID },
   { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
