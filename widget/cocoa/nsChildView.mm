@@ -1421,7 +1421,8 @@ nsChildView::ShouldUseOffMainThreadCompositing()
   // OMTC doesn't work with Basic Layers on OS X right now. Once it works, we'll
   // still want to disable it for certain kinds of windows (e.g. popups).
   return nsBaseWidget::ShouldUseOffMainThreadCompositing() &&
-         ComputeShouldAccelerate(mUseLayersAcceleration);
+         (ComputeShouldAccelerate(mUseLayersAcceleration) ||
+          Preferences::GetBool("layers.offmainthreadcomposition.prefer-basic", false));
 }
 
 inline uint16_t COLOR8TOCOLOR16(uint8_t color8)
