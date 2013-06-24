@@ -56,6 +56,7 @@
 #include "nsStyleUtil.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/Preferences.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -2757,10 +2758,22 @@ nsObjectLoadingContent::CancelPlayPreview()
   return NS_OK;
 }
 
+static bool sPrefsInitialized;
+static uint32_t sSessionTimeoutMinutes;
+static uint32_t sPersistentTimeoutDays;
+
 bool
 nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentType)
 {
   nsresult rv;
+
+  if (!sPrefsInitialized) {
+    Preferences::AddUintVarCache(&sSessionTimeoutMinutes,
+                                 "plugin.sessionPermissionNow.intervalInMinutes", 60);
+    Preferences::AddUintVarCache(&sPersistentTimeoutDays,
+                                 "plugin.persistentPermissionAlways.intervalInDays", 90);
+    sPrefsInitialized = true;
+  }
 
   nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
@@ -2862,6 +2875,13 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
                                                         permissionString.Data(),
                                                         &permission);
     NS_ENSURE_SUCCESS(rv, false);
+    if (permission != nsIPermissionManager::UNKNOWN_ACTION) {
+      uint64_t nowms = PR_Now() / 1000;
+      permissionManager->UpdateExpireTime(
+        topDoc->NodePrincipal(), permissionString.Data(), false,
+        nowms + sSessionTimeoutMinutes * 60 * 1000,
+        nowms / 1000 + uint64_t(sPersistentTimeoutDays) * 24 * 60 * 60 * 1000);
+    }
     switch (permission) {
     case nsIPermissionManager::ALLOW_ACTION:
       return true;
