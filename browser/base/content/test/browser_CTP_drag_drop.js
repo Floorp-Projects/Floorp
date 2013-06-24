@@ -11,6 +11,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 function test() {
   waitForExplicitFinish();
   registerCleanupFunction(function() {
+    clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
     let plugin = getTestPlugin();
     plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
@@ -86,90 +87,17 @@ function part7() {
   ok(!objLoadingContent.activated, "plugin should not be activated");
 
   EventUtils.synthesizeMouseAtCenter(plugin, {}, gNewWindow.gBrowser.selectedBrowser.contentWindow);
-  let condition = function() objLoadingContent.activated;
+  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser).dismissed;
   waitForCondition(condition, part8, "waited too long for plugin to activate");
 }
 
 function part8() {
-  ok(!PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser), "Should not have a click-to-play notification in the tab in the new window now");
+  // Click the activate button on doorhanger to make sure it works
+  gNewWindow.PopupNotifications.panel.firstChild._primaryButton.click();
+
   let plugin = gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test");
   let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "plugin should be activated now");
-
-  gNewWindow.close();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gNextTest = part9;
-  gBrowser.selectedBrowser.addEventListener("PluginBindingAttached", handleEvent, true, true);
-  // This test page contains an "invisible" plugin. It doesn't script it,
-  // but when we do later in this test, it will trigger the popup notification.
-  gBrowser.selectedBrowser.contentDocument.location = gHttpTestRoot + "plugin_test_noScriptNoPopup.html";
-}
-
-function part9() {
-  gBrowser.selectedBrowser.removeEventListener("PluginBindingAttached", handleEvent);
-  ok(PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should have a click-to-play notification in the initial tab");
-
-  gNextTest = part10;
-  gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-  gNewWindow.addEventListener("load", handleEvent, true);
-}
-
-function part10() {
-  gNewWindow.removeEventListener("load", handleEvent);
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
-  waitForCondition(condition, part11, "Waited too long for click-to-play notification");
-}
-
-function part11() {
-  ok(!PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should not have a click-to-play notification in the old window now");
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
-  ok(notification, "Should have a click-to-play notification in the tab in the new window");
-  // we have to actually show the panel to get the bindings to instantiate
-  notification.options.eventCallback = part12;
-  // this scripts the plugin, triggering the popup notification
-  try {
-    gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test").wrappedJSObject.getObjectValue();
-  } catch (e) {}
-}
-
-function part12(type) {
-  if (type != "shown") {
-    return;
-  }
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
-  notification.options.eventCallback = null;
-  let centerAction = null;
-  for (let action of notification.options.centerActions) {
-    if (action.message == "Test") {
-      centerAction = action;
-      break;
-    }
-  }
-  ok(centerAction, "Found center action for the Test plugin");
-
-  let centerItem = null;
-  for (let item of centerAction.popupnotification.childNodes) {
-    if (item.action == centerAction) {
-      centerItem = item;
-      break;
-    }
-  }
-  ok(centerItem, "Found center item for the Test plugin");
-
-  // "click" the button to activate the Test plugin
-  centerItem.runCallback.apply(centerItem);
-
-  let plugin = gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, part13, "Waited too long for plugin to activate via center action");
-}
-
-function part13() {
-  ok(!PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser), "Should not have a click-to-play notification in the tab in the new window");
-  let plugin = gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Plugin should be activated via center action");
 
   gNewWindow.close();
   finish();
