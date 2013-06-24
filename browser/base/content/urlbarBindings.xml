@@ -8,6 +8,8 @@
 <!DOCTYPE bindings [
 <!ENTITY % notificationDTD SYSTEM "chrome://global/locale/notification.dtd">
 %notificationDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
 ]>
 
 <bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
@@ -1376,122 +1378,477 @@
     </implementation>
   </binding>
 
-  <binding id="center-item">
+  <binding id="plugin-popupnotification-center-item">
     <content align="center">
-      <xul:vbox flex="1" class="center-item-box"
-                xbl:inherits="warn,showseparator,padbottom">
-        <xul:hbox flex="1" align="center">
-          <xul:image class="center-item-icon"
-                     xbl:inherits="src=itemicon"/>
-          <xul:description class="center-item-label"
-                           xbl:inherits="xbl:text=itemtext"/>
-          <xul:spacer flex="1"/>
-          <xul:button class="popup-notification-menubutton center-item-button"
-                      oncommand="document.getBindingParent(this).runCallback();"
-                      xbl:inherits="label=buttonlabel"/>
+      <xul:vbox pack="center" anonid="itemBox" class="itemBox">
+        <xul:description anonid="center-item-label" class="center-item-label" />
+        <xul:hbox flex="1" pack="start" align="center" anonid="center-item-warning">
+          <xul:image anonid="center-item-warning-icon" class="center-item-warning-icon"/>
+          <xul:label anonid="center-item-warning-label"/>
+          <xul:label anonid="center-item-link" value="&checkForUpdates;" class="text-link"/>
         </xul:hbox>
-        <xul:hbox flex="1" align="center" class="center-item-warning">
-          <xul:image class="center-item-warning-icon"/>
-          <xul:label class="center-item-warning-description" xbl:inherits="xbl:text=warningText"/>
-          <xul:label xbl:inherits="href=updateLink" value="&checkForUpdates;" class="text-link"/>
-          <xul:spacer flex="1"/>
-        </xul:hbox>
+      </xul:vbox>
+      <xul:vbox pack="center">
+        <xul:menulist class="center-item-menulist"
+                      anonid="center-item-menulist">
+          <xul:menupopup>
+            <xul:menuitem anonid="allownow" value="allownow"
+                          label="&pluginActivateNow.label;" />
+            <xul:menuitem anonid="allowalways" value="allowalways"
+                          label="&pluginActivateAlways.label;" />
+            <xul:menuitem anonid="block" value="block"
+                          label="&pluginBlockNow.label;" />
+          </xul:menupopup>
+        </xul:menulist>
       </xul:vbox>
     </content>
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <implementation>
-      <field name="action"></field>
-      <method name="runCallback">
-        <body><![CDATA[
-          let action = this.action;
-          action.callback();
-          let cas = action.popupnotification.notification.options.centerActions;
-          cas.splice(cas.indexOf(action), 1);
-          PopupNotifications._dismiss();
-        ]]></body>
-      </method>
+      <constructor><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid", "center-item-label").value = this.action.pluginName;
+
+        let curState = "block";
+        if (this.action.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+          if (this.action.pluginPermissionType == Ci.nsIPermissionManager.EXPIRE_SESSION) {
+            curState = "allownow";
+          }
+          else {
+            curState = "allowalways";
+          }
+        }
+        document.getAnonymousElementByAttribute(this, "anonid", "center-item-menulist").value = curState;
+
+        let warningString = "";
+        let linkString = "";
+
+        let link = document.getAnonymousElementByAttribute(this, "anonid", "center-item-link");
+
+        let url;
+        let linkHandler;
+
+        if (this.action.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED) {
+          document.getAnonymousElementByAttribute(this, "anonid", "center-item-menulist").hidden = true;
+          warningString = gNavigatorBundle.getString("pluginActivateDisabled.label");
+          linkString = gNavigatorBundle.getString("pluginActivateDisabled.manage");
+          linkHandler = function(event) {
+            event.preventDefault();
+            gPluginHandler.managePlugins();
+          };
+          document.getAnonymousElementByAttribute(this, "anonid", "center-item-warning-icon").hidden = true;
+        }
+        else {
+          url = this.action.detailsLink;
+
+          switch (this.action.blocklistState) {
+          case Ci.nsIBlocklistService.STATE_NOT_BLOCKED:
+            document.getAnonymousElementByAttribute(this, "anonid", "center-item-warning").hidden = true;
+            break;
+          case Ci.nsIBlocklistService.STATE_BLOCKED:
+            document.getAnonymousElementByAttribute(this, "anonid", "center-item-menulist").hidden = true;
+            warningString = gNavigatorBundle.getString("pluginActivateBlocked.label");
+            linkString = gNavigatorBundle.getString("pluginActivate.learnMore");
+            break;
+          case Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE:
+            warningString = gNavigatorBundle.getString("pluginActivateOutdated.label");
+            linkString = gNavigatorBundle.getString("pluginActivate.updateLabel");
+            break;
+          case Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE:
+            warningString = gNavigatorBundle.getString("pluginActivateVulnerable.label");
+            linkString = gNavigatorBundle.getString("pluginActivate.riskLabel");
+            break;
+          }
+        }
+        document.getAnonymousElementByAttribute(this, "anonid", "center-item-warning-label").value = warningString;
+
+        if (url || linkHandler) {
+          link.value = linkString;
+          if (url) {
+            link.href = url;
+          }
+          if (linkHandler) {
+            link.addEventListener("click", linkHandler, false);
+          }
+        }
+        else {
+          link.hidden = true;
+        }
+      ]]></constructor>
+      <property name="value">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid",
+                   "center-item-menulist").value;
+        </getter>
+        <setter><!-- This should be used only in automated tests -->
+          document.getAnonymousElementByAttribute(this, "anonid",
+                    "center-item-menulist").value = val;
+        </setter>
+      </property>
     </implementation>
   </binding>
 
   <binding id="click-to-play-plugins-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start" class="click-to-play-plugins-notification-content">
-      <xul:hbox flex="1">
-        <xul:vbox class="click-to-play-plugins-notification-icon-box" flex="1">
-          <xul:image class="popup-notification-icon"
-                     xbl:inherits="popupid,src=icon"/>
-          <xul:spacer flex="1"/>
-        </xul:vbox>
-        <xul:spacer class="click-to-play-plugins-notification-separator"/>
-        <xul:vbox flex="1" class="popup-notification-main-box"
-                  xbl:inherits="popupid">
-          <xul:box class="click-to-play-plugins-notification-description-box" flex="1">
-            <xul:description xbl:inherits="xbl:text=label"/>
-          </xul:box>
-          <xul:spacer class="click-to-play-plugins-notification-separator"/>
-          <xul:vbox class="click-to-play-plugins-notification-center-box">
-            <children includes="popupnotification-centeritem"/>
-          </xul:vbox>
-          <xul:spacer class="click-to-play-plugins-notification-separator"/>
-          <xul:hbox class="click-to-play-plugins-notification-button-container"
-                    pack="end" align="center">
-            <xul:button anonid="button"
-                        class="popup-notification-menubutton"
-                        type="menu-button"
-                        xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
-              <xul:menupopup anonid="menupopup"
-                             xbl:inherits="oncommand=menucommand">
-                <children/>
-                <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
-                              label="&closeNotificationItem.label;"
-                              xbl:inherits="oncommand=closeitemcommand"/>
-              </xul:menupopup>
-            </xul:button>
-          </xul:hbox>
-        </xul:vbox>
-      </xul:hbox>
+      <xul:vbox flex="1" align="stretch" class="popup-notification-main-box"
+                xbl:inherits="popupid">
+        <xul:hbox class="click-to-play-plugins-notification-description-box" flex="1" align="start">
+          <xul:description class="click-to-play-plugins-outer-description" flex="1">
+            <html:span anonid="click-to-play-plugins-notification-description" />
+            <xul:label class="text-link click-to-play-plugins-notification-link" anonid="click-to-play-plugins-notification-link" />
+          </xul:description>
+          <xul:toolbarbutton anonid="closebutton"
+                             class="messageCloseButton popup-notification-closebutton tabbable"
+                             xbl:inherits="oncommand=closebuttoncommand"
+                             tooltiptext="&closeNotification.tooltip;"/>
+        </xul:hbox>
+        <xul:grid anonid="click-to-play-plugins-notification-center-box"
+                  class="click-to-play-plugins-notification-center-box">
+          <xul:columns>
+            <xul:column flex="1"/>
+            <xul:column/>
+          </xul:columns>
+          <xul:rows>
+            <children includes="row"/>
+            <xul:hbox pack="start" anonid="plugin-notification-showbox">
+              <xul:button label="&pluginNotification.showAll.label;"
+                          accesskey="&pluginNotification.showAll.accesskey;"
+                          class="plugin-notification-showbutton"
+                          oncommand="document.getBindingParent(this)._setState(2)"/>
+            </xul:hbox>
+          </xul:rows>
+        </xul:grid>
+        <xul:hbox anonid="button-container"
+                  class="click-to-play-plugins-notification-button-container"
+                  pack="center" align="center">
+          <xul:button anonid="primarybutton"
+                      class="click-to-play-popup-button primary-button"
+                      oncommand="document.getBindingParent(this)._onButton(this)"
+                      flex="1"/>
+          <xul:button anonid="secondarybutton"
+                      class="click-to-play-popup-button"
+                      oncommand="document.getBindingParent(this)._onButton(this);"
+                      flex="1"/>
+        </xul:hbox>
+        <xul:box hidden="true">
+          <children/>
+        </xul:box>
+      </xul:vbox>
     </content>
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <implementation>
-      <field name="button" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "button");
+      <field name="_states">
+        ({SINGLE: 0, MULTI_COLLAPSED: 1, MULTI_EXPANDED: 2})
       </field>
-      <field name="menupopup" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "menupopup");
+      <field name="_primaryButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "primarybutton");
       </field>
+      <field name="_secondaryButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "secondarybutton")
+      </field>
+      <field name="_buttonContainer">
+        document.getAnonymousElementByAttribute(this, "anonid", "button-container")
+      </field>
+      <field name="_brandShortName">
+        document.getElementById("bundle_brand").getString("brandShortName")
+      </field>
+      <field name="_items">[]</field>
       <constructor><![CDATA[
         const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        let popupnotification = this;
-        let item = null;
-        let prev = null;
-        this.notification.options.centerActions.forEach(function(action) {
-          action.popupnotification = popupnotification;
-          item = document.createElementNS(XUL_NS, "popupnotification-centeritem");
+        for (let action of this.notification.options.centerActions) {
+          let item = document.createElementNS(XUL_NS, "row");
+          item.setAttribute("class", "plugin-popupnotification-centeritem");
           item.action = action;
-          item.setAttribute("itemtext", action.message);
-          item.setAttribute("buttonlabel", action.label);
-          item.setAttribute("warn", action.warn);
-          item.setAttribute("warningText", action.warningText);
-          item.setAttribute("updateLink", action.updateLink);
-          if (prev &&
-              (prev.getAttribute("warn") == "true" ||
-               item.getAttribute("warn") == "true")) {
-            item.setAttribute("showseparator", true);
-            if (prev.getAttribute("warn") != "true") {
-              prev.setAttribute("padbottom", true);
-            }
-          }
-          popupnotification.appendChild(item);
-          prev = item;
-        });
-        if (item != null) {
-          item.setAttribute("padbottom", "true");
+          this.appendChild(item);
+          this._items.push(item);
+        }
+        if (this.notification.options.centerActions.length == 1) {
+          this._setState(this._states.SINGLE);
+        } else if (this.notification.options.primaryPlugin) {
+          this._setState(this._states.MULTI_COLLAPSED);
+        } else {
+          this._setState(this._states.MULTI_EXPANDED);
         }
       ]]></constructor>
+      <method name="_setState">
+        <parameter name="state" />
+        <body><![CDATA[
+          var grid = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-center-box");
+
+          if (this._states.SINGLE == state) {
+            grid.hidden = true;
+            this._setupSingleState();
+            return;
+          }
+
+          this._setupDescription("pluginActivateMultiple.message");
+
+          var showBox = document.getAnonymousElementByAttribute(this, "anonid", "plugin-notification-showbox");
+
+          var dialogStrings = Services.strings.createBundle("chrome://global/locale/dialog.properties");
+          this._primaryButton.label = dialogStrings.GetStringFromName("button-accept");
+          this._primaryButton.setAttribute("default", "true");
+
+          this._secondaryButton.label = dialogStrings.GetStringFromName("button-cancel");
+          this._primaryButton.setAttribute("action", "_multiAccept");
+          this._secondaryButton.setAttribute("action", "_cancel");
+
+          grid.hidden = false;
+
+          if (this._states.MULTI_COLLAPSED == state) {
+            for (let child of this.childNodes) {
+              if (child.tagName != "row") {
+                continue;
+              }
+              child.hidden = this.notification.options.primaryPlugin !=
+                             child.action.permissionString;
+            }
+            showBox.hidden = false;
+          }
+          else {
+            for (let child of this.childNodes) {
+              if (child.tagName != "row") {
+                continue;
+              }
+              child.hidden = false;
+            }
+            showBox.hidden = true;
+          }
+          this._setupLink(null);
+        ]]></body>
+      </method>
+      <method name="_setupSingleState">
+        <body><![CDATA[
+          var action = this.notification.options.centerActions[0];
+          var host = action.pluginPermissionHost;
+
+          let label, linkLabel, linkUrl, button1, button2;
+
+          if (action.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+            button1 = {
+              label: "pluginBlockNow.label",
+              accesskey: "pluginBlockNow.accesskey",
+              action: "_singleBlock"
+            };
+            button2 = {
+              label: "pluginContinue.label",
+              accesskey: "pluginContinue.accesskey",
+              action: "_cancel",
+              default: true
+            };
+            switch (action.blocklistState) {
+            case Ci.nsIBlocklistService.STATE_NOT_BLOCKED:
+              label = "pluginEnabled.message";
+              linkLabel = "pluginActivate.learnMore";
+              break;
+
+            case Ci.nsIBlocklistService.STATE_BLOCKED:
+              Cu.reportError(Error("Cannot happen!"));
+              break;
+
+            case Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE:
+              label = "pluginEnabledOutdated.message";
+              linkLabel = "pluginActivate.updateLabel";
+              break;
+
+            case Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE:
+              label = "pluginEnabledVulnerable.message";
+              linkLabel = "pluginActivate.riskLabel"
+              break;
+
+            default:
+              Cu.reportError(Error("Unexpected blocklist state"));
+            }
+          }
+          else if (action.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED) {
+            let linkElement =
+              document.getAnonymousElementByAttribute(
+                         this, "anonid", "click-to-play-plugins-notification-link");
+            linkElement.textContent = gNavigatorBundle.getString("pluginActivateDisabled.manage");
+            linkElement.setAttribute("onclick", "gPluginHandler.managePlugins()");
+
+            let descElement = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
+            descElement.textContent = gNavigatorBundle.getFormattedString(
+              "pluginActivateDisabled.message", [action.pluginName, this._brandShortName]) + " ";
+            this._buttonContainer.hidden = true;
+            return;
+          }
+          else if (action.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+            let descElement = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
+            descElement.textContent = gNavigatorBundle.getFormattedString(
+              "pluginActivateBlocked.message", [action.pluginName, this._brandShortName]) + " ";
+            this._setupLink("pluginActivate.learnMore", action.detailsLink);
+            this._buttonContainer.hidden = true;
+            return;
+          }
+          else {
+            button1 = {
+              label: "pluginActivateNow.label",
+              accesskey: "pluginActivateNow.accesskey",
+              action: "_singleActivateNow"
+            };
+            button2 = {
+              label: "pluginActivateAlways.label",
+              accesskey: "pluginActivateAlways.accesskey",
+              action: "_singleActivateAlways"
+            };
+            switch (action.blocklistState) {
+            case Ci.nsIBlocklistService.STATE_NOT_BLOCKED:
+              label = "pluginActivateNew.message";
+              linkLabel = "pluginActivate.learnMore";
+              button2.default = true;
+              break;
+
+            case Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE:
+              label = "pluginActivateOutdated.label";
+              linkLabel = "pluginActivate.updateLabel";
+              button1.default = true;
+              break;
+
+            case Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE:
+              label = "pluginActivateVulnerable.message";
+              linkLabel = "pluginActivate.riskLabel"
+              button1.default = true;
+              break;
+
+            default:
+              Cu.reportError(Error("Unexpected blocklist state"));
+            }
+          }
+          this._setupDescription(label, action.pluginName, host);
+          this._setupLink(linkLabel, action.detailsLink);
+
+          this._primaryButton.label = gNavigatorBundle.getString(button1.label);
+          this._primaryButton.accesskey = gNavigatorBundle.getString(button1.accesskey);
+          this._primaryButton.setAttribute("action", button1.action);
+
+          this._secondaryButton.label = gNavigatorBundle.getString(button2.label);
+          this._secondaryButton.accesskey = gNavigatorBundle.getString(button2.accesskey);
+          this._secondaryButton.setAttribute("action", button2.action);
+          if (button1.default) {
+            this._primaryButton.setAttribute("default", "true");
+          }
+          else if (button2.default) {
+            this._secondaryButton.setAttribute("default", "true");
+          }
+        ]]></body>
+      </method>
+      <method name="_setupDescription">
+        <parameter name="baseString" />
+        <parameter name="pluginName" /> <!-- null for the multiple-plugin case -->
+        <parameter name="host" />
+        <body><![CDATA[
+          var bsn = this._brandShortName;
+          var span = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
+          while (span.lastChild) {
+            span.removeChild(span.lastChild);
+          }
+
+          if (!host) {
+            host = this.notification.browser.currentURI.host;
+          }
+          var args = ["__host__", this._brandShortName];
+          if (pluginName) {
+            args.unshift(pluginName);
+          }
+          var bases = gNavigatorBundle.getFormattedString(baseString, args).
+            split("__host__", 2);
+
+          span.appendChild(document.createTextNode(bases[0]));
+          var hostSpan = document.createElementNS("http://www.w3.org/1999/xhtml", "em");
+          hostSpan.appendChild(document.createTextNode(host));
+          span.appendChild(hostSpan);
+          span.appendChild(document.createTextNode(bases[1] + " "));
+        ]]></body>
+      </method>
+      <method name="_setupLink">
+        <parameter name="linkString"/>
+        <parameter name="linkUrl" />
+        <body><![CDATA[
+          var link = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-link");
+          if (!linkString || !linkUrl) {
+            link.hidden = true;
+            return;
+          }
+
+          link.hidden = false;
+          link.textContent = gNavigatorBundle.getString(linkString);
+          link.href = linkUrl;
+        ]]></body>
+      </method>
+      <method name="_onButton">
+        <parameter name="aButton" />
+        <body><![CDATA[
+          let methodName = aButton.getAttribute("action");
+          this[methodName]();
+        ]]></body>
+      </method>
+      <method name="_singleActivateNow">
+        <body><![CDATA[
+          gPluginHandler._updatePluginPermission(this.notification,
+            this.notification.options.centerActions[0],
+            "allownow");
+          this._cancel();
+        ]]></body>
+      </method>
+      <method name="_singleBlock">
+        <body><![CDATA[
+          gPluginHandler._updatePluginPermission(this.notification,
+            this.notification.options.centerActions[0],
+            "block");
+            this._cancel();
+        ]]></body>
+      </method>
+      <method name="_singleActivateAlways">
+        <body><![CDATA[
+          gPluginHandler._updatePluginPermission(this.notification,
+            this.notification.options.centerActions[0],
+            "allowalways");
+          this._cancel();
+        ]]></body>
+      </method>
+      <method name="_multiAccept">
+        <body><![CDATA[
+          for (let item of this._items) {
+            let action = item.action;
+            if (action.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED ||
+                action.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+              continue;
+            }
+            gPluginHandler._updatePluginPermission(this.notification,
+              item.action, item.value);
+          }
+          this._cancel();
+        ]]></body>
+      </method>
+      <method name="_cancel">
+        <body><![CDATA[
+          PopupNotifications._dismiss();
+        ]]></body>
+      </method>
+      <method name="_accept">
+        <parameter name="aEvent" />
+        <body><![CDATA[
+          if (aEvent.defaultPrevented)
+            return;
+          aEvent.preventDefault();
+          if (this._primaryButton.getAttribute("default") == "true") {
+            this._primaryButton.click();
+          }
+          else if (this._secondaryButton.getAttribute("default") == "true") {
+            this._secondaryButton.click();
+          }
+        ]]></body>
+      </method>
     </implementation>
+    <handlers>
+      <!-- The _accept method checks for .defaultPrevented so that if focus is in a button,
+           enter activates the button and not this default action -->
+      <handler event="keypress" keycode="VK_ENTER" group="system" action="this._accept(event);"/>
+      <handler event="keypress" keycode="VK_RETURN" group="system" action="this._accept(event);"/>
+    </handlers>
   </binding>
 
   <binding id="splitmenu">
