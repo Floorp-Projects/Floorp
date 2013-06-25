@@ -8,6 +8,7 @@
 
 #include "jsiter.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
@@ -813,7 +814,7 @@ iterator_iteratorObject(JSContext *cx, HandleObject obj, JSBool keysonly)
 }
 
 size_t
-PropertyIteratorObject::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
+PropertyIteratorObject::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return mallocSizeOf(getPrivate());
 }

@@ -416,9 +416,8 @@ class ConditionalExpression;
 class PropertyAccess;
 class ModuleBox;
 
-struct ParseNode
+class ParseNode
 {
-  private:
     uint32_t            pn_type   : 16, /* PNK_* type */
                         pn_op     : 8,  /* see JSOp enum and jsopcode.tbl */
                         pn_arity  : 5,  /* see ParseNodeArity enum */

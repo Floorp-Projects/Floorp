@@ -20,6 +20,7 @@
 #include "nsURIHashKey.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/MemoryReporting.h"
 
 class nsIAtom;
 class nsICSSLoaderObserver;
@@ -368,7 +369,7 @@ public:
   void UnlinkCachedSheets();
 
   // Measure our size.
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   friend class SheetLoadData;

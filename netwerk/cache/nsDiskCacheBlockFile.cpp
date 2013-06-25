@@ -8,6 +8,7 @@
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/MemoryReporting.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -397,7 +398,7 @@ nsDiskCacheBlockFile::Write(int32_t offset, const void *buf, int32_t amount)
 }
 
 size_t
-nsDiskCacheBlockFile::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsDiskCacheBlockFile::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
 {
     return aMallocSizeOf(mBitMap) + aMallocSizeOf(mFD);
 }
