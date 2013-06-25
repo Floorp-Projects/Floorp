@@ -240,6 +240,9 @@ endif
 ifdef MODULE_NAME
 $(error MODULE_NAME is $(MODULE_NAME) but MODULE_NAME and LIBXUL_LIBRARY are not compatible)
 endif
+ifdef FORCE_STATIC_LIB
+$(error Makefile sets FORCE_STATIC_LIB which was already implied by LIBXUL_LIBRARY)
+endif
 FORCE_STATIC_LIB=1
 ifneq ($(SHORT_LIBNAME),)
 $(error SHORT_LIBNAME is $(SHORT_LIBNAME) but SHORT_LIBNAME is not compatable with LIBXUL_LIBRARY)
