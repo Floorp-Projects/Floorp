@@ -50,8 +50,7 @@ import java.util.ArrayList;
  * Fragment that displays frecency search results in a ListView.
  */
 public class BrowserSearch extends HomeFragment
-                           implements AdapterView.OnItemClickListener,
-                                      GeckoEventListener {
+                           implements GeckoEventListener {
     // Logging tag name
     private static final String LOGTAG = "GeckoBrowserSearch";
 
@@ -195,7 +194,19 @@ public class BrowserSearch extends HomeFragment
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mList.setOnItemClickListener(this);
+        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final Cursor c = mAdapter.getCursor();
+                if (c == null || !c.moveToPosition(position)) {
+                    return;
+                }
+
+                final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+                mUrlOpenListener.onUrlOpen(url);
+            }
+        });
+
         registerForContextMenu(mList);
     }
 
@@ -302,17 +313,6 @@ public class BrowserSearch extends HomeFragment
 
     private void unregisterEventListener(String eventName) {
         GeckoAppShell.getEventDispatcher().unregisterEventListener(eventName, this);
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        final Cursor c = mAdapter.getCursor();
-        if (c == null || !c.moveToPosition(position)) {
-            return;
-        }
-
-        final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-        mUrlOpenListener.onUrlOpen(url);
     }
 
     public void filter(String searchTerm) {
