@@ -6,11 +6,13 @@
 
 #ifdef JSGC_GENERATIONAL
 
-#include "jsgc.h"
+#include "gc/StoreBuffer.h"
+
+#include "mozilla/Assertions.h"
+
+#include "vm/ForkJoin.h"
 
 #include "gc/Barrier-inl.h"
-#include "gc/StoreBuffer.h"
-#include "vm/ForkJoin.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
@@ -64,8 +66,12 @@ StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
         MarkChildren(trc, static_cast<JSObject *>(tenured));
         return;
     }
+#ifdef JS_ION
     JS_ASSERT(kind == JSTRACE_IONCODE);
     static_cast<ion::IonCode *>(tenured)->trace(trc);
+#else
+    MOZ_NOT_REACHED("Only objects can be in the wholeCellBuffer if IonMonkey is disabled.");
+#endif
 }
 
 /*** MonoTypeBuffer ***/

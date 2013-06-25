@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/MemoryReporting.h"
 
 #include "jsobj.h"
 #include "jspropertytree.h"
@@ -144,7 +145,7 @@ struct ShapeTable {
      * This counts the ShapeTable object itself (which must be
      * heap-allocated) and its |entries| array.
      */
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + mallocSizeOf(entries);
     }
 
@@ -548,7 +549,7 @@ class Shape : public js::gc::Cell
     bool hasTable() const { return base()->hasTable(); }
     ShapeTable &table() const { return base()->table(); }
 
-    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
+    void sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t *propTableSize, size_t *kidsSize) const {
         *propTableSize = hasTable() ? table().sizeOfIncludingThis(mallocSizeOf) : 0;
         *kidsSize = !inDictionary() && kids.isHash()

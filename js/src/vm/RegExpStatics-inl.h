@@ -7,6 +7,8 @@
 #ifndef vm_RegExpStatics_inl_h
 #define vm_RegExpStatics_inl_h
 
+#include "mozilla/MemoryReporting.h"
+
 #include "vm/RegExpStatics.h"
 
 #include "gc/Marking.h"
@@ -211,7 +213,7 @@ js::GlobalObject::getRegExpStatics() const
 }
 
 inline size_t
-SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
+SizeOfRegExpStaticsData(const JSObject *obj, mozilla::MallocSizeOf mallocSizeOf)
 {
     return mallocSizeOf(obj->getPrivate());
 }

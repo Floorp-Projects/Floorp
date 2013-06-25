@@ -59,6 +59,7 @@
 #include "nsObjectFrame.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMessageManager.h"
 #include "FrameLayerBuilder.h"
@@ -2524,7 +2525,7 @@ nsPresContext::GetPrimaryFrameFor(nsIContent* aContent)
 
 
 size_t
-nsPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsPresContext::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return mPropertyTable.SizeOfExcludingThis(aMallocSizeOf);
          mLangGroupFontPrefs.SizeOfExcludingThis(aMallocSizeOf);
@@ -2860,7 +2861,7 @@ nsRootPresContext::FlushWillPaintObservers()
 }
 
 size_t
-nsRootPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsRootPresContext::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return nsPresContext::SizeOfExcludingThis(aMallocSizeOf);
 

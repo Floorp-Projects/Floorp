@@ -56,20 +56,6 @@ EncapsulatedValue::~EncapsulatedValue()
     pre();
 }
 
-inline void
-EncapsulatedValue::init(const Value &v)
-{
-    JS_ASSERT(!IsPoisonedValue(v));
-    value = v;
-}
-
-inline void
-EncapsulatedValue::init(JSRuntime *rt, const Value &v)
-{
-    JS_ASSERT(!IsPoisonedValue(v));
-    value = v;
-}
-
 inline EncapsulatedValue &
 EncapsulatedValue::operator=(const Value &v)
 {

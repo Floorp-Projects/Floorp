@@ -20,6 +20,7 @@ class nsClientRectList;
 class nsFontFaceList;
 class nsIImageLoadingContent;
 
+#include "mozilla/MemoryReporting.h"
 #include "nsChangeHint.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
@@ -143,6 +144,14 @@ public:
    * This is aPrimaryFrame itself except for tableOuter frames.
    */
   static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
+
+  /**
+   * Given a content node,
+   * return the frame that has the non-psuedoelement style context for
+   * the content.  May return null.
+   * This is aContent->GetPrimaryFrame() except for tableOuter frames.
+   */
+  static nsIFrame* GetStyleFrame(const nsIContent* aContent);
 
   /**
    * IsGeneratedContentFor returns true if aFrame is the outermost
@@ -1569,7 +1578,7 @@ public:
    *    total = SizeOfTextRunsForFrames(rootFrame, mallocSizeOf, false);
    */
   static size_t SizeOfTextRunsForFrames(nsIFrame* aFrame,
-                                        nsMallocSizeOfFun aMallocSizeOf,
+                                        mozilla::MallocSizeOf aMallocSizeOf,
                                         bool clear);
 
   /**

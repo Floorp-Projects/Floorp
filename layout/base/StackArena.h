@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/MemoryReporting.h"
 #include "nsAlgorithm.h"
 #include "nsDebug.h"
 
@@ -28,7 +29,7 @@ private:
   void Push();
   void Pop();
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // our current position in memory
   size_t mPos;

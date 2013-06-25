@@ -20,6 +20,7 @@
 #include "mozilla/Constants.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MemoryReporting.h"
 
 #include <fcntl.h>
 
@@ -94,7 +95,7 @@ MathCache::MathCache() {
 }
 
 size_t
-MathCache::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
+MathCache::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     return mallocSizeOf(this);
 }

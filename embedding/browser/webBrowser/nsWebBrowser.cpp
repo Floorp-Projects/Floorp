@@ -701,49 +701,63 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(uint32_t aId, uint32_t aValue)
     case nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS:
         {
            NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            mDocShell->SetAllowPlugins(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT:
         {
            NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            mDocShell->SetAllowJavascript(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS:
         {
            NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            mDocShell->SetAllowMetaRedirects(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES:
         {
            NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            mDocShell->SetAllowSubframes(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_IMAGES:
         {
            NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            mDocShell->SetAllowImages(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH:
         {
             NS_ENSURE_STATE(mDocShell);
-            NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+            NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
             mDocShell->SetAllowDNSPrefetch(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
         {
            NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            rv = EnableGlobalHistory(!!aValue);
            mShouldEnableHistory = aValue;
         }
@@ -755,7 +769,9 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(uint32_t aId, uint32_t aValue)
         break;
     case nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER:
         {
-           NS_ENSURE_TRUE((aValue == true || aValue == false), NS_ERROR_INVALID_ARG);
+           NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
+                           aValue == static_cast<uint32_t>(false)),
+                          NS_ERROR_INVALID_ARG);
            SetItemType(aValue ? static_cast<int32_t>(typeChromeWrapper)
                               : static_cast<int32_t>(typeContentWrapper));
         }

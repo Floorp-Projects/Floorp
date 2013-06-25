@@ -12,6 +12,7 @@
 #define nsAttrAndChildArray_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 
 #include "nscore.h"
 #include "nsAttrName.h"
@@ -116,7 +117,7 @@ public:
            !AttrSlotIsTaken(ATTRCHILD_ARRAY_MAX_ATTR_COUNT - 1);
   }
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   bool HasMappedAttrs() const
   {
     return MappedAttrCount();
