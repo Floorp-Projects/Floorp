@@ -80,6 +80,7 @@ MOCHITEST_FILES = \
 		switch-helper.svg \
 		test_text.html \
 		test_text_2.html \
+		test_text_dirty.html \
 		test_text_scaled.html \
 		test_text_selection.html \
 		test_text_update.html \

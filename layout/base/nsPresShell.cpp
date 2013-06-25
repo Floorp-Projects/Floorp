@@ -4450,6 +4450,9 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
     mRenderFlags = ChangeFlag(mRenderFlags, true, STATE_IGNORING_VIEWPORT_SCROLLING);
   }
+  if (aFlags & RENDER_DRAWWINDOW_NOT_FLUSHING) {
+    mRenderFlags = ChangeFlag(mRenderFlags, true, STATE_DRAWWINDOW_NOT_FLUSHING);
+  }
   if (aFlags & RENDER_DOCUMENT_RELATIVE) {
     // XXX be smarter about this ... drawWindow might want a rect
     // that's "pretty close" to what our retained layer tree covers.
