@@ -469,7 +469,7 @@ js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
 {
     JSObject &callee = call.callee();
     JS_ASSERT(IsAnyBuiltinEval(&callee.as<JSFunction>()) ||
-              IsBuiltinFunctionConstructor(&callee.as<JSFunction>()));
+              callee.as<JSFunction>().isBuiltinFunctionConstructor());
 
     // To compute the principals of the compiled eval/Function code, we simply
     // use the callee's principals. To see why the caller's principals are

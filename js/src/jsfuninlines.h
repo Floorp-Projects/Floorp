@@ -16,12 +16,6 @@
 #include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
-inline bool
-JSFunction::strict() const
-{
-    return nonLazyScript()->strict;
-}
-
 inline void
 JSFunction::initAtom(JSAtom *atom)
 {
@@ -38,13 +32,6 @@ JSFunction::setGuessedAtom(JSAtom *atom)
     flags |= HAS_GUESSED_ATOM;
 }
 
-inline JSObject *
-JSFunction::environment() const
-{
-    JS_ASSERT(isInterpreted());
-    return u.i.env_;
-}
-
 inline void
 JSFunction::setEnvironment(JSObject *obj)
 {
@@ -57,28 +44,6 @@ JSFunction::initEnvironment(JSObject *obj)
 {
     JS_ASSERT(isInterpreted());
     ((js::HeapPtrObject *)&u.i.env_)->init(obj);
-}
-
-inline void
-JSFunction::initNative(js::Native native, const JSJitInfo *data)
-{
-    JS_ASSERT(native);
-    u.n.native = native;
-    u.n.jitinfo = data;
-}
-
-inline const JSJitInfo *
-JSFunction::jitInfo() const
-{
-    JS_ASSERT(isNative());
-    return u.n.jitinfo;
-}
-
-inline void
-JSFunction::setJitInfo(const JSJitInfo *data)
-{
-    JS_ASSERT(isNative());
-    u.n.jitinfo = data;
 }
 
 inline void
@@ -105,44 +70,7 @@ JSFunction::setExtendedSlot(size_t which, const js::Value &val)
     toExtended()->extendedSlots[which] = val;
 }
 
-inline const js::Value &
-JSFunction::getExtendedSlot(size_t which) const
-{
-    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
-    return toExtended()->extendedSlots[which];
-}
-
 namespace js {
-
-extern JS_ALWAYS_INLINE bool
-SameTraceType(const Value &lhs, const Value &rhs)
-{
-    return SameType(lhs, rhs) &&
-           (lhs.isPrimitive() ||
-            lhs.toObject().is<JSFunction>() == rhs.toObject().is<JSFunction>());
-}
-
-/* Valueified JS_IsConstructing. */
-static JS_ALWAYS_INLINE bool
-IsConstructing(const Value *vp)
-{
-#ifdef DEBUG
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    if (callee->is<JSFunction>()) {
-        JSFunction *fun = &callee->as<JSFunction>();
-        JS_ASSERT(fun->isNativeConstructor());
-    } else {
-        JS_ASSERT(callee->getClass()->construct != NULL);
-    }
-#endif
-    return vp[1].isMagic();
-}
-
-inline bool
-IsConstructing(CallReceiver call)
-{
-    return IsConstructing(call.base());
-}
 
 inline const char *
 GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
@@ -152,12 +80,6 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
         return bytes->encodeLatin1(cx, atom);
     return js_anonymous_str;
 }
-
-extern JSBool
-Function(JSContext *cx, unsigned argc, Value *vp);
-
-extern bool
-IsBuiltinFunctionConstructor(JSFunction *fun);
 
 static inline JSObject *
 SkipScopeParent(JSObject *parent)
@@ -224,20 +146,6 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
 
 } /* namespace js */
 
-inline bool
-JSFunction::isHeavyweight() const
-{
-    JS_ASSERT(!isInterpretedLazy());
-
-    if (isNative())
-        return false;
-
-    // Note: this should be kept in sync with FunctionBox::isHeavyweight().
-    return nonLazyScript()->bindings.hasAnyAliasedBindings() ||
-           nonLazyScript()->funHasExtensibleScope ||
-           nonLazyScript()->funNeedsDeclEnvObject;
-}
-
 inline JSScript *
 JSFunction::existingScript()
 {
@@ -270,17 +178,6 @@ JSFunction::initScript(JSScript *script_)
 {
     JS_ASSERT(isInterpreted());
     mutableScript().init(script_);
-}
-
-inline void
-JSFunction::initLazyScript(js::LazyScript *lazy)
-{
-    JS_ASSERT(isInterpreted());
-
-    flags &= ~INTERPRETED;
-    flags |= INTERPRETED_LAZY;
-
-    u.i.s.lazy_ = lazy;
 }
 
 inline JSObject *
