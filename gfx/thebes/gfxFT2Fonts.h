@@ -25,6 +25,8 @@ public: // new functions
                bool aNeedsBold);
     virtual ~gfxFT2Font ();
 
+    cairo_font_face_t *CairoFontFace();
+
     FT2FontEntry *GetFontEntry();
 
     static already_AddRefed<gfxFT2Font>
