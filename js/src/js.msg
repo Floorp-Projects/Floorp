@@ -322,7 +322,7 @@ MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,    268, 0, JSEXN_SYNTAXERR, "for-in loop let 
 MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run compile-and-go script on a cleared scope")
 MSG_DEF(JSMSG_MALFORMED_ESCAPE,       270, 1, JSEXN_SYNTAXERR, "malformed {0} character escape sequence")
 MSG_DEF(JSMSG_BAD_GENEXP_BODY,        271, 1, JSEXN_SYNTAXERR, "illegal use of {0} in generator expression")
-MSG_DEF(JSMSG_UNUSED272,              272, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_YIELD_WITHOUT_OPERAND,  272, 0, JSEXN_SYNTAXERR, "yield without a value is deprecated, and illegal in ES6 (use 'yield undefined' instead)")
 MSG_DEF(JSMSG_UNNAMED_FUNCTION_STMT,  273, 0, JSEXN_SYNTAXERR, "function statement requires a name")
 MSG_DEF(JSMSG_CCW_REQUIRED,           274, 1, JSEXN_TYPEERR, "{0}: argument must be an object from a different compartment")
 MSG_DEF(JSMSG_DEBUG_BAD_RESUMPTION,   275, 0, JSEXN_TYPEERR, "debugger resumption value must be undefined, {throw: val}, {return: val}, or null")

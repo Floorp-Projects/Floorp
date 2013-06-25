@@ -4425,6 +4425,11 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
         (isYield && (next == TOK_YIELD || next == TOK_RB || next == TOK_RP ||
                      next == TOK_COLON || next == TOK_COMMA)))
     {
+        if (isYield) {
+            if (!reportWithOffset(ParseWarning, false, pos().begin, JSMSG_YIELD_WITHOUT_OPERAND))
+                return null();
+        }
+
         exprNode = null();
         if (!isYield)
             pc->funHasReturnVoid = true;
