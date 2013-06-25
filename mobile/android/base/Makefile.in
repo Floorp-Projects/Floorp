@@ -59,7 +59,6 @@ FENNEC_JAVA_FILES = \
   animation/ViewHelper.java \
   BackButton.java \
   BrowserApp.java \
-  BrowserSearch.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
   BrowserToolbarLayout.java \
@@ -129,8 +128,6 @@ FENNEC_JAVA_FILES = \
   PromptInput.java \
   PromptService.java \
   Restarter.java \
-  SearchEngine.java \
-  SearchEngineRow.java \
   sqlite/ByteBufferInputStream.java \
   sqlite/MatrixBlobCursor.java \
   sqlite/SQLiteBridge.java \
@@ -143,10 +140,8 @@ FENNEC_JAVA_FILES = \
   SetupScreen.java \
   ShapedButton.java \
   SharedPreferencesHelper.java \
-  SimpleCursorLoader.java \
   SiteIdentityPopup.java \
   SmsManager.java \
-  SuggestClient.java \
   SurfaceBits.java \
   SyncPreference.java \
   Tab.java \
@@ -217,12 +212,17 @@ FENNEC_JAVA_FILES = \
   home/BookmarksPage.java \
   home/BookmarkFolderView.java \
   home/BookmarkThumbnailView.java \
+  home/BrowserSearch.java \
   home/HomeFragment.java \
   home/HomeListView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
   home/FadedTextView.java \
   home/FaviconsLoader.java \
+  home/SearchEngine.java \
+  home/SearchEngineRow.java \
+  home/SimpleCursorLoader.java \
+  home/SuggestClient.java \
   home/TopBookmarkItemView.java \
   home/TopBookmarksView.java \
   home/TwoLinePageRow.java \
