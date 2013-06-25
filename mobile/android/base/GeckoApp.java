@@ -2333,10 +2333,12 @@ abstract public class GeckoApp
                     break;
                 }
                 String mcc_mnc = tm.getNetworkOperator();
-                mcc = mcc_mnc.substring(0, 3);
-                mnc = mcc_mnc.substring(3);
-                obj.put("mcc", mcc);
-                obj.put("mnc", mnc);
+                if (mcc_mnc.length() > 3) {
+                    mcc = mcc_mnc.substring(0, 3);
+                    mnc = mcc_mnc.substring(3);
+                    obj.put("mcc", mcc);
+                    obj.put("mnc", mnc);
+                }
                 obj.put("asu", mSignalStrenth);
             } catch(JSONException jsonex) {}
             cellInfo.put(obj);
