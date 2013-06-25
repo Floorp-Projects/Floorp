@@ -272,7 +272,6 @@ struct ParseContext : public GenericParseContext
     return decls_.init() && lexdeps.ensureMap(sc->context);
 }
 
-    InBlockBool inBlock() const { return InBlockBool(!topStmt || topStmt->type == STMT_BLOCK); }
     unsigned blockid() { return topStmt ? topStmt->blockid : bodyid; }
 
     // True if we are at the topmost level of a entire script or function body.
