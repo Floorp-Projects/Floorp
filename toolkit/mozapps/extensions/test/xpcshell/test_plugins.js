@@ -91,7 +91,7 @@ function run_test_1() {
       do_check_true(p.isCompatible);
       do_check_true(p.providesUpdatesSecurely);
       do_check_eq(p.blocklistState, 0);
-      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE);
+      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE | AddonManager.PERM_CAN_ASK_TO_ACTIVATE);
       do_check_eq(p.pendingOperations, 0);
       do_check_true(p.size > 0);
       do_check_eq(p.size, getFileSize(testPlugin));

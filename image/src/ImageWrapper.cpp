@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MemoryReporting.h"
 #include "ImageWrapper.h"
 
 using mozilla::layers::LayerManager;
@@ -38,13 +39,13 @@ ImageWrapper::SizeOfData()
 }
 
 size_t
-ImageWrapper::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+ImageWrapper::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mInnerImage->HeapSizeOfSourceWithComputedFallback(aMallocSizeOf);
 }
 
 size_t
-ImageWrapper::HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+ImageWrapper::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mInnerImage->HeapSizeOfDecodedWithComputedFallback(aMallocSizeOf);
 }

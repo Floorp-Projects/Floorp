@@ -6,6 +6,7 @@
 #ifndef GFX_FT2FONTS_H
 #define GFX_FT2FONTS_H
 
+#include "mozilla/MemoryReporting.h"
 #include "cairo.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
@@ -63,9 +64,9 @@ public: // new functions
         return &entry->mData;
     }
 
-    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+    virtual void SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
-    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+    virtual void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
 
 protected:

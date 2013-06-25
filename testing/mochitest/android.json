@@ -116,6 +116,8 @@
  "content/media/test/test_framebuffer.html": "",
  "content/media/test/test_media_selection.html": "",
  "content/media/test/test_playback.html": "",
+ "content/media/test/test_playback_rate.html": "bug 845162",
+ "content/media/test/test_seek.html": "bug 845162",
  "content/media/test/test_seekLies.html": "TIMED_OUT",
  "content/media/test/test_seekable2.html": "",
  "content/media/test/test_wave_data_s16.html": "TIMED_OUT",

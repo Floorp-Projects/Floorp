@@ -9,6 +9,7 @@
  * potentially re-creating) style contexts
  */
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #include "nsStyleSet.h"
@@ -119,7 +120,7 @@ nsStyleSet::nsStyleSet()
 }
 
 size_t
-nsStyleSet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
 

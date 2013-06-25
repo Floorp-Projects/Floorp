@@ -11,6 +11,7 @@
 #ifndef nsIStyleSheet_h___
 #define nsIStyleSheet_h___
 
+#include "mozilla/MemoryReporting.h"
 #include <stdio.h>
 #include "nsISupports.h"
 
@@ -78,7 +79,7 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
 #endif
 
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleSheet, NS_ISTYLE_SHEET_IID)

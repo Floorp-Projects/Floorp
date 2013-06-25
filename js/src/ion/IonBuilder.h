@@ -720,7 +720,7 @@ class CallInfo
         return args_;
     }
 
-    MDefinition *getArg(uint32_t i) {
+    MDefinition *getArg(uint32_t i) const {
         JS_ASSERT(i < argc());
         return args_[i];
     }

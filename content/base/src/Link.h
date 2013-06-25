@@ -12,6 +12,7 @@
 #define mozilla_dom_Link_h__
 
 #include "mozilla/IHistory.h"
+#include "mozilla/MemoryReporting.h"
 #include "nsIContent.h"
 
 namespace mozilla {
@@ -98,7 +99,7 @@ public:
   virtual bool HasDeferredDNSPrefetchRequest() { return true; }
 
   virtual size_t
-    SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+    SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   bool ElementHasHref() const;
 

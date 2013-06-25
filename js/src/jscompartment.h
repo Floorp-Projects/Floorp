@@ -7,6 +7,7 @@
 #ifndef jscompartment_h
 #define jscompartment_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #include "jscntxt.h"
@@ -191,10 +192,10 @@ struct JSCompartment
     js::RegExpCompartment        regExps;
 
   private:
-    void sizeOfTypeInferenceData(JS::TypeInferenceSizes *stats, JSMallocSizeOfFun mallocSizeOf);
+    void sizeOfTypeInferenceData(JS::TypeInferenceSizes *stats, mozilla::MallocSizeOf mallocSizeOf);
 
   public:
-    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compartmentObject,
+    void sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *compartmentObject,
                              JS::TypeInferenceSizes *tiSizes,
                              size_t *shapesCompartmentTables, size_t *crossCompartmentWrappers,
                              size_t *regexpCompartment, size_t *debuggeesSet,
