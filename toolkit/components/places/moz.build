@@ -22,7 +22,7 @@ if CONFIG['MOZ_PLACES']:
         'nsIBrowserHistory.idl',
         'nsIFaviconService.idl',
         'nsINavBookmarksService.idl',
-        'nsITaggingService.idl ',
+        'nsITaggingService.idl',
         'nsPIPlacesDatabase.idl',
         'nsPIPlacesHistoryListenersNotifier.idl',
     ]
