@@ -38,29 +38,15 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
 ifndef MOZ_PROFILE_USE
-# One of the first things we do in the build is purge "unknown" files
-# from the object directory. This serves two purposes:
-#
-#   1) Remove files from a previous build no longer accounted for in
-#      this build configuration.
-#
-#   2) Work around poor build system dependencies by forcing some
-#      rebuilds.
-#
-# Ideally #2 does not exist. Our reliance on this aspect should diminish
-# over time.
-#
-# moz.build backend generation simply installs a set of "manifests" into
-# a common directory. Each manifest is responsible for defining files in
-# a specific subdirectory of the object directory. The invoked Python
-# script simply iterates over all the manifests, purging files as
-# necessary. To manage new directories or add files to the manifests,
-# modify the backend generator.
-#
 # We need to explicitly put backend.RecursiveMakeBackend.built here
 # otherwise the rule in rules.mk doesn't run early enough.
 default alldep all:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
-	$(PYTHON) $(topsrcdir)/config/purge_directories.py -d _build_manifests/purge .
+	$(RM) -r $(DIST)/sdk
+	$(RM) -r $(DIST)/include
+	$(RM) -r $(DIST)/private
+	$(RM) -r $(DIST)/public
+	$(RM) -r $(DIST)/bin
+	$(RM) -r _tests
 endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
