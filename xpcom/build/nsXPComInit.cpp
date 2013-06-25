@@ -648,8 +648,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     // Release the directory service
     NS_IF_RELEASE(nsDirectoryService::gService);
 
-    nsCycleCollector_shutdown();
-
     if (moduleLoaders) {
         bool more;
         nsCOMPtr<nsISupports> el;
@@ -674,6 +672,8 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
         moduleLoaders = nullptr;
     }
+
+    nsCycleCollector_shutdown();
 
     PROFILER_MARKER("Shutdown xpcom");
     // If we are doing any shutdown checks, poison writes.
