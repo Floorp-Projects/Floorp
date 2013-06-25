@@ -61,6 +61,18 @@ CustomizeMode.prototype = {
     return this.document.getElementById("PanelUI-contents");
   },
 
+  toggle: function() {
+    if (this._transitioning) {
+      return;
+    }
+    if (this._customizing) {
+      this.exit();
+    } else {
+      this.enter();
+    }
+  },
+
+
   enter: function() {
     if (this._customizing || this._transitioning) {
       return;
@@ -141,6 +153,8 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.addEventListener("click", this, false);
       window.PanelUI.menuButton.disabled = true;
 
+      window.document.getElementById("PanelUI-help-btn").disabled = true;
+
       this._updateResetButton();
 
       let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true]):not([collapsed=true])");
@@ -214,6 +228,8 @@ CustomizeMode.prototype = {
       this.dispatchToolboxEvent("customizationending");
       window.PanelUI.setMainView(window.PanelUI.mainView);
       window.PanelUI.menuButton.disabled = false;
+
+      window.document.getElementById("PanelUI-help-btn").disabled = false;
 
       // We need to set self._customizing to false before removing the tab
       // or the TabSelect event handler will think that we are exiting

@@ -45,9 +45,13 @@
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
   padding: 0;
+  box-shadow: none;
 }
 
-#PanelUI-mainView .toolbarbutton-text {
+#PanelUI-contents > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
+#PanelUI-contents > toolbaritem > toolbarbutton > .toolbarbutton-text,
+#PanelUI-contents > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
+#PanelUI-contents > toolbarbutton > .toolbarbutton-text {
   display: -moz-box;
   font-size: 10px;
 }
@@ -76,11 +80,9 @@
   -moz-margin-start: 0;
 }
 
-.PanelUI-footer,
 #PanelUI-contents #edit-controls,
 #PanelUI-contents #zoom-controls,
 #PanelUI-contents,
-.PanelUI-footer,
 .panel-mainview:not([panelid="PanelUI-popup"]) {
   max-width: @menuPanelWidth@;
   padding: .5em 1em;
@@ -187,19 +189,57 @@ toolbarpaletteitem[place="palette"] > toolbarbutton,
 .PanelUI-footer {
   background-color: rgba(0, 0, 0, 0.05);
   border-top: 1px solid rgba(0,0,0,.1);
+  padding: 0;
+  margin: 0;
 }
 
-.PanelUI-footer toolbarbutton > .toolbarbutton-icon {
+#PanelUI-help-btn,
+#PanelUI-customize-btn {
+  margin: -1px 0 0;
+  padding: 12px;
+  -moz-appearance: none;
+  box-shadow: none;
+  background-image: none;
+  border: none;
+  border-top: 1px solid transparent;
+  border-radius: 0;
+  transition: background-color;
+}
+#PanelUI-help-btn {
+  -moz-border-start: 1px solid transparent;
+  list-style-image: url(chrome://global/skin/icons/question-16.png);
+}
+#PanelUI-customize-btn {
+  -moz-border-end: 1px solid transparent;
+  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#PanelUI-help-btn[disabled] {
+  opacity: 0.4;
+}
+
+#PanelUI-help-btn:not([disabled]):hover,
+#PanelUI-customize-btn:hover {
+  border-top: 1px solid rgba(8,25,42,0.1);
+  background-color: rgba(0,0,0,0.1);
+  box-shadow: none;
+}
+
+#PanelUI-help-btn:not([disabled]):hover {
+  -moz-border-start: 1px solid rgba(8,25,42,0.2);
+}
+
+#PanelUI-customize-btn:hover {
+  -moz-border-end: 1px solid rgba(8,25,42,0.2);
+}
+
+#PanelUI-help-btn > .toolbarbutton-text {
   display: none;
 }
 
-#PanelUI-help-btn {
-  -moz-appearance: none;
-  border: none;
-  box-shadow: none;
-  background: transparent;
-  text-decoration: underline;
-  cursor: pointer;
+#PanelUI-customize-btn > .toolbarbutton-text {
+  text-align: start;
 }
 
 #customization-palette .toolbarbutton-text {
@@ -227,8 +267,7 @@ panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):
 #widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-contents #edit-controls toolbarbutton,
 #PanelUI-contents #zoom-controls toolbarbutton,
-.customizationmode-button,
-#PanelUI-mainView #PanelUI-customize-btn {
+.customizationmode-button {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
   box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
