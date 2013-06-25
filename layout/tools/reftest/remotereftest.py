@@ -387,6 +387,16 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
     def getManifestPath(self, path):
         return path
 
+    def printDeviceInfo(self, printLogcat=False):
+        try:
+            if printLogcat:
+                logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
+                print ''.join(logcat)
+            print "Device info: %s" % self._devicemanager.getInfo()
+            print "Test root: %s" % self._devicemanager.getDeviceRoot()
+        except devicemanager.DMError:
+            print "WARNING: Error getting device information"
+
     def cleanup(self, profileDir):
         # Pull results back from device
         if self.remoteLogFile and \
@@ -474,7 +484,7 @@ def main(args):
     if (dm.processExist(procName)):
         dm.killProcess(procName)
 
-    print dm.getInfo()
+    reftest.printDeviceInfo()
 
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
@@ -491,12 +501,8 @@ def main(args):
         retVal = 1
 
     reftest.stopWebServer(options)
-    try:
-        logcat = dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
-        print ''.join(logcat)
-        print dm.getInfo()
-    except devicemanager.DMError:
-        print "WARNING: Error getting device information at end of test"
+
+    reftest.printDeviceInfo(printLogcat=True)
 
     return retVal
 

@@ -11,6 +11,7 @@
 #include "nsIObserver.h"
 #include "nsNSSShutDown.h"
 #include "PSMRunnable.h"
+#include "mozilla/DebugOnly.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -235,7 +236,7 @@ void nsKeygenThread::Run(void)
   }
 
   if (notifyObserver) {
-    nsresult rv = NS_DispatchToMainThread(notifyObserver);
+    DebugOnly<nsresult> rv = NS_DispatchToMainThread(notifyObserver);
     NS_ASSERTION(NS_SUCCEEDED(rv),
 		 "failed to dispatch keygen thread observer to main thread");
   }
