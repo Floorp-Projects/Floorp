@@ -11,7 +11,6 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  audioBufferSourceNodeNeutered_worker.js \
   webaudio.js \
   layouttest-glue.js \
   test_bug808374.html \
@@ -45,8 +44,6 @@ MOCHITEST_FILES := \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
   test_audioBufferSourceNodeLoopStartEndSame.html \
-  test_audioBufferSourceNodeNeutered.html \
-  test_audioBufferSourceNodeNoStart.html \
   test_audioBufferSourceNodeNullBuffer.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
