@@ -323,6 +323,10 @@ class RecursiveMakeBackend(BuildBackend):
         if strings:
             backend_file.write('%s += %s\n' % (export_name, ' '.join(strings)))
 
+            for s in strings:
+                p = '%s%s' % (namespace, s)
+                self._purge_manifests['dist_include'].add(p)
+
         children = exports.get_children()
         for subdir in sorted(children):
             self._process_exports(children[subdir], backend_file,
