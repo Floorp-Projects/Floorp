@@ -357,7 +357,7 @@ class MacroAssemblerARM : public Assembler
         }
         if (mode == DB) {
             return transferMultipleByRunsImpl
-                <FloatRegisterBackwardIterator>(set, ls, rm, mode, -1);
+                <FloatRegisterIterator>(set, ls, rm, mode, -1);
         }
         JS_NOT_REACHED("Invalid data transfer addressing mode");
     }
