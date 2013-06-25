@@ -111,7 +111,7 @@ public class BrowserSearch extends HomeFragment
     }
 
     public interface OnSearchListener {
-        public void onSearch(SearchEngine engine, String text);
+        public void onSearch(String engineId, String text);
     }
 
     public interface OnEditSuggestionListener {

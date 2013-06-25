@@ -28,7 +28,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
-public abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
+abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
     Cursor mCursor;
 

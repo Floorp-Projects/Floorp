@@ -17,7 +17,6 @@ import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
@@ -1834,8 +1833,8 @@ abstract public class BrowserApp extends GeckoApp
 
     // BrowserSearch.OnSearchListener
     @Override
-    public void onSearch(SearchEngine engine, String text) {
-        openUrl(text, engine.name);
+    public void onSearch(String engineId, String text) {
+        openUrl(text, engineId);
     }
 
     // BrowserSearch.OnEditSuggestionListener
