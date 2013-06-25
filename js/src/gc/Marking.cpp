@@ -8,10 +8,13 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jstypedarray.h"
+
 #include "ion/IonCode.h"
 #include "vm/Shape.h"
 
 #include "jscompartmentinlines.h"
+#include "jsinferinlines.h"
 
 #include "gc/Nursery-inl.h"
 #include "vm/Shape-inl.h"
