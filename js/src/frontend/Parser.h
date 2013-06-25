@@ -417,7 +417,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
                                     HandlePropertyName funName, FunctionType type,
-                                    FunctionSyntaxKind kind, bool strict, bool *becameStrict);
+                                    FunctionSyntaxKind kind, bool *becameStrict);
 
     virtual bool strictMode() { return pc->sc->strict; }
 
