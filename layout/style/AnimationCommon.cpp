@@ -60,28 +60,6 @@ CommonAnimationManager::Disconnect()
 }
 
 void
-CommonAnimationManager::AddElementData(CommonElementAnimationData* aData)
-{
-  if (PR_CLIST_IS_EMPTY(&mElementData)) {
-    // We need to observe the refresh driver.
-    nsRefreshDriver *rd = mPresContext->RefreshDriver();
-    rd->AddRefreshObserver(this, Flush_Style);
-  }
-
-  PR_INSERT_BEFORE(aData, &mElementData);
-}
-
-void
-CommonAnimationManager::ElementDataRemoved()
-{
-  // If we have no transitions or animations left, remove ourselves from
-  // the refresh driver.
-  if (PR_CLIST_IS_EMPTY(&mElementData)) {
-    mPresContext->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
-  }
-}
-
-void
 CommonAnimationManager::RemoveAllElementData()
 {
   while (!PR_CLIST_IS_EMPTY(&mElementData)) {

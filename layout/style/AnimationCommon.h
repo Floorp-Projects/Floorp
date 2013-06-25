@@ -65,8 +65,8 @@ public:
 protected:
   friend struct CommonElementAnimationData; // for ElementDataRemoved
 
-  void AddElementData(CommonElementAnimationData* aData);
-  void ElementDataRemoved();
+  virtual void AddElementData(CommonElementAnimationData* aData) = 0;
+  virtual void ElementDataRemoved() = 0;
   void RemoveAllElementData();
 
   PRCList mElementData;

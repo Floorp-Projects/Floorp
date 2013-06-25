@@ -473,6 +473,7 @@ nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aET)
   aET->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh(),
                           mPendingEvents,
                           false);
+  CheckNeedsRefresh();
 }
 
 /* virtual */ void
@@ -636,6 +637,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mNeedsRefreshes = true;
 
     ea->EnsureStyleRuleFor(refreshTime, mPendingEvents, false);
+    CheckNeedsRefresh();
     // We don't actually dispatch the mPendingEvents now.  We'll either
     // dispatch them the next time we get a refresh driver notification
     // or the next time somebody calls
@@ -1005,6 +1007,39 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 }
 
 void
+nsAnimationManager::AddElementData(CommonElementAnimationData* aData)
+{
+  if (!mObservingRefreshDriver) {
+    NS_ASSERTION(static_cast<ElementAnimations*>(aData)->mNeedsRefreshes,
+                 "Added data which doesn't need refreshing?");
+    // We need to observe the refresh driver.
+    mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+    mObservingRefreshDriver = true;
+  }
+
+  PR_INSERT_BEFORE(aData, &mElementData);
+}
+
+void
+nsAnimationManager::CheckNeedsRefresh()
+{
+  for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
+       l = PR_NEXT_LINK(l)) {
+    if (static_cast<ElementAnimations*>(l)->mNeedsRefreshes) {
+      if (!mObservingRefreshDriver) {
+        mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+        mObservingRefreshDriver = true;
+      }
+      return;
+    }
+  }
+  if (mObservingRefreshDriver) {
+    mObservingRefreshDriver = false;
+    mPresContext->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
+  }
+}
+
+void
 nsAnimationManager::FlushAnimations(FlushFlags aFlags)
 {
   // FIXME: check that there's at least one style rule that's not
@@ -1022,6 +1057,7 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
     ea->EnsureStyleRuleFor(now, mPendingEvents, canThrottleTick);
+    CheckNeedsRefresh();
     if (oldStyleRule != ea->mStyleRule) {
       ea->PostRestyleForAnimation(mPresContext);
     } else {
