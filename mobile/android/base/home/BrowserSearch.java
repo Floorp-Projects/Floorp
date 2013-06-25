@@ -3,18 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.home.FaviconsLoader;
-import org.mozilla.gecko.home.HomeFragment;
-import org.mozilla.gecko.home.HomeListView;
-import org.mozilla.gecko.home.TwoLinePageRow;
 import org.mozilla.gecko.widget.FaviconView;
 
 import org.json.JSONArray;
@@ -309,11 +310,11 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void registerEventListener(String eventName) {
-        GeckoAppShell.getEventDispatcher().registerEventListener(eventName, this);
+        GeckoAppShell.registerEventListener(eventName, this);
     }
 
     private void unregisterEventListener(String eventName) {
-        GeckoAppShell.getEventDispatcher().unregisterEventListener(eventName, this);
+        GeckoAppShell.unregisterEventListener(eventName, this);
     }
 
     public void filter(String searchTerm) {
