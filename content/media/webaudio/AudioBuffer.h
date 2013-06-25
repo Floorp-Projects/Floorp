@@ -91,6 +91,7 @@ public:
 
   /**
    * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
+   * Can return null if there is no data.
    */
   ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext);
 
