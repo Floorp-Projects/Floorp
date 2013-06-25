@@ -9,7 +9,7 @@
 
 @media (min-resolution: 2dppx) {
   #customization-palette toolbarbutton > .toolbarbutton-icon,
-  #PanelUI-mainView toolbarbutton > .toolbarbutton-icon {
+  #PanelUI-contents toolbarbutton > .toolbarbutton-icon {
     width: 20px;
   }
 }
