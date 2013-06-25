@@ -37,7 +37,7 @@
                                                           android:layout_height="32dip"
                                                           android:layout_gravity="top"
                                                           android:gravity="bottom"
-                                                          android:background="#FFECF0F3"
+                                                          android:background="@color/background_light"
                                                           gecko:tabIndicatorColor="@color/text_color_highlight"
                                                           android:textAppearance="@style/TextAppearance.Widget.HomePagerTabStrip"/>
 
