@@ -2084,7 +2084,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
                 return false;
 
             if (!parser->functionArgsAndBodyGeneric(SyntaxParseHandler::NodeGeneric,
-                                                    fun, funName, type, kind, strict, becameStrict))
+                                                    fun, funName, type, kind, becameStrict))
             {
                 if (parser->hadAbortedSyntaxParse()) {
                     // Try again with a full parse.
@@ -2117,7 +2117,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     if (!funpc.init())
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, funName, type, kind, strict, becameStrict))
+    if (!functionArgsAndBodyGeneric(pn, fun, funName, type, kind, becameStrict))
         return false;
 
     if (!leaveFunction(pn, funName, outerpc, kind))
@@ -2158,7 +2158,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     if (!funpc.init())
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, funName, type, kind, strict, becameStrict))
+    if (!functionArgsAndBodyGeneric(pn, fun, funName, type, kind, becameStrict))
         return false;
 
     if (!leaveFunction(pn, funName, outerpc, kind))
@@ -2191,7 +2191,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
 
     RootedPropertyName funName(context, fun->atom() ? fun->atom()->asPropertyName() : NULL);
 
-    if (!functionArgsAndBodyGeneric(pn, fun, funName, Normal, Statement, strict, NULL))
+    if (!functionArgsAndBodyGeneric(pn, fun, funName, Normal, Statement, NULL))
         return null();
 
     if (fun->isNamedLambda()) {
@@ -2214,8 +2214,7 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
                                                  HandlePropertyName funName, FunctionType type,
-                                                 FunctionSyntaxKind kind,
-                                                 bool strict, bool *becameStrict)
+                                                 FunctionSyntaxKind kind, bool *becameStrict)
 {
     // Given a properly initialized parse context, try to parse an actual
     // function without concern for conversion to strict mode, use of lazy
