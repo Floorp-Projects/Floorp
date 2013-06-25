@@ -44,6 +44,7 @@ MOCHITEST_FILES := \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
   test_audioBufferSourceNodeLoopStartEndSame.html \
+  test_audioBufferSourceNodeNoStart.html \
   test_audioBufferSourceNodeNullBuffer.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
