@@ -292,10 +292,4 @@ JSFunction::getBoundFunctionTarget() const
     return getParent();
 }
 
-inline bool
-js::Class::isCallable() const
-{
-    return this == &JSFunction::class_ || call;
-}
-
 #endif /* jsfuninlines_h */
