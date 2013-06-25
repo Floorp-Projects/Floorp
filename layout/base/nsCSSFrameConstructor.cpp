@@ -8907,8 +8907,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
       // our content
       nsIContent* content = fixed->GetContent();
       nsStyleContext* styleContext =
-        nsLayoutUtils::GetStyleFrame(content->GetPrimaryFrame())->
-          StyleContext();
+        nsLayoutUtils::GetStyleFrame(content)->StyleContext();
       FrameConstructionItemList items;
       AddFrameConstructionItemsInternal(state, content, canvasFrame,
                                         content->Tag(),

@@ -16,6 +16,7 @@
 
 #include "ion/AsmJS.h"
 #include "vm/ForkJoin.h"
+#include "vm/Interpreter.h"
 
 #include "vm/ObjectImpl-inl.h"
 

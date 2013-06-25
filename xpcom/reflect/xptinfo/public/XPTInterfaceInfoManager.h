@@ -9,6 +9,7 @@
 
 #include "nsIInterfaceInfoManager.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsDataHashtable.h"
@@ -44,7 +45,7 @@ public:
 
     xptiInterfaceEntry* GetInterfaceEntryForIID(const nsIID *iid);
 
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
     static int64_t GetXPTIWorkingSetSize();
 

@@ -814,11 +814,6 @@ inline bool IsPoisonedPtr(T *v)
 
 }
 
-/*
- * This is SpiderMonkey's equivalent to |nsMallocSizeOfFun|.
- */
-typedef size_t(*JSMallocSizeOfFun)(const void *p);
-
 /* sixgill annotation defines */
 #ifndef HAVE_STATIC_ANNOTATIONS
 # define HAVE_STATIC_ANNOTATIONS

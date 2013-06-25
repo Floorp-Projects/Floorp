@@ -11,6 +11,7 @@
 #define nsHTMLCSSStyleSheet_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
@@ -39,9 +40,9 @@ public:
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) MOZ_OVERRIDE;
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) MOZ_OVERRIDE;
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
 
   void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);

@@ -6,6 +6,7 @@
 #ifndef MOZILLA_IMAGELIB_IMAGEWRAPPER_H_
 #define MOZILLA_IMAGELIB_IMAGEWRAPPER_H_
 
+#include "mozilla/MemoryReporting.h"
 #include "Image.h"
 
 namespace mozilla {
@@ -29,8 +30,8 @@ public:
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
   virtual uint32_t SizeOfData() MOZ_OVERRIDE;
-  virtual size_t HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
-  virtual size_t HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t NonHeapSizeOfDecoded() const MOZ_OVERRIDE;
   virtual size_t OutOfProcessSizeOfDecoded() const MOZ_OVERRIDE;
 

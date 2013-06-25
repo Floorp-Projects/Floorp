@@ -393,37 +393,6 @@ class TryNoteIter
 
 /************************************************************************/
 
-/*
- * To really poison a set of values, using 'magic' or 'undefined' isn't good
- * enough since often these will just be ignored by buggy code (see bug 629974)
- * in debug builds and crash in release builds. Instead, we use a safe-for-crash
- * pointer.
- */
-static JS_ALWAYS_INLINE void
-Debug_SetValueRangeToCrashOnTouch(Value *beg, Value *end)
-{
-#ifdef DEBUG
-    for (Value *v = beg; v != end; ++v)
-        v->setObject(*reinterpret_cast<JSObject *>(0x42));
-#endif
-}
-
-static JS_ALWAYS_INLINE void
-Debug_SetValueRangeToCrashOnTouch(Value *vec, size_t len)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch(vec, vec + len);
-#endif
-}
-
-static JS_ALWAYS_INLINE void
-Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
-#endif
-}
-
 bool
 Throw(JSContext *cx, HandleValue v);
 

@@ -11,6 +11,7 @@
 #ifndef nsCSSDataBlock_h__
 #define nsCSSDataBlock_h__
 
+#include "mozilla/MemoryReporting.h"
 #include "nsCSSProps.h"
 #include "nsCSSPropertySet.h"
 
@@ -81,7 +82,7 @@ public:
      */
     static nsCSSCompressedDataBlock* CreateEmptyBlock();
 
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     bool HasDefaultBorderImageSlice() const;
     bool HasDefaultBorderImageWidth() const;

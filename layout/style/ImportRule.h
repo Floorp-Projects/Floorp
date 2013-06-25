@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsCSSRules.h"
@@ -49,7 +50,7 @@ public:
 
   void SetSheet(nsCSSStyleSheet*);
 
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE

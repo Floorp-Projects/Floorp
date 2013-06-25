@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MemoryReporting.h"
 #include "FramePropertyTable.h"
 #include "prlog.h"
 
@@ -228,7 +229,7 @@ FramePropertyTable::DeleteAll()
 }
 
 size_t
-FramePropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+FramePropertyTable::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mEntries.SizeOfExcludingThis(SizeOfPropertyTableEntryExcludingThis,
                                       aMallocSizeOf);
@@ -236,7 +237,7 @@ FramePropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 
 /* static */ size_t
 FramePropertyTable::SizeOfPropertyTableEntryExcludingThis(Entry* aEntry,
-                      nsMallocSizeOfFun aMallocSizeOf, void *)
+                      mozilla::MallocSizeOf aMallocSizeOf, void *)
 {
   return aEntry->mProp.SizeOfExcludingThis(aMallocSizeOf);
 }
