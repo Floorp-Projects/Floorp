@@ -6,6 +6,7 @@
 #ifndef GFX_WINDOWSDWRITEFONTS_H
 #define GFX_WINDOWSDWRITEFONTS_H
 
+#include "mozilla/MemoryReporting.h"
 #include <dwrite.h>
 
 #include "gfxFont.h"
@@ -58,9 +59,9 @@ public:
 
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions> GetGlyphRenderingOptions();
 
-    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+    virtual void SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
-    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+    virtual void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
 
     virtual FontType GetType() const { return FONT_TYPE_DWRITE; }

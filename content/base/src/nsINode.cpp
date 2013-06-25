@@ -15,6 +15,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Util.h"
 #include "nsAsyncDOMEvent.h"
@@ -2074,7 +2075,7 @@ nsINode::UnbindObject(nsISupports* aObject)
 }
 
 size_t
-nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsINode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   nsEventListenerManager* elm =

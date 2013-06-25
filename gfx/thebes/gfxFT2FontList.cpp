@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #if defined(MOZ_WIDGET_GTK2)
@@ -464,7 +465,7 @@ FT2FontEntry::CopyFontTable(uint32_t aTableTag,
 }
 
 void
-FT2FontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+FT2FontEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                   FontListSizes*    aSizes) const
 {
     gfxFontEntry::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -473,7 +474,7 @@ FT2FontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-FT2FontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+FT2FontEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                   FontListSizes*    aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);

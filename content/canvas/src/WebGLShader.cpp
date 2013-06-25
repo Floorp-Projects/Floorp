@@ -6,6 +6,7 @@
 #include "WebGLObjectModel.h"
 #include "WebGLShader.h"
 #include "WebGLContext.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "nsContentUtils.h"
 
@@ -39,7 +40,7 @@ WebGLShader::Delete() {
 }
 
 size_t
-WebGLShader::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+WebGLShader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) +
            mSource.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
            mTranslationLog.SizeOfExcludingThisIfUnshared(aMallocSizeOf);

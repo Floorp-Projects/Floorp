@@ -9,6 +9,8 @@
 
 #ifdef JS_ION
 
+#include "mozilla/MemoryReporting.h"
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "IonCode.h"
@@ -349,7 +351,7 @@ void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
 uint32_t UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc);
 
 void PurgeCaches(JSScript *script, JS::Zone *zone);
-size_t SizeOfIonData(JSScript *script, JSMallocSizeOfFun mallocSizeOf);
+size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);
 void DestroyIonScripts(FreeOp *fop, JSScript *script);
 void TraceIonScripts(JSTracer* trc, JSScript *script);
 

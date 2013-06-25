@@ -19,6 +19,7 @@
 
 #include "nsPresArena.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Poison.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
@@ -116,7 +117,7 @@ nsPresArena::Free(uint32_t aCode, void* aPtr)
 
 /* static */ size_t
 nsPresArena::SizeOfFreeListEntryExcludingThis(
-  FreeList* aEntry, nsMallocSizeOfFun aMallocSizeOf, void*)
+  FreeList* aEntry, mozilla::MallocSizeOf aMallocSizeOf, void*)
 {
   return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
 }
@@ -179,7 +180,7 @@ nsPresArena::FreeListEnumerator(FreeList* aEntry, void* aData)
 }
 
 void
-nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+nsPresArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                  nsArenaMemoryStats* aArenaStats)
 {
   // We do a complicated dance here because we want to measure the

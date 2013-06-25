@@ -10,6 +10,7 @@
 #define jsapi_h
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ThreadLocal.h"
@@ -378,10 +379,10 @@ class AutoHashMapRooter : protected AutoGCRooter
         return map.capacity();
     }
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return map.sizeOfExcludingThis(mallocSizeOf);
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return map.sizeOfIncludingThis(mallocSizeOf);
     }
 
@@ -493,10 +494,10 @@ class AutoHashSetRooter : protected AutoGCRooter
         return set.capacity();
     }
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return set.sizeOfExcludingThis(mallocSizeOf);
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return set.sizeOfIncludingThis(mallocSizeOf);
     }
 

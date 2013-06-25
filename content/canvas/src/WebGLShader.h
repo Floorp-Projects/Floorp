@@ -14,6 +14,7 @@
 #include "angle/ShaderLang.h"
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 
@@ -39,7 +40,7 @@ public:
         DeleteOnce();
     }
 
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     WebGLuint GLName() { return mGLName; }
     WebGLenum ShaderType() { return mType; }

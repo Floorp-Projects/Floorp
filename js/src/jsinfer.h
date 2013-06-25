@@ -9,6 +9,8 @@
 #ifndef jsinfer_h
 #define jsinfer_h
 
+#include "mozilla/MemoryReporting.h"
+
 #include "jsalloc.h"
 #include "jsfriendapi.h"
 
@@ -1086,7 +1088,7 @@ struct TypeObject : gc::Cell
     inline void clearProperties();
     inline void sweep(FreeOp *fop);
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
