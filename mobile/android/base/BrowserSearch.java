@@ -177,6 +177,7 @@ public class BrowserSearch extends HomeFragment
     public void onDetach() {
         super.onDetach();
 
+        mInflater = null;
         mUrlOpenListener = null;
         mSearchListener = null;
         mEditSuggestionListener = null;
