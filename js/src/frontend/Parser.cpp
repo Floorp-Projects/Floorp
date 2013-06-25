@@ -2318,6 +2318,10 @@ typename ParseHandler::Node
 Parser<ParseHandler>::functionStmt()
 {
     JS_ASSERT(tokenStream.currentToken().type == TOK_FUNCTION);
+
+    TokenStream::Position start(keepAtoms);
+    tokenStream.tell(&start);
+
     RootedPropertyName name(context);
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
         name = tokenStream.currentToken().name();
@@ -2326,9 +2330,6 @@ Parser<ParseHandler>::functionStmt()
         report(ParseError, false, null(), JSMSG_UNNAMED_FUNCTION_STMT);
         return null();
     }
-
-    TokenStream::Position start(keepAtoms);
-    tokenStream.positionAfterLastFunctionKeyword(start);
 
     /* We forbid function statements in strict mode code. */
     if (!pc->atBodyLevel() && pc->sc->needStrictChecks() &&
@@ -2345,7 +2346,7 @@ Parser<ParseHandler>::functionExpr()
     RootedPropertyName name(context);
     JS_ASSERT(tokenStream.currentToken().type == TOK_FUNCTION);
     TokenStream::Position start(keepAtoms);
-    tokenStream.positionAfterLastFunctionKeyword(start);
+    tokenStream.tell(&start);
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME)
         name = tokenStream.currentToken().name();
     else
@@ -2752,16 +2753,12 @@ Parser<ParseHandler>::bindVarOrConst(JSContext *cx, BindData<ParseHandler> *data
             /*
              * This definition isn't being added to the parse context's
              * declarations, so make sure to indicate the need to deoptimize
-             * the script's arguments object.
+             * the script's arguments object. Mark the function as if it
+             * contained a debugger statement, which will deoptimize arguments
+             * as much as possible.
              */
-            HandlePropertyName arguments = cx->names().arguments;
-            if (name == arguments) {
-                Node pn = parser->newName(arguments);
-                if (!pc->define(parser->context, arguments, pn, Definition::VAR))
-                    return false;
-                funbox->setArgumentsHasLocalBinding();
-                funbox->setDefinitelyNeedsArgsObj();
-            }
+            if (name == cx->names().arguments)
+                funbox->setHasDebuggerStatement();
         }
         return true;
     }

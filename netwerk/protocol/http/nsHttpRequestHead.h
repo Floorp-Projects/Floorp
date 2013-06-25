@@ -67,7 +67,7 @@ private:
     nsHttpHeaderArray mHeaders;
     nsHttpAtom        mMethod;
     nsHttpVersion     mVersion;
-    mozilla::net::InfallableCopyCString mRequestURI;
+    nsCString         mRequestURI;
 };
 
 #endif // nsHttpRequestHead_h__

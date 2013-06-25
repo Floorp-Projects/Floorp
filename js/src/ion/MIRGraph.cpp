@@ -1063,3 +1063,28 @@ MBasicBlock::immediateDominatorBranch(BranchDirection *pdirection)
 
     return NULL;
 }
+
+void
+MIRGraph::dump(FILE *fp)
+{
+#ifdef DEBUG
+    for (MBasicBlockIterator iter(begin()); iter != end(); iter++) {
+        iter->dump(fp);
+    }
+#endif
+}
+
+void
+MBasicBlock::dump(FILE *fp)
+{
+#ifdef DEBUG
+    for (MPhiIterator iter(phisBegin()); iter != phisEnd(); iter++) {
+        iter->printOpcode(fp);
+        fprintf(fp, "\n");
+    }
+    for (MInstructionIterator iter(begin()); iter != end(); iter++) {
+        iter->printOpcode(fp);
+        fprintf(fp, "\n");
+    }
+#endif
+}

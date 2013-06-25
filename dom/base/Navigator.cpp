@@ -40,6 +40,7 @@
 #include "Connection.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
+#include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
 #include "IccManager.h"
 #include "MobileConnection.h"
