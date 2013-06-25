@@ -231,6 +231,13 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXPORTS_nspr/private += pprio.h',
         ])
 
+        # EXPORTS files should appear in the dist_include purge manifest.
+        m = PurgeManifest.from_path(os.path.join(env.topobjdir,
+            '_build_manifests', 'purge', 'dist_include'))
+        self.assertIn('foo.h', m.entries)
+        self.assertIn('mozilla/mozilla1.h', m.entries)
+        self.assertIn('mozilla/dom/dom2.h', m.entries)
+
     def test_xpcshell_manifests(self):
         """Ensure XPCSHELL_TESTS_MANIFESTS is written out correctly."""
         env = self._consume('xpcshell_manifests', RecursiveMakeBackend)
