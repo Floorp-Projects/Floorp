@@ -27,7 +27,6 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsWrapperCache.h"
 #include "nsIObserver.h"
-#include "nsLayoutUtils.h"
 
 #include "GLContextProvider.h"
 
