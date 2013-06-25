@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.home;
 
 import android.content.Context;
 import android.database.ContentObserver;

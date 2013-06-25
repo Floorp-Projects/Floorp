@@ -3,11 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.BrowserSearch.OnEditSuggestionListener;
-import org.mozilla.gecko.BrowserSearch.OnSearchListener;
-import org.mozilla.gecko.BrowserSearch.OnUrlOpenListener;
+import org.mozilla.gecko.AnimatedHeightLayout;
+import org.mozilla.gecko.FlowLayout;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
+import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
+import org.mozilla.gecko.home.BrowserSearch.OnUrlOpenListener;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
