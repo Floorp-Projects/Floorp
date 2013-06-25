@@ -24,7 +24,7 @@ import java.util.ArrayList;
 /**
  * Encapsulates the implementation of the favicons cursorloader.
  */
-public class FaviconsLoader {
+class FaviconsLoader {
     // Argument containing list of urls for the favicons loader
     private static final String FAVICONS_LOADER_URLS_ARG = "urls";
 

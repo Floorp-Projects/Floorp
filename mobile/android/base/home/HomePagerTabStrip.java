@@ -17,7 +17,7 @@ import org.mozilla.gecko.R;
  * that exposes XML attributes for the public methods.
  */
 
-public class HomePagerTabStrip extends PagerTabStrip {
+class HomePagerTabStrip extends PagerTabStrip {
 
     public HomePagerTabStrip(Context context) {
         super(context);

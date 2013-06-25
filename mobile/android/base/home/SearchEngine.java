@@ -9,7 +9,7 @@ import android.graphics.Bitmap;
 
 import java.util.ArrayList;
 
-public class SearchEngine {
+class SearchEngine {
     public String name;
     public String identifier;
     public Bitmap icon;

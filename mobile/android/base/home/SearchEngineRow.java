@@ -78,7 +78,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
                         mUrlOpenListener.onUrlOpen(suggestion);
                     }
                 } else if (mSearchListener != null) {
-                    mSearchListener.onSearch(mSearchEngine, suggestion);
+                    mSearchListener.onSearch(mSearchEngine.name, suggestion);
                 }
             }
         };
