@@ -534,6 +534,25 @@ function synthesizeNativeMouseMUp(aElement, aOffsetX, aOffsetY) {
 }
 
 /*
+ * logicalCoordsForElement - given coordinates relative to top-left of
+ * given element, returns logical coordinates for window. If a non-numeric
+ * X or Y value is given, a value for the center of the element in that
+ * dimension is used.
+ *
+ * @param aElement element coordinates are relative to.
+ * @param aX, aY relative coordinates.
+ */
+function logicalCoordsForElement (aElement, aX, aY) {
+  let coords = { x: null, y: null };
+  let rect = aElement.getBoundingClientRect();
+
+  coords.x = isNaN(aX) ? rect.left + (rect.width / 2) : rect.left + aX;
+  coords.y = isNaN(aY) ? rect.top + (rect.height / 2) : rect.top + aY;
+
+  return coords;
+}
+
+/*
  * sendContextMenuClick - simulates a press-hold touch input event. Event
  * is delivered to the main window of the application through the top-level
  * widget.
@@ -568,8 +587,8 @@ function sendContextMenuClickToWindow(aWindow, aX, aY) {
 function sendContextMenuClickToElement(aWindow, aElement, aX, aY) {
   let utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  let rect = aElement.getBoundingClientRect();
-  utils.sendMouseEventToWindow("contextmenu", rect.left + aX, rect.top + aY, 2, 1, 0, true,
+  let coords = logicalCoordsForElement(aElement, aX, aY);
+  utils.sendMouseEventToWindow("contextmenu", coords.x, coords.y, 2, 1, 0, true,
                                 1, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
 }
 
@@ -596,8 +615,8 @@ function sendTap(aWindow, aX, aY) {
 }
 
 function sendElementTap(aWindow, aElement, aX, aY) {
-  let rect = aElement.getBoundingClientRect();
-  EventUtils.synthesizeMouseAtPoint(rect.left + aX, rect.top + aY, {
+  let coords = logicalCoordsForElement(aElement, aX, aY);
+  EventUtils.synthesizeMouseAtPoint(coords.x, coords.y, {
       clickCount: 1,
       inputSource: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
     }, aWindow);
