@@ -1950,7 +1950,10 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
         tokenStream.seek(start);
         if (funName && tokenStream.getToken() == TOK_ERROR)
             return null();
+
+        // functionArgsAndBody may have already set pn->pn_body before failing.
         handler.setFunctionBody(pn, null());
+
         if (!functionArgsAndBody(pn, fun, funName, startOffset, type, kind, true))
             return null();
     }
