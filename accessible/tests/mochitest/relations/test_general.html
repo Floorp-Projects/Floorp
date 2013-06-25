@@ -117,6 +117,9 @@
       testRelation("listitem1", RELATION_NODE_PARENT_OF,
                    [ "listitem1.1", "listitem1.2" ]);
 
+      // aria-atomic
+      testRelation(getNode("atomic").firstChild, RELATION_MEMBER_OF, "atomic");
+
       // aria-controls
       getAccessible("tab");
       todo(false,
@@ -316,6 +319,8 @@
   <div id="lr2" aria-live="assertive">a</div>
   <input type="button" id="button" aria-controls="lr1 lr2"
          onclick="getNode('lr1').textContent += '1'; getNode('lr2').textContent += 'a';"/>
+
+  <div id="atomic" aria-atomic="true">live region</div>
 
   <span id="flowto" aria-flowto="flowfrom">flow to</span>
   <span id="flowfrom">flow from</span>
