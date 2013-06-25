@@ -416,11 +416,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             });
         }
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            // Create the panel and inflate the custom menu.
-            mActivity.onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, null);
-        }
-
         mFocusOrder = Arrays.asList(mBack, mForward, mLayout, mReader, mSiteSecurity, mStop, mTabs);
     }
 
