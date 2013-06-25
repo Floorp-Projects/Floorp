@@ -4,6 +4,8 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+const Ci = Components.interfaces;
+
 /**
  * Special Powers Exception - used to throw exceptions nicely
  **/
