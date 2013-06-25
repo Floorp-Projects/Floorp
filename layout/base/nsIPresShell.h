@@ -173,7 +173,8 @@ protected:
   typedef mozilla::layers::LayerManager LayerManager;
 
   enum eRenderFlag {
-    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1
+    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
+    STATE_DRAWWINDOW_NOT_FLUSHING = 0x2
   };
   typedef uint8_t RenderFlags; // for storing the above flags
 
@@ -983,7 +984,8 @@ public:
     RENDER_CARET = 0x04,
     RENDER_USE_WIDGET_LAYERS = 0x08,
     RENDER_ASYNC_DECODE_IMAGES = 0x10,
-    RENDER_DOCUMENT_RELATIVE = 0x20
+    RENDER_DOCUMENT_RELATIVE = 0x20,
+    RENDER_DRAWWINDOW_NOT_FLUSHING = 0x40
   };
   virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, uint32_t aFlags,
                                               nscolor aBackgroundColor,
@@ -1219,6 +1221,13 @@ public:
   gfxSize GetResolution() { return gfxSize(mXResolution, mYResolution); }
   float GetXResolution() { return mXResolution; }
   float GetYResolution() { return mYResolution; }
+
+  /**
+   * Returns whether we are in a DrawWindow() call that used the
+   * DRAWWINDOW_DO_NOT_FLUSH flag.
+   */
+  bool InDrawWindowNotFlushing() const
+  { return mRenderFlags & STATE_DRAWWINDOW_NOT_FLUSHING; }
 
   /**
    * Set the isFirstPaint flag.
