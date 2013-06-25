@@ -66,7 +66,7 @@ typedef Vector<IonBuilder*, 0, SystemAllocPolicy> OffThreadCompilationVector;
 // Optimized stubs are allocated per-compartment and are always purged when
 // JIT-code is discarded. Fallback stubs are allocated per BaselineScript and
 // are only destroyed when the BaselineScript is destroyed.
-struct ICStubSpace
+class ICStubSpace
 {
   protected:
     LifoAlloc allocator_;
