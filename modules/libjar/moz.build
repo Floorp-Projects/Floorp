@@ -10,7 +10,10 @@ if CONFIG['MOZ_ZIPWRITER']:
 TEST_TOOL_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    '$(MODULES_LIBJAR_LXPIDLSRCS)',
+    'nsIJARChannel.idl',
+    'nsIJARProtocolHandler.idl',
+    'nsIJARURI.idl',
+    'nsIZipReader.idl',
 ]
 
 MODULE = 'jar'
@@ -22,6 +25,12 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    '$(MODULES_LIBJAR_LCPPSRCS)',
+    'nsJAR.cpp',
+    'nsJARChannel.cpp',
+    'nsJARFactory.cpp',
+    'nsJARInputStream.cpp',
+    'nsJARProtocolHandler.cpp',
+    'nsJARURI.cpp',
+    'nsZipArchive.cpp',
 ]
 

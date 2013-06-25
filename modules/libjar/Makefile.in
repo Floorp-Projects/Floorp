@@ -9,7 +9,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(srcdir)/objs.mk
 
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
 MSVC_ENABLE_PGO := 1
