@@ -415,8 +415,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     enum FunctionBodyType { StatementListBody, ExpressionBody };
     Node functionBody(FunctionSyntaxKind kind, FunctionBodyType type);
 
-    bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
-                                    HandlePropertyName funName, FunctionType type,
+    bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
                                     FunctionSyntaxKind kind, bool *becameStrict);
 
     virtual bool strictMode() { return pc->sc->strict; }
@@ -486,8 +485,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     Node functionDef(HandlePropertyName name, const TokenStream::Position &start,
                      size_t startOffset, FunctionType type, FunctionSyntaxKind kind);
-    bool functionArgsAndBody(Node pn, HandleFunction fun, HandlePropertyName funName,
-                             size_t startOffset, FunctionType type, FunctionSyntaxKind kind,
+    bool functionArgsAndBody(Node pn, HandleFunction fun, size_t startOffset,
+                             FunctionType type, FunctionSyntaxKind kind,
                              bool strict, bool *becameStrict = NULL);
 
     Node unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin);
@@ -533,7 +532,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
                                 bool forDecl, bool forEach, bool forOf);
     bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
     bool checkStrictAssignment(Node lhs, AssignmentFlavor flavor);
-    bool checkStrictBinding(HandlePropertyName name, Node pn);
+    bool checkStrictBinding(PropertyName *name, Node pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node *duplicatedArg = NULL);
     Node pushLexicalScope(StmtInfoPC *stmt);
@@ -572,8 +571,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool checkFinalReturn(Node pn);
     DefinitionNode getOrCreateLexicalDependency(ParseContext<ParseHandler> *pc, JSAtom *atom);
 
-    bool leaveFunction(Node fn, HandlePropertyName funName,
-                       ParseContext<ParseHandler> *outerpc,
+    bool leaveFunction(Node fn, ParseContext<ParseHandler> *outerpc,
                        FunctionSyntaxKind kind = Expression);
 
     TokenPos pos() const { return tokenStream.currentToken().pos; }
