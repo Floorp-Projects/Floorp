@@ -100,7 +100,8 @@ struct ElementTransitions MOZ_FINAL
 
 
 
-class nsTransitionManager : public mozilla::css::CommonAnimationManager
+class nsTransitionManager MOZ_FINAL
+  : public mozilla::css::CommonAnimationManager
 {
 public:
   nsTransitionManager(nsPresContext *aPresContext)
@@ -201,6 +202,10 @@ public:
   // compare against.  When we do this, we don't bother touching frames
   // other than primary frames.
   void UpdateAllThrottledStyles();
+
+protected:
+  virtual void ElementDataRemoved() MOZ_OVERRIDE;
+  virtual void AddElementData(mozilla::css::CommonElementAnimationData* aData) MOZ_OVERRIDE;
 
 private:
   void ConsiderStartingTransition(nsCSSProperty aProperty,
