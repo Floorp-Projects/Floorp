@@ -632,7 +632,7 @@ pref("plugins.hide_infobar_for_outdated_plugin", false);
 pref("plugins.update.url", "https://www.mozilla.org/%LOCALE%/plugincheck/");
 pref("plugins.update.notifyUser", false);
 
-pref("plugins.click_to_play", false);
+pref("plugins.click_to_play", true);
 
 // display door hanger if flash not installed
 pref("plugins.notifyMissingFlash", true);
