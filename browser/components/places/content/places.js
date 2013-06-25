@@ -37,6 +37,50 @@ var PlacesOrganizer = {
       PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
   },
 
+  /**
+   * Opens a given hierarchy in the left pane, stopping at the last reachable
+   * container.
+   *
+   * @param aHierarchy A single container or an array of containers, sorted from
+   *                   the outmost to the innermost in the hierarchy. Each
+   *                   container may be either an item id, a Places URI string,
+   *                   or a named query.
+   * @see PlacesUIUtils.leftPaneQueries for supported named queries.
+   */
+  selectLeftPaneContainerByHierarchy:
+  function PO_selectLeftPaneContainerByHierarchy(aHierarchy) {
+    if (!aHierarchy)
+      throw new Error("Invalid containers hierarchy");
+    let hierarchy = [].concat(aHierarchy);
+    let selectWasSuppressed = this._places.view.selection.selectEventsSuppressed;
+    if (!selectWasSuppressed)
+      this._places.view.selection.selectEventsSuppressed = true;
+    try {
+      for (let container of hierarchy) {
+        switch (typeof container) {
+          case "number":
+            this._places.selectItems([container]);
+            break;
+          case "string":
+            if (container.substr(0, 6) == "place:")
+              this._places.selectPlaceURI(container);
+            else if (container in PlacesUIUtils.leftPaneQueries)
+              this.selectLeftPaneQuery(container);
+            else
+              throw new Error("Invalid container found: " + container);
+            break;
+          default:
+            throw new Error("Invalid container type found: " + container);
+            break;
+        }
+        PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
+      }
+    } finally {
+      if (!selectWasSuppressed)
+        this._places.view.selection.selectEventsSuppressed = false;
+    }
+  },
+
   init: function PO_init() {
     ContentArea.init();
 
@@ -47,12 +91,13 @@ var PlacesOrganizer = {
     if (window.arguments && window.arguments[0])
       leftPaneSelection = window.arguments[0];
 
-    this.selectLeftPaneQuery(leftPaneSelection);
-    if (leftPaneSelection == "History") {
+    this.selectLeftPaneContainerByHierarchy(leftPaneSelection);
+    if (leftPaneSelection === "History") {
       let historyNode = this._places.selectedNode;
       if (historyNode.childCount > 0)
         this._places.selectNode(historyNode.getChild(0));
     }
+
     // clear the back-stack
     this._backHistory.splice(0, this._backHistory.length);
     document.getElementById("OrganizerCommand:Back").setAttribute("disabled", true);
