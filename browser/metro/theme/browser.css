@@ -122,7 +122,7 @@
     opacity: 0;
     transform: scale(0, 0);
   }
-  
+
   100% {
     opacity: 1;
     transform: scale(1, 1);
@@ -168,7 +168,7 @@ documenttab[closing] > .documenttab-container {
   font-size: @metro_font_normal@;
   width: @thumbnail_width@;
   padding: 4px @metro_spacing_snormal@ 8px;
-  
+
   background: #000;
   opacity: 0.95;
   color: #fff;
@@ -223,7 +223,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 .selection-overlay {
-  pointer-events: none;  
+  pointer-events: none;
 }
 
 .selection-overlay:-moz-focusring {
@@ -749,13 +749,15 @@ setting[type="radio"] > vbox {
   visibility: collapse;
 }
 
-/*tile content should be on same line in snapped view */
-#snapped-topsites-grid > richgriditem > .richgrid-item-content {
-  -moz-box-orient: horizontal;
+/* startUI sections, grids */
+#start-container .meta-section {
+  /* allot space for at least a single column */
+  min-width: @grid_double_column_width@;
 }
 
-[viewstate="snapped"] .canSnapTiles .richgrid-item-desc {
- -moz-margin-start: 8px;
+#start-topsites {
+  /* allot space for 3 tile columns for the topsites grid */
+  min-width: calc(3 * @grid_double_column_width@);
 }
 
 /* if snapped, hide the fullscreen awesome screen, if viewstate is anything
@@ -778,8 +780,8 @@ setting[type="radio"] > vbox {
 
 #start-container[viewstate="snapped"] .meta-section {
   margin: 0px;
+  min-width: @grid_double_column_width@;
 }
-
 
 /* Browser Content Areas ----------------------------------------------------- */
 

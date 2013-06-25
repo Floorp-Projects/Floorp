@@ -15,6 +15,7 @@ chrome.jar:
   skin/config.css                           (config.css)
 * skin/forms.css                            (forms.css)
 * skin/platform.css                         (platform.css)
+* skin/tiles.css                            (tiles.css)
   skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
