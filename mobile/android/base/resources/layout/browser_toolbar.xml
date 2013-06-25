@@ -3,15 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.BrowserToolbarLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:gecko="http://schemas.android.com/apk/res-auto"
-              android:id="@+id/browser_toolbar"
-              style="@style/BrowserToolbar"
-              android:layout_centerVertical="true"
-              android:clipChildren="false"
-              android:clipToPadding="false"
-              android:clickable="true"
-              android:focusable="true">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <ImageButton android:id="@+id/back"
                  style="@style/AddressBar.ImageButton.Back"/>
@@ -158,4 +151,4 @@
                android:contentDescription="@null"
                android:visibility="gone"/>
 
-</org.mozilla.gecko.BrowserToolbarLayout>
+</merge>
