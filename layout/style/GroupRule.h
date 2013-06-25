@@ -12,6 +12,7 @@
 #define mozilla_css_GroupRule_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
@@ -69,8 +70,8 @@ public:
                                     nsMediaQueryResultCacheKey& aKey) = 0;
 
   // non-virtual -- it is only called by subclasses
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
 protected:
   // to help implement nsIDOMCSSRule

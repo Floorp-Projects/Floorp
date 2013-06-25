@@ -26,6 +26,7 @@
 #include "plbase64.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PContent.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
@@ -807,7 +808,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
 }
 
 size_t
-pref_SizeOfPrivateData(nsMallocSizeOfFun aMallocSizeOf)
+pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
 {
     size_t n = PL_SizeOfArenaPoolExcludingPool(&gPrefNameArena, aMallocSizeOf);
     for (struct CallbackNode* node = gCallbacks; node; node = node->next) {

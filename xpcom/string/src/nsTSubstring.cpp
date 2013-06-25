@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "mozilla/MemoryReporting.h"
 #include "prdtoa.h"
 
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
@@ -883,7 +884,7 @@ nsTSubstring_CharT::DoAppendFloat( double aFloat, int digits )
 
 size_t
 nsTSubstring_CharT::SizeOfExcludingThisMustBeUnshared(
-    nsMallocSizeOfFun mallocSizeOf) const
+    mozilla::MallocSizeOf mallocSizeOf) const
 {
   if (mFlags & F_SHARED) {
     return nsStringBuffer::FromData(mData)->
@@ -906,7 +907,7 @@ nsTSubstring_CharT::SizeOfExcludingThisMustBeUnshared(
 
 size_t
 nsTSubstring_CharT::SizeOfExcludingThisIfUnshared(
-    nsMallocSizeOfFun mallocSizeOf) const
+    mozilla::MallocSizeOf mallocSizeOf) const
 {
   // This is identical to SizeOfExcludingThisMustBeUnshared except for the
   // F_SHARED case.
@@ -922,7 +923,7 @@ nsTSubstring_CharT::SizeOfExcludingThisIfUnshared(
 
 size_t
 nsTSubstring_CharT::SizeOfExcludingThisEvenIfShared(
-    nsMallocSizeOfFun mallocSizeOf) const
+    mozilla::MallocSizeOf mallocSizeOf) const
 {
   // This is identical to SizeOfExcludingThisMustBeUnshared except for the
   // F_SHARED case.
@@ -938,21 +939,21 @@ nsTSubstring_CharT::SizeOfExcludingThisEvenIfShared(
 
 size_t
 nsTSubstring_CharT::SizeOfIncludingThisMustBeUnshared(
-    nsMallocSizeOfFun mallocSizeOf) const
+    mozilla::MallocSizeOf mallocSizeOf) const
 {
   return mallocSizeOf(this) + SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
 }
 
 size_t
 nsTSubstring_CharT::SizeOfIncludingThisIfUnshared(
-    nsMallocSizeOfFun mallocSizeOf) const
+    mozilla::MallocSizeOf mallocSizeOf) const
 {
   return mallocSizeOf(this) + SizeOfExcludingThisIfUnshared(mallocSizeOf);
 }
 
 size_t
 nsTSubstring_CharT::SizeOfIncludingThisEvenIfShared(
-    nsMallocSizeOfFun mallocSizeOf) const
+    mozilla::MallocSizeOf mallocSizeOf) const
 {
   return mallocSizeOf(this) + SizeOfExcludingThisEvenIfShared(mallocSizeOf);
 }

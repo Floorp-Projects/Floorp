@@ -7,7 +7,7 @@
 /*
  * JS atom table.
  */
-#include "jsatom.h"
+#include "jsatominlines.h"
 
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
@@ -22,9 +22,11 @@
 #include "gc/Marking.h"
 #include "vm/Xdr.h"
 
-#include "jsatominlines.h"
 #include "jscompartmentinlines.h"
 
+#ifdef JSGC_GENERATIONAL
+#include "vm/Shape-inl.h"
+#endif
 #include "vm/String-inl.h"
 
 using namespace js;
