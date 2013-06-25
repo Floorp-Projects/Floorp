@@ -222,6 +222,10 @@ XRE_MetroCoreApplicationRun()
   }
 #endif
 
+  // Experimental work around for random timing/MozAfterPaint problems
+  // in mochiperf tests. (Bug 886109)
+  PR_Now();
+
   sMetroApp = Make<MetroApp>();
 
   HStringReference className(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication);
