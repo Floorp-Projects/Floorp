@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "vm/ObjectImpl-inl.h"
+
 #include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/ObjectImpl.h"
@@ -12,20 +14,19 @@
 
 #include "gc/Barrier-inl.h"
 #include "gc/Marking.h"
-#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 
-void
-js::ObjectImpl::assertIsNative() const
+bool
+js::ObjectImpl::isNativeSlow() const
 {
-    MOZ_ASSERT(isNative());
+    return isNative();
 }
 
-void
-js::ObjectImpl::assertSlotIsWithinSpan(uint32_t slot) const
+uint32_t
+js::ObjectImpl::slotSpanSlow() const
 {
-    MOZ_ASSERT(slot < slotSpan());
+    return slotSpan();
 }
 
 PropDesc::PropDesc()

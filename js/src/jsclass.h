@@ -21,6 +21,10 @@ class PropertyName;
 class SpecialId;
 class PropertyId;
 
+// This is equal to JSFunction::class_.  Use it in places where you don't want
+// to #include jsfun.h.
+extern JS_FRIEND_DATA(js::Class*) FunctionClassPtr;
+
 static JS_ALWAYS_INLINE jsid
 SPECIALID_TO_JSID(const SpecialId &sid);
 
@@ -312,8 +316,9 @@ struct Class
         return flags & JSCLASS_EMULATES_UNDEFINED;
     }
 
-    /* Defined in jsfuninlines.h */
-    inline bool isCallable() const;
+    bool isCallable() const {
+        return this == js::FunctionClassPtr || call;
+    }
 
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
 };
