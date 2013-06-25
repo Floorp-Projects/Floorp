@@ -698,6 +698,52 @@ FoldConstants<FullParseHandler>(JSContext *cx, ParseNode **pnp,
         }
         break;
 
+      case PNK_ELEM: {
+        // An indexed expression, pn1[pn2]. A few cases can be improved.
+        PropertyName *name = NULL;
+        if (pn2->isKind(PNK_STRING)) {
+            JSAtom *atom = pn2->pn_atom;
+            uint32_t index;
+
+            if (atom->isIndex(&index)) {
+                // Optimization 1: We have something like pn1["100"]. This is
+                // equivalent to pn1[100] which is faster.
+                pn2->setKind(PNK_NUMBER);
+                pn2->setOp(JSOP_DOUBLE);
+                pn2->pn_dval = index;
+            } else {
+                name = atom->asPropertyName();
+            }
+        } else if (pn2->isKind(PNK_NUMBER)) {
+            double number = pn2->pn_dval;
+            if (number != ToUint32(number)) {
+                // Optimization 2: We have something like pn1[3.14]. The number
+                // is not an array index. This is equivalent to pn1["3.14"]
+                // which enables optimization 3 below.
+                JSAtom *atom = ToAtom<NoGC>(cx, DoubleValue(number));
+                if (!atom)
+                    return false;
+                name = atom->asPropertyName();
+            }
+        }
+
+        if (name) {
+            // Optimization 3: We have pn1["foo"] where foo is not an index.
+            // Convert to a property access (like pn1.foo) which we optimize
+            // better downstream.
+            ParseNode *expr = parser->handler.newPropertyAccess(pn->pn_left, name, pn->pn_pos.end);
+            if (!expr)
+                return false;
+            ReplaceNode(pnp, expr);
+
+            pn->pn_left = NULL;
+            pn->pn_right = NULL;
+            parser->handler.freeTree(pn);
+            pn = expr;
+        }
+        break;
+      }
+
       default:;
     }
 
