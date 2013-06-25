@@ -41,6 +41,12 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(AudioBufferSourceNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 
+/**
+ * Media-thread playback engine for AudioBufferSourceNode.
+ * Nothing is played until a non-null buffer has been set (via
+ * AudioNodeStream::SetBuffer) and a non-zero duration has been set (via
+ * AudioNodeStream::SetInt32Parameter).
+ */
 class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
@@ -353,8 +359,9 @@ public:
                                  AudioChunk* aOutput,
                                  bool* aFinished)
   {
-    if (!mBuffer)
+    if (!mBuffer || !mDuration) {
       return;
+    }
 
     uint32_t channels = mBuffer->GetChannels();
     if (!channels) {
@@ -483,7 +490,9 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
                       std::numeric_limits<double>::min();
     SendOffsetAndDurationParametersToStream(ns, aOffset, duration);
   } else {
-    // Remember our arguments so that we can use them once we have a buffer
+    // Remember our arguments so that we can use them once we have a buffer.
+    // We can't send these parameters now because we don't know the buffer
+    // sample rate.
     mOffset = aOffset;
     mDuration = aDuration.WasPassed() ?
                 aDuration.Value() :
@@ -511,11 +520,13 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
       mBuffer->GetThreadSharedChannelsForRate(aCx);
     ns->SetBuffer(data.forget());
     ns->SetInt32Parameter(SAMPLE_RATE, rate);
+
+    if (mStartCalled) {
+      SendOffsetAndDurationParametersToStream(ns, mOffset, mDuration);
+    }
   } else {
     ns->SetBuffer(nullptr);
   }
-
-  SendOffsetAndDurationParametersToStream(ns, mOffset, mDuration);
 }
 
 void
@@ -523,8 +534,11 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
                                                                double aOffset,
                                                                double aDuration)
 {
-  float rate = mBuffer ? mBuffer->SampleRate() : Context()->SampleRate();
-  int32_t lengthSamples = mBuffer ? mBuffer->Length() : 0;
+  NS_ASSERTION(mBuffer && mStartCalled,
+               "Only call this when we have a buffer and start() has been called");
+
+  float rate = mBuffer->SampleRate();
+  int32_t lengthSamples = mBuffer->Length();
   double length = double(lengthSamples) / rate;
   double offset = std::max(0.0, aOffset);
   double endOffset = aDuration == std::numeric_limits<double>::min() ?
