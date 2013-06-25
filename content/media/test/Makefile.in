@@ -138,6 +138,7 @@ MOCHITEST_FILES = \
 		test_paused_after_removed.html \
 		$(filter disabled-for-intermittent-failures--bug-608634, test_error_in_video_document.html) \
 		test_texttrack.html \
+		test_texttrackcue.html \
 		test_timeupdate_small_files.html \
 		test_unseekable.html \
 		test_webvtt_disabled.html \
@@ -259,6 +260,7 @@ MOCHITEST_FILES += \
 		detodos.opus \
 		notags.mp3 \
 		id3tags.mp3 \
+		basic.vtt \
 		$(NULL)
 
 # Wave sample files
