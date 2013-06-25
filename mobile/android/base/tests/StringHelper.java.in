@@ -17,6 +17,34 @@ class StringHelper {
     };
     public static final int DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;
 
+    // About pages
+    public static final String ABOUT_BLANK_URL = "about:blank";
+    public static final String ABOUT_FIREFOX_URL = "about:firefox";
+    public static final String ABOUT_DOWNLOADS_URL = "about:downloads";
+    public static final String ABOUT_ADDONS_URL = "about:addons";
+    public static final String ABOUT_APPS_URL = "about:apps";
+
+    // Context Menu menu items
+    public static final String[] CONTEXT_MENU_ITEMS_IN_PRIVATE_TAB = new String[] {
+        "Open Link in Private Tab", 
+        "Copy Link", 
+        "Share Link", 
+        "Bookmark Link"
+    };
+
+    public static final String[] CONTEXT_MENU_ITEMS_IN_NORMAL_TAB = new String[] {
+        "Open Link in New Tab",
+        "Open Link in Private Tab", 
+        "Copy Link", 
+        "Share Link", 
+        "Bookmark Link"
+    };
+
+    public static final String[] BOOKMARKS_OPTIONS_CONTEXTMENU_ITEMS = new String[] {
+        "Edit",
+        "Add to Home Screen"
+    };
+
     // Robocop page urls
     // Note: please use getAbsoluteUrl(String url) on each robocop url to get the correct url
     public static final String ROBOCOP_BIG_LINK_URL = "/robocop/robocop_big_link.html";
@@ -129,10 +157,4 @@ class StringHelper {
     public static final String BOOKMARK_REMOVED_LABEL = "Bookmark removed";
     public static final String BOOKMARK_UPDATED_LABEL = "Bookmark updated";
     public static final String BOOKMARK_OPTIONS_LABEL = "Options";
-
-    // Bookmark Options Context Menu items
-    public static final String[] BOOKMARKS_OPTIONS_CONTEXTMENU_ITEMS = new String[] {
-    "Edit",
-    "Add to Home Screen"
-    };
 }
