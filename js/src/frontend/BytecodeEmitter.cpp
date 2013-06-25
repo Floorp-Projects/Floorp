@@ -1862,20 +1862,10 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 }
 
 static bool
-EmitPropLHS(JSContext *cx, ParseNode *pn, JSOp *op, BytecodeEmitter *bce, bool callContext)
+EmitPropLHS(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
+    JS_ASSERT(pn->isKind(PNK_DOT));
     ParseNode *pn2 = pn->maybeExpr();
-
-    if (callContext) {
-        JS_ASSERT(pn->isKind(PNK_DOT));
-        JS_ASSERT(*op == JSOP_GETPROP);
-        *op = JSOP_CALLPROP;
-    } else if (*op == JSOP_GETPROP && pn->isKind(PNK_DOT)) {
-        if (pn2->isKind(PNK_NAME)) {
-            if (!BindNameToSlot(cx, bce, pn2))
-                return false;
-        }
-    }
 
     /*
      * If the object operand is also a dotted property reference, reverse the
@@ -1904,7 +1894,8 @@ EmitPropLHS(JSContext *cx, ParseNode *pn, JSOp *op, BytecodeEmitter *bce, bool c
 
         do {
             /* Walk back up the list, emitting annotated name ops. */
-            if (!EmitAtomOp(cx, pndot, pndot->getOp(), bce))
+            JS_ASSERT(pndot->getOp() == JSOP_GETPROP);
+            if (!EmitAtomOp(cx, pndot, JSOP_GETPROP, bce))
                 return false;
 
             /* Reverse the pn_expr link again. */
@@ -1912,20 +1903,19 @@ EmitPropLHS(JSContext *cx, ParseNode *pn, JSOp *op, BytecodeEmitter *bce, bool c
             pndot->pn_expr = pndown;
             pndown = pndot;
         } while ((pndot = pnup) != NULL);
-    } else {
-        if (!EmitTree(cx, bce, pn2))
-            return false;
+        return true;
     }
-    return true;
+
+    // The non-optimized case.
+    return EmitTree(cx, bce, pn2);
 }
 
 static bool
-EmitPropOp(JSContext *cx, ParseNode *pn, JSOp requested, BytecodeEmitter *bce, bool callContext)
+EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(pn->isArity(PN_NAME));
 
-    JSOp op = requested;
-    if (!EmitPropLHS(cx, pn, &op, bce, callContext))
+    if (!EmitPropLHS(cx, pn, op, bce))
         return false;
 
     if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_DUP) < 0)
@@ -1952,9 +1942,8 @@ EmitPropIncDec(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
     JSOp binop = GetIncDecInfo(pn->getKind(), &post);
 
     JSOp get = JSOP_GETPROP;
-    if (!EmitPropLHS(cx, pn->pn_kid, &get, bce, false)) // OBJ
+    if (!EmitPropLHS(cx, pn->pn_kid, get, bce))     // OBJ
         return false;
-    JS_ASSERT(get == JSOP_GETPROP);
     if (Emit1(cx, bce, JSOP_DUP) < 0)               // OBJ OBJ
         return false;
     if (!EmitAtomOp(cx, pn->pn_kid, JSOP_GETPROP, bce)) // OBJ V
@@ -3413,7 +3402,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             return false;
     }
 
-    /* If += etc., emit the binary operator with a decompiler note. */
+    /* If += etc., emit the binary operator with a source note. */
     if (op != JSOP_NOP) {
         /*
          * Take care to avoid SRC_ASSIGNOP if the left-hand side is a const
@@ -3447,7 +3436,8 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         }
         break;
       case PNK_DOT:
-        if (!EmitIndexOp(cx, lhs->getOp(), atomIndex, bce))
+        JS_ASSERT(lhs->getOp() == JSOP_SETPROP);
+        if (!EmitIndexOp(cx, JSOP_SETPROP, atomIndex, bce))
             return false;
         break;
       case PNK_CALL:
@@ -4934,7 +4924,7 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
       }
       case PNK_DOT:
-        if (!EmitPropOp(cx, pn2, JSOP_DELPROP, bce, false))
+        if (!EmitPropOp(cx, pn2, JSOP_DELPROP, bce))
             return false;
         break;
       case PNK_ELEM:
@@ -5042,7 +5032,8 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
       case PNK_DOT:
-        if (!EmitPropOp(cx, pn2, pn2->getOp(), bce, callop))
+        JS_ASSERT(pn2->getOp() == JSOP_GETPROP);
+        if (!EmitPropOp(cx, pn2, callop ? JSOP_CALLPROP : JSOP_GETPROP, bce))
             return false;
         break;
       case PNK_ELEM:
@@ -5937,7 +5928,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * this bytecode's immediate-indexed atom operand, and push its value
          * (not a reference to it).
          */
-        ok = EmitPropOp(cx, pn, pn->getOp(), bce, false);
+        JS_ASSERT(pn->getOp() == JSOP_GETPROP);
+        ok = EmitPropOp(cx, pn, JSOP_GETPROP, bce);
         break;
 
       case PNK_ELEM:
@@ -5947,7 +5939,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * push its value.  Set the "obj" register to the result of ToObject
          * on the left operand.
          */
-        ok = EmitElemOp(cx, pn, pn->getOp(), bce);
+        JS_ASSERT(pn->getOp() == JSOP_GETELEM);
+        ok = EmitElemOp(cx, pn, JSOP_GETELEM, bce);
         break;
 
       case PNK_NEW:
