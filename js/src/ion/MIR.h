@@ -814,6 +814,8 @@ class MControlInstruction : public MInstruction
     bool isControlInstruction() const {
         return true;
     }
+
+    void printOpcode(FILE *fp);
 };
 
 class MTableSwitch
@@ -1906,6 +1908,8 @@ class MCompare
         JS_ASSERT(compareType_ <= Compare_Value);
         return AliasSet::None();
     }
+
+    void printOpcode(FILE *fp);
 
   protected:
     bool congruentTo(MDefinition *const &ins) const {

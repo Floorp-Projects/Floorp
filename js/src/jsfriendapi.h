@@ -1730,8 +1730,8 @@ assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id);
 inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id) {};
 #endif
 
-typedef JSObject *
-(* ObjectMetadataCallback)(JSContext *cx);
+typedef bool
+(* ObjectMetadataCallback)(JSContext *cx, JSObject **pmetadata);
 
 /*
  * Specify a callback to invoke when creating each JS object in the current
