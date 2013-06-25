@@ -714,6 +714,17 @@ nsLayoutUtils::GetStyleFrame(nsIFrame* aFrame)
 }
 
 nsIFrame*
+nsLayoutUtils::GetStyleFrame(const nsIContent* aContent)
+{
+  nsIFrame *frame = aContent->GetPrimaryFrame();
+  if (!frame) {
+    return nullptr;
+  }
+
+  return nsLayoutUtils::GetStyleFrame(frame);
+}
+
+nsIFrame*
 nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   NS_ASSERTION(nsGkAtoms::placeholderFrame == aFrame->GetType(),
                "Must have a placeholder here");
