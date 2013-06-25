@@ -15,6 +15,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
@@ -39,7 +40,7 @@ public:
 
   // Return the estimated size of the set on disk and in memory,
   // in bytes
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
 protected:
   static const uint32_t DELTAS_LIMIT = 100;

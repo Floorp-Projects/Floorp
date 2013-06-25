@@ -200,7 +200,7 @@
 
 namespace js {
 
-struct ForkJoinSlice;
+class ForkJoinSlice;
 
 bool ForkJoin(JSContext *cx, CallArgs &args);
 
@@ -290,7 +290,7 @@ struct ParallelBailoutRecord {
 
 struct ForkJoinShared;
 
-struct ForkJoinSlice : ThreadSafeContext
+class ForkJoinSlice : public ThreadSafeContext
 {
   public:
     // Which slice should you process? Ranges from 0 to |numSlices|.

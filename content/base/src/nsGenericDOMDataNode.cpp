@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsGenericDOMDataNode.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsEventListenerManager.h"
@@ -920,7 +921,7 @@ nsGenericDOMDataNode::GetClassAttributeName() const
 }
 
 size_t
-nsGenericDOMDataNode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsGenericDOMDataNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = nsIContent::SizeOfExcludingThis(aMallocSizeOf);
   n += mText.SizeOfExcludingThis(aMallocSizeOf);

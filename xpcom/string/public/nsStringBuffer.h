@@ -7,6 +7,8 @@
 #ifndef nsStringBuffer_h__
 #define nsStringBuffer_h__
 
+#include "mozilla/MemoryReporting.h"
+
 template<class T> struct already_AddRefed;
 
 /**
@@ -143,12 +145,12 @@ class nsStringBuffer
        * This measures the size.  It should only be used if the StringBuffer is
        * unshared.  This is checked.
        */
-      size_t SizeOfIncludingThisMustBeUnshared(nsMallocSizeOfFun aMallocSizeOf) const;
+      size_t SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf) const;
 
       /**
        * This measures the size only if the StringBuffer is unshared.
        */
-      size_t SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun aMallocSizeOf) const;
+      size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const;
 
       /**
        * This measures the size regardless of whether the StringBuffer is
@@ -159,7 +161,7 @@ class nsStringBuffer
        * please explain clearly in a comment why it's safe and won't lead to
        * double-counting.
        */
-      size_t SizeOfIncludingThisEvenIfShared(nsMallocSizeOfFun aMallocSizeOf) const;
+      size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf) const;
   };
 
 #endif /* !defined(nsStringBuffer_h__ */

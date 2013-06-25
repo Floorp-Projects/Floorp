@@ -11,6 +11,7 @@
 #include "prmjtime.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 /*
@@ -1865,7 +1866,7 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 size_t
-GCMarker::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
+GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
     for (ZonesIter zone(runtime); !zone.done(); zone.next())

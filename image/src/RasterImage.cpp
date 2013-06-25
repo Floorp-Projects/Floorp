@@ -38,6 +38,7 @@
 
 #include "gfxContext.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
@@ -1182,7 +1183,7 @@ RasterImage::UpdateImageContainer()
 }
 
 size_t
-RasterImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+RasterImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   // n == 0 is possible for two reasons.
   // - This is a zero-length image.
@@ -1197,7 +1198,7 @@ RasterImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeO
 
 size_t
 RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
-                                                     nsMallocSizeOfFun aMallocSizeOf) const
+                                                     MallocSizeOf aMallocSizeOf) const
 {
   size_t n = mFrameBlender.SizeOfDecodedWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
 
@@ -1209,7 +1210,7 @@ RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation
 }
 
 size_t
-RasterImage::HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+RasterImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_IN_PROCESS_HEAP,
                                                  aMallocSizeOf);

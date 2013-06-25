@@ -18,6 +18,9 @@ const backgroundPageThumbsContent = {
                 getInterface(Ci.nsIDOMWindowUtils);
     dwu.preventFurtherDialogs();
 
+    docShell.allowMedia = false;
+    docShell.allowPlugins = false;
+
     // Stop about:blank from loading.  If it finishes loading after a capture
     // request is received, it could trigger the capture's load listener.
     this._webNav.stop(Ci.nsIWebNavigation.STOP_NETWORK);

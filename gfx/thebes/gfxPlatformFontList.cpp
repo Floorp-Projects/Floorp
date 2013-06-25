@@ -16,6 +16,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -764,7 +765,7 @@ gfxPlatformFontList::GetPrefsAndStartLoader()
 static size_t
 SizeOfFamilyEntryExcludingThis(const nsAString&               aKey,
                                const nsRefPtr<gfxFontFamily>& aFamily,
-                               nsMallocSizeOfFun              aMallocSizeOf,
+                               MallocSizeOf                   aMallocSizeOf,
                                void*                          aUserArg)
 {
     FontListSizes *sizes = static_cast<FontListSizes*>(aUserArg);
@@ -782,7 +783,7 @@ SizeOfFamilyEntryExcludingThis(const nsAString&               aKey,
 gfxPlatformFontList::SizeOfFamilyNameEntryExcludingThis
     (const nsAString&               aKey,
      const nsRefPtr<gfxFontFamily>& aFamily,
-     nsMallocSizeOfFun              aMallocSizeOf,
+     MallocSizeOf                   aMallocSizeOf,
      void*                          aUserArg)
 {
     // we don't count the size of the family here, because this is an *extra*
@@ -793,7 +794,7 @@ gfxPlatformFontList::SizeOfFamilyNameEntryExcludingThis
 static size_t
 SizeOfFontNameEntryExcludingThis(const nsAString&              aKey,
                                  const nsRefPtr<gfxFontEntry>& aFont,
-                                 nsMallocSizeOfFun             aMallocSizeOf,
+                                 MallocSizeOf                  aMallocSizeOf,
                                  void*                         aUserArg)
 {
     // the font itself is counted by its owning family; here we only care about
@@ -805,7 +806,7 @@ static size_t
 SizeOfPrefFontEntryExcludingThis
     (const uint32_t&                           aKey,
      const nsTArray<nsRefPtr<gfxFontFamily> >& aList,
-     nsMallocSizeOfFun                         aMallocSizeOf,
+     MallocSizeOf                              aMallocSizeOf,
      void*                                     aUserArg)
 {
     // again, we only care about the size of the array itself; we don't follow
@@ -816,7 +817,7 @@ SizeOfPrefFontEntryExcludingThis
 
 static size_t
 SizeOfStringEntryExcludingThis(nsStringHashKey*  aHashEntry,
-                               nsMallocSizeOfFun aMallocSizeOf,
+                               MallocSizeOf      aMallocSizeOf,
                                void*             aUserArg)
 {
     return aHashEntry->GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
@@ -824,7 +825,7 @@ SizeOfStringEntryExcludingThis(nsStringHashKey*  aHashEntry,
 
 static size_t
 SizeOfSharedCmapExcludingThis(CharMapHashKey*   aHashEntry,
-                              nsMallocSizeOfFun aMallocSizeOf,
+                              MallocSizeOf      aMallocSizeOf,
                               void*             aUserArg)
 {
     FontListSizes *sizes = static_cast<FontListSizes*>(aUserArg);
@@ -838,8 +839,8 @@ SizeOfSharedCmapExcludingThis(CharMapHashKey*   aHashEntry,
 }
 
 void
-gfxPlatformFontList::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                         FontListSizes*    aSizes) const
+gfxPlatformFontList::SizeOfExcludingThis(MallocSizeOf   aMallocSizeOf,
+                                         FontListSizes* aSizes) const
 {
     aSizes->mFontListSize +=
         mFontFamilies.SizeOfExcludingThis(SizeOfFamilyEntryExcludingThis,
@@ -877,8 +878,8 @@ gfxPlatformFontList::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxPlatformFontList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                         FontListSizes*    aSizes) const
+gfxPlatformFontList::SizeOfIncludingThis(MallocSizeOf   aMallocSizeOf,
+                                         FontListSizes* aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
