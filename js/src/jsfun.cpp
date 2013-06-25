@@ -1524,9 +1524,9 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-js::IsBuiltinFunctionConstructor(JSFunction *fun)
+JSFunction::isBuiltinFunctionConstructor()
 {
-    return fun->maybeNative() == Function;
+    return maybeNative() == Function;
 }
 
 JSFunction *
