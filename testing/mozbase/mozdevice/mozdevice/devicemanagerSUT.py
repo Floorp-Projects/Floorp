@@ -542,7 +542,7 @@ class DeviceManagerSUT(DeviceManager):
     def getTempDir(self):
         return self._runCmds([{ 'cmd': 'tmpd' }]).strip()
 
-    def pullFile(self, remoteFile):
+    def pullFile(self, remoteFile, offset=None, length=None):
         # The "pull" command is different from other commands in that DeviceManager
         # has to read a certain number of bytes instead of just reading to the
         # next prompt.  This is more robust than the "cat" command, which will be
@@ -604,7 +604,14 @@ class DeviceManagerSUT(DeviceManager):
         # <filename>,-1\n<error message>
 
         # just send the command first, we read the response inline below
-        self._runCmds([{ 'cmd': 'pull ' + remoteFile }])
+        if offset is not None and length is not None:
+            cmd = 'pull %s %d %d' % (remoteFile, offset, length)
+        elif offset is not None:
+            cmd = 'pull %s %d' % (remoteFile, offset)
+        else: 
+            cmd = 'pull %s' % remoteFile
+
+        self._runCmds([{ 'cmd': cmd }])
 
         # read metadata; buffer the rest
         metadata, sep, buf = read_until_char('\n', buf, 'could not find metadata')

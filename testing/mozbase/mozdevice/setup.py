@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.26'
+PACKAGE_VERSION = '0.27'
 
 setup(name='mozdevice',
       version=PACKAGE_VERSION,
