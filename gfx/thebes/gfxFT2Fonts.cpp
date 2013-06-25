@@ -557,12 +557,6 @@ gfxFT2Font::~gfxFT2Font()
 {
 }
 
-cairo_font_face_t *
-gfxFT2Font::CairoFontFace()
-{
-    return GetFontEntry()->CairoFontFace();
-}
-
 /**
  * Look up the font in the gfxFont cache. If we don't find it, create one.
  * In either case, add a ref, append it to the aFonts array, and return it ---
