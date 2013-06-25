@@ -12,8 +12,6 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 586142";
 
-let hud;
-
 function test()
 {
   addTab(TEST_URI);
@@ -33,21 +31,19 @@ function testNewlines(aHud) {
     content.console.log("Hello world #" + i);
   }
 
-  waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "Hello world #19",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  }).then(testClipboard);
+  waitForSuccess({
+    name: "20 console.log messages displayed",
+    validatorFn: function()
+    {
+      return hud.outputNode.itemCount == 20;
+    },
+    successFn: testClipboard,
+    failureFn: finishTest,
+  });
 }
 
 function testClipboard() {
   let outputNode = hud.outputNode;
-
-  info("messages in output: " + outputNode.itemCount);
-  ok(outputNode.itemCount >= 20, "expected number of messages");
 
   outputNode.selectAll();
   outputNode.focus();
