@@ -180,13 +180,8 @@ class ArrayBufferViewByteOffsetRef : public gc::BufferableRef
     explicit ArrayBufferViewByteOffsetRef(JSObject *obj) : obj(obj) {}
 
     void mark(JSTracer *trc) {
-        /* Update obj's private to point to the moved buffer's array data. */
         MarkObjectUnbarriered(trc, &obj, "TypedArray");
-        HeapSlot &bufSlot = obj->getReservedSlotRef(BufferView::BUFFER_SLOT);
-        gc::MarkSlot(trc, &bufSlot, "TypedArray::BUFFER_SLOT");
-        ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
-        int32_t offset = obj->getReservedSlot(BufferView::BYTEOFFSET_SLOT).toInt32();
-        obj->initPrivate(buf.dataPointer() + offset);
+        obj->getClass()->trace(trc, obj);
     }
 };
 #endif

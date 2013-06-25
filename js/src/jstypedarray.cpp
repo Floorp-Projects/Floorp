@@ -538,10 +538,6 @@ ArrayBufferObject::addView(JSObject *view)
     }
 
     *views = view;
-
-    // The view list is not stored in the private slot, but it needs the same
-    // post barrier implementation
-    privateWriteBarrierPost((void**)views);
 }
 
 JSObject *
@@ -1342,6 +1338,26 @@ js::ClampDoubleToUint8(const double x)
     return y;
 }
 
+/*
+ * This method is used to trace TypedArray and DataView objects. We need a
+ * custom tracer because some of an ArrayBufferView's reserved slots are weak
+ * references, and some need to be updated specially during moving GCs.
+ */
+static void
+TraceArrayBufferView(JSTracer *trc, JSObject *obj)
+{
+    HeapSlot &bufSlot = obj->getReservedSlotRef(BufferView::BUFFER_SLOT);
+    MarkSlot(trc, &bufSlot, "typedarray.buffer");
+
+    /* Update obj's data slot if the array buffer moved. */
+    ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
+    int32_t offset = obj->getReservedSlot(BufferView::BYTEOFFSET_SLOT).toInt32();
+    obj->initPrivate(buf.dataPointer() + offset);
+
+    /* Update NEXT_VEIW_SLOT, if the view moved. */
+    IsSlotMarked(&obj->getReservedSlotRef(BufferView::NEXT_VIEW_SLOT));
+}
+
 template<typename NativeType> static inline const int TypeIDOfType();
 template<> inline const int TypeIDOfType<int8_t>() { return TypedArray::TYPE_INT8; }
 template<> inline const int TypeIDOfType<uint8_t>() { return TypedArray::TYPE_UINT8; }
@@ -1390,12 +1406,6 @@ class TypedArrayTemplate
 
     static bool is(const Value &v) {
         return v.isObject() && v.toObject().hasClass(fastClass());
-    }
-
-    static void
-    obj_trace(JSTracer *trc, JSObject *obj)
-    {
-        MarkSlot(trc, &obj->getFixedSlotRef(BUFFER_SLOT), "typedarray.buffer");
     }
 
     static JSBool
@@ -3487,7 +3497,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     NULL,                    /* call        */                                 \
     NULL,                    /* construct   */                                 \
     NULL,                    /* hasInstance */                                 \
-    _typedArray::obj_trace,  /* trace       */                                 \
+    TraceArrayBufferView,    /* trace       */                                 \
     {                                                                          \
         NULL,       /* outerObject */                                          \
         NULL,       /* innerObject */                                          \
@@ -3688,6 +3698,7 @@ Class DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_IMPLEMENTS_BARRIERS |
+    /* Bug 886622: Consider making this Class NON_NATIVE. */
     JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     JS_PropertyStub,         /* addProperty */
@@ -3697,12 +3708,12 @@ Class DataViewObject::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    NULL,           /* finalize */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* hasInstance */
-    NULL,           /* trace */
+    NULL,                    /* finalize */
+    NULL,                    /* checkAccess */
+    NULL,                    /* call        */
+    NULL,                    /* construct   */
+    NULL,                    /* hasInstance */
+    TraceArrayBufferView,    /* trace */
     JS_NULL_CLASS_EXT,
     JS_NULL_OBJECT_OPS
 };
