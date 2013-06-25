@@ -42,6 +42,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_555547.js \
 	browser_416459_cut.js \
 	browser_library_downloads.js \
+	browser_library_left_pane_select_hierarchy.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
