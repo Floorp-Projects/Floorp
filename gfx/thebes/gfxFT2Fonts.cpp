@@ -35,6 +35,7 @@
 #include "prlog.h"
 #include "prinit.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 
 // rounding and truncation functions for a Freetype floating point number
@@ -642,7 +643,7 @@ gfxFT2Font::FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd)
 }
 
 void
-gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxFT2Font::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes*   aSizes) const
 {
     gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -651,7 +652,7 @@ gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxFT2Font::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxFT2Font::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes*   aSizes) const
 {
     aSizes->mFontInstances += aMallocSizeOf(this);

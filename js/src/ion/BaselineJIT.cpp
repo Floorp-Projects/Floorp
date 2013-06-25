@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MemoryReporting.h"
+
 #include "BaselineCompiler.h"
 #include "BaselineIC.h"
 #include "BaselineJIT.h"
@@ -843,7 +845,7 @@ ion::IonCompartment::toggleBaselineStubBarriers(bool enabled)
 }
 
 void
-ion::SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data,
+ion::SizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf, size_t *data,
                         size_t *fallbackStubs)
 {
     *data = 0;

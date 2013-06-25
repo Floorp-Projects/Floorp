@@ -12,6 +12,7 @@
 #ifndef nsIStyleRuleProcessor_h___
 #define nsIStyleRuleProcessor_h___
 
+#include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
 #include "nsChangeHint.h"
 
@@ -125,8 +126,8 @@ public:
    * Report the size of this style rule processor to about:memory.  A
    * processor may return 0.
    */
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) const = 0;
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf) const = 0;
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const = 0;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRuleProcessor,

@@ -22,7 +22,7 @@ namespace gc {
  */
 class RelocationOverlay
 {
-    friend struct MinorCollectionTracer;
+    friend class MinorCollectionTracer;
 
     /* The low bit is set so this should never equal a normal pointer. */
     const static uintptr_t Relocated = uintptr_t(0xbad0bad1);

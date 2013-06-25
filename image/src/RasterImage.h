@@ -29,6 +29,7 @@
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LinkedList.h"
@@ -176,8 +177,8 @@ public:
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const;
 
-  virtual size_t HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const;
-  virtual size_t HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const;
+  virtual size_t HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t NonHeapSizeOfDecoded() const;
   virtual size_t OutOfProcessSizeOfDecoded() const;
 
@@ -589,7 +590,7 @@ private:
   mozilla::TimeStamp GetCurrentImgFrameEndTime() const;
 
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
-                                                 nsMallocSizeOfFun aMallocSizeOf) const;
+                                                 mozilla::MallocSizeOf aMallocSizeOf) const;
 
   inline void EnsureAnimExists()
   {

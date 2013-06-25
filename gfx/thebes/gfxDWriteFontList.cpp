@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #ifdef MOZ_LOGGING
@@ -213,7 +214,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
 }
 
 void
-gfxDWriteFontFamily::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFontFamily::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                          FontListSizes*    aSizes) const
 {
     gfxFontFamily::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -222,7 +223,7 @@ gfxDWriteFontFamily::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxDWriteFontFamily::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFontFamily::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                          FontListSizes*    aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);
@@ -555,7 +556,7 @@ gfxDWriteFontEntry::IsCJKFont()
 }
 
 void
-gfxDWriteFontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFontEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                         FontListSizes*    aSizes) const
 {
     gfxFontEntry::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -564,7 +565,7 @@ gfxDWriteFontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxDWriteFontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFontEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                         FontListSizes*    aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);
@@ -1218,7 +1219,7 @@ gfxDWriteFontList::ResolveFontName(const nsAString& aFontName,
 }
 
 void
-gfxDWriteFontList::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFontList::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                        FontListSizes*    aSizes) const
 {
     gfxPlatformFontList::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -1236,7 +1237,7 @@ gfxDWriteFontList::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxDWriteFontList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFontList::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                        FontListSizes*    aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);

@@ -17,6 +17,7 @@
 #include "nsPropertyTable.h"        // for typedefs
 #include "nsTObserverArray.h"       // for member
 #include "nsWindowMemoryReporter.h" // for NS_DECL_SIZEOF_EXCLUDING_THIS
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/EventTarget.h" // for base class
 
 // Including 'windows.h' will #define GetClassInfo to something else.
@@ -299,7 +300,7 @@ public:
   // way that |this| points to the start of the allocated object, even in
   // methods of nsINode's sub-classes, and so |aMallocSizeOf(this)| is always
   // safe to call no matter which object it was invoked on.
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 

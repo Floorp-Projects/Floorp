@@ -21,6 +21,7 @@
 #ifndef nsScriptNameSpaceManager_h__
 #define nsScriptNameSpaceManager_h__
 
+#include "mozilla/MemoryReporting.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsString.h"
 #include "nsID.h"
@@ -156,7 +157,7 @@ public:
   void EnumerateGlobalNames(GlobalNameEnumerator aEnumerator,
                             void* aClosure);
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
   // Adds a new entry to the hash and returns the nsGlobalNameStruct
