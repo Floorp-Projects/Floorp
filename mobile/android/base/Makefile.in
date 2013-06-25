@@ -222,6 +222,7 @@ FENNEC_JAVA_FILES = \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
   home/FadedTextView.java \
+  home/FaviconsLoader.java \
   home/TopBookmarkItemView.java \
   home/TopBookmarksView.java \
   home/TwoLinePageRow.java \

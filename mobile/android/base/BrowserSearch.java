@@ -11,6 +11,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.home.FaviconsLoader;
 import org.mozilla.gecko.home.HomeFragment;
 import org.mozilla.gecko.home.HomeListView;
 import org.mozilla.gecko.home.TwoLinePageRow;
@@ -26,7 +27,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.content.res.Configuration;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -63,9 +63,6 @@ public class BrowserSearch extends HomeFragment
 
     // AsyncTask loader ID for suggestion query
     private static final int SUGGESTION_LOADER_ID = 2;
-
-    // Argument containing list of urls for the favicons loader
-    private static final String FAVICONS_LOADER_URLS_ARG = "urls";
 
     // Timeout for the suggestion client to respond
     private static final int SUGGESTION_TIMEOUT = 3000;
@@ -307,30 +304,6 @@ public class BrowserSearch extends HomeFragment
         GeckoAppShell.getEventDispatcher().unregisterEventListener(eventName, this);
     }
 
-    private ArrayList<String> getUrlsWithoutFavicon(Cursor c) {
-        ArrayList<String> urls = new ArrayList<String>();
-
-        if (c == null || !c.moveToFirst()) {
-            return urls;
-        }
-
-        final Favicons favicons = Favicons.getInstance();
-
-        do {
-            final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-
-            // We only want to load favicons from DB if they are not in the
-            // memory cache yet.
-            if (favicons.getFaviconFromMemCache(url) != null) {
-                continue;
-            }
-
-            urls.add(url);
-        } while (c.moveToNext());
-
-        return urls;
-    }
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         final Cursor c = mAdapter.getCursor();
@@ -384,50 +357,6 @@ public class BrowserSearch extends HomeFragment
 
             final ContentResolver cr = getContext().getContentResolver();
             return BrowserDB.filter(cr, mSearchTerm, SEARCH_LIMIT);
-        }
-    }
-
-    private static class FaviconsCursorLoader extends SimpleCursorLoader {
-        private ArrayList<String> mUrls;
-
-        public FaviconsCursorLoader(Context context, ArrayList<String> urls) {
-            super(context);
-            mUrls = urls;
-        }
-
-        @Override
-        public Cursor loadCursor() {
-            final ContentResolver cr = getContext().getContentResolver();
-
-            Cursor c = BrowserDB.getFaviconsForUrls(cr, mUrls);
-            storeFaviconsInMemCache(c);
-
-            return c;
-        }
-
-        private void storeFaviconsInMemCache(Cursor c) {
-            if (c == null || !c.moveToFirst()) {
-                return;
-            }
-
-            final Favicons favicons = Favicons.getInstance();
-
-            do {
-                final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
-                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Combined.FAVICON));
-
-                if (b == null || b.length == 0) {
-                    continue;
-                }
-
-                Bitmap favicon = BitmapUtils.decodeByteArray(b);
-                if (favicon == null) {
-                    continue;
-                }
-
-                favicon = favicons.scaleImage(favicon);
-                favicons.putFaviconInMemCache(url, favicon);
-            } while (c.moveToNext());
         }
     }
 
@@ -618,8 +547,7 @@ public class BrowserSearch extends HomeFragment
                 return new SearchCursorLoader(getActivity(), mSearchTerm);
 
             case FAVICONS_LOADER_ID:
-                final ArrayList<String> urls = args.getStringArrayList(FAVICONS_LOADER_URLS_ARG);
-                return new FaviconsCursorLoader(getActivity(), urls);
+                return FaviconsLoader.createInstance(getActivity(), args);
             }
 
             return null;
@@ -632,14 +560,8 @@ public class BrowserSearch extends HomeFragment
             case SEARCH_LOADER_ID:
                 mAdapter.swapCursor(c);
 
-                // If there urls without in-memory favicons, trigger a new loader
-                // to load the images from disk to memory.
-                ArrayList<String> urls = getUrlsWithoutFavicon(c);
-                if (urls.size() > 0) {
-                    Bundle args = new Bundle();
-                    args.putStringArrayList(FAVICONS_LOADER_URLS_ARG, urls);
-                    getLoaderManager().restartLoader(FAVICONS_LOADER_ID, args, mCursorLoaderCallbacks);
-                }
+                FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
+                        mCursorLoaderCallbacks, c);
                 break;
 
             case FAVICONS_LOADER_ID:
