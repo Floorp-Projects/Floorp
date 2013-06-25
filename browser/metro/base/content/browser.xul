@@ -9,7 +9,6 @@
 <?xml-stylesheet href="chrome://browser/skin/forms.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
@@ -195,7 +194,7 @@
             <scrollbox id="start-scrollbox" orient="horizontal" observes="bcast_preciseInput" flex="1">
               <vbox id="start-topsites" class="meta-section">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <richgrid id="start-topsites-grid" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
+                <richgrid id="start-topsites-grid" rows="3" columns="3" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-bookmarks" class="meta-section">
                 <label class="meta-section-title" value="&startBookmarksHeader.label;"/>
@@ -211,9 +210,8 @@
               </vbox>
             </scrollbox>
           </hbox>
-
           <!-- snapped view -->
-          <hbox id="snapped-start" class="start-page" flex="1" observes="bcast_windowState">
+          <vbox id="snapped-start" class="start-page" observes="bcast_windowState">
             <scrollbox id="snapped-scrollbox" orient="vertical" flex="1">
               <vbox id="snapped-topsites">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
@@ -226,7 +224,7 @@
               <label id="snappedRemoteTabsLabel" class="meta-section-title" value="&snappedRemoteTabsHeader.label;"
                 onclick="PanelUI.show('remotetabs-container');" inputProcessing="true"/>
             </scrollbox>
-          </hbox>
+          </vbox>
           <!-- Autocompletion interface -->
           <box id="start-autocomplete" observes="bcast_windowState"/>
         </hbox>
