@@ -40,6 +40,8 @@ var PREF_EM_CHECK_COMPATIBILITY;
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
+const SHUTDOWN_EVENT                  = "profile-before-change";
+
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -451,7 +453,7 @@ var AddonManagerInternal = {
 
     this.recordTimestamp("AMI_startup_begin");
 
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, SHUTDOWN_EVENT, false);
 
     let appChanged = undefined;
 
@@ -682,7 +684,7 @@ var AddonManagerInternal = {
    */
   shutdown: function AMI_shutdown() {
     LOG("shutdown");
-    Services.obs.removeObserver(this, "xpcom-shutdown");
+    Services.obs.removeObserver(this, SHUTDOWN_EVENT);
     Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_STRICT_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
@@ -711,7 +713,7 @@ var AddonManagerInternal = {
    * @see nsIObserver
    */
   observe: function AMI_observe(aSubject, aTopic, aData) {
-    if (aTopic == "xpcom-shutdown") {
+    if (aTopic == SHUTDOWN_EVENT) {
       this.shutdown();
       return;
     }
