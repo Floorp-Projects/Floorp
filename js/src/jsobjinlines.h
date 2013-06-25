@@ -1662,18 +1662,19 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
                               JSObject **ctorp = NULL,
                               gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
-static JS_ALWAYS_INLINE JSObject *
-NewObjectMetadata(JSContext *cx)
+static JS_ALWAYS_INLINE bool
+NewObjectMetadata(JSContext *cx, JSObject **pmetadata)
 {
     // The metadata callback is invoked before each created object, except when
     // analysis is active as the callback may reenter JS.
+    JS_ASSERT(!*pmetadata);
     if (JS_UNLIKELY((size_t)cx->compartment()->objectMetadataCallback) &&
         !cx->compartment()->activeAnalysis)
     {
         gc::AutoSuppressGC suppress(cx);
-        return cx->compartment()->objectMetadataCallback(cx);
+        return cx->compartment()->objectMetadataCallback(cx, pmetadata);
     }
-    return NULL;
+    return true;
 }
 
 } /* namespace js */

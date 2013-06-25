@@ -2803,8 +2803,12 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     if (!type)
         return NULL;
 
+    JSObject *metadata = NULL;
+    if (!NewObjectMetadata(cx, &metadata))
+        return NULL;
+
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, TaggedProto(proto),
-                                                      proto->getParent(), NewObjectMetadata(cx),
+                                                      proto->getParent(), metadata,
                                                       gc::FINALIZE_OBJECT0));
 
     RootedObject arrayProto(cx, JSObject::createArray(cx, gc::FINALIZE_OBJECT4, gc::TenuredHeap, shape, type, 0));
@@ -2898,12 +2902,16 @@ NewArray(JSContext *cx, uint32_t length, JSObject *protoArg, NewObjectKind newKi
     if (!type)
         return NULL;
 
+    JSObject *metadata = NULL;
+    if (!NewObjectMetadata(cx, &metadata))
+        return NULL;
+
     /*
      * Get a shape with zero fixed slots, regardless of the size class.
      * See JSObject::createArray.
      */
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, TaggedProto(proto),
-                                                      cx->global(), NewObjectMetadata(cx), gc::FINALIZE_OBJECT0));
+                                                      cx->global(), metadata, gc::FINALIZE_OBJECT0));
     if (!shape)
         return NULL;
 
