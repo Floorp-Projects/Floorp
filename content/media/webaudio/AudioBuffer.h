@@ -91,9 +91,14 @@ public:
 
   /**
    * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
-   * Can return null if there is no data.
    */
   ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext);
+
+  // aContents should either come from JS_AllocateArrayBufferContents or
+  // JS_StealArrayBufferContents.
+  bool SetChannelDataFromArrayBufferContents(JSContext* aJSContext,
+                                             uint32_t aChannel,
+                                             void* aContents);
 
   // This replaces the contents of the JS array for the given channel.
   // This function needs to be called on an AudioBuffer which has not been
