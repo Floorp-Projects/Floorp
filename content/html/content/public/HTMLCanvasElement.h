@@ -15,7 +15,6 @@
 #include "nsNodeInfoManager.h"
 
 #include "nsICanvasElementExternal.h"
-#include "nsLayoutUtils.h"
 #include "mozilla/gfx/Rect.h"
 
 class nsICanvasRenderingContextInternal;
