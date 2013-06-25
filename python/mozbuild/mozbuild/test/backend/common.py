@@ -89,15 +89,17 @@ class BackendTester(unittest.TestCase):
         config['substs'].append(('top_srcdir', srcdir))
         return ConfigEnvironment(srcdir, objdir, **config)
 
-    def _emit(self, name):
-        env = self._get_environment(name)
+    def _emit(self, name, env=None):
+        if not env:
+            env = self._get_environment(name)
+
         reader = BuildReader(env)
         emitter = TreeMetadataEmitter(env)
 
         return env, emitter.emit(reader.read_topsrcdir())
 
-    def _consume(self, name, cls):
-        env, objs = self._emit(name)
+    def _consume(self, name, cls, env=None):
+        env, objs = self._emit(name, env=env)
         backend = cls(env)
         backend.consume(objs)
 
