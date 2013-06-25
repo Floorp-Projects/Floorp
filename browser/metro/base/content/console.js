@@ -71,7 +71,6 @@ let ConsolePanelView = {
   updateVisibility: function ec_updateVisibility(aVal, aPref) {
     let button = document.getElementById("menuitem-console");
     button.hidden = !this.enabled;
-    Appbar._updateDebugButtons();
   },
 
   observe: function(aSubject, aTopic, aData) {

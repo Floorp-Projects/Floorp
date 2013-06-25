@@ -10,6 +10,8 @@
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
 
+<!ENTITY appbarErrorConsole.label   "Open error console">
+<!ENTITY appbarJSShell.label        "Open JavaScript shell">
 <!ENTITY appbarFindInPage2.label    "Find in page">
 <!ENTITY appbarViewOnDesktop2.label "View on desktop">
 
