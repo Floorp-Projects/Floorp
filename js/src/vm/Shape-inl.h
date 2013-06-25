@@ -26,8 +26,6 @@
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 
-#include "vm/ScopeObject-inl.h"
-
 namespace js {
 
 static inline void
