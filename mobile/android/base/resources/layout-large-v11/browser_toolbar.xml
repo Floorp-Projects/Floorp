@@ -3,12 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.BrowserToolbarLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:gecko="http://schemas.android.com/apk/res-auto"
-              android:id="@+id/browser_toolbar"
-              style="@style/BrowserToolbar"
-              android:clickable="true"
-              android:focusable="true">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                 android:layout_width="fill_parent"
@@ -153,4 +149,4 @@
                android:contentDescription="@null"
                android:visibility="gone"/>
 
-</org.mozilla.gecko.BrowserToolbarLayout>
+</merge>
