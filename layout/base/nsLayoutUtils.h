@@ -146,14 +146,6 @@ public:
   static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
 
   /**
-   * Given a content node,
-   * return the frame that has the non-psuedoelement style context for
-   * the content.  May return null.
-   * This is aContent->GetPrimaryFrame() except for tableOuter frames.
-   */
-  static nsIFrame* GetStyleFrame(const nsIContent* aContent);
-
-  /**
    * IsGeneratedContentFor returns true if aFrame is the outermost
    * frame for generated content of type aPseudoElement for aContent.
    * aFrame *might not* have the aPseudoElement pseudo-style! For example
