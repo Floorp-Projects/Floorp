@@ -226,6 +226,7 @@ FENNEC_JAVA_FILES = \
   home/TopBookmarkItemView.java \
   home/TopBookmarksView.java \
   home/TwoLinePageRow.java \
+  home/VisitedPage.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \
   menu/GeckoMenuItem.java \
