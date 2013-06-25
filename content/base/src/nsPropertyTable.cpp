@@ -20,6 +20,7 @@
  * nsIAtom pointers, and the values are void pointers.
  */
 
+#include "mozilla/MemoryReporting.h"
 #include "nsPropertyTable.h"
 #include "pldhash.h"
 #include "nsError.h"
@@ -52,7 +53,7 @@ public:
     return mName == aPropertyName;
   }
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   nsCOMPtr<nsIAtom>  mName;           // property name
   PLDHashTable       mObjectValueMap; // map of object/value pairs
@@ -340,7 +341,7 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
 }
 
 size_t
-nsPropertyTable::PropertyList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsPropertyTable::PropertyList::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
   n += PL_DHashTableSizeOfExcludingThis(&mObjectValueMap, nullptr, aMallocSizeOf);
@@ -348,7 +349,7 @@ nsPropertyTable::PropertyList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSize
 }
 
 size_t
-nsPropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsPropertyTable::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
 

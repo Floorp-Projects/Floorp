@@ -5277,7 +5277,7 @@ nsSVGTextFrame2::SetupCairoStroke(gfxContext* aContext,
   gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
   aContext->IdentityMatrix();
 
-  nsSVGUtils::SetupCairoStrokeHitGeometry(aFrame, aContext, aOuterObjectPaint);
+  nsSVGUtils::SetupCairoStrokeGeometry(aFrame, aContext, aOuterObjectPaint);
   float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
                                          style->mStrokeOpacity,
                                          aOuterObjectPaint);

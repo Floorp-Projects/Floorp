@@ -8,6 +8,7 @@
 #ifndef _nsDiskCacheStreams_h_
 #define _nsDiskCacheStreams_h_
 
+#include "mozilla/MemoryReporting.h"
 #include "nsDiskCacheBinding.h"
 
 #include "nsCache.h"
@@ -40,7 +41,7 @@ public:
                     NS_ASSERTION(mInStreamCount >= 0, "mInStreamCount has gone negative");
                 }
 
-    size_t     SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+    size_t     SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
     // GCC 2.95.2 requires this to be defined, although we never call it.
     // and OS/2 requires that it not be private

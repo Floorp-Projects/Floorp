@@ -48,7 +48,7 @@ js::Nursery::init()
     // were marked as uncommitted, but it's a little complicated to avoid
     // clobbering pre-existing unrelated mappings.
     while (IsPoisonedPtr(heap) || IsPoisonedPtr((void*)(uintptr_t(heap) + NurserySize)))
-        heap = MapAlignedPages(NurserySize, Alignment);
+        heap = MapAlignedPages(runtime(), NurserySize, Alignment);
 #endif
     if (!heap)
         return false;
@@ -58,7 +58,9 @@ js::Nursery::init()
     rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
     numActiveChunks_ = 1;
     setCurrentChunk(0);
+#ifdef DEBUG
     JS_POISON(heap, FreshNursery, NurserySize);
+#endif
     for (int i = 0; i < NumNurseryChunks; ++i)
         chunk(i).runtime = rt;
 
@@ -108,7 +110,9 @@ js::Nursery::allocate(size_t size)
     void *thing = (void *)position();
     position_ = position() + size;
 
+#ifdef DEBUG
     JS_POISON(thing, AllocatedThing, size);
+#endif
     return thing;
 }
 

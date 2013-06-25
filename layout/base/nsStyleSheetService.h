@@ -12,6 +12,7 @@
 #include "nsCOMArray.h"
 #include "nsIStyleSheet.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 
 class nsISimpleEnumerator;
 class nsICategoryManager;
@@ -39,7 +40,7 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
   nsCOMArray<nsIStyleSheet>* UserStyleSheets() { return &mSheets[USER_SHEET]; }
   nsCOMArray<nsIStyleSheet>* AuthorStyleSheets() { return &mSheets[AUTHOR_SHEET]; }
 
-  static size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  static size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   static nsStyleSheetService *GetInstance();
   static nsStyleSheetService *gInstance;
@@ -59,7 +60,7 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
   NS_HIDDEN_(nsresult) LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                                     uint32_t aSheetType);
 
-  size_t SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   nsCOMArray<nsIStyleSheet> mSheets[3];
 

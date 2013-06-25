@@ -5277,17 +5277,18 @@ TryEnablingIon(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_t argc, V
     const AsmJSModule &module =
         cx->mainThread().asmJSActivationStackFromOwnerThread()->module();
 
-#ifdef DEBUG
-    // The types should correspond, since we just run through invoke, before testing this.
-    JS_ASSERT(types::TypeScript::ThisTypes(script)->hasType(types::Type::UndefinedType()));
+    // Normally the types should corresond, since we just ran with those types,
+    // but there are reports this is asserting. Therefore doing it as a check, instead of DEBUG only.
+    if (!types::TypeScript::ThisTypes(script)->hasType(types::Type::UndefinedType()))
+        return true;
     for(uint32_t i = 0; i < exitDatum->fun->nargs; i++) {
         types::StackTypeSet *typeset = types::TypeScript::ArgTypes(script, i);
         types::Type type = types::Type::DoubleType();
         if (!argv[i].isDouble())
             type = types::Type::PrimitiveType(argv[i].extractNonDoubleType());
-        JS_ASSERT(typeset->hasType(type));
+        if (!typeset->hasType(type))
+            return true;
     }
-#endif
 
     // Enable
     IonScript *ionScript = script->ionScript();

@@ -970,7 +970,7 @@ nsSVGGlyphFrame::SetupCairoStroke(gfxContext *aContext,
   }
 
   const nsStyleSVG *style = StyleSVG();
-  nsSVGUtils::SetupCairoStrokeHitGeometry(this, aContext, aOuterObjectPaint);
+  nsSVGUtils::SetupCairoStrokeGeometry(this, aContext, aOuterObjectPaint);
   float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
                                          style->mStrokeOpacity,
                                          aOuterObjectPaint);

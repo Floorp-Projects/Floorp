@@ -7038,33 +7038,55 @@ IonBuilder::jsop_arguments_length()
 bool
 IonBuilder::jsop_arguments_getelem()
 {
-    if (inliningDepth_ != 0)
-        return abort("NYI inlined get argument element");
+    JS_ASSERT(!info().argsObjAliasesFormals());
 
+    // Get the argument id
     MDefinition *idx = current->pop();
 
     // Type Inference has guaranteed this is an optimized arguments object.
     MDefinition *args = current->pop();
     args->setFoldedUnchecked();
 
-    // To ensure that we are not looking above the number of actual arguments.
-    MArgumentsLength *length = MArgumentsLength::New();
-    current->add(length);
 
-    // Ensure idx is an integer.
-    MInstruction *index = MToInt32::New(idx);
-    current->add(index);
+    // When we are not inlining, we can just get the arguments from the stack.
+    if (inliningDepth_ == 0) {
+        // To ensure that we are not looking above the number of actual arguments.
+        MArgumentsLength *length = MArgumentsLength::New();
+        current->add(length);
 
-    // Bailouts if we read more than the number of actual arguments.
-    index = addBoundsCheck(index, length);
+        // Ensure idx is an integer.
+        MInstruction *index = MToInt32::New(idx);
+        current->add(index);
 
-    // Load the argument from the actual arguments.
-    MGetArgument *load = MGetArgument::New(index);
-    current->add(load);
-    current->push(load);
+        // Bailouts if we read more than the number of actual arguments.
+        index = addBoundsCheck(index, length);
 
-    types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
-    return pushTypeBarrier(load, types, true);
+        // Load the argument from the actual arguments.
+        MGetArgument *load = MGetArgument::New(index);
+        current->add(load);
+        current->push(load);
+
+        types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
+        return pushTypeBarrier(load, types, true);
+    }
+
+    // When the id is constant, we can just return the corresponding inlined argument
+    if (idx->isConstant() && idx->toConstant()->value().isInt32()) {
+        JS_ASSERT(inliningDepth_ > 0);
+
+        int32_t id = idx->toConstant()->value().toInt32();
+        idx->setFoldedUnchecked();
+
+        if (id < (int32_t)inlineCallInfo_->argc() && id >= 0)
+            current->push(inlineCallInfo_->getArg(id));
+        else
+            pushConstant(UndefinedValue());
+
+        return true;
+    }
+
+    // inlined not constant not supported, yet.
+    return abort("NYI inlined not constant get argument element");
 }
 
 bool
