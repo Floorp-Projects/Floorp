@@ -3356,12 +3356,22 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
   if (!kid)
     return NS_OK;
 
+  nsPresContext* presContext = PresContext();
+
   gfxContext *gfx = aContext->ThebesContext();
   gfxMatrix initialMatrix = gfx->CurrentMatrix();
 
   AutoCanvasTMForMarker autoCanvasTMFor(this, FOR_PAINTING);
 
   if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    // If we are in a canvas DrawWindow call that used the
+    // DRAWWINDOW_DO_NOT_FLUSH flag, then we may still have out
+    // of date frames.  Just don't paint anything if they are
+    // dirty.
+    if (presContext->PresShell()->InDrawWindowNotFlushing() &&
+        NS_SUBTREE_DIRTY(this)) {
+      return NS_OK;
+    }
     // Text frames inside <clipPath>, <mask>, etc. will never have had
     // ReflowSVG called on them, so call UpdateGlyphPositioning to do this now.
     UpdateGlyphPositioning();
@@ -3380,8 +3390,6 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
 
   gfxMatrix matrixForPaintServers(canvasTM);
   matrixForPaintServers.Multiply(initialMatrix);
-
-  nsPresContext* presContext = PresContext();
 
   // Check if we need to draw anything.
   if (aDirtyRect) {
