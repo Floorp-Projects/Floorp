@@ -244,8 +244,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
         mTitle = (GeckoTextView) mLayout.findViewById(R.id.awesome_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
-        if (Build.VERSION.SDK_INT >= 16)
-            mTitle.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
         mTabs = (ShapedButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
