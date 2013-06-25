@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 877859 Valgrind header location updates for FxOS Valgrind
+Bug 874669 - Remove legacy event type constants
