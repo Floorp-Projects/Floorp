@@ -39,7 +39,7 @@ load 878407.html
 load 878478.html
 load 877527.html
 load 880129.html
-skip-if(B2G) load 880202.html # load failed, bug 833371 for B2G
+skip-if(B2G) test-pref(media.webaudio.enabled,true) load 880202.html # load failed, bug 833371 for B2G
 load 880342-1.html
 load 880342-2.html
 load 880384.html
