@@ -15,14 +15,13 @@
 
       <vbox id="PanelUI-mainView-spring" flex="1"/>
 
-      <footer class="PanelUI-footer" align="center">
+      <footer class="PanelUI-footer">
+        <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;"
+                       oncommand="gCustomizeMode.toggle()" flex="1"/>
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->
-        <toolbarbutton id="PanelUI-help-btn" label="&helpMenu.label;"
-                       onclick="PanelUI.showHelpView(this.parentNode);"/>
-        <spacer flex="1"/>
-        <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;"
-                       command="cmd_CustomizeToolbars"/>
+        <toolbarbutton id="PanelUI-help-btn" aria-label="&helpMenu.label;"
+                       oncommand="PanelUI.showHelpView(this.parentNode);"/>
       </footer>
     </panelview>
 
