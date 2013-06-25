@@ -85,33 +85,33 @@ var testData = [
    new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null)],
 
   // Test using a non-bmKeywordData object, to test the behavior of
-  // getShortcutOrURI for non-keywords (setupKeywords only adds keywords for
+  // getShortcutOrURIAndPostData for non-keywords (setupKeywords only adds keywords for
   // bmKeywordData objects)
   [{keyword: "http://gavinsharp.com"},
    new keywordResult(null, null, true)]
 ];
 
 function test() {
+  waitForExplicitFinish();
+
   setupKeywords();
 
-  for each (var item in testData) {
-    var [data, result] = item;
+  Task.spawn(function() {
+    for each (var item in testData) {
+      let [data, result] = item;
 
-    var postData = {};
-    var query = data.keyword;
-    if (data.searchWord)
-      query += " " + data.searchWord;
-    var mayInheritPrincipal = {};
-    var url = getShortcutOrURI(query, postData, mayInheritPrincipal);
-
-    // null result.url means we should expect the same query we sent in
-    var expected = result.url || query;
-    is(url, expected, "got correct URL for " + data.keyword);
-    is(getPostDataString(postData.value), result.postData, "got correct postData for " + data.keyword);
-    is(mayInheritPrincipal.value, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
-  }
-
-  cleanupKeywords();
+      let query = data.keyword;
+      if (data.searchWord)
+        query += " " + data.searchWord;
+      let returnedData = yield getShortcutOrURIAndPostData(query);
+      // null result.url means we should expect the same query we sent in
+      let expected = result.url || query;
+      is(returnedData.url, expected, "got correct URL for " + data.keyword);
+      is(getPostDataString(returnedData.postData), result.postData, "got correct postData for " + data.keyword);
+      is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
+    }
+    cleanupKeywords();
+  }).then(finish);
 }
 
 var gBMFolder = null;
