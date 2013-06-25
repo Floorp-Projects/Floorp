@@ -149,6 +149,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
 function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
   let testIter = Iterator(tests);
   let providersAtStart = Social.providers.length;
+  info("runSocialTests: start test run with " + providersAtStart + " providers");
 
   if (cbPreTest === undefined) {
     cbPreTest = function(cb) {cb()};
@@ -164,6 +165,8 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
     } catch (err if err instanceof StopIteration) {
       // out of items:
       (cbFinish || defaultFinishChecks)();
+      is(providersAtStart, Social.providers.length,
+         "runSocialTests: finish test run with " + Social.providers.length + " providers");
       return;
     }
     // We run on a timeout as the frameworker also makes use of timeouts, so
@@ -174,7 +177,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
         cbPostTest(runNextTest);
       }
       cbPreTest(function() {
-        is(providersAtStart, Social.providers.length, "no new providers left enabled");
+        is(providersAtStart, Social.providers.length, "pre-test: no new providers left enabled");
         info("sub-test " + name + " starting");
         try {
           func.call(tests, cleanupAndRunNextTest);
@@ -292,26 +295,6 @@ function resetBuiltinManifestPref(name) {
   Services.prefs.getDefaultBranch(null).deleteBranch(name);
   is(Services.prefs.getDefaultBranch(null).getPrefType(name),
      Services.prefs.PREF_INVALID, "default manifest removed");
-}
-
-function addWindowListener(aURL, aCallback) {
-  Services.wm.addListener({
-    onOpenWindow: function(aXULWindow) {
-      info("window opened, waiting for focus");
-      Services.wm.removeListener(this);
-
-      var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindow);
-      waitForFocus(function() {
-        is(domwindow.document.location.href, aURL, "window opened and focused");
-        executeSoon(function() {
-          aCallback(domwindow);
-        });
-      }, domwindow);
-    },
-    onCloseWindow: function(aXULWindow) { },
-    onWindowTitleChange: function(aXULWindow, aNewTitle) { }
-  });
 }
 
 function addTab(url, callback) {
