@@ -243,7 +243,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
   if (hitTestFlags & SVG_HIT_TEST_FILL)
     isHit = tmpCtx->PointInFill(userSpacePoint);
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
-    nsSVGUtils::SetupCairoStrokeHitGeometry(this, tmpCtx);
+    nsSVGUtils::SetupCairoStrokeGeometry(this, tmpCtx);
     isHit = tmpCtx->PointInStroke(userSpacePoint);
   }
 
