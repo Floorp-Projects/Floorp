@@ -24,7 +24,7 @@ namespace js {
 namespace ion {
 
 class StackValue;
-struct ICEntry;
+class ICEntry;
 class ICStub;
 
 class PCMappingSlotInfo

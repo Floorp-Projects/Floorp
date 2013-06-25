@@ -17,7 +17,7 @@ namespace js {
 class ScriptSource;
 class SPSProfiler;
 class AsmJSModule;
-namespace frontend { struct TokenStream; struct ParseNode; }
+namespace frontend { class TokenStream; class ParseNode; }
 namespace ion { class MIRGenerator; class LIRGraph; }
 
 // Called after parsing a function 'fn' which contains the "use asm" directive.

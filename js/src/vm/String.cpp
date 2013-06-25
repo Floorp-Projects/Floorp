@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/String.h"
+#include "vm/String-inl.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -14,7 +14,9 @@
 
 #include "jscompartmentinlines.h"
 
-#include "String-inl.h"
+#ifdef JSGC_GENERATIONAL
+#include "vm/Shape-inl.h"
+#endif
 
 using namespace js;
 
