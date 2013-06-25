@@ -198,6 +198,9 @@ function test() {
     return;
   }
 
+  // XXX need this until bugs 886624 and 859742 are fully resolved
+  setDevPixelEqualToPx();
+
   requestLongerTimeout(3);
   runTests();
 }

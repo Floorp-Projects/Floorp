@@ -27,6 +27,15 @@ function isLandscapeMode()
   return (MetroUtils.snappedState == Ci.nsIWinMetroUtils.fullScreenLandscape);
 }
 
+function setDevPixelEqualToPx()
+{
+  todo(false, "test depends on devPixelsPerPx set to 1.0 - see bugs 886624 and 859742");
+  SpecialPowers.setCharPref("layout.css.devPixelsPerPx", "1.0");
+  registerCleanupFunction(function () {
+    SpecialPowers.clearUserPref("layout.css.devPixelsPerPx");
+  });
+}
+
 function checkContextUIMenuItemCount(aCount)
 {
   let visibleCount = 0;
