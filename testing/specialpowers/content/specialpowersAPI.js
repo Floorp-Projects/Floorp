@@ -1112,17 +1112,14 @@ SpecialPowersAPI.prototype = {
     return this.wrap(Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest));
   },
 
-  snapshotWindowWithOptions: function (win, rect, bgcolor, options) {
+  snapshotWindow: function (win, withCaret, rect, bgcolor) {
     var el = this.window.get().document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    if (rect === undefined) {
+    if (arguments.length < 3) {
       rect = { top: win.scrollY, left: win.scrollX,
                width: win.innerWidth, height: win.innerHeight };
     }
-    if (bgcolor === undefined) {
+    if (arguments.length < 4) {
       bgcolor = "rgb(255,255,255)";
-    }
-    if (options === undefined) {
-      options = { };
     }
 
     el.width = rect.width;
@@ -1130,24 +1127,18 @@ SpecialPowersAPI.prototype = {
     var ctx = el.getContext("2d");
     var flags = 0;
 
-    for (var option in options) {
-      flags |= ctx[option];
-    }
-
     ctx.drawWindow(win,
                    rect.left, rect.top, rect.width, rect.height,
                    bgcolor,
-                   flags);
+                   withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
     return el;
   },
 
-  snapshotWindow: function (win, withCaret, rect, bgcolor) {
-    return this.snapshotWindowWithOptions(win, rect, bgcolor,
-                                          { DRAWWINDOW_DRAW_CARET: withCaret });
-  },
-
   snapshotRect: function (win, rect, bgcolor) {
-    return this.snapshotWindow(win, false, rect, bgcolor);
+    // Splice in our "do not want caret" bit
+    args = Array.slice(arguments);
+    args.splice(1, 0, false);
+    return this.snapshotWindow.apply(this, args);
   },
 
   gc: function() {
