@@ -11,7 +11,7 @@
 TEST(Moz2D, Point) {
   TestBase* test = new TestPoint();
   int failures = 0;
-  int totalTests = test->RunTests(&failures);
+  test->RunTests(&failures);
   delete test;
 
   ASSERT_EQ(failures, 0);
@@ -20,7 +20,7 @@ TEST(Moz2D, Point) {
 TEST(Moz2D, Scaling) {
   TestBase* test = new TestScaling();
   int failures = 0;
-  int totalTests = test->RunTests(&failures);
+  test->RunTests(&failures);
   delete test;
 
   ASSERT_EQ(failures, 0);

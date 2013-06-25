@@ -146,7 +146,7 @@ permissions.forEach(function (perm) {
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
 
     def tearDown(self):
-        self._deleteSession()
+        pass  # bug 874599
 
     def cleanTest(self):
         self._deleteSession()
@@ -155,7 +155,10 @@ permissions.forEach(function (perm) {
         self.duration = time.time() - self.start_time
         if hasattr(self.marionette, 'session'):
             if self.marionette.session is not None:
-                self.loglines = self.marionette.get_logs()
+                try:
+                    self.loglines = self.marionette.get_logs()
+                except Exception, inst:
+                    self.loglines = [['Error getting log: %s' % inst]]
                 self.marionette.delete_session()
         self.marionette = None
 

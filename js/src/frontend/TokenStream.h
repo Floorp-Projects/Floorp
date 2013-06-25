@@ -660,7 +660,6 @@ class MOZ_STACK_CLASS TokenStream
     void tell(Position *);
     void seek(const Position &pos);
     void seek(const Position &pos, const TokenStream &other);
-    void positionAfterLastFunctionKeyword(Position &pos);
 
     size_t positionToOffset(const Position &pos) const {
         return pos.buf - userbuf.base();
@@ -920,7 +919,6 @@ class MOZ_STACK_CLASS TokenStream
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */
-    Position            lastFunctionKeyword; /* used as a starting point for reparsing strict functions */
 
     /*
      * The tokens array stores pointers to JSAtoms. These are rooted by the

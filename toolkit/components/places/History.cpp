@@ -873,9 +873,12 @@ public:
       if (!known) {
         nsresult rv = mHistory->FetchPageInfo(place, &known);
         if (NS_FAILED(rv)) {
-          nsCOMPtr<nsIRunnable> event =
-            new NotifyPlaceInfoCallback(mCallback, place, true, rv);
-          return NS_DispatchToMainThread(event);
+          if (mCallback) {
+            nsCOMPtr<nsIRunnable> event =
+              new NotifyPlaceInfoCallback(mCallback, place, true, rv);
+            return NS_DispatchToMainThread(event);
+          }
+          return NS_OK;
         }
       }
 
