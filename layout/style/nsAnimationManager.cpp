@@ -356,7 +356,7 @@ ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
 bool
 ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
 {
-  nsIFrame* frame = mElement->GetPrimaryFrame();
+  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
   if (!frame) {
     return false;
   }
