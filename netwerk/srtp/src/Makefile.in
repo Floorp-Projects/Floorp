@@ -22,7 +22,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = nksrtp_s
 LIBXUL_LIBRARY = 1
-FORCE_STATIC_LIB = 1
 
 DISABLED_CSRCS := \
   ekt.c \

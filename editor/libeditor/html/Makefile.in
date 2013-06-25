@@ -22,9 +22,6 @@ endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-# don't want the shared lib; force the creation of a static lib.
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES        += -I$(topsrcdir)/editor/libeditor/base \
