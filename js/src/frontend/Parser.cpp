@@ -5332,9 +5332,7 @@ Parser<ParseHandler>::unaryExpr()
             return null();
 
         // Per spec, deleting any unary expression is valid -- it simply returns
-        // true -- except for a few cases that are illegal in strict mode.
-        if (foldConstants && !FoldConstants(context, &expr, this))
-            return null();
+        // true -- except for one case that is illegal in strict mode.
         if (handler.isName(expr)) {
             if (!report(ParseStrictError, pc->sc->strict, expr, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return null();
@@ -6230,13 +6228,6 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
                 return null();
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
-
-            /*
-             * Do folding so we don't have roundtrip changes for cases like:
-             * function (obj) { return obj["a" + "b"] }
-             */
-            if (foldConstants && !FoldConstants(context, &propExpr, this))
-                return null();
 
             nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
