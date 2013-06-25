@@ -220,6 +220,7 @@ class MinorCollectionTracer : public JSTracer
     RelocationOverlay **tail;
 
     /* Save and restore all of the runtime state we use during MinorGC. */
+    bool savedRuntimeNeedBarrier;
     AutoDisableProxyCheck disableStrictProxyChecking;
 
     /* Insert the given relocation entry into the list of things to visit. */
@@ -236,11 +237,26 @@ class MinorCollectionTracer : public JSTracer
         tenuredSize(0),
         head(NULL),
         tail(&head),
+        savedRuntimeNeedBarrier(rt->needsBarrier()),
         disableStrictProxyChecking(rt)
     {
         JS_TracerInit(this, rt, Nursery::MinorGCCallback);
         eagerlyTraceWeakMaps = TraceWeakMapKeysValues;
         rt->gcNumber++;
+
+        /*
+         * We disable the runtime needsBarrier() check so that pre-barriers do
+         * not fire on objects that have been relocated. The pre-barrier's
+         * call to obj->zone() will try to look through shape_, which is now
+         * the relocation magic and will crash. However, zone->needsBarrier()
+         * must still be set correctly so that allocations we make in minor
+         * GCs between incremental slices will allocate their objects marked.
+         */
+        rt->setNeedsBarrier(false);
+    }
+
+    ~MinorCollectionTracer() {
+        runtime->setNeedsBarrier(savedRuntimeNeedBarrier);
     }
 };
 
