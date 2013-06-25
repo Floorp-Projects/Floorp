@@ -14,10 +14,8 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-IS_COMPONENT = 1
 LIBXUL_LIBRARY = 1
 
-MODULE_NAME = JavaScript_Debugger
 EXPORT_LIBRARY = 1
 
 # REQUIRES	= java js
