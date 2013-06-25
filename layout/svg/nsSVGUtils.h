@@ -639,10 +639,11 @@ public:
                               gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
-   * Set up a cairo context for measuring a stroked path
+   * Set up a cairo context for measuring the bounding box of a stroked path.
    */
-  static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
-                                       gfxTextObjectPaint *aObjectPaint = nullptr);
+  static void SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
+                                           gfxContext *aContext,
+                                           gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for hit testing a stroked path
