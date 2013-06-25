@@ -3,11 +3,17 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
+import datetime
 import socket
-from threading import Thread
 import time
 
+from threading import Thread
+
 class MockAgent(object):
+
+    MAX_WAIT_TIME_SECONDS = 10
+    SOCKET_TIMEOUT_SECONDS = 5
+
     def __init__(self, tester, start_commands = None, commands = []):
         if start_commands:
             self.commands = start_commands
@@ -37,10 +43,22 @@ class MockAgent(object):
         while self.commands:
             if not conn:
                 conn, addr = self._sock.accept()
+                conn.settimeout(self.SOCKET_TIMEOUT_SECONDS)
                 conn.send("$>\x00")
             (command, response) = self.commands.pop(0)
-            data = conn.recv(1024).strip()
-            self.tester.assertEqual(data, command)
+            data = ''
+            timeout = datetime.datetime.now() + datetime.timedelta(
+                seconds=self.MAX_WAIT_TIME_SECONDS)
+            # The data might come in chunks, particularly if we are expecting
+            # multiple lines, as with push commands.
+            while (len(data) < len(command) and
+                   datetime.datetime.now() < timeout):
+                try:
+                    data += conn.recv(1024)
+                except socket.timeout:
+                    # We handle timeouts in the main loop.
+                    pass
+            self.tester.assertEqual(data.strip(), command)
             # send response and prompt separately to test for bug 789496
             # FIXME: Improve the mock agent, since overloading the meaning
             # of 'response' is getting confusing.

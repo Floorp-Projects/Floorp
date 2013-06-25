@@ -386,13 +386,24 @@ class DeviceManagerADB(DeviceManager):
         except (OSError, ValueError):
             raise DMError("Error pulling remote file '%s' to '%s'" % (remoteFile, localFile))
 
-    def pullFile(self, remoteFile):
+    def pullFile(self, remoteFile, offset=None, length=None):
         # TODO: add debug flags and allow for printing stdout
         localFile = tempfile.mkstemp()[1]
         self._runPull(remoteFile, localFile)
 
         f = open(localFile, 'r')
-        ret = f.read()
+
+        # ADB pull does not support offset and length, but we can instead
+        # read only the requested portion of the local file
+        if offset is not None and length is not None:
+            f.seek(offset)
+            ret = f.read(length)
+        elif offset is not None:
+            f.seek(offset)
+            ret = f.read()
+        else: 
+            ret = f.read()
+
         f.close()
         os.remove(localFile)
         return ret
