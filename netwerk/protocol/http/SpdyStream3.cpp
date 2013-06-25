@@ -1018,14 +1018,17 @@ SpdyStream3::Uncompress(z_stream *context,
     if (zlib_rv == Z_NEED_DICT) {
       if (triedDictionary) {
         LOG3(("SpdySession3::Uncompress %p Dictionary Error\n", this));
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_ILLEGAL_VALUE;
       }
 
       triedDictionary = true;
       inflateSetDictionary(context, kDictionary, sizeof(kDictionary));
     }
 
-    if (zlib_rv == Z_DATA_ERROR || zlib_rv == Z_MEM_ERROR)
+    if (zlib_rv == Z_DATA_ERROR)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    if (zlib_rv == Z_MEM_ERROR)
       return NS_ERROR_FAILURE;
 
     // zlib's inflate() decreases context->avail_out by the amount it places
