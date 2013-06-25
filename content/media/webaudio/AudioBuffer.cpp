@@ -164,7 +164,13 @@ ThreadSharedFloatArrayBufferList*
 AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext)
 {
   if (!mSharedChannels) {
-    // Steal JS data
+    for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
+      if (mLength != JS_GetTypedArrayLength(mJSChannels[i])) {
+        // Probably one of the arrays was neutered
+        return nullptr;
+      }
+    }
+
     mSharedChannels =
       StealJSArrayDataIntoThreadSharedFloatArrayBufferList(aJSContext, mJSChannels);
   }
