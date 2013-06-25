@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import os
 import time
 
+from mozpack.manifests import PurgeManifest
 from mozunit import main
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
@@ -268,6 +269,43 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertEqual(lines, [
             '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
             ''] + ['[include:%s/xpcshell.ini]' % x for x in expected])
+
+    def test_purge_manifests_written(self):
+        env = self._consume('stub0', RecursiveMakeBackend)
+
+        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
+        self.assertTrue(os.path.exists(purge_dir))
+
+        expected = [
+            'dist_bin',
+            'dist_include',
+            'dist_private',
+            'dist_public',
+            'dist_sdk',
+            'tests',
+        ]
+
+        for e in expected:
+            full = os.path.join(purge_dir, e)
+            self.assertTrue(os.path.exists(full))
+
+        m = PurgeManifest.from_path(os.path.join(purge_dir, 'dist_bin'))
+        self.assertEqual(m.relpath, 'dist/bin')
+
+    def test_old_purge_manifest_deleted(self):
+        # Simulate a purge manifest from a previous backend version. Ensure it
+        # is deleted.
+        env = self._get_environment('stub0')
+        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
+        manifest_path = os.path.join(purge_dir, 'old_manifest')
+        os.makedirs(purge_dir)
+        m = PurgeManifest()
+        m.write_file(manifest_path)
+
+        self.assertTrue(os.path.exists(manifest_path))
+        self._consume('stub0', RecursiveMakeBackend, env)
+        self.assertFalse(os.path.exists(manifest_path))
+
 
 if __name__ == '__main__':
     main()
