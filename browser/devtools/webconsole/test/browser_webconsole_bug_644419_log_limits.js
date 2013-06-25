@@ -10,7 +10,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/" +
                  "webconsole/test/test-bug-644419-log-limits.html";
 
-var gOldPref;
+let hud, outputNode;
 
 function test() {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 644419: Console should " +
@@ -34,19 +34,17 @@ function onLoad(aEvent) {
 
 function testWebDevLimits(aEvent) {
   browser.removeEventListener(aEvent.type, testWebDevLimits, true);
-  gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.console");
   Services.prefs.setIntPref("devtools.hud.loglimit.console", 10);
 
   // Find the sentinel entry.
-  waitForSuccess({
-    name: "bar is not defined",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("bar is not defined") > -1;
-    },
-    successFn: testWebDevLimits2,
-    failureFn: testWebDevLimits2,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "bar is not defined",
+      category: CATEGORY_JS,
+      severity: SEVERITY_ERROR,
+    }],
+  }).then(testWebDevLimits2);
 }
 
 function testWebDevLimits2() {
@@ -55,44 +53,45 @@ function testWebDevLimits2() {
     content.console.log("test message " + i);
   }
 
-  waitForSuccess({
-    name: "10 console.log messages displayed and one pruned",
-    validatorFn: function()
-    {
-      let message0 = outputNode.textContent.indexOf("test message 0");
-      let message10 = outputNode.textContent.indexOf("test message 10");
-      return message0 == -1 && message10 > -1;
-    },
-    successFn: function()
-    {
-      findLogEntry("test message 1");
-      // Check if the sentinel entry is still there.
-      findLogEntry("bar is not defined");
+  waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        text: "test message 0",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      },
+      {
+        text: "test message 10",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      },
+    ],
+  }).then(() => {
+    findLogEntry("test message 1");
+    // Check if the sentinel entry is still there.
+    findLogEntry("bar is not defined");
 
-      Services.prefs.setIntPref("devtools.hud.loglimit.console", gOldPref);
-      testJsLimits();
-    },
-    failureFn: testJsLimits,
+    Services.prefs.clearUserPref("devtools.hud.loglimit.console");
+    testJsLimits();
   });
 }
 
 function testJsLimits() {
-  gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.exception");
   Services.prefs.setIntPref("devtools.hud.loglimit.exception", 10);
 
   hud.jsterm.clearOutput();
   content.console.log("testing JS limits");
 
   // Find the sentinel entry.
-  waitForSuccess({
-    name: "console.log 'testing JS limits'",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("testing JS limits") > -1;
-    },
-    successFn: testJsLimits2,
-    failureFn: testNetLimits,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "testing JS limits",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testJsLimits2);
 }
 
 function testJsLimits2() {
@@ -105,49 +104,44 @@ function testJsLimits2() {
     head.insertBefore(script, head.firstChild);
   }
 
-  waitForSuccess({
-    name: "10 JS errors shown",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("fubar10 is not defined") > -1;
-    },
-    successFn: function()
-    {
-      testLogEntry(outputNode, "fubar0 is not defined", "first message is pruned", false, true);
-      findLogEntry("fubar1 is not defined");
-      // Check if the sentinel entry is still there.
-      findLogEntry("testing JS limits");
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "fubar10 is not defined",
+      category: CATEGORY_JS,
+      severity: SEVERITY_ERROR,
+    }],
+  }).then(() => {
+    testLogEntry(outputNode, "fubar0 is not defined", "first message is pruned", false, true);
+    findLogEntry("fubar1 is not defined");
+    // Check if the sentinel entry is still there.
+    findLogEntry("testing JS limits");
 
-      Services.prefs.setIntPref("devtools.hud.loglimit.exception", gOldPref);
-      testNetLimits();
-    },
-    failureFn: testNetLimits,
+    Services.prefs.clearUserPref("devtools.hud.loglimit.exception");
+    testNetLimits();
   });
 }
 
 var gCounter, gImage;
 
 function testNetLimits() {
-  gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.network");
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);
 
   hud.jsterm.clearOutput();
   content.console.log("testing Net limits");
 
   // Find the sentinel entry.
-  waitForSuccess({
-    name: "console.log 'testing Net limits'",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("testing Net limits") > -1;
-    },
-    successFn: function()
-    {
-      // Fill the log with network messages.
-      gCounter = 0;
-      loadImage();
-    },
-    failureFn: testCssLimits,
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "testing Net limits",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(() => {
+    // Fill the log with network messages.
+    gCounter = 0;
+    loadImage();
   });
 }
 
@@ -165,44 +159,45 @@ function loadImage() {
 
   is(gCounter, 11, "loaded 11 files");
 
-  waitForSuccess({
-    name: "loaded 11 files, one message pruned",
-    validatorFn: function()
-    {
-      let message0 = outputNode.querySelector('*[value*="test-image.png?_fubar=0"]');
-      let message10 = outputNode.querySelector('*[value*="test-image.png?_fubar=10"]');
-      return !message0 && message10;
-    },
-    successFn: function()
-    {
-      findLogEntry("test-image.png?_fubar=1");
-      // Check if the sentinel entry is still there.
-      findLogEntry("testing Net limits");
+  waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        text: "test-image.png?_fubar=0",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+      },
+      {
+        text: "test-image.png?_fubar=10",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+      },
+    ],
+  }).then(() => {
+    findLogEntry("test-image.png?_fubar=1");
+    // Check if the sentinel entry is still there.
+    findLogEntry("testing Net limits");
 
-      Services.prefs.setIntPref("devtools.hud.loglimit.network", gOldPref);
-      testCssLimits();
-    },
-    failureFn: testCssLimits,
+    Services.prefs.clearUserPref("devtools.hud.loglimit.network");
+    testCssLimits();
   });
 }
 
 function testCssLimits() {
-  gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.cssparser");
   Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", 10);
 
   hud.jsterm.clearOutput();
   content.console.log("testing CSS limits");
 
   // Find the sentinel entry.
-  waitForSuccess({
-    name: "console.log 'testing CSS limits'",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("testing CSS limits") > -1;
-    },
-    successFn: testCssLimits2,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "testing CSS limits",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testCssLimits2);
 }
 
 function testCssLimits2() {
@@ -214,23 +209,21 @@ function testCssLimits2() {
     body.insertBefore(div, body.firstChild);
   }
 
-  waitForSuccess({
-    name: "10 CSS errors shown",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("-moz-foobar10") > -1;
-    },
-    successFn: function()
-    {
-      testLogEntry(outputNode, "Unknown property '-moz-foobar0'",
-                   "first message is pruned", false, true);
-      findLogEntry("Unknown property '-moz-foobar1'");
-      // Check if the sentinel entry is still there.
-      findLogEntry("testing CSS limits");
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "-moz-foobar10",
+      category: CATEGORY_CSS,
+      severity: SEVERITY_WARNING,
+    }],
+  }).then(() => {
+    testLogEntry(outputNode, "Unknown property '-moz-foobar0'",
+                 "first message is pruned", false, true);
+    findLogEntry("Unknown property '-moz-foobar1'");
+    // Check if the sentinel entry is still there.
+    findLogEntry("testing CSS limits");
 
-      Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", gOldPref);
-      finishTest();
-    },
-    failureFn: finishTest,
+    Services.prefs.clearUserPref("devtools.hud.loglimit.cssparser");
+    finishTest();
   });
 }
