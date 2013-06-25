@@ -1179,9 +1179,7 @@ class Activation
     bool isActive() const {
         return active_;
     }
-    void setActive(bool active = true) {
-        active_ = active;
-    }
+    void setActive(bool active = true);
 
     bool isInterpreter() const {
         return kind_ == Interpreter;
