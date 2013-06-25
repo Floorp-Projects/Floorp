@@ -1262,7 +1262,7 @@ Parser<ParseHandler>::getOrCreateLexicalDependency(ParseContext<ParseHandler> *p
     if (p)
         return p.value().get<ParseHandler>();
 
-    DefinitionNode dn = handler.newPlaceholder(atom, pc->inBlock(), pc->blockid(), pos());
+    DefinitionNode dn = handler.newPlaceholder(atom, pc->blockid(), pos());
     if (!dn)
         return ParseHandler::nullDefinition();
     DefinitionSingle def = DefinitionSingle::new_<ParseHandler>(dn);
@@ -1313,9 +1313,6 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
 
     FunctionBox *funbox = fn->pn_funbox;
     JS_ASSERT(funbox == pc->sc->asFunctionBox());
-
-    if (!outerpc->topStmt || outerpc->topStmt->type == STMT_BLOCK)
-        fn->pn_dflags |= PND_BLOCKCHILD;
 
     /* Propagate unresolved lexical names up to outerpc->lexdeps. */
     if (pc->lexdeps->count()) {
@@ -5598,8 +5595,8 @@ CompExprTransplanter::transplant(ParseNode *pn)
                      * generator) a use of a new placeholder in the generator's
                      * lexdeps.
                      */
-                    Definition *dn2 = parser->handler.newPlaceholder(
-                        atom, parser->pc->inBlock(), parser->pc->blockid(), parser->pos());
+                    Definition *dn2 = parser->handler.newPlaceholder(atom, parser->pc->blockid(),
+                                                                     parser->pos());
                     if (!dn2)
                         return false;
                     dn2->pn_pos = root->pn_pos;
@@ -6227,7 +6224,7 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::newName(PropertyName *name)
 {
-    return handler.newName(name, pc->inBlock(), pc->blockid(), pos());
+    return handler.newName(name, pc->blockid(), pos());
 }
 
 template <typename ParseHandler>
