@@ -3204,6 +3204,9 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_ASYNC_DECODE_IMAGES) {
     renderDocFlags |= nsIPresShell::RENDER_ASYNC_DECODE_IMAGES;
   }
+  if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) {
+    renderDocFlags |= nsIPresShell::RENDER_DRAWWINDOW_NOT_FLUSHING;
+  }
 
   // gfxContext-over-Azure may modify the DrawTarget's transform, so
   // save and restore it
