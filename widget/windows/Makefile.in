@@ -42,8 +42,6 @@ LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/content/events/src \
 		$(NULL)
 
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
