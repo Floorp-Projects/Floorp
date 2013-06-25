@@ -70,7 +70,6 @@ FENNEC_JAVA_FILES = \
   BrowserApp.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
-  BrowserToolbarLayout.java \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
   CanvasDelegate.java \
