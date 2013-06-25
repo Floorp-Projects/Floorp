@@ -346,10 +346,6 @@
           <toolbarbutton id="stop-button" command="cmd_stop"/>
         </hbox>
 
-        <!-- developer buttons -->
-        <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
-        <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
-
         <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
         <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
         <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
@@ -693,11 +689,20 @@
           </richlistitem>
 
           <!-- App bar: 'more' button context menu -->
+          <!-- developer buttons - shown in metrodesktop mode only -->
+          <richlistitem id="context-error-console" type="open-error-console" onclick="ContextCommands.errorConsole();">
+            <label value="&appbarErrorConsole.label;"/>
+          </richlistitem>
+          <richlistitem id="context-jsshell" type="open-jsshell" onclick="ContextCommands.jsShell();">
+            <label value="&appbarJSShell.label;"/>
+          </richlistitem>
+
+          <!-- standard buttons -->
           <richlistitem id="context-findinpage" type="find-in-page" onclick="ContextCommands.findInPage();">
-          <label value="&appbarFindInPage2.label;"/>
+            <label value="&appbarFindInPage2.label;"/>
           </richlistitem>
           <richlistitem id="context-viewondesktop" type="view-on-desktop" onclick="ContextCommands.viewOnDesktop();">
-          <label value="&appbarViewOnDesktop2.label;"/>
+            <label value="&appbarViewOnDesktop2.label;"/>
           </richlistitem>
         </richlistbox>
       </vbox>
