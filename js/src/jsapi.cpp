@@ -3026,7 +3026,7 @@ JS_IdArrayGet(JSContext *cx, JSIdArray *ida, int index)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    DestroyIdArray(cx->runtime()->defaultFreeOp(), ida);
+    cx->runtime()->defaultFreeOp()->free_(ida);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4493,7 +4493,7 @@ prop_iter_finalize(FreeOp *fop, JSObject *obj)
     if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() >= 0) {
         /* Non-native case: destroy the ida enumerated when obj was created. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        DestroyIdArray(fop, ida);
+        fop->free_(ida);
     }
 }
 

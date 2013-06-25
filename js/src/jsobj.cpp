@@ -5123,6 +5123,12 @@ DumpProperty(JSObject *obj, Shape &shape)
     fprintf(stderr, "\n");
 }
 
+bool
+JSObject::isProxySlow() const
+{
+    return isProxy();
+}
+
 void
 JSObject::dump()
 {

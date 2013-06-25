@@ -1245,24 +1245,24 @@ class ObjectImpl : public gc::Cell
     preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
 
     HeapSlotArray getDenseElements() {
-        assertIsNative();
+        JS_ASSERT(isNativeSlow());
         return HeapSlotArray(elements);
     }
     const Value &getDenseElement(uint32_t idx) {
-        assertIsNative();
+        JS_ASSERT(isNativeSlow());
         MOZ_ASSERT(idx < getDenseInitializedLength());
         return elements[idx];
     }
     bool containsDenseElement(uint32_t idx) {
-        assertIsNative();
+        JS_ASSERT(isNativeSlow());
         return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
-        assertIsNative();
+        JS_ASSERT(isNativeSlow());
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() {
-        assertIsNative();
+        JS_ASSERT(isNativeSlow());
         return getElementsHeader()->capacity;
     }
 
@@ -1423,8 +1423,9 @@ class ObjectImpl : public gc::Cell
 
     inline JSCompartment *compartment() const;
 
+    // isNativeSlow() is equivalent to isNative(), but isn't inlined.
     inline bool isNative() const;
-    void assertIsNative() const;
+    bool isNativeSlow() const;
 
     types::TypeObject *type() const {
         MOZ_ASSERT(!hasLazyType());
@@ -1447,8 +1448,9 @@ class ObjectImpl : public gc::Cell
      */
     bool hasLazyType() const { return type_->lazy(); }
 
+    // slotSpanSlow() is the same as slotSpan(), but isn't inlined.
     inline uint32_t slotSpan() const;
-    void assertSlotIsWithinSpan(uint32_t slot) const;
+    uint32_t slotSpanSlow() const;
 
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
@@ -1548,13 +1550,11 @@ class ObjectImpl : public gc::Cell
     }
 
     HeapSlot &nativeGetSlotRef(uint32_t slot) {
-        assertIsNative();
-        assertSlotIsWithinSpan(slot);
+        JS_ASSERT(isNativeSlow() && slot < slotSpanSlow());
         return getSlotRef(slot);
     }
     const Value &nativeGetSlot(uint32_t slot) const {
-        assertIsNative();
-        assertSlotIsWithinSpan(slot);
+        JS_ASSERT(isNativeSlow() && slot < slotSpanSlow());
         return getSlot(slot);
     }
 

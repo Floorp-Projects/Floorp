@@ -381,10 +381,6 @@ struct Atom {
 
 } /* namespace shadow */
 
-// This is equal to JSFunction::class_.  Use it in places where you don't want
-// to #include jsfun.h.
-extern JS_FRIEND_DATA(js::Class*) FunctionClassPtr;
-
 extern JS_FRIEND_DATA(js::Class) FunctionProxyClass;
 extern JS_FRIEND_DATA(js::Class) OuterWindowProxyClass;
 extern JS_FRIEND_DATA(js::Class) ObjectProxyClass;
