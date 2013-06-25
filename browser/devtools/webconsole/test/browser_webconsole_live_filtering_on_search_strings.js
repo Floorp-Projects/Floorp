@@ -26,19 +26,18 @@ function consoleOpened(aHud) {
     console.log("http://www.example.com/ " + i);
   }
 
-  waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "http://www.example.com/ 49",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  }).then(testLiveFilteringOnSearchStrings);
+  waitForSuccess({
+    name: "50 console.log messages displayed",
+    validatorFn: function()
+    {
+      return hud.outputNode.itemCount == 50;
+    },
+    successFn: testLiveFilteringOnSearchStrings,
+    failureFn: finishTest,
+  });
 }
 
 function testLiveFilteringOnSearchStrings() {
-  is(hud.outputNode.itemCount, 50, "number of messages");
-
   setStringFilter("http");
   isnot(countMessageNodes(), 0, "the log nodes are not hidden when the " +
     "search string is set to \"http\"");
