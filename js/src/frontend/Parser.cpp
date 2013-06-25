@@ -824,7 +824,7 @@ Parser<ParseHandler>::checkStrictAssignment(Node lhs, AssignmentFlavor flavor)
  */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkStrictBinding(HandlePropertyName name, Node pn)
+Parser<ParseHandler>::checkStrictBinding(PropertyName *name, Node pn)
 {
     if (!pc->sc->needStrictChecks())
         return true;
@@ -1305,8 +1305,7 @@ ConvertDefinitionToNamedLambdaUse(TokenStream &ts, ParseContext<FullParseHandler
  */
 template <>
 bool
-Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funName,
-                                        ParseContext<FullParseHandler> *outerpc,
+Parser<FullParseHandler>::leaveFunction(ParseNode *fn, ParseContext<FullParseHandler> *outerpc,
                                         FunctionSyntaxKind kind)
 {
     outerpc->blockidGen = pc->blockidGen;
@@ -1321,7 +1320,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
             Definition *dn = r.front().value().get<FullParseHandler>();
             JS_ASSERT(dn->isPlaceholder());
 
-            if (atom == funName && kind == Expression) {
+            if (atom == funbox->function()->name() && kind == Expression) {
                 if (!ConvertDefinitionToNamedLambdaUse(tokenStream, pc, funbox, dn))
                     return false;
                 continue;
@@ -1405,8 +1404,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
 
 template <>
 bool
-Parser<SyntaxParseHandler>::leaveFunction(Node fn, HandlePropertyName funName,
-                                          ParseContext<SyntaxParseHandler> *outerpc,
+Parser<SyntaxParseHandler>::leaveFunction(Node fn, ParseContext<SyntaxParseHandler> *outerpc,
                                           FunctionSyntaxKind kind)
 {
     outerpc->blockidGen = pc->blockidGen;
@@ -1940,7 +1938,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
     // directive, we backup and reparse it as strict.
     bool initiallyStrict = pc->sc->strict;
     bool becameStrict;
-    if (!functionArgsAndBody(pn, fun, funName, startOffset, type, kind, initiallyStrict,
+    if (!functionArgsAndBody(pn, fun, startOffset, type, kind, initiallyStrict,
                              &becameStrict))
     {
         if (initiallyStrict || !becameStrict || tokenStream.hadError())
@@ -1954,7 +1952,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
         // functionArgsAndBody may have already set pn->pn_body before failing.
         handler.setFunctionBody(pn, null());
 
-        if (!functionArgsAndBody(pn, fun, funName, startOffset, type, kind, true))
+        if (!functionArgsAndBody(pn, fun, startOffset, type, kind, true))
             return null();
     }
 
@@ -2055,7 +2053,6 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
 template <>
 bool
 Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
-                                              HandlePropertyName funName,
                                               size_t startOffset, FunctionType type,
                                               FunctionSyntaxKind kind,
                                               bool strict, bool *becameStrict)
@@ -2087,7 +2084,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
                 return false;
 
             if (!parser->functionArgsAndBodyGeneric(SyntaxParseHandler::NodeGeneric,
-                                                    fun, funName, type, kind, becameStrict))
+                                                    fun, type, kind, becameStrict))
             {
                 if (parser->hadAbortedSyntaxParse()) {
                     // Try again with a full parse.
@@ -2120,10 +2117,10 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     if (!funpc.init())
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, funName, type, kind, becameStrict))
+    if (!functionArgsAndBodyGeneric(pn, fun, type, kind, becameStrict))
         return false;
 
-    if (!leaveFunction(pn, funName, outerpc, kind))
+    if (!leaveFunction(pn, outerpc, kind))
         return false;
 
     pn->pn_blockid = outerpc->blockid();
@@ -2140,10 +2137,8 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
 
 template <>
 bool
-Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
-                                                HandlePropertyName funName,
-                                                size_t startOffset, FunctionType type,
-                                                FunctionSyntaxKind kind,
+Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun, size_t startOffset,
+                                                FunctionType type, FunctionSyntaxKind kind,
                                                 bool strict, bool *becameStrict)
 {
     if (becameStrict)
@@ -2161,10 +2156,10 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     if (!funpc.init())
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, funName, type, kind, becameStrict))
+    if (!functionArgsAndBodyGeneric(pn, fun, type, kind, becameStrict))
         return false;
 
-    if (!leaveFunction(pn, funName, outerpc, kind))
+    if (!leaveFunction(pn, outerpc, kind))
         return false;
 
     // This is a lazy function inner to another lazy function. Remember the
@@ -2192,13 +2187,11 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!funpc.init())
         return null();
 
-    RootedPropertyName funName(context, fun->atom() ? fun->atom()->asPropertyName() : NULL);
-
-    if (!functionArgsAndBodyGeneric(pn, fun, funName, Normal, Statement, NULL))
+    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement, NULL))
         return null();
 
     if (fun->isNamedLambda()) {
-        if (AtomDefnPtr p = pc->lexdeps->lookup(funName)) {
+        if (AtomDefnPtr p = pc->lexdeps->lookup(fun->name())) {
             Definition *dn = p.value().get<FullParseHandler>();
             if (!ConvertDefinitionToNamedLambdaUse(tokenStream, pc, funbox, dn))
                 return NULL;
@@ -2215,8 +2208,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
-                                                 HandlePropertyName funName, FunctionType type,
+Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
                                                  FunctionSyntaxKind kind, bool *becameStrict)
 {
     // Given a properly initialized parse context, try to parse an actual
@@ -2273,7 +2265,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
     if (!yieldGuard.empty() && !yieldGuard.ref().checkValidBody(body, JSMSG_YIELD_IN_ARROW))
         return false;
 
-    if (funName && !checkStrictBinding(funName, pn))
+    if (fun->name() && !checkStrictBinding(fun->name(), pn))
         return false;
 
 #if JS_HAS_EXPR_CLOSURES
@@ -6026,8 +6018,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
         genfn->pn_pos.end = body->pn_pos.end = pos().end;
 
-        RootedPropertyName funName(context);
-        if (!leaveFunction(genfn, funName, outerpc))
+        if (!leaveFunction(genfn, outerpc))
             return null();
     }
 
