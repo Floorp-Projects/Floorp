@@ -354,6 +354,28 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void
+nsDisplayXULImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                             const nsDisplayItemGeometry* aGeometry,
+                                             nsRegion* aInvalidRegion)
+{
+
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    nsImageBoxFrame* boxFrame = static_cast<nsImageBoxFrame*>(mFrame);
+    nsCOMPtr<imgIContainer> image;
+    if (boxFrame->mImageRequest) {
+      boxFrame->mImageRequest->GetImage(getter_AddRefs(image));
+    }
+
+    if  (image && !image->IsDecoded()) {
+      bool snap;
+      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+    }
+  }
+
+  nsDisplayImageContainer::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
+}
+
+void
 nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
