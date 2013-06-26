@@ -2124,13 +2124,12 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
     // If this widget uses OMTC...
-    if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager() &&
-        Compositor::GetBackend() != LAYERS_BASIC) {
+    if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
+        listener->PaintWindow(this, region);
         listener->DidPaintWindow();
 
         g_free(rects);
         return TRUE;
-
     } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(region);
@@ -2199,10 +2198,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     {
       if (GetLayerManager()->GetBackendType() == LAYERS_BASIC) {
         AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-        painted = listener->PaintWindow(this, region);
-      } else if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
-        ClientLayerManager *manager = static_cast<ClientLayerManager*>(GetLayerManager());
-        manager->SetShadowTarget(ctx);
         painted = listener->PaintWindow(this, region);
       }
     }
