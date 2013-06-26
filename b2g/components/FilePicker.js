@@ -75,13 +75,11 @@ FilePicker.prototype = {
   },
 
   appendFilters: function(filterMask) {
-    this.mFilterTypes = null;
-
     // Ci.nsIFilePicker.filterHTML is not supported
     // Ci.nsIFilePicker.filterText is not supported
 
     if (filterMask & Ci.nsIFilePicker.filterImages) {
-      this.mFilterTypes = IMAGE_FILTERS;
+      this.mFilterTypes = this.mFilterTypes.concat(IMAGE_FILTERS);
     }
 
     // Ci.nsIFilePicker.filterXML is not supported
@@ -90,11 +88,11 @@ FilePicker.prototype = {
     // Ci.nsIFilePicker.filterAllowURLs is not supported
 
     if (filterMask & Ci.nsIFilePicker.filterVideo) {
-      this.mFilterTypes = VIDEO_FILTERS;
+      this.mFilterTypes = this.mFilterTypes.concat(VIDEO_FILTERS);
     }
 
     if (filterMask & Ci.nsIFilePicker.filterAudio) {
-      this.mFilterTypes = AUDIO_FILTERS;
+      this.mFilterTypes = this.mFilterTypes.concat(AUDIO_FILTERS);
     }
 
     // Ci.nsIFilePicker.filterAll is by default
