@@ -13,6 +13,8 @@
 
 #include "vm/GlobalObject.h"
 
+#include "jsobjinlines.h"
+
 #include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
