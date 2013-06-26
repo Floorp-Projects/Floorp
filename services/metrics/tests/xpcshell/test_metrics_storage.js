@@ -80,7 +80,7 @@ add_task(function test_reconnect() {
 
 add_task(function test_future_schema_errors() {
   let backend = yield Metrics.Storage("future_schema_errors");
-  yield backend._connection.setSchemaVersion(2);
+  backend._connection.schemaVersion = 2;
   yield backend.close();
 
   let backend2;
