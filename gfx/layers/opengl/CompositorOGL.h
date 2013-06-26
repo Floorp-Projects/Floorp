@@ -24,7 +24,7 @@ class GLManagerCompositor;
 class CompositorOGL : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
-  typedef ShaderProgramType ProgramType;
+  typedef mozilla::gl::ShaderProgramType ProgramType;
   
   friend class GLManagerCompositor;
 
@@ -130,12 +130,9 @@ public:
   }
 
   GLContext* gl() const { return mGLContext; }
-  ShaderProgramType GetFBOLayerProgramType() const {
+  gl::ShaderProgramType GetFBOLayerProgramType() const {
     return mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB ?
-           RGBARectLayerProgramType : RGBALayerProgramType;
-  }
-  gfx::SurfaceFormat GetFBOFormat() const {
-    return gfx::FORMAT_R8G8B8A8;
+           gl::RGBARectLayerProgramType : gl::RGBALayerProgramType;
   }
 
   /**
@@ -219,7 +216,7 @@ private:
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) MOZ_OVERRIDE;
 
-  ShaderProgramType GetProgramTypeForEffect(Effect* aEffect) const;
+  gl::ShaderProgramType GetProgramTypeForEffect(Effect* aEffect) const;
 
   /**
    * Updates all layer programs with a new projection matrix.
@@ -230,9 +227,9 @@ private:
    * Helper method for Initialize, creates all valid variations of a program
    * and adds them to mPrograms
    */
-  void AddPrograms(ShaderProgramType aType);
+  void AddPrograms(gl::ShaderProgramType aType);
 
-  ShaderProgramOGL* GetProgram(ShaderProgramType aType,
+  ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType,
                                MaskType aMask = MaskNone) {
     MOZ_ASSERT(ProgramProfileOGL::ProgramExists(aType, aMask),
                "Invalid program type.");

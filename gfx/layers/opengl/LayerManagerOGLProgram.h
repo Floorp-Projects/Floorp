@@ -18,7 +18,6 @@
 #include "gfxColor.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/RefPtr.h"
-#include "gfxASurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -27,53 +26,6 @@ class GLContext;
 namespace layers {
 
 class Layer;
-
-enum ShaderProgramType {
-  RGBALayerProgramType,
-  RGBALayerExternalProgramType,
-  BGRALayerProgramType,
-  RGBXLayerProgramType,
-  BGRXLayerProgramType,
-  RGBARectLayerProgramType,
-  RGBAExternalLayerProgramType,
-  ColorLayerProgramType,
-  YCbCrLayerProgramType,
-  ComponentAlphaPass1ProgramType,
-  ComponentAlphaPass2ProgramType,
-  Copy2DProgramType,
-  Copy2DRectProgramType,
-  NumProgramTypes
-};
-
-static inline ShaderProgramType
-ShaderProgramFromSurfaceFormat(gfx::SurfaceFormat aFormat)
-{
-  switch (aFormat) {
-    case gfx::FORMAT_B8G8R8A8:
-      return BGRALayerProgramType;
-    case gfx::FORMAT_B8G8R8X8:
-      return BGRXLayerProgramType;
-    case gfx::FORMAT_R8G8B8A8:
-      return RGBALayerProgramType;
-    case gfx::FORMAT_R8G8B8X8:
-    case gfx::FORMAT_R5G6B5:
-      return RGBXLayerProgramType;
-    case gfx::FORMAT_A8:
-      // We don't have a specific luminance shader
-      break;
-    default:
-      NS_ASSERTION(false, "Unhandled surface format!");
-  }
-  return ShaderProgramType(0);
-}
-
-static inline ShaderProgramType
-ShaderProgramFromContentType(gfxASurface::gfxContentType aContentType)
-{
-  if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA)
-    return RGBALayerProgramType;
-  return RGBXLayerProgramType;
-}
 
 /**
  * This struct represents the shaders that make up a program and the uniform
@@ -87,16 +39,16 @@ struct ProgramProfileOGL
    * Factory method; creates an instance of this class for the given
    * ShaderProgramType
    */
-  static ProgramProfileOGL GetProfileFor(ShaderProgramType aType,
+  static ProgramProfileOGL GetProfileFor(gl::ShaderProgramType aType,
                                          MaskType aMask);
 
   /**
    * returns true if such a shader program exists
    */
-  static bool ProgramExists(ShaderProgramType aType, MaskType aMask)
+  static bool ProgramExists(gl::ShaderProgramType aType, MaskType aMask)
   {
     if (aType < 0 ||
-        aType >= NumProgramTypes)
+        aType >= gl::NumProgramTypes)
       return false;
 
     if (aMask < MaskNone ||
@@ -104,13 +56,13 @@ struct ProgramProfileOGL
       return false;
 
     if (aMask == Mask2d &&
-        (aType == Copy2DProgramType ||
-         aType == Copy2DRectProgramType))
+        (aType == gl::Copy2DProgramType ||
+         aType == gl::Copy2DRectProgramType))
       return false;
 
     return aMask != Mask3d ||
-           aType == RGBARectLayerProgramType ||
-           aType == RGBALayerProgramType;
+           aType == gl::RGBARectLayerProgramType ||
+           aType == gl::RGBALayerProgramType;
   }
 
 

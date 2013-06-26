@@ -287,7 +287,7 @@ ContainerRender(Container* aContainer,
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
       nsRefPtr<gfxImageSurface> surf = 
-        aContainer->gl()->GetTexImage(containerSurface, true, aManager->GetFBOTextureFormat());
+        aContainer->gl()->GetTexImage(containerSurface, true, aManager->GetFBOLayerProgramType());
 
       WriteSnapshotToDumpFile(aContainer, surf);
     }
