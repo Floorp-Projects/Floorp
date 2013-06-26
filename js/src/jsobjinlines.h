@@ -18,7 +18,7 @@
 #include "vm/StringObject.h"
 
 #include "jsatominlines.h"
-#include "jsfuninlines.h"
+#include "jsinferinlines.h"
 
 #include "vm/ObjectImpl-inl.h"
 

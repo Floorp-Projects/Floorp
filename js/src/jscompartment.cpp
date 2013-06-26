@@ -23,6 +23,7 @@
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
 
+#include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 

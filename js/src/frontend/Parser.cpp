@@ -36,6 +36,7 @@
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
+#include "jsfuninlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 

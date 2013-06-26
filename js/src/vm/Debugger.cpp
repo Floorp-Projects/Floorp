@@ -18,6 +18,7 @@
 #include "ion/BaselineJIT.h"
 #include "js/Vector.h"
 
+#include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsopcodeinlines.h"
 
