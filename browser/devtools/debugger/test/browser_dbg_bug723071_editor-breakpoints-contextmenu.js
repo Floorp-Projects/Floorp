@@ -26,7 +26,10 @@ function test()
     gSources.preferredSource = EXAMPLE_URL + "test-script-switching-02.js";
 
     gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-      let url = aEvent.detail.url;
+      let { url, loaded, text } = aEvent.detail;
+      info("Shown source: " + url + ", loaded: " + loaded + ", text:\n" + text);
+      info("Shown label: " + gSources.selectedLabel);
+      info("All labels:" + gSources.labels);
       if (url.indexOf("-02") != -1) {
         gDebugger.removeEventListener(aEvent.type, _onEvent);
         performTestWhileNotPaused();
@@ -35,11 +38,11 @@ function test()
   });
 
   function addBreakpoints(callback) {
-    gPane.addBreakpoint({url: gSources.values[0], line: 5}, function(cl, err) {
-      gPane.addBreakpoint({url: gSources.values[1], line: 6}, function(cl, err) {
-        gPane.addBreakpoint({url: gSources.values[1], line: 7}, function(cl, err) {
-          gPane.addBreakpoint({url: gSources.values[1], line: 8}, function(cl, err) {
-            gPane.addBreakpoint({url: gSources.values[1], line: 9}, function(cl, err) {
+    gPane.addBreakpoint({url: gSources.orderedItems[0].value, line: 5}, function(cl, err) {
+      gPane.addBreakpoint({url: gSources.orderedItems[1].value, line: 6}, function(cl, err) {
+        gPane.addBreakpoint({url: gSources.orderedItems[1].value, line: 7}, function(cl, err) {
+          gPane.addBreakpoint({url: gSources.orderedItems[1].value, line: 8}, function(cl, err) {
+            gPane.addBreakpoint({url: gSources.orderedItems[1].value, line: 9}, function(cl, err) {
               callback();
             });
           });
