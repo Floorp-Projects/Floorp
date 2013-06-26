@@ -25,7 +25,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsEventListenerManager.h"
-#include "nsIDOMNodeSelector.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
 #include "nsBindingManager.h"
