@@ -224,12 +224,6 @@ public:
     double aEstimatedPaintDuration);
 
   /**
-   * Return the scale factor needed to fit the viewport in |aMetrics|
-   * into its composition bounds.
-   */
-  static CSSToScreenScale CalculateIntrinsicScale(const FrameMetrics& aMetrics);
-
-  /**
    * Return the resolution that content should be rendered at given
    * the configuration in aFrameMetrics: viewport dimensions, zoom
    * factor, etc.  (The mResolution member of aFrameMetrics is
