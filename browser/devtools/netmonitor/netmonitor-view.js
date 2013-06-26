@@ -278,6 +278,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.widget = new SideMenuWidget($("#requests-menu-contents"), false);
     this._summary = $("#request-menu-network-summary");
 
+    this.allowFocusOnRightClick = true;
     this.widget.maintainSelectionVisible = false;
     this.widget.autoscrollWithAppendedItems = true;
 
