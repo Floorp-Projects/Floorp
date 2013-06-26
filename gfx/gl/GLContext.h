@@ -89,8 +89,6 @@ class GLContext
 protected:
     typedef class gfx::SharedSurface SharedSurface;
     typedef gfx::SharedSurfaceType SharedSurfaceType;
-    typedef gfxASurface::gfxImageFormat ImageFormat;
-    typedef gfx::SurfaceFormat SurfaceFormat;
 
 public:
     typedef struct gfx::SurfaceCaps SurfaceCaps;
@@ -491,7 +489,7 @@ public:
 
     typedef struct {
         GLenum mTarget;
-        SurfaceFormat mTextureFormat;
+        ShaderProgramType mProgramType;
         gfx3DMatrix mTextureTransform;
     } SharedHandleDetails;
 
@@ -807,7 +805,7 @@ public:
                                                        GLenum aTextureFormat,
                                                        bool aYInvert = false);
 
-    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat);
+    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader);
 
     /**
      * Call ReadPixels into an existing gfxImageSurface.
@@ -879,15 +877,15 @@ public:
      *  surface. This testure may be overridden, clients should not rely on
      *  the contents of this texture after this call or even on this
      *  texture unit being active.
-     * \return Surface format of this texture.
+     * \return Shader program needed to render this texture.
      */
-    SurfaceFormat UploadSurfaceToTexture(gfxASurface *aSurface,
-                                         const nsIntRegion& aDstRegion,
-                                         GLuint& aTexture,
-                                         bool aOverwrite = false,
-                                         const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
-                                         bool aPixelBuffer = false,
-                                         GLenum aTextureUnit = LOCAL_GL_TEXTURE0);
+    ShaderProgramType UploadSurfaceToTexture(gfxASurface *aSurface,
+                                             const nsIntRegion& aDstRegion,
+                                             GLuint& aTexture,
+                                             bool aOverwrite = false,
+                                             const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
+                                             bool aPixelBuffer = false,
+                                             GLenum aTextureUnit = LOCAL_GL_TEXTURE0);
 
 
     void TexImage2D(GLenum target, GLint level, GLint internalformat,

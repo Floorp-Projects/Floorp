@@ -384,7 +384,7 @@ CompositorOGL::Initialize()
   }
 
   // initialise a common shader to check that we can actually compile a shader
-  if (!mPrograms[RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
+  if (!mPrograms[gl::RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
     return false;
   }
 
@@ -952,12 +952,12 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, SurfaceInitMode aInit,
   *aTexture = tex;
 }
 
-ShaderProgramType
+gl::ShaderProgramType
 CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
 {
   switch(aEffect->mType) {
   case EFFECT_SOLID_COLOR:
-    return ColorLayerProgramType;
+    return gl::ColorLayerProgramType;
   case EFFECT_RGBA:
   case EFFECT_RGBX:
   case EFFECT_BGRA:
@@ -966,14 +966,14 @@ CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
     TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffect);
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
-    return ShaderProgramFromSurfaceFormat(source->GetTextureFormat());
+    return source->GetShaderProgram();
   }
   case EFFECT_YCBCR:
-    return YCbCrLayerProgramType;
+    return gl::YCbCrLayerProgramType;
   case EFFECT_RENDER_TARGET:
     return GetFBOLayerProgramType();
   default:
-    return RGBALayerProgramType;
+    return gl::RGBALayerProgramType;
   }
 }
 
@@ -1046,10 +1046,10 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
     maskType = MaskNone;
   }
 
-  ShaderProgramType programType = GetProgramTypeForEffect(aEffectChain.mPrimaryEffect);
+  gl::ShaderProgramType programType = GetProgramTypeForEffect(aEffectChain.mPrimaryEffect);
   ShaderProgramOGL *program = GetProgram(programType, maskType);
   program->Activate();
-  if (programType == RGBARectLayerProgramType) {
+  if (programType == gl::RGBARectLayerProgramType) {
     TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
@@ -1105,7 +1105,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       }
 
       AutoBindTexture bindSource(source->AsSourceOGL(), LOCAL_GL_TEXTURE0);
-      if (programType == RGBALayerExternalProgramType) {
+      if (programType == gl::RGBALayerExternalProgramType) {
         program->SetTextureTransform(source->AsSourceOGL()->GetTextureTransform());
       }
 
@@ -1213,11 +1213,11 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       for (int32_t pass = 1; pass <=2; ++pass) {
         ShaderProgramOGL* program;
         if (pass == 1) {
-          program = GetProgram(ComponentAlphaPass1ProgramType, maskType);
+          program = GetProgram(gl::ComponentAlphaPass1ProgramType, maskType);
           gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                    LOCAL_GL_ONE, LOCAL_GL_ONE);
         } else {
-          program = GetProgram(ComponentAlphaPass2ProgramType, maskType);
+          program = GetProgram(gl::ComponentAlphaPass2ProgramType, maskType);
           gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                    LOCAL_GL_ONE, LOCAL_GL_ONE);
         }

@@ -1063,9 +1063,9 @@ private:
         , sGLXLib(sGLXLibrary[aLibType])
     {
         if (aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
-            mTextureFormat = FORMAT_R8G8B8A8;
+            mShaderType = gl::RGBALayerProgramType;
         } else {
-            mTextureFormat = FORMAT_R8G8B8X8;
+            mShaderType = gl::RGBXLayerProgramType;
         }
     }
 

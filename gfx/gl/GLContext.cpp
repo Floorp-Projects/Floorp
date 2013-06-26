@@ -1437,7 +1437,7 @@ static already_AddRefed<gfxImageSurface> YInvertImageSurface(gfxImageSurface* aS
 }
 
 already_AddRefed<gfxImageSurface>
-GLContext::GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat)
+GLContext::GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader)
 {
     MakeCurrent();
     GuaranteeResolve();
@@ -1463,7 +1463,7 @@ GLContext::GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat)
         fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
     }
 
-    if (aFormat == FORMAT_R8G8B8A8 || aFormat == FORMAT_R8G8B8X8) {
+    if (aShader == RGBALayerProgramType || aShader == RGBXLayerProgramType) {
       SwapRAndBComponents(surf);
     }
 
@@ -1725,7 +1725,7 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
         if (DebugMode()) {
             NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
         }
-        ImageFormat readFormatGFX;
+        gfxASurface::gfxImageFormat readFormatGFX;
 
         switch (readFormat) {
             case LOCAL_GL_RGBA:
@@ -1992,7 +1992,7 @@ DataOffset(gfxImageSurface *aSurf, const nsIntPoint &aPoint)
   return data;
 }
 
-GLContext::SurfaceFormat
+ShaderProgramType
 GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
                                   const nsIntRegion& aDstRegion,
                                   GLuint& aTexture,
@@ -2069,36 +2069,37 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
     GLenum format;
     GLenum type;
     int32_t pixelSize = gfxASurface::BytePerPixelFromFormat(imageSurface->Format());
-    SurfaceFormat surfaceFormat;
+    ShaderProgramType shader;
 
     switch (imageSurface->Format()) {
         case gfxASurface::ImageFormatARGB32:
             format = LOCAL_GL_RGBA;
             type = LOCAL_GL_UNSIGNED_BYTE;
-            surfaceFormat = FORMAT_B8G8R8A8;
+            shader = BGRALayerProgramType;
             break;
         case gfxASurface::ImageFormatRGB24:
             // Treat RGB24 surfaces as RGBA32 except for the shader
             // program used.
             format = LOCAL_GL_RGBA;
             type = LOCAL_GL_UNSIGNED_BYTE;
-            surfaceFormat = FORMAT_B8G8R8X8;
+            shader = BGRXLayerProgramType;
             break;
         case gfxASurface::ImageFormatRGB16_565:
             format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-            surfaceFormat = FORMAT_R5G6B5;
+            shader = RGBALayerProgramType;
             break;
         case gfxASurface::ImageFormatA8:
             format = LOCAL_GL_LUMINANCE;
             type = LOCAL_GL_UNSIGNED_BYTE;
-            surfaceFormat = FORMAT_A8;
+            // We don't have a specific luminance shader
+            shader = ShaderProgramType(0);
             break;
         default:
             NS_ASSERTION(false, "Unhandled image surface format!");
             format = 0;
             type = 0;
-            surfaceFormat = FORMAT_UNKNOWN;
+            shader = ShaderProgramType(0);
     }
 
     int32_t stride = imageSurface->Stride();
@@ -2147,7 +2148,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
 
     }
 
-    return surfaceFormat;
+    return shader;
 }
 
 static GLint GetAddressAlignment(ptrdiff_t aAddress)

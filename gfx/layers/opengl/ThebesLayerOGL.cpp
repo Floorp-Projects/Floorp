@@ -134,7 +134,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
     nsRefPtr<gfxImageSurface> surf = 
-      gl()->GetTexImage(mTexImage->GetTextureID(), false, mTexImage->GetTextureFormat());
+      gl()->GetTexImage(mTexImage->GetTextureID(), false, mTexImage->GetShaderProgramType());
     
     WriteSnapshotToDumpFile(mLayer, surf);
   }
@@ -147,12 +147,12 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     if (passes == 2) {
       ShaderProgramOGL* alphaProgram;
       if (pass == 1) {
-        alphaProgram = aManager->GetProgram(ComponentAlphaPass1ProgramType,
+        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass1ProgramType,
                                             mLayer->GetMaskLayer());
         gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       } else {
-        alphaProgram = aManager->GetProgram(ComponentAlphaPass2ProgramType,
+        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass2ProgramType,
                                             mLayer->GetMaskLayer());
         gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
@@ -166,7 +166,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
       // Note BGR: Cairo's image surfaces are always in what
       // OpenGL and our shaders consider BGR format.
       ShaderProgramOGL* basicProgram =
-        aManager->GetProgram(ShaderProgramFromSurfaceFormat(mTexImage->GetTextureFormat()),
+        aManager->GetProgram(mTexImage->GetShaderProgramType(),
                              mLayer->GetMaskLayer());
 
       basicProgram->Activate();
