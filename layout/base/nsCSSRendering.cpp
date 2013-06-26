@@ -3037,18 +3037,28 @@ nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
 }
 
 /* static */ bool
+nsCSSRendering::IsBackgroundImageDecodedForStyleContextAndLayer(
+  const nsStyleBackground *aBackground, uint32_t aLayer)
+{
+  const nsStyleImage* image = &aBackground->mLayers[aLayer].mImage;
+  if (image->GetType() == eStyleImageType_Image) {
+    nsCOMPtr<imgIContainer> img;
+    if (NS_SUCCEEDED(image->GetImageData()->GetImage(getter_AddRefs(img)))) {
+      if (!img->IsDecoded()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/* static */ bool
 nsCSSRendering::AreAllBackgroundImagesDecodedForFrame(nsIFrame* aFrame)
 {
   const nsStyleBackground *bg = aFrame->StyleContext()->StyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
-    const nsStyleImage* image = &bg->mLayers[i].mImage;
-    if (image->GetType() == eStyleImageType_Image) {
-      nsCOMPtr<imgIContainer> img;
-      if (NS_SUCCEEDED(image->GetImageData()->GetImage(getter_AddRefs(img)))) {
-        if (!img->IsDecoded()) {
-          return false;
-        }
-      }
+    if (!IsBackgroundImageDecodedForStyleContextAndLayer(bg, i)) {
+      return false;
     }
   }
   return true;
