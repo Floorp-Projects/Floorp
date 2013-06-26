@@ -237,6 +237,13 @@ public:
                                   const nsRect& aDirtyRect,
                                   nsPoint aPt, uint32_t aBGPaintFlags);
 
+  /**
+   * Determines if any table part has a background image that is currently not
+   * decoded. Does not look into cell contents (ie only table parts).
+   */
+  static bool AnyTablePartHasUndecodedBackgroundImage(nsIFrame* aStart,
+                                                      nsIFrame* aEnd);
+
   /** Get the outer half (i.e., the part outside the height and width of
    *  the table) of the largest segment (?) of border-collapsed border on
    *  the table on each side, or 0 for non border-collapsed tables.
