@@ -324,11 +324,6 @@ let CustomizableUIInternal = {
         continue;
       }
 
-      if (aArea == CustomizableUI.AREA_PANEL) {
-        node.classList.add("panel-contents-button");
-      } else {
-        node.classList.remove("panel-contents-button");
-      }
       this.ensureButtonContextMenu(node, aArea == CustomizableUI.AREA_PANEL);
 
       this.insertWidgetBefore(node, currentNode, container, aArea);
@@ -459,7 +454,6 @@ let CustomizableUIInternal = {
     let document = aPanel.ownerDocument;
 
     for (let btn of aPanel.querySelectorAll("toolbarbutton")) {
-      btn.classList.add("panel-contents-button");
       this.ensureButtonContextMenu(btn, true);
     }
 
@@ -494,12 +488,6 @@ let CustomizableUIInternal = {
       let window = areaNode.ownerDocument.defaultView;
       let container = areaNode.customizationTarget;
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
-
-      if (aArea == CustomizableUI.AREA_PANEL) {
-        widgetNode.classList.add("panel-contents-button");
-      } else {
-        widgetNode.classList.remove("panel-contents-button");
-      }
 
       this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
 
