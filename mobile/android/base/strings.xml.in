@@ -79,14 +79,17 @@
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
-  <string name="pref_category_general">&pref_category_general;</string>
-  <string name="pref_category_privacy">&pref_category_privacy;</string>
-  <string name="pref_category_content">&pref_category_content;</string>
+  <string name="pref_category_customize">&pref_category_customize;</string>
+  <string name="pref_category_display">&pref_category_display;</string>
+  <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
+  <string name="pref_category_vendor">&pref_category_vendor;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
-  <string name="pref_header_general">&pref_header_general;</string>
-  <string name="pref_header_privacy">&pref_header_privacy;</string>
-  <string name="pref_header_content">&pref_header_content;</string>
-  <string name="pref_about_firefox">&pref_about_firefox;</string>
+
+  <string name="pref_header_customize">&pref_header_customize;</string>
+  <string name="pref_header_display">&pref_header_display;</string>
+  <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
+  <string name="pref_header_vendor">&pref_header_vendor;</string>
+
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
   <string name="pref_cookies_menu">&pref_cookies_menu;</string>
@@ -133,6 +136,11 @@
   <string name="pref_update_autodownload_wifi">&pref_update_autodownload_wifi;</string>
   <string name="pref_update_autodownload_disabled">&pref_update_autodownload_disabled;</string>
   <string name="pref_update_autodownload_enabled">&pref_update_autodownload_enabled;</string>
+
+
+  <string name="pref_about_firefox">&pref_about_firefox;</string>
+  <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
+  <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>
 
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
   <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>
