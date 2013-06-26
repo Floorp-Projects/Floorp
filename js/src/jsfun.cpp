@@ -1351,6 +1351,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
     options.setPrincipals(principals)
            .setOriginPrincipals(originPrincipals)
            .setFileAndLine(filename, lineno)
+           .setNoScriptRval(false)
            .setCompileAndGo(true);
 
     unsigned n = args.length() ? args.length() - 1 : 0;
