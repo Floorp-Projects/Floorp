@@ -11,9 +11,6 @@
 #include "frontend/ParseNode.h"
 #include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
-
-#include "frontend/ParseNode-inl.h"
-
 #include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/MIR.h"
@@ -22,6 +19,10 @@
 #ifdef MOZ_VTUNE
 # include "jitprofiling.h"
 #endif
+
+#include "jsfuninlines.h"
+
+#include "frontend/ParseNode-inl.h"
 
 using namespace js;
 using namespace js::frontend;

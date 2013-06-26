@@ -17,7 +17,6 @@
 #include "ion/BaselineFrame-inl.h"
 #include "ion/IonFrameIterator-inl.h"
 
-#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "ArgumentsObject-inl.h"

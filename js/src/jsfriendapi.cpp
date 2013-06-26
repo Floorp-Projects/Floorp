@@ -20,6 +20,7 @@
 
 #include "builtin/TestingFunctions.h"
 
+#include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
