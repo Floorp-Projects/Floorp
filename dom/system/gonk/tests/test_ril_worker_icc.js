@@ -99,6 +99,30 @@ add_test(function test_read_icc_ucs2_string() {
 });
 
 /**
+ * Verify GsmPDUHelper#readDiallingNumber
+ */
+add_test(function test_read_dialling_number() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let str = "123456789";
+
+  helper.readHexOctet = function () {
+    return 0x81;
+  };
+
+  helper.readSwappedNibbleBcdString = function (len) {
+    return str.substring(0, len);
+  };
+
+  for (let i = 0; i < str.length; i++) {
+    do_check_eq(str.substring(0, i - 1), // -1 for the TON
+                helper.readDiallingNumber(i));
+  }
+
+  run_next_test();
+});
+
+/**
  * Verify GsmPDUHelper#read8BitUnpackedToString
  */
 add_test(function test_read_8bit_unpacked_to_string() {
