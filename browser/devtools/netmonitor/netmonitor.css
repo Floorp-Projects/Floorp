@@ -15,6 +15,10 @@
   overflow: auto;
 }
 
+#custom-pane {
+  overflow: auto;
+}
+
 #timings-summary-blocked {
   display: none; /* This doesn't work yet. */
 }
