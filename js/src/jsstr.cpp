@@ -343,7 +343,7 @@ static JSBool
 str_uneval(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str = ValueToSource(cx, args.get(0));
+    JSString *str = ValueToSource(cx, args.handleOrUndefinedAt(0));
     if (!str)
         return false;
 
@@ -3804,7 +3804,7 @@ template JSString *
 js::ToStringSlow<NoGC>(JSContext *cx, Value arg);
 
 JSString *
-js::ValueToSource(JSContext *cx, const Value &v)
+js::ValueToSource(JSContext *cx, HandleValue v)
 {
     JS_CHECK_RECURSION(cx, return NULL);
     assertSameCompartment(cx, v);
@@ -3812,7 +3812,7 @@ js::ValueToSource(JSContext *cx, const Value &v)
     if (v.isUndefined())
         return cx->names().void0;
     if (v.isString())
-        return js_QuoteString(cx, v.toString(), '"');
+        return StringToSource(cx, v.toString());
     if (v.isPrimitive()) {
         /* Special case to preserve negative zero, _contra_ toString. */
         if (v.isDouble() && IsNegativeZero(v.toDouble())) {
@@ -3821,8 +3821,7 @@ js::ValueToSource(JSContext *cx, const Value &v)
 
             return js_NewStringCopyN<CanGC>(cx, js_negzero_ucNstr, 2);
         }
-        RootedValue vRoot(cx, v);
-        return ToString<CanGC>(cx, vRoot);
+        return ToString<CanGC>(cx, v);
     }
 
     RootedValue rval(cx, NullValue());
@@ -3836,6 +3835,12 @@ js::ValueToSource(JSContext *cx, const Value &v)
     }
 
     return ToString<CanGC>(cx, rval);
+}
+
+JSString *
+js::StringToSource(JSContext *cx, JSString *str)
+{
+    return js_QuoteString(cx, str, '"');
 }
 
 bool
