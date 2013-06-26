@@ -118,12 +118,11 @@ WeakMapBase::removeWeakMapFromList(WeakMapBase *weakmap)
 static JSObject *
 GetKeyArg(JSContext *cx, CallArgs &args)
 {
-    Value *vp = &args[0];
-    if (vp->isPrimitive()) {
+    if (args[0].isPrimitive()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return NULL;
     }
-    return &vp->toObject();
+    return &args[0].toObject();
 }
 
 JS_ALWAYS_INLINE bool

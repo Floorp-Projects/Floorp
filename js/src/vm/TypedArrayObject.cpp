@@ -2177,9 +2177,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
                 args.setCallee(cx->compartment()->maybeGlobal()->createArrayFromBuffer<NativeType>());
                 args.setThis(ObjectValue(*bufobj));
-                args[0] = NumberValue(byteOffset);
-                args[1] = Int32Value(lengthInt);
-                args[2] = ObjectValue(*proto);
+                args[0].setNumber(byteOffset);
+                args[1].setInt32(lengthInt);
+                args[2].setObject(*proto);
 
                 if (!Invoke(cx, args))
                     return NULL;
@@ -2869,7 +2869,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         args2.setCallee(global->createDataViewForThis());
         args2.setThis(ObjectValue(*bufobj));
         PodCopy(args2.array(), args.array(), args.length());
-        args2[argc] = ObjectValue(*proto);
+        args2[argc].setObject(*proto);
         if (!Invoke(cx, args2))
             return false;
         args.rval().set(args2.rval());
@@ -3039,7 +3039,7 @@ DataViewObject::write(JSContext *cx, Handle<DataViewObject*> obj,
         return false;
 
     NativeType value;
-    if (!WebIDLCast(cx, args.handleAt(1), &value))
+    if (!WebIDLCast(cx, args[1], &value))
         return false;
 
     bool toLittleEndian = args.length() >= 3 && ToBoolean(args[2]);

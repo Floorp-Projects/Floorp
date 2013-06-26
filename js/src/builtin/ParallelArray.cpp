@@ -170,7 +170,7 @@ ParallelArrayObject::constructHelper(JSContext *cx, MutableHandleFunction ctor, 
     args.setThis(ObjectValue(*result));
 
     for (uint32_t i = 0; i < args0.length(); i++)
-        args[i] = args0[i];
+        args[i].set(args0[i]);
 
     if (!Invoke(cx, args))
         return false;

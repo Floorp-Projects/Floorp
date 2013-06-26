@@ -407,9 +407,9 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
 
     args.setCallee(initializerValue);
     args.setThis(NullValue());
-    args[0] = ObjectValue(*obj);
-    args[1] = locales;
-    args[2] = options;
+    args[0].setObject(*obj);
+    args[1].set(locales);
+    args[2].set(options);
 
     return Invoke(cx, args);
 }
@@ -473,7 +473,7 @@ GetInternals(JSContext *cx, HandleObject obj, MutableHandleObject internals)
 
     args.setCallee(getInternalsValue);
     args.setThis(NullValue());
-    args[0] = ObjectValue(*obj);
+    args[0].setObject(*obj);
 
     if (!Invoke(cx, args))
         return false;
