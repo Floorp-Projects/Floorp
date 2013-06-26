@@ -28,6 +28,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_toolbox_options_disablejs.html \
 		browser_toolbox_options_disablejs_iframe.html \
 		browser_toolbox_highlight.js \
+		browser_toolbox_raise.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
