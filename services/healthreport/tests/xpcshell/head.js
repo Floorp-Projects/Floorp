@@ -19,19 +19,3 @@ do_get_profile();
   Components.utils.import("resource://testing-common/services/healthreport/utils.jsm", ns);
   ns.updateAppInfo();
 }).call(this);
-
-// The hack, it burns. This could go away if extensions code exposed its
-// test environment setup functions as a testing-only JSM. See similar
-// code in Sync's head_helpers.js.
-let gGlobalScope = this;
-function loadAddonManager() {
-  let ns = {};
-  Components.utils.import("resource://gre/modules/Services.jsm", ns);
-  let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
-  let file = do_get_file(head);
-  let uri = ns.Services.io.newFileURI(file);
-  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
-}
-
