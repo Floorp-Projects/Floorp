@@ -358,7 +358,7 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
     static inline void writeBarrierPre(BaseShape *shape);
-    static inline void writeBarrierPost(BaseShape *shape, void *addr);
+    static void writeBarrierPost(BaseShape *shape, void *addr) {}
     static inline void readBarrier(BaseShape *shape);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }
@@ -832,7 +832,7 @@ class Shape : public js::gc::Cell
     JS::Zone *zone() const { return tenuredZone(); }
 
     static inline void writeBarrierPre(Shape *shape);
-    static inline void writeBarrierPost(Shape *shape, void *addr);
+    static void writeBarrierPost(Shape *shape, void *addr) {}
 
     /*
      * All weak references need a read barrier for incremental GC. This getter

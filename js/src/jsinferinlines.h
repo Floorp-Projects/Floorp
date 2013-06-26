@@ -1653,11 +1653,6 @@ TypeObject::writeBarrierPre(TypeObject *type)
 }
 
 inline void
-TypeObject::writeBarrierPost(TypeObject *type, void *addr)
-{
-}
-
-inline void
 TypeObject::readBarrier(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
@@ -1683,11 +1678,6 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
         MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
     }
 #endif
-}
-
-inline void
-TypeNewScript::writeBarrierPost(TypeNewScript *newScript, void *addr)
-{
 }
 
 inline
