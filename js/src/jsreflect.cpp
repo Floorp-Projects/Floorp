@@ -2960,7 +2960,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         return JS_FALSE;
     }
 
-    RootedString src(cx, ToString<CanGC>(cx, args.handleAt(0)));
+    RootedString src(cx, ToString<CanGC>(cx, args[0]));
     if (!src)
         return JS_FALSE;
 
