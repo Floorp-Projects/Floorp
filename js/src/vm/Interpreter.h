@@ -138,7 +138,7 @@ Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, Valu
  * getter/setter calls.
  */
 extern bool
-InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsigned argc, Value *argv,
+InvokeGetterOrSetter(JSContext *cx, JSObject *obj, Value fval, unsigned argc, Value *argv,
                      MutableHandleValue rval);
 
 /*
@@ -150,7 +150,7 @@ InvokeConstructor(JSContext *cx, CallArgs args);
 
 /* See the fval overload of Invoke. */
 extern bool
-InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *argv, Value *rval);
+InvokeConstructor(JSContext *cx, Value fval, unsigned argc, Value *argv, Value *rval);
 
 /*
  * Executes a script with the given scopeChain/this. The 'type' indicates
