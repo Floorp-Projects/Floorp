@@ -213,7 +213,6 @@ let DebuggerController = {
       DebuggerView._handleTabNavigation();
 
       // Discard all the old sources.
-      DebuggerController.SourceScripts.clearCache();
       DebuggerController.Parser.clearCache();
       SourceUtils.clearCache();
       return;
@@ -821,11 +820,11 @@ StackFrames.prototype = {
     // having the whole watch expressions array throw because of a single
     // faulty expression, simply convert it to a string describing the error.
     // There's no other information necessary to be offered in such cases.
-    let sanitizedExpressions = list.map(function(str) {
+    let sanitizedExpressions = list.map((aString) => {
       // Reflect.parse throws when it encounters a syntax error.
       try {
-        Parser.reflectionAPI.parse(str);
-        return str; // Watch expression can be executed safely.
+        Parser.reflectionAPI.parse(aString);
+        return aString; // Watch expression can be executed safely.
       } catch (e) {
         return "\"" + e.name + ": " + e.message + "\""; // Syntax error.
       }
@@ -835,13 +834,13 @@ StackFrames.prototype = {
       this.syncedWatchExpressions =
         this.currentWatchExpressions =
           "[" +
-            sanitizedExpressions.map(function(str)
+            sanitizedExpressions.map((aString) =>
               "eval(\"" +
                 "try {" +
                   // Make sure all quotes are escaped in the expression's syntax,
                   // and add a newline after the statement to avoid comments
                   // breaking the code integrity inside the eval block.
-                  str.replace(/"/g, "\\$&") + "\" + " + "'\\n'" + " + \"" +
+                  aString.replace(/"/g, "\\$&") + "\" + " + "'\\n'" + " + \"" +
                 "} catch (e) {" +
                   "e.name + ': ' + e.message;" + // TODO: Bug 812765, 812764.
                 "}" +
@@ -862,13 +861,9 @@ StackFrames.prototype = {
  * source script cache.
  */
 function SourceScripts() {
-  this._cache = new Map(); // Can't use a WeakMap because keys are strings.
   this._onNewGlobal = this._onNewGlobal.bind(this);
   this._onNewSource = this._onNewSource.bind(this);
   this._onSourcesAdded = this._onSourcesAdded.bind(this);
-  this._onFetch = this._onFetch.bind(this);
-  this._onTimeout = this._onTimeout.bind(this);
-  this._onFinished = this._onFinished.bind(this);
 }
 
 SourceScripts.prototype = {
@@ -944,7 +939,7 @@ SourceScripts.prototype = {
     // ..or the first entry if there's none selected yet after a while
     else {
       window.clearTimeout(this._newSourceTimeout);
-      this._newSourceTimeout = window.setTimeout(function() {
+      this._newSourceTimeout = window.setTimeout(() => {
         // If after a certain delay the preferred source still wasn't received,
         // just give up on waiting and display the first entry.
         if (!container.selectedValue) {
@@ -1009,163 +1004,102 @@ SourceScripts.prototype = {
    *
    * @param object aSource
    *        The source object coming from the active thread.
-   * @param function aCallback
-   *        Function called after the source text has been loaded.
-   * @param function aTimeout
-   *        Function called when the source text takes too long to fetch.
+   * @param function aOnTimeout [optional]
+   *        Function called when the source text takes a long time to fetch,
+   *        but not necessarily failing. Long fetch times don't cause the
+   *        rejection of the returned promise.
+   * @param number aDelay [optional]
+   *        The amount of time it takes to consider a source slow to fetch.
+   *        If unspecified, it defaults to a predefined value.
+   * @return object
+   *         A promise that is resolved after the source text has been fetched.
    */
-  getText: function(aSource, aCallback, aTimeout) {
-    // If already loaded, return the source text immediately.
-    if (aSource.loaded) {
-      aCallback(aSource);
-      return;
+  getTextForSource: function(aSource, aOnTimeout, aDelay = FETCH_SOURCE_RESPONSE_DELAY) {
+    // Fetch the source text only once.
+    if (aSource._fetched) {
+      return aSource._fetched;
     }
 
-    // If the source text takes too long to fetch, invoke a timeout to
-    // avoid blocking any operations.
-    if (aTimeout) {
-      var fetchTimeout = window.setTimeout(() => {
-        aSource._fetchingTimedOut = true;
-        aTimeout(aSource);
-      }, FETCH_SOURCE_RESPONSE_DELAY);
+    let deferred = Promise.defer();
+    aSource._fetched = deferred.promise;
+
+    // If the source text takes a long time to fetch, invoke a callback.
+    if (aOnTimeout) {
+      var fetchTimeout = window.setTimeout(() => aOnTimeout(aSource), aDelay);
     }
 
     // Get the source text from the active thread.
     this.activeThread.source(aSource).source((aResponse) => {
-      if (aTimeout) {
+      if (aOnTimeout) {
         window.clearTimeout(fetchTimeout);
       }
       if (aResponse.error) {
-        Cu.reportError("Error loading: " + aSource.url + "\n" + aResponse.message);
-        return void aCallback(aSource);
+        deferred.reject([aSource, aResponse.message]);
+      } else {
+        deferred.resolve([aSource, aResponse.source]);
       }
-      aSource.loaded = true;
-      aSource.text = aResponse.source;
-      aCallback(aSource);
     });
-  },
 
-  /**
-   * Gets all the fetched sources.
-   *
-   * @return array
-   *         An array containing [url, text] entries for the fetched sources.
-   */
-  getCache: function() {
-    let sources = [];
-    for (let source of this._cache) {
-      sources.push(source);
-    }
-    return sources.sort(([first], [second]) => first > second);
-  },
-
-  /**
-   * Clears all the fetched sources from cache.
-   */
-  clearCache: function() {
-    this._cache.clear();
+    return deferred.promise;
   },
 
   /**
    * Starts fetching all the sources, silently.
    *
    * @param array aUrls
-   *        The urls for the sources to fetch.
-   * @param object aCallbacks [optional]
-   *        An object containing the callback functions to invoke:
-   *          - onFetch: optional, called after each source is fetched
-   *          - onTimeout: optional, called when a source takes too long to fetch
-   *          - onFinished: called when all the sources are fetched
+   *        The urls for the sources to fetch. If fetching a source's text
+   *        takes too long, it will be discarded.
+   * @return object
+   *         A promise that is resolved after source texts have been fetched.
    */
-  fetchSources: function(aUrls, aCallbacks = {}) {
-    this._fetchQueue = new Set();
-    this._fetchCallbacks = aCallbacks;
+  getTextForSources: function(aUrls) {
+    let deferred = Promise.defer();
+    let pending = new Set(aUrls);
+    let fetched = [];
 
-    // Add each new source which needs to be fetched in a queue.
+    // Can't use Promise.all, because if one fetch operation is rejected, then
+    // everything is considered rejected, thus no other subsequent source will
+    // be getting fetched. We don't want that. Something like Q's allSettled
+    // would work like a charm here.
+
+    // Try to fetch as many sources as possible.
     for (let url of aUrls) {
-      if (!this._cache.has(url)) {
-        this._fetchQueue.add(url);
+      let sourceItem = DebuggerView.Sources.getItemByValue(url);
+      let sourceClient = sourceItem.attachment.source;
+      this.getTextForSource(sourceClient, onTimeout).then(onFetch, onError);
+    }
+
+    /* Called if fetching a source takes too long. */
+    function onTimeout(aSource) {
+      onError([aSource]);
+    }
+
+    /* Called if fetching a source finishes successfully. */
+    function onFetch([aSource, aText]) {
+      // If fetching the source has previously timed out, discard it this time.
+      if (!pending.has(aSource.url)) {
+        return;
+      }
+      pending.delete(aSource.url);
+      fetched.push([aSource.url, aText]);
+      maybeFinish();
+    }
+
+    /* Called if fetching a source failed because of an error. */
+    function onError([aSource, aError]) {
+      pending.delete(aSource.url);
+      maybeFinish();
+    }
+
+    /* Called every time something interesting happens while fetching sources. */
+    function maybeFinish() {
+      if (pending.size == 0) {
+        deferred.resolve(fetched.sort(([aFirst], [aSecond]) => aFirst > aSecond));
       }
     }
 
-    // If all the sources were already fetched, don't do anything special.
-    if (this._fetchQueue.size == 0) {
-      this._onFinished();
-      return;
-    }
-
-    // Start fetching each new source.
-    for (let url of this._fetchQueue) {
-      let sourceItem = DebuggerView.Sources.getItemByValue(url);
-      let sourceObject = sourceItem.attachment.source;
-      this.getText(sourceObject, this._onFetch, this._onTimeout);
-    }
-  },
-
-  /**
-   * Called when a source has been fetched via fetchSources().
-   *
-   * @param object aSource
-   *        The source object coming from the active thread.
-   */
-  _onFetch: function(aSource) {
-    // Remember the source in a cache so we don't have to fetch it again.
-    this._cache.set(aSource.url, aSource.text);
-
-    // Fetch completed before timeout, remove the source from the fetch queue.
-    this._fetchQueue.delete(aSource.url);
-
-    // If this fetch was eventually completed at some point after a timeout,
-    // don't call any subsequent event listeners.
-    if (aSource._fetchingTimedOut) {
-      return;
-    }
-
-    // Invoke the source fetch callback if provided via fetchSources();
-    if (this._fetchCallbacks.onFetch) {
-      this._fetchCallbacks.onFetch(aSource);
-    }
-
-    // Check if all sources were fetched and stored in the cache.
-    if (this._fetchQueue.size == 0) {
-      this._onFinished();
-    }
-  },
-
-  /**
-   * Called when a source's text takes too long to fetch via fetchSources().
-   *
-   * @param object aSource
-   *        The source object coming from the active thread.
-   */
-  _onTimeout: function(aSource) {
-    // Remove the source from the fetch queue.
-    this._fetchQueue.delete(aSource.url);
-
-    // Invoke the source timeout callback if provided via fetchSources();
-    if (this._fetchCallbacks.onTimeout) {
-      this._fetchCallbacks.onTimeout(aSource);
-    }
-
-    // Check if the remaining sources were fetched and stored in the cache.
-    if (this._fetchQueue.size == 0) {
-      this._onFinished();
-    }
-  },
-
-  /**
-   * Called when all the sources have been fetched.
-   */
-  _onFinished: function() {
-    // Invoke the finish callback if provided via fetchSources();
-    if (this._fetchCallbacks.onFinished) {
-      this._fetchCallbacks.onFinished();
-    }
-  },
-
-  _cache: null,
-  _fetchQueue: null,
-  _fetchCallbacks: null
+    return deferred.promise;
+  }
 };
 
 /**
