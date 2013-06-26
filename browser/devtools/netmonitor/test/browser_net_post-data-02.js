@@ -20,8 +20,8 @@ function test() {
       NetMonitorView.toggleDetailsPane({ visible: true }, 2)
       RequestsMenu.selectedIndex = 0;
 
-      let tab = document.querySelectorAll("#details-pane tab")[2];
-      let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+      let tab = document.querySelectorAll("#event-details-pane tab")[2];
+      let tabpanel = document.querySelectorAll("#event-details-pane tabpanel")[2];
 
       is(tab.getAttribute("selected"), "true",
         "The params tab in the network details pane should be selected.");
