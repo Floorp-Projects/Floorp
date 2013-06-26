@@ -6,19 +6,10 @@
 
 #include "nsISupports.idl"
 
-[scriptable, function, uuid(8cbf2dc2-91e0-44bc-984f-553638412071)]
+[scriptable,function, uuid(0bfee0c4-2c24-400e-b18e-b5bb41a032c8)]
 interface mozIStorageCompletionCallback : nsISupports {
   /**
    * Indicates that the event this callback was passed in for has completed.
-   *
-   * @param status
-   *        The status of the call. Generally NS_OK if the operation
-   *        completed successfully.
-   * @param value
-   *        If the operation produces a result, the result. Otherwise,
-   *        |null|.
-   *
-   * @see The calling method for expected values.
    */
-  void complete(in nsresult status, [optional] in nsISupports value);
+  void complete();
 };

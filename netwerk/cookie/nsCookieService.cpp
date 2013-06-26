@@ -559,7 +559,7 @@ public:
   nsRefPtr<DBState> mDBState;
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Complete(nsresult, nsISupports*)
+  NS_IMETHOD Complete()
   {
     gCookieService->HandleDBClosed(mDBState);
     return NS_OK;
