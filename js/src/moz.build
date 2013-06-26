@@ -40,7 +40,6 @@ EXPORTS += [
     'jsdbgapi.h',
     'jsfriendapi.h',
     'jslock.h',
-    'jsperf.h',
     'jsprf.h',
     'jsprototypes.h',
     'jsproxy.h',
@@ -50,6 +49,7 @@ EXPORTS += [
     'jsutil.h',
     'jsversion.h',
     'jswrapper.h',
+    'perf/jsperf.h',
 ]
 
 if CONFIG['HAVE_DTRACE']:
@@ -61,22 +61,22 @@ if CONFIG['HAVE_DTRACE']:
 # that we ensure we don't over-expose our internal integer typedefs.  Note that
 # LegacyIntTypes.h below is deliberately exempted from this requirement.
 EXPORTS.js += [
-    'Anchor.h',
-    'CallArgs.h',
-    'CharacterEncoding.h',
-    'Date.h',
-    'GCAPI.h',
-    'HashTable.h',
-    'HeapAPI.h',
-    'LegacyIntTypes.h',
-    'MemoryMetrics.h',
-    'PropertyKey.h',
-    'RequiredDefines.h',
-    'RootingAPI.h',
-    'TemplateLib.h',
-    'Utility.h',
-    'Value.h',
-    'Vector.h',
+    '../public/Anchor.h',
+    '../public/CallArgs.h',
+    '../public/CharacterEncoding.h',
+    '../public/Date.h',
+    '../public/GCAPI.h',
+    '../public/HashTable.h',
+    '../public/HeapAPI.h',
+    '../public/LegacyIntTypes.h',
+    '../public/MemoryMetrics.h',
+    '../public/PropertyKey.h',
+    '../public/RequiredDefines.h',
+    '../public/RootingAPI.h',
+    '../public/TemplateLib.h',
+    '../public/Utility.h',
+    '../public/Value.h',
+    '../public/Vector.h',
 ]
 
 CPP_SOURCES += [
