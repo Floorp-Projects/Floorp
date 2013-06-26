@@ -1522,7 +1522,7 @@
                   class="click-to-play-plugins-notification-button-container"
                   pack="center" align="center">
           <xul:button anonid="primarybutton"
-                      class="click-to-play-popup-button primary-button"
+                      class="click-to-play-popup-button"
                       oncommand="document.getBindingParent(this)._onButton(this)"
                       flex="1"/>
           <xul:button anonid="secondarybutton"
