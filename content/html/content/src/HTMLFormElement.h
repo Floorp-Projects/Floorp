@@ -21,13 +21,6 @@
 #include "nsDataHashtable.h"
 #include "nsAsyncDOMEvent.h"
 
-// Including 'windows.h' will #define GetClassInfo to something else.
-#ifdef XP_WIN
-#ifdef GetClassInfo
-#undef GetClassInfo
-#endif
-#endif
-
 class nsIMutableArray;
 class nsIURI;
 
@@ -288,8 +281,6 @@ public:
    * @note This method might disappear with bug 592124, hopefuly.
    */
   bool CheckValidFormSubmission();
-
-  virtual nsXPCClassInfo* GetClassInfo() MOZ_OVERRIDE;
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 

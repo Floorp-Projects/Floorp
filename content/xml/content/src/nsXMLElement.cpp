@@ -17,13 +17,10 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, already_AddRefed<nsINodeInfo> 
   return NS_OK;
 }
 
-DOMCI_NODE_DATA(Element, nsXMLElement)
-
 // QueryInterface implementation for nsXMLElement
 NS_INTERFACE_TABLE_HEAD(nsXMLElement)
   NS_INTERFACE_TABLE_INHERITED2(nsXMLElement, nsIDOMNode, nsIDOMElement)
   NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Element)
 NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(nsXMLElement, Element)

@@ -50,7 +50,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIHTMLDocument.h"
-#include "mozilla/dom/Element.h" // DOMCI_NODE_DATA
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
 
 using namespace mozilla;

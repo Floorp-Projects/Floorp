@@ -1699,10 +1699,8 @@ NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
                                  new nsTouchEventReceiverTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIInlineEventHandlers,
                                  new nsInlineEventHandlersTearoff(this))
-  // nsNodeSH::PreCreate() depends on the identity pointer being the
-  // same as nsINode (which nsIContent inherits), so if you change the
-  // below line, make sure nsNodeSH::PreCreate() still does the right
-  // thing!
+  // DOM bindings depend on the identity pointer being the
+  // same as nsINode (which nsIContent inherits).
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
