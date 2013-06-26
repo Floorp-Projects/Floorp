@@ -387,7 +387,7 @@ public class GeckoAppShell
             sWaitingForEventAck = true;
             while (true) {
                 try {
-                    sEventAckLock.wait(100);
+                    sEventAckLock.wait(1000);
                 } catch (InterruptedException ie) {
                 }
                 if (!sWaitingForEventAck) {
@@ -396,11 +396,6 @@ public class GeckoAppShell
                 }
                 long waited = SystemClock.uptimeMillis() - time;
                 Log.d(LOGTAG, "Gecko event sync taking too long: " + waited + "ms");
-                if (isUiThread && waited >= 4000) {
-                    Log.w(LOGTAG, "Gecko event sync took too long, aborting!", new Exception());
-                    sWaitingForEventAck = false;
-                    break;
-                }
             }
         }
     }
