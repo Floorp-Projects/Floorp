@@ -4,24 +4,26 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional SpeechRecognitionErrorInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+enum SpeechRecognitionErrorCode {
+  "no-speech",
+  "aborted",
+  "audio-capture",
+  "network",
+  "not-allowed",
+  "service-not-allowed",
+  "bad-grammar",
+  "language-not-supported"
+};
+
+[Constructor(DOMString type, optional SpeechRecognitionErrorInit eventInitDict)]
 interface SpeechRecognitionError : Event
 {
-  const unsigned long NO_SPEECH = 0;
-  const unsigned long ABORTED = 1;
-  const unsigned long AUDIO_CAPTURE = 2;
-  const unsigned long NETWORK = 3;
-  const unsigned long NOT_ALLOWED = 4;
-  const unsigned long SERVICE_NOT_ALLOWED = 5;
-  const unsigned long BAD_GRAMMAR = 6;
-  const unsigned long LANGUAGE_NOT_SUPPORTED = 7;
-
-  readonly attribute unsigned long error;
+  readonly attribute SpeechRecognitionErrorCode error;
   readonly attribute DOMString? message;
 };
 
 dictionary SpeechRecognitionErrorInit : EventInit
 {
-  unsigned long error = 0;
+  SpeechRecognitionErrorCode error = "no-speech";
   DOMString message = "";
 };

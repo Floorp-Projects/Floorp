@@ -28,7 +28,7 @@
 #include "nsISpeechRecognitionService.h"
 #include "endpointer.h"
 
-#include "nsIDOMSpeechRecognitionError.h"
+#include "mozilla/dom/SpeechRecognitionError.h"
 
 struct JSContext;
 class nsIDOMWindow;
@@ -127,7 +127,7 @@ public:
     EVENT_COUNT
   };
 
-  void DispatchError(EventType aErrorType, int aErrorCode, const nsAString& aMessage);
+  void DispatchError(EventType aErrorType, SpeechRecognitionErrorCode aErrorCode, const nsAString& aMessage);
   uint32_t FillSamplesBuffer(const int16_t* aSamples, uint32_t aSampleCount);
   uint32_t SplitSamplesBuffer(const int16_t* aSamplesBuffer, uint32_t aSampleCount, nsTArray<already_AddRefed<SharedBuffer> >& aResult);
   AudioSegment* CreateAudioSegment(nsTArray<already_AddRefed<SharedBuffer> >& aChunks);
@@ -284,7 +284,7 @@ public:
   NS_IMETHOD Run() MOZ_OVERRIDE;
   AudioSegment* mAudioSegment;
   nsRefPtr<SpeechRecognitionResultList> mRecognitionResultList; // TODO: make this a session being passed which also has index and stuff
-  nsCOMPtr<nsIDOMSpeechRecognitionError> mError;
+  nsRefPtr<SpeechRecognitionError> mError;
 
   friend class SpeechRecognition;
 private:
