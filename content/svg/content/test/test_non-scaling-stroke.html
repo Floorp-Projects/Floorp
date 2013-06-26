@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=829085
+-->
+<head>
+  <title>Test for Bug 829085 - non-scaling-stroke hit testing</title>
+  <meta charset="utf-8"></meta>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=829085">Mozilla Bug 829085 - non-scaling-stroke hit testing</a>
+<p id="display"></p>
+<div id="content">
+
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="300" height="250">
+    <rect width="100%" height="100%" fill="none" stroke-width="4" stroke="blue"/>
+    <style>
+      line:hover { stroke: lime; }
+    </style>
+    <g transform="scale(1.3) translate(100, -80) rotate(45)">
+      <line id="line" stroke="teal" stroke-width="120px"
+            x1="50" y1="130" x2="200" y2="130"
+            vector-effect="non-scaling-stroke"></line>
+    </g>
+  </svg>
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  function startTest() {
+    SimpleTest.waitForFocus(function() {
+        disableNonTestMouseEvents(true);
+        var line = document.getElementById('line');
+        // Send a click
+        synthesizeMouseExpectEvent($("svg"), 170, 100, { },
+                                   $("line"), "click",
+                                   "Testing mouse event on non-scaling-stroke");
+        disableNonTestMouseEvents(false);
+        SimpleTest.finish();
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(startTest);
+
+</script>
+</pre>
+</body>
+</html>

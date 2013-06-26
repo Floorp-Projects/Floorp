@@ -1195,7 +1195,6 @@ Interpret(JSContext *cx, RunState &state)
     RootedScript rootScript0(cx);
     DebugOnly<uint32_t> blockDepth;
 
-#if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
         JS_ASSERT(size_t(regs.pc - script->code) <= script->length);
         JS_ASSERT(regs.stackDepth() <= script->nslots);
@@ -1209,7 +1208,6 @@ Interpret(JSContext *cx, RunState &state)
             goto error;
         }
     }
-#endif
 
     /* State communicated between non-local jumps: */
     bool interpReturnOK;
@@ -3050,7 +3048,6 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 }
 END_CASE(JSOP_LEAVEBLOCK)
 
-#if JS_HAS_GENERATORS
 BEGIN_CASE(JSOP_GENERATOR)
 {
     JS_ASSERT(!cx->isExceptionPending());
@@ -3094,7 +3091,6 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     regs.sp--;
 }
 END_CASE(JSOP_ARRAYPUSH)
-#endif /* JS_HAS_GENERATORS */
 
           default:
           {
@@ -3149,11 +3145,9 @@ END_CASE(JSOP_ARRAYPUSH)
               case JSTRY_CATCH:
                   JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK);
 
-#if JS_HAS_GENERATORS
                 /* Catch cannot intercept the closing of a generator. */
                   if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))
                     break;
-#endif
 
                 /*
                  * Don't clear exceptions to save cx->exception from GC
@@ -3196,14 +3190,12 @@ END_CASE(JSOP_ARRAYPUSH)
          * is an asynchronous return from a generator.
          */
         interpReturnOK = false;
-#if JS_HAS_GENERATORS
         if (JS_UNLIKELY(cx->isExceptionPending() &&
                         cx->getPendingException().isMagic(JS_GENERATOR_CLOSING))) {
             cx->clearPendingException();
             interpReturnOK = true;
             regs.fp()->clearReturnValue();
         }
-#endif
     } else {
         UnwindForUncatchableException(cx, regs);
         interpReturnOK = false;

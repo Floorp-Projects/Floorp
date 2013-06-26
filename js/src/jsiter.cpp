@@ -959,10 +959,8 @@ const JSFunctionSpec ElementIteratorObject::methods[] = {
     JS_FS_END
 };
 
-#if JS_HAS_GENERATORS
 static JSBool
 CloseGenerator(JSContext *cx, HandleObject genobj);
-#endif
 
 bool
 js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
@@ -1024,12 +1022,9 @@ js::CloseIterator(JSContext *cx, HandleObject obj)
              */
             ni->props_cursor = ni->props_array;
         }
-    }
-#if JS_HAS_GENERATORS
-    else if (obj->is<GeneratorObject>()) {
+    } else if (obj->is<GeneratorObject>()) {
         return CloseGenerator(cx, obj);
     }
-#endif
     return true;
 }
 
@@ -1320,8 +1315,6 @@ Class StopIterationObject::class_ = {
 
 /*** Generators **********************************************************************************/
 
-#if JS_HAS_GENERATORS
-
 static void
 generator_finalize(FreeOp *fop, JSObject *obj)
 {
@@ -1418,11 +1411,6 @@ GeneratorState::pushInterpreterFrame(JSContext *cx, FrameGuard *)
      * or else some kind of epoch scheme would have to be used.
      */
     GeneratorWriteBarrierPre(cx, gen_);
-
-    /*
-     * Don't change the state until after the frame is successfully pushed
-     * or else we might fail to scan some generator values.
-     */
     gen_->state = futureState_;
 
     gen_->fp->clearSuspended();
@@ -1561,9 +1549,12 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         if (gen->state == JSGEN_OPEN) {
             /*
              * Store the argument to send as the result of the yield
-             * expression.
+             * expression. The generator stack is not barriered, so we need
+             * write barriers here.
              */
+            HeapValue::writeBarrierPre(gen->regs.sp[-1]);
             gen->regs.sp[-1] = arg;
+            HeapValue::writeBarrierPost(cx->runtime(), gen->regs.sp[-1], &gen->regs.sp[-1]);
         }
         futureState = JSGEN_RUNNING;
         break;
@@ -1777,8 +1768,6 @@ static const JSFunctionSpec generator_methods[] = {
     JS_FS_END
 };
 
-#endif /* JS_HAS_GENERATORS */
-
 /* static */ bool
 GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 {
@@ -1820,14 +1809,12 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         global->setReservedSlot(ELEMENT_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
-#if JS_HAS_GENERATORS
     if (global->getSlot(GENERATOR_PROTO).isUndefined()) {
         proto = global->createBlankPrototype(cx, &GeneratorObject::class_);
         if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
             return false;
         global->setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
     }
-#endif
 
     if (global->getPrototype(JSProto_StopIteration).isUndefined()) {
         proto = global->createBlankPrototype(cx, &StopIterationObject::class_);

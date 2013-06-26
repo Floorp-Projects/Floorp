@@ -75,6 +75,8 @@ const TEST_INTERRUPTIBLE_GZIP_URI = NetUtil.newURI(HTTP_BASE +
                                                    TEST_INTERRUPTIBLE_GZIP_PATH);
 
 const TEST_TARGET_FILE_NAME = "test-download.txt";
+const TEST_STORE_FILE_NAME = "test-downloads.json";
+
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryPing.js.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
@@ -182,6 +184,32 @@ function promiseSimpleDownload(aSourceURI) {
     target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
     saver: { type: "copy" },
   });
+}
+
+/**
+ * Returns a new public DownloadList object.
+ *
+ * @return {Promise}
+ * @resolves The newly created DownloadList object.
+ * @rejects JavaScript exception.
+ */
+function promiseNewDownloadList() {
+  // Force the creation of a new public download list.
+  Downloads._promisePublicDownloadList = null;
+  return Downloads.getPublicDownloadList();
+}
+
+/**
+ * Returns a new private DownloadList object.
+ *
+ * @return {Promise}
+ * @resolves The newly created DownloadList object.
+ * @rejects JavaScript exception.
+ */
+function promiseNewPrivateDownloadList() {
+  // Force the creation of a new public download list.
+  Downloads._privateDownloadList = null;
+  return Downloads.getPrivateDownloadList();
 }
 
 /**
@@ -420,4 +448,7 @@ add_task(function test_common_initialize()
       bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_SECOND,
                          TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length);
     });
+
+  // Disable integration with the host application requiring profile access.
+  DownloadIntegration.dontLoad = true;
 });

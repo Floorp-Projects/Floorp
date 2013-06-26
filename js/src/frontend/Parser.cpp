@@ -3692,12 +3692,9 @@ Parser<ParseHandler>::matchInOrOf(bool *isForOfp)
         *isForOfp = false;
         return true;
     }
-    if (tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->names().of) {
-            *isForOfp = true;
-            return true;
-        }
-        tokenStream.ungetToken();
+    if (tokenStream.matchContextualKeyword(context->names().of)) {
+        *isForOfp = true;
+        return true;
     }
     return false;
 }
@@ -3764,13 +3761,9 @@ Parser<FullParseHandler>::forStatement()
     bool isForEach = false;
     unsigned iflags = 0;
 
-    if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->names().each) {
-            iflags = JSITER_FOREACH;
-            isForEach = true;
-        } else {
-            tokenStream.ungetToken();
-        }
+    if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each)) {
+        iflags = JSITER_FOREACH;
+        isForEach = true;
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
@@ -4394,7 +4387,6 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     }
 
     if (isYield) {
-        JS_ASSERT(JS_HAS_GENERATORS);
         if (!abortIfSyntaxParser())
             return null();
 
@@ -4883,13 +4875,11 @@ Parser<FullParseHandler>::expr()
         pn2->initList(pn);
         pn = pn2;
         do {
-#if JS_HAS_GENERATORS
             pn2 = pn->last();
             if (pn2->isKind(PNK_YIELD) && !pn2->isInParens()) {
                 report(ParseError, false, pn2, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
                 return null();
             }
-#endif
             pn2 = assignExpr();
             if (!pn2)
                 return null();
@@ -5158,12 +5148,10 @@ Parser<ParseHandler>::assignExpr()
 {
     JS_CHECK_RECURSION(context, return null());
 
-#if JS_HAS_GENERATORS
     if (tokenStream.matchToken(TOK_YIELD, TSF_OPERAND))
         return returnStatementOrYieldExpression();
     if (tokenStream.hadError())
         return null();
-#endif
 
     // Save the tokenizer state in case we find an arrow function and have to
     // rewind.
@@ -5368,8 +5356,6 @@ Parser<ParseHandler>::unaryExpr()
     }
     return pn;
 }
-
-#if JS_HAS_GENERATORS
 
 /*
  * A dedicated helper for transplanting the comprehension expression E in
@@ -5807,12 +5793,8 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
 
         pn2->setOp(JSOP_ITER);
         pn2->pn_iflags = JSITER_ENUMERATE;
-        if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
-            if (tokenStream.currentToken().name() == context->names().each)
-                pn2->pn_iflags |= JSITER_FOREACH;
-            else
-                tokenStream.ungetToken();
-        }
+        if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each))
+            pn2->pn_iflags |= JSITER_FOREACH;
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
         GenexpGuard<FullParseHandler> guard(this);
@@ -6104,22 +6086,17 @@ Parser<SyntaxParseHandler>::generatorExpr(Node kid)
 static const char js_generator_str[] = "generator";
 
 #endif /* JS_HAS_GENERATOR_EXPRS */
-#endif /* JS_HAS_GENERATORS */
 
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::assignExprWithoutYield(unsigned msg)
 {
-#ifdef JS_HAS_GENERATORS
     GenexpGuard<ParseHandler> yieldGuard(this);
-#endif
     Node res = assignExpr();
     yieldGuard.endBody();
     if (res) {
-#ifdef JS_HAS_GENERATORS
         if (!yieldGuard.checkValidBody(res, msg))
             return null();
-#endif
     }
     return res;
 }
@@ -6141,13 +6118,11 @@ Parser<ParseHandler>::argumentList(Node listNode)
         if (arg0)
             guard.endBody();
 
-#if JS_HAS_GENERATORS
         if (handler.isOperationWithoutParens(argNode, PNK_YIELD) &&
             tokenStream.peekToken() == TOK_COMMA) {
             report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
             return false;
         }
-#endif
 #if JS_HAS_GENERATOR_EXPRS
         if (tokenStream.matchToken(TOK_FOR)) {
             if (!guard.checkValidBody(argNode))
@@ -6375,9 +6350,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         pn = handler.newList(PNK_ARRAY, null(), JSOP_NEWINIT);
         if (!pn)
             return null();
-#if JS_HAS_GENERATORS
         handler.setBlockId(pn, pc->blockidGen);
-#endif
 
         if (tokenStream.matchToken(TOK_RB, TSF_OPERAND)) {
             /*
@@ -6437,7 +6410,6 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 }
             }
 
-#if JS_HAS_GENERATORS
             /*
              * At this point, (index == 0 && missingTrailingComma) implies one
              * element initialiser was parsed.
@@ -6483,7 +6455,6 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 if (!arrayInitializerComprehensionTail(pn))
                     return null();
             }
-#endif /* JS_HAS_GENERATORS */
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
         }
