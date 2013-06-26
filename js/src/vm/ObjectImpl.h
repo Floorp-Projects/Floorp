@@ -1247,24 +1247,24 @@ class ObjectImpl : public gc::Cell
     preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
 
     HeapSlotArray getDenseElements() {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         return HeapSlotArray(elements);
     }
     const Value &getDenseElement(uint32_t idx) {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         MOZ_ASSERT(idx < getDenseInitializedLength());
         return elements[idx];
     }
     bool containsDenseElement(uint32_t idx) {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         return getElementsHeader()->capacity;
     }
 
@@ -1425,9 +1425,9 @@ class ObjectImpl : public gc::Cell
 
     inline JSCompartment *compartment() const;
 
-    // isNativeSlow() is equivalent to isNative(), but isn't inlined.
+    // uninlinedIsNative() is equivalent to isNative(), but isn't inlined.
     inline bool isNative() const;
-    bool isNativeSlow() const;
+    bool uninlinedIsNative() const;
 
     types::TypeObject *type() const {
         MOZ_ASSERT(!hasLazyType());
@@ -1450,9 +1450,9 @@ class ObjectImpl : public gc::Cell
      */
     bool hasLazyType() const { return type_->lazy(); }
 
-    // slotSpanSlow() is the same as slotSpan(), but isn't inlined.
+    // uninlinedSlotSpan() is the same as slotSpan(), but isn't inlined.
     inline uint32_t slotSpan() const;
-    uint32_t slotSpanSlow() const;
+    uint32_t uninlinedSlotSpan() const;
 
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
@@ -1552,11 +1552,11 @@ class ObjectImpl : public gc::Cell
     }
 
     HeapSlot &nativeGetSlotRef(uint32_t slot) {
-        JS_ASSERT(isNativeSlow() && slot < slotSpanSlow());
+        JS_ASSERT(uninlinedIsNative() && slot < uninlinedSlotSpan());
         return getSlotRef(slot);
     }
     const Value &nativeGetSlot(uint32_t slot) const {
-        JS_ASSERT(isNativeSlow() && slot < slotSpanSlow());
+        JS_ASSERT(uninlinedIsNative() && slot < uninlinedSlotSpan());
         return getSlot(slot);
     }
 

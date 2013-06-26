@@ -18,13 +18,13 @@
 using namespace js;
 
 bool
-js::ObjectImpl::isNativeSlow() const
+js::ObjectImpl::uninlinedIsNative() const
 {
     return isNative();
 }
 
 uint32_t
-js::ObjectImpl::slotSpanSlow() const
+js::ObjectImpl::uninlinedSlotSpan() const
 {
     return slotSpan();
 }

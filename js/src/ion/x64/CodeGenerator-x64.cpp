@@ -9,9 +9,11 @@
 #include "CodeGenerator-x64.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Shape.h"
 
+#include "jsscriptinlines.h"
+
+#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;

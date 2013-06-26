@@ -405,7 +405,9 @@ class JSObject : public js::ObjectImpl
      */
     static inline bool setSingletonType(JSContext *cx, js::HandleObject obj);
 
+    // uninlinedGetType() is the same as getType(), but not inlined.
     inline js::types::TypeObject* getType(JSContext *cx);
+    js::types::TypeObject* uninlinedGetType(JSContext *cx);
 
     const js::HeapPtr<js::types::TypeObject> &typeFromGC() const {
         /* Direct field access for use by GC. */
@@ -424,15 +426,17 @@ class JSObject : public js::ObjectImpl
      *    If obj is a proxy and the proto is lazy, this code may allocate or
      *    GC in order to compute the proto. Currently, it will not run JS code.
      */
-    bool isProxySlow() const;
+    bool uninlinedIsProxy() const;
     JSObject *getProto() const {
-        JS_ASSERT(!isProxySlow());
+        JS_ASSERT(!uninlinedIsProxy());
         return js::ObjectImpl::getProto();
     }
     static inline bool getProto(JSContext *cx, js::HandleObject obj,
                                 js::MutableHandleObject protop);
 
+    // uninlinedSetType() is the same as setType(), but not inlined.
     inline void setType(js::types::TypeObject *newType);
+    void uninlinedSetType(js::types::TypeObject *newType);
 
     js::types::TypeObject *getNewType(JSContext *cx, js::Class *clasp, JSFunction *fun = NULL);
 
@@ -555,7 +559,7 @@ class JSObject : public js::ObjectImpl
     }
 
     uint32_t getDenseCapacity() {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         JS_ASSERT(getElementsHeader()->capacity >= getElementsHeader()->initializedLength);
         return getElementsHeader()->capacity;
     }
@@ -578,7 +582,7 @@ class JSObject : public js::ObjectImpl
     inline void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count);
 
     bool shouldConvertDoubleElements() {
-        JS_ASSERT(isNativeSlow());
+        JS_ASSERT(uninlinedIsNative());
         return getElementsHeader()->shouldConvertDoubleElements();
     }
 

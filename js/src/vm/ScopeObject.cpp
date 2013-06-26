@@ -19,6 +19,7 @@
 
 #include "gc/Barrier-inl.h"
 #include "vm/ScopeObject-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::types;

@@ -6,6 +6,9 @@
 
 /* Inline members for javascript type inference. */
 
+#ifndef jsinferinlines_h
+#define jsinferinlines_h
+
 #include "mozilla/PodOperations.h"
 
 #include "jsarray.h"
@@ -26,12 +29,9 @@
 #include "vm/StringObject.h"
 
 #include "jsanalyzeinlines.h"
+#include "jscntxtinlines.h"
 
 #include "gc/Barrier-inl.h"
-#include "vm/Stack-inl.h"
-
-#ifndef jsinferinlines_h
-#define jsinferinlines_h
 
 inline bool
 js::TaggedProto::isObject() const
@@ -925,7 +925,7 @@ SetInitializerObjectType(JSContext *cx, HandleScript script, jsbytecode *pc, Han
         types::TypeObject *type = TypeScript::InitObject(cx, script, pc, key);
         if (!type)
             return false;
-        obj->setType(type);
+        obj->uninlinedSetType(type);
     }
 
     return true;
@@ -1497,7 +1497,7 @@ TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i) const
         JSObject *singleton = getSingleObject(i);
         if (!singleton)
             return NULL;
-        type = singleton->getType(cx);
+        type = singleton->uninlinedGetType(cx);
         if (!type)
             cx->compartment()->types.setPendingNukeTypes(cx);
     }
