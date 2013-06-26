@@ -109,27 +109,6 @@ function synthesizeCharAtPoint(aX, aY, aWindow)
 }
 
 /**
- * Synthesize a selection set event.
- *
- * @param aOffset  The character offset.  0 means the first character in the
- *                 selection root.
- * @param aLength  The length of the text.  If the length is too long,
- *                 the extra length is ignored.
- * @param aReverse If true, the selection is from |aOffset + aLength| to
- *                 |aOffset|.  Otherwise, from |aOffset| to |aOffset + aLength|.
- * @param aWindow  Optional (If null, current |window| will be used)
- * @return         True, if succeeded.  Otherwise false.
- */
-function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow)
-{
-  var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return false;
-  }
-  return utils.sendSelectionSetEvent(aOffset, aLength, aReverse);
-}
-
-/**
  * Emulate a dragstart event.
  *  element - element to fire the dragstart event on
  *  expectedDragData - the data you expect the data transfer to contain afterwards
