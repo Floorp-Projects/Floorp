@@ -22,7 +22,7 @@ pref("metro.debug.selection.dumpRanges", false);
 pref("metro.debug.selection.dumpEvents", false);
 
 // Enable off main thread compositing
-pref("layers.offmainthreadcomposition.enabled", false);
+pref("layers.offmainthreadcomposition.enabled", true);
 
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);
