@@ -6,10 +6,6 @@
 #endif
  */
 
-// One of the possible values for the mousewheel.* preferences.
-// From nsEventStateManager.cpp.
-const MOUSE_SCROLL_ZOOM = 3;
-
 /**
  * Controls the "full zoom" setting and its site-specific preferences.
  */
@@ -22,6 +18,10 @@ var FullZoom = {
 
   // browser.zoom.updateBackgroundTabs preference cache
   updateBackgroundTabs: undefined,
+
+  // One of the possible values for the mousewheel.* preferences.
+  // From nsEventStateManager.h.
+  ACTION_ZOOM: 3,
 
   // Incremented each time the zoom is changed so that operations that change
   // the zoom asynchronously don't clobber more recent zoom changes.  See
@@ -116,7 +116,7 @@ var FullZoom = {
     // Don't do anything if this isn't a "zoom" scroll event.
     var isZoomEvent = false;
     try {
-      isZoomEvent = (gPrefService.getIntPref(pref) == MOUSE_SCROLL_ZOOM);
+      isZoomEvent = (gPrefService.getIntPref(pref) == this.ACTION_ZOOM);
     } catch (e) {}
     if (!isZoomEvent)
       return;
