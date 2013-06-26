@@ -404,6 +404,20 @@
 # define MOZ_NONHEAP_CLASS /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
+/*
+ * MOZ_THIS_IN_INITIALIZER_LIST is used to avoid a warning when we know that
+ * it's safe to use 'this' in an initializer list.
+ */
+#ifdef _MSC_VER
+#  define MOZ_THIS_IN_INITIALIZER_LIST() \
+     __pragma(warning(push)) \
+     __pragma(warning(disable:4355)) \
+     this \
+     __pragma(warning(pop))
+#else
+#  define MOZ_THIS_IN_INITIALIZER_LIST() this
+#endif
+
 #endif /* __cplusplus */
 
 #endif  /* mozilla_Attributes_h_ */
