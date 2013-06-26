@@ -2962,7 +2962,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         for overload in self._overloads:
             inOptionalArguments = False
             variadicArgument = None
-            sawOptionalWithNoDefault = False
 
             arguments = overload.arguments
             for (idx, argument) in enumerate(arguments):
@@ -3003,18 +3002,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                     raise WebIDLError("Non-optional argument after optional "
                                       "arguments",
                                       [argument.location])
-                # Once we see an argument with no default value, there can
-                # be no more default values.
-                if sawOptionalWithNoDefault and argument.defaultValue:
-                    raise WebIDLError("Argument with default value after "
-                                      "optional arguments with no default "
-                                      "values",
-                                      [argument.location])
                 inOptionalArguments = argument.optional
                 if argument.variadic:
                     variadicArgument = argument
-                sawOptionalWithNoDefault = (argument.optional and
-                                            not argument.defaultValue)
 
             returnType = overload.returnType
             if returnType.isComplete():
