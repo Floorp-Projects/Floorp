@@ -283,7 +283,7 @@ JS_ALWAYS_INLINE bool
 InterpreterStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                                   HandleScript script, InitialFrameFlags initial)
 {
-    JSFunction *callee = &args.callee().as<JSFunction>();
+    RootedFunction callee(cx, &args.callee().as<JSFunction>());
     JS_ASSERT(regs.sp == args.end());
     JS_ASSERT(callee->nonLazyScript() == script);
 

@@ -2694,7 +2694,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
     if (!lambda.is<JSFunction>())
         return true;
 
-    JSFunction *fun = &lambda.as<JSFunction>();
+    RootedFunction fun(cx, &lambda.as<JSFunction>());
     if (!fun->isInterpreted())
         return true;
 
