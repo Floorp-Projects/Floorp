@@ -204,7 +204,6 @@ nsHTMLDocument::nsHTMLDocument()
 nsHTMLDocument::~nsHTMLDocument()
 {
   mAll = nullptr;
-  NS_DROP_JS_OBJECTS(this, nsHTMLDocument);
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
@@ -2704,7 +2703,7 @@ nsHTMLDocument::GetAll(JSContext* aCx, ErrorResult& aRv)
     JS_SetPrivate(mAll, static_cast<nsINode*>(this));
     NS_ADDREF_THIS();
 
-    NS_HOLD_JS_OBJECTS(this, nsHTMLDocument);
+    PreserveWrapper(static_cast<nsINode*>(this));
   }
 
   return mAll;
