@@ -165,7 +165,15 @@ namespace js {
  * an error, otherwise returning a new string reference.
  */
 extern JSString *
-ValueToSource(JSContext *cx, const js::Value &v);
+ValueToSource(JSContext *cx, HandleValue v);
+
+/*
+ * Convert a JSString to its source expression; returns null after reporting an
+ * error, otherwise returns a new string reference. No Handle needed since the
+ * input is dead after the GC.
+ */
+extern JSString *
+StringToSource(JSContext *cx, JSString *str);
 
 /*
  * Test if strings are equal. The caller can call the function even if str1
