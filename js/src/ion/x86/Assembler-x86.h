@@ -256,6 +256,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::cmpl;
     using AssemblerX86Shared::call;
     using AssemblerX86Shared::push;
+    using AssemblerX86Shared::pop;
 
     static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -280,6 +281,11 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel pushWithPatch(const ImmWord &word) {
         push(Imm32(word.value));
         return masm.currentOffset();
+    }
+
+    void pop(const FloatRegister &src) {
+        movsd(Operand(StackPointer, 0), src);
+        addl(Imm32(sizeof(double)), StackPointer);
     }
 
     CodeOffsetLabel movWithPatch(const ImmWord &word, const Register &dest) {

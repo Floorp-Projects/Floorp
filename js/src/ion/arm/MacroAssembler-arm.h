@@ -990,6 +990,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_push(reg);
     }
     void pushValue(const Address &addr);
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
+    void Pop(const ValueOperand &val) {
+        popValue(val);
+        framePushed_ -= sizeof(Value);
+    }
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
     void storePayload(const Value &val, Register base, Register index, int32_t shift = defaultShift);
