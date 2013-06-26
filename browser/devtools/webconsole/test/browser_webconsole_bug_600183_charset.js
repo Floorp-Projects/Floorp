@@ -41,20 +41,12 @@ function test()
     browser.removeEventListener("load", onLoad, true);
 
     openConsole(null, function(hud) {
-      hud.ui.saveRequestAndResponseBodies = true;
+      hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
+        ok(hud.ui._saveRequestAndResponseBodies,
+          "The saveRequestAndResponseBodies property was successfully set.");
 
-      waitForSuccess({
-        name: "saveRequestAndResponseBodies update",
-        validatorFn: function()
-        {
-          return hud.ui.saveRequestAndResponseBodies;
-        },
-        successFn: function()
-        {
-          HUDService.lastFinishedRequestCallback = performTest;
-          content.location = TEST_URI;
-        },
-        failureFn: finishTest,
+        HUDService.lastFinishedRequestCallback = performTest;
+        content.location = TEST_URI;
       });
     });
   }, true);
