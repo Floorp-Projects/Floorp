@@ -1061,10 +1061,65 @@ public:
   }
 #endif
 
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion *aInvalidRegion) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("TableBorderBackground", TYPE_TABLE_BORDER_BACKGROUND)
 };
+
+#ifdef DEBUG
+static bool
+IsFrameAllowedInTable(nsIAtom* aType)
+{
+  return IS_TABLE_CELL(aType) ||
+         nsGkAtoms::tableRowFrame == aType ||
+         nsGkAtoms::tableRowGroupFrame == aType ||
+         nsGkAtoms::scrollFrame == aType ||
+         nsGkAtoms::tableFrame == aType ||
+         nsGkAtoms::tableColFrame == aType ||
+         nsGkAtoms::tableColGroupFrame == aType;
+}
+#endif
+
+/* static */ bool
+nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(nsIFrame* aStart,
+                                                      nsIFrame* aEnd)
+{
+  for (nsIFrame* f = aStart; f != aEnd; f = f->GetNextSibling()) {
+    NS_ASSERTION(IsFrameAllowedInTable(f->GetType()), "unexpected frame type");
+
+    if (!nsCSSRendering::AreAllBackgroundImagesDecodedForFrame(f))
+      return true;
+
+    nsTableCellFrame *cellFrame = do_QueryFrame(f);
+    if (cellFrame)
+      continue;
+
+    if (AnyTablePartHasUndecodedBackgroundImage(f->PrincipalChildList().FirstChild(), nullptr))
+      return true;
+  }
+  
+  return false;
+}
+
+void
+nsDisplayTableBorderBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                          const nsDisplayItemGeometry* aGeometry,
+                                                          nsRegion *aInvalidRegion)
+{
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    if (nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(mFrame, mFrame->GetNextSibling()) ||
+        nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(
+          mFrame->GetChildList(nsIFrame::kColGroupList).FirstChild(), nullptr)) {
+      bool snap;
+      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+    }
+  }
+
+  nsDisplayTableItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
+}
 
 void
 nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
@@ -1175,20 +1230,6 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
 
   aFrame->DisplayOutline(aBuilder, aLists);
 }
-
-#ifdef DEBUG
-static bool
-IsFrameAllowedInTable(nsIAtom* aType)
-{
-  return IS_TABLE_CELL(aType) ||
-         nsGkAtoms::tableRowFrame == aType ||
-         nsGkAtoms::tableRowGroupFrame == aType ||
-         nsGkAtoms::scrollFrame == aType ||
-         nsGkAtoms::tableFrame == aType ||
-         nsGkAtoms::tableColFrame == aType ||
-         nsGkAtoms::tableColGroupFrame == aType;
-}
-#endif
 
 static bool
 AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
