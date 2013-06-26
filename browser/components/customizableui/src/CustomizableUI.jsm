@@ -176,7 +176,7 @@ let CustomizableUIInternal = {
     this.registerArea(CustomizableUI.AREA_ADDONBAR, {
       type: CustomizableUI.TYPE_TOOLBAR,
       legacy: true,
-      defaultPlacements: []
+      defaultPlacements: ["addonbar-closebutton", "status-bar"]
     });
   },
 
