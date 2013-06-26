@@ -4151,10 +4151,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
             return false;
 
         // Create a function MConstant to use in the entry ResumePoint.
-        // Note that guarding is on the original function pointer even
-        // if there is a clone, since cloning occurs at the callsite.
-        JSFunction *original = &originals[i]->as<JSFunction>();
-        MConstant *funcDef = MConstant::New(ObjectValue(*original));
+        MConstant *funcDef = MConstant::New(ObjectValue(*target));
         funcDef->setFoldedUnchecked();
         dispatchBlock->add(funcDef);
 
@@ -4201,7 +4198,10 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
         setCurrent(dispatchBlock);
 
         // Connect the inline path to the returnBlock.
-        dispatch->addCase(original, inlineBlock);
+        //
+        // Note that guarding is on the original function pointer even
+        // if there is a clone, since cloning occurs at the callsite.
+        dispatch->addCase(&originals[i]->as<JSFunction>(), inlineBlock);
 
         MDefinition *retVal = inlineReturnBlock->peek(-1);
         retPhi->addInput(retVal);
