@@ -397,6 +397,12 @@ struct nsCSSRendering {
                                        uint32_t aFlags);
 
   /**
+   * Checks if image in layer aLayer of aBackground is currently decoded.
+   */
+  static bool IsBackgroundImageDecodedForStyleContextAndLayer(
+    const nsStyleBackground *aBackground, uint32_t aLayer);
+
+  /**
    * Checks if all images that are part of the background for aFrame are
    * currently decoded.
    */
