@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'mozIStorageAggregateFunction.idl',
-    'mozIStorageAsyncConnection.idl',
     'mozIStorageAsyncStatement.idl',
     'mozIStorageBaseStatement.idl',
     'mozIStorageBindingParams.idl',

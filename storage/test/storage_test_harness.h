@@ -176,7 +176,7 @@ AsyncStatementSpinner::HandleCompletion(uint16_t aReason)
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::Complete(nsresult, nsISupports*)
+AsyncStatementSpinner::Complete()
 {
   mCompleted = true;
   return NS_OK;
