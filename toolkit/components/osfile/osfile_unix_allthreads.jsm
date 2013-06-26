@@ -138,6 +138,15 @@ if (typeof Components != "undefined") {
       return this.unixErrno == OS.Constants.libc.EBADF;
     }
   });
+  /**
+   * |true| if the error was raised because permission is denied to
+   * access a file or directory, |false| otherwise.
+   */
+  Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
+    get: function becauseAccessDenied() {
+      return this.unixErrno == OS.Constants.libc.EACCES;
+    }
+  });
 
   /**
    * Serialize an instance of OSError to something that can be
