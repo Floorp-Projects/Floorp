@@ -13,6 +13,8 @@
 #include "ion/IonFrameIterator.h"
 #include "ion/LIR.h"
 
+#include "ion/IonFrameIterator-inl.h"
+
 namespace js {
 namespace ion {
 

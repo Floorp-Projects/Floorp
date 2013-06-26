@@ -10,6 +10,7 @@
 
 #include "ion/AsmJS.h"
 #include "ion/Bailouts.h"
+#include "ion/BaselineFrame.h"
 #include "ion/BaselineIC.h"
 #include "ion/BaselineJIT.h"
 #include "ion/BaselineRegisters.h"

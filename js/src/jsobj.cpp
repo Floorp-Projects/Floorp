@@ -47,6 +47,7 @@
 #include "jstypedarrayinlines.h"
 #include "builtin/Iterator-inl.h"
 #include "vm/ArrayObject-inl.h"
+#include "vm/ArgumentsObject-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
@@ -1101,6 +1102,18 @@ extern JSBool
 js_PopulateObject(JSContext *cx, HandleObject newborn, HandleObject props)
 {
     return DefineProperties(cx, newborn, props);
+}
+
+js::types::TypeObject*
+JSObject::uninlinedGetType(JSContext *cx)
+{
+    return getType(cx);
+}
+
+void
+JSObject::uninlinedSetType(js::types::TypeObject *newType)
+{
+    setType(newType);
 }
 
 /* static */ inline unsigned
@@ -5155,7 +5168,7 @@ DumpProperty(JSObject *obj, Shape &shape)
 }
 
 bool
-JSObject::isProxySlow() const
+JSObject::uninlinedIsProxy() const
 {
     return isProxy();
 }
