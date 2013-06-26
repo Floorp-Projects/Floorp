@@ -631,7 +631,7 @@ class MOZ_STACK_CLASS TokenStream
         JS_ALWAYS_TRUE(matchToken(tt));
     }
 
-    bool matchContextualKeyword(PropertyName* keyword) {
+    bool matchContextualKeyword(Handle<PropertyName*> keyword) {
         if (getToken() == TOK_NAME && currentToken().name() == keyword)
             return true;
         ungetToken();
