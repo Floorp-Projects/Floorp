@@ -94,6 +94,15 @@ public:
     return mScrollOffset * LayersPixelsPerCSSPixel();
   }
 
+  /**
+   * Return the scale factor needed to fit the viewport
+   * into its composition bounds.
+   */
+  CSSToScreenScale CalculateIntrinsicScale() const
+  {
+    return CSSToScreenScale(float(mCompositionBounds.width) / float(mViewport.width));
+  }
+
   // ---------------------------------------------------------------------------
   // The following metrics are all in widget space/device pixels.
   //
