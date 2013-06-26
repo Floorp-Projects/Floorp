@@ -103,6 +103,17 @@ public:
     return CSSToScreenScale(float(mCompositionBounds.width) / float(mViewport.width));
   }
 
+  /**
+   * Return the resolution that content should be rendered at given
+   * the configuration in this metrics object: viewport dimensions,
+   * zoom factor, etc. (The mResolution member of this metrics is
+   * ignored.)
+   */
+  CSSToScreenScale CalculateResolution() const
+  {
+    return CalculateIntrinsicScale() * mZoom;
+  }
+
   // ---------------------------------------------------------------------------
   // The following metrics are all in widget space/device pixels.
   //

@@ -350,8 +350,7 @@ TabChild::Observe(nsISupports *aSubject,
         mLastMetrics.mZoom = ScreenToScreenScale(1.0);
         mLastMetrics.mViewport = CSSRect(CSSPoint(), kDefaultViewportSize);
         mLastMetrics.mCompositionBounds = ScreenIntRect(ScreenIntPoint(), mInnerSize);
-        CSSToScreenScale resolution =
-          AsyncPanZoomController::CalculateResolution(mLastMetrics);
+        CSSToScreenScale resolution = mLastMetrics.CalculateResolution();
         // We use ScreenToLayerScale(1) below in order to ask gecko to render
         // what's currently visible on the screen. This is effectively turning
         // the async zoom amount into the gecko zoom amount.
@@ -623,7 +622,7 @@ TabChild::HandlePossibleViewportChange()
     // new CSS viewport, so we know that there's no velocity, acceleration, and
     // we have no idea how long painting will take.
     metrics, gfx::Point(0.0f, 0.0f), gfx::Point(0.0f, 0.0f), 0.0);
-  CSSToScreenScale resolution = AsyncPanZoomController::CalculateResolution(metrics);
+  CSSToScreenScale resolution = metrics.CalculateResolution();
   metrics.mResolution = resolution / metrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
   utils->SetResolution(metrics.mResolution.scale, metrics.mResolution.scale);
 
@@ -1533,8 +1532,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     utils->SetScrollPositionClampingScrollPortSize(
       cssCompositedRect.width, cssCompositedRect.height);
     ScrollWindowTo(window, aFrameMetrics.mScrollOffset);
-    CSSToScreenScale resolution = AsyncPanZoomController::CalculateResolution(
-      aFrameMetrics);
+    CSSToScreenScale resolution = aFrameMetrics.CalculateResolution();
     utils->SetResolution(resolution.scale, resolution.scale);
 
     nsCOMPtr<nsIDOMDocument> domDoc;
