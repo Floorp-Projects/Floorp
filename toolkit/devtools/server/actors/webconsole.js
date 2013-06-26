@@ -89,6 +89,7 @@ function WebConsoleActor(aConnection, aParentActor)
 
   this._protoChains = new Map();
   this._dbgGlobals = new Map();
+  this._netEvents = new Map();
   this._getDebuggerGlobal(this.window);
 
   this._onObserverNotification = this._onObserverNotification.bind(this);
@@ -146,6 +147,15 @@ WebConsoleActor.prototype =
    * @type Map
    */
   _dbgGlobals: null,
+
+  /**
+   * Holds a map between nsIChannel objects and NetworkEventActors for requests
+   * created with sendHTTPRequest.
+   *
+   * @private
+   * @type Map
+   */
+  _netEvents: null,
 
   /**
    * Object that holds the JSTerm API, the helper functions, for the default
@@ -252,6 +262,8 @@ WebConsoleActor.prototype =
                                   "last-pb-context-exited");
     }
     this._actorPool = null;
+
+    this._netEvents.clear();
     this._protoChains.clear();
     this._dbgGlobals.clear();
     this._jstermHelpers = null;
@@ -1000,10 +1012,10 @@ WebConsoleActor.prototype =
    *         A new NetworkEventActor is returned. This is used for tracking the
    *         network request and response.
    */
-  onNetworkEvent: function WCA_onNetworkEvent(aEvent)
+  onNetworkEvent: function WCA_onNetworkEvent(aEvent, aChannel)
   {
-    let actor = new NetworkEventActor(aEvent, this);
-    this._actorPool.addActor(actor);
+    let actor = this.getNetworkEventActor(aChannel);
+    actor.init(aEvent);
 
     let packet = {
       from: this.actorID,
@@ -1014,6 +1026,57 @@ WebConsoleActor.prototype =
     this.conn.send(packet);
 
     return actor;
+  },
+
+  /**
+   * Get the NetworkEventActor for a nsIChannel, if it exists,
+   * otherwise create a new one.
+   *
+   * @param object aChannel
+   *        The channel for the network event.
+   */
+  getNetworkEventActor: function WCA_getNetworkEventActor(aChannel) {
+    let actor = this._netEvents.get(aChannel);
+    if (actor) {
+      // delete from map as we should only need to do this check once
+      this._netEvents.delete(aChannel);
+      actor.channel = null;
+      return actor;
+    }
+
+    actor = new NetworkEventActor(aChannel, this);
+    this._actorPool.addActor(actor);
+    return actor;
+  },
+
+  /**
+   * Send a new HTTP request from the target's window.
+   *
+   * @param object aMessage
+   *        Object with 'request' - the HTTP request details.
+   */
+  onSendHTTPRequest: function WCA_onSendHTTPRequest(aMessage)
+  {
+    let details = aMessage.request;
+
+    // send request from target's window
+    let request = new this._window.XMLHttpRequest();
+    request.open(details.method, details.url, true);
+
+    for (let {name, value} of details.headers) {
+      request.setRequestHeader(name, value);
+    }
+    request.send(details.body);
+
+    let actor = this.getNetworkEventActor(request.channel);
+
+    // map channel to actor so we can associate future events with it
+    this._netEvents.set(request.channel, actor);
+
+    return {
+      from: this.actorID,
+      eventActor: actor.grip()
+    };
   },
 
   /**
@@ -1113,7 +1176,7 @@ WebConsoleActor.prototype =
         });
         break;
     }
-  },
+  }
 };
 
 WebConsoleActor.prototype.requestTypes =
@@ -1125,32 +1188,31 @@ WebConsoleActor.prototype.requestTypes =
   autocomplete: WebConsoleActor.prototype.onAutocomplete,
   clearMessagesCache: WebConsoleActor.prototype.onClearMessagesCache,
   setPreferences: WebConsoleActor.prototype.onSetPreferences,
+  sendHTTPRequest: WebConsoleActor.prototype.onSendHTTPRequest
 };
 
 /**
  * Creates an actor for a network event.
  *
  * @constructor
- * @param object aNetworkEvent
- *        The network event you want to use the actor for.
+ * @param object aChannel
+ *        The nsIChannel associated with this event.
  * @param object aWebConsoleActor
  *        The parent WebConsoleActor instance for this object.
  */
-function NetworkEventActor(aNetworkEvent, aWebConsoleActor)
+function NetworkEventActor(aChannel, aWebConsoleActor)
 {
   this.parent = aWebConsoleActor;
   this.conn = this.parent.conn;
-
-  this._startedDateTime = aNetworkEvent.startedDateTime;
-  this._isXHR = aNetworkEvent.isXHR;
+  this.channel = aChannel;
 
   this._request = {
-    method: aNetworkEvent.method,
-    url: aNetworkEvent.url,
-    httpVersion: aNetworkEvent.httpVersion,
+    method: null,
+    url: null,
+    httpVersion: null,
     headers: [],
     cookies: [],
-    headersSize: aNetworkEvent.headersSize,
+    headersSize: null,
     postData: {},
   };
 
@@ -1164,10 +1226,6 @@ function NetworkEventActor(aNetworkEvent, aWebConsoleActor)
 
   // Keep track of LongStringActors owned by this NetworkEventActor.
   this._longStringActors = new Set();
-
-  this._discardRequestBody = aNetworkEvent.discardRequestBody;
-  this._discardResponseBody = aNetworkEvent.discardResponseBody;
-  this._private = aNetworkEvent.private;
 }
 
 NetworkEventActor.prototype =
@@ -1206,6 +1264,10 @@ NetworkEventActor.prototype =
       }
     }
     this._longStringActors = new Set();
+
+    if (this.channel) {
+      this.parent._netEvents.delete(this.channel);
+    }
     this.parent.releaseActor(this);
   },
 
@@ -1216,6 +1278,27 @@ NetworkEventActor.prototype =
   {
     this.release();
     return {};
+  },
+
+  /**
+   * Set the properties of this actor based on it's corresponding
+   * network event.
+   *
+   * @param object aNetworkEvent
+   *        The network event associated with this actor.
+   */
+  init: function NEA_init(aNetworkEvent)
+  {
+    this._startedDateTime = aNetworkEvent.startedDateTime;
+    this._isXHR = aNetworkEvent.isXHR;
+
+    for (let prop of ['method', 'url', 'httpVersion', 'headersSize']) {
+      this._request[prop] = aNetworkEvent[prop];
+    }
+
+    this._discardRequestBody = aNetworkEvent.discardRequestBody;
+    this._discardResponseBody = aNetworkEvent.discardResponseBody;
+    this._private = aNetworkEvent.private;
   },
 
   /**
@@ -1544,5 +1627,4 @@ NetworkEventActor.prototype.requestTypes =
 
 DebuggerServer.addTabActor(WebConsoleActor, "consoleActor");
 DebuggerServer.addGlobalActor(WebConsoleActor, "consoleActor");
-
 
