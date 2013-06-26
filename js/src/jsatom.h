@@ -135,6 +135,7 @@ extern const char js_break_str[];
 extern const char js_case_str[];
 extern const char js_catch_str[];
 extern const char js_class_str[];
+extern const char js_close_str[];
 extern const char js_const_str[];
 extern const char js_continue_str[];
 extern const char js_debugger_str[];
@@ -159,6 +160,7 @@ extern const char js_package_str[];
 extern const char js_private_str[];
 extern const char js_protected_str[];
 extern const char js_public_str[];
+extern const char js_send_str[];
 extern const char js_setter_str[];
 extern const char js_static_str[];
 extern const char js_super_str[];
@@ -170,10 +172,6 @@ extern const char js_void_str[];
 extern const char js_while_str[];
 extern const char js_with_str[];
 extern const char js_yield_str[];
-#if JS_HAS_GENERATORS
-extern const char   js_close_str[];
-extern const char   js_send_str[];
-#endif
 
 namespace js {
 

@@ -409,7 +409,9 @@ gTests.push({
 
     ////////////////////////////////////////////////////////////
     // Context menu options
-
+    /*
+    XXX disabled temporarily due to bug 880739
+    
     // image01 - 1x1x100x100
     let promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToWindow(win, 10, 10);
@@ -456,7 +458,7 @@ gTests.push({
     purgeEventQueue();
 
     ok(saveLocationPath.exists(), "image saved");
-
+    */
     ////////////////////////////////////////////////////////////
     // Copy image
 
@@ -465,10 +467,10 @@ gTests.push({
     yield promise;
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    menuItem = document.getElementById("context-copy-image");
+    let menuItem = document.getElementById("context-copy-image");
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
-    popupPromise = waitForEvent(document, "popuphidden");
+    let popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;
 

@@ -5476,7 +5476,6 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * JSOP_SETELEM/JSOP_SETPROP would do.
      */
 
-#if JS_HAS_GENERATORS
     if (pn->isKind(PNK_ARRAYCOMP)) {
         if (!EmitNewInit(cx, bce, JSProto_Array, pn))
             return false;
@@ -5496,7 +5495,6 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /* Emit the usual op needed for decompilation. */
         return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
     }
-#endif /* JS_HAS_GENERATORS */
 
     if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
         return EmitSingletonInitialiser(cx, bce, pn);
@@ -5782,7 +5780,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitReturn(cx, bce, pn);
         break;
 
-#if JS_HAS_GENERATORS
       case PNK_YIELD:
         JS_ASSERT(bce->sc->isFunctionBox());
         if (pn->pn_kid) {
@@ -5797,7 +5794,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (Emit1(cx, bce, JSOP_YIELD) < 0)
             return false;
         break;
-#endif
 
       case PNK_STATEMENTLIST:
         ok = EmitStatementList(cx, bce, pn, top);
@@ -5943,7 +5939,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              : EmitVariables(cx, bce, pn, InitializeVars);
         break;
 #endif /* JS_HAS_BLOCK_SCOPE */
-#if JS_HAS_GENERATORS
       case PNK_ARRAYPUSH: {
         int slot;
 
@@ -5962,12 +5957,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
       }
-#endif
 
       case PNK_ARRAY:
-#if JS_HAS_GENERATORS
       case PNK_ARRAYCOMP:
-#endif
         ok = EmitArray(cx, bce, pn);
         break;
 

@@ -1189,7 +1189,7 @@ FilterView.prototype = {
   _doSearch: function(aOperator = "") {
     this._searchbox.focus();
     this._searchbox.value = ""; // Need to clear value beforehand. Bug 779738.
-    this._searchbox.value = aOperator;
+    this._searchbox.value = aOperator + DebuggerView.getEditorSelectionText();
   },
 
   /**
