@@ -22,7 +22,7 @@
         xhr.send(aMessage);
       }
 
-      function performRequest() {
+      function performRequests() {
         var rawData = "Content-Type: application/x-www-form-urlencoded\r\n\r\nfoo=bar&baz=123";
         post("sjs_simple-test-server.sjs", rawData, function() {
           // Done.
