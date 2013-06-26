@@ -77,7 +77,7 @@ public class ProfileInformationCache implements ProfileInformationProvider {
       blocklistEnabled = object.getBoolean("blocklist");
       telemetryEnabled = object.getBoolean("telemetry");
       profileCreationTime = object.getLong("profileCreated");
-      addons = object.optJSONObject("addons");
+      addons = object.getJSONObject("addons");
       return true;
     default:
       Logger.warn(LOG_TAG, "Unable to restore from version " + version + " PIC file: expecting " + FORMAT_VERSION);
@@ -161,6 +161,7 @@ public class ProfileInformationCache implements ProfileInformationProvider {
     } catch (FileNotFoundException e) {
       return false;
     } catch (JSONException e) {
+      Logger.warn(LOG_TAG, "Malformed ProfileInformationCache. Not restoring.");
       return false;
     }
   }
