@@ -1542,7 +1542,7 @@ JSObject *
 js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject *proto,
                                   NewObjectKind newKind /* = GenericObject */)
 {
-    JSObject *res;
+    RootedObject res(cx);
 
     if (proto) {
         RootedTypeObject type(cx, proto->getNewType(cx, &ObjectClass, &callee->as<JSFunction>()));
