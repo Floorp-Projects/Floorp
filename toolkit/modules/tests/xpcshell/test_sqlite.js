@@ -87,6 +87,34 @@ add_task(function test_get_dummy_database() {
   yield db.close();
 });
 
+add_task(function test_schema_version() {
+  let db = yield getDummyDatabase("schema_version");
+
+  let version = yield db.getSchemaVersion();
+  do_check_eq(version, 0);
+
+  db.setSchemaVersion(14);
+  version = yield db.getSchemaVersion();
+  do_check_eq(version, 14);
+
+  for (let v of [0.5, "foobar", NaN]) {
+    let success;
+    try {
+      yield db.setSchemaVersion(v);
+      do_print("Schema version " + v + " should have been rejected");
+      success = false;
+    } catch (ex if ex.message.startsWith("Schema version must be an integer.")) {
+      success = true;
+    }
+    do_check_true(success);
+
+    version = yield db.getSchemaVersion();
+    do_check_eq(version, 14);
+  }
+
+  yield db.close();
+});
+
 add_task(function test_simple_insert() {
   let c = yield getDummyDatabase("simple_insert");
 
@@ -109,8 +137,10 @@ add_task(function test_simple_bound_object() {
   let result = yield c.execute("INSERT INTO dirs VALUES (:id, :path)",
                                {id: 1, path: "foo"});
   do_check_eq(result.length, 0);
-  do_check_eq(c.lastInsertRowID, 1);
-  do_check_eq(c.affectedRows, 1);
+  result = yield c.execute("SELECT id, path FROM dirs");
+  do_check_eq(result.length, 1);
+  do_check_eq(result[0].getResultByName("id"), 1);
+  do_check_eq(result[0].getResultByName("path"), "foo");
   yield c.close();
 });
 
