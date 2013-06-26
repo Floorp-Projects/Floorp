@@ -34,6 +34,17 @@ FutureCallback::~FutureCallback()
   MOZ_COUNT_DTOR(FutureCallback);
 }
 
+static void
+EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
+                 const Optional<JS::Handle<JS::Value> >& aValue)
+{
+  // FIXME Bug 878849
+  if (aValue.WasPassed() && aValue.Value().isObject()) {
+    JS::Rooted<JSObject*> rooted(aCx, &aValue.Value().toObject());
+    aAc.construct(aCx, rooted);
+  }
+}
+
 // ResolveFutureCallback
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ResolveFutureCallback,
@@ -63,12 +74,8 @@ ResolveFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
 {
   // Run resolver's algorithm with value and the synchronous flag set.
   AutoJSContext cx;
-  // FIXME Bug 878849
   Maybe<JSAutoCompartment> ac;
-  if (aValue.WasPassed() && aValue.Value().isObject()) {
-    JS::Rooted<JSObject*> rooted(cx, &aValue.Value().toObject());
-    ac.construct(cx, rooted);
-  }
+  EnterCompartment(ac, cx, aValue);
 
   mResolver->ResolveInternal(cx, aValue, FutureResolver::SyncTask);
 }
@@ -102,12 +109,8 @@ RejectFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
 {
   // Run resolver's algorithm with value and the synchronous flag set.
   AutoJSContext cx;
-  // FIXME Bug 878849
   Maybe<JSAutoCompartment> ac;
-  if (aValue.WasPassed() && aValue.Value().isObject()) {
-    JS::Rooted<JSObject*> rooted(cx, &aValue.Value().toObject());
-    ac.construct(cx, rooted);
-  }
+  EnterCompartment(ac, cx, aValue);
 
   mResolver->RejectInternal(cx, aValue, FutureResolver::SyncTask);
 }
@@ -142,12 +145,8 @@ void
 WrapperFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
 {
   AutoJSContext cx;
-  // FIXME Bug 878849
   Maybe<JSAutoCompartment> ac;
-  if (aValue.WasPassed() && aValue.Value().isObject()) {
-    JS::Rooted<JSObject*> rooted(cx, &aValue.Value().toObject());
-    ac.construct(cx, rooted);
-  }
+  EnterCompartment(ac, cx, aValue);
 
   ErrorResult rv;
 
@@ -162,12 +161,17 @@ WrapperFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
   if (rv.Failed() && rv.IsJSException()) {
     Optional<JS::Handle<JS::Value> > value(cx);
     rv.StealJSException(cx, &value.Value());
+
+    Maybe<JSAutoCompartment> ac2;
+    EnterCompartment(ac2, cx, value);
     mNextResolver->RejectInternal(cx, value, FutureResolver::SyncTask);
     return;
   }
 
   // Otherwise, run resolver's resolve with value and the synchronous flag
   // set.
+  Maybe<JSAutoCompartment> ac2;
+  EnterCompartment(ac2, cx, value);
   mNextResolver->ResolveInternal(cx, value, FutureResolver::SyncTask);
 }
 

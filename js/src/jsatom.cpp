@@ -65,6 +65,7 @@ const char js_break_str[]           = "break";
 const char js_case_str[]            = "case";
 const char js_catch_str[]           = "catch";
 const char js_class_str[]           = "class";
+const char js_close_str[]           = "close";
 const char js_const_str[]           = "const";
 const char js_continue_str[]        = "continue";
 const char js_debugger_str[]        = "debugger";
@@ -89,6 +90,7 @@ const char js_package_str[]         = "package";
 const char js_private_str[]         = "private";
 const char js_protected_str[]       = "protected";
 const char js_public_str[]          = "public";
+const char js_send_str[]            = "send";
 const char js_setter_str[]          = "setter";
 const char js_static_str[]          = "static";
 const char js_super_str[]           = "super";
@@ -100,10 +102,6 @@ const char js_void_str[]            = "void";
 const char js_while_str[]           = "while";
 const char js_with_str[]            = "with";
 const char js_yield_str[]           = "yield";
-#if JS_HAS_GENERATORS
-const char js_close_str[]           = "close";
-const char js_send_str[]            = "send";
-#endif
 
 /*
  * For a browser build from 2007-08-09 after the browser starts up there are

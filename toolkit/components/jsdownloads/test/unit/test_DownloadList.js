@@ -10,35 +10,6 @@
 "use strict";
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Globals
-
-/**
- * Returns a new DownloadList object.
- *
- * @return {Promise}
- * @resolves The newly created DownloadList object.
- * @rejects JavaScript exception.
- */
-function promiseNewDownloadList() {
-  // Force the creation of a new public download list.
-  Downloads._publicDownloadList = null;
-  return Downloads.getPublicDownloadList();
-}
-
-/**
- * Returns a new private DownloadList object.
- *
- * @return {Promise}
- * @resolves The newly created DownloadList object.
- * @rejects JavaScript exception.
- */
-function promiseNewPrivateDownloadList() {
-  // Force the creation of a new public download list.
-  Downloads._privateDownloadList = null;
-  return Downloads.getPrivateDownloadList();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
 /**

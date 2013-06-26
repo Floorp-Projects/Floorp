@@ -151,6 +151,15 @@ if (typeof Components != "undefined") {
       return this.winLastError == exports.OS.Constants.Win.ERROR_INVALID_HANDLE;
     }
   });
+  /**
+   * |true| if the error was raised because permission is denied to
+   * access a file or directory, |false| otherwise.
+   */
+  Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
+    get: function becauseAccessDenied() {
+      return this.winLastError == exports.OS.Constants.Win.ERROR_ACCESS_DENIED;
+    }
+  });
 
   /**
    * Serialize an instance of OSError to something that can be

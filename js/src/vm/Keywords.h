@@ -25,13 +25,6 @@
 #  define FOR_LET_KEYWORD(macro) \
       macro(let, let, TOK_STRICT_RESERVED, JSOP_NOP, JSVERSION_1_7)
 #endif
-#if JS_HAS_GENERATORS
-#  define FOR_YIELD_KEYWORD(macro) \
-      macro(yield, yield, TOK_YIELD, JSOP_NOP, JSVERSION_1_7)
-#else
-#  define FOR_YIELD_KEYWORD(macro) \
-      macro(yield, yield, TOK_STRICT_RESERVED, JSOP_NOP, JSVERSION_1_7)
-#endif
 
 #define FOR_EACH_JAVASCRIPT_KEYWORD(macro) \
     macro(false, false_, TOK_FALSE, JSOP_FALSE, JSVERSION_DEFAULT) \
@@ -79,9 +72,10 @@
     macro(protected, protected_, TOK_STRICT_RESERVED, JSOP_NOP, JSVERSION_DEFAULT) \
     macro(public, public_, TOK_STRICT_RESERVED, JSOP_NOP, JSVERSION_DEFAULT) \
     macro(static, static_, TOK_STRICT_RESERVED, JSOP_NOP, JSVERSION_DEFAULT) \
+    /* ES5 future reserved keyword in strict mode, keyword in JS1.7 even when not strict. */ \
+    macro(yield, yield, TOK_YIELD, JSOP_NOP, JSVERSION_1_7) \
     /* Various conditional keywords. */ \
     FOR_CONST_KEYWORD(macro) \
-    FOR_LET_KEYWORD(macro) \
-    FOR_YIELD_KEYWORD(macro)
+    FOR_LET_KEYWORD(macro)
 
 #endif /* vm_Keywords_h */
