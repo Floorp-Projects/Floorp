@@ -564,7 +564,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                                  PREF_BLOCKLIST_ENABLED
                              },
                              handler);
-        Log.d(LOG_TAG, "Done initializing profile cache. Beginning storage init.");
+        Log.d(LOG_TAG, "Requested prefs.");
     }
 
     @Override
@@ -574,7 +574,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                 Log.d(LOG_TAG, "Got all add-ons.");
                 try {
                     JSONObject addons = message.getJSONObject("json");
-                    Log.d(LOG_TAG, "Persisting " + addons.length() + " add-ons.");
+                    Log.i(LOG_TAG, "Persisting " + addons.length() + " add-ons.");
                     profileCache.setJSONForAddons(addons);
                     profileCache.completeInitialization();
                 } catch (java.io.IOException e) {
