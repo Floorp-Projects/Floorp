@@ -5238,11 +5238,15 @@ let HealthReportStatusListener = {
         if (aAddons) {
           for (let i = 0; i < aAddons.length; ++i) {
             let addon = aAddons[i];
-            let addonJSON = HealthReportStatusListener.jsonForAddon(addon);
-            if (HealthReportStatusListener._shouldIgnore(addon)) {
-              addonJSON.ignore = true;
+            try {
+              let addonJSON = HealthReportStatusListener.jsonForAddon(addon);
+              if (HealthReportStatusListener._shouldIgnore(addon)) {
+                addonJSON.ignore = true;
+              }
+              json[addon.id] = addonJSON;
+            } catch (e) {
+              // Just skip this add-on.
             }
-            json[addon.id] = addonJSON;
           }
         }
         sendMessageToJava({ type: "Addons:All", json: json });
