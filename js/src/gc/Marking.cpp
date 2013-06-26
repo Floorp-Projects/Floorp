@@ -735,9 +735,27 @@ static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
-    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(gcmarker->runtime, thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+        gcmarker->pushObject(thing);
+}
+
+/*
+ * PushMarkStack for BaseShape unpacks its children directly onto the mark
+ * stack. For a pre-barrier between incremental slices, this may result in
+ * objects in the nursery getting pushed onto the mark stack. It is safe to
+ * ignore these objects because they will be marked by the matching
+ * post-barrier during the minor GC at the start of each incremental slice.
+ */
+static void
+MaybePushMarkStackBetweenSlices(GCMarker *gcmarker, JSObject *thing)
+{
+    JSRuntime *rt = gcmarker->runtime;
+    JS_COMPARTMENT_ASSERT(rt, thing);
+    JS_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(rt, thing));
+
+    if (!IsInsideNursery(rt, thing) && thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -853,19 +871,19 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
     base->compartment()->mark();
 
     if (base->hasGetterObject())
-        PushMarkStack(gcmarker, base->getterObject());
+        MaybePushMarkStackBetweenSlices(gcmarker, base->getterObject());
 
     if (base->hasSetterObject())
-        PushMarkStack(gcmarker, base->setterObject());
+        MaybePushMarkStackBetweenSlices(gcmarker, base->setterObject());
 
     if (JSObject *parent = base->getObjectParent()) {
-        PushMarkStack(gcmarker, parent);
+        MaybePushMarkStackBetweenSlices(gcmarker, parent);
     } else if (GlobalObject *global = base->compartment()->maybeGlobal()) {
         PushMarkStack(gcmarker, global);
     }
 
     if (JSObject *metadata = base->getObjectMetadata())
-        PushMarkStack(gcmarker, metadata);
+        MaybePushMarkStackBetweenSlices(gcmarker, metadata);
 
     /*
      * All children of the owned base shape are consistent with its
