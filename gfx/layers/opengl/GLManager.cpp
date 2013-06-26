@@ -47,7 +47,7 @@ public:
     return mImpl->gl();
   }
 
-  virtual ShaderProgramOGL* GetProgram(ShaderProgramType aType) MOZ_OVERRIDE
+  virtual ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType) MOZ_OVERRIDE
   {
     return mImpl->GetProgram(aType);
   }

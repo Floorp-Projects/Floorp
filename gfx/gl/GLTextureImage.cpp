@@ -98,7 +98,7 @@ BasicTextureImage::EndUpdate()
 
     bool relative = FinishedSurfaceUpdate();
 
-    mTextureFormat =
+    mShaderType =
         mGLContext->UploadSurfaceToTexture(mUpdateSurface,
                                            mUpdateRegion,
                                            mTexture,
@@ -156,7 +156,7 @@ BasicTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         region = aRegion;
     }
 
-    mTextureFormat =
+    mShaderType =
         mGLContext->UploadSurfaceToTexture(aSurf,
                                            region,
                                            mTexture,
@@ -268,7 +268,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     } while (NextTile() || (mTextureState != Valid));
     mCurrentImage = oldCurrentImage;
 
-    mTextureFormat = mImages[0]->GetTextureFormat();
+    mShaderType = mImages[0]->GetShaderProgramType();
     mTextureState = Valid;
     return result;
 }
@@ -380,7 +380,7 @@ TiledTextureImage::EndUpdate()
         mImages[mCurrentImage]->EndUpdate();
         mInUpdate = false;
         mTextureState = Valid;
-        mTextureFormat = mImages[mCurrentImage]->GetTextureFormat();
+        mShaderType = mImages[mCurrentImage]->GetShaderProgramType();
         return;
     }
 
@@ -407,7 +407,7 @@ TiledTextureImage::EndUpdate()
 
     mUpdateSurface = nullptr;
     mInUpdate = false;
-    mTextureFormat = mImages[0]->GetTextureFormat();
+    mShaderType = mImages[0]->GetShaderProgramType();
     mTextureState = Valid;
 }
 

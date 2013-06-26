@@ -2014,7 +2014,7 @@ nsChildView::MaybeDrawResizeIndicator(GLManager* aManager, const nsIntRect& aRec
   TextureImage::ScopedBindTexture texBind(mResizerImage, LOCAL_GL_TEXTURE0);
 
   ShaderProgramOGL *program =
-    aManager->GetProgram(mResizerImage->GetTextureFormat());
+    aManager->GetProgram(mResizerImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(bottomX - resizeIndicatorWidth,
                                       bottomY - resizeIndicatorHeight,
@@ -2207,7 +2207,7 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager, const nsIntRect& aRect)
   TextureImage::ScopedBindTexture texBind(mTitlebarImage, LOCAL_GL_TEXTURE0);
 
   ShaderProgramOGL *program =
-    aManager->GetProgram(mTitlebarImage->GetTextureFormat());
+    aManager->GetProgram(mTitlebarImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0),
                                       mTitlebarImage->GetSize()));
@@ -2275,7 +2275,7 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
   
   TextureImage::ScopedBindTexture texBind(mCornerMaskImage, LOCAL_GL_TEXTURE0);
   
-  ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetTextureFormat());
+  ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0),
                                       mCornerMaskImage->GetSize()));

@@ -28,7 +28,7 @@ public:
   CanvasLayerOGL(LayerManagerOGL *aManager)
     : CanvasLayer(aManager, NULL)
     , LayerOGL(aManager)
-    , mLayerProgram(RGBALayerProgramType)
+    , mLayerProgram(gl::RGBALayerProgramType)
     , mTexture(0)
     , mTextureTarget(LOCAL_GL_TEXTURE_2D)
     , mDelayedUpdates(false)
@@ -61,7 +61,7 @@ protected:
 
   nsRefPtr<gfxASurface> mCanvasSurface;
   nsRefPtr<GLContext> mGLContext;
-  ShaderProgramType mLayerProgram;
+  gl::ShaderProgramType mLayerProgram;
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
   GLuint mTexture;
