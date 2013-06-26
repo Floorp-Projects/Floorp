@@ -61,7 +61,10 @@ else:
         'yuv_row_other.cpp',
     ]
 
-if CONFIG['OS_TEST'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
+    ASFILES += [
+        'yuv_row_arm.s',
+    ]
     CPP_SOURCES += [
         'yuv_convert_arm.cpp',
     ]
