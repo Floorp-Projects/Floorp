@@ -250,7 +250,6 @@ TargetEventsHandler.prototype = {
       case "will-navigate": {
         // Reset UI.
         NetMonitorView.RequestsMenu.reset();
-        NetMonitorView.Sidebar.reset();
         NetMonitorView.NetworkDetails.reset();
 
         // Reset global helpers cache.

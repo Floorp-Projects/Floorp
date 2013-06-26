@@ -285,23 +285,6 @@ WebConsoleClient.prototype = {
   },
 
   /**
-   * Send a HTTP request with the given data.
-   *
-   * @param string aData
-   *        The details of the HTTP request.
-   * @param function aOnResponse
-   *        The function invoked when the response is received.
-   */
-  sendHTTPRequest: function WCC_sendHTTPRequest(aData, aOnResponse) {
-    let packet = {
-      to: this._actor,
-      type: "sendHTTPRequest",
-      request: aData
-    };
-    this._client.request(packet, aOnResponse);
-  },
-
-  /**
    * Start the given Web Console listeners.
    *
    * @see this.LISTENERS
