@@ -114,6 +114,11 @@ public:
     return CalculateIntrinsicScale() * mZoom;
   }
 
+  CSSRect CalculateCompositedRectInCssPixels() const
+  {
+    return CSSRect(gfx::RoundedIn(mCompositionBounds / CalculateResolution()));
+  }
+
   // ---------------------------------------------------------------------------
   // The following metrics are all in widget space/device pixels.
   //

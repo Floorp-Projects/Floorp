@@ -1489,8 +1489,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
         return true;
     }
 
-    CSSRect cssCompositedRect =
-      AsyncPanZoomController::CalculateCompositedRectInCssPixels(aFrameMetrics);
+    CSSRect cssCompositedRect = aFrameMetrics.CalculateCompositedRectInCssPixels();
     // The BrowserElementScrolling helper must know about these updated metrics
     // for other functions it performs, such as double tap handling.
     nsCString data;
