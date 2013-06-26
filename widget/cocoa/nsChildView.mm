@@ -1950,8 +1950,8 @@ nsChildView::CreateCompositor()
       compositor::GetLayerManager(mCompositorParent);
     Compositor *compositor = manager->GetCompositor();
 
-    LayersBackend backend = compositor->GetBackend();
-    if (backend == LAYERS_OPENGL) {
+    ClientLayerManager *clientManager = static_cast<ClientLayerManager*>(GetLayerManager());
+    if (clientManager->GetCompositorBackendType() == LAYERS_OPENGL) {
       CompositorOGL *compositorOGL = static_cast<CompositorOGL*>(compositor);
 
       NSOpenGLContext *glContext = (NSOpenGLContext *)compositorOGL->gl()->GetNativeData(GLContext::NativeGLContext);
