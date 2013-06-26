@@ -107,12 +107,10 @@ class LinkedListElement
     LinkedListElement* prev;
     const bool isSentinel;
 
-    LinkedListElement* thisDuringConstruction() { return this; }
-
   public:
     LinkedListElement()
-      : next(thisDuringConstruction()),
-        prev(thisDuringConstruction()),
+      : next(MOZ_THIS_IN_INITIALIZER_LIST()),
+        prev(MOZ_THIS_IN_INITIALIZER_LIST()),
         isSentinel(false)
     { }
 
@@ -201,8 +199,8 @@ class LinkedListElement
     };
 
     LinkedListElement(NodeKind nodeKind)
-      : next(thisDuringConstruction()),
-        prev(thisDuringConstruction()),
+      : next(MOZ_THIS_IN_INITIALIZER_LIST()),
+        prev(MOZ_THIS_IN_INITIALIZER_LIST()),
         isSentinel(nodeKind == NODE_KIND_SENTINEL)
     { }
 

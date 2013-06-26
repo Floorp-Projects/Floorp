@@ -1636,7 +1636,6 @@ struct JSContext : js::ThreadSafeContext,
                    public mozilla::LinkedListElement<JSContext>
 {
     explicit JSContext(JSRuntime *rt);
-    JSContext *thisDuringConstruction() { return this; }
     ~JSContext();
 
     JSRuntime *runtime() const { return runtime_; }
