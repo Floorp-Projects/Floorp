@@ -147,11 +147,6 @@ JSScript::writeBarrierPre(JSScript *script)
 #endif
 }
 
-inline void
-JSScript::writeBarrierPost(JSScript *script, void *addr)
-{
-}
-
 /* static */ inline void
 js::LazyScript::writeBarrierPre(js::LazyScript *lazy)
 {

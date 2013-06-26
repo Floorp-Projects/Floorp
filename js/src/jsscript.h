@@ -1017,7 +1017,7 @@ class JSScript : public js::gc::Cell
     JS::Zone *zone() const { return tenuredZone(); }
 
     static inline void writeBarrierPre(JSScript *script);
-    static inline void writeBarrierPost(JSScript *script, void *addr);
+    static void writeBarrierPost(JSScript *script, void *addr) {}
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
