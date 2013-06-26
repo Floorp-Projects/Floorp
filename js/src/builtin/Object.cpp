@@ -23,25 +23,6 @@ using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
 
 
-// Duplicated in jsobj.cpp
-static bool
-DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
-{
-    AutoIdVector ids(cx);
-    AutoPropDescArrayRooter descs(cx);
-    if (!ReadPropertyDescriptors(cx, props, true, &ids, &descs))
-        return false;
-
-    bool dummy;
-    for (size_t i = 0, len = ids.length(); i < len; i++) {
-        if (!DefineProperty(cx, obj, ids.handleAt(i), descs[i], true, &dummy))
-            return false;
-    }
-
-    return true;
-}
-
-
 JSBool
 js::obj_construct(JSContext *cx, unsigned argc, Value *vp)
 {
