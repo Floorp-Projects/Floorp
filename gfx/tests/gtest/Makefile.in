@@ -23,6 +23,23 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/gfx/2d/unittest \
   $(NULL)
 
+GTEST_CPPSRCS = \
+  TestLayers.cpp \
+  TestTiledLayerBuffer.cpp \
+  TestAsyncPanZoomController.cpp \
+  $(NULL)
+
+# Because of gkmedia on windows we wont find these
+# symbols in xul.dll.
+ifneq ($(MOZ_WIDGET_TOOLKIT),windows)
+GTEST_CPPSRCS += \
+  TestMoz2D.cpp \
+  TestBase.cpp \
+  TestPoint.cpp \
+  TestScaling.cpp \
+  $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

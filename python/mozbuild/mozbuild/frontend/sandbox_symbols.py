@@ -118,27 +118,6 @@ VARIABLES = {
        files will be installed in the /components directory of the distribution.
         """),
 
-    'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
-        """C code source files for GTest unit tests.
-
-        This variable contains a list of C GTEST unit test source files to
-        compile.
-        """),
-
-    'GTEST_CMM_SOURCES': (StrictOrderingOnAppendList, list, [],
-        """Sources for GTest unit tests to compile with the Objective C/C++ compiler.
-
-        This variable contains a list of objective-C++ GTest unit test sources
-        to compile.
-        """),
-
-    'GTEST_CPP_SOURCES': (list, list, [],
-        """C++ source files for GTest unit tests.
-
-        This is a list of C++ GTest unit test sources. Entries must be files
-        that exist. These generally have .cpp, .cc, or .cxx extensions.
-        """),
-
     'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
         """C source files to compile with the host compiler.
 
