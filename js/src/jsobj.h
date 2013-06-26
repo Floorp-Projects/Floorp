@@ -1316,6 +1316,9 @@ DefineProperty(JSContext *cx, js::HandleObject obj,
                js::HandleId id, const PropDesc &desc, bool throwError,
                bool *rval);
 
+bool
+DefineProperties(JSContext *cx, HandleObject obj, HandleObject props);
+
 /*
  * Read property descriptors from props, as for Object.defineProperties. See
  * ES5 15.2.3.7 steps 3-5.
