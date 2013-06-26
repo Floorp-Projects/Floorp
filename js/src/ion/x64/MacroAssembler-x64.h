@@ -450,6 +450,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Address &dest) {
         addq(imm, Operand(dest));
     }
+    void addPtr(Imm32 imm, const Operand &dest) {
+        addq(imm, dest);
+    }
     void addPtr(ImmWord imm, const Register &dest) {
         JS_ASSERT(dest != ScratchReg);
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
