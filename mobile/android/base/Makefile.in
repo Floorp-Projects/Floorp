@@ -572,15 +572,16 @@ RES_VALUES_V14 = \
   $(NULL)
 
 RES_XML = \
-  res/xml/preferences_datareporting.xml \
+  res/xml/preferences_customize.xml \
+  res/xml/preferences_display.xml \
+  res/xml/preferences_privacy.xml \
+  res/xml/preferences_vendor.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
 RES_XML_V11 = \
   res/xml-v11/preference_headers.xml \
-  res/xml-v11/preferences_general.xml \
-  res/xml-v11/preferences_content.xml \
-  res/xml-v11/preferences_privacy.xml \
+  res/xml-v11/preferences_customize_tablet.xml \
   res/xml-v11/preferences.xml \
   $(NULL)
 
