@@ -134,9 +134,7 @@ public class testImportFromAndroid extends PixelTest {
 
     private void importDataFromAndroid() {
         waitForText("Enter Search or Address");
-        selectMenuItem("Settings");
-        waitForText("General");
-        mSolo.clickOnText("Import from Android");
+        selectSettingsItem("Customize", "Import from Android");
 
         // Wait for the Import form Android popup to be opened. It has the same title as the option so waiting for the "Cancel" button
         waitForText("Cancel");
@@ -145,9 +143,16 @@ public class testImportFromAndroid extends PixelTest {
         mSolo.clickOnButton("Import");
 
         // Import has finished. Waiting to get back to the Settings Menu and looking for the Import&Export subsection
-        waitForText("Import & Export");
+        if ("phone".equals(mDevice.type)) {
+            // Phones don't have headers like tablets, so we need to pop up one more level.
+            waitForText("Import from Android");
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        }
+        waitForText("Settings");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
-        waitForText("Enter Search or Address"); // Make sure we are not in the Settings Menu anymore
+        // Make sure the settings menu has been closed.
+        mAsserter.ok(mSolo.waitForText("Enter Search or Address"), "Waiting for search bar", "Search bar found");
+
     }
 
     public ArrayList<String> getAndroidUrls(String data) {
