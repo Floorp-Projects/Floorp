@@ -21,7 +21,7 @@
 #include "EdgeCaseAnalysis.h"
 #include "RangeAnalysis.h"
 #include "LinearScan.h"
-#include "ParallelArrayAnalysis.h"
+#include "ParallelSafetyAnalysis.h"
 #include "jscompartment.h"
 #include "vm/ThreadPool.h"
 #include "vm/ForkJoin.h"
@@ -998,6 +998,12 @@ OptimizeMIR(MIRGenerator *mir)
     if (mir->shouldCancel("Apply types"))
         return false;
 
+    if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
+        ParallelSafetyAnalysis analysis(mir, graph);
+        if (!analysis.analyze())
+            return false;
+    }
+
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
     if (js_IonOptions.licm || js_IonOptions.gvn) {
@@ -1135,12 +1141,6 @@ OptimizeMIR(MIRGenerator *mir)
         return false;
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
-
-    if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
-        ParallelArrayAnalysis analysis(mir, graph);
-        if (!analysis.analyze())
-            return false;
-    }
 
     return true;
 }

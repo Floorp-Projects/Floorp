@@ -9,15 +9,15 @@
 #include "Ion.h"
 #include "MIR.h"
 #include "MIRGraph.h"
-#include "ParallelArrayAnalysis.h"
+#include "ParallelSafetyAnalysis.h"
 #include "IonSpewer.h"
 #include "UnreachableCodeElimination.h"
 #include "IonAnalysis.h"
 
 #include "vm/Stack.h"
 
-namespace js {
-namespace ion {
+using namespace js;
+using namespace ion;
 
 using parallel::Spew;
 using parallel::SpewMIR;
@@ -63,9 +63,8 @@ using parallel::SpewCompile;
         return insertWriteGuard(prop, prop->obj());                           \
     }
 
-class ParallelArrayVisitor : public MInstructionVisitor
+class ParallelSafetyVisitor : public MInstructionVisitor
 {
-    JSContext *cx_;
     MIRGraph &graph_;
     bool unsafe_;
     MDefinition *parSlice_;
@@ -91,9 +90,8 @@ class ParallelArrayVisitor : public MInstructionVisitor
     }
 
   public:
-    ParallelArrayVisitor(JSContext *cx, MIRGraph &graph)
-      : cx_(cx),
-        graph_(graph),
+    ParallelSafetyVisitor(MIRGraph &graph)
+      : graph_(graph),
         unsafe_(false),
         parSlice_(NULL)
     { }
@@ -116,7 +114,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(Callee)
     SAFE_OP(TableSwitch)
     SAFE_OP(Goto)
-    CUSTOM_OP(Test)
+    SAFE_OP(Test)
     SAFE_OP(Compare)
     SAFE_OP(Phi)
     SAFE_OP(Beta)
@@ -300,7 +298,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
 };
 
 bool
-ParallelArrayAnalysis::analyze()
+ParallelSafetyAnalysis::analyze()
 {
     // Walk the basic blocks in a DFS.  When we encounter a block with an
     // unsafe instruction, then we know that this block will bailout when
@@ -309,12 +307,11 @@ ParallelArrayAnalysis::analyze()
     // We don't need a worklist, though, because the graph is sorted
     // in RPO.  Therefore, we just use the marked flags to tell us
     // when we visited some predecessor of the current block.
-    JSContext *cx = GetIonContext()->cx;
-    ParallelArrayVisitor visitor(cx, graph_);
+    ParallelSafetyVisitor visitor(graph_);
     graph_.entryBlock()->mark();  // Note: in par. exec., we never enter from OSR.
     uint32_t marked = 0;
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-        if (mir_->shouldCancel("ParallelArrayAnalysis"))
+        if (mir_->shouldCancel("ParallelSafetyAnalysis"))
             return false;
 
         if (block->isMarked()) {
@@ -326,7 +323,7 @@ ParallelArrayAnalysis::analyze()
             for (MInstructionIterator ins(block->begin());
                  ins != block->end() && !visitor.unsafe();)
             {
-                if (mir_->shouldCancel("ParallelArrayAnalysis"))
+                if (mir_->shouldCancel("ParallelSafetyAnalysis"))
                     return false;
 
                 // We may be removing or replacing the current
@@ -370,12 +367,12 @@ ParallelArrayAnalysis::analyze()
     }
 
     Spew(SpewCompile, "Safe");
-    IonSpewPass("ParallelArrayAnalysis");
+    IonSpewPass("ParallelSafetyAnalysis");
 
     UnreachableCodeElimination uce(mir_, graph_);
     if (!uce.removeUnmarkedBlocks(marked))
         return false;
-    IonSpewPass("UCEAfterParallelArrayAnalysis");
+    IonSpewPass("UCEAfterParallelSafetyAnalysis");
     AssertExtendedGraphCoherency(graph_);
 
     if (!removeResumePointOperands())
@@ -383,16 +380,11 @@ ParallelArrayAnalysis::analyze()
     IonSpewPass("RemoveResumePointOperands");
     AssertExtendedGraphCoherency(graph_);
 
-    if (!EliminateDeadCode(mir_, graph_))
-        return false;
-    IonSpewPass("DCEAfterParallelArrayAnalysis");
-    AssertExtendedGraphCoherency(graph_);
-
     return true;
 }
 
 bool
-ParallelArrayAnalysis::removeResumePointOperands()
+ParallelSafetyAnalysis::removeResumePointOperands()
 {
     // In parallel exec mode, nothing is effectful, therefore we do
     // not need to reconstruct interpreter state and can simply
@@ -432,21 +424,15 @@ ParallelArrayAnalysis::removeResumePointOperands()
 }
 
 void
-ParallelArrayAnalysis::replaceOperandsOnResumePoint(MResumePoint *resumePoint,
-                                                    MDefinition *withDef)
+ParallelSafetyAnalysis::replaceOperandsOnResumePoint(MResumePoint *resumePoint,
+                                                     MDefinition *withDef)
 {
     for (size_t i = 0; i < resumePoint->numOperands(); i++)
         resumePoint->replaceOperand(i, withDef);
 }
 
 bool
-ParallelArrayVisitor::visitTest(MTest *)
-{
-    return true;
-}
-
-bool
-ParallelArrayVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
+ParallelSafetyVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
 {
     JS_ASSERT(unsafe()); // `block` must have contained unsafe items
     JS_ASSERT(block->isMarked()); // `block` must have been reachable to get here
@@ -506,7 +492,7 @@ ParallelArrayVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
 // These allocations will take place using per-helper-thread arenas.
 
 bool
-ParallelArrayVisitor::visitNewParallelArray(MNewParallelArray *ins)
+ParallelSafetyVisitor::visitNewParallelArray(MNewParallelArray *ins)
 {
     MParNew *parNew = new MParNew(parSlice(), ins->templateObject());
     replace(ins, parNew);
@@ -514,7 +500,7 @@ ParallelArrayVisitor::visitNewParallelArray(MNewParallelArray *ins)
 }
 
 bool
-ParallelArrayVisitor::visitNewCallObject(MNewCallObject *ins)
+ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 {
     // fast path: replace with ParNewCallObject op
     MParNewCallObject *parNewCallObjectInstruction =
@@ -524,7 +510,7 @@ ParallelArrayVisitor::visitNewCallObject(MNewCallObject *ins)
 }
 
 bool
-ParallelArrayVisitor::visitLambda(MLambda *ins)
+ParallelSafetyVisitor::visitLambda(MLambda *ins)
 {
     if (ins->fun()->hasSingletonType() ||
         types::UseNewTypeForClone(ins->fun()))
@@ -540,7 +526,7 @@ ParallelArrayVisitor::visitLambda(MLambda *ins)
 }
 
 bool
-ParallelArrayVisitor::visitNewObject(MNewObject *newInstruction)
+ParallelSafetyVisitor::visitNewObject(MNewObject *newInstruction)
 {
     if (newInstruction->shouldUseVM()) {
         SpewMIR(newInstruction, "should use VM");
@@ -552,7 +538,7 @@ ParallelArrayVisitor::visitNewObject(MNewObject *newInstruction)
 }
 
 bool
-ParallelArrayVisitor::visitNewArray(MNewArray *newInstruction)
+ParallelSafetyVisitor::visitNewArray(MNewArray *newInstruction)
 {
     if (newInstruction->shouldUseVM()) {
         SpewMIR(newInstruction, "should use VM");
@@ -564,14 +550,14 @@ ParallelArrayVisitor::visitNewArray(MNewArray *newInstruction)
 }
 
 bool
-ParallelArrayVisitor::visitRest(MRest *ins)
+ParallelSafetyVisitor::visitRest(MRest *ins)
 {
     return replace(ins, MParRest::New(parSlice(), ins));
 }
 
 bool
-ParallelArrayVisitor::replaceWithParNew(MInstruction *newInstruction,
-                                        JSObject *templateObject)
+ParallelSafetyVisitor::replaceWithParNew(MInstruction *newInstruction,
+                                         JSObject *templateObject)
 {
     MParNew *parNewInstruction = new MParNew(parSlice(), templateObject);
     replace(newInstruction, parNewInstruction);
@@ -579,8 +565,8 @@ ParallelArrayVisitor::replaceWithParNew(MInstruction *newInstruction,
 }
 
 bool
-ParallelArrayVisitor::replace(MInstruction *oldInstruction,
-                              MInstruction *replacementInstruction)
+ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
+                               MInstruction *replacementInstruction)
 {
     MBasicBlock *block = oldInstruction->block();
     block->insertBefore(oldInstruction, replacementInstruction);
@@ -600,8 +586,8 @@ ParallelArrayVisitor::replace(MInstruction *oldInstruction,
 // per-thread-arena or not.
 
 bool
-ParallelArrayVisitor::insertWriteGuard(MInstruction *writeInstruction,
-                                       MDefinition *valueBeingWritten)
+ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
+                                                 MDefinition *valueBeingWritten)
 {
     // Many of the write operations do not take the JS object
     // but rather something derived from it, such as the elements.
@@ -679,7 +665,7 @@ ParallelArrayVisitor::insertWriteGuard(MInstruction *writeInstruction,
 // Ion compiled. If a function has no IonScript, we bail out.
 
 bool
-ParallelArrayVisitor::visitCall(MCall *ins)
+ParallelSafetyVisitor::visitCall(MCall *ins)
 {
     // DOM? Scary.
     if (ins->isDOMFunction()) {
@@ -687,7 +673,7 @@ ParallelArrayVisitor::visitCall(MCall *ins)
         return markUnsafe();
     }
 
-    RootedFunction target(cx_, ins->getSingleTarget());
+    JSFunction *target = ins->getSingleTarget();
     if (target) {
         // Native? Scary.
         if (target->isNative()) {
@@ -714,14 +700,14 @@ ParallelArrayVisitor::visitCall(MCall *ins)
 // Similar considerations apply to checking for interrupts.
 
 bool
-ParallelArrayVisitor::visitCheckOverRecursed(MCheckOverRecursed *ins)
+ParallelSafetyVisitor::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
     MParCheckOverRecursed *replacement = new MParCheckOverRecursed(parSlice());
     return replace(ins, replacement);
 }
 
 bool
-ParallelArrayVisitor::visitInterruptCheck(MInterruptCheck *ins)
+ParallelSafetyVisitor::visitInterruptCheck(MInterruptCheck *ins)
 {
     MParCheckInterrupt *replacement = new MParCheckInterrupt(parSlice());
     return replace(ins, replacement);
@@ -737,8 +723,8 @@ ParallelArrayVisitor::visitInterruptCheck(MInterruptCheck *ins)
 // if the operands are not both integers/floats.
 
 bool
-ParallelArrayVisitor::visitSpecializedInstruction(MInstruction *ins, MIRType spec,
-                                                  uint32_t flags)
+ParallelSafetyVisitor::visitSpecializedInstruction(MInstruction *ins, MIRType spec,
+                                                   uint32_t flags)
 {
     uint32_t flag = 1 << spec;
     if (flags & flag)
@@ -752,7 +738,7 @@ ParallelArrayVisitor::visitSpecializedInstruction(MInstruction *ins, MIRType spe
 // Throw
 
 bool
-ParallelArrayVisitor::visitThrow(MThrow *thr)
+ParallelSafetyVisitor::visitThrow(MThrow *thr)
 {
     MBasicBlock *block = thr->block();
     JS_ASSERT(block->lastIns() == thr);
@@ -780,7 +766,7 @@ static bool
 AddCallTarget(HandleScript script, CallTargetVector &targets);
 
 bool
-AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
+ion::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
 {
     JSContext *cx = GetIonContext()->cx;
 
@@ -878,7 +864,4 @@ AddCallTarget(HandleScript script, CallTargetVector &targets)
         return false;
 
     return true;
-}
-
-}
 }
