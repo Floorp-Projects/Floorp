@@ -602,8 +602,7 @@ TabChild::HandlePossibleViewportChange()
   nsresult rv = utils->GetIsFirstPaint(&isFirstPaint);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv) || isFirstPaint) {
-    CSSToScreenScale intrinsicScale =
-        AsyncPanZoomController::CalculateIntrinsicScale(metrics);
+    CSSToScreenScale intrinsicScale = metrics.CalculateIntrinsicScale();
     // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
     // 0.0 to mean "did not calculate a zoom".  In that case, we default
     // it to the intrinsic scale.
