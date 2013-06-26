@@ -15,6 +15,7 @@ let TargetFactory = tempScope.devtools.TargetFactory;
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 let Promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+// Promise._reportErrors = true; // please never leave me.
 
 let gPendingOutputTest = 0;
 

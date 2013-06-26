@@ -140,6 +140,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_keyboard_accessibility.js \
 	browser_console_filters.js \
 	browser_console_dead_objects.js \
+	browser_console_iframe_messages.js \
 	head.js \
 	$(NULL)
 
@@ -239,6 +240,10 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-837351-security-errors.html \
 	test-bug-869003-top-window.html \
 	test-bug-869003-iframe.html \
+	test-consoleiframes.html \
+	test-iframe1.html \
+	test-iframe2.html \
+	test-iframe3.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
