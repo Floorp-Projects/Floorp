@@ -391,6 +391,8 @@ public:
    * thread at the same time. The backend type in use can be checked with this
    * static method. We need this for creating texture clients/hosts etc. when we
    * don't have a reference to a Compositor.
+   *
+   * This can only be used from the compositor thread!
    */
   static LayersBackend GetBackend();
 
