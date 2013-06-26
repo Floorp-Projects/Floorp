@@ -138,21 +138,24 @@ IsVertSpace(int32_t ch) {
 }
 
 /**
- * True if 'ch' is a character that can appear in the middle of an
- * identifier.
+ * True if 'ch' is a character that can appear in the middle of an identifier.
+ * This includes U+0000 since it is handled as U+FFFD, but for purposes of
+ * GatherText it should not be included in IsOpenCharClass.
  */
 static inline bool
 IsIdentChar(int32_t ch) {
-  return IsOpenCharClass(ch, IS_IDCHAR);
+  return IsOpenCharClass(ch, IS_IDCHAR) || ch == 0;
 }
 
 /**
  * True if 'ch' is a character that by itself begins an identifier.
+ * This includes U+0000 since it is handled as U+FFFD, but for purposes of
+ * GatherText it should not be included in IsOpenCharClass.
  * (This is a subset of IsIdentChar.)
  */
 static inline bool
 IsIdentStart(int32_t ch) {
-  return IsOpenCharClass(ch, IS_IDSTART);
+  return IsOpenCharClass(ch, IS_IDSTART) || ch == 0;
 }
 
 /**
@@ -539,7 +542,7 @@ nsCSSScanner::GatherEscape(nsString& aOutput, bool aInString)
     // character.
     Advance();
     if (!aInString) {
-      aOutput.Append(0xFFFD);
+      aOutput.Append(UCS2_REPLACEMENT_CHAR);
     }
     return true;
   }
@@ -561,7 +564,11 @@ nsCSSScanner::GatherEscape(nsString& aOutput, bool aInString)
     // return, or form feed) can be escaped with a backslash to remove
     // its special meaning." -- CSS2.1 section 4.1.3
     Advance(2);
-    aOutput.Append(ch);
+    if (ch == 0) {
+      aOutput.Append(UCS2_REPLACEMENT_CHAR);
+    } else {
+      aOutput.Append(ch);
+    }
     return true;
   }
 
@@ -584,22 +591,21 @@ nsCSSScanner::GatherEscape(nsString& aOutput, bool aInString)
     ch = Peek();
   } while (i < 6 && IsHexDigit(ch));
 
-  // Silently deleting \0 opens a content-filtration loophole (see
-  // bug 228856), so what we do instead is pretend the "cancels the
-  // meaning of special characters" rule applied.
+  // "Interpret the hex digits as a hexadecimal number. If this number is zero,
+  // or is greater than the maximum allowed codepoint, return U+FFFD
+  // REPLACEMENT CHARACTER" -- CSS Syntax Level 3
   if (MOZ_UNLIKELY(val == 0)) {
-    do {
-      aOutput.Append('0');
-    } while (--i);
+    aOutput.Append(UCS2_REPLACEMENT_CHAR);
   } else {
     AppendUCS4ToUTF16(ENSURE_VALID_CHAR(val), aOutput);
-    // Consume exactly one whitespace character after a nonzero
-    // hexadecimal escape sequence.
-    if (IsVertSpace(ch)) {
-      AdvanceLine();
-    } else if (IsHorzSpace(ch)) {
-      Advance();
-    }
+  }
+
+  // Consume exactly one whitespace character after a
+  // hexadecimal escape sequence.
+  if (IsVertSpace(ch)) {
+    AdvanceLine();
+  } else if (IsHorzSpace(ch)) {
+    Advance();
   }
   return true;
 }
@@ -644,6 +650,11 @@ nsCSSScanner::GatherText(uint8_t aClass, nsString& aText)
     int32_t ch = Peek();
     MOZ_ASSERT(!IsOpenCharClass(ch, aClass),
                "should not have exited the inner loop");
+    if (ch == 0) {
+      Advance();
+      aText.Append(UCS2_REPLACEMENT_CHAR);
+      continue;
+    }
 
     if (ch != '\\') {
       break;
