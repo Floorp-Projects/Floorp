@@ -914,7 +914,7 @@ struct TypeNewScript
     Initializer *initializerList;
 
     static inline void writeBarrierPre(TypeNewScript *newScript);
-    static inline void writeBarrierPost(TypeNewScript *newScript, void *addr);
+    static void writeBarrierPost(TypeNewScript *newScript, void *addr) {}
 };
 
 /*
@@ -1100,7 +1100,7 @@ struct TypeObject : gc::Cell
     JS::Zone *zone() const { return tenuredZone(); }
 
     static inline void writeBarrierPre(TypeObject *type);
-    static inline void writeBarrierPost(TypeObject *type, void *addr);
+    static void writeBarrierPost(TypeObject *type, void *addr) {}
     static inline void readBarrier(TypeObject *type);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_TYPE_OBJECT; }
