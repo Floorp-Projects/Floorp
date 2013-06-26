@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 // Counts the number of created connections per database basename(). This is
 // used for logging to distinguish connection instances.
-let connectionCounters = new Map();
+let connectionCounters = {};
 
 
 /**
@@ -89,37 +89,34 @@ function openConnection(options) {
   }
 
   let file = FileUtils.File(path);
+  let openDatabaseFn = sharedMemoryCache ?
+                         Services.storage.openDatabase :
+                         Services.storage.openUnsharedDatabase;
 
   let basename = OS.Path.basename(path);
-  let number = connectionCounters.get(basename) || 0;
-  connectionCounters.set(basename, number + 1);
 
+  if (!connectionCounters[basename]) {
+    connectionCounters[basename] = 1;
+  }
+
+  let number = connectionCounters[basename]++;
   let identifier = basename + "#" + number;
 
   log.info("Opening database: " + path + " (" + identifier + ")");
-  let deferred = Promise.defer();
-  let options = null;
-  if (!sharedMemoryCache) {
-    options = Cc["@mozilla.org/hash-property-bag;1"].
-      createInstance(Ci.nsIWritablePropertyBag);
-    options.setProperty("shared", false);
+  try {
+    let connection = openDatabaseFn(file);
+
+    if (!connection.connectionReady) {
+      log.warn("Connection is not ready.");
+      return Promise.reject(new Error("Connection is not ready."));
+    }
+
+    return Promise.resolve(new OpenedConnection(connection, basename, number,
+                                                openedOptions));
+  } catch (ex) {
+    log.warn("Could not open database: " + CommonUtils.exceptionStr(ex));
+    return Promise.reject(ex);
   }
-  Services.storage.openAsyncDatabase(file, options, function(status, connection) {
-    if (!connection) {
-      log.warn("Could not open connection: " + status);
-      deferred.reject(new Error("Could not open connection: " + status));
-    }
-    log.warn("Connection opened");
-    try {
-      deferred.resolve(
-        new OpenedConnection(connection.QueryInterface(Ci.mozIStorageAsyncConnection), basename, number,
-        openedOptions));
-    } catch (ex) {
-      log.warn("Could not open database: " + CommonUtils.exceptionStr(ex));
-      deferred.reject(ex);
-    }
-  });
-  return deferred.promise;
 }
 
 
@@ -228,32 +225,51 @@ OpenedConnection.prototype = Object.freeze({
 
   TRANSACTION_TYPES: ["DEFERRED", "IMMEDIATE", "EXCLUSIVE"],
 
+  get connectionReady() {
+    return this._open && this._connection.connectionReady;
+  },
+
+  /**
+   * The row ID from the last INSERT operation.
+   *
+   * Because all statements are executed asynchronously, this could
+   * return unexpected results if multiple statements are performed in
+   * parallel. It is the caller's responsibility to schedule
+   * appropriately.
+   *
+   * It is recommended to only use this within transactions (which are
+   * handled as sequential statements via Tasks).
+   */
+  get lastInsertRowID() {
+    this._ensureOpen();
+    return this._connection.lastInsertRowID;
+  },
+
+  /**
+   * The number of rows that were changed, inserted, or deleted by the
+   * last operation.
+   *
+   * The same caveats regarding asynchronous execution for
+   * `lastInsertRowID` also apply here.
+   */
+  get affectedRows() {
+    this._ensureOpen();
+    return this._connection.affectedRows;
+  },
+
   /**
    * The integer schema version of the database.
    *
    * This is 0 if not schema version has been set.
-   *
-   * @return Promise<int>
    */
-  getSchemaVersion: function() {
-    let self = this;
-    return this.execute("PRAGMA user_version").then(
-      function onSuccess(result) {
-        if (result == null) {
-          return 0;
-        }
-        return JSON.stringify(result[0].getInt32(0));
-      }
-    );
+  get schemaVersion() {
+    this._ensureOpen();
+    return this._connection.schemaVersion;
   },
 
-  setSchemaVersion: function(value) {
-    if (!Number.isInteger(value)) {
-      // Guarding against accidental SQLi
-      throw new TypeError("Schema version must be an integer. Got " + value);
-    }
+  set schemaVersion(value) {
     this._ensureOpen();
-    return this.execute("PRAGMA user_version = " + value);
+    this._connection.schemaVersion = value;
   },
 
   /**
