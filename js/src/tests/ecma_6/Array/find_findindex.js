@@ -15,7 +15,7 @@ print(BUGNUMBER + ": " + summary);
 
 function isString(v, index, array)
 {
-  reportCompare(v, array[index], 'isString: check callback argument consistency');
+  assertEq(array[index], v);
   return typeof v == 'string';
 }
 
@@ -39,7 +39,8 @@ sparsestrings[2] = 'sparse';
 var arraylike = {0:0, 1:'string', 2:2, length:3};
 // array for which JSObject::isIndexed() holds.
 var indexedArray = [];
-Object.defineProperty(indexedArray, 42, { get: function() { return 42; } })
+Object.defineProperty(indexedArray, 42, { get: function() { return 42; } });
+Object.defineProperty(indexedArray, 142, { get: function() { return 'string'; } });
 
 // find and findIndex have 1 required argument
 
@@ -181,3 +182,25 @@ catch(e)
   actual = dumpError(e);
 }
 reportCompare(expect, actual, 'arraylike with getter: getter only called once');
+
+try
+{
+  expect = 'string';
+  actual = [].find.call(indexedArray, isString);
+}
+catch(e)
+{
+  actual = dumpError(e);
+}
+reportCompare(expect, actual, 'indexedArray: find finds first string element');
+
+try
+{
+  expect = 142;
+  actual = [].findIndex.call(indexedArray, isString);
+}
+catch(e)
+{
+  actual = dumpError(e);
+}
+reportCompare(expect, actual, 'indexedArray: findIndex finds first string element');
