@@ -1813,9 +1813,7 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitStringClass,                EAGER_ATOM_AND_OCLASP(String)},
     {js_InitExceptionClasses,           EAGER_ATOM_AND_OCLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_OCLASP(RegExp)},
-#if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_OCLASP(StopIteration)},
-#endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
     {js_InitWeakMapClass,               EAGER_ATOM_AND_OCLASP(WeakMap)},
