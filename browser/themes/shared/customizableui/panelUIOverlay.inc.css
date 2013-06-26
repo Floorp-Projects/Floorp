@@ -169,7 +169,6 @@ panelview:not([mainview]) .toolbarbutton-text,
   list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons.png);
 }
 
-.panel-contents-button[disabled] > .toolbarbutton-icon,
 .panel-combined-button[disabled] > .toolbarbutton-icon {
   opacity: .5;
 }
