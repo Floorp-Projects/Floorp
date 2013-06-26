@@ -10,6 +10,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
+#include "nsIXPConnect.h"
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -255,11 +256,7 @@ public:
                       uint16_t          af)
         : mResolver(res)
         , mHost(host)
-        // Sometimes aListener is a main-thread only object like XPCWrappedJS, and
-        // sometimes it's a threadsafe object like nsSocketTransport. Use a main-
-        // thread pointer holder, but disable strict enforcement of thread invariants.
-        // The AddRef implementation of XPCWrappedJS will assert if we go wrong here.
-        , mListener(new nsMainThreadPtrHolder<nsIDNSListener>(listener, false))
+        , mListener(listener)
         , mFlags(flags)
         , mAF(af) {}
     ~nsDNSAsyncRequest() {}
@@ -272,7 +269,7 @@ public:
 
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
-    nsMainThreadPtrHandle<nsIDNSListener> mListener;
+    nsCOMPtr<nsIDNSListener> mListener;
     uint16_t                 mFlags;
     uint16_t                 mAF;
 };
@@ -296,7 +293,7 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
     MOZ_EVENT_TRACER_DONE(this, "net::dns::lookup");
 
     mListener->OnLookupComplete(this, rec, status);
-    mListener = nsMainThreadPtrHandle<nsIDNSListener>();
+    mListener = nullptr;
 
     // release the reference to ourselves that was added before we were
     // handed off to the host resolver.
@@ -590,13 +587,14 @@ NS_IMETHODIMP
 nsDNSService::AsyncResolve(const nsACString  &hostname,
                            uint32_t           flags,
                            nsIDNSListener    *listener,
-                           nsIEventTarget    *target,
+                           nsIEventTarget    *target_,
                            nsICancelable    **result)
 {
     // grab reference to global host resolver and IDN service.  beware
     // simultaneous shutdown!!
     nsRefPtr<nsHostResolver> res;
     nsCOMPtr<nsIIDNService> idn;
+    nsCOMPtr<nsIEventTarget> target = target_;
     bool localDomain = false;
     {
         MutexAutoLock lock(mLock);
@@ -625,6 +623,13 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
     if (idn && !IsASCII(*hostPtr)) {
         if (NS_SUCCEEDED(idn->ConvertUTF8toACE(*hostPtr, hostACE)))
             hostPtr = &hostACE;
+    }
+
+    nsCOMPtr<nsIXPConnectWrappedJS> wrappedListener = do_QueryInterface(listener);
+    if (wrappedListener && !target) {
+        nsCOMPtr<nsIThread> mainThread;
+        NS_GetMainThread(getter_AddRefs(mainThread));
+        target = do_QueryInterface(mainThread);
     }
 
     if (target) {
