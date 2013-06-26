@@ -383,11 +383,6 @@ box.requests-menu-status[code^="5"] {
   padding-top: 2px;
 }
 
-#headers-summary-resend {
-  margin: 0 6px;
-  min-height: 20px;
-}
-
 /* Response tabpanel */
 
 #response-content-info-header {
@@ -425,20 +420,6 @@ box.requests-menu-status[code^="5"] {
 
 #timings-tabpanel .requests-menu-timings-total {
   transition: transform 0.2s ease-out;
-}
-
-/* Custom request form */
-
-#custom-pane {
-  padding: 0.6em 0.5em;
-}
-
-.custom-header {
-  font-size: 1.1em;
-}
-
-.custom-section {
-  margin-top: 0.5em;
 }
 
 /* Footer */
