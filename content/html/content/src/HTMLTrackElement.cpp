@@ -54,12 +54,10 @@ NS_NewHTMLTrackElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                        mozilla::dom::FromParser aFromParser)
 {
   if (!mozilla::dom::HTMLTrackElement::IsWebVTTEnabled()) {
-    return mozilla::dom::NewHTMLElementHelper::Create<nsHTMLUnknownElement,
-           mozilla::dom::HTMLUnknownElement>(aNodeInfo);
+    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
   }
 
-  return mozilla::dom::NewHTMLElementHelper::Create<nsHTMLTrackElement,
-         mozilla::dom::HTMLTrackElement>(aNodeInfo);
+  return new mozilla::dom::HTMLTrackElement(aNodeInfo);
 }
 
 namespace mozilla {
