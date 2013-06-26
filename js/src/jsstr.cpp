@@ -550,7 +550,7 @@ js_str_toString(JSContext *cx, unsigned argc, Value *vp)
  */
 
 JS_ALWAYS_INLINE bool
-ValueToIntegerRange(JSContext *cx, const Value &v, int32_t *out)
+ValueToIntegerRange(JSContext *cx, HandleValue v, int32_t *out)
 {
     if (v.isInt32()) {
         *out = v.toInt32();
@@ -640,7 +640,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
             begin = args[0].toInt32();
         } else {
             RootedString strRoot(cx, str);
-            if (!ValueToIntegerRange(cx, args[0], &begin))
+            if (!ValueToIntegerRange(cx, args.handleAt(0), &begin))
                 return false;
             str = strRoot;
         }
@@ -655,7 +655,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
                 end = args[1].toInt32();
             } else {
                 RootedString strRoot(cx, str);
-                if (!ValueToIntegerRange(cx, args[1], &end))
+                if (!ValueToIntegerRange(cx, args.handleAt(1), &end))
                     return false;
                 str = strRoot;
             }
@@ -866,7 +866,7 @@ js_str_charAt(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         double d = 0.0;
-        if (args.length() > 0 && !ToInteger(cx, args[0], &d))
+        if (args.length() > 0 && !ToInteger(cx, args.handleAt(0), &d))
             return false;
 
         if (d < 0 || str->length() <= d)
@@ -903,7 +903,7 @@ js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         double d = 0.0;
-        if (args.length() > 0 && !ToInteger(cx, args[0], &d))
+        if (args.length() > 0 && !ToInteger(cx, args.handleAt(0), &d))
             return false;
 
         if (d < 0 || str->length() <= d)
@@ -1227,7 +1227,7 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args[1], &d))
+            if (!ToInteger(cx, args.handleAt(1), &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1278,7 +1278,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args[1], &d))
+            if (!ToInteger(cx, args.handleAt(1), &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1406,7 +1406,7 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args[1], &d))
+            if (!ToInteger(cx, args.handleAt(1), &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1463,7 +1463,7 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args[1], &d))
+            if (!ToInteger(cx, args.handleAt(1), &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -3135,7 +3135,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
     int32_t length, len, begin;
     if (args.length() > 0) {
         length = int32_t(str->length());
-        if (!ValueToIntegerRange(cx, args[0], &begin))
+        if (!ValueToIntegerRange(cx, args.handleAt(0), &begin))
             return false;
 
         if (begin >= length) {
@@ -3149,7 +3149,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
         }
 
         if (args.hasDefined(1)) {
-            if (!ValueToIntegerRange(cx, args[1], &len))
+            if (!ValueToIntegerRange(cx, args.handleAt(1), &len))
                 return false;
 
             if (len <= 0) {
@@ -3240,7 +3240,7 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() != 0) {
         double begin, end, length;
 
-        if (!ToInteger(cx, args[0], &begin))
+        if (!ToInteger(cx, args.handleAt(0), &begin))
             return false;
         length = str->length();
         if (begin < 0) {
@@ -3252,7 +3252,7 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
         }
 
         if (args.hasDefined(1)) {
-            if (!ToInteger(cx, args[1], &end))
+            if (!ToInteger(cx, args.handleAt(1), &end))
                 return false;
             if (end < 0) {
                 end += length;

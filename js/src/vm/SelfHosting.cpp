@@ -138,7 +138,7 @@ intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     double result;
-    if (!ToInteger(cx, args[0], &result))
+    if (!ToInteger(cx, args.handleAt(0), &result))
         return false;
     args.rval().setDouble(result);
     return true;
