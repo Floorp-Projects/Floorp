@@ -20,6 +20,9 @@ const RIL_GETTHREADSCURSOR_CID =
   Components.ID("{95ee7c3e-d6f2-4ec4-ade5-0c453c036d35}");
 
 const DEBUG = false;
+const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
+
+
 const DB_NAME = "sms";
 const DB_VERSION = 11;
 const MESSAGE_STORE_NAME = "sms";
@@ -1133,13 +1136,15 @@ MobileMessageDatabaseService.prototype = {
     let self = this.getRilIccInfoMsisdn();
     let threadParticipants = [aMessage.sender];
     if (aMessage.type == "sms") {
-      // TODO Bug 853384 - for some SIMs we cannot retrieve the vaild
-      // phone number, thus setting the SMS' receiver to be null.
+      // For some SIMs we cannot retrieve the vaild MSISDN (i.e. the user's own
+      // phone number), thus setting the SMS' receiver to be null.
       aMessage.receiver = self;
-    } else if (aMessage.type == "mms") {
+    } else if (aMessage.type == "mms" && !DISABLE_MMS_GROUPING_FOR_RECEIVING) {
       let receivers = aMessage.receivers;
-      // We need to add the receivers (excluding our own) into the participants
-      // of a thread. Some cases we might encounter here:
+      // If we don't want to disable the MMS grouping for receiving, we need to
+      // add the receivers (excluding the user's own number) to the participants
+      // for creating the thread. Some cases might be investigated as below:
+      //
       // 1. receivers.length == 0
       //    This usually happens when receiving an MMS notification indication
       //    which doesn't carry any receivers.
@@ -1148,18 +1153,25 @@ MobileMessageDatabaseService.prototype = {
       //    add it into participants because we know that number is our own.
       // 3. receivers.length >= 2
       //    If the receivers contain multiple phone numbers, we need to add all
-      //    of them but not our own into participants.
+      //    of them but not the user's own number into participants.
       if (receivers.length >= 2) {
-        // TODO Bug 853384 - for some SIM cards, the phone number might not be
-        // available, so we cannot correcly exclude our own from the receivers,
-        // thus wrongly building the thread index.
+        let isSuccess = false;
         let slicedReceivers = receivers.slice();
         if (self) {
           let found = slicedReceivers.indexOf(self);
           if (found !== -1) {
+            isSuccess = true;
             slicedReceivers.splice(found, 1);
           }
         }
+
+        if (!isSuccess) {
+          // For some SIMs we cannot retrieve the vaild MSISDN (i.e. the user's
+          // own phone number), so we cannot correcly exclude the user's own
+          // number from the receivers, thus wrongly building the thread index.
+          if (DEBUG) debug("Error! Cannot strip out user's own phone number!");
+        }
+
         threadParticipants = threadParticipants.concat(slicedReceivers);
       }
     }
@@ -1220,8 +1232,8 @@ MobileMessageDatabaseService.prototype = {
       }
     }
 
-    // TODO Bug 853384 - for some SIMs we cannot retrieve the vaild
-    // phone number, thus setting the message's sender to be null.
+    // For some SIMs we cannot retrieve the vaild MSISDN (i.e. the user's own
+    // phone number), thus setting the message's sender to be null.
     aMessage.sender = this.getRilIccInfoMsisdn();
     let timestamp = aMessage.timestamp;
 
@@ -1542,7 +1554,11 @@ MobileMessageDatabaseService.prototype = {
                                                messageRecord.threadId,
                                                messageId,
                                                messageRecord.read);
-              };
+
+              Services.obs.notifyObservers(null,
+                                           "mobile-message-deleted",
+                                           JSON.stringify({ id: messageId }));
+            };
           } else if (DEBUG) {
             debug("Message id " + messageId + " does not exist");
           }
