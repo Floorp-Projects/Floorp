@@ -431,7 +431,7 @@ CrossCompartmentWrapper::call(JSContext *cx, HandleObject wrapper, const CallArg
             return false;
 
         for (size_t n = 0; n < args.length(); ++n) {
-            if (!cx->compartment()->wrap(cx, args.handleAt(n)))
+            if (!cx->compartment()->wrap(cx, args[n]))
                 return false;
         }
 
@@ -450,7 +450,7 @@ CrossCompartmentWrapper::construct(JSContext *cx, HandleObject wrapper, const Ca
         AutoCompartment call(cx, wrapped);
 
         for (size_t n = 0; n < args.length(); ++n) {
-            if (!cx->compartment()->wrap(cx, args.handleAt(n)))
+            if (!cx->compartment()->wrap(cx, args[n]))
                 return false;
         }
         if (!Wrapper::construct(cx, wrapper, args))
