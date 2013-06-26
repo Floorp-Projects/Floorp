@@ -45,6 +45,7 @@ MOCHITEST_FILES = \
 		test_hasFeature.xhtml \
 		$(filter disabled-for-intermittent-failures--bug-701060, test_lang.xhtml) \
 		test_nonAnimStrings.xhtml \
+		test_non-scaling-stroke.html \
 		test_pathAnimInterpolation.xhtml \
 		test_pathSeg.xhtml \
 		test_pointAtLength.xhtml \
