@@ -223,14 +223,6 @@ public:
     const gfx::Point& aAcceleration,
     double aEstimatedPaintDuration);
 
-  /**
-   * Return the resolution that content should be rendered at given
-   * the configuration in aFrameMetrics: viewport dimensions, zoom
-   * factor, etc.  (The mResolution member of aFrameMetrics is
-   * ignored.)
-   */
-  static CSSToScreenScale CalculateResolution(const FrameMetrics& aMetrics);
-
   static CSSRect CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics);
 
   /**
