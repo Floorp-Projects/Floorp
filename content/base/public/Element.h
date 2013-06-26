@@ -1256,14 +1256,6 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   return rv;                                                                \
 }
 
-#define DOMCI_NODE_DATA(_interface, _class)                             \
-  DOMCI_DATA(_interface, _class)                                        \
-  nsXPCClassInfo* _class::GetClassInfo()                                \
-  {                                                                     \
-    return static_cast<nsXPCClassInfo*>(                                \
-      NS_GetDOMClassInfoInstance(eDOMClassInfo_##_interface##_id));     \
-  }
-
 /**
  * A macro to implement the getter and setter for a given string
  * valued content property. The method uses the generic GetAttr and

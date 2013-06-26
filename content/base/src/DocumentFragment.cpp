@@ -8,7 +8,7 @@
  */
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/Element.h" // for DOMCI_NODE_DATA
+#include "mozilla/dom/Element.h" // for NS_IMPL_ELEMENT_CLONE
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
@@ -133,10 +133,8 @@ NS_INTERFACE_MAP_BEGIN(DocumentFragment)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
                                  new nsNodeSelectorTearoff(this))
-  // nsNodeSH::PreCreate() depends on the identity pointer being the
-  // same as nsINode (which nsIContent inherits), so if you change the
-  // below line, make sure nsNodeSH::PreCreate() still does the right
-  // thing!
+  // DOM bindings depend on the identity pointer being the
+  // same as nsINode (which nsIContent inherits).
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
