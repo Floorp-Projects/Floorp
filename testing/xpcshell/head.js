@@ -36,6 +36,16 @@ let (ios = Components.classes["@mozilla.org/network/io-service;1"]
   ios.offline = false;
 }
 
+// Only if building of places is enabled.
+if ("mozIAsyncHistory" in Components.interfaces) {
+  // Ensure places history is enabled for xpcshell-tests as some non-FF
+  // apps disable it.
+  let (prefs = Components.classes["@mozilla.org/preferences-service;1"]
+               .getService(Components.interfaces.nsIPrefBranch)) {
+    prefs.setBoolPref("places.history.enabled", true);
+  };
+}
+
 // Determine if we're running on parent or child
 let runningInParent = true;
 try {
