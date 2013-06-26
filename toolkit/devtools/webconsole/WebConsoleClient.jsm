@@ -148,6 +148,24 @@ WebConsoleClient.prototype = {
   },
 
   /**
+   * Get Web Console-related preferences on the server.
+   *
+   * @param object aPreferences
+   *        An object with the preferences you want to retrieve.
+   * @param function [aOnResponse]
+   *        Optional function to invoke when the response is received.
+   */
+  getPreferences: function WCC_getPreferences(aPreferences, aOnResponse)
+  {
+    let packet = {
+      to: this._actor,
+      type: "getPreferences",
+      preferences: aPreferences,
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
    * Set Web Console-related preferences on the server.
    *
    * @param object aPreferences
