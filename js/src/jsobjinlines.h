@@ -1032,11 +1032,9 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 {
     SkipRoot skip;
 
-    AutoPropertyDescriptorRooter *thisDuringConstruction() { return this; }
-
   public:
     AutoPropertyDescriptorRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, thisDuringConstruction())
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, MOZ_THIS_IN_INITIALIZER_LIST())
     {
         obj = NULL;
         attrs = 0;
@@ -1046,7 +1044,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, thisDuringConstruction())
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, MOZ_THIS_IN_INITIALIZER_LIST())
     {
         obj = desc->obj;
         attrs = desc->attrs;

@@ -50,10 +50,8 @@ class BumpChunk
     char *headerBase() { return reinterpret_cast<char *>(this); }
     char *bumpBase() const { return limit - bumpSpaceSize; }
 
-    BumpChunk *thisDuringConstruction() { return this; }
-
     explicit BumpChunk(size_t bumpSpaceSize)
-      : bump(reinterpret_cast<char *>(thisDuringConstruction()) + sizeof(BumpChunk)),
+      : bump(reinterpret_cast<char *>(MOZ_THIS_IN_INITIALIZER_LIST()) + sizeof(BumpChunk)),
         limit(bump + bumpSpaceSize),
         next_(NULL), bumpSpaceSize(bumpSpaceSize)
     {
