@@ -50,10 +50,15 @@ class DebugKeystore:
         return self._alias
 
     def _check(self, args):
-        if self.verbose:
-            subprocess.check_call(args)
-        else:
-            subprocess.check_output(args)
+        try:
+            if self.verbose:
+                subprocess.check_call(args)
+            else:
+                subprocess.check_output(args)
+        except OSError as ex:
+            if ex.errno != errno.ENOENT:
+                raise
+            raise Exception("Could not find executable '%s'" % args[0])
 
     def keystore_contains_alias(self):
         args = [ self.keytool,

@@ -18,7 +18,10 @@ AIDL=$(ANDROID_BUILD_TOOLS)/aidl
 ADB=$(ANDROID_PLATFORM_TOOLS)/adb
 ZIPALIGN=$(ANDROID_SDK)/../../tools/zipalign
 # DEBUG_JARSIGNER always debug signs.
-DEBUG_JARSIGNER=$(PYTHON) $(call core_abspath,$(topsrcdir)/mobile/android/debug_sign_tool.py)
+DEBUG_JARSIGNER=$(PYTHON) $(call core_abspath,$(topsrcdir)/mobile/android/debug_sign_tool.py) \
+  --keytool=$(KEYTOOL) \
+  --jarsigner=$(JARSIGNER) \
+  $(NULL)
 
 # For Android, this defaults to $(ANDROID_SDK)/android.jar
 ifndef JAVA_BOOTCLASSPATH
