@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=864040
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 864040</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="setTimeout(runTests, 0);">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=864040">Mozilla Bug 864040</a>
+<div id="display">
+  <textarea id="ta" rows="5" cols="20"></textarea>
+  <div id="ce" contentEditable="true" style="height: 5em;"></div>
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    /**
+    * Test for Bug 864040
+    *
+    * We use a selection event to set the selection to the end of an editor
+    * containing an ending newline. Then we test to see that the caret is
+    * actually drawn on the newline.
+    */
+
+    function testSelectEndOfText(elem) {
+      var tn = elem.tagName;
+      elem.focus();
+
+      // Enter test string into editor
+      var test_string = 'test\n';
+      sendString(test_string);
+
+      // Get the caret position after what we entered
+      var result = synthesizeQuerySelectedText();
+      ok(result, tn + ': failed to query selection (1)');
+      var refoffset = result.offset;
+
+      // Take a snapshot of where the caret is (on the new line)
+      referenceSnapshot = snapshotWindow(window, true /* withCaret */);
+      ok(referenceSnapshot, tn + ': failed to take snapshot (1)');
+
+      // Set selection to the same spot through a selection event
+      ok(synthesizeSelectionSet(refoffset, 0, false), tn + ': failed to set selection');
+
+      // Make sure new selection is the same
+      result = synthesizeQuerySelectedText();
+      ok(result, tn + ': failed to query selection (2)');
+      is(result.offset, refoffset, tn + ': caret is not at the right position');
+
+      // Take a snapshot of where the new caret is (shoud still be on the new line)
+      testSnapshot = snapshotWindow(window, true /* withCaret */);
+      ok(testSnapshot, tn + ': failed to take snapshot (2)');
+
+      // Compare snapshot (should be the same)
+      result = compareSnapshots(referenceSnapshot, testSnapshot, true /* expected */)
+      ok(result, tn + ': failed to compare snapshots');
+      // result = [correct, s1data, s2data]
+      ok(result[0], tn + ': caret is not on new line');
+      if (!result[0]) {
+        dump('Ref: ' + result[1] + '\n');
+        dump('Res: ' + result[2] + '\n');
+      }
+    }
+
+    function runTests() {
+      // we don't test regular <input> because this test is about multiline support
+      // test textarea
+      testSelectEndOfText(document.getElementById('ta'));
+      // test contentEditable
+      testSelectEndOfText(document.getElementById('ce'));
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+  </script>
+</pre>
+</body>
+</html>
