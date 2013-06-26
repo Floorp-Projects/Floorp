@@ -310,6 +310,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::j;
     using AssemblerX86Shared::jmp;
     using AssemblerX86Shared::push;
+    using AssemblerX86Shared::pop;
 
     static uint8_t *PatchableJumpAddress(IonCode *code, size_t index);
     static void PatchJumpEntry(uint8_t *entry, uint8_t *target);
@@ -346,13 +347,18 @@ class Assembler : public AssemblerX86Shared
         }
     }
     void push(const FloatRegister &src) {
-        subq(Imm32(sizeof(void*)), StackPointer);
+        subq(Imm32(sizeof(double)), StackPointer);
         movsd(src, Operand(StackPointer, 0));
     }
     CodeOffsetLabel pushWithPatch(const ImmWord &word) {
         CodeOffsetLabel label = movWithPatch(word, ScratchReg);
         push(ScratchReg);
         return label;
+    }
+
+    void pop(const FloatRegister &src) {
+        movsd(Operand(StackPointer, 0), src);
+        addq(Imm32(sizeof(double)), StackPointer);
     }
 
     CodeOffsetLabel movWithPatch(const ImmWord &word, const Register &dest) {

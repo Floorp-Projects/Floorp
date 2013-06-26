@@ -359,6 +359,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     using MacroAssemblerSpecific::Push;
+    using MacroAssemblerSpecific::Pop;
 
     void Push(jsid id, Register scratchReg) {
         if (JSID_IS_GCTHING(id)) {
