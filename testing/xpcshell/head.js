@@ -45,6 +45,17 @@ try {
 } 
 catch (e) { }
 
+// Only if building of places is enabled.
+if (runningInParent &&
+    "mozIAsyncHistory" in Components.interfaces) {
+  // Ensure places history is enabled for xpcshell-tests as some non-FF
+  // apps disable it.
+  let (prefs = Components.classes["@mozilla.org/preferences-service;1"]
+               .getService(Components.interfaces.nsIPrefBranch)) {
+    prefs.setBoolPref("places.history.enabled", true);
+  };
+}
+
 try {
   if (runningInParent) {
     let prefs = Components.classes["@mozilla.org/preferences-service;1"]

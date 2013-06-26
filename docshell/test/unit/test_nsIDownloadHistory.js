@@ -61,8 +61,6 @@ function run_test()
   // Needed to properly setup and shutdown the profile.
   do_get_profile();
 
-  Services.prefs.setBoolPref("places.history.enabled", true);
-
   for (var i = 0; i < tests.length; i++)
     tests[i]();
 
