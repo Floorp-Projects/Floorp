@@ -223,8 +223,6 @@ public:
     const gfx::Point& aAcceleration,
     double aEstimatedPaintDuration);
 
-  static CSSRect CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics);
-
   /**
    * Send an mozbrowserasyncscroll event.
    * *** The monitor must be held while calling this.
