@@ -1026,6 +1026,12 @@ this.WidgetMethods = {
   autoFocusOnInput: true,
 
   /**
+   * When focusing on input, allow right clicks?
+   * @see WidgetMethods.autoFocusOnInput
+   */
+  allowFocusOnRightClick: false,
+
+  /**
    * The number of elements in this container to jump when Page Up or Page Down
    * keys are pressed. If falsy, then the page size will be based on the
    * number of visible items in the container.
@@ -1541,12 +1547,12 @@ this.WidgetMethods = {
   },
 
   /**
-   * The keyPress event listener for this container.
+   * The mousePress event listener for this container.
    * @param string aName
    * @param MouseEvent aEvent
    */
   _onWidgetMousePress: function(aName, aEvent) {
-    if (aEvent.button != 0) {
+    if (aEvent.button != 0 && !this.allowFocusOnRightClick) {
       // Only allow left-click to trigger this event.
       return;
     }
