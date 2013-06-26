@@ -480,6 +480,10 @@ interface TestExampleInterface {
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
   legacycaller short(unsigned long arg1, TestInterface arg2);
+  void passArgsWithDefaults(optional long arg1,
+                            optional TestInterface? arg2 = null,
+                            optional Dict arg3, optional double arg4 = 5.0,
+                            optional float arg5);
 
   // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };
