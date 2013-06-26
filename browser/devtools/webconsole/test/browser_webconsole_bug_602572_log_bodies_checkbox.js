@@ -70,10 +70,12 @@ function onpopupshown2(aEvent)
   isnot(menuitems[1].getAttribute("checked"), "true",
         "menuitems[1] is not checked");
 
-  ok(!huds[1].ui.saveRequestAndResponseBodies, "bodies are not logged");
+  ok(!huds[1].ui._saveRequestAndResponseBodies, "bodies are not logged");
 
   // Enable body logging.
-  huds[1].ui.saveRequestAndResponseBodies = true;
+  huds[1].ui.setSaveRequestAndResponseBodies(true).then(() => {
+    menupopups[1].hidePopup();
+  });
 
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
@@ -81,29 +83,12 @@ function onpopupshown2(aEvent)
     info("menupopups[1] hidden");
 
     // Reopen the context menu.
-    menupopups[1].addEventListener("popupshown", onpopupshown2b, false);
-    executeSoon(function() {
-      menupopups[1].openPopup();
-    });
+    huds[1].ui.once("save-bodies-ui-toggled", () => testpopup2b(aEvent));
+    menupopups[1].openPopup();
   }, false);
-
-  waitForSuccess({
-    name: "saveRequestAndResponseBodies update",
-    validatorFn: function()
-    {
-      return huds[1].ui.saveRequestAndResponseBodies;
-    },
-    successFn: function()
-    {
-      menupopups[1].hidePopup();
-    },
-    failureFn: finishTest,
-  });
 }
 
-function onpopupshown2b(aEvent)
-{
-  menupopups[1].removeEventListener(aEvent.type, onpopupshown2b, false);
+function testpopup2b(aEvent) {
   is(menuitems[1].getAttribute("checked"), "true", "menuitems[1] is checked");
 
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
@@ -143,7 +128,9 @@ function onpopupshown1(aEvent)
         "menuitems[0] is not checked");
 
   // Enable body logging for tab 1 as well.
-  huds[0].ui.saveRequestAndResponseBodies = true;
+  huds[0].ui.setSaveRequestAndResponseBodies(true).then(() => {
+    menupopups[0].hidePopup();
+  });
 
   // Close the menu, and switch back to tab 2.
   menupopups[0].addEventListener("popuphidden", function _onhidden(aEvent) {
@@ -154,29 +141,13 @@ function onpopupshown1(aEvent)
     gBrowser.selectedTab = tabs[runCount*2 + 1];
     waitForFocus(function() {
       // Reopen the context menu from tab 2.
-      menupopups[1].addEventListener("popupshown", onpopupshown2c, false);
+      huds[1].ui.once("save-bodies-ui-toggled", () => testpopup2c(aEvent));
       menupopups[1].openPopup();
     }, tabs[runCount*2 + 1].linkedBrowser.contentWindow);
   }, false);
-
-  waitForSuccess({
-    name: "saveRequestAndResponseBodies update",
-    validatorFn: function()
-    {
-      return huds[0].ui.saveRequestAndResponseBodies;
-    },
-    successFn: function()
-    {
-      menupopups[0].hidePopup();
-    },
-    failureFn: finishTest,
-  });
 }
 
-function onpopupshown2c(aEvent)
-{
-  menupopups[1].removeEventListener(aEvent.type, onpopupshown2c, false);
-
+function testpopup2c(aEvent) {
   is(menuitems[1].getAttribute("checked"), "true", "menuitems[1] is checked");
 
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
@@ -203,7 +174,6 @@ function onpopupshown2c(aEvent)
         executeSoon(finishTest);
       }
     });
-
   }, false);
 
   executeSoon(function() {
