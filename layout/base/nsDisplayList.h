@@ -938,6 +938,16 @@ public:
   }
 
   /**
+   * For display items types that just draw a background we use this function
+   * to do any invalidation that might be needed if we are asked to sync decode
+   * images.
+   */
+  void AddInvalidRegionForSyncDecodeBackgroundImages(
+    nsDisplayListBuilder* aBuilder,
+    const nsDisplayItemGeometry* aGeometry,
+    nsRegion* aInvalidRegion);
+
+  /**
    * Called when the area rendered by this display item has changed (been
    * invalidated or changed geometry) since the last paint. This includes
    * when the display item was not rendered at all in the last paint.

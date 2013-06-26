@@ -397,6 +397,12 @@ struct nsCSSRendering {
                                        uint32_t aFlags);
 
   /**
+   * Checks if all images that are part of the background for aFrame are
+   * currently decoded.
+   */
+  static bool AreAllBackgroundImagesDecodedForFrame(nsIFrame* aFrame);
+
+  /**
    * Called when we start creating a display list. The frame tree will not
    * change until a matching EndFrameTreeLocked is called.
    */
