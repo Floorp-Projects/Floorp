@@ -1227,12 +1227,10 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
       case VMFunction::RootPropertyName:
       case VMFunction::RootFunction:
       case VMFunction::RootCell:
-        loadPtr(Address(StackPointer, 0), cellReg);
-        freeStack(sizeof(void *));
+        Pop(cellReg);
         break;
       case VMFunction::RootValue:
-        loadValue(Address(StackPointer, 0), valueReg);
-        freeStack(sizeof(Value));
+        Pop(valueReg);
         break;
     }
 }

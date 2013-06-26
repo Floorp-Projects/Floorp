@@ -55,6 +55,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
   public:
     using MacroAssemblerX86Shared::Push;
+    using MacroAssemblerX86Shared::Pop;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
 
@@ -203,6 +204,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void pushValue(const Address &addr) {
         push(tagOf(addr));
         push(payloadOf(addr));
+    }
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
+    void Pop(const ValueOperand &val) {
+        popValue(val);
+        framePushed_ -= sizeof(Value);
     }
     void storePayload(const Value &val, Operand dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);

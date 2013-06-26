@@ -178,9 +178,14 @@ class MacroAssemblerX86Shared : public Assembler
         return pushWithPatch(word);
     }
 
-    void Pop(const Register &reg) {
-        pop(reg);
+    template <typename T>
+    void Pop(const T &t) {
+        pop(t);
         framePushed_ -= STACK_SLOT_SIZE;
+    }
+    void Pop(const FloatRegister &t) {
+        pop(t);
+        framePushed_ -= sizeof(double);
     }
     void implicitPop(uint32_t args) {
         JS_ASSERT(args % STACK_SLOT_SIZE == 0);
