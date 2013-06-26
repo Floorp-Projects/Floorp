@@ -25,14 +25,16 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
+                                  "resource://gre/modules/DownloadStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "env",
                                    "@mozilla.org/process/environment;1",
                                    "nsIEnvironment");
@@ -51,6 +53,44 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
 this.DownloadIntegration = {
   // For testing only
   testMode: false,
+  dontLoad: false,
+
+  /**
+   * Main DownloadStore object for loading and saving the list of persistent
+   * downloads, or null if the download list was never requested and thus it
+   * doesn't need to be persisted.
+   */
+  _store: null,
+
+  /**
+   * Performs initialization of the list of persistent downloads, before its
+   * first use by the host application.  This function may be called only once
+   * during the entire lifetime of the application.
+   *
+   * @param aList
+   *        DownloadList object to be populated with the download objects
+   *        serialized from the previous session.  This list will be persisted
+   *        to disk during the session lifetime or when the session terminates.
+   *
+   * @return {Promise}
+   * @resolves When the list has been populated.
+   * @rejects JavaScript exception.
+   */
+  loadPersistent: function DI_loadPersistent(aList)
+  {
+    if (this.dontLoad) {
+      return Promise.resolve();
+    }
+
+    if (this._store) {
+      throw new Error("loadPersistent may be called only once.");
+    }
+
+    this._store = new DownloadStore(aList, OS.Path.join(
+                                              OS.Constants.Path.profileDir,
+                                              "downloads.json"));
+    return this._store.load();
+  },
 
   /**
    * Returns the system downloads directory asynchronously.
