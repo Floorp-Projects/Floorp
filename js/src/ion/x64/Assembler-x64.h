@@ -428,6 +428,10 @@ class Assembler : public AssemblerX86Shared
         masm.movq_rr(src.code(), dest.code());
     }
 
+    void xchgq(const Register &src, const Register &dest) {
+        masm.xchgq_rr(src.code(), dest.code());
+    }
+
     void andq(const Register &src, const Register &dest) {
         masm.andq_rr(src.code(), dest.code());
     }
@@ -551,6 +555,9 @@ class Assembler : public AssemblerX86Shared
         // instruction stream.
         masm.movq_i64r(label->prev(), dest.code());
         label->setPrev(masm.size());
+    }
+    void xchg(const Register &src, const Register &dest) {
+        xchgq(src, dest);
     }
     void lea(const Operand &src, const Register &dest) {
         switch (src.kind()) {

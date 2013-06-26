@@ -488,6 +488,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Address &dest) {
         addl(imm, Operand(dest));
     }
+    void addPtr(Imm32 imm, const Operand &dest) {
+        addl(imm, dest);
+    }
     void addPtr(const Address &src, const Register &dest) {
         addl(Operand(src), dest);
     }

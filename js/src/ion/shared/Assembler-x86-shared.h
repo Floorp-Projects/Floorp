@@ -287,6 +287,10 @@ class AssemblerX86Shared
         }
     }
 
+    void xchgl(const Register &src, const Register &dest) {
+        masm.xchgl_rr(src.code(), dest.code());
+    }
+
     void movsd(const FloatRegister &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.movsd_rr(src.code(), dest.code());
