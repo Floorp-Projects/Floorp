@@ -343,6 +343,9 @@ class Assembler : public AssemblerX86Shared
     void mov(const Register &src, const Register &dest) {
         movl(src, dest);
     }
+    void xchg(const Register &src, const Register &dest) {
+        xchgl(src, dest);
+    }
     void lea(const Operand &src, const Register &dest) {
         return leal(src, dest);
     }
