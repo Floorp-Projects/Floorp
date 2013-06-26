@@ -3692,12 +3692,9 @@ Parser<ParseHandler>::matchInOrOf(bool *isForOfp)
         *isForOfp = false;
         return true;
     }
-    if (tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->names().of) {
-            *isForOfp = true;
-            return true;
-        }
-        tokenStream.ungetToken();
+    if (tokenStream.matchContextualKeyword(context->names().of)) {
+        *isForOfp = true;
+        return true;
     }
     return false;
 }
@@ -3764,13 +3761,9 @@ Parser<FullParseHandler>::forStatement()
     bool isForEach = false;
     unsigned iflags = 0;
 
-    if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->names().each) {
-            iflags = JSITER_FOREACH;
-            isForEach = true;
-        } else {
-            tokenStream.ungetToken();
-        }
+    if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each)) {
+        iflags = JSITER_FOREACH;
+        isForEach = true;
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
@@ -5800,12 +5793,8 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
 
         pn2->setOp(JSOP_ITER);
         pn2->pn_iflags = JSITER_ENUMERATE;
-        if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
-            if (tokenStream.currentToken().name() == context->names().each)
-                pn2->pn_iflags |= JSITER_FOREACH;
-            else
-                tokenStream.ungetToken();
-        }
+        if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each))
+            pn2->pn_iflags |= JSITER_FOREACH;
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
         GenexpGuard<FullParseHandler> guard(this);
