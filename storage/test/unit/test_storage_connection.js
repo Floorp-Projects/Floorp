@@ -7,69 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-function asyncClone(db, readOnly) {
-  let deferred = Promise.defer();
-  db.asyncClone(readOnly, function(status, db2) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve(db2);
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function asyncClose(db) {
-  let deferred = Promise.defer();
-  db.asyncClose(function(status) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve();
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function openAsyncDatabase(file, options) {
-  let deferred = Promise.defer();
-  let properties;
-  if (options) {
-    properties = Cc["@mozilla.org/hash-property-bag;1"].
-        createInstance(Ci.nsIWritablePropertyBag);
-    for (let k in options) {
-      properties.setProperty(k, options[k]);
-    }
-  }
-  getService().openAsyncDatabase(file, properties, function(status, db) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function executeAsync(statement, onResult) {
-  let deferred = Promise.defer();
-  statement.executeAsync({
-    handleError: function(error) {
-      deferred.reject(error);
-    },
-    handleResult: function(result) {
-      if (onResult) {
-        onResult(result);
-      }
-    },
-    handleCompletion: function(result) {
-      deferred.resolve(result);
-    }
-  });
-  return deferred.promise;
-}
-
-add_task(function test_connectionReady_open()
+function test_connectionReady_open()
 {
   // there doesn't seem to be a way for the connection to not be ready (unless
   // we close it with mozIStorageConnection::Close(), but we don't for this).
@@ -78,9 +16,10 @@ add_task(function test_connectionReady_open()
 
   var msc = getOpenedDatabase();
   do_check_true(msc.connectionReady);
-});
+  run_next_test();
+}
 
-add_task(function test_connectionReady_closed()
+function test_connectionReady_closed()
 {
   // This also tests mozIStorageConnection::Close()
 
@@ -88,41 +27,47 @@ add_task(function test_connectionReady_closed()
   msc.close();
   do_check_false(msc.connectionReady);
   gDBConn = null; // this is so later tests don't start to fail.
-});
+  run_next_test();
+}
 
-add_task(function test_databaseFile()
+function test_databaseFile()
 {
   var msc = getOpenedDatabase();
   do_check_true(getTestDB().equals(msc.databaseFile));
-});
+  run_next_test();
+}
 
-add_task(function test_tableExists_not_created()
+function test_tableExists_not_created()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.tableExists("foo"));
-});
+  run_next_test();
+}
 
-add_task(function test_indexExists_not_created()
+function test_indexExists_not_created()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.indexExists("foo"));
-});
+  run_next_test();
+}
 
-add_task(function test_createTable_not_created()
+function test_createTable_not_created()
 {
   var msc = getOpenedDatabase();
   msc.createTable("test", "id INTEGER PRIMARY KEY, name TEXT");
   do_check_true(msc.tableExists("test"));
-});
+  run_next_test();
+}
 
-add_task(function test_indexExists_created()
+function test_indexExists_created()
 {
   var msc = getOpenedDatabase();
   msc.executeSimpleSQL("CREATE INDEX name_ind ON test (name)");
   do_check_true(msc.indexExists("name_ind"));
-});
+  run_next_test();
+}
 
-add_task(function test_createTable_already_created()
+function test_createTable_already_created()
 {
   var msc = getOpenedDatabase();
   do_check_true(msc.tableExists("test"));
@@ -132,22 +77,25 @@ add_task(function test_createTable_already_created()
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
   }
-});
+  run_next_test();
+}
 
-add_task(function test_lastInsertRowID()
+function test_lastInsertRowID()
 {
   var msc = getOpenedDatabase();
   msc.executeSimpleSQL("INSERT INTO test (name) VALUES ('foo')");
   do_check_eq(1, msc.lastInsertRowID);
-});
+  run_next_test();
+}
 
-add_task(function test_transactionInProgress_no()
+function test_transactionInProgress_no()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.transactionInProgress);
-});
+  run_next_test();
+}
 
-add_task(function test_transactionInProgress_yes()
+function test_transactionInProgress_yes()
 {
   var msc = getOpenedDatabase();
   msc.beginTransaction();
@@ -159,9 +107,10 @@ add_task(function test_transactionInProgress_yes()
   do_check_true(msc.transactionInProgress);
   msc.rollbackTransaction();
   do_check_false(msc.transactionInProgress);
-});
+  run_next_test();
+}
 
-add_task(function test_commitTransaction_no_transaction()
+function test_commitTransaction_no_transaction()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.transactionInProgress);
@@ -171,9 +120,10 @@ add_task(function test_commitTransaction_no_transaction()
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_UNEXPECTED, e.result);
   }
-});
+  run_next_test();
+}
 
-add_task(function test_rollbackTransaction_no_transaction()
+function test_rollbackTransaction_no_transaction()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.transactionInProgress);
@@ -183,38 +133,43 @@ add_task(function test_rollbackTransaction_no_transaction()
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_UNEXPECTED, e.result);
   }
-});
+  run_next_test();
+}
 
-add_task(function test_get_schemaVersion_not_set()
+function test_get_schemaVersion_not_set()
 {
   do_check_eq(0, getOpenedDatabase().schemaVersion);
-});
+  run_next_test();
+}
 
-add_task(function test_set_schemaVersion()
+function test_set_schemaVersion()
 {
   var msc = getOpenedDatabase();
   const version = 1;
   msc.schemaVersion = version;
   do_check_eq(version, msc.schemaVersion);
-});
+  run_next_test();
+}
 
-add_task(function test_set_schemaVersion_same()
+function test_set_schemaVersion_same()
 {
   var msc = getOpenedDatabase();
   const version = 1;
   msc.schemaVersion = version; // should still work ok
   do_check_eq(version, msc.schemaVersion);
-});
+  run_next_test();
+}
 
-add_task(function test_set_schemaVersion_negative()
+function test_set_schemaVersion_negative()
 {
   var msc = getOpenedDatabase();
   const version = -1;
   msc.schemaVersion = version;
   do_check_eq(version, msc.schemaVersion);
-});
+  run_next_test();
+}
 
-add_task(function test_createTable(){
+function test_createTable(){
   var temp = getTestDB().parent;
   temp.append("test_db_table");
   try {
@@ -227,9 +182,10 @@ add_task(function test_createTable(){
     do_check_true(e.result==Cr.NS_ERROR_NOT_INITIALIZED ||
                   e.result==Cr.NS_ERROR_FAILURE);
   }
-});
+  run_next_test();
+}
 
-add_task(function test_defaultSynchronousAtNormal()
+function test_defaultSynchronousAtNormal()
 {
   var msc = getOpenedDatabase();
   var stmt = createStatement("PRAGMA synchronous;");
@@ -241,10 +197,10 @@ add_task(function test_defaultSynchronousAtNormal()
     stmt.reset();
     stmt.finalize();
   }
-});
+  run_next_test();
+}
 
-// must be ran before executeAsync tests
-add_task(function test_close_does_not_spin_event_loop()
+function test_close_does_not_spin_event_loop()
 {
   // We want to make sure that the event loop on the calling thread does not
   // spin when close is called.
@@ -270,9 +226,10 @@ add_task(function test_close_does_not_spin_event_loop()
 
   // Reset gDBConn so that later tests will get a new connection object.
   gDBConn = null;
-});
+  run_next_test();
+}
 
-add_task(function test_asyncClose_succeeds_with_finalized_async_statement()
+function test_asyncClose_succeeds_with_finalized_async_statement()
 {
   // XXX this test isn't perfect since we can't totally control when events will
   //     run.  If this paticular function fails randomly, it means we have a
@@ -285,15 +242,15 @@ add_task(function test_asyncClose_succeeds_with_finalized_async_statement()
   stmt.executeAsync();
   stmt.finalize();
 
-  let deferred = Promise.defer();
-  yield asyncClose(getOpenedDatabase());
-  // Reset gDBConn so that later tests will get a new connection object.
-  gDBConn = null;
-});
+  getOpenedDatabase().asyncClose(function() {
+    // Reset gDBConn so that later tests will get a new connection object.
+    gDBConn = null;
+    run_next_test();
+  });
+}
 
-add_task(function test_close_fails_with_async_statement_ran()
+function test_close_fails_with_async_statement_ran()
 {
-  let deferred = Promise.defer();
   let stmt = createStatement("SELECT * FROM test");
   stmt.executeAsync();
   stmt.finalize();
@@ -311,13 +268,12 @@ add_task(function test_close_fails_with_async_statement_ran()
     db.asyncClose(function() {
       // Reset gDBConn so that later tests will get a new connection object.
       gDBConn = null;
-      deferred.resolve();
+      run_next_test();
     });
   }
-  yield deferred.promise;
-});
+}
 
-add_task(function test_clone_optional_param()
+function test_clone_optional_param()
 {
   let db1 = getService().openUnsharedDatabase(getTestDB());
   let db2 = db1.clone();
@@ -336,181 +292,11 @@ add_task(function test_clone_optional_param()
 
   // Additionally check that it is a connection on the same database.
   do_check_true(db1.databaseFile.equals(db2.databaseFile));
-});
 
-function standardAsyncTest(promisedDB, name, shouldInit = false) {
-  do_print("Performing standard async test " + name);
-
-  let adb = yield promisedDB;
-  do_check_true(adb instanceof Ci.mozIStorageAsyncConnection);
-  do_check_false(adb instanceof Ci.mozIStorageConnection);
-
-  if (shouldInit) {
-    let stmt = adb.createAsyncStatement("CREATE TABLE test(name TEXT)");
-    yield executeAsync(stmt);
-    stmt.finalize();
-  }
-
-  // Generate a name to insert and fetch back
-  let name = "worker bee " + Math.random() + " (" + name + ")";
-
-  let stmt = adb.createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
-  stmt.params.name = name;
-  let result = yield executeAsync(stmt);
-  do_print("Request complete");
-  stmt.finalize();
-  do_check_true(Components.isSuccessCode(result));
-  do_print("Extracting data");
-  stmt = adb.createAsyncStatement("SELECT * FROM test");
-  let found = false;
-  yield executeAsync(stmt, function(result) {
-    do_print("Data has been extracted");
-
-    for (let row = result.getNextRow(); row != null; row = result.getNextRow()) {
-      if (row.getResultByName("name") == name) {
-        found = true;
-      break;
-      }
-    }
-  });
-  do_check_true(found);
-  stmt.finalize();
-  yield asyncClose(adb);
-
-  do_print("Standard async test " + name + " complete");
+  run_next_test();
 }
 
-add_task(function test_open_async() {
-  yield standardAsyncTest(openAsyncDatabase(getTestDB(), null), "default");
-  yield standardAsyncTest(openAsyncDatabase(getTestDB()), "no optional arg");
-  yield standardAsyncTest(openAsyncDatabase(getTestDB(),
-    {shared: false, growthIncrement: 54}), "non-default options");
-  yield standardAsyncTest(openAsyncDatabase("memory"),
-    "in-memory database", true);
-  yield standardAsyncTest(openAsyncDatabase("memory",
-    {shared: false, growthIncrement: 54}),
-    "in-memory database and options", true);
-
-  do_print("Testing async opening with bogus options 1");
-  let raised = false;
-  let adb = null;
-  try {
-    adb = yield openAsyncDatabase(getTestDB(), {shared: "forty-two"});
-  } catch (ex) {
-    raised = true;
-  } finally {
-    if (adb) {
-      yield asyncClose(adb);
-    }
-  }
-  do_check_true(raised);
-
-  do_print("Testing async opening with bogus options 2");
-  raised = false;
-  adb = null;
-  try {
-    adb = yield openAsyncDatabase(getTestDB(), {growthIncrement: "forty-two"});
-  } catch (ex) {
-    raised = true;
-  } finally {
-    if (adb) {
-      yield asyncClose(adb);
-    }
-  }
-  do_check_true(raised);
-});
-
-
-add_task(function test_async_open_with_shared_cache() {
-  do_print("Testing that opening with a shared cache doesn't break stuff");
-  let adb = yield openAsyncDatabase(getTestDB(), {shared: true});
-
-  let stmt = adb.createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
-  stmt.params.name = "clockworker";
-  let result = yield executeAsync(stmt);
-  do_print("Request complete");
-  stmt.finalize();
-  do_check_true(Components.isSuccessCode(result));
-  do_print("Extracting data");
-  stmt = adb.createAsyncStatement("SELECT * FROM test");
-  let found = false;
-  yield executeAsync(stmt, function(result) {
-    do_print("Data has been extracted");
-
-    for (let row = result.getNextRow(); row != null; row = result.getNextRow()) {
-      if (row.getResultByName("name") == "clockworker") {
-        found = true;
-      break;
-      }
-    }
-  });
-  do_check_true(found);
-  stmt.finalize();
-  yield asyncClose(adb);
-});
-
-add_task(function test_clone_trivial_async()
-{
-  let db1 = getService().openDatabase(getTestDB());
-  do_print("Opened adb1");
-  do_check_true(db1 instanceof Ci.mozIStorageAsyncConnection);
-  let adb2 = yield asyncClone(db1, true);
-  do_check_true(adb2 instanceof Ci.mozIStorageAsyncConnection);
-  do_print("Cloned to adb2");
-  db1.close();
-  do_print("Closed db1");
-  yield asyncClose(adb2);
-});
-
-add_task(function test_clone_no_optional_param_async()
-{
-  "use strict";
-  do_print("Testing async cloning");
-  let adb1 = yield openAsyncDatabase(getTestDB(), null);
-  do_check_true(adb1 instanceof Ci.mozIStorageAsyncConnection);
-
-  do_print("Cloning database");
-  do_check_true(Components.isSuccessCode(result));
-
-  let adb2 = yield asyncClone(adb1);
-  do_print("Testing that the cloned db is a mozIStorageAsyncConnection " +
-           "and not a mozIStorageConnection");
-  do_check_true(adb2 instanceof Ci.mozIStorageAsyncConnection);
-  do_check_false(adb2 instanceof Ci.mozIStorageConnection);
-
-  do_print("Inserting data into source db");
-  let stmt = adb1.
-               createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
-
-  stmt.params.name = "yoric";
-  let result = yield executeAsync(stmt);
-  do_print("Request complete");
-  stmt.finalize();
-  do_check_true(Components.isSuccessCode(result));
-  do_print("Extracting data from clone db");
-  stmt = adb2.createAsyncStatement("SELECT * FROM test");
-  let found = false;
-  yield executeAsync(stmt, function(result) {
-    do_print("Data has been extracted");
-
-    for (let row = result.getNextRow(); row != null; row = result.getNextRow()) {
-      if (row.getResultByName("name") == "yoric") {
-        found = true;
-      break;
-      }
-    }
-  });
-  do_check_true(found);
-  stmt.finalize();
-  do_print("Closing databases");
-  yield asyncClose(adb2);
-  do_print("First db closed");
-
-  yield asyncClose(adb1);
-  do_print("Second db closed");
-});
-
-add_task(function test_clone_readonly()
+function test_clone_readonly()
 {
   let db1 = getService().openUnsharedDatabase(getTestDB());
   let db2 = db1.clone(true);
@@ -526,31 +312,36 @@ add_task(function test_clone_readonly()
   stmt = db2.createStatement("SELECT * FROM test");
   do_check_true(stmt.executeStep());
   stmt.finalize();
-});
 
-add_task(function test_clone_shared_readonly()
+  run_next_test();
+}
+
+function test_clone_shared_readonly()
 {
   let db1 = getService().openDatabase(getTestDB());
   let db2 = db1.clone(true);
   do_check_true(db2.connectionReady);
 
+  // A write statement should fail here.
   let stmt = db2.createStatement("INSERT INTO test (name) VALUES (:name)");
-  stmt.params.name = "parker";
+  stmt.params.name = "reed";
   // TODO currently SQLite does not actually work correctly here.  The behavior
   //      we want is commented out, and the current behavior is being tested
   //      for.  Our IDL comments will have to be updated when this starts to
   //      work again.
-  stmt.execute();
-  // expectError(Components.results.NS_ERROR_FILE_READ_ONLY, function() stmt.execute());
+  stmt.execute(); // This should not throw!
+  //expectError(Cr.NS_ERROR_FILE_READ_ONLY, function() stmt.execute());
   stmt.finalize();
 
   // And a read statement should succeed.
   stmt = db2.createStatement("SELECT * FROM test");
   do_check_true(stmt.executeStep());
   stmt.finalize();
-});
 
-add_task(function test_close_clone_fails()
+  run_next_test();
+}
+
+function test_close_clone_fails()
 {
   let calls = [
     "openDatabase",
@@ -561,16 +352,20 @@ add_task(function test_close_clone_fails()
     db.close();
     expectError(Cr.NS_ERROR_NOT_INITIALIZED, function() db.clone());
   });
-});
 
-add_task(function test_memory_clone_fails()
+  run_next_test();
+}
+
+function test_memory_clone_fails()
 {
   let db = getService().openSpecialDatabase("memory");
   db.close();
-  expectError(Cr.NS_ERROR_NOT_INITIALIZED, function() db.clone());
-});
+  expectError(Cr.NS_ERROR_NOT_INIALIZED, function() db.clone());
 
-add_task(function test_clone_copies_functions()
+  run_next_test();
+}
+
+function test_clone_copies_functions()
 {
   const FUNC_NAME = "test_func";
   let calls = [
@@ -602,9 +397,11 @@ add_task(function test_clone_copies_functions()
       });
     });
   });
-});
 
-add_task(function test_clone_copies_overridden_functions()
+  run_next_test();
+}
+
+function test_clone_copies_overridden_functions()
 {
   const FUNC_NAME = "lower";
   function test_func() {
@@ -648,9 +445,11 @@ add_task(function test_clone_copies_overridden_functions()
       });
     });
   });
-});
 
-add_task(function test_clone_copies_pragmas()
+  run_next_test();
+}
+
+function test_clone_copies_pragmas()
 {
   const PRAGMAS = [
     { name: "cache_size", value: 500, copied: true },
@@ -687,9 +486,11 @@ add_task(function test_clone_copies_pragmas()
     validate(pragma.value, stmt.getInt32(0));
     stmt.finalize();
   });
-});
 
-add_task(function test_readonly_clone_copies_pragmas()
+  run_next_test();
+}
+
+function test_readonly_clone_copies_pragmas()
 {
   const PRAGMAS = [
     { name: "cache_size", value: 500, copied: true },
@@ -726,9 +527,11 @@ add_task(function test_readonly_clone_copies_pragmas()
     validate(pragma.value, stmt.getInt32(0));
     stmt.finalize();
   });
-});
 
-add_task(function test_getInterface()
+  run_next_test();
+}
+
+function test_getInterface()
 {
   let db = getOpenedDatabase();
   let target = db.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -737,10 +540,48 @@ add_task(function test_getInterface()
   // the correct value.
   do_check_true(target != null);
 
-  yield asyncClose(db);
-  gDBConn = null;
-});
+ db.asyncClose(function() {
+   // Reset gDBConn so that later tests will get a new connection object.
+   gDBConn = null;
+   run_next_test();
+ });
+}
 
+////////////////////////////////////////////////////////////////////////////////
+//// Test Runner
+
+[
+  test_connectionReady_open,
+  test_connectionReady_closed,
+  test_databaseFile,
+  test_tableExists_not_created,
+  test_indexExists_not_created,
+  test_createTable_not_created,
+  test_indexExists_created,
+  test_createTable_already_created,
+  test_lastInsertRowID,
+  test_transactionInProgress_no,
+  test_transactionInProgress_yes,
+  test_commitTransaction_no_transaction,
+  test_rollbackTransaction_no_transaction,
+  test_get_schemaVersion_not_set,
+  test_set_schemaVersion,
+  test_set_schemaVersion_same,
+  test_set_schemaVersion_negative,
+  test_createTable,
+  test_defaultSynchronousAtNormal,
+  test_close_does_not_spin_event_loop, // must be ran before executeAsync tests
+  test_asyncClose_succeeds_with_finalized_async_statement,
+  test_close_fails_with_async_statement_ran,
+  test_clone_optional_param,
+  test_clone_readonly,
+  test_close_clone_fails,
+  test_clone_copies_functions,
+  test_clone_copies_overridden_functions,
+  test_clone_copies_pragmas,
+  test_readonly_clone_copies_pragmas,
+  test_getInterface,
+].forEach(add_test);
 
 function run_test()
 {
