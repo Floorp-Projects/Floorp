@@ -970,14 +970,6 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   return scrollableRect.ClampRect(shiftedDisplayPort) - scrollOffset;
 }
 
-/*static*/ CSSRect
-AsyncPanZoomController::CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics)
-{
-  CSSToScreenScale resolution = aMetrics.CalculateResolution();
-  CSSIntRect rect = gfx::RoundedIn(aMetrics.mCompositionBounds / resolution);
-  return CSSRect(rect);
-}
-
 void AsyncPanZoomController::SetDPI(int aDPI) {
   mDPI = aDPI;
 }
@@ -1325,7 +1317,7 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
     if (zoomToRect.IsEmpty() ||
         (currentZoom == localMaxZoom && targetZoom >= localMaxZoom) ||
         (currentZoom == localMinZoom && targetZoom <= localMinZoom)) {
-      CSSRect compositedRect = CalculateCompositedRectInCssPixels(mFrameMetrics);
+      CSSRect compositedRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
       float y = scrollOffset.y;
       float newHeight =
         cssPageRect.width * (compositedRect.height / compositedRect.width);
@@ -1348,8 +1340,7 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
     // Adjust the zoomToRect to a sensible position to prevent overscrolling.
     FrameMetrics metricsAfterZoom = mFrameMetrics;
     metricsAfterZoom.mZoom = mEndZoomToMetrics.mZoom;
-    CSSRect rectAfterZoom
-      = CalculateCompositedRectInCssPixels(metricsAfterZoom);
+    CSSRect rectAfterZoom = metricsAfterZoom.CalculateCompositedRectInCssPixels();
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
@@ -1461,7 +1452,7 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
   CSSSize scrollableSize;
   {
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
-    contentRect = AsyncPanZoomController::CalculateCompositedRectInCssPixels(mFrameMetrics);
+    contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
