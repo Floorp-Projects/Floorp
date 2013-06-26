@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ion_ParallelArrayAnalysis_h
-#define ion_ParallelArrayAnalysis_h
+#ifndef ion_ParallelSafetyAnalysis_h
+#define ion_ParallelSafetyAnalysis_h
 
 #include "MIR.h"
 #include "CompileInfo.h"
@@ -22,7 +22,7 @@ class AutoDestroyAllocator;
 // Determines whether a function is compatible for parallel execution.
 // Removes basic blocks containing unsafe MIR operations from the
 // graph and replaces them with MParBailout blocks.
-class ParallelArrayAnalysis
+class ParallelSafetyAnalysis
 {
     MIRGenerator *mir_;
     MIRGraph &graph_;
@@ -31,8 +31,8 @@ class ParallelArrayAnalysis
     void replaceOperandsOnResumePoint(MResumePoint *resumePoint, MDefinition *withDef);
 
   public:
-    ParallelArrayAnalysis(MIRGenerator *mir,
-                          MIRGraph &graph)
+    ParallelSafetyAnalysis(MIRGenerator *mir,
+                           MIRGraph &graph)
       : mir_(mir),
         graph_(graph)
     {}
@@ -52,4 +52,4 @@ bool AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets);
 } // namespace ion
 } // namespace js
 
-#endif /* ion_ParallelArrayAnalysis_h */
+#endif /* ion_ParallelSafetyAnalysis_h */

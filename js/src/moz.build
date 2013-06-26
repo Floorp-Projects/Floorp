@@ -232,7 +232,7 @@ if CONFIG['ENABLE_ION']:
         'MIR.cpp',
         'MIRGraph.cpp',
         'MoveResolver.cpp',
-        'ParallelArrayAnalysis.cpp',
+        'ParallelSafetyAnalysis.cpp',
         'ParallelFunctions.cpp',
         'RangeAnalysis.cpp',
         'RegisterAllocator.cpp',
