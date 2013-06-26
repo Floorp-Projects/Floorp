@@ -7,6 +7,8 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
+let hud;
+
 function test() {
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
@@ -22,21 +24,22 @@ function consoleOpened(aHud) {
   let console = content.console;
 
   for (let i = 0; i < 50; i++) {
-    console.log("http://www.example.com/" + i);
+    console.log("foobarz #" + i);
   }
 
-  waitForSuccess({
-    name: "50 console.log messages displayed",
-    validatorFn: function()
-    {
-      return hud.outputNode.itemCount == 50;
-    },
-    successFn: testLiveFilteringOfMessageTypes,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "foobarz #49",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testLiveFilteringOfMessageTypes);
 }
 
 function testLiveFilteringOfMessageTypes() {
+  is(hud.outputNode.itemCount, 50, "number of messages");
+
   hud.setFilterState("log", false);
   is(countMessageNodes(), 0, "the log nodes are hidden when the " +
     "corresponding filter is switched off");
