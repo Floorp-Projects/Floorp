@@ -7,40 +7,40 @@
 MODULE = 'thebes'
 
 EXPORTS += [
-    'BasicCanvasLayer.h',
-    'BasicImplData.h',
-    'BasicLayers.h',
-    'BasicLayersImpl.h',
-    'BasicThebesLayer.h',
-    'ClientCanvasLayer.h',
-    'ClientContainerLayer.h',
-    'ClientLayerManager.h',
-    'ClientThebesLayer.h',
-    'ClientTiledThebesLayer.h',
-    'Composer2D.h',
-    'CompositableHost.h',
-    'CompositorChild.h',
-    'CompositorParent.h',
     'CopyableCanvasLayer.h',
     'D3D9SurfaceImage.h',
     'FrameMetrics.h',
     'GonkIOSurfaceImage.h',
     'ImageContainer.h',
-    'ImageHost.h',
-    'ImageLayerOGL.h',
     'ImageLayers.h',
     'ImageTypes.h',
-    'LayerManagerOGL.h',
-    'LayerManagerOGLProgram.h',
-    'LayerManagerOGLShaders.h',
     'LayerSorter.h',
     'LayerTreeInvalidation.h',
     'Layers.h',
     'LayersLogging.h',
     'ReadbackLayer.h',
-    'ShadowLayersManager.h',
     'SharedTextureImage.h',
-    'TexturePoolOGL.h',
+    'basic/BasicCanvasLayer.h',
+    'basic/BasicImplData.h',
+    'basic/BasicLayers.h',
+    'basic/BasicLayersImpl.h',
+    'basic/BasicThebesLayer.h',
+    'client/ClientCanvasLayer.h',
+    'client/ClientContainerLayer.h',
+    'client/ClientLayerManager.h',
+    'client/ClientThebesLayer.h',
+    'client/ClientTiledThebesLayer.h',
+    'composite/CompositableHost.h',
+    'composite/ImageHost.h',
+    'ipc/CompositorChild.h',
+    'ipc/CompositorParent.h',
+    'ipc/ShadowLayersManager.h',
+    'opengl/Composer2D.h',
+    'opengl/ImageLayerOGL.h',
+    'opengl/LayerManagerOGL.h',
+    'opengl/LayerManagerOGLProgram.h',
+    'opengl/LayerManagerOGLShaders.h',
+    'opengl/TexturePoolOGL.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -49,8 +49,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
     if CONFIG['MOZ_ENABLE_D3D9_LAYER']:
         EXPORTS += [
-            'DeviceManagerD3D9.h',
-            'LayerManagerD3D9.h',
+            'd3d9/DeviceManagerD3D9.h',
+            'd3d9/LayerManagerD3D9.h',
         ]
         CPP_SOURCES += [
             'LayerManagerD3D9.cpp',
@@ -64,13 +64,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
     if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         EXPORTS += [
-            'LayerManagerD3D10.h',
-            'ReadbackManagerD3D10.h',
+            'd3d10/LayerManagerD3D10.h',
+            'd3d10/ReadbackManagerD3D10.h',
         ]
         EXPORTS.mozilla.layers += [
-            'CompositorD3D11.h',
-            'ShadowLayerUtilsD3D10.h',
-            'TextureD3D11.h',
+            'd3d11/CompositorD3D11.h',
+            'd3d11/TextureD3D11.h',
+            'ipc/ShadowLayerUtilsD3D10.h',
         ]
         CPP_SOURCES += [
             'CanvasLayerD3D10.cpp',
@@ -86,62 +86,62 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
 
 EXPORTS.gfxipc += [
-    'ShadowLayerUtils.h',
+    'ipc/ShadowLayerUtils.h',
 ]
 
 EXPORTS.mozilla.layers += [
-    'AsyncCompositionManager.h',
-    'AsyncPanZoomController.h',
-    'Axis.h',
-    'BasicCompositor.h',
-    'CanvasClient.h',
-    'CanvasLayerComposite.h',
-    'ColorLayerComposite.h',
-    'CompositableClient.h',
-    'CompositableForwarder.h',
-    'CompositableTransactionParent.h',
-    'CompositingRenderTargetOGL.h',
     'Compositor.h',
-    'CompositorChild.h',
-    'CompositorCocoaWidgetHelper.h',
-    'CompositorOGL.h',
-    'CompositorParent.h',
     'CompositorTypes.h',
-    'ContainerLayerComposite.h',
-    'ContentClient.h',
-    'ContentHost.h',
     'D3D9SurfaceImage.h',
     'Effects.h',
-    'GeckoContentController.h',
-    'GestureEventListener.h',
-    'ISurfaceAllocator.h',
-    'ImageBridgeChild.h',
-    'ImageBridgeParent.h',
-    'ImageClient.h',
-    'ImageHost.h',
-    'ImageLayerComposite.h',
-    'LayerManagerComposite.h',
-    'LayerTransactionChild.h',
-    'LayerTransactionParent.h',
     'LayersTypes.h',
     'RenderTrace.h',
-    'ShadowLayers.h',
-    'ShadowLayersManager.h',
-    'SharedPlanarYCbCrImage.h',
-    'SharedRGBImage.h',
-    'TaskThrottler.h',
-    'TextureClient.h',
-    'TextureClientOGL.h',
-    'TextureHost.h',
-    'TextureHostOGL.h',
-    'ThebesLayerComposite.h',
-    'TiledContentClient.h',
     'YCbCrImageDataSerializer.h',
+    'basic/BasicCompositor.h',
+    'client/CanvasClient.h',
+    'client/CompositableClient.h',
+    'client/ContentClient.h',
+    'client/ImageClient.h',
+    'client/TextureClient.h',
+    'client/TiledContentClient.h',
+    'composite/AsyncCompositionManager.h',
+    'composite/CanvasLayerComposite.h',
+    'composite/ColorLayerComposite.h',
+    'composite/ContainerLayerComposite.h',
+    'composite/ContentHost.h',
+    'composite/ImageHost.h',
+    'composite/ImageLayerComposite.h',
+    'composite/LayerManagerComposite.h',
+    'composite/TextureHost.h',
+    'composite/ThebesLayerComposite.h',
+    'ipc/AsyncPanZoomController.h',
+    'ipc/Axis.h',
+    'ipc/CompositableForwarder.h',
+    'ipc/CompositableTransactionParent.h',
+    'ipc/CompositorChild.h',
+    'ipc/CompositorCocoaWidgetHelper.h',
+    'ipc/CompositorParent.h',
+    'ipc/GeckoContentController.h',
+    'ipc/GestureEventListener.h',
+    'ipc/ISurfaceAllocator.h',
+    'ipc/ImageBridgeChild.h',
+    'ipc/ImageBridgeParent.h',
+    'ipc/LayerTransactionChild.h',
+    'ipc/LayerTransactionParent.h',
+    'ipc/ShadowLayers.h',
+    'ipc/ShadowLayersManager.h',
+    'ipc/SharedPlanarYCbCrImage.h',
+    'ipc/SharedRGBImage.h',
+    'ipc/TaskThrottler.h',
+    'opengl/CompositingRenderTargetOGL.h',
+    'opengl/CompositorOGL.h',
+    'opengl/TextureClientOGL.h',
+    'opengl/TextureHostOGL.h',
 ]
 
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla.layers += [
-        'ShadowLayerUtilsX11.h'
+        'ipc/ShadowLayerUtilsX11.h',
     ]
     CPP_SOURCES += [
         'ShadowLayerUtilsX11.cpp'
@@ -149,7 +149,7 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
-        'GLManager.h'
+        'opengl/GLManager.h',
     ]
     CPP_SOURCES += [
         'ShadowLayerUtilsMac.cpp',
@@ -161,7 +161,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 # has full system permissions there.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS.mozilla.layers += [
-        'ShadowLayerUtilsGralloc.h'
+        'ipc/ShadowLayerUtilsGralloc.h',
     ]
     CPP_SOURCES += [
         'ShadowLayerUtilsGralloc.cpp',

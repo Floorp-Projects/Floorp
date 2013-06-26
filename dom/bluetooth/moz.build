@@ -62,7 +62,7 @@ if CONFIG['MOZ_B2G_BT']:
             ]
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [
-    'BluetoothMessageUtils.h',
+    'ipc/BluetoothMessageUtils.h',
 ]
 
 EXPORTS.mozilla.dom.bluetooth += [

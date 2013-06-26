@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.snappy += [
-    'snappy-c.h',
     'snappy-stubs-public.h',
-    'snappy.h',
+    'src/snappy-c.h',
+    'src/snappy.h',
 ]
 
 CPP_SOURCES += [
