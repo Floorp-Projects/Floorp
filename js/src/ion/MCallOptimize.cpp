@@ -13,6 +13,8 @@
 #include "MIRGraph.h"
 #include "IonBuilder.h"
 
+#include "jsscriptinlines.h"
+
 #include "vm/StringObject-inl.h"
 
 namespace js {

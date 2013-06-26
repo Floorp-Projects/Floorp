@@ -39,13 +39,6 @@ JSObject::enclosingScope()
 
 namespace js {
 
-inline
-ScopeCoordinate::ScopeCoordinate(jsbytecode *pc)
-  : hops(GET_UINT16(pc)), slot(GET_UINT16(pc + 2))
-{
-    JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
-}
-
 inline void
 ScopeObject::setEnclosingScope(HandleObject obj)
 {
