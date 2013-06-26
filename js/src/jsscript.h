@@ -1469,8 +1469,9 @@ enum LineOption {
     NOT_CALLED_FROM_JSOP_EVAL
 };
 
-inline void
-CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
+extern void
+CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *linenop,
+                            JSPrincipals **origin, LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
 extern JSScript *
 CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
