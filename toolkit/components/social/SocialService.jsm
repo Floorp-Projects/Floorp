@@ -143,7 +143,10 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
   for (let manifest of this.manifests) {
     try {
       if (ActiveProviders.has(manifest.origin)) {
-        let provider = new SocialProvider(manifest);
+        let activationType = getOriginActivationType(manifest.origin);
+        let blessed = activationType == "builtin" ||
+                      activationType == "whitelist";
+        let provider = new SocialProvider(manifest, blessed);
         providers[provider.origin] = provider;
       }
     } catch (err) {
@@ -655,7 +658,7 @@ this.SocialService = {
  * @param {jsobj} object representing the manifest file describing this provider
  * @param {bool} boolean indicating whether this provider is "built in"
  */
-function SocialProvider(input) {
+function SocialProvider(input, blessed = false) {
   if (!input.name)
     throw new Error("SocialProvider must be passed a name");
   if (!input.origin)
@@ -679,11 +682,7 @@ function SocialProvider(input) {
   this.ambientNotificationIcons = {};
   this.errorState = null;
   this.frecency = 0;
-
-  let activationType = getOriginActivationType(input.origin);
-  this.blessed = activationType == "builtin" ||
-                 activationType == "whitelist";
-
+  this.blessed = blessed;
   try {
     this.domain = etld.getBaseDomainFromHost(originUri.host);
   } catch(e) {
