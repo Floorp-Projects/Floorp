@@ -364,7 +364,7 @@ this.PushService = {
             // just for it
             if (this._ws) {
               debug("Had a connection, so telling the server");
-              this._request("unregister", {channelID: records[i].channelID});
+              this._sendRequest("unregister", {channelID: records[i].channelID});
             }
           }
         }.bind(this), function() {
