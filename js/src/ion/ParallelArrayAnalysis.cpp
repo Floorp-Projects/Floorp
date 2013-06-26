@@ -566,17 +566,7 @@ ParallelArrayVisitor::visitNewArray(MNewArray *newInstruction)
 bool
 ParallelArrayVisitor::visitRest(MRest *ins)
 {
-    // Construct a new template object that has a generic type object and not
-    // a pc-tracked one. This is because we cannot ensure that the arguments
-    // array's element types to contain the argument types in a threadsafe
-    // manner, so we might as well just not track its element types so that we
-    // can stay parallel.
-    JSObject *templateObj = NewDenseUnallocatedArray(cx_, 0, NULL, TenuredObject);
-    if (!templateObj)
-        return false;
-
-    return replace(ins, MParRest::New(parSlice(), ins->numActuals(),
-                                      ins->numFormals(), templateObj));
+    return replace(ins, MParRest::New(parSlice(), ins));
 }
 
 bool

@@ -2744,11 +2744,6 @@ BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    RootedTypeObject type(cx, types::TypeScript::InitObject(cx, script, pc, JSProto_Array));
-    if (!type)
-        return false;
-    masm.movePtr(ImmGCPtr(type), R0.scratchReg());
-
     ICRest_Fallback::Compiler stubCompiler(cx);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
