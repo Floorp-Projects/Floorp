@@ -1215,6 +1215,19 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
     PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage, flags);
 }
 
+void
+nsDisplayImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                          const nsDisplayItemGeometry* aGeometry,
+                                          nsRegion* aInvalidRegion)
+{
+  if (aBuilder->ShouldSyncDecodeImages() && mImage && !mImage->IsDecoded()) {
+    bool snap;
+    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+  }
+
+  nsDisplayImageContainer::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
+}
+
 already_AddRefed<ImageContainer>
 nsDisplayImage::GetContainer(LayerManager* aManager,
                              nsDisplayListBuilder* aBuilder)
