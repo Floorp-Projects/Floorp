@@ -2247,7 +2247,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       this._valueLabel.classList.remove(VariablesView.getClass(prevGrip));
     }
     this._valueGrip = aGrip;
-    this._valueString = VariablesView.getString(aGrip);
+    this._valueString = VariablesView.getString(aGrip, true);
     this._valueClassName = VariablesView.getClass(aGrip);
 
     this._valueLabel.classList.add(this._valueClassName);

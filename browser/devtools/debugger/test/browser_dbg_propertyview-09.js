@@ -53,7 +53,7 @@ function testFrameParameters()
       is(globalNodes[1].querySelector(".name").getAttribute("value"), "SpecialPowers",
         "Should have the right property name for |SpecialPowers|.");
 
-      is(globalNodes[1].querySelector(".value").getAttribute("value"), "[object Object]",
+      is(globalNodes[1].querySelector(".value").getAttribute("value"), "Object",
         "Should have the right property value for |SpecialPowers|.");
 
       let globalScopeObject = gDebugger.DebuggerView.Variables.getScopeForNode(globalScope);
@@ -62,14 +62,14 @@ function testFrameParameters()
       is(documentNode.target.querySelector(".name").getAttribute("value"), "document",
         "Should have the right property name for |document|.");
 
-      is(documentNode.target.querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
+      is(documentNode.target.querySelector(".value").getAttribute("value"), "HTMLDocument",
         "Should have the right property value for |document|.");
 
       let len = globalNodes.length - 1;
       is(globalNodes[len].querySelector(".name").getAttribute("value"), "window",
         "Should have the right property name for |window|.");
 
-      is(globalNodes[len].querySelector(".value").getAttribute("value"), "[object Window]",
+      is(globalNodes[len].querySelector(".value").getAttribute("value"), "Window",
         "Should have the right property value for |window|.");
 
       resumeAndFinish();
