@@ -34,6 +34,8 @@ static const size_t maxChunkSize =
 class Buffer: public MappedPtr
 {
 public:
+  virtual ~Buffer() { }
+
   virtual bool Resize(size_t size)
   {
     void *buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
@@ -132,7 +134,7 @@ public:
     piece *origBufPieces = reinterpret_cast<piece *>(
                            static_cast<void *>(inBuf));
     std::map<piece, int> stats;
-    for (int i = 0; i < inBuf.GetLength() / sizeof(piece); i++) {
+    for (unsigned int i = 0; i < inBuf.GetLength() / sizeof(piece); i++) {
       stats[origBufPieces[i]]++;
     }
     std::vector<stat_pair> statsVec(stats.begin(), stats.end());
@@ -489,7 +491,7 @@ int main(int argc, char* argv[])
       if (!firstArg[0])
         break;
       bool matched = false;
-      for (int i = 0; i < sizeof(filterName) / sizeof(char *); ++i) {
+      for (unsigned int i = 0; i < sizeof(filterName) / sizeof(char *); ++i) {
         if (strcmp(firstArg[0], filterName[i]) == 0) {
           filter = static_cast<SeekableZStream::FilterId>(i);
           matched = true;
