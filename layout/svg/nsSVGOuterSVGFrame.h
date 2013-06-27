@@ -111,6 +111,7 @@ public:
   // nsISVGChildFrame methods:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
                       const nsIntRect *aDirtyRect) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
 
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       uint32_t aFlags) MOZ_OVERRIDE;
