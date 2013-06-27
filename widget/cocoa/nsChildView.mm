@@ -1387,7 +1387,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
     return NS_OK;
 
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LAYERS_CLIENT ||
-               static_cast<ClientLayerManager*>(GetLayerManager())->GetCompositorBackendType() == LAYERS_BASIC,
+               Compositor::GetBackend() == LAYERS_BASIC,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
   if ([NSView focusView]) {
@@ -1821,8 +1821,8 @@ nsChildView::CreateCompositor()
       compositor::GetLayerManager(mCompositorParent);
     Compositor *compositor = manager->GetCompositor();
 
-    ClientLayerManager *clientManager = static_cast<ClientLayerManager*>(GetLayerManager());
-    if (clientManager->GetCompositorBackendType() == LAYERS_OPENGL) {
+    LayersBackend backend = compositor->GetBackend();
+    if (backend == LAYERS_OPENGL) {
       CompositorOGL *compositorOGL = static_cast<CompositorOGL*>(compositor);
 
       NSOpenGLContext *glContext = (NSOpenGLContext *)compositorOGL->gl()->GetNativeData(GLContext::NativeGLContext);
@@ -3073,8 +3073,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     painted = mGeckoChild->PaintWindow(region);
   } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
     // We only need this so that we actually get DidPaintWindow fired
-    ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
-    if (manager->GetCompositorBackendType() == LAYERS_BASIC) {
+    if (Compositor::GetBackend() == LAYERS_BASIC) {
+      ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
       manager->SetShadowTarget(targetContext);
     }
     painted = mGeckoChild->PaintWindow(region);
