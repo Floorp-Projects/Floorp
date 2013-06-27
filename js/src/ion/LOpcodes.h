@@ -117,6 +117,7 @@
     _(DoubleToInt32)                \
     _(TruncateDToInt32)             \
     _(IntToString)                  \
+    _(DoubleToString)               \
     _(Start)                        \
     _(OsrEntry)                     \
     _(OsrValue)                     \
