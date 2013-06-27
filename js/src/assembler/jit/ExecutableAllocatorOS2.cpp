@@ -24,7 +24,7 @@
  */
 
 
-#include "ExecutableAllocator.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
 #if ENABLE_ASSEMBLER && WTF_OS_OS2
 

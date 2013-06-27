@@ -30,9 +30,9 @@
 #ifndef yarr_PageAllocation_h
 #define yarr_PageAllocation_h
 
-#include "wtfbridge.h"
-#include "OSAllocator.h"
-#include "PageBlock.h"
+#include "yarr/wtfbridge.h"
+#include "yarr/OSAllocator.h"
+#include "yarr/PageBlock.h"
 #include "assembler/wtf/VMTags.h"
 
 #if WTF_OS_DARWIN

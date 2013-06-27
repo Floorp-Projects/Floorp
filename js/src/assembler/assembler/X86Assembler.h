@@ -36,7 +36,7 @@
 
 #if ENABLE_ASSEMBLER && (WTF_CPU_X86 || WTF_CPU_X86_64)
 
-#include "AssemblerBuffer.h"
+#include "assembler/assembler/AssemblerBuffer.h"
 #include "assembler/wtf/Assertions.h"
 #include "js/Vector.h"
 

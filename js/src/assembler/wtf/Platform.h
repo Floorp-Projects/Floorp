@@ -1220,7 +1220,7 @@
 #endif
 
 #if ENABLE_GLIB_SUPPORT
-#include "GTypedefs.h"
+//#include "GTypedefs.h"
 #endif
 
 /* FIXME: This define won't be needed once #27551 is fully landed. However, 
