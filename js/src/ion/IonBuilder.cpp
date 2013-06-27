@@ -3290,9 +3290,14 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
     // Do a string concatenation if adding two inputs that are int or string
     // and at least one is a string.
     if (op == JSOP_ADD &&
-        (left->type() == MIRType_String || right->type() == MIRType_String) &&
-        (left->type() == MIRType_String || left->type() == MIRType_Int32) &&
-        (right->type() == MIRType_String || right->type() == MIRType_Int32))
+        ((left->type() == MIRType_String &&
+          (right->type() == MIRType_String ||
+           right->type() == MIRType_Int32 ||
+           right->type() == MIRType_Double)) ||
+         (left->type() == MIRType_Int32 &&
+          right->type() == MIRType_String) ||
+         (left->type() == MIRType_Double &&
+          right->type() == MIRType_String)))
     {
         MConcat *ins = MConcat::New(left, right);
         current->add(ins);

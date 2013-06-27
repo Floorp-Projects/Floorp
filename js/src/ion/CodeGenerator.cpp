@@ -570,9 +570,13 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
     return true;
 }
 
-typedef JSFlatString *(*IntToStringFn)(JSContext *, int);
+typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
 static const VMFunction IntToStringInfo =
     FunctionInfo<IntToStringFn>(Int32ToString<CanGC>);
+
+typedef ParallelResult (*ParallelIntToStringFn)(ForkJoinSlice *, int, MutableHandleString);
+static const VMFunction ParallelIntToStringInfo =
+    FunctionInfo<ParallelIntToStringFn>(ParIntToString);
 
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
@@ -580,8 +584,19 @@ CodeGenerator::visitIntToString(LIntToString *lir)
     Register input = ToRegister(lir->input());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode *ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
-                                   StoreRegisterTo(output));
+    OutOfLineCode *ool;
+    switch (gen->info().executionMode()) {
+      case SequentialExecution:
+        ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
+                        StoreRegisterTo(output));
+        break;
+      case ParallelExecution:
+        ool = oolCallVM(ParallelIntToStringInfo, lir, (ArgList(), input),
+                        StoreRegisterTo(output));
+        break;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
     if (!ool)
         return false;
 
@@ -590,6 +605,48 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 
     masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.intStaticTable), output);
     masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
+static const VMFunction DoubleToStringInfo =
+    FunctionInfo<DoubleToStringFn>(js_NumberToString<CanGC>);
+
+typedef ParallelResult (*ParallelDoubleToStringFn)(ForkJoinSlice *, double, MutableHandleString);
+static const VMFunction ParallelDoubleToStringInfo =
+    FunctionInfo<ParallelDoubleToStringFn>(ParDoubleToString);
+
+bool
+CodeGenerator::visitDoubleToString(LDoubleToString *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register temp = ToRegister(lir->tempInt());
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode *ool;
+    switch (gen->info().executionMode()) {
+      case SequentialExecution:
+        ool = oolCallVM(DoubleToStringInfo, lir, (ArgList(), input),
+                        StoreRegisterTo(output));
+        break;
+      case ParallelExecution:
+        ool = oolCallVM(ParallelDoubleToStringInfo, lir, (ArgList(), input),
+                        StoreRegisterTo(output));
+        break;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
+    if (!ool)
+        return false;
+
+    masm.convertDoubleToInt32(input, temp, ool->entry(), true);
+    masm.branch32(Assembler::AboveOrEqual, temp, Imm32(StaticStrings::INT_STATIC_LIMIT),
+                  ool->entry());
+
+    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.intStaticTable), output);
+    masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
 
     masm.bind(ool->rejoin());
     return true;
