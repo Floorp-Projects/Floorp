@@ -22,7 +22,7 @@
  * - memory after length and up to the end of the corresponding page is nulled
  *   out.
  */
-class Mappable
+class Mappable: public mozilla::RefCounted<Mappable>
 {
 public:
   virtual ~Mappable() { }
@@ -119,6 +119,9 @@ public:
    * argument is used to create the cache file in the cache directory.
    */
   static Mappable *Create(const char *name, Zip *zip, Zip::Stream *stream);
+
+  /* Override finalize from MappableFile */
+  virtual void finalize() {}
 
   virtual Kind GetKind() const { return MAPPABLE_EXTRACT_FILE; };
 private:

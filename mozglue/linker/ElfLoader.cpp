@@ -182,8 +182,6 @@ LeafName(const char *path)
 LibHandle::~LibHandle()
 {
   free(path);
-  if (mappable && mappable->GetKind() != Mappable::MAPPABLE_EXTRACT_FILE)
-    delete mappable;
 }
 
 const char *
@@ -195,9 +193,8 @@ LibHandle::GetName() const
 size_t
 LibHandle::GetMappableLength() const
 {
-  MOZ_ASSERT(mappable != NULL, "GetMappableLength needs to be called first,"
-                               " and only once");
-  mappable = GetMappable();
+  if (!mappable)
+    mappable = GetMappable();
   if (!mappable)
     return 0;
   return mappable->GetLength();
@@ -206,8 +203,10 @@ LibHandle::GetMappableLength() const
 void *
 LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const
 {
-  MOZ_ASSERT(mappable == NULL, "MappableMMap must be called after"
-                               " GetMappableLength");
+  if (!mappable)
+    mappable = GetMappable();
+  if (!mappable)
+    return MAP_FAILED;
   void* mapped = mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
   if (mapped != MAP_FAILED) {
     /* Ensure the availability of all pages within the mapping */
@@ -221,9 +220,8 @@ LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const
 void
 LibHandle::MappableMUnmap(void *addr, size_t length) const
 {
-  MOZ_ASSERT(mappable == NULL, "MappableMUnmap must be called after"
-                               " MappableMMap and GetMappableLength");
-  mappable->munmap(addr, length);
+  if (mappable)
+    mappable->munmap(addr, length);
 }
 
 /**
