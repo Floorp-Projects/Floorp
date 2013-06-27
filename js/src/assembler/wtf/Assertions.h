@@ -37,7 +37,9 @@
 #  define ASSERT_DISABLED 1
 #endif
 
+#ifndef ASSERT
 #define ASSERT(assertion) MOZ_ASSERT(assertion)
+#endif
 #define ASSERT_UNUSED(variable, assertion) do { \
     (void)variable; \
     ASSERT(assertion); \
