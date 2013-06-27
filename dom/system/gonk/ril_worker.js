@@ -11454,9 +11454,9 @@ let ICCUtilsHelper = {
       bitmask = 1 << ((usimService % 8) << 0);
     }
 
-    return (serviceTable &&
+    return (serviceTable !== null) &&
            (index < serviceTable.length) &&
-           (serviceTable[index] & bitmask)) !== 0;
+           ((serviceTable[index] & bitmask) !== 0);
   },
 
   /**
