@@ -48,32 +48,32 @@
     <LinearLayout android:id="@+id/menu_items"
                   style="@style/AddressBar.ImageButton.Unused"/>
 
-    <Gecko.ShapedButton android:id="@+id/menu"
-                        style="@style/AddressBar.ImageButton"
-                        android:layout_width="48dip"
-                        android:layout_alignParentRight="true"
-                        android:contentDescription="@string/menu"
-                        android:background="@drawable/shaped_button"
-                        android:visibility="gone"/>
+    <org.mozilla.gecko.ShapedButton android:id="@+id/menu"
+                                    style="@style/AddressBar.ImageButton"
+                                    android:layout_width="48dip"
+                                    android:layout_alignParentRight="true"
+                                    android:contentDescription="@string/menu"
+                                    android:background="@drawable/shaped_button"
+                                    android:visibility="gone"/>
 
-    <Gecko.ImageView android:id="@+id/menu_icon"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_alignLeft="@id/menu"
-                     android:layout_alignRight="@id/menu"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu_level"
-                     android:visibility="gone"/>
+    <org.mozilla.gecko.GeckoImageView android:id="@+id/menu_icon"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_alignLeft="@id/menu"
+                                      android:layout_alignRight="@id/menu"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/menu_level"
+                                      android:visibility="gone"/>
 
-    <Gecko.ShapedButton android:id="@+id/tabs"
-                        style="@style/AddressBar.ImageButton"
-                        android:layout_width="72dip"
-                        android:layout_toLeftOf="@id/menu"
-                        android:layout_alignWithParentIfMissing="true"
-                        gecko:curveTowards="right"
-                        android:background="@drawable/shaped_button"
-                        android:gravity="center_vertical"
-                        android:paddingLeft="37dip"
-                        android:paddingRight="11dip"/>
+    <org.mozilla.gecko.ShapedButton android:id="@+id/tabs"
+                                    style="@style/AddressBar.ImageButton"
+                                    android:layout_width="72dip"
+                                    android:layout_toLeftOf="@id/menu"
+                                    android:layout_alignWithParentIfMissing="true"
+                                    gecko:curveTowards="right"
+                                    android:background="@drawable/shaped_button"
+                                    android:gravity="center_vertical"
+                                    android:paddingLeft="37dip"
+                                    android:paddingRight="11dip"/>
 
     <!-- The TextSwitcher should be shifted 24dp on the left, to avoid
          the curve. On a 48dp space, centering 24dp image will leave
@@ -115,19 +115,19 @@
                      android:contentDescription="@string/site_security"
                      android:visibility="gone"/>
 
-        <Gecko.TextView android:id="@+id/awesome_bar_title"
-                        style="@style/AddressBar.Button"
-                        android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1.0"
-                        android:singleLine="true"
-                        android:paddingRight="8dp"
-                        android:textColor="@color/awesome_bar_title"
-                        android:textColorHint="@color/awesome_bar_title_hint"
-                        android:gravity="center_vertical|left"
-                        android:hint="@string/awesomebar_default_text"
-                        android:layout_gravity="center_vertical"
-                        gecko:autoUpdateTheme="false"/>
+        <org.mozilla.gecko.GeckoTextView android:id="@+id/awesome_bar_title"
+                                         style="@style/AddressBar.Button"
+                                         android:layout_width="fill_parent"
+                                         android:layout_height="fill_parent"
+                                         android:layout_weight="1.0"
+                                         android:singleLine="true"
+                                         android:paddingRight="8dp"
+                                         android:textColor="@color/awesome_bar_title"
+                                         android:textColorHint="@color/awesome_bar_title_hint"
+                                         android:gravity="center_vertical|left"
+                                         android:hint="@string/awesomebar_default_text"
+                                         android:layout_gravity="center_vertical"
+                                         gecko:autoUpdateTheme="false"/>
 
         <ImageButton android:id="@+id/reader"
                      style="@style/AddressBar.ImageButton.Icon"

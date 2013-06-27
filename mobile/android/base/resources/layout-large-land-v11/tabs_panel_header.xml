@@ -5,10 +5,10 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <Gecko.IconTabWidget android:id="@+id/tab_widget"
-                         android:layout_width="wrap_content"
-                         android:layout_height="fill_parent"
-                         android:tabStripEnabled="false"
-                         android:divider="@drawable/tab_indicator_divider"/>
+    <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_widget"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="fill_parent"
+                                            android:tabStripEnabled="false"
+                                            android:divider="@drawable/tab_indicator_divider"/>
 
 </merge>
