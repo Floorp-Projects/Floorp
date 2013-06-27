@@ -355,14 +355,36 @@ WebConsoleFrame.prototype = {
 
   _destroyer: null,
 
+  // Used in tests.
   _saveRequestAndResponseBodies: false,
 
   /**
    * Tells whether to save the bodies of network requests and responses.
    * Disabled by default to save memory.
-   * @type boolean
+   *
+   * @return boolean
+   *         The saveRequestAndResponseBodies pref value.
    */
-  get saveRequestAndResponseBodies() this._saveRequestAndResponseBodies,
+  getSaveRequestAndResponseBodies:
+  function WCF_getSaveRequestAndResponseBodies() {
+    let deferred = Promise.defer();
+    let toGet = [
+      "NetworkMonitor.saveRequestAndResponseBodies"
+    ];
+
+    // Make sure the web console client connection is established first.
+    this.webConsoleClient.getPreferences(toGet, aResponse => {
+      if (!aResponse.error) {
+        this._saveRequestAndResponseBodies = aResponse.preferences[toGet[0]];
+        deferred.resolve(this._saveRequestAndResponseBodies);
+      }
+      else {
+        deferred.reject(aResponse.error);
+      }
+    });
+
+    return deferred.promise;
+  },
 
   /**
    * Setter for saving of network request and response bodies.
@@ -370,17 +392,26 @@ WebConsoleFrame.prototype = {
    * @param boolean aValue
    *        The new value you want to set.
    */
-  set saveRequestAndResponseBodies(aValue) {
+  setSaveRequestAndResponseBodies:
+  function WCF_setSaveRequestAndResponseBodies(aValue) {
+    let deferred = Promise.defer();
     let newValue = !!aValue;
-    let preferences = {
+    let toSet = {
       "NetworkMonitor.saveRequestAndResponseBodies": newValue,
     };
 
-    this.webConsoleClient.setPreferences(preferences, function(aResponse) {
+    // Make sure the web console client connection is established first.
+    this.webConsoleClient.setPreferences(toSet, aResponse => {
       if (!aResponse.error) {
         this._saveRequestAndResponseBodies = newValue;
+        deferred.resolve(aResponse);
       }
-    }.bind(this));
+      else {
+        deferred.reject(aResponse.error);
+      }
+    });
+
+    return deferred.promise;
   },
 
   /**
@@ -420,7 +451,6 @@ WebConsoleFrame.prototype = {
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
     this.proxy.connect().then(() => { // on success
-      this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
       this._initDefer.resolve(this);
     }, (aReason) => { // on failure
       let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
@@ -473,42 +503,48 @@ WebConsoleFrame.prototype = {
       this.inputNode.style.fontSize = fontSize + "px";
     }
 
+    let updateSaveBodiesPrefUI = (aElement) => {
+      this.getSaveRequestAndResponseBodies().then(aValue => {
+        aElement.setAttribute("checked", aValue);
+        this.emit("save-bodies-ui-toggled");
+      });
+    }
+
+    let reverseSaveBodiesPref = ({ target: aElement }) => {
+      this.getSaveRequestAndResponseBodies().then(aValue => {
+        this.setSaveRequestAndResponseBodies(!aValue);
+        aElement.setAttribute("checked", aValue);
+        this.emit("save-bodies-pref-reversed");
+      });
+    }
+
     let saveBodies = doc.getElementById("saveBodies");
-    saveBodies.addEventListener("command", function() {
-      this.saveRequestAndResponseBodies = !this.saveRequestAndResponseBodies;
-    }.bind(this));
-    saveBodies.setAttribute("checked", this.saveRequestAndResponseBodies);
+    saveBodies.addEventListener("click", reverseSaveBodiesPref);
     saveBodies.disabled = !this.getFilterState("networkinfo") &&
                           !this.getFilterState("network");
 
-    saveBodies.parentNode.addEventListener("popupshowing", function() {
-      saveBodies.setAttribute("checked", this.saveRequestAndResponseBodies);
-      saveBodies.disabled = !this.getFilterState("networkinfo") &&
-                            !this.getFilterState("network");
-    }.bind(this));
-
-    // Remove this part when context menu entry is removed.
     let saveBodiesContextMenu = doc.getElementById("saveBodiesContextMenu");
-    saveBodiesContextMenu.addEventListener("command", function() {
-      this.saveRequestAndResponseBodies = !this.saveRequestAndResponseBodies;
-    }.bind(this));
-    saveBodiesContextMenu.setAttribute("checked",
-                                       this.saveRequestAndResponseBodies);
+    saveBodiesContextMenu.addEventListener("click", reverseSaveBodiesPref);
     saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
                                      !this.getFilterState("network");
 
-    saveBodiesContextMenu.parentNode.addEventListener("popupshowing", function() {
-      saveBodiesContextMenu.setAttribute("checked",
-                                         this.saveRequestAndResponseBodies);
+    saveBodies.parentNode.addEventListener("popupshowing", () => {
+      updateSaveBodiesPrefUI(saveBodies);
+      saveBodies.disabled = !this.getFilterState("networkinfo") &&
+                            !this.getFilterState("network");
+    });
+
+    saveBodiesContextMenu.parentNode.addEventListener("popupshowing", () => {
+      updateSaveBodiesPrefUI(saveBodiesContextMenu);
       saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
                                        !this.getFilterState("network");
-    }.bind(this));
+    });
 
     let clearButton = doc.getElementsByClassName("webconsole-clear-console-button")[0];
-    clearButton.addEventListener("command", function WCF__onClearButton() {
+    clearButton.addEventListener("command", () => {
       this.owner._onClearButton();
       this.jsterm.clearOutput(true);
-    }.bind(this));
+    });
 
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
