@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup Reflow Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Popup Reflow Tests</title>
+
+  <panel id="testPanel"
+         type="arrow"
+         noautohide="true">
+  </panel>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script>
+<![CDATA[
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+
+let panel, anchor, arrow;
+
+// A reflow observer - it just remembers the stack trace of all sync reflows
+// done by the panel.
+let observer = {
+  reflows: [],
+  reflow: function (start, end) {
+    this.reflows.push(new Error().stack);
+  },
+
+  reflowInterruptible: function (start, end) {
+    // We're not interested in interruptible reflows.  Why, you ask?  Because
+    // we've simply cargo-culted this test from browser_tabopen_reflows.js!
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
+                                         Ci.nsISupportsWeakReference])
+};
+
+// A test utility that counts the reflows caused by a test function.  If the
+// count of reflows isn't what is expected, it causes a test failure and logs
+// the stack trace of all seen reflows.
+function countReflows(testfn, expected) {
+  let deferred = Promise.defer();
+  observer.reflows = [];
+  let docShell = panel.ownerDocument.defaultView
+                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIWebNavigation)
+                  .QueryInterface(Components.interfaces.nsIDocShell);
+  docShell.addWeakReflowObserver(observer);
+  testfn().then(() => {
+    docShell.removeWeakReflowObserver(observer);
+    SimpleTest.is(observer.reflows.length, expected, "correct number of reflows");
+    if (observer.reflows.length != expected) {
+      SimpleTest.info("stack traces of reflows:\n" + observer.reflows.join("\n") + "\n");
+    }
+    deferred.resolve();
+  });
+  return deferred.promise
+}
+
+function openPopup() {
+  let deferred = Promise.defer();
+  panel.addEventListener("popupshown", function popupshown() {
+    panel.removeEventListener("popupshown", popupshown);
+    deferred.resolve();
+  });
+  panel.openPopup(anchor, "before_start");
+  return deferred.promise
+}
+
+// ********************
+// The actual tests...
+// We only have one atm - simply open a popup.
+//
+function testSimplePanel() {
+  return openPopup();
+}
+
+// ********************
+// The test harness...
+//
+SimpleTest.waitForExplicitFinish();
+
+addEventListener("load", function() {
+  anchor = document.getElementById("anchor");
+  panel = document.getElementById("testPanel");
+  arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+
+  // Cancel the arrow panel slide-in transition (bug 767133) - we are only
+  // testing reflows in the core panel implementation and not reflows that may
+  // or may not be caused by transitioning....
+  arrow.style.transition = "none";
+
+  // and off we go...
+  countReflows(testSimplePanel, 1).then(SimpleTest.finish);
+});
+]]>
+</script>
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p>The anchor --&gt; <span id="anchor">v</span> &lt;--</p>
+</body>
+</window>
