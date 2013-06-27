@@ -51,21 +51,27 @@ class BufferOffset
 };
 
 template<int SliceSize>
-struct BufferSlice : public InlineForwardListNode<BufferSlice<SliceSize> > {
+struct BufferSlice {
   protected:
+    BufferSlice<SliceSize> *prev;
+    BufferSlice<SliceSize> *next;
     // How much data has been added to the current node.
     uint32_t nodeSize;
   public:
-    BufferSlice *getNext() { return static_cast<BufferSlice *>(this->next); }
+    BufferSlice *getNext() { return this->next; }
+    BufferSlice *getPrev() { return this->prev; }
     void setNext(BufferSlice<SliceSize> *next_) {
         JS_ASSERT(this->next == NULL);
+        JS_ASSERT(next_->prev == NULL);
         this->next = next_;
+        next_->prev = this;
     }
+
     uint8_t instructions [SliceSize];
     unsigned int size() {
         return nodeSize;
     }
-    BufferSlice() : InlineForwardListNode<BufferSlice<SliceSize> >(NULL), nodeSize(0) {}
+    BufferSlice() : next(NULL), prev(NULL), nodeSize(0) {}
     void putBlob(uint32_t instSize, uint8_t* inst) {
         if (inst != NULL)
             memcpy(&instructions[size()], inst, instSize);
@@ -163,9 +169,14 @@ struct AssemblerBuffer
     Inst *getInst(BufferOffset off) {
         unsigned int local_off = off.getOffset();
         Slice *cur = NULL;
-        if (local_off > bufferSize) {
-            local_off -= bufferSize;
-            cur = tail;
+        if (local_off > bufferSize / 2) {
+            unsigned int max_off = bufferSize;
+            for (cur = tail; cur != NULL; cur = cur->getPrev(), max_off -= cur->size()) {
+                if (local_off >= max_off) {
+                    local_off -= max_off;
+                    break;
+                }
+            }
         } else {
             for (cur = head; cur != NULL; cur = cur->getNext()) {
                 if (local_off < cur->size())
@@ -175,7 +186,8 @@ struct AssemblerBuffer
             JS_ASSERT(cur != NULL);
         }
         // the offset within this node should not be larger than the node itself.
-        JS_ASSERT(local_off < cur->size());
+        // this check is now completely bogus since a slightly different algorithm is used.
+        // JS_ASSERT(local_off < cur->size());
         return (Inst*)&cur->instructions[local_off];
     }
     BufferOffset nextOffset() const {
