@@ -974,8 +974,8 @@ var Browser = {
 
   onAboutPolicyClick: function() {
     FlyoutPanelsUI.hide();
-    BrowserUI.newTab(Services.prefs.getCharPref("app.privacyURL"),
-                     Browser.selectedTab);
+    let linkStr = Services.urlFormatter.formatURLPref("app.privacyURL");
+    BrowserUI.newTab(linkStr, Browser.selectedTab);
   }
 
 };
