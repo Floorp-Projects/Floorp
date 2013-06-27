@@ -3,16 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<Gecko.TabRow xmlns:android="http://schemas.android.com/apk/res/android"
-              style="@style/TabsItem"
-              android:focusable="true"
-              android:id="@+id/info"
-              android:layout_width="fill_parent"
-              android:layout_height="wrap_content"
-              android:paddingLeft="12dip"
-              android:paddingTop="6dip"
-              android:paddingBottom="6dip"
-              android:background="@drawable/tab_row">
+<org.mozilla.gecko.widget.TabRow xmlns:android="http://schemas.android.com/apk/res/android"
+                                 style="@style/TabsItem"
+                                 android:focusable="true"
+                                 android:id="@+id/info"
+                                 android:layout_width="fill_parent"
+                                 android:layout_height="wrap_content"
+                                 android:paddingLeft="12dip"
+                                 android:paddingTop="6dip"
+                                 android:paddingBottom="6dip"
+                                 android:background="@drawable/tab_row">
 
     <LinearLayout android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
@@ -20,10 +20,10 @@
                   android:background="@drawable/tab_thumbnail"
                   android:duplicateParentState="true">
 
-        <Gecko.ThumbnailView android:id="@+id/thumbnail"
-                             android:layout_width="@dimen/tab_thumbnail_width"
-                             android:layout_height="@dimen/tab_thumbnail_height"
-                             android:src="@drawable/tab_thumbnail_default"/>
+        <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
+                                                android:layout_width="@dimen/tab_thumbnail_width"
+                                                android:layout_height="@dimen/tab_thumbnail_height"
+                                                android:src="@drawable/tab_thumbnail_default"/>
 
     </LinearLayout>
 
@@ -50,4 +50,4 @@
                  android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_close"/>
 
-</Gecko.TabRow>
+</org.mozilla.gecko.widget.TabRow>

@@ -37,9 +37,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
     private static final String GECKO_VIEW_IDENTIFIER = "org.mozilla.gecko.";
     private static final int GECKO_VIEW_IDENTIFIER_LENGTH = GECKO_VIEW_IDENTIFIER.length();
 
-    private static final String GECKO_IDENTIFIER = "Gecko.";
-    private static final int GECKO_IDENTIFIER_LENGTH = GECKO_IDENTIFIER.length();
-
     private final Map<String, Constructor<? extends View>> mFactoryMap;
 
     private GeckoViewsFactory() {
@@ -50,12 +47,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
         Class<Context> arg1Class = Context.class;
         Class<AttributeSet> arg2Class = AttributeSet.class;
         try {
-            mFactoryMap.put("AboutHomeView", AboutHomeView.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("AddonsSection", AddonsSection.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("LastTabsSection", LastTabsSection.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("PromoBox", PromoBox.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("RemoteTabsSection", RemoteTabsSection.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("TopSitesView", TopSitesView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("AwesomeBarTabs", AwesomeBarTabs.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("AwesomeBarTabs$BackgroundLayout", AwesomeBarTabs.BackgroundLayout.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("BackButton", BackButton.class.getConstructor(arg1Class, arg2Class));
@@ -64,33 +55,39 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
             mFactoryMap.put("FormAssistPopup", FormAssistPopup.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("ForwardButton", ForwardButton.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("GeckoApp$MainLayout", GeckoApp.MainLayout.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("LinkTextView", LinkTextView.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("menu.MenuItemActionBar", MenuItemActionBar.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("menu.MenuItemDefault", MenuItemDefault.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("menu.GeckoMenu$DefaultActionItemBar", GeckoMenu.DefaultActionItemBar.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("FindInPageBar", FindInPageBar.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("IconTabWidget", IconTabWidget.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("RemoteTabs", RemoteTabs.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("ShapedButton", ShapedButton.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("TabRow", TabRow.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsPanel", TabsPanel.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsPanel$TabsListContainer", TabsPanel.TabsListContainer.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsPanel$TabsPanelToolbar", TabsPanel.TabsPanelToolbar.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsTray", TabsTray.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("ThumbnailView", ThumbnailView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TextSelectionHandle", TextSelectionHandle.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("gfx.LayerView", LayerView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("AllCapsTextView", AllCapsTextView.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("Button", GeckoButton.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("EditText", GeckoEditText.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("FrameLayout", GeckoFrameLayout.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("ImageButton", GeckoImageButton.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("ImageView", GeckoImageView.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("LinearLayout", GeckoLinearLayout.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("RelativeLayout", GeckoRelativeLayout.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("TextSwitcher", GeckoTextSwitcher.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("TextView", GeckoTextView.class.getConstructor(arg1Class, arg2Class));
-            mFactoryMap.put("FaviconView", FaviconView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoButton", GeckoButton.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoEditText", GeckoEditText.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoFrameLayout", GeckoFrameLayout.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoImageButton", GeckoImageButton.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoImageView", GeckoImageView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoLinearLayout", GeckoLinearLayout.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoRelativeLayout", GeckoRelativeLayout.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoTextSwitcher", GeckoTextSwitcher.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("GeckoTextView", GeckoTextView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("menu.MenuItemActionBar", MenuItemActionBar.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("menu.MenuItemDefault", MenuItemDefault.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("menu.GeckoMenu$DefaultActionItemBar", GeckoMenu.DefaultActionItemBar.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.AboutHomeView", AboutHomeView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.AddonsSection", AddonsSection.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.FaviconView", FaviconView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.LastTabsSection", LastTabsSection.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.LinkTextView", LinkTextView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.PromoBox", PromoBox.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.RemoteTabsSection", RemoteTabsSection.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.TabRow", TabRow.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.ThumbnailView", ThumbnailView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("widget.TopSitesView", TopSitesView.class.getConstructor(arg1Class, arg2Class));
         } catch (NoSuchMethodException nsme) {
             Log.e(LOGTAG, "Unable to initialize views factory", nsme);
         }
@@ -110,8 +107,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
 
             if (name.startsWith(GECKO_VIEW_IDENTIFIER))
                 viewName = name.substring(GECKO_VIEW_IDENTIFIER_LENGTH);
-            else if (name.startsWith(GECKO_IDENTIFIER))
-                viewName = name.substring(GECKO_IDENTIFIER_LENGTH);
             else
                 return null;
 
