@@ -2336,7 +2336,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
             macRect.origin.y += 4;
             macRect.size.height -= 4;
           } else {
-            macRect.origin.x += 4;
+            if (aFrame->StyleVisibility()->mDirection !=
+                NS_STYLE_DIRECTION_RTL) {
+              macRect.origin.x += 4;
+            }
             macRect.size.width -= 4;
           }
         }
