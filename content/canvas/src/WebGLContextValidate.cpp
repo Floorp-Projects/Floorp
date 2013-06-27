@@ -12,6 +12,7 @@
 #include "WebGLFramebuffer.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
+#include "WebGLVertexArray.h"
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
@@ -112,9 +113,9 @@ WebGLContext::ValidateBuffers(uint32_t *maxAllowedCount, const char *info)
     }
 
     uint32_t maxAllowed = UINT32_MAX;
-    uint32_t attribs = mAttribBuffers.Length();
+    uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
     for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mAttribBuffers[i];
+        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[i];
 
         // If the attrib array isn't enabled, there's nothing to check;
         // it's a static value.
@@ -850,18 +851,7 @@ WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *loca
 
 bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
 {
-    if (index >= mAttribBuffers.Length()) {
-        if (index == WebGLuint(-1)) {
-             ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLocation() call, "
-                               "where this return value -1 means that the passed name didn't correspond to an active attribute in "
-                               "the specified program.", info);
-        } else {
-             ErrorInvalidValue("%s: index %d is out of range", info, index);
-        }
-        return false;
-    } else {
-        return true;
-    }
+    return mBoundVertexArray->EnsureAttribIndex(index, info);
 }
 
 bool WebGLContext::ValidateStencilParamsForDrawCall()
@@ -905,13 +895,10 @@ WebGLContext::InitAndValidateGL()
     mActiveTexture = 0;
     mWebGLError = LOCAL_GL_NO_ERROR;
 
-    mAttribBuffers.Clear();
-
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
 
     mBoundArrayBuffer = nullptr;
-    mBoundElementArrayBuffer = nullptr;
     mCurrentProgram = nullptr;
 
     mBoundFramebuffer = nullptr;
@@ -933,8 +920,6 @@ WebGLContext::InitAndValidateGL()
         GenerateWarning("GL_MAX_VERTEX_ATTRIBS: %d is < 8!", mGLMaxVertexAttribs);
         return false;
     }
-
-    mAttribBuffers.SetLength(mGLMaxVertexAttribs);
 
     // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
     // even though the hardware supports much more.  The
@@ -1083,6 +1068,10 @@ WebGLContext::InitAndValidateGL()
                                      "memory-pressure",
                                      false);
     }
+
+    mDefaultVertexArray = new WebGLVertexArray(this);
+    mDefaultVertexArray->mAttribBuffers.SetLength(mGLMaxVertexAttribs);
+    mBoundVertexArray = mDefaultVertexArray;
 
     return true;
 }
