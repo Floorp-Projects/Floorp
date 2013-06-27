@@ -2124,14 +2124,13 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
     // If this widget uses OMTC...
-    if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
-        ClientLayerManager *manager = static_cast<ClientLayerManager*>(GetLayerManager());
-        if (manager->GetCompositorBackendType() != LAYERS_BASIC) {
-            listener->DidPaintWindow();
+    if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager() &&
+        Compositor::GetBackend() != LAYERS_BASIC) {
+        listener->DidPaintWindow();
 
-            g_free(rects);
-            return TRUE;
-        }
+        g_free(rects);
+        return TRUE;
+
     } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(region);

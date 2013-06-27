@@ -383,7 +383,7 @@ ClientLayerManager::ClearLayer(Layer* aLayer)
 void
 ClientLayerManager::GetBackendName(nsAString& aName)
 {
-  switch (GetCompositorBackendType()) {
+  switch (Compositor::GetBackend()) {
     case LAYERS_BASIC: aName.AssignLiteral("Basic"); return;
     case LAYERS_OPENGL: aName.AssignLiteral("OpenGL"); return;
     case LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
