@@ -188,7 +188,12 @@ function end_test() {
   }
 
   // This will delete the app console log file if it exists.
-  getAppConsoleLogPath();
+  try {
+    getAppConsoleLogPath();
+  }
+  catch (e) {
+    logTestInfo("unable to remove file during end_test. Exception: " + e);
+  }
 
   if (IS_UNIX) {
     // This will delete the launch script if it exists.
