@@ -16,6 +16,7 @@ import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.MissingCryptoInputException;
 import org.mozilla.gecko.sync.crypto.NoKeyBundleException;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+import org.mozilla.gecko.sync.repositories.domain.RecordParseException;
 
 /**
  * A Sync crypto record has:
@@ -128,7 +129,7 @@ public class CryptoRecord extends Record {
    * @throws IOException
    */
   public static CryptoRecord fromJSONRecord(String jsonRecord)
-      throws ParseException, NonObjectJSONException, IOException {
+      throws ParseException, NonObjectJSONException, IOException, RecordParseException {
     byte[] bytes = jsonRecord.getBytes("UTF-8");
     ExtendedJSONObject object = ExtendedJSONObject.parseUTF8AsJSONObject(bytes);
 
@@ -137,7 +138,7 @@ public class CryptoRecord extends Record {
 
   // TODO: defensive programming.
   public static CryptoRecord fromJSONRecord(ExtendedJSONObject jsonRecord)
-      throws IOException, ParseException, NonObjectJSONException {
+      throws IOException, ParseException, NonObjectJSONException, RecordParseException {
     String id                  = (String) jsonRecord.get(KEY_ID);
     String collection          = (String) jsonRecord.get(KEY_COLLECTION);
     String jsonEncodedPayload  = (String) jsonRecord.get(KEY_PAYLOAD);
@@ -148,15 +149,29 @@ public class CryptoRecord extends Record {
     record.guid         = id;
     record.collection   = collection;
     if (jsonRecord.containsKey(KEY_MODIFIED)) {
-      record.lastModified = jsonRecord.getTimestamp(KEY_MODIFIED);
+      Long timestamp = jsonRecord.getTimestamp(KEY_MODIFIED);
+      if (timestamp == null) {
+        throw new RecordParseException("timestamp could not be parsed");
+      }
+      record.lastModified = timestamp.longValue();
     }
     if (jsonRecord.containsKey(KEY_SORTINDEX)) {
-      record.sortIndex = jsonRecord.getLong(KEY_SORTINDEX);
+      // getLong tries to cast to Long, and might return null. We catch all
+      // exceptions, just to be safe.
+      try {
+        record.sortIndex = jsonRecord.getLong(KEY_SORTINDEX);
+      } catch (Exception e) {
+        throw new RecordParseException("timestamp could not be parsed");
+      }
     }
     if (jsonRecord.containsKey(KEY_TTL)) {
       // TTLs are never returned by the sync server, so should never be true if
       // the record was fetched.
-      record.ttl = jsonRecord.getLong(KEY_TTL);
+      try {
+        record.ttl = jsonRecord.getLong(KEY_TTL);
+      } catch (Exception e) {
+        throw new RecordParseException("TTL could not be parsed");
+      }
     }
     // TODO: deleted?
     return record;
