@@ -120,8 +120,11 @@ struct AssemblerBuffer
             tail->setNext(tmp);
         }
         tail = tmp;
-        if (head == NULL)
+        if (head == NULL) {
+            finger = tmp;
+            finger_offset = 0;
             head = tmp;
+        }
         return true;
     }
 
@@ -166,28 +169,66 @@ struct AssemblerBuffer
     void fail_bail() {
         m_bail = true;
     }
+    // finger for speeding up accesses
+    Slice *finger;
+    unsigned int finger_offset;
     Inst *getInst(BufferOffset off) {
-        unsigned int local_off = off.getOffset();
+        int local_off = off.getOffset();
+        // don't update the structure's finger in place, so there is the option
+        // to not update it.
         Slice *cur = NULL;
-        if (local_off > bufferSize / 2) {
-            unsigned int max_off = bufferSize;
-            for (cur = tail; cur != NULL; cur = cur->getPrev(), max_off -= cur->size()) {
-                if (local_off >= max_off) {
-                    local_off -= max_off;
+        int cur_off;
+        // get the offset that we'd be dealing with by walking through backwards
+        int end_off = bufferSize - local_off;
+        // If end_off is negative, then it is in the last chunk, and there is no
+        // real work to be done.
+        if (end_off <= 0) {
+            return (Inst*)&tail->instructions[-end_off];
+        }
+        bool used_finger = false;
+        int finger_off = abs(local_off - finger_offset);
+        if (finger_off < Min(local_off, end_off)) {
+            // The finger offset is minimal, use the finger.
+            cur = finger;
+            cur_off = finger_offset;
+            used_finger = true;
+        } else if (local_off < end_off) {
+            // it is closest to the start
+            cur = head;
+            cur_off = 0;
+        } else {
+            // it is closest to the end
+            cur = tail;
+            cur_off = bufferSize;
+        }
+        int count = 0;
+        char sigil;
+        if (local_off < cur_off) {
+            for (; cur != NULL; cur = cur->getPrev(), cur_off -= cur->size()) {
+                if (local_off >= cur_off) {
+                    local_off -= cur_off;
                     break;
                 }
+                count++;
             }
+            JS_ASSERT(cur != NULL);
         } else {
-            for (cur = head; cur != NULL; cur = cur->getNext()) {
-                if (local_off < cur->size())
+            for (; cur != NULL; cur = cur->getNext()) {
+                if (local_off < cur_off + cur->size()) {
+                    local_off -= cur_off;
                     break;
-                local_off -= cur->size();
+                }
+                cur_off += cur->size();
+                count++;
             }
             JS_ASSERT(cur != NULL);
         }
+        if (count > 2 || used_finger) {
+            finger = cur;
+            finger_offset = cur_off;
+        }
         // the offset within this node should not be larger than the node itself.
-        // this check is now completely bogus since a slightly different algorithm is used.
-        // JS_ASSERT(local_off < cur->size());
+        JS_ASSERT(local_off < cur->size());
         return (Inst*)&cur->instructions[local_off];
     }
     BufferOffset nextOffset() const {
