@@ -22,6 +22,11 @@
   display: none;
 }
 
+.chat-toolbarbutton.notification-anchor-icon > .toolbarbutton-icon {
+  width: inherit;
+  margin-top: -2px;
+}
+
 .chat-close-button {
   list-style-image: url('chrome://browser/skin/social/chat-icons.png');
   -moz-image-region: rect(0, 14px, 14px, 0);
