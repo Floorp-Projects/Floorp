@@ -582,7 +582,12 @@ function executeWithCallback(msg, useFinish) {
  * This function creates a touch event given a touch type and a touch
  */
 function emitTouchEvent(type, touch) {
-  // Using domWindowUtils
+  let loggingInfo = "Marionette: emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
+  dump(loggingInfo);
+  marionetteLogObj.log(loggingInfo, "TRACE");
+  sendSyncMessage("Marionette:shareData",
+                  {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+  marionetteLogObj.clearLogs();
   let domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
   domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
 }
@@ -595,11 +600,16 @@ function emitTouchEvent(type, touch) {
  *           elClientX and elClientY are the coordinates of the mouse relative to the viewport
  */
 function emitMouseEvent(doc, type, elClientX, elClientY, detail, button) {
+  let loggingInfo = "Marionette: emitting Mouse event of type " + type + " at coordinates (" + elClientX + ", " + elClientY + ") relative to the viewport";
+  dump(loggingInfo);
+  marionetteLogObj.log(loggingInfo, "TRACE");
+  sendSyncMessage("Marionette:shareData",
+                  {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+  marionetteLogObj.clearLogs();
   detail = detail || 1;
   button = button || 0;
-  var win = doc.defaultView;
+  let win = doc.defaultView;
   // Figure out the element the mouse would be over at (x, y)
-  var target = doc.elementFromPoint(elClientX, elClientY);
   utils.synthesizeMouseAtPoint(elClientX, elClientY, {type: type, button: button, clickCount: detail}, win);
 }
 
