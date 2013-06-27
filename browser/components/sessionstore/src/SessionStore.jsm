@@ -80,6 +80,7 @@ Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
+Cu.import("resource://gre/modules/Task.jsm", this);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
@@ -235,7 +236,18 @@ this.SessionStore = {
 
   checkPrivacyLevel: function ss_checkPrivacyLevel(aIsHTTPS, aUseDefaultPref) {
     return SessionStoreInternal.checkPrivacyLevel(aIsHTTPS, aUseDefaultPref);
-  }
+  },
+
+  /**
+   * Backstage pass to implementation details, used for testing purpose.
+   * Controlled by preference "browser.sessionstore.testmode".
+   */
+  get _internal() {
+    if (Services.prefs.getBoolPref("browser.sessionstore.debug")) {
+      return SessionStoreInternal;
+    }
+    return undefined;
+  },
 };
 
 // Freeze the SessionStore object. We don't want anyone to modify it.
@@ -451,9 +463,50 @@ let SessionStoreInternal = {
 
     this._initEncoding();
 
-    // Session is ready.
+    this._performUpgradeBackup();
+
+    // The service is ready. Backup-on-upgrade might still be in progress,
+    // but we do not have a race condition:
+    //
+    // - if the file to backup is named sessionstore.js, secondary
+    // backup will be started in this tick, so any further I/O will be
+    // scheduled to start after the secondary backup is complete;
+    //
+    // - if the file is named sessionstore.bak, it will only be erased
+    // by the getter to |_backupSessionFileOnce|, which specifically
+    // waits until the secondary backup has been completed or deemed
+    // useless before causing any side-effects.
     this._sessionInitialized = true;
     this._promiseInitialization.resolve();
+  },
+
+  /**
+   * If this is the first time we launc this build of Firefox,
+   * backup sessionstore.js.
+   */
+  _performUpgradeBackup: function ssi_performUpgradeBackup() {
+    // Perform upgrade backup, if necessary
+    const PREF_UPGRADE = "sessionstore.upgradeBackup.latestBuildID";
+
+    let buildID = Services.appinfo.platformBuildID;
+    let latestBackup = this._prefBranch.getCharPref(PREF_UPGRADE);
+    if (latestBackup == buildID) {
+      return Promise.resolve();
+    }
+    return Task.spawn(function task() {
+      try {
+        // Perform background backup
+        yield _SessionFile.createUpgradeBackupCopy("-" + buildID);
+
+        this._prefBranch.setCharPref(PREF_UPGRADE, buildID);
+
+        // In case of success, remove previous backup.
+        yield _SessionFile.removeUpgradeBackup("-" + latestBackup);
+      } catch (ex) {
+        debug("Could not perform upgrade backup " + ex);
+        debug(ex.stack);
+      }
+    }.bind(this));
   },
 
   _initEncoding : function ssi_initEncoding() {

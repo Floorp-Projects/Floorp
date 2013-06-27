@@ -836,6 +836,10 @@ pref("browser.sessionstore.restore_hidden_tabs", false);
 // When set to true, this pref overrides that behavior, and pinned tabs will only
 // be restored when they are focused.
 pref("browser.sessionstore.restore_pinned_tabs_on_demand", false);
+// The version at which we performed the latest upgrade backup
+pref("browser.sessionstore.upgradeBackup.latestBuildID", "");
+// End-users should not run sessionstore in debug mode
+pref("browser.sessionstore.debug", false);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
