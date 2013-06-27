@@ -4,20 +4,16 @@
 
 package org.mozilla.gecko.sync.stage;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
-import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.PersistedCrypto5Keys;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
@@ -136,21 +132,8 @@ implements SyncStorageRequestDelegate {
         Logger.pii(LOG_TAG, "Fetched keys: " + body.toJSONString());
       }
       keys.setKeyPairsFromWBO(CryptoRecord.fromJSONRecord(body), session.config.syncKeyBundle);
-    } catch (IllegalStateException e) {
+    } catch (Exception e) {
       session.abort(e, "Invalid keys WBO.");
-      return;
-    } catch (ParseException e) {
-      session.abort(e, "Invalid keys WBO.");
-      return;
-    } catch (NonObjectJSONException e) {
-      session.abort(e, "Invalid keys WBO.");
-      return;
-    } catch (IOException e) {
-      // Some kind of lower-level error.
-      session.abort(e, "IOException fetching keys.");
-      return;
-    } catch (CryptoException e) {
-      session.abort(e, "CryptoException handling keys WBO.");
       return;
     }
 
