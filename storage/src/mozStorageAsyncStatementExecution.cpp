@@ -577,8 +577,9 @@ AsyncExecuteStatements::Run()
     return notifyComplete();
 
   if (statementsNeedTransaction()) {
-    mTransactionManager = new mozStorageTransaction(mConnection, false,
-                                                    mozIStorageConnection::TRANSACTION_IMMEDIATE);
+    Connection* rawConnection = static_cast<Connection*>(mConnection.get());
+    mTransactionManager = new mozStorageAsyncTransaction(rawConnection, false,
+                                                         mozIStorageConnection::TRANSACTION_IMMEDIATE);
   }
 
   // Execute each statement, giving the callback results if it returns any.

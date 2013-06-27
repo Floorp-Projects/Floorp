@@ -10,6 +10,8 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Mutex.h"
+#include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
 #include "nsIInterfaceRequestor.h"
 
 #include "nsDataHashtable.h"
@@ -17,6 +19,8 @@
 #include "SQLiteMutex.h"
 #include "mozIStorageConnection.h"
 #include "mozStorageService.h"
+#include "mozIStorageAsyncConnection.h"
+#include "mozIStorageCompletionCallback.h"
 
 #include "nsIMutableArray.h"
 #include "mozilla/Attributes.h"
@@ -37,6 +41,7 @@ class Connection MOZ_FINAL : public mozIStorageConnection
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEASYNCCONNECTION
   NS_DECL_MOZISTORAGECONNECTION
   NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -60,8 +65,13 @@ public:
    *        connection.
    * @param aFlags
    *        The flags to pass to sqlite3_open_v2.
+   * @param aAsyncOnly
+   *        If |true|, the Connection only implements asynchronous interface:
+   *        - |mozIStorageAsyncConnection|;
+   *        If |false|, the result also implements synchronous interface:
+   *        - |mozIStorageConnection|.
    */
-  Connection(Service *aService, int aFlags);
+  Connection(Service *aService, int aFlags, bool aAsyncOnly);
 
   /**
    * Creates the connection to an in-memory database.
@@ -162,9 +172,11 @@ public:
    */
   bool isAsyncClosing();
 
+
+  nsresult initializeClone(Connection *aClone, bool aReadOnly);
+
 private:
   ~Connection();
-
   nsresult initializeInternal(nsIFile *aDatabaseFile);
 
   /**
@@ -262,6 +274,54 @@ private:
   // connections do not outlive the service.  2) Our custom collating functions
   // call its localeCompareStrings() method.
   nsRefPtr<Service> mStorageService;
+
+  /**
+   * If |false|, this instance supports synchronous operations
+   * and it can be cast to |mozIStorageConnection|.
+   */
+  const bool mAsyncOnly;
+};
+
+
+/**
+ * A Runnable designed to call a mozIStorageCompletionCallback on
+ * the appropriate thread.
+ */
+class CallbackComplete MOZ_FINAL : public nsRunnable
+{
+public:
+  /**
+   * @param aValue The result to pass to the callback. It must
+   *               already be owned by the main thread.
+   * @param aCallback The callback. It must already be owned by the
+   *                  main thread.
+   */
+  CallbackComplete(nsresult aStatus,
+                   nsISupports* aValue,
+                   already_AddRefed<mozIStorageCompletionCallback> aCallback)
+    : mStatus(aStatus)
+    , mValue(aValue)
+    , mCallback(aCallback)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsresult rv = mCallback->Complete(mStatus, mValue);
+
+    // Ensure that we release on the main thread
+    mValue = nullptr;
+    mCallback = nullptr;
+    return rv;
+  }
+
+private:
+  nsresult mStatus;
+  nsCOMPtr<nsISupports> mValue;
+  // This is a nsRefPtr<T> and not a nsCOMPtr<T> because
+  // nsCOMP<T> would cause an off-main thread QI, which
+  // is not a good idea (and crashes XPConnect).
+  nsRefPtr<mozIStorageCompletionCallback> mCallback;
 };
 
 } // namespace storage
