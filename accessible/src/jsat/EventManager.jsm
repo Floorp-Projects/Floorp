@@ -138,7 +138,7 @@ this.EventManager.prototype = {
         let pivot = aEvent.accessible.
           QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
         let position = pivot.position;
-        if (position.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME)
+        if (position && position.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME)
           break;
         let event = aEvent.
           QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
