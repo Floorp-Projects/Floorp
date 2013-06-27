@@ -398,6 +398,19 @@ SpeechPresenter.prototype = {
         ]
       }
     };
+  },
+
+  actionInvoked: function SpeechPresenter_actionInvoked(aObject, aActionName) {
+    return {
+      type: this.type,
+      details: {
+        actions: [
+          {method: 'speak',
+           data: UtteranceGenerator.genForAction(aObject, aActionName).join(' '),
+           options: {enqueue: false}}
+        ]
+      }
+    };
   }
 };
 
