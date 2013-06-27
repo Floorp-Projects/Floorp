@@ -155,7 +155,7 @@ VisualPresenter.prototype = {
         }
       };
     } catch (e) {
-      Logger.error('Failed to get bounds: ' + e);
+      Logger.logException(e, 'Failed to get bounds');
       return null;
     }
   },

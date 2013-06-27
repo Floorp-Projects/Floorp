@@ -271,12 +271,27 @@ this.Logger = {
       this, [this.ERROR].concat(Array.prototype.slice.call(arguments)));
   },
 
-  logException: function logException(aException) {
+  logException: function logException(
+    aException, aErrorMessage = 'An exception has occured') {
     try {
-      let args = [aException.message];
-      args.push.apply(args, aException.stack ? ['\n', aException.stack] :
-        ['(' + aException.fileName + ':' + aException.lineNumber + ')']);
-      this.error.apply(this, args);
+      let stackMessage = '';
+      if (aException.stack) {
+        stackMessage = '  ' + aException.stack.replace(/\n/g, '\n  ');
+      } else if (aException.location) {
+        let frame = aException.location;
+        let stackLines = [];
+        while (frame && frame.lineNumber) {
+          stackLines.push(
+            '  ' + frame.name + '@' + frame.filename + ':' + frame.lineNumber);
+          frame = frame.caller;
+        }
+        stackMessage = stackLines.join('\n');
+      } else {
+        stackMessage = '(' + aException.fileName + ':' + aException.lineNumber + ')';
+      }
+      this.error(aErrorMessage + ':\n ' +
+                 aException.message + '\n' +
+                 stackMessage);
     } catch (x) {
       this.error(x);
     }
