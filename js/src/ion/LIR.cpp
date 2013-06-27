@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "LIR.h"
-#include "IonSpewer.h"
-#include "LIR-inl.h"
-#include "shared/CodeGenerator-shared.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/LIR.h"
+#include "ion/IonSpewer.h"
+#include "ion/LIR-inl.h"
+#include "ion/shared/CodeGenerator-shared.h"
+
 using namespace js;
 using namespace js::ion;
 

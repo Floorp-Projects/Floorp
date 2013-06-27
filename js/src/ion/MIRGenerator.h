@@ -13,10 +13,10 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "IonAllocPolicy.h"
-#include "IonCompartment.h"
-#include "CompileInfo.h"
-#include "RegisterSets.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/IonCompartment.h"
+#include "ion/CompileInfo.h"
+#include "ion/RegisterSets.h"
 
 namespace js {
 namespace ion {

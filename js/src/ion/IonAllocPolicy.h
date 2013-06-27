@@ -12,8 +12,8 @@
 #include "jscntxt.h"
 #include "ds/LifoAlloc.h"
 
-#include "Ion.h"
-#include "InlineList.h"
+#include "ion/Ion.h"
+#include "ion/InlineList.h"
 
 namespace js {
 namespace ion {

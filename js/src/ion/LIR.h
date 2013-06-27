@@ -11,17 +11,17 @@
 // inputs and outputs, as well as the interface instructions must conform to.
 
 #include "jscntxt.h"
-#include "IonAllocPolicy.h"
-#include "InlineList.h"
-#include "FixedArityList.h"
-#include "LOpcodes.h"
-#include "Registers.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "shared/Assembler-shared.h"
-#include "Safepoints.h"
-#include "Bailouts.h"
-#include "VMFunctions.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/InlineList.h"
+#include "ion/FixedArityList.h"
+#include "ion/LOpcodes.h"
+#include "ion/Registers.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/shared/Assembler-shared.h"
+#include "ion/Safepoints.h"
+#include "ion/Bailouts.h"
+#include "ion/VMFunctions.h"
 
 namespace js {
 namespace ion {
@@ -1430,20 +1430,20 @@ LAllocation::toRegister() const
     }
 #endif
 
-#include "LIR-Common.h"
+#include "ion/LIR-Common.h"
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
 # if defined(JS_CPU_X86)
-#  include "x86/LIR-x86.h"
+#  include "ion/x86/LIR-x86.h"
 # elif defined(JS_CPU_X64)
-#  include "x64/LIR-x64.h"
+#  include "ion/x64/LIR-x64.h"
 # endif
-# include "shared/LIR-x86-shared.h"
+# include "ion/shared/LIR-x86-shared.h"
 #elif defined(JS_CPU_ARM)
-# include "arm/LIR-arm.h"
+# include "ion/arm/LIR-arm.h"
 #endif
 
 #undef LIR_HEADER
 
-#include "LIR-inl.h"
+#include "ion/LIR-inl.h"
 
 #endif /* ion_LIR_h */

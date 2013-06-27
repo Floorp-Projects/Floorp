@@ -12,8 +12,8 @@
 // This file declares the data structures for building a MIRGraph from a
 // JSScript.
 
-#include "MIR.h"
-#include "MIRGraph.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 namespace js {
 namespace ion {

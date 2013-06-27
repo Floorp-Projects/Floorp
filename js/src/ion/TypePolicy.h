@@ -7,7 +7,7 @@
 #ifndef ion_TypePolicy_h
 #define ion_TypePolicy_h
 
-#include "IonTypes.h"
+#include "ion/IonTypes.h"
 
 namespace js {
 namespace ion {

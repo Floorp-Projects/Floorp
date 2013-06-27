@@ -10,11 +10,11 @@
 #ifdef JS_ION
 
 #if defined(JS_CPU_X86)
-# include "x86/BaselineRegisters-x86.h"
+# include "ion/x86/BaselineRegisters-x86.h"
 #elif defined(JS_CPU_X64)
-# include "x64/BaselineRegisters-x64.h"
+# include "ion/x64/BaselineRegisters-x64.h"
 #else
-# include "arm/BaselineRegisters-arm.h"
+# include "ion/arm/BaselineRegisters-arm.h"
 #endif
 
 namespace js {

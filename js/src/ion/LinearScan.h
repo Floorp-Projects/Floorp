@@ -7,8 +7,8 @@
 #ifndef ion_LinearScan_h
 #define ion_LinearScan_h
 
-#include "LiveRangeAllocator.h"
-#include "BitSet.h"
+#include "ion/LiveRangeAllocator.h"
+#include "ion/BitSet.h"
 
 #include "js/Vector.h"
 

@@ -15,7 +15,7 @@
 #include "jsscript.h"
 #include "jstypedarrayinlines.h"
 
-#include "IonMacroAssembler.h"
+#include "ion/IonMacroAssembler.h"
 
 namespace js {
 

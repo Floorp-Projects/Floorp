@@ -27,10 +27,6 @@
 #include "ion/ExecutionModeInlines.h"
 #include "vm/ScopeObject-inl.h"
 
-#ifdef JS_THREADSAFE
-# include "prthread.h"
-#endif
-
 using namespace js;
 using namespace js::ion;
 

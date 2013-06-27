@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MIRGenerator.h"
-#include "IonFrames.h"
+#include "ion/MIRGenerator.h"
+#include "ion/IonFrames.h"
 #include "jsscript.h"
-#include "IonLinker.h"
-#include "IonSpewer.h"
-#include "SnapshotReader.h"
-#include "SnapshotWriter.h"
+#include "ion/IonLinker.h"
+#include "ion/IonSpewer.h"
+#include "ion/SnapshotReader.h"
+#include "ion/SnapshotWriter.h"
 
 #ifdef TRACK_SNAPSHOTS
-#include "MIR.h"
-#include "LIR.h"
+#include "ion/MIR.h"
+#include "ion/LIR.h"
 #endif
 
 #include "jsscriptinlines.h"

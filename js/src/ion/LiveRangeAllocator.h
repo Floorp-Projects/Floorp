@@ -9,8 +9,8 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "RegisterAllocator.h"
-#include "StackSlotAllocator.h"
+#include "ion/RegisterAllocator.h"
+#include "ion/StackSlotAllocator.h"
 
 // Common structures and functions used by register allocators that operate on
 // virtual register live ranges.

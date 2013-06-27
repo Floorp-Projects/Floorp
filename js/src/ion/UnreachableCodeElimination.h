@@ -7,8 +7,8 @@
 #ifndef ion_UnreachableCodeElimination_h
 #define ion_UnreachableCodeElimination_h
 
-#include "MIR.h"
-#include "MIRGraph.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 namespace js {
 namespace ion {

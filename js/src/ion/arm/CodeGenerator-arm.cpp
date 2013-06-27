@@ -9,7 +9,7 @@
 #include "jscompartment.h"
 #include "jsnum.h"
 
-#include "CodeGenerator-arm.h"
+#include "ion/arm/CodeGenerator-arm.h"
 #include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/IonCompartment.h"
