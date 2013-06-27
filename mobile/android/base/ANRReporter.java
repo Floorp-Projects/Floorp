@@ -9,12 +9,10 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONObject;
 
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -34,7 +32,6 @@ import java.io.StringReader;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.UUID;
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 public final class ANRReporter extends BroadcastReceiver
@@ -266,30 +263,6 @@ public final class ANRReporter extends BroadcastReceiver
         return 0L;
     }
 
-    private static long getTotalMem() {
-
-        if (Build.VERSION.SDK_INT >= 16 && GeckoAppShell.getContext() != null) {
-            ActivityManager am = (ActivityManager)
-                GeckoAppShell.getContext().getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            am.getMemoryInfo(mi);
-            mi.totalMem /= 1024L * 1024L;
-            if (DEBUG) {
-                Log.d(LOGTAG, "totalMem " + String.valueOf(mi.totalMem));
-            }
-            return mi.totalMem;
-        } else if (DEBUG) {
-            Log.d(LOGTAG, "totalMem unavailable");
-        }
-        return 0L;
-    }
-
-    private static String getLocale() {
-        // Having a different locale than system locale is not
-        // supported right now; assume we are using the system locale
-        return Locale.getDefault().toString().replace('_', '-');
-    }
-
     /*
         a saved telemetry ping file consists of JSON in the following format,
             {
@@ -346,8 +319,8 @@ public final class ANRReporter extends BroadcastReceiver
             "}," +
             "\"info\":{" +
                 "\"reason\":\"android-anr-report\"," +
-                "\"OS\":" + JSONObject.quote(AppConstants.OS_TARGET) + "," +
-                "\"version\":\"" + String.valueOf(Build.VERSION.SDK_INT) + "\"," +
+                "\"OS\":" + JSONObject.quote(SysInfo.getName()) + "," +
+                "\"version\":\"" + String.valueOf(SysInfo.getVersion()) + "\"," +
                 "\"appID\":" + JSONObject.quote(AppConstants.MOZ_APP_ID) + "," +
                 "\"appVersion\":" + JSONObject.quote(AppConstants.MOZ_APP_VERSION)+ "," +
                 "\"appName\":" + JSONObject.quote(AppConstants.MOZ_APP_BASENAME) + "," +
@@ -355,15 +328,14 @@ public final class ANRReporter extends BroadcastReceiver
                 "\"appUpdateChannel\":" + JSONObject.quote(AppConstants.MOZ_UPDATE_CHANNEL) + "," +
                 // Technically the platform build ID may be different, but we'll never know
                 "\"platformBuildID\":" + JSONObject.quote(AppConstants.MOZ_APP_BUILDID) + "," +
-                "\"locale\":" + JSONObject.quote(getLocale()) + "," +
-                "\"cpucount\":" + String.valueOf(Runtime.getRuntime().availableProcessors()) + "," +
-                "\"memsize\":" + String.valueOf(getTotalMem()) + "," +
-                "\"arch\":" + JSONObject.quote(System.getProperty("os.arch")) + "," +
-                "\"kernel_version\":" + JSONObject.quote(System.getProperty("os.version")) + "," +
-                "\"device\":" + JSONObject.quote(Build.MODEL) + "," +
-                "\"manufacturer\":" + JSONObject.quote(Build.MANUFACTURER) + "," +
-                "\"hardware\":" + JSONObject.quote(Build.VERSION.SDK_INT < 8 ? "" :
-                                                   Build.HARDWARE) +
+                "\"locale\":" + JSONObject.quote(SysInfo.getLocale()) + "," +
+                "\"cpucount\":" + String.valueOf(SysInfo.getCPUCount()) + "," +
+                "\"memsize\":" + String.valueOf(SysInfo.getMemSize()) + "," +
+                "\"arch\":" + JSONObject.quote(SysInfo.getArchABI()) + "," +
+                "\"kernel_version\":" + JSONObject.quote(SysInfo.getKernelVersion()) + "," +
+                "\"device\":" + JSONObject.quote(SysInfo.getDevice()) + "," +
+                "\"manufacturer\":" + JSONObject.quote(SysInfo.getManufacturer()) + "," +
+                "\"hardware\":" + JSONObject.quote(SysInfo.getHardware()) +
             "}," +
             "\"androidANR\":\""));
         if (DEBUG) {
