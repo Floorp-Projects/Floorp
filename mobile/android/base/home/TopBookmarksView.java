@@ -109,9 +109,6 @@ public class TopBookmarksView extends GridView {
                 }
             }
         });
-
-        // Load the bookmarks.
-        new LoadBookmarksTask().execute();
     }
 
     /**
@@ -120,18 +117,7 @@ public class TopBookmarksView extends GridView {
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        if (mAdapter != null) {
-            setAdapter(null);
-            final Cursor cursor = mAdapter.getCursor();
-
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                if (cursor != null && !cursor.isClosed())
-                    cursor.close();
-                }
-            });
-        }
+        mAdapter = null;
     }
 
     /**
@@ -217,6 +203,24 @@ public class TopBookmarksView extends GridView {
      */
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
         mUrlOpenListener = listener;
+    }
+
+    /**
+     * Refreshes the grid with the given cursor.
+     *
+     * @param cursor The cursor to use with the adapter.
+     */
+    public void refreshFromCursor(Cursor cursor) {
+        if (mAdapter == null) {
+            return;
+        }
+
+        mAdapter.swapCursor(cursor);
+
+        // Load the thumbnails.
+        if (mAdapter.getCount() > 0) {
+            new LoadThumbnailsTask().execute(cursor);
+        }
     }
 
     /**
@@ -309,31 +313,6 @@ public class TopBookmarksView extends GridView {
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             return new TopBookmarkItemView(context);
-        }
-    }
-
-    /**
-     * An AsyncTask to load the top bookmarks from the db.
-     */
-    private class LoadBookmarksTask extends UiAsyncTask<Void, Void, Cursor> {
-        public LoadBookmarksTask() {
-            super(ThreadUtils.getBackgroundHandler());
-        }
-
-        @Override
-        protected Cursor doInBackground(Void... params) {
-            return BrowserDB.getTopSites(getContext().getContentResolver(), mMaxBookmarks);
-        }
-
-        @Override
-        public void onPostExecute(Cursor cursor) {
-            // Change to new cursor.
-            mAdapter.changeCursor(cursor);
-
-            // Load the thumbnails.
-            if (mAdapter.getCount() > 0) {
-                new LoadThumbnailsTask().execute(cursor);
-            }
         }
     }
 
