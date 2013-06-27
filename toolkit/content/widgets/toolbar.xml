@@ -409,6 +409,9 @@
       <constructor>
         this._setInactive();
       </constructor>
+      <destructor>
+        this._setActive();
+      </destructor>
 
       <field name="_inactiveTimeout">null</field>
 
