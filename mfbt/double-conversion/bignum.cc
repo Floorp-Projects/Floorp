@@ -501,8 +501,8 @@ uint16_t Bignum::DivideModuloIntBignum(const Bignum& other) {
   // Start by removing multiples of 'other' until both numbers have the same
   // number of digits.
   while (BigitLength() > other.BigitLength()) {
-    // This naive approach is extremely inefficient if the this divided other
-    // might be big. This function is implemented for doubleToString where
+    // This naive approach is extremely inefficient if `this` divided by other
+    // is big. This function is implemented for doubleToString where
     // the result should be small (less than 10).
     ASSERT(other.bigits_[other.used_digits_ - 1] >= ((1 << kBigitSize) / 16));
     // Remove the multiples of the first digit.
@@ -755,7 +755,6 @@ void Bignum::SubtractTimes(const Bignum& other, int factor) {
     Chunk difference = bigits_[i] - borrow;
     bigits_[i] = difference & kBigitMask;
     borrow = difference >> (kChunkSize - 1);
-    ++i;
   }
   Clamp();
 }
