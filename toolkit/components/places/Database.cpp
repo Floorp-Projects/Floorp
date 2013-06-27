@@ -222,7 +222,7 @@ public:
 };
 
 NS_IMETHODIMP
-BlockingConnectionCloseCallback::Complete()
+BlockingConnectionCloseCallback::Complete(nsresult, nsISupports*)
 {
   mDone = true;
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
