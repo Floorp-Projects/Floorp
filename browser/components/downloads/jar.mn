@@ -8,6 +8,7 @@ browser.jar:
         content/browser/downloads/downloads.css          (content/downloads.css)
 *       content/browser/downloads/downloads.js           (content/downloads.js)
 *       content/browser/downloads/downloadsOverlay.xul   (content/downloadsOverlay.xul)
+        content/browser/downloads/indicator.css          (content/indicator.css)
         content/browser/downloads/indicator.js           (content/indicator.js)
         content/browser/downloads/indicatorOverlay.xul   (content/indicatorOverlay.xul)
 *       content/browser/downloads/allDownloadsViewOverlay.xul (content/allDownloadsViewOverlay.xul)

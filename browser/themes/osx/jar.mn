@@ -94,8 +94,10 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/webRTC-sharingDevice-16.png
   skin/classic/browser/webRTC-sharingDevice-16@2x.png
+  skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/buttons@2x.png             (downloads/buttons@2x.png)
+  skin/classic/browser/downloads/contentAreaDownloadsView.css (downloads/contentAreaDownloadsView.css)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-glow@2x.png       (downloads/download-glow@2x.png)
   skin/classic/browser/downloads/download-notification-finish.png  (downloads/download-notification-finish.png)
@@ -105,8 +107,7 @@ browser.jar:
   skin/classic/browser/downloads/download-summary.png       (downloads/download-summary.png)
   skin/classic/browser/downloads/download-summary@2x.png    (downloads/download-summary@2x.png)
   skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
-  skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
-  skin/classic/browser/downloads/contentAreaDownloadsView.css (downloads/contentAreaDownloadsView.css)
+  skin/classic/browser/downloads/indicator.css              (downloads/indicator.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
