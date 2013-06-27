@@ -3545,6 +3545,49 @@ class MConcat
     }
 };
 
+class MParConcat
+  : public MTernaryInstruction,
+    public MixPolicy<StringPolicy<1>, StringPolicy<2> >
+{
+    MParConcat(MDefinition *parSlice, MDefinition *left, MDefinition *right)
+      : MTernaryInstruction(parSlice, left, right)
+    {
+        setMovable();
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ParConcat)
+
+    static MParConcat *New(MDefinition *parSlice, MDefinition *left, MDefinition *right) {
+        return new MParConcat(parSlice, left, right);
+    }
+
+    static MParConcat *New(MDefinition *parSlice, MConcat *concat) {
+        return New(parSlice, concat->lhs(), concat->rhs());
+    }
+
+    MDefinition *parSlice() const {
+        return getOperand(0);
+    }
+    MDefinition *lhs() const {
+        return getOperand(1);
+    }
+    MDefinition *rhs() const {
+        return getOperand(2);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MCharCodeAt
   : public MBinaryInstruction,
     public MixPolicy<StringPolicy<0>, IntPolicy<1> >
