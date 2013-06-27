@@ -2237,12 +2237,12 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     // fallback.
     if (mOfflineCacheEntry) {
         mOfflineCacheEntry->AsyncDoom(nullptr);
-        mOfflineCacheEntry = 0;
+        mOfflineCacheEntry = nullptr;
         mOfflineCacheAccess = 0;
     }
 
     mApplicationCacheForWrite = nullptr;
-    mOfflineCacheEntry = 0;
+    mOfflineCacheEntry = nullptr;
     mOfflineCacheAccess = 0;
 
     // Close the current cache entry.
@@ -3566,8 +3566,8 @@ nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
 
     mCachedResponseHead = nullptr;
 
-    mCachePump = 0;
-    mCacheEntry = 0;
+    mCachePump = nullptr;
+    mCacheEntry = nullptr;
     mCacheAccess = 0;
     mInitedCacheEntry = false;
 }
@@ -3590,7 +3590,7 @@ nsHttpChannel::CloseOfflineCacheEntry()
             mOfflineCacheEntry->AsyncDoom(nullptr);
     }
 
-    mOfflineCacheEntry = 0;
+    mOfflineCacheEntry = nullptr;
     mOfflineCacheAccess = 0;
 }
 
@@ -5015,7 +5015,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // at this point, we're done with the transaction
         mTransactionTimings = mTransaction->Timings();
         mTransaction = nullptr;
-        mTransactionPump = 0;
+        mTransactionPump = nullptr;
 
         // We no longer need the dns prefetch object
         if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
