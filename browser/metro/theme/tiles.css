@@ -1,0 +1,274 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Tile grid  ------------------------------------------------------------- */
+
+%filter substitution
+%include defines.inc
+
+/*
+ *****************************************************
+  The following rules define the key tile dimensions
+  They are (also) snarfed via the CSSOM as the dimensions used in the #richgrid binding
+ *****************************************************
+ */
+richgriditem {
+  width: @grid_double_column_width@;
+  height: @grid_row_height@;
+}
+richgriditem[customImage] {
+  width: @grid_double_column_width@;
+  height: @grid_double_row_height@;
+}
+richgriditem[compact] {
+  width: auto;
+  height: @compactgrid_row_height@;
+}
+
+/*
+ *****************************************************
+ */
+
+richgrid {
+  display: -moz-box;
+}
+
+richgrid > .richgrid-grid {
+  -moz-column-width: @grid_double_column_width@; /* tile width (2x unit + gutter) */
+  min-width: @grid_double_column_width@; /* min 1 column */
+  min-height: @grid_double_row_height@; /* 2 rows (or 1 double rows) minimum; multiple of tile_height */
+  -moz-column-fill: auto; /* do not attempt to balance content between columns */
+  -moz-column-gap: 0;
+  -moz-column-count: auto;
+  display: block;
+  -moz-box-sizing: content-box;
+  overflow-x: hidden; /* clipping will only kick in if an explicit width is set */
+  transition: 100ms transform ease-out;
+}
+
+richgriditem {
+  display: block;
+  position: relative;
+  width: @grid_double_column_width@;
+  height: @grid_row_height@;
+  -moz-box-sizing: border-box;
+  -moz-column-gap: 0;
+  overflow:hidden;
+  cursor: default;
+  transition: 300ms height ease-out,
+              150ms opacity ease-out,
+              100ms transform ease-out;
+}
+
+.tile-content {
+  display: block;
+  position: absolute;
+  background-color: #fff;
+  background-origin: padding-box;
+  /* content positioning within the grid "cell"
+     gives us the gutters/spacing between tiles */
+  top: 2px; right: 6px; bottom: 10px; left: 6px;
+  border: @metro_border_thin@ solid @tile_border_color@;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+  transition: 150ms transform ease-out;
+}
+
+.tile-start-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 20px;
+  background: hsla(0,2%,98%,.95);
+  padding: 8px;
+}
+
+.tile-icon-box {
+  display: inline-block;
+  padding: 4px;
+  background: #fff;
+  opacity: 1.0;
+}
+
+.tile-icon-box > image {
+  width: 24px;
+  height: 24px;
+  list-style-image: url("chrome://browser/skin/images/identity-icons-generic.png");
+}
+
+.tile-desc {
+  display: block;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 20px; /* the colored bar in the default tile is the background color peeking through */
+  z-index: 1;
+  padding: 4px 8px;
+  color: #333;
+  margin: 0;
+  -moz-margin-start: 0;
+  display: block;
+  font-size: 20px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+richgriditem.collapsed {
+  height: 0!important;
+  overflow: hidden;
+  opacity: 0;
+}
+
+richgriditem.collapsed > .tile-content {
+  transform: scaleY(0);
+  transition: 150ms transform ease-out 150ms;
+}
+
+richgriditem:active {
+  z-index: 2;
+}
+
+/* thumbnail variation */
+richgriditem[customImage] {
+  width: @grid_double_column_width@;
+  height: @grid_double_row_height@;
+  -moz-box-pack: end;
+  padding: 0px;
+  color: #1a1a1a;
+}
+
+richgriditem[customImage] .tile-desc {
+  background: transparent;
+  margin: 0px;
+  left: 0;
+}
+
+richgriditem[customImage] > .tile-content > .tile-desc {
+  /* ensure thumbnail labels get their color from the parent richgriditem element */
+  color: inherit;
+}
+
+/* put the image in place of the icon if there is an image background */
+richgriditem[customImage] > .tile-content > .tile-start-container {
+  background-size: cover;
+  background-position: top left;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 0;
+  bottom: 32px; /* TODO: should be some em value? */;
+  right: 0;
+  left: 0;
+  background-color: hsla(0,2%,98%,.95);
+}
+richgriditem[customImage] .tile-icon-box {
+  visibility: collapse;
+}
+
+/* selected tile indicator */
+richgriditem[selected] > .tile-content::after {
+  content: "";
+  pointer-events: none;
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  background-image: url(chrome://browser/skin/images/tile-selected-check-hdpi.png);
+  background-origin: border-box;
+  background-position: right 0 top 0;
+  background-repeat: no-repeat;
+  /* scale the image whatever the dppx */
+  background-size: 35px 35px;
+  border: @metro_border_xthick@ solid @selected_color@;
+}
+
+richgriditem[crosssliding] {
+  z-index: 10;
+}
+
+/* ease the return to original position when cross-sliding */
+richgriditem:not([crosssliding]) {
+  transition: transform ease-out 0.2s;
+}
+
+
+/* tile pinned-state indication */
+richgriditem[pinned] > .tile-content::before {
+  pointer-events:none;
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: auto;
+  z-index: 1;
+  width: 35px;
+  height: 35px;
+  background-image: url(chrome://browser/skin/images/pinned-hdpi.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  /* scale the image whatever the dppx */
+  background-size: 70px 70px;
+}
+
+/* Selected _and_ pinned tiles*/
+richgriditem[selected][pinned] > .tile-content::before {
+  background-position: right -@metro_border_xthick@ top -@metro_border_xthick@;
+  width: 70px;
+  height: 70px;
+}
+
+richgriditem[pinned]:-moz-locale-dir(rtl) > .tile-content::before {
+  left: 0;
+  right: auto;
+}
+
+richgriditem[customColor] {
+  color: #f1f1f1;
+}
+
+/* Snapped-view variation
+   We use the compact, single-column grid treatment for <=320px */
+
+@media (max-width: 330px) {
+
+  richgrid > .richgrid-grid {
+    -moz-column-width: auto!important; /* let it flow */
+    -moz-column-count: auto!important; /* let it flow */
+    height: auto; /* let it flow */
+    min-width: 280px;
+    transition: 100ms transform ease-out;
+  }
+
+  richgriditem {
+    width: @grid_double_column_width@;
+    overflow: hidden;
+    height: @compactgrid_row_height@;
+  }
+
+  .tile-desc {
+    top: 0;
+    left: 44px; /* label goes to the right of the favicon */
+    right: 0;
+    padding: 8px;
+  }
+
+  .tile-start-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 6px;
+    background: #fff;
+    padding: 8px;
+  }
+  .tile-icon-box {
+    padding: 2px;
+    background: #fff;
+    opacity: 1.0;
+  }
+}
