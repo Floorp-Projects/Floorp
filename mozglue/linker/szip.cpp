@@ -441,13 +441,13 @@ int SzipCompress::do_compress(Buffer &origBuf, Buffer &outBuf,
   }
   header->lastChunkSize = avail;
   MOZ_ASSERT(header->totalSize == offset);
+  MOZ_ASSERT(header->nChunks == nChunks);
 
   if (!outBuf.Resize(offset)) {
     LOG("Error truncating output: %s", strerror(errno));
     return 1;
   }
 
-  MOZ_ASSERT(header->nChunks == nChunks);
   return 0;
 
 }
