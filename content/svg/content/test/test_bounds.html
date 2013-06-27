@@ -44,24 +44,6 @@ function runTest()
 {
   var doc = $("svg").contentWindow.document;
 
-  var svg1Bounds = doc.getElementById("svg1").getBoundingClientRect();
-  is(svg1Bounds.left, 10, "svg1.getBoundingClientRect().left");
-  is(svg1Bounds.top, 10, "svg1.getBoundingClientRect().top");
-  is(svg1Bounds.width, 25, "svg1.getBoundingClientRect().width");
-  is(svg1Bounds.height, 30, "svg1.getBoundingClientRect().height");
-
-  var svg2Bounds = doc.getElementById("svg2").getBoundingClientRect();
-  is(svg2Bounds.left, 0, "svg2.getBoundingClientRect().left");
-  is(svg2Bounds.top, 0, "svg2.getBoundingClientRect().top");
-  is(svg2Bounds.width, 2, "svg2.getBoundingClientRect().width");
-  is(svg2Bounds.height, 2, "svg2.getBoundingClientRect().height");
-
-  var svg3Bounds = doc.getElementById("svg3").getBoundingClientRect();
-  is(svg3Bounds.left, 0, "svg3.getBoundingClientRect().left");
-  is(svg3Bounds.top, 0, "svg3.getBoundingClientRect().top");
-  is(svg3Bounds.width, 1, "svg3.getBoundingClientRect().width");
-  is(svg3Bounds.height, 1, "svg3.getBoundingClientRect().height");
-
   var text1 = doc.getElementById("text1");
 
   var text1Bounds = text1.getBoundingClientRect();
