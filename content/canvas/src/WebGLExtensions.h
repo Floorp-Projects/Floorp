@@ -172,6 +172,23 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionVertexArray
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionVertexArray(WebGLContext*);
+    virtual ~WebGLExtensionVertexArray();
+
+    already_AddRefed<WebGLVertexArray> CreateVertexArrayOES();
+    void DeleteVertexArrayOES(WebGLVertexArray* array);
+    bool IsVertexArrayOES(WebGLVertexArray* array);
+    void BindVertexArrayOES(WebGLVertexArray* array);
+
+    static bool IsSupported(const WebGLContext* context);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 } // namespace mozilla
 
 #endif // WEBGLEXTENSIONS_H_

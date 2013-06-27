@@ -76,6 +76,7 @@ class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLShaderPrecisionFormat;
 class WebGLTexture;
+class WebGLVertexArray;
 
 namespace dom {
 struct WebGLContextAttributes;
@@ -128,6 +129,7 @@ class WebGLContext :
     friend class WebGLExtensionCompressedTexturePVRTC;
     friend class WebGLExtensionDepthTexture;
     friend class WebGLExtensionDrawBuffers;
+    friend class WebGLExtensionVertexArray;
 
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
@@ -321,6 +323,7 @@ public:
     void BindFramebuffer(WebGLenum target, WebGLFramebuffer* wfb);
     void BindRenderbuffer(WebGLenum target, WebGLRenderbuffer* wrb);
     void BindTexture(WebGLenum target, WebGLTexture *tex);
+    void BindVertexArray(WebGLVertexArray *vao);
     void BlendColor(WebGLclampf r, WebGLclampf g, WebGLclampf b, WebGLclampf a) {
         if (!IsContextStable())
             return;
@@ -367,12 +370,14 @@ public:
     already_AddRefed<WebGLRenderbuffer> CreateRenderbuffer();
     already_AddRefed<WebGLTexture> CreateTexture();
     already_AddRefed<WebGLShader> CreateShader(WebGLenum type);
+    already_AddRefed<WebGLVertexArray> CreateVertexArray();
     void CullFace(WebGLenum face);
     void DeleteBuffer(WebGLBuffer *buf);
     void DeleteFramebuffer(WebGLFramebuffer *fbuf);
     void DeleteProgram(WebGLProgram *prog);
     void DeleteRenderbuffer(WebGLRenderbuffer *rbuf);
     void DeleteShader(WebGLShader *shader);
+    void DeleteVertexArray(WebGLVertexArray *vao);
     void DeleteTexture(WebGLTexture *tex);
     void DepthFunc(WebGLenum func);
     void DepthMask(WebGLboolean b);
@@ -465,6 +470,7 @@ public:
     bool IsRenderbuffer(WebGLRenderbuffer *rb);
     bool IsShader(WebGLShader *shader);
     bool IsTexture(WebGLTexture *tex);
+    bool IsVertexArray(WebGLVertexArray *vao);
     void LineWidth(WebGLfloat width) {
         if (!IsContextStable())
             return;
@@ -874,6 +880,7 @@ protected:
         OES_standard_derivatives,
         OES_texture_float,
         OES_texture_float_linear,
+        OES_vertex_array_object,
         WEBGL_compressed_texture_atc,
         WEBGL_compressed_texture_pvrtc,
         WEBGL_compressed_texture_s3tc,
@@ -1031,14 +1038,10 @@ protected:
     void ForceLoseContext();
     void ForceRestoreContext();
 
-    // the buffers bound to the current program's attribs
-    nsTArray<WebGLVertexAttribData> mAttribBuffers;
-
     nsTArray<WebGLRefPtr<WebGLTexture> > mBound2DTextures;
     nsTArray<WebGLRefPtr<WebGLTexture> > mBoundCubeMapTextures;
 
     WebGLRefPtr<WebGLBuffer> mBoundArrayBuffer;
-    WebGLRefPtr<WebGLBuffer> mBoundElementArrayBuffer;
 
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
 
@@ -1046,6 +1049,7 @@ protected:
 
     WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
+    WebGLRefPtr<WebGLVertexArray> mBoundVertexArray;
 
     LinkedList<WebGLTexture> mTextures;
     LinkedList<WebGLBuffer> mBuffers;
@@ -1053,6 +1057,9 @@ protected:
     LinkedList<WebGLShader> mShaders;
     LinkedList<WebGLRenderbuffer> mRenderbuffers;
     LinkedList<WebGLFramebuffer> mFramebuffers;
+    LinkedList<WebGLVertexArray> mVertexArrays;
+
+    WebGLRefPtr<WebGLVertexArray> mDefaultVertexArray;
 
     // PixelStore parameters
     uint32_t mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
@@ -1138,6 +1145,7 @@ public:
     friend class WebGLBuffer;
     friend class WebGLShader;
     friend class WebGLUniformLocation;
+    friend class WebGLVertexArray;
 };
 
 // used by DOM bindings in conjunction with GetParentObject
