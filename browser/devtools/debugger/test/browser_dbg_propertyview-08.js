@@ -43,11 +43,11 @@ function testFrameParameters()
       is(localNodes.length + localNonEnums.length, 12,
         "The localScope and localNonEnums should contain all the created variable elements.");
 
-      is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Window]",
+      is(localNodes[0].querySelector(".value").getAttribute("value"), "Window",
         "Should have the right property value for 'this'.");
-      is(localNodes[8].querySelector(".value").getAttribute("value"), "[object Arguments]",
+      is(localNodes[8].querySelector(".value").getAttribute("value"), "Arguments",
         "Should have the right property value for 'arguments'.");
-      is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Object]",
+      is(localNodes[10].querySelector(".value").getAttribute("value"), "Object",
         "Should have the right property value for 'c'.");
 
 
@@ -117,45 +117,45 @@ function testFrameParameters()
         window.clearInterval(intervalID);
 
         is(thisNode.target.querySelector(".value")
-           .getAttribute("value"), "[object Window]",
+           .getAttribute("value"), "Window",
           "Should have the right property value for 'this'.");
 
         is(thisNode.get("window").target.querySelector(".name")
            .getAttribute("value"), "window",
           "Should have the right property name for 'window'.");
-        ok(thisNode.get("window").target.querySelector(".value")
-           .getAttribute("value").search(/object/) != -1,
+        is(thisNode.get("window").target.querySelector(".value")
+           .getAttribute("value"), "Window",
           "'window' should be an object.");
 
         is(thisNode.get("document").target.querySelector(".name")
            .getAttribute("value"), "document",
           "Should have the right property name for 'document'.");
-        ok(thisNode.get("document").target.querySelector(".value")
-           .getAttribute("value").search(/object/) != -1,
+        is(thisNode.get("document").target.querySelector(".value")
+           .getAttribute("value"), "HTMLDocument",
           "'document' should be an object.");
 
 
         is(argumentsNode.target.querySelector(".value")
-           .getAttribute("value"), "[object Arguments]",
+           .getAttribute("value"), "Arguments",
           "Should have the right property value for 'arguments'.");
 
         is(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .name")[0]
            .getAttribute("value"), "0",
           "Should have the right property name for 'arguments[0]'.");
-        ok(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .value")[0]
-           .getAttribute("value").search(/object/) != -1,
+        is(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .value")[0]
+           .getAttribute("value"), "Object",
           "'arguments[0]' should be an object.");
 
         is(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .name")[7]
            .getAttribute("value"), "__proto__",
           "Should have the right property name for '__proto__'.");
-        ok(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .value")[7]
-           .getAttribute("value").search(/object/) != -1,
+        is(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .value")[7]
+           .getAttribute("value"), "Object",
           "'__proto__' should be an object.");
 
 
         is(cNode.target.querySelector(".value")
-           .getAttribute("value"), "[object Object]",
+           .getAttribute("value"), "Object",
           "Should have the right property value for 'c'.");
 
         is(cNode.target.querySelectorAll(".variables-view-property > .title > .name")[0]
