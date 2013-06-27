@@ -63,7 +63,7 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
   , mDOMStream(DOMAudioNodeMediaStream::CreateTrackUnionStream(GetOwner(),
-                                                               this,
+                                                               MOZ_THIS_IN_INITIALIZER_LIST(),
                                                                DOMMediaStream::HINT_CONTENTS_AUDIO))
 {
   TrackUnionStream* tus = static_cast<TrackUnionStream*>(mDOMStream->GetStream());
