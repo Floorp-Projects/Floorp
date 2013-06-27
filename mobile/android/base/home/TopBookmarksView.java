@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
@@ -372,7 +373,9 @@ public class TopBookmarksView extends GridView {
                 if (!thumbnails.containsKey(url)) {
                     final Bitmap bitmap = BrowserDB.getFaviconForUrl(cr, url);
                     if (bitmap != null) {
-                        thumbnails.put(url, new Thumbnail(bitmap, false));
+                        // Favicons.scaleImage can return several different size favicons,
+                        // but will at least prevent this from being too large.
+                        thumbnails.put(url, new Thumbnail(Favicons.getInstance().scaleImage(bitmap), false));
                     }
                 }
             }
