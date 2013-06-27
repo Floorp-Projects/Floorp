@@ -104,6 +104,10 @@ class B2GOptions(ReftestOptions):
                         type='string', dest='busybox',
                         help="Path to busybox binary to install on device")
         defaults['busybox'] = None
+        self.add_option("--httpd-path", action = "store",
+                    type = "string", dest = "httpdPath",
+                    help = "path to the httpd.js file")
+        defaults["httpdPath"] = None
         defaults["remoteTestRoot"] = "/data/local/tests"
         defaults["logFile"] = "reftest.log"
         defaults["autorun"] = True
@@ -163,6 +167,12 @@ class B2GOptions(ReftestOptions):
             f = open(options.pidFile, 'w')
             f.write("%s" % os.getpid())
             f.close()
+
+        # httpd-path is specified by standard makefile targets and may be specified
+        # on the command line to select a particular version of httpd.js. If not
+        # specified, try to select the one from from the xre bundle, as required in bug 882932.
+        if not options.httpdPath:
+            options.httpdPath = os.path.join(options.xrePath, "components")
 
         return options
 

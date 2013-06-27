@@ -60,7 +60,7 @@ RUN_MOCHITEST_REMOTE = \
   $(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    --testing-modules-dir=$(call core_abspath,_tests/modules) \
+    --testing-modules-dir=$(call core_abspath,_tests/modules) --httpd-path=. \
     $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 RUN_MOCHITEST_ROBOCOP = \
@@ -71,6 +71,7 @@ RUN_MOCHITEST_ROBOCOP = \
     --robocop-ini=$(DEPTH)/build/mobile/robocop/robocop.ini \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+    --httpd-path=. \
     $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
@@ -185,11 +186,13 @@ RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
 REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --dm_trans=$(DM_TRANS) --ignore-window-size \
   --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+  --httpd-path=_tests/reftest/reftest/components \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) "$(1)" | tee ./$@.log
 
 RUN_REFTEST_B2G = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftestb2g.py \
   --remote-webserver=10.0.2.2 --b2gpath=${B2G_PATH} --adbpath=${ADB_PATH} \
   --xre-path=${MOZ_HOST_BIN} $(SYMBOLS_PATH) --ignore-window-size \
+  --httpd-path=_tests/reftest/reftest/components \
   $(EXTRA_TEST_ARGS) "$(1)" | tee ./$@.log
 
 ifeq ($(OS_ARCH),WINNT) #{
