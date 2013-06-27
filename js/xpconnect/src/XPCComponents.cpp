@@ -3942,7 +3942,7 @@ xpc_EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sourc
 
         // Set the exception on our caller's cx.
         JS_SetPendingException(cx, exn);
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 
     // Transitively apply Xray waivers if |sb| was waived.
