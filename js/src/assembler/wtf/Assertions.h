@@ -26,7 +26,7 @@
 #ifndef assembler_wtf_Assertions_h
 #define assembler_wtf_Assertions_h
 
-#include "Platform.h"
+#include "assembler/wtf/Platform.h"
 #include "mozilla/Assertions.h"
 
 #ifndef DEBUG
