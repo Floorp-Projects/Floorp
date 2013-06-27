@@ -441,11 +441,6 @@ gfxWindowsPlatform::UpdateRenderMode()
     d2dDisabled = OncePreferenceDirect2DDisabled();
     d2dForceEnabled = OncePreferenceDirect2DForceEnabled();
 
-#ifdef MOZ_METRO
-    // In Metro mode there is no fallback available
-    d2dForceEnabled |= IsRunningInWindowsMetro();
-#endif
-
     bool tryD2D = !d2dBlocked || d2dForceEnabled;
 
     // Do not ever try if d2d is explicitly disabled,
