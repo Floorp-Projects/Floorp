@@ -3633,5 +3633,10 @@
   "BROWSER_IS_USER_DEFAULT": {
     "kind": "boolean",
     "description": "The result of the startup default desktop browser check."
+  },
+  "MIXED_CONTENT_PAGE_LOAD": {
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
   }
 }
