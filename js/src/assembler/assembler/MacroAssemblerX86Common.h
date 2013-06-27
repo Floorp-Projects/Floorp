@@ -34,8 +34,8 @@
 
 #if ENABLE_ASSEMBLER
 
-#include "X86Assembler.h"
-#include "AbstractMacroAssembler.h"
+#include "assembler/assembler/X86Assembler.h"
+#include "assembler/assembler/AbstractMacroAssembler.h"
 
 #if WTF_COMPILER_MSVC
 #if WTF_CPU_X86_64

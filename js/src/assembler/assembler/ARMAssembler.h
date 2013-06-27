@@ -38,7 +38,7 @@
 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
-#include "AssemblerBufferWithConstantPool.h"
+#include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "assembler/wtf/Assertions.h"
 
 // TODO: We don't print the condition code in our spew lines. Doing this

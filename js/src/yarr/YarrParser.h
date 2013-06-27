@@ -28,7 +28,7 @@
 #ifndef yarr_YarrParser_h
 #define yarr_YarrParser_h
 
-#include "Yarr.h"
+#include "yarr/Yarr.h"
 
 namespace JSC { namespace Yarr {
 
