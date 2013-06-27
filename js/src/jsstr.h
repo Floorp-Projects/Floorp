@@ -43,7 +43,7 @@ class RopeBuilder;
 
 template <AllowGC allowGC>
 extern JSString *
-ConcatStrings(JSContext *cx,
+ConcatStrings(ThreadSafeContext *cx,
               typename MaybeRooted<JSString*, allowGC>::HandleType left,
               typename MaybeRooted<JSString*, allowGC>::HandleType right);
 
@@ -88,7 +88,7 @@ extern const char js_encodeURIComponent_str[];
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
 template <js::AllowGC allowGC>
 extern JSStableString *
-js_NewString(JSContext *cx, jschar *chars, size_t length);
+js_NewString(js::ThreadSafeContext *tcx, jschar *chars, size_t length);
 
 extern JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start, size_t length);
@@ -100,7 +100,7 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
 template <js::AllowGC allowGC>
 extern JSFlatString *
-js_NewStringCopyN(JSContext *cx, const char *s, size_t n);
+js_NewStringCopyN(js::ThreadSafeContext *tcx, const char *s, size_t n);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC>
@@ -109,7 +109,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
 template <js::AllowGC allowGC>
 extern JSFlatString *
-js_NewStringCopyZ(JSContext *cx, const char *s);
+js_NewStringCopyZ(js::ThreadSafeContext *tcx, const char *s);
 
 /*
  * Convert a value to a printable C string.
@@ -228,7 +228,7 @@ namespace js {
  * new string (in jschars).
  */
 extern jschar *
-InflateString(JSContext *cx, const char *bytes, size_t *length);
+InflateString(ThreadSafeContext *cx, const char *bytes, size_t *length);
 
 /*
  * Inflate bytes in UTF-8 encoding to jschars. Return null on error, otherwise
