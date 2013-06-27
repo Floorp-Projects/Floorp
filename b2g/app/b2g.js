@@ -556,10 +556,13 @@ pref("javascript.options.mem.log", false);
 // Increase mark slice time from 10ms to 30ms
 pref("javascript.options.mem.gc_incremental_slice_ms", 30);
 
-pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 150);
+// Increase time to get more high frequency GC on benchmarks from 1000ms to 1500ms
+pref("javascript.options.mem.gc_high_frequency_time_limit_ms", 1500);
+
+pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 300);
 pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 120);
 pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 40);
-pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
+pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 0);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 120);
 pref("javascript.options.mem.high_water_mark", 6);
 pref("javascript.options.mem.gc_allocation_threshold_mb", 1);
