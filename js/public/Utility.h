@@ -170,7 +170,7 @@ static JS_INLINE void js_free(void* p)
 }
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
-JS_BEGIN_EXTERN_C
+extern "C" {
 
 /*
  * Replace bit-scanning code sequences with CPU-specific instructions to
@@ -314,7 +314,7 @@ JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(uint64_t));
 # error "NOT SUPPORTED"
 #endif
 
-JS_END_EXTERN_C
+} // extern "C"
 
 /*
  * Internal function.
