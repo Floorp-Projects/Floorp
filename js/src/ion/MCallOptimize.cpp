@@ -112,8 +112,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineParallelArray(callInfo);
 
     // Utility intrinsics.
-    if (native == intrinsic_ThrowError)
-        return inlineThrowError(callInfo);
     if (native == intrinsic_IsCallable)
         return inlineIsCallable(callInfo);
     if (native == intrinsic_NewObjectWithClassPrototype)
@@ -1412,40 +1410,6 @@ IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
     MHaveSameClass *sameClass = MHaveSameClass::New(callInfo.getArg(0), callInfo.getArg(1));
     current->add(sameClass);
     current->push(sameClass);
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineThrowError(CallInfo &callInfo)
-{
-    // In Parallel Execution, convert %ThrowError() into a bailout.
-
-    if (callInfo.constructing())
-        return InliningStatus_NotInlined;
-
-    ExecutionMode executionMode = info().executionMode();
-    switch (executionMode) {
-      case SequentialExecution:
-        return InliningStatus_NotInlined;
-      case ParallelExecution:
-        break;
-    }
-
-    callInfo.unwrapArgs();
-
-    MParBailout *bailout = new MParBailout();
-    if (!bailout)
-        return InliningStatus_Error;
-    current->end(bailout);
-
-    setCurrentAndSpecializePhis(newBlock(pc));
-    if (!current)
-        return InliningStatus_Error;
-
-    MConstant *udef = MConstant::New(UndefinedValue());
-    current->add(udef);
-    current->push(udef);
 
     return InliningStatus_Inlined;
 }
