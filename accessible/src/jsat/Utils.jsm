@@ -191,15 +191,18 @@ this.Utils = {
   },
 
   getAttributes: function getAttributes(aAccessible) {
-    let attributesEnum = aAccessible.attributes.enumerate();
     let attributes = {};
 
-    // Populate |attributes| object with |aAccessible|'s attribute key-value
-    // pairs.
-    while (attributesEnum.hasMoreElements()) {
-      let attribute = attributesEnum.getNext().QueryInterface(
-        Ci.nsIPropertyElement);
-      attributes[attribute.key] = attribute.value;
+    if (aAccessible && aAccessible.attributes) {
+      let attributesEnum = aAccessible.attributes.enumerate();
+
+      // Populate |attributes| object with |aAccessible|'s attribute key-value
+      // pairs.
+      while (attributesEnum.hasMoreElements()) {
+        let attribute = attributesEnum.getNext().QueryInterface(
+          Ci.nsIPropertyElement);
+        attributes[attribute.key] = attribute.value;
+      }
     }
 
     return attributes;
