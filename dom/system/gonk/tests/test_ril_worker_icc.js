@@ -2607,7 +2607,7 @@ add_test(function test_unlock_card_lock_corporateLocked() {
 /**
  * Verify MCC and MNC parsing
  */
-add_test(function test_mcc_mnc_parsing()) {
+add_test(function test_mcc_mnc_parsing() {
   let worker = newUint8Worker();
   let record = worker.ICCRecordHelper;
   let helper = worker.GsmPDUHelper;
