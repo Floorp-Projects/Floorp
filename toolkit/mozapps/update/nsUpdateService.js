@@ -2830,8 +2830,15 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   pauseDownload: function AUS_pauseDownload() {
-    if (this.isDownloading)
+    if (this.isDownloading) {
       this._downloader.cancel();
+    } else if (this._retryTimer) {
+      // Download status is still consider as 'downloading' during retry.
+      // We need to cancel both retry and download at this stage.
+      this._retryTimer.cancel();
+      this._retryTimer = null;
+      this._downloader.cancel();
+    }
   },
 
   /**
