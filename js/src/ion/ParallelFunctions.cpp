@@ -452,7 +452,8 @@ ion::ParCallToUncompiledScript(JSFunction *func)
             Spew(SpewBailouts, "Call to bound function (excessive depth: %d)", depth);
         }
     } else {
-        JS_NOT_REACHED("ParCall'ed functions must have scripts or be ES6 bound functions.");
+        JS_ASSERT(func->isNative());
+        Spew(SpewBailouts, "Call to native function");
     }
 #endif
 }
