@@ -18,3 +18,4 @@ cp $1/src/*.cc ./
 
 patch -p3 < add-mfbt-api-markers.patch
 patch -p3 < use-StandardInteger.patch
+patch -p3 < use-mozilla-assertions.patch
