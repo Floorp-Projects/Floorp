@@ -208,6 +208,12 @@ let DebuggerView = {
    *        The source text content.
    */
   setEditorMode: function(aUrl, aContentType = "", aTextContent = "") {
+    // Avoid setting the editor mode for very large files.
+    if (aTextContent.length >= SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
+      this.editor.setMode(SourceEditor.MODES.TEXT);
+      return;
+    }
+
     if (aContentType) {
       if (/javascript/.test(aContentType)) {
         this.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
@@ -243,39 +249,23 @@ let DebuggerView = {
     }
 
     dumpn("Setting the DebuggerView editor source: " + aSource.url +
-          ", loaded: " + aSource.loaded);
+          ", fetched: " + !!aSource._fetched);
 
     this.editor.setMode(SourceEditor.MODES.TEXT);
     this.editor.setText(L10N.getStr("loadingText"));
     this.editor.resetUndo();
     this._editorSource = aSource;
 
-    // If the source is not loaded, display a placeholder text.
-    if (!aSource.loaded) {
-      DebuggerController.SourceScripts.getText(aSource, set.bind(this));
-    }
-    // If the source is already loaded, display it immediately.
-    else {
-      set.call(this, aSource);
-    }
-
-    // Updates the source editor's displayed text.
-    // @param object aSource
-    function set(aSource) {
+    DebuggerController.SourceScripts.getTextForSource(aSource).then(([, aText]) => {
       // Avoid setting an unexpected source. This may happen when fast switching
       // between sources that haven't been fetched yet.
       if (this._editorSource != aSource) {
         return;
       }
 
-      // Avoid setting the editor mode for very large files.
-      if (aSource.text.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
-        this.setEditorMode(aSource.url, aSource.contentType, aSource.text);
-      } else {
-        this.editor.setMode(SourceEditor.MODES.TEXT);
-      }
-      this.editor.setText(aSource.text);
+      this.editor.setText(aText);
       this.editor.resetUndo();
+      this.setEditorMode(aSource.url, aSource.contentType, aText);
 
       // Update the editor's current caret and debug locations given by the
       // currently active frame in the stack, if there's one available.
@@ -287,7 +277,13 @@ let DebuggerView = {
 
       // Notify that we've shown a source file.
       window.dispatchEvent(document, "Debugger:SourceShown", aSource);
-    }
+    },
+    ([, aError]) => {
+      // Rejected. TODO: Bug 884484.
+      let msg = "Error loading: " + aSource.url + "\n" + aError;
+      dumpn(msg);
+      Cu.reportError(msg);
+    });
   },
 
   /**
