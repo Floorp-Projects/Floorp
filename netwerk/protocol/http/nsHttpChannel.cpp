@@ -19,6 +19,7 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsILoadGroupChild.h"
+#include "nsIProtocolProxyService2.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
@@ -1775,8 +1776,19 @@ nsHttpChannel::ResolveProxy()
     if (NS_FAILED(rv))
         return rv;
 
-    return pps->AsyncResolve(mProxyURI ? mProxyURI : mURI, mProxyResolveFlags,
-                             this, getter_AddRefs(mProxyRequest));
+    // using the nsIProtocolProxyService2 allows a minor performance
+    // optimization, but if an add-on has only provided the original interface
+    // then it is ok to use that version.
+    nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
+    if (pps2) {
+        rv = pps2->AsyncResolve2(mProxyURI ? mProxyURI : mURI, mProxyResolveFlags,
+                                 this, getter_AddRefs(mProxyRequest));
+    } else {
+        rv = pps->AsyncResolve(mProxyURI ? mProxyURI : mURI, mProxyResolveFlags,
+                               this, getter_AddRefs(mProxyRequest));
+    }
+
+    return rv;
 }
 
 bool
