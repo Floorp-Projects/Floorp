@@ -1233,9 +1233,9 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
                    colorWriteMask[2] == mColorWriteMask[2] &&
                    colorWriteMask[3] == mColorWriteMask[3]);
         MOZ_ASSERT(IsSameFloat(mColorClearValue[0], colorClearValue[0]) &&
-                   IsSameFloat(mColorClearValue[0], colorClearValue[0]) &&
-                   IsSameFloat(mColorClearValue[0], colorClearValue[0]) &&
-                   IsSameFloat(mColorClearValue[0], colorClearValue[0]));
+                   IsSameFloat(mColorClearValue[1], colorClearValue[1]) &&
+                   IsSameFloat(mColorClearValue[2], colorClearValue[2]) &&
+                   IsSameFloat(mColorClearValue[3], colorClearValue[3]));
 
 
         realGLboolean depthWriteMask = 2;
