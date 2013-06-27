@@ -19,7 +19,7 @@ SeekableZStream::Init(const void *buf, size_t length)
 {
   const SeekableZStreamHeader *header = SeekableZStreamHeader::validate(buf);
   if (!header) {
-    log("Not a seekable zstream");
+    LOG("Not a seekable zstream");
     return false;
   }
 
@@ -41,7 +41,7 @@ SeekableZStream::Init(const void *buf, size_t length)
       (lastChunkSize == 0) ||
       (lastChunkSize > chunkSize) ||
       (length < totalSize)) {
-    log("Malformed or broken seekable zstream");
+    LOG("Malformed or broken seekable zstream");
     return false;
   }
 
@@ -66,7 +66,7 @@ bool
 SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
 {
   if (chunk >= offsetTable.numElements()) {
-    log("DecompressChunk: chunk #%" PRIdSize " out of range [0-%" PRIdSize ")",
+    LOG("DecompressChunk: chunk #%" PRIdSize " out of range [0-%" PRIdSize ")",
         chunk, offsetTable.numElements());
     return false;
   }
@@ -78,7 +78,7 @@ SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
   if (length == 0 || length > chunkLen)
     length = chunkLen;
 
-  debug("DecompressChunk #%" PRIdSize " @%p (%" PRIdSize "/% " PRIdSize ")",
+  DEBUG_LOG("DecompressChunk #%" PRIdSize " @%p (%" PRIdSize "/% " PRIdSize ")",
         chunk, where, length, chunkLen);
   z_stream zStream;
   memset(&zStream, 0, sizeof(zStream));
@@ -90,21 +90,21 @@ SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
 
   /* Decompress chunk */
   if (inflateInit2(&zStream, windowBits) != Z_OK) {
-    log("inflateInit failed: %s", zStream.msg);
+    LOG("inflateInit failed: %s", zStream.msg);
     return false;
   }
   if (dictionary && inflateSetDictionary(&zStream, dictionary,
                                          dictionary.numElements()) != Z_OK) {
-    log("inflateSetDictionary failed: %s", zStream.msg);
+    LOG("inflateSetDictionary failed: %s", zStream.msg);
     return false;
   }
   if (inflate(&zStream, (length == chunkLen) ? Z_FINISH : Z_SYNC_FLUSH)
       != (length == chunkLen) ? Z_STREAM_END : Z_OK) {
-    log("inflate failed: %s", zStream.msg);
+    LOG("inflate failed: %s", zStream.msg);
     return false;
   }
   if (inflateEnd(&zStream) != Z_OK) {
-    log("inflateEnd failed: %s", zStream.msg);
+    LOG("inflateEnd failed: %s", zStream.msg);
     return false;
   }
   if (filter)

@@ -142,7 +142,7 @@ private:
       void (*func)(void);
     } f;
     f.ptr = ptr;
-    debug("%s: Calling function @%p", GetPath(), ptr);
+    DEBUG_LOG("%s: Calling function @%p", GetPath(), ptr);
     f.func();
   }
 

@@ -233,12 +233,12 @@ SystemElf::Load(const char *path, int flags)
   /* The Android linker returns a handle when the file name matches an
    * already loaded library, even when the full path doesn't exist */
   if (path && path[0] == '/' && (access(path, F_OK) == -1)){
-    debug("dlopen(\"%s\", 0x%x) = %p", path, flags, (void *)NULL);
+    DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, (void *)NULL);
     return NULL;
   }
 
   void *handle = dlopen(path, flags);
-  debug("dlopen(\"%s\", 0x%x) = %p", path, flags, handle);
+  DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, handle);
   ElfLoader::Singleton.lastError = dlerror();
   if (handle) {
     SystemElf *elf = new SystemElf(path, handle);
@@ -252,7 +252,7 @@ SystemElf::~SystemElf()
 {
   if (!dlhandle)
     return;
-  debug("dlclose(%p [\"%s\"])", dlhandle, GetPath());
+  DEBUG_LOG("dlclose(%p [\"%s\"])", dlhandle, GetPath());
   dlclose(dlhandle);
   ElfLoader::Singleton.lastError = dlerror();
   ElfLoader::Singleton.Forget(this);
@@ -262,7 +262,7 @@ void *
 SystemElf::GetSymbolPtr(const char *symbol) const
 {
   void *sym = dlsym(dlhandle, symbol);
-  debug("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
+  DEBUG_LOG("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
   ElfLoader::Singleton.lastError = dlerror();
   return sym;
 }
@@ -353,9 +353,9 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     handle = SystemElf::Load(name, flags);
 
   delete [] abs_path;
-  debug("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path, flags,
-        reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
-        static_cast<void *>(handle));
+  DEBUG_LOG("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path, flags,
+            reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
+            static_cast<void *>(handle));
 
   return handle;
 }
@@ -420,14 +420,14 @@ ElfLoader::Forget(LibHandle *handle)
 {
   LibHandleList::iterator it = std::find(handles.begin(), handles.end(), handle);
   if (it != handles.end()) {
-    debug("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
-                                            handle->GetPath());
+    DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
+                                                handle->GetPath());
     if (dbg && !handle->IsSystemElf())
       dbg.Remove(static_cast<CustomElf *>(handle));
     handles.erase(it);
   } else {
-    debug("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
-          reinterpret_cast<void *>(handle), handle->GetPath());
+    DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
+              reinterpret_cast<void *>(handle), handle->GetPath());
   }
 }
 
@@ -459,13 +459,13 @@ ElfLoader::~ElfLoader()
     for (LibHandleList::reverse_iterator it = list.rbegin();
          it < list.rend(); ++it) {
       if ((*it)->IsSystemElf()) {
-        debug("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
-              "[%d direct refs, %d refs total]", (*it)->GetPath(),
-              (*it)->DirectRefCount(), (*it)->refCount());
+        DEBUG_LOG("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
+                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
+                  (*it)->DirectRefCount(), (*it)->refCount());
       } else {
-        debug("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
-              "[%d direct refs, %d refs total]", (*it)->GetPath(),
-              (*it)->DirectRefCount(), (*it)->refCount());
+        DEBUG_LOG("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
+                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
+                  (*it)->DirectRefCount(), (*it)->refCount());
         /* Not removing, since it could have references to other libraries,
          * destroying them as a side effect, and possibly leaving dangling
          * pointers in the handle list we're scanning */
@@ -521,8 +521,8 @@ void
 ElfLoader::DestructorCaller::Call()
 {
   if (destructor) {
-    debug("ElfLoader::DestructorCaller::Call(%p, %p, %p)",
-          FunctionPtr(destructor), object, dso_handle);
+    DEBUG_LOG("ElfLoader::DestructorCaller::Call(%p, %p, %p)",
+              FunctionPtr(destructor), object, dso_handle);
     destructor(object);
     destructor = NULL;
   }
@@ -610,7 +610,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
   }
 
   if (!phdrs) {
-    debug("Couldn't find program headers");
+    DEBUG_LOG("Couldn't find program headers");
     return;
   }
 
@@ -625,20 +625,20 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
     /* If program headers aren't mapped, try to map them */
     int fd = open("/proc/self/exe", O_RDONLY);
     if (fd == -1) {
-      debug("Failed to open /proc/self/exe");
+      DEBUG_LOG("Failed to open /proc/self/exe");
       return;
     }
     mem.Assign(mmap(base, PAGE_SIZE, PROT_READ, MAP_PRIVATE, fd, 0), PAGE_SIZE);
     /* If we don't manage to map at the right address, just give up. */
     if (mem != base) {
-      debug("Couldn't read program headers");
+      DEBUG_LOG("Couldn't read program headers");
       return;
     }
   }
   /* Sanity check: the first bytes at the base address should be an ELF
    * header. */
   if (!Elf::Ehdr::validate(base)) {
-     debug("Couldn't find program base");
+     DEBUG_LOG("Couldn't find program base");
      return;
   }
 
@@ -657,7 +657,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
       dyns.Init(base + phdr->p_vaddr, phdr->p_filesz);
   }
   if (!dyns) {
-    debug("Failed to find PT_DYNAMIC section in program");
+    DEBUG_LOG("Failed to find PT_DYNAMIC section in program");
     return;
   }
 
@@ -668,7 +668,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
       break;
     }
   }
-  debug("DT_DEBUG points at %p", static_cast<void *>(dbg));
+  DEBUG_LOG("DT_DEBUG points at %p", static_cast<void *>(dbg));
 }
 
 /**
@@ -938,7 +938,7 @@ SEGVHandler::~SEGVHandler()
 void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
 {
   //ASSERT(signum == SIGSEGV);
-  debug("Caught segmentation fault @%p", info->si_addr);
+  DEBUG_LOG("Caught segmentation fault @%p", info->si_addr);
 
   /* Check whether we segfaulted in the address space of a CustomElf. We're
    * only expecting that to happen as an access error. */
@@ -946,7 +946,7 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
     mozilla::RefPtr<LibHandle> handle =
       ElfLoader::Singleton.GetHandleByPtr(info->si_addr);
     if (handle && !handle->IsSystemElf()) {
-      debug("Within the address space of a CustomElf");
+      DEBUG_LOG("Within the address space of a CustomElf");
       CustomElf *elf = static_cast<CustomElf *>(static_cast<LibHandle *>(handle));
       if (elf->mappable->ensure(info->si_addr))
         return;
@@ -956,20 +956,20 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   /* Redispatch to the registered handler */
   SEGVHandler &that = ElfLoader::Singleton;
   if (that.action.sa_flags & SA_SIGINFO) {
-    debug("Redispatching to registered handler @%p",
-          FunctionPtr(that.action.sa_sigaction));
+    DEBUG_LOG("Redispatching to registered handler @%p",
+              FunctionPtr(that.action.sa_sigaction));
     that.action.sa_sigaction(signum, info, context);
   } else if (that.action.sa_handler == SIG_DFL) {
-    debug("Redispatching to default handler");
+    DEBUG_LOG("Redispatching to default handler");
     /* Reset the handler to the default one, and trigger it. */
     sys_sigaction(signum, &that.action, NULL);
     raise(signum);
   } else if (that.action.sa_handler != SIG_IGN) {
-    debug("Redispatching to registered handler @%p",
-          FunctionPtr(that.action.sa_handler));
+    DEBUG_LOG("Redispatching to registered handler @%p",
+              FunctionPtr(that.action.sa_handler));
     that.action.sa_handler(signum);
   } else {
-    debug("Ignoring");
+    DEBUG_LOG("Ignoring");
   }
 }
 
