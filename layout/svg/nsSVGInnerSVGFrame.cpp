@@ -90,6 +90,25 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
   return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
 }
 
+NS_IMETHODIMP_(nsRect)
+nsSVGInnerSVGFrame::GetCoveredRegion()
+{
+  float x, y, w, h;
+  static_cast<SVGSVGElement*>(mContent)->
+    GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
+  if (w < 0.0f) w = 0.0f;
+  if (h < 0.0f) h = 0.0f;
+  // GetCanvasTM includes the x,y translation
+  nsRect bounds = nsSVGUtils::ToCanvasBounds(gfxRect(0.0, 0.0, w, h),
+                                             GetCanvasTM(FOR_OUTERSVG_TM),
+                                             PresContext());
+
+  if (!StyleDisplay()->IsScrollableOverflow()) {
+    bounds.UnionRect(bounds, nsSVGUtils::GetCoveredRegion(mFrames));
+  }
+  return bounds;
+}
+
 void
 nsSVGInnerSVGFrame::ReflowSVG()
 {

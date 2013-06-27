@@ -6,6 +6,13 @@ text { font: 20px monospace; }
   </style>
 
 <g id="g">
+  <svg id="svg1" x="10" y="10" width="25" height="30"/>
+  <svg id="svg2" width="1" height="1" overflow="visible">
+    <rect width="2" height="2" fill="yellow"/>
+  </svg>
+  <svg id="svg3" width="1" height="1" overflow="hidden">
+    <rect width="2" height="2" fill="yellow"/>
+  </svg>
   <text id="text1" x="25" y="25">abc</text>
   <text id="text1a" x="85" y="25" stroke="black" stroke-width="4">abc</text>
   <rect id="rect1" x="50" y="50" width="50" height="50" fill="green"/>
