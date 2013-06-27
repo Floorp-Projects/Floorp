@@ -7,7 +7,7 @@
 #ifndef ion_RegisterSets_h
 #define ion_RegisterSets_h
 
-#include "Registers.h"
+#include "ion/Registers.h"
 #include "ion/IonAllocPolicy.h"
 
 namespace js {

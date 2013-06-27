@@ -8,7 +8,7 @@
 
 #include "jsnum.h"
 
-#include "CodeGenerator-x86.h"
+#include "ion/x86/CodeGenerator-x86.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 #include "ion/shared/CodeGenerator-shared-inl.h"

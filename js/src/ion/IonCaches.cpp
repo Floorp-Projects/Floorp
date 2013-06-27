@@ -6,17 +6,17 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "PerfSpewer.h"
-#include "CodeGenerator.h"
-#include "Ion.h"
-#include "IonCaches.h"
-#include "IonLinker.h"
-#include "IonSpewer.h"
-#include "VMFunctions.h"
+#include "ion/PerfSpewer.h"
+#include "ion/CodeGenerator.h"
+#include "ion/Ion.h"
+#include "ion/IonCaches.h"
+#include "ion/IonLinker.h"
+#include "ion/IonSpewer.h"
+#include "ion/VMFunctions.h"
 
 #include "vm/Shape.h"
 
-#include "IonFrames-inl.h"
+#include "ion/IonFrames-inl.h"
 
 #include "vm/Interpreter-inl.h"
 

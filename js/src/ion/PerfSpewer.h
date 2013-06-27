@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 #include "jsscript.h"
-#include "IonMacroAssembler.h"
+#include "ion/IonMacroAssembler.h"
 #include "js/RootingAPI.h"
 
 class JSScript;

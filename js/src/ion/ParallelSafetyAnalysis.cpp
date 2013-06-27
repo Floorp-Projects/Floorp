@@ -6,13 +6,13 @@
 
 #include <stdio.h>
 
-#include "Ion.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "ParallelSafetyAnalysis.h"
-#include "IonSpewer.h"
-#include "UnreachableCodeElimination.h"
-#include "IonAnalysis.h"
+#include "ion/Ion.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/ParallelSafetyAnalysis.h"
+#include "ion/IonSpewer.h"
+#include "ion/UnreachableCodeElimination.h"
+#include "ion/IonAnalysis.h"
 
 #include "vm/Stack.h"
 

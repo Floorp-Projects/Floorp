@@ -14,9 +14,9 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "IonCode.h"
-#include "IonMacroAssembler.h"
-#include "Bailouts.h"
+#include "ion/IonCode.h"
+#include "ion/IonMacroAssembler.h"
+#include "ion/Bailouts.h"
 
 #include "ds/LifoAlloc.h"
 
