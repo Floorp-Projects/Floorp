@@ -307,9 +307,16 @@
           }
           CustomizableUI.registerToolbar(this);
           this.evictNodes();
-          let mutationObserver = new MutationObserver(() => {
-            if (!this._isModifying) {
-              this.evictNodes();
+          // We can't easily use |this| or strong bindings for the observer fn here
+          // because that creates leaky circular references when the node goes away,
+          // and XBL destructors are unreliable.
+          let mutationObserver = new MutationObserver(function(mutations) {
+            if (!mutations.length) {
+              return;
+            }
+            let toolbar = mutations[0].target;
+            if (!toolbar._isModifying) {
+              toolbar.evictNodes();
             }
           });
           mutationObserver.observe(this, {childList: true});
