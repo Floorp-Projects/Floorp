@@ -119,7 +119,7 @@ JSRuntime::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSi
     for (ContextIter acx(this); !acx.done(); acx.next())
         rtSizes->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
 
-    rtSizes->dtoa = mallocSizeOf(dtoaState);
+    rtSizes->dtoa = mallocSizeOf(mainThread.dtoaState);
 
     rtSizes->temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
