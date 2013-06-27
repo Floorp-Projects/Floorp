@@ -2304,6 +2304,41 @@ class LConcat : public LInstructionHelper<1, 2, 4>
     }
 };
 
+class LParConcat : public LInstructionHelper<1, 3, 3>
+{
+  public:
+    LIR_HEADER(ParConcat)
+
+    LParConcat(const LAllocation &parSlice, const LAllocation &lhs, const LAllocation &rhs,
+               const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3) {
+        setOperand(0, parSlice);
+        setOperand(1, lhs);
+        setOperand(2, rhs);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+
+    const LAllocation *parSlice() {
+        return this->getOperand(0);
+    }
+    const LAllocation *lhs() {
+        return this->getOperand(1);
+    }
+    const LAllocation *rhs() {
+        return this->getOperand(2);
+    }
+    const LDefinition *temp1() {
+        return this->getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return this->getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return this->getTemp(2);
+    }
+};
+
 // Get uint16 character code from a string.
 class LCharCodeAt : public LInstructionHelper<1, 2, 0>
 {

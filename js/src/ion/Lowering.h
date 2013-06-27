@@ -143,6 +143,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitDiv(MDiv *ins);
     bool visitMod(MMod *ins);
     bool visitConcat(MConcat *ins);
+    bool visitParConcat(MParConcat *ins);
     bool visitCharCodeAt(MCharCodeAt *ins);
     bool visitFromCharCode(MFromCharCode *ins);
     bool visitStart(MStart *start);

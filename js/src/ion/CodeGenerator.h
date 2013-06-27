@@ -172,6 +172,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitEmulatesUndefined(LEmulatesUndefined *lir);
     bool visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir);
     bool visitConcat(LConcat *lir);
+    bool visitParConcat(LParConcat *lir);
     bool visitCharCodeAt(LCharCodeAt *lir);
     bool visitFromCharCode(LFromCharCode *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);

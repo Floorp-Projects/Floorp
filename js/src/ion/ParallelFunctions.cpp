@@ -194,6 +194,17 @@ ion::ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length)
     return array;
 }
 
+ParallelResult
+ion::ParConcatStrings(ForkJoinSlice *slice, HandleString left, HandleString right,
+                      MutableHandleString out)
+{
+    JSString *str = ConcatStrings<NoGC>(slice, left, right);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
+}
+
 #define PAR_RELATIONAL_OP(OP, EXPECTED)                                         \
 do {                                                                            \
     /* Optimize for two int-tagged operands (typical loop control). */          \
