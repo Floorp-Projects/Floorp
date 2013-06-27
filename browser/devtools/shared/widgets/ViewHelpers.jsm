@@ -377,9 +377,13 @@ function Item(aOwnerView, aAttachment, aContents = []) {
   this.attachment = aAttachment;
 
   let [aLabel, aValue, aDescription] = aContents;
+  // Make sure the label and the value are always strings.
   this._label = aLabel + "";
   this._value = aValue + "";
-  this._description = (aDescription || "") + "";
+  // Make sure the description is also a string, but only if it's available.
+  if (aDescription !== undefined) {
+    this._description = aDescription + "";
+  }
 
   // Allow the insertion of prebuilt nodes, otherwise delegate the item view
   // creation to a widget.
@@ -499,7 +503,7 @@ Item.prototype = {
 
   _label: "",
   _value: "",
-  _description: "",
+  _description: undefined,
   _prebuiltTarget: null,
   _target: null,
   finalize: null,
@@ -663,9 +667,12 @@ this.WidgetMethods = {
     if (!selectedItem) {
       return false;
     }
+
+    let { _label: label, _value: value, _description: desc } = selectedItem;
     this._widget.removeAttribute("notice");
-    this._widget.setAttribute("label", selectedItem._label);
-    this._widget.setAttribute("tooltiptext", selectedItem._value);
+    this._widget.setAttribute("label", label);
+    this._widget.setAttribute("tooltiptext", desc !== undefined ? desc : value);
+
     return true;
   },
 
@@ -1024,6 +1031,12 @@ this.WidgetMethods = {
    * this container, its corresponding target element is focused as well.
    */
   autoFocusOnInput: true,
+
+  /**
+   * When focusing on input, allow right clicks?
+   * @see WidgetMethods.autoFocusOnInput
+   */
+  allowFocusOnRightClick: false,
 
   /**
    * The number of elements in this container to jump when Page Up or Page Down
@@ -1541,12 +1554,12 @@ this.WidgetMethods = {
   },
 
   /**
-   * The keyPress event listener for this container.
+   * The mousePress event listener for this container.
    * @param string aName
    * @param MouseEvent aEvent
    */
   _onWidgetMousePress: function(aName, aEvent) {
-    if (aEvent.button != 0) {
+    if (aEvent.button != 0 && !this.allowFocusOnRightClick) {
       // Only allow left-click to trigger this event.
       return;
     }

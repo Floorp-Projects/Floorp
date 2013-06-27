@@ -43,6 +43,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_accessibility-02.js \
 	browser_net_footer-summary.js \
 	browser_net_resend.js \
+	browser_net_req-resp-bodies.js \
 	head.js \
 	$(NULL)
 

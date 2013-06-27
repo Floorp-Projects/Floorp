@@ -377,7 +377,7 @@ UpdateCommonJSGCMemoryOption(RuntimeService* aRuntimeService,
 
   int32_t prefValue = GetWorkerPref(aPrefName, -1);
   uint32_t value =
-    (prefValue <= 0 || prefValue >= 10000) ? 0 : uint32_t(prefValue);
+    (prefValue < 0 || prefValue >= 10000) ? 0 : uint32_t(prefValue);
 
   RuntimeService::SetDefaultJSGCSettings(aKey, value);
 
