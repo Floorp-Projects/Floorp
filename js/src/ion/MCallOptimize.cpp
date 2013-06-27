@@ -9,9 +9,9 @@
 #include "builtin/ParallelArray.h"
 #include "builtin/TestingFunctions.h"
 
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "IonBuilder.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/IonBuilder.h"
 
 #include "jsscriptinlines.h"
 

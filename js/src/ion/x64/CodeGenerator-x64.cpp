@@ -6,7 +6,7 @@
 
 #include "jsnum.h"
 
-#include "CodeGenerator-x64.h"
+#include "ion/x64/CodeGenerator-x64.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 #include "vm/Shape.h"

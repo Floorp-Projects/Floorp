@@ -6,8 +6,8 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "Assembler-arm.h"
-#include "MacroAssembler-arm.h"
+#include "ion/arm/Assembler-arm.h"
+#include "ion/arm/MacroAssembler-arm.h"
 #include "gc/Marking.h"
 #include "jsutil.h"
 #include "assembler/jit/ExecutableAllocator.h"

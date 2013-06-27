@@ -11,12 +11,12 @@
 
 #include "vm/NumericConversions.h"
 
-#include "Ion.h"
-#include "IonAnalysis.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "RangeAnalysis.h"
-#include "IonSpewer.h"
+#include "ion/Ion.h"
+#include "ion/IonAnalysis.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/RangeAnalysis.h"
+#include "ion/IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;

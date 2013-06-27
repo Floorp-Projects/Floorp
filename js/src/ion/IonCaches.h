@@ -7,8 +7,8 @@
 #ifndef ion_IonCaches_h
 #define ion_IonCaches_h
 
-#include "IonCode.h"
-#include "Registers.h"
+#include "ion/IonCode.h"
+#include "ion/Registers.h"
 
 #include "vm/ForkJoin.h"
 
