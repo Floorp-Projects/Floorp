@@ -97,7 +97,7 @@ tests.push(function test_redGradientBlueSolid() {
     ctx.fillStyle = "blue";
     ctx.fillRect(9, 0, 7, 16);
   }, function(actual, message) {
-    ok(actual > 0xFF0000 && actual < 0xFF0808, message);
+    ok(actual >= 0xFF0000 && actual <= 0xFF0808, message);
   }, "redGradientBlueSolid analysis returns redish");
 });
 
