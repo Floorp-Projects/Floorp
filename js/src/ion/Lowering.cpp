@@ -1543,12 +1543,19 @@ LIRGenerator::visitToString(MToString *ins)
     MDefinition *opd = ins->input();
 
     switch (opd->type()) {
-      case MIRType_Double:
       case MIRType_Null:
       case MIRType_Undefined:
       case MIRType_Boolean:
         JS_NOT_REACHED("NYI: Lower MToString");
         return false;
+
+      case MIRType_Double: {
+        LDoubleToString *lir = new LDoubleToString(useRegister(opd), temp());
+
+        if (!define(lir, ins))
+            return false;
+        return assignSafepoint(lir, ins);
+      }
 
       case MIRType_Int32: {
         LIntToString *lir = new LIntToString(useRegister(opd));

@@ -75,6 +75,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitTypeObjectDispatch(LTypeObjectDispatch *lir);
     bool visitPolyInlineDispatch(LPolyInlineDispatch *lir);
     bool visitIntToString(LIntToString *lir);
+    bool visitDoubleToString(LDoubleToString *lir);
     bool visitInteger(LInteger *lir);
     bool visitRegExp(LRegExp *lir);
     bool visitRegExpTest(LRegExpTest *lir);
