@@ -592,6 +592,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
             featureSettings.GetUnit() != eCSSUnit_Normal ||
             languageOverride.GetUnit() != eCSSUnit_Normal ||
             fontKerning.GetIntValue() != NS_FONT_KERNING_AUTO ||
+            fontSynthesis.GetUnit() != eCSSUnit_Enumerated ||
             fontSynthesis.GetIntValue() !=
               (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
             fontVariantAlternates.GetUnit() != eCSSUnit_Normal ||
