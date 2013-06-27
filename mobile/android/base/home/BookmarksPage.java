@@ -6,11 +6,18 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.home.BookmarksListView.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,11 +28,20 @@ import android.view.ViewGroup;
 public class BookmarksPage extends HomeFragment {
     public static final String LOGTAG = "GeckoBookmarksPage";
 
+    // Cursor loader ID for list of bookmarks.
+    private static final int BOOKMARKS_LIST_LOADER_ID = 0;
+
+    // Key for bookmarks folder id.
+    private static final String BOOKMARKS_FOLDER_KEY = "folder_id";
+
     // List of bookmarks.
     private BookmarksListView mList;
 
     // Grid of top bookmarks.
     private TopBookmarksView mTopBookmarks;
+
+    // Callback for loaders.
+    private CursorLoaderCallbacks mLoaderCallbacks;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,10 +67,30 @@ public class BookmarksPage extends HomeFragment {
 
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
         mList.setOnUrlOpenListener(listener);
+        mList.setOnRefreshFolderListener(new OnRefreshFolderListener() {
+            @Override
+            public void onRefreshFolder(int folderId) {
+                // Restart the loader with folder as the argument.
+                Bundle bundle = new Bundle();
+                bundle.putInt(BOOKMARKS_FOLDER_KEY, folderId);
+                getLoaderManager().restartLoader(BOOKMARKS_LIST_LOADER_ID, bundle, mLoaderCallbacks);
+            }
+        });
 
         registerForContextMenu(mList);
 
         mTopBookmarks.setOnUrlOpenListener(listener);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Create callbacks before the initial loader is started.
+        mLoaderCallbacks = new CursorLoaderCallbacks();
+
+        // Reconnect to the loader only if present.
+        getLoaderManager().initLoader(BOOKMARKS_LIST_LOADER_ID, null, mLoaderCallbacks);
     }
 
     @Override
@@ -80,6 +116,71 @@ public class BookmarksPage extends HomeFragment {
                                 .detach(this)
                                 .attach(this)
                                 .commitAllowingStateLoss();
+        }
+    }
+
+    /**
+     * Loader for the list for bookmarks.
+     */
+    private static class BookmarksLoader extends SimpleCursorLoader {
+        private final int mFolderId;
+
+        public BookmarksLoader(Context context) {
+            this(context, Bookmarks.FIXED_ROOT_ID);
+        }
+
+        public BookmarksLoader(Context context, int folderId) {
+            super(context);
+            mFolderId = folderId;
+        }
+
+        @Override
+        public Cursor loadCursor() {
+            return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderId);
+        }
+    }
+
+    /**
+     * Loader callbacks for the LoaderManager of this fragment.
+     */
+    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            switch(id) {
+                case BOOKMARKS_LIST_LOADER_ID: {
+                    if (args == null) {
+                        return new BookmarksLoader(getActivity());
+                    } else {
+                        return new BookmarksLoader(getActivity(), args.getInt(BOOKMARKS_FOLDER_KEY));
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
+            final int loaderId = loader.getId();
+            switch(loaderId) {
+                case BOOKMARKS_LIST_LOADER_ID: {
+                    mList.refreshFromCursor(c);
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            final int loaderId = loader.getId();
+            switch(loaderId) {
+                case BOOKMARKS_LIST_LOADER_ID: {
+                    if (mList != null) {
+                        mList.refreshFromCursor(null);
+                    }
+                    break;
+                }
+            }
         }
     }
 }

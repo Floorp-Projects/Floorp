@@ -7,15 +7,12 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.GamepadUtils;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -37,17 +34,26 @@ public class BookmarksListView extends HomeListView
     
     public static final String LOGTAG = "GeckoBookmarksListView";
 
+    // A listener that knows how to refresh the list for a given folder id.
+    // This is usually implemented by the enclosing fragment/activity.
+    public static interface OnRefreshFolderListener {
+
+        // The folder id to refresh the list with.
+        public void onRefreshFolder(int folderId);
+
+    }
+
     // A cursor based adapter.
     private BookmarksListAdapter mCursorAdapter = null;
-
-    // A background task to query the db.
-    private BookmarksQueryTask mQueryTask = null;
 
     // The last motion event that was intercepted.
     private MotionEvent mMotionEvent;
 
     // The default touch slop.
     private int mTouchSlop;
+
+    // Refresh folder listener.
+    private OnRefreshFolderListener mListener;
 
     public BookmarksListView(Context context) {
         this(context, null);
@@ -74,29 +80,13 @@ public class BookmarksListView extends HomeListView
 
         setOnItemClickListener(this);
         setOnKeyListener(GamepadUtils.getListItemClickDispatcher());
-
-        mQueryTask = new BookmarksQueryTask();
-        mQueryTask.execute();
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-
-        // Can't use getters for adapter. It will create one if null.
-        if (mCursorAdapter != null) {
-            final Cursor cursor = mCursorAdapter.getCursor();
-            mCursorAdapter = null;
-
-            // Gingerbread locks the DB when closing a cursor, so do it in the background.
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (cursor != null && !cursor.isClosed())
-                        cursor.close();
-                }
-            });
-        }
+        mCursorAdapter = null;
+        mListener = null;
     }
 
     @Override
@@ -176,12 +166,13 @@ public class BookmarksListView extends HomeListView
         }
     }
 
-    private void refreshListWithCursor(Cursor cursor) {
+    public void refreshFromCursor(Cursor cursor) {
         // This will update the cursorAdapter to use the new one if it already exists.
-        mCursorAdapter.changeCursor(cursor);
+        mCursorAdapter.swapCursor(cursor);
+    }
 
-        // Reset the task.
-        mQueryTask = null;
+    public void setOnRefreshFolderListener(OnRefreshFolderListener listener) {
+        mListener = listener;
     }
 
     /**
@@ -210,14 +201,9 @@ public class BookmarksListView extends HomeListView
 
         // Refresh the current folder by executing a new task.
         private void refreshCurrentFolder() {
-            // Cancel any pre-existing async refresh tasks
-            if (mQueryTask != null) {
-                mQueryTask.cancel(false);
+            if (mListener != null) {
+                mListener.onRefreshFolder(mParentStack.peek().first);
             }
-
-            final Pair<Integer, String> folderPair = mParentStack.getFirst();
-            mQueryTask = new BookmarksQueryTask();
-            mQueryTask.execute(folderPair.first);
         }
 
         /**
@@ -376,27 +362,6 @@ public class BookmarksListView extends HomeListView
             }
 
             return LayoutInflater.from(parent.getContext()).inflate(resId, null);
-        }
-    }
-
-    /**
-     * AsyncTask to query the DB for bookmarks.
-     */
-    private class BookmarksQueryTask extends AsyncTask<Integer, Void, Cursor> {
-        @Override
-        protected Cursor doInBackground(Integer... folderIds) {
-            int folderId = Bookmarks.FIXED_ROOT_ID;
-
-            if (folderIds.length != 0) {
-                folderId = folderIds[0].intValue();
-            }
-
-            return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), folderId);
-        }
-
-        @Override
-        protected void onPostExecute(final Cursor cursor) {
-            refreshListWithCursor(cursor);
         }
     }
 }
