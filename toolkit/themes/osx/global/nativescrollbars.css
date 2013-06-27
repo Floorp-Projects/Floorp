@@ -27,14 +27,6 @@ html|select[multiple] > scrollbar {
   scrollbar[disabled="true"] {
     visibility: hidden;
   }
-
-  scrollbar[orient="vertical"] {
-    -moz-margin-start: -16px;
-  }
-
-  scrollbar[orient="horizontal"] {
-    margin-top: -16px;
-  }
 }
 
 /* ..... track ..... */
