@@ -8,10 +8,10 @@
 
 #include "nsAutoPtr.h"
 
+#include "mozIStorageAsyncConnection.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsError.h"
-
 
 /**
  * This class wraps a transaction inside a given C++ scope, guaranteeing that
@@ -27,13 +27,18 @@
  * is already in progress, this object does nothing. Note that in this case,
  * you may not get the transaction type you ask for, and you won't be able
  * to rollback.
+ *
+ * Note: This class is templatized to be also usable with internal data
+ * structures. External users of this class should generally use
+ * |mozStorageTransaction| instead.
  */
-class mozStorageTransaction
+template<typename T, typename U>
+class mozStorageTransactionBase
 {
 public:
-  mozStorageTransaction(mozIStorageConnection* aConnection,
-                        bool aCommitOnComplete,
-                        int32_t aType = mozIStorageConnection::TRANSACTION_DEFERRED)
+  mozStorageTransactionBase(T* aConnection,
+                            bool aCommitOnComplete,
+                            int32_t aType = mozIStorageConnection::TRANSACTION_DEFERRED)
     : mConnection(aConnection),
       mHasTransaction(false),
       mCommitOnComplete(aCommitOnComplete),
@@ -43,7 +48,7 @@ public:
     if (mConnection)
       mHasTransaction = NS_SUCCEEDED(mConnection->BeginTransactionAs(aType));
   }
-  ~mozStorageTransaction()
+  ~mozStorageTransactionBase()
   {
     if (mConnection && mHasTransaction && ! mCompleted) {
       if (mCommitOnComplete)
@@ -119,11 +124,20 @@ public:
   }
 
 protected:
-  nsCOMPtr<mozIStorageConnection> mConnection;
+  U mConnection;
   bool mHasTransaction;
   bool mCommitOnComplete;
   bool mCompleted;
 };
+
+/**
+ * An instance of the mozStorageTransaction<> family dedicated
+ * to |mozIStorageConnection|.
+ */
+typedef mozStorageTransactionBase<mozIStorageConnection,
+                                  nsCOMPtr<mozIStorageConnection> >
+mozStorageTransaction;
+
 
 
 /**
