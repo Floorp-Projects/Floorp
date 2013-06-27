@@ -13,14 +13,6 @@
 using namespace Elf;
 using namespace mozilla;
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-#ifndef PAGE_MASK
-#define PAGE_MASK (~ (PAGE_SIZE - 1))
-#endif
-
 /* TODO: Fill ElfLoader::Singleton.lastError on errors. */
 
 /* Function used to report library mappings from the custom linker to Gecko
@@ -82,7 +74,7 @@ class Mappable1stPagePtr: public GenericMappedPtr<Mappable1stPagePtr> {
 public:
   Mappable1stPagePtr(Mappable *mappable)
   : GenericMappedPtr<Mappable1stPagePtr>(
-      mappable->mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE, 0), PAGE_SIZE)
+      mappable->mmap(NULL, PageSize(), PROT_READ, MAP_PRIVATE, 0))
   , mappable(mappable)
   {
     /* Ensure the content of this page */
@@ -189,8 +181,8 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
    * that we'll be able to use with MAP_FIXED, and then remap MAP_PRIVATE at
    * the same address, because of some bad side effects of keeping it as
    * MAP_SHARED. */
-  elf->base.Assign(mmap(NULL, max_vaddr, PROT_NONE, MAP_SHARED | MAP_ANONYMOUS,
-                      -1, 0), max_vaddr);
+  elf->base.Assign(MemoryRange::mmap(NULL, max_vaddr, PROT_NONE,
+                                     MAP_SHARED | MAP_ANONYMOUS, -1, 0));
   if ((elf->base == MAP_FAILED) ||
       (mmap(elf->base, max_vaddr, PROT_NONE,
             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) != elf->base)) {
@@ -388,10 +380,10 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
              ((pt_load->p_flags & PF_R) ? PROT_READ : 0);
 
   /* Mmap at page boundary */
-  Addr align = PAGE_SIZE;
+  Addr align = PageSize();
   void *mapped, *where;
   do {
-    Addr align_offset = pt_load->p_vaddr & (align - 1);
+    Addr align_offset = pt_load->p_vaddr - AlignedPtr(pt_load->p_vaddr, align);
     where = GetPtr(pt_load->p_vaddr - align_offset);
     DEBUG_LOG("%s: Loading segment @%p %c%c%c", GetPath(), where,
                                                 prot & PROT_READ ? 'r' : '-',
@@ -428,7 +420,7 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
   const char *ondemand = getenv("MOZ_LINKER_ONDEMAND");
   if (!ElfLoader::Singleton.hasRegisteredHandler() ||
       (ondemand && !strncmp(ondemand, "0", 2 /* Including '\0' */))) {
-    for (Addr off = 0; off < pt_load->p_filesz; off += PAGE_SIZE) {
+    for (Addr off = 0; off < pt_load->p_filesz; off += PageSize()) {
       mappable->ensure(reinterpret_cast<char *>(mapped) + off);
     }
   }
@@ -443,7 +435,7 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
   if (pt_load->p_memsz > pt_load->p_filesz) {
     Addr file_end = pt_load->p_vaddr + pt_load->p_filesz;
     Addr mem_end = pt_load->p_vaddr + pt_load->p_memsz;
-    Addr next_page = (file_end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+    Addr next_page = PageAlignedEndPtr(file_end);
     if (mem_end > next_page) {
       if (mprotect(GetPtr(next_page), mem_end - next_page, prot) < 0) {
         LOG("%s: Failed to mprotect", GetPath());

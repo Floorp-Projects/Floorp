@@ -38,13 +38,13 @@ public:
 
   virtual bool Resize(size_t size)
   {
-    void *buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANON, -1, 0);
+    MemoryRange buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
+                           MAP_PRIVATE | MAP_ANON, -1, 0);
     if (buf == MAP_FAILED)
       return false;
     if (*this != MAP_FAILED)
       memcpy(buf, *this, std::min(size, GetLength()));
-    Assign(buf, size);
+    Assign(buf);
     return true;
   }
 
@@ -76,8 +76,8 @@ public:
       if (ftruncate(fd, size) == -1)
         return false;
     }
-    Assign(mmap(NULL, size, PROT_READ | (writable ? PROT_WRITE : 0),
-                writable ? MAP_SHARED : MAP_PRIVATE, fd, 0), size);
+    Assign(MemoryRange::mmap(NULL, size, PROT_READ | (writable ? PROT_WRITE : 0),
+                             writable ? MAP_SHARED : MAP_PRIVATE, fd, 0));
     return this != MAP_FAILED;
   }
 

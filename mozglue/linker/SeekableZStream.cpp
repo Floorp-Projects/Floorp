@@ -6,14 +6,6 @@
 #include "SeekableZStream.h"
 #include "Logging.h"
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-#ifndef PAGE_MASK
-#define PAGE_MASK (~ (PAGE_SIZE - 1))
-#endif
-
 bool
 SeekableZStream::Init(const void *buf, size_t length)
 {
@@ -35,8 +27,8 @@ SeekableZStream::Init(const void *buf, size_t length)
 
   /* Sanity check */
   if ((chunkSize == 0) ||
-      (chunkSize % PAGE_SIZE) ||
-      (chunkSize > 8 * PAGE_SIZE) ||
+      (!IsPageAlignedSize(chunkSize)) ||
+      (chunkSize > 8 * PageSize()) ||
       (offsetTable.numElements() < 1) ||
       (lastChunkSize == 0) ||
       (lastChunkSize > chunkSize) ||

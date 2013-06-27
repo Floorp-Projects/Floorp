@@ -102,30 +102,112 @@ struct AutoCloseFILETraits
 typedef mozilla::Scoped<AutoCloseFILETraits> AutoCloseFILE;
 
 /**
- * MappedPtr is a RAII wrapper for mmap()ed memory. It can be used as
- * a simple void * or unsigned char *.
- *
- * It is defined as a derivative of a template that allows to use a
- * different unmapping strategy.
+ * Page alignment helpers
  */
+static inline size_t PageSize()
+{
+  return 4096;
+}
+
+static inline uintptr_t AlignedPtr(uintptr_t ptr, size_t alignment)
+{
+  return ptr & ~(alignment - 1);
+}
+
 template <typename T>
-class GenericMappedPtr
+static inline T *AlignedPtr(T *ptr, size_t alignment)
+{
+  return reinterpret_cast<T *>(
+         AlignedPtr(reinterpret_cast<uintptr_t>(ptr), alignment));
+}
+
+template <typename T>
+static inline T PageAlignedPtr(T ptr)
+{
+  return AlignedPtr(ptr, PageSize());
+}
+
+static inline uintptr_t AlignedEndPtr(uintptr_t ptr, size_t alignment)
+{
+  return AlignedPtr(ptr + alignment - 1, alignment);
+}
+
+template <typename T>
+static inline T *AlignedEndPtr(T *ptr, size_t alignment)
+{
+  return reinterpret_cast<T *>(
+         AlignedEndPtr(reinterpret_cast<uintptr_t>(ptr), alignment));
+}
+
+template <typename T>
+static inline T PageAlignedEndPtr(T ptr)
+{
+  return AlignedEndPtr(ptr,  PageSize());
+}
+
+static inline size_t AlignedSize(size_t size, size_t alignment)
+{
+  return (size + alignment - 1) & ~(alignment - 1);
+}
+
+static inline size_t PageAlignedSize(size_t size)
+{
+  return AlignedSize(size, PageSize());
+}
+
+static inline bool IsAlignedPtr(uintptr_t ptr, size_t alignment)
+{
+  return ptr % alignment == 0;
+}
+
+template <typename T>
+static inline bool IsAlignedPtr(T *ptr, size_t alignment)
+{
+  return IsAlignedPtr(reinterpret_cast<uintptr_t>(ptr), alignment);
+}
+
+template <typename T>
+static inline bool IsPageAlignedPtr(T ptr)
+{
+  return IsAlignedPtr(ptr, PageSize());
+}
+
+static inline bool IsAlignedSize(size_t size, size_t alignment)
+{
+  return size % alignment == 0;
+}
+
+static inline bool IsPageAlignedSize(size_t size)
+{
+  return IsAlignedSize(size, PageSize());
+}
+
+static inline size_t PageNumber(size_t size)
+{
+  return (size + PageSize() - 1) / PageSize();
+}
+
+/**
+ * MemoryRange stores a pointer, size pair.
+ */
+class MemoryRange
 {
 public:
-  GenericMappedPtr(void *buf, size_t length): buf(buf), length(length) { }
-  GenericMappedPtr(): buf(MAP_FAILED), length(0) { }
+  MemoryRange(void *buf, size_t length): buf(buf), length(length) { }
 
   void Assign(void *b, size_t len) {
-    if (buf != MAP_FAILED)
-      static_cast<T *>(this)->munmap(buf, length);
     buf = b;
     length = len;
   }
 
-  ~GenericMappedPtr()
+  void Assign(const MemoryRange& other) {
+    buf = other.buf;
+    length = other.length;
+  }
+
+  void *get() const
   {
-    if (buf != MAP_FAILED)
-      static_cast<T *>(this)->munmap(buf, length);
+    return buf;
   }
 
   operator void *() const
@@ -167,15 +249,55 @@ public:
     return length;
   }
 
+  static MemoryRange mmap(void *addr, size_t length, int prot, int flags,
+                          int fd, off_t offset) {
+    return MemoryRange(::mmap(addr, length, prot, flags, fd, offset), length);
+  }
+
 private:
   void *buf;
   size_t length;
+};
+
+/**
+ * MappedPtr is a RAII wrapper for mmap()ed memory. It can be used as
+ * a simple void * or unsigned char *.
+ *
+ * It is defined as a derivative of a template that allows to use a
+ * different unmapping strategy.
+ */
+template <typename T>
+class GenericMappedPtr: public MemoryRange
+{
+public:
+  GenericMappedPtr(void *buf, size_t length): MemoryRange(buf, length) { }
+  GenericMappedPtr(const MemoryRange& other): MemoryRange(other) { }
+  GenericMappedPtr(): MemoryRange(MAP_FAILED, 0) { }
+
+  void Assign(void *b, size_t len) {
+    if (get() != MAP_FAILED)
+      static_cast<T *>(this)->munmap(get(), GetLength());
+    MemoryRange::Assign(b, len);
+  }
+
+  void Assign(const MemoryRange& other) {
+    Assign(other.get(), other.GetLength());
+  }
+
+  ~GenericMappedPtr()
+  {
+    if (get() != MAP_FAILED)
+      static_cast<T *>(this)->munmap(get(), GetLength());
+  }
+
 };
 
 struct MappedPtr: public GenericMappedPtr<MappedPtr>
 {
   MappedPtr(void *buf, size_t length)
   : GenericMappedPtr<MappedPtr>(buf, length) { }
+  MappedPtr(const MemoryRange& other)
+  : GenericMappedPtr<MappedPtr>(other) { }
   MappedPtr(): GenericMappedPtr<MappedPtr>() { }
 
 private:

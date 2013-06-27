@@ -27,8 +27,8 @@ class Mappable: public mozilla::RefCounted<Mappable>
 public:
   virtual ~Mappable() { }
 
-  virtual void *mmap(const void *addr, size_t length, int prot, int flags,
-                     off_t offset) = 0;
+  virtual MemoryRange mmap(const void *addr, size_t length, int prot, int flags,
+                           off_t offset) = 0;
 
   enum Kind {
     MAPPABLE_FILE,
@@ -92,7 +92,7 @@ public:
   static Mappable *Create(const char *path);
 
   /* Inherited from Mappable */
-  virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
+  virtual MemoryRange mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
   virtual void finalize();
   virtual size_t GetLength() const;
 
@@ -170,7 +170,7 @@ public:
   static Mappable *Create(const char *name, Zip *zip, Zip::Stream *stream);
 
   /* Inherited from Mappable */
-  virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
+  virtual MemoryRange mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
   virtual void finalize();
   virtual size_t GetLength() const;
 
@@ -207,7 +207,7 @@ public:
                                          Zip::Stream *stream);
 
   /* Inherited from Mappable */
-  virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
+  virtual MemoryRange mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
   virtual void munmap(void *addr, size_t length);
   virtual void finalize();
   virtual bool ensure(const void *addr);
