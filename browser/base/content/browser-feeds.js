@@ -8,66 +8,50 @@
  * and shows UI when they are discovered.
  */
 var FeedHandler = {
-  /**
-   * The click handler for the Feed icon in the toolbar. Opens the
-   * subscription page if user is not given a choice of feeds.
-   * (Otherwise the list of available feeds will be presented to the
-   * user in a popup menu.)
-   */
-  onFeedButtonClick: function(event) {
-    event.stopPropagation();
-
-    let feeds = gBrowser.selectedBrowser.feeds || [];
-    // If there are multiple feeds, the menu will open, so no need to do
-    // anything. If there are no feeds, nothing to do either.
-    if (feeds.length != 1)
-      return;
-
-    if (event.eventPhase == Event.AT_TARGET &&
-        (event.button == 0 || event.button == 1)) {
-      this.subscribeToFeed(feeds[0].href, event);
-    }
-  },
-
- /** Called when the user clicks on the Subscribe to This Page... menu item.
+  /** Called when the user clicks on the Subscribe to This Page... menu item,
+   * or when the user clicks the feed button when the page contains multiple
+   * feeds.
    * Builds a menu of unique feeds associated with the page, and if there
    * is only one, shows the feed inline in the browser window.
-   * @param   menuPopup
-   *          The feed list menupopup to be populated.
-   * @returns true if the menu should be shown, false if there was only
+   * @param   container
+   *          The feed list container (menupopup or subview) to be populated.
+   * @param   isSubview
+   *          Whether we're creating a subview (true) or menu (false/undefined)
+   * @returns true if the menu/subview should be shown, false if there was only
    *          one feed and the feed should be shown inline in the browser
-   *          window (do not show the menupopup).
+   *          window (do not show the menupopup/subview).
    */
-  buildFeedList: function(menuPopup) {
+  buildFeedList: function(container, isSubview) {
     var feeds = gBrowser.selectedBrowser.feeds;
-    if (feeds == null) {
+    if (!isSubview && feeds == null) {
       // XXX hack -- menu opening depends on setting of an "open"
       // attribute, and the menu refuses to open if that attribute is
       // set (because it thinks it's already open).  onpopupshowing gets
       // called after the attribute is unset, and it doesn't get unset
       // if we return false.  so we unset it here; otherwise, the menu
       // refuses to work past this point.
-      menuPopup.parentNode.removeAttribute("open");
+      container.parentNode.removeAttribute("open");
       return false;
     }
 
-    while (menuPopup.firstChild)
-      menuPopup.removeChild(menuPopup.firstChild);
+    while (container.firstChild)
+      container.removeChild(container.firstChild);
 
-    if (feeds.length <= 1)
+    if (!feeds || feeds.length <= 1)
       return false;
 
     // Build the menu showing the available feed choices for viewing.
+    var itemNodeType = isSubview ? "toolbarbutton" : "menuitem";
     for (let feedInfo of feeds) {
-      var menuItem = document.createElement("menuitem");
+      var item = document.createElement(itemNodeType);
       var baseTitle = feedInfo.title || feedInfo.href;
       var labelStr = gNavigatorBundle.getFormattedString("feedShowFeedNew", [baseTitle]);
-      menuItem.setAttribute("class", "feed-menuitem");
-      menuItem.setAttribute("label", labelStr);
-      menuItem.setAttribute("feed", feedInfo.href);
-      menuItem.setAttribute("tooltiptext", feedInfo.href);
-      menuItem.setAttribute("crop", "center");
-      menuPopup.appendChild(menuItem);
+      item.setAttribute("class", "feed-" + itemNodeType);
+      item.setAttribute("label", labelStr);
+      item.setAttribute("feed", feedInfo.href);
+      item.setAttribute("tooltiptext", feedInfo.href);
+      item.setAttribute("crop", "center");
+      container.appendChild(item);
     }
     return true;
   },
@@ -76,7 +60,7 @@ var FeedHandler = {
    * Subscribe to a given feed.  Called when
    *   1. Page has a single feed and user clicks feed icon in location bar
    *   2. Page has a single feed and user selects Subscribe menu item
-   *   3. Page has multiple feeds and user selects from feed icon popup
+   *   3. Page has multiple feeds and user selects from feed icon popup (or subview)
    *   4. Page has multiple feeds and user selects from Subscribe submenu
    * @param   href
    *          The feed to subscribe to. May be null, in which case the

@@ -111,7 +111,6 @@ toolkit.jar:
   skin/classic/global/icons/information-large.png                    (icons/information-large.png)
   skin/classic/global/icons/loading_16.png                           (icons/loading_16.png)
   skin/classic/global/icons/menulist-dropmarker.png                  (icons/menulist-dropmarker.png)
-  skin/classic/global/icons/notloading_16.png                        (icons/notloading_16.png)
   skin/classic/global/icons/notfound.png                             (icons/notfound.png)
   skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
   skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)

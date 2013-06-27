@@ -1199,7 +1199,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 13;
+    const UI_VERSION = 16;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1387,6 +1387,60 @@ BrowserGlue.prototype = {
           Services.prefs.setBoolPref("plugins.notifyMissingFlash", false);
       }
       catch (ex) {}
+    }
+
+    if (currentUIVersion < 14) {
+      // Migrate users from text or text&icons mode to icons mode.
+      let updateToolbars = function (aToolbarIds, aResourceName, aResourceValue) {
+        let resource = this._rdf.GetResource(aResourceName);
+        for (toolbarId of aToolbarIds) {
+          let toolbar = this._rdf.GetResource(BROWSER_DOCURL + toolbarId);
+          let oldValue = this._getPersist(toolbar, resource);
+          if (oldValue && oldValue != aResourceValue) {
+            this._setPersist(toolbar, resource, aResourceValue);
+          }
+        }
+      }.bind(this);
+
+      updateToolbars(["navigator-toolbox", "nav-bar", "PersonalToolbar", "addon-bar"], "mode", "icons");
+      // Exclude PersonalToolbar and addon-bar since they have lockiconsize="true".
+      updateToolbars(["navigator-toolbox", "nav-bar"], "iconsize", "large");
+    }
+
+    if (currentUIVersion < 15) {
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let collapsedResource = this._rdf.GetResource("collapsed");
+      let isCollapsed = this._getPersist(toolbarResource, collapsedResource);
+      if (isCollapsed == "true") {
+        this._setPersist(toolbarResource, collapsedResource, "false");
+      }
+    }
+
+    // Insert the bookmarks-menu-button into the nav-bar if it isn't already
+    // there.
+    if (currentUIVersion < 16) {
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      // Need to migrate only if toolbar is customized.
+      if (currentset) {
+        if (!currentset.contains("bookmarks-menu-button")) {
+          // The button isn't in the nav-bar, so let's look for an appropriate
+          // place to put it.
+          if (currentset.contains("downloads-button")) {
+            currentset = currentset.replace(/(^|,)downloads-button($|,)/,
+                                            "$1bookmarks-menu-button,downloads-button$2");
+          } else if (currentset.contains("home-button")) {
+            currentset = currentset.replace(/(^|,)home-button($|,)/,
+                                            "$1bookmarks-menu-button,home-button$2");
+          } else {
+            // Just append.
+            currentset = currentset.replace(/(^|,)window-controls($|,)/,
+                                            "$1bookmarks-menu-button,window-controls$2")
+          }
+          this._setPersist(toolbarResource, currentsetResource, currentset);
+        }
+      }
     }
 
     if (this._dirty)

@@ -1,0 +1,486 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.panel-subviews {
+  background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
+  background-color: -moz-dialog;
+  box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
+  margin-left: 38px;
+}
+
+.panel-viewstack[viewtype="main"] > .panel-subviews {
+  transform: translateX(@menuPanelWidth@);
+}
+
+#PanelUI-contents[type="list"] > toolbarbutton {
+  -moz-binding: url("chrome://browser/content/panelUI.xml#toolbarbutton");
+}
+
+.panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {
+  -moz-box-flex: 1;
+}
+
+.panel-viewstack[viewtype="main"] > .panel-mainview > #PanelUI-mainView > #PanelUI-mainView-spring {
+  display: none;
+}
+
+#app-extension-point-end > #PanelUI-menu-button {
+  padding: 2px 5px;
+}
+#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-text {
+  display: none;
+}
+#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-icon {
+  margin: 0;
+}
+
+#PanelUI-popup > arrowscrollbox > autorepeatbutton {
+  display: none;
+}
+#PanelUI-popup > arrowscrollbox > scrollbox {
+  overflow: visible;
+}
+
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  overflow: hidden;
+  padding: 0;
+}
+
+#PanelUI-menu-button > .toolbarbutton-icon {
+  list-style-image: url("chrome://browser/skin/appmenu.png");
+}
+
+#PanelUI-menu-button {
+  list-style-image: none;
+}
+
+#PanelUI-mainView .toolbarbutton-text {
+  display: -moz-box;
+  font-size: 10px;
+}
+
+#PanelUI-contents #wrapper-edit-controls,
+#PanelUI-contents #wrapper-zoom-controls {
+  margin-left: -1em;
+  margin-right: -1em;
+  width: calc(100% + 2em);
+}
+
+#PanelUI-contents #edit-controls,
+#PanelUI-contents #zoom-controls {
+  padding: 1em 0 0;
+}
+
+#PanelUI-contents #edit-controls,
+#PanelUI-contents #zoom-controls {
+  -moz-margin-start: -1em;
+  -moz-box-align: stretch;
+  width: calc(100% + 2em);
+}
+
+#PanelUI-contents #wrapper-edit-controls #edit-controls,
+#PanelUI-contents #wrapper-zoom-controls #zoom-controls {
+  -moz-margin-start: 0;
+}
+
+.PanelUI-footer,
+#PanelUI-contents #edit-controls,
+#PanelUI-contents #zoom-controls,
+#PanelUI-contents,
+.PanelUI-footer,
+.panel-mainview:not([panelid="PanelUI-popup"]) {
+  max-width: @menuPanelWidth@;
+  padding: .5em 1em;
+}
+
+#PanelUI-contents[type="list"] toolbarbutton > .toolbarbutton-text,
+panelview:not([mainview]) .toolbarbutton-text,
+#customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
+  text-align: start;
+  -moz-padding-start: 8px;
+  display: -moz-box;
+}
+
+#PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-acceltext {
+  font-size: calc(5em / 6);
+  color: GrayText;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-icon {
+  min-width: 2em;
+  max-width: 2em;
+  min-height: 2em;
+  max-height: 2em;
+}
+
+#PanelUI-contents[type="grid"] {
+  display: block;
+}
+
+#PanelUI-contents #edit-controls toolbarbutton > .toolbarbutton-icon,
+#PanelUI-contents #zoom-controls toolbarbutton > .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
+#PanelUI-contents[type="grid"] toolbarbutton,
+#customization-palette toolbarbutton,
+.panel-customization-placeholder {
+  -moz-appearance: none;
+  -moz-box-orient: vertical;
+  min-width: 7em;
+  max-width: 7em;
+  height: 6em;
+  max-height: 6em;
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons.png);
+}
+
+#PanelUI-contents #edit-controls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton {
+  -moz-box-orient: horizontal;
+  min-width: 7em;
+}
+
+#customization-palette #edit-controls toolbarbutton,
+#PanelUI-contents #edit-controls toolbarbutton,
+#customization-palette #zoom-controls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton {
+  max-width: none;
+  max-height: none;
+  height: auto;
+}
+
+#customization-palette #zoom-reset-button {
+  display: none;
+}
+
+#customization-palette #edit-controls toolbarbutton,
+#customization-palette #zoom-controls toolbarbutton {
+  min-width: 1em;
+}
+
+/* These smaller icons have different styling between the panel and the toolbar,
+   hence not referencing toolbar.png for these icons. */
+#PanelUI-contents #edit-controls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton,
+.panel-combined-button {
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons.png);
+}
+
+.panel-combined-button[disabled] > .toolbarbutton-icon {
+  opacity: .5;
+}
+
+#PanelUI-contents[type="grid"] toolbarbutton > .toolbarbutton-icon,
+#customization-palette toolbarbutton > .toolbarbutton-icon {
+  min-width: calc(8em / 3);
+  min-height: calc(8em / 3);
+  margin: calc(5em / 12);
+}
+
+#PanelUI-contents #edit-controls toolbarbutton > .toolbarbutton-icon,
+#PanelUI-contents #zoom-controls toolbarbutton > .toolbarbutton-icon {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+#PanelUI-contents #edit-controls #copy-button,
+#PanelUI-contents #zoom-controls #zoom-reset-button {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+
+#PanelUI-contents #zoom-in-button .toolbarbutton-text,
+#PanelUI-contents #zoom-out-button .toolbarbutton-text,
+#PanelUI-contents #zoom-reset-button .toolbarbutton-icon {
+  display: none;
+}
+
+.PanelUI-footer {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0,0,0,.1);
+}
+
+.PanelUI-footer toolbarbutton > .toolbarbutton-icon {
+  display: none;
+}
+
+#PanelUI-help-btn {
+  -moz-appearance: none;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#customization-palette .toolbarbutton-text {
+  display: none;
+}
+
+panelview toolbarbutton,
+#widget-overflow-list > toolbarbutton,
+.customizationmode-button {
+  -moz-appearance: none;
+  padding: 2px 6px;
+  background-color: hsla(210,32%,93%,0);
+  background-clip: padding-box;
+  border-radius: 2px;
+  border: 1px solid;
+  border-color: hsla(210,54%,20%,0) hsla(210,54%,20%,0) hsla(210,54%,20%,0);
+  box-shadow: 0 1px hsla(0,0%,100%,0) inset,
+              0 1px hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+}
+
+panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#PanelUI-contents #edit-controls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton,
+.customizationmode-button,
+#PanelUI-mainView #PanelUI-customize-btn {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
+  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
+              0 1px hsla(210,54%,20%,.03),
+              0 0 2px hsla(210,54%,20%,.1);
+}
+
+panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+.customizationmode-button:not([disabled]):hover:active,
+#widget-overflow-list > toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-color: hsla(210,54%,20%,.15);
+  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
+  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
+              0 0 1px hsla(210,54%,20%,.2) inset,
+              0 1px 0 hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  text-shadow: none;
+  transition: none;
+}
+
+#PanelUI-historyItems > toolbarbutton {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+#PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.PanelUI-footer.panel-multiview-anchor,
+.PanelUI-footer.panel-multiview-anchor > #PanelUI-help-btn,
+toolbarbutton.panel-multiview-anchor {
+  background-color: Highlight;
+  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-repeat: repeat-x;
+  color: HighlightText;
+}
+
+#PanelUI-contents[type="grid"] #new-window-button,
+#customization-palette #new-window-button {
+  -moz-image-region: rect(0 64px 32px 32px);
+}
+
+#PanelUI-contents[type="grid"] #privatebrowsing-button,
+#customization-palette #privatebrowsing-button {
+  -moz-image-region: rect(0 96px 32px 64px);
+}
+
+#PanelUI-contents[type="grid"] #open-file-button,
+#customization-palette #open-file-button {
+  -moz-image-region: rect(32px 32px 64px 0);
+}
+
+#PanelUI-contents[type="grid"] #save-page-button,
+#customization-palette #save-page-button {
+  -moz-image-region: rect(32px 64px 64px 32px);
+}
+
+#PanelUI-contents[type="grid"] #bookmarks-menu-button,
+#customization-palette #bookmarks-menu-button {
+  -moz-image-region: rect(32px 96px 64px 64px);
+}
+
+#PanelUI-contents[type="grid"] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker,
+#customization-palette #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker {
+  display: none;
+}
+
+#PanelUI-contents[type="grid"] #history-button,
+#customization-palette #history-button,
+#PanelUI-contents[type="grid"] #history-panelmenu,
+#customization-palette #history-panelmenu {
+  -moz-image-region: rect(64px 32px 96px 0);
+}
+
+#PanelUI-contents[type="grid"] #add-ons-button,
+#customization-palette #add-ons-button {
+  -moz-image-region: rect(64px 64px 96px 32px);
+}
+
+#PanelUI-contents[type="grid"] #downloads-button,
+#customization-palette #downloads-button {
+  -moz-image-region: rect(64px 96px 96px 64px);
+}
+
+#PanelUI-contents[type="grid"] #sync-button,
+#customization-palette #sync-button {
+  -moz-image-region: rect(96px 32px 128px 0);
+}
+
+#PanelUI-contents[type="grid"] #print-button,
+#customization-palette #print-button {
+  -moz-image-region: rect(96px 64px 128px 32px);
+}
+
+#PanelUI-contents[type="grid"] #fullscreen-button,
+#customization-palette #fullscreen-button {
+  -moz-image-region: rect(96px 96px 128px 64px);
+}
+
+#PanelUI-contents[type="grid"] #feed-button,
+#customization-palette #feed-button {
+  -moz-image-region: rect(128px 32px 160px 0);
+}
+
+#PanelUI-contents[type="grid"] #find-button,
+#customization-palette #find-button {
+  -moz-image-region: rect(128px 64px 160px 32px);
+}
+
+#PanelUI-contents[type="grid"] #developer-button,
+#customization-palette #developer-button {
+  -moz-image-region: rect(128px 96px 160px 64px);
+}
+
+#PanelUI-contents[type="grid"] #tabview-button,
+#customization-palette #tabview-button {
+  -moz-image-region: rect(160px 32px 192px 0);
+}
+
+#PanelUI-contents[type="grid"] #preferences-button,
+#customization-palette #preferences-button {
+  -moz-image-region: rect(160px 64px 192px 32px);
+}
+
+#PanelUI-contents[type="grid"] #home-button,
+#customization-palette #home-button {
+  -moz-image-region: rect(160px 96px 192px 64px);
+}
+
+#PanelUI-contents[type="grid"] #reload-button,
+#customization-palette #reload-button {
+  -moz-image-region: rect(192px 32px 224px 0);
+}
+
+#PanelUI-contents[type="grid"] #stop-button,
+#customization-palette #stop-button {
+  -moz-image-region: rect(192px 64px 224px 32px);
+}
+
+#PanelUI-contents #cut-button {
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+#PanelUI-contents #copy-button {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+#PanelUI-contents #paste-button {
+  -moz-image-region: rect(0 48px 16px 32px);
+}
+
+#PanelUI-contents #zoom-out-button {
+  -moz-image-region: rect(0 64px 16px 48px);
+}
+
+#PanelUI-contents #zoom-reset-button {
+  list-style-image: none;
+}
+
+#PanelUI-contents #zoom-in-button {
+  -moz-image-region: rect(0 80px 16px 64px);
+}
+
+#PanelUI-contents #paste-button,
+#PanelUI-contents #zoom-in-button {
+  -moz-border-start: 1px solid;
+}
+
+#PanelUI-contents #cut-button:-moz-locale-dir(ltr),
+#PanelUI-contents #paste-button:-moz-locale-dir(rtl),
+#PanelUI-contents #zoom-out-button:-moz-locale-dir(ltr),
+#PanelUI-contents #zoom-in-button:-moz-locale-dir(rtl) {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+#PanelUI-contents #cut-button:-moz-locale-dir(rtl),
+#PanelUI-contents #paste-button:-moz-locale-dir(ltr),
+#PanelUI-contents #zoom-out-button:-moz-locale-dir(rtl),
+#PanelUI-contents #zoom-in-button:-moz-locale-dir(ltr) {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+/* These icons are missing from Toolbar.png, so this is a temporary
+   hack until they are added. */
+toolbar > .customization-target > #find-button,
+toolbar > .customization-target > #open-file-button,
+toolbar > .customization-target > #developer-button,
+toolbar > .customization-target > #privatebrowsing-button,
+toolbar > .customization-target > #save-page-button,
+toolbar > .customization-target > #add-ons-button,
+toolbar > .customization-target > #preferences-button,
+toolbar > .customization-target > toolbarpaletteitem > #find-button,
+toolbar > .customization-target > toolbarpaletteitem > #open-file-button,
+toolbar > .customization-target > toolbarpaletteitem > #developer-button,
+toolbar > .customization-target > toolbarpaletteitem > #privatebrowsing-button,
+toolbar > .customization-target > toolbarpaletteitem > #save-page-button,
+toolbar > .customization-target > toolbarpaletteitem > #add-ons-button,
+toolbar > .customization-target > toolbarpaletteitem > #preferences-button {
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons.png);
+}
+
+toolbar > .customization-target > #find-button,
+toolbar > .customization-target > toolbarpaletteitem > #find-button {
+  -moz-image-region: rect(128px 64px 160px 32px);
+}
+
+toolbar > .customization-target > #open-file-button,
+toolbar > .customization-target > toolbarpaletteitem > #open-file-button {
+  -moz-image-region: rect(32px 32px 64px 0);
+}
+
+toolbar > .customization-target > #developer-button,
+toolbar > .customization-target > toolbarpaletteitem > #developer-button {
+  -moz-image-region: rect(128px 96px 160px 64px);
+}
+
+toolbar > .customization-target > #privatebrowsing-button,
+toolbar > .customization-target > toolbarpaletteitem > #privatebrowsing-button {
+  -moz-image-region: rect(0 96px 32px 64px);
+}
+
+toolbar > .customization-target > #save-page-button,
+toolbar > .customization-target > toolbarpaletteitem > #save-page-button {
+  -moz-image-region: rect(32px 64px 64px 32px);
+}
+
+toolbar > .customization-target > #add-ons-button,
+toolbar > .customization-target > toolbarpaletteitem > #add-ons-button {
+  -moz-image-region: rect(64px 64px 96px 32px);
+}
+
+toolbar > .customization-target > #preferences-button,
+toolbar > .customization-target > toolbarpaletteitem > #preferences-button {
+  -moz-image-region: rect(160px 64px 192px 32px);
+}
