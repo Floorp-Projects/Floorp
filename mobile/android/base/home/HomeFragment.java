@@ -128,7 +128,7 @@ class HomeFragment extends Fragment {
                     break;
                 }
 
-                int flags = Tabs.LOADURL_NEW_TAB;
+                int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
                 if (item.getItemId() == R.id.open_private_tab)
                     flags |= Tabs.LOADURL_PRIVATE;
 
