@@ -21,6 +21,9 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aHyperlinkCount)
+    return E_INVALIDARG;
+
   *aHyperlinkCount = 0;
 
   HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
@@ -38,6 +41,9 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
                                       IAccessibleHyperlink** aHyperlink)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aHyperlink)
+    return E_INVALIDARG;
 
   *aHyperlink = nullptr;
 
@@ -61,6 +67,9 @@ STDMETHODIMP
 ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkIndex)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aHyperlinkIndex)
+    return E_INVALIDARG;
 
   *aHyperlinkIndex = 0;
 
