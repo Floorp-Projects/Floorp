@@ -34,14 +34,6 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 
 using namespace mozilla;
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-#ifndef PAGE_MASK
-#define PAGE_MASK (~ (PAGE_SIZE - 1))
-#endif
-
 /**
  * dlfcn.h replacements functions
  */
@@ -116,7 +108,7 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
     // get the Phdr location from there.
     uint8_t mapped;
     // If the page is not mapped, mincore returns an error.
-    if (!mincore(const_cast<void*>(it->l_addr), PAGE_SIZE, &mapped)) {
+    if (!mincore(const_cast<void*>(it->l_addr), PageSize(), &mapped)) {
       const Elf::Ehdr *ehdr = Elf::Ehdr::validate(it->l_addr);
       if (ehdr) {
         info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(
@@ -210,7 +202,7 @@ LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const
   void* mapped = mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
   if (mapped != MAP_FAILED) {
     /* Ensure the availability of all pages within the mapping */
-    for (size_t off = 0; off < length; off += PAGE_SIZE) {
+    for (size_t off = 0; off < length; off += PageSize()) {
       mappable->ensure(reinterpret_cast<char *>(mapped) + off);
     }
   }
@@ -602,7 +594,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
     if (auxv->type == AT_PHDR) {
       phdrs.Init(reinterpret_cast<Elf::Phdr*>(auxv->value));
       /* Assume the base address is the first byte of the same page */
-      base = reinterpret_cast<char *>(auxv->value & PAGE_MASK);
+      base = reinterpret_cast<char *>(PageAlignedPtr(auxv->value));
     }
     if (auxv->type == AT_PHNUM)
       phdrs.Init(auxv->value);
@@ -619,8 +611,8 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
    * definitions in the program executable. Trying to map anonymous memory
    * with a hint giving the base address will return a different address
    * if something is mapped there, and the base address otherwise. */
-  MappedPtr mem(mmap(base, PAGE_SIZE, PROT_NONE,
-                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), PAGE_SIZE);
+  MappedPtr mem(MemoryRange::mmap(base, PageSize(), PROT_NONE,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   if (mem == base) {
     /* If program headers aren't mapped, try to map them */
     int fd = open("/proc/self/exe", O_RDONLY);
@@ -628,7 +620,8 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
       DEBUG_LOG("Failed to open /proc/self/exe");
       return;
     }
-    mem.Assign(mmap(base, PAGE_SIZE, PROT_READ, MAP_PRIVATE, fd, 0), PAGE_SIZE);
+    mem.Assign(MemoryRange::mmap(base, PageSize(), PROT_READ, MAP_PRIVATE,
+                                 fd, 0));
     /* If we don't manage to map at the right address, just give up. */
     if (mem != base) {
       DEBUG_LOG("Couldn't read program headers");
@@ -682,24 +675,24 @@ public:
   template <typename T>
   EnsureWritable(T *ptr, size_t length_ = sizeof(T))
   {
-    MOZ_ASSERT(length_ < PAGE_SIZE);
+    MOZ_ASSERT(length_ < PageSize());
     prot = -1;
     page = MAP_FAILED;
 
-    uintptr_t firstPage = reinterpret_cast<uintptr_t>(ptr) & PAGE_MASK;
-    length = (reinterpret_cast<uintptr_t>(ptr) + length_ - firstPage
-              + PAGE_SIZE - 1) & PAGE_MASK;
-
+    char *firstPage = PageAlignedPtr(reinterpret_cast<char *>(ptr));
+    char *lastPageEnd = PageAlignedEndPtr(reinterpret_cast<char *>(ptr) + length_);
+    length = lastPageEnd - firstPage;
+    uintptr_t start = reinterpret_cast<uintptr_t>(firstPage);
     uintptr_t end;
 
-    prot = getProt(firstPage, &end);
-    if (prot == -1 || (firstPage + length) > end)
+    prot = getProt(start, &end);
+    if (prot == -1 || (start + length) > end)
       MOZ_CRASH();
 
     if (prot & PROT_WRITE)
       return;
 
-    page = reinterpret_cast<void *>(firstPage);
+    page = firstPage;
     mprotect(page, length, prot | PROT_WRITE);
   }
 
@@ -908,8 +901,8 @@ SEGVHandler::SEGVHandler()
    * enough, or if there is none. */
   if (sigaltstack(NULL, &oldStack) == -1 || !oldStack.ss_sp ||
       oldStack.ss_size < stackSize) {
-    stackPtr.Assign(mmap(NULL, stackSize, PROT_READ | PROT_WRITE,
-                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), stackSize);
+    stackPtr.Assign(MemoryRange::mmap(NULL, stackSize, PROT_READ | PROT_WRITE,
+                                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
     stack_t stack;
     stack.ss_sp = stackPtr;
     stack.ss_size = stackSize;

@@ -18,14 +18,6 @@
 #include "SeekableZStream.h"
 #include "Logging.h"
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-#ifndef PAGE_MASK
-#define PAGE_MASK (~ (PAGE_SIZE - 1))
-#endif
-
 Mappable *
 MappableFile::Create(const char *path)
 {
@@ -35,7 +27,7 @@ MappableFile::Create(const char *path)
   return NULL;
 }
 
-void *
+MemoryRange
 MappableFile::mmap(const void *addr, size_t length, int prot, int flags,
                    off_t offset)
 {
@@ -43,17 +35,16 @@ MappableFile::mmap(const void *addr, size_t length, int prot, int flags,
   MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
 
-  void *mapped = ::mmap(const_cast<void *>(addr), length, prot, flags,
-                        fd, offset);
+  MemoryRange mapped = MemoryRange::mmap(const_cast<void *>(addr), length,
+                                         prot, flags, fd, offset);
   if (mapped == MAP_FAILED)
     return mapped;
 
   /* Fill the remainder of the last page with zeroes when the requested
    * protection has write bits. */
   if ((mapped != MAP_FAILED) && (prot & PROT_WRITE) &&
-      (length & (PAGE_SIZE - 1))) {
-    memset(reinterpret_cast<char *>(mapped) + length, 0,
-           PAGE_SIZE - (length & ~(PAGE_MASK)));
+      (PageAlignedSize(length) > length)) {
+    memset(mapped + length, 0, PageAlignedSize(length) - length);
   }
   return mapped;
 }
@@ -109,8 +100,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       return NULL;
     }
     /* Map the temporary file for use as inflate buffer */
-    MappedPtr buffer(::mmap(NULL, stream->GetUncompressedSize(), PROT_WRITE,
-                            MAP_SHARED, fd, 0), stream->GetUncompressedSize());
+    MappedPtr buffer(MemoryRange::mmap(NULL, stream->GetUncompressedSize(),
+                                       PROT_WRITE, MAP_SHARED, fd, 0));
     if (buffer == MAP_FAILED) {
       LOG("Couldn't map %s to decompress library", file.get());
       return NULL;
@@ -146,8 +137,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       LOG("Couldn't ftruncate %s to decompress library", file.get());
       return NULL;
     }
-    MappedPtr buffer(::mmap(NULL, zStream.GetUncompressedSize(), PROT_WRITE,
-                            MAP_SHARED, fd, 0), zStream.GetUncompressedSize());
+    MappedPtr buffer(MemoryRange::mmap(NULL, zStream.GetUncompressedSize(),
+                                       PROT_WRITE, MAP_SHARED, fd, 0));
     if (buffer == MAP_FAILED) {
       LOG("Couldn't map %s to decompress library", file.get());
       return NULL;
@@ -285,7 +276,7 @@ MappableDeflate::MappableDeflate(_MappableBuffer *buf, Zip *zip,
 
 MappableDeflate::~MappableDeflate() { }
 
-void *
+MemoryRange
 MappableDeflate::mmap(const void *addr, size_t length, int prot, int flags, off_t offset)
 {
   MOZ_ASSERT(buffer);
@@ -301,27 +292,27 @@ MappableDeflate::mmap(const void *addr, size_t length, int prot, int flags, off_
     if ((*buffer == zStream.next_out) &&
         (inflateInit2(&zStream, -MAX_WBITS) != Z_OK)) {
       LOG("inflateInit failed: %s", zStream.msg);
-      return MAP_FAILED;
+      return MemoryRange(MAP_FAILED, 0);
     }
     int ret = inflate(&zStream, Z_SYNC_FLUSH);
     if (ret < 0) {
       LOG("inflate failed: %s", zStream.msg);
-      return MAP_FAILED;
+      return MemoryRange(MAP_FAILED, 0);
     }
     if (ret == Z_NEED_DICT) {
       LOG("zstream requires a dictionary. %s", zStream.msg);
-      return MAP_FAILED;
+      return MemoryRange(MAP_FAILED, 0);
     }
     zStream.avail_out = avail_out - missing + zStream.avail_out;
     if (ret == Z_STREAM_END) {
       if (inflateEnd(&zStream) != Z_OK) {
         LOG("inflateEnd failed: %s", zStream.msg);
-        return MAP_FAILED;
+        return MemoryRange(MAP_FAILED, 0);
       }
       if (zStream.total_out != buffer->GetLength()) {
         LOG("File not fully uncompressed! %ld / %d", zStream.total_out,
             static_cast<unsigned int>(buffer->GetLength()));
-        return MAP_FAILED;
+        return MemoryRange(MAP_FAILED, 0);
       }
     }
   }
@@ -335,7 +326,7 @@ MappableDeflate::mmap(const void *addr, size_t length, int prot, int flags, off_
   }
 #endif
 
-  return buffer->mmap(addr, length, prot, flags, offset);
+  return MemoryRange(buffer->mmap(addr, length, prot, flags, offset), length);
 }
 
 void
@@ -388,7 +379,7 @@ MappableSeekableZStream::~MappableSeekableZStream()
   pthread_mutex_destroy(&mutex);
 }
 
-void *
+MemoryRange
 MappableSeekableZStream::mmap(const void *addr, size_t length, int prot,
                               int flags, off_t offset)
 {
@@ -396,7 +387,7 @@ MappableSeekableZStream::mmap(const void *addr, size_t length, int prot,
    * bring us to ensure() */
   void *res = buffer->mmap(addr, length, PROT_NONE, flags, offset);
   if (res == MAP_FAILED)
-    return MAP_FAILED;
+    return MemoryRange(MAP_FAILED, 0);
 
   /* Store the mapping, ordered by offset and length */
   std::vector<LazyMap>::reverse_iterator it;
@@ -407,7 +398,7 @@ MappableSeekableZStream::mmap(const void *addr, size_t length, int prot,
   }
   LazyMap map = { res, length, prot, offset };
   lazyMaps.insert(it.base(), map);
-  return res;
+  return MemoryRange(res, length);
 }
 
 void
@@ -446,8 +437,7 @@ bool
 MappableSeekableZStream::ensure(const void *addr)
 {
   DEBUG_LOG("ensure @%p", addr);
-  void *addrPage = reinterpret_cast<void *>
-                   (reinterpret_cast<uintptr_t>(addr) & PAGE_MASK);
+  const void *addrPage = PageAlignedPtr(addr);
   /* Find the mapping corresponding to the given page */
   std::vector<LazyMap>::iterator map;
   for (map = lazyMaps.begin(); map < lazyMaps.end(); ++map) {
@@ -489,9 +479,9 @@ MappableSeekableZStream::ensure(const void *addr)
    * as such, only the first page of the first chunk is decompressed this way.
    * When we fault in the remaining pages of that chunk, we want to decompress
    * the complete chunk again. Short of doing that, we would end up with
-   * no data between PAGE_SIZE and chunkSize, which would effectively corrupt
+   * no data between PageSize() and chunkSize, which would effectively corrupt
    * symbol resolution in the underlying library. */
-  if (chunkAvail[chunk] < (length + PAGE_SIZE - 1) / PAGE_SIZE) {
+  if (chunkAvail[chunk] < PageNumber(length)) {
     if (!zStream.DecompressChunk(*buffer + chunkStart, chunk, length))
       return false;
 
@@ -508,7 +498,7 @@ MappableSeekableZStream::ensure(const void *addr)
     if (chunkAvail[chunk] == 0)
       chunkAvailNum++;
 
-    chunkAvail[chunk] = (length + PAGE_SIZE - 1) / PAGE_SIZE;
+    chunkAvail[chunk] = PageNumber(length);
   }
 
   /* Flip the chunk mapping protection to the recorded flags. We could
