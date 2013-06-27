@@ -41,6 +41,10 @@ JSObject* ParPush(ParPushArgs *args);
 // generation.
 JSObject *ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length);
 
+// Concatenate two strings.
+ParallelResult ParConcatStrings(ForkJoinSlice *slice, HandleString left, HandleString right,
+                                MutableHandleString out);
+
 // These parallel operations fail if they would be required to convert
 // to a string etc etc.
 ParallelResult ParStrictlyEqual(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);

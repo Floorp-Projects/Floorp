@@ -315,6 +315,7 @@ StringPolicy<Op>::staticAdjustInputs(MInstruction *def)
 
 template bool StringPolicy<0>::staticAdjustInputs(MInstruction *ins);
 template bool StringPolicy<1>::staticAdjustInputs(MInstruction *ins);
+template bool StringPolicy<2>::staticAdjustInputs(MInstruction *ins);
 
 template <unsigned Op>
 bool

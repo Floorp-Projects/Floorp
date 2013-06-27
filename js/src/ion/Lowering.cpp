@@ -1324,6 +1324,28 @@ LIRGenerator::visitConcat(MConcat *ins)
 }
 
 bool
+LIRGenerator::visitParConcat(MParConcat *ins)
+{
+    MDefinition *parSlice = ins->parSlice();
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_String);
+    JS_ASSERT(rhs->type() == MIRType_String);
+    JS_ASSERT(ins->type() == MIRType_String);
+
+    LParConcat *lir = new LParConcat(useFixed(parSlice, CallTempReg5),
+                                     useFixed(lhs, CallTempReg0),
+                                     useFixed(rhs, CallTempReg1),
+                                     tempFixed(CallTempReg2),
+                                     tempFixed(CallTempReg3),
+                                     tempFixed(CallTempReg4));
+    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg6))))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCharCodeAt(MCharCodeAt *ins)
 {
     MDefinition *str = ins->getOperand(0);
