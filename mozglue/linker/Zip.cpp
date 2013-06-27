@@ -18,25 +18,25 @@ Zip::Create(const char *filename)
   /* Open and map the file in memory */
   AutoCloseFD fd(open(filename, O_RDONLY));
   if (fd == -1) {
-    log("Error opening %s: %s", filename, strerror(errno));
+    LOG("Error opening %s: %s", filename, strerror(errno));
     return NULL;
   }
   struct stat st;
   if (fstat(fd, &st) == -1) {
-    log("Error stating %s: %s", filename, strerror(errno));
+    LOG("Error stating %s: %s", filename, strerror(errno));
     return NULL;
   }
   size_t size = st.st_size;
   if (size <= sizeof(CentralDirectoryEnd)) {
-    log("Error reading %s: too short", filename);
+    LOG("Error reading %s: too short", filename);
     return NULL;
   }
   void *mapped = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
   if (mapped == MAP_FAILED) {
-    log("Error mmapping %s: %s", filename, strerror(errno));
+    LOG("Error mmapping %s: %s", filename, strerror(errno));
     return NULL;
   }
-  debug("Mapped %s @%p", filename, mapped);
+  DEBUG_LOG("Mapped %s @%p", filename, mapped);
 
   return Create(filename, mapped, size);
 }
@@ -49,7 +49,7 @@ Zip::Create(const char *filename, void *mapped, size_t size)
   // If neither the first Local File entry nor central directory entries
   // have been found, the zip was invalid.
   if (!zip->nextFile && !zip->entries) {
-    log("%s - Invalid zip", filename);
+    LOG("%s - Invalid zip", filename);
     return NULL;
   }
 
@@ -76,7 +76,7 @@ Zip::~Zip()
   ZipCollection::Forget(this);
   if (name) {
     munmap(mapped, size);
-    debug("Unmapped %s @%p", name, mapped);
+    DEBUG_LOG("Unmapped %s @%p", name, mapped);
     free(name);
   }
 }
@@ -84,7 +84,7 @@ Zip::~Zip()
 bool
 Zip::GetStream(const char *path, Zip::Stream *out) const
 {
-  debug("%s - GetFile %s", name, path);
+  DEBUG_LOG("%s - GetFile %s", name, path);
   /* Fast path: if the Local File header on store matches, we can return the
    * corresponding stream right away.
    * However, the Local File header may not contain enough information, in
@@ -97,7 +97,7 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
    * normal condition for the bit to be set). */
   if (nextFile && nextFile->GetName().Equals(path) &&
       !entries && (nextFile->compressedSize != 0)) {
-    debug("%s - %s was next file: fast path", name, path);
+    DEBUG_LOG("%s - %s was next file: fast path", name, path);
     /* Fill Stream info from Local File header content */
     const char *data = reinterpret_cast<const char *>(nextFile->GetData());
     out->compressedBuf = data;
@@ -120,14 +120,14 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
    * Directory for the entry corresponding to the given path */
   if (!nextDir || !nextDir->GetName().Equals(path)) {
     const DirectoryEntry *entry = GetFirstEntry();
-    debug("%s - Scan directory entries in search for %s", name, path);
+    DEBUG_LOG("%s - Scan directory entries in search for %s", name, path);
     while (entry && !entry->GetName().Equals(path)) {
       entry = entry->GetNext();
     }
     nextDir = entry;
   }
   if (!nextDir) {
-    debug("%s - Couldn't find %s", name, path);
+    DEBUG_LOG("%s - Couldn't find %s", name, path);
     return false;
   }
 
@@ -136,7 +136,7 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
   nextFile = LocalFile::validate(static_cast<const char *>(mapped)
                              + nextDir->offset);
   if (!nextFile) {
-    log("%s - Couldn't find the Local File header for %s", name, path);
+    LOG("%s - Couldn't find the Local File header for %s", name, path);
     return false;
   }
 
@@ -167,14 +167,14 @@ Zip::GetFirstEntry() const
   for (; _end > mapped && !end; _end--)
     end = CentralDirectoryEnd::validate(_end);
   if (!end) {
-    log("%s - Couldn't find end of central directory record", name);
+    LOG("%s - Couldn't find end of central directory record", name);
     return NULL;
   }
 
   entries = DirectoryEntry::validate(static_cast<const char *>(mapped)
                                  + end->offset);
   if (!entries) {
-    log("%s - Couldn't find central directory record", name);
+    LOG("%s - Couldn't find central directory record", name);
   }
   return entries;
 }
@@ -202,12 +202,12 @@ ZipCollection::Register(Zip *zip)
 void
 ZipCollection::Forget(Zip *zip)
 {
-  debug("ZipCollection::Forget(\"%s\")", zip->GetName());
+  DEBUG_LOG("ZipCollection::Forget(\"%s\")", zip->GetName());
   std::vector<Zip *>::iterator it = std::find(Singleton.zips.begin(),
                                               Singleton.zips.end(), zip);
   if (*it == zip) {
     Singleton.zips.erase(it);
   } else {
-    debug("ZipCollection::Forget: didn't find \"%s\" in bookkeeping", zip->GetName());
+    DEBUG_LOG("ZipCollection::Forget: didn't find \"%s\" in bookkeeping", zip->GetName());
   }
 }
