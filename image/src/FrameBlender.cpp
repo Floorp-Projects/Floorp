@@ -138,8 +138,8 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     return false;
   }
 
-  FrameDataPair& prevFrame = mFrames[aPrevFrameIndex];
-  FrameDataPair& nextFrame = mFrames[aNextFrameIndex];
+  const FrameDataPair& prevFrame = mFrames[aPrevFrameIndex];
+  const FrameDataPair& nextFrame = mFrames[aNextFrameIndex];
   if (!prevFrame.HasFrameData() || !nextFrame.HasFrameData()) {
     return false;
   }
@@ -433,7 +433,7 @@ FrameBlender::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect, const
 // Whether we succeed or fail will not cause a crash, and there's not much
 // we can do about a failure, so there we don't return a nsresult
 bool
-FrameBlender::CopyFrameImage(uint8_t *aDataSrc, const nsIntRect& aRectSrc,
+FrameBlender::CopyFrameImage(const uint8_t *aDataSrc, const nsIntRect& aRectSrc,
                              uint8_t *aDataDest, const nsIntRect& aRectDest)
 {
   uint32_t dataLengthSrc = aRectSrc.width * aRectSrc.height * 4;
@@ -449,7 +449,7 @@ FrameBlender::CopyFrameImage(uint8_t *aDataSrc, const nsIntRect& aRectSrc,
 }
 
 nsresult
-FrameBlender::DrawFrameTo(uint8_t *aSrcData, const nsIntRect& aSrcRect,
+FrameBlender::DrawFrameTo(const uint8_t *aSrcData, const nsIntRect& aSrcRect,
                           uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
                           uint8_t *aDstPixels, const nsIntRect& aDstRect,
                           FrameBlender::FrameBlendMethod aBlendMethod)
@@ -483,9 +483,9 @@ FrameBlender::DrawFrameTo(uint8_t *aSrcData, const nsIntRect& aSrcRect,
                  "FrameBlender::DrawFrameTo: source must be smaller than dest");
 
     // Get pointers to image data
-    uint8_t *srcPixels = aSrcData + aSrcPaletteLength;
+    const uint8_t *srcPixels = aSrcData + aSrcPaletteLength;
     uint32_t *dstPixels = reinterpret_cast<uint32_t*>(aDstPixels);
-    uint32_t *colormap = reinterpret_cast<uint32_t*>(aSrcData);
+    const uint32_t *colormap = reinterpret_cast<const uint32_t*>(aSrcData);
 
     // Skip to the right offset
     dstPixels += aSrcRect.x + (aSrcRect.y * aDstRect.width);
@@ -514,7 +514,7 @@ FrameBlender::DrawFrameTo(uint8_t *aSrcData, const nsIntRect& aSrcRect,
     pixman_image_t* src = pixman_image_create_bits(aSrcHasAlpha ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                    aSrcRect.width,
                                                    aSrcRect.height,
-                                                   reinterpret_cast<uint32_t*>(aSrcData),
+                                                   reinterpret_cast<uint32_t*>(const_cast<uint8_t*>(aSrcData)),
                                                    aSrcRect.width * 4);
     pixman_image_t* dst = pixman_image_create_bits(PIXMAN_a8r8g8b8,
                                                    aDstRect.width,
