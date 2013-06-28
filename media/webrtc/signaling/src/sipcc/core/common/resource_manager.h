@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef _RM_MGR_H__
-#define _RM_MGR_H_
+#define _RM_MGR_H__
 
 typedef struct resource_manager {
     int16_t  max_element;
