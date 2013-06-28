@@ -464,6 +464,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     ndefaults(0),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
+    hasDestructuringArgs(false),
     useAsm(false),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     usesArguments(false),
@@ -1533,7 +1534,6 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
     if (parenFreeArrow || !tokenStream.matchToken(TOK_RP)) {
         bool hasDefaults = false;
         Node duplicatedArg = null();
-        bool destructuringArg = false;
 #if JS_HAS_DESTRUCTURING
         Node list = null();
 #endif
@@ -1562,7 +1562,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                     return false;
                 }
 
-                destructuringArg = true;
+                funbox->hasDestructuringArgs = true;
 
                 /*
                  * A destructuring formal parameter turns into one or more
@@ -1624,7 +1624,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                     funbox->setStart(tokenStream);
 
                 RootedPropertyName name(context, tokenStream.currentToken().name());
-                bool disallowDuplicateArgs = destructuringArg || hasDefaults;
+                bool disallowDuplicateArgs = funbox->hasDestructuringArgs || hasDefaults;
                 if (!defineArg(funcpn, name, disallowDuplicateArgs, &duplicatedArg))
                     return false;
 
