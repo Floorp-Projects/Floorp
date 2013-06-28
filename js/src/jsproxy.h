@@ -129,7 +129,7 @@ class JS_FRIEND_API(BaseProxyHandler)
                          MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    virtual bool isExtensible(JSObject *proxy) = 0;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) = 0;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
@@ -190,7 +190,7 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
-    virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
@@ -242,7 +242,7 @@ class Proxy
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    static bool isExtensible(JSObject *proxy);
+    static bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible);
     static bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
     static bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);

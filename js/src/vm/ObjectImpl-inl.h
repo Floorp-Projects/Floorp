@@ -39,13 +39,25 @@ js::ObjectImpl::nativeContainsPure(Shape *shape)
 }
 
 inline bool
-js::ObjectImpl::isExtensible() const
+js::ObjectImpl::nonProxyIsExtensible() const
 {
-    if (this->isProxy())
-        return Proxy::isExtensible(const_cast<JSObject*>(this->asObjectPtr()));
+    MOZ_ASSERT(!isProxy());
 
     // [[Extensible]] for ordinary non-proxy objects is an object flag.
     return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
+}
+
+/* static */ inline bool
+js::ObjectImpl::isExtensible(JSContext *cx, js::Handle<ObjectImpl*> obj, bool *extensible)
+{
+    if (obj->isProxy()) {
+        HandleObject h =
+            HandleObject::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
+        return Proxy::isExtensible(cx, h, extensible);
+    }
+
+    *extensible = obj->nonProxyIsExtensible();
+    return true;
 }
 
 inline bool
