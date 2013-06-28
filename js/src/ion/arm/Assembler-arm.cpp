@@ -1545,6 +1545,18 @@ Assembler::as_smlal(Register destHI, Register destLO, Register src1, Register sr
     return as_genmul(destHI, destLO, src1, src2, opm_smlal, sc, c);
 }
 
+BufferOffset
+Assembler::as_sdiv(Register rd, Register rn, Register rm, Condition c)
+{
+    return writeInst(0x0710f010 | c | RN(rd) | RM(rm) | rn.code());
+}
+
+BufferOffset
+Assembler::as_udiv(Register rd, Register rn, Register rm, Condition c)
+{
+    return writeInst(0x0730f010 | c | RN(rd) | RM(rm) | rn.code());
+}
+
 // Data transfer instructions: ldr, str, ldrb, strb.
 // Using an int to differentiate between 8 bits and 32 bits is
 // overkill, but meh

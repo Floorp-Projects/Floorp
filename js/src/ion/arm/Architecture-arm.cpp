@@ -124,6 +124,11 @@ bool useConvReg()
     return has32DP();
 }
 
+bool hasIDIV()
+{
+    return js::ion::getFlags() & HWCAP_IDIVA;
+}
+
 } // namespace ion
 } // namespace js
 
