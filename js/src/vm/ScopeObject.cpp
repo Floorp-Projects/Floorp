@@ -9,10 +9,10 @@
 #include "jscompartment.h"
 #include "jsiter.h"
 
-#include "GlobalObject.h"
-#include "ScopeObject.h"
-#include "Shape.h"
-#include "Xdr.h"
+#include "vm/GlobalObject.h"
+#include "vm/ScopeObject.h"
+#include "vm/Shape.h"
+#include "vm/Xdr.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
