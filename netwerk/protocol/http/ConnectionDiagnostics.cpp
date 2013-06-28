@@ -127,8 +127,8 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
 {
   log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
 
-  log.AppendPrintf("    npncomplete = %d  setupNPNCalled = %d\n",
-                   mNPNComplete, mSetupNPNCalled);
+  log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n",
+                   mNPNComplete, mSetupSSLCalled);
 
   log.AppendPrintf("    spdyVersion = %d  reportedSpdy = %d everspdy = %d\n",
                    mUsingSpdyVersion, mReportedSpdy, mEverUsedSpdy);
