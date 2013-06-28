@@ -4077,9 +4077,8 @@ JSTerm.prototype = {
       return false;
     }
 
-    // Only complete if the selection is empty and at the end of the input.
-    if (inputNode.selectionStart == inputNode.selectionEnd &&
-        inputNode.selectionEnd != inputValue.length) {
+    // Only complete if the selection is empty.
+    if (inputNode.selectionStart != inputNode.selectionEnd) {
       this.clearCompletion();
       return false;
     }
@@ -4215,6 +4214,11 @@ JSTerm.prototype = {
 
   onAutocompleteSelect: function JSTF_onAutocompleteSelect()
   {
+    // Render the suggestion only if the cursor is at the end of the input.
+    if (this.inputNode.selectionStart != this.inputNode.value.length) {
+      return;
+    }
+
     let currentItem = this.autocompletePopup.selectedItem;
     if (currentItem && this.lastCompletion.value) {
       let suffix = currentItem.label.substring(this.lastCompletion.
@@ -4256,7 +4260,11 @@ JSTerm.prototype = {
     if (currentItem && this.lastCompletion.value) {
       let suffix = currentItem.label.substring(this.lastCompletion.
                                                matchProp.length);
-      this.setInputValue(this.inputNode.value + suffix);
+      let cursor = this.inputNode.selectionStart;
+      let value = this.inputNode.value;
+      this.setInputValue(value.substr(0, cursor) + suffix + value.substr(cursor));
+      let newCursor = cursor + suffix.length;
+      this.inputNode.selectionStart = this.inputNode.selectionEnd = newCursor;
       updated = true;
     }
 
