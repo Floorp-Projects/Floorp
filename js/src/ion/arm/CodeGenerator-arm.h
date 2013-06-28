@@ -81,7 +81,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitModPowTwoI(LModPowTwoI *ins);
     virtual bool visitModMaskI(LModMaskI *ins);
     virtual bool visitPowHalfD(LPowHalfD *ins);
-    virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitShiftI(LShiftI *ins);
     virtual bool visitUrshD(LUrshD *ins);
 

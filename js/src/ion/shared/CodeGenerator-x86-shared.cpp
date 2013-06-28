@@ -12,7 +12,6 @@
 #include "ion/shared/CodeGenerator-x86-shared.h"
 #include "ion/shared/CodeGenerator-shared-inl.h"
 #include "ion/IonFrames.h"
-#include "ion/MoveEmitter.h"
 #include "ion/IonCompartment.h"
 #include "ion/ParallelFunctions.h"
 
@@ -1033,43 +1032,6 @@ CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a) const
     if (a->isFloatReg())
         return MoveOperand(ToFloatRegister(a));
     return MoveOperand(StackPointer, ToStackOffset(a));
-}
-
-bool
-CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
-{
-    if (!group->numMoves())
-        return true;
-
-    MoveResolver &resolver = masm.moveResolver();
-
-    for (size_t i = 0; i < group->numMoves(); i++) {
-        const LMove &move = group->getMove(i);
-
-        const LAllocation *from = move.from();
-        const LAllocation *to = move.to();
-
-        // No bogus moves.
-        JS_ASSERT(*from != *to);
-        JS_ASSERT(!from->isConstant());
-        JS_ASSERT(from->isDouble() == to->isDouble());
-
-        MoveResolver::Move::Kind kind = from->isDouble()
-                                        ? MoveResolver::Move::DOUBLE
-                                        : MoveResolver::Move::GENERAL;
-
-        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
-            return false;
-    }
-
-    if (!resolver.resolve())
-        return false;
-
-    MoveEmitter emitter(masm);
-    emitter.emit(resolver);
-    emitter.finish();
-
-    return true;
 }
 
 class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared>

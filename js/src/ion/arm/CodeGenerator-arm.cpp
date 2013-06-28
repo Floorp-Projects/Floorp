@@ -16,7 +16,6 @@
 #include "ion/IonFrames.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/MoveEmitter.h"
 #include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Shape.h"
 
@@ -943,43 +942,6 @@ CodeGeneratorARM::toMoveOperand(const LAllocation *a) const
         offset -= AlignmentMidPrologue;
 
     return MoveOperand(StackPointer, offset);
-}
-
-bool
-CodeGeneratorARM::visitMoveGroup(LMoveGroup *group)
-{
-    if (!group->numMoves())
-        return true;
-
-    MoveResolver &resolver = masm.moveResolver();
-
-    for (size_t i = 0; i < group->numMoves(); i++) {
-        const LMove &move = group->getMove(i);
-
-        const LAllocation *from = move.from();
-        const LAllocation *to = move.to();
-
-        // No bogus moves.
-        JS_ASSERT(*from != *to);
-        JS_ASSERT(!from->isConstant());
-        JS_ASSERT(from->isDouble() == to->isDouble());
-
-        MoveResolver::Move::Kind kind = from->isDouble()
-                                        ? MoveResolver::Move::DOUBLE
-                                        : MoveResolver::Move::GENERAL;
-
-        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
-            return false;
-    }
-
-    if (!resolver.resolve())
-        return false;
-
-    MoveEmitter emitter(masm);
-    emitter.emit(resolver);
-    emitter.finish();
-
-    return true;
 }
 
 class js::ion::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorARM>
