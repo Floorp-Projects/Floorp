@@ -475,16 +475,16 @@ class Assembler : public AssemblerX86Shared
     }
 
     // Load from *(base + disp32) where disp32 can be patched.
-    CodeOffsetLabel movxblWithPatch(Address src, Register dest) {
-        masm.movxbl_mr_disp32(src.offset, src.base.code(), dest.code());
+    CodeOffsetLabel movsblWithPatch(Address src, Register dest) {
+        masm.movsbl_mr_disp32(src.offset, src.base.code(), dest.code());
         return masm.currentOffset();
     }
     CodeOffsetLabel movzblWithPatch(Address src, Register dest) {
         masm.movzbl_mr_disp32(src.offset, src.base.code(), dest.code());
         return masm.currentOffset();
     }
-    CodeOffsetLabel movxwlWithPatch(Address src, Register dest) {
-        masm.movxwl_mr_disp32(src.offset, src.base.code(), dest.code());
+    CodeOffsetLabel movswlWithPatch(Address src, Register dest) {
+        masm.movswl_mr_disp32(src.offset, src.base.code(), dest.code());
         return masm.currentOffset();
     }
     CodeOffsetLabel movzwlWithPatch(Address src, Register dest) {

@@ -226,10 +226,10 @@ class MacroAssemblerX86Shared : public Assembler
         movzbl(Operand(src), dest);
     }
     void load8SignExtend(const Address &src, const Register &dest) {
-        movxbl(Operand(src), dest);
+        movsbl(Operand(src), dest);
     }
     void load8SignExtend(const BaseIndex &src, const Register &dest) {
-        movxbl(Operand(src), dest);
+        movsbl(Operand(src), dest);
     }
     template <typename S, typename T>
     void store8(const S &src, const T &dest) {
@@ -246,10 +246,10 @@ class MacroAssemblerX86Shared : public Assembler
         movw(src, Operand(dest));
     }
     void load16SignExtend(const Address &src, const Register &dest) {
-        movxwl(Operand(src), dest);
+        movswl(Operand(src), dest);
     }
     void load16SignExtend(const BaseIndex &src, const Register &dest) {
-        movxwl(Operand(src), dest);
+        movswl(Operand(src), dest);
     }
     void load32(const Address &address, Register dest) {
         movl(Operand(address), dest);
