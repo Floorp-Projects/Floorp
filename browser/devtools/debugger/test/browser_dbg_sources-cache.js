@@ -92,9 +92,6 @@ function testSourcesCache()
 }
 
 function fetchSources(callback) {
-  let fetches = 0;
-  let timeouts = 0;
-
   gControllerSources.getTextForSources(gSources.values).then((aSources) => {
     testCacheIntegrity(aSources);
     callback();
@@ -141,16 +138,18 @@ function testStateAfterReload() {
 function testCacheIntegrity(aCache) {
   for (let source of aCache) {
     let [url, contents] = source;
-    let index = aCache.indexOf(source);
 
-    ok(url.contains("test-function-search-0" + (index + 1)),
+    // Sources of a debugee don't always finish fetching consecutively. D'uh.
+    let index = url.match(/test-function-search-0(\d)/).pop();
+
+    ok(index >= 1 && index <= TOTAL_SOURCES,
       "Found a source url cached correctly (" + index + ")");
     ok(contents.contains(
-      ["First source!", "Second source!", "Third source!"][index]),
+      ["First source!", "Second source!", "Third source!"][index - 1]),
       "Found a source's text contents cached correctly (" + index + ")");
 
-    info("Cached source url at " + index + ": " + source[0]);
-    info("Cached source text at " + index + ": " + source[1]);
+    info("Cached source url at " + index + ": " + url);
+    info("Cached source text at " + index + ": " + contents);
   }
 }
 
