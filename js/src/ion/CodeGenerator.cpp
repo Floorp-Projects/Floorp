@@ -15,6 +15,7 @@
 #include "ion/IonSpewer.h"
 #include "ion/MIRGenerator.h"
 #include "ion/shared/CodeGenerator-shared-inl.h"
+#include "ion/MoveEmitter.h"
 #include "jsnum.h"
 #include "jsmath.h"
 #include "ion/ParallelFunctions.h"
@@ -945,6 +946,43 @@ CodeGenerator::visitStackArgV(LStackArgV *lir)
 
     masm.storeValue(val, Address(StackPointer, stack_offset));
     return pushedArgumentSlots_.append(StackOffsetToSlot(stack_offset));
+}
+
+bool
+CodeGenerator::visitMoveGroup(LMoveGroup *group)
+{
+    if (!group->numMoves())
+        return true;
+
+    MoveResolver &resolver = masm.moveResolver();
+
+    for (size_t i = 0; i < group->numMoves(); i++) {
+        const LMove &move = group->getMove(i);
+
+        const LAllocation *from = move.from();
+        const LAllocation *to = move.to();
+
+        // No bogus moves.
+        JS_ASSERT(*from != *to);
+        JS_ASSERT(!from->isConstant());
+        JS_ASSERT(from->isDouble() == to->isDouble());
+
+        MoveResolver::Move::Kind kind = from->isDouble()
+                                        ? MoveResolver::Move::DOUBLE
+                                        : MoveResolver::Move::GENERAL;
+
+        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
+            return false;
+    }
+
+    if (!resolver.resolve())
+        return false;
+
+    MoveEmitter emitter(masm);
+    emitter.emit(resolver);
+    emitter.finish();
+
+    return true;
 }
 
 bool
