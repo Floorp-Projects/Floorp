@@ -134,9 +134,6 @@ var StarUI = {
     document.loadOverlay(
       "chrome://browser/content/places/editBookmarkOverlay.xul",
       (function (aSubject, aTopic, aData) {
-        //XXX We just caused localstore.rdf to be re-applied (bug 640158)
-        retrieveToolbarIconsizesFromTheme();
-
         // Move the header (star, title, button) into the grid,
         // so that it aligns nicely with the other items (bug 484022).
         let header = this._element("editBookmarkPanelHeader");
