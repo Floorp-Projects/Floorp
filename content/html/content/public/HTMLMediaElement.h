@@ -25,7 +25,6 @@
 #include "nsIDOMWakeLock.h"
 #include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
-#include "MediaDecoder.h"
 #include "MediaMetadataManager.h"
 #include "AudioChannelAgent.h"
 #include "mozilla/Attributes.h"
@@ -521,12 +520,6 @@ public:
 
   void AddTextTrack(TextTrack* aTextTrack) {
     mTextTracks->AddTextTrack(aTextTrack);
-  }
-
-  MediaDecoder::FrameStatistics& GetFrameStatistics()
-  {
-    MediaDecoder::FrameStatistics empty;
-    return mDecoder ? mDecoder->GetFrameStatistics() : empty;
   }
 
 protected:
