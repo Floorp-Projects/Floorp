@@ -141,6 +141,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_filters.js \
 	browser_console_dead_objects.js \
 	browser_console_iframe_messages.js \
+	browser_console_variables_view_while_debugging_and_inspecting.js \
 	head.js \
 	$(NULL)
 
