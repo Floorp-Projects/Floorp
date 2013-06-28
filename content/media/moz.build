@@ -6,8 +6,6 @@
 
 PARALLEL_DIRS += ['encoder']
 
-PARALLEL_DIRS += ['mediasource']
-
 PARALLEL_DIRS += ['webaudio']
 
 if CONFIG['MOZ_RAW']:
@@ -87,7 +85,6 @@ EXPORTS.mozilla.dom += [
     'TextTrackCue.h',
     'TextTrackCueList.h',
     'TextTrackList.h',
-    'VideoPlaybackQuality.h',
     'VideoStreamTrack.h',
 ]
 
@@ -115,7 +112,6 @@ CPP_SOURCES += [
     'TextTrackCueList.cpp',
     'TextTrackList.cpp',
     'VideoFrameContainer.cpp',
-    'VideoPlaybackQuality.cpp',
     'VideoSegment.cpp',
     'VideoStreamTrack.cpp',
     'VideoUtils.cpp',
