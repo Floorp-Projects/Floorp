@@ -1462,6 +1462,10 @@ class Assembler
                 SetCond_ sc = NoSetCond, Condition c = Always);
     BufferOffset as_smlal(Register dest1, Register dest2, Register src1, Register src2,
                 SetCond_ sc = NoSetCond, Condition c = Always);
+
+    BufferOffset as_sdiv(Register dest, Register num, Register div, Condition c = Always);
+    BufferOffset as_udiv(Register dest, Register num, Register div, Condition c = Always);
+
     // Data transfer instructions: ldr, str, ldrb, strb.
     // Using an int to differentiate between 8 bits and 32 bits is
     // overkill, but meh
