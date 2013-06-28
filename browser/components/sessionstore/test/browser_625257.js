@@ -15,7 +15,7 @@ let tab;
 //     tab is scheduled to be removed.
 //  3. After the tab has been closed, undoCloseTab() has been called and the tab
 //     should fully load.
-const URI_TO_LOAD = "about:home";
+const URI_TO_LOAD = "about:mozilla";
 
 function test() {
   waitForExplicitFinish();
