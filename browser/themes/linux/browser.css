@@ -540,6 +540,10 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 /* 24px primary toolbar buttons */
+#PanelUI-menu-button {
+  list-style-image: url("chrome://browser/skin/appmenu.png");
+}
+
 #back-button {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
 }
@@ -729,6 +733,9 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
+/* Menu panel buttons */
+
+%include ../shared/menupanel.inc
 
 /* Fullscreen window controls */
 #window-controls {
