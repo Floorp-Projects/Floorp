@@ -1702,7 +1702,7 @@
               break;
 
             case Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE:
-              label = "pluginActivateOutdated.label";
+              label = "pluginActivateOutdated.message";
               linkLabel = "pluginActivate.updateLabel";
               button1.default = true;
               break;
