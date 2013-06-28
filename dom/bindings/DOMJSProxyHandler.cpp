@@ -89,12 +89,6 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
     if (v.isUndefined()) {
       return nullptr;
     }
-
-    nsISupports* native = UnwrapDOMObject<nsISupports>(obj);
-    nsWrapperCache* cache;
-    CallQueryInterface(native, &cache);
-    cache->SetPreservingWrapper(false);
-    nsContentUtils::DropJSObjects(native);
     expandoAndGeneration->expando = UndefinedValue();
   }
 

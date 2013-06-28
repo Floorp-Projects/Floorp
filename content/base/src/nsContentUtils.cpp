@@ -6287,9 +6287,6 @@ nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
     JSObject* obj = aCache->GetWrapperPreserveColor();
     if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
         DOMProxyHandler::GetAndClearExpandoObject(obj);
-        if (!aCache->PreservingWrapper()) {
-          return;
-        }
     }
     aCache->SetPreservingWrapper(false);
     DropJSObjects(aScriptObjectHolder);
