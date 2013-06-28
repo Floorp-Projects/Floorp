@@ -886,6 +886,13 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32
 
 }
 
+// division
+void
+MacroAssemblerARM::ma_sdiv(Register num, Register div, Register dest, Condition cond)
+{
+    as_sdiv(dest, num, div, cond);
+}
+
 // Memory.
 // Shortcut for when we know we're transferring 32 bits of data.
 void
