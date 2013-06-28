@@ -42,21 +42,21 @@ function continue_test() {
     gURLBar.selectionEnd = aTyped.length - 1;
 
     EventUtils.synthesizeKey(aTyped.substr(-1), {});
-    is(gURLBar.value, aExpected, "trim was applied correctly");
-
-    aCallback();
+    waitForSearchComplete(function () {
+      is(gURLBar.value, aExpected, "trim was applied correctly");
+      aCallback();
+    });
   }
 
   test_autoFill("http://", "http://", function () {
     test_autoFill("http://a", "http://autofilltrimurl.com/", function () {
       test_autoFill("http://www.autofilltrimurl.com", "http://www.autofilltrimurl.com/", function () {
         // Now ensure selecting from the popup correctly trims.
-        waitForSearchComplete(function () {
-          EventUtils.synthesizeKey("VK_DOWN", {});
-          is(gURLBar.value, "www.autofilltrimurl.com", "trim was applied correctly");
-          gURLBar.closePopup();
-          waitForClearHistory(finish);
-        });
+        is(gURLBar.controller.matchCount, 1, "Found the expected number of matches");
+        EventUtils.synthesizeKey("VK_DOWN", {});
+        is(gURLBar.value, "www.autofilltrimurl.com", "trim was applied correctly");
+        gURLBar.closePopup();
+        waitForClearHistory(finish);
       });
     });
   });
@@ -70,16 +70,18 @@ function waitForClearHistory(aCallback) {
   PlacesUtils.bhistory.removeAllPages();
 }
 
+let gOnSearchComplete = null;
 function waitForSearchComplete(aCallback) {
   info("Waiting for onSearchComplete");
-  let onSearchComplete = gURLBar.onSearchComplete;
-  registerCleanupFunction(function () {
-    gURLBar.onSearchComplete = onSearchComplete;
-  });
+  if (!gOnSearchComplete) {
+    gOnSearchComplete = gURLBar.onSearchComplete;
+    registerCleanupFunction(() => {
+      gURLBar.onSearchComplete = gOnSearchComplete;
+    });
+  }
   gURLBar.onSearchComplete = function () {
     ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
-    is(gURLBar.controller.matchCount, 1, "Found the expected number of matches")
-    onSearchComplete.apply(gURLBar);
+    gOnSearchComplete.apply(gURLBar);
     aCallback();
   }
 }
