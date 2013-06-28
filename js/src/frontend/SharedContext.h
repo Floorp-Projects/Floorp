@@ -262,6 +262,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint16_t        ndefaults;
     bool            inWith:1;               /* some enclosing scope is a with-statement */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
+    bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
     bool            useAsm:1;               /* function contains "use asm" directive */
     bool            insideUseAsm:1;         /* nested function of function of "use asm" directive */
 

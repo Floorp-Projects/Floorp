@@ -2643,6 +2643,8 @@ CheckFunctionHead(ModuleCompiler &m, ParseNode *fn, ParseNode **stmtIter)
         return m.fail(fn, "rest args not allowed");
     if (!FunctionHasStatementList(fn))
         return m.fail(fn, "expression closures not allowed");
+    if (fn->pn_funbox->hasDestructuringArgs)
+        return m.fail(fn, "destructuring args not allowed");
 
     *stmtIter = ListHead(FunctionStatementList(fn));
     return true;
