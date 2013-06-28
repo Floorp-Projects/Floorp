@@ -320,7 +320,7 @@ DebuggerClient.Argument = function DCP(aPosition) {
 };
 
 DebuggerClient.Argument.prototype.getArgument = function DCP_getArgument(aParams) {
-  if (!this.position in aParams) {
+  if (!(this.position in aParams)) {
     throw new Error("Bad index into params: " + this.position);
   }
   return aParams[this.position];
