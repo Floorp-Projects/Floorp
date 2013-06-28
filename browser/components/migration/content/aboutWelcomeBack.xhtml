@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
+  %netErrorDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % restorepageDTD SYSTEM "chrome://browser/locale/aboutSessionRestore.dtd">
+  %restorepageDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&restorepage.tabtitle;</title>
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutWelcomeBack.css" type="text/css" media="all"/>
+    <link rel="icon" type="image/png" href="chrome://global/skin/icons/information-16.png"/>
+
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutSessionRestore.js"/>
+  </head>
+
+  <body dir="&locale.dir;">
+
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 id="errorTitleText">&welcomeback.pageTitle;</h1>
+      </div>
+
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+          <p id="errorShortDescText">&welcomeback.pageInfo;</p>
+        </div>
+
+        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+        <div id="errorLongDesc">
+        </div>
+
+        <!-- Short Description -->
+        <div id="errorTrailerDesc">
+          <tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
+                onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
+                _window_label="&restorepage.windowLabel;">
+            <treecols>
+              <treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+              <splitter class="tree-splitter"/>
+              <treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+            </treecols>
+            <treechildren flex="1"/>
+          </tree>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="buttons">
+#ifdef XP_UNIX
+        <button id="errorCancel" label="&restorepage.closeButton;"
+                accesskey="&restorepage.close.access;"
+                oncommand="startNewSession();"/>
+        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
+                accesskey="&restorepage.restore.access;"
+                oncommand="restoreSession();"/>
+#else
+        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
+                accesskey="&restorepage.restore.access;"
+                oncommand="restoreSession();"/>
+        <button id="errorCancel" label="&restorepage.closeButton;"
+                accesskey="&restorepage.close.access;"
+                oncommand="startNewSession();"/>
+#endif
+      </hbox>
+      <!-- holds the session data for when the tab is closed -->
+      <input type="text" id="sessionData" style="display: none;"/>
+    </div>
+
+  </body>
+</html>
