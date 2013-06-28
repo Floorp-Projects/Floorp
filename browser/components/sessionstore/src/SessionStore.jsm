@@ -425,6 +425,11 @@ let SessionStoreInternal = {
                 }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
+            } else if (this._hasSingleTabWithURL(this._initialState.windows,
+                                                 "about:welcomeback")) {
+              // On a single about:welcomeback URL that crashed, replace about:welcomeback
+              // with about:sessionrestore, to make clear to the user that we crashed.
+              this._initialState.windows[0].tabs[0].entries[0].url = "about:sessionrestore";
             }
           }
 
@@ -2251,7 +2256,8 @@ let SessionStoreInternal = {
     }
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
-    let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
+    let topURL = aContent.top.document.location.href;
+    let isAboutSR = topURL == "about:sessionrestore" || topURL == "about:welcomeback";
     if (aFullData || this.checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
       if (aFullData || aUpdateFormData) {
         let formData = DocumentUtils.getFormData(aContent.document);
@@ -3452,7 +3458,7 @@ let SessionStoreInternal = {
         // for about:sessionrestore we saved the field as JSON to avoid
         // nested instances causing humongous sessionstore.js files.
         // cf. bug 467409
-        if (aData.url == "about:sessionrestore" &&
+        if ((aData.url == "about:sessionrestore" || aData.url == "about:welcomeback") &&
             "sessionData" in formdata.id &&
             typeof formdata.id["sessionData"] == "object") {
           formdata.id["sessionData"] =
@@ -4076,11 +4082,10 @@ let SessionStoreInternal = {
       return false;
 
     // don't wrap a single about:sessionrestore page
-    if (winData.length == 1 && winData[0].tabs &&
-        winData[0].tabs.length == 1 && winData[0].tabs[0].entries &&
-        winData[0].tabs[0].entries.length == 1 &&
-        winData[0].tabs[0].entries[0].url == "about:sessionrestore")
+    if (this._hasSingleTabWithURL(winData, "about:sessionrestore") ||
+        this._hasSingleTabWithURL(winData, "about:welcomeback")) {
       return false;
+    }
 
     // don't automatically restore in Safe Mode
     if (Services.appinfo.inSafeMode)
@@ -4094,6 +4099,23 @@ let SessionStoreInternal = {
     return max_resumed_crashes != -1 &&
            (aRecentCrashes > max_resumed_crashes ||
             sessionAge && sessionAge >= SIX_HOURS_IN_MS);
+  },
+
+  /**
+   * @param aWinData is the set of windows in session state
+   * @param aURL is the single URL we're looking for
+   * @returns whether the window data contains only the single URL passed
+   */
+  _hasSingleTabWithURL: function(aWinData, aURL) {
+    if (aWinData &&
+        aWinData.length == 1 &&
+        aWinData[0].tabs &&
+        aWinData[0].tabs.length == 1 &&
+        aWinData[0].tabs[0].entries &&
+        aWinData[0].tabs[0].entries.length == 1) {
+      return aURL == aWinData[0].tabs[0].entries[0].url;
+    }
+    return false;
   },
 
   /**
