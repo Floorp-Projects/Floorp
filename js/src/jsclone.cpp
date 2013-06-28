@@ -29,12 +29,14 @@
  */
 
 #include "jsclone.h"
+#include "jswrapper.h"
 
 #include "mozilla/FloatingPoint.h"
 
 #include "jsdate.h"
 
 #include "vm/TypedArrayObject.h"
+#include "vm/WrapperObject.h"
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
@@ -568,7 +570,7 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 
     // If the object is a security wrapper, see if we're allowed to unwrap it.
     // If we aren't, throw.
-    if (obj->isWrapper())
+    if (obj->is<WrapperObject>())
         obj = CheckedUnwrap(obj);
     if (!obj) {
         JS_ReportError(w->context(), "Permission denied to access object");

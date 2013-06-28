@@ -12,6 +12,7 @@
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsobj.h"
+#include "jswrapper.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/WeakMapObject.h"

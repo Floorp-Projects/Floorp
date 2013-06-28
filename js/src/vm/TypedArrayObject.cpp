@@ -21,12 +21,14 @@
 #include "jsgc.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jswrapper.h"
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
+#include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -2855,7 +2857,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, args, "DataView constructor", &bufobj))
         return false;
 
-    if (bufobj->isWrapper() && UncheckedUnwrap(bufobj)->is<ArrayBufferObject>()) {
+    if (bufobj->is<WrapperObject>() && UncheckedUnwrap(bufobj)->is<ArrayBufferObject>()) {
         Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
         Rooted<JSObject*> proto(cx, global->getOrCreateDataViewPrototype(cx));
         if (!proto)

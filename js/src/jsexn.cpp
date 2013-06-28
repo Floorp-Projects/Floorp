@@ -22,6 +22,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jswrapper.h"
 
 #include "gc/Marking.h"
 #include "vm/ErrorObject.h"

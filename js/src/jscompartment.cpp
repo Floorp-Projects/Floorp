@@ -22,6 +22,7 @@
 #endif
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
@@ -272,7 +273,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         vp.set(p->value);
         if (vp.isObject()) {
             DebugOnly<JSObject *> obj = &vp.toObject();
-            JS_ASSERT(obj->isCrossCompartmentWrapper());
+            JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
             JS_ASSERT(obj->getParent() == global);
         }
         return true;

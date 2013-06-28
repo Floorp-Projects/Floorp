@@ -10,7 +10,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 
+#include "jswrapper.h"
+
 #include "js/RootingAPI.h"
+#include "vm/WrapperObject.h"
 
 #include "vm/BooleanObject-inl.h"
 
@@ -31,7 +34,7 @@ BooleanGetPrimitiveValue(HandleObject obj, JSContext *cx)
 inline bool
 EmulatesUndefined(JSObject *obj)
 {
-    JSObject *actual = MOZ_LIKELY(!obj->isWrapper()) ? obj : UncheckedUnwrap(obj);
+    JSObject *actual = MOZ_LIKELY(!obj->is<WrapperObject>()) ? obj : UncheckedUnwrap(obj);
     bool emulatesUndefined = actual->getClass()->emulatesUndefined();
     MOZ_ASSERT_IF(emulatesUndefined, obj->type()->flags & types::OBJECT_FLAG_EMULATES_UNDEFINED);
     return emulatesUndefined;
