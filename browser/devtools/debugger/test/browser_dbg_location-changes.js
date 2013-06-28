@@ -56,7 +56,7 @@ function testLocationChange()
 
       closeDebuggerAndFinish();
     });
-    content.location = TAB1_URL;
+    gDebugger.DebuggerController.client.activeTab.navigateTo(TAB1_URL);
   });
 }
 

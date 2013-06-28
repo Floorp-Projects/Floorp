@@ -95,7 +95,8 @@ function testLocationChange()
         closeDebuggerAndFinish();
       });
     });
-    content.location = EXAMPLE_URL + "browser_dbg_iframes.html";
+    let newLocation = EXAMPLE_URL + "browser_dbg_iframes.html";
+    gDebugger.DebuggerController.client.activeTab.navigateTo(newLocation);
   });
 }
 
