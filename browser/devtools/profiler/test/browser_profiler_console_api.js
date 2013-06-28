@@ -19,46 +19,17 @@ function test() {
 function testConsoleProfile(hud) {
   hud.jsterm.clearOutput(true);
 
-  // Here we start two named profiles and then end one of them.
-  // profileEnd, when name is not provided, simply pops the latest
-  // profile.
-
   let profilesStarted = 0;
 
-  function profileEnd(_, uid) {
-    let profile = gPanel.profiles.get(uid);
+  gPanel.once("parsed", () => {
+    let profile = gPanel.activeProfile;
 
-    profile.once("started", () => {
-      if (++profilesStarted < 2)
-        return;
-
-      gPanel.off("profileCreated", profileEnd);
-      gPanel.profiles.get(3).once("stopped", () => {
-        openProfiler(gTab, checkProfiles);
-      });
-
-      hud.jsterm.execute("console.profileEnd()");
-    });
-  }
-
-  gPanel.on("profileCreated", profileEnd);
-  hud.jsterm.execute("console.profile()");
-  hud.jsterm.execute("console.profile()");
-}
-
-function checkProfiles(toolbox) {
-  let panel = toolbox.getPanel("jsprofiler");
-
-  is(getSidebarItem(1, panel).attachment.state, PROFILE_IDLE);
-  is(getSidebarItem(2, panel).attachment.state, PROFILE_RUNNING);
-  is(getSidebarItem(3, panel).attachment.state, PROFILE_COMPLETED);
-
-  // Make sure we can still stop profiles via the UI.
-
-  gPanel.profiles.get(2).once("stopped", () => {
-    is(getSidebarItem(2, panel).attachment.state, PROFILE_COMPLETED);
+    is(profile.name, "Profile 1", "Profile name is OK");
+    is(gPanel.sidebar.selectedItem, gPanel.sidebar.getItemByProfile(profile), "Sidebar is OK");
+    is(gPanel.sidebar.selectedItem.attachment.state, PROFILE_COMPLETED);
     tearDown(gTab, () => gTab = gPanel = null);
   });
 
-  sendFromProfile(2, "stop");
+  hud.jsterm.execute("console.profile()");
+  hud.jsterm.execute("console.profileEnd()");
 }
