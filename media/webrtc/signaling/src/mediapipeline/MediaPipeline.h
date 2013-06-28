@@ -122,6 +122,10 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   virtual Direction direction() const { return direction_; }
 
+  bool IsDoingRtcpMux() const {
+    return (rtp_transport_ == rtcp_transport_);
+  }
+
   int rtp_packets_sent() const { return rtp_packets_sent_; }
   int rtcp_packets_sent() const { return rtcp_packets_sent_; }
   int rtp_packets_received() const { return rtp_packets_received_; }
