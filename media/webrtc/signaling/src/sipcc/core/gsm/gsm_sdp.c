@@ -4734,12 +4734,14 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
             /*
              * Negotiate rtcp-mux
              */
+            if(SDP_MEDIA_APPLICATION != media_type) {
+              sdp_res = sdp_attr_get_rtcp_mux_attribute(sdp_p->dest_sdp, i,
+                                                        0, SDP_ATTR_RTCP_MUX,
+                                                        1, &rtcp_mux);
 
-            sdp_res = sdp_attr_get_rtcp_mux_attribute (sdp_p->dest_sdp, i,
-                                              0, SDP_ATTR_RTCP_MUX, 1, &rtcp_mux);
-
-            if (SDP_SUCCESS == sdp_res) {
-            	media->rtcp_mux = TRUE;
+              if (SDP_SUCCESS == sdp_res) {
+                media->rtcp_mux = TRUE;
+              }
             }
 
             if (!unsupported_line) {
@@ -4753,8 +4755,10 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
                                               sdp_p->src_sdp, media->candidatesp[j]);
                   }
 
+                  /* Set RTCPMux if we have it turned on in our config
+                     and the other side requests it */
                   config_get_value(CFGID_RTCPMUX, &rtcpmux, sizeof(rtcpmux));
-                  if (rtcpmux) {
+                  if (rtcpmux && media->rtcp_mux) {
                     gsmsdp_set_rtcp_mux_attribute (SDP_ATTR_RTCP_MUX, media->level,
                                                    sdp_p->src_sdp, TRUE);
                   }
@@ -5275,7 +5279,7 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
           }
 
           config_get_value(CFGID_RTCPMUX, &rtcpmux, sizeof(rtcpmux));
-          if (rtcpmux) {
+          if (SDP_MEDIA_APPLICATION != media_cap->type && rtcpmux) {
             gsmsdp_set_rtcp_mux_attribute (SDP_ATTR_RTCP_MUX, level, dcb_p->sdp->src_sdp, TRUE);
           }
 
