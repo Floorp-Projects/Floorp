@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/VideoPlaybackQuality.h"
+#include "nsPerformance.h"
 
 namespace mozilla {
 namespace dom {
@@ -113,6 +115,8 @@ public:
   bool MozHasAudio() const;
 
   void NotifyOwnerDocumentActivityChanged() MOZ_OVERRIDE;
+
+  already_AddRefed<dom::VideoPlaybackQuality> VideoPlaybackQuality();
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
