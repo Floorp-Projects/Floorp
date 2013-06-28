@@ -484,8 +484,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool &hasRest);
 
     Node functionDef(HandlePropertyName name, const TokenStream::Position &start,
-                     size_t startOffset, FunctionType type, FunctionSyntaxKind kind);
-    bool functionArgsAndBody(Node pn, HandleFunction fun, size_t startOffset,
+                     FunctionType type, FunctionSyntaxKind kind);
+    bool functionArgsAndBody(Node pn, HandleFunction fun,
                              FunctionType type, FunctionSyntaxKind kind,
                              bool strict, bool *becameStrict = NULL);
 

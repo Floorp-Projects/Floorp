@@ -1913,7 +1913,7 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream::Position &start,
-                                  size_t startOffset, FunctionType type, FunctionSyntaxKind kind)
+                                  FunctionType type, FunctionSyntaxKind kind)
 {
     JS_ASSERT_IF(kind == Statement, funName);
 
@@ -1938,7 +1938,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
     // directive, we backup and reparse it as strict.
     bool initiallyStrict = pc->sc->strict;
     bool becameStrict;
-    if (!functionArgsAndBody(pn, fun, startOffset, type, kind, initiallyStrict,
+    if (!functionArgsAndBody(pn, fun, type, kind, initiallyStrict,
                              &becameStrict))
     {
         if (initiallyStrict || !becameStrict || tokenStream.hadError())
@@ -1952,7 +1952,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
         // functionArgsAndBody may have already set pn->pn_body before failing.
         handler.setFunctionBody(pn, null());
 
-        if (!functionArgsAndBody(pn, fun, startOffset, type, kind, true))
+        if (!functionArgsAndBody(pn, fun, type, kind, true))
             return null();
     }
 
@@ -2053,8 +2053,7 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
 template <>
 bool
 Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
-                                              size_t startOffset, FunctionType type,
-                                              FunctionSyntaxKind kind,
+                                              FunctionType type, FunctionSyntaxKind kind,
                                               bool strict, bool *becameStrict)
 {
     if (becameStrict)
@@ -2137,7 +2136,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
 
 template <>
 bool
-Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun, size_t startOffset,
+Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
                                                 FunctionType type, FunctionSyntaxKind kind,
                                                 bool strict, bool *becameStrict)
 {
@@ -2356,7 +2355,7 @@ Parser<ParseHandler>::functionStmt()
         !report(ParseStrictError, pc->sc->strict, null(), JSMSG_STRICT_FUNCTION_STATEMENT))
         return null();
 
-    return functionDef(name, start, tokenStream.positionToOffset(start), Normal, Statement);
+    return functionDef(name, start, Normal, Statement);
 }
 
 template <typename ParseHandler>
@@ -2371,7 +2370,7 @@ Parser<ParseHandler>::functionExpr()
         name = tokenStream.currentToken().name();
     else
         tokenStream.ungetToken();
-    return functionDef(name, start, tokenStream.positionToOffset(start), Normal, Expression);
+    return functionDef(name, start, Normal, Expression);
 }
 
 /*
@@ -5162,10 +5161,9 @@ Parser<ParseHandler>::assignExpr()
 
         if (tokenStream.getToken() == TOK_ERROR)
             return null();
-        size_t offset = pos().begin;
         tokenStream.ungetToken();
 
-        return functionDef(NullPtr(), start, offset, Normal, Arrow);
+        return functionDef(NullPtr(), start, Normal, Arrow);
       }
 
       default:
@@ -6500,8 +6498,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     Rooted<PropertyName*> funName(context, NULL);
                     TokenStream::Position start(keepAtoms);
                     tokenStream.tell(&start);
-                    pn2 = functionDef(funName, start, tokenStream.positionToOffset(start),
-                                      op == JSOP_INITPROP_GETTER ? Getter : Setter,
+                    pn2 = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
                                       Expression);
                     if (!pn2)
                         return null();
