@@ -111,6 +111,9 @@ public:
 
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
   uint32_t PaletteDataLength() const {
+    if (!mPaletteDepth)
+      return 0;
+
     return ((1 << mPaletteDepth) * sizeof(uint32_t));
   }
 
