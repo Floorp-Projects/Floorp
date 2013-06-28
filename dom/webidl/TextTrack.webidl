@@ -37,6 +37,7 @@ interface TextTrack : EventTarget {
   readonly attribute TextTrackRegionList? regions;
 
   void addCue(VTTCue cue);
+  [Throws]
   void removeCue(VTTCue cue);
 
            attribute EventHandler oncuechange;
