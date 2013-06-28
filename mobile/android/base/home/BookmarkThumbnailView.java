@@ -98,7 +98,7 @@ public class BookmarkThumbnailView extends ImageView {
     @Override
     public void setBackgroundColor(int color) {
         int colorFilter = color == 0 ? DEFAULT_COLOR : color & COLOR_FILTER;
-        Drawable drawable = getResources().getDrawable(R.drawable.favicon_bg);
+        Drawable drawable = getResources().getDrawable(R.drawable.bookmark_thumbnail_bg);
         drawable.setColorFilter(colorFilter, Mode.SRC_ATOP);
         setBackgroundDrawable(drawable);
         mShowBorder = false;
