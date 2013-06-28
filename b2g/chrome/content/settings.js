@@ -165,7 +165,7 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
       Services.prefs.setBoolPref('dom.sms.strict7BitEncoding', value);
   });
 
-  SettingsListener.observe('ril.sms.requestStatusReport.enabled', true,
+  SettingsListener.observe('ril.sms.requestStatusReport.enabled', false,
     function(value) {
       Services.prefs.setBoolPref('dom.sms.requestStatusReport', value);
   });
