@@ -103,8 +103,14 @@ void
 NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 {
     for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
-        if (IsInsideNursery(rt, entries[i].key))
-            mozilla::PodZero(&entries[i]);
+        Entry &e = entries[i];
+        JSObject *obj = reinterpret_cast<JSObject *>(&e.templateObject);
+        if (IsInsideNursery(rt, e.key) ||
+            IsInsideNursery(rt, obj->slots) ||
+            IsInsideNursery(rt, obj->elements))
+        {
+            mozilla::PodZero(&e);
+        }
     }
 }
 
