@@ -24,6 +24,7 @@ from mozpack.chrome.manifest import (
     ManifestOverride,
 )
 import unittest
+import mozfile
 import mozunit
 import os
 import shutil
@@ -41,7 +42,7 @@ class TestWithTmpDir(unittest.TestCase):
         self.tmpdir = mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.tmpdir)
+        mozfile.rmtree(self.tmpdir)
 
     def tmppath(self, relpath):
         return os.path.normpath(os.path.join(self.tmpdir, relpath))
