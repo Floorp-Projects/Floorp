@@ -952,7 +952,6 @@ var gBrowserInit = {
     CombinedStopReload.init();
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
-    retrieveToolbarIconsizesFromTheme();
 
     // Wait until chrome is painted before executing code not critical to making the window visible
     this._boundDelayedStartup = this._delayedStartup.bind(this, uriToLoad, mustLoadSidebar);
@@ -3302,29 +3301,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 function BrowserToolboxCustomizeChange(aType) {
   gHomeButton.updatePersonalToolbarStyle();
   BookmarksMenuButton.customizeChange();
-}
-
-/**
- * Allows themes to override the "iconsize" attribute on toolbars.
- */
-function retrieveToolbarIconsizesFromTheme() {
-  function retrieveToolbarIconsize(aToolbar) {
-    if (aToolbar.localName != "toolbar")
-      return;
-
-    // The theme indicates that it wants to override the "iconsize" attribute
-    // by specifying a special value for the "counter-reset" property on the
-    // toolbar. A custom property cannot be used because getComputedStyle can
-    // only return the values of standard CSS properties.
-    let counterReset = getComputedStyle(aToolbar).counterReset;
-    if (counterReset == "smallicons 0")
-      aToolbar.setAttribute("iconsize", "small");
-    else if (counterReset == "largeicons 0")
-      aToolbar.setAttribute("iconsize", "large");
-  }
-
-  Array.forEach(gNavToolbox.childNodes, retrieveToolbarIconsize);
-  gNavToolbox.externalToolbars.forEach(retrieveToolbarIconsize);
 }
 
 /**
