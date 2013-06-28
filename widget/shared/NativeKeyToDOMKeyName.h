@@ -17,6 +17,9 @@
 
 // Windows (both Desktop and Metro)
 #define KEY_MAP_WIN(aCPPKeyName, aNativeKey)
+#define KEY_MAP_WIN_JPN(aCPPKeyName, aNativeKey)
+#define KEY_MAP_WIN_KOR(aCPPKeyName, aNativeKey)
+#define KEY_MAP_WIN_OTH(aCPPKeyName, aNativeKey)
 // OS/2
 #define KEY_MAP_OS2(aCPPKeyName, aNativeKey)
 // Mac OS X
@@ -29,9 +32,28 @@
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey)
 
 #if defined(XP_WIN)
+// KEY_MAP_WIN() defines the mapping not depending on keyboard layout.
 #undef KEY_MAP_WIN
 #define KEY_MAP_WIN(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+// KEY_MAP_WIN_JPN() defines the mapping which is valid only with Japanese
+// keyboard layout.
+#undef KEY_MAP_WIN_JPN
+#define KEY_MAP_WIN_JPN(aCPPKeyName, aNativeKey) \
+  NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, \
+                                               KEY_NAME_INDEX_##aCPPKeyName)
+// KEY_MAP_WIN_KOR() defines the mapping which is valid only with Korean
+// keyboard layout.
+#undef KEY_MAP_WIN_KOR
+#define KEY_MAP_WIN_KOR(aCPPKeyName, aNativeKey) \
+  NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, \
+                                             KEY_NAME_INDEX_##aCPPKeyName)
+// KEY_MAP_WIN_OTH() defines the mapping which is valid with neither
+// Japanese keyboard layout nor Korean keyboard layout.
+#undef KEY_MAP_WIN_OTH
+#define KEY_MAP_WIN_OTH(aCPPKeyName, aNativeKey) \
+  NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, \
+                                            KEY_NAME_INDEX_##aCPPKeyName)
 #elif defined(XP_MACOSX)
 #undef KEY_MAP_COCOA
 #define KEY_MAP_COCOA(aCPPKeyName, aNativeKey) \
@@ -51,7 +73,7 @@
 #endif
 
 // Attn
-KEY_MAP_WIN     (Attn, VK_ATTN)
+KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
 KEY_MAP_GTK     (Attn, GDK_3270_Attn) // legacy IBM keyboard layout
 
 // Apps
@@ -756,6 +778,7 @@ KEY_MAP_GTK     (DeadSemivoicedSound, GDK_dead_semivoiced_sound)
 KEY_MAP_QT      (DeadSemivoicedSound, Qt::Key_Dead_Semivoiced_Sound)
 
 // Alphanumeric
+KEY_MAP_WIN_JPN (Alphanumeric, VK_OEM_ATTN)
 KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_Shift)
 KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_toggle)
 KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_Shift)
@@ -889,12 +912,15 @@ KEY_MAP_QT      (Nonconvert, Qt::Key_Muhenkan)
 KEY_MAP_ANDROID (Nonconvert, AKEYCODE_MUHENKAN)
 
 // FinalMode
+KEY_MAP_WIN     (FinalMode, VK_FINAL)
 
 // FullWidth
+KEY_MAP_WIN_JPN (FullWidth, VK_OEM_ENLW)
 KEY_MAP_GTK     (FullWidth, GDK_Zenkaku)
 KEY_MAP_QT      (FullWidth, Qt::Key_Zenkaku)
 
 // HalfWidth
+KEY_MAP_WIN_JPN (HalfWidth, VK_OEM_AUTO)
 KEY_MAP_GTK     (HalfWidth, GDK_Hankaku)
 KEY_MAP_QT      (HalfWidth, Qt::Key_Hankaku)
 
@@ -903,6 +929,7 @@ KEY_MAP_WIN     (ModeChange, VK_MODECHANGE)
 KEY_MAP_ANDROID (ModeChange, AKEYCODE_SWITCH_CHARSET)
 
 // RomanCharacters
+KEY_MAP_WIN_JPN (RomanCharacters, VK_OEM_BACKTAB)
 KEY_MAP_COCOA   (RomanCharacters, kVK_JIS_Eisu)
 KEY_MAP_GTK     (RomanCharacters, GDK_Romaji)
 KEY_MAP_QT      (RomanCharacters, Qt::Key_Romaji)
@@ -910,26 +937,31 @@ KEY_MAP_QT      (RomanCharacters, Qt::Key_Romaji)
 KEY_MAP_ANDROID (RomanCharacters, AKEYCODE_EISU)
 
 // HangulMode
+KEY_MAP_WIN_KOR (HangulMode, VK_HANGUL /* same as VK_KANA */)
 
 // HanjaMode
-KEY_MAP_WIN     (HanjaMode, VK_FINAL)
+KEY_MAP_WIN_KOR (HanjaMode, VK_HANJA /* same as VK_KANJI */)
 
 // JunjaMode
 KEY_MAP_WIN     (JunjaMode, VK_JUNJA)
 
 // Hiragana
+KEY_MAP_WIN_JPN (Hiragana, VK_OEM_COPY)
 KEY_MAP_GTK     (Hiragana, GDK_Hiragana)
 KEY_MAP_QT      (Hiragana, Qt::Key_Hiragana)
 
 // KanaMode
-KEY_MAP_WIN     (KanaMode, VK_KANA /* same as VK_HANGUL */)
+// VK_KANA is never used with modern Japanese keyboard, however, IE maps it to
+// KanaMode, therefore, we should use same map for it.
+KEY_MAP_WIN_JPN (KanaMode, VK_KANA /* same as VK_HANGUL */)
+KEY_MAP_WIN_JPN (KanaMode, VK_ATTN)
 KEY_MAP_GTK     (KanaMode, GDK_Kana_Lock)
 KEY_MAP_GTK     (KanaMode, GDK_Kana_Shift)
 KEY_MAP_QT      (KanaMode, Qt::Key_Kana_Lock)
 KEY_MAP_QT      (KanaMode, Qt::Key_Kana_Shift)
 
 // KanjiMode
-KEY_MAP_WIN     (KanjiMode, VK_KANJI /* same as VK_HANJA */)
+KEY_MAP_WIN_JPN (KanjiMode, VK_KANJI /* same as VK_HANJA */)
 KEY_MAP_COCOA   (KanjiMode, kVK_JIS_Kana) // Kana key opens IME
 KEY_MAP_GTK     (KanjiMode, GDK_Kanji) // Typically, Alt + Hankaku/Zenkaku key
 KEY_MAP_QT      (KanjiMode, Qt::Key_Kanji)
@@ -937,6 +969,7 @@ KEY_MAP_QT      (KanjiMode, Qt::Key_Kanji)
 KEY_MAP_ANDROID (KanjiMode, AKEYCODE_KANA)
 
 // Katakana
+KEY_MAP_WIN_JPN (Katakana, VK_OEM_FINISH)
 KEY_MAP_GTK     (Katakana, GDK_Katakana)
 KEY_MAP_QT      (Katakana, Qt::Key_Katakana)
 
@@ -1158,6 +1191,9 @@ KEY_MAP_GTK     (Yellow, GDK_Yellow)
 KEY_MAP_ANDROID (Yellow, AKEYCODE_PROG_YELLOW)
 
 #undef KEY_MAP_WIN
+#undef KEY_MAP_WIN_JPN
+#undef KEY_MAP_WIN_KOR
+#undef KEY_MAP_WIN_OTH
 #undef KEY_MAP_OS2
 #undef KEY_MAP_COCOA
 #undef KEY_MAP_GTK
