@@ -10,9 +10,9 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
-#include "IonAllocPolicy.h"
-#include "MIRGenerator.h"
-#include "FixedList.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/MIRGenerator.h"
+#include "ion/FixedList.h"
 
 namespace js {
 namespace ion {

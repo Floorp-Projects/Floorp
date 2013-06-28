@@ -70,7 +70,6 @@ FENNEC_JAVA_FILES = \
   BrowserApp.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
-  BrowserToolbarLayout.java \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
   CanvasDelegate.java \
@@ -113,7 +112,6 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GeckoJavaSampler.java \
   GlobalHistory.java \
-  GeckoViewsFactory.java \
   GeckoView.java \
   health/BrowserHealthRecorder.java \
   health/BrowserHealthReporter.java \

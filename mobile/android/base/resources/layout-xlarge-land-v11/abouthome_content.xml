@@ -22,43 +22,43 @@
                       android:layout_marginLeft="@dimen/abouthome_gutter_large"
                       android:layout_marginRight="@dimen/abouthome_gutter_small">
 
-            <Gecko.ImageView android:id="@+id/abouthome_logo"
-                             android:src="@drawable/abouthome_logo"
-                             android:layout_width="wrap_content"
-                             android:layout_height="24dip"
-                             android:layout_marginTop="16dip"
-                             android:layout_marginBottom="10dip"
-                             android:layout_marginLeft="12dip"/>
+            <org.mozilla.gecko.GeckoImageView android:id="@+id/abouthome_logo"
+                                              android:src="@drawable/abouthome_logo"
+                                              android:layout_width="wrap_content"
+                                              android:layout_height="24dip"
+                                              android:layout_marginTop="16dip"
+                                              android:layout_marginBottom="10dip"
+                                              android:layout_marginLeft="12dip"/>
 
-            <Gecko.TextView android:id="@+id/top_sites_title"
-                            android:text="@string/abouthome_top_sites_title"
-                            android:layout_width="fill_parent"
-                            android:layout_height="26dip"
-                            android:background="#34FFFFFF"
-                            android:paddingLeft="12dip"
-                            android:textSize="12sp"
-                            android:textColor="@color/abouthome_section_title"
-                            android:textStyle="bold"
-                            android:gravity="left|center_vertical"/>
+            <org.mozilla.gecko.GeckoTextView android:id="@+id/top_sites_title"
+                                             android:text="@string/abouthome_top_sites_title"
+                                             android:layout_width="fill_parent"
+                                             android:layout_height="26dip"
+                                             android:background="#34FFFFFF"
+                                             android:paddingLeft="12dip"
+                                             android:textSize="12sp"
+                                             android:textColor="@color/abouthome_section_title"
+                                             android:textStyle="bold"
+                                             android:gravity="left|center_vertical"/>
 
-            <Gecko.TopSitesView android:id="@+id/top_sites_grid"
-                                style="@style/AboutHome.Thumbnail.Grid"/>
+            <org.mozilla.gecko.widget.TopSitesView android:id="@+id/top_sites_grid"
+                                                   style="@style/AboutHome.Thumbnail.Grid"/>
 
-            <Gecko.PromoBox android:id="@+id/promo_box"
-                            android:background="@drawable/abouthome_promo_box"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="12dp"
-                            android:layout_marginRight="12dp"
-                            android:layout_marginTop="17dp"
-                            android:layout_marginBottom="14dp"
-                            android:drawablePadding="7dp"
-                            android:gravity="center"
-                            android:clickable="true"
-                            android:textSize="16sp"
-                            android:textColor="#FFFFFF"
-                            android:visibility="gone"
-                            android:focusable="true"/>
+            <org.mozilla.gecko.widget.PromoBox android:id="@+id/promo_box"
+                                               android:background="@drawable/abouthome_promo_box"
+                                               android:layout_width="fill_parent"
+                                               android:layout_height="wrap_content"
+                                               android:layout_marginLeft="12dp"
+                                               android:layout_marginRight="12dp"
+                                               android:layout_marginTop="17dp"
+                                               android:layout_marginBottom="14dp"
+                                               android:drawablePadding="7dp"
+                                               android:gravity="center"
+                                               android:clickable="true"
+                                               android:textSize="16sp"
+                                               android:textColor="#FFFFFF"
+                                               android:visibility="gone"
+                                               android:focusable="true"/>
 
         </LinearLayout>
 
@@ -83,26 +83,26 @@
                           android:layout_alignParentLeft="true"
                           android:layout_marginTop="50dip">
 
-                <Gecko.LastTabsSection android:id="@+id/last_tabs"
-                                       android:layout_width="fill_parent"
-                                       android:layout_height="wrap_content"
-                                       android:visibility="gone"
-                                       gecko:title="@string/abouthome_last_tabs_title"
-                                       gecko:more_text="@string/abouthome_last_tabs_open"/>
+                <org.mozilla.gecko.widget.LastTabsSection android:id="@+id/last_tabs"
+                                                          android:layout_width="fill_parent"
+                                                          android:layout_height="wrap_content"
+                                                          android:visibility="gone"
+                                                          gecko:title="@string/abouthome_last_tabs_title"
+                                                          gecko:more_text="@string/abouthome_last_tabs_open"/>
 
-                <Gecko.AddonsSection android:id="@+id/recommended_addons"
-                                     android:layout_width="fill_parent"
-                                     android:layout_height="wrap_content"
-                                     android:visibility="gone"
-                                     gecko:title="@string/abouthome_addons_title"
-                                     gecko:more_text="@string/abouthome_addons_browse"/>
+                <org.mozilla.gecko.widget.AddonsSection android:id="@+id/recommended_addons"
+                                                        android:layout_width="fill_parent"
+                                                        android:layout_height="wrap_content"
+                                                        android:visibility="gone"
+                                                        gecko:title="@string/abouthome_addons_title"
+                                                        gecko:more_text="@string/abouthome_addons_browse"/>
 
-                <Gecko.RemoteTabsSection android:id="@+id/remote_tabs"
-                                         android:layout_width="fill_parent"
-                                         android:layout_height="wrap_content"
-                                         android:visibility="gone"
-                                         gecko:title="@string/remote_tabs"
-                                         gecko:more_text="@string/remote_tabs_show_all"/>
+                <org.mozilla.gecko.widget.RemoteTabsSection android:id="@+id/remote_tabs"
+                                                            android:layout_width="fill_parent"
+                                                            android:layout_height="wrap_content"
+                                                            android:visibility="gone"
+                                                            gecko:title="@string/remote_tabs"
+                                                            gecko:more_text="@string/remote_tabs_show_all"/>
 
             </LinearLayout>
 

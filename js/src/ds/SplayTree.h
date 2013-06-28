@@ -7,7 +7,7 @@
 #ifndef ds_SplayTree_h
 #define ds_SplayTree_h
 
-#include "LifoAlloc.h"
+#include "ds/LifoAlloc.h"
 
 namespace js {
 

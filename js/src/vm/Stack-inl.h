@@ -19,8 +19,8 @@
 
 #include "jsscriptinlines.h"
 
-#include "ArgumentsObject-inl.h"
-#include "ScopeObject-inl.h"
+#include "vm/ArgumentsObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 namespace js {
 

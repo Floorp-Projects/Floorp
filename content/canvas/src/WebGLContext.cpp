@@ -11,6 +11,7 @@
 #include "WebGLVertexAttribData.h"
 #include "WebGLMemoryMultiReporterWrapper.h"
 #include "WebGLFramebuffer.h"
+#include "WebGLVertexArray.h"
 
 #include "AccessCheck.h"
 #include "nsIConsoleService.h"
@@ -253,15 +254,16 @@ WebGLContext::DestroyResourcesAndContext()
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
     mBoundArrayBuffer = nullptr;
-    mBoundElementArrayBuffer = nullptr;
     mCurrentProgram = nullptr;
     mBoundFramebuffer = nullptr;
     mBoundRenderbuffer = nullptr;
-
-    mAttribBuffers.Clear();
+    mBoundVertexArray = nullptr;
+    mDefaultVertexArray = nullptr;
 
     while (!mTextures.isEmpty())
         mTextures.getLast()->DeleteOnce();
+    while (!mVertexArrays.isEmpty())
+        mVertexArrays.getLast()->DeleteOnce();
     while (!mBuffers.isEmpty())
         mBuffers.getLast()->DeleteOnce();
     while (!mRenderbuffers.isEmpty())
@@ -984,6 +986,8 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
         case OES_texture_float_linear:
             return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float_linear
                                                           : GLContext::ARB_texture_float);
+        case OES_vertex_array_object:
+            return WebGLExtensionVertexArray::IsSupported(this);
         case EXT_texture_filter_anisotropic:
             return gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
         case WEBGL_compressed_texture_s3tc:
@@ -1062,6 +1066,10 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     else if (CompareWebGLExtensionName(name, "OES_texture_float_linear"))
     {
         ext = OES_texture_float_linear;
+    }
+    else if (CompareWebGLExtensionName(name, "OES_vertex_array_object"))
+    {
+        ext = OES_vertex_array_object;
     }
     else if (CompareWebGLExtensionName(name, "OES_standard_derivatives"))
     {
@@ -1160,6 +1168,9 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
                 break;
             case WEBGL_draw_buffers:
                 obj = new WebGLExtensionDrawBuffers(this);
+                break;
+            case OES_vertex_array_object:
+                obj = new WebGLExtensionVertexArray(this);
                 break;
             default:
                 MOZ_ASSERT(false, "should not get there.");
@@ -1564,6 +1575,8 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
         arr.AppendElement(NS_LITERAL_STRING("WEBGL_depth_texture"));
     if (IsExtensionSupported(cx, WEBGL_draw_buffers))
         arr.AppendElement(NS_LITERAL_STRING("WEBGL_draw_buffers"));
+    if (IsExtensionSupported(cx, OES_vertex_array_object))
+        arr.AppendElement(NS_LITERAL_STRING("OES_vertex_array_object"));
 }
 
 //
@@ -1573,17 +1586,16 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_10(WebGLContext,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_9(WebGLContext,
   mCanvasElement,
   mExtensions,
   mBound2DTextures,
   mBoundCubeMapTextures,
   mBoundArrayBuffer,
-  mBoundElementArrayBuffer,
   mCurrentProgram,
   mBoundFramebuffer,
   mBoundRenderbuffer,
-  mAttribBuffers)
+  mBoundVertexArray)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

@@ -7,8 +7,8 @@
 #include "ion/LIR.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "Lowering-shared.h"
-#include "Lowering-shared-inl.h"
+#include "ion/shared/Lowering-shared.h"
+#include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;
 using namespace ion;

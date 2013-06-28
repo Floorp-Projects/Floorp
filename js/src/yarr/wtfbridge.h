@@ -19,7 +19,7 @@
 #include "vm/String.h"
 #include "assembler/wtf/Platform.h"
 #include "assembler/jit/ExecutableAllocator.h"
-#include "CheckedArithmetic.h"
+#include "yarr/CheckedArithmetic.h"
 #include "js/TemplateLib.h"
 
 namespace JSC { namespace Yarr {

@@ -577,7 +577,7 @@ double StringToDoubleConverter::StringToIeee(
     const char* input,
     int length,
     int* processed_characters_count,
-    bool read_as_double) {
+    bool read_as_double) const {
   const char* current = input;
   const char* end = input + length;
 

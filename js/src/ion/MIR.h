@@ -15,15 +15,15 @@
 #include "jsinfer.h"
 #include "jsinferinlines.h"
 #include "jstypedarrayinlines.h"
-#include "TypePolicy.h"
-#include "IonAllocPolicy.h"
-#include "InlineList.h"
-#include "MOpcodes.h"
-#include "FixedArityList.h"
-#include "IonMacroAssembler.h"
-#include "Bailouts.h"
-#include "FixedList.h"
-#include "CompilerRoot.h"
+#include "ion/TypePolicy.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/InlineList.h"
+#include "ion/MOpcodes.h"
+#include "ion/FixedArityList.h"
+#include "ion/IonMacroAssembler.h"
+#include "ion/Bailouts.h"
+#include "ion/FixedList.h"
+#include "ion/CompilerRoot.h"
 
 namespace js {
 namespace ion {
@@ -3532,6 +3532,49 @@ class MConcat
     INSTRUCTION_HEADER(Concat)
     static MConcat *New(MDefinition *left, MDefinition *right) {
         return new MConcat(left, right);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MParConcat
+  : public MTernaryInstruction,
+    public MixPolicy<StringPolicy<1>, StringPolicy<2> >
+{
+    MParConcat(MDefinition *parSlice, MDefinition *left, MDefinition *right)
+      : MTernaryInstruction(parSlice, left, right)
+    {
+        setMovable();
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ParConcat)
+
+    static MParConcat *New(MDefinition *parSlice, MDefinition *left, MDefinition *right) {
+        return new MParConcat(parSlice, left, right);
+    }
+
+    static MParConcat *New(MDefinition *parSlice, MConcat *concat) {
+        return New(parSlice, concat->lhs(), concat->rhs());
+    }
+
+    MDefinition *parSlice() const {
+        return getOperand(0);
+    }
+    MDefinition *lhs() const {
+        return getOperand(1);
+    }
+    MDefinition *rhs() const {
+        return getOperand(2);
     }
 
     TypePolicy *typePolicy() {

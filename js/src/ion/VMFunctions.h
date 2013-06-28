@@ -332,6 +332,7 @@ template <> struct OutParamToDataType<uint32_t *> { static const DataType result
 template <> struct OutParamToDataType<uint8_t **> { static const DataType result = Type_Pointer; };
 template <> struct OutParamToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
 template <> struct OutParamToDataType<MutableHandleObject> { static const DataType result = Type_Handle; };
+template <> struct OutParamToDataType<MutableHandleString> { static const DataType result = Type_Handle; };
 
 template <class> struct OutParamToRootType {
     static const VMFunction::RootType result = VMFunction::RootNone;
@@ -352,6 +353,12 @@ template <> struct MatchContext<JSContext *> {
 };
 template <> struct MatchContext<ForkJoinSlice *> {
     static const ExecutionMode execMode = ParallelExecution;
+};
+template <> struct MatchContext<ThreadSafeContext *> {
+    // ThreadSafeContext functions can be called from either mode, but for
+    // calling from parallel they need to be wrapped first to return a
+    // ParallelResult, so we default to SequentialExecution here.
+    static const ExecutionMode execMode = SequentialExecution;
 };
 
 #define FOR_EACH_ARGS_1(Macro, Sep, Last) Macro(1) Last(1)

@@ -7,7 +7,7 @@
 #ifndef ion_PcScriptCache_inl_h
 #define ion_PcScriptCache_inl_h
 
-#include "PcScriptCache.h"
+#include "ion/PcScriptCache.h"
 
 namespace js {
 namespace ion {

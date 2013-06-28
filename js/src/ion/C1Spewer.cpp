@@ -9,12 +9,12 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include "IonBuilder.h"
-#include "Ion.h"
-#include "C1Spewer.h"
-#include "MIRGraph.h"
-#include "LIR.h"
-#include "LinearScan.h"
+#include "ion/IonBuilder.h"
+#include "ion/Ion.h"
+#include "ion/C1Spewer.h"
+#include "ion/MIRGraph.h"
+#include "ion/LIR.h"
+#include "ion/LinearScan.h"
 
 #include "jsscriptinlines.h"
 

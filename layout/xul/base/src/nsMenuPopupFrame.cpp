@@ -1301,8 +1301,10 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove)
     // We might want to "slide" an arrow if the panel is of the correct type -
     // but we can only slide on one axis - the other axis must be "flipped or
     // resized" as normal.
-    bool slideHorizontal = mSlide && mPosition <= POPUPPOSITION_AFTEREND;
-    bool slideVertical = mSlide && mPosition >= POPUPPOSITION_STARTBEFORE;
+    bool slideHorizontal = mSlide && mPosition >= POPUPPOSITION_BEFORESTART
+                                  && mPosition <= POPUPPOSITION_AFTEREND;
+    bool slideVertical = mSlide && mPosition >= POPUPPOSITION_STARTBEFORE
+                                && mPosition <= POPUPPOSITION_ENDAFTER;
 
     // Next, check if there is enough space to show the popup at full size when
     // positioned at screenPoint. If not, flip the popups to the opposite side

@@ -548,7 +548,8 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
             // Check for unsafe-inline and unsafe-eval in script-src
             if (dv._allowUnsafeInline) {
               aCSPR._allowInlineScripts = true;
-            } else if (dv._allowUnsafeEval) {
+            }
+            if (dv._allowUnsafeEval) {
               aCSPR._allowEval = true;
             }
           }

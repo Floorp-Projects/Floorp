@@ -19,27 +19,27 @@ gTests.push({
       });
 
     is(StartUI.isVisible, true, "Start UI is displayed on about:start");
-    is(ContextUI.isVisible, true, "Navbar is displayed on about:start");
-    is(ContextUI.isExpanded, false, "Tabbar is not displayed initially");
-    is(Elements.navbar.isShowing, false, "Appbar is not displayed initially");
+    is(ContextUI.navbarVisible, true, "Navbar is displayed on about:start");
+    is(ContextUI.tabbarVisible, false, "Tabbar is not displayed initially");
+    is(ContextUI.contextAppbarVisible, false, "Appbar is not displayed initially");
 
     // toggle on
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Navbar is still visible after one swipe");
-    is(ContextUI.isExpanded, true, "Tabbar is visible after one swipe");
-    is(Elements.navbar.isShowing, true, "Appbar is visible after one swipe");
+    is(ContextUI.navbarVisible, true, "Navbar is still visible after one swipe");
+    is(ContextUI.tabbarVisible, true, "Tabbar is visible after one swipe");
+    is(ContextUI.contextAppbarVisible, false, "Appbar is hidden after one swipe");
 
     // toggle off
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Navbar is still visible after second swipe");
-    is(ContextUI.isExpanded, false, "Tabbar is hidden after second swipe");
-    is(Elements.navbar.isShowing, false, "Appbar is hidden after second swipe");
+    is(ContextUI.navbarVisible, true, "Navbar is still visible after second swipe");
+    is(ContextUI.tabbarVisible, false, "Tabbar is hidden after second swipe");
+    is(ContextUI.contextAppbarVisible, false, "Appbar is hidden after second swipe");
 
     // sanity check - toggle on again
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Navbar is still visible after third swipe");
-    is(ContextUI.isExpanded, true, "Tabbar is visible after third swipe");
-    is(Elements.navbar.isShowing, true, "Appbar is visible after third swipe");
+    is(ContextUI.navbarVisible, true, "Navbar is still visible after third swipe");
+    is(ContextUI.tabbarVisible, true, "Tabbar is visible after third swipe");
+    is(ContextUI.contextAppbarVisible, false, "Appbar is hidden after third swipe");
 
     is(StartUI.isVisible, true, "Start UI is still visible");
   }
@@ -51,19 +51,16 @@ gTests.push({
     yield addTab("about:");
     ContextUI.dismiss();
     is(StartUI.isVisible, false, "Start UI is not visible on about:");
-    is(ContextUI.isVisible, false, "Navbar is not initially visible on about:");
-    is(ContextUI.isExpanded, false, "Tabbar is not initially visible on about:");
-    is(Elements.navbar.isShowing, false, "Appbar is not initially visible on about on about::");
+    is(ContextUI.navbarVisible, false, "Navbar is not initially visible on about:");
+    is(ContextUI.tabbarVisible, false, "Tabbar is not initially visible on about:");
 
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Navbar is visible after one swipe");
-    is(ContextUI.isExpanded, true, "Tabbar is visble after one swipe");
-    is(Elements.navbar.isShowing, true, "Appbar is visible after one swipe");
+    is(ContextUI.navbarVisible, true, "Navbar is visible after one swipe");
+    is(ContextUI.tabbarVisible, true, "Tabbar is visble after one swipe");
 
     doEdgeUIGesture();
-    is(ContextUI.isVisible, false, "Navbar is not visible after second swipe");
-    is(ContextUI.isExpanded, false, "Tabbar is not visible after second swipe");
-    is(Elements.navbar.isShowing, false, "Appbar is hidden after second swipe");
+    is(ContextUI.navbarVisible, false, "Navbar is not visible after second swipe");
+    is(ContextUI.tabbarVisible, false, "Tabbar is not visible after second swipe");
 
     is(StartUI.isVisible, false, "Start UI is still not visible");
   }
@@ -74,12 +71,12 @@ gTests.push({
   run: function testAbout() {
     let tab = yield addTab("about:");
     ContextUI.dismiss();
-    is(ContextUI.isVisible, false, "Navbar is not initially visible");
-    is(ContextUI.isExpanded, false, "Tab bar is not initially visible");
+    is(ContextUI.navbarVisible, false, "Navbar is not initially visible");
+    is(ContextUI.tabbarVisible, false, "Tab bar is not initially visible");
 
     EventUtils.synthesizeKey('l', { accelKey: true });
-    is(ContextUI.isVisible, true, "Navbar is visible");
-    is(ContextUI.isExpanded, false, "Tab bar is not visible");
+    is(ContextUI.navbarVisible, true, "Navbar is visible");
+    is(ContextUI.tabbarVisible, false, "Tab bar is not visible");
 
     let edit = document.getElementById("urlbar-edit");
     is(edit.value, "about:", "Location field contains the page URL");

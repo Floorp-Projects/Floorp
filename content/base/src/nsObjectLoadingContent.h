@@ -344,10 +344,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * 
      * NOTE This function does not perform security checks, only determining the
      *      requested type and parameters of the object.
-     * 
+     *
+     * @param aJavaURI Specify that the URI will be consumed by java, which
+     *                 changes codebase parsing and URI construction. Used
+     *                 internally.
+     *
      * @return Returns a bitmask of ParameterUpdateFlags values
      */
-    ParameterUpdateFlags UpdateObjectParameters();
+    ParameterUpdateFlags UpdateObjectParameters(bool aJavaURI = false);
 
     /**
      * Queue a CheckPluginStopEvent and track it in mPendingCheckPluginStopEvent

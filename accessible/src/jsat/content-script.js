@@ -93,7 +93,7 @@ function virtualCursorControl(aMessage) {
       sendAsyncMessage('AccessFu:VirtualCursor', aMessage.json);
     }
   } catch (x) {
-    Logger.error(x);
+    Logger.logException(x, 'Failed to move virtual cursor');
   }
 }
 

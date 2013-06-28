@@ -64,6 +64,9 @@ interface WebGLTexture {
 interface WebGLUniformLocation {
 };
 
+interface WebGLVertexArray {
+};
+
 interface WebGLActiveInfo {
     readonly attribute GLint size;
     readonly attribute GLenum type;
@@ -882,4 +885,14 @@ interface WebGLExtensionDrawBuffers {
 [NoInterfaceObject]
 interface WebGLExtensionTextureFloatLinear
 {
+};
+
+[NoInterfaceObject]
+interface WebGLExtensionVertexArray {
+    const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
+
+    WebGLVertexArray? createVertexArrayOES();
+    void deleteVertexArrayOES(WebGLVertexArray? arrayObject);
+    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArray? arrayObject);
+    void bindVertexArrayOES(WebGLVertexArray? arrayObject);
 };

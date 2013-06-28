@@ -7,7 +7,7 @@
 #ifndef vm_ScopeObject_inl_h
 #define vm_ScopeObject_inl_h
 
-#include "ScopeObject.h"
+#include "vm/ScopeObject.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"

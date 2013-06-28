@@ -15,13 +15,13 @@
                                                 gecko:curveTowards="none"
                                                 android:background="@drawable/address_bar_bg"/>
 
-    <Gecko.ShapedButton android:id="@+id/dummy_tab"
-                        style="@style/AddressBar.ImageButton"
-                        android:layout_width="84dip"
-                        android:layout_alignParentLeft="true"
-                        gecko:curveTowards="left"
-                        android:background="@drawable/shaped_button"
-                        android:gravity="center_vertical"/>
+    <org.mozilla.gecko.ShapedButton android:id="@+id/dummy_tab"
+                                    style="@style/AddressBar.ImageButton"
+                                    android:layout_width="84dip"
+                                    android:layout_alignParentLeft="true"
+                                    gecko:curveTowards="left"
+                                    android:background="@drawable/shaped_button"
+                                    android:gravity="center_vertical"/>
 
     <view class="org.mozilla.gecko.CustomEditText"
           android:id="@+id/awesomebar_text"

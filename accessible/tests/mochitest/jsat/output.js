@@ -37,7 +37,8 @@ function testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aGenerator
  */
 function testObjectOutput(aAccOrElmOrID, aGenerator) {
   var accessible = getAccessible(aAccOrElmOrID);
-  var output = aGenerator.genForObject(accessible);
+  var context = new PivotContext(accessible);
+  var output = aGenerator.genForObject(accessible, context);
   var outputOrder;
   try {
     outputOrder = SpecialPowers.getIntPref(PREF_UTTERANCE_ORDER);

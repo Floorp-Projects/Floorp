@@ -30,7 +30,7 @@
 
 #include "mozilla/StandardInteger.h"
 
-#include "wtfbridge.h"
+#include "yarr/wtfbridge.h"
 
 namespace JSC { namespace Yarr {
 

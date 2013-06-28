@@ -12,16 +12,16 @@ var Appbar = {
   activeTileset: null,
 
   init: function Appbar_init() {
-    window.addEventListener('MozContextUIShow', this);
-    window.addEventListener('MozContextUIDismiss', this);
-    window.addEventListener('MozAppbarDismiss', this);
+    // fired from appbar bindings
     Elements.contextappbar.addEventListener('MozAppbarShowing', this, false);
     Elements.contextappbar.addEventListener('MozAppbarDismissing', this, false);
+
+    // fired when a context sensitive item (bookmarks) changes state
     window.addEventListener('MozContextActionsChange', this, false);
+
+    // browser events we need to update button state on
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.tabList.addEventListener('TabSelect', this, true);
-    Elements.panelUI.addEventListener('ToolPanelShown', this, false);
-    Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
     // tilegroup selection events for all modules get bubbled up
     window.addEventListener("selectionchange", this, false);
@@ -31,22 +31,10 @@ var Appbar = {
     switch (aEvent.type) {
       case 'URLChanged':
       case 'TabSelect':
-        this.update();
-        Elements.navbar.dismiss();
-        Elements.contextappbar.dismiss();
-        break;
-      case 'MozContextUIShow':
-        Elements.navbar.show();
-        break;
-      case 'MozAppbarDismiss':
-      case 'MozContextUIDismiss':
-      case 'ToolPanelShown':
-      case 'ToolPanelHidden':
-        Elements.navbar.dismiss();
-        Elements.contextappbar.dismiss();
-        break;
       case 'MozAppbarShowing':
+        this.update();
         break;
+
       case 'MozAppbarDismissing':
         if (this.activeTileset) {
           this.activeTileset.clearSelection();
@@ -54,11 +42,13 @@ var Appbar = {
         this.clearContextualActions();
         this.activeTileset = null;
         break;
+
       case 'MozContextActionsChange':
         let actions = aEvent.actions;
         // could transition in old, new buttons?
         this.showContextualActions(actions);
         break;
+
       case "selectionchange":
         let nodeName = aEvent.target.nodeName;
         if ('richgrid' === nodeName) {
