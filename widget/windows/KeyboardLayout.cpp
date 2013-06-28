@@ -2047,18 +2047,80 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
 KeyNameIndex
 KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const
 {
+#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
+#define NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
+#define NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
+#define NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
+
   switch (aVirtualKey) {
 
+#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
 #define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
     case aNativeKey: return aKeyNameIndex;
 
 #include "NativeKeyToDOMKeyName.h"
 
 #undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
 
     default:
-      return IsPrintableCharKey(aVirtualKey) ? KEY_NAME_INDEX_PrintableKey :
-                                               KEY_NAME_INDEX_Unidentified;
+      if (IsPrintableCharKey(aVirtualKey)) {
+        return KEY_NAME_INDEX_PrintableKey;
+      }
+      break;
+  }
+
+  HKL layout = GetLayout();
+  WORD langID = LOWORD(static_cast<HKL>(layout));
+  WORD primaryLangID = PRIMARYLANGID(langID);
+
+  if (primaryLangID == LANG_JAPANESE) {
+    switch (aVirtualKey) {
+
+#undef NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#define NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)\
+      case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#define NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
+
+      default:
+        break;
+    }
+  } else if (primaryLangID == LANG_KOREAN) {
+    switch (aVirtualKey) {
+
+#undef NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#define NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)\
+      case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#define NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
+
+      default:
+        return KEY_NAME_INDEX_Unidentified;
+    }
+  }
+
+  switch (aVirtualKey) {
+
+#undef NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#define NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)\
+    case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#undef NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#undef NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+#undef NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+
+    default:
+      return KEY_NAME_INDEX_Unidentified;
   }
 }
 

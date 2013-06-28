@@ -58,7 +58,6 @@ var FindHelperUI = {
     Elements.tabList.addEventListener("TabSelect", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
     window.addEventListener("MozContextUIShow", this, true);
-    window.addEventListener("MozContextUIExpand", this, true);
   },
 
   receiveMessage: function findHelperReceiveMessage(aMessage) {
@@ -81,7 +80,6 @@ var FindHelperUI = {
   handleEvent: function findHelperHandleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozContextUIShow":
-      case "MozContextUIExpand":
       case "TabSelect":
         this.hide();
         break;

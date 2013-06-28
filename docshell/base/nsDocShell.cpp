@@ -18,7 +18,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
 #include "mozilla/VisualEventTracer.h"

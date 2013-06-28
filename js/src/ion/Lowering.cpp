@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LIR.h"
-#include "Lowering.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "IonSpewer.h"
-#include "RangeAnalysis.h"
+#include "ion/LIR.h"
+#include "ion/Lowering.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/IonSpewer.h"
+#include "ion/RangeAnalysis.h"
 #include "jsanalyze.h"
 #include "jsbool.h"
 #include "jsnum.h"
-#include "shared/Lowering-shared-inl.h"
+#include "ion/shared/Lowering-shared-inl.h"
 #include "mozilla/DebugOnly.h"
 
 using namespace js;
@@ -1324,6 +1324,28 @@ LIRGenerator::visitConcat(MConcat *ins)
 }
 
 bool
+LIRGenerator::visitParConcat(MParConcat *ins)
+{
+    MDefinition *parSlice = ins->parSlice();
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_String);
+    JS_ASSERT(rhs->type() == MIRType_String);
+    JS_ASSERT(ins->type() == MIRType_String);
+
+    LParConcat *lir = new LParConcat(useFixed(parSlice, CallTempReg5),
+                                     useFixed(lhs, CallTempReg0),
+                                     useFixed(rhs, CallTempReg1),
+                                     tempFixed(CallTempReg2),
+                                     tempFixed(CallTempReg3),
+                                     tempFixed(CallTempReg4));
+    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg6))))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCharCodeAt(MCharCodeAt *ins)
 {
     MDefinition *str = ins->getOperand(0);
@@ -1521,12 +1543,19 @@ LIRGenerator::visitToString(MToString *ins)
     MDefinition *opd = ins->input();
 
     switch (opd->type()) {
-      case MIRType_Double:
       case MIRType_Null:
       case MIRType_Undefined:
       case MIRType_Boolean:
         JS_NOT_REACHED("NYI: Lower MToString");
         return false;
+
+      case MIRType_Double: {
+        LDoubleToString *lir = new LDoubleToString(useRegister(opd), temp());
+
+        if (!define(lir, ins))
+            return false;
+        return assignSafepoint(lir, ins);
+      }
 
       case MIRType_Int32: {
         LIntToString *lir = new LIntToString(useRegister(opd));

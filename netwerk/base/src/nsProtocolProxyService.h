@@ -363,6 +363,13 @@ protected:
     PRTime                       mSessionStart;
     nsFailedProxyTable           mFailedProxies;
     int32_t                      mFailedProxyTimeout;
+
+private:
+    nsresult AsyncResolveInternal(nsIURI *uri, uint32_t flags,
+                                  nsIProtocolProxyCallback *callback,
+                                  nsICancelable **result,
+                                  bool isSyncOK);
+
 };
 
 #endif // !nsProtocolProxyService_h__

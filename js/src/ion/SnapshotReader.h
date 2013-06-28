@@ -7,10 +7,10 @@
 #ifndef ion_SnapshotReader_h
 #define ion_SnapshotReader_h
 
-#include "IonTypes.h"
-#include "IonCode.h"
-#include "Registers.h"
-#include "CompactBuffer.h"
+#include "ion/IonTypes.h"
+#include "ion/IonCode.h"
+#include "ion/Registers.h"
+#include "ion/CompactBuffer.h"
 
 namespace js {
 namespace ion {

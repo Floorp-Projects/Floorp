@@ -13,8 +13,8 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "IonCode.h"
-#include "CompileInfo.h"
+#include "ion/IonCode.h"
+#include "ion/CompileInfo.h"
 #include "jsinfer.h"
 
 #include "vm/Interpreter.h"

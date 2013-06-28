@@ -180,6 +180,11 @@
                 label="&viewImageInfoCmd.label;"
                 accesskey="&viewImageInfoCmd.accesskey;"
                 oncommand="gContextMenu.viewImageInfo();"/>
+      <menuitem id="context-viewimagedesc"
+                label="&viewImageDescCmd.label;"
+                accesskey="&viewImageDescCmd.accesskey;"
+                oncommand="gContextMenu.viewImageDesc(event);"
+                onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-savevideo"
                 label="&saveVideoCmd.label;"
                 accesskey="&saveVideoCmd.accesskey;"

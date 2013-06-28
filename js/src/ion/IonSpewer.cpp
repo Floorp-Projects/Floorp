@@ -6,8 +6,8 @@
 
 #ifdef DEBUG
 
-#include "Ion.h"
-#include "IonSpewer.h"
+#include "ion/Ion.h"
+#include "ion/IonSpewer.h"
 
 #include "jsscriptinlines.h"
 

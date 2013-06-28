@@ -32,7 +32,7 @@
 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
-#include "MacroAssemblerARM.h"
+#include "assembler/assembler/MacroAssemblerARM.h"
 
 #if WTF_OS_LINUX || WTF_OS_ANDROID
 #include <sys/types.h>

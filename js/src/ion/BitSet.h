@@ -7,7 +7,7 @@
 #ifndef ion_BitSet_h
 #define ion_BitSet_h
 
-#include "IonAllocPolicy.h"
+#include "ion/IonAllocPolicy.h"
 
 namespace js {
 namespace ion {

@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=833386
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Test for Bug 833386 - HTMLTrackElement</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "seek.webm";
+    var trackElement = document.createElement("track");
+    trackElement.src = "basic.vtt";
+    trackElement.kind = "subtitles";
+    document.getElementById("content").appendChild(video);
+    video.appendChild(trackElement);
+    run_tests();
+    function run_tests() {
+      // Re-que run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackElement.readyState == 1) {
+        setTimeout(run_tests, 0);
+        return;
+      }
+      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
+      var cueList = trackElement.track.cues;
+      is(cueList.length, 4, "Cue list length should be 4.");
+
+      // Check if first cue was parsed correctly.
+      var cue = cueList[0];
+      is(cue.id, "1", "Cue's ID should be 1.");
+      is(cue.startTime, 0.5, "Cue's start time should be 0.5.");
+      is(cue.endTime, 0.7, "Cue's end time should be 0.7.");
+      is(cue.pauseOnExit, false, "Cue's pause on exit flag should be false.");
+      is(cue.text, "This", "Cue's text should be set correctly.");
+      // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=879431
+      // GetTrack() isn't implemented so this *is* returning undefined currently.
+      todo_isnot(cue.track, undefined, "Cue's track should be defined.");
+
+      // Check that all cue times were not rounded
+      is(cueList[1].startTime, 1.2, "Second cue's start time should be 1.2.");
+      is(cueList[1].endTime, 2.4, "Second cue's end time should be 2.4.");
+      is(cueList[2].startTime, 2.71, "Third cue's start time should be 2.71.");
+      is(cueList[2].endTime, 2.91, "Third cue's end time should be 2.91.");
+      is(cueList[3].startTime, 3.217, "Fourth cue's start time should be 3.217.");
+      is(cueList[3].endTime, 3.989, "Fourth cue's end time should be 3.989.");
+
+      // Check that Cue setters are working correctly.
+      cue.id = "Cue 01";
+      is(cue.id, "Cue 01", "Cue's ID should be 'Cue 01'.");
+      cue.startTime = 1.5;
+      is(cue.startTime, 1.5, "Cue's start time should be 1.5.");
+      cue.endTime = 2.5;
+      is(cue.endTime, 2.5, "Cue's end time should be 2.5.");
+      cue.pauseOnExit = true;
+      is(cue.pauseOnExit, true, "Cue's pause on exit flag should be true.");
+
+      // Check that we can create and add new TextTrackCues
+      var textTrackCue = new TextTrackCue(3.999, 4, "foo");
+      trackElement.track.addCue(textTrackCue);
+      is(cueList.length, 5, "Cue list length should now be 5.");
+
+      // Check that new TestTrackCue was added correctly
+      cue = cueList[4];
+      is(cue.startTime, 3.999, "Cue's start time should be 3.999.");
+      is(cue.endTime, 4, "Cue's end time should be 4.");
+      is(cue.text, "foo", "Cue's text should be foo.");
+
+      // Adding the same cue again should not increase the cue count.
+      // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=867823
+      //       http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#dom-texttrack-addcue
+      trackElement.track.addCue(textTrackCue);
+      todo_is(cueList.length, 5, "Cue list length should be 5.");
+
+      // Check that we are able to remove cues.
+      trackElement.track.removeCue(cue);
+      // TODO: Marked as todo as incorrect addition up top increases cue count
+      // to 4 -- https://bugzilla.mozilla.org/show_bug.cgi?id=867823
+      todo_is(cueList.length, 4, "Cue list length should be 4.");
+
+      var exceptionHappened = false;
+      try {
+        // We should not be able to remove a cue that is not in the list.
+        cue = new TextTrackCue(1, 2, "foo");
+        trackElement.removeCue(cue);
+      } catch (e) {
+        // "NotFoundError" should be thrown when trying to remove a cue that is
+        // not in the list.
+        // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=867823
+        //       http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#dom-texttrack-removecue
+        todo_is(e.name, "NotFoundError", "We should have caught an error.");
+        exceptionHappened = true;
+      }
+      // If this is false then we did not throw an error and probably removed a cue
+      // when we shouln't have.
+      ok(exceptionHappened, "Exception should have happened.");
+
+      // We should not have removed a cue so the cue list length should not
+      // have changed.
+      // TODO: Marked as todo as incorrect addition of cue up top increases
+      // count erroneously.
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=867823
+      todo_is(cueList.length, 4, "Cue list length should be 4.");
+
+      SimpleTest.finish();
+    }
+  }
+);
+
+</script>
+</pre>
+</body>
+</html>

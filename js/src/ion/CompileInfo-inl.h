@@ -7,7 +7,7 @@
 #ifndef ion_CompileInfo_inl_h
 #define ion_CompileInfo_inl_h
 
-#include "CompileInfo.h"
+#include "ion/CompileInfo.h"
 #include "jsgcinlines.h"
 #include "jsscriptinlines.h"
 

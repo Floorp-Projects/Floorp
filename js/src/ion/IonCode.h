@@ -10,8 +10,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#include "IonTypes.h"
-#include "AsmJS.h"
+#include "ion/IonTypes.h"
+#include "ion/AsmJS.h"
 #include "gc/Heap.h"
 
 // For RecompileInfo

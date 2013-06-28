@@ -54,9 +54,10 @@
         expected: ["list 2 items", "Test List", "Last item", "2.", "list two"]
       }, {
         accOrElmOrID: "cell",
-        expected: ["table", "Fruits and vegetables", "List of Fruits",
-          "list 4 items","First item", "link", "Apples", "link", "Bananas",
-          "link", "Peaches", "Last item", "link", "Plums"]
+        expected: ["table with 1 column and 1 row", "Fruits and vegetables",
+          "Column 1 Row 1", "List of Fruits", "list 4 items", "First item",
+          "link", "Apples", "link", "Bananas", "link", "Peaches", "Last item",
+          "link", "Plums"]
       }, {
         accOrElmOrID: "app.net",
         expected: ["list 2 items", "First item", "link", "star", "Last item",
@@ -71,13 +72,12 @@
         // Test pivot to li_one from list.
         accOrElmOrID: "li_one",
         oldAccOrElmOrID: "list",
-        expected: ["list 2 items", "Test List", "First item", "Top of the list"]
+        expected: ["First item", "Top of the list"]
       }, {
         // Test pivot to "apples" link from the table cell.
         accOrElmOrID: "apples",
         oldAccOrElmOrID: "cell",
-        expected: ["List of Fruits", "list 4 items", "First item", "link",
-          "Apples"]
+        expected: ["list 4 items", "First item", "link", "Apples"]
       }, {
         // Test pivot to the table cell from the "apples" link.
         accOrElmOrID: "cell",

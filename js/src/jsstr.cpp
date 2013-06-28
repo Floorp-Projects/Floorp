@@ -3630,16 +3630,16 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
 
 template <AllowGC allowGC>
 JSStableString *
-js_NewString(JSContext *cx, jschar *chars, size_t length)
+js_NewString(ThreadSafeContext *tcx, jschar *chars, size_t length)
 {
-    return JSStableString::new_<allowGC>(cx, chars, length);
+    return JSStableString::new_<allowGC>(tcx, chars, length);
 }
 
 template JSStableString *
-js_NewString<CanGC>(JSContext *cx, jschar *chars, size_t length);
+js_NewString<CanGC>(ThreadSafeContext *tcx, jschar *chars, size_t length);
 
 template JSStableString *
-js_NewString<NoGC>(JSContext *cx, jschar *chars, size_t length);
+js_NewString<NoGC>(ThreadSafeContext *tcx, jschar *chars, size_t length);
 
 JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
@@ -3688,25 +3688,25 @@ js_NewStringCopyN<NoGC>(JSContext *cx, const jschar *s, size_t n);
 
 template <AllowGC allowGC>
 JSFlatString *
-js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
+js_NewStringCopyN(ThreadSafeContext *tcx, const char *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
-        return NewShortString<allowGC>(cx, JS::Latin1Chars(s, n));
+        return NewShortString<allowGC>(tcx, JS::Latin1Chars(s, n));
 
-    jschar *chars = InflateString(cx, s, &n);
+    jschar *chars = InflateString(tcx, s, &n);
     if (!chars)
         return NULL;
-    JSFlatString *str = js_NewString<allowGC>(cx, chars, n);
+    JSFlatString *str = js_NewString<allowGC>(tcx, chars, n);
     if (!str)
         js_free(chars);
     return str;
 }
 
 template JSFlatString *
-js_NewStringCopyN<CanGC>(JSContext *cx, const char *s, size_t n);
+js_NewStringCopyN<CanGC>(ThreadSafeContext *tcx, const char *s, size_t n);
 
 template JSFlatString *
-js_NewStringCopyN<NoGC>(JSContext *cx, const char *s, size_t n);
+js_NewStringCopyN<NoGC>(ThreadSafeContext *tcx, const char *s, size_t n);
 
 template <AllowGC allowGC>
 JSFlatString *
@@ -3735,16 +3735,16 @@ js_NewStringCopyZ<NoGC>(JSContext *cx, const jschar *s);
 
 template <AllowGC allowGC>
 JSFlatString *
-js_NewStringCopyZ(JSContext *cx, const char *s)
+js_NewStringCopyZ(ThreadSafeContext *tcx, const char *s)
 {
-    return js_NewStringCopyN<allowGC>(cx, s, strlen(s));
+    return js_NewStringCopyN<allowGC>(tcx, s, strlen(s));
 }
 
 template JSFlatString *
-js_NewStringCopyZ<CanGC>(JSContext *cx, const char *s);
+js_NewStringCopyZ<CanGC>(ThreadSafeContext *tcx, const char *s);
 
 template JSFlatString *
-js_NewStringCopyZ<NoGC>(JSContext *cx, const char *s);
+js_NewStringCopyZ<NoGC>(ThreadSafeContext *tcx, const char *s);
 
 const char *
 js_ValueToPrintable(JSContext *cx, const Value &vArg, JSAutoByteString *bytes, bool asSource)
@@ -3967,14 +3967,14 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
 }
 
 jschar *
-js::InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
+js::InflateString(ThreadSafeContext *tcx, const char *bytes, size_t *lengthp)
 {
     size_t nchars;
     jschar *chars;
     size_t nbytes = *lengthp;
 
     nchars = nbytes;
-    chars = cx->pod_malloc<jschar>(nchars + 1);
+    chars = tcx->pod_malloc<jschar>(nchars + 1);
     if (!chars)
         goto bad;
     for (size_t i = 0; i < nchars; i++)

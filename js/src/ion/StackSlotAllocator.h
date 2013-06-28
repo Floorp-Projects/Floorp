@@ -7,7 +7,7 @@
 #ifndef ion_StackSlotAllocator_h
 #define ion_StackSlotAllocator_h
 
-#include "Registers.h"
+#include "ion/Registers.h"
 
 namespace js {
 namespace ion {

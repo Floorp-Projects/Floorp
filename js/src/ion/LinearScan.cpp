@@ -8,11 +8,11 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "BitSet.h"
-#include "LinearScan.h"
-#include "IonBuilder.h"
-#include "IonSpewer.h"
-#include "LIR-inl.h"
+#include "ion/BitSet.h"
+#include "ion/LinearScan.h"
+#include "ion/IonBuilder.h"
+#include "ion/IonSpewer.h"
+#include "ion/LIR-inl.h"
 
 using namespace js;
 using namespace js::ion;

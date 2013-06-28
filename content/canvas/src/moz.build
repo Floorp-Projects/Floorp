@@ -47,6 +47,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionTextureFilterAnisotropic.cpp',
         'WebGLExtensionTextureFloat.cpp',
         'WebGLExtensionTextureFloatLinear.cpp',
+        'WebGLExtensionVertexArray.cpp',
         'WebGLFramebuffer.cpp',
         'WebGLObjectModel.cpp',
         'WebGLProgram.cpp',
@@ -56,6 +57,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLTexelConversions.cpp',
         'WebGLTexture.cpp',
         'WebGLUniformLocation.cpp',
+        'WebGLVertexArray.cpp',
     ]
 else:
     CPP_SOURCES += [

@@ -31,8 +31,8 @@
 #define yarr_Yarr_h
 
 #include <limits.h>
-#include "YarrInterpreter.h"
-#include "YarrPattern.h"
+#include "yarr/YarrInterpreter.h"
+#include "yarr/YarrPattern.h"
 
 namespace JSC { namespace Yarr {
 

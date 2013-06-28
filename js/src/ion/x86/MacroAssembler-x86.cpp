@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MacroAssembler-x86.h"
+#include "ion/x86/MacroAssembler-x86.h"
 #include "ion/BaselineFrame.h"
 #include "ion/MoveEmitter.h"
 #include "ion/IonFrames.h"
