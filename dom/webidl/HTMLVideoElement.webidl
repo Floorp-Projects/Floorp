@@ -45,9 +45,3 @@ partial interface HTMLVideoElement {
   // True if the video has an audio track available.
   readonly attribute boolean mozHasAudio;
 };
-
-// https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html#idl-def-HTMLVideoElement
-partial interface HTMLVideoElement {
-  [Pref="media.mediasource.enabled"]
-  readonly attribute VideoPlaybackQuality videoPlaybackQuality;
-};
