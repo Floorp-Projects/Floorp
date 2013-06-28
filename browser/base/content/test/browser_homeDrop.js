@@ -4,6 +4,15 @@
 function test() {
   waitForExplicitFinish();
 
+  let str = Cc["@mozilla.org/supports-string;1"]
+              .createInstance(Ci.nsISupportsString);
+  str.data = "about:mozilla";
+  Services.prefs.setComplexValue("browser.startup.homepage",
+                                 Ci.nsISupportsString, str);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.startup.homepage");
+  });
+
   // Open a new tab, since starting a drag from the home button activates it and
   // we don't want to interfere with future tests by loading the home page.
   let newTab = gBrowser.selectedTab = gBrowser.addTab();
