@@ -141,6 +141,15 @@ class nsCSSScanner {
     return mSVGMode;
   }
 
+  // Reset or check whether a BAD_URL or BAD_STRING token has been seen.
+  void ClearSeenBadToken() {
+    mSeenBadToken = false;
+  }
+
+  bool SeenBadToken() const {
+    return mSeenBadToken;
+  }
+
   // Get the 1-based line number of the last character of
   // the most recently processed token.
   uint32_t GetLineNumber() const { return mTokenLineNumber; }
@@ -221,6 +230,7 @@ protected:
   // True if we are in SVG mode; false in "normal" CSS
   bool mSVGMode;
   bool mRecording;
+  bool mSeenBadToken;
 };
 
 #endif /* nsCSSScanner_h___ */
