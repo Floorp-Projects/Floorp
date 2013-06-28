@@ -399,13 +399,13 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
-    void movxbl(const Operand &src, const Register &dest) {
+    void movsbl(const Operand &src, const Register &dest) {
         switch (src.kind()) {
           case Operand::REG_DISP:
-            masm.movxbl_mr(src.disp(), src.base(), dest.code());
+            masm.movsbl_mr(src.disp(), src.base(), dest.code());
             break;
           case Operand::SCALE:
-            masm.movxbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            masm.movsbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
@@ -472,13 +472,13 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
-    void movxwl(const Operand &src, const Register &dest) {
+    void movswl(const Operand &src, const Register &dest) {
         switch (src.kind()) {
           case Operand::REG_DISP:
-            masm.movxwl_mr(src.disp(), src.base(), dest.code());
+            masm.movswl_mr(src.disp(), src.base(), dest.code());
             break;
           case Operand::SCALE:
-            masm.movxwl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            masm.movswl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");

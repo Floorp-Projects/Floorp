@@ -419,9 +419,9 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 
     uint32_t before = masm.size();
     switch (vt) {
-      case ArrayBufferView::TYPE_INT8:    masm.movxbl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_INT8:    masm.movsbl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_UINT8:   masm.movzbl(srcAddr, ToRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_INT16:   masm.movxwl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_INT16:   masm.movswl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_UINT16:  masm.movzwl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_INT32:   masm.movl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_UINT32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
