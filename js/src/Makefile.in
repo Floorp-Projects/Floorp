@@ -298,12 +298,15 @@ JITTEST_VALGRIND_FLAG = --valgrind
 endif
 endif
 
+check-style::
+	(cd $(srcdir) && $(PYTHON) config/check_spidermonkey_style.py);
+
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --tbpl $(JITTEST_VALGRIND_FLAG) \
 	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 
-check:: check-jit-test
+check:: check-style check-jit-test
 
 # jstests doesn't have a --jitflags option, so we need to loop, updating the
 # exit code (RC) after each invocation.
