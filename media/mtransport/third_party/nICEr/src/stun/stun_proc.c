@@ -199,7 +199,12 @@ nr_stun_process_indication(nr_stun_message *ind)
     return _status;
 }
 
-/* draft-ietf-behave-rfc3489bis-10.txt S 7.3.3 */
+/* RFC5389 S 7.3.3, except that we *also* allow a MAPPED_ADDRESS
+   to compensate for a bug in Google's STUN server where it
+   always returns MAPPED_ADDRESS.
+
+   Mozilla bug: 888274.
+ */
 int
 nr_stun_process_success_response(nr_stun_message *res)
 {
@@ -211,8 +216,9 @@ nr_stun_process_success_response(nr_stun_message *res)
 #endif /* USE_STUN_PEDANTIC */
 
     if (NR_STUN_GET_TYPE_METHOD(res->header.type) == NR_METHOD_BINDING) {
-        if (! nr_stun_message_has_attribute(res, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0)) {
-            r_log(NR_LOG_STUN, LOG_ERR, "Missing XOR-MAPPED-ADDRESS");
+        if (! nr_stun_message_has_attribute(res, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0) &&
+            ! nr_stun_message_has_attribute(res, NR_STUN_ATTR_MAPPED_ADDRESS, 0)) {
+            r_log(NR_LOG_STUN, LOG_ERR, "Missing XOR-MAPPED-ADDRESS and MAPPED_ADDRESS");
             ABORT(R_REJECTED);
         }
     }
