@@ -87,6 +87,20 @@ this._SessionFile = {
     return SessionFileInternal.createBackupCopy();
   },
   /**
+   * Create a backup copy, asynchronously.
+   * This is designed to perform backup on upgrade.
+   */
+  createUpgradeBackupCopy: function(ext) {
+    return SessionFileInternal.createUpgradeBackupCopy(ext);
+  },
+  /**
+   * Remove a backup copy, asynchronously.
+   * This is designed to clean up a backup on upgrade.
+   */
+  removeUpgradeBackup: function(ext) {
+    return SessionFileInternal.removeUpgradeBackup(ext);
+  },
+  /**
    * Wipe the contents of the session file, asynchronously.
    */
   wipe: function SessionFile_wipe() {
@@ -305,27 +319,65 @@ let SessionFileInternal = {
     });
   },
 
+  createUpgradeBackupCopy: function(ext) {
+    return TaskUtils.spawn(function task() {
+      try {
+        yield OS.File.copy(this.path, this.backupPath + ext);
+      } catch (ex if this._isNoSuchFile(ex)) {
+        // Ignore exceptions about non-existent files.
+      } catch (ex) {
+        Cu.reportError("Could not backup session state file to " +
+                       dest + ": " + ex);
+        throw ex;
+      }
+    }.bind(this));
+  },
+
+  removeUpgradeBackup: function(ext) {
+    return TaskUtils.spawn(function task() {
+      try {
+        yield OS.File.remove(this.backupPath + ext);
+      } catch (ex if this._isNoSuchFile(ex)) {
+        // Ignore exceptions about non-existent files.
+      }
+    }.bind(this));
+  },
+
   wipe: function ssfi_wipe() {
     let self = this;
     return TaskUtils.spawn(function task() {
+      let exn;
+      // Erase session state file
       try {
         yield OS.File.remove(self.path);
       } catch (ex if self._isNoSuchFile(ex)) {
         // Ignore exceptions about non-existent files.
       } catch (ex) {
+        // Report error, don't stop immediately
         Cu.reportError("Could not remove session state file: " + ex);
-        throw ex;
+        exn = ex;
       }
 
-      try {
-        yield OS.File.remove(self.backupPath);
-      } catch (ex if self._isNoSuchFile(ex)) {
-        // Ignore exceptions about non-existent files.
-      } catch (ex) {
-        Cu.reportError("Could not remove session state backup file: " + ex);
-        throw ex;
+      // Erase any backup, any file named "sessionstore.bak[-buildID]".
+      let iterator = new OS.File.DirectoryIterator(OS.Constants.Path.profileDir);
+      for (let promise of iterator) {
+        let entry = yield promise;
+        if (!entry.isDir && entry.path.startsWith(self.backupPath)) {
+          try {
+            yield OS.File.remove(entry.path);
+          } catch (ex) {
+            // Report error, don't stop immediately
+            Cu.reportError("Could not remove backup file " + entry.path + " : " + ex);
+            exn = exn || ex;
+          }
+        }
+      }
+
+      if (exn) {
+        throw exn;
       }
     });
+
   },
 
   _isNoSuchFile: function ssfi_isNoSuchFile(aReason) {

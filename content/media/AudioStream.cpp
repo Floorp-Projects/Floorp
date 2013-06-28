@@ -128,7 +128,7 @@ AudioStream::AudioStream()
   mOutRate(0),
   mChannels(0),
   mWritten(0),
-  mAudioClock(this)
+  mAudioClock(MOZ_THIS_IN_INITIALIZER_LIST())
 {}
 
 void AudioStream::InitLibrary()

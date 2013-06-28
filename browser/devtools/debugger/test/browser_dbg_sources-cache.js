@@ -76,8 +76,6 @@ function testSourcesCache()
   ok(gSources.values.sort()[2].contains("test-function-search-03.js"),
     "The third source value appears to be correct.");
 
-  is(gControllerSources.getCache().length, 0,
-    "The sources cache should be empty when debugger starts.");
   is(gDebugger.SourceUtils._labelsCache.size, TOTAL_SOURCES,
     "There should be " + TOTAL_SOURCES + " labels cached");
   is(gDebugger.SourceUtils._groupsCache.size, TOTAL_SOURCES,
@@ -97,30 +95,9 @@ function fetchSources(callback) {
   let fetches = 0;
   let timeouts = 0;
 
-  gControllerSources.fetchSources(gSources.values, {
-    onFetch: function(aSource) {
-      info("Fetched: " + aSource.url);
-      fetches++;
-    },
-    onTimeout: function(aSource) {
-      info("Timed out: " + aSource.url);
-      timeouts++;
-    },
-    onFinished: function() {
-      info("Finished...");
-
-      ok(fetches > 0,
-        "At least one source should have been fetched.");
-      is(fetches + timeouts, TOTAL_SOURCES,
-        "The correct number of sources have been either fetched or timed out.");
-
-      let cache = gControllerSources.getCache();
-      is(cache.length, fetches,
-        "The sources cache should have exactly " + fetches + " sources cached.");
-
-      testCacheIntegrity();
-      callback();
-    }
+  gControllerSources.getTextForSources(gSources.values).then((aSources) => {
+    testCacheIntegrity(aSources);
+    callback();
   });
 }
 
@@ -161,17 +138,14 @@ function testStateAfterReload() {
     "There should be " + TOTAL_SOURCES + " groups cached after reload.");
 }
 
-function testCacheIntegrity() {
-  let cache = gControllerSources.getCache();
-  isnot(cache.length, 0,
-    "The sources cache should not be empty at this point.");
+function testCacheIntegrity(aCache) {
+  for (let source of aCache) {
+    let [url, contents] = source;
+    let index = aCache.indexOf(source);
 
-  for (let source of cache) {
-    let index = cache.indexOf(source);
-
-    ok(source[0].contains("test-function-search-0" + (index + 1)),
+    ok(url.contains("test-function-search-0" + (index + 1)),
       "Found a source url cached correctly (" + index + ")");
-    ok(source[1].contains(
+    ok(contents.contains(
       ["First source!", "Second source!", "Third source!"][index]),
       "Found a source's text contents cached correctly (" + index + ")");
 

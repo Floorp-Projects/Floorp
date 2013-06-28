@@ -66,7 +66,7 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 
 #ifdef DEBUG
     if (IonSpewEnabled(IonSpew_Safepoints)) {
-        for (GeneralRegisterIterator iter(spilled); iter.more(); iter++) {
+        for (GeneralRegisterForwardIterator iter(spilled); iter.more(); iter++) {
             const char *type = gc.has(*iter)
                                ? "gc"
                                : valueRegs.has(*iter)
