@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let tabState = {
-  entries: [{url: "about:home", children: [{url: "about:mozilla"}]}]
+  entries: [{url: "about:robots", children: [{url: "about:mozilla"}]}]
 };
 
 function test() {
