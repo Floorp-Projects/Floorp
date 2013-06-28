@@ -197,7 +197,7 @@ var BrowserUI = {
     DialogUI.closeAllDialogs();
     StartUI.update(aURI);
     ContextUI.dismissTabs();
-    ContextUI.dismissAppbar();
+    ContextUI.dismissContextAppbar();
     FlyoutPanelsUI.hide();
     PanelUI.hide();
   },
