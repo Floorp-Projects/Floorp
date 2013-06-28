@@ -88,6 +88,7 @@ chrome.jar:
   content/TopSites.js                          (content/TopSites.js)
   content/console.js                           (content/console.js)
   content/AnimatedZoom.js                      (content/AnimatedZoom.js)
+  content/dbg-metro-actors.js                  (content/dbg-metro-actors.js)
 #ifdef MOZ_SERVICES_SYNC
 * content/sync.js                              (content/sync.js)
   content/RemoteTabs.js                        (content/RemoteTabs.js)
