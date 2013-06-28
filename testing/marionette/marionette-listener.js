@@ -12,7 +12,7 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
 
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
-loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
+loader.loadSubScript("chrome://marionette/content/marionette-common.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -279,35 +279,6 @@ function resetValues() {
   mouseEventsOnly = false;
 }
 
-/**
- * Creates an error message for a JavaScript exception thrown during
- * execute_(async_)script.
- *
- * This will generate a [msg, trace] pair like:
- *
- * ['ReferenceError: foo is not defined',
- *  'execute_script @test_foo.py, line 10
- *   inline javascript, line 2
- *   src: "return foo;"']
- *
- * @param error An Error object passed to a catch() clause.
-          fnName The name of the function to use in the stack trace message
-                 (e.g., 'execute_script').
-          pythonFile The filename of the test file containing the Marionette
-                  command that caused this exception to occur.
-          pythonLine The line number of the above test file.
-          script The JS script being executed in text form.
- */
-function createStackMessage(error, fnName, pythonFile, pythonLine, script) {
-  let python_stack = fnName + " @" + pythonFile + ", line " + pythonLine;
-  let stack = error.stack.split("\n");
-  let line = stack[0].substr(stack[0].lastIndexOf(':') + 1);
-  let msg = error.name + ": " + error.message;
-  let trace = python_stack +
-              "\ninline javascript, line " + line +
-              "\nsrc: \"" + script.split("\n")[line] + "\"";
-  return [msg, trace];
-}
 
 /*
  * Marionette Methods
