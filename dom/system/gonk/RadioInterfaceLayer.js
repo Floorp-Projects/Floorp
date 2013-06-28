@@ -1970,7 +1970,7 @@ RadioInterfaceLayer.prototype = {
         this.handleSettingsChange(setting.key, setting.value, setting.message);
         break;
       case kPrefenceChangedObserverTopic:
-        if (data == kCellBroadcastDisabled) {
+        if (data === kCellBroadcastDisabled) {
           let value = false;
           try {
             value = Services.prefs.getBoolPref(kCellBroadcastDisabled);
