@@ -66,8 +66,6 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     static Wrapper singleton;
     static Wrapper singletonWithPrototype;
-
-    static void *getWrapperFamily();
 };
 
 /* Base class for all cross compartment wrapper handlers. */

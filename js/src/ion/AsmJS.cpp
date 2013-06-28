@@ -10,6 +10,7 @@
 
 #include "jsmath.h"
 #include "jsworkers.h"
+#include "jswrapper.h"
 #include "prmjtime.h"
 
 #ifdef MOZ_VTUNE

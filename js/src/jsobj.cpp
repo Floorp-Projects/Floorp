@@ -1827,7 +1827,7 @@ CopySlots(JSContext *cx, HandleObject from, HandleObject to)
     JS_ASSERT(from->getClass() == to->getClass());
 
     size_t n = 0;
-    if (from->isWrapper() &&
+    if (from->is<WrapperObject>() &&
         (Wrapper::wrapperHandler(from)->flags() &
          Wrapper::CROSS_COMPARTMENT)) {
         to->setSlot(0, from->getSlot(0));

@@ -18,6 +18,7 @@
 #include "ion/Ion.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
+#include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
 
@@ -177,7 +178,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             cStats->gcHeapObjectsFunction += thingSize;
         else if (obj->is<ArrayObject>())
             cStats->gcHeapObjectsDenseArray += thingSize;
-        else if (obj->isCrossCompartmentWrapper())
+        else if (obj->is<CrossCompartmentWrapperObject>())
             cStats->gcHeapObjectsCrossCompartmentWrapper += thingSize;
         else
             cStats->gcHeapObjectsOrdinary += thingSize;
