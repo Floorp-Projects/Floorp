@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    // This shouldn't leak
+    var frame = document.getElementById("f");
+    var frameWin = frame.contentWindow;
+    document.body.removeChild(frame);
+    frameWin.navigator;
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<iframe id="f" src="data:text/html;charset=utf-8,1"></iframe>
+</body>
+</html>
