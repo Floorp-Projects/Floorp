@@ -3517,8 +3517,12 @@ Tab.prototype = {
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI, aFlags) {
     let contentWin = aWebProgress.DOMWindow;
-    if (contentWin != contentWin.top)
-        return;
+
+    // Browser webapps may load content inside iframes that can not reach across the app/frame boundary
+    // i.e. even though the page is loaded in an iframe window.top != webapp
+    // Make cure this window is a top level tab before moving on.
+    if (BrowserApp.getBrowserForWindow(contentWin) == null)
+      return;
 
     this._hostChanged = true;
 
