@@ -607,9 +607,9 @@ Parser<ParseHandler>::parse(JSObject *chain)
      */
     Directives directives(options().strictOption);
     GlobalSharedContext globalsc(context, chain, directives, options().extraWarningsOption);
-    ParseContext<ParseHandler> globalpc(this, /* parent = */ NULL, &globalsc,
-                                        /* newDirectives = */ NULL, /* staticLevel = */ 0,
-                                        /* bodyid = */ 0);
+    ParseContext<ParseHandler> globalpc(this, /* parent = */ NULL, ParseHandler::null(),
+                                        &globalsc, /* newDirectives = */ NULL,
+                                        /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!globalpc.init())
         return null();
 
@@ -867,7 +867,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
         return null();
     handler.setFunctionBox(fn, funbox);
 
-    ParseContext<FullParseHandler> funpc(this, pc, funbox, newDirectives,
+    ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
                                          /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
@@ -2078,8 +2078,9 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
             tokenStream.tell(&position);
             parser->tokenStream.seek(position, tokenStream);
 
-            ParseContext<SyntaxParseHandler> funpc(parser, outerpc, funbox, newDirectives,
-                                                   outerpc->staticLevel + 1, outerpc->blockidGen);
+            ParseContext<SyntaxParseHandler> funpc(parser, outerpc, SyntaxParseHandler::null(), funbox,
+                                                   newDirectives, outerpc->staticLevel + 1,
+                                                   outerpc->blockidGen);
             if (!funpc.init())
                 return false;
 
@@ -2110,7 +2111,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     } while (false);
 
     // Continue doing a full parse for this inner function.
-    ParseContext<FullParseHandler> funpc(this, pc, funbox, newDirectives,
+    ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives,
                                          outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return false;
@@ -2148,7 +2149,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
         return false;
 
     // Initialize early for possible flags mutation via destructuringExpr.
-    ParseContext<SyntaxParseHandler> funpc(this, pc, funbox, newDirectives,
+    ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives,
                                            outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return false;
@@ -2181,7 +2182,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
         return null();
 
     Directives newDirectives = directives;
-    ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, funbox,
+    ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, pn, funbox,
                                          &newDirectives, staticLevel, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
@@ -2312,8 +2313,9 @@ Parser<FullParseHandler>::moduleDecl()
         return NULL;
     pn->pn_modulebox = modulebox;
 
-    ParseContext<FullParseHandler> modulepc(this, pc, modulebox, /* newDirectives = */ NULL,
-                                            pc->staticLevel + 1, pc->blockidGen);
+    ParseContext<FullParseHandler> modulepc(this, pc, /* function = */ NULL, modulebox,
+                                            /* newDirectives = */ NULL, pc->staticLevel + 1,
+                                            pc->blockidGen);
     if (!modulepc.init())
         return NULL;
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
@@ -5990,8 +5992,9 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         if (!genFunbox)
             return null();
 
-        ParseContext<FullParseHandler> genpc(this, outerpc, genFunbox, /* newDirectives = */ NULL,
-                                             outerpc->staticLevel + 1, outerpc->blockidGen);
+        ParseContext<FullParseHandler> genpc(this, outerpc, genfn, genFunbox,
+                                             /* newDirectives = */ NULL, outerpc->staticLevel + 1,
+                                             outerpc->blockidGen);
         if (!genpc.init())
             return null();
 

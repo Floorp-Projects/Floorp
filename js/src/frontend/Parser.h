@@ -99,6 +99,7 @@ struct ParseContext : public GenericParseContext
     StmtInfoPC      *topStmt;       /* top of statement info stack */
     StmtInfoPC      *topScopeStmt;  /* top lexical scope statement */
     Rooted<StaticBlockObject *> blockChain;
+    Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
                                     /* compile time block scope chain */
 
     const unsigned  staticLevel;    /* static compilation unit nesting level */
@@ -233,7 +234,8 @@ struct ParseContext : public GenericParseContext
     bool            inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler> *prs, GenericParseContext *parent,
-                 SharedContext *sc, Directives *newDirectives,
+                 Node maybeFunction, SharedContext *sc,
+                 Directives *newDirectives,
                  unsigned staticLevel, uint32_t bodyid)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
