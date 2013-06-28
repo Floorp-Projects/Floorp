@@ -95,8 +95,8 @@ class LDivI : public LBinaryMath<1>
     }
 };
 
-// LSoftDivI is a software divide for architectures before ARMv7 that don't
-// support a hardware divide instruction.
+// LSoftDivI is a software divide for ARM cores that don't support a hardware
+// divide instruction.
 //
 // It is implemented as a proper C function so it trashes r0, r1, r2 and r3.  The
 // call also trashes lr, and has the ability to trash ip. The function also
