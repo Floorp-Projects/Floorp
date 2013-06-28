@@ -2,19 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#mainarea > .controlPane {
-  font-size: 120%;
-  padding-top: 75px;
-  text-align: center;
-}
-
-#stopWrapper {
-  display: none;
-}
-
-#profilerMessage {
-  color: #999;
-  display: none;
+#mainarea {
 }
 
 /* De-emphasize chrome functions */

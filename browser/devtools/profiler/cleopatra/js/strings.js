@@ -1,5 +1,9 @@
 const Cu = Components.utils;
-Cu.import("resource:///modules/devtools/ProfilerHelpers.jsm");
+const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const { L10N_BUNDLE } = require("devtools/profiler/consts");
+
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+var L10N = new ViewHelpers.L10N(L10N_BUNDLE);
 
 /**
  * Shortcuts for the L10N helper functions. Used in Cleopatra.
