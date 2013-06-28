@@ -573,8 +573,15 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         break;
 
     case NR_STUN_CLIENT_MODE_BINDING_REQUEST_NO_AUTH:
-        if (! nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0))
-            ABORT(R_BAD_DATA);
+        if (! nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0)) {
+            if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_MAPPED_ADDRESS, 0)) {
+              /* Compensate for a bug in Google's STUN servers where they always respond with MAPPED-ADDRESS */
+              r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): No XOR-MAPPED-ADDRESS but MAPPED-ADDRESS. Falling back (though server is wrong).", ctx->label);
+            }
+            else {
+              ABORT(R_BAD_DATA);
+            }
+        }
 
         mapped_addr = &ctx->results.stun_binding_response.mapped_addr;
         break;
