@@ -158,6 +158,20 @@ DOMRequest::FireError(nsresult aError)
 }
 
 void
+DOMRequest::FireDetailedError(nsISupports* aError)
+{
+  NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
+  NS_ASSERTION(!mError, "mError shouldn't have been set!");
+  NS_ASSERTION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
+  NS_ASSERTION(aError, "No detailed error provided");
+
+  mDone = true;
+  mError = aError;
+
+  FireEvent(NS_LITERAL_STRING("error"), true, true);
+}
+
+void
 DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
 {
   if (NS_FAILED(CheckInnerWindowCorrectness())) {
@@ -235,6 +249,16 @@ DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
 {
   NS_ENSURE_STATE(aRequest);
   static_cast<DOMRequest*>(aRequest)->FireError(aError);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
+                                     nsISupports* aError)
+{
+  NS_ENSURE_STATE(aRequest);
+  static_cast<DOMRequest*>(aRequest)->FireDetailedError(aError);
 
   return NS_OK;
 }

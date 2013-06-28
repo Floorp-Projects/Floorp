@@ -23,7 +23,7 @@ class DOMRequest : public nsDOMEventTargetHelper,
 {
 protected:
   JS::Heap<JS::Value> mResult;
-  nsRefPtr<DOMError> mError;
+  nsCOMPtr<nsISupports> mError;
   bool mDone;
   bool mRooted;
 
@@ -58,7 +58,7 @@ public:
     return mResult;
   }
 
-  DOMError* GetError() const
+  nsISupports* GetError() const
   {
     NS_ASSERTION(mDone || !mError,
                  "Error should be null when pending");
@@ -72,6 +72,7 @@ public:
   void FireSuccess(JS::Handle<JS::Value> aResult);
   void FireError(const nsAString& aError);
   void FireError(nsresult aError);
+  void FireDetailedError(nsISupports* aError);
 
   DOMRequest(nsIDOMWindow* aWindow);
   DOMRequest();
