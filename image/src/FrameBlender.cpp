@@ -393,29 +393,6 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     return false;
   }
 
-  // We don't want to keep composite images for 8bit frames.  Also this
-  // optimization won't work if the next frame has kDisposeRestorePrevious,
-  // because it would need to be restored into "after prev disposal but before
-  // next blend" state, not into empty frame.
-  if (isFullNextFrame &&
-      nextFrameDisposalMethod != FrameBlender::kDisposeRestorePrevious &&
-      !nextFrame->GetIsPaletted()) {
-    // We have a composited full frame
-    // Store the composited frame into the mFrames[..] so we don't have to
-    // continuously re-build it
-    // Then set the previous frame's disposal to CLEAR_ALL so we just draw the
-    // frame next time around
-    if (CopyFrameImage(mAnim->compositingFrame.GetFrameData(),
-                       mAnim->compositingFrame.GetFrame()->GetRect(),
-                       nextFrame.GetFrameData(),
-                       nextFrame.GetFrame()->GetRect())) {
-      prevFrame->SetFrameDisposalMethod(FrameBlender::kDisposeClearAll);
-      mAnim->compositingFrame.SetFrame(nullptr);
-      mAnim->lastCompositedFrameIndex = -1;
-      return true;
-    }
-  }
-
   mAnim->lastCompositedFrameIndex = int32_t(aNextFrameIndex);
 
   return true;
