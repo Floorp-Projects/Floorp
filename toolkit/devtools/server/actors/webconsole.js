@@ -133,14 +133,6 @@ WebConsoleActor.prototype =
   _prefs: null,
 
   /**
-   * Tells the current inner ID of |this.window|. When the page is navigated, we
-   * need to recreate the jsterm helpers.
-   * @private
-   * @type number
-   */
-  _globalWindowId: 0,
-
-  /**
    * Holds a map between inner window IDs and Debugger.Objects for the window
    * objects.
    * @private
@@ -156,16 +148,6 @@ WebConsoleActor.prototype =
    * @type Map
    */
   _netEvents: null,
-
-  /**
-   * Object that holds the JSTerm API, the helper functions, for the default
-   * window object.
-   *
-   * @see this._getJSTermHelpers()
-   * @private
-   * @type object
-   */
-  _jstermHelpers: null,
 
   /**
    * A cache of prototype chains for objects that have received a
@@ -266,10 +248,8 @@ WebConsoleActor.prototype =
     this._netEvents.clear();
     this._protoChains.clear();
     this._dbgGlobals.clear();
-    this._jstermHelpers = null;
     this.dbg.enabled = false;
     this.dbg = null;
-    this._globalWindowId = 0;
     this.conn = this._window = null;
   },
 
@@ -741,8 +721,14 @@ WebConsoleActor.prototype =
    */
   _getJSTermHelpers: function WCA__getJSTermHelpers(aDebuggerGlobal)
   {
-    let helpers = Object.create(this);
-    helpers.sandbox = Object.create(null);
+    let helpers = {
+      window: this.window,
+      chromeWindow: this.chromeWindow.bind(this),
+      makeDebuggeeValue: aDebuggerGlobal.makeDebuggeeValue.bind(aDebuggerGlobal),
+      createValueGrip: this.createValueGrip.bind(this),
+      sandbox: Object.create(null),
+      helperResult: null,
+    };
     JSTermHelpers(helpers);
 
     // Make sure the helpers can be used during eval.
@@ -816,8 +802,9 @@ WebConsoleActor.prototype =
       aString = "help()";
     }
 
+    // Find the Debugger.Object of the given ObjectActor. This is used as
+    // a binding during eval: |_self|.
     let bindSelf = null;
-
     if (aOptions.bindObjectActor) {
       let objActor = this.getActorByID(aOptions.bindObjectActor);
       if (objActor) {
@@ -825,6 +812,7 @@ WebConsoleActor.prototype =
       }
     }
 
+    // Find the Debugger.Frame of the given FrameActor.
     let frame = null, frameActor = null;
     if (aOptions.frameActor) {
       frameActor = this.conn.getActor(aOptions.frameActor);
@@ -837,20 +825,49 @@ WebConsoleActor.prototype =
       }
     }
 
-    let dbg = this.dbg;
-    let dbgWindow = null;
-    let helpers = null;
-    let found$ = false, found$$ = false;
-
     // Determine which debugger to use, depending on the presence of the
     // stackframe.
+    // This helps with avoid having bindings from a different Debugger. The
+    // Debugger.Frame comes from the jsdebugger's Debugger instance.
+    let dbg = this.dbg;
+    let dbgWindow = this._getDebuggerGlobal(this.window);
     if (frame) {
-      // Avoid having bindings from a different Debugger. The Debugger.Frame
-      // comes from the jsdebugger's Debugger instance.
       dbg = frameActor.threadActor.dbg;
       dbgWindow = dbg.addDebuggee(this.window);
-      helpers = this._getJSTermHelpers(dbgWindow);
+    }
 
+    // If we have an object to bind to |_self| we need to determine the
+    // global of the given JavaScript object.
+    if (bindSelf) {
+      let jsObj = bindSelf.unsafeDereference();
+      let global = Cu.getGlobalForObject(jsObj);
+
+      // Get the Debugger.Object for the new global.
+      if (global != this.window) {
+        dbgWindow = dbg.addDebuggee(global);
+
+        // Remove the debuggee only if the Debugger instance belongs to the
+        // console actor, to avoid breaking the ThreadActor that owns the
+        // Debugger object.
+        if (dbg == this.dbg) {
+          dbg.removeDebuggee(global);
+        }
+      }
+
+      bindSelf = dbgWindow.makeDebuggeeValue(jsObj);
+    }
+
+    // Get the JSTerm helpers for the given debugger window.
+    let helpers = this._getJSTermHelpers(dbgWindow);
+    let bindings = helpers.sandbox;
+    if (bindSelf) {
+      bindings._self = bindSelf;
+    }
+
+    // Check if the Debugger.Frame or Debugger.Object for the global include
+    // $ or $$. We will not overwrite these functions with the jsterm helpers.
+    let found$ = false, found$$ = false;
+    if (frame) {
       let env = frame.environment;
       if (env) {
         found$ = !!env.find("$");
@@ -858,37 +875,8 @@ WebConsoleActor.prototype =
       }
     }
     else {
-      // Use the Web Console debugger object.
-      dbgWindow = this._getDebuggerGlobal(this.window);
-
-      let windowId = WebConsoleUtils.getInnerWindowId(this.window);
-      if (this._globalWindowId != windowId) {
-        this._jstermHelpers = null;
-        this._globalWindowId = windowId;
-      }
-      if (!this._jstermHelpers) {
-        this._jstermHelpers = this._getJSTermHelpers(dbgWindow);
-      }
-
-      helpers = this._jstermHelpers;
       found$ = !!dbgWindow.getOwnPropertyDescriptor("$");
       found$$ = !!dbgWindow.getOwnPropertyDescriptor("$$");
-    }
-
-    let bindings = helpers.sandbox;
-    if (bindSelf) {
-      // Determine the global of the given JavaScript object.
-      let jsObj = bindSelf.unsafeDereference();
-      let global = Cu.getGlobalForObject(jsObj);
-
-      if (global != this.window) {
-        dbgWindow = dbg.addDebuggee(global);
-        if (dbg == this.dbg) {
-          dbg.removeDebuggee(global);
-        }
-      }
-
-      bindings._self = dbgWindow.makeDebuggeeValue(jsObj);
     }
 
     let $ = null, $$ = null;
@@ -901,6 +889,7 @@ WebConsoleActor.prototype =
       delete bindings.$$;
     }
 
+    // Ready to evaluate the string.
     helpers.evalInput = aString;
 
     let result;
