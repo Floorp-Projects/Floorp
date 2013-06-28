@@ -151,7 +151,7 @@ public:
 
 #ifdef ACCESSIBILITY
   mozilla::a11y::Accessible* DispatchAccessibleEvent(uint32_t aEventType);
-  mozilla::a11y::Accessible* GetRootAccessible();
+  mozilla::a11y::Accessible* GetAccessible();
 #endif // ACCESSIBILITY
 
   // needed for current nsIFilePicker

@@ -149,6 +149,13 @@ public final class SysInfo {
     }
 
     /**
+     * @return the kernel version string, such as "3.4.10-geb45596".
+     */
+    public static String getKernelVersion() {
+        return System.getProperty("os.version", "");
+    }
+
+    /**
      * @return the device manufacturer, such as "HTC".
      */
     public static String getManufacturer() {
@@ -192,5 +199,12 @@ public final class SysInfo {
         // Android likes to include the ABI, too ("armeabiv7"), so we
         // differ to add value.
         return android.os.Build.CPU_ABI;
+    }
+
+    /**
+     * @return the default system locale, such as "en-US"
+     */
+    public static String getLocale() {
+        return java.util.Locale.getDefault().toString().replace('_', '-');
     }
 }
