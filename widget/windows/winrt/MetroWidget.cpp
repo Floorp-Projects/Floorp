@@ -1010,7 +1010,7 @@ MetroWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 
 #ifdef ACCESSIBILITY
 mozilla::a11y::Accessible*
-MetroWidget::GetRootAccessible()
+MetroWidget::GetAccessible()
 {
   // We want the ability to forcibly disable a11y on windows, because
   // some non-a11y-related components attempt to bring it up.  See bug
@@ -1034,7 +1034,7 @@ MetroWidget::GetRootAccessible()
   if (accForceDisable)
       return nullptr;
 
-  return GetAccessible();
+  return GetRootAccessible();
 }
 #endif
 
