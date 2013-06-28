@@ -21,13 +21,13 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
   function() {
     var video = document.createElement("video");
     video.src = "seek.webm";
+    video.preload = "auto";
     var trackElement = document.createElement("track");
     trackElement.src = "basic.vtt";
     trackElement.kind = "subtitles";
     document.getElementById("content").appendChild(video);
     video.appendChild(trackElement);
-    run_tests();
-    function run_tests() {
+    video.addEventListener("loadedmetadata", function run_tests() {
       // Re-que run_tests() at the end of the event loop until the track
       // element has loaded its data.
       if (trackElement.readyState == 1) {
@@ -116,7 +116,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       todo_is(cueList.length, 4, "Cue list length should be 4.");
 
       SimpleTest.finish();
-    }
+    });
   }
 );
 
