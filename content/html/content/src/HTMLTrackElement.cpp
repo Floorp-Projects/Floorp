@@ -304,7 +304,7 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
     media->NotifyAddedSource();
     LOG(PR_LOG_DEBUG, ("Track element sent notification to parent."));
 
-    nsContentUtils::AddScriptRunner(
+    mMediaParent->RunInStableState(
       NS_NewRunnableMethod(this, &HTMLTrackElement::LoadResource));
   }
 
