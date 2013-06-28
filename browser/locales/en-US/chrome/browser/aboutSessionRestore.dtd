@@ -21,3 +21,14 @@
 <!ENTITY restorepage.listHeader     "Windows and Tabs">
 <!-- LOCALIZATION NOTE: &#37;S will be replaced with a number. -->
 <!ENTITY restorepage.windowLabel    "Window &#37;S">
+
+
+<!-- LOCALIZATION NOTE: The following 'welcomeback' strings are for about:welcomeback,
+     not for about:sessionstore -->
+<!ENTITY welcomeback.tabtitle       "Welcome Back!">
+
+<!-- LOCALIZATION NOTE: The title is intended to be welcoming and congratulatory,
+     expressing joy that the user has successfully migrated their stuff and hope
+     that now they have a better experience.  -->
+<!ENTITY welcomeback.pageTitle      "Welcome Back!">
+<!ENTITY welcomeback.pageInfo       "&brandShortName; successfully reset your profile. Below is a list of windows and tabs you had open; you can restore them or start with a clean slate.">
