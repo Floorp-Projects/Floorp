@@ -20,7 +20,6 @@ browser.jar:
         skin/classic/browser/aboutSyncTabs.css
 #endif
         skin/classic/browser/actionicon-tab.png
-        skin/classic/browser/appmenu.png
 *       skin/classic/browser/browser.css
 *       skin/classic/browser/browser-lightweightTheme.css
         skin/classic/browser/click-to-play-warning-stripes.png
@@ -28,8 +27,6 @@ browser.jar:
         skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
-        skin/classic/browser/customizableui/menuPanel-icons.png        (customizableui/menuPanel-icons.png)
-        skin/classic/browser/customizableui/menuPanel-small-icons.png  (customizableui/menuPanel-small-icons.png)
 *       skin/classic/browser/engineManager.css
         skin/classic/browser/Geolocation-16.png
         skin/classic/browser/Geolocation-64.png
@@ -44,6 +41,8 @@ browser.jar:
         skin/classic/browser/livemark-folder.png
         skin/classic/browser/menu-back.png
         skin/classic/browser/menu-forward.png
+        skin/classic/browser/menuPanel.png
+        skin/classic/browser/menuPanel-small.png
         skin/classic/browser/mixed-content-blocked-16.png
         skin/classic/browser/mixed-content-blocked-64.png
         skin/classic/browser/monitor.png
@@ -70,6 +69,7 @@ browser.jar:
         skin/classic/browser/slowStartup-16.png
         skin/classic/browser/Toolbar.png
         skin/classic/browser/Toolbar-inverted.png
+        skin/classic/browser/Toolbar-lunaSilver.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
         skin/classic/browser/urlbar-arrow.png
@@ -287,7 +287,6 @@ browser.jar:
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
         skin/classic/aero/browser/actionicon-tab.png
-        skin/classic/aero/browser/appmenu.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/browser-lightweightTheme.css
         skin/classic/aero/browser/click-to-play-warning-stripes.png
@@ -295,8 +294,6 @@ browser.jar:
         skin/classic/aero/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/aero/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/aero/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
-        skin/classic/aero/browser/customizableui/menuPanel-icons.png        (customizableui/menuPanel-icons.png)
-        skin/classic/aero/browser/customizableui/menuPanel-small-icons.png  (customizableui/menuPanel-small-icons.png)
 *       skin/classic/aero/browser/engineManager.css
         skin/classic/aero/browser/Geolocation-16.png
         skin/classic/aero/browser/Geolocation-64.png
@@ -311,6 +308,8 @@ browser.jar:
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)
+        skin/classic/aero/browser/menuPanel.png                      (menuPanel-aero.png)
+        skin/classic/aero/browser/menuPanel-small.png                (menuPanel-small-aero.png)
         skin/classic/aero/browser/mixed-content-blocked-16.png
         skin/classic/aero/browser/mixed-content-blocked-64.png
         skin/classic/aero/browser/monitor.png
@@ -335,10 +334,10 @@ browser.jar:
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/slowStartup-16.png
-        skin/classic/aero/browser/Toolbar.png
-        skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
+        skin/classic/aero/browser/Toolbar.png                        (Toolbar-aero.png)
+        skin/classic/aero/browser/Toolbar-inverted.png               (Toolbar-inverted-aero.png)
         skin/classic/aero/browser/urlbar-arrow.png
         skin/classic/aero/browser/urlbar-popup-blocked.png
         skin/classic/aero/browser/urlbar-history-dropmarker.png

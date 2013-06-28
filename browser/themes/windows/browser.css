@@ -112,10 +112,6 @@
   z-index: 1;
 }
 
-#nav-bar-overflow-button {
-  -moz-image-region: rect(-5px, 12px, 11px, -4px);
-}
-
 #widget-overflow-list > .overflowedItem {
   width: 100%;
   min-height: 36px;
@@ -335,13 +331,16 @@ menuitem.bookmark-item {
 
 /* ::::: primary toolbar buttons ::::: */
 
-.toolbarbutton-1 {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
+%include ../shared/toolbarbuttons.inc
+%include ../shared/menupanel.inc
 
-.toolbarbutton-1:-moz-lwtheme-brighttext {
-  list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
+%ifndef WINDOWS_AERO
+@media (-moz-windows-theme: luna-silver) {
+  :-moz-any(@primaryToolbarButtons@) {
+    list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
+  }
 }
+%endif
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
@@ -545,20 +544,6 @@ menuitem.bookmark-item {
 
 /* unified back/forward button */
 
-#back-button {
-  -moz-image-region: rect(0, 18px, 18px, 0);
-}
-
-#forward-button {
-  -moz-image-region: rect(0, 36px, 18px, 18px);
-}
-
-#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#forward-button:-moz-locale-dir(rtl),
-#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-text {
-  transform: scaleX(-1);
-}
-
 @conditionalForwardWithUrlbar@ {
   -moz-box-align: center;
 }
@@ -590,7 +575,6 @@ menuitem.bookmark-item {
 }
 
 @conditionalForwardWithUrlbar@ > #back-button {
-  -moz-image-region: rect(18px, 20px, 38px, 0);
   padding-top: 3px;
   padding-bottom: 3px;
   -moz-padding-start: 5px;
@@ -656,87 +640,16 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
 }
 
-#stop-button {
-  -moz-image-region: rect(0, 54px, 18px, 36px);
-}
-
-#reload-button {
-  -moz-image-region: rect(0, 72px, 18px, 54px);
-}
-
 #home-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 #home-button.bookmark-item:-moz-lwtheme-brighttext {
   list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
 }
-#home-button {
-  -moz-image-region: rect(0, 90px, 18px, 72px);
-}
 
-#downloads-button {
-  -moz-image-region: rect(0, 108px, 18px, 90px);
-}
-
-toolbar > .customization-target > #history-panelmenu,
-toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
-  -moz-image-region: rect(0, 126px, 18px, 108px);
-}
-
-#bookmarks-button {
-  -moz-image-region: rect(0, 144px, 18px, 126px);
-}
-
-#print-button {
-  -moz-image-region: rect(0, 162px, 18px, 144px);
-}
-
-#new-tab-button {
-  -moz-image-region: rect(0, 180px, 18px, 162px);
-}
-
-#new-window-button {
-  -moz-image-region: rect(0, 198px, 18px, 180px);
-}
-
-#cut-button {
-  -moz-image-region: rect(0, 216px, 18px, 198px);
-}
-
-#copy-button {
-  -moz-image-region: rect(0, 234px, 18px, 216px);
-}
-
-#paste-button {
-  -moz-image-region: rect(0, 252px, 18px, 234px);
-}
-
-#fullscreen-button {
-  -moz-image-region: rect(0, 270px, 18px, 252px);
-}
-
-#zoom-out-button {
-  -moz-image-region: rect(0, 288px, 18px, 270px);
-}
-
-#zoom-in-button {
-  -moz-image-region: rect(0, 306px, 18px, 288px);
-}
-
-#sync-button {
-  -moz-image-region: rect(0, 324px, 18px, 306px);
-}
 #sync-button[status="active"] {
   list-style-image: url("chrome://browser/skin/sync-throbber.png");
   -moz-image-region: rect(0, 18px, 18px, 0);
-}
-
-#feed-button {
-  -moz-image-region: rect(0, 342px, 18px, 324px);
-}
-
-#webrtc-status-button {
-  -moz-image-region: rect(0, 360px, 18px, 342px);
 }
 
 /* tabview button & menu item */
@@ -1421,14 +1334,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* bookmarks menu-button */
-
-#bookmarks-menu-button {
-  -moz-image-region: rect(0px 378px 18px 360px);
-}
-
-#bookmarks-menu-button[starred] {
-  -moz-image-region: rect(18px 378px 36px 360px);
-}
 
 #bookmarks-menu-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/places/bookmark.png");

@@ -7,27 +7,11 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
-#PanelUI-contents #edit-controls toolbarbutton {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
-
-#PanelUI-contents #cut-button {
-  -moz-image-region: rect(0, 216px, 18px, 198px);
-}
-#PanelUI-contents #copy-button {
-  -moz-image-region: rect(0, 234px, 18px, 216px);
-}
-#PanelUI-contents #paste-button {
-  -moz-image-region: rect(0, 252px, 18px, 234px);
-}
-
 #PanelUI-contents #zoom-out-btn {
-  -moz-image-region: rect(0, 288px, 18px, 270px);
   padding-left: 12px;
   padding-right: 12px;
 }
 #PanelUI-contents #zoom-in-btn {
-  -moz-image-region: rect(0, 306px, 18px, 288px);
   padding-left: 12px;
   padding-right: 12px;
 }
