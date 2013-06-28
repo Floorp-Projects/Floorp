@@ -14,13 +14,6 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
 
-// delay for ContextUI's dismissWithDelay
-const kHideContextAndTrayDelayMsec = 3000;
-
-// delay when showing the tab bar briefly as a new tab opens
-const kNewTabAnimationDelayMsec = 500;
-
-
 // Page for which the start UI is shown
 const kStartOverlayURI = "about:start";
 
@@ -448,7 +441,7 @@ var BrowserUI = {
   animateClosingTab: function animateClosingTab(tabToClose) {
     tabToClose.chromeTab.setAttribute("closing", "true");
 
-    let wasCollapsed = !ContextUI.isExpanded;
+    let wasCollapsed = !ContextUI.tabbarVisible;
     if (wasCollapsed) {
       ContextUI.displayTabs();
     }
@@ -1254,7 +1247,7 @@ var BrowserUI = {
         this._editURI(true);
         break;
       case "cmd_addBookmark":
-        Elements.navbar.show();
+        ContextUI.displayNavbar();
         Appbar.onStarButton(true);
         break;
       case "cmd_bookmarks":
