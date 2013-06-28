@@ -9,11 +9,11 @@
 
 #include "mozilla/Util.h"
 
-#include "RegExpObject.h"
+#include "vm/RegExpObject.h"
 
 #include "jsstrinlines.h"
 
-#include "String-inl.h"
+#include "vm/String-inl.h"
 
 namespace js {
 

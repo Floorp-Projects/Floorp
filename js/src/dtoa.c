@@ -164,15 +164,15 @@ typedef unsigned Long ULong;
 #endif
 
 #ifdef DEBUG
-#include "stdio.h"
+#include <stdio.h>
 #define Bug(x) {fprintf(stderr, "%s\n", x); exit(1);}
 #endif
 
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef USE_LOCALE
-#include "locale.h"
+#include <locale.h>
 #endif
 
 #ifdef MALLOC
@@ -205,7 +205,7 @@ extern void *MALLOC(size_t);
 #define IEEE_Arith
 #endif
 
-#include "errno.h"
+#include <errno.h>
 
 #ifdef Bad_float_h
 
@@ -237,11 +237,11 @@ extern void *MALLOC(size_t);
 #endif
 
 #else /* ifndef Bad_float_h */
-#include "float.h"
+#include <float.h>
 #endif /* Bad_float_h */
 
 #ifndef __MATH_H__
-#include "math.h"
+#include <math.h>
 #endif
 
 #ifndef CONST

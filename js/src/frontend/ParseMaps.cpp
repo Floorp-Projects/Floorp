@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "FullParseHandler.h"
-#include "SyntaxParseHandler.h"
+#include "frontend/FullParseHandler.h"
+#include "frontend/SyntaxParseHandler.h"
 
-#include "ParseMaps-inl.h"
+#include "frontend/ParseMaps-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;

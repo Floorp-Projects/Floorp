@@ -39,7 +39,7 @@
 #include "jstypedarrayinlines.h"
 #include "jsworkers.h"
 #include "jswrapper.h"
-#include "jsperf.h"
+#include "perf/jsperf.h"
 
 #include "builtin/TestingFunctions.h"
 #include "frontend/BytecodeEmitter.h"
@@ -48,8 +48,8 @@
 
 #include "prmjtime.h"
 
-#include "jsoptparse.h"
-#include "jsheaptools.h"
+#include "shell/jsoptparse.h"
+#include "shell/jsheaptools.h"
 
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
