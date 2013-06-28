@@ -21,6 +21,7 @@ JS_MODULES_PATH := modules/sessionstore
 EXTRA_JS_MODULES := \
   DocumentUtils.jsm \
   SessionStorage.jsm \
+  SessionMigration.jsm \
   XPathGenerator.jsm \
   _SessionFile.jsm \
   $(NULL)
