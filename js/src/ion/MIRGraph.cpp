@@ -599,7 +599,7 @@ AssertSafelyDiscardable(MDefinition *def)
 #ifdef DEBUG
     // Instructions captured by resume points cannot be safely discarded, since
     // they are necessary for interpreter frame reconstruction in case of bailout.
-    JS_ASSERT(def->useCount() == 0);
+    JS_ASSERT(!def->hasUses());
 #endif
 }
 

@@ -89,7 +89,7 @@ ValueNumberer::simplifyControlInstruction(MControlInstruction *def)
 
     // MControlInstructions should not have consumers.
     JS_ASSERT(repl->isControlInstruction());
-    JS_ASSERT(def->useCount() == 0);
+    JS_ASSERT(!def->hasUses());
 
     if (def->isInWorklist())
         repl->setInWorklist();
