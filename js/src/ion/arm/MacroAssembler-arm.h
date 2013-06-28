@@ -238,6 +238,9 @@ class MacroAssemblerARM : public Assembler
     // implicitly assumes that we can overwrite dest at the beginning of the sequence
     void ma_mod_mask(Register src, Register dest, Register hold, int32_t shift);
 
+    // division
+    void ma_sdiv(Register num, Register div, Register dest, Condition cond = Always);
+
     // memory
     // shortcut for when we know we're transferring 32 bits of data
     void ma_dtr(LoadStore ls, Register rn, Imm32 offset, Register rt,

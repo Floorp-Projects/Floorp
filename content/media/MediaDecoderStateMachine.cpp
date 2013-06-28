@@ -2466,11 +2466,13 @@ void MediaDecoderStateMachine::AdvanceFrame()
     while (mRealTime || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->mEndTime;
       currentFrame = frame;
-      LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld", mDecoder.get(), frame->mTime));
 #ifdef PR_LOGGING
-      if (droppedFrames++) {
-        LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld (%d so far)",
-              mDecoder.get(), frame->mTime, droppedFrames - 1));
+      if (!PR_GetEnv("MOZ_QUIET")) {
+        LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld", mDecoder.get(), frame->mTime));
+        if (droppedFrames++) {
+          LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld (%d so far)",
+            mDecoder.get(), frame->mTime, droppedFrames - 1));
+        }
       }
 #endif
       mReader->VideoQueue().PopFront();
