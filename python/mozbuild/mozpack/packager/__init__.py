@@ -17,6 +17,108 @@ import mozpack.path
 from collections import deque
 
 
+class Component(object):
+    '''
+    Class that represents a component in a package manifest.
+    '''
+    def __init__(self, name, destdir=''):
+        if name.find(' ') > 0:
+            errors.fatal('Malformed manifest: space in component name "%s"'
+                         % component)
+        self._name = name
+        self._destdir = destdir
+
+    def __repr__(self):
+        s = self.name
+        if self.destdir:
+            s += ' destdir="%s"' % self.destdir
+        return s
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def destdir(self):
+        return self._destdir
+
+    @staticmethod
+    def _triples(lst):
+        '''
+        Split [1, 2, 3, 4, 5, 6, 7] into [(1, 2, 3), (4, 5, 6)].
+        '''
+        return zip(*[iter(lst)] * 3)
+
+    KEY_VALUE_RE = re.compile(r'''
+        \s*                 # optional whitespace.
+        ([a-zA-Z0-9_]+)     # key.
+        \s*=\s*             # optional space around =.
+        "([^"]*)"           # value without surrounding quotes.
+        (?:\s+|$)
+        ''', re.VERBOSE)
+
+    @staticmethod
+    def _split_options(string):
+        '''
+        Split 'key1="value1" key2="value2"' into
+        {'key1':'value1', 'key2':'value2'}.
+
+        Returned keys and values are all strings.
+
+        Throws ValueError if the input is malformed.
+        '''
+        options = {}
+        splits = Component.KEY_VALUE_RE.split(string)
+        if len(splits) % 3 != 1:
+            # This should never happen -- we expect to always split
+            # into ['', ('key', 'val', '')*].
+            raise ValueError("Bad input")
+        if splits[0]:
+            raise ValueError('Unrecognized input ' + splits[0])
+        for key, val, no_match in Component._triples(splits[1:]):
+            if no_match:
+                raise ValueError('Unrecognized input ' + no_match)
+            options[key] = val
+        return options
+
+    @staticmethod
+    def _split_component_and_options(string):
+        '''
+        Split 'name key1="value1" key2="value2"' into
+        ('name', {'key1':'value1', 'key2':'value2'}).
+
+        Returned name, keys and values are all strings.
+
+        Raises ValueError if the input is malformed.
+        '''
+        splits = string.strip().split(None, 1)
+        if not splits:
+            raise ValueError('No component found')
+        component = splits[0].strip()
+        if not component:
+            raise ValueError('No component found')
+        if not re.match('[a-zA-Z0-9_\-]+$', component):
+            raise ValueError('Bad component name ' + component)
+        options = Component._split_options(splits[1]) if len(splits) > 1 else {}
+        return component, options
+
+    @staticmethod
+    def from_string(string):
+        '''
+        Create a component from a string.
+        '''
+        try:
+            name, options = Component._split_component_and_options(string)
+        except ValueError as e:
+            errors.fatal('Malformed manifest: %s' % e)
+            return
+        destdir = options.pop('destdir', '')
+        if options:
+            errors.fatal('Malformed manifest: options %s not recognized'
+                         % options.keys())
+        return Component(name, destdir=destdir)
+
+
 class PackageManifestParser(object):
     '''
     Class for parsing of a package manifest, after preprocessing.
@@ -29,14 +131,16 @@ class PackageManifestParser(object):
         ; file comment
 
     The parser takes input from the preprocessor line by line, and pushes
-    parsed information to a sink object. The add and remove methods of the
-    sink object are called with the current component and a path.
+    parsed information to a sink object.
+
+    The add and remove methods of the sink object are called with the
+    current Component instance and a path.
     '''
     def __init__(self, sink):
         '''
         Initialize the package manifest parser with the given sink.
         '''
-        self._component = ''
+        self._component = Component('')
         self._sink = sink
 
     def handle_line(self, str):
@@ -49,10 +153,7 @@ class PackageManifestParser(object):
         if not str or str.startswith(';'):
             return
         if str.startswith('[') and str.endswith(']'):
-            if str == '[]' or re.search(r'[\[\]\s]', str[1:-1]):
-                errors.fatal('Malformed manifest')
-            else:
-                self._component = str[1:-1]
+            self._component = Component.from_string(str[1:-1])
         elif str.startswith('-'):
             str = str[1:]
             self._sink.remove(self._component, str)
@@ -227,9 +328,9 @@ class SimpleManifestSink(object):
             return mozpack.path.relpath(path, 'bin')
         return path
 
-    def add(self, section, pattern):
+    def add(self, component, pattern):
         '''
-        Add files with the given pattern.
+        Add files with the given pattern in the given component.
         '''
         assert not self._closed
         added = False
@@ -237,11 +338,15 @@ class SimpleManifestSink(object):
             added = True
             if is_manifest(p):
                 self._manifests.add(p)
-            self.packager.add(SimpleManifestSink.normalize_path(p), f)
+            dest = mozpack.path.join(component.destdir, SimpleManifestSink.normalize_path(p))
+            self.packager.add(dest, f)
         if not added:
             errors.error('Missing file(s): %s' % pattern)
 
-    def remove(self, section, pattern):
+    def remove(self, component, pattern):
+        '''
+        Remove files with the given pattern in the given component.
+        '''
         assert not self._closed
         errors.fatal('Removal is unsupported')
 
