@@ -625,9 +625,10 @@ DirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
 }
 
 bool
-DirectProxyHandler::isExtensible(JSObject *proxy)
+DirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
 {
-    return GetProxyTargetObject(proxy)->isExtensible();
+    RootedObject target(cx, GetProxyTargetObject(proxy));
+    return JSObject::isExtensible(cx, target, extensible);
 }
 
 bool
@@ -787,7 +788,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
-    virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
@@ -811,9 +812,10 @@ ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
 }
 
 bool
-ScriptedIndirectProxyHandler::isExtensible(JSObject *proxy)
+ScriptedIndirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
 {
     // Scripted indirect proxies don't support extensibility changes.
+    *extensible = true;
     return true;
 }
 
@@ -1394,7 +1396,10 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
             return false;
         }
 
-        if (!target->isExtensible()) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (!extensible) {
             bool found;
             if (!HasOwn(cx, target, id, &found))
                 return false;
@@ -1414,7 +1419,10 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
         return false;
 
     // step 9
-    if (target->isExtensible() && !isFixed) {
+    bool extensible;
+    if (!JSObject::isExtensible(cx, target, &extensible))
+        return false;
+    if (extensible && !isFixed) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_NEW);
         return false;
     }
@@ -1495,7 +1503,10 @@ TrapDefineOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHan
         if (!HasOwn(cx, target, id, &isFixed))
             return false;
 
-        if (!target->isExtensible() && !isFixed) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (!extensible && !isFixed) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_DEFINE_NEW);
             return false;
         }
@@ -1581,7 +1592,10 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
             return false;
 
         // step v
-        if (!target->isExtensible() && !isFixed) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (!extensible && !isFixed) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_NEW);
             return false;
         }
@@ -1625,7 +1639,10 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
             return false;
 
         // step iii
-        if (!target->isExtensible() && isFixed) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (!extensible && isFixed) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_E_AS_NE);
             return false;
         }
@@ -1674,7 +1691,10 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
     bool success = ToBoolean(trapResult);
     if (success) {
         // step g
-        if (target->isExtensible()) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (extensible) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
             return false;
         }
@@ -1919,7 +1939,10 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
             return false;
         }
 
-        if (!target->isExtensible()) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (!extensible) {
             bool isFixed;
             if (!HasOwn(cx, target, id, &isFixed))
                 return false;
@@ -1979,7 +2002,10 @@ ScriptedDirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId i
             return false;
         }
 
-        if (!target->isExtensible()) {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
+            return false;
+        if (!extensible) {
             bool isFixed;
             if (!HasOwn(cx, target, id, &isFixed))
                 return false;
@@ -1988,13 +2014,18 @@ ScriptedDirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId i
                 return false;
             }
         }
-    } else if (!target->isExtensible()) {
-        bool isFixed;
-        if (!HasOwn(cx, target, id, &isFixed))
+    } else {
+        bool extensible;
+        if (!JSObject::isExtensible(cx, target, &extensible))
             return false;
-        if (!isFixed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_NEW);
-            return false;
+        if (!extensible) {
+            bool isFixed;
+            if (!HasOwn(cx, target, id, &isFixed))
+                return false;
+            if (!isFixed) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_NEW);
+                return false;
+            }
         }
     }
 
@@ -2578,9 +2609,10 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
 }
 
 bool
-Proxy::isExtensible(JSObject *proxy)
+Proxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
 {
-    return GetProxyHandler(proxy)->isExtensible(proxy);
+    JS_CHECK_RECURSION(cx, return false);
+    return GetProxyHandler(proxy)->isExtensible(cx, proxy, extensible);
 }
 
 bool

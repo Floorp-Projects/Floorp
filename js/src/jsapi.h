@@ -3185,7 +3185,7 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
-JS_IsExtensible(JSObject *obj);
+JS_IsExtensible(JSContext *cx, JS::HandleObject obj, JSBool *extensible);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsNative(JSObject *obj);

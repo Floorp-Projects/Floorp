@@ -2065,7 +2065,7 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t o
     if (obj->getClass()->addProperty != JS_PropertyStub)
         return false;
 
-    if (!obj->isExtensible() || !shape->writable())
+    if (!obj->nonProxyIsExtensible() || !shape->writable())
         return false;
 
     // walk up the object prototype chain and ensure that all prototypes

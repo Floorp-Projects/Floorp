@@ -384,7 +384,7 @@ JSObject::extendDenseElements(js::ThreadSafeContext *tcx,
      * elements can be added/written with no extensible or watchpoint checks as
      * long as there is capacity for them.
      */
-    if (!isExtensible() || watched()) {
+    if (!nonProxyIsExtensible() || watched()) {
         JS_ASSERT(getDenseCapacity() == 0);
         return ED_SPARSE;
     }

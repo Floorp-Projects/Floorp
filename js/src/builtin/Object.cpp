@@ -885,7 +885,10 @@ obj_isExtensible(JSContext *cx, unsigned argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, args, "Object.isExtensible", &obj))
         return false;
 
-    args.rval().setBoolean(obj->isExtensible());
+    bool extensible;
+    if (!JSObject::isExtensible(cx, obj, &extensible))
+        return false;
+    args.rval().setBoolean(extensible);
     return true;
 }
 
@@ -898,7 +901,11 @@ obj_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     args.rval().setObject(*obj);
-    if (!obj->isExtensible())
+
+    bool extensible;
+    if (!JSObject::isExtensible(cx, obj, &extensible))
+        return false;
+    if (!extensible)
         return true;
 
     return JSObject::preventExtensions(cx, obj);
