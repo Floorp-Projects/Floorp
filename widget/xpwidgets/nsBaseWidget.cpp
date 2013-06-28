@@ -1483,7 +1483,7 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
 #ifdef ACCESSIBILITY
 
 a11y::Accessible*
-nsBaseWidget::GetAccessible()
+nsBaseWidget::GetRootAccessible()
 {
   NS_ENSURE_TRUE(mWidgetListener, nullptr);
 
@@ -1498,7 +1498,8 @@ nsBaseWidget::GetAccessible()
 
   // Accessible creation might be not safe so use IsSafeToRunScript to
   // make sure it's not created at unsafe times.
-  nsCOMPtr<nsIAccessibilityService> accService = services::GetAccessibilityService();
+  nsCOMPtr<nsIAccessibilityService> accService =
+    services::GetAccessibilityService();
   if (accService) {
     return accService->GetRootDocumentAccessible(presShell, nsContentUtils::IsSafeToRunScript());
   }

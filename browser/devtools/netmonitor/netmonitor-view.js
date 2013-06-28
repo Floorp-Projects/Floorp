@@ -278,6 +278,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.widget = new SideMenuWidget($("#requests-menu-contents"), false);
     this._summary = $("#request-menu-network-summary");
 
+    this.allowFocusOnRightClick = true;
     this.widget.maintainSelectionVisible = false;
     this.widget.autoscrollWithAppendedItems = true;
 
@@ -336,7 +337,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._registerLastRequestEnd(unixTime);
 
     // Append a network request item to this container.
-    let requestItem = this.push([menuView, aId], {
+    let requestItem = this.push([menuView, aId, ""], {
       attachment: {
         startedDeltaMillis: unixTime - this._firstRequestStartedMillis,
         startedMillis: unixTime,
@@ -367,7 +368,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // Create the element node for the network request item.
     let menuView = this._createMenuView(selected.method, selected.url);
 
-    let newItem = this.push([menuView], {
+    let newItem = this.push([menuView,, ""], {
       attachment: Object.create(selected, {
         isCustom: { value: true }
       })
