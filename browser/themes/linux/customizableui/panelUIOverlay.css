@@ -6,36 +6,3 @@
 %define menuPanelWidth 23em
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
-
-#PanelUI-contents #cut-button {
-  list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar");
-}
-#PanelUI-contents #cut-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled");
-}
-
-#PanelUI-contents #copy-button {
-  list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar");
-}
-#PanelUI-contents #copy-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled");
-}
-
-#PanelUI-contents #paste-button {
-  list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar");
-}
-#PanelUI-contents #paste-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled");
-}
-
-#PanelUI-contents #zoom-out-button {
-  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar");
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-#PanelUI-contents #zoom-in-button {
-  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar");
-  padding-left: 12px;
-  padding-right: 12px;
-}

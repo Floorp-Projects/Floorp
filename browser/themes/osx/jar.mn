@@ -18,7 +18,6 @@ browser.jar:
 #endif
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
-  skin/classic/browser/appmenu.png
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
@@ -26,10 +25,6 @@ browser.jar:
   skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
-  skin/classic/browser/customizableui/menuPanel-icons.png           (customizableui/menuPanel-icons.png)
-  skin/classic/browser/customizableui/menuPanel-icons@2x.png        (customizableui/menuPanel-icons@2x.png)
-  skin/classic/browser/customizableui/menuPanel-small-icons.png     (customizableui/menuPanel-small-icons.png)
-  skin/classic/browser/customizableui/menuPanel-small-icons@2x.png  (customizableui/menuPanel-small-icons@2x.png)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-16@2x.png
@@ -56,6 +51,10 @@ browser.jar:
   skin/classic/browser/notification-16@2x.png
   skin/classic/browser/notification-64.png
   skin/classic/browser/notification-64@2x.png
+  skin/classic/browser/menuPanel.png
+  skin/classic/browser/menuPanel@2x.png
+  skin/classic/browser/menuPanel-small.png
+  skin/classic/browser/menuPanel-small@2x.png
   skin/classic/browser/mixed-content-blocked-16.png
   skin/classic/browser/mixed-content-blocked-16@2x.png
   skin/classic/browser/mixed-content-blocked-64.png
@@ -91,6 +90,9 @@ browser.jar:
   skin/classic/browser/Secure-Glyph@2x.png
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/Toolbar.png
+  skin/classic/browser/Toolbar@2x.png
+  skin/classic/browser/Toolbar-inverted.png
+  skin/classic/browser/Toolbar-inverted@2x.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker@2x.png
@@ -334,8 +336,6 @@ browser.jar:
 #endif
   skin/classic/browser/lion/keyhole-circle.png              (keyhole-circle-lion.png)
   skin/classic/browser/keyhole-circle@2x.png                (keyhole-circle-lion@2x.png)
-  skin/classic/browser/lion/Toolbar.png                     (Toolbar-lion.png)
-  skin/classic/browser/Toolbar@2x.png                       (Toolbar-lion@2x.png)
   skin/classic/browser/Toolbar-background-noise.png         (Toolbar-background-noise.png)
   skin/classic/browser/lion/toolbarbutton-dropmarker.png    (toolbarbutton-dropmarker-lion.png)
   skin/classic/browser/toolbarbutton-dropmarker@2x.png      (toolbarbutton-dropmarker-lion@2x.png)
@@ -348,7 +348,6 @@ browser.jar:
   skin/classic/browser/webapps-64.png
 
 % override chrome://browser/skin/keyhole-circle.png                        chrome://browser/skin/lion/keyhole-circle.png                           os=Darwin osversion>=10.7
-% override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/lion/Toolbar.png                                  os=Darwin osversion>=10.7
 % override chrome://browser/skin/toolbarbutton-dropmarker.png              chrome://browser/skin/lion/toolbarbutton-dropmarker.png                 os=Darwin osversion>=10.7
 % override chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png     chrome://browser/skin/lion/tabbrowser/alltabs-box-bkgnd-icon.png        os=Darwin osversion>=10.7
 % override chrome://browser/skin/tabview/tabview.png                       chrome://browser/skin/lion/tabview/tabview.png                          os=Darwin osversion>=10.7
