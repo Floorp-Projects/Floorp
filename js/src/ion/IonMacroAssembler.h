@@ -110,6 +110,19 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
+    // asm.js compilation handles its own IonContet-pushing
+    struct AsmJSToken {};
+    MacroAssembler(AsmJSToken)
+      : enoughMemory_(true),
+        embedsNurseryPointers_(false),
+        sps_(NULL)
+    {
+#ifdef JS_CPU_ARM
+        initWithAllocator();
+        m_buffer.id = 0;
+#endif
+    }
+
     void setInstrumentation(IonInstrumentation *sps) {
         sps_ = sps;
     }
