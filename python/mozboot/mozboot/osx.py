@@ -240,7 +240,7 @@ class OSXBootstrapper(BaseBootstrapper):
             self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
 
         self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
-        self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
+        self.run_as_root([self.port, 'select', '--set', 'clang', MACPORTS_CLANG_PACKAGE])
 
     def ensure_package_manager(self):
         '''
