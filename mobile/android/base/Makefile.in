@@ -1018,6 +1018,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
   mobile/android/base/resources/drawable/action_bar_button_inverse.xml          \
+  mobile/android/base/resources/drawable/bookmark_thumbnail_bg.xml              \
   mobile/android/base/resources/drawable/url_bar_bg.xml                         \
   mobile/android/base/resources/drawable/url_bar_bg_shadow_repeat.xml           \
   mobile/android/base/resources/drawable/url_bar_entry.xml                      \
