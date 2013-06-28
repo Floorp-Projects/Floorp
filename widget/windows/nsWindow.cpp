@@ -597,6 +597,12 @@ nsWindow::Create(nsIWidget *aParent,
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
   }
 
+  // Query for command button metric data for rendering the titlebar. We
+  // only do this once on the first window.
+  if (!nsUXThemeData::sTitlebarInfoPopulatedThemed ||
+      !nsUXThemeData::sTitlebarInfoPopulatedAero) {
+    nsUXThemeData::UpdateTitlebarInfo(mWnd);
+  }
   return NS_OK;
 }
 
