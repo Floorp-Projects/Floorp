@@ -141,7 +141,14 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     int32_t diffF = set.fpus().size() * sizeof(double);
     int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
 
-#ifdef JS_CPU_ARM
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    // On x86, always use push to push the integer registers, as it's fast
+    // on modern hardware and it's a small instruction.
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        diffG -= STACK_SLOT_SIZE;
+        Push(*iter);
+    }
+#elif defined(JS_CPU_ARM)
     if (set.gprs().size() > 1) {
         adjustFrame(diffG);
         startDataTransferM(IsStore, StackPointer, DB, WriteBack);
@@ -150,15 +157,20 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
             transferReg(*iter);
         }
         finishDataTransfer();
-    } else
-#endif
-    {
+    } else {
         reserveStack(diffG);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             storePtr(*iter, Address(StackPointer, diffG));
         }
     }
+#else
+    reserveStack(diffG);
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        diffG -= STACK_SLOT_SIZE;
+        storePtr(*iter, Address(StackPointer, diffG));
+    }
+#endif
     JS_ASSERT(diffG == 0);
 
 #ifdef JS_CPU_ARM
@@ -200,6 +212,17 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     }
     JS_ASSERT(diffF == 0);
 
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    // On x86, use pop to pop the integer registers, if we're not going to
+    // ignore any slots, as it's fast on modern hardware and it's a small
+    // instruction.
+    if (ignore.empty(false)) {
+        for (GeneralRegisterForwardIterator iter(set.gprs()); iter.more(); iter++) {
+            diffG -= STACK_SLOT_SIZE;
+            Pop(*iter);
+        }
+    } else
+#endif
 #ifdef JS_CPU_ARM
     if (set.gprs().size() > 1 && ignore.empty(false)) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
