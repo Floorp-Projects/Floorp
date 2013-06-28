@@ -113,7 +113,8 @@ public:
     // connection manager, nor is the submitter obligated to actually submit a
     // real transaction for this connectionInfo.
     nsresult SpeculativeConnect(nsHttpConnectionInfo *,
-                                nsIInterfaceRequestor *);
+                                nsIInterfaceRequestor *,
+                                uint32_t caps = 0);
 
     // called when a connection is done processing a transaction.  if the
     // connection can be reused then it will be added to the idle list, else

@@ -326,7 +326,8 @@ nsHttpConnectionMgr::DoShiftReloadConnectionCleanup(nsHttpConnectionInfo *aCI)
 
 nsresult
 nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
-                                        nsIInterfaceRequestor *callbacks)
+                                        nsIInterfaceRequestor *callbacks,
+                                        uint32_t caps)
 {
     LOG(("nsHttpConnectionMgr::SpeculativeConnect [ci=%s]\n",
          ci->HashKey().get()));
@@ -336,7 +337,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     nsCOMPtr<nsIInterfaceRequestor> wrappedCallbacks;
     NS_NewInterfaceRequestorAggregation(callbacks, nullptr, getter_AddRefs(wrappedCallbacks));
 
-    uint32_t caps = ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
+    caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
     nsRefPtr<NullHttpTransaction> trans =
         new NullHttpTransaction(ci, wrappedCallbacks, caps);
 
@@ -2813,6 +2814,10 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     nsRefPtr<nsHttpConnection> conn = new nsHttpConnection();
     LOG(("nsHalfOpenSocket::OnOutputStreamReady "
          "Created new nshttpconnection %p\n", conn.get()));
+
+    // Some capabilities are needed before a transaciton actually gets
+    // scheduled (e.g. how to negotiate false start)
+    conn->SetTransactionCaps(mTransaction->Caps());
 
     NetAddr peeraddr;
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
