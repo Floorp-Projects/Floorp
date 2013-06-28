@@ -54,6 +54,8 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
+                                  "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -267,6 +269,14 @@ Download.prototype = {
       // Wait upon any pending cancellation request.
       if (this._promiseCanceled) {
         yield this._promiseCanceled;
+      }
+
+      // Disallow download if parental controls service restricts it.
+      if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
+        let error = new DownloadError(Cr.NS_ERROR_FAILURE, "Download blocked.");
+        error.becauseBlocked = true;
+        error.becauseBlockedByParentalControls = true;
+        throw error;
       }
 
       try {
@@ -541,6 +551,18 @@ DownloadError.prototype = {
    * Indicates an error occurred while writing to the local target.
    */
   becauseTargetFailed: false,
+
+  /**
+   * Indicates the download failed because it was blocked.  If the reason for
+   * blocking is known, the corresponding property will be also set.
+   */
+  becauseBlocked: false,
+
+  /**
+   * Indicates the download was blocked because downloads are globally
+   * disallowed by the Parental Controls or Family Safety features on Windows.
+   */
+  becauseBlockedByParentalControls: false,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

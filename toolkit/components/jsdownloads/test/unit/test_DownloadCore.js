@@ -873,3 +873,25 @@ add_task(function test_download_cancel_midway_restart_with_content_encoding()
   yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
 });
 
+/**
+ * Download with parental controls enabled.
+ */
+add_task(function test_download_blocked_parental_controls()
+{
+  function cleanup() {
+    DownloadIntegration.shouldBlockInTest = false;
+  }
+  do_register_cleanup(cleanup);
+  DownloadIntegration.shouldBlockInTest = true;
+
+  let download = yield promiseSimpleDownload();
+
+  try {
+    yield download.start();
+    do_throw("The download should have blocked.");
+  } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
+    do_check_true(ex.becauseBlockedByParentalControls);
+  }
+  cleanup();
+});
+

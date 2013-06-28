@@ -125,7 +125,6 @@ add_task(function test_getUserDownloadsDirectory()
   cleanup();
 });
 
-
 /**
  * Tests that the getTemporaryDownloadsDirectory returns a valid nsFile 
  * download directory object.
