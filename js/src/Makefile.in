@@ -117,11 +117,6 @@ else
 LOCAL_INCLUDES = -Ictypes/libffi/include
 endif
 
-LOCAL_INCLUDES += \
-    -I. \
-    $(NULL)
-
-
 ifdef MOZ_NATIVE_FFI
 EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
 else
@@ -681,8 +676,6 @@ CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
 ifneq (,$(ENABLE_YARR_JIT))
 CXXFLAGS +=  -DENABLE_JIT=1
 endif
-
-INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 
 #
 # END kludges for the Nitro assembler

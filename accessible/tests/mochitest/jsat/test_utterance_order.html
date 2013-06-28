@@ -57,13 +57,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           accOrElmOrID: "cell",
           expected: [[
-            "table", "Fruits and vegetables", "list 4 items", "First item",
-            "link", "Apples", "link", "Bananas", "link", "Peaches",
-            "Last item", "link", "Plums"
+            "table with 1 column and 1 row", "Fruits and vegetables",
+            "Column 1 Row 1", "list 4 items", "First item", "link", "Apples",
+            "link", "Bananas", "link", "Peaches", "Last item", "link", "Plums"
           ], [
             "Apples", "link", "First item", "Bananas", "link", "Peaches",
             "link", "Plums", "link", "Last item", "list 4 items",
-            "Fruits and vegetables", "table"
+            "Column 1 Row 1", "Fruits and vegetables",
+            "table with 1 column and 1 row"
           ]]
         }, {
           // Test pivot to list from li_one.

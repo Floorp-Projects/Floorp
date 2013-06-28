@@ -12,8 +12,8 @@
 // This file declares the data structures for building a MIRGraph from a
 // JSScript.
 
-#include "MIR.h"
-#include "MIRGraph.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 namespace js {
 namespace ion {
@@ -507,7 +507,6 @@ class IonBuilder : public MIRGenerator
                                            uint32_t discards);
 
     // Utility intrinsics.
-    InliningStatus inlineThrowError(CallInfo &callInfo);
     InliningStatus inlineIsCallable(CallInfo &callInfo);
     InliningStatus inlineNewObjectWithClassPrototype(CallInfo &callInfo);
     InliningStatus inlineHaveSameClass(CallInfo &callInfo);

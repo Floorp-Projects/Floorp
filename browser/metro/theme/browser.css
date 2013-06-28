@@ -402,12 +402,16 @@ appbar[visible] {
   -moz-image-region: rect(0 80px 40px 40px);
 }
 
-#toolbar > .appbar-primary:not([checked]):active {
+#toolbar > .appbar-primary[checked] {
   -moz-image-region: rect(0 120px 40px 80px);
 }
 
 #toolbar > .appbar-primary[checked]:hover:not(:active) {
   -moz-image-region: rect(0 160px 40px 120px);
+}
+
+#toolbar > .appbar-primary:active {
+  -moz-image-region: rect(0 120px 40px 80px);
 }
 
 @media (min-resolution: 130dpi) {
@@ -424,12 +428,16 @@ appbar[visible] {
     -moz-image-region: rect(0 112px 56px 56px);
   }
 
-  #toolbar > .appbar-primary:not([checked]):active {
-    -moz-image-region: rect(0 168px 56px 112px);
+  #toolbar > .appbar-primary[checked] {
+    -moz-image-region: rect(0 224px 56px 168px);
   }
 
   #toolbar > .appbar-primary[checked]:hover:not(:active) {
     -moz-image-region: rect(0 224px 56px 168px);
+  }
+
+  #toolbar > .appbar-primary:active {
+    -moz-image-region: rect(0 168px 56px 112px);
   }
 }
 

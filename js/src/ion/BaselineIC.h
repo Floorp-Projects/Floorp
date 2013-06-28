@@ -14,8 +14,8 @@
 #include "jsgc.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "BaselineJIT.h"
-#include "BaselineRegisters.h"
+#include "ion/BaselineJIT.h"
+#include "ion/BaselineRegisters.h"
 
 #include "gc/Heap.h"
 

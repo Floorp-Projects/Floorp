@@ -194,6 +194,37 @@ ion::ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length)
     return array;
 }
 
+ParallelResult
+ion::ParConcatStrings(ForkJoinSlice *slice, HandleString left, HandleString right,
+                      MutableHandleString out)
+{
+    JSString *str = ConcatStrings<NoGC>(slice, left, right);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
+}
+
+ParallelResult
+ion::ParIntToString(ForkJoinSlice *slice, int i, MutableHandleString out)
+{
+    JSFlatString *str = Int32ToString<NoGC>(slice, i);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
+}
+
+ParallelResult
+ion::ParDoubleToString(ForkJoinSlice *slice, double d, MutableHandleString out)
+{
+    JSString *str = js_NumberToString<NoGC>(slice, d);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
+}
+
 #define PAR_RELATIONAL_OP(OP, EXPECTED)                                         \
 do {                                                                            \
     /* Optimize for two int-tagged operands (typical loop control). */          \
@@ -452,7 +483,8 @@ ion::ParCallToUncompiledScript(JSFunction *func)
             Spew(SpewBailouts, "Call to bound function (excessive depth: %d)", depth);
         }
     } else {
-        JS_NOT_REACHED("ParCall'ed functions must have scripts or be ES6 bound functions.");
+        JS_ASSERT(func->isNative());
+        Spew(SpewBailouts, "Call to native function");
     }
 #endif
 }

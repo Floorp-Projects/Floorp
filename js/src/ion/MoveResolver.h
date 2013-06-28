@@ -7,9 +7,9 @@
 #ifndef ion_MoveResolver_h
 #define ion_MoveResolver_h
 
-#include "Registers.h"
-#include "InlineList.h"
-#include "IonAllocPolicy.h"
+#include "ion/Registers.h"
+#include "ion/InlineList.h"
+#include "ion/IonAllocPolicy.h"
 
 namespace js {
 namespace ion {

@@ -6,11 +6,11 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "CodeGenerator-shared.h"
+#include "ion/shared/CodeGenerator-shared.h"
 #include "ion/MIRGenerator.h"
 #include "ion/IonFrames-inl.h"
 #include "ion/MIR.h"
-#include "CodeGenerator-shared-inl.h"
+#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "ion/IonSpewer.h"
 #include "ion/IonMacroAssembler.h"
 #include "ion/ParallelFunctions.h"

@@ -178,7 +178,7 @@ ASSERT_OK(JSBool ok)
 enum ErrorNum {
 #define MSG_DEF(name, number, count, exception, format) \
   name = number,
-#include "ctypes.msg"
+#include "ctypes/ctypes.msg"
 #undef MSG_DEF
   CTYPESERR_LIMIT
 };
@@ -204,7 +204,7 @@ enum ABICode {
 enum TypeCode {
   TYPE_void_t,
 #define DEFINE_TYPE(name, type, ffiType) TYPE_##name,
-#include "typedefs.h"
+#include "ctypes/typedefs.h"
   TYPE_pointer,
   TYPE_function,
   TYPE_array,

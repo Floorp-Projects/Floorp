@@ -261,21 +261,6 @@ public class AwesomeBar extends GeckoActivity
         }
     }
 
-    /*
-     * Only one factory can be set on the inflater; however, we want to use two
-     * factories (GeckoViewsFactory and the FragmentActivity factory).
-     * Overriding onCreateView() here allows us to dispatch view creation to
-     * both factories.
-     */
-    @Override
-    public View onCreateView(String name, Context context, AttributeSet attrs) {
-        View view = GeckoViewsFactory.getInstance().onCreateView(name, context, attrs);
-        if (view == null) {
-            view = super.onCreateView(name, context, attrs);
-        }
-        return view;
-    }
-
     private boolean handleBackKey() {
         // Let mAwesomeTabs try to handle the back press, since we may be in a
         // bookmarks sub-folder.

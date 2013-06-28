@@ -34,9 +34,9 @@
 
 #include "assembler/assembler/MacroAssembler.h"
 
-#include "MatchResult.h"
-#include "Yarr.h"
-#include "YarrPattern.h"
+#include "yarr/MatchResult.h"
+#include "yarr/Yarr.h"
+#include "yarr/YarrPattern.h"
 
 #if WTF_CPU_X86 && !WTF_COMPILER_MSVC && !WTF_COMPILER_SUNCC
 #define YARR_CALL __attribute__ ((regparm (3)))

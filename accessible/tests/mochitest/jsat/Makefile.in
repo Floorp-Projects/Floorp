@@ -15,9 +15,10 @@ MOCHITEST_A11Y_FILES =\
 jsatcommon.js \
 output.js \
 test_alive.html \
-test_explicit_names.html \
-test_utterance_order.html \
 test_braille.html \
+test_explicit_names.html \
+test_tables.html \
+test_utterance_order.html \
 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -7,8 +7,8 @@
 #ifndef ion_ParallelSafetyAnalysis_h
 #define ion_ParallelSafetyAnalysis_h
 
-#include "MIR.h"
-#include "CompileInfo.h"
+#include "ion/MIR.h"
+#include "ion/CompileInfo.h"
 
 namespace js {
 

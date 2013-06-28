@@ -34,7 +34,7 @@
 
 #if ENABLE_ASSEMBLER && WTF_CPU_X86
 
-#include "MacroAssemblerX86Common.h"
+#include "assembler/assembler/MacroAssemblerX86Common.h"
 
 namespace JSC {
 

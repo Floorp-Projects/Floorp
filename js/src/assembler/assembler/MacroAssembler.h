@@ -35,27 +35,27 @@
 #if ENABLE_ASSEMBLER
 
 #if WTF_CPU_ARM_THUMB2
-#include "MacroAssemblerARMv7.h"
+#include "assembler/assembler/MacroAssemblerARMv7.h"
 namespace JSC { typedef MacroAssemblerARMv7 MacroAssemblerBase; }
 
 #elif WTF_CPU_ARM_TRADITIONAL
-#include "MacroAssemblerARM.h"
+#include "assembler/assembler/MacroAssemblerARM.h"
 namespace JSC { typedef MacroAssemblerARM MacroAssemblerBase; }
 
 #elif WTF_CPU_MIPS
-#include "MacroAssemblerMIPS.h"
+#include "assembler/assembler/MacroAssemblerMIPS.h"
 namespace JSC { typedef MacroAssemblerMIPS MacroAssemblerBase; }
 
 #elif WTF_CPU_X86
-#include "MacroAssemblerX86.h"
+#include "assembler/assembler/MacroAssemblerX86.h"
 namespace JSC { typedef MacroAssemblerX86 MacroAssemblerBase; }
 
 #elif WTF_CPU_X86_64
-#include "MacroAssemblerX86_64.h"
+#include "assembler/assembler/MacroAssemblerX86_64.h"
 namespace JSC { typedef MacroAssemblerX86_64 MacroAssemblerBase; }
 
 #elif WTF_CPU_SPARC
-#include "MacroAssemblerSparc.h"
+#include "assembler/assembler/MacroAssemblerSparc.h"
 namespace JSC { typedef MacroAssemblerSparc MacroAssemblerBase; }
 
 #else

@@ -2304,6 +2304,41 @@ class LConcat : public LInstructionHelper<1, 2, 4>
     }
 };
 
+class LParConcat : public LInstructionHelper<1, 3, 3>
+{
+  public:
+    LIR_HEADER(ParConcat)
+
+    LParConcat(const LAllocation &parSlice, const LAllocation &lhs, const LAllocation &rhs,
+               const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3) {
+        setOperand(0, parSlice);
+        setOperand(1, lhs);
+        setOperand(2, rhs);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+
+    const LAllocation *parSlice() {
+        return this->getOperand(0);
+    }
+    const LAllocation *lhs() {
+        return this->getOperand(1);
+    }
+    const LAllocation *rhs() {
+        return this->getOperand(2);
+    }
+    const LDefinition *temp1() {
+        return this->getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return this->getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return this->getTemp(2);
+    }
+};
+
 // Get uint16 character code from a string.
 class LCharCodeAt : public LInstructionHelper<1, 2, 0>
 {
@@ -2442,8 +2477,7 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1>
     }
 };
 
-// Convert a any input type hosted on one definition to a string with a function
-// call.
+// Convert an integer hosted on one definition to a string with a function call.
 class LIntToString : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -2453,6 +2487,25 @@ class LIntToString : public LInstructionHelper<1, 1, 0>
         setOperand(0, input);
     }
 
+    const MToString *mir() {
+        return mir_->toToString();
+    }
+};
+
+// Convert a double hosted on one definition to a string with a function call.
+class LDoubleToString : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(DoubleToString)
+
+    LDoubleToString(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *tempInt() {
+        return getTemp(0);
+    }
     const MToString *mir() {
         return mir_->toToString();
     }

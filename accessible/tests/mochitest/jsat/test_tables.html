@@ -1,0 +1,297 @@
+<html>
+<head>
+  <title>[AccessFu] Improve reading of table semantics</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="output.js"></script>
+  <script type="application/javascript">
+
+    function doTest() {
+      // Test the following accOrElmOrID.
+      var tests = [{
+        accOrElmOrID: "table1",
+        expectedUtterance: [["table with 2 columns and 2 rows",
+          "Column 1 Row 1", "col1", "Column 2 Row 1", "col2",
+          "Column 1 Row 2 col1", "cell1", "Column 2 Row 2 col2", "cell2"], [
+          "col1", "Column 1 Row 1", "col2", "Column 2 Row 1", "cell1",
+          "Column 1 Row 2 col1", "cell2", "Column 2 Row 2 col2",
+          "table with 2 columns and 2 rows"]],
+        expectedBraille: [["tbl 2c 2r", "c1r1", "col1", "c2r1", "col2",
+          "c1r2 col1", "cell1", "c2r2 col2", "cell2"], ["col1", "c1r1", "col2",
+          "c2r1", "cell1", "c1r2 col1", "cell2", "c2r2 col2", "tbl 2c 2r"]]
+      }, {
+        accOrElmOrID: "table2",
+        expectedUtterance: [["table with 2 columns and 2 rows",
+          "Column 1 Row 1 col1", "cell1", "Column 2 Row 1 col2",
+          "table with 1 column and 2 rows", "Column 1 Row 1", "colheader",
+          "Column 1 Row 2 colheader", "bla", "Column 1 Row 2", "col1",
+          "Column 2 Row 2", "col2"], ["cell1", "Column 1 Row 1 col1",
+          "colheader", "Column 1 Row 1", "bla", "Column 1 Row 2 colheader",
+          "table with 1 column and 2 rows", "Column 2 Row 1 col2", "col1",
+          "Column 1 Row 2", "col2", "Column 2 Row 2",
+          "table with 2 columns and 2 rows"]],
+        expectedBraille: [["tbl 2c 2r", "c1r1 col1", "cell1", "c2r1 col2",
+          "tbl 1c 2r", "c1r1", "colheader", "c1r2 colheader", "bla", "c1r2",
+          "col1", "c2r2", "col2"], ["cell1", "c1r1 col1", "colheader", "c1r1",
+          "bla", "c1r2 colheader", "tbl 1c 2r", "c2r1 col2", "col1", "c1r2",
+          "col2", "c2r2", "tbl 2c 2r"]]
+      }, {
+        accOrElmOrID: "table3",
+        expectedUtterance: [["table with 2 columns and 2 rows",
+          "Column 2 Row 1 col2", "table with 1 column and 2 rows",
+          "Column 1 Row 1", "colheader", "Column 1 Row 2 colheader", "bla"], [
+          "colheader", "Column 1 Row 1", "bla", "Column 1 Row 2 colheader",
+          "table with 1 column and 2 rows", "Column 2 Row 1 col2",
+          "table with 2 columns and 2 rows"]],
+        expectedBraille: [["tbl 1c 2r", "c1r1", "colheader", "c1r2 colheader",
+          "bla"], ["colheader", "c1r1", "bla", "c1r2 colheader", "tbl 1c 2r"]]
+      }, {
+        accOrElmOrID: "table4",
+        expectedUtterance: [["table with 4 columns and 3 rows",
+          "Column 1 Row 1", "col1", "Column 2 Row 1", "col2", "Column 3 Row 1",
+          "col3", "Column 1 Row 2 spans 2 columns col1", "row1",
+          "Column 3 Row 2 col3 row1", "cell1",
+          "Column 4 Row 2 spans 2 rows row1", "cell2", "Column 1 Row 3 col1",
+          "row2", "Column 2 Row 3 col2 row2", "cell3",
+          "Column 3 Row 3 col3 row2", "cell4"], ["col1", "Column 1 Row 1",
+          "col2", "Column 2 Row 1", "col3", "Column 3 Row 1", "row1",
+          "Column 1 Row 2 spans 2 columns col1", "cell1",
+          "Column 3 Row 2 col3 row1", "cell2",
+          "Column 4 Row 2 spans 2 rows row1", "row2", "Column 1 Row 3 col1",
+          "cell3", "Column 2 Row 3 col2 row2", "cell4",
+          "Column 3 Row 3 col3 row2", "table with 4 columns and 3 rows"]],
+        expectedBraille: [["tbl 4c 3r", "c1r1", "col1", "c2r1", "col2", "c3r1",
+          "col3", "c1r2 col1", "row1", "c3r2 col3 row1", "cell1", "c4r2 row1",
+          "cell2", "c1r3 col1", "row2", "c2r3 col2 row2", "cell3",
+          "c3r3 col3 row2", "cell4"], ["col1", "c1r1", "col2", "c2r1", "col3",
+          "c3r1", "row1", "c1r2 col1", "cell1", "c3r2 col3 row1", "cell2",
+          "c4r2 row1", "row2", "c1r3 col1", "cell3", "c2r3 col2 row2", "cell4",
+          "c3r3 col3 row2", "tbl 4c 3r"]]
+      }, {
+        accOrElmOrID: "table5",
+        expectedUtterance: [["Row1", "Row2"], ["Row1", "Row2"]],
+        expectedBraille: [["Row1", "Row2"], ["Row1", "Row2"]]
+      }, {
+        // Test pivot to table1_th1 from table1.
+        accOrElmOrID: "table1_th1",
+        oldAccOrElmOrID: "table1",
+        expectedUtterance: [["Column 1 Row 1", "col1"], ["col1",
+          "Column 1 Row 1"]],
+        expectedBraille: [["c1r1", "col1"], ["col1", "c1r1"]]
+      }, {
+        // Test pivot to table1_td2 from table1.
+        accOrElmOrID: "table1_td2",
+        oldAccOrElmOrID: "table1",
+        expectedUtterance: [["Column 2 Row 2 col2", "cell2"], ["cell2",
+          "Column 2 Row 2 col2"]],
+        expectedBraille: [["c2r2 col2", "cell2"], ["cell2", "c2r2 col2"]]
+      }, {
+        // Test pivot to table1_td2 from table1_th1.
+        accOrElmOrID: "table1_td2",
+        oldAccOrElmOrID: "table1_th1",
+        expectedUtterance: [["Column 2 Row 2 col2", "cell2"], ["cell2",
+          "Column 2 Row 2 col2"]],
+        expectedBraille: [["c2r2 col2", "cell2"], ["cell2", "c2r2 col2"]]
+      }, {
+        // Test pivot to table1_td2 from table1_td1.
+        accOrElmOrID: "table1_td2",
+        oldAccOrElmOrID: "table1_td1",
+        expectedUtterance: [["Column 2 col2", "cell2"], ["cell2",
+          "Column 2 col2"]],
+        expectedBraille: [["c2r2 col2", "cell2"], ["cell2", "c2r2 col2"]]
+      }, {
+        // Test pivot to table2_cell_1 from table2.
+        accOrElmOrID: "table2_cell_1",
+        oldAccOrElmOrID: "table2",
+        expectedUtterance: [["Column 1 Row 1 col1", "cell1"], ["cell1",
+          "Column 1 Row 1 col1"]],
+        expectedBraille: [["c1r1 col1", "cell1"], ["cell1", "c1r1 col1"]]
+      }, {
+        // Test pivot to table2_cell_2 from table2.
+        accOrElmOrID: "table2_cell_2",
+        oldAccOrElmOrID: "table2",
+        expectedUtterance: [["Column 2 Row 1 col2",
+          "table with 1 column and 2 rows", "Column 1 Row 1", "colheader",
+          "Column 1 Row 2 colheader", "bla"], ["colheader", "Column 1 Row 1",
+          "bla", "Column 1 Row 2 colheader", "table with 1 column and 2 rows",
+          "Column 2 Row 1 col2"]],
+        expectedBraille: [["c2r1 col2", "tbl 1c 2r", "c1r1", "colheader",
+          "c1r2 colheader", "bla"], ["colheader", "c1r1", "bla",
+          "c1r2 colheader", "tbl 1c 2r", "c2r1 col2"]]
+      }, {
+        // Test pivot to table2_cell_1 from table2_cell_2.
+        accOrElmOrID: "table2_cell_1",
+        oldAccOrElmOrID: "table2_cell_2",
+        expectedUtterance: [["Column 1 col1", "cell1"], ["cell1",
+          "Column 1 col1"]],
+        expectedBraille: [["c1r1 col1", "cell1"], ["cell1", "c1r1 col1"]]
+      }, {
+        // Test pivot to table3_cell from table2.
+        accOrElmOrID: "table3_cell",
+        oldAccOrElmOrID: "table2",
+        expectedUtterance: [["Column 2 Row 1 col2",
+          "table with 1 column and 2 rows", "Column 1 Row 2 colheader",
+          "bla"], ["bla", "Column 1 Row 2 colheader",
+          "table with 1 column and 2 rows", "Column 2 Row 1 col2"]],
+        expectedBraille: [["c1r2 colheader", "bla"], ["bla", "c1r2 colheader"]]
+      }, {
+        // Test pivot to table3_cell from table2_cell_1.
+        accOrElmOrID: "table3_cell",
+        oldAccOrElmOrID: "table2_cell_1",
+        expectedUtterance: [["Column 2 col2", "table with 1 column and 2 rows",
+          "Column 1 Row 2 colheader", "bla"], ["bla",
+          "Column 1 Row 2 colheader", "table with 1 column and 2 rows",
+          "Column 2 Row 1 col2"]],
+        expectedBraille: [["c1r2 colheader", "bla"], ["bla", "c1r2 colheader"]]
+      }, {
+        // Test pivot to table3_cell from table3_ch.
+        accOrElmOrID: "table3_cell",
+        oldAccOrElmOrID: "table3_ch",
+        expectedUtterance: [["Row 2", "bla"], ["bla", "Row 2"]],
+        expectedBraille: [["c1r2", "bla"], ["bla", "c1r2"]]
+      }, {
+        // Test pivot to table3_cell from table1_td1.
+        accOrElmOrID: "table3_cell",
+        oldAccOrElmOrID: "table1_td1",
+        expectedUtterance: [["table with 2 columns and 2 rows",
+          "Column 2 Row 1 col2", "table with 1 column and 2 rows",
+          "Column 1 Row 2 colheader", "bla"], ["bla",
+          "Column 1 Row 2 colheader", "table with 1 column and 2 rows",
+          "Column 2 Row 1 col2", "table with 2 columns and 2 rows"]],
+        expectedBraille: [["c1r2 colheader", "bla"], ["bla", "c1r2 colheader"]]
+      }, {
+        // Test pivot to table4_ch_3 from table4.
+        accOrElmOrID: "table4_ch_3",
+        oldAccOrElmOrID: "table4",
+        expectedUtterance: [["Column 3 Row 1", "col3"], ["col3",
+          "Column 3 Row 1"]],
+        expectedBraille: [["c3r1", "col3"], ["col3", "c3r1"]]
+      }, {
+        // Test pivot to table4_rh_1 from table4_ch_3.
+        accOrElmOrID: "table4_rh_1",
+        oldAccOrElmOrID: "table4_ch_3",
+        expectedUtterance: [["Column 1 Row 2 spans 2 columns col1", "row1"], [
+          "row1", "Column 1 Row 2 spans 2 columns col1"]],
+        expectedBraille: [["c1r2 col1", "row1"], ["row1", "c1r2 col1"]]
+      }, {
+        // Test pivot to table4_cell_3 from table4_rh_1.
+        accOrElmOrID: "table4_cell_3",
+        oldAccOrElmOrID: "table4_rh_1",
+        expectedUtterance: [["Column 4 spans 2 rows", "cell2"], ["cell2",
+          "Column 4 spans 2 rows"]],
+        expectedBraille: [["c4r2", "cell2"], ["cell2", "c4r2"]]
+      }, {
+        // Test pivot to table4_cell_5 from table4_cell_3.
+        accOrElmOrID: "table4_cell_5",
+        oldAccOrElmOrID: "table4_cell_3",
+        expectedUtterance: [["Column 2 Row 3 col2 row2", "cell3"], ["cell3",
+          "Column 2 Row 3 col2 row2"]],
+        expectedBraille: [["c2r3 col2 row2", "cell3"], ["cell3",
+          "c2r3 col2 row2"]]
+      }];
+
+      SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, 0);
+
+      // Test outputs (utterance and braille) for tables including their
+      // headers and cells.
+      tests.forEach(function run(test) {
+        var outputOrderValues = [0, 1];
+        outputOrderValues.forEach(function testOutputOrder(outputOrder) {
+          SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, outputOrder);
+          testOutput(test.expectedUtterance[outputOrder], test.accOrElmOrID,
+            test.oldAccOrElmOrID, 1);
+          testOutput(test.expectedBraille[outputOrder], test.accOrElmOrID,
+            test.oldAccOrElmOrID, 0);
+        });
+      });
+
+      // If there was an original utterance order preference, revert to it.
+      SpecialPowers.clearUserPref(PREF_UTTERANCE_ORDER);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <div id="root">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=830748"
+       title="[AccessFu] Improve reading of table semantics">
+       Mozilla Bug 830748
+       </a>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+    <table id="table1">
+      <thead>
+        <tr>
+          <th id="table1_th1">col1</th>
+          <th>col2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="table1_td1">cell1</td>
+          <td id="table1_td2">cell2</td>
+        </tr>
+      </tbody>
+    </table>
+    <table id="table2" border="1">
+      <tr>
+        <td id="table2_cell_1" headers="table2_ch_1">cell1</td>
+        <td id="table2_cell_2" headers="table2_ch_2">
+          <table id="table3">
+            <thead>
+              <tr>
+                <th id="table3_ch">colheader</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="table3_cell">bla</td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td id="table2_ch_1" scope="col">col1</td>
+        <td id="table2_ch_2" scope="col">col2</td>
+      </tr>
+    </table>
+    <table id="table4" border="1">
+      <thead>
+        <tr>
+          <th id="table4_ch_1">col1</th>
+          <th id="table4_ch_2">col2</th>
+          <td id="table4_ch_3" scope="col">col3</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th id="table4_rh_1" colspan="2">row1</th>
+          <td id="table4_cell_2">cell1</td>
+          <td id="table4_cell_3" rowspan="2">cell2</td>
+        </tr>
+        <tr>
+          <td id="table4_rh_2" scope="row">row2</td>
+          <td id="table4_cell_5">cell3</td>
+          <td id="table4_cell_6">cell4</td>
+        </tr>
+      </tbody>
+    </table>
+    <table id="table5">
+      <tr><td>Row1</td></tr>
+      <tr><td>Row2</td></tr>
+    </table>
+  </div>
+</body>
+</html>
