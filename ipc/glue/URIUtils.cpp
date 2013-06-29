@@ -80,7 +80,7 @@ SerializeURI(nsIURI* aURI,
 
   if (!allowed) {
     MOZ_CRASH("All IPDL URIs must be serializable or an allowed "
-                    "scheme!");
+              "scheme!");
   }
 
   GenericURIParams params;

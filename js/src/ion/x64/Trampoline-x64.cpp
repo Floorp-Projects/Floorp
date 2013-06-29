@@ -451,7 +451,6 @@ IonCode *
 IonRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
 {
     MOZ_ASSUME_NOT_REACHED("x64 does not use bailout tables");
-    return NULL;
 }
 
 IonCode *
@@ -563,7 +562,6 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
               case VMFunction::DoubleByValue:
               case VMFunction::DoubleByRef:
                 MOZ_ASSUME_NOT_REACHED("NYI: x64 callVM should not be used with 128bits values.");
-                break;
             }
         }
     }
@@ -589,7 +587,6 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unknown failure kind");
-        break;
     }
 
     // Load the outparam and free any allocated stack.

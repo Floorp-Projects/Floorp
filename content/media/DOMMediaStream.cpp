@@ -256,7 +256,6 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
     break;
   default:
     MOZ_CRASH("Unhandled track type");
-    return nullptr;
   }
   mTracks.AppendElement(track);
 

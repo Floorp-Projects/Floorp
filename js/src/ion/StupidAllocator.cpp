@@ -37,7 +37,6 @@ StupidAllocator::registerIndex(AnyRegister reg)
             return i;
     }
     MOZ_ASSUME_NOT_REACHED("Bad register");
-    return UINT32_MAX;
 }
 
 bool

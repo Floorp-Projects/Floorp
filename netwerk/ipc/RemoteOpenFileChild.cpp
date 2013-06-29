@@ -204,10 +204,7 @@ RemoteOpenFileChild::OnCachedFileDescriptor(const nsAString& aPath,
     MOZ_ASSERT(mFile);
 
     nsString path;
-    if (NS_FAILED(mFile->GetPath(path))) {
-      MOZ_CRASH("Couldn't get path from file!");
-    }
-
+    MOZ_ASSERT(NS_SUCCEEDED(mFile->GetPath(path)));
     MOZ_ASSERT(path == aPath, "Paths don't match!");
   }
 #endif

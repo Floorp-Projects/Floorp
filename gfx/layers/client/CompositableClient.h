@@ -74,7 +74,6 @@ public:
   virtual TextureInfo GetTextureInfo() const
   {
     MOZ_CRASH("This method should be overridden");
-    return TextureInfo();
   }
 
   LayersBackend GetCompositorBackendType() const;

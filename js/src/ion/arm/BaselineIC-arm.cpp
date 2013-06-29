@@ -197,7 +197,6 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Unhandled op for BinaryArith_Int32.");
-        return false;
     }
 
     EmitReturnFromIC(masm);
@@ -249,7 +248,6 @@ ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected op");
-        return false;
     }
 
     EmitReturnFromIC(masm);

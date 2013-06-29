@@ -547,7 +547,6 @@ class MacroAssembler : public MacroAssemblerSpecific
             break;
           default:
             MOZ_ASSUME_NOT_REACHED("Invalid typed array type");
-            break;
         }
     }
 
@@ -563,7 +562,6 @@ class MacroAssembler : public MacroAssemblerSpecific
             break;
           default:
             MOZ_ASSUME_NOT_REACHED("Invalid typed array type");
-            break;
         }
     }
 
@@ -947,7 +945,6 @@ JSOpToDoubleCondition(JSOp op)
         return Assembler::DoubleGreaterThanOrEqual;
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected comparison operation");
-        return Assembler::DoubleEqual;
     }
 }
 
@@ -975,7 +972,6 @@ JSOpToCondition(JSOp op, bool isSigned)
             return Assembler::GreaterThanOrEqual;
           default:
             MOZ_ASSUME_NOT_REACHED("Unrecognized comparison operation");
-            return Assembler::Equal;
         }
     } else {
         switch (op) {
@@ -995,7 +991,6 @@ JSOpToCondition(JSOp op, bool isSigned)
             return Assembler::AboveOrEqual;
           default:
             MOZ_ASSUME_NOT_REACHED("Unrecognized comparison operation");
-            return Assembler::Equal;
         }
     }
 }

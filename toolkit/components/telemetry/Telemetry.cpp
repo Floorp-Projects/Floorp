@@ -672,7 +672,6 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
     return JS_TRUE;
   default:
     MOZ_CRASH("unhandled reflection status");
-    return JS_FALSE;
   }
 }
 

@@ -135,7 +135,6 @@ class AssemblerX86Shared
         }
 
         MOZ_ASSUME_NOT_REACHED("Unknown double condition");
-        return NaN_HandledByCond;
     }
 
     static void staticAsserts() {

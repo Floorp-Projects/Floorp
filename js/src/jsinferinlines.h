@@ -114,7 +114,6 @@ CompilerOutput::ion() const
     }
 #endif
     MOZ_ASSUME_NOT_REACHED("Invalid kind of CompilerOutput");
-    return NULL;
 }
 
 inline bool
@@ -224,7 +223,6 @@ PrimitiveTypeFlag(JSValueType type)
         return TYPE_FLAG_LAZYARGS;
       default:
         MOZ_ASSUME_NOT_REACHED("Bad type");
-        return 0;
     }
 }
 
@@ -248,7 +246,6 @@ TypeFlagPrimitive(TypeFlags flags)
         return JSVAL_TYPE_MAGIC;
       default:
         MOZ_ASSUME_NOT_REACHED("Bad type");
-        return (JSValueType) 0;
     }
 }
 
@@ -499,7 +496,6 @@ GetClassForProtoKey(JSProtoKey key)
 
       default:
         MOZ_ASSUME_NOT_REACHED("Bad proto key");
-        return NULL;
     }
 }
 
@@ -1592,7 +1588,6 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool own)
             }
 
             MOZ_ASSUME_NOT_REACHED("Missing property");
-            return NULL;
         }
     }
 

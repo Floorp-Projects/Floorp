@@ -171,7 +171,6 @@ CanvasLayerD3D10::UpdateSurface()
 
       default:
         MOZ_CRASH("Unhandled SharedSurfaceType.");
-        return;
     }
   } else if (mSurface) {
     RECT r;

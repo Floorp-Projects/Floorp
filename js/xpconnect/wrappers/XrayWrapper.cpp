@@ -148,12 +148,12 @@ public:
     static bool call(JSContext *cx, HandleObject wrapper,
                      const JS::CallArgs &args, js::Wrapper& baseInstance)
     {
-        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
+        MOZ_ASSUME_NOT_REACHED("Call trap currently implemented only for XPCWNs");
     }
     static bool construct(JSContext *cx, HandleObject wrapper,
                           const JS::CallArgs &args, js::Wrapper& baseInstance)
     {
-        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
+        MOZ_ASSUME_NOT_REACHED("Call trap currently implemented only for XPCWNs");
     }
 
     virtual void preserveWrapper(JSObject *target) = 0;

@@ -1901,8 +1901,6 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
       break;
     default:
       MOZ_CRASH("Unexpected computed value for 'flex-flow' property");
-      mMainAxis = inlineDimension;
-      break;
   }
 
   // Determine cross axis:

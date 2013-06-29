@@ -1817,18 +1817,15 @@ nsDOMClassInfo::Init()
     if (!sClassInfoData[i].u.mConstructorFptr ||
         sClassInfoData[i].mDebugID != i) {
       MOZ_CRASH("Class info data out of sync, you forgot to update "
-                      "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
-                      "mozilla will not work without this fixed!");
-      return NS_ERROR_NOT_INITIALIZED;
+                "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
+                "mozilla will not work without this fixed!");
     }
   }
 
   for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
     if (!sClassInfoData[i].mInterfaces) {
       MOZ_CRASH("Class info data without an interface list! Fix this, "
-                      "mozilla will not work without this fixed!");
-
-      return NS_ERROR_NOT_INITIALIZED;
+                "mozilla will not work without this fixed!");
      }
    }
 #endif
@@ -2028,7 +2025,6 @@ nsDOMClassInfo::PostTransplant(nsIXPConnectWrappedNative *wrapper,
                                JSContext *cx, JSObject *obj)
 {
   MOZ_CRASH("nsDOMClassInfo::PostTransplant Don't call me!");
-  return NS_OK;
 }
 
 NS_IMETHODIMP

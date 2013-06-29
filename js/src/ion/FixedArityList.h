@@ -36,13 +36,9 @@ class FixedArityList<T, 0>
   public:
     T &operator [](size_t index) {
         MOZ_ASSUME_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
     }
     const T &operator [](size_t index) const {
         MOZ_ASSUME_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
     }
 };
 

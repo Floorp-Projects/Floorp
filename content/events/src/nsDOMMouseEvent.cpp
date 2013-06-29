@@ -142,7 +142,6 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
       return NS_OK;
     default:
       MOZ_CRASH("There is no space to store the modifiers");
-      return NS_ERROR_FAILURE;
   }
 }
 
@@ -243,7 +242,6 @@ nsDOMMouseEvent::Buttons()
       return static_cast<nsMouseEvent_base*>(mEvent)->buttons;
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
-      return 0;
   }
 }
 

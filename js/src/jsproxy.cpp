@@ -309,13 +309,13 @@ BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags, Mut
 bool
 BaseProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    MOZ_NOT_REACHED("callable proxies should implement call trap");
+    MOZ_ASSUME_NOT_REACHED("callable proxies should implement call trap");
 }
 
 bool
 BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    MOZ_NOT_REACHED("callable proxies should implement construct trap");
+    MOZ_ASSUME_NOT_REACHED("callable proxies should implement construct trap");
 }
 
 const char *
@@ -327,14 +327,14 @@ BaseProxyHandler::className(JSContext *cx, HandleObject proxy)
 JSString *
 BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
-    MOZ_NOT_REACHED("callable proxies should implement fun_toString trap");
+    MOZ_ASSUME_NOT_REACHED("callable proxies should implement fun_toString trap");
 }
 
 bool
 BaseProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy,
                                   RegExpGuard *g)
 {
-    MOZ_NOT_REACHED("This should have been a wrapped regexp");
+    MOZ_ASSUME_NOT_REACHED("This should have been a wrapped regexp");
 }
 
 bool

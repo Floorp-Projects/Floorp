@@ -1480,7 +1480,6 @@ protected:
                                             MOZ_OVERRIDE
   {
     MOZ_CRASH("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
   }
 
   uint64_t RequestedVersion() const
@@ -1560,7 +1559,6 @@ protected:
                                             MOZ_OVERRIDE
   {
     MOZ_CRASH("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
   }
 
 private:

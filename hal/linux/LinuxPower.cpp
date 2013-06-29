@@ -67,9 +67,7 @@ QuitHard(hal::ShutdownMode aMode)
       break;
     default:
       MOZ_CRASH();
-      break;
   }
-  MOZ_CRASH();
 }
 
 // Function to complusively shut down the system with a given mode when timeout.

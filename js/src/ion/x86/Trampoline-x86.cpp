@@ -610,7 +610,6 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unknown failure kind");
-        break;
     }
 
     // Load the outparam and free any allocated stack.

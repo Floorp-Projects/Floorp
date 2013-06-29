@@ -31,7 +31,6 @@ ComputeTransformForRotation(const nsIntRect& aBounds,
         break;
     default:
         MOZ_CRASH("Unknown rotation");
-        break;
     }
     return transform;
 }

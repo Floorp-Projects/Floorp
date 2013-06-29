@@ -124,7 +124,6 @@ AssemblerX86Shared::InvertCondition(Condition cond)
         return Above;
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected condition");
-        return Equal;
     }
 }
 

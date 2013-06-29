@@ -2994,7 +2994,6 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     return false;
   }
   MOZ_CRASH("Unexpected enabledState");
-  return false;
 }
 
 nsIDocument*

@@ -271,7 +271,6 @@ LAllocation::toString() const
         return buf;
       default:
         MOZ_ASSUME_NOT_REACHED("what?");
-        return "???";
     }
 }
 #endif // DEBUG

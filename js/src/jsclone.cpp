@@ -928,7 +928,6 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unknown TypedArray type");
-        return false;
     }
 
     if (!obj)
@@ -971,7 +970,6 @@ bytesPerTypedArrayElement(uint32_t arrayType)
         return sizeof(uint64_t);
       default:
         MOZ_ASSUME_NOT_REACHED("unknown TypedArray type");
-        return 0;
     }
 }
 
@@ -1008,7 +1006,6 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, 
         return in.readArray((uint64_t*) buffer.dataPointer(), nelems);
       default:
         MOZ_ASSUME_NOT_REACHED("unknown TypedArray type");
-        return false;
     }
 }
 

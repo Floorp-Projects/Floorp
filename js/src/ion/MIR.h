@@ -3460,7 +3460,6 @@ class MDiv : public MBinaryArithInstruction
 
     double getIdentity() {
         MOZ_ASSUME_NOT_REACHED("not used");
-        return 1;
     }
 
     bool canBeNegativeZero() {
@@ -3508,7 +3507,6 @@ class MMod : public MBinaryArithInstruction
 
     double getIdentity() {
         MOZ_ASSUME_NOT_REACHED("not used");
-        return 1;
     }
 
     bool fallible();

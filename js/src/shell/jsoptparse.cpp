@@ -310,7 +310,6 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i, boo
       }
       default:
         MOZ_ASSUME_NOT_REACHED("unhandled option kind");
-        return Fail;
     }
 }
 
@@ -338,7 +337,6 @@ OptionParser::handleArg(size_t argc, char **argv, size_t *i, bool *optionsAllowe
       }
       default:
         MOZ_ASSUME_NOT_REACHED("unhandled argument kind");
-        return Fail;
     }
 }
 

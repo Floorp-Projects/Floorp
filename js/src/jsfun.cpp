@@ -144,7 +144,6 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     }
 
     MOZ_ASSUME_NOT_REACHED("fun_getProperty");
-    return false;
 }
 
 
@@ -1752,6 +1751,5 @@ JSObject::hasIdempotentProtoChain() const
     }
 
     MOZ_ASSUME_NOT_REACHED("Should not get here");
-    return false;
 }
 

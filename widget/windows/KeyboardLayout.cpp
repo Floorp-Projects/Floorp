@@ -498,7 +498,6 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
             break;
           default:
             MOZ_CRASH("Unsupported mOriginalVirtualKeyCode");
-            break;
         }
         break;
       }
@@ -535,7 +534,6 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
           break;
         default:
           MOZ_CRASH("Unsupported mOriginalVirtualKeyCode");
-          break;
       }
       break;
     }
@@ -552,7 +550,6 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       break;
     default:
       MOZ_CRASH("Unsupported message");
-      break;
   }
 
   if (!mVirtualKeyCode) {
@@ -738,7 +735,6 @@ NativeKey::InitKeyEvent(nsKeyEvent& aKeyEvent,
       break;
     default:
       MOZ_CRASH("Invalid event message");
-      break;
   }
 
   aKeyEvent.mKeyNameIndex = mKeyNameIndex;
@@ -1070,7 +1066,6 @@ NativeKey::RemoveFollowingCharMessage() const
   if (!WinUtils::GetMessage(&msg, mMsg.hwnd,
                             mCharMsg.message, mCharMsg.message)) {
     MOZ_CRASH("We lost the following char message");
-    return mCharMsg;
   }
 
   MOZ_ASSERT(mCharMsg.message == msg.message &&

@@ -99,7 +99,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
           default:
             MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
-            return base; // Silence GCC warning.
         }
     }
     void moveValue(const Value &val, Register type, Register data) {

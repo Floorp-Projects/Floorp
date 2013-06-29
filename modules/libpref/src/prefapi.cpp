@@ -294,7 +294,6 @@ SetPrefValue(const char* aPrefName, const dom::PrefValue& aValue,
                                 setDefault);
     default:
         MOZ_CRASH();
-        return NS_ERROR_FAILURE;
     }
 }
 

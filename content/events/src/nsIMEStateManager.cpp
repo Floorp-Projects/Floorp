@@ -588,7 +588,6 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
         return composition ? aWidget->NotifyIME(aNotification) : NS_OK;
       default:
         MOZ_CRASH("Unsupported notification");
-        return NS_ERROR_INVALID_ARG;
     }
     MOZ_CRASH(
       "Failed to handle the notification for non-synthesized composition");
@@ -1050,7 +1049,6 @@ nsIMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
       return false;
     default:
       MOZ_CRASH("Unknown IME enable state");
-      return false;
   }
 }
 

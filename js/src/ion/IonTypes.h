@@ -69,7 +69,6 @@ BailoutKindString(BailoutKind kind)
       default:
         MOZ_ASSUME_NOT_REACHED("Invalid BailoutKind");
     }
-    return "INVALID_BAILOUT_KIND";
 }
 #endif
 
@@ -119,7 +118,6 @@ MIRTypeFromValueType(JSValueType type)
         return MIRType_Value;
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected jsval type");
-        return MIRType_None;
     }
 }
 
@@ -187,7 +185,6 @@ StringFromMIRType(MIRType type)
       return "ForkJoinSlice";
     default:
       MOZ_ASSUME_NOT_REACHED("Unknown MIRType.");
-      return "";
   }
 }
 

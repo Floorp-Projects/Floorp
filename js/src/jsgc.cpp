@@ -460,7 +460,6 @@ FinalizeArenas(FreeOp *fop,
 #endif
       default:
         MOZ_ASSUME_NOT_REACHED("Invalid alloc kind");
-        return true;
     }
 }
 
@@ -726,7 +725,6 @@ Chunk::findDecommittedArenaOffset()
         if (decommittedArenas.get(i))
             return i;
     MOZ_ASSUME_NOT_REACHED("No decommitted arenas found.");
-    return -1;
 }
 
 ArenaHeader *
@@ -3511,7 +3509,6 @@ RemoveFromGrayList(JSObject *wrapper)
     }
 
     MOZ_ASSUME_NOT_REACHED("object not found in gray link list");
-    return false;
 }
 
 static void

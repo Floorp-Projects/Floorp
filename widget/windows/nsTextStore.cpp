@@ -1025,7 +1025,6 @@ nsTextStore::FlushPendingActions()
       }
       default:
         MOZ_CRASH("unexpected action type");
-        break;
     }
 
     if (mWidget && !mWidget->Destroyed()) {

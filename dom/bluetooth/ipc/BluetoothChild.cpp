@@ -118,7 +118,6 @@ PBluetoothRequestChild*
 BluetoothChild::AllocPBluetoothRequest(const Request& aRequest)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
-  return nullptr;
 }
 
 bool

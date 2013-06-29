@@ -617,7 +617,6 @@ js::ThreadSafeContext::allowGC() const
       default:
         /* Silence warnings. */
         MOZ_ASSUME_NOT_REACHED("Bad context kind");
-        return NoGC;
     }
 }
 
