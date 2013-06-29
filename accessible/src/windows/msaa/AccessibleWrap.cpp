@@ -78,6 +78,9 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!ppv)
+    return E_INVALIDARG;
+
   *ppv = nullptr;
 
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
@@ -134,6 +137,9 @@ STDMETHODIMP
 AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!ppdispParent)
+    return E_INVALIDARG;
 
   *ppdispParent = nullptr;
 
@@ -195,6 +201,9 @@ AccessibleWrap::get_accChild(
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!ppdispChild)
+    return E_INVALIDARG;
+
   *ppdispChild = nullptr;
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -223,6 +232,9 @@ AccessibleWrap::get_accName(
       /* [retval][out] */ BSTR __RPC_FAR *pszName)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!pszName)
+    return E_INVALIDARG;
 
   *pszName = nullptr;
 
@@ -260,6 +272,9 @@ AccessibleWrap::get_accValue(
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!pszValue)
+    return E_INVALIDARG;
 
   *pszValue = nullptr;
 
@@ -299,6 +314,9 @@ AccessibleWrap::get_accDescription(VARIANT varChild,
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!pszDescription)
+    return E_INVALIDARG;
+
   *pszDescription = nullptr;
 
   if (IsDefunct())
@@ -327,6 +345,9 @@ AccessibleWrap::get_accRole(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarRole)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!pvarRole)
+    return E_INVALIDARG;
 
   VariantInit(pvarRole);
 
@@ -423,6 +444,9 @@ AccessibleWrap::get_accState(
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!pvarState)
+    return E_INVALIDARG;
+
   VariantInit(pvarState);
   pvarState->vt = VT_I4;
   pvarState->lVal = 0;
@@ -461,6 +485,9 @@ AccessibleWrap::get_accHelp(
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!pszHelp)
+    return E_INVALIDARG;
+
   *pszHelp = nullptr;
   return S_FALSE;
 
@@ -474,6 +501,9 @@ AccessibleWrap::get_accHelpTopic(
       /* [retval][out] */ long __RPC_FAR *pidTopic)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!pszHelpFile || !pidTopic)
+    return E_INVALIDARG;
 
   *pszHelpFile = nullptr;
   *pidTopic = 0;
@@ -523,6 +553,11 @@ AccessibleWrap::get_accFocus(
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!pvarChild)
+    return E_INVALIDARG;
+
+  VariantInit(pvarChild);
+
   // VT_EMPTY:    None. This object does not have the keyboard focus itself
   //              and does not contain a child that has the keyboard focus.
   // VT_I4:       lVal is CHILDID_SELF. The object itself has the keyboard focus.
@@ -531,8 +566,6 @@ AccessibleWrap::get_accFocus(
   //              for the child object with the keyboard focus.
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
-
-  VariantInit(pvarChild);
 
   // Return the current IAccessible child that has focus
   Accessible* focusedAccessible = FocusedChild();
@@ -692,6 +725,9 @@ AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!pvarChildren)
+    return E_INVALIDARG;
+
   VariantInit(pvarChildren);
   pvarChildren->vt = VT_EMPTY;
 
@@ -723,6 +759,9 @@ AccessibleWrap::get_accDefaultAction(
       /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!pszDefaultAction)
+    return E_INVALIDARG;
 
   *pszDefaultAction = nullptr;
 
@@ -800,6 +839,14 @@ AccessibleWrap::accLocation(
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight)
+    return E_INVALIDARG;
+
+  *pxLeft = 0;
+  *pyTop = 0;
+  *pcxWidth = 0;
+  *pcyHeight = 0;
+
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -834,6 +881,8 @@ AccessibleWrap::accNavigate(
   if (!pvarEndUpAt)
     return E_INVALIDARG;
 
+  VariantInit(pvarEndUpAt);
+
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -843,8 +892,6 @@ AccessibleWrap::accNavigate(
 
   if (accessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
-
-  VariantInit(pvarEndUpAt);
 
   Accessible* navAccessible = nullptr;
   int32_t xpRelation = -1;
@@ -951,6 +998,9 @@ AccessibleWrap::accHitTest(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!pvarChild)
+    return E_INVALIDARG;
 
   VariantInit(pvarChild);
 
@@ -1113,6 +1163,9 @@ AccessibleWrap::role(long *aRole)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aRole)
+    return E_INVALIDARG;
+
   *aRole = 0;
 
   if (IsDefunct())
@@ -1186,6 +1239,13 @@ AccessibleWrap::get_groupPosition(long *aGroupLevel,
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aGroupLevel || !aSimilarItemsInGroup || !aPositionInGroup)
+    return E_INVALIDARG;
+
+  *aGroupLevel = 0;
+  *aSimilarItemsInGroup = 0;
+  *aPositionInGroup = 0;
+
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -1210,6 +1270,9 @@ STDMETHODIMP
 AccessibleWrap::get_states(AccessibleStates *aStates)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aStates)
+    return E_INVALIDARG;
 
   *aStates = 0;
 
@@ -1269,6 +1332,9 @@ AccessibleWrap::get_extendedRole(BSTR *aExtendedRole)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aExtendedRole)
+    return E_INVALIDARG;
+
   *aExtendedRole = nullptr;
   return E_NOTIMPL;
 
@@ -1280,6 +1346,9 @@ AccessibleWrap::get_localizedExtendedRole(BSTR *aLocalizedExtendedRole)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aLocalizedExtendedRole)
+    return E_INVALIDARG;
+
   *aLocalizedExtendedRole = nullptr;
   return E_NOTIMPL;
 
@@ -1290,6 +1359,9 @@ STDMETHODIMP
 AccessibleWrap::get_nExtendedStates(long *aNExtendedStates)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aNExtendedStates)
+    return E_INVALIDARG;
 
   *aNExtendedStates = 0;
   return E_NOTIMPL;
@@ -1303,6 +1375,9 @@ AccessibleWrap::get_extendedStates(long aMaxExtendedStates,
                                    long *aNExtendedStates)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aExtendedStates || !aNExtendedStates)
+    return E_INVALIDARG;
 
   *aExtendedStates = nullptr;
   *aNExtendedStates = 0;
@@ -1318,6 +1393,9 @@ AccessibleWrap::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aLocalizedExtendedStates || !aNLocalizedExtendedStates)
+    return E_INVALIDARG;
+
   *aLocalizedExtendedStates = nullptr;
   *aNLocalizedExtendedStates = 0;
   return E_NOTIMPL;
@@ -1330,6 +1408,9 @@ AccessibleWrap::get_uniqueID(long *uniqueID)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!uniqueID)
+    return E_INVALIDARG;
+
   *uniqueID = - reinterpret_cast<intptr_t>(UniqueID());
   return S_OK;
 
@@ -1340,6 +1421,9 @@ STDMETHODIMP
 AccessibleWrap::get_windowHandle(HWND *aWindowHandle)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aWindowHandle)
+    return E_INVALIDARG;
 
   *aWindowHandle = 0;
 
@@ -1377,6 +1461,9 @@ STDMETHODIMP
 AccessibleWrap::get_locale(IA2Locale *aLocale)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aLocale)
+    return E_INVALIDARG;
 
   // Language codes consist of a primary code and a possibly empty series of
   // subcodes: language-code = primary-code ( "-" subcode )*
@@ -1425,6 +1512,9 @@ AccessibleWrap::get_attributes(BSTR *aAttributes)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aAttributes)
+    return E_INVALIDARG;
+
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
   *aAttributes = nullptr;
@@ -1444,6 +1534,9 @@ AccessibleWrap::get_attributes(BSTR *aAttributes)
 STDMETHODIMP
 AccessibleWrap::GetTypeInfoCount(UINT *pctinfo)
 {
+  if (!pctinfo)
+    return E_INVALIDARG;
+
   *pctinfo = 1;
   return S_OK;
 }
@@ -1451,6 +1544,9 @@ AccessibleWrap::GetTypeInfoCount(UINT *pctinfo)
 STDMETHODIMP
 AccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
+  if (!ppTInfo)
+    return E_INVALIDARG;
+
   *ppTInfo = nullptr;
 
   if (iTInfo != 0)

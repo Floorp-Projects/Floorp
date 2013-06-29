@@ -728,11 +728,16 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 
   FireScriptAvailable(NS_OK, aRequest);
 
-  bool runScript = true;
-  nsContentUtils::DispatchTrustedEvent(scriptElem->OwnerDoc(),
-                                       scriptElem,
-                                       NS_LITERAL_STRING("beforescriptexecute"),
-                                       true, true, &runScript);
+  // The window may have gone away by this point, in which case there's no point
+  // in trying to run the script.
+  nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
+  bool runScript = !!pwin;
+  if (runScript) {
+    nsContentUtils::DispatchTrustedEvent(scriptElem->OwnerDoc(),
+                                         scriptElem,
+                                         NS_LITERAL_STRING("beforescriptexecute"),
+                                         true, true, &runScript);
+  }
 
   nsresult rv = NS_OK;
   if (runScript) {
@@ -807,9 +812,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   }
 
   nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
-  if (!pwin) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ASSERTION(pwin, "shouldn't be called with a null inner window");
+
   nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(pwin);
   NS_ASSERTION(globalObject, "windows must be global objects");
 
