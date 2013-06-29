@@ -212,9 +212,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 
     TypeScript::MonitorUnknown(cx);
 
-    if (value.get().isPrimitive()) {
-        vp.set(value);
-    } else {
+    if (value.isObject()) {
         JSObject *obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;

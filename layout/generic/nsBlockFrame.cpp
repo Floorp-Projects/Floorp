@@ -6131,10 +6131,15 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
       !lineMayHaveTextOverflow)
     return;
 
+  // Collect our line's display items in a temporary nsDisplayListCollection,
+  // so that we can apply any "text-overflow" clipping to the entire collection
+  // without affecting previous lines.
+  nsDisplayListCollection collection;
+
   // Block-level child backgrounds go on the blockBorderBackgrounds list ...
   // Inline-level child backgrounds go on the regular child content list.
-  nsDisplayListSet childLists(aLists,
-    lineInline ? aLists.Content() : aLists.BlockBorderBackgrounds());
+  nsDisplayListSet childLists(collection,
+    lineInline ? collection.Content() : collection.BlockBorderBackgrounds());
 
   uint32_t flags = lineInline ? nsIFrame::DISPLAY_CHILD_INLINE : 0;
 
@@ -6147,8 +6152,10 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   }
   
   if (lineMayHaveTextOverflow) {
-    aTextOverflow->ProcessLine(aLists, aLine.get());
+    aTextOverflow->ProcessLine(collection, aLine.get());
   }
+
+  collection.MoveTo(aLists);
 }
 
 void

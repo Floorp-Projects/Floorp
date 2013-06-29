@@ -75,12 +75,12 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitMulI(LMulI *ins);
 
     virtual bool visitDivI(LDivI *ins);
+    virtual bool visitSoftDivI(LSoftDivI *ins);
     virtual bool visitDivPowTwoI(LDivPowTwoI *ins);
     virtual bool visitModI(LModI *ins);
     virtual bool visitModPowTwoI(LModPowTwoI *ins);
     virtual bool visitModMaskI(LModMaskI *ins);
     virtual bool visitPowHalfD(LPowHalfD *ins);
-    virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitShiftI(LShiftI *ins);
     virtual bool visitUrshD(LUrshD *ins);
 
@@ -117,6 +117,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
+
+    bool divICommon(MDiv *mir, Register lhs, Register rhs, Register output, LSnapshot *snapshot,
+                    Label &done);
 
   public:
     CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);

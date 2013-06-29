@@ -4892,6 +4892,7 @@ class MArrayConcat
         templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(templateObj));
     }
 
   public:
