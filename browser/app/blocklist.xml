@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1371672180000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1372449691000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -9,8 +9,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i41" id="{99079a25-328f-4bd4-be04-00955acaa0a7}">
+      <emItem  blockID="i402" id="{99079a25-328f-4bd4-be04-00955acaa0a7}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i71" id="youtube@2youtube.com">
@@ -45,6 +47,10 @@
                         <versionRange  minVersion="0" maxVersion="1.0.8" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i400" id="{dd6b651f-dfb9-4142-b0bd-09912ad22674}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i348" id="{13c9f1f9-2322-4d5c-81df-6d4bf8476ba4}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -53,8 +59,14 @@
                         <versionRange  minVersion=" " maxVersion="8.5">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i236" id="{EEE6C361-6118-11DC-9C72-001320C79847}">
+      <emItem  blockID="i392" id="{EEE6C361-6118-11DC-9C72-001320C79847}">
                         <versionRange  minVersion="0" maxVersion="1.7.999" severity="1">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i406" id="{bf7380fa-e3b4-4db2-af3e-9d8783a45bfc}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i24" id="{6E19037A-12E3-4295-8915-ED48BC341614}">
@@ -117,6 +129,10 @@
                   </emItem>
       <emItem  blockID="i97" id="support3_en@adobe122.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i382" id="{6926c7f7-6006-42d1-b046-eba1b3010315}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i11" id="yslow@yahoo-inc.com">
@@ -188,11 +204,22 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i46" id="{841468a1-d7f4-4bd3-84e6-bb0f13a06c64}">
+                        <versionRange  minVersion="0.1" maxVersion="*">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="9.0a1" maxVersion="9.0" />
+                          </targetApplication>
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i18" id="msntoolbar@msn.com">
                         <versionRange  minVersion=" " maxVersion="6.*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i228" id="crossriderapp5060@crossrider.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i386" id="7lffxtbr@CursorMania_7l.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -246,11 +273,8 @@
                         <versionRange  minVersion="0" maxVersion="1.0" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i46" id="{841468a1-d7f4-4bd3-84e6-bb0f13a06c64}">
-                        <versionRange  minVersion="0.1" maxVersion="*">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="9.0a1" maxVersion="9.0" />
-                          </targetApplication>
+      <emItem  blockID="i398" id="{377e5d4d-77e5-476a-8716-7e70a9272da0}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i256" id="/^[0-9a-f]+@[0-9a-f]+\.info/">
@@ -258,6 +282,14 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i370" id="happylyrics@hpyproductions.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i388" id="5mffxtbr@MyFunCards_5m.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i396" id="/@(ft|putlocker|clickmovie|m2k|sharerepo|smarter-?)downloader\.com$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -351,7 +383,15 @@
                   </emItem>
       <emItem  blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
                         </emItem>
+      <emItem  blockID="i394" id="{7D4F1959-3F72-49d5-8E59-F02F8AA6815D}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i344" id="lrcsTube@hansanddeta.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -526,6 +566,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i384" id="7lffxtbr@PopularScreensavers_7l.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -744,14 +788,14 @@
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.6.602.175" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.7.700.169" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.6.602.175" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.7.700.169" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>
@@ -960,6 +1004,54 @@
                   </pluginItem>
       <pluginItem  blockID="p366">
                   <match name="filename" exp="Scorch\.plugin" />                      <versionRange  minVersion="6.2.0" maxVersion="6.2.0" severity="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p408">
+                  <match name="filename" exp="QuickTime Plugin\.plugin" />                      <versionRange  minVersion="0" maxVersion="7.7.0" severity="0" vulnerabilitystatus="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p410">
+                  <match name="filename" exp="npqtplugin\.dll" />                      <versionRange  minVersion="0" maxVersion="7.7.3" severity="0" vulnerabilitystatus="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p412">
+      <match name="name" exp="Java\(TM\) Plug-in 1\.6\.0_4[2-5]([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p414">
+      <match name="name" exp="Java\(TM\) Platform SE 6 U4[2-5](\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p416">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 6 Update 42" maxVersion="Java 6 Update 45" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p418">
+      <match name="name" exp="Java\(TM\) Plug-in 1\.7\.0_(1[6-9]|2[0-4])([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p420">
+      <match name="name" exp="Java\(TM\) Platform SE 7 U(1[6-9]|2[0-4])(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p422">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 16" maxVersion="Java 7 Update 24" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
                   </pluginItem>
     </pluginItems>
 
