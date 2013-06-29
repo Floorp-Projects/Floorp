@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include "mozilla/StandardInteger.h"
-const PRTime gPreloadListExpirationTime = INT64_C(1382782977857000);
+const PRTime gPreloadListExpirationTime = INT64_C(1383387341169000);
 
 class nsSTSPreload
 {
@@ -24,6 +24,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "arivo.com.br", true },
   { "bassh.net", true },
   { "bccx.com", true },
+  { "blog.cyveillance.com", true },
   { "blog.linode.com", false },
   { "blog.torproject.org", false },
   { "bugzilla.mozilla.org", true },
@@ -31,11 +32,13 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "carezone.com", false },
   { "check.torproject.org", false },
   { "cloudsecurityalliance.org", true },
+  { "conformal.com", true },
   { "controlcenter.gigahost.dk", true },
   { "crate.io", true },
   { "crm.onlime.ch", false },
   { "crypto.cat", false },
   { "csawctf.poly.edu", true },
+  { "cyphertite.com", true },
   { "developer.mydigipass.com", false },
   { "dist.torproject.org", false },
   { "dm.lookout.com", false },
@@ -46,7 +49,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "espra.com", true },
   { "factor.cc", false },
   { "forum.linode.com", false },
-  { "gocardless.com", false },
+  { "gocardless.com", true },
   { "grc.com", false },
   { "howrandom.org", true },
   { "id.mayfirst.org", false },
@@ -55,8 +58,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "itriskltd.com", true },
   { "keyerror.com", true },
   { "lastpass.com", false },
+  { "launchkey.com", true },
   { "library.linode.com", false },
   { "linode.com", false },
+  { "linx.net", false },
   { "lockify.com", true },
   { "login.persona.org", true },
   { "login.sapo.pt", true },
@@ -100,6 +105,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.apollo-auto.com", true },
   { "www.braintreepayments.com", false },
   { "www.cueup.com", false },
+  { "www.cyveillance.com", true },
   { "www.entropia.de", false },
   { "www.gov.uk", false },
   { "www.grc.com", false },
