@@ -40,7 +40,7 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
     result = nullptr;
     break;
   default:
-    MOZ_NOT_REACHED("unhandled program type");
+    MOZ_CRASH("unhandled program type");
   }
 
   NS_ASSERTION(result, "Failed to create ImageClient");

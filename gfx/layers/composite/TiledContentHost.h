@@ -190,7 +190,7 @@ public:
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Does nothing");
+    MOZ_CRASH("Does nothing");
   }
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE

@@ -48,13 +48,13 @@ SerializeInputStream(nsIInputStream* aInputStream,
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
     do_QueryInterface(aInputStream);
   if (!serializable) {
-    MOZ_NOT_REACHED("Input stream is not serializable!");
+    MOZ_CRASH("Input stream is not serializable!");
   }
 
   serializable->Serialize(aParams);
 
   if (aParams.type() == InputStreamParams::T__None) {
-    MOZ_NOT_REACHED("Serialize failed!");
+    MOZ_CRASH("Serialize failed!");
   }
 }
 

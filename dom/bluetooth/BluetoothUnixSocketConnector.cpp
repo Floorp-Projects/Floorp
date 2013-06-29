@@ -93,7 +93,7 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
   case BluetoothSocketType::SCO:
     break;
   default:
-    MOZ_NOT_REACHED("Unknown socket type!");
+    MOZ_CRASH("Unknown socket type!");
   }
 
   if (lm) {
@@ -181,7 +181,7 @@ BluetoothUnixSocketConnector::Create()
     fd = socket(PF_BLUETOOTH, SOCK_STREAM, BTPROTO_L2CAP);
     break;
   default:
-    MOZ_NOT_REACHED();
+    MOZ_CRASH();
   }
 
   if (fd < 0) {
@@ -262,7 +262,7 @@ BluetoothUnixSocketConnector::GetSocketAddr(const sockaddr_any& aAddr,
     get_bdaddr_as_string((bdaddr_t*)(&aAddr.l2.l2_bdaddr), addr);
     break;
   default:
-    MOZ_NOT_REACHED("Socket should be either RFCOMM or SCO!");
+    MOZ_CRASH("Socket should be either RFCOMM or SCO!");
   }
   aAddrStr.AssignASCII(addr);
 }

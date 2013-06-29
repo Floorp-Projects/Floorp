@@ -1318,7 +1318,7 @@ WrapStyle(JSContext* cx, JSObject* objArg,
       break;
     }
     default:
-      MOZ_NOT_REACHED("unexpected CanvasMultiGetterType");
+      MOZ_CRASH("unexpected CanvasMultiGetterType");
   }
   if (!ok) {
     error.Throw(NS_ERROR_FAILURE);
@@ -2638,7 +2638,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     anchorY = -fontMetrics.emDescent;
     break;
   default:
-      MOZ_NOT_REACHED("unexpected TextBaseline");
+      MOZ_CRASH("unexpected TextBaseline");
   }
 
   processor.mPt.y += anchorY;

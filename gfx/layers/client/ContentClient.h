@@ -141,7 +141,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should not be called on non-remote ContentClient");
+    MOZ_CRASH("Should not be called on non-remote ContentClient");
     return TextureInfo();
   }
 

@@ -140,7 +140,7 @@ TextComposition::CompositionEventDispatcher::Run()
       break;
     }
     default:
-      MOZ_NOT_REACHED("Unsupported event");
+      MOZ_CRASH("Unsupported event");
       break;
   }
   return NS_OK;

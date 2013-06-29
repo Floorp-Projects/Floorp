@@ -753,7 +753,7 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
       }
     }
 
-    MOZ_NOT_REACHED("We returned early");
+    MOZ_CRASH("We returned early");
   }
 
   if (status == SOCKET_LISTENING) {

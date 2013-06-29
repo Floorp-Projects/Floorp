@@ -68,7 +68,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
                           PRUnichar **outUsages)
 {
   if (!aCertUsage) {
-    MOZ_NOT_REACHED("caller should have supplied non-zero aCertUsage");
+    MOZ_CRASH("caller should have supplied non-zero aCertUsage");
     return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
   }
 
@@ -115,7 +115,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
     typestr = "VerifyAnyCA";
     break;
   default:
-    MOZ_NOT_REACHED("unknown cert usage passed to check()");
+    MOZ_CRASH("unknown cert usage passed to check()");
     return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
   }
 

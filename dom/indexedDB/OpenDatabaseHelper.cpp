@@ -1479,7 +1479,7 @@ protected:
                                             const ResponseValue& aResponseValue)
                                             MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should never get here!");
+    MOZ_CRASH("Should never get here!");
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1559,7 +1559,7 @@ protected:
                                             const ResponseValue& aResponseValue)
                                             MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should never get here!");
+    MOZ_CRASH("Should never get here!");
     return NS_ERROR_UNEXPECTED;
   }
 

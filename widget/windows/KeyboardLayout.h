@@ -377,7 +377,7 @@ private:
 
   NativeKey()
   {
-    MOZ_NOT_REACHED("The default constructor of NativeKey isn't available");
+    MOZ_CRASH("The default constructor of NativeKey isn't available");
   }
 
   UINT GetScanCodeWithExtendedFlag() const;

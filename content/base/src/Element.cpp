@@ -2708,7 +2708,7 @@ public:
             EncodeTextFragment(u.mTextFragment, aOut);
             break;
           default:
-            MOZ_NOT_REACHED("Unknown unit type?");
+            MOZ_CRASH("Unknown unit type?");
         }
       }
     }

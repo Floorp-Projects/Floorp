@@ -198,7 +198,7 @@ nsScreen::GetMozOrientation(nsString& aOrientation)
     break;
   case eScreenOrientation_None:
   default:
-    MOZ_NOT_REACHED("Unacceptable mOrientation value");
+    MOZ_CRASH("Unacceptable mOrientation value");
   }
 }
 
@@ -371,7 +371,7 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
 
   // This is only for compilers that don't understand that the previous switch
   // will always return.
-  MOZ_NOT_REACHED("unexpected lock orientation permission value");
+  MOZ_CRASH("unexpected lock orientation permission value");
   return false;
 }
 

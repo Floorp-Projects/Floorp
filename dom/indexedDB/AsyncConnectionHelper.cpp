@@ -254,7 +254,7 @@ AsyncConnectionHelper::Run()
       }
 
       default:
-        MOZ_NOT_REACHED("Unknown value for ChildProcessSendResult!");
+        MOZ_CRASH("Unknown value for ChildProcessSendResult!");
     }
 
     NS_ASSERTION(gCurrentTransaction == mTransaction, "Should be unchanged!");

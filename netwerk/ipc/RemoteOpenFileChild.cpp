@@ -170,7 +170,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 #else
   nsString path;
   if (NS_FAILED(mFile->GetPath(path))) {
-    MOZ_NOT_REACHED("Couldn't get path from file!");
+    MOZ_CRASH("Couldn't get path from file!");
   }
 
   if (mTabChild) {
@@ -205,7 +205,7 @@ RemoteOpenFileChild::OnCachedFileDescriptor(const nsAString& aPath,
 
     nsString path;
     if (NS_FAILED(mFile->GetPath(path))) {
-      MOZ_NOT_REACHED("Couldn't get path from file!");
+      MOZ_CRASH("Couldn't get path from file!");
     }
 
     MOZ_ASSERT(path == aPath, "Paths don't match!");
@@ -221,7 +221,7 @@ RemoteOpenFileChild::HandleFileDescriptorAndNotifyListener(
                                                       bool aFromRecvDelete)
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
-  MOZ_NOT_REACHED("OS X and Windows shouldn't be doing IPDL here");
+  MOZ_CRASH("OS X and Windows shouldn't be doing IPDL here");
 #else
   if (!mListener) {
     // We already notified our listener (either in response to a cached file
@@ -246,7 +246,7 @@ RemoteOpenFileChild::HandleFileDescriptorAndNotifyListener(
   if (tabChild && aFromRecvDelete) {
     nsString path;
     if (NS_FAILED(mFile->GetPath(path))) {
-      MOZ_NOT_REACHED("Couldn't get path from file!");
+      MOZ_CRASH("Couldn't get path from file!");
     }
 
     tabChild->CancelCachedFileDescriptorCallback(path, this);
