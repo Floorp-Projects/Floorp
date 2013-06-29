@@ -10,6 +10,8 @@
 
 /* ::::: XBL bindings ::::: */
 
+@namespace xbl "http://www.mozilla.org/xbl";
+
 menulist > menupopup,
 .menulist-menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
@@ -281,7 +283,7 @@ notification > button:active:hover:-moz-focusring {
   box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
-notification > button > .button-box > .button-text {
+notification > button > .button-box > xbl|children > .button-text {
   margin: 0 !important;
 }
 
