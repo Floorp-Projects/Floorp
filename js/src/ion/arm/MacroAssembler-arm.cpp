@@ -695,7 +695,7 @@ MacroAssemblerARM::ma_cmn(Register src1, Register src2, Condition c)
 void
 MacroAssemblerARM::ma_cmn(Register src1, Operand op, Condition c)
 {
-    MOZ_ASSUME_NOT_REACHED("Feature NYI");
+    MOZ_ASSUME_UNREACHABLE("Feature NYI");
 }
 
 // Compare (src - src2).
@@ -729,7 +729,7 @@ MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
         as_cmp(src1, O2Reg(ScratchRegister), c);
         break;
       default:
-        MOZ_ASSUME_NOT_REACHED("trying to compare FP and integer registers");
+        MOZ_ASSUME_UNREACHABLE("trying to compare FP and integer registers");
     }
 }
 void
@@ -802,7 +802,7 @@ MacroAssemblerARM::ma_check_mul(Register src1, Register src2, Register dest, Con
         return NotEqual;
     }
 
-    MOZ_ASSUME_NOT_REACHED("Condition NYI");
+    MOZ_ASSUME_UNREACHABLE("Condition NYI");
 }
 
 Assembler::Condition
@@ -820,7 +820,7 @@ MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Conditi
         return NotEqual;
     }
 
-    MOZ_ASSUME_NOT_REACHED("Condition NYI");
+    MOZ_ASSUME_UNREACHABLE("Condition NYI");
 }
 
 void
@@ -902,7 +902,7 @@ void
 MacroAssemblerARM::ma_dtr(LoadStore ls, Register rn, Register rm, Register rt,
                           Index mode, Assembler::Condition cc)
 {
-    MOZ_ASSUME_NOT_REACHED("Feature NYI");
+    MOZ_ASSUME_UNREACHABLE("Feature NYI");
 }
 
 void
@@ -1216,7 +1216,7 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
             m_buffer.markGuard();
         break;
       default:
-        MOZ_ASSUME_NOT_REACHED("Other methods of generating tracable jumps NYI");
+        MOZ_ASSUME_UNREACHABLE("Other methods of generating tracable jumps NYI");
     }
 }
 
@@ -2766,7 +2766,7 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
                 mode = IB;
                 break;
               default:
-                MOZ_ASSUME_NOT_REACHED("Bogus Offset for LoadValue as DTM");
+                MOZ_ASSUME_UNREACHABLE("Bogus Offset for LoadValue as DTM");
             }
             startDataTransferM(IsLoad, Register::FromCode(srcOp.base()), mode);
             transferReg(val.payloadReg());
@@ -2836,7 +2836,7 @@ MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
         ma_str(src, ToPayload(dest));
         return;
     }
-    MOZ_ASSUME_NOT_REACHED("why do we do all of these things?");
+    MOZ_ASSUME_UNREACHABLE("why do we do all of these things?");
 
 }
 
@@ -2873,7 +2873,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
         return;
     }
 
-    MOZ_ASSUME_NOT_REACHED("why do we do all of these things?");
+    MOZ_ASSUME_UNREACHABLE("why do we do all of these things?");
 
 }
 

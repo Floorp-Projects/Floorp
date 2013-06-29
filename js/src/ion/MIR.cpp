@@ -116,7 +116,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
         ret.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
         break;
       default:
-        MOZ_ASSUME_NOT_REACHED("NYI");
+        MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
     if (ins->type() != MIRTypeFromValue(ret)) {
@@ -436,7 +436,7 @@ MConstant::printOpcode(FILE *fp)
         fprintf(fp, "magic");
         break;
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1484,7 +1484,7 @@ MCompare::inputType()
       case Compare_Value:
         return MIRType_Value;
       default:
-        MOZ_ASSUME_NOT_REACHED("No known conversion");
+        MOZ_ASSUME_UNREACHABLE("No known conversion");
     }
 }
 
@@ -1934,7 +1934,7 @@ MCompare::tryFold(bool *result)
             *result = (op == JSOP_NE || op == JSOP_STRICTNE);
             return true;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unexpected type");
+            MOZ_ASSUME_UNREACHABLE("Unexpected type");
         }
     }
 
@@ -1955,9 +1955,9 @@ MCompare::tryFold(bool *result)
             return true;
           case MIRType_Boolean:
             // Int32 specialization should handle this.
-            MOZ_ASSUME_NOT_REACHED("Wrong specialization");
+            MOZ_ASSUME_UNREACHABLE("Wrong specialization");
           default:
-            MOZ_ASSUME_NOT_REACHED("Unexpected type");
+            MOZ_ASSUME_UNREACHABLE("Unexpected type");
         }
     }
 
@@ -1978,9 +1978,9 @@ MCompare::tryFold(bool *result)
             return true;
           case MIRType_String:
             // Compare_String specialization should handle this.
-            MOZ_ASSUME_NOT_REACHED("Wrong specialization");
+            MOZ_ASSUME_UNREACHABLE("Wrong specialization");
           default:
-            MOZ_ASSUME_NOT_REACHED("Unexpected type");
+            MOZ_ASSUME_UNREACHABLE("Unexpected type");
         }
     }
 
@@ -2032,7 +2032,7 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (comp != 0);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unexpected op.");
+            MOZ_ASSUME_UNREACHABLE("Unexpected op.");
         }
 
         return true;
@@ -2064,7 +2064,7 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (lhsUint != rhsUint);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unexpected op.");
+            MOZ_ASSUME_UNREACHABLE("Unexpected op.");
         }
 
         return true;

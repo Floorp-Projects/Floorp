@@ -82,25 +82,25 @@ ForkJoinSlice::InitializeTLS()
 JSRuntime *
 ForkJoinSlice::runtime()
 {
-    MOZ_ASSUME_NOT_REACHED("Not THREADSAFE build");
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 bool
 ForkJoinSlice::check()
 {
-    MOZ_ASSUME_NOT_REACHED("Not THREADSAFE build");
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 void
 ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
 {
-    MOZ_ASSUME_NOT_REACHED("Not THREADSAFE build");
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 void
 ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
-    MOZ_ASSUME_NOT_REACHED("Not THREADSAFE build");
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 void
@@ -109,14 +109,14 @@ ParallelBailoutRecord::setCause(ParallelBailoutCause cause,
                                 JSScript *currentScript,
                                 jsbytecode *currentPc)
 {
-    MOZ_ASSUME_NOT_REACHED("Not THREADSAFE build");
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 void
 ParallelBailoutRecord::addTrace(JSScript *script,
                                 jsbytecode *pc)
 {
-    MOZ_ASSUME_NOT_REACHED("Not THREADSAFE build");
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 bool
@@ -599,7 +599,7 @@ js::ParallelDo::apply()
         break;
 
       case NumForkJoinModes:
-        MOZ_ASSUME_NOT_REACHED("Invalid mode");
+        MOZ_ASSUME_UNREACHABLE("Invalid mode");
     }
 
     while (bailouts < MAX_BAILOUTS) {

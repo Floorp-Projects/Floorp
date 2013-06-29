@@ -268,7 +268,7 @@ SnapshotReader::readSlot()
       }
     }
 
-    MOZ_ASSUME_NOT_REACHED("huh?");
+    MOZ_ASSUME_UNREACHABLE("huh?");
 }
 
 SnapshotOffset
@@ -377,7 +377,7 @@ ValTypeToString(JSValueType type)
       case JSVAL_TYPE_MAGIC:
         return "magic";
       default:
-        MOZ_ASSUME_NOT_REACHED("no payload");
+        MOZ_ASSUME_UNREACHABLE("no payload");
     }
 }
 

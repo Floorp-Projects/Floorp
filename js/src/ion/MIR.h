@@ -3459,7 +3459,7 @@ class MDiv : public MBinaryArithInstruction
     void analyzeEdgeCasesBackward();
 
     double getIdentity() {
-        MOZ_ASSUME_NOT_REACHED("not used");
+        MOZ_ASSUME_UNREACHABLE("not used");
     }
 
     bool canBeNegativeZero() {
@@ -3506,7 +3506,7 @@ class MMod : public MBinaryArithInstruction
     MDefinition *foldsTo(bool useValueNumbers);
 
     double getIdentity() {
-        MOZ_ASSUME_NOT_REACHED("not used");
+        MOZ_ASSUME_UNREACHABLE("not used");
     }
 
     bool fallible();
@@ -5922,7 +5922,7 @@ class MPolyInlineDispatch : public MControlInstruction, public SingleObjectPolic
             if (getFunction(i) == func)
                 return getFunctionBlock(i);
         }
-        MOZ_ASSUME_NOT_REACHED("Bad function lookup!");
+        MOZ_ASSUME_UNREACHABLE("Bad function lookup!");
     }
 
     InlinePropertyTable *propTable() const {
