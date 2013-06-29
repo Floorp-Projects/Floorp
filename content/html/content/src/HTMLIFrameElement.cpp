@@ -55,6 +55,7 @@ NS_IMPL_URI_ATTR(HTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Width, width)
 NS_IMPL_BOOL_ATTR(HTMLIFrameElement, AllowFullscreen, allowfullscreen)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Sandbox, sandbox)
+NS_IMPL_STRING_ATTR(HTMLIFrameElement, Srcdoc, srcdoc)
 
 void
 HTMLIFrameElement::GetItemValueText(nsAString& aValue)
@@ -199,6 +200,24 @@ HTMLIFrameElement::GetAttributeMappingFunction() const
 }
 
 nsresult
+HTMLIFrameElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           bool aNotify)
+{
+  nsresult rv = nsGenericHTMLFrameElement::SetAttr(aNameSpaceID, aName,
+                                                   aPrefix, aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::srcdoc) {
+    // Don't propagate error here. The attribute was successfully set, that's
+    // what we should reflect.
+    LoadSrc();
+  }
+
+  return NS_OK;
+}
+
+nsresult
 HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify)
@@ -225,6 +244,23 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
                                             aNotify);
+}
+
+nsresult
+HTMLIFrameElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                             bool aNotify)
+{
+  // Invoke on the superclass.
+  nsresult rv = nsGenericHTMLFrameElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::srcdoc) {
+    // Fall back to the src attribute, if any
+    LoadSrc();
+  }
+
+  return NS_OK;
 }
 
 uint32_t
