@@ -111,7 +111,6 @@ FileDescriptor::ShareTo(const FileDescriptor::IPDLPrivate&,
 #endif
 
   MOZ_CRASH("Must not get here!");
-  return PickleType();
 }
 
 // static

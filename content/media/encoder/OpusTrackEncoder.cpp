@@ -221,7 +221,6 @@ OpusTrackEncoder::GetHeader(nsTArray<uint8_t>* aOutput)
     break;
   default:
     MOZ_CRASH("Invalid state");
-    break;
   }
   return NS_OK;
 }

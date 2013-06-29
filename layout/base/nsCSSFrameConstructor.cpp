@@ -9763,7 +9763,6 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
         break;
       default:
         MOZ_CRASH("Colgroups should be suppresing non-col child items");
-        break;
     }
 
     const PseudoParentData& pseudoData = sPseudoParentData[wrapperType];

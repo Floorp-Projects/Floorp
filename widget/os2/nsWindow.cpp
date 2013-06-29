@@ -2527,7 +2527,6 @@ PlatformToNSAttr(uint8_t aAttr)
 
     default:
       MOZ_CRASH("unknown attribute");
-      return NS_TEXTRANGE_RAWINPUT;
   }
 }
 

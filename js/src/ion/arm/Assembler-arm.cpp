@@ -731,7 +731,6 @@ Assembler::getCF32Target(Iter *iter)
     }
 
     MOZ_ASSUME_NOT_REACHED("unsupported branch relocation");
-    return NULL;
 }
 
 uintptr_t
@@ -795,7 +794,6 @@ Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
         return *ptr;
     }
     MOZ_ASSUME_NOT_REACHED("unsupported relocation");
-    return NULL;
 }
 
 static IonCode *
@@ -1803,7 +1801,7 @@ Assembler::placeConstantPoolBarrier(int offset)
     // BUG: 700526
     // this is still an active path, however, we do not hit it in the test
     // suite at all.
-    MOZ_NOT_REACHED("ARMAssembler holdover");
+    MOZ_ASSUME_NOT_REACHED("ARMAssembler holdover");
 #if 0
     offset = (offset - sizeof(ARMWord)) >> 2;
     ASSERT((offset <= BOFFSET_MAX && offset >= BOFFSET_MIN));
@@ -2011,7 +2009,6 @@ Assembler::as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
     MOZ_ASSUME_NOT_REACHED("Feature NYI");
-    return BufferOffset();
 }
 
 BufferOffset

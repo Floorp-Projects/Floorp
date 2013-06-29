@@ -58,7 +58,6 @@ uint32_t
 FrameSizeClass::frameSize() const
 {
     MOZ_ASSUME_NOT_REACHED("x64 does not use frame size classes");
-    return 0;
 }
 
 bool
@@ -119,7 +118,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
             break;
           default:
             MOZ_ASSUME_NOT_REACHED("Given MIRType cannot be unboxed.");
-            return false;
         }
         if (!bailoutIf(cond, unbox->snapshot()))
             return false;
@@ -140,7 +138,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Given MIRType cannot be unboxed.");
-        break;
     }
 
     return true;
@@ -390,14 +387,12 @@ bool
 CodeGeneratorX64::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
     MOZ_ASSUME_NOT_REACHED("NYI");
-    return true;
 }
 
 bool
 CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
 {
     MOZ_ASSUME_NOT_REACHED("NYI");
-    return true;
 }
 
 bool

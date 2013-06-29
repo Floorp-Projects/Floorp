@@ -72,7 +72,6 @@ ScriptAnalysis::getValueTypes(const SSAValue &v)
       default:
         /* Cannot compute types for empty SSA values. */
         MOZ_ASSUME_NOT_REACHED("Bad SSA value");
-        return NULL;
     }
 }
 

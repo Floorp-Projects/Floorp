@@ -113,7 +113,6 @@ TCPSocketParent::RecvData(const SendableData& aData)
 
     default:
       MOZ_CRASH("unexpected SendableData type");
-      return false;
   }
   return true;
 }

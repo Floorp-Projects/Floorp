@@ -224,7 +224,6 @@ CanvasLayerOGL::UpdateSurface()
         }
         default:
           MOZ_CRASH("Unacceptable SharedSurface type.");
-          return;
       }
     } else {
       nothingToShow = true;
@@ -246,7 +245,6 @@ CanvasLayerOGL::UpdateSurface()
     updatedSurface = mCanvasSurface;
   } else {
     MOZ_CRASH("Unhandled canvas layer type.");
-    return;
   }
 
   if (updatedSurface) {

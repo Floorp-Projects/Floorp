@@ -137,7 +137,6 @@ public:
                                             MOZ_OVERRIDE
   {
     MOZ_CRASH("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
   }
 
 private:
@@ -870,7 +869,6 @@ NoRequestDatabaseHelper::UnpackResponseFromParentProcess(
                                             const ResponseValue& aResponseValue)
 {
   MOZ_CRASH("Should never get here!");
-  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult

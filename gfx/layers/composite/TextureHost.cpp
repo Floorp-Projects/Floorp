@@ -60,7 +60,6 @@ TextureHost::CreateTextureHost(SurfaceDescriptorType aDescriptorType,
                                     aTextureFlags);
     default:
       MOZ_CRASH("Couldn't create texture host");
-      return nullptr;
   }
 }
 

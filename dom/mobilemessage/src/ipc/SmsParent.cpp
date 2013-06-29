@@ -339,7 +339,6 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
       return actor->DoRequest(aRequest.get_MarkMessageReadRequest());
     default:
       MOZ_CRASH("Unknown type!");
-      break;
   }
 
   return false;
@@ -378,7 +377,6 @@ SmsParent::RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActo
       return actor->DoRequest(aRequest.get_CreateThreadCursorRequest());
     default:
       MOZ_CRASH("Unknown type!");
-      break;
   }
 
   return false;
@@ -445,7 +443,6 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
     break;
   default:
     MOZ_CRASH("Unknown type of SendMessageRequest!");
-    return false;
   }
   return true;
 }
@@ -741,7 +738,6 @@ MobileMessageCursorParent::NotifyCursorResult(nsISupports* aResult)
   }
 
   MOZ_CRASH("Received invalid response parameters!");
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

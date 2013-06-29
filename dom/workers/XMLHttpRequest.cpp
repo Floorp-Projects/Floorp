@@ -264,7 +264,6 @@ ConvertStringToResponseType(const nsAString& aString)
   }
 
   MOZ_CRASH("Don't know anything about this response type!");
-  return XMLHttpRequestResponseType::_empty;
 }
 
 enum

@@ -195,7 +195,6 @@ BluetoothServiceChildProcess::GetScoSocket(
                                     mozilla::ipc::UnixSocketConsumer* aConsumer)
 {
   MOZ_CRASH("This should never be called!");
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -204,7 +203,6 @@ BluetoothServiceChildProcess::GetServiceChannel(const nsAString& aDeviceAddress,
                                                 BluetoothProfileManagerBase* aManager)
 {
   MOZ_CRASH("This should never be called!");
-  return NS_ERROR_FAILURE;
 }
 
 bool
@@ -212,7 +210,6 @@ BluetoothServiceChildProcess::UpdateSdpRecords(const nsAString& aDeviceAddress,
                                                BluetoothProfileManagerBase* aManager)
 {
   MOZ_CRASH("This should never be called!");
-  return false;
 }
 
 bool
@@ -365,28 +362,24 @@ nsresult
 BluetoothServiceChildProcess::StartInternal()
 {
   MOZ_CRASH("This should never be called!");
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
 BluetoothServiceChildProcess::StopInternal()
 {
   MOZ_CRASH("This should never be called!");
-  return NS_ERROR_FAILURE;
 }
 
 bool
 BluetoothServiceChildProcess::IsEnabledInternal()
 {
   MOZ_CRASH("This should never be called!");
-  return false;
 }
 
 bool
 BluetoothServiceChildProcess::IsConnected(uint16_t aProfileId)
 {
   MOZ_CRASH("This should never be called!");
-  return false;
 }
 
 nsresult
@@ -394,5 +387,4 @@ BluetoothServiceChildProcess::SendSinkMessage(const nsAString& aDeviceAddresses,
                                               const nsAString& aMessage)
 {
   MOZ_CRASH("This should never be called!");
-  return NS_ERROR_FAILURE;
 }

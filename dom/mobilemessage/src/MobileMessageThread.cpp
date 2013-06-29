@@ -187,7 +187,6 @@ MobileMessageThread::GetLastMessageType(nsAString& aLastMessageType)
     case eMessageType_EndGuard:
     default:
       MOZ_CRASH("We shouldn't get any other message type!");
-      return NS_ERROR_UNEXPECTED;
   }
 
   return NS_OK;

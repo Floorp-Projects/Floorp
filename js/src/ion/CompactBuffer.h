@@ -43,7 +43,6 @@ class CompactBufferReader
                 return val;
         }
         MOZ_ASSUME_NOT_REACHED("unreachable");
-        return 0;
     }
 
   public:

@@ -189,7 +189,6 @@ ParseContext<FullParseHandler>::define(JSContext *cx, HandlePropertyName name,
 
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected kind");
-        break;
     }
 
     return true;
@@ -3976,7 +3975,6 @@ Parser<FullParseHandler>::forStatement()
 #if JS_HAS_DESTRUCTURING
           case PNK_ASSIGN:
             MOZ_ASSUME_NOT_REACHED("forStatement TOK_ASSIGN");
-            break;
 
           case PNK_ARRAY:
           case PNK_OBJECT:
@@ -6657,7 +6655,6 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 assignType = SET;
             } else {
                 MOZ_ASSUME_NOT_REACHED("bad opcode in object initializer");
-                assignType = VALUE; /* try to error early */
             }
 
             AtomIndexAddPtr p = seen.lookupForAdd(atom);

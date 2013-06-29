@@ -96,7 +96,7 @@ struct gfxRect :
             case NS_SIDE_BOTTOM: return BottomRight();
             case NS_SIDE_LEFT: return BottomLeft();
         }
-        MOZ_CRASH("Incomplet switch");
+        MOZ_CRASH("Incomplete switch");
     }
 
     gfxPoint CWCorner(mozilla::css::Side side) const {
@@ -106,7 +106,7 @@ struct gfxRect :
             case NS_SIDE_BOTTOM: return BottomLeft();
             case NS_SIDE_LEFT: return TopLeft();
         }
-        MOZ_CRASH("Incomplet switch");
+        MOZ_CRASH("Incomplete switch");
     }
 
     /* Conditions this border to Cairo's max coordinate space.

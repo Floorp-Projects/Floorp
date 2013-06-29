@@ -571,7 +571,6 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        return;
     }
     MConstant *c = MConstant::New(v);
     // The instruction pass will insert the box

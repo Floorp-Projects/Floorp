@@ -372,7 +372,6 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
   // This is only for compilers that don't understand that the previous switch
   // will always return.
   MOZ_CRASH("unexpected lock orientation permission value");
-  return false;
 }
 
 void

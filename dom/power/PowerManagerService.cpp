@@ -120,7 +120,6 @@ PowerManagerService::Reboot()
   SyncProfile();
   hal::Reboot();
   MOZ_CRASH("hal::Reboot() shouldn't return");
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -131,7 +130,6 @@ PowerManagerService::PowerOff()
   SyncProfile();
   hal::PowerOff();
   MOZ_CRASH("hal::PowerOff() shouldn't return");
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -154,7 +152,6 @@ PowerManagerService::Restart()
 #endif
   _exit(0);
   MOZ_CRASH("_exit() shouldn't return");
-  return NS_OK;
 }
 
 NS_IMETHODIMP

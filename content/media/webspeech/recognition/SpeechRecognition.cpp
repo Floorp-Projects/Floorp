@@ -195,7 +195,7 @@ SpeechRecognition::Transition(SpeechEvent* aEvent)
           break;
         case EVENT_START:
           SR_LOG("STATE_STARTING: Unhandled event %s", GetName(aEvent));
-          MOZ_CRASH("");
+          MOZ_CRASH();
         case EVENT_COUNT:
           MOZ_CRASH("Invalid event EVENT_COUNT");
       }
@@ -221,7 +221,7 @@ SpeechRecognition::Transition(SpeechEvent* aEvent)
           break;
         case EVENT_START:
           SR_LOG("STATE_ESTIMATING: Unhandled event %d", aEvent->mType);
-          MOZ_CRASH("");
+          MOZ_CRASH();
         case EVENT_COUNT:
           MOZ_CRASH("Invalid event EVENT_COUNT");
       }
@@ -247,7 +247,7 @@ SpeechRecognition::Transition(SpeechEvent* aEvent)
           break;
         case EVENT_START:
           SR_LOG("STATE_STARTING: Unhandled event %s", GetName(aEvent));
-          MOZ_CRASH("");
+          MOZ_CRASH();
         case EVENT_COUNT:
           MOZ_CRASH("Invalid event EVENT_COUNT");
       }
@@ -273,7 +273,7 @@ SpeechRecognition::Transition(SpeechEvent* aEvent)
           break;
         case EVENT_START:
           SR_LOG("STATE_RECOGNIZING: Unhandled aEvent %s", GetName(aEvent));
-          MOZ_CRASH("");
+          MOZ_CRASH();
         case EVENT_COUNT:
           MOZ_CRASH("Invalid event EVENT_COUNT");
       }
@@ -299,7 +299,7 @@ SpeechRecognition::Transition(SpeechEvent* aEvent)
         case EVENT_START:
         case EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT:
           SR_LOG("STATE_WAITING_FOR_RESULT: Unhandled aEvent %s", GetName(aEvent));
-          MOZ_CRASH("");
+          MOZ_CRASH();
         case EVENT_COUNT:
           MOZ_CRASH("Invalid event EVENT_COUNT");
       }

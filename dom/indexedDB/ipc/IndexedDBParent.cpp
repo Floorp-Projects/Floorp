@@ -311,7 +311,6 @@ IndexedDBDatabaseParent::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   MOZ_CRASH("Unexpected message!");
-  return NS_ERROR_UNEXPECTED;
 }
 
 void
@@ -511,7 +510,6 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
   }
 
   MOZ_CRASH("Unexpected message type!");
-  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
@@ -557,7 +555,6 @@ IndexedDBDatabaseParent::HandleDatabaseEvent(nsIDOMEvent* aEvent,
   }
 
   MOZ_CRASH("Unexpected message type!");
-  return NS_ERROR_UNEXPECTED;
 }
 
 void
@@ -781,7 +778,6 @@ bool
 IndexedDBTransactionParent::RecvDeleteObjectStore(const nsString& aName)
 {
   MOZ_CRASH("Should be overridden, don't call me!");
-  return false;
 }
 
 bool
@@ -825,11 +821,9 @@ IndexedDBTransactionParent::RecvPIndexedDBObjectStoreConstructor(
   if (aParams.type() ==
       ObjectStoreConstructorParams::TCreateObjectStoreParams) {
     MOZ_CRASH("Should be overridden, don't call me!");
-    return false;
   }
 
   MOZ_CRASH("Unknown param type!");
-  return false;
 }
 
 PIndexedDBObjectStoreParent*
@@ -1030,11 +1024,9 @@ IndexedDBCursorParent::RecvPIndexedDBRequestConstructor(
 
     default:
       MOZ_CRASH("Unknown type!");
-      return false;
   }
 
   MOZ_CRASH("Should never get here!");
-  return false;
 }
 
 PIndexedDBRequestParent*
@@ -1087,7 +1079,6 @@ bool
 IndexedDBObjectStoreParent::RecvDeleteIndex(const nsString& aName)
 {
   MOZ_CRASH("Should be overridden, don't call me!");
-  return false;
 }
 
 bool
@@ -1140,11 +1131,9 @@ IndexedDBObjectStoreParent::RecvPIndexedDBRequestConstructor(
 
     default:
       MOZ_CRASH("Unknown type!");
-      return false;
   }
 
   MOZ_CRASH("Should never get here!");
-  return false;
 }
 
 bool
@@ -1184,11 +1173,9 @@ IndexedDBObjectStoreParent::RecvPIndexedDBIndexConstructor(
 
   if (aParams.type() == IndexConstructorParams::TCreateIndexParams) {
     MOZ_CRASH("Should be overridden, don't call me!");
-    return false;
   }
 
   MOZ_CRASH("Unknown param type!");
-  return false;
 }
 
 PIndexedDBRequestParent*
@@ -1226,7 +1213,6 @@ IndexedDBObjectStoreParent::AllocPIndexedDBCursor(
                               const ObjectStoreCursorConstructorParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct a cursor!");
-  return NULL;
 }
 
 bool
@@ -1416,11 +1402,9 @@ IndexedDBIndexParent::RecvPIndexedDBRequestConstructor(
 
     default:
       MOZ_CRASH("Unknown type!");
-      return false;
   }
 
   MOZ_CRASH("Should never get here!");
-  return false;
 }
 
 PIndexedDBRequestParent*
@@ -1441,7 +1425,6 @@ IndexedDBIndexParent::AllocPIndexedDBCursor(
                                     const IndexCursorConstructorParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct a cursor!");
-  return NULL;
 }
 
 bool
@@ -1573,7 +1556,6 @@ IndexedDBObjectStoreRequestParent::GetAll(const GetAllParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   {
@@ -1713,7 +1695,6 @@ IndexedDBObjectStoreRequestParent::Count(const CountParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   nsRefPtr<IDBRequest> request;
@@ -1753,7 +1734,6 @@ IndexedDBObjectStoreRequestParent::OpenCursor(const OpenCursorParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   size_t direction = static_cast<size_t>(aParams.direction());
@@ -1876,7 +1856,6 @@ IndexedDBIndexRequestParent::GetAll(const GetAllParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   {
@@ -1916,7 +1895,6 @@ IndexedDBIndexRequestParent::GetAllKeys(const GetAllKeysParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   {
@@ -1954,7 +1932,6 @@ IndexedDBIndexRequestParent::Count(const CountParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   nsRefPtr<IDBRequest> request;
@@ -1994,7 +1971,6 @@ IndexedDBIndexRequestParent::OpenCursor(const OpenCursorParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   size_t direction = static_cast<size_t>(aParams.direction());
@@ -2036,7 +2012,6 @@ IndexedDBIndexRequestParent::OpenKeyCursor(const OpenKeyCursorParams& aParams)
 
     default:
       MOZ_CRASH("Unknown param type!");
-      return false;
   }
 
   size_t direction = static_cast<size_t>(aParams.direction());
@@ -2203,5 +2178,4 @@ IndexedDBDeleteDatabaseRequestParent::SetOpenRequest(
  WeakEventListenerBase::HandleEvent(nsIDOMEvent* aEvent)
 {
   MOZ_CRASH("This must be overridden!");
-  return NS_ERROR_FAILURE;
 }

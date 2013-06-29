@@ -227,7 +227,6 @@ PIndexedDBDeleteDatabaseRequestChild*
 IndexedDBChild::AllocPIndexedDBDeleteDatabaseRequest(const nsString& aName)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
-  return NULL;
 }
 
 bool
@@ -650,7 +649,6 @@ IndexedDBTransactionChild::RecvComplete(const CompleteParams& aParams)
 
     default:
       MOZ_CRASH("Unknown union type!");
-      return false;
   }
 
   FireCompleteEvent(resultCode);
@@ -662,7 +660,6 @@ IndexedDBTransactionChild::AllocPIndexedDBObjectStore(
                                     const ObjectStoreConstructorParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct an object store!");
-  return NULL;
 }
 
 bool
@@ -761,7 +758,6 @@ IndexedDBObjectStoreChild::AllocPIndexedDBRequest(
                                         const ObjectStoreRequestParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
-  return NULL;
 }
 
 bool
@@ -777,7 +773,6 @@ IndexedDBObjectStoreChild::AllocPIndexedDBIndex(
                                           const IndexConstructorParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct an index!");
-  return NULL;
 }
 
 bool
@@ -893,7 +888,6 @@ IndexedDBIndexChild::RecvPIndexedDBCursorConstructor(
 
     default:
       MOZ_CRASH("Unknown union type!");
-      return false;
   }
 
   actor->SetCursor(cursor);
@@ -904,7 +898,6 @@ PIndexedDBRequestChild*
 IndexedDBIndexChild::AllocPIndexedDBRequest(const IndexRequestParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
-  return NULL;
 }
 
 bool
@@ -982,7 +975,6 @@ PIndexedDBRequestChild*
 IndexedDBCursorChild::AllocPIndexedDBRequest(const CursorRequestParams& aParams)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
-  return NULL;
 }
 
 bool
@@ -1035,7 +1027,6 @@ bool
 IndexedDBRequestChildBase::Recv__delete__(const ResponseValue& aResponse)
 {
   MOZ_CRASH("This should be overridden!");
-  return false;
 }
 
 /*******************************************************************************
@@ -1094,7 +1085,6 @@ IndexedDBObjectStoreRequestChild::Recv__delete__(const ResponseValue& aResponse)
 
     default:
       MOZ_CRASH("Received invalid response parameters!");
-      return false;
   }
 
   nsresult rv = mHelper->OnParentProcessRequestComplete(aResponse);
@@ -1153,7 +1143,6 @@ IndexedDBIndexRequestChild::Recv__delete__(const ResponseValue& aResponse)
 
     default:
       MOZ_CRASH("Received invalid response parameters!");
-      return false;
   }
 
   nsresult rv = mHelper->OnParentProcessRequestComplete(aResponse);
@@ -1197,7 +1186,6 @@ IndexedDBCursorRequestChild::Recv__delete__(const ResponseValue& aResponse)
 
     default:
       MOZ_CRASH("Received invalid response parameters!");
-      return false;
   }
 
   nsresult rv = mHelper->OnParentProcessRequestComplete(aResponse);
@@ -1283,14 +1271,12 @@ AsyncConnectionHelper::ChildProcessSendResult
 IPCOpenDatabaseHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
   MOZ_CRASH("Don't call me!");
-  return Error;
 }
 
 nsresult
 IPCOpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   MOZ_CRASH("Don't call me!");
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -1312,14 +1298,12 @@ AsyncConnectionHelper::ChildProcessSendResult
 IPCSetVersionHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
   MOZ_CRASH("Don't call me!");
-  return Error;
 }
 
 nsresult
 IPCSetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   MOZ_CRASH("Don't call me!");
-  return NS_ERROR_FAILURE;
 }
 
 already_AddRefed<nsIDOMEvent>
@@ -1344,14 +1328,12 @@ IPCDeleteDatabaseHelper::UnpackResponseFromParentProcess(
                                             const ResponseValue& aResponseValue)
 {
   MOZ_CRASH("Don't call me!");
-  return NS_ERROR_FAILURE;
 }
 
 AsyncConnectionHelper::ChildProcessSendResult
 IPCDeleteDatabaseHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
   MOZ_CRASH("Don't call me!");
-  return Error;
 }
 
 nsresult
@@ -1365,5 +1347,4 @@ nsresult
 IPCDeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   MOZ_CRASH("Don't call me!");
-  return NS_ERROR_FAILURE;
 }

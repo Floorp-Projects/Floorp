@@ -69,7 +69,6 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
 {
   if (!aCertUsage) {
     MOZ_CRASH("caller should have supplied non-zero aCertUsage");
-    return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
   }
 
   if (isFatalError(previousCheckResult)) {
@@ -116,7 +115,6 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
     break;
   default:
     MOZ_CRASH("unknown cert usage passed to check()");
-    return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
   }
 
   SECStatus rv = certVerifier->VerifyCert(mCert, aCertUsage,

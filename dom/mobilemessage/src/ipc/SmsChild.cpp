@@ -31,7 +31,6 @@ CreateMessageFromMessageData(const MobileMessageData& aData)
       break;
     default:
       MOZ_CRASH("Unexpected type of MobileMessageData");
-      return nullptr;
   }
 
   return message.forget();
@@ -114,7 +113,6 @@ PSmsRequestChild*
 SmsChild::AllocPSmsRequest(const IPCSmsRequest& aRequest)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
-  return nullptr;
 }
 
 bool
@@ -128,7 +126,6 @@ PMobileMessageCursorChild*
 SmsChild::AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor)
 {
   MOZ_CRASH("Caller is supposed to manually construct a cursor!");
-  return nullptr;
 }
 
 bool
@@ -201,7 +198,6 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
       break;
     default:
       MOZ_CRASH("Received invalid response parameters!");
-      return false;
   }
 
   return true;
@@ -244,7 +240,6 @@ MobileMessageCursorChild::RecvNotifyResult(const MobileMessageCursorData& aData)
       break;
     default:
       MOZ_CRASH("Received invalid response parameters!");
-      return false;
   }
 
   mCursorCallback->NotifyCursorResult(result);

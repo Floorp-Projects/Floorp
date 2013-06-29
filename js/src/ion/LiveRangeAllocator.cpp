@@ -31,7 +31,6 @@ Requirement::priority() const
 
       default:
         MOZ_ASSUME_NOT_REACHED("Unknown requirement kind.");
-        return -1;
     }
 }
 

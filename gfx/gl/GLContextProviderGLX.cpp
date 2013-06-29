@@ -108,7 +108,6 @@ GLXLibrary::EnsureInitialized(LibType libType)
             break;
         default:
             MOZ_CRASH("Invalid GLX library type.");
-            return false;
         }
 
         ScopedGfxFeatureReporter reporter(libGLfilename, forceFeatureReport);

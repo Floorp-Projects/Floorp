@@ -67,7 +67,7 @@ private:
   do { \
     if (NS_IsCycleCollectorThread()) { \
       MOZ_CRASH("Changing refcount of " #_class " object during Traverse is " \
-                      "not permitted!"); \
+                "not permitted!"); \
     } \
     else { \
       NS_ASSERT_OWNINGTHREAD(_class); \

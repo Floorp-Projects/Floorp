@@ -117,7 +117,6 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("NYI");
-        return NULL;
     }
 
     if (ins->type() != MIRTypeFromValue(ret)) {
@@ -438,7 +437,6 @@ MConstant::printOpcode(FILE *fp)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        break;
     }
 }
 
@@ -1487,7 +1485,6 @@ MCompare::inputType()
         return MIRType_Value;
       default:
         MOZ_ASSUME_NOT_REACHED("No known conversion");
-        return MIRType_None;
     }
 }
 
@@ -1938,7 +1935,6 @@ MCompare::tryFold(bool *result)
             return true;
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected type");
-            return false;
         }
     }
 
@@ -1960,10 +1956,8 @@ MCompare::tryFold(bool *result)
           case MIRType_Boolean:
             // Int32 specialization should handle this.
             MOZ_ASSUME_NOT_REACHED("Wrong specialization");
-            return false;
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected type");
-            return false;
         }
     }
 
@@ -1985,10 +1979,8 @@ MCompare::tryFold(bool *result)
           case MIRType_String:
             // Compare_String specialization should handle this.
             MOZ_ASSUME_NOT_REACHED("Wrong specialization");
-            return false;
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected type");
-            return false;
         }
     }
 
@@ -2041,7 +2033,6 @@ MCompare::evaluateConstantOperands(bool *result)
             break;
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected op.");
-            return false;
         }
 
         return true;
@@ -2074,7 +2065,6 @@ MCompare::evaluateConstantOperands(bool *result)
             break;
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected op.");
-            return false;
         }
 
         return true;
