@@ -556,6 +556,19 @@ protected:
     return CurrentState().font;
   }
 
+#if USE_SKIA_GPU
+
+  // Recreate the DrawTarget in software mode
+  void Demote();
+
+  static std::vector<CanvasRenderingContext2D*>& DemotableContexts();
+  static void DemoteOldestContextIfNecessary();
+  static void AddDemotableContext(CanvasRenderingContext2D* context);
+
+  // Do not use GL
+  bool mForceSoftware;
+#endif
+
   // Member vars
   int32_t mWidth, mHeight;
 
