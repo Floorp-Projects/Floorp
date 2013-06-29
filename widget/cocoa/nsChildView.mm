@@ -3036,12 +3036,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   PROFILER_LABEL("widget", "ChildView::drawRect");
 
-  // Clip to the dirty region.
-  const NSRect *rects;
-  NSInteger count;
-  [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
-  CGContextClipToRects(aContext, (CGRect*)rects, count);
-
   // The CGContext that drawRect supplies us with comes with a transform that
   // scales one user space unit to one Cocoa point, which can consist of
   // multiple dev pixels. But Gecko expects its supplied context to be scaled
@@ -3359,13 +3353,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mGeckoChild->WillPaintWindow();
   }
   [super viewWillDraw];
-}
-
-// Allows us to turn off setting up the clip region
-// before each drawRect. We already clip within gecko.
-- (BOOL)wantsDefaultClipping
-{
-  return NO;
 }
 
 #if USE_CLICK_HOLD_CONTEXTMENU
