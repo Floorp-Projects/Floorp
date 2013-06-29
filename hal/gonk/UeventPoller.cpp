@@ -58,7 +58,7 @@ public:
   // no writing to the netlink socket
   virtual void OnFileCanWriteWithoutBlocking(int fd)
   {
-    MOZ_NOT_REACHED("Must not write to netlink socket");
+    MOZ_CRASH("Must not write to netlink socket");
   }
 
   MessageLoopForIO *GetIOLoop () const { return mIOLoop; }

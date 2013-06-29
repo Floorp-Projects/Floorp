@@ -107,7 +107,7 @@ GLXLibrary::EnsureInitialized(LibType libType)
 #endif
             break;
         default:
-            MOZ_NOT_REACHED("Invalid GLX library type.");
+            MOZ_CRASH("Invalid GLX library type.");
             return false;
         }
 

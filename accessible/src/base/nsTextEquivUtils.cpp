@@ -394,7 +394,7 @@ nsTextEquivUtils::GetRoleRule(role aRole)
   switch (aRole) {
 #include "RoleMap.h"
     default:
-      MOZ_NOT_REACHED("Unknown role.");
+      MOZ_CRASH("Unknown role.");
   }
 
 #undef ROLE

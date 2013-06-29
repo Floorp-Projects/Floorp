@@ -226,7 +226,7 @@ IndexedDBChild::DeallocPIndexedDBDatabase(PIndexedDBDatabaseChild* aActor)
 PIndexedDBDeleteDatabaseRequestChild*
 IndexedDBChild::AllocPIndexedDBDeleteDatabaseRequest(const nsString& aName)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  MOZ_CRASH("Caller is supposed to manually construct a request!");
   return NULL;
 }
 
@@ -649,7 +649,7 @@ IndexedDBTransactionChild::RecvComplete(const CompleteParams& aParams)
       break;
 
     default:
-      MOZ_NOT_REACHED("Unknown union type!");
+      MOZ_CRASH("Unknown union type!");
       return false;
   }
 
@@ -661,7 +661,7 @@ PIndexedDBObjectStoreChild*
 IndexedDBTransactionChild::AllocPIndexedDBObjectStore(
                                     const ObjectStoreConstructorParams& aParams)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct an object store!");
+  MOZ_CRASH("Caller is supposed to manually construct an object store!");
   return NULL;
 }
 
@@ -760,7 +760,7 @@ PIndexedDBRequestChild*
 IndexedDBObjectStoreChild::AllocPIndexedDBRequest(
                                         const ObjectStoreRequestParams& aParams)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  MOZ_CRASH("Caller is supposed to manually construct a request!");
   return NULL;
 }
 
@@ -776,7 +776,7 @@ PIndexedDBIndexChild*
 IndexedDBObjectStoreChild::AllocPIndexedDBIndex(
                                           const IndexConstructorParams& aParams)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct an index!");
+  MOZ_CRASH("Caller is supposed to manually construct an index!");
   return NULL;
 }
 
@@ -892,7 +892,7 @@ IndexedDBIndexChild::RecvPIndexedDBCursorConstructor(
       break;
 
     default:
-      MOZ_NOT_REACHED("Unknown union type!");
+      MOZ_CRASH("Unknown union type!");
       return false;
   }
 
@@ -903,7 +903,7 @@ IndexedDBIndexChild::RecvPIndexedDBCursorConstructor(
 PIndexedDBRequestChild*
 IndexedDBIndexChild::AllocPIndexedDBRequest(const IndexRequestParams& aParams)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  MOZ_CRASH("Caller is supposed to manually construct a request!");
   return NULL;
 }
 
@@ -981,7 +981,7 @@ IndexedDBCursorChild::ActorDestroy(ActorDestroyReason aWhy)
 PIndexedDBRequestChild*
 IndexedDBCursorChild::AllocPIndexedDBRequest(const CursorRequestParams& aParams)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  MOZ_CRASH("Caller is supposed to manually construct a request!");
   return NULL;
 }
 
@@ -1034,7 +1034,7 @@ IndexedDBRequestChildBase::Disconnect()
 bool
 IndexedDBRequestChildBase::Recv__delete__(const ResponseValue& aResponse)
 {
-  MOZ_NOT_REACHED("This should be overridden!");
+  MOZ_CRASH("This should be overridden!");
   return false;
 }
 
@@ -1093,7 +1093,7 @@ IndexedDBObjectStoreRequestChild::Recv__delete__(const ResponseValue& aResponse)
       break;
 
     default:
-      MOZ_NOT_REACHED("Received invalid response parameters!");
+      MOZ_CRASH("Received invalid response parameters!");
       return false;
   }
 
@@ -1152,7 +1152,7 @@ IndexedDBIndexRequestChild::Recv__delete__(const ResponseValue& aResponse)
       break;
 
     default:
-      MOZ_NOT_REACHED("Received invalid response parameters!");
+      MOZ_CRASH("Received invalid response parameters!");
       return false;
   }
 
@@ -1196,7 +1196,7 @@ IndexedDBCursorRequestChild::Recv__delete__(const ResponseValue& aResponse)
       break;
 
     default:
-      MOZ_NOT_REACHED("Received invalid response parameters!");
+      MOZ_CRASH("Received invalid response parameters!");
       return false;
   }
 
@@ -1282,14 +1282,14 @@ IPCOpenDatabaseHelper::UnpackResponseFromParentProcess(
 AsyncConnectionHelper::ChildProcessSendResult
 IPCOpenDatabaseHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return Error;
 }
 
 nsresult
 IPCOpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return NS_ERROR_FAILURE;
 }
 
@@ -1311,14 +1311,14 @@ IPCSetVersionHelper::UnpackResponseFromParentProcess(
 AsyncConnectionHelper::ChildProcessSendResult
 IPCSetVersionHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return Error;
 }
 
 nsresult
 IPCSetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return NS_ERROR_FAILURE;
 }
 
@@ -1343,14 +1343,14 @@ nsresult
 IPCDeleteDatabaseHelper::UnpackResponseFromParentProcess(
                                             const ResponseValue& aResponseValue)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return NS_ERROR_FAILURE;
 }
 
 AsyncConnectionHelper::ChildProcessSendResult
 IPCDeleteDatabaseHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return Error;
 }
 
@@ -1364,6 +1364,6 @@ IPCDeleteDatabaseHelper::GetSuccessResult(JSContext* aCx, JS::MutableHandle<JS::
 nsresult
 IPCDeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  MOZ_NOT_REACHED("Don't call me!");
+  MOZ_CRASH("Don't call me!");
   return NS_ERROR_FAILURE;
 }

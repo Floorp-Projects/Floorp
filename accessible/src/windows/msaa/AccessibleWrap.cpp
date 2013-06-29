@@ -378,7 +378,7 @@ AccessibleWrap::get_accRole(
   switch (geckoRole) {
 #include "RoleMap.h"
     default:
-      MOZ_NOT_REACHED("Unknown role.");
+      MOZ_CRASH("Unknown role.");
   };
 
 #undef ROLE
@@ -1181,7 +1181,7 @@ AccessibleWrap::role(long *aRole)
   switch (geckoRole) {
 #include "RoleMap.h"
     default:
-      MOZ_NOT_REACHED("Unknown role.");
+      MOZ_CRASH("Unknown role.");
   };
 
 #undef ROLE

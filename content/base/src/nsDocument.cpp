@@ -8475,7 +8475,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
     break;
   default:
     /* should never happen */
-    MOZ_NOT_REACHED("Unknown CORS mode!");
+    MOZ_CRASH("Unknown CORS mode!");
   }
 
   // Image not in cache - trigger preload
@@ -11148,7 +11148,7 @@ nsDocument::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // nsDocuments can only appear at the top of the DOM tree, and we use the
   // specialized DocSizeOfExcludingThis() in that case.  So this should never
   // be called.
-  MOZ_NOT_REACHED("nsDocument::SizeOfExcludingThis");
+  MOZ_CRASH("nsDocument::SizeOfExcludingThis");
   return 0;
 }
 

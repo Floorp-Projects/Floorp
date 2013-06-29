@@ -58,14 +58,14 @@ SerializeURI(nsIURI* aURI,
   if (serializable) {
     serializable->Serialize(aParams);
     if (aParams.type() == URIParams::T__None) {
-      MOZ_NOT_REACHED("Serialize failed!");
+      MOZ_CRASH("Serialize failed!");
     }
     return;
   }
 
   nsCString scheme;
   if (NS_FAILED(aURI->GetScheme(scheme))) {
-    MOZ_NOT_REACHED("This must never fail!");
+    MOZ_CRASH("This must never fail!");
   }
 
   bool allowed = false;
@@ -79,14 +79,14 @@ SerializeURI(nsIURI* aURI,
   }
 
   if (!allowed) {
-    MOZ_NOT_REACHED("All IPDL URIs must be serializable or an allowed "
+    MOZ_CRASH("All IPDL URIs must be serializable or an allowed "
                     "scheme!");
   }
 
   GenericURIParams params;
   if (NS_FAILED(aURI->GetSpec(params.spec())) ||
       NS_FAILED(aURI->GetOriginCharset(params.charset()))) {
-    MOZ_NOT_REACHED("This must never fail!");
+    MOZ_CRASH("This must never fail!");
   }
 
   aParams = params;
@@ -132,7 +132,7 @@ DeserializeURI(const URIParams& aParams)
         break;
 
       default:
-        MOZ_NOT_REACHED("Unknown params!");
+        MOZ_CRASH("Unknown params!");
     }
 
     MOZ_ASSERT(serializable);
@@ -160,7 +160,7 @@ DeserializeURI(const URIParams& aParams)
 
   nsCString scheme;
   if (NS_FAILED(uri->GetScheme(scheme))) {
-    MOZ_NOT_REACHED("This must never fail!");
+    MOZ_CRASH("This must never fail!");
   }
 
   bool allowed = false;
@@ -197,7 +197,7 @@ DeserializeURI(const OptionalURIParams& aParams)
       break;
 
     default:
-      MOZ_NOT_REACHED("Unknown params!");
+      MOZ_CRASH("Unknown params!");
   }
 
   return uri.forget();

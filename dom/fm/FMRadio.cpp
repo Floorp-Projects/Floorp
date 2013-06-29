@@ -240,7 +240,7 @@ void FMRadio::Notify(const FMRadioOperationInformation& info)
       DispatchTrustedEvent(RADIO_SEEK_COMPLETE_EVENT_NAME);
       break;
     default:
-      MOZ_NOT_REACHED();
+      MOZ_CRASH();
       return;
   }
 }

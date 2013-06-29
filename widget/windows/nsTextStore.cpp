@@ -1024,7 +1024,7 @@ nsTextStore::FlushPendingActions()
         break;
       }
       default:
-        MOZ_NOT_REACHED("unexpected action type");
+        MOZ_CRASH("unexpected action type");
         break;
     }
 

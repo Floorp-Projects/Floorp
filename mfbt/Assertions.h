@@ -359,14 +359,14 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #endif
 
 /*
- * MOZ_NOT_REACHED_MARKER() expands to an expression which states that it is
+ * MOZ_CRASH_MARKER() expands to an expression which states that it is
  * undefined behavior for execution to reach this point.  No guarantees are made
  * about what will happen if this is reached at runtime.  Most code should
- * probably use the higher level MOZ_NOT_REACHED, which uses this when
+ * probably use the higher level MOZ_CRASH, which uses this when
  * appropriate.
  */
 #if defined(__clang__)
-#  define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
+#  define MOZ_CRASH_MARKER() __builtin_unreachable()
 #elif defined(__GNUC__)
    /*
     * __builtin_unreachable() was implemented in gcc 4.5.  If we don't have
@@ -374,26 +374,26 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
     * in C++ in case there's another abort() visible in local scope.
     */
 #  if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0)
-#    define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
+#    define MOZ_CRASH_MARKER() __builtin_unreachable()
 #  else
 #    ifdef __cplusplus
-#      define MOZ_NOT_REACHED_MARKER() ::abort()
+#      define MOZ_CRASH_MARKER() ::abort()
 #    else
-#      define MOZ_NOT_REACHED_MARKER() abort()
+#      define MOZ_CRASH_MARKER() abort()
 #    endif
 #  endif
 #elif defined(_MSC_VER)
-#  define MOZ_NOT_REACHED_MARKER() __assume(0)
+#  define MOZ_CRASH_MARKER() __assume(0)
 #else
 #  ifdef __cplusplus
-#    define MOZ_NOT_REACHED_MARKER() ::abort()
+#    define MOZ_CRASH_MARKER() ::abort()
 #  else
-#    define MOZ_NOT_REACHED_MARKER() abort()
+#    define MOZ_CRASH_MARKER() abort()
 #  endif
 #endif
 
 /*
- * MOZ_NOT_REACHED(reason) indicates that the given point can't be reached
+ * MOZ_CRASH(reason) indicates that the given point can't be reached
  * during execution: simply reaching that point in execution is a bug.  It takes
  * as an argument an error message indicating the reason why that point should
  * not have been reachable.
@@ -406,17 +406,17 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  *     else if (node.isFalse())
  *       handleFalseLiteral();
  *     else
- *       MOZ_NOT_REACHED("boolean literal that's not true or false?");
+ *       MOZ_CRASH("boolean literal that's not true or false?");
  *   }
  */
 #if defined(DEBUG)
-#  define MOZ_NOT_REACHED(reason) \
+#  define MOZ_CRASH(reason) \
      do { \
        MOZ_ASSERT(false, reason); \
-       MOZ_NOT_REACHED_MARKER(); \
+       MOZ_CRASH_MARKER(); \
      } while (0)
 #else
-#  define MOZ_NOT_REACHED(reason)  MOZ_NOT_REACHED_MARKER()
+#  define MOZ_CRASH(reason)  MOZ_CRASH_MARKER()
 #endif
 
 /*

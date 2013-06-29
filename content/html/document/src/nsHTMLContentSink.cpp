@@ -662,21 +662,21 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   // Special handling for certain tags
   switch (nodeType) {
     case eHTMLTag_form:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
+      MOZ_CRASH("Must not use HTMLContentSink for forms.");
       break;
 
     case eHTMLTag_frameset:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for frames.");
+      MOZ_CRASH("Must not use HTMLContentSink for frames.");
       break;
 
     case eHTMLTag_noembed:
     case eHTMLTag_noframes:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for noembed/noframes.");
+      MOZ_CRASH("Must not use HTMLContentSink for noembed/noframes.");
       break;
 
     case eHTMLTag_script:
     case eHTMLTag_style:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for styles and scripts.");
+      MOZ_CRASH("Must not use HTMLContentSink for styles and scripts.");
       break;
 
     case eHTMLTag_button:
@@ -783,11 +783,11 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   switch (nodeType) {
   case eHTMLTag_noembed:
   case eHTMLTag_noframes:
-    MOZ_NOT_REACHED("Must not use HTMLContentSink for noembed/noframes.");
+    MOZ_CRASH("Must not use HTMLContentSink for noembed/noframes.");
     break;
 
   case eHTMLTag_form:
-    MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
+    MOZ_CRASH("Must not use HTMLContentSink for forms.");
     break;
 
   case eHTMLTag_video:
@@ -801,12 +801,12 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
     break;
 
   case eHTMLTag_script:
-    MOZ_NOT_REACHED("Must not use HTMLContentSink to run scripts.");
+    MOZ_CRASH("Must not use HTMLContentSink to run scripts.");
     result = NS_ERROR_NOT_IMPLEMENTED;
     break;
 
   case eHTMLTag_style:
-    MOZ_NOT_REACHED("Must not use HTMLContentSink for styles.");
+    MOZ_CRASH("Must not use HTMLContentSink for styles.");
     result = NS_ERROR_NOT_IMPLEMENTED;
     break;
 
@@ -855,7 +855,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Additional processing needed once the element is in the tree
       switch (nodeType) {
       case eHTMLTag_meta:
-        MOZ_NOT_REACHED("Must not use HTMLContentSink for metas.");
+        MOZ_CRASH("Must not use HTMLContentSink for metas.");
         rv = NS_ERROR_NOT_IMPLEMENTED;
         break;
 
@@ -1751,7 +1751,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   switch (aNode.GetNodeType()) {
     case eHTMLTag_frameset:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for frames.");
+      MOZ_CRASH("Must not use HTMLContentSink for frames.");
       rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     case eHTMLTag_head:
@@ -1776,7 +1776,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       }
       break;
     case eHTMLTag_form:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
+      MOZ_CRASH("Must not use HTMLContentSink for forms.");
       rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     default:
@@ -1794,7 +1794,7 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 
   switch (aTag) {
     case eHTMLTag_frameset:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for frames.");
+      MOZ_CRASH("Must not use HTMLContentSink for frames.");
       rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     case eHTMLTag_head:
@@ -1807,7 +1807,7 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
       rv = CloseHTML();
       break;
     case eHTMLTag_form:
-      MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
+      MOZ_CRASH("Must not use HTMLContentSink for forms.");
       rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     default:
@@ -1833,7 +1833,7 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   switch (nodeType) {
   case eHTMLTag_link:
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    MOZ_NOT_REACHED("Must not use HTMLContentSink for links.");
+    MOZ_CRASH("Must not use HTMLContentSink for links.");
 
     break;
   default:

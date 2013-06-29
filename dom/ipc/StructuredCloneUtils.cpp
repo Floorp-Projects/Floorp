@@ -49,7 +49,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
       nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
       bool isMutable;
       if (NS_FAILED(mutableFile->GetMutable(&isMutable))) {
-        MOZ_NOT_REACHED("GetMutable failed!");
+        MOZ_CRASH("GetMutable failed!");
       }
       else {
         MOZ_ASSERT(!isMutable);
@@ -82,7 +82,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
       nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
       bool isMutable;
       if (NS_FAILED(mutableBlob->GetMutable(&isMutable))) {
-        MOZ_NOT_REACHED("GetMutable failed!");
+        MOZ_CRASH("GetMutable failed!");
       }
       else {
         MOZ_ASSERT(!isMutable);

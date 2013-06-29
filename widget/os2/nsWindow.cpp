@@ -2526,7 +2526,7 @@ PlatformToNSAttr(uint8_t aAttr)
       return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
 
     default:
-      MOZ_NOT_REACHED("unknown attribute");
+      MOZ_CRASH("unknown attribute");
       return NS_TEXTRANGE_RAWINPUT;
   }
 }

@@ -4844,7 +4844,7 @@ static int32_t RoundUp(double aDouble)
   if (mGeckoChild &&
       mGeckoChild->GetInputContext().IsPasswordEditor() !=
         TextInputHandler::IsSecureEventInputEnabled()) {
-    MOZ_NOT_REACHED("in wrong secure input mode");
+    MOZ_CRASH("in wrong secure input mode");
   }
 #endif // #if !defined(RELEASE_BUILD) || defined(DEBUG)
 

@@ -5057,7 +5057,7 @@ class CGMethodCall(CGThing):
                      argCountCases,
                      CGGeneric('return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s");\n' % methodName)))
         overloadCGThings.append(
-            CGGeneric('MOZ_NOT_REACHED("We have an always-returning default case");\n'
+            CGGeneric('MOZ_CRASH("We have an always-returning default case");\n'
                       'return false;'))
         self.cgRoot = CGWrapper(CGIndenter(CGList(overloadCGThings, "\n")),
                                 pre="\n")

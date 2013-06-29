@@ -1452,5 +1452,5 @@ nsContentSubtreeIterator::GetTopAncestorInRange(nsINode* aNode)
     content = parent;
   }
 
-  MOZ_NOT_REACHED("This should only be possible if aNode was null");
+  MOZ_CRASH("This should only be possible if aNode was null");
 }

@@ -484,7 +484,7 @@ static void HandleOOM()
 {
   fputs("Out of memory allocating atom hashtable.\n", stderr);
   MOZ_CRASH();
-  MOZ_NOT_REACHED();
+  MOZ_CRASH();
 }
 
 static inline void

@@ -30,7 +30,7 @@ ComputeTransformForRotation(const nsIntRect& aBounds,
         transform.Rotate(M_PI * 3 / 2);
         break;
     default:
-        MOZ_NOT_REACHED("Unknown rotation");
+        MOZ_CRASH("Unknown rotation");
         break;
     }
     return transform;

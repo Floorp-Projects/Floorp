@@ -293,7 +293,7 @@ SetPrefValue(const char* aPrefName, const dom::PrefValue& aValue,
         return PREF_SetBoolPref(aPrefName, aValue.get_bool(),
                                 setDefault);
     default:
-        MOZ_NOT_REACHED();
+        MOZ_CRASH();
         return NS_ERROR_FAILURE;
     }
 }
@@ -426,7 +426,7 @@ GetPrefValueFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref,
         *settingValue = !!value->boolVal;
         return;
     default:
-        MOZ_NOT_REACHED();
+        MOZ_CRASH();
     }
 }
 
