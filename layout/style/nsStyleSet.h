@@ -53,6 +53,15 @@ class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
 #endif
 };
 
+class nsDisableTextZoomStyleRule MOZ_FINAL : public nsIStyleRule
+{
+  NS_DECL_ISUPPORTS
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+#endif
+};
+
 // The style set object is created by the document viewer and ownership is
 // then handed off to the PresShell.  Only the PresShell should delete a
 // style set.
@@ -336,6 +345,9 @@ class nsStyleSet
   void WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
                            nsRuleWalker* aRuleWalker);
 
+  void WalkDisableTextZoomRule(mozilla::dom::Element* aElement,
+                               nsRuleWalker* aRuleWalker);
+
 #ifdef DEBUG
   // Just like AddImportantRules except it doesn't actually add anything; it
   // just asserts that there are no important rules between aCurrLevelNode and
@@ -434,6 +446,10 @@ class nsStyleSet
   // Style rule which sets all properties to their initial values for
   // determining when context-sensitive values are in use.
   nsRefPtr<nsInitialStyleRule> mInitialStyleRule;
+
+  // Style rule that sets the internal -x-text-zoom property on
+  // <svg:text> elements to disable the effect of text zooming.
+  nsRefPtr<nsDisableTextZoomStyleRule> mDisableTextZoomStyleRule;
 
   // Old rule trees, which should only be non-empty between
   // BeginReconstruct and EndReconstruct, but in case of bugs that cause
