@@ -17,7 +17,7 @@ interface nsISHEntry;
 
 typedef long nsDocShellInfoLoadType;
 
-[scriptable, uuid(5b041ea4-6655-434c-b3d3-cbbc9441f86a)]
+[scriptable, uuid(5df91211-37db-47e9-8f83-2d5b0cb2eb9e)]
 interface nsIDocShellLoadInfo : nsISupports
 {
     /** This is the referrer for the load. */
@@ -82,4 +82,16 @@ interface nsIDocShellLoadInfo : nsISupports
      *  sent, even if it's available. This attribute defaults to true.
      */
     attribute boolean sendReferrer;
+
+    /** True if the docshell has been created to load an iframe where the
+     * srcdoc attribute has been set.  Set when srcdocData is specified.
+     */
+    readonly attribute boolean isSrcdocLoad;
+
+    /** When set, the load will be interpreted as a srcdoc load, where contents
+     * of this string will be loaded instead of the URI.  Setting srcdocData
+     * sets isSrcdocLoad to true
+     */
+    attribute AString srcdocData;
+
 };
