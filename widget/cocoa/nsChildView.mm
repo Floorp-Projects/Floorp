@@ -2084,7 +2084,6 @@ nsChildView::UpdateTitlebarImageBuffer()
   double scale = BackingScaleFactor();
   CGContextScaleCTM(ctx, scale, scale);
   NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
 
   CGContextSaveGState(ctx);
 
@@ -2094,6 +2093,8 @@ nsChildView::UpdateTitlebarImageBuffer()
     CGContextTranslateCTM(ctx, 0, [frameView bounds].size.height);
     CGContextScaleCTM(ctx, 1, -1);
   }
+  NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[frameView isFlipped]];
+  [NSGraphicsContext setCurrentContext:context];
 
   // Draw the titlebar controls into the titlebar image.
   for (id view in [window titlebarControls]) {
@@ -2119,14 +2120,17 @@ nsChildView::UpdateTitlebarImageBuffer()
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, viewFrame.origin.x, viewFrame.origin.y);
 
-    if ([view isFlipped]) {
+    if ([context isFlipped] != [view isFlipped]) {
       CGContextTranslateCTM(ctx, 0, viewFrame.size.height);
       CGContextScaleCTM(ctx, 1, -1);
     }
 
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[view isFlipped]]];
+
     NSRect intersectRect = DevPixelsToCocoaPoints(intersection.GetBounds());
     [cell drawWithFrame:[view convertRect:intersectRect fromView:mView] inView:button];
 
+    [NSGraphicsContext setCurrentContext:context];
     CGContextRestoreGState(ctx);
   }
 
