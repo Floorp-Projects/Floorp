@@ -86,6 +86,8 @@ public:
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsPresContext* aContext);
 
+  void EnableZoom(nsPresContext* aContext, bool aEnable);
+
   nsFont  mFont;        // [inherited]
   nscoord mSize;        // [inherited] Our "computed size". Can be different
                         // from mFont.size which is our "actual size" and is
@@ -101,6 +103,10 @@ public:
 
   // was mLanguage set based on a lang attribute in the document?
   bool mExplicitLanguage;        // [inherited]
+
+  // should calls to ZoomText() and UnZoomText() be made to the font
+  // size on this nsStyleFont?
+  bool mAllowZoom;               // [inherited]
 
   // The value mSize would have had if scriptminsize had never been applied
   nscoord mScriptUnconstrainedSize;

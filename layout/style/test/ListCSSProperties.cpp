@@ -103,6 +103,7 @@ const char *gInaccessibleProperties[] = {
     "-x-lang",
     "-x-span",
     "-x-system-font",
+    "-x-text-zoom",
     "border-end-color-value",
     "border-end-style-value",
     "border-end-width-value",

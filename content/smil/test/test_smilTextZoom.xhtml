@@ -59,27 +59,26 @@ function main()
   try {
     // Verify computed style values at various points during animation.
     // * Correct behavior is for the computed values of 'font-size' to be
-    // exactly twice as large as their corresponding specified values.
-    // (Mozilla's SVG code divides out the textZoom factor from these computed
-    // values when rendering, to obtain the correct font-size.)
+    // the same as their corresponding specified values, since text zoom
+    // should not affect SVG text elements.
     // * I also include tests for an identical animation of the "stroke-width"
     // property, which should _not_ be affected by textZoom.
     var text = document.getElementsByTagName("text")[0];
     var rect = document.getElementsByTagName("rect")[0];
 
-    verifyStyle(text, "font-size",    "10px");
+    verifyStyle(text, "font-size",    "5px");
     verifyStyle(rect, "stroke-width", "5px");
     svg.setCurrentTime(1);
-    verifyStyle(text, "font-size",    "40px");
+    verifyStyle(text, "font-size",    "20px");
     verifyStyle(rect, "stroke-width", "20px");
     svg.setCurrentTime(1.5);
-    verifyStyle(text, "font-size",    "60px");
+    verifyStyle(text, "font-size",    "30px");
     verifyStyle(rect, "stroke-width", "30px");
     svg.setCurrentTime(2);
-    verifyStyle(text, "font-size",    "80px");
+    verifyStyle(text, "font-size",    "40px");
     verifyStyle(rect, "stroke-width", "40px");
     svg.setCurrentTime(3);
-    verifyStyle(text, "font-size",    "80px");
+    verifyStyle(text, "font-size",    "40px");
     verifyStyle(rect, "stroke-width", "40px");
   } catch (e) {
     // If anything goes wrong, make sure we restore textZoom before bubbling
