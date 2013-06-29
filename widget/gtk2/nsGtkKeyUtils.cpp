@@ -496,7 +496,7 @@ KeymapWrapper::InitBySystemSettings()
                 modifier = LEVEL5;
                 break;
             default:
-                MOZ_NOT_REACHED("All indexes must be handled here");
+                MOZ_CRASH("All indexes must be handled here");
                 break;
         }
         for (uint32_t j = 0; j < ArrayLength(mod); j++) {

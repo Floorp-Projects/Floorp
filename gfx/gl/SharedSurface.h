@@ -105,13 +105,13 @@ public:
     // For use when AttachType is correct.
     virtual GLuint Texture() const {
         MOZ_ASSERT(AttachType() == AttachmentType::GLTexture);
-        MOZ_NOT_REACHED("Did you forget to override this function?");
+        MOZ_CRASH("Did you forget to override this function?");
         return 0;
     }
 
     virtual GLuint Renderbuffer() const {
         MOZ_ASSERT(AttachType() == AttachmentType::GLRenderbuffer);
-        MOZ_NOT_REACHED("Did you forget to override this function?");
+        MOZ_CRASH("Did you forget to override this function?");
         return 0;
     }
 };

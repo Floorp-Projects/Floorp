@@ -117,7 +117,7 @@ BluetoothChild::RecvNotificationsStopped()
 PBluetoothRequestChild*
 BluetoothChild::AllocPBluetoothRequest(const Request& aRequest)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  MOZ_CRASH("Caller is supposed to manually construct a request!");
   return nullptr;
 }
 

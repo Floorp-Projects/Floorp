@@ -1816,7 +1816,7 @@ nsDOMClassInfo::Init()
   for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
     if (!sClassInfoData[i].u.mConstructorFptr ||
         sClassInfoData[i].mDebugID != i) {
-      MOZ_NOT_REACHED("Class info data out of sync, you forgot to update "
+      MOZ_CRASH("Class info data out of sync, you forgot to update "
                       "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
                       "mozilla will not work without this fixed!");
       return NS_ERROR_NOT_INITIALIZED;
@@ -1825,7 +1825,7 @@ nsDOMClassInfo::Init()
 
   for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
     if (!sClassInfoData[i].mInterfaces) {
-      MOZ_NOT_REACHED("Class info data without an interface list! Fix this, "
+      MOZ_CRASH("Class info data without an interface list! Fix this, "
                       "mozilla will not work without this fixed!");
 
       return NS_ERROR_NOT_INITIALIZED;
@@ -2027,7 +2027,7 @@ NS_IMETHODIMP
 nsDOMClassInfo::PostTransplant(nsIXPConnectWrappedNative *wrapper,
                                JSContext *cx, JSObject *obj)
 {
-  MOZ_NOT_REACHED("nsDOMClassInfo::PostTransplant Don't call me!");
+  MOZ_CRASH("nsDOMClassInfo::PostTransplant Don't call me!");
   return NS_OK;
 }
 
@@ -3147,7 +3147,7 @@ DefineIDBInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsII
     interface = IDBConstant::IDBTransaction;
   }
   else {
-    MOZ_NOT_REACHED("unexpected IID");
+    MOZ_CRASH("unexpected IID");
   }
 
   for (int8_t i = 0; i < (int8_t)mozilla::ArrayLength(sIDBConstants); ++i) {

@@ -96,7 +96,7 @@ GLScreenBuffer::BindAsFramebuffer(GLContext* const gl, GLenum target) const
 
     default:
         // In case we got a bad target.
-        MOZ_NOT_REACHED("Bad `target` for BindFramebuffer.");
+        MOZ_CRASH("Bad `target` for BindFramebuffer.");
         gl->raw_fBindFramebuffer(target, 0);
         break;
     }
@@ -577,7 +577,7 @@ ReadBuffer::Create(GLContext* gl,
         colorRB = surf->Renderbuffer();
         break;
     default:
-        MOZ_NOT_REACHED("Unknown attachment type?");
+        MOZ_CRASH("Unknown attachment type?");
         return nullptr;
     }
     MOZ_ASSERT(colorTex || colorRB);
@@ -627,7 +627,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
             colorRB = surf->Renderbuffer();
             break;
         default:
-            MOZ_NOT_REACHED("Unknown attachment type?");
+            MOZ_CRASH("Unknown attachment type?");
             return;
         }
 

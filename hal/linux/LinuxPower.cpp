@@ -66,10 +66,10 @@ QuitHard(hal::ShutdownMode aMode)
       _exit(1);
       break;
     default:
-      MOZ_NOT_REACHED();
+      MOZ_CRASH();
       break;
   }
-  MOZ_NOT_REACHED();
+  MOZ_CRASH();
 }
 
 // Function to complusively shut down the system with a given mode when timeout.

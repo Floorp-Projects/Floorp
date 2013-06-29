@@ -90,7 +90,7 @@ public:
   {
     // See InputStreamUtils.cpp to see how deserialization of a
     // RemoteInputStream is special-cased.
-    MOZ_NOT_REACHED("RemoteInputStream should never be deserialized");
+    MOZ_CRASH("RemoteInputStream should never be deserialized");
     return false;
   }
 
@@ -626,7 +626,7 @@ BlobTraits<Parent>::BaseType::NoteRunnableCompleted(
     }
   }
 
-  MOZ_NOT_REACHED("Runnable not in our array!");
+  MOZ_CRASH("Runnable not in our array!");
 }
 
 template <ActorFlavorEnum ActorFlavor>
@@ -1079,7 +1079,7 @@ Blob<ActorFlavor>::Create(const ConstructorParamsType& aParams)
     }
 
     default:
-      MOZ_NOT_REACHED("Unknown params!");
+      MOZ_CRASH("Unknown params!");
   }
 
   return nullptr;
@@ -1185,13 +1185,13 @@ Blob<ActorFlavor>::CreateRemoteBlob(const ConstructorParamsType& aParams)
     }
 
     default:
-      MOZ_NOT_REACHED("Unknown params!");
+      MOZ_CRASH("Unknown params!");
   }
 
   MOZ_ASSERT(remoteBlob);
 
   if (NS_FAILED(remoteBlob->SetMutable(false))) {
-    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
+    MOZ_CRASH("Failed to make remote blob immutable!");
   }
 
   return remoteBlob.forget();
@@ -1278,7 +1278,7 @@ Blob<ActorFlavor>::RecvResolveMystery(const ResolveMysteryParams& aParams)
     }
 
     default:
-      MOZ_NOT_REACHED("Unknown params!");
+      MOZ_CRASH("Unknown params!");
   }
 
   return true;

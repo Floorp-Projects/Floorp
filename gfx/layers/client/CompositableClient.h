@@ -73,7 +73,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const
   {
-    MOZ_NOT_REACHED("This method should be overridden");
+    MOZ_CRASH("This method should be overridden");
     return TextureInfo();
   }
 
@@ -85,7 +85,7 @@ public:
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)
   {
-    MOZ_NOT_REACHED("If you want to call this, you should have implemented it");
+    MOZ_CRASH("If you want to call this, you should have implemented it");
   }
 
   /**

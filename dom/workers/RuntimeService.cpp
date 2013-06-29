@@ -749,7 +749,7 @@ CTypesActivityCallback(JSContext* aCx,
       break;
 
     default:
-      MOZ_NOT_REACHED("Unknown type flag!");
+      MOZ_CRASH("Unknown type flag!");
   }
 }
 

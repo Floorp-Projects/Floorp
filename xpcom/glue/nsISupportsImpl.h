@@ -66,7 +66,7 @@ private:
 #define NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class) \
   do { \
     if (NS_IsCycleCollectorThread()) { \
-      MOZ_NOT_REACHED("Changing refcount of " #_class " object during Traverse is " \
+      MOZ_CRASH("Changing refcount of " #_class " object during Traverse is " \
                       "not permitted!"); \
     } \
     else { \

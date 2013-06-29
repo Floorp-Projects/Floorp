@@ -233,7 +233,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
       break;
 
     default:
-      MOZ_NOT_REACHED("Invalid encode state");
+      MOZ_CRASH("Invalid encode state");
       break;
     }
   }

@@ -115,7 +115,7 @@ FormatFromShaderType(ShaderProgramType aShaderType)
     case BGRXLayerProgramType:
       return FORMAT_B8G8R8X8;
     default:
-      MOZ_NOT_REACHED("Unsupported texture shader type");
+      MOZ_CRASH("Unsupported texture shader type");
       return FORMAT_UNKNOWN;
   }
 }
@@ -435,7 +435,7 @@ SurfaceStreamHostOGL::Lock()
       break;
     }
     default:
-      MOZ_NOT_REACHED("Invalid SharedSurface type.");
+      MOZ_CRASH("Invalid SharedSurface type.");
       return false;
   }
 

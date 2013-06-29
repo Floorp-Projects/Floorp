@@ -671,7 +671,7 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(snapshot));
     return JS_TRUE;
   default:
-    MOZ_NOT_REACHED("unhandled reflection status");
+    MOZ_CRASH("unhandled reflection status");
     return JS_FALSE;
   }
 }

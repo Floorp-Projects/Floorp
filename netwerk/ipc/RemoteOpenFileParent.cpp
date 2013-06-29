@@ -21,7 +21,7 @@ bool
 RemoteOpenFileParent::OpenSendCloseDelete()
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
-  MOZ_NOT_REACHED("OS X and Windows shouldn't be doing IPDL here");
+  MOZ_CRASH("OS X and Windows shouldn't be doing IPDL here");
 #else
 
   // TODO: make this async!

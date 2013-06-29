@@ -1570,7 +1570,7 @@ MainAxisPositionTracker::
         }
         break;
       default:
-        MOZ_NOT_REACHED("Unexpected justify-content value");
+        MOZ_CRASH("Unexpected justify-content value");
     }
   }
 
@@ -1900,7 +1900,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
       mMainAxis = GetReverseAxis(blockDimension);
       break;
     default:
-      MOZ_NOT_REACHED("Unexpected computed value for 'flex-flow' property");
+      MOZ_CRASH("Unexpected computed value for 'flex-flow' property");
       mMainAxis = inlineDimension;
       break;
   }

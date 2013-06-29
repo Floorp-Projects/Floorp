@@ -411,7 +411,7 @@ MappableSeekableZStream::munmap(void *addr, size_t length)
       ::munmap(addr, length);
       return;
     }
-  MOZ_NOT_REACHED("munmap called with unknown mapping");
+  MOZ_CRASH("munmap called with unknown mapping");
 }
 
 void
@@ -422,12 +422,12 @@ public:
   AutoLock(pthread_mutex_t *mutex): mutex(mutex)
   {
     if (pthread_mutex_lock(mutex))
-      MOZ_NOT_REACHED("pthread_mutex_lock failed");
+      MOZ_CRASH("pthread_mutex_lock failed");
   }
   ~AutoLock()
   {
     if (pthread_mutex_unlock(mutex))
-      MOZ_NOT_REACHED("pthread_mutex_unlock failed");
+      MOZ_CRASH("pthread_mutex_unlock failed");
   }
 private:
   pthread_mutex_t *mutex;

@@ -680,7 +680,7 @@ getRoleCB(AtkObject *aAtkObj)
   switch (accWrap->Role()) {
 #include "RoleMap.h"
     default:
-      MOZ_NOT_REACHED("Unknown role.");
+      MOZ_CRASH("Unknown role.");
       aAtkObj->role = ATK_ROLE_UNKNOWN;
   };
 

@@ -2916,7 +2916,7 @@ HttpCacheQuery::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
                 mCacheEntryDeviceTelemetryID
                     = Telemetry::HTTP_OFFLINE_CACHE_DISPOSITION_2;
             } else {
-                MOZ_NOT_REACHED("unknown cache device ID");
+                MOZ_CRASH("unknown cache device ID");
             }
 
             delete cacheDeviceID;

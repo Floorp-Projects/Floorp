@@ -250,7 +250,7 @@ public:
     virtual GLLibraryEGL* GetLibraryEGL() { return nullptr; }
 
     virtual void MakeCurrent_EGLSurface(void* surf) {
-        MOZ_NOT_REACHED("Must be called against a GLContextEGL.");
+        MOZ_CRASH("Must be called against a GLContextEGL.");
     }
 
     /**

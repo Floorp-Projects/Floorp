@@ -30,7 +30,7 @@ CreateMessageFromMessageData(const MobileMessageData& aData)
       message = new SmsMessage(aData.get_SmsMessageData());
       break;
     default:
-      MOZ_NOT_REACHED("Unexpected type of MobileMessageData");
+      MOZ_CRASH("Unexpected type of MobileMessageData");
       return nullptr;
   }
 
@@ -113,7 +113,7 @@ SmsChild::RecvNotifyDeliveryErrorMessage(const MobileMessageData& aData)
 PSmsRequestChild*
 SmsChild::AllocPSmsRequest(const IPCSmsRequest& aRequest)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  MOZ_CRASH("Caller is supposed to manually construct a request!");
   return nullptr;
 }
 
@@ -127,7 +127,7 @@ SmsChild::DeallocPSmsRequest(PSmsRequestChild* aActor)
 PMobileMessageCursorChild*
 SmsChild::AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor)
 {
-  MOZ_NOT_REACHED("Caller is supposed to manually construct a cursor!");
+  MOZ_CRASH("Caller is supposed to manually construct a cursor!");
   return nullptr;
 }
 
@@ -200,7 +200,7 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
       mReplyRequest->NotifyMarkMessageReadFailed(aReply.get_ReplyMarkeMessageReadFail().error());
       break;
     default:
-      MOZ_NOT_REACHED("Received invalid response parameters!");
+      MOZ_CRASH("Received invalid response parameters!");
       return false;
   }
 
@@ -243,7 +243,7 @@ MobileMessageCursorChild::RecvNotifyResult(const MobileMessageCursorData& aData)
       result = new MobileMessageThread(aData.get_ThreadData());
       break;
     default:
-      MOZ_NOT_REACHED("Received invalid response parameters!");
+      MOZ_CRASH("Received invalid response parameters!");
       return false;
   }
 

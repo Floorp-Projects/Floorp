@@ -968,7 +968,7 @@ DigestOutputStream::WriteFrom(nsIInputStream* aFromStream,
   // Not supported. We could read the stream to a buf, call DigestOp on the
   // result, seek back and pass the stream on, but it's not worth it since our
   // application (NS_AsyncCopy) doesn't invoke this on the sink.
-  MOZ_NOT_REACHED("DigestOutputStream::WriteFrom not implemented");
+  MOZ_CRASH("DigestOutputStream::WriteFrom not implemented");
 }
 
 NS_IMETHODIMP
@@ -976,7 +976,7 @@ DigestOutputStream::WriteSegments(nsReadSegmentFun aReader,
                                   void *aClosure, uint32_t aCount,
                                   uint32_t *retval)
 {
-  MOZ_NOT_REACHED("DigestOutputStream::WriteSegments not implemented");
+  MOZ_CRASH("DigestOutputStream::WriteSegments not implemented");
 }
 
 NS_IMETHODIMP
