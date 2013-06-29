@@ -4,13 +4,13 @@
 let state = {
   windows: [{
     tabs: [{
-      entries: [{ url: "about:home" }],
+      entries: [{ url: "about:mozilla" }],
       hidden: true,
-      extData: {"tabview-tab": '{"url":"about:home","groupID":1,"bounds":{"left":20,"top":20,"width":20,"height":20}}'}
+      extData: {"tabview-tab": '{"url":"about:mozilla","groupID":1,"bounds":{"left":20,"top":20,"width":20,"height":20}}'}
     },{
-      entries: [{ url: "about:home" }],
+      entries: [{ url: "about:mozilla" }],
       hidden: false,
-      extData: {"tabview-tab": '{"url":"about:home","groupID":2,"bounds":{"left":20,"top":20,"width":20,"height":20}}'},
+      extData: {"tabview-tab": '{"url":"about:mozilla","groupID":2,"bounds":{"left":20,"top":20,"width":20,"height":20}}'},
     }],
     selected: 2,
     extData: {

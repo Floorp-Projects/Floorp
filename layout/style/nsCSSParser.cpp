@@ -2782,17 +2782,21 @@ CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
 
   UngetToken();
 
+  mScanner->ClearSeenBadToken();
+
   if (mToken.IsSymbol('(') ||
       mToken.mType == eCSSToken_Function ||
       mToken.mType == eCSSToken_URL ||
       mToken.mType == eCSSToken_Bad_URL) {
     return ParseSupportsConditionInParens(aConditionMet) &&
-           ParseSupportsConditionTerms(aConditionMet);
+           ParseSupportsConditionTerms(aConditionMet) &&
+           !mScanner->SeenBadToken();
   }
 
   if (mToken.mType == eCSSToken_Ident &&
       mToken.mIdent.LowerCaseEqualsLiteral("not")) {
-    return ParseSupportsConditionNegation(aConditionMet);
+    return ParseSupportsConditionNegation(aConditionMet) &&
+           !mScanner->SeenBadToken();
   }
 
   REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedStart);

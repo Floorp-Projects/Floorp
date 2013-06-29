@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: When we have multiple lines of text with "text-overflow: ellipsis",
+    an ellipsis on one line shouldn't affect the other lines.
+-->
+<html>
+<head>
+<title>Testcase for bug 886313</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+.test {
+  font: 16px DejaVuSansMono;
+  text-overflow:ellipsis;
+  overflow: hidden;
+  width:55px;
+  border: 1px solid black;
+  margin-bottom: 2px;
+}
+</style>
+</head>
+<body>
+  <div class="test">well, hello world</div>
+  <div class="test">well, hello world!</div>
+  <div class="test">well, helloo world</div>
+</body>
+</html>

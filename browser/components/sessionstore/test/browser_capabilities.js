@@ -38,7 +38,7 @@ function runTests() {
   is(disallow.size, 2, "two capabilities disallowed");
 
   // Reuse the tab to restore a new, clean state into it.
-  ss.setTabState(tab, JSON.stringify({ entries: [{url: "about:home"}] }));
+  ss.setTabState(tab, JSON.stringify({ entries: [{url: "about:robots"}] }));
   yield waitForLoad(browser);
 
   // After restoring disallowed features must be available again.
