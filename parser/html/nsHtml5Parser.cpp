@@ -10,6 +10,7 @@
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5DependentUTF16Buffer.h"
+#include "nsIInputStreamChannel.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
@@ -213,6 +214,9 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // This is the first document.write() on a document.open()ed document
     mExecutor->SetParser(this);
     mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
+
+    mTreeBuilder->setIsSrcdocDocument(IsSrcdocDocument());
+
     mTokenizer->start();
     mExecutor->Start();
     if (!aContentType.EqualsLiteral("text/html")) {
@@ -674,6 +678,9 @@ nsHtml5Parser::Initialize(nsIDocument* aDoc,
 
 void
 nsHtml5Parser::StartTokenizer(bool aScriptingEnabled) {
+
+  mTreeBuilder->setIsSrcdocDocument(IsSrcdocDocument());
+
   mTreeBuilder->SetPreventScriptExecution(!aScriptingEnabled);
   mTreeBuilder->setScriptingEnabled(aScriptingEnabled);
   mTokenizer->start();
@@ -697,3 +704,21 @@ nsHtml5Parser::ContinueAfterFailedCharsetSwitch()
     "Tried to continue after failed charset switch without a stream parser");
   mStreamParser->ContinueAfterFailedCharsetSwitch();
 }
+
+bool
+nsHtml5Parser::IsSrcdocDocument()
+{
+  nsresult rv;
+
+  bool isSrcdoc = false;
+  nsCOMPtr<nsIChannel> channel;
+  rv = GetChannel(getter_AddRefs(channel));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIInputStreamChannel> isr = do_QueryInterface(channel);
+    if (isr) {
+      isr->GetIsSrcdocChannel(&isSrcdoc);
+    }
+  }
+  return isSrcdoc;
+}
+
