@@ -6,6 +6,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Troubleshoot.jsm");
+Components.utils.import("resource://gre/modules/ResetProfile.jsm");
 
 window.addEventListener("load", function onload(event) {
   window.removeEventListener("load", onload, false);
@@ -516,31 +517,6 @@ function showUpdateHistory() {
  * Profile reset is only supported for the default profile if the appropriate migrator exists.
  */
 function populateResetBox() {
-  if (resetSupported())
+  if (ResetProfile.resetSupported())
     $("reset-box").style.visibility = "visible";
-}
-
-/**
- * Restart the application to reset the profile.
- */
-function resetProfileAndRestart() {
-  let branding = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-  let brandShortName = branding.GetStringFromName("brandShortName");
-
-  // Prompt the user to confirm.
-  let retVals = {
-    reset: false,
-  };
-  window.openDialog("chrome://global/content/resetProfile.xul", null,
-                    "chrome,modal,centerscreen,titlebar,dialog=yes", retVals);
-  if (!retVals.reset)
-    return;
-
-  // Set the reset profile environment variable.
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
-  env.set("MOZ_RESET_PROFILE_RESTART", "1");
-
-  let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-  appStartup.quit(Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart);
 }
