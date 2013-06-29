@@ -1362,6 +1362,12 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
     return oldVersionNumber;
 }
 
+JS_PUBLIC_API(void)
+JS_SetVersionForCompartment(JSCompartment *compartment, JSVersion version)
+{
+    compartment->options().setVersion(version);
+}
+
 static struct v2smap {
     JSVersion   version;
     const char  *string;
