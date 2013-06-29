@@ -133,69 +133,12 @@ extern "C" {
 #endif
 
 /*
- * MOZ_CRASH crashes the program, plain and simple, in a Breakpad-compatible
- * way, in both debug and release builds.
- *
- * MOZ_CRASH is a good solution for "handling" failure cases when you're
- * unwilling or unable to handle them more cleanly -- for OOM, for likely memory
- * corruption, and so on.  It's also a good solution if you need safe behavior
- * in release builds as well as debug builds.  But if the failure is one that
- * should be debugged and fixed, MOZ_ASSERT is generally preferable.
- */
-#if defined(_MSC_VER)
-   /*
-    * On MSVC use the __debugbreak compiler intrinsic, which produces an inline
-    * (not nested in a system function) breakpoint.  This distinctively invokes
-    * Breakpad without requiring system library symbols on all stack-processing
-    * machines, as a nested breakpoint would require.  We use TerminateProcess
-    * with the exit code aborting would generate because we don't want to invoke
-    * atexit handlers, destructors, library unload handlers, and so on when our
-    * process might be in a compromised state.  We don't use abort() because
-    * it'd cause Windows to annoyingly pop up the process error dialog multiple
-    * times.  See bug 345118 and bug 426163.
-    *
-    * (Technically these are Windows requirements, not MSVC requirements.  But
-    * practically you need MSVC for debugging, and we only ship builds created
-    * by MSVC, so doing it this way reduces complexity.)
-    */
-#  ifdef __cplusplus
-#    define MOZ_CRASH() \
-       do { \
-         __debugbreak(); \
-         *((volatile int*) NULL) = 123; \
-         ::TerminateProcess(::GetCurrentProcess(), 3); \
-       } while (0)
-#  else
-#    define MOZ_CRASH() \
-       do { \
-         __debugbreak(); \
-         *((volatile int*) NULL) = 123; \
-         TerminateProcess(GetCurrentProcess(), 3); \
-       } while (0)
-#  endif
-#else
-#  ifdef __cplusplus
-#    define MOZ_CRASH() \
-       do { \
-         *((volatile int*) NULL) = 123; \
-         ::abort(); \
-       } while (0)
-#  else
-#    define MOZ_CRASH() \
-       do { \
-         *((volatile int*) NULL) = 123; \
-         abort(); \
-       } while (0)
-#  endif
-#endif
-
-/*
  * Prints |s| as an assertion failure (using file and ln as the location of the
  * assertion) to the standard debug-output channel.
  *
- * Usually you should use MOZ_ASSERT instead of this method.  This method is
- * primarily for internal use in this header, and only secondarily for use in
- * implementing release-build assertions.
+ * Usually you should use MOZ_ASSERT or MOZ_CRASH instead of this method.  This
+ * method is primarily for internal use in this header, and only secondarily
+ * for use in implementing release-build assertions.
  */
 static MOZ_ALWAYS_INLINE void
 MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
@@ -208,6 +151,112 @@ MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
   fflush(stderr);
 #endif
 }
+
+static MOZ_ALWAYS_INLINE void
+MOZ_ReportCrash(const char* s, const char* file, int ln)
+{
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_FATAL, "MOZ_CRASH",
+                        "Hit MOZ_CRASH(%s) at %s:%d\n", s, file, ln);
+#else
+  fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", s, file, ln);
+  fflush(stderr);
+#endif
+}
+
+/**
+ * MOZ_REALLY_CRASH is used in the implementation of MOZ_CRASH().  You should
+ * call MOZ_CRASH instead.
+ */
+#if defined(_MSC_VER)
+   /*
+    * On MSVC use the __debugbreak compiler intrinsic, which produces an inline
+    * (not nested in a system function) breakpoint.  This distinctively invokes
+    * Breakpad without requiring system library symbols on all stack-processing
+    * machines, as a nested breakpoint would require.
+    *
+    * We use TerminateProcess with the exit code aborting would generate
+    * because we don't want to invoke atexit handlers, destructors, library
+    * unload handlers, and so on when our process might be in a compromised
+    * state.
+    *
+    * We don't use abort() because it'd cause Windows to annoyingly pop up the
+    * process error dialog multiple times.  See bug 345118 and bug 426163.
+    *
+    * We follow TerminateProcess() with a call to MOZ_NoReturn() so that the
+    * compiler doesn't hassle us to provide a return statement after a
+    * MOZ_REALLY_CRASH() call.
+    *
+    * (Technically these are Windows requirements, not MSVC requirements.  But
+    * practically you need MSVC for debugging, and we only ship builds created
+    * by MSVC, so doing it this way reduces complexity.)
+    */
+
+__declspec(noreturn) __inline void MOZ_NoReturn() {}
+
+#  ifdef __cplusplus
+#    define MOZ_REALLY_CRASH() \
+       do { \
+         __debugbreak(); \
+         *((volatile int*) NULL) = 123; \
+         ::TerminateProcess(::GetCurrentProcess(), 3); \
+         ::MOZ_NoReturn(); \
+       } while (0)
+#  else
+#    define MOZ_REALLY_CRASH() \
+       do { \
+         __debugbreak(); \
+         *((volatile int*) NULL) = 123; \
+         TerminateProcess(GetCurrentProcess(), 3); \
+         MOZ_NoReturn(); \
+       } while (0)
+#  endif
+#else
+#  ifdef __cplusplus
+#    define MOZ_REALLY_CRASH() \
+       do { \
+         *((volatile int*) NULL) = 123; \
+         ::abort(); \
+       } while (0)
+#  else
+#    define MOZ_REALLY_CRASH() \
+       do { \
+         *((volatile int*) NULL) = 123; \
+         abort(); \
+       } while (0)
+#  endif
+#endif
+
+/*
+ * MOZ_CRASH([explanation-string]) crashes the program, plain and simple, in a
+ * Breakpad-compatible way, in both debug and release builds.
+ *
+ * MOZ_CRASH is a good solution for "handling" failure cases when you're
+ * unwilling or unable to handle them more cleanly -- for OOM, for likely memory
+ * corruption, and so on.  It's also a good solution if you need safe behavior
+ * in release builds as well as debug builds.  But if the failure is one that
+ * should be debugged and fixed, MOZ_ASSERT is generally preferable.
+ *
+ * The optional explanation-string, if provided, must be a string literal
+ * explaining why we're crashing.  This argument is intended for use with
+ * MOZ_CRASH() calls whose rationale is non-obvious; don't use it if it's
+ * obvious why we're crashing.
+ *
+ * If we're a DEBUG build and we crash at a MOZ_CRASH which provides an
+ * explanation-string, we print the string to stderr.  Otherwise, we don't
+ * print anything; this is because we want MOZ_CRASH to be 100% safe in release
+ * builds, and it's hard to print to stderr safely when memory might have been
+ * corrupted.
+ */
+#ifndef DEBUG
+#  define MOZ_CRASH(...) MOZ_REALLY_CRASH()
+#else
+#  define MOZ_CRASH(...) \
+     do { \
+       MOZ_ReportCrash("" __VA_ARGS__, __FILE__, __LINE__); \
+       MOZ_REALLY_CRASH(); \
+     } while(0)
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -251,7 +300,7 @@ MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
      do { \
        if (MOZ_UNLIKELY(!(expr))) { \
          MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
-         MOZ_CRASH(); \
+         MOZ_REALLY_CRASH(); \
        } \
      } while (0)
    /* Now the two-argument form. */
@@ -259,7 +308,7 @@ MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
      do { \
        if (MOZ_UNLIKELY(!(expr))) { \
          MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
-         MOZ_CRASH(); \
+         MOZ_REALLY_CRASH(); \
        } \
      } while (0)
    /* And now, helper macrology up the wazoo. */
