@@ -2420,6 +2420,14 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   RetrieveRelevantHeaders(aChannel);
 
   mChannel = aChannel;
+  nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(mChannel);
+  if (inStrmChan) {
+    bool isSrcdocChannel;
+    inStrmChan->GetIsSrcdocChannel(&isSrcdocChannel);
+    if (isSrcdocChannel) {
+      mIsSrcdocDocument = true;
+    }
+  }
 
   // If this document is being loaded by a docshell, copy its sandbox flags
   // to the document. These are immutable after being set here.
@@ -3000,7 +3008,23 @@ nsDocument::GetReferrer(nsAString& aReferrer)
 void
 nsIDocument::GetReferrer(nsAString& aReferrer) const
 {
-  CopyUTF8toUTF16(mReferrer, aReferrer);
+  if (mIsSrcdocDocument && mParentDocument)
+      mParentDocument->GetReferrer(aReferrer);
+  else
+    CopyUTF8toUTF16(mReferrer, aReferrer);
+}
+
+nsresult
+nsIDocument::GetSrcdocData(nsAString &aSrcdocData)
+{
+  if (mIsSrcdocDocument) {
+    nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(mChannel);
+    if (inStrmChan) {
+      return inStrmChan->GetSrcdocData(aSrcdocData);
+    }
+  }
+  aSrcdocData = NullString();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
