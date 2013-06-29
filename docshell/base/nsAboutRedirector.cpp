@@ -64,7 +64,12 @@ static RedirEntry kRedirMap[] = {
     { "support", "chrome://global/content/aboutSupport.xhtml",
       nsIAboutModule::ALLOW_SCRIPT },
     { "telemetry", "chrome://global/content/aboutTelemetry.xhtml",
-      nsIAboutModule::ALLOW_SCRIPT }
+      nsIAboutModule::ALLOW_SCRIPT },
+    // about:srcdoc is unresolvable by specification.  It is included here
+    // because the security manager would disallow srcdoc iframes otherwise.
+    { "srcdoc", "about:blank",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+      nsIAboutModule::HIDE_FROM_ABOUTABOUT }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 

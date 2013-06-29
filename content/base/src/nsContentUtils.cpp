@@ -6100,11 +6100,17 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
   if (aForceOwner || ((NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherit)) &&
       (inherit || (aSetUpForAboutBlank && NS_IsAboutBlank(aURI)))))) {
 #ifdef DEBUG
-    // Assert that aForceOwner is only set for null principals
+    // Assert that aForceOwner is only set for null principals for non-srcdoc
+    // loads.  (Strictly speaking not all uses of about:srcdoc would be 
+    // srcdoc loads, but the URI is non-resolvable in cases where it is not).
     if (aForceOwner) {
-      nsCOMPtr<nsIURI> ownerURI;
-      nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(ownerURI));
-      MOZ_ASSERT(NS_SUCCEEDED(rv) && SchemeIs(ownerURI, NS_NULLPRINCIPAL_SCHEME));
+      nsAutoCString uriStr;
+      aURI->GetSpec(uriStr);
+      if(!uriStr.EqualsLiteral("about:srcdoc")) {
+        nsCOMPtr<nsIURI> ownerURI;
+        nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(ownerURI));
+        MOZ_ASSERT(NS_SUCCEEDED(rv) && SchemeIs(ownerURI, NS_NULLPRINCIPAL_SCHEME));
+      }
     }
 #endif
     aChannel->SetOwner(aLoadingPrincipal);
@@ -6287,9 +6293,6 @@ nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
     JSObject* obj = aCache->GetWrapperPreserveColor();
     if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
         DOMProxyHandler::GetAndClearExpandoObject(obj);
-        if (!aCache->PreservingWrapper()) {
-          return;
-        }
     }
     aCache->SetPreservingWrapper(false);
     DropJSObjects(aScriptObjectHolder);

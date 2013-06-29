@@ -1479,8 +1479,7 @@ protected:
                                             const ResponseValue& aResponseValue)
                                             MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
+    MOZ_CRASH("Should never get here!");
   }
 
   uint64_t RequestedVersion() const
@@ -1559,8 +1558,7 @@ protected:
                                             const ResponseValue& aResponseValue)
                                             MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
+    MOZ_CRASH("Should never get here!");
   }
 
 private:

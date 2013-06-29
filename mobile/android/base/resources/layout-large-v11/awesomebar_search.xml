@@ -41,16 +41,13 @@
               <requestFocus/>
     </view>
 
-    <LinearLayout android:layout_width="4dp"
-                  android:layout_height="fill_parent"
-                  android:orientation="vertical"
-                  android:layout_alignParentRight="true"/>
-
     <ImageButton android:id="@+id/awesomebar_button"
                  style="@style/AddressBar.ImageButton.Icon"
                  android:padding="14dip"
+                 android:background="@drawable/action_bar_button"
                  android:layout_centerVertical="true"
                  android:layout_alignRight="@id/awesomebar_text"
+                 android:nextFocusLeft="@id/awesomebar_text"
                  android:visibility="gone"
                  android:src="@drawable/ic_awesomebar_go"/>
 

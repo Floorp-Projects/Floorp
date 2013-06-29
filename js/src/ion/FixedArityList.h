@@ -35,14 +35,10 @@ class FixedArityList<T, 0>
 {
   public:
     T &operator [](size_t index) {
-        JS_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
+        MOZ_ASSUME_UNREACHABLE("no items");
     }
     const T &operator [](size_t index) const {
-        JS_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
+        MOZ_ASSUME_UNREACHABLE("no items");
     }
 };
 

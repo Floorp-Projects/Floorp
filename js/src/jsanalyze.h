@@ -206,8 +206,7 @@ ReverseCompareOp(JSOp op)
       case JSOP_STRICTNE:
         return op;
       default:
-        JS_NOT_REACHED("unrecognized op");
-        return op;
+        MOZ_ASSUME_UNREACHABLE("unrecognized op");
     }
 }
 
@@ -232,8 +231,7 @@ NegateCompareOp(JSOp op)
       case JSOP_STRICTEQ:
         return JSOP_STRICTNE;
       default:
-        JS_NOT_REACHED("unrecognized op");
-        return op;
+        MOZ_ASSUME_UNREACHABLE("unrecognized op");
     }
 }
 
@@ -295,8 +293,7 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
         return ThisSlot();
 
       default:
-        JS_NOT_REACHED("Bad slot opcode");
-        return 0;
+        MOZ_ASSUME_UNREACHABLE("Bad slot opcode");
     }
 }
 

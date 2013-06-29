@@ -846,11 +846,9 @@ PBluetoothChild*
 ContentChild::AllocPBluetooth()
 {
 #ifdef MOZ_B2G_BT
-    MOZ_NOT_REACHED("No one should be allocating PBluetoothChild actors");
-    return nullptr;
+    MOZ_CRASH("No one should be allocating PBluetoothChild actors");
 #else
-    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
-    return nullptr;
+    MOZ_CRASH("No support for bluetooth on this platform!");
 #endif
 }
 
@@ -861,8 +859,7 @@ ContentChild::DeallocPBluetooth(PBluetoothChild* aActor)
     delete aActor;
     return true;
 #else
-    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
-    return false;
+    MOZ_CRASH("No support for bluetooth on this platform!");
 #endif
 }
 
@@ -870,8 +867,7 @@ PSpeechSynthesisChild*
 ContentChild::AllocPSpeechSynthesis()
 {
 #ifdef MOZ_WEBSPEECH
-    MOZ_NOT_REACHED("No one should be allocating PSpeechSynthesisChild actors");
-    return nullptr;
+    MOZ_CRASH("No one should be allocating PSpeechSynthesisChild actors");
 #else
     return nullptr;
 #endif

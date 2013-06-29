@@ -459,8 +459,7 @@ FinalizeArenas(FreeOp *fop,
         return FinalizeTypedArenas<ion::IonCode>(fop, src, dest, thingKind, budget);
 #endif
       default:
-        JS_NOT_REACHED("Invalid alloc kind");
-        return true;
+        MOZ_ASSUME_UNREACHABLE("Invalid alloc kind");
     }
 }
 
@@ -725,8 +724,7 @@ Chunk::findDecommittedArenaOffset()
     for (unsigned i = 0; i < info.lastDecommittedArenaOffset; i++)
         if (decommittedArenas.get(i))
             return i;
-    JS_NOT_REACHED("No decommitted arenas found.");
-    return -1;
+    MOZ_ASSUME_UNREACHABLE("No decommitted arenas found.");
 }
 
 ArenaHeader *
@@ -2350,7 +2348,7 @@ GCHelperThread::startBackgroundShrink()
          */
         break;
       case SHUTDOWN:
-        JS_NOT_REACHED("No shrink on shutdown");
+        MOZ_ASSUME_UNREACHABLE("No shrink on shutdown");
     }
 #endif /* JS_THREADSAFE */
 }
@@ -3510,8 +3508,7 @@ RemoveFromGrayList(JSObject *wrapper)
         obj = next;
     }
 
-    JS_NOT_REACHED("object not found in gray link list");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("object not found in gray link list");
 }
 
 static void
@@ -4113,7 +4110,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         break;
 
       default:
-        JS_NOT_REACHED("Invalid incremental GC state");
+        MOZ_ASSUME_UNREACHABLE("Invalid incremental GC state");
     }
 
     rt->gcStats.reset(reason);

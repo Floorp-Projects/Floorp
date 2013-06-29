@@ -2993,8 +2993,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   case nsIPluginTag::STATE_CLICKTOPLAY:
     return false;
   }
-  MOZ_NOT_REACHED("Unexpected enabledState");
-  return false;
+  MOZ_CRASH("Unexpected enabledState");
 }
 
 nsIDocument*

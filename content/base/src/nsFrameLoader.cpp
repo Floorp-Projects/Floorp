@@ -312,21 +312,28 @@ nsFrameLoader::LoadFrame()
   NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
 
   nsAutoString src;
-  GetURL(src);
 
-  src.Trim(" \t\n\r");
+  bool isSrcdoc = mOwnerContent->IsHTML(nsGkAtoms::iframe) &&
+                  mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc);
+  if (isSrcdoc) {
+    src.AssignLiteral("about:srcdoc");
+  }
+  else {
+    GetURL(src);
 
-  if (src.IsEmpty()) {
-    // If the frame is a XUL element and has the attribute 'nodefaultsrc=true'
-    // then we will not use 'about:blank' as fallback but return early without
-    // starting a load if no 'src' attribute is given (or it's empty).
-    if (mOwnerContent->IsXUL() &&
-        mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::nodefaultsrc,
-                                   nsGkAtoms::_true, eCaseMatters)) {
-      return NS_OK;
+    src.Trim(" \t\n\r");
+
+    if (src.IsEmpty()) {
+      // If the frame is a XUL element and has the attribute 'nodefaultsrc=true'
+      // then we will not use 'about:blank' as fallback but return early without
+      // starting a load if no 'src' attribute is given (or it's empty).
+      if (mOwnerContent->IsXUL() &&
+          mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::nodefaultsrc,
+                                     nsGkAtoms::_true, eCaseMatters)) {
+        return NS_OK;
+      }
+      src.AssignLiteral("about:blank");
     }
-
-    src.AssignLiteral("about:blank");
   }
 
   nsIDocument* doc = mOwnerContent->OwnerDoc();
@@ -472,8 +479,23 @@ nsFrameLoader::ReallyStartLoadingInternal()
   loadInfo->SetOwner(mOwnerContent->NodePrincipal());
 
   nsCOMPtr<nsIURI> referrer;
-  rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
-  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString srcdoc;
+  bool isSrcdoc = mOwnerContent->IsHTML(nsGkAtoms::iframe) &&
+                  mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::srcdoc,
+                                         srcdoc);
+
+  if (isSrcdoc) {
+    nsAutoString referrerStr;
+    mOwnerContent->OwnerDoc()->GetReferrer(referrerStr);
+    rv = NS_NewURI(getter_AddRefs(referrer), referrerStr);
+
+    loadInfo->SetSrcdocData(srcdoc);
+  }
+  else {
+    rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   loadInfo->SetReferrer(referrer);
 

@@ -174,8 +174,7 @@ nsWindow::nsWindow()
             sRotationMatrix.Rotate(M_PI);
             break;
         default:
-            MOZ_NOT_REACHED("Unknown rotation");
-            break;
+            MOZ_CRASH("Unknown rotation");
         }
         sVirtualBounds = gScreenBounds;
 
@@ -847,8 +846,7 @@ ComputeOrientation(uint32_t aRotation, const nsIntSize& aScreenSize)
         return (naturallyPortrait ? eScreenOrientation_LandscapeSecondary : 
                 eScreenOrientation_PortraitSecondary);
     default:
-        MOZ_NOT_REACHED("Gonk screen must always have a known rotation");
-        return eScreenOrientation_None;
+        MOZ_CRASH("Gonk screen must always have a known rotation");
     }
 }
 

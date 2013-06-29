@@ -145,11 +145,11 @@ TCPSocketChild::RecvCallback(const nsString& aType,
       rv = mSocket->CallListenerData(aType, data.get_nsString());
 
     } else {
-      MOZ_NOT_REACHED("Invalid callback data type!");
+      MOZ_CRASH("Invalid callback data type!");
     }
 
   } else {
-    MOZ_NOT_REACHED("Invalid callback type!");
+    MOZ_CRASH("Invalid callback type!");
   }
   NS_ENSURE_SUCCESS(rv, true);
   return true;

@@ -17,6 +17,7 @@ FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../style \
+		-I$(topsrcdir)/content/base/src \
 		-I$(topsrcdir)/content/xbl/src \
 		$(NULL)
 

@@ -91,7 +91,6 @@ CPP_SOURCES += [
     'nsCSSRendering.cpp',
     'nsCSSRenderingBorders.cpp',
     'nsCaret.cpp',
-    'nsChildIterator.cpp',
     'nsCounterManager.cpp',
     'nsDisplayList.cpp',
     'nsDisplayListInvalidation.cpp',
