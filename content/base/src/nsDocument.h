@@ -1290,9 +1290,6 @@ protected:
 
   nsInterfaceHashtable<nsPtrHashKey<nsIContent>, nsPIBoxObject> *mBoxObjectTable;
 
-  // The channel that got passed to StartDocumentLoad(), if any
-  nsCOMPtr<nsIChannel> mChannel;
-
   // A document "without a browsing context" that owns the content of
   // HTMLTemplateElement.
   nsCOMPtr<nsIDocument> mTemplateContentsOwner;
