@@ -42,7 +42,7 @@ js::ion::CheckPerf() {
         } else if (!strcmp(env, "func")) {
             PerfMode = PERF_MODE_FUNC;
         } else {
-            fprintf(stderr, "Use IONPERF=func to record at basic block granularity\n");
+            fprintf(stderr, "Use IONPERF=func to record at function granularity\n");
             fprintf(stderr, "Use IONPERF=block to record at basic block granularity\n");
             fprintf(stderr, "\n");
             fprintf(stderr, "Be advised that using IONPERF will cause all scripts\n");
