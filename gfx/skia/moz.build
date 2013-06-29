@@ -144,6 +144,7 @@ EXPORTS.skia += [
     'include/utils/SkDeferredCanvas.h',
     'include/utils/SkRandom.h',
     'include/views/SkTextBox.h',
+    'src/core/SkTypefaceCache.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

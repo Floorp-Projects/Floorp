@@ -63,6 +63,10 @@
 #include "TexturePoolOGL.h"
 #endif
 
+#ifdef USE_SKIA
+#include "skia/SkGraphics.h"
+#endif
+
 #ifdef USE_SKIA_GPU
 #include "skia/GrContext.h"
 #include "skia/GrGLInterface.h"
@@ -472,8 +476,16 @@ gfxPlatform::~gfxPlatform()
     // cairo_debug_* function unconditionally.
     //
     // because cairo can assert and thus crash on shutdown, don't do this in release builds
-#if MOZ_TREE_CAIRO && (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(NS_TRACE_MALLOC))
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(NS_TRACE_MALLOC) || defined(MOZ_VALGRIND)
+#ifdef USE_SKIA
+    // must do Skia cleanup before Cairo cleanup, because Skia may be referencing
+    // Cairo objects e.g. through SkCairoFTTypeface
+    SkGraphics::Term();
+#endif
+
+#if MOZ_TREE_CAIRO
     cairo_debug_reset_static_data();
+#endif
 #endif
 
 #if 0
