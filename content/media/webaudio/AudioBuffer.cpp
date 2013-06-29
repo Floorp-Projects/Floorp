@@ -153,8 +153,7 @@ StealJSArrayDataIntoThreadSharedFloatArrayBufferList(JSContext* aJSContext,
                                     &stolenData)) {
       result->SetData(i, dataToFree, reinterpret_cast<float*>(stolenData));
     } else {
-      result->Clear();
-      return result.forget();
+      return nullptr;
     }
   }
   return result.forget();
