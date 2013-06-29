@@ -649,15 +649,6 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
-RevertVersion(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    js_RevertVersion(cx);
-    args.rval().setUndefined();
-    return true;
-}
-
 static JSScript *
 GetTopScript(JSContext *cx)
 {
@@ -3574,10 +3565,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
 "  Get or force a script compilation version number."),
-
-    JS_FN_HELP("revertVersion", RevertVersion, 0, 0,
-"revertVersion()",
-"  Revert previously set version number."),
 
     JS_FN_HELP("options", Options, 0, 0,
 "options([option ...])",
