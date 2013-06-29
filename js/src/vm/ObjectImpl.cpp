@@ -386,8 +386,7 @@ SparseElementsHeader::getOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
-    MOZ_NOT_REACHED("NYI");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 template<typename T>
@@ -427,8 +426,7 @@ ArrayBufferElementsHeader::getOwnElement(JSContext *cx, Handle<ObjectImpl*> obj,
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
-    MOZ_NOT_REACHED("NYI");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
@@ -438,8 +436,7 @@ SparseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
-    MOZ_NOT_REACHED("NYI");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
@@ -569,8 +566,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
     Rooted<PropertyId> pid(cx, pid_);
 
     if (static_cast<JSObject *>(obj.get())->isProxy()) {
-        MOZ_NOT_REACHED("NYI: proxy [[GetOwnProperty]]");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("NYI: proxy [[GetOwnProperty]]");
     }
 
     RootedShape shape(cx, obj->nativeLookup(cx, pid));
@@ -612,8 +608,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
         return true;
     }
 
-    MOZ_NOT_REACHED("NYI: PropertyOp-based properties");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("NYI: PropertyOp-based properties");
 }
 
 bool
@@ -648,8 +643,7 @@ js::GetOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsign
         return header.asArrayBufferElements().getOwnElement(cx, obj, index, resolveFlags, desc);
     }
 
-    MOZ_NOT_REACHED("bad elements kind!");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("bad elements kind!");
 }
 
 bool
@@ -666,8 +660,7 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
         MOZ_ASSERT(obj);
 
         if (Downcast(current)->isProxy()) {
-            MOZ_NOT_REACHED("NYI: proxy [[GetP]]");
-            return false;
+            MOZ_ASSUME_UNREACHABLE("NYI: proxy [[GetP]]");
         }
 
         AutoPropDescRooter desc(cx);
@@ -711,12 +704,10 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
         }
 
         /* Otherwise it's a PropertyOp-based property.  XXX handle this! */
-        MOZ_NOT_REACHED("NYI: handle PropertyOp'd properties here");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("NYI: handle PropertyOp'd properties here");
     } while (false);
 
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("buggy control flow");
 }
 
 bool
@@ -732,8 +723,7 @@ js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
         MOZ_ASSERT(current);
 
         if (Downcast(current)->isProxy()) {
-            MOZ_NOT_REACHED("NYI: proxy [[GetP]]");
-            return false;
+            MOZ_ASSUME_UNREACHABLE("NYI: proxy [[GetP]]");
         }
 
         PropDesc desc;
@@ -778,12 +768,10 @@ js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
         }
 
         /* Otherwise it's a PropertyOp-based property.  XXX handle this! */
-        MOZ_NOT_REACHED("NYI: handle PropertyOp'd properties here");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("NYI: handle PropertyOp'd properties here");
     } while (false);
 
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("buggy control flow");
 }
 
 bool
@@ -798,8 +786,7 @@ js::HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned 
         MOZ_ASSERT(current);
 
         if (Downcast(current)->isProxy()) {
-            MOZ_NOT_REACHED("NYI: proxy [[HasProperty]]");
-            return false;
+            MOZ_ASSUME_UNREACHABLE("NYI: proxy [[HasProperty]]");
         }
 
         PropDesc prop;
@@ -819,8 +806,7 @@ js::HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned 
         return true;
     } while (false);
 
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("buggy control flow");
 }
 
 bool
@@ -870,8 +856,7 @@ js::DefineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, const 
                                                             resolveFlags, succeeded);
     }
 
-    MOZ_NOT_REACHED("bad elements kind!");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("bad elements kind!");
 }
 
 bool
@@ -881,8 +866,7 @@ SparseElementsHeader::setElement(JSContext *cx, Handle<ObjectImpl*> obj,
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
-    MOZ_NOT_REACHED("NYI");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
@@ -892,8 +876,7 @@ DenseElementsHeader::setElement(JSContext *cx, Handle<ObjectImpl*> obj,
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
-    MOZ_NOT_REACHED("NYI");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 template <typename T>
@@ -967,8 +950,7 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
         MOZ_ASSERT(current);
 
         if (Downcast(current)->isProxy()) {
-            MOZ_NOT_REACHED("NYI: proxy [[SetP]]");
-            return false;
+            MOZ_ASSUME_UNREACHABLE("NYI: proxy [[SetP]]");
         }
 
         PropDesc ownDesc;
@@ -1012,8 +994,7 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
                 return Invoke(cx, args);
             }
 
-            MOZ_NOT_REACHED("NYI: setting PropertyOp-based property");
-            return false;
+            MOZ_ASSUME_UNREACHABLE("NYI: setting PropertyOp-based property");
         }
 
         current = current->getProto();
@@ -1024,8 +1005,7 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
         return DefineElement(cx, receiver, index, newDesc, false, resolveFlags, succeeded);
     } while (false);
 
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("buggy control flow");
 }
 
 void

@@ -1192,7 +1192,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (!mHasSoftMenuButton)
             return false;
 
-        if (mMenuPopup.isShowing())
+        if (mMenuPopup != null && mMenuPopup.isShowing())
             mMenuPopup.dismiss();
 
         return true;

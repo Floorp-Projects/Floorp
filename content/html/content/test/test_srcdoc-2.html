@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=802895
+-->
+    <head>
+<title>Test session history for srcdoc iframes introduced in bug 802895</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=802895">Mozilla Bug 802895</a>
+
+<iframe id="pframe" name="pframe" src="file_srcdoc-2.html"></iframe>
+<pre id="test">
+<script>
+
+  SimpleTest.waitForExplicitFinish();
+  var pframe = $("pframe");
+
+  //disable bfcache
+  pframe.contentWindow.addEventListener("unload", function () { }, false);
+
+  var loadState = 0;
+  pframe.onload = function () {
+    SimpleTest.executeSoon(function () {
+
+      var pDoc = pframe.contentDocument;
+
+      if (loadState == 0) {
+        var div = pDoc.createElement("div");
+        div.id = "modifyCheck";
+        div.innerHTML = "hello again";
+        pDoc.body.appendChild(div);
+        ok(pDoc.getElementById("modifyCheck"), "Child element not created");
+        pframe.src = "about:blank";
+        loadState = 1;
+      }
+      else if (loadState == 1) {
+        loadState = 2;
+        window.history.back();
+      }
+      else if (loadState == 2) {
+        ok(!pDoc.getElementById("modifyCheck"), "modifyCheck element shouldn't be present");
+        is(pDoc.getElementById("iframe").contentDocument.body.innerHTML,
+           "Hello World", "srcdoc iframe not present");
+        SimpleTest.finish();
+      }
+
+    })
+  };
+
+</script>
+</pre>
+</body>
+</html>

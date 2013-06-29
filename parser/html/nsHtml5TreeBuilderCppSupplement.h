@@ -823,7 +823,7 @@ nsHtml5TreeBuilder::errStrayDoctype()
 void
 nsHtml5TreeBuilder::errAlmostStandardsDoctype()
 {
-  if (MOZ_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
     mViewSource->AddErrorToCurrentRun("errAlmostStandardsDoctype");
   }
 }
@@ -831,7 +831,7 @@ nsHtml5TreeBuilder::errAlmostStandardsDoctype()
 void
 nsHtml5TreeBuilder::errQuirkyDoctype()
 {
-  if (MOZ_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
     mViewSource->AddErrorToCurrentRun("errQuirkyDoctype");
   }
 }
@@ -895,7 +895,7 @@ nsHtml5TreeBuilder::errFooBetweenHeadAndBody(nsIAtom* aName)
 void
 nsHtml5TreeBuilder::errStartTagWithoutDoctype()
 {
-  if (MOZ_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
     mViewSource->AddErrorToCurrentRun("errStartTagWithoutDoctype");
   }
 }
@@ -1016,7 +1016,7 @@ nsHtml5TreeBuilder::errStartTagInTableBody(nsIAtom* aName)
 void
 nsHtml5TreeBuilder::errEndTagSeenWithoutDoctype()
 {
-  if (MOZ_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
     mViewSource->AddErrorToCurrentRun("errEndTagSeenWithoutDoctype");
   }
 }

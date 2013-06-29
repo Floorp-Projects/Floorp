@@ -36,7 +36,7 @@ class nsPresContext;
 class nsStyleChangeList;
 class nsIFrame;
 struct nsGenConInitializer;
-class ChildIterator;
+
 class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
 struct PendingBinding;
@@ -44,6 +44,14 @@ class nsRefreshDriver;
 
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
+
+namespace mozilla {
+namespace dom {
+
+class FlattenedChildIterator;
+
+}
+}
 
 class nsCSSFrameConstructor : public nsFrameManager
 {
@@ -110,7 +118,6 @@ private:
   // ContentInserted calls for each child.  aEndChild = nullptr indicates that we
   // are dealing with an append.
   nsIFrame* GetRangeInsertionPoint(nsIContent* aContainer,
-                                   nsIFrame* aParentFrame,
                                    nsIContent* aStartChild,
                                    nsIContent* aEndChild,
                                    bool aAllowLazyConstruction);
@@ -355,10 +362,9 @@ public:
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
   // Get the XBL insertion point for a child
-  nsresult GetInsertionPoint(nsIFrame*     aParentFrame,
-                             nsIContent*   aChildContent,
-                             nsIFrame**    aInsertionPoint,
-                             bool*       aMultiple = nullptr);
+  nsIFrame* GetInsertionPoint(nsIContent* aContainer,
+                              nsIContent* aChildContent,
+                              bool*       aMultiple = nullptr);
 
   nsresult CreateListBoxContent(nsPresContext* aPresContext,
                                 nsIFrame*       aParentFrame,
@@ -1405,7 +1411,7 @@ private:
 
   /**
    * Construct the frames for the children of aContent.  "children" is defined
-   * as "whatever ChildIterator returns for aContent".  This means we're
+   * as "whatever FlattenedChildIterator returns for aContent".  This means we're
    * basically operating on children in the "flattened tree" per sXBL/XBL2.
    * This method will also handle constructing ::before, ::after,
    * ::first-letter, and ::first-line frames, as needed and if allowed.
@@ -1784,15 +1790,13 @@ private:
   // Find the ``rightmost'' frame for the content immediately preceding the one
   // aIter points to, following continuations if necessary.  aIter is passed by
   // value on purpose, so as not to modify the caller's iterator.
-  nsIFrame* FindPreviousSibling(const ChildIterator& aFirst,
-                                ChildIterator aIter,
+  nsIFrame* FindPreviousSibling(mozilla::dom::FlattenedChildIterator aIter,
                                 uint8_t& aTargetContentDisplay);
 
   // Find the frame for the content node immediately following the one aIter
   // points to, following continuations if necessary.  aIter is passed by value
   // on purpose, so as not to modify the caller's iterator.
-  nsIFrame* FindNextSibling(ChildIterator aIter,
-                            const ChildIterator& aLast,
+  nsIFrame* FindNextSibling(mozilla::dom::FlattenedChildIterator aIter,
                             uint8_t& aTargetContentDisplay);
 
   // Find the right previous sibling for an insertion.  This also updates the

@@ -50,7 +50,7 @@ public:
   virtual void ReleaseTexture() = 0;
   virtual gfx::IntSize GetSize() const = 0;
   virtual gl::ShaderProgramType GetShaderProgram() const {
-    MOZ_NOT_REACHED("unhandled shader type");
+    MOZ_CRASH("unhandled shader type");
   }
   // TODO: Noone's implementing this anymore, should see if we need this.
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
@@ -73,7 +73,7 @@ GetProgramTypeForTexture(const TextureHost *aTextureHost)
   case gfx::FORMAT_R8G8B8A8:
     return gl::RGBALayerProgramType;;
   default:
-    MOZ_NOT_REACHED("unhandled program type");
+    MOZ_CRASH("unhandled program type");
   }
 }
 

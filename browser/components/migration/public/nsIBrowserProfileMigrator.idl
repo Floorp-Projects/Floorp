@@ -9,7 +9,7 @@ interface nsIArray;
 interface nsIProfileStartup;
 
 [scriptable, uuid(44993E0E-74E8-4BEC-9D66-AD8156E0A274)]
-interface nsIBrowserProfileMigrator : nsISupports 
+interface nsIBrowserProfileMigrator : nsISupports
 {
   /**
    * profile items to migrate. use with migrate().
@@ -22,6 +22,7 @@ interface nsIBrowserProfileMigrator : nsISupports
   const unsigned short PASSWORDS   = 0x0010;
   const unsigned short BOOKMARKS   = 0x0020;
   const unsigned short OTHERDATA   = 0x0040;
+  const unsigned short SESSION     = 0x0080;
 
   /**
    * Copy user profile information to the current active profile.

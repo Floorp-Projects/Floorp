@@ -18,7 +18,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAMCHANNEL
 
-    nsInputStreamChannel() {}
+    nsInputStreamChannel() :
+      mIsSrcdocChannel(false) {}
 
 protected:
     virtual ~nsInputStreamChannel() {}
@@ -28,6 +29,8 @@ protected:
 
 private:
     nsCOMPtr<nsIInputStream> mContentStream;
+    nsString mSrcdocData;
+    bool mIsSrcdocChannel;
 };
 
 #endif // !nsInputStreamChannel_h__
