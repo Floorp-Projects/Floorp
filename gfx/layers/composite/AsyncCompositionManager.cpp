@@ -45,7 +45,6 @@ ContentMightReflowOnOrientationChange(const nsIntRect& rect)
 template<Op OP>
 static void
 WalkTheTree(Layer* aLayer,
-            Layer* aParent,
             bool& aReady,
             const TargetConfig& aTargetConfig)
 {
@@ -75,7 +74,7 @@ WalkTheTree(Layer* aLayer,
   }
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    WalkTheTree<OP>(child, aLayer, aReady, aTargetConfig);
+    WalkTheTree<OP>(child, aReady, aTargetConfig);
   }
 }
 
@@ -83,7 +82,6 @@ void
 AsyncCompositionManager::ResolveRefLayers()
 {
   WalkTheTree<Resolve>(mLayerManager->GetRoot(),
-                       nullptr,
                        mReadyForCompose,
                        mTargetConfig);
 }
@@ -92,7 +90,6 @@ void
 AsyncCompositionManager::DetachRefLayers()
 {
   WalkTheTree<Detach>(mLayerManager->GetRoot(),
-                      nullptr,
                       mReadyForCompose,
                       mTargetConfig);
 }
