@@ -1318,7 +1318,7 @@ WrapStyle(JSContext* cx, JSObject* objArg,
       break;
     }
     default:
-      MOZ_NOT_REACHED("unexpected CanvasMultiGetterType");
+      MOZ_CRASH("unexpected CanvasMultiGetterType");
   }
   if (!ok) {
     error.Throw(NS_ERROR_FAILURE);
@@ -2079,6 +2079,9 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
     return;
   }
 
+  // add a rule to prevent text zoom from affecting the style
+  rules.AppendElement(new nsDisableTextZoomStyleRule);
+
   nsRefPtr<nsStyleContext> sc =
       styleSet->ResolveStyleForRules(parentContext, rules);
   if (!sc) {
@@ -2097,21 +2100,20 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
 
   // use CSS pixels instead of dev pixels to avoid being affected by page zoom
   const uint32_t aupcp = nsPresContext::AppUnitsPerCSSPixel();
-  // un-zoom the font size to avoid being affected by text-only zoom
-  //
-  // Purposely ignore the font size that respects the user's minimum
-  // font preference (fontStyle->mFont.size) in favor of the computed
-  // size (fontStyle->mSize).  See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=698652.
-  const nscoord fontSize = nsStyleFont::UnZoomText(parentContext->PresContext(), fontStyle->mSize);
 
   bool printerFont = (presShell->GetPresContext()->Type() == nsPresContext::eContext_PrintPreview ||
                       presShell->GetPresContext()->Type() == nsPresContext::eContext_Print);
 
+  // Purposely ignore the font size that respects the user's minimum
+  // font preference (fontStyle->mFont.size) in favor of the computed
+  // size (fontStyle->mSize).  See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=698652.
+  MOZ_ASSERT(!fontStyle->mAllowZoom,
+             "expected text zoom to be disabled on this nsStyleFont");
   gfxFontStyle style(fontStyle->mFont.style,
                      fontStyle->mFont.weight,
                      fontStyle->mFont.stretch,
-                     NSAppUnitsToFloatPixels(fontSize, float(aupcp)),
+                     NSAppUnitsToFloatPixels(fontStyle->mSize, float(aupcp)),
                      language,
                      fontStyle->mFont.sizeAdjust,
                      fontStyle->mFont.systemFont,
@@ -2638,7 +2640,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     anchorY = -fontMetrics.emDescent;
     break;
   default:
-      MOZ_NOT_REACHED("unexpected TextBaseline");
+    MOZ_CRASH("unexpected TextBaseline");
   }
 
   processor.mPt.y += anchorY;

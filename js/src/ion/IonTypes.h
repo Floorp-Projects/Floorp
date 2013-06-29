@@ -67,9 +67,8 @@ BailoutKindString(BailoutKind kind)
       case Bailout_CachedShapeGuard:
         return "Bailout_CachedShapeGuard";
       default:
-        JS_NOT_REACHED("Invalid BailoutKind");
+        MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
     }
-    return "INVALID_BAILOUT_KIND";
 }
 #endif
 
@@ -118,8 +117,7 @@ MIRTypeFromValueType(JSValueType type)
       case JSVAL_TYPE_UNKNOWN:
         return MIRType_Value;
       default:
-        JS_NOT_REACHED("unexpected jsval type");
-        return MIRType_None;
+        MOZ_ASSUME_UNREACHABLE("unexpected jsval type");
     }
 }
 
@@ -186,8 +184,7 @@ StringFromMIRType(MIRType type)
     case MIRType_ForkJoinSlice:
       return "ForkJoinSlice";
     default:
-      JS_NOT_REACHED("Unknown MIRType.");
-      return "";
+      MOZ_ASSUME_UNREACHABLE("Unknown MIRType.");
   }
 }
 

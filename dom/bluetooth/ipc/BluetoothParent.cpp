@@ -67,8 +67,7 @@ public:
   virtual bool
   ParseSuccessfulReply(JS::Value* aValue) MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("This should never be called!");
-    return false;
+    MOZ_CRASH("This should never be called!");
   }
 };
 
@@ -232,12 +231,10 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
     case Request::TIsScoConnectedRequest:
       return actor->DoRequest(aRequest.get_IsScoConnectedRequest());
     default:
-      MOZ_NOT_REACHED("Unknown type!");
-      return false;
+      MOZ_CRASH("Unknown type!");
   }
 
-  MOZ_NOT_REACHED("Should never get here!");
-  return false;
+  MOZ_CRASH("Should never get here!");
 }
 
 PBluetoothRequestParent*

@@ -351,6 +351,9 @@ Toolbox.prototype = {
     let id = toolDefinition.id;
 
     let radio = this.doc.createElement("radio");
+    // The radio element is not being used in the conventional way, thus
+    // the devtools-tab class replaces the radio XBL binding with its base
+    // binding (the control-item binding).
     radio.className = "toolbox-tab devtools-tab";
     radio.id = "toolbox-tab-" + id;
     radio.setAttribute("toolid", id);

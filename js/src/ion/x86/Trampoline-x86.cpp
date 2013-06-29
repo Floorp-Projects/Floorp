@@ -609,8 +609,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.branchPtr(Assembler::NotEqual, eax, Imm32(TP_SUCCESS), &failure);
         break;
       default:
-        JS_NOT_REACHED("unknown failure kind");
-        break;
+        MOZ_ASSUME_UNREACHABLE("unknown failure kind");
     }
 
     // Load the outparam and free any allocated stack.
