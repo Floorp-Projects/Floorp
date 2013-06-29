@@ -3722,7 +3722,7 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
     // MGetPropertyCache with no uses may be optimized away.
     if (funcDef->isGetPropertyCache()) {
         MGetPropertyCache *cache = funcDef->toGetPropertyCache();
-        if (cache->useCount() > 0)
+        if (cache->hasUses())
             return NULL;
         if (!CanInlineGetPropertyCache(cache, thisDef))
             return NULL;
@@ -3735,7 +3735,7 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
         MUnbox *unbox = funcDef->toUnbox();
         if (unbox->mode() != MUnbox::Infallible)
             return NULL;
-        if (unbox->useCount() > 0)
+        if (unbox->hasUses())
             return NULL;
         if (!unbox->input()->isTypeBarrier())
             return NULL;
@@ -3978,7 +3978,7 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
 
     // 3. The MGetPropertyCache (and, if applicable, MTypeBarrier and MUnbox) only
     //    have at most a single use.
-    JS_ASSERT_IF(callInfo.fun()->isGetPropertyCache(), cache->useCount() == 0);
+    JS_ASSERT_IF(callInfo.fun()->isGetPropertyCache(), !cache->hasUses());
     JS_ASSERT_IF(callInfo.fun()->isUnbox(), cache->useCount() == 1);
 
     // This means that no resume points yet capture the MGetPropertyCache,

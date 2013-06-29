@@ -63,8 +63,6 @@ class PerfSpewer
     PerfSpewer();
     ~PerfSpewer();
 
-    bool init(const char *path);
-
     bool startBasicBlock(MBasicBlock *blk, MacroAssembler &masm);
     bool endBasicBlock(MacroAssembler &masm);
     void writeProfile(JSScript *script,

@@ -19,6 +19,9 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleAction::QueryInterface(REFIID iid, void** ppv)
 {
+  if (!ppv)
+    return E_INVALIDARG;
+
   *ppv = nullptr;
 
   if (IID_IAccessibleAction == iid) {
@@ -72,6 +75,9 @@ STDMETHODIMP
 ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aDescription)
+    return E_INVALIDARG;
 
   *aDescription = nullptr;
 
@@ -150,6 +156,9 @@ ia2AccessibleAction::get_name(long aActionIndex, BSTR *aName)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aName)
+    return E_INVALIDARG;
+
   *aName = nullptr;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
@@ -175,6 +184,9 @@ STDMETHODIMP
 ia2AccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aLocalizedName)
+    return E_INVALIDARG;
 
   *aLocalizedName = nullptr;
   return E_NOTIMPL;

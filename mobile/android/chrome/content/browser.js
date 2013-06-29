@@ -3517,8 +3517,12 @@ Tab.prototype = {
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI, aFlags) {
     let contentWin = aWebProgress.DOMWindow;
-    if (contentWin != contentWin.top)
-        return;
+
+    // Browser webapps may load content inside iframes that can not reach across the app/frame boundary
+    // i.e. even though the page is loaded in an iframe window.top != webapp
+    // Make cure this window is a top level tab before moving on.
+    if (BrowserApp.getBrowserForWindow(contentWin) == null)
+      return;
 
     this._hostChanged = true;
 
@@ -6558,28 +6562,17 @@ var WebappsUI = {
 
     if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name + "\n" + aData.app.origin)) {
       // Get a profile for the app to be installed in. We'll download everything before creating the icons.
+      let origin = aData.app.origin;
       let profilePath = sendMessageToJava({
         type: "WebApps:PreInstall",
         name: manifest.name,
         manifestURL: aData.app.manifestURL,
-        origin: aData.app.origin
+        origin: origin
       });
-      let file = null;
       if (profilePath) {
-        file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.initWithPath(profilePath);
-
-        // build any app specific default prefs
-        let prefs = [];
-        if (manifest.orientation) {
-          prefs.push({name:"app.orientation.default", value: manifest.orientation});
-        }
-
-        // write them into the app profile
-        let defaultPrefsFile = file.clone();
-        defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
-        this.writeDefaultPrefs(defaultPrefsFile, prefs);
-
+  
         let self = this;
         DOMApplicationRegistry.confirmInstall(aData, false, file, null,
           function (manifest) {
@@ -6599,10 +6592,12 @@ var WebappsUI = {
                   let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
                   persist.saveURI(source, null, null, null, null, iconFile, null);
 
+                  // aData.app.origin may now point to the app: url that hosts this app
                   sendMessageToJava({
                     type: "WebApps:PostInstall",
                     name: manifest.name,
                     manifestURL: aData.app.manifestURL,
+                    originalOrigin: origin,
                     origin: aData.app.origin,
                     iconURL: fullsizeIcon
                   });
@@ -6619,6 +6614,7 @@ var WebappsUI = {
                 } catch(ex) {
                   console.log(ex);
                 }
+                self.writeDefaultPrefs(file, manifest);
               }
             );
           }
@@ -6629,7 +6625,20 @@ var WebappsUI = {
     }
   },
 
-  writeDefaultPrefs: function webapps_writeDefaultPrefs(aFile, aPrefs) {
+  writeDefaultPrefs: function webapps_writeDefaultPrefs(aProfile, aManifest) {
+      // build any app specific default prefs
+      let prefs = [];
+      if (aManifest.orientation) {
+        prefs.push({name:"app.orientation.default", value: aManifest.orientation.join(",") });
+      }
+
+      // write them into the app profile
+      let defaultPrefsFile = aProfile.clone();
+      defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
+      this._writeData(defaultPrefsFile, prefs);
+  },
+
+  _writeData: function(aFile, aPrefs) {
     if (aPrefs.length > 0) {
       let data = JSON.stringify(aPrefs);
 

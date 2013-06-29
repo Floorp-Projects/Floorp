@@ -22,6 +22,9 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 {
+  if (!ppv)
+    return E_INVALIDARG;
+
   *ppv = nullptr;
 
   if (IID_IAccessibleComponent == iid) {
@@ -39,6 +42,9 @@ STDMETHODIMP
 ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aX || !aY)
+    return E_INVALIDARG;
 
   *aX = 0;
   *aY = 0;
@@ -87,6 +93,11 @@ ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
 {
   A11Y_TRYBLOCK_BEGIN
 
+  if (!aForeground)
+    return E_INVALIDARG;
+
+  *aForeground = 0;
+
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -104,6 +115,11 @@ STDMETHODIMP
 ia2AccessibleComponent::get_background(IA2Color* aBackground)
 {
   A11Y_TRYBLOCK_BEGIN
+
+  if (!aBackground)
+    return E_INVALIDARG;
+
+  *aBackground = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())

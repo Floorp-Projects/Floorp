@@ -266,14 +266,13 @@ class RemoteAutomation(Automation):
             """
             if self.dm.fileExists(self.proc):
                 try:
-                    t = self.dm.pullFile(self.proc)
+                    newLogContent = self.dm.pullFile(self.proc, self.stdoutlen)
                 except DMError:
                     # we currently don't retry properly in the pullFile
                     # function in dmSUT, so an error here is not necessarily
                     # the end of the world
                     return ''
-                newLogContent = t[self.stdoutlen:]
-                self.stdoutlen = len(t)
+                self.stdoutlen += len(newLogContent)
                 # Match the test filepath from the last TEST-START line found in the new
                 # log content. These lines are in the form:
                 # 1234 INFO TEST-START | /filepath/we/wish/to/capture.html\n
@@ -290,14 +289,18 @@ class RemoteAutomation(Automation):
 
         def wait(self, timeout = None):
             timer = 0
-            interval = 5
+            interval = 20 
 
             if timeout == None:
                 timeout = self.timeout
 
             while (self.dm.getTopActivity() == self.procName):
-                t = self.stdout
-                if t != '': print t
+                # retrieve log updates every 60 seconds
+                if timer % 60 == 0: 
+                    t = self.stdout
+                    if t != '':
+                        print t
+
                 time.sleep(interval)
                 timer += interval
                 if (timer > timeout):
