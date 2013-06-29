@@ -557,6 +557,10 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 {
   sNumLivingContexts++;
   SetIsDOMBinding();
+
+#if USE_SKIA_GPU
+  mForceSoftware = false;
+#endif
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
@@ -570,6 +574,12 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   if (!sNumLivingContexts) {
     NS_IF_RELEASE(sErrorTarget);
   }
+
+#if USE_SKIA_GPU
+  std::vector<CanvasRenderingContext2D*>::iterator iter = std::find(DemotableContexts().begin(), DemotableContexts().end(), this);
+  if (iter != DemotableContexts().end())
+    DemotableContexts().erase(iter);
+#endif
 }
 
 JSObject*
@@ -767,6 +777,62 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
   Redraw(newr);
 }
 
+#if USE_SKIA_GPU
+
+void CanvasRenderingContext2D::Demote()
+{
+  if (!IsTargetValid() || mForceSoftware)
+    return;
+
+  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  RefPtr<DrawTarget> oldTarget = mTarget;
+  mTarget = nullptr;
+  mForceSoftware = true;
+
+  // Recreate target, now demoted to software only
+  EnsureTarget();
+  if (!IsTargetValid())
+    return;
+
+  // Put back the content from the old DrawTarget
+  mgfx::Rect r(0, 0, mWidth, mHeight);
+  mTarget->DrawSurface(snapshot, r, r);
+}
+
+std::vector<CanvasRenderingContext2D*>&
+CanvasRenderingContext2D::DemotableContexts()
+{
+  static std::vector<CanvasRenderingContext2D*> contexts;
+  return contexts;
+}
+
+void
+CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
+{
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  const size_t kMaxContexts = 2;
+#else
+  const size_t kMaxContexts = 16;
+#endif
+
+  std::vector<CanvasRenderingContext2D*>& contexts = DemotableContexts();
+  if (contexts.size() < kMaxContexts)
+    return;
+
+  CanvasRenderingContext2D* oldest = contexts.front();
+  contexts.erase(contexts.begin());
+
+  oldest->Demote();
+}
+
+void
+CanvasRenderingContext2D::AddDemotableContext(CanvasRenderingContext2D* context)
+{
+  DemotableContexts().push_back(context);
+}
+
+#endif
+
 void
 CanvasRenderingContext2D::EnsureTarget()
 {
@@ -804,14 +870,19 @@ CanvasRenderingContext2D::EnsureTarget()
          }
 #endif
 
-         nsRefPtr<GLContext> glContext = GLContextProvider::CreateOffscreen(
-           gfxIntSize(size.width, size.height),
-           caps,
-           GLContext::ContextFlagsNone);
+         DemoteOldestContextIfNecessary();
+
+         nsRefPtr<GLContext> glContext;
+
+         if (!mForceSoftware) {
+           glContext = GLContextProvider::CreateOffscreen(gfxIntSize(size.width, size.height),
+                                                          caps, GLContext::ContextFlagsNone);
+         }
 
          if (glContext) {
            SkAutoTUnref<GrGLInterface> i(CreateGrGLInterfaceFromGLContext(glContext));
            mTarget = Factory::CreateDrawTargetSkiaWithGLContextAndGrGLInterface(glContext, i, size, format);
+           AddDemotableContext(this);
          } else {
            mTarget = layerManager->CreateDrawTarget(size, format);
          }
