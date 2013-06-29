@@ -1228,7 +1228,7 @@ Interpret(JSContext *cx, RunState &state)
           case JSTRAP_ERROR:
             goto error;
           default:
-            JS_NOT_REACHED("bad ScriptDebugPrologue status");
+            MOZ_ASSUME_NOT_REACHED("bad ScriptDebugPrologue status");
         }
     }
 
@@ -2360,7 +2360,7 @@ BEGIN_CASE(JSOP_FUNCALL)
           case JSTRAP_ERROR:
             goto error;
           default:
-            JS_NOT_REACHED("bad ScriptDebugPrologue status");
+            MOZ_ASSUME_NOT_REACHED("bad ScriptDebugPrologue status");
         }
     }
 
@@ -3122,7 +3122,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 goto forced_return;
 
               default:
-                JS_NOT_REACHED("Invalid trap status");
+                MOZ_ASSUME_NOT_REACHED("Invalid trap status");
             }
         }
 

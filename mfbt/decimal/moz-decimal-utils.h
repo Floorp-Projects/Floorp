@@ -32,7 +32,7 @@
 #endif
 #define ASSERT MOZ_ASSERT
 
-#define ASSERT_NOT_REACHED() MOZ_CRASH("")
+#define ASSERT_NOT_REACHED() MOZ_ASSUME_NOT_REACHED()
 
 #define WTF_MAKE_NONCOPYABLE(ClassName) \
   private: \

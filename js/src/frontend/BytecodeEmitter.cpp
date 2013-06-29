@@ -919,7 +919,7 @@ EmitVarOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
       case JSOP_GETARG: case JSOP_GETLOCAL: op = JSOP_GETALIASEDVAR; break;
       case JSOP_SETARG: case JSOP_SETLOCAL: op = JSOP_SETALIASEDVAR; break;
       case JSOP_CALLARG: case JSOP_CALLLOCAL: op = JSOP_CALLALIASEDVAR; break;
-      default: JS_NOT_REACHED("unexpected var op");
+      default: MOZ_ASSUME_NOT_REACHED("unexpected var op");
     }
 
     return EmitAliasedVarOp(cx, op, pn, bce);
@@ -1013,7 +1013,7 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
       case Definition::PLACEHOLDER:
       case Definition::NAMED_LAMBDA:
       case Definition::MISSING:
-        JS_NOT_REACHED("unexpected dn->kind");
+        MOZ_ASSUME_NOT_REACHED("unexpected dn->kind");
     }
     return false;
 }
@@ -1108,7 +1108,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
           case JSOP_NAME:     op = JSOP_GETINTRINSIC; break;
           case JSOP_SETNAME:  op = JSOP_SETINTRINSIC; break;
           /* Other *NAME ops aren't (yet) supported in self-hosted code. */
-          default: JS_NOT_REACHED("intrinsic");
+          default: MOZ_ASSUME_NOT_REACHED("intrinsic");
         }
         pn->setOp(op);
         return true;
@@ -1214,7 +1214,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
           case JSOP_SETCONST:
             /* Not supported. */
             return false;
-          default: JS_NOT_REACHED("gname");
+          default: MOZ_ASSUME_NOT_REACHED("gname");
         }
         pn->setOp(op);
         return true;
@@ -1363,7 +1363,7 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETARG; break;
           case JSOP_SETNAME:  op = JSOP_SETARG; break;
-          default: JS_NOT_REACHED("arg");
+          default: MOZ_ASSUME_NOT_REACHED("arg");
         }
         JS_ASSERT(!pn->isConst());
         break;
@@ -1375,7 +1375,7 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
           case JSOP_NAME:     op = JSOP_GETLOCAL; break;
           case JSOP_SETNAME:  op = JSOP_SETLOCAL; break;
           case JSOP_SETCONST: op = JSOP_SETLOCAL; break;
-          default: JS_NOT_REACHED("local");
+          default: MOZ_ASSUME_NOT_REACHED("local");
         }
         break;
 
@@ -1432,7 +1432,7 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return true;
 
       case Definition::MISSING:
-        JS_NOT_REACHED("missing");
+        MOZ_ASSUME_NOT_REACHED("missing");
     }
 
     /*
@@ -1624,7 +1624,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
               default:
                 return CheckSideEffects(cx, bce, pn2, answer);
             }
-            MOZ_NOT_REACHED("We have a returning default case");
+            MOZ_ASSUME_NOT_REACHED("We have a returning default case");
             return false;
           }
 
@@ -1648,7 +1648,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
             *answer = true;
             return true;
         }
-        MOZ_NOT_REACHED("We have a returning default case");
+        MOZ_ASSUME_NOT_REACHED("We have a returning default case");
         return false;
 
       case PN_NAME:
@@ -3365,7 +3365,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
                   case JSOP_SETARG: op = JSOP_GETARG; break;
                   case JSOP_SETLOCAL: op = JSOP_GETLOCAL; break;
                   case JSOP_SETALIASEDVAR: op = JSOP_GETALIASEDVAR; break;
-                  default: JS_NOT_REACHED("Bad op");
+                  default: MOZ_ASSUME_NOT_REACHED("Bad op");
                 }
                 if (!EmitVarOp(cx, lhs, op, bce))
                     return false;
@@ -3589,7 +3589,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, MutableHandleValue
         return true;
       }
       default:
-        JS_NOT_REACHED("Unexpected node");
+        MOZ_ASSUME_NOT_REACHED("Unexpected node");
     }
     return false;
 }
@@ -5423,7 +5423,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
               case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
               case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
               case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
-              default: JS_NOT_REACHED("Invalid op");
+              default: MOZ_ASSUME_NOT_REACHED("Invalid op");
             }
             if (Emit1(cx, bce, op) < 0)
                 return false;

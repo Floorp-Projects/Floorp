@@ -47,7 +47,7 @@ SizeOfFramePrefix(FrameType type)
       case IonFrame_Osr:
         return IonOsrFrameLayout::Size();
       default:
-        JS_NOT_REACHED("unknown frame type");
+        MOZ_ASSUME_NOT_REACHED("unknown frame type");
     }
     return 0;
 }

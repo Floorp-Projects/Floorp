@@ -30,7 +30,7 @@ Requirement::priority() const
         return 2;
 
       default:
-        JS_NOT_REACHED("Unknown requirement kind.");
+        MOZ_ASSUME_NOT_REACHED("Unknown requirement kind.");
         return -1;
     }
 }

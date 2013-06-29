@@ -17,7 +17,7 @@ ToInt32(const LAllocation *a)
         return a->toConstant()->toInt32();
     if (a->isConstantIndex())
         return a->toConstantIndex()->index();
-    JS_NOT_REACHED("this is not a constant!");
+    MOZ_ASSUME_NOT_REACHED("this is not a constant!");
     return -1;
 }
 static inline double

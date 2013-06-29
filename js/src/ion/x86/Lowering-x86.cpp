@@ -237,7 +237,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         lir = new LAsmJSStoreHeap(useRegisterAtStart(ins->ptr()),
                                   useRegisterAtStart(ins->value()));
         break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
     }
 
     return add(lir, ins);
@@ -261,7 +261,7 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
         lir = new LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
                                                 useRegisterAtStart(ins->value()));
         break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
     }
 
     return add(lir, ins);

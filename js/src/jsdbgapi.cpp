@@ -105,7 +105,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
         frame.setReturnValue(rval);
         break;
       default:
-        JS_NOT_REACHED("bad Debugger::onEnterFrame JSTrapStatus value");
+        MOZ_ASSUME_NOT_REACHED("bad Debugger::onEnterFrame JSTrapStatus value");
     }
     return status;
 }
@@ -167,7 +167,7 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
         break;
 
       default:
-        JS_NOT_REACHED("Invalid trap status");
+        MOZ_ASSUME_NOT_REACHED("Invalid trap status");
     }
 
     return status;

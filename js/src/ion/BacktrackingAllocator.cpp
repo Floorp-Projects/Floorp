@@ -1151,7 +1151,7 @@ BacktrackingAllocator::populateSafepoints()
                     break;
 #endif
                   default:
-                    JS_NOT_REACHED("Bad register type");
+                    MOZ_ASSUME_NOT_REACHED("Bad register type");
                 }
             }
         }
@@ -1439,7 +1439,7 @@ BacktrackingAllocator::computeSpillWeight(const LiveInterval *interval)
 
           default:
             // Note: RECOVERED_INPUT will not appear in UsePositionIterator.
-            JS_NOT_REACHED("Bad use");
+            MOZ_ASSUME_NOT_REACHED("Bad use");
         }
     }
 

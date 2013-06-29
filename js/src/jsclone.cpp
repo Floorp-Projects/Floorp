@@ -927,7 +927,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
         obj = JS_NewUint8ClampedArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
       default:
-        JS_NOT_REACHED("unknown TypedArray type");
+        MOZ_ASSUME_NOT_REACHED("unknown TypedArray type");
         return false;
     }
 
@@ -970,7 +970,7 @@ bytesPerTypedArrayElement(uint32_t arrayType)
       case TypedArray::TYPE_FLOAT64:
         return sizeof(uint64_t);
       default:
-        JS_NOT_REACHED("unknown TypedArray type");
+        MOZ_ASSUME_NOT_REACHED("unknown TypedArray type");
         return 0;
     }
 }
@@ -1007,7 +1007,7 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, 
       case TypedArray::TYPE_FLOAT64:
         return in.readArray((uint64_t*) buffer.dataPointer(), nelems);
       default:
-        JS_NOT_REACHED("unknown TypedArray type");
+        MOZ_ASSUME_NOT_REACHED("unknown TypedArray type");
         return false;
     }
 }

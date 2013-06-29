@@ -1017,7 +1017,7 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
             continue;
         }
 
-        JS_NOT_REACHED("Element access not dense array nor typed array");
+        MOZ_ASSUME_NOT_REACHED("Element access not dense array nor typed array");
     }
 
     return InliningStatus_Inlined;
@@ -1088,7 +1088,7 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    JS_NOT_REACHED("Invalid execution mode");
+    MOZ_ASSUME_NOT_REACHED("Invalid execution mode");
 }
 
 IonBuilder::InliningStatus
@@ -1262,7 +1262,7 @@ IonBuilder::inlineNewDenseArray(CallInfo &callInfo)
         return inlineNewDenseArrayForParallelExecution(callInfo);
     }
 
-    JS_NOT_REACHED("unknown ExecutionMode");
+    MOZ_ASSUME_NOT_REACHED("unknown ExecutionMode");
 }
 
 IonBuilder::InliningStatus

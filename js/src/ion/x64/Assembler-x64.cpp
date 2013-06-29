@@ -45,7 +45,7 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(FloatArgRegs[regIndex_++]);
         break;
       default:
-        JS_NOT_REACHED("Unexpected argument type");
+        MOZ_ASSUME_NOT_REACHED("Unexpected argument type");
     }
     return current_;
 #else
@@ -68,7 +68,7 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
         break;
       default:
-        JS_NOT_REACHED("Unexpected argument type");
+        MOZ_ASSUME_NOT_REACHED("Unexpected argument type");
     }
     return current_;
 #endif

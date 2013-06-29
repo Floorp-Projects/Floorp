@@ -695,7 +695,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.branch32(Assembler::NotEqual, r0, Imm32(TP_SUCCESS), &failure);
         break;
       default:
-        JS_NOT_REACHED("unknown failure kind");
+        MOZ_ASSUME_NOT_REACHED("unknown failure kind");
         break;
     }
 

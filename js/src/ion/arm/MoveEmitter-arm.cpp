@@ -190,7 +190,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             masm.ma_str(from.reg(), toOperand(to, false));
             break;
           default:
-            JS_NOT_REACHED("strange move!");
+            MOZ_ASSUME_NOT_REACHED("strange move!");
         }
     } else if (to.isGeneralReg()) {
         JS_ASSERT(from.isMemory() || from.isEffectiveAddress());

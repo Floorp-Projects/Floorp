@@ -162,7 +162,7 @@ private:
           case ASMJS_CODE:    m_asmJSCodeBytes    += n;        break;
           case REGEXP_CODE:   m_regexpCodeBytes   += n;        break;
           case OTHER_CODE:    m_otherCodeBytes    += n;        break;
-          default:            JS_NOT_REACHED("bad code kind"); break;
+          default:            MOZ_ASSUME_NOT_REACHED("bad code kind"); break;
         }
         return result;
     }
