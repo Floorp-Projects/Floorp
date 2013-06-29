@@ -537,11 +537,8 @@ protected:
   mozilla::dom::EventTarget*                mTarget;  //WEAK
   nsCOMPtr<nsIAtom>                         mNoListenerForEventAtom;
 
-  static uint32_t                           mInstanceCount;
-  static jsid                               sAddListenerID;
-
-  friend class nsEventTargetChainItem;
-  static uint32_t                           sCreatedCount;
+  friend class ELMCreationDetector;
+  static uint32_t                           sMainThreadCreatedCount;
 };
 
 /**

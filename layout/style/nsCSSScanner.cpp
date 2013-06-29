@@ -352,6 +352,7 @@ nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
   , mReporter(nullptr)
   , mSVGMode(false)
   , mRecording(false)
+  , mSeenBadToken(false)
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
 }
@@ -922,6 +923,7 @@ nsCSSScanner::ScanString(nsCSSToken& aToken)
       continue;
     }
 
+    mSeenBadToken = true;
     aToken.mType = eCSSToken_Bad_String;
     mReporter->ReportUnexpected("SEUnterminatedString", aToken);
     break;
@@ -1056,6 +1058,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     Advance();
     aToken.mType = eCSSToken_URL;
   } else {
+    mSeenBadToken = true;
     aToken.mType = eCSSToken_Bad_URL;
   }
   return true;
