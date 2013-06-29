@@ -194,8 +194,7 @@ BluetoothServiceChildProcess::GetScoSocket(
                                     bool aEncrypt,
                                     mozilla::ipc::UnixSocketConsumer* aConsumer)
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return NS_ERROR_FAILURE;
+  MOZ_CRASH("This should never be called!");
 }
 
 nsresult
@@ -203,16 +202,14 @@ BluetoothServiceChildProcess::GetServiceChannel(const nsAString& aDeviceAddress,
                                                 const nsAString& aServiceUuid,
                                                 BluetoothProfileManagerBase* aManager)
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return NS_ERROR_FAILURE;
+  MOZ_CRASH("This should never be called!");
 }
 
 bool
 BluetoothServiceChildProcess::UpdateSdpRecords(const nsAString& aDeviceAddress,
                                                BluetoothProfileManagerBase* aManager)
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return false;
+  MOZ_CRASH("This should never be called!");
 }
 
 bool
@@ -364,35 +361,30 @@ BluetoothServiceChildProcess::HandleShutdown()
 nsresult
 BluetoothServiceChildProcess::StartInternal()
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return NS_ERROR_FAILURE;
+  MOZ_CRASH("This should never be called!");
 }
 
 nsresult
 BluetoothServiceChildProcess::StopInternal()
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return NS_ERROR_FAILURE;
+  MOZ_CRASH("This should never be called!");
 }
 
 bool
 BluetoothServiceChildProcess::IsEnabledInternal()
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return false;
+  MOZ_CRASH("This should never be called!");
 }
 
 bool
 BluetoothServiceChildProcess::IsConnected(uint16_t aProfileId)
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return false;
+  MOZ_CRASH("This should never be called!");
 }
 
 nsresult
 BluetoothServiceChildProcess::SendSinkMessage(const nsAString& aDeviceAddresses,
                                               const nsAString& aMessage)
 {
-  MOZ_NOT_REACHED("This should never be called!");
-  return NS_ERROR_FAILURE;
+  MOZ_CRASH("This should never be called!");
 }

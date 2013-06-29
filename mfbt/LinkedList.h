@@ -413,7 +413,7 @@ class LinkedList
         if (elem == t)
           return;
       }
-      MOZ_NOT_REACHED("element wasn't found in this list!");
+      MOZ_CRASH("element wasn't found in this list!");
 #endif
     }
 

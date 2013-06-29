@@ -71,8 +71,7 @@ ScriptAnalysis::getValueTypes(const SSAValue &v)
         return &v.phiNode()->types;
       default:
         /* Cannot compute types for empty SSA values. */
-        JS_NOT_REACHED("Bad SSA value");
-        return NULL;
+        MOZ_ASSUME_UNREACHABLE("Bad SSA value");
     }
 }
 

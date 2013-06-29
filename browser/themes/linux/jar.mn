@@ -9,6 +9,7 @@ browser.jar:
 * skin/classic/browser/aboutPrivateBrowsing.css
 * skin/classic/browser/aboutSessionRestore.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
+  skin/classic/browser/aboutWelcomeBack.css                     (../shared/aboutWelcomeBack.css)
   skin/classic/browser/aboutCertError.css
   skin/classic/browser/aboutCertError_sectionCollapsed.png
   skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png

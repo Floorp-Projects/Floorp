@@ -843,8 +843,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         return define(lir, comp);
     }
 
-    JS_NOT_REACHED("Unrecognized compare type.");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("Unrecognized compare type.");
 }
 
 static void
@@ -1452,8 +1451,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
       default:
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
-        JS_NOT_REACHED("unexpected type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1499,8 +1497,7 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
         return false;
 
       default:
-        JS_NOT_REACHED("unexpected type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1532,8 +1529,7 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
       default:
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
-        JS_NOT_REACHED("unexpected type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1546,8 +1542,7 @@ LIRGenerator::visitToString(MToString *ins)
       case MIRType_Null:
       case MIRType_Undefined:
       case MIRType_Boolean:
-        JS_NOT_REACHED("NYI: Lower MToString");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("NYI: Lower MToString");
 
       case MIRType_Double: {
         LDoubleToString *lir = new LDoubleToString(useRegister(opd), temp());
@@ -1567,8 +1562,7 @@ LIRGenerator::visitToString(MToString *ins)
 
       default:
         // Objects might be effectful. (see ToPrimitive)
-        JS_NOT_REACHED("unexpected type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1661,8 +1655,7 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 
       case MIRType_Undefined:
       case MIRType_Null:
-        JS_NOT_REACHED("typed load must have a payload");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("typed load must have a payload");
 
       default:
         return define(new LLoadSlotT(useRegister(ins->slots())), ins);
@@ -1907,8 +1900,7 @@ LIRGenerator::visitNot(MNot *ins)
       }
 
       default:
-        JS_NOT_REACHED("Unexpected MIRType.");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("Unexpected MIRType.");
     }
 }
 
@@ -1976,8 +1968,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       }
       case MIRType_Undefined:
       case MIRType_Null:
-        JS_NOT_REACHED("typed load must have a payload");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("typed load must have a payload");
 
       default:
       {
@@ -2083,8 +2074,7 @@ LIRGenerator::visitArrayPopShift(MArrayPopShift *ins)
       }
       case MIRType_Undefined:
       case MIRType_Null:
-        JS_NOT_REACHED("typed load must have a payload");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("typed load must have a payload");
 
       default:
       {
@@ -2179,8 +2169,7 @@ LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
       }
 
       default:
-        JS_NOT_REACHED("unexpected type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -2726,7 +2715,7 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn *ins)
     else if (rval->type() == MIRType_Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
     else
-        JS_NOT_REACHED("Unexpected asm.js return type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected asm.js return type");
     return add(lir);
 }
 

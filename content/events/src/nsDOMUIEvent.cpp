@@ -362,7 +362,7 @@ nsDOMUIEvent::IsChar() const
     default:
       return false;
   }
-  MOZ_NOT_REACHED("Switch handles all cases.");
+  MOZ_CRASH("Switch handles all cases.");
 }
 
 NS_IMETHODIMP

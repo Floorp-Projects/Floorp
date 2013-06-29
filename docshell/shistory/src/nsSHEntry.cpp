@@ -35,6 +35,7 @@ nsSHEntry::nsSHEntry()
   , mScrollPositionY(0)
   , mParent(nullptr)
   , mURIWasModified(false)
+  , mIsSrcdocEntry(false)
 {
   mShared = new nsSHEntryShared();
 }
@@ -52,6 +53,8 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mParent(other.mParent)
   , mURIWasModified(other.mURIWasModified)
   , mStateData(other.mStateData)
+  , mIsSrcdocEntry(other.mIsSrcdocEntry)
+  , mSrcdocData(other.mSrcdocData)
 {
 }
 
@@ -490,6 +493,30 @@ nsSHEntry::AbandonBFCacheEntry()
   mShared = nsSHEntryShared::Duplicate(mShared);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSHEntry::GetIsSrcdocEntry(bool* aIsSrcdocEntry)
+{
+  *aIsSrcdocEntry = mIsSrcdocEntry;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetSrcdocData(nsAString &aSrcdocData)
+{
+  aSrcdocData = mSrcdocData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetSrcdocData(const nsAString &aSrcdocData)
+{
+  mSrcdocData = aSrcdocData;
+  mIsSrcdocEntry = true;
+  return NS_OK;
+}
+
+
 
 //*****************************************************************************
 //    nsSHEntry: nsISHContainer

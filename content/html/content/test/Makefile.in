@@ -386,6 +386,10 @@ MOCHITEST_FILES = \
 		test_bug885024.html \
 		test_track.html \
 		test_track_disabled.html \
+		test_srcdoc.html \
+		file_srcdoc.html \
+		test_srcdoc-2.html \
+		file_srcdoc-2.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \

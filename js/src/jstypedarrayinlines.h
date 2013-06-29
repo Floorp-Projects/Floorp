@@ -156,8 +156,7 @@ TypedArray::slotWidth(int atype) {
     case js::TypedArray::TYPE_FLOAT64:
         return 8;
     default:
-        JS_NOT_REACHED("invalid typed array type");
-        return 0;
+        MOZ_ASSUME_UNREACHABLE("invalid typed array type");
     }
 }
 

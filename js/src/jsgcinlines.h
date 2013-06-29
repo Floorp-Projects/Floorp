@@ -151,8 +151,7 @@ GetGCKindSlots(AllocKind thingKind)
       case FINALIZE_OBJECT16_BACKGROUND:
         return 16;
       default:
-        JS_NOT_REACHED("Bad object finalize kind");
-        return 0;
+        MOZ_ASSUME_UNREACHABLE("Bad object finalize kind");
     }
 }
 

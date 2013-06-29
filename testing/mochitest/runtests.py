@@ -263,6 +263,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "launches tests in immersive browser")
     defaults["immersiveMode"] = False
 
+    self.add_option("--httpd-path", action = "store",
+                    type = "string", dest = "httpdPath",
+                    help = "path to the httpd.js file")
+    defaults["httpdPath"] = None
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -316,7 +321,6 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     options.httpPort = self._automation.DEFAULT_HTTP_PORT
     options.sslPort = self._automation.DEFAULT_SSL_PORT
     options.webSocketPort = self._automation.DEFAULT_WEBSOCKET_PORT
-    options.httpdPath = '.' 
 
     if options.vmwareRecording:
       if not self._automation.IS_WIN32:
@@ -411,7 +415,11 @@ class MochitestServer:
     self.httpPort = options.httpPort
     self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
     self.testPrefix = "'webapprt_'" if options.webapprtContent else "undefined"
-    self._httpdPath = options.httpdPath
+    if options.httpdPath:
+        self._httpdPath = options.httpdPath
+    else:
+        self._httpdPath = '.'
+    self._httpdPath = os.path.abspath(self._httpdPath)
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."

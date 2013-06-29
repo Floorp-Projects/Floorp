@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom += [
     'CDATASection.h',
     'ProcessingInstruction.h',
     'XMLStylesheetProcessingInstruction.h',
+    'nsXMLElement.h',
 ]
 
 CPP_SOURCES += [

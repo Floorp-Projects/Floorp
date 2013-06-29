@@ -64,7 +64,7 @@ void
 test_finalizer_rel_size_t(size_t i)
 {
   if (--gFinalizerTestResources[i] < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
 }
 
@@ -72,7 +72,7 @@ size_t
 test_finalizer_rel_size_t_return_size_t(size_t i)
 {
   if (-- gFinalizerTestResources[i] < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   return i;
 }
@@ -81,7 +81,7 @@ RECT
 test_finalizer_rel_size_t_return_struct_t(size_t i)
 {
   if (-- gFinalizerTestResources[i] < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   const int32_t narrowed = (int32_t)i;
   RECT result = { narrowed, narrowed, narrowed, narrowed };
@@ -109,7 +109,7 @@ void
 test_finalizer_rel_int32_t(int32_t i)
 {
   if (--gFinalizerTestResources[i] < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
 }
 
@@ -134,7 +134,7 @@ void
 test_finalizer_rel_int64_t(int64_t i)
 {
   if (-- gFinalizerTestResources[i] < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
 }
 
@@ -161,7 +161,7 @@ test_finalizer_rel_ptr_t(void *i)
   int *as_int = (int*)i;
   -- (*as_int);
   if (*as_int < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
 }
 
@@ -187,7 +187,7 @@ test_finalizer_rel_int32_ptr_t(int32_t *i)
 {
   -- (*i);
   if (*i < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
 }
 
@@ -212,7 +212,7 @@ void
 test_finalizer_rel_null_t(void *i)
 {
   if (i != NULL) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   gFinalizerTestResources[0] --;
 }
@@ -251,7 +251,7 @@ test_finalizer_rel_string_t(char *i)
 {
   int index = atoi(i);
   if (index < 0 || index >= (int)gFinalizerTestSize) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   gFinalizerTestResources[index] --;
 }
@@ -285,7 +285,7 @@ test_finalizer_rel_struct_t(RECT i)
 {
   int index = i.top;
   if (index < 0 || index >= (int)gFinalizerTestSize) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   gFinalizerTestResources[index] --;
 }
@@ -295,7 +295,7 @@ test_finalizer_struct_resource_is_acquired(RECT i)
 {
   int index = i.top;
   if (index < 0 || index >= (int)gFinalizerTestSize) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   return gFinalizerTestResources[index] == 1;
 }
@@ -316,7 +316,7 @@ void
 test_finalizer_rel_size_t_set_errno(size_t i)
 {
   if (-- gFinalizerTestResources[i] < 0) {
-    MOZ_NOT_REACHED("Assertion failed");
+    MOZ_CRASH("Assertion failed");
   }
   errno = 10;
 }
