@@ -1266,8 +1266,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
       case ESClass_Date: return obj->is<DateObject>();
     }
-    JS_NOT_REACHED("bad classValue");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("bad classValue");
 }
 
 inline bool

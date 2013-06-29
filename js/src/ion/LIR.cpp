@@ -270,8 +270,7 @@ LAllocation::toString() const
         PrintUse(buf, sizeof(buf), toUse());
         return buf;
       default:
-        JS_NOT_REACHED("what?");
-        return "???";
+        MOZ_ASSUME_UNREACHABLE("what?");
     }
 }
 #endif // DEBUG

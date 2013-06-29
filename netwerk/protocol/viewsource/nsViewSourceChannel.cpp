@@ -14,6 +14,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsStringStream.h"
 
 NS_IMPL_ADDREF(nsViewSourceChannel)
 NS_IMPL_RELEASE(nsViewSourceChannel)
@@ -70,6 +71,36 @@ nsViewSourceChannel::Init(nsIURI* uri)
     mApplicationCacheChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
     
+    return NS_OK;
+}
+
+nsresult
+nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc)
+{
+
+    nsresult rv;
+
+    nsCOMPtr<nsIURI> inStreamURI;
+    // Need to strip view-source: from the URI.  Hardcoded to
+    // about:srcdoc as this is the only permissible URI for srcdoc 
+    // loads
+    rv = NS_NewURI(getter_AddRefs(inStreamURI),
+                   NS_LITERAL_STRING("about:srcdoc"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), inStreamURI,
+                                  aSrcdoc, NS_LITERAL_CSTRING("text/html"),
+                                  true);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+    mOriginalURI = aURI;
+    
+    mChannel->SetOriginalURI(mOriginalURI);
+    mHttpChannel = do_QueryInterface(mChannel);
+    mHttpChannelInternal = do_QueryInterface(mChannel);
+    mCachingChannel = do_QueryInterface(mChannel);
+    mApplicationCacheChannel = do_QueryInterface(mChannel);
+    mUploadChannel = do_QueryInterface(mChannel);
     return NS_OK;
 }
 

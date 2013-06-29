@@ -141,8 +141,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
       static_cast<nsInputEvent*>(mEvent)->modifiers = modifiers;
       return NS_OK;
     default:
-      MOZ_NOT_REACHED("There is no space to store the modifiers");
-      return NS_ERROR_FAILURE;
+      MOZ_CRASH("There is no space to store the modifiers");
   }
 }
 
@@ -242,8 +241,7 @@ nsDOMMouseEvent::Buttons()
     case NS_SIMPLE_GESTURE_EVENT:
       return static_cast<nsMouseEvent_base*>(mEvent)->buttons;
     default:
-      MOZ_NOT_REACHED("Tried to get mouse buttons for non-mouse event!");
-      return 0;
+      MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
   }
 }
 

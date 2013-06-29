@@ -1,7 +1,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
-Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 
 // The following are used to compare against a well-tested reference

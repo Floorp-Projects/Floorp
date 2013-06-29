@@ -819,8 +819,7 @@ IonScript::getSafepointIndex(uint32_t disp) const
         }
     }
 
-    JS_NOT_REACHED("displacement not found.");
-    return NULL;
+    MOZ_ASSUME_UNREACHABLE("displacement not found.");
 }
 
 const OsiIndex *
@@ -834,8 +833,7 @@ IonScript::getOsiIndex(uint32_t disp) const
             return it;
     }
 
-    JS_NOT_REACHED("Failed to find OSI point return address");
-    return NULL;
+    MOZ_ASSUME_UNREACHABLE("Failed to find OSI point return address");
 }
 
 const OsiIndex *
@@ -1218,7 +1216,7 @@ GenerateLIR(MIRGenerator *mir)
       }
 
       default:
-        JS_NOT_REACHED("Bad regalloc");
+        MOZ_ASSUME_UNREACHABLE("Bad regalloc");
     }
 
     if (mir->shouldCancel("Allocate Registers"))
@@ -2005,8 +2003,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
             break;
           case IonFrame_Unwound_OptimizedJS:
           case IonFrame_Unwound_BaselineStub:
-            JS_NOT_REACHED("invalid");
-            break;
+            MOZ_ASSUME_UNREACHABLE("invalid");
           case IonFrame_Unwound_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d unwound rectifier frame @ %p", frameno, it.fp());
             break;
@@ -2318,7 +2315,7 @@ ion::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
         return;
     }
 
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_UNREACHABLE("No such execution mode");
 }
 
 uint32_t

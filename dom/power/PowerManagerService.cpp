@@ -119,8 +119,7 @@ PowerManagerService::Reboot()
   // To synchronize any unsaved user data before rebooting.
   SyncProfile();
   hal::Reboot();
-  MOZ_NOT_REACHED("hal::Reboot() shouldn't return");
-  return NS_OK;
+  MOZ_CRASH("hal::Reboot() shouldn't return");
 }
 
 NS_IMETHODIMP
@@ -130,8 +129,7 @@ PowerManagerService::PowerOff()
   // To synchronize any unsaved user data before powering off.
   SyncProfile();
   hal::PowerOff();
-  MOZ_NOT_REACHED("hal::PowerOff() shouldn't return");
-  return NS_OK;
+  MOZ_CRASH("hal::PowerOff() shouldn't return");
 }
 
 NS_IMETHODIMP
@@ -153,8 +151,7 @@ PowerManagerService::Restart()
   sync();
 #endif
   _exit(0);
-  MOZ_NOT_REACHED("_exit() shouldn't return");
-  return NS_OK;
+  MOZ_CRASH("_exit() shouldn't return");
 }
 
 NS_IMETHODIMP

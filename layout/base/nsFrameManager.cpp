@@ -60,6 +60,7 @@
 #include "nsTransitionManager.h"
 #include "RestyleTracker.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "ChildIterator.h"
 
 #include "nsFrameManager.h"
 #include "nsRuleProcessorData.h"
@@ -173,7 +174,12 @@ public:
   NS_HIDDEN_(void)  Clear(void);
 
 protected:
-  NS_HIDDEN_(PLHashEntry**) GetEntryFor(nsIContent* aParentContent);
+  /**
+   * Gets the entry for the provided parent content. If the content
+   * is a <xbl:children> element, |**aParentContent| is set to
+   * the parent of the children element.
+   */
+  NS_HIDDEN_(PLHashEntry**) GetEntryFor(nsIContent** aParentContent);
   NS_HIDDEN_(void)          AppendNodeFor(UndisplayedNode* aNode,
                                           nsIContent* aParentContent);
 
@@ -398,19 +404,12 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 
   // Need to look at aParentContent's content list due to XBL insertions.
   // Nodes in aParentContent's content list do not have aParentContent as a
-  // parent, but are treated as children of aParentContent. We get access to
-  // the content list via GetXBLChildNodesFor and just ignore any nodes we
-  // don't care about.
-  nsINodeList* list =
-    aParentContent->OwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParentContent);
-  if (list) {
-    uint32_t length;
-    list->GetLength(&length);
-    for (uint32_t i = 0; i < length; ++i) {
-      nsIContent* child = list->Item(i);
-      if (child->GetParent() != aParentContent) {
-        ClearUndisplayedContentIn(child, child->GetParent());
-      }
+  // parent, but are treated as children of aParentContent. We iterate over
+  // the flattened content list and just ignore any nodes we don't care about.
+  FlattenedChildIterator iter(aParentContent);
+  for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
+    if (child->GetParent() != aParentContent) {
+      ClearUndisplayedContentIn(child, child->GetParent());
     }
   }
 }
@@ -1375,6 +1374,18 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         NS_ASSERTION(!undisplayed->mStyle->GetPseudo(),
                      "Shouldn't have random pseudo style contexts in the "
                      "undisplayed map");
+
+        // Get the parent of the undisplayed content and check if it is a XBL
+        // children element. Push the children element as an ancestor here because it does
+        // not have a frame and would not otherwise be pushed as an ancestor.
+        nsIContent* parent = undisplayed->mContent->GetParent();
+        bool pushInsertionPoint = parent &&
+          parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+        TreeMatchContext::AutoAncestorPusher
+          insertionPointPusher(pushInsertionPoint,
+                               aTreeMatchContext,
+                               parent && parent->IsElement() ? parent->AsElement() : nullptr);
+
         nsRestyleHint thisChildHint = childRestyleHint;
         RestyleTracker::RestyleData undisplayedRestyleData;
         if (aRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
@@ -1530,6 +1541,19 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         for (; !childFrames.AtEnd(); childFrames.Next()) {
           nsIFrame* child = childFrames.get();
           if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+            // Get the parent of the child frame's content and check if it is a XBL
+            // children element. Push the children element as an ancestor here because it does
+            // not have a frame and would not otherwise be pushed as an ancestor.
+
+            // Check if the frame has a content because |child| may be a nsPageFrame that does
+            // not have a content.
+            nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
+            bool pushInsertionPoint = parent &&
+              parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+            TreeMatchContext::AutoAncestorPusher
+              insertionPointPusher(pushInsertionPoint, aTreeMatchContext,
+                                   parent && parent->IsElement() ? parent->AsElement() : nullptr);
+
             // only do frames that are in flow
             if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
@@ -1872,13 +1896,29 @@ nsFrameManagerBase::UndisplayedMap::~UndisplayedMap(void)
 }
 
 PLHashEntry**  
-nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
+nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent** aParentContent)
 {
-  if (mLastLookup && (aParentContent == (*mLastLookup)->key)) {
+  nsIContent* parentContent = *aParentContent;
+
+  if (mLastLookup && (parentContent == (*mLastLookup)->key)) {
     return mLastLookup;
   }
-  PLHashNumber hashCode = NS_PTR_TO_INT32(aParentContent);
-  PLHashEntry** entry = PL_HashTableRawLookup(mTable, hashCode, aParentContent);
+
+  // In the case of XBL default content, <xbl:children> elements do not get a
+  // frame causing a mismatch between the content tree and the frame tree.
+  // |GetEntryFor| is sometimes called with the content tree parent (which may
+  // be a <xbl:children> element) but the parent in the frame tree would be the
+  // insertion parent (parent of the <xbl:children> element). Here the children
+  // elements are normalized to the insertion parent to correct for the mismatch.
+  if (parentContent &&
+      parentContent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
+    parentContent = parentContent->GetParent();
+    // Change the caller's pointer for the parent content to be the insertion parent.
+    *aParentContent = parentContent;
+  }
+
+  PLHashNumber hashCode = NS_PTR_TO_INT32(parentContent);
+  PLHashEntry** entry = PL_HashTableRawLookup(mTable, hashCode, parentContent);
   if (*entry) {
     mLastLookup = entry;
   }
@@ -1888,7 +1928,7 @@ nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
 UndisplayedNode* 
 nsFrameManagerBase::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 {
-  PLHashEntry** entry = GetEntryFor(aParentContent);
+  PLHashEntry** entry = GetEntryFor(&aParentContent);
   if (*entry) {
     return (UndisplayedNode*)((*entry)->value);
   }
@@ -1899,7 +1939,7 @@ void
 nsFrameManagerBase::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
                                                   nsIContent* aParentContent)
 {
-  PLHashEntry** entry = GetEntryFor(aParentContent);
+  PLHashEntry** entry = GetEntryFor(&aParentContent);
   if (*entry) {
     UndisplayedNode*  node = (UndisplayedNode*)((*entry)->value);
     while (node->mNext) {
@@ -1937,7 +1977,7 @@ void
 nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
                                                   UndisplayedNode* aNode)
 {
-  PLHashEntry** entry = GetEntryFor(aParentContent);
+  PLHashEntry** entry = GetEntryFor(&aParentContent);
   NS_ASSERTION(*entry, "content not in map");
   if (*entry) {
     if ((UndisplayedNode*)((*entry)->value) == aNode) {  // first node
@@ -1968,7 +2008,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
 void
 nsFrameManagerBase::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
 {
-  PLHashEntry** entry = GetEntryFor(aParentContent);
+  PLHashEntry** entry = GetEntryFor(&aParentContent);
   NS_ASSERTION(entry, "content not in map");
   if (*entry) {
     UndisplayedNode*  node = (UndisplayedNode*)((*entry)->value);

@@ -89,6 +89,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIChannel.h"
 #include "IHistory.h"
+#include "nsViewSourceHandler.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -1260,8 +1261,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
     bool inheritOwner = false;
     bool ownerIsExplicit = false;
     bool sendReferrer = true;
+    bool isSrcdoc = false;
     nsCOMPtr<nsISHEntry> shEntry;
     nsXPIDLString target;
+    nsAutoString srcdoc;
+
     uint32_t loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);    
 
     NS_ENSURE_ARG(aURI);
@@ -1288,6 +1292,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
         aLoadInfo->GetPostDataStream(getter_AddRefs(postStream));
         aLoadInfo->GetHeadersStream(getter_AddRefs(headersStream));
         aLoadInfo->GetSendReferrer(&sendReferrer);
+        aLoadInfo->GetIsSrcdocLoad(&isSrcdoc);
+        aLoadInfo->GetSrcdocData(srcdoc);
     }
 
 #if defined(PR_LOGGING) && defined(DEBUG)
@@ -1508,6 +1514,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
     if (aLoadFlags & LOAD_FLAGS_FORCE_ALLOW_COOKIES)
         flags |= INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
 
+    if (isSrcdoc)
+        flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+
     return InternalLoad(aURI,
                         referrer,
                         owner,
@@ -1520,6 +1529,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                         loadType,
                         nullptr,         // No SHEntry
                         aFirstParty,
+                        srcdoc,
                         nullptr,         // No nsIDocShell
                         nullptr);        // No nsIRequest
 }
@@ -4567,7 +4577,7 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     return InternalLoad(errorPageURI, nullptr, nullptr,
                         INTERNAL_LOAD_FLAGS_INHERIT_OWNER, nullptr, nullptr,
                         NullString(), nullptr, nullptr, LOAD_ERROR_PAGE,
-                        nullptr, true, nullptr, nullptr);
+                        nullptr, true, NullString(), nullptr,nullptr);
 }
 
 
@@ -4608,17 +4618,24 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     else {
         nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
 
+        // Do not inherit owner from document
+        uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
+        nsAutoString srcdoc;
         nsIPrincipal* principal = nullptr;
         nsAutoString contentTypeHint;
         if (doc) {
             principal = doc->NodePrincipal();
             doc->GetContentType(contentTypeHint);
-        }
 
+            if (doc->IsSrcdocDocument()) {
+                doc->GetSrcdocData(srcdoc);
+                flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+            }
+        }
         rv = InternalLoad(mCurrentURI,
                           mReferrerURI,
                           principal,
-                          INTERNAL_LOAD_FLAGS_NONE, // Do not inherit owner from document
+                          flags,
                           nullptr,         // No window target
                           NS_LossyConvertUTF16toASCII(contentTypeHint).get(),
                           NullString(),    // No forced download
@@ -4627,6 +4644,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                           loadType,        // Load type
                           nullptr,         // No SHEntry
                           true,
+                          srcdoc,          // srcdoc argument for iframe
                           nullptr,         // No nsIDocShell
                           nullptr);        // No nsIRequest
     }
@@ -8467,7 +8485,9 @@ public:
                       nsISupports * aOwner, uint32_t aFlags,
                       const char* aTypeHint, nsIInputStream * aPostData,
                       nsIInputStream * aHeadersData, uint32_t aLoadType,
-                      nsISHEntry * aSHEntry, bool aFirstParty) :
+                      nsISHEntry * aSHEntry, bool aFirstParty,
+                      const nsAString &aSrcdoc) :
+        mSrcdoc(aSrcdoc),
         mDocShell(aDocShell),
         mURI(aURI),
         mReferrer(aReferrer),
@@ -8490,7 +8510,7 @@ public:
                                        nullptr, mTypeHint.get(),
                                        NullString(), mPostData, mHeadersData,
                                        mLoadType, mSHEntry, mFirstParty,
-                                       nullptr, nullptr);
+                                       mSrcdoc, nullptr, nullptr);
     }
 
 private:
@@ -8498,6 +8518,7 @@ private:
     // Use IDL strings so .get() returns null by default
     nsXPIDLString mWindowTarget;
     nsXPIDLCString mTypeHint;
+    nsString mSrcdoc;
 
     nsRefPtr<nsDocShell> mDocShell;
     nsCOMPtr<nsIURI> mURI;
@@ -8541,6 +8562,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          uint32_t aLoadType,
                          nsISHEntry * aSHEntry,
                          bool aFirstParty,
+                         const nsAString &aSrcdoc,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
@@ -8779,6 +8801,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               aLoadType,
                                               aSHEntry,
                                               aFirstParty,
+                                              aSrcdoc,
                                               aDocShell,
                                               aRequest);
             if (rv == NS_ERROR_NO_CONTENT) {
@@ -8860,7 +8883,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             nsCOMPtr<nsIRunnable> ev =
                 new InternalLoadEvent(this, aURI, aReferrer, aOwner, aFlags,
                                       aTypeHint, aPostData, aHeadersData,
-                                      aLoadType, aSHEntry, aFirstParty);
+                                      aLoadType, aSHEntry, aFirstParty, aSrcdoc);
             return NS_DispatchToCurrentThread(ev);
         }
 
@@ -9267,6 +9290,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         }
     }
 
+    nsAutoString srcdoc;
+    if (aFlags & INTERNAL_LOAD_FLAGS_IS_SRCDOC)
+      srcdoc = aSrcdoc;
+    else
+      srcdoc = NullString();
+
     nsCOMPtr<nsIRequest> req;
     rv = DoURILoad(aURI, aReferrer,
                    !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
@@ -9274,7 +9303,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                    aFirstParty, aDocShell, getter_AddRefs(req),
                    (aFlags & INTERNAL_LOAD_FLAGS_FIRST_LOAD) != 0,
                    (aFlags & INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER) != 0,
-                   (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES) != 0);
+                   (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES) != 0,
+                   srcdoc);
     if (req && aRequest)
         NS_ADDREF(*aRequest = req);
 
@@ -9352,7 +9382,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                       nsIRequest ** aRequest,
                       bool aIsNewWindowTarget,
                       bool aBypassClassifier,
-                      bool aForceAllowCookies)
+                      bool aForceAllowCookies,
+                      const nsAString &aSrcdoc)
 {
 #ifdef MOZ_VISUAL_EVENT_TRACER
     nsAutoCString urlSpec;
@@ -9401,28 +9432,52 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     // open a channel for the url
     nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_NewChannel(getter_AddRefs(channel),
-                       aURI,
-                       nullptr,
-                       nullptr,
-                       static_cast<nsIInterfaceRequestor *>(this),
-                       loadFlags,
-                       channelPolicy);
-    if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
-            // This is a uri with a protocol scheme we don't know how
-            // to handle.  Embedders might still be interested in
-            // handling the load, though, so we fire a notification
-            // before throwing the load away.
-            bool abort = false;
-            nsresult rv2 = mContentListener->OnStartURIOpen(aURI, &abort);
-            if (NS_SUCCEEDED(rv2) && abort) {
-                // Hey, they're handling the load for us!  How convenient!
-                return NS_OK;
+    bool isSrcdoc = !aSrcdoc.IsVoid();
+    if (!isSrcdoc) {
+        rv = NS_NewChannel(getter_AddRefs(channel),
+                           aURI,
+                           nullptr,
+                           nullptr,
+                           static_cast<nsIInterfaceRequestor *>(this),
+                           loadFlags,
+                           channelPolicy);
+        if (NS_FAILED(rv)) {
+            if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
+                // This is a uri with a protocol scheme we don't know how
+                // to handle.  Embedders might still be interested in
+                // handling the load, though, so we fire a notification
+                // before throwing the load away.
+                bool abort = false;
+                nsresult rv2 = mContentListener->OnStartURIOpen(aURI, &abort);
+                if (NS_SUCCEEDED(rv2) && abort) {
+                    // Hey, they're handling the load for us!  How convenient!
+                    return NS_OK;
+                }
             }
+            return rv;
         }
-            
-        return rv;
+    }
+    else {
+        nsAutoCString scheme;
+        rv = aURI->GetScheme(scheme);
+        NS_ENSURE_SUCCESS(rv,rv);
+        bool isViewSource;
+        aURI->SchemeIs("view-source",&isViewSource);
+
+        if (isViewSource) {
+            nsViewSourceHandler *vsh = nsViewSourceHandler::GetInstance();
+            NS_ENSURE_TRUE(vsh,NS_ERROR_FAILURE);
+
+            rv = vsh->NewSrcdocChannel(aURI, aSrcdoc,getter_AddRefs(channel));
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+        else {
+            rv = NS_NewInputStreamChannel(getter_AddRefs(channel),aURI,
+                                          aSrcdoc,
+                                          NS_LITERAL_CSTRING("text/html"),
+                                          true);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
     }
 
     nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
@@ -9580,7 +9635,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     }
 
     nsContentUtils::SetUpChannelOwner(ownerPrincipal, channel, aURI, true,
-                                      (mSandboxFlags & SANDBOXED_ORIGIN));
+                                      (mSandboxFlags & SANDBOXED_ORIGIN) ||
+                                      isSrcdoc);
 
     nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
     if (scriptChannel) {
@@ -10638,6 +10694,16 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
                   mHistoryID,
                   mDynamicallyCreated);
     entry->SetReferrerURI(referrerURI);
+    nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(aChannel);
+    if (inStrmChan) {
+        bool isSrcdocChannel;
+        inStrmChan->GetIsSrcdocChannel(&isSrcdocChannel);
+        if (isSrcdocChannel) {
+            nsAutoString srcdoc;
+            inStrmChan->GetSrcdocData(srcdoc);
+            entry->SetSrcdocData(srcdoc);
+        }
+    }
     /* If cache got a 'no-store', ask SH not to store
      * HistoryLayoutState. By default, SH will set this
      * flag to true and save HistoryLayoutState.
@@ -10784,10 +10850,24 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType)
         return NS_BINDING_ABORTED;
     }
 
+    // Do not inherit owner from document (security-critical!);
+    uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
+
+    nsAutoString srcdoc;
+    bool isSrcdoc;
+    aEntry->GetIsSrcdocEntry(&isSrcdoc);
+    if (isSrcdoc) {
+        aEntry->GetSrcdocData(srcdoc);
+        flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+    }
+    else {
+        srcdoc = NullString();
+    }
+
     rv = InternalLoad(uri,
                       referrerURI,
                       owner,
-                      INTERNAL_LOAD_FLAGS_NONE, // Do not inherit owner from document (security-critical!)
+                      flags,
                       nullptr,            // No window target
                       contentType.get(),  // Type hint
                       NullString(),       // No forced file download
@@ -10796,6 +10876,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType)
                       aLoadType,          // Load type
                       aEntry,             // SHEntry
                       true,
+                      srcdoc,
                       nullptr,            // No nsIDocShell
                       nullptr);           // No nsIRequest
     return rv;
@@ -12235,6 +12316,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
                              LOAD_LINK,                 // Load type
                              nullptr,                   // No SHEntry
                              true,                      // first party site
+                             NullString(),              // No srcdoc
                              aDocShell,                 // DocShell out-param
                              aRequest);                 // Request out-param
   if (NS_SUCCEEDED(rv)) {

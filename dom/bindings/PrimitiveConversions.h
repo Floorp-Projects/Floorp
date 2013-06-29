@@ -93,8 +93,7 @@ struct DisallowedConversion {
 private:
   static inline bool converter(JSContext* cx, JS::Handle<JS::Value> v,
                                jstype* retval) {
-    MOZ_NOT_REACHED("This should never be instantiated!");
-    return false;
+    MOZ_CRASH("This should never be instantiated!");
   }
 };
 

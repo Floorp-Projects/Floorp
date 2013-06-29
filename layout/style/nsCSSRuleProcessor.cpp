@@ -61,6 +61,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Util.h"
+#include "nsXBLChildrenElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2286,6 +2287,27 @@ static bool SelectorMatchesTree(Element* aPrevElement,
           // traverse further up the tree.
           aTreeMatchContext.PopStyleScopeForSelectorMatching(element);
         }
+
+        // Compatibility hack: First try matching this selector as though the
+        // <xbl:children> element wasn't in the tree to allow old selectors
+        // were written before <xbl:children> participated in CSS selector
+        // matching to work.
+        if (selector->mOperator == '>' &&
+            element->NodeInfo()->Equals(nsGkAtoms::children,
+                                        kNameSpaceID_XBL)) {
+          Element* styleScope = aTreeMatchContext.mCurrentStyleScope;
+          if (SelectorMatchesTree(element, selector, aTreeMatchContext,
+                                  aLookForRelevantLink)) {
+            // It matched, don't try matching on the <xbl:children> element at
+            // all.
+            return true;
+          }
+          // We want to reset mCurrentStyleScope on aTreeMatchContext
+          // back to its state before the SelectorMatchesTree call, in
+          // case that call happens to traverse past the style scope element
+          // and sets it to null.
+          aTreeMatchContext.mCurrentStyleScope = styleScope;
+        }
       }
     }
     if (!element) {
@@ -3393,6 +3415,7 @@ TreeMatchContext::InitAncestors(Element *aElement)
       if (!parent->IsElement()) {
         break;
       }
+
       cur = parent->AsElement();
     } while (true);
 

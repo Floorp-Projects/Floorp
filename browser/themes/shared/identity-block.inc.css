@@ -1,0 +1,93 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
+  background-position: right;
+  background-size: 1px;
+  background-repeat: no-repeat;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
+  color: hsl(92,100%,30%);
+  background-image: linear-gradient(hsla(92,81%,16%,0),
+                                    hsla(92,81%,16%,.2) 35%,
+                                    hsla(92,81%,16%,.2) 65%,
+                                    hsla(92,81%,16%,0));
+}
+
+
+%ifdef MOZ_OFFICIAL_BRANDING
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+  color: rgb(229,115,0);
+  background-image: linear-gradient(rgba(229,114,0,0),
+                                    rgba(229,114,0,.5) 35%,
+                                    rgba(229,114,0,.5) 65%,
+                                    rgba(229,114,0,0));
+}
+%else
+%if MOZ_UPDATE_CHANNEL == aurora
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+  color: hsl(214,90%,23%);
+  background-image: linear-gradient(hsla(208,99%,37%,0),
+                                    hsla(214,90%,23%,.5) 35%,
+                                    hsla(214,90%,23%,.5) 65%,
+                                    hsla(214,90%,23%,0));
+}
+%else
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+  color: hsl(211,33%,32%);
+  background-image: linear-gradient(hsla(211,33%,32%,0),
+                                    hsla(211,33%,32%,.5) 35%,
+                                    hsla(211,33%,32%,.5) 65%,
+                                    hsla(211,33%,32%,0));
+}
+%endif
+%endif
+
+#identity-box.chromeUI:-moz-locale-dir(rtl),
+#identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
+  background-position: left;
+}
+
+/* page proxy icon */
+
+#page-proxy-favicon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
+}
+
+.chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://branding/content/identity-icons-brand.png);
+}
+
+.verifiedDomain > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-icons-https.png);
+}
+
+.verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
+}
+
+.mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
+}
+
+#page-proxy-favicon[pageproxystate="invalid"] {
+  opacity: 0.3;
+}
+
+#identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
+  list-style-image: url("chrome://branding/content/icon64.png");
+}
+
+#identity-popup-brandName {
+  font-weight: bold;
+  font-size: 1.25em;
+  margin-top: .5em;
+  margin-bottom: .5em;
+}

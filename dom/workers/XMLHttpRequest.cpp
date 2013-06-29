@@ -263,8 +263,7 @@ ConvertStringToResponseType(const nsAString& aString)
     }
   }
 
-  MOZ_NOT_REACHED("Don't know anything about this response type!");
-  return XMLHttpRequestResponseType::_empty;
+  MOZ_CRASH("Don't know anything about this response type!");
 }
 
 enum

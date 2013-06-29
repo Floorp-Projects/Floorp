@@ -114,8 +114,6 @@ enum {
   // node in fact has a class, but may be set even if it doesn't.
   NODE_MAY_HAVE_CLASS =                   NODE_FLAG_BIT(8),
 
-  NODE_IS_INSERTION_PARENT =              NODE_FLAG_BIT(9),
-
   // Node has an :empty or :-moz-only-whitespace selector
   NODE_HAS_EMPTY_SELECTOR =               NODE_FLAG_BIT(10),
 
