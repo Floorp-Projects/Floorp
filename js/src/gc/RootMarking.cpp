@@ -66,7 +66,7 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
       case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
       case THING_ROOT_BINDINGS:    ((Bindings *)addr)->trace(trc); break;
       case THING_ROOT_PROPERTY_DESCRIPTOR: ((JSPropertyDescriptor *)addr)->trace(trc); break;
-      default: JS_NOT_REACHED("Invalid THING_ROOT kind"); break;
+      default: MOZ_ASSUME_NOT_REACHED("Invalid THING_ROOT kind"); break;
     }
 }
 

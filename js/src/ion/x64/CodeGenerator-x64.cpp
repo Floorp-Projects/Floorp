@@ -57,7 +57,7 @@ FrameSizeClass::ClassLimit()
 uint32_t
 FrameSizeClass::frameSize() const
 {
-    JS_NOT_REACHED("x64 does not use frame size classes");
+    MOZ_ASSUME_NOT_REACHED("x64 does not use frame size classes");
     return 0;
 }
 
@@ -118,7 +118,7 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
             cond = masm.testString(Assembler::NotEqual, value);
             break;
           default:
-            JS_NOT_REACHED("Given MIRType cannot be unboxed.");
+            MOZ_ASSUME_NOT_REACHED("Given MIRType cannot be unboxed.");
             return false;
         }
         if (!bailoutIf(cond, unbox->snapshot()))
@@ -139,7 +139,7 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
         masm.unboxString(value, ToRegister(result));
         break;
       default:
-        JS_NOT_REACHED("Given MIRType cannot be unboxed.");
+        MOZ_ASSUME_NOT_REACHED("Given MIRType cannot be unboxed.");
         break;
     }
 
@@ -176,7 +176,7 @@ CodeGeneratorX64::loadUnboxedValue(Operand source, MIRType type, const LDefiniti
         break;
 
       default:
-        JS_NOT_REACHED("unexpected type");
+        MOZ_ASSUME_NOT_REACHED("unexpected type");
     }
 }
 
@@ -389,14 +389,14 @@ CodeGeneratorX64::visitUInt32ToDouble(LUInt32ToDouble *lir)
 bool
 CodeGeneratorX64::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
-    JS_NOT_REACHED("NYI");
+    MOZ_ASSUME_NOT_REACHED("NYI");
     return true;
 }
 
 bool
 CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
 {
-    JS_NOT_REACHED("NYI");
+    MOZ_ASSUME_NOT_REACHED("NYI");
     return true;
 }
 
@@ -426,7 +426,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
       case ArrayBufferView::TYPE_INT32:   masm.movl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_UINT32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_FLOAT64: masm.movsd(srcAddr, ToFloatRegister(ins->output())); break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
     }
     uint32_t after = masm.size();
     return gen->noteHeapAccess(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
@@ -457,7 +457,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
           case ArrayBufferView::TYPE_UINT16:  masm.movw(Imm32(ToInt32(ins->value())), dstAddr); break;
           case ArrayBufferView::TYPE_INT32:   masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
           case ArrayBufferView::TYPE_UINT32:  masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
-          default: JS_NOT_REACHED("unexpected array type");
+          default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
         }
     } else {
         switch (vt) {
@@ -468,7 +468,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
           case ArrayBufferView::TYPE_INT32:   masm.movl(ToRegister(ins->value()), dstAddr); break;
           case ArrayBufferView::TYPE_UINT32:  masm.movl(ToRegister(ins->value()), dstAddr); break;
           case ArrayBufferView::TYPE_FLOAT64: masm.movsd(ToFloatRegister(ins->value()), dstAddr); break;
-          default: JS_NOT_REACHED("unexpected array type");
+          default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
         }
     }
     uint32_t after = masm.size();

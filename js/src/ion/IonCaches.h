@@ -38,7 +38,7 @@ class IonCacheVisitor
   public:
 #define VISIT_INS(op)                                               \
     virtual bool visit##op##IC(CodeGenerator *codegen, op##IC *) {  \
-        JS_NOT_REACHED("NYI: " #op "IC");                           \
+        MOZ_ASSUME_NOT_REACHED("NYI: " #op "IC");                           \
         return false;                                               \
     }
 

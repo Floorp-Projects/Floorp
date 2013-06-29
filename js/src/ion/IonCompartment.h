@@ -290,7 +290,7 @@ class IonCompartment
         switch (mode) {
           case SequentialExecution: return rt->argumentsRectifier_;
           case ParallelExecution:   return rt->parallelArgumentsRectifier_;
-          default:                  JS_NOT_REACHED("No such execution mode");
+          default:                  MOZ_ASSUME_NOT_REACHED("No such execution mode");
         }
     }
 
@@ -326,7 +326,7 @@ class IonCompartment
         switch (mode) {
           case SequentialExecution: return stringConcatStub_;
           case ParallelExecution:   return parallelStringConcatStub_;
-          default:                  JS_NOT_REACHED("No such execution mode");
+          default:                  MOZ_ASSUME_NOT_REACHED("No such execution mode");
         }
     }
 

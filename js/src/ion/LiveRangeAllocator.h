@@ -117,7 +117,7 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
           // UsePosition is only used as hint.
         return alloc.isRegister();
       default:
-        JS_NOT_REACHED("Unknown use policy");
+        MOZ_ASSUME_NOT_REACHED("Unknown use policy");
     }
     return false;
 }
@@ -147,7 +147,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
       case LDefinition::PASSTHROUGH:
         return true;
       default:
-        JS_NOT_REACHED("Unknown definition policy");
+        MOZ_ASSUME_NOT_REACHED("Unknown definition policy");
     }
     return false;
 }

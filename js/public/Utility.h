@@ -41,7 +41,6 @@ namespace js {}
 
 #define JS_ASSERT(expr)           MOZ_ASSERT(expr)
 #define JS_ASSERT_IF(cond, expr)  MOZ_ASSERT_IF(cond, expr)
-#define JS_NOT_REACHED(reason)    MOZ_NOT_REACHED(reason)
 #define JS_ALWAYS_TRUE(expr)      MOZ_ALWAYS_TRUE(expr)
 #define JS_ALWAYS_FALSE(expr)     MOZ_ALWAYS_FALSE(expr)
 

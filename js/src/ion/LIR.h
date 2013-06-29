@@ -550,7 +550,7 @@ class LDefinition
           case MIRType_ForkJoinSlice:
             return LDefinition::GENERAL;
           default:
-            JS_NOT_REACHED("unexpected type");
+            MOZ_ASSUME_NOT_REACHED("unexpected type");
             return LDefinition::GENERAL;
         }
     }
@@ -717,7 +717,7 @@ class LInstructionVisitor
     {}
 
   public:
-#define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("NYI: " #op); return false; }
+#define VISIT_INS(op) virtual bool visit##op(L##op *) { MOZ_ASSUME_NOT_REACHED("NYI: " #op); return false; }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

@@ -1271,7 +1271,7 @@ class ObjectImpl : public gc::Cell
     bool makeElementsSparse(JSContext *cx) {
         NEW_OBJECT_REPRESENTATION_ONLY();
 
-        MOZ_NOT_REACHED("NYI");
+        MOZ_ASSUME_NOT_REACHED("NYI");
         return false;
     }
 
@@ -1400,7 +1400,7 @@ class ObjectImpl : public gc::Cell
     {
         NEW_OBJECT_REPRESENTATION_ONLY();
 
-        MOZ_NOT_REACHED("NYI");
+        MOZ_ASSUME_NOT_REACHED("NYI");
         return Failure;
     }
 

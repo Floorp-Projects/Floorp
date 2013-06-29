@@ -209,7 +209,7 @@ ComparePolicy::adjustInputs(MInstruction *def)
             replace = MUnbox::New(in, MIRType_String, MUnbox::Infallible);
             break;
           default:
-            JS_NOT_REACHED("Unknown compare specialization");
+            MOZ_ASSUME_NOT_REACHED("Unknown compare specialization");
             return false;
         }
 
@@ -491,7 +491,7 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
         value = boxAt(ins, value);
         break;
       default:
-        JS_NOT_REACHED("Unexpected type");
+        MOZ_ASSUME_NOT_REACHED("Unexpected type");
         break;
     }
 
@@ -529,7 +529,7 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
         }
         break;
       default:
-        JS_NOT_REACHED("Invalid array type");
+        MOZ_ASSUME_NOT_REACHED("Invalid array type");
         break;
     }
 

@@ -570,7 +570,7 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
         v = MagicValue(JS_OPTIMIZED_ARGUMENTS);
         break;
       default:
-        JS_NOT_REACHED("unexpected type");
+        MOZ_ASSUME_NOT_REACHED("unexpected type");
         return;
     }
     MConstant *c = MConstant::New(v);

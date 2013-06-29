@@ -1549,7 +1549,7 @@ namespace JSC {
                             dblToFloat ? SD(dest) : DD(dest),
                             dblToFloat ? DM(src) : SM(src), 0);
             } else {
-                JS_NOT_REACHED("Other conversions did not seem useful on 2011/08/04");
+                MOZ_ASSUME_NOT_REACHED("Other conversions did not seem useful on 2011/08/04");
             }
         }
 

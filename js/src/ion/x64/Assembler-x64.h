@@ -385,7 +385,7 @@ class Assembler : public AssemblerX86Shared
             masm.movq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void movq(const Register &src, const Operand &dest) {
@@ -400,7 +400,7 @@ class Assembler : public AssemblerX86Shared
             masm.movq_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void movq(Imm32 imm32, const Operand &dest) {
@@ -415,7 +415,7 @@ class Assembler : public AssemblerX86Shared
             masm.movq_i32m(imm32.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void movqsd(const Register &src, const FloatRegister &dest) {
@@ -451,7 +451,7 @@ class Assembler : public AssemblerX86Shared
             masm.addq_im(imm.value, dest.disp(), dest.base());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void addq(const Register &src, const Register &dest) {
@@ -466,7 +466,7 @@ class Assembler : public AssemblerX86Shared
             masm.addq_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
 
@@ -485,7 +485,7 @@ class Assembler : public AssemblerX86Shared
             masm.subq_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void shlq(Imm32 imm, const Register &dest) {
@@ -512,7 +512,7 @@ class Assembler : public AssemblerX86Shared
             masm.orq_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void xorq(const Register &src, const Register &dest) {
@@ -568,7 +568,7 @@ class Assembler : public AssemblerX86Shared
             masm.leaq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexepcted operand kind");
         }
     }
 
@@ -603,7 +603,7 @@ class Assembler : public AssemblerX86Shared
             masm.cmpq_rm(rhs.code(), lhs.disp(), lhs.base());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void cmpq(const Operand &lhs, Imm32 rhs) {
@@ -615,7 +615,7 @@ class Assembler : public AssemblerX86Shared
             masm.cmpq_im(rhs.value, lhs.disp(), lhs.base());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void cmpq(const Register &lhs, const Operand &rhs) {
@@ -627,7 +627,7 @@ class Assembler : public AssemblerX86Shared
             masm.cmpq_mr(rhs.disp(), rhs.base(), lhs.code());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
         }
     }
     void cmpq(const Register &lhs, const Register &rhs) {
@@ -652,7 +652,7 @@ class Assembler : public AssemblerX86Shared
             masm.testq_i32m(rhs.value, lhs.disp(), lhs.base());
             break;
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
             break;
         }
     }

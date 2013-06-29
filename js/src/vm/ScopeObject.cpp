@@ -2114,7 +2114,7 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
       }
       case ScopeIter::With:
       case ScopeIter::StrictEvalScope:
-        JS_NOT_REACHED("should already have a scope");
+        MOZ_ASSUME_NOT_REACHED("should already have a scope");
     }
     if (!debugScope)
         return NULL;

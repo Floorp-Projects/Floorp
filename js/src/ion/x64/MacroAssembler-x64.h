@@ -95,7 +95,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
                            base.scale(), base.disp() + 4);
 
           default:
-            JS_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
             return base; // Silence GCC warning.
         }
     }

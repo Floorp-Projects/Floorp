@@ -114,7 +114,7 @@ typedef AutoValueVector NodeVector;
 
 #define LOCAL_NOT_REACHED(expr)                                                        \
     JS_BEGIN_MACRO                                                                     \
-        JS_NOT_REACHED(expr);                                                          \
+        MOZ_ASSUME_NOT_REACHED(expr);                                                          \
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PARSE_NODE);      \
         return false;                                                                  \
     JS_END_MACRO

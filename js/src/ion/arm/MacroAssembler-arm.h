@@ -362,7 +362,7 @@ class MacroAssemblerARM : public Assembler
             return transferMultipleByRunsImpl
                 <FloatRegisterBackwardIterator>(set, ls, rm, mode, -1);
         }
-        JS_NOT_REACHED("Invalid data transfer addressing mode");
+        MOZ_ASSUME_NOT_REACHED("Invalid data transfer addressing mode");
     }
 
 private:
@@ -483,10 +483,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(Imm32(imm.value), dest);
     }
     void mov(Register src, Address dest) {
-        JS_NOT_REACHED("NYI-IC");
+        MOZ_ASSUME_NOT_REACHED("NYI-IC");
     }
     void mov(Address src, Register dest) {
-        JS_NOT_REACHED("NYI-IC");
+        MOZ_ASSUME_NOT_REACHED("NYI-IC");
     }
 
     void call(const Register reg) {

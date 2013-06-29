@@ -337,7 +337,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
         return 3;
       default:;
     }
-    JS_NOT_REACHED("Unexpected array type");
+    MOZ_ASSUME_NOT_REACHED("Unexpected array type");
     return 0;
 }
 

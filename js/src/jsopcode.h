@@ -515,7 +515,7 @@ GetBytecodeInteger(jsbytecode *pc)
       case JSOP_INT8:   return GET_INT8(pc);
       case JSOP_INT32:  return GET_INT32(pc);
       default:
-        JS_NOT_REACHED("Bad op");
+        MOZ_ASSUME_NOT_REACHED("Bad op");
         return 0;
     }
 }

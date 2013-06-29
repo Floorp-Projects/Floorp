@@ -1130,7 +1130,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             }
             start = poolGroup[idx].other->addPoolSize(start);
         }
-        JS_NOT_REACHED("Entry is not in a pool");
+        MOZ_ASSUME_NOT_REACHED("Entry is not in a pool");
         return -1;
     }
     void writePoolEntry(PoolEntry pe, uint8_t *buff) {
