@@ -523,7 +523,14 @@ const DownloadsIndicatorView = {
       DownloadsCommon.getIndicatorData(window).attention = false;
       BrowserDownloadsUI();
     } else {
-      DownloadsPanel.showPanel();
+      // If the downloads button is in the menu panel, open the Library
+      let widgetGroup = CustomizableUI.getWidget("downloads-button");
+      let widget = widgetGroup.forWindow(window);
+      if (widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+        DownloadsPanel.showDownloadsHistory();
+      } else {
+        DownloadsPanel.showPanel();
+      }
     }
 
     aEvent.stopPropagation();
