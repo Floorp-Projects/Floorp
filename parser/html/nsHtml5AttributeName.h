@@ -256,6 +256,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_POSTER;
     static nsHtml5AttributeName* ATTR_POINTS;
     static nsHtml5AttributeName* ATTR_PROMPT;
+    static nsHtml5AttributeName* ATTR_SRCDOC;
     static nsHtml5AttributeName* ATTR_SCOPED;
     static nsHtml5AttributeName* ATTR_STRING;
     static nsHtml5AttributeName* ATTR_SCHEME;
