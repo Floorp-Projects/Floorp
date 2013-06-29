@@ -582,6 +582,24 @@ nsFrameMessageManager::AssertAppHasPermission(const nsAString& aPermission,
                                aHasPermission);
 }
 
+NS_IMETHODIMP
+nsFrameMessageManager::CheckAppHasStatus(unsigned short aStatus,
+                                         bool* aHasStatus)
+{
+  *aHasStatus = false;
+
+  // This API is only supported for message senders in the chrome process.
+  if (!mChrome || mIsBroadcaster) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  if (!mCallback) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aHasStatus = mCallback->CheckAppHasStatus(aStatus);
+
+  return NS_OK;
+}
+
 class MMListenerRemover
 {
 public:
