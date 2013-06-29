@@ -13,8 +13,14 @@ ifdef MOZ_TOOLKIT_SEARCH
 DEFINES += -DMOZ_TOOLKIT_SEARCH
 endif
 
+DEFINES += \
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DMOZ_BUILD_APP=$(MOZ_BUILD_APP) \
+  $(NULL)
+
 EXTRA_PP_JS_MODULES = \
   CertUtils.jsm \
+  ResetProfile.jsm \
   Services.jsm \
   Troubleshoot.jsm \
   UpdateChannel.jsm \
