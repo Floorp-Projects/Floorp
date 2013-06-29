@@ -33,7 +33,7 @@ function test()
   let (a=0, b=1, c=2) {}
 
 // In RecycleTree at ../jsparse.cpp:315, we hit
-//     JS_NOT_REACHED("RecycleUseDefKids");
+//     MOZ_ASSUME_NOT_REACHED("RecycleUseDefKids");
 // pn->pn_type is TOK_UNARYOP
 // pn->pn_op   is JSOP_XMLNAME
 // pn->pn_defn is 1

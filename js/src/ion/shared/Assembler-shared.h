@@ -63,7 +63,7 @@ ScaleFromElemWidth(int shift)
         return TimesEight;
     }
 
-    JS_NOT_REACHED("Invalid scale");
+    MOZ_ASSUME_NOT_REACHED("Invalid scale");
     return TimesOne;
 }
 
@@ -86,7 +86,7 @@ struct Imm32
           case TimesEight:
             return Imm32(3);
         };
-        JS_NOT_REACHED("Invalid scale");
+        MOZ_ASSUME_NOT_REACHED("Invalid scale");
         return Imm32(-1);
     }
 

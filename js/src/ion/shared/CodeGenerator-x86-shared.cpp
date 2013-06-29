@@ -292,7 +292,7 @@ CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
       case SequentialExecution:
         break;
       default:
-        JS_NOT_REACHED("No such execution mode");
+        MOZ_ASSUME_NOT_REACHED("No such execution mode");
     }
 
     if (!encode(snapshot))
@@ -938,7 +938,7 @@ CodeGeneratorX86Shared::visitBitOpI(LBitOpI *ins)
                 masm.andl(ToOperand(rhs), ToRegister(lhs));
             break;
         default:
-            JS_NOT_REACHED("unexpected binary opcode");
+            MOZ_ASSUME_NOT_REACHED("unexpected binary opcode");
     }
 
     return true;
@@ -972,7 +972,7 @@ CodeGeneratorX86Shared::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            JS_NOT_REACHED("Unexpected shift op");
+            MOZ_ASSUME_NOT_REACHED("Unexpected shift op");
         }
     } else {
         JS_ASSERT(ToRegister(rhs) == ecx);
@@ -993,7 +993,7 @@ CodeGeneratorX86Shared::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            JS_NOT_REACHED("Unexpected shift op");
+            MOZ_ASSUME_NOT_REACHED("Unexpected shift op");
         }
     }
 
@@ -1138,7 +1138,7 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
         masm.divsd(rhs, lhs);
         break;
       default:
-        JS_NOT_REACHED("unexpected opcode");
+        MOZ_ASSUME_NOT_REACHED("unexpected opcode");
         return false;
     }
     return true;

@@ -1087,7 +1087,7 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
         masm.storeValue(scratch, dest);
         break;
       default:
-        JS_NOT_REACHED("Invalid kind");
+        MOZ_ASSUME_NOT_REACHED("Invalid kind");
     }
 }
 

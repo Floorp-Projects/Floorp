@@ -423,7 +423,7 @@ CodeGeneratorX86::loadViewTypeElement(ArrayBufferView::ViewType vt, const Addres
       case ArrayBufferView::TYPE_INT32:   masm.movlWithPatch(srcAddr, ToRegister(out)); break;
       case ArrayBufferView::TYPE_UINT32:  masm.movlWithPatch(srcAddr, ToRegister(out)); break;
       case ArrayBufferView::TYPE_FLOAT64: masm.movsdWithPatch(srcAddr, ToFloatRegister(out)); break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
     }
 }
 
@@ -526,7 +526,7 @@ CodeGeneratorX86::storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllo
       case ArrayBufferView::TYPE_INT32:   masm.movlWithPatch(ToRegister(value), dstAddr); break;
       case ArrayBufferView::TYPE_UINT32:  masm.movlWithPatch(ToRegister(value), dstAddr); break;
       case ArrayBufferView::TYPE_FLOAT64: masm.movsdWithPatch(ToFloatRegister(value), dstAddr); break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_NOT_REACHED("unexpected array type");
     }
 }
 

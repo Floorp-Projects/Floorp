@@ -4480,21 +4480,21 @@ class LPhi : public LInstruction
         return 0;
     }
     LDefinition *getTemp(size_t index) {
-        JS_NOT_REACHED("no temps");
+        MOZ_ASSUME_NOT_REACHED("no temps");
         return NULL;
     }
     void setTemp(size_t index, const LDefinition &temp) {
-        JS_NOT_REACHED("no temps");
+        MOZ_ASSUME_NOT_REACHED("no temps");
     }
     size_t numSuccessors() const {
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        JS_NOT_REACHED("no successors");
+        MOZ_ASSUME_NOT_REACHED("no successors");
         return NULL;
     }
     void setSuccessor(size_t i, MBasicBlock *) {
-        JS_NOT_REACHED("no successors");
+        MOZ_ASSUME_NOT_REACHED("no successors");
     }
 
     virtual void printInfo(FILE *fp) {
@@ -4793,20 +4793,20 @@ class LAsmJSCall : public LInstruction
         return 0;
     }
     LDefinition *getTemp(size_t index) {
-        JS_NOT_REACHED("no temps");
+        MOZ_ASSUME_NOT_REACHED("no temps");
     }
     void setTemp(size_t index, const LDefinition &a) {
-        JS_NOT_REACHED("no temps");
+        MOZ_ASSUME_NOT_REACHED("no temps");
     }
     size_t numSuccessors() const {
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        JS_NOT_REACHED("no successors");
+        MOZ_ASSUME_NOT_REACHED("no successors");
         return NULL;
     }
     void setSuccessor(size_t i, MBasicBlock *) {
-        JS_NOT_REACHED("no successors");
+        MOZ_ASSUME_NOT_REACHED("no successors");
     }
 };
 

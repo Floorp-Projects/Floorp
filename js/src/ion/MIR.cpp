@@ -116,7 +116,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
         ret.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
         break;
       default:
-        JS_NOT_REACHED("NYI");
+        MOZ_ASSUME_NOT_REACHED("NYI");
         return NULL;
     }
 
@@ -437,7 +437,7 @@ MConstant::printOpcode(FILE *fp)
         fprintf(fp, "magic");
         break;
       default:
-        JS_NOT_REACHED("unexpected type");
+        MOZ_ASSUME_NOT_REACHED("unexpected type");
         break;
     }
 }
@@ -1486,7 +1486,7 @@ MCompare::inputType()
       case Compare_Value:
         return MIRType_Value;
       default:
-        JS_NOT_REACHED("No known conversion");
+        MOZ_ASSUME_NOT_REACHED("No known conversion");
         return MIRType_None;
     }
 }
@@ -1937,7 +1937,7 @@ MCompare::tryFold(bool *result)
             *result = (op == JSOP_NE || op == JSOP_STRICTNE);
             return true;
           default:
-            JS_NOT_REACHED("Unexpected type");
+            MOZ_ASSUME_NOT_REACHED("Unexpected type");
             return false;
         }
     }
@@ -1959,10 +1959,10 @@ MCompare::tryFold(bool *result)
             return true;
           case MIRType_Boolean:
             // Int32 specialization should handle this.
-            JS_NOT_REACHED("Wrong specialization");
+            MOZ_ASSUME_NOT_REACHED("Wrong specialization");
             return false;
           default:
-            JS_NOT_REACHED("Unexpected type");
+            MOZ_ASSUME_NOT_REACHED("Unexpected type");
             return false;
         }
     }
@@ -1984,10 +1984,10 @@ MCompare::tryFold(bool *result)
             return true;
           case MIRType_String:
             // Compare_String specialization should handle this.
-            JS_NOT_REACHED("Wrong specialization");
+            MOZ_ASSUME_NOT_REACHED("Wrong specialization");
             return false;
           default:
-            JS_NOT_REACHED("Unexpected type");
+            MOZ_ASSUME_NOT_REACHED("Unexpected type");
             return false;
         }
     }
@@ -2040,7 +2040,7 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (comp != 0);
             break;
           default:
-            JS_NOT_REACHED("Unexpected op.");
+            MOZ_ASSUME_NOT_REACHED("Unexpected op.");
             return false;
         }
 
@@ -2073,7 +2073,7 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (lhsUint != rhsUint);
             break;
           default:
-            JS_NOT_REACHED("Unexpected op.");
+            MOZ_ASSUME_NOT_REACHED("Unexpected op.");
             return false;
         }
 

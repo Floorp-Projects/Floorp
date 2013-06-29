@@ -921,7 +921,7 @@ MBasicBlock::getSuccessorIndex(MBasicBlock *block) const
         if (getSuccessor(i) == block)
             return i;
     }
-    JS_NOT_REACHED("Invalid successor");
+    MOZ_ASSUME_NOT_REACHED("Invalid successor");
 }
 
 void
@@ -953,7 +953,7 @@ MBasicBlock::replacePredecessor(MBasicBlock *old, MBasicBlock *split)
         }
     }
 
-    JS_NOT_REACHED("predecessor was not found");
+    MOZ_ASSUME_NOT_REACHED("predecessor was not found");
 }
 
 void
@@ -990,7 +990,7 @@ MBasicBlock::removePredecessor(MBasicBlock *pred)
         return;
     }
 
-    JS_NOT_REACHED("predecessor was not found");
+    MOZ_ASSUME_NOT_REACHED("predecessor was not found");
 }
 
 void

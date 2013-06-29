@@ -44,7 +44,7 @@
     (void)variable; \
     ASSERT(assertion); \
 } while (0)
-#define ASSERT_NOT_REACHED() MOZ_NOT_REACHED("")
+#define ASSERT_NOT_REACHED() MOZ_ASSUME_NOT_REACHED()
 #define CRASH() MOZ_CRASH()
 #define COMPILE_ASSERT(exp, name) MOZ_STATIC_ASSERT(exp, #name)
 

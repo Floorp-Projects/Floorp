@@ -19,7 +19,7 @@ HasIonScript(JSScript *script, ExecutionMode cmode)
       case SequentialExecution: return script->hasIonScript();
       case ParallelExecution: return script->hasParallelIonScript();
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
     return false;
 }
 
@@ -30,7 +30,7 @@ GetIonScript(JSScript *script, ExecutionMode cmode)
       case SequentialExecution: return script->maybeIonScript();
       case ParallelExecution: return script->maybeParallelIonScript();
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
     return NULL;
 }
 
@@ -41,7 +41,7 @@ SetIonScript(JSScript *script, ExecutionMode cmode, IonScript *ionScript)
       case SequentialExecution: script->setIonScript(ionScript); return;
       case ParallelExecution: script->setParallelIonScript(ionScript); return;
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
 }
 
 static inline size_t
@@ -51,7 +51,7 @@ OffsetOfIonInJSScript(ExecutionMode cmode)
       case SequentialExecution: return JSScript::offsetOfIonScript();
       case ParallelExecution: return JSScript::offsetOfParallelIonScript();
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
 }
 
 static inline bool
@@ -61,7 +61,7 @@ CanIonCompile(JSScript *script, ExecutionMode cmode)
       case SequentialExecution: return script->canIonCompile();
       case ParallelExecution: return script->canParallelIonCompile();
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
     return false;
 }
 
@@ -78,7 +78,7 @@ CompilingOffThread(JSScript *script, ExecutionMode cmode)
       case SequentialExecution: return script->isIonCompilingOffThread();
       case ParallelExecution: return script->isParallelIonCompilingOffThread();
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
     return false;
 }
 
@@ -89,7 +89,7 @@ CompilingOffThread(HandleScript script, ExecutionMode cmode)
       case SequentialExecution: return script->isIonCompilingOffThread();
       case ParallelExecution: return script->isParallelIonCompilingOffThread();
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
     return false;
 }
 
@@ -100,7 +100,7 @@ CompilerOutputKind(ExecutionMode cmode)
       case SequentialExecution: return types::CompilerOutput::Ion;
       case ParallelExecution: return types::CompilerOutput::ParallelIon;
     }
-    JS_NOT_REACHED("No such execution mode");
+    MOZ_ASSUME_NOT_REACHED("No such execution mode");
     return types::CompilerOutput::Ion;
 }
 

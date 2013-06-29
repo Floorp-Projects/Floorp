@@ -135,7 +135,7 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
             }
             break;
           default:
-            JS_NOT_REACHED("unhandled token splitting character in text");
+            MOZ_ASSUME_NOT_REACHED("unhandled token splitting character in text");
         }
     }
 }
@@ -309,7 +309,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i, boo
         return opt->asMultiStringOption()->strings.append(arg) ? Okay : Fail;
       }
       default:
-        JS_NOT_REACHED("unhandled option kind");
+        MOZ_ASSUME_NOT_REACHED("unhandled option kind");
         return Fail;
     }
 }
@@ -337,7 +337,7 @@ OptionParser::handleArg(size_t argc, char **argv, size_t *i, bool *optionsAllowe
         return arg->asMultiStringOption()->strings.append(value) ? Okay : Fail;
       }
       default:
-        JS_NOT_REACHED("unhandled argument kind");
+        MOZ_ASSUME_NOT_REACHED("unhandled argument kind");
         return Fail;
     }
 }

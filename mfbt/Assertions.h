@@ -359,14 +359,14 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #endif
 
 /*
- * MOZ_CRASH_MARKER() expands to an expression which states that it is
+ * MOZ_ASSUME_NOT_REACHED_MARKER() expands to an expression which states that it is
  * undefined behavior for execution to reach this point.  No guarantees are made
  * about what will happen if this is reached at runtime.  Most code should
- * probably use the higher level MOZ_CRASH, which uses this when
+ * probably use the higher level MOZ_ASSUME_NOT_REACHED, which uses this when
  * appropriate.
  */
 #if defined(__clang__)
-#  define MOZ_CRASH_MARKER() __builtin_unreachable()
+#  define MOZ_ASSUME_NOT_REACHED_MARKER() __builtin_unreachable()
 #elif defined(__GNUC__)
    /*
     * __builtin_unreachable() was implemented in gcc 4.5.  If we don't have
@@ -374,49 +374,71 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
     * in C++ in case there's another abort() visible in local scope.
     */
 #  if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0)
-#    define MOZ_CRASH_MARKER() __builtin_unreachable()
+#    define MOZ_ASSUME_NOT_REACHED_MARKER() __builtin_unreachable()
 #  else
 #    ifdef __cplusplus
-#      define MOZ_CRASH_MARKER() ::abort()
+#      define MOZ_ASSUME_NOT_REACHED_MARKER() ::abort()
 #    else
-#      define MOZ_CRASH_MARKER() abort()
+#      define MOZ_ASSUME_NOT_REACHED_MARKER() abort()
 #    endif
 #  endif
 #elif defined(_MSC_VER)
-#  define MOZ_CRASH_MARKER() __assume(0)
+#  define MOZ_ASSUME_NOT_REACHED_MARKER() __assume(0)
 #else
 #  ifdef __cplusplus
-#    define MOZ_CRASH_MARKER() ::abort()
+#    define MOZ_ASSUME_NOT_REACHED_MARKER() ::abort()
 #  else
-#    define MOZ_CRASH_MARKER() abort()
+#    define MOZ_ASSUME_NOT_REACHED_MARKER() abort()
 #  endif
 #endif
 
 /*
- * MOZ_CRASH(reason) indicates that the given point can't be reached
- * during execution: simply reaching that point in execution is a bug.  It takes
- * as an argument an error message indicating the reason why that point should
- * not have been reachable.
+ * MOZ_ASSUME_UNREACHABLE([reason]) tells the compiler that it can assume that
+ * the macro call cannot be reached during execution.  This lets the compiler
+ * generate better-optimized code under some circumstances, at the expense of
+ * the program's behavior being undefined if control reaches the
+ * MOZ_ASSUME_UNREACHABLE.
  *
- *   // ...in a language parser...
- *   void handle(BooleanLiteralNode node)
+ * In Gecko, you probably should not use this macro outside of performance- or
+ * size-critical code, because it's unsafe.  If you don't care about code size
+ * or performance, you should probably use MOZ_ASSERT or MOZ_CRASH.
+ *
+ * SpiderMonkey is a different beast, and there it's acceptable to use
+ * MOZ_ASSUME_UNREACHABLE more widely.
+ *
+ * Note that MOZ_ASSUME_NOT_REACHED is noreturn, so it's valid not to return a
+ * value following a MOZ_ASSUME_NOT_REACHED call.
+ *
+ * Example usage:
+ *
+ *   enum ValueType {
+ *     VALUE_STRING,
+ *     VALUE_INT,
+ *     VALUE_FLOAT
+ *   };
+ *
+ *   int ptrToInt(ValueType type, void* value) {
  *   {
- *     if (node.isTrue())
- *       handleTrueLiteral();
- *     else if (node.isFalse())
- *       handleFalseLiteral();
- *     else
- *       MOZ_CRASH("boolean literal that's not true or false?");
+ *     // We know for sure that type is either INT or FLOAT, and we want this
+ *     // code to run as quickly as possible.
+ *     switch (type) {
+ *     case VALUE_INT:
+ *       return *(int*) value;
+ *     case VALUE_FLOAT:
+ *       return (int) *(float*) value;
+ *     default:
+ *       MOZ_ASSUME_NOT_REACHED("can only handle VALUE_INT and VALUE_FLOAT");
+ *     }
  *   }
  */
 #if defined(DEBUG)
-#  define MOZ_CRASH(reason) \
+#  define MOZ_ASSUME_NOT_REACHED(...) \
      do { \
-       MOZ_ASSERT(false, reason); \
-       MOZ_CRASH_MARKER(); \
+       MOZ_ASSERT(false, "MOZ_ASSUME_NOT_REACHED(" __VA_ARGS__ ")"); \
+       MOZ_ASSUME_NOT_REACHED_MARKER(); \
      } while (0)
 #else
-#  define MOZ_CRASH(reason)  MOZ_CRASH_MARKER()
+#  define MOZ_ASSUME_NOT_REACHED(reason)  MOZ_ASSUME_NOT_REACHED_MARKER()
 #endif
 
 /*

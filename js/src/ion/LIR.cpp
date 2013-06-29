@@ -270,7 +270,7 @@ LAllocation::toString() const
         PrintUse(buf, sizeof(buf), toUse());
         return buf;
       default:
-        JS_NOT_REACHED("what?");
+        MOZ_ASSUME_NOT_REACHED("what?");
         return "???";
     }
 }

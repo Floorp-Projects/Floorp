@@ -633,7 +633,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
         return false;
 
       default:
-        JS_NOT_REACHED("Invalid trap status");
+        MOZ_ASSUME_NOT_REACHED("Invalid trap status");
     }
 }
 
@@ -767,7 +767,7 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *m
         return false;
 
       default:
-        JS_NOT_REACHED("Invalid trap status");
+        MOZ_ASSUME_NOT_REACHED("Invalid trap status");
     }
 
     return true;
@@ -805,7 +805,7 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool 
         return false;
 
       default:
-        JS_NOT_REACHED("Invalid trap status");
+        MOZ_ASSUME_NOT_REACHED("Invalid trap status");
     }
 }
 

@@ -695,7 +695,7 @@ ScriptFrameIter::operator++()
 {
     switch (data_.state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
+        MOZ_ASSUME_NOT_REACHED("Unexpected state");
       case SCRIPTED:
         if (interpFrame()->isDebuggerFrame() && interpFrame()->evalInFramePrev()) {
             AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
@@ -714,7 +714,7 @@ ScriptFrameIter::operator++()
 #ifdef JS_ION
                     popJitFrame();
 #else
-                    JS_NOT_REACHED("Invalid state");
+                    MOZ_ASSUME_NOT_REACHED("Invalid state");
 #endif
                 } else {
                     popInterpreterFrame();
@@ -733,7 +733,7 @@ ScriptFrameIter::operator++()
         popJitFrame();
         break;
 #else
-        JS_NOT_REACHED("Unexpected state");
+        MOZ_ASSUME_NOT_REACHED("Unexpected state");
 #endif
     }
     return *this;
@@ -762,7 +762,7 @@ ScriptFrameIter::compartment() const
       case JIT:
         return data_.activations_.activation()->compartment();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NULL;
 }
 
@@ -784,7 +784,7 @@ ScriptFrameIter::isFunctionFrame() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -806,7 +806,7 @@ ScriptFrameIter::isGlobalFrame() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -828,7 +828,7 @@ ScriptFrameIter::isEvalFrame() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -844,7 +844,7 @@ ScriptFrameIter::isNonEvalFunctionFrame() const
       case JIT:
         return !isEvalFrame() && isFunctionFrame();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -859,7 +859,7 @@ ScriptFrameIter::isGeneratorFrame() const
       case JIT:
         return false;
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -881,7 +881,7 @@ ScriptFrameIter::isConstructing() const
       case SCRIPTED:
         return interpFrame()->isConstructing();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -901,7 +901,7 @@ ScriptFrameIter::abstractFramePtr() const
         JS_ASSERT(interpFrame());
         return AbstractFramePtr(interpFrame());
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NullFramePtr();
 }
 
@@ -950,7 +950,7 @@ ScriptFrameIter::updatePcQuadratic()
 #endif
         break;
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
 }
 
 JSFunction *
@@ -972,7 +972,7 @@ ScriptFrameIter::callee() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NULL;
 }
 
@@ -992,7 +992,7 @@ ScriptFrameIter::calleev() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return Value();
 }
 
@@ -1016,7 +1016,7 @@ ScriptFrameIter::numActualArgs() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return 0;
 }
 
@@ -1036,7 +1036,7 @@ ScriptFrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) c
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NullValue();
 }
 
@@ -1057,7 +1057,7 @@ ScriptFrameIter::scopeChain() const
       case SCRIPTED:
         return interpFrame()->scopeChain();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NULL;
 }
 
@@ -1088,7 +1088,7 @@ ScriptFrameIter::hasArgsObj() const
         break;
 #endif
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -1110,7 +1110,7 @@ ScriptFrameIter::argsObj() const
       case SCRIPTED:
         return interpFrame()->argsObj();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return interpFrame()->argsObj();
 }
 
@@ -1142,7 +1142,7 @@ ScriptFrameIter::thisv() const
       case SCRIPTED:
         return interpFrame()->thisValue();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NullValue();
 }
 
@@ -1161,7 +1161,7 @@ ScriptFrameIter::returnValue() const
       case SCRIPTED:
         return interpFrame()->returnValue();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NullValue();
 }
 
@@ -1183,7 +1183,7 @@ ScriptFrameIter::setReturnValue(const Value &v)
         interpFrame()->setReturnValue(v);
         return;
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
 }
 
 size_t
@@ -1206,7 +1206,7 @@ ScriptFrameIter::numFrameSlots() const
         JS_ASSERT(data_.interpFrames_.sp() >= interpFrame()->base());
         return data_.interpFrames_.sp() - interpFrame()->base();
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return 0;
 }
 
@@ -1232,7 +1232,7 @@ ScriptFrameIter::frameSlotValue(size_t index) const
       case SCRIPTED:
           return interpFrame()->base()[index];
     }
-    JS_NOT_REACHED("Unexpected state");
+    MOZ_ASSUME_NOT_REACHED("Unexpected state");
     return NullValue();
 }
 
@@ -1261,7 +1261,7 @@ AbstractFramePtr::hasPushedSPSFrame() const
 #ifdef JS_ION
     return asBaselineFrame()->hasPushedSPSFrame();
 #else
-    JS_NOT_REACHED("Invalid frame");
+    MOZ_ASSUME_NOT_REACHED("Invalid frame");
     return false;
 #endif
 }

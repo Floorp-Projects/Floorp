@@ -28,7 +28,7 @@ ABIArgGenerator::next(MIRType type)
         stackOffset_ += sizeof(uint64_t);
         break;
       default:
-        JS_NOT_REACHED("Unexpected argument type");
+        MOZ_ASSUME_NOT_REACHED("Unexpected argument type");
     }
     return current_;
 }

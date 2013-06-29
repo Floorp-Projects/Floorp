@@ -42,7 +42,7 @@ class CompactBufferReader
             if (!(byte & 1))
                 return val;
         }
-        JS_NOT_REACHED("unreachable");
+        MOZ_ASSUME_NOT_REACHED("unreachable");
         return 0;
     }
 
