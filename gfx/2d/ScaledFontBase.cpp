@@ -112,6 +112,12 @@ ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)
 {
   MOZ_ASSERT(!mScaledFont);
 
+  if (font == mScaledFont)
+    return;
+ 
+  if (mScaledFont)
+    cairo_scaled_font_destroy(mScaledFont);
+
   mScaledFont = font;
   cairo_scaled_font_reference(mScaledFont);
 }
