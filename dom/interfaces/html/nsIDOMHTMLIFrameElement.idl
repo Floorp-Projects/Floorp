@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(21ffbe98-51f5-499e-8d6f-612ae798c1e1)]
+[scriptable, uuid(60D9BCF1-3B0C-4704-AE8C-5B6AC0180B2E)]
 interface nsIDOMHTMLIFrameElement : nsIDOMHTMLElement
 {
            attribute DOMString        align;
@@ -28,6 +28,7 @@ interface nsIDOMHTMLIFrameElement : nsIDOMHTMLElement
            attribute DOMString        name;
            attribute DOMString        scrolling;
            attribute DOMString        src;
+           attribute DOMString        srcdoc;
            attribute DOMString        width;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument   contentDocument;
