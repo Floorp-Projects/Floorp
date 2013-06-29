@@ -312,7 +312,7 @@ class Assembler : public AssemblerX86Shared
             writeDataRelocation(ptr);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     void movl(ImmWord imm, Register dest) {
@@ -375,7 +375,7 @@ class Assembler : public AssemblerX86Shared
             writeDataRelocation(imm);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("unexpected operand kind");
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     CodeOffsetLabel cmplWithPatch(const Register &lhs, Imm32 rhs) {

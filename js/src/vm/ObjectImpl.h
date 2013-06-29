@@ -690,7 +690,7 @@ class TypedElementsHeader : public ElementsHeader
 template<typename T> inline void
 TypedElementsHeader<T>::assign(uint32_t index, double d)
 {
-    MOZ_ASSUME_NOT_REACHED("didn't specialize for this element type");
+    MOZ_ASSUME_UNREACHABLE("didn't specialize for this element type");
 }
 
 template<> inline void
@@ -1270,7 +1270,7 @@ class ObjectImpl : public gc::Cell
 
     bool makeElementsSparse(JSContext *cx) {
         NEW_OBJECT_REPRESENTATION_ONLY();
-        MOZ_ASSUME_NOT_REACHED("NYI");
+        MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
     inline bool isProxy() const;
@@ -1397,7 +1397,7 @@ class ObjectImpl : public gc::Cell
                                                        uint32_t extra)
     {
         NEW_OBJECT_REPRESENTATION_ONLY();
-        MOZ_ASSUME_NOT_REACHED("NYI");
+        MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
     /*

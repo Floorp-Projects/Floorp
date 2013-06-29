@@ -544,7 +544,7 @@ class ICStub
             IC_STUB_KIND_LIST(DEF_KIND_STR)
 #undef DEF_KIND_STR
           default:
-            MOZ_ASSUME_NOT_REACHED("Invalid kind.");
+            MOZ_ASSUME_UNREACHABLE("Invalid kind.");
         }
     }
 
@@ -1045,7 +1045,7 @@ class ICStubCompiler
             regs.take(R1);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Invalid numInputs");
+            MOZ_ASSUME_UNREACHABLE("Invalid numInputs");
         }
 
         return regs;

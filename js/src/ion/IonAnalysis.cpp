@@ -570,7 +570,7 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
         v = MagicValue(JS_OPTIMIZED_ARGUMENTS);
         break;
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
     MConstant *c = MConstant::New(v);
     // The instruction pass will insert the box

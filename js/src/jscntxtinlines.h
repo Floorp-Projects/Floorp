@@ -616,7 +616,7 @@ js::ThreadSafeContext::allowGC() const
         return NoGC;
       default:
         /* Silence warnings. */
-        MOZ_ASSUME_NOT_REACHED("Bad context kind");
+        MOZ_ASSUME_UNREACHABLE("Bad context kind");
     }
 }
 

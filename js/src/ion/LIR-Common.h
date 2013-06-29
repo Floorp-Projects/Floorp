@@ -4480,19 +4480,19 @@ class LPhi : public LInstruction
         return 0;
     }
     LDefinition *getTemp(size_t index) {
-        MOZ_ASSUME_NOT_REACHED("no temps");
+        MOZ_ASSUME_UNREACHABLE("no temps");
     }
     void setTemp(size_t index, const LDefinition &temp) {
-        MOZ_ASSUME_NOT_REACHED("no temps");
+        MOZ_ASSUME_UNREACHABLE("no temps");
     }
     size_t numSuccessors() const {
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        MOZ_ASSUME_NOT_REACHED("no successors");
+        MOZ_ASSUME_UNREACHABLE("no successors");
     }
     void setSuccessor(size_t i, MBasicBlock *) {
-        MOZ_ASSUME_NOT_REACHED("no successors");
+        MOZ_ASSUME_UNREACHABLE("no successors");
     }
 
     virtual void printInfo(FILE *fp) {
@@ -4791,19 +4791,19 @@ class LAsmJSCall : public LInstruction
         return 0;
     }
     LDefinition *getTemp(size_t index) {
-        MOZ_ASSUME_NOT_REACHED("no temps");
+        MOZ_ASSUME_UNREACHABLE("no temps");
     }
     void setTemp(size_t index, const LDefinition &a) {
-        MOZ_ASSUME_NOT_REACHED("no temps");
+        MOZ_ASSUME_UNREACHABLE("no temps");
     }
     size_t numSuccessors() const {
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        MOZ_ASSUME_NOT_REACHED("no successors");
+        MOZ_ASSUME_UNREACHABLE("no successors");
     }
     void setSuccessor(size_t i, MBasicBlock *) {
-        MOZ_ASSUME_NOT_REACHED("no successors");
+        MOZ_ASSUME_UNREACHABLE("no successors");
     }
 };
 

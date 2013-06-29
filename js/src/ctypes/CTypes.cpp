@@ -2129,7 +2129,7 @@ ConvertToJS(JSContext* cx,
     break;
   }
   case TYPE_function:
-    MOZ_ASSUME_NOT_REACHED("cannot return a FunctionType");
+    MOZ_ASSUME_UNREACHABLE("cannot return a FunctionType");
   }
 
   return true;
@@ -2569,7 +2569,7 @@ ImplicitConvert(JSContext* cx,
   }
   case TYPE_void_t:
   case TYPE_function:
-    MOZ_ASSUME_NOT_REACHED("invalid type");
+    MOZ_ASSUME_UNREACHABLE("invalid type");
   }
 
   return true;
@@ -2641,7 +2641,7 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
     return false;
   case TYPE_void_t:
   case TYPE_function:
-    MOZ_ASSUME_NOT_REACHED("invalid type");
+    MOZ_ASSUME_UNREACHABLE("invalid type");
   }
   return true;
 }
@@ -2813,7 +2813,7 @@ BuildTypeSource(JSContext* cx,
       AppendString(result, "ctypes.winapi_abi, ");
       break;
     case INVALID_ABI:
-      MOZ_ASSUME_NOT_REACHED("invalid abi");
+      MOZ_ASSUME_UNREACHABLE("invalid abi");
     }
 
     // Recursively build the source string describing the function return and
@@ -3057,7 +3057,7 @@ BuildDataSource(JSContext* cx,
     break;
   }
   case TYPE_void_t:
-    MOZ_ASSUME_NOT_REACHED("invalid type");
+    MOZ_ASSUME_UNREACHABLE("invalid type");
   }
 
   return true;
@@ -3530,7 +3530,7 @@ CType::GetFFIType(JSContext* cx, JSObject* obj)
     break;
 
   default:
-    MOZ_ASSUME_NOT_REACHED("simple types must have an ffi_type");
+    MOZ_ASSUME_UNREACHABLE("simple types must have an ffi_type");
   }
 
   if (!result)
@@ -5459,7 +5459,7 @@ FunctionType::BuildSymbolName(JSString* name,
   }
 
   case INVALID_ABI:
-    MOZ_ASSUME_NOT_REACHED("invalid abi");
+    MOZ_ASSUME_UNREACHABLE("invalid abi");
   }
 }
 
@@ -6795,7 +6795,7 @@ CDataFinalizer::Methods::ToString(JSContext *cx, unsigned argc, jsval *vp)
       return JS_FALSE;
     }
   } else if (!CDataFinalizer::GetValue(cx, objThis, value.address())) {
-    MOZ_ASSUME_NOT_REACHED("Could not convert an empty CDataFinalizer");
+    MOZ_ASSUME_UNREACHABLE("Could not convert an empty CDataFinalizer");
   } else {
     strMessage = JS_ValueToString(cx, value);
     if (!strMessage) {
@@ -7003,7 +7003,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
       objBestArgType = CData::GetCType(objData);
       size_t sizeBestArg;
       if (!CType::GetSafeSize(objBestArgType, &sizeBestArg)) {
-        MOZ_ASSUME_NOT_REACHED("object with unknown size");
+        MOZ_ASSUME_UNREACHABLE("object with unknown size");
       }
       if (sizeBestArg != sizeArg) {
         return TypeError(cx, "(an object with the same size as that expected by the C finalization function)", valData);

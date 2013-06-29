@@ -404,7 +404,7 @@ RegExpShared::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
 {
     switch (error) {
       case JSC::Yarr::NoError:
-        MOZ_ASSUME_NOT_REACHED("Called reportYarrError with value for no error");
+        MOZ_ASSUME_UNREACHABLE("Called reportYarrError with value for no error");
 #define COMPILE_EMSG(__code, __msg)                                                              \
       case JSC::Yarr::__code:                                                                    \
         if (ts)                                                                                  \
@@ -425,7 +425,7 @@ RegExpShared::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
       COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
 #undef COMPILE_EMSG
       default:
-        MOZ_ASSUME_NOT_REACHED("Unknown Yarr error code");
+        MOZ_ASSUME_UNREACHABLE("Unknown Yarr error code");
     }
 }
 

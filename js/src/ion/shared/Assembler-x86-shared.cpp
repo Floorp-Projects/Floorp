@@ -123,7 +123,7 @@ AssemblerX86Shared::InvertCondition(Condition cond)
       case BelowOrEqual:
         return Above;
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected condition");
+        MOZ_ASSUME_UNREACHABLE("unexpected condition");
     }
 }
 
