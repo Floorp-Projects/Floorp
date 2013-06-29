@@ -109,7 +109,7 @@ load 382199-1.html
 load 382208-1.xhtml
 load 382262-1.html
 load 382396-1.xhtml
-load 382745-1.xhtml
+asserts(1) load 382745-1.xhtml
 load 383089-1.html
 load 385265-1.xhtml
 load 385295-1.xhtml
