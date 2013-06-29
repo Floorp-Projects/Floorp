@@ -98,6 +98,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     int32_t charBufferLen;
   private:
     bool quirks;
+    bool isSrcdocDocument;
   public:
     void startTokenization(nsHtml5Tokenizer* self);
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, bool forceQuirks);
@@ -235,6 +236,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     bool isScriptingEnabled();
     void setScriptingEnabled(bool scriptingEnabled);
+    void setIsSrcdocDocument(bool isSrcdocDocument);
     void flushCharacters();
   private:
     bool charBufferContainsNonWhitespace();
