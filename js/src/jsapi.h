@@ -3151,11 +3151,20 @@ SameZoneAs(JSObject *obj)
     return ZoneSpecifier(obj);
 }
 
+struct JS_PUBLIC_API(CompartmentOptions) {
+    ZoneSpecifier zoneSpec;
+
+    explicit CompartmentOptions() : zoneSpec(JS::FreshZone)
+    {}
+
+    CompartmentOptions &setZone(ZoneSpecifier spec) { zoneSpec = spec; return *this; }
+};
+
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
-                   JS::ZoneSpecifier zoneSpec = JS::FreshZone);
+                   const JS::CompartmentOptions &options = JS::CompartmentOptions());
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
