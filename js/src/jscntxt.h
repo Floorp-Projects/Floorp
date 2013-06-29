@@ -740,6 +740,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Default locale for Internationalization API */
     char *defaultLocale;
 
+    /* Default JSVersion. */
+    JSVersion defaultVersion_;
+
     /* See comment for JS_AbortIfWrongThread in jsapi.h. */
 #ifdef JS_THREADSAFE
   public:
@@ -851,6 +854,9 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Gets current default locale. String remains owned by context. */
     const char *getDefaultLocale();
+
+    JSVersion defaultVersion() { return defaultVersion_; }
+    void setDefaultVersion(JSVersion v) { defaultVersion_ = v; }
 
     /* Base address of the native stack for the current thread. */
     uintptr_t           nativeStackBase;
@@ -1655,9 +1661,6 @@ struct JSContext : js::ThreadSafeContext,
     js::PerThreadData &mainThread() const { return runtime()->mainThread; }
 
   private:
-    /* See JSContext::findVersion. */
-    JSVersion           defaultVersion;      /* script compilation version */
-
     /* Exception state -- the exception member is a GC root by definition. */
     bool                throwing;            /* is there a pending exception? */
     js::Value           exception;           /* most-recently-thrown exception */
@@ -1756,12 +1759,6 @@ struct JSContext : js::ThreadSafeContext,
     inline js::RegExpStatics *regExpStatics();
 
   public:
-    /* Set the default script compilation version. */
-    void setDefaultVersion(JSVersion version) {
-        defaultVersion = version;
-    }
-
-    JSVersion getDefaultVersion() const { return defaultVersion; }
 
     /*
      * Return:
