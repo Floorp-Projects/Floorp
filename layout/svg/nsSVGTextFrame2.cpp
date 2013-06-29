@@ -4980,8 +4980,7 @@ nsSVGTextFrame2::UpdateFontSizeScaleFactor()
     }
   }
 
-  float textZoom = presContext->TextZoom();
-  double minSize = presContext->AppUnitsToFloatCSSPixels(min) / textZoom;
+  double minSize = presContext->AppUnitsToFloatCSSPixels(min);
 
   if (geometricPrecision) {
     // We want to ensure minSize is scaled to PRECISE_SIZE.
@@ -4989,7 +4988,7 @@ nsSVGTextFrame2::UpdateFontSizeScaleFactor()
     return;
   }
 
-  double maxSize = presContext->AppUnitsToFloatCSSPixels(max) / textZoom;
+  double maxSize = presContext->AppUnitsToFloatCSSPixels(max);
 
   // The context scale is the ratio of the length of the transformed
   // diagonal vector (1,1) to the length of the untransformed diagonal
