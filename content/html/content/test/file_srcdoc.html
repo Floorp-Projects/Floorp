@@ -1,0 +1,16 @@
+﻿<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=802895
+-->
+<body>
+<iframe id="iframe" srcdoc="Hello World"></iframe>
+    
+<iframe id="iframe1" src="about:mozilla" 
+    srcdoc="Goodbye World"></iframe>
+<iframe id="iframe2" srcdoc="Peeking test" sandbox=""></iframe>
+<iframe id="iframe3" src="data:text/html;charset=US-ASCII,Gone" 
+    srcdoc="Going"></iframe>
+</body>
+
+</html>
