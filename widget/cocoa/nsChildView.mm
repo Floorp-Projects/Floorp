@@ -2962,7 +2962,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
   const NSRect *rects;
   NSInteger count;
-  [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
+  [self getRectsBeingDrawn:&rects count:&count];
 
   if (count > MAX_RECTS_IN_REGION) {
     return boundingRect;
@@ -2970,9 +2970,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsIntRegion region;
   for (NSInteger i = 0; i < count; ++i) {
-    // Add the rect to the region.
-    NSRect r = [self convertRect:rects[i] fromView:[NSView focusView]];
-    region.Or(region, mGeckoChild->CocoaPointsToDevPixels(r));
+    region.Or(region, mGeckoChild->CocoaPointsToDevPixels(rects[i]));
   }
   region.And(region, boundingRect);
   return region;
