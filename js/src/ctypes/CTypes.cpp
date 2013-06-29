@@ -2570,7 +2570,6 @@ ImplicitConvert(JSContext* cx,
   case TYPE_void_t:
   case TYPE_function:
     MOZ_ASSUME_NOT_REACHED("invalid type");
-    return false;
   }
 
   return true;
@@ -2643,7 +2642,6 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
   case TYPE_void_t:
   case TYPE_function:
     MOZ_ASSUME_NOT_REACHED("invalid type");
-    return false;
   }
   return true;
 }
@@ -2816,7 +2814,6 @@ BuildTypeSource(JSContext* cx,
       break;
     case INVALID_ABI:
       MOZ_ASSUME_NOT_REACHED("invalid abi");
-      break;
     }
 
     // Recursively build the source string describing the function return and
@@ -3061,7 +3058,6 @@ BuildDataSource(JSContext* cx,
   }
   case TYPE_void_t:
     MOZ_ASSUME_NOT_REACHED("invalid type");
-    break;
   }
 
   return true;
@@ -5464,7 +5460,6 @@ FunctionType::BuildSymbolName(JSString* name,
 
   case INVALID_ABI:
     MOZ_ASSUME_NOT_REACHED("invalid abi");
-    break;
   }
 }
 

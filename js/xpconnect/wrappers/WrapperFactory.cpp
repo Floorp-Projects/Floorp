@@ -623,7 +623,7 @@ WrapperFactory::WrapForSameCompartmentXray(JSContext *cx, JSObject *obj)
     else if (type == XrayForDOMObject)
         wrapper = &SCPermissiveXrayDOM::singleton;
     else
-        MOZ_NOT_REACHED("Bad Xray type");
+        MOZ_ASSUME_NOT_REACHED("Bad Xray type");
 
     // Make the Xray.
     JSObject *parent = JS_GetGlobalForObject(cx, obj);

@@ -2022,7 +2022,7 @@ SSAValue::print() const
         break;
 
       default:
-        MOZ_NOT_REACHED("Bad kind");
+        MOZ_ASSUME_NOT_REACHED("Bad kind");
     }
 }
 

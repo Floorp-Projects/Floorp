@@ -20,7 +20,6 @@ HasIonScript(JSScript *script, ExecutionMode cmode)
       case ParallelExecution: return script->hasParallelIonScript();
     }
     MOZ_ASSUME_NOT_REACHED("No such execution mode");
-    return false;
 }
 
 static inline IonScript *
@@ -31,7 +30,6 @@ GetIonScript(JSScript *script, ExecutionMode cmode)
       case ParallelExecution: return script->maybeParallelIonScript();
     }
     MOZ_ASSUME_NOT_REACHED("No such execution mode");
-    return NULL;
 }
 
 static inline void
@@ -79,7 +77,6 @@ CompilingOffThread(JSScript *script, ExecutionMode cmode)
       case ParallelExecution: return script->isParallelIonCompilingOffThread();
     }
     MOZ_ASSUME_NOT_REACHED("No such execution mode");
-    return false;
 }
 
 static inline bool
@@ -90,7 +87,6 @@ CompilingOffThread(HandleScript script, ExecutionMode cmode)
       case ParallelExecution: return script->isParallelIonCompilingOffThread();
     }
     MOZ_ASSUME_NOT_REACHED("No such execution mode");
-    return false;
 }
 
 static inline types::CompilerOutput::Kind
@@ -101,7 +97,6 @@ CompilerOutputKind(ExecutionMode cmode)
       case ParallelExecution: return types::CompilerOutput::ParallelIon;
     }
     MOZ_ASSUME_NOT_REACHED("No such execution mode");
-    return types::CompilerOutput::Ion;
 }
 
 } // namespace ion

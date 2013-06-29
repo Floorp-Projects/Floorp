@@ -1139,7 +1139,6 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected opcode");
-        return false;
     }
     return true;
 }

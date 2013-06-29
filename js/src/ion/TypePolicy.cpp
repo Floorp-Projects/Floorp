@@ -210,7 +210,6 @@ ComparePolicy::adjustInputs(MInstruction *def)
             break;
           default:
             MOZ_ASSUME_NOT_REACHED("Unknown compare specialization");
-            return false;
         }
 
         def->block()->insertBefore(def, replace);
@@ -492,7 +491,6 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected type");
-        break;
     }
 
     if (value != curValue) {
@@ -530,7 +528,6 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Invalid array type");
-        break;
     }
 
     if (value != curValue) {

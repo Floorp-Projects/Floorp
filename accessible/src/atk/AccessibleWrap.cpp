@@ -681,7 +681,6 @@ getRoleCB(AtkObject *aAtkObj)
 #include "RoleMap.h"
     default:
       MOZ_CRASH("Unknown role.");
-      aAtkObj->role = ATK_ROLE_UNKNOWN;
   };
 
 #undef ROLE

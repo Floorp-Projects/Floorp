@@ -207,7 +207,6 @@ ReverseCompareOp(JSOp op)
         return op;
       default:
         MOZ_ASSUME_NOT_REACHED("unrecognized op");
-        return op;
     }
 }
 
@@ -233,7 +232,6 @@ NegateCompareOp(JSOp op)
         return JSOP_STRICTNE;
       default:
         MOZ_ASSUME_NOT_REACHED("unrecognized op");
-        return op;
     }
 }
 
@@ -296,7 +294,6 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
 
       default:
         MOZ_ASSUME_NOT_REACHED("Bad slot opcode");
-        return 0;
     }
 }
 

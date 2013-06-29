@@ -61,7 +61,7 @@
 #  define NEW_OBJECT_REPRESENTATION_ONLY() ((void)0)
 #else
 #  define NEW_OBJECT_REPRESENTATION_ONLY() \
-     MOZ_NOT_REACHED("don't call this!  to be used in the new object representation")
+     MOZ_ASSUME_NOT_REACHED("don't call this!  to be used in the new object representation")
 #endif
 
 #endif /* jsversion_h */

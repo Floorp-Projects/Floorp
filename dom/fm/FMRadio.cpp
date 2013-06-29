@@ -241,7 +241,6 @@ void FMRadio::Notify(const FMRadioOperationInformation& info)
       break;
     default:
       MOZ_CRASH();
-      return;
   }
 }
 

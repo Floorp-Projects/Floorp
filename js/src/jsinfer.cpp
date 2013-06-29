@@ -191,7 +191,6 @@ types::TypeString(Type type)
             return "lazyargs";
           default:
             MOZ_ASSUME_NOT_REACHED("Bad type");
-            return "";
         }
     }
     if (type.isUnknown())

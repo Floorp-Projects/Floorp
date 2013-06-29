@@ -152,7 +152,6 @@ GetGCKindSlots(AllocKind thingKind)
         return 16;
       default:
         MOZ_ASSUME_NOT_REACHED("Bad object finalize kind");
-        return 0;
     }
 }
 

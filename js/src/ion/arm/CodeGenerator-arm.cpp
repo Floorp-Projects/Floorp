@@ -1070,7 +1070,6 @@ CodeGeneratorARM::visitMathD(LMathD *math)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected opcode");
-        return false;
     }
     return true;
 }
@@ -1704,14 +1703,12 @@ bool
 CodeGeneratorARM::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
     MOZ_ASSUME_NOT_REACHED("NYI");
-    return true;
 }
 
 bool
 CodeGeneratorARM::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
 {
     MOZ_ASSUME_NOT_REACHED("NYI");
-    return true;
 }
 
 bool

@@ -73,7 +73,6 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     return result;
   default:
     MOZ_CRASH("Unknown CompositableType");
-    return nullptr;
   }
 }
 

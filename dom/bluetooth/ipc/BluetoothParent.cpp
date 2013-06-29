@@ -68,7 +68,6 @@ public:
   ParseSuccessfulReply(JS::Value* aValue) MOZ_OVERRIDE
   {
     MOZ_CRASH("This should never be called!");
-    return false;
   }
 };
 
@@ -233,11 +232,9 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_IsScoConnectedRequest());
     default:
       MOZ_CRASH("Unknown type!");
-      return false;
   }
 
   MOZ_CRASH("Should never get here!");
-  return false;
 }
 
 PBluetoothRequestParent*

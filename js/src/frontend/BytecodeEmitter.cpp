@@ -1625,7 +1625,6 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
                 return CheckSideEffects(cx, bce, pn2, answer);
             }
             MOZ_ASSUME_NOT_REACHED("We have a returning default case");
-            return false;
           }
 
           case PNK_TYPEOF:
@@ -1649,7 +1648,6 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
             return true;
         }
         MOZ_ASSUME_NOT_REACHED("We have a returning default case");
-        return false;
 
       case PN_NAME:
         /*

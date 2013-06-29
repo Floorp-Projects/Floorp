@@ -820,7 +820,6 @@ IonScript::getSafepointIndex(uint32_t disp) const
     }
 
     MOZ_ASSUME_NOT_REACHED("displacement not found.");
-    return NULL;
 }
 
 const OsiIndex *
@@ -835,7 +834,6 @@ IonScript::getOsiIndex(uint32_t disp) const
     }
 
     MOZ_ASSUME_NOT_REACHED("Failed to find OSI point return address");
-    return NULL;
 }
 
 const OsiIndex *
@@ -2006,7 +2004,6 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
           case IonFrame_Unwound_OptimizedJS:
           case IonFrame_Unwound_BaselineStub:
             MOZ_ASSUME_NOT_REACHED("invalid");
-            break;
           case IonFrame_Unwound_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d unwound rectifier frame @ %p", frameno, it.fp());
             break;

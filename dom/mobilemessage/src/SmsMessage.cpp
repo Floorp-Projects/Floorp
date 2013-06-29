@@ -179,7 +179,6 @@ SmsMessage::GetDelivery(nsAString& aDelivery)
     case eDeliveryState_EndGuard:
     default:
       MOZ_CRASH("We shouldn't get any other delivery state!");
-      return NS_ERROR_UNEXPECTED;
   }
 
   return NS_OK;
@@ -204,7 +203,6 @@ SmsMessage::GetDeliveryStatus(nsAString& aDeliveryStatus)
     case eDeliveryStatus_EndGuard:
     default:
       MOZ_CRASH("We shouldn't get any other delivery status!");
-      return NS_ERROR_UNEXPECTED;
   }
 
   return NS_OK;
@@ -252,7 +250,6 @@ SmsMessage::GetMessageClass(nsAString& aMessageClass)
       break;
     default:
       MOZ_CRASH("We shouldn't get any other message class!");
-      return NS_ERROR_UNEXPECTED;
   }
 
   return NS_OK;

@@ -156,7 +156,6 @@ void
 RilConnector::GetSocketAddr(const sockaddr_any& aAddr,
                             nsAString& aAddrStr)
 {
-    // Unused.
     MOZ_CRASH("This should never be called!");
 }
 

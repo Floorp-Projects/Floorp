@@ -3589,7 +3589,6 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected binary op");
-        return false;
     }
 }
 
@@ -3737,7 +3736,6 @@ CodeGenerator::visitCompareVM(LCompareVM *lir)
 
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected compare op");
-            return false;
         }
 
       case ParallelExecution:
@@ -3768,7 +3766,6 @@ CodeGenerator::visitCompareVM(LCompareVM *lir)
 
           default:
             MOZ_ASSUME_NOT_REACHED("Unexpected compare op");
-            return false;
         }
     }
 
@@ -6073,7 +6070,6 @@ CodeGenerator::visitBitOpV(LBitOpV *lir)
         break;
     }
     MOZ_ASSUME_NOT_REACHED("unexpected bitop");
-    return false;
 }
 
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>

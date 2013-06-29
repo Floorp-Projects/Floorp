@@ -1437,7 +1437,6 @@ DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, H
       }
       default:
         MOZ_ASSUME_NOT_REACHED("Invalid stub");
-        return false;
     }
 
     return stub->addUpdateStubForValue(cx, script, obj, id, value);
@@ -2465,7 +2464,6 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
       }
       default:
         MOZ_ASSUME_NOT_REACHED("Unhandled baseline arith op");
-        return false;
     }
 
     if (ret.isDouble())
@@ -2784,7 +2782,6 @@ ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected op");
-        return false;
     }
 
     masm.boxDouble(FloatReg0, R0);
@@ -2865,7 +2862,6 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
       }
       default:
        MOZ_ASSUME_NOT_REACHED("Unhandled op for BinaryArith_BooleanWithInt32.");
-       return false;
     }
 
     // Failure case - jump to next stub
@@ -2928,7 +2924,6 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       default:
        MOZ_ASSUME_NOT_REACHED("Unhandled op for BinaryArith_DoubleWithInt32.");
-       return false;
     }
     masm.tagValue(JSVAL_TYPE_INT32, intReg2, R0);
     EmitReturnFromIC(masm);
@@ -2970,7 +2965,6 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
         break;
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected op");
-        return false;
     }
 
     if (res.isDouble())

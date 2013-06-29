@@ -293,7 +293,7 @@ bool CompartmentPrivate::TryParseLocationURI()
         // Strip current item and continue
         chain = Substring(chain, 0, idx);
     }
-    MOZ_NOT_REACHED("Chain parser loop does not terminate");
+    MOZ_ASSUME_NOT_REACHED("Chain parser loop does not terminate");
 }
 
 bool CompartmentPrivate::TryParseLocationURICandidate(const nsACString& uristr)

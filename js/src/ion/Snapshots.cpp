@@ -269,7 +269,6 @@ SnapshotReader::readSlot()
     }
 
     MOZ_ASSUME_NOT_REACHED("huh?");
-    return Slot(JS_UNDEFINED);
 }
 
 SnapshotOffset
@@ -379,7 +378,6 @@ ValTypeToString(JSValueType type)
         return "magic";
       default:
         MOZ_ASSUME_NOT_REACHED("no payload");
-        return "";
     }
 }
 

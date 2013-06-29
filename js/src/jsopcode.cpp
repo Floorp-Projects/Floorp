@@ -118,7 +118,6 @@ js_GetVariableBytecodeLength(jsbytecode *pc)
       }
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected op");
-        return 0;
     }
 }
 
@@ -251,14 +250,12 @@ PCCounts::countName(JSOp op, size_t which)
         if (propertyOp(op))
             return countPropertyNames[which - ACCESS_LIMIT];
         MOZ_ASSUME_NOT_REACHED("bad op");
-        return NULL;
     }
 
     if (arithOp(op))
         return countArithNames[which - BASE_LIMIT];
 
     MOZ_ASSUME_NOT_REACHED("bad op");
-    return NULL;
 }
 
 #ifdef DEBUG

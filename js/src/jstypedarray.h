@@ -338,7 +338,6 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
       default:;
     }
     MOZ_ASSUME_NOT_REACHED("Unexpected array type");
-    return 0;
 }
 
 class DataViewObject : public JSObject, public BufferView

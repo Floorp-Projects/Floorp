@@ -289,7 +289,6 @@ DeleteFromMozHostListener(nsPermissionManager* aManager)
 NS_IMETHODIMP DeleteFromMozHostListener::HandleResult(mozIStorageResultSet *)
 {
   MOZ_CRASH("Should not get any results");
-  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteFromMozHostListener::HandleError(mozIStorageError *)

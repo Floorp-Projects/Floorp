@@ -91,7 +91,6 @@ public:
     // See InputStreamUtils.cpp to see how deserialization of a
     // RemoteInputStream is special-cased.
     MOZ_CRASH("RemoteInputStream should never be deserialized");
-    return false;
   }
 
   void

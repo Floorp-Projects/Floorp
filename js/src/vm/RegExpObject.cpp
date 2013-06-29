@@ -405,7 +405,6 @@ RegExpShared::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
     switch (error) {
       case JSC::Yarr::NoError:
         MOZ_ASSUME_NOT_REACHED("Called reportYarrError with value for no error");
-        return;
 #define COMPILE_EMSG(__code, __msg)                                                              \
       case JSC::Yarr::__code:                                                                    \
         if (ts)                                                                                  \

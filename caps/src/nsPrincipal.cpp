@@ -841,7 +841,6 @@ NS_IMETHODIMP
 nsExpandedPrincipal::GetHashValue(uint32_t* result)
 {
   MOZ_CRASH("extended principal should never be used as key in a hash map");
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

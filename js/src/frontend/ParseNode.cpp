@@ -382,15 +382,13 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
       case PN_CODE:
         if (pn->getKind() == PNK_MODULE) {
             MOZ_ASSUME_NOT_REACHED("module nodes cannot be cloned");
-            return NULL;
-        } else {
-            NULLCHECK(pn->pn_funbox =
-                      newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
-            NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
-            pn->pn_cookie = opn->pn_cookie;
-            pn->pn_dflags = opn->pn_dflags;
-            pn->pn_blockid = opn->pn_blockid;
         }
+        NULLCHECK(pn->pn_funbox =
+                  newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
+        NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
+        pn->pn_cookie = opn->pn_cookie;
+        pn->pn_dflags = opn->pn_dflags;
+        pn->pn_blockid = opn->pn_blockid;
         break;
 
       case PN_LIST:

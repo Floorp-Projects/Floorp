@@ -844,7 +844,6 @@ LIRGenerator::visitCompare(MCompare *comp)
     }
 
     MOZ_ASSUME_NOT_REACHED("Unrecognized compare type.");
-    return false;
 }
 
 static void
@@ -1453,7 +1452,6 @@ LIRGenerator::visitToDouble(MToDouble *convert)
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        return false;
     }
 }
 
@@ -1500,7 +1498,6 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
 
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        return false;
     }
 }
 
@@ -1533,7 +1530,6 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        return false;
     }
 }
 
@@ -1547,7 +1543,6 @@ LIRGenerator::visitToString(MToString *ins)
       case MIRType_Undefined:
       case MIRType_Boolean:
         MOZ_ASSUME_NOT_REACHED("NYI: Lower MToString");
-        return false;
 
       case MIRType_Double: {
         LDoubleToString *lir = new LDoubleToString(useRegister(opd), temp());
@@ -1568,7 +1563,6 @@ LIRGenerator::visitToString(MToString *ins)
       default:
         // Objects might be effectful. (see ToPrimitive)
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        return false;
     }
 }
 
@@ -1662,7 +1656,6 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
       case MIRType_Undefined:
       case MIRType_Null:
         MOZ_ASSUME_NOT_REACHED("typed load must have a payload");
-        return false;
 
       default:
         return define(new LLoadSlotT(useRegister(ins->slots())), ins);
@@ -1908,7 +1901,6 @@ LIRGenerator::visitNot(MNot *ins)
 
       default:
         MOZ_ASSUME_NOT_REACHED("Unexpected MIRType.");
-        return false;
     }
 }
 
@@ -1977,7 +1969,6 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       case MIRType_Undefined:
       case MIRType_Null:
         MOZ_ASSUME_NOT_REACHED("typed load must have a payload");
-        return false;
 
       default:
       {
@@ -2084,7 +2075,6 @@ LIRGenerator::visitArrayPopShift(MArrayPopShift *ins)
       case MIRType_Undefined:
       case MIRType_Null:
         MOZ_ASSUME_NOT_REACHED("typed load must have a payload");
-        return false;
 
       default:
       {
@@ -2180,7 +2170,6 @@ LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
 
       default:
         MOZ_ASSUME_NOT_REACHED("unexpected type");
-        return false;
     }
 }
 

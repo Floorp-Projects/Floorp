@@ -119,7 +119,6 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
       default:
         MOZ_ASSUME_NOT_REACHED("Unknown use policy");
     }
-    return false;
 }
 
 #ifdef DEBUG
@@ -149,7 +148,6 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
       default:
         MOZ_ASSUME_NOT_REACHED("Unknown definition policy");
     }
-    return false;
 }
 
 #endif // DEBUG

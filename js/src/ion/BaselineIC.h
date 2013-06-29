@@ -545,7 +545,6 @@ class ICStub
 #undef DEF_KIND_STR
           default:
             MOZ_ASSUME_NOT_REACHED("Invalid kind.");
-            return "INVALID_KIND";
         }
     }
 
