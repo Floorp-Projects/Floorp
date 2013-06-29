@@ -14,7 +14,6 @@
         id="recording-window"
         hidechrome="true"
         onload="OnRecordingLoad();"
-        onunload="OnRecordingUnload();"
         style="background:white; overflow:hidden; width:800px; height:600px;"
         >
     <script type="application/ecmascript" src="recording.js" />
