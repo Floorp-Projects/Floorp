@@ -79,6 +79,11 @@ public:
     return false;
   }
 
+  virtual bool CheckAppHasStatus(unsigned short aStatus)
+  {
+    return false;
+  }
+
 protected:
   bool BuildClonedMessageDataForParent(ContentParent* aParent,
 				       const StructuredCloneData& aData,

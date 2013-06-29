@@ -115,6 +115,7 @@ public:
     virtual bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE;
     virtual bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE;
     virtual bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE;
+    virtual bool CheckAppHasStatus(unsigned short aStatus) MOZ_OVERRIDE;
 
     /** Notify that a tab is beginning its destruction sequence. */
     void NotifyTabDestroying(PBrowserParent* aTab);

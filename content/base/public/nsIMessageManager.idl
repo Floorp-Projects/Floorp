@@ -336,7 +336,7 @@ interface nsIFrameScriptLoader : nsISupports
   void removeDelayedFrameScript(in AString aURL);
 };
 
-[scriptable, builtinclass, uuid(134ccbf0-5c08-11e2-bcfd-0800200c9a66)]
+[scriptable, builtinclass, uuid(b37821ff-df79-44d4-821c-6d6ec4dfe1e9)]
 interface nsIProcessChecker : nsISupports
 {
 
@@ -383,5 +383,16 @@ interface nsIProcessChecker : nsISupports
   boolean assertContainApp(in DOMString aManifestURL);
 
   boolean assertAppHasPermission(in DOMString aPermission);
+
+  /**
+   * Return true iff the "remote" process' principal has an appStatus equal to
+   * |aStatus|.
+   *
+   * This interface only returns meaningful data when our content is
+   * in a separate process.  If it shares the same OS process as us,
+   * then applying this permission check doesn't add any security,
+   * though it doesn't hurt anything either.
+   */
+  boolean checkAppHasStatus(in unsigned short aStatus);
 
 };
