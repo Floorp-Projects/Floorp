@@ -678,8 +678,13 @@ nsContextMenu.prototype = {
 
     // See if the user clicked in a frame.
     var docDefaultView = this.target.ownerDocument.defaultView;
-    if (docDefaultView != docDefaultView.top)
-      this.inFrame = true;
+    if (docDefaultView != docDefaultView.top) {
+      // srcdoc iframes are not considered frames for concerns about web
+      // content with about:srcdoc in location bar masqurading as trusted
+      // chrome/addon content.
+      if (!this.target.ownerDocument.isSrcdocDocument)
+        this.inFrame = true;
+    }
 
     // if the document is editable, show context menu like in text inputs
     if (!this.onEditableArea) {
