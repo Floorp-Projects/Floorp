@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=802895
+-->
+    <head>
+<title>Tests for srcdoc iframes introduced in bug 802895</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=802895">Mozilla Bug 802895</a>
+
+<iframe id="pframe" src="file_srcdoc.html"></iframe>
+
+<pre id="test">
+<script>
+
+  SimpleTest.waitForExplicitFinish();
+  var pframe = $("pframe");
+
+  var loadState = 0;
+  pframe.contentWindow.addEventListener("load", function () {
+
+    var pframeDoc = pframe.contentDocument;
+
+    var iframe = pframeDoc.getElementById("iframe");
+    var innerDoc = iframe.contentDocument;
+    var iframe1 = pframeDoc.getElementById("iframe1");
+    var innerDoc1 = iframe1.contentDocument;
+
+    var finish = false;
+    var finish1 = false;
+    var finish3 = false;
+
+
+
+    is(iframe.srcdoc, "Hello World", "Bad srcdoc attribute contents")
+
+    is(innerDoc.domain, document.domain, "Wrong domain");
+    is(innerDoc.referrer, pframeDoc.referrer, "Wrong referrer");
+    is(innerDoc.body.innerHTML, "Hello World", "Wrong body");
+    is(innerDoc.compatMode, "CSS1Compat", "Not standards compliant");
+
+    is(innerDoc1.domain, document.domain, "Wrong domain with src attribute");
+    is(innerDoc1.referrer, pframeDoc.referrer, "Wrong referrer with src attribute");
+    is(innerDoc1.body.innerHTML, "Goodbye World", "Wrong body with src attribute")
+    is(innerDoc1.compatMode, "CSS1Compat", "Not standards compliant with src attribute");
+
+    var iframe2 = pframeDoc.getElementById("iframe2");
+    var innerDoc2 = iframe2.contentDocument;
+    try {
+      innerDoc2.domain;
+      foundError = false;
+    }
+    catch (error) {
+      foundError = true;
+    }
+    ok(foundError, "srcdoc iframe not sandboxed");
+
+    //Test changed srcdoc attribute
+    iframe.onload = function () {
+
+      iframe = pframeDoc.getElementById("iframe");
+      innerDoc = iframe.contentDocument;
+
+      is(iframe.srcdoc, "Hello again", "Bad srcdoc attribute contents with srcdoc attribute changed");
+      is(innerDoc.domain, document.domain, "Wrong domain with srcdoc attribute changed");
+      is(innerDoc.referrer, pframeDoc.referrer, "Wrong referrer with srcdoc attribute changed");
+      is(innerDoc.body.innerHTML, "Hello again", "Wrong body with srcdoc attribute changed");
+      is(innerDoc.compatMode, "CSS1Compat", "Not standards compliant with srcdoc attribute changed");
+
+      finish = true;
+      if (finish && finish1 && finish3) {
+        SimpleTest.finish();
+      }
+    };
+
+    iframe.srcdoc = "Hello again";
+
+    var iframe3 = pframeDoc.getElementById("iframe3");
+
+    // Test srcdoc attribute removal
+    iframe3.onload = function () {
+      var innerDoc3 = iframe3.contentDocument;
+      is(innerDoc3.body.innerHTML, "Gone", "Bad srcdoc attribute removal");
+      finish3 = true;
+      if (finish && finish1 && finish3) {
+        SimpleTest.finish();
+      }
+    }
+
+    iframe3.removeAttribute("srcdoc");
+
+
+    var iframe1load = false;
+    iframe1.onload = function () {
+      iframe1load = true;
+    }
+
+    iframe1.src = "data:text/plain;charset=US-ASCII,Goodbyeeee";
+
+    // Need to test that changing the src doesn't change the iframe.
+    setTimeout(function () {
+      ok(!iframe1load, "Changing src attribute shouldn't cause a load when srcdoc is set");
+      finish1 = true;
+      if (finish && finish1 && finish3) {
+        SimpleTest.finish();
+      }
+    }, 2000);
+
+  }, false);
+
+</script>
+</pre>
+</body>
+</html>
