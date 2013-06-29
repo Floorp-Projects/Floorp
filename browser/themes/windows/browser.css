@@ -1457,20 +1457,9 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   padding-right: 5.01px;
 }
 
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
-  color: hsl(92,100%,30%);
   -moz-margin-end: 4px;
-  background-image: linear-gradient(hsla(92,81%,16%,0),
-                                    hsla(92,81%,16%,.2) 25%,
-                                    hsla(92,81%,16%,.2) 75%,
-                                    hsla(92,81%,16%,0));
-  background-position: right;
-  background-size: 1px;
-  background-repeat: no-repeat;
-}
-
-#identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
-  background-position: left;
 }
 
 #identity-box.verifiedIdentity:not(:-moz-lwtheme) {
@@ -1512,31 +1501,18 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 /* page proxy icon */
 
+%include ../shared/identity-block.inc.css
+
 #page-proxy-favicon {
-  width: 16px;
-  height: 16px;
   margin-top: 1px;
   margin-bottom: 1px;
   -moz-margin-start: 3px;
   -moz-margin-end: 2px;
-  list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar > #identity-box > #page-proxy-favicon {
   -moz-margin-end: 1px;
-}
-
-.verifiedDomain > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https.png);
-}
-
-.verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
-}
-
-.mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
 }
 
 #identity-box:hover > #page-proxy-favicon {
@@ -1546,10 +1522,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 #identity-box:hover:active > #page-proxy-favicon,
 #identity-box[open=true] > #page-proxy-favicon {
   -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
-#page-proxy-favicon[pageproxystate="invalid"] {
-  opacity: 0.3;
 }
 
 /* autocomplete */
