@@ -1657,8 +1657,6 @@ struct JSContext : js::ThreadSafeContext,
   private:
     /* See JSContext::findVersion. */
     JSVersion           defaultVersion;      /* script compilation version */
-    JSVersion           versionOverride;     /* supercedes defaultVersion when valid */
-    bool                hasVersionOverride;
 
     /* Exception state -- the exception member is a GC root by definition. */
     bool                throwing;            /* is there a pending exception? */
@@ -1758,49 +1756,15 @@ struct JSContext : js::ThreadSafeContext,
     inline js::RegExpStatics *regExpStatics();
 
   public:
-    /*
-     * The default script compilation version can be set iff there is no code running.
-     * This typically occurs via the JSAPI right after a context is constructed.
-     */
-    inline bool canSetDefaultVersion() const;
-
-    /* Force a version for future script compilation. */
-    inline void overrideVersion(JSVersion newVersion);
-
     /* Set the default script compilation version. */
     void setDefaultVersion(JSVersion version) {
         defaultVersion = version;
     }
 
-    void clearVersionOverride() { hasVersionOverride = false; }
     JSVersion getDefaultVersion() const { return defaultVersion; }
-    bool isVersionOverridden() const { return hasVersionOverride; }
-
-    JSVersion getVersionOverride() const {
-        JS_ASSERT(isVersionOverridden());
-        return versionOverride;
-    }
-
-    /*
-     * Set the default version if possible; otherwise, force the version.
-     * Return whether an override occurred.
-     */
-    inline bool maybeOverrideVersion(JSVersion newVersion);
-
-    /*
-     * If there is no code on the stack, turn the override version into the
-     * default version.
-     */
-    void maybeMigrateVersionOverride() {
-        if (JS_UNLIKELY(isVersionOverridden()) && !currentlyRunning()) {
-            defaultVersion = versionOverride;
-            clearVersionOverride();
-        }
-    }
 
     /*
      * Return:
-     * - The override version, if there is an override version.
      * - The newest scripted frame's version, if there is such a frame.
      * - The version from the compartment.
      * - The default version.
