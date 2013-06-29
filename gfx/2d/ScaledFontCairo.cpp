@@ -34,26 +34,34 @@ namespace gfx {
 // is a requirement when we consider runtime switchable backends and so on
 ScaledFontCairo::ScaledFontCairo(cairo_scaled_font_t* aScaledFont, Float aSize)
   : ScaledFontBase(aSize)
-{
+{ 
   mScaledFont = aScaledFont;
+}
+
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
-  cairo_font_face_t* fontFace = cairo_scaled_font_get_font_face(aScaledFont);
-  FT_Face face = cairo_ft_scaled_font_lock_face(aScaledFont);
+SkTypeface* ScaledFontCairo::GetSkTypeface()
+{
+  if (!mTypeface) {
+    cairo_font_face_t* fontFace = cairo_scaled_font_get_font_face(mScaledFont);
+    FT_Face face = cairo_ft_scaled_font_lock_face(mScaledFont);
 
-  int style = SkTypeface::kNormal;
+    int style = SkTypeface::kNormal;
 
-  if (face->style_flags & FT_STYLE_FLAG_ITALIC)
+    if (face->style_flags & FT_STYLE_FLAG_ITALIC)
     style |= SkTypeface::kItalic;
 
-  if (face->style_flags & FT_STYLE_FLAG_BOLD)
-    style |= SkTypeface::kBold;
+    if (face->style_flags & FT_STYLE_FLAG_BOLD)
+      style |= SkTypeface::kBold;
 
-  bool isFixedWidth = face->face_flags & FT_FACE_FLAG_FIXED_WIDTH;
-  cairo_ft_scaled_font_unlock_face(aScaledFont);
+    bool isFixedWidth = face->face_flags & FT_FACE_FLAG_FIXED_WIDTH;
+    cairo_ft_scaled_font_unlock_face(mScaledFont);
 
-  mTypeface = SkCreateTypefaceFromCairoFont(fontFace, (SkTypeface::Style)style, isFixedWidth);
-#endif
+    mTypeface = SkCreateTypefaceFromCairoFont(fontFace, (SkTypeface::Style)style, isFixedWidth);
+  }
+
+  return mTypeface;
 }
+#endif
 
 }
 }
