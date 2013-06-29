@@ -958,7 +958,8 @@ JSRuntime::init(uint32_t maxbytes)
     if (!atomsZone)
         return false;
 
-    ScopedJSDeletePtr<JSCompartment> atomsCompartment(new_<JSCompartment>(atomsZone.get()));
+    JS::CompartmentOptions options;
+    ScopedJSDeletePtr<JSCompartment> atomsCompartment(new_<JSCompartment>(atomsZone.get(), options));
     if (!atomsCompartment || !atomsCompartment->init(NULL))
         return false;
 
@@ -3301,7 +3302,8 @@ class AutoHoldZone
 };
 
 JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, JS::ZoneSpecifier zoneSpec)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   const JS::CompartmentOptions &options)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3310,18 +3312,18 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, JS::
     JSRuntime *rt = cx->runtime();
 
     Zone *zone;
-    if (zoneSpec == JS::SystemZone)
+    if (options.zoneSpec == JS::SystemZone)
         zone = rt->systemZone;
-    else if (zoneSpec == JS::FreshZone)
+    else if (options.zoneSpec == JS::FreshZone)
         zone = NULL;
     else
-        zone = ((JSObject *)zoneSpec)->zone();
+        zone = ((JSObject *)options.zoneSpec)->zone();
 
-    JSCompartment *compartment = NewCompartment(cx, zone, principals);
+    JSCompartment *compartment = NewCompartment(cx, zone, principals, options);
     if (!compartment)
         return NULL;
 
-    if (zoneSpec == JS::SystemZone) {
+    if (options.zoneSpec == JS::SystemZone) {
         rt->systemZone = compartment->zone();
         rt->systemZone->isSystem = true;
     }
