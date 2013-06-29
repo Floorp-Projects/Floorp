@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <binding id="a">
+    <content>
+      <xhtml:div class="aparent">
+        <xhtml:div class="a">
+          <children>
+            <xhtml:div class="b">
+              TEXT
+            </xhtml:div>
+          </children>
+        </xhtml:div>
+      </xhtml:div>
+    </content>
+  </binding>
+</bindings>
+
+<style>
+
+  @namespace xbl "http://www.mozilla.org/xbl";
+  .a > .b { color: green; }
+  .a > xbl|children > .b { text-decoration: underline; }
+  .a .b { text-transform: lowercase; }
+  .aparent > * > .b { background: yellow; }
+
+  /* Inverse cases. */
+  .a > * > xbl|children > .b { color: red !important; }
+
+</style>
+
+</head>
+
+<body>
+<div style="-moz-binding: url(#a);" />
+</body>
+</html>
