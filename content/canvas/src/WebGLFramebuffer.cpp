@@ -118,7 +118,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
                     format == LOCAL_GL_RGB ||
                     format == LOCAL_GL_RGBA);
         }
-        MOZ_NOT_REACHED("Invalid WebGL attachment poin?");
+        MOZ_CRASH("Invalid WebGL attachment poin?");
     }
 
     if (mRenderbufferPtr) {
@@ -139,7 +139,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
                     format == LOCAL_GL_RGB5_A1 ||
                     format == LOCAL_GL_RGBA4);
         }
-        MOZ_NOT_REACHED("Invalid WebGL attachment poin?");
+        MOZ_CRASH("Invalid WebGL attachment poin?");
     }
 
     NS_ABORT(); // should never get there

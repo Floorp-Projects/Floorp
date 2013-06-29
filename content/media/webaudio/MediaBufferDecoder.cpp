@@ -439,8 +439,7 @@ MediaDecodeTask::RunNextPhase()
     break;
   case PhaseEnum::Decode:
   case PhaseEnum::Done:
-    MOZ_NOT_REACHED("Invalid phase Decode");
-    break;
+    MOZ_CRASH("Invalid phase Decode");
   }
 }
 

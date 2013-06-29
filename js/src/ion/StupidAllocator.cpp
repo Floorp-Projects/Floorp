@@ -36,8 +36,7 @@ StupidAllocator::registerIndex(AnyRegister reg)
         if (reg == registers[i].reg)
             return i;
     }
-    JS_NOT_REACHED("Bad register");
-    return UINT32_MAX;
+    MOZ_ASSUME_UNREACHABLE("Bad register");
 }
 
 bool

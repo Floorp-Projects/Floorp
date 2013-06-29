@@ -547,7 +547,7 @@ private:
       {
         if (other.item == NULL)
           return item ? true : false;
-        MOZ_NOT_REACHED("DebuggerHelper::iterator::operator< called with something else than DebuggerHelper::end()");
+        MOZ_CRASH("DebuggerHelper::iterator::operator< called with something else than DebuggerHelper::end()");
       }
     protected:
       friend class DebuggerHelper;

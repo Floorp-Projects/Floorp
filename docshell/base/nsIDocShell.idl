@@ -42,7 +42,7 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(f453d2ee-bac7-46f9-a553-df918f0cc0d0)]
+[scriptable, builtinclass, uuid(cdeb1ed0-7794-4e5f-964e-bb9d753d1686)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -106,6 +106,9 @@ interface nsIDocShell : nsIDocShellTreeItem
   const long INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10;
   const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES     = 0x20;
 
+  // Whether the load should be treated as srcdoc load, rather than a URI one.
+  const long INTERNAL_LOAD_FLAGS_IS_SRCDOC               = 0x40;
+
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except
    * that its parameter list is broken out instead of being packaged inside
@@ -128,6 +131,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
    *                          in nsIWebNavigation.
    * @param aSHEntry        - Active Session History entry (if loading from SH)
+   * @param aSrcdoc           When INTERNAL_LOAD_FLAGS_IS_SRCDOC is set, the
+   *                          contents of this parameter will be loaded instead
+   *                          of aURI.
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
@@ -141,6 +147,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in unsigned long aLoadFlags,
                               in nsISHEntry aSHEntry,
                               in boolean firstParty,
+                              in AString aSrcdoc,
                               out nsIDocShell aDocShell,
                               out nsIRequest aRequest);
 

@@ -4,14 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    mmsdir = 'android'
+elif CONFIG['MOZ_B2G_RIL']:
+    mmsdir = 'ril'
+else:
+    mmsdir = 'fallback'
+
 EXPORTS.mozilla.dom.mobilemessage += [
     'Constants.h',
     'MobileMessageCallback.h',
     'MobileMessageService.h',
-    'SmsChild.h',
-    'SmsParent.h',
     'SmsServicesFactory.h',
     'Types.h',
+    'ipc/SmsChild.h',
+    'ipc/SmsParent.h',
 ]
 
 if CONFIG['MOZ_B2G_RIL']:
@@ -23,8 +30,8 @@ if CONFIG['MOZ_B2G_RIL']:
     ]
 else:
     EXPORTS.mozilla.dom.mobilemessage += [
-        'MmsService.h',
-        'MobileMessageDatabaseService.h',
+        "%s/%s" % (mmsdir, 'MmsService.h'),
+        "%s/%s" % (mmsdir, 'MobileMessageDatabaseService.h'),
     ]
     CPP_SOURCES += [
         'MobileMessageDatabaseService.cpp',

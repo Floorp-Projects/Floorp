@@ -1291,20 +1291,9 @@ toolbar[mode="icons"] #zoom-in-button {
   padding-right: 10.01px;
 }
 
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
-  color: hsl(92,100%,30%);
   -moz-padding-end: 4px;
-  background-image: linear-gradient(hsla(92,81%,16%,0),
-                                    hsla(92,81%,16%,.2) 25%,
-                                    hsla(92,81%,16%,.2) 75%,
-                                    hsla(92,81%,16%,0));
-  background-position: right;
-  background-size: 1px;
-  background-repeat: no-repeat;
-}
-
-#identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
-  background-position: left;
 }
 
 #identity-box:-moz-focusring {
@@ -1374,25 +1363,12 @@ toolbar[mode="icons"] #zoom-in-button {
   height: 22px;
 }
 
+%include ../shared/identity-block.inc.css
+
 #page-proxy-favicon {
-  width: 16px;
-  height: 16px;
   margin: 0px;
   padding: 0px;
-  list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.verifiedDomain > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https.png);
-}
-
-.verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
-}
-
-.mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
 }
 
 #identity-box:hover:active > #page-proxy-favicon,
@@ -1400,10 +1376,21 @@ toolbar[mode="icons"] #zoom-in-button {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
+/* The chromeUI identity-icon set includes three states,
+   but OS X only uses two of them. */
+#identity-box.chromeUI:hover:active > #page-proxy-favicon,
+#identity-box.chromeUI[open=true] > #page-proxy-favicon {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
 @media (min-resolution: 2dppx) {
   #page-proxy-favicon {
     list-style-image: url(chrome://browser/skin/identity-icons-generic@2x.png);
     -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+
+  .chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
+    list-style-image: url(chrome://branding/content/identity-icons-brand@2x.png);
   }
 
   .verifiedDomain > #page-proxy-favicon[pageproxystate="valid"] {
@@ -1422,10 +1409,13 @@ toolbar[mode="icons"] #zoom-in-button {
   #identity-box[open=true] > #page-proxy-favicon {
     -moz-image-region: rect(0, 64px, 32px, 32px);
   }
-}
 
-#page-proxy-favicon[pageproxystate="invalid"] {
-  opacity: 0.3;
+  /* The chromeUI identity-icon set includes three states,
+     but OS X only uses two of them. */
+  #identity-box.chromeUI:hover:active > #page-proxy-favicon,
+  #identity-box.chromeUI[open=true] > #page-proxy-favicon {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
+  }
 }
 
 #wrapper-urlbar-container[place="palette"] {
@@ -2963,6 +2953,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
   #identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
     -moz-image-region: rect(256px, 128px, 384px, 0px);
+  }
+
+  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
+    list-style-image: url("chrome://branding/content/icon128.png");
   }
 }
 

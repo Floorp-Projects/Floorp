@@ -298,6 +298,11 @@
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
+          <label id="identity-popup-brandName"
+                 class="identity-popup-label"
+                 value="&brandFullName;"/>
+          <label id="identity-popup-chromeLabel"
+                 class="identity-popup-label"/>
           <label id="identity-popup-connectedToLabel"
                  class="identity-popup-label"
                  value="&identity.connectedTo;"/>
