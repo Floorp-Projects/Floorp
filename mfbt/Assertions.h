@@ -359,14 +359,14 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #endif
 
 /*
- * MOZ_ASSUME_NOT_REACHED_MARKER() expands to an expression which states that it is
+ * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that it is
  * undefined behavior for execution to reach this point.  No guarantees are made
  * about what will happen if this is reached at runtime.  Most code should
- * probably use the higher level MOZ_ASSUME_NOT_REACHED, which uses this when
+ * probably use the higher level MOZ_ASSUME_UNREACHABLE, which uses this when
  * appropriate.
  */
 #if defined(__clang__)
-#  define MOZ_ASSUME_NOT_REACHED_MARKER() __builtin_unreachable()
+#  define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
 #elif defined(__GNUC__)
    /*
     * __builtin_unreachable() was implemented in gcc 4.5.  If we don't have
@@ -374,21 +374,21 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
     * in C++ in case there's another abort() visible in local scope.
     */
 #  if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0)
-#    define MOZ_ASSUME_NOT_REACHED_MARKER() __builtin_unreachable()
+#    define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
 #  else
 #    ifdef __cplusplus
-#      define MOZ_ASSUME_NOT_REACHED_MARKER() ::abort()
+#      define MOZ_ASSUME_UNREACHABLE_MARKER() ::abort()
 #    else
-#      define MOZ_ASSUME_NOT_REACHED_MARKER() abort()
+#      define MOZ_ASSUME_UNREACHABLE_MARKER() abort()
 #    endif
 #  endif
 #elif defined(_MSC_VER)
-#  define MOZ_ASSUME_NOT_REACHED_MARKER() __assume(0)
+#  define MOZ_ASSUME_UNREACHABLE_MARKER() __assume(0)
 #else
 #  ifdef __cplusplus
-#    define MOZ_ASSUME_NOT_REACHED_MARKER() ::abort()
+#    define MOZ_ASSUME_UNREACHABLE_MARKER() ::abort()
 #  else
-#    define MOZ_ASSUME_NOT_REACHED_MARKER() abort()
+#    define MOZ_ASSUME_UNREACHABLE_MARKER() abort()
 #  endif
 #endif
 
@@ -406,8 +406,8 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  * SpiderMonkey is a different beast, and there it's acceptable to use
  * MOZ_ASSUME_UNREACHABLE more widely.
  *
- * Note that MOZ_ASSUME_NOT_REACHED is noreturn, so it's valid not to return a
- * value following a MOZ_ASSUME_NOT_REACHED call.
+ * Note that MOZ_ASSUME_UNREACHABLE is noreturn, so it's valid not to return a
+ * value following a MOZ_ASSUME_UNREACHABLE call.
  *
  * Example usage:
  *
@@ -427,18 +427,18 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  *     case VALUE_FLOAT:
  *       return (int) *(float*) value;
  *     default:
- *       MOZ_ASSUME_NOT_REACHED("can only handle VALUE_INT and VALUE_FLOAT");
+ *       MOZ_ASSUME_UNREACHABLE("can only handle VALUE_INT and VALUE_FLOAT");
  *     }
  *   }
  */
 #if defined(DEBUG)
-#  define MOZ_ASSUME_NOT_REACHED(...) \
+#  define MOZ_ASSUME_UNREACHABLE(...) \
      do { \
-       MOZ_ASSERT(false, "MOZ_ASSUME_NOT_REACHED(" __VA_ARGS__ ")"); \
-       MOZ_ASSUME_NOT_REACHED_MARKER(); \
+       MOZ_ASSERT(false, "MOZ_ASSUME_UNREACHABLE(" __VA_ARGS__ ")"); \
+       MOZ_ASSUME_UNREACHABLE_MARKER(); \
      } while (0)
 #else
-#  define MOZ_ASSUME_NOT_REACHED(reason)  MOZ_ASSUME_NOT_REACHED_MARKER()
+#  define MOZ_ASSUME_UNREACHABLE(reason)  MOZ_ASSUME_UNREACHABLE_MARKER()
 #endif
 
 /*

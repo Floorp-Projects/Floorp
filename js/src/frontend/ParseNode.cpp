@@ -381,7 +381,7 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 
       case PN_CODE:
         if (pn->getKind() == PNK_MODULE) {
-            MOZ_ASSUME_NOT_REACHED("module nodes cannot be cloned");
+            MOZ_ASSUME_UNREACHABLE("module nodes cannot be cloned");
         }
         NULLCHECK(pn->pn_funbox =
                   newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));

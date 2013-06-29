@@ -63,7 +63,7 @@ ScaleFromElemWidth(int shift)
         return TimesEight;
     }
 
-    MOZ_ASSUME_NOT_REACHED("Invalid scale");
+    MOZ_ASSUME_UNREACHABLE("Invalid scale");
 }
 
 // Used for 32-bit immediates which do not require relocation.
@@ -85,7 +85,7 @@ struct Imm32
           case TimesEight:
             return Imm32(3);
         };
-        MOZ_ASSUME_NOT_REACHED("Invalid scale");
+        MOZ_ASSUME_UNREACHABLE("Invalid scale");
     }
 
     static inline Imm32 FactorOf(enum Scale s) {

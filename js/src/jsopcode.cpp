@@ -117,7 +117,7 @@ js_GetVariableBytecodeLength(jsbytecode *pc)
         return 1 + 3 * JUMP_OFFSET_LEN + ncases * JUMP_OFFSET_LEN;
       }
       default:
-        MOZ_ASSUME_NOT_REACHED("Unexpected op");
+        MOZ_ASSUME_UNREACHABLE("Unexpected op");
     }
 }
 
@@ -249,13 +249,13 @@ PCCounts::countName(JSOp op, size_t which)
             return countElementNames[which - ACCESS_LIMIT];
         if (propertyOp(op))
             return countPropertyNames[which - ACCESS_LIMIT];
-        MOZ_ASSUME_NOT_REACHED("bad op");
+        MOZ_ASSUME_UNREACHABLE("bad op");
     }
 
     if (arithOp(op))
         return countArithNames[which - BASE_LIMIT];
 
-    MOZ_ASSUME_NOT_REACHED("bad op");
+    MOZ_ASSUME_UNREACHABLE("bad op");
 }
 
 #ifdef DEBUG
@@ -2163,11 +2163,11 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
                 else if (PCCounts::propertyOp(op))
                     propertyTotals[j - PCCounts::ACCESS_LIMIT] += value;
                 else
-                    MOZ_ASSUME_NOT_REACHED("Bad opcode");
+                    MOZ_ASSUME_UNREACHABLE("Bad opcode");
             } else if (PCCounts::arithOp(op)) {
                 arithTotals[j - PCCounts::BASE_LIMIT] += value;
             } else {
-                MOZ_ASSUME_NOT_REACHED("Bad opcode");
+                MOZ_ASSUME_UNREACHABLE("Bad opcode");
             }
         }
     }

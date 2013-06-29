@@ -189,7 +189,7 @@ class MacroAssembler : public MacroAssemblerSpecific
           case MIRType_Object:      return testObject(cond, val);
           case MIRType_Double:      return testDouble(cond, val);
           default:
-            MOZ_ASSUME_NOT_REACHED("Bad MIRType");
+            MOZ_ASSUME_UNREACHABLE("Bad MIRType");
         }
     }
 
@@ -546,7 +546,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(value, dest);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Invalid typed array type");
+            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
         }
     }
 
@@ -561,7 +561,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeDouble(value, dest);
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Invalid typed array type");
+            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
         }
     }
 
@@ -944,7 +944,7 @@ JSOpToDoubleCondition(JSOp op)
       case JSOP_GE:
         return Assembler::DoubleGreaterThanOrEqual;
       default:
-        MOZ_ASSUME_NOT_REACHED("Unexpected comparison operation");
+        MOZ_ASSUME_UNREACHABLE("Unexpected comparison operation");
     }
 }
 
@@ -971,7 +971,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::GreaterThanOrEqual;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unrecognized comparison operation");
+            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
         }
     } else {
         switch (op) {
@@ -990,7 +990,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::AboveOrEqual;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unrecognized comparison operation");
+            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
         }
     }
 }

@@ -1104,7 +1104,7 @@ IonBuilder::snoopControlFlow(JSOp op)
 
           default:
             // Hard assert for now - make an error later.
-            MOZ_ASSUME_NOT_REACHED("unknown goto case");
+            MOZ_ASSUME_UNREACHABLE("unknown goto case");
         }
         break;
       }
@@ -1115,7 +1115,7 @@ IonBuilder::snoopControlFlow(JSOp op)
       case JSOP_IFNE:
         // We should never reach an IFNE, it's a stopAt point, which will
         // trigger closing the loop.
-        MOZ_ASSUME_NOT_REACHED("we should never reach an ifne!");
+        MOZ_ASSUME_UNREACHABLE("we should never reach an ifne!");
 
       default:
         break;
@@ -1403,7 +1403,7 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_LOOPHEAD:
         // JSOP_LOOPHEAD is handled when processing the loop header.
-        MOZ_ASSUME_NOT_REACHED("JSOP_LOOPHEAD outside loop");
+        MOZ_ASSUME_UNREACHABLE("JSOP_LOOPHEAD outside loop");
 
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
@@ -1603,7 +1603,7 @@ IonBuilder::processCfgEntry(CFGState &state)
         return processLabelEnd(state);
 
       default:
-        MOZ_ASSUME_NOT_REACHED("unknown cfgstate");
+        MOZ_ASSUME_UNREACHABLE("unknown cfgstate");
     }
 }
 
@@ -2251,7 +2251,7 @@ IonBuilder::processSwitchBreak(JSOp op)
         breaks = &state.condswitch.breaks;
         break;
       default:
-        MOZ_ASSUME_NOT_REACHED("Unexpected switch state.");
+        MOZ_ASSUME_UNREACHABLE("Unexpected switch state.");
     }
 
     *breaks = new DeferredEdge(current, *breaks);
@@ -2327,7 +2327,7 @@ IonBuilder::maybeLoop(JSOp op, jssrcnote *sn)
         break;
 
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected opcode");
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
     }
 
     return ControlStatus_None;
@@ -2357,7 +2357,7 @@ IonBuilder::assertValidLoopHeadOp(jsbytecode *pc)
             break;
 
           default:
-            MOZ_ASSUME_NOT_REACHED("JSOP_LOOPHEAD unexpected source note");
+            MOZ_ASSUME_UNREACHABLE("JSOP_LOOPHEAD unexpected source note");
         }
 
         // Make sure this loop goes to the same ifne as the loop header's
@@ -3139,7 +3139,7 @@ IonBuilder::jsop_ifeq(JSOp op)
       }
 
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected source note type");
+        MOZ_ASSUME_UNREACHABLE("unexpected source note type");
     }
 
     // Switch to parsing the true branch. Note that no PC update is needed,
@@ -3168,7 +3168,7 @@ IonBuilder::processReturn(JSOp op)
 
       default:
         def = NULL;
-        MOZ_ASSUME_NOT_REACHED("unknown return op");
+        MOZ_ASSUME_UNREACHABLE("unknown return op");
     }
 
     if (instrumentedProfiling())
@@ -3257,7 +3257,7 @@ IonBuilder::jsop_bitop(JSOp op)
         break;
 
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected bitop");
+        MOZ_ASSUME_UNREACHABLE("unexpected bitop");
     }
 
     current->add(ins);
@@ -3314,7 +3314,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
         break;
 
       default:
-        MOZ_ASSUME_NOT_REACHED("unexpected binary opcode");
+        MOZ_ASSUME_UNREACHABLE("unexpected binary opcode");
     }
 
     bool overflowed = types::HasOperationOverflowed(script(), pc);
@@ -6076,7 +6076,7 @@ ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
         return types->unknown() || (inputTypes && inputTypes->isSubset(types));
 
       default:
-        MOZ_ASSUME_NOT_REACHED("Bad input type");
+        MOZ_ASSUME_UNREACHABLE("Bad input type");
     }
 }
 
@@ -6584,7 +6584,7 @@ IonBuilder::jsop_getelem_typed(int arrayType)
             knownType = MIRType_Double;
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unknown typed array type");
+            MOZ_ASSUME_UNREACHABLE("Unknown typed array type");
         }
 
         // Get the length.
@@ -6630,7 +6630,7 @@ IonBuilder::jsop_getelem_typed(int arrayType)
                 needsBarrier = false;
             break;
           default:
-            MOZ_ASSUME_NOT_REACHED("Unknown typed array type");
+            MOZ_ASSUME_UNREACHABLE("Unknown typed array type");
         }
 
         // Assume we will read out-of-bound values. In this case the
