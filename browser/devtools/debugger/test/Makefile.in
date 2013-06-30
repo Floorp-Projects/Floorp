@@ -95,6 +95,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_bug786070_hide_nonenums.js \
 	browser_dbg_bug868163_highight_on_pause.js \
+	browser_dbg_bug883220_raise_on_pause.js \
 	browser_dbg_displayName.js \
 	browser_dbg_pause-exceptions.js \
 	browser_dbg_multiple-windows.js \

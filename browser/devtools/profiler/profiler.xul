@@ -19,10 +19,9 @@
   <box flex="1" id="profiler-chrome" class="devtools-responsive-container">
     <vbox class="profiler-sidebar">
       <toolbar class="devtools-toolbar">
-        <toolbarbutton id="profiler-create"
-                       class="devtools-toolbarbutton"
-                       label="&profilerNew.label;"
-                       disabled="true"/>
+        <hbox id="profiler-controls">
+          <toolbarbutton id="profiler-start" class="devtools-toolbarbutton"/>
+        </hbox>
       </toolbar>
 
       <vbox id="profiles-list" flex="1">

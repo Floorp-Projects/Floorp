@@ -29,8 +29,7 @@ function test() {
 }
 
 function runTests() {
-  is(getSidebarItem(1).attachment.state, PROFILE_IDLE);
-  is(getSidebarItem(2).attachment.state, PROFILE_COMPLETED);
+  is(getSidebarItem(1).attachment.state, PROFILE_COMPLETED);
 
   gPanel.once("parsed", () => {
     function assertSampleAndFinish() {
