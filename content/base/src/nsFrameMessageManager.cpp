@@ -632,14 +632,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       bool aSync,
                                       const StructuredCloneData* aCloneData,
                                       JS::Handle<JSObject*> aObjectsArray,
-                                      InfallibleTArray<nsString>* aJSONRetVal,
-                                      JSContext* aContext)
+                                      InfallibleTArray<nsString>* aJSONRetVal)
 {
-  JSContext *cxToUse = mContext ? mContext
-                                : (aContext ? aContext
-                                            : nsContentUtils::GetSafeJSContext());
-  AutoPushJSContext ctx(cxToUse);
-  JS::Rooted<JSObject*> objectsArray(cxToUse, aObjectsArray);
+  AutoSafeJSContext ctx;
+  JS::Rooted<JSObject*> objectsArray(ctx, aObjectsArray);
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     MMListenerRemover lr(this);
@@ -1197,7 +1193,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sChildProcessManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), mMessage,
-                          false, &data, JS::NullPtr(), nullptr, nullptr);
+                          false, &data, JS::NullPtr(), nullptr);
     }
     return NS_OK;
   }
@@ -1327,7 +1323,7 @@ public:
       nsRefPtr<nsFrameMessageManager> ppm =
         nsFrameMessageManager::sSameProcessParentManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                          mMessage, false, &data, JS::NullPtr(), nullptr, nullptr);
+                          mMessage, false, &data, JS::NullPtr(), nullptr);
      }
      return NS_OK;
   }
