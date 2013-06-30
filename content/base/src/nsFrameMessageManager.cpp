@@ -755,7 +755,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
   return mParentManager ? mParentManager->ReceiveMessage(aTarget, aMessage,
                                                          aSync, aCloneData,
                                                          objectsArray,
-                                                         aJSONRetVal, mContext) : NS_OK;
+                                                         aJSONRetVal) : NS_OK;
 }
 
 void
@@ -812,7 +812,6 @@ nsFrameMessageManager::RemoveFromParent()
   mParentManager = nullptr;
   mCallback = nullptr;
   mOwnedCallback = nullptr;
-  mContext = nullptr;
 }
 
 void
@@ -825,7 +824,6 @@ nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
   mParentManager = nullptr;
   mCallback = nullptr;
   mOwnedCallback = nullptr;
-  mContext = nullptr;
   if (!mHandlingMessage) {
     mListeners.Clear();
   }
@@ -837,7 +835,6 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
   NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default,
                  NS_ERROR_NOT_AVAILABLE);
   nsFrameMessageManager* mm = new nsFrameMessageManager(nullptr,
-                                                        nullptr,
                                                         nullptr,
                                                         MM_CHROME | MM_GLOBAL | MM_BROADCASTER);
   return CallQueryInterface(mm, aResult);
@@ -1391,7 +1388,6 @@ NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
                  NS_ERROR_NOT_AVAILABLE);
   nsRefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
                                                                  nullptr,
-                                                                 nullptr,
                                                                  MM_CHROME | MM_PROCESSMANAGER | MM_BROADCASTER);
   nsFrameMessageManager::sParentProcessManager = mm;
   nsFrameMessageManager::NewProcessMessageManager(nullptr); // Create same process message manager.
@@ -1413,12 +1409,10 @@ nsFrameMessageManager::NewProcessMessageManager(mozilla::dom::ContentParent* aPr
   if (aProcess) {
     mm = new nsFrameMessageManager(aProcess,
                                    nsFrameMessageManager::sParentProcessManager,
-                                   nullptr,
                                    MM_CHROME | MM_PROCESSMANAGER);
   } else {
     mm = new nsFrameMessageManager(new SameParentProcessMessageManagerCallback(),
                                    nsFrameMessageManager::sParentProcessManager,
-                                   nullptr,
                                    MM_CHROME | MM_PROCESSMANAGER | MM_OWNSCALLBACK);
     sSameProcessParentManager = mm;
   }
@@ -1438,7 +1432,6 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
     cb = new ChildProcessMessageManagerCallback();
   }
   nsFrameMessageManager* mm = new nsFrameMessageManager(cb,
-                                                        nullptr,
                                                         nullptr,
                                                         MM_PROCESSMANAGER | MM_OWNSCALLBACK);
   nsFrameMessageManager::sChildProcessManager = mm;
