@@ -284,8 +284,6 @@ protected:
   ~nsFrameScriptExecutor()
   { MOZ_COUNT_DTOR(nsFrameScriptExecutor); }
   void DidCreateGlobal();
-  // Call this when you want to destroy mCx.
-  void DestroyCx();
   void LoadFrameScriptInternal(const nsAString& aURL);
   enum CacheFailedBehavior { EXECUTE_IF_CANT_CACHE, DONT_EXECUTE };
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
