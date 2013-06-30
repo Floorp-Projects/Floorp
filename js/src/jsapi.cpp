@@ -122,47 +122,6 @@ JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl
     return false;
 }
 
-
-/*
- * This class is a version-establishing barrier at the head of a VM entry or
- * re-entry. It ensures that:
- *
- * - |newVersion| is the starting (default) version used for the context.
- * - The starting version state is not an override.
- * - Overrides in the VM session are not propagated to the caller.
- */
-class AutoVersionAPI
-{
-    JSContext   * const cx;
-    JSVersion   oldDefaultVersion;
-    bool        oldHasVersionOverride;
-    JSVersion   oldVersionOverride;
-    JSVersion   newVersion;
-
-  public:
-    AutoVersionAPI(JSContext *cx, JSVersion newVersion)
-      : cx(cx),
-        oldDefaultVersion(cx->getDefaultVersion()),
-        oldHasVersionOverride(cx->isVersionOverridden()),
-        oldVersionOverride(oldHasVersionOverride ? cx->findVersion() : JSVERSION_UNKNOWN)
-    {
-        this->newVersion = newVersion;
-        cx->clearVersionOverride();
-        cx->setDefaultVersion(newVersion);
-    }
-
-    ~AutoVersionAPI() {
-        cx->setDefaultVersion(oldDefaultVersion);
-        if (oldHasVersionOverride)
-            cx->overrideVersion(oldVersionOverride);
-        else
-            cx->clearVersionOverride();
-    }
-
-    /* The version that this scoped-entity establishes. */
-    JSVersion version() const { return newVersion; }
-};
-
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
 #else
@@ -752,6 +711,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     numCompartments(0),
     localeCallbacks(NULL),
     defaultLocale(NULL),
+    defaultVersion_(JSVERSION_DEFAULT),
 #ifdef JS_THREADSAFE
     ownerThread_(NULL),
 #endif
@@ -958,7 +918,8 @@ JSRuntime::init(uint32_t maxbytes)
     if (!atomsZone)
         return false;
 
-    ScopedJSDeletePtr<JSCompartment> atomsCompartment(new_<JSCompartment>(atomsZone.get()));
+    JS::CompartmentOptions options;
+    ScopedJSDeletePtr<JSCompartment> atomsCompartment(new_<JSCompartment>(atomsZone.get(), options));
     if (!atomsCompartment || !atomsCompartment->init(NULL))
         return false;
 
@@ -1344,21 +1305,10 @@ JS_GetVersion(JSContext *cx)
     return VersionNumber(cx->findVersion());
 }
 
-JS_PUBLIC_API(JSVersion)
-JS_SetVersion(JSContext *cx, JSVersion newVersion)
+JS_PUBLIC_API(void)
+JS_SetVersionForCompartment(JSCompartment *compartment, JSVersion version)
 {
-    JS_ASSERT(VersionIsKnown(newVersion));
-    JS_ASSERT(!VersionHasFlags(newVersion));
-    JSVersion newVersionNumber = newVersion;
-
-    JSVersion oldVersion = cx->findVersion();
-    JSVersion oldVersionNumber = VersionNumber(oldVersion);
-    if (oldVersionNumber == newVersionNumber)
-        return oldVersionNumber; /* No override actually occurs! */
-
-    VersionCopyFlags(&newVersion, oldVersion);
-    cx->maybeOverrideVersion(newVersion);
-    return oldVersionNumber;
+    compartment->options().setVersion(version);
 }
 
 static struct v2smap {
@@ -3301,7 +3251,8 @@ class AutoHoldZone
 };
 
 JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, JS::ZoneSpecifier zoneSpec)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   const JS::CompartmentOptions &options)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3310,18 +3261,18 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, JS::
     JSRuntime *rt = cx->runtime();
 
     Zone *zone;
-    if (zoneSpec == JS::SystemZone)
+    if (options.zoneSpec == JS::SystemZone)
         zone = rt->systemZone;
-    else if (zoneSpec == JS::FreshZone)
+    else if (options.zoneSpec == JS::FreshZone)
         zone = NULL;
     else
-        zone = ((JSObject *)zoneSpec)->zone();
+        zone = ((JSObject *)options.zoneSpec)->zone();
 
-    JSCompartment *compartment = NewCompartment(cx, zone, principals);
+    JSCompartment *compartment = NewCompartment(cx, zone, principals, options);
     if (!compartment)
         return NULL;
 
-    if (zoneSpec == JS::SystemZone) {
+    if (options.zoneSpec == JS::SystemZone) {
         rt->systemZone = compartment->zone();
         rt->systemZone->isSystem = true;
     }
@@ -5192,13 +5143,6 @@ JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
             const jschar *chars, size_t length)
 {
-    Maybe<AutoVersionAPI> mava;
-    if (options.versionSet) {
-        mava.construct(cx, options.version);
-        // AutoVersionAPI propagates some compilation flags through.
-        options.version = mava.ref().version();
-    }
-
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5351,13 +5295,6 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
                     const char *name, unsigned nargs, const char **argnames,
                     const jschar *chars, size_t length)
 {
-    Maybe<AutoVersionAPI> mava;
-    if (options.versionSet) {
-        mava.construct(cx, options.version);
-        // AutoVersionAPI propagates some compilation flags through.
-        options.version = mava.ref().version();
-    }
-
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5533,7 +5470,6 @@ JS_ExecuteScriptVersion(JSContext *cx, JSObject *objArg, JSScript *script, jsval
                         JSVersion version)
 {
     RootedObject obj(cx, objArg);
-    AutoVersionAPI ava(cx, version);
     return JS_ExecuteScript(cx, obj, script, rval);
 }
 
@@ -5543,13 +5479,6 @@ extern JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
              const jschar *chars, size_t length, jsval *rval)
 {
-    Maybe<AutoVersionAPI> mava;
-    if (options.versionSet) {
-        mava.construct(cx, options.version);
-        // AutoVersionAPI propagates some compilation flags through.
-        options.version = mava.ref().version();
-    }
-
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
