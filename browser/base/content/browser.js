@@ -1241,6 +1241,8 @@ var gBrowserInit = {
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
     gNavToolbox.addEventListener("customizationending", CustomizationHandler);
 
+    gCustomizeMode.init();
+
     // End startup crash tracking after a delay to catch crashes while restoring
     // tabs and to postpone saving the pref to disk.
     try {
@@ -1351,6 +1353,7 @@ var gBrowserInit = {
       IndexedDBPromptHelper.uninit();
       SocialUI.uninit();
       LightweightThemeListener.uninit();
+      gCustomizeMode.uninit();
       PanelUI.uninit();
     }
 
@@ -3749,17 +3752,6 @@ var XULBrowserWindow = {
 
         // fix bug 253793 - turn off highlight when page changes
         gFindBar.getElement("highlight").checked = false;
-      }
-
-      // Try not to instantiate gCustomizeMode as much as possible,
-      // so don't use CustomizeMode.jsm to check for URI or customizing.
-      let customizingURI = "about:customizing";
-      if (location == customizingURI &&
-          !CustomizationHandler.isCustomizing()) {
-        gCustomizeMode.enter();
-      } else if (location != customizingURI &&
-                 CustomizationHandler.isCustomizing()) {
-        gCustomizeMode.exit();
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
