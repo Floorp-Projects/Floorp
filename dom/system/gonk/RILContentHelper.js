@@ -1566,43 +1566,29 @@ RILContentHelper.prototype = {
 
     let success = message.success;
 
-    let result = {
-      serviceCode: message.mmiServiceCode
-    };
-
-    switch (message.mmiServiceCode) {
-      case RIL.MMI_KS_SC_IMEI:
-        // We expect to have an IMEI at this point, so getting a successful
-        // reply from the RIL without containing an actual IMEI number is
-        // considered an error.
-        if (success && message.result) {
-          result.statusMessage = message.result;
-        } else {
-          result.name = message.errorMsg ?
-            message.errorMsg : RIL.GECKO_ERROR_GENERIC_FAILURE;
-          success = false;
-        }
-        break;
-      case RIL.MMI_KS_SC_PIN:
-      case RIL.MMI_KS_SC_PIN2:
-      case RIL.MMI_KS_SC_PUK:
-      case RIL.MMI_KS_SC_PUK2:
-        // TODO: Bug 874000: Use MMIResult for PIN/PIN2/PUK related
-        //       functionality.
-        break;
-      case RIL.MMI_KS_SC_CALL_FORWARDING:
-        // TODO: Bug 884343 - Use MMIResult for Call Forwarding related
-        //       functionality.
-        break;
+    // We expect to have an IMEI at this point if the request was supposed
+    // to query for the IMEI, so getting a successful reply from the RIL
+    // without containing an actual IMEI number is considered an error.
+    if (message.mmiServiceCode === RIL.MMI_KS_SC_IMEI &&
+        !message.statusMessage) {
+        message.errorMsg = message.errorMsg ?
+          message.errorMsg : RIL.GECKO_ERROR_GENERIC_FAILURE;
+        success = false;
     }
 
+    let result = {
+      serviceCode: message.mmiServiceCode,
+      additionalInformation: message.additionalInformation
+    };
+
     if (success) {
+      result.statusMessage = message.statusMessage;
       let mmiResult = new DOMMMIResult(result);
       Services.DOMRequest.fireSuccess(request, mmiResult);
     } else {
       let mmiError = new this._window.DOMMMIError(result.serviceCode,
-                                                  result.name,
-                                                  result.message,
+                                                  message.errorMsg,
+                                                  null,
                                                   result.additionalInformation);
       Services.DOMRequest.fireDetailedError(request, mmiError);
     }
