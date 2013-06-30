@@ -1145,10 +1145,8 @@ TabChild::~TabChild()
     if (webBrowser) {
       webBrowser->SetContainerWindow(nullptr);
     }
-    if (mCx) {
-      DestroyCx();
-    }
-    
+    mGlobal = nullptr;
+
     if (mTabChildGlobal) {
       nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(false);
       if (elm) {
@@ -1445,7 +1443,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
         cloneData.mDataLength = buffer.nbytes();
     }
 
-    nsFrameScriptCx frameScriptCx(static_cast<nsIWebBrowserChrome*>(this), this);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
     // Let the BrowserElementScrolling helper (if it exists) for this
     // content manipulate the frame state.
     nsRefPtr<nsFrameMessageManager> mm =
@@ -1485,7 +1483,7 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 bool
 TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
   {
-    if (!mCx || !mTabChildGlobal) {
+    if (!mGlobal || !mTabChildGlobal) {
         return true;
     }
 
@@ -1555,7 +1553,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 bool
 TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint)
 {
-    if (!mCx || !mTabChildGlobal) {
+    if (!mGlobal || !mTabChildGlobal) {
         return true;
     }
 
@@ -1572,7 +1570,7 @@ TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint)
 bool
 TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint)
 {
-  if (!mCx || !mTabChildGlobal) {
+  if (!mGlobal || !mTabChildGlobal) {
     return true;
   }
 
@@ -1586,7 +1584,7 @@ TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint)
 bool
 TabChild::RecvHandleLongTap(const CSSIntPoint& aPoint)
 {
-  if (!mCx || !mTabChildGlobal) {
+  if (!mGlobal || !mTabChildGlobal) {
     return true;
   }
 
@@ -1995,7 +1993,7 @@ TabChild::DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* actor)
 bool
 TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
-  if (!mCx && !InitTabChildGlobal())
+  if (!mGlobal && !InitTabChildGlobal())
     // This can happen if we're half-destroyed.  It's not a fatal
     // error.
     return true;
@@ -2009,7 +2007,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
                            const ClonedMessageData& aData)
 {
   if (mTabChildGlobal) {
-    nsFrameScriptCx cx(static_cast<nsIWebBrowserChrome*>(this), this);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
@@ -2093,7 +2091,7 @@ TabChild::DeallocPRenderFrame(PRenderFrameChild* aFrame)
 bool
 TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
 {
-  if (!mCx && !mTabChildGlobal) {
+  if (!mGlobal && !mTabChildGlobal) {
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
     NS_ENSURE_TRUE(window, false);
     nsCOMPtr<EventTarget> chromeHandler =
@@ -2344,7 +2342,6 @@ TabChildGlobal::Init()
   NS_ASSERTION(!mMessageManager, "Re-initializing?!?");
   mMessageManager = new nsFrameMessageManager(mTabChild,
                                               nullptr,
-                                              mTabChild->GetJSContext(),
                                               MM_CHILD);
 }
 
@@ -2418,9 +2415,7 @@ TabChildGlobal::Atob(const nsAString& aAsciiString,
 JSContext*
 TabChildGlobal::GetJSContextForEventHandlers()
 {
-  if (!mTabChild)
-    return nullptr;
-  return mTabChild->GetJSContext();
+  return nsContentUtils::GetSafeJSContext();
 }
 
 nsIPrincipal* 
