@@ -25,7 +25,7 @@ loader.lazyGetter(this, "InspectorPanel", function() require("devtools/inspector
 loader.lazyImporter(this, "WebConsolePanel", "resource:///modules/WebConsolePanel.jsm");
 loader.lazyImporter(this, "DebuggerPanel", "resource:///modules/devtools/DebuggerPanel.jsm");
 loader.lazyImporter(this, "StyleEditorPanel", "resource:///modules/devtools/StyleEditorPanel.jsm");
-loader.lazyImporter(this, "ProfilerPanel", "resource:///modules/devtools/ProfilerPanel.jsm");
+loader.lazyGetter(this, "ProfilerPanel", function() require("devtools/profiler/panel"));
 loader.lazyImporter(this, "NetMonitorPanel", "resource:///modules/devtools/NetMonitorPanel.jsm");
 
 // Strings
