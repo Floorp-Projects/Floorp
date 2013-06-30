@@ -4678,7 +4678,8 @@ AutoPrepareForTracing::AutoPrepareForTracing(JSRuntime *rt)
 }
 
 JSCompartment *
-js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals)
+js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
+                   const JS::CompartmentOptions &options)
 {
     JSRuntime *rt = cx->runtime();
     JS_AbortIfWrongThread(rt);
@@ -4700,7 +4701,7 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals)
         zone->isSystem = principals && principals == trusted;
     }
 
-    ScopedJSDeletePtr<JSCompartment> compartment(cx->new_<JSCompartment>(zone));
+    ScopedJSDeletePtr<JSCompartment> compartment(cx->new_<JSCompartment>(zone, options));
     if (!compartment || !compartment->init(cx))
         return NULL;
 

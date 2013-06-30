@@ -44,7 +44,7 @@ class nsWrapperCache;
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
-      native ZoneSpecifier(uintptr_t);
+[ref] native JSCompartmentOptions(JS::CompartmentOptions);
 [ref] native JSCallArgsRef(const JS::CallArgs);
       native JSHandleId(JS::HandleId);
 
@@ -291,7 +291,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(dee6f80b-7ec5-4690-8622-a48af6a1ce52)]
+[uuid(bd61342d-8a88-4f23-8d2d-1782fff02d26)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -318,14 +318,15 @@ interface nsIXPConnect : nsISupports
      *                   compartment. Can be null if not on the main thread.
      * @param aFlags one of the flags below specifying what options this
      *               global object wants.
+     * @param aOptions JSAPI-specific options for the new compartment.
      */
     nsIXPConnectJSObjectHolder
     initClassesWithNewWrappedGlobal(
-                  in JSContextPtr aJSContext,
-                  in nsISupports  aCOMObj,
-                  in nsIPrincipal aPrincipal,
-                  in uint32_t     aFlags,
-                  in ZoneSpecifier aZoneSpec);
+                  in JSContextPtr         aJSContext,
+                  in nsISupports          aCOMObj,
+                  in nsIPrincipal         aPrincipal,
+                  in uint32_t             aFlags,
+                  in JSCompartmentOptions aOptions);
 
     const uint32_t INIT_JS_STANDARD_CLASSES  = 1 << 0;
     // Free bit here!

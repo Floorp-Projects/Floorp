@@ -264,12 +264,13 @@ HRESULT
 RadialGradientEffectD2D1::Register(ID2D1Factory1 *aFactory)
 {
   D2D1_PROPERTY_BINDING bindings[] = {
-    D2D1_VALUE_TYPE_BINDING(L"StopCollection", &SetStopCollection, &GetStopCollection),
-    D2D1_VALUE_TYPE_BINDING(L"Center1", &SetCenter1, &GetCenter1),
-    D2D1_VALUE_TYPE_BINDING(L"Center2", &SetCenter2, &GetCenter2),
-    D2D1_VALUE_TYPE_BINDING(L"Radius1", &SetRadius1, &GetRadius1),
-    D2D1_VALUE_TYPE_BINDING(L"Radius2", &SetRadius2, &GetRadius2),
-    D2D1_VALUE_TYPE_BINDING(L"Transform", &SetTransform, &GetTransform)
+    D2D1_VALUE_TYPE_BINDING(L"StopCollection", &RadialGradientEffectD2D1::SetStopCollection,
+                            &RadialGradientEffectD2D1::GetStopCollection),
+    D2D1_VALUE_TYPE_BINDING(L"Center1", &RadialGradientEffectD2D1::SetCenter1, &RadialGradientEffectD2D1::GetCenter1),
+    D2D1_VALUE_TYPE_BINDING(L"Center2", &RadialGradientEffectD2D1::SetCenter2, &RadialGradientEffectD2D1::GetCenter2),
+    D2D1_VALUE_TYPE_BINDING(L"Radius1", &RadialGradientEffectD2D1::SetRadius1, &RadialGradientEffectD2D1::GetRadius1),
+    D2D1_VALUE_TYPE_BINDING(L"Radius2", &RadialGradientEffectD2D1::SetRadius2, &RadialGradientEffectD2D1::GetRadius2),
+    D2D1_VALUE_TYPE_BINDING(L"Transform", &RadialGradientEffectD2D1::SetTransform, &RadialGradientEffectD2D1::GetTransform)
   };
   HRESULT hr = aFactory->RegisterEffectFromString(CLSID_RadialGradientEffect, kXmlDescription, bindings, ARRAYSIZE(bindings), CreateEffect);
 
