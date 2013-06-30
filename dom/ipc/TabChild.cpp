@@ -1446,7 +1446,6 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
     }
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
-    nsFrameScriptCx frameScriptCx(static_cast<nsIWebBrowserChrome*>(this), this);
     // Let the BrowserElementScrolling helper (if it exists) for this
     // content manipulate the frame state.
     nsRefPtr<nsFrameMessageManager> mm =
@@ -2011,7 +2010,6 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
 {
   if (mTabChildGlobal) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
-    nsFrameScriptCx cx(static_cast<nsIWebBrowserChrome*>(this), this);
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
