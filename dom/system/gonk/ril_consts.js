@@ -2566,6 +2566,11 @@ this.MMI_SM_KS_PIN_CHANGED = "smPinChanged";
 this.MMI_SM_KS_PIN2_CHANGED = "smPin2Changed";
 this.MMI_SM_KS_PIN_UNBLOCKED = "smPinUnblocked";
 this.MMI_SM_KS_PIN2_UNBLOCKED = "smPin2Unblocked";
+this.MMI_SM_KS_SERVICE_ENABLED = "smServiceEnabled";
+this.MMI_SM_KS_SERVICE_DISABLED = "smServiceDisabled";
+this.MMI_SM_KS_SERVICE_REGISTERED = "smServiceRegistered";
+this.MMI_SM_KS_SERVICE_ERASED = "smServiceErased";
+this.MMI_SM_KS_SERVICE_INTERROGATED = "smServiceInterrogated";
 
 /**
  * CDMA PDU constants

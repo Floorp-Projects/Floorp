@@ -4850,8 +4850,7 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] =
     }
     if (!rulesLength) {
       options.success = false;
-      options.errorMsg =
-        "Invalid rule length while querying call forwarding status.";
+      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
       this.sendDOMMessage(options);
       return;
     }
@@ -4867,6 +4866,13 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] =
       rules[i] = rule;
     }
     options.rules = rules;
+    if (options.rilMessageType === "sendMMI") {
+      options.statusMessage = MMI_SM_KS_SERVICE_INTERROGATED;
+      // MMI query call forwarding options request returns a set of rules that
+      // will be exposed in the form of an array of nsIDOMMozMobileCFInfo
+      // instances.
+      options.additionalInformation = rules;
+    }
     this.sendDOMMessage(options);
 };
 RIL[REQUEST_SET_CALL_FORWARD] =
@@ -4874,6 +4880,22 @@ RIL[REQUEST_SET_CALL_FORWARD] =
     options.success = (options.rilRequestError === 0);
     if (!options.success) {
       options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    }
+    if (options.success && options.isSendMMI) {
+      switch (options.action) {
+        case CALL_FORWARD_ACTION_ENABLE:
+          options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
+          break;
+        case CALL_FORWARD_ACTION_DISABLE:
+          options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
+          break;
+        case CALL_FORWARD_ACTION_REGISTRATION:
+          options.statusMessage = MMI_SM_KS_SERVICE_REGISTERED;
+          break;
+        case CALL_FORWARD_ACTION_ERASURE:
+          options.statusMessage = MMI_SM_KS_SERVICE_ERASED;
+          break;
+      }
     }
     this.sendDOMMessage(options);
 };

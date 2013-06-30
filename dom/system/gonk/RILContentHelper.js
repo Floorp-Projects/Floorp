@@ -1576,6 +1576,14 @@ RILContentHelper.prototype = {
         success = false;
     }
 
+    // MMI query call forwarding options request returns a set of rules that
+    // will be exposed in the form of an array of nsIDOMMozMobileCFInfo
+    // instances.
+    if (message.mmiServiceCode === RIL.MMI_KS_SC_CALL_FORWARDING &&
+        message.additionalInformation) {
+      this._cfRulesToMobileCfInfo(message.additionalInformation);
+    }
+
     let result = {
       serviceCode: message.mmiServiceCode,
       additionalInformation: message.additionalInformation
