@@ -282,6 +282,8 @@ public:
 
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 
+    JSContext* GetJSContext() { return mCx; }
+
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
     /** Return the DPI of the widget this TabChild draws to. */
