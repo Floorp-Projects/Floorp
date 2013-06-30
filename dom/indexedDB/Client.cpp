@@ -84,6 +84,12 @@ Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
       continue;
     }
 
+#ifdef XP_MACOSX
+    if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+      continue;
+    }
+#endif
+
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     NS_ENSURE_SUCCESS(rv, rv);
