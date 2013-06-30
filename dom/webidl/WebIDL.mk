@@ -61,6 +61,7 @@ webidl_files = \
   DOMCursor.webidl \
   DOMError.webidl \
   DOMImplementation.webidl \
+  DOMMMIError.webidl \
   DOMParser.webidl \
   DOMRequest.webidl \
   DOMSettableTokenList.webidl \
