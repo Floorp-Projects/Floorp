@@ -370,8 +370,11 @@ SessionStore.prototype = {
     if (aWindow.Browser.tabs.length > 0) {
       // Bundle this browser's data and extra data and save in the closedTabs
       // window property
+      //
+      // NB: The access to aBrowser.__SS_extdata throws during automation (in
+      // browser_msgmgr_01). See bug 888736.
       let data = aBrowser.__SS_data;
-      data.extData = aBrowser.__SS_extdata;
+      try { data.extData = aBrowser.__SS_extdata; } catch (e) { }
 
       this._windows[aWindow.__SSID].closedTabs.unshift(data);
       let length = this._windows[aWindow.__SSID].closedTabs.length;
