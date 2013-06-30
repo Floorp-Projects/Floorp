@@ -257,11 +257,6 @@ private:
                                  bool* aValid);
 };
 
-void
-ContentScriptErrorReporter(JSContext* aCx,
-                           const char* aMessage,
-                           JSErrorReport* aReport);
-
 class nsScriptCacheCleaner;
 
 struct nsFrameJSScriptExecutorHolder
@@ -284,8 +279,7 @@ public:
   }
 protected:
   friend class nsFrameScriptCx;
-  nsFrameScriptExecutor() : mCx(nullptr), mCxStackRefCnt(0),
-                            mDelayedCxDestroy(false)
+  nsFrameScriptExecutor()
   { MOZ_COUNT_CTOR(nsFrameScriptExecutor); }
   ~nsFrameScriptExecutor()
   { MOZ_COUNT_DTOR(nsFrameScriptExecutor); }
@@ -301,31 +295,9 @@ protected:
                        nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsFrameScriptExecutor* aTmp);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
-  JSContext* mCx;
-  uint32_t mCxStackRefCnt;
-  bool mDelayedCxDestroy;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   static nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>* sCachedScripts;
   static nsScriptCacheCleaner* sScriptCacheCleaner;
-};
-
-class nsFrameScriptCx
-{
-public:
-  nsFrameScriptCx(nsISupports* aOwner, nsFrameScriptExecutor* aExec)
-  : mOwner(aOwner), mExec(aExec)
-  {
-    ++(mExec->mCxStackRefCnt);
-  }
-  ~nsFrameScriptCx()
-  {
-    if (--(mExec->mCxStackRefCnt) == 0 &&
-        mExec->mDelayedCxDestroy) {
-      mExec->DestroyCx();
-    }
-  }
-  nsCOMPtr<nsISupports> mOwner;
-  nsFrameScriptExecutor* mExec;
 };
 
 class nsScriptCacheCleaner MOZ_FINAL : public nsIObserver
