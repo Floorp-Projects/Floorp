@@ -4,6 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+.profiler-sidebar-empty-notice {
+  max-width: 176px;
+  padding: 10px;
+  background-color: rgb(61, 69, 76);
+  color: white;
+  font-weight: bold;
+}
+
+.devtools-toolbar {
+  min-height: 33px; 
+}
+
 .profiler-sidebar {
   min-width: 196px;
 }
@@ -30,14 +42,33 @@
   color: rgb(128, 195, 228);
 }
 
-.devtools-toolbar {
-  height: 26px;
-  padding: 3px;
+#profiler-controls > toolbarbutton {
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+  border-width: 0;
+  -moz-border-end-width: 1px;
+  outline-offset: -3px;
 }
 
-.devtools-toolbar .devtools-toolbarbutton {
-  min-width: 48px;
-  min-height: 0;
-  font-size: 11px;
-  padding: 0px 8px;
+#profiler-controls > toolbarbutton:last-of-type {
+  -moz-border-end-width: 0;
+}
+
+#profiler-controls {
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
+              0 0 0 1px hsla(210,16%,76%,.15) inset,
+              0 1px 0 hsla(210,16%,76%,.15);
+  border: 1px solid hsla(210,8%,5%,.45);
+  border-radius: 3px;
+  margin: 0 3px;
+}
+
+#profiler-start {
+  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.png");
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#profiler-start[checked] {
+  -moz-image-region: rect(0px,32px,16px,16px);
 }
