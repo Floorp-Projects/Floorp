@@ -907,6 +907,12 @@ QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
       continue;
     }
 
+#ifdef XP_MACOSX
+    if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+      continue;
+    }
+#endif
+
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2062,6 +2068,12 @@ AsyncUsageRunnable::RunInternal()
           if (leafName.EqualsLiteral(METADATA_FILE_NAME)) {
             continue;
           }
+
+#ifdef XP_MACOSX
+          if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+            continue;
+          }
+#endif
 
           if (!initialized) {
             bool isDirectory;
