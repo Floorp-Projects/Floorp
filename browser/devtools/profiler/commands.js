@@ -2,20 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-this.EXPORTED_SYMBOLS = [];
+const { Cu } = require("chrome");
+module.exports = [];
 
 Cu.import("resource://gre/modules/devtools/gcli.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/devtools/Require.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-  "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyGetter(this, "gDevTools",
+  () => Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
 
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/Console.jsm");
-
-var Promise = require('util/promise');
+var Promise = require("sdk/core/promise");
 
 /*
  * 'profiler' command. Doesn't do anything.
@@ -64,39 +59,17 @@ gcli.addCommand({
   name: "profiler start",
   description: gcli.lookup("profilerStartDesc"),
   returnType: "string",
-
-  params: [
-    {
-      name: "name",
-      type: "string",
-      manual: gcli.lookup("profilerStartManual")
-    }
-  ],
+  params: [],
 
   exec: function (args, context) {
     function start() {
-      let name = args.name;
       let panel = getPanel(context, "jsprofiler");
-      let profile = panel.getProfileByName(name) || panel.createProfile(name);
 
-      if (profile.isStarted) {
-        throw gcli.lookup("profilerAlreadyStarted");
-      }
+      if (panel.recordingProfile)
+        throw gcli.lookup("profilerAlreadyStarted2");
 
-      if (profile.isFinished) {
-        throw gcli.lookup("profilerAlreadyFinished");
-      }
-
-      let item = panel.sidebar.getItemByProfile(profile);
-
-      if (panel.sidebar.selectedItem === item) {
-        profile.start();
-      } else {
-        panel.on("profileSwitched", () => profile.start());
-        panel.sidebar.selectedItem = item;
-      }
-
-      return gcli.lookup("profilerStarting2");
+      panel.toggleRecording();
+      return gcli.lookup("profilerStarted");
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")
@@ -111,42 +84,16 @@ gcli.addCommand({
   name: "profiler stop",
   description: gcli.lookup("profilerStopDesc"),
   returnType: "string",
-
-  params: [
-    {
-      name: "name",
-      type: "string",
-      manual: gcli.lookup("profilerStopManual")
-    }
-  ],
+  params: [],
 
   exec: function (args, context) {
     function stop() {
       let panel = getPanel(context, "jsprofiler");
-      let profile = panel.getProfileByName(args.name);
 
-      if (!profile) {
-        throw gcli.lookup("profilerNotFound");
-      }
+      if (!panel.recordingProfile)
+        throw gcli.lookup("profilerNotStarted3");
 
-      if (profile.isFinished) {
-        throw gcli.lookup("profilerAlreadyFinished");
-      }
-
-      if (!profile.isStarted) {
-        throw gcli.lookup("profilerNotStarted2");
-      }
-
-      let item = panel.sidebar.getItemByProfile(profile);
-
-      if (panel.sidebar.selectedItem === item) {
-        profile.stop();
-      } else {
-        panel.on("profileSwitched", () => profile.stop());
-        panel.sidebar.selectedItem = item;
-      }
-
-      return gcli.lookup("profilerStopping2");
+      panel.toggleRecording();
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")

@@ -73,6 +73,7 @@ Selection.prototype = {
 
   _onMutations: function(mutations) {
     let attributeChange = false;
+    let pseudoChange = false;
     let detached = false;
     let parentNode = null;
     for (let m of mutations) {
@@ -85,10 +86,15 @@ Selection.prototype = {
           detached = true;
         }
       }
+      if (m.type == "pseudoClassLock"){
+        pseudoChange = true;
+      }
     }
 
     if (attributeChange)
       this.emit("attribute-changed");
+    if (pseudoChange)
+      this.emit("pseudoclass");
     if (detached) {
       this.emit("detached", parentNode ? parentNode.rawNode() : null);
       this.emit("detached-front", parentNode);
