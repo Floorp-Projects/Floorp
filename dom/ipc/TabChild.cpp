@@ -1145,7 +1145,7 @@ TabChild::~TabChild()
     if (webBrowser) {
       webBrowser->SetContainerWindow(nullptr);
     }
-    if (mCx) {
+    if (mGlobal) {
       DestroyCx();
     }
     
@@ -1486,7 +1486,7 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 bool
 TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
   {
-    if (!mCx || !mTabChildGlobal) {
+    if (!mGlobal || !mTabChildGlobal) {
         return true;
     }
 
@@ -1556,7 +1556,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 bool
 TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint)
 {
-    if (!mCx || !mTabChildGlobal) {
+    if (!mGlobal || !mTabChildGlobal) {
         return true;
     }
 
@@ -1573,7 +1573,7 @@ TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint)
 bool
 TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint)
 {
-  if (!mCx || !mTabChildGlobal) {
+  if (!mGlobal || !mTabChildGlobal) {
     return true;
   }
 
@@ -1587,7 +1587,7 @@ TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint)
 bool
 TabChild::RecvHandleLongTap(const CSSIntPoint& aPoint)
 {
-  if (!mCx || !mTabChildGlobal) {
+  if (!mGlobal || !mTabChildGlobal) {
     return true;
   }
 
@@ -1996,7 +1996,7 @@ TabChild::DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* actor)
 bool
 TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
-  if (!mCx && !InitTabChildGlobal())
+  if (!mGlobal && !InitTabChildGlobal())
     // This can happen if we're half-destroyed.  It's not a fatal
     // error.
     return true;
@@ -2095,7 +2095,7 @@ TabChild::DeallocPRenderFrame(PRenderFrameChild* aFrame)
 bool
 TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
 {
-  if (!mCx && !mTabChildGlobal) {
+  if (!mGlobal && !mTabChildGlobal) {
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
     NS_ENSURE_TRUE(window, false);
     nsCOMPtr<EventTarget> chromeHandler =
