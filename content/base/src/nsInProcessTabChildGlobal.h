@@ -93,7 +93,7 @@ public:
   }
   using nsDOMEventTargetHelper::AddEventListener;
 
-  virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE { return nsContentUtils::GetSafeJSContext(); }
+  virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE { return mCx; }
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL);
   void Disconnect();

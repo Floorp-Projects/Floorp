@@ -120,6 +120,7 @@ class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
 public:
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         nsFrameMessageManager* aParentManager,
+                        JSContext* aContext,
                         /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
   : mChrome(!!(aFlags & mozilla::dom::ipc::MM_CHROME)),
     mGlobal(!!(aFlags & mozilla::dom::ipc::MM_GLOBAL)),
@@ -129,8 +130,11 @@ public:
     mHandlingMessage(false),
     mDisconnected(false),
     mCallback(aCallback),
-    mParentManager(aParentManager)
+    mParentManager(aParentManager),
+    mContext(aContext)
   {
+    NS_ASSERTION(mContext || (mChrome && !mParentManager) || mIsProcessManager,
+                 "Should have mContext in non-global/non-process manager!");
     NS_ASSERTION(mChrome || !aParentManager, "Should not set parent manager!");
     NS_ASSERTION(!mIsBroadcaster || !mCallback,
                  "Broadcasters cannot have callbacks!");
@@ -184,7 +188,8 @@ public:
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aSync, const StructuredCloneData* aCloneData,
                           JS::Handle<JSObject*> aObjectsArray,
-                          InfallibleTArray<nsString>* aJSONRetVal);
+                          InfallibleTArray<nsString>* aJSONRetVal,
+                          JSContext* aContext = nullptr);
 
   void AddChildManager(nsFrameMessageManager* aManager,
                        bool aLoadScripts = true);
@@ -207,6 +212,8 @@ public:
                                 uint8_t aArgc);
   nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
                                         const StructuredCloneData& aData);
+  JSContext* GetJSContext() { return mContext; }
+  void SetJSContext(JSContext* aCx) { mContext = aCx; }
   void RemoveFromParent();
   nsFrameMessageManager* GetParentManager() { return mParentManager; }
   void SetParentManager(nsFrameMessageManager* aParent)
@@ -240,6 +247,7 @@ protected:
   mozilla::dom::ipc::MessageManagerCallback* mCallback;
   nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
   nsFrameMessageManager* mParentManager;
+  JSContext* mContext;
   nsTArray<nsString> mPendingScripts;
 public:
   static nsFrameMessageManager* sParentProcessManager;
@@ -257,6 +265,11 @@ private:
                                  bool* aValid);
 };
 
+void
+ContentScriptErrorReporter(JSContext* aCx,
+                           const char* aMessage,
+                           JSErrorReport* aReport);
+
 class nsScriptCacheCleaner;
 
 struct nsFrameJSScriptExecutorHolder
@@ -272,18 +285,16 @@ class nsFrameScriptExecutor
 {
 public:
   static void Shutdown();
-  already_AddRefed<nsIXPConnectJSObjectHolder> GetGlobal()
-  {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> ref = mGlobal;
-    return ref.forget();
-  }
 protected:
   friend class nsFrameScriptCx;
-  nsFrameScriptExecutor()
+  nsFrameScriptExecutor() : mCx(nullptr), mCxStackRefCnt(0),
+                            mDelayedCxDestroy(false)
   { MOZ_COUNT_CTOR(nsFrameScriptExecutor); }
   ~nsFrameScriptExecutor()
   { MOZ_COUNT_DTOR(nsFrameScriptExecutor); }
-  void DidCreateGlobal();
+  void DidCreateCx();
+  // Call this when you want to destroy mCx.
+  void DestroyCx();
   void LoadFrameScriptInternal(const nsAString& aURL);
   enum CacheFailedBehavior { EXECUTE_IF_CANT_CACHE, DONT_EXECUTE };
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
@@ -293,9 +304,31 @@ protected:
                        nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsFrameScriptExecutor* aTmp);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
+  JSContext* mCx;
+  uint32_t mCxStackRefCnt;
+  bool mDelayedCxDestroy;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   static nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>* sCachedScripts;
   static nsScriptCacheCleaner* sScriptCacheCleaner;
+};
+
+class nsFrameScriptCx
+{
+public:
+  nsFrameScriptCx(nsISupports* aOwner, nsFrameScriptExecutor* aExec)
+  : mOwner(aOwner), mExec(aExec)
+  {
+    ++(mExec->mCxStackRefCnt);
+  }
+  ~nsFrameScriptCx()
+  {
+    if (--(mExec->mCxStackRefCnt) == 0 &&
+        mExec->mDelayedCxDestroy) {
+      mExec->DestroyCx();
+    }
+  }
+  nsCOMPtr<nsISupports> mOwner;
+  nsFrameScriptExecutor* mExec;
 };
 
 class nsScriptCacheCleaner MOZ_FINAL : public nsIObserver
