@@ -8,8 +8,10 @@
  * the two is unified to minimize footprint.
  */
 
-#include "mozilla/MemoryReporting.h"
 #include "nsAttrAndChildArray.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "nsMappedAttributeElement.h"
 #include "prbit.h"
 #include "nsString.h"
