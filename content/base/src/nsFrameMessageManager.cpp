@@ -859,12 +859,6 @@ nsFrameScriptExecutor::DidCreateGlobal()
   }
 }
 
-void
-nsFrameScriptExecutor::DestroyCx()
-{
-  mGlobal = nullptr;
-}
-
 static PLDHashOperator
 CachedScriptUnrooter(const nsAString& aKey,
                        nsFrameJSScriptExecutorHolder*& aData,
