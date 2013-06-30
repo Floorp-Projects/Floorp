@@ -835,7 +835,6 @@ Activation::~Activation()
 {
     JS_ASSERT(cx_->mainThread().activation_ == this);
     cx_->mainThread().activation_ = prev_;
-    cx_->maybeMigrateVersionOverride();
 }
 
 InterpreterActivation::InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs)
