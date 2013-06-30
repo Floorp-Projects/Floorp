@@ -285,6 +285,11 @@ class nsFrameScriptExecutor
 {
 public:
   static void Shutdown();
+  already_AddRefed<nsIXPConnectJSObjectHolder> GetGlobal()
+  {
+    nsCOMPtr<nsIXPConnectJSObjectHolder> ref = mGlobal;
+    return ref.forget();
+  }
 protected:
   friend class nsFrameScriptCx;
   nsFrameScriptExecutor() : mCx(nullptr), mCxStackRefCnt(0),
