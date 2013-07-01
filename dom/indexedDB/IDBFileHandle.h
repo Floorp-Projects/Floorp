@@ -9,19 +9,18 @@
 
 #include "IndexedDatabase.h"
 
-#include "nsIIDBFileHandle.h"
-
 #include "mozilla/dom/file/FileHandle.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 
+class nsIIDBDatabase;
+
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBFileHandle : public mozilla::dom::file::FileHandle,
-                      public nsIIDBFileHandle
+class IDBFileHandle : public mozilla::dom::file::FileHandle
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBFILEHANDLE
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   NS_IMETHOD_(int64_t)
   GetFileId()
@@ -45,6 +44,8 @@ public:
   virtual already_AddRefed<nsIDOMFile>
   CreateFileObject(mozilla::dom::file::LockedFile* aLockedFile,
                    uint32_t aFileSize);
+
+  nsIIDBDatabase* Database();
 
 private:
   IDBFileHandle()
