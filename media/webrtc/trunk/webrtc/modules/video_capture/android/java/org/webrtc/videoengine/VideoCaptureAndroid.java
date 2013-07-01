@@ -70,6 +70,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     private int mCaptureWidth = -1;
     private int mCaptureHeight = -1;
     private int mCaptureFPS = -1;
+    private int mCaptureRotation = 0;
 
     private AppStateListener mAppStateListener = null;
 
@@ -145,6 +146,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         camera = in_camera;
         cameraId = in_cameraId;
         currentDevice = in_device;
+        mCaptureRotation = GetRotateAmount();
 
         try {
             View cameraView = GeckoAppShell.getGeckoInterface().getCameraView();
@@ -193,6 +195,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
                 isCaptureStarted = true;
                 tryStartCapture(mCaptureWidth, mCaptureHeight, mCaptureFPS);
                 captureLock.unlock();
+            }
+            @Override
+            public void onConfigurationChanged() {
+                mCaptureRotation = GetRotateAmount();
             }
         };
 
@@ -320,7 +326,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         return DetachCamera();
     }
 
-    native void ProvideCameraFrame(byte[] data, int length, long captureObject);
+    native void ProvideCameraFrame(byte[] data, int length, int rotation,
+                                   long captureObject);
 
     public void onPreviewFrame(byte[] data, Camera camera) {
         previewBufferLock.lock();
@@ -332,7 +339,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             // If StartCapture has been called but not StopCapture
             // Call the C++ layer with the captured frame
             if (data.length == expectedFrameSize) {
-                ProvideCameraFrame(data, expectedFrameSize, context);
+                ProvideCameraFrame(data, expectedFrameSize, mCaptureRotation,
+                                   context);
                 if (ownsBuffers) {
                     // Give the video buffer to the camera service again.
                     camera.addCallbackBuffer(data);
@@ -340,46 +348,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             }
         }
         previewBufferLock.unlock();
-    }
-
-    // Sets the rotation of the preview render window.
-    // Does not affect the captured video image.
-    public void SetPreviewRotation(int rotation) {
-        Log.v(TAG, "SetPreviewRotation: " + rotation);
-
-        if (camera != null) {
-            previewBufferLock.lock();
-            int width = 0;
-            int height = 0;
-            int framerate = 0;
-            boolean wasCaptureRunning = isCaptureRunning;
-
-            if (isCaptureRunning) {
-                width = mCaptureWidth;
-                height = mCaptureHeight;
-                framerate = mCaptureFPS;
-                StopCapture();
-            }
-
-            int resultRotation = 0;
-            if (currentDevice.frontCameraType ==
-                    VideoCaptureDeviceInfoAndroid.FrontFacingCameraType.Android23) {
-                // this is a 2.3 or later front facing camera.
-                // SetDisplayOrientation will flip the image horizontally
-                // before doing the rotation.
-                resultRotation=(360-rotation) % 360; // compensate the mirror
-            }
-            else {
-                // Back facing or 2.2 or previous front camera
-                resultRotation=rotation;
-            }
-            camera.setDisplayOrientation(resultRotation);
-
-            if (wasCaptureRunning) {
-                StartCapture(width, height, framerate);
-            }
-            previewBufferLock.unlock();
-        }
     }
 
     public void surfaceChanged(SurfaceHolder holder,

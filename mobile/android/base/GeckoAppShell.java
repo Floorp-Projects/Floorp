@@ -1965,6 +1965,7 @@ public class GeckoAppShell
     public interface AppStateListener {
         public void onPause();
         public void onResume();
+        public void onConfigurationChanged();
     }
 
     public interface GeckoInterface {
