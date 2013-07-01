@@ -326,6 +326,8 @@ BrowserGlue.prototype = {
         // of them are changed (either by directly setting the relevant prefs,
         // i.e. if add-ons try to change this directly, or if the
         // nsIBrowserSearchService setters are called).
+        // No need to initialize the search service, since it's guaranteed to be
+        // initialized already when this notification fires.
         let ss = Services.search;
         if (ss.currentEngine.name == ss.defaultEngine.name)
           return;
@@ -334,6 +336,22 @@ BrowserGlue.prototype = {
         else
           ss.currentEngine = ss.defaultEngine;
         break;
+      case "browser-search-service":
+        if (data != "init-complete")
+          return;
+        Services.obs.removeObserver(this, "browser-search-service");
+        this._syncSearchEngines();
+        break;
+    }
+  },
+
+  _syncSearchEngines: function () {
+    // Only do this if the search service is already initialized. This function
+    // gets called in finalUIStartup and from a browser-search-service observer,
+    // to catch both cases (search service initialization occurring before and
+    // after final-ui-startup)
+    if (Services.search.isInitialized) {
+      Services.search.defaultEngine = Services.search.currentEngine;
     }
   },
 
@@ -369,6 +387,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "keyword-search", false);
 #endif
     os.addObserver(this, "browser-search-engine-modified", false);
+    os.addObserver(this, "browser-search-service", false);
   },
 
   // cleanup (called on application shutdown)
@@ -403,6 +422,10 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "keyword-search");
 #endif
     os.removeObserver(this, "browser-search-engine-modified");
+    try {
+      os.removeObserver(this, "browser-search-service");
+      // may have already been removed by the observer
+    } catch (ex) {}
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
@@ -429,6 +452,8 @@ BrowserGlue.prototype = {
     this._migrateUI();
 
     this._setUpUserAgentOverrides();
+
+    this._syncSearchEngines();
 
     webappsUI.init();
     PageThumbs.init();
