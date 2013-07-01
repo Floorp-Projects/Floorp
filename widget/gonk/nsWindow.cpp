@@ -23,6 +23,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -74,7 +75,6 @@ static bool sUsingOMTC;
 static bool sUsingHwc;
 static bool sScreenInitialized;
 static nsRefPtr<gfxASurface> sOMTCSurface;
-static pthread_t sFramebufferWatchThread;
 
 namespace {
 
@@ -115,30 +115,13 @@ private:
     bool mIsOn;
 };
 
-static const char* kSleepFile = "/sys/power/wait_for_fb_sleep";
-static const char* kWakeFile = "/sys/power/wait_for_fb_wake";
+static StaticRefPtr<ScreenOnOffEvent> sScreenOnEvent;
+static StaticRefPtr<ScreenOnOffEvent> sScreenOffEvent;
 
-static void *frameBufferWatcher(void *) {
-
-    char buf;
-    bool ret;
-
-    nsRefPtr<ScreenOnOffEvent> mScreenOnEvent = new ScreenOnOffEvent(true);
-    nsRefPtr<ScreenOnOffEvent> mScreenOffEvent = new ScreenOnOffEvent(false);
-
-    while (true) {
-        // Cannot use epoll here because kSleepFile and kWakeFile are
-        // always ready to read and blocking.
-        ret = ReadSysFile(kSleepFile, &buf, sizeof(buf));
-        NS_WARN_IF_FALSE(ret, "WAIT_FOR_FB_SLEEP failed");
-        NS_DispatchToMainThread(mScreenOffEvent);
-
-        ret = ReadSysFile(kWakeFile, &buf, sizeof(buf));
-        NS_WARN_IF_FALSE(ret, "WAIT_FOR_FB_WAKE failed");
-        NS_DispatchToMainThread(mScreenOnEvent);
-    }
-
-    return NULL;
+static void
+displayEnabledCallback(bool enabled)
+{
+    NS_DispatchToMainThread(enabled ? sScreenOnEvent : sScreenOffEvent);
 }
 
 } // anonymous namespace
@@ -146,11 +129,11 @@ static void *frameBufferWatcher(void *) {
 nsWindow::nsWindow()
 {
     if (!sScreenInitialized) {
-        // Watching screen on/off state by using a pthread
-        // which implicitly calls exit() when the main thread ends
-        if (pthread_create(&sFramebufferWatchThread, NULL, frameBufferWatcher, NULL)) {
-            NS_RUNTIMEABORT("Failed to create framebufferWatcherThread, aborting...");
-        }
+        sScreenOnEvent = new ScreenOnOffEvent(true);
+        ClearOnShutdown(&sScreenOnEvent);
+        sScreenOffEvent = new ScreenOnOffEvent(false);
+        ClearOnShutdown(&sScreenOffEvent);
+        GetGonkDisplay()->OnEnabled(displayEnabledCallback);
 
         nsIntSize screenSize;
         bool gotFB = Framebuffer::GetSize(&screenSize);
