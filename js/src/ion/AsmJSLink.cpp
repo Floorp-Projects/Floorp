@@ -476,7 +476,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
     if (!PerfFuncEnabled())
         return true;
 
-    PerfSpewer perfSpewer;
+    AsmJSPerfSpewer perfSpewer;
 
     unsigned long base = (unsigned long) module.functionCode();
 
@@ -500,7 +500,34 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
         unsigned lineno = func.lineno;
         unsigned columnIndex = func.columnIndex;
 
-        perfSpewer.writeAsmJSProfile(start, size, filename, lineno, columnIndex, method_name);
+        perfSpewer.writeFunctionMap(start, size, filename, lineno, columnIndex, method_name);
+    }
+
+    return true;
+}
+
+static bool
+SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
+{
+    if (!PerfBlockEnabled())
+        return true;
+
+    AsmJSPerfSpewer spewer;
+    unsigned long funcBaseAddress = (unsigned long) module.functionCode();
+
+    const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
+    const char *filename = const_cast<char *>(info.scriptSource_->filename());
+
+    for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
+        const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);
+
+        unsigned long size = (unsigned long)func.endCodeOffset - (unsigned long)func.startCodeOffset;
+        JSAutoByteString bytes;
+        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        if (!method_name)
+            return false;
+
+        spewer.writeBlocksMap(funcBaseAddress, func.startCodeOffset, size, filename, method_name, func.blocks);
     }
 
     return true;
@@ -528,6 +555,8 @@ js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
 #endif
 
 #if defined(JS_ION_PERF)
+    if (!SendBlocksToPerf(cx, module))
+        return false;
     if (!SendFunctionsToPerf(cx, module))
         return false;
 #endif
