@@ -70,3 +70,52 @@ const PromptHelper = {
       dialog.arguments.selection.value = document.getElementById("prompt-select-list").selectedIndex;
   }
 };
+
+var CrashPrompt = {
+  load: function () {
+    if (this._preventRecurse) {
+      throw new Exception("CrashPrompt recursion error!!");
+      return;
+    }
+    // populate the text blurb with localized text
+    let brandName = Services.strings.createBundle("chrome://branding/locale/brand.properties")
+                                    .GetStringFromName("brandShortName");
+    let vendorName = Services.strings.createBundle("chrome://branding/locale/brand.properties")
+                                     .GetStringFromName("vendorShortName");
+    let crashBundle = Services.strings.createBundle("chrome://browser/locale/crashprompt.properties");
+    let message = crashBundle.formatStringFromName("crashprompt.messagebody", [brandName, vendorName, brandName], 3);
+    let descElement = document.getElementById("privacy-crash-blurb");
+    descElement.textContent = message;
+
+    // focus the send button
+    document.getElementById('crash-button-accept').focus();
+  },
+
+  accept: function() {
+    document.getElementById("crash-prompt-dialog").close();
+    Services.prefs.setBoolPref('app.crashreporter.autosubmit', true);
+    Services.prefs.setBoolPref('app.crashreporter.prompted', true);
+    BrowserUI.crashReportingPrefChanged(true);
+
+    this._preventRecurse = true;
+    BrowserUI.startupCrashCheck();
+    this._preventRecurse = false;
+  },
+
+  refuse: function() {
+    document.getElementById("crash-prompt-dialog").close();
+    Services.prefs.setBoolPref('app.crashreporter.autosubmit', false);
+    Services.prefs.setBoolPref('app.crashreporter.prompted', true);
+    BrowserUI.crashReportingPrefChanged(false);
+  },
+
+  privacy: function() {
+    document.getElementById("crash-privacy-options").setAttribute("hidden", true);
+    document.getElementById("crash-privacy-statement").setAttribute("hidden", false);
+  },
+
+  privacyBack: function() {
+    document.getElementById("crash-privacy-options").setAttribute("hidden", false);
+    document.getElementById("crash-privacy-statement").setAttribute("hidden", true);
+  },
+};

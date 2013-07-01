@@ -492,6 +492,7 @@ dialog > .prompt-inner {
 }
 
 .prompt-message {
+  padding-top: @metro_spacing_normal@;
   text-align: start;
   font-size: @metro_font_normal@;
 }
@@ -506,6 +507,42 @@ dialog > .prompt-inner {
   margin: @margin_xnormal@;
   font-size: @font_normal@;
   text-align: start;
+}
+
+/* additional styles for crash prompt dialog */
+
+/* specific height and wider for the long privacy statement */
+.prompt-inner-statement {
+  margin-top: @metro_spacing_xnormal@;
+  margin-bottom: @metro_spacing_xnormal@;
+  height: 450px;
+  width: 800px;
+}
+
+.crash-message {
+  text-align: justify;
+  margin-top: 5px;
+  margin-bottom: @metro_spacing_small@;
+  font-size: @metro_font_normal@;
+}
+
+.crash-link {
+  margin-top: @metro_spacing_small@;
+}
+
+/* temp - bug 887176 */
+.crash-privacy-back-button {
+  width: 26px;
+  margin-top: 22px; /* align with title text */
+  -moz-margin-end: 15px;
+  background-image: url(chrome://browser/skin/images/appbar-stop.png);
+  background-origin: border-box;
+  background-position: right 0 top 0;
+  background-repeat: no-repeat;
+}
+
+.crash-privacy-statement-scroller {
+  overflow: auto;
 }
 
 /* Arrowbox ---------------------------------------------------------------- */

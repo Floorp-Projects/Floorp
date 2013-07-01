@@ -34,6 +34,7 @@ chrome.jar:
   content/prompt/promptPassword.xul            (content/prompt/promptPassword.xul)
   content/prompt/select.xul                    (content/prompt/select.xul)
   content/prompt/prompt.js                     (content/prompt/prompt.js)
+  content/prompt/crash.xul                     (content/prompt/crash.xul)
 
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
