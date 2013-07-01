@@ -16,10 +16,15 @@ struct AutoLoadSystemDependencies
     // DLLs as a precaution.  This call has no effect for delay load DLLs.
     SetDllDirectory(L"");
 
-    static LPCWSTR delayDLLs[] = { L"wsock32.dll", L"crypt32.dll",
-                                   L"cryptsp.dll", L"cryptbase.dll",
-                                   L"msasn1.dll", L"userenv.dll",
-                                   L"secur32.dll" };
+    // The order that these are loaded matter, for example if we load something
+    // that tries to load profapi.dll first, then profapi.dll would be loaded
+    // wrongly from the current directory.
+    static LPCWSTR delayDLLs[] = { L"profapi.dll", L"wsock32.dll",
+                                   L"crypt32.dll", L"cryptsp.dll",
+                                   L"cryptbase.dll", L"msasn1.dll",
+                                   L"userenv.dll", L"secur32.dll",
+                                   L"ws2_32.dll", L"ws2help.dll",
+                                   L"apphelp.dll", L"bcryptprimitives.dll" };
 
     WCHAR systemDirectory[MAX_PATH + 1] = { L'\0' };
     // If GetSystemDirectory fails we accept that we'll load the DLLs from the
