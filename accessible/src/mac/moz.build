@@ -17,3 +17,15 @@ EXPORTS.mozilla.a11y += [
 
 LIBRARY_NAME = 'accessibility_toolkit_s'
 
+CMMSRCS += [
+    'AccessibleWrap.mm',
+    'DocAccessibleWrap.mm',
+    'MacUtils.mm',
+    'Platform.mm',
+    'RootAccessibleWrap.mm',
+    'mozAccessible.mm',
+    'mozActionElements.mm',
+    'mozDocAccessible.mm',
+    'mozHTMLAccessible.mm',
+    'mozTextAccessible.mm',
+]
