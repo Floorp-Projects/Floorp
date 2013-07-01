@@ -29,7 +29,8 @@ let WebAppRT = {
     pref("xpinstall.enabled", false),
     // Set a future policy version to avoid the telemetry prompt.
     pref("toolkit.telemetry.prompted", 999),
-    pref("toolkit.telemetry.notifiedOptOut", 999)
+    pref("toolkit.telemetry.notifiedOptOut", 999),
+    pref("media.useAudioChannelService", true);
   ],
 
   init: function(aStatus, aUrl, aCallback) {
