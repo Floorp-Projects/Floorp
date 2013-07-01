@@ -1276,6 +1276,8 @@ moz_gtk_spin_updown_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+/* See gtk_range_draw() for reference.
+*/
 static gint
 moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkWidgetState* state,
@@ -1285,7 +1287,7 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
   gint x = 0, y = 0;
   GtkStyleContext* style;
   GtkWidget* widget;
-  GtkBorder border;
+  GtkBorder margin;
 
   ensure_scale_widget();
   widget = ((flags == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
@@ -1294,15 +1296,15 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
   style = gtk_widget_get_style_context(widget);
   gtk_style_context_save(style);
   gtk_style_context_add_class(style, GTK_STYLE_CLASS_SCALE);
-  gtk_style_context_get_border(style, state_flags, &border);
+  gtk_style_context_get_margin(style, state_flags, &margin); 
 
   if (flags == GTK_ORIENTATION_HORIZONTAL) {
-    x = border.left;
+    x = margin.left;
     y++;
   }
   else {
     x++;
-    y = border.top;
+    y = margin.top;
   }
 
   gtk_render_frame(style, cr, rect->x + x, rect->y + y,
@@ -1616,6 +1618,8 @@ moz_gtk_expander_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+/* See gtk_separator_draw() for reference.
+*/
 static gint
 moz_gtk_combo_box_paint(cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state,
@@ -1669,9 +1673,10 @@ moz_gtk_combo_box_paint(cairo_t *cr, GdkRectangle* rect,
         gtk_render_frame(style, cr, arrow_rect.x, arrow_rect.y, separator_width, arrow_rect.height);
     } else {
         if (direction == GTK_TEXT_DIR_LTR) {
-            GtkBorder border;
-            gtk_style_context_get_border(style, GetStateFlagsFromGtkWidgetState(state), &border);
-            arrow_rect.x -= border.left;
+            GtkBorder padding;
+            GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+            gtk_style_context_get_padding(style, state_flags, &padding);
+            arrow_rect.x -= padding.left;
         }
         else
             arrow_rect.x += arrow_rect.width;
@@ -1856,6 +1861,8 @@ moz_gtk_toolbar_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+/* See _gtk_toolbar_paint_space_line() for reference.
+*/
 static gint
 moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                                 GtkTextDirection direction)
@@ -1889,11 +1896,10 @@ moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                           separator_width,
                           rect->height * (end_fraction - start_fraction));
     } else {
-        GtkBorder border;
-        gtk_style_context_get_border(style, 0, &border);    
+        GtkBorder padding;
+        gtk_style_context_get_padding(style, 0, &padding);
     
-        paint_width = border.left;
-        
+        paint_width = padding.left;
         if (paint_width > rect->width)
             paint_width = rect->width;
         
