@@ -2346,6 +2346,7 @@ moz_gtk_menu_popup_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+// See gtk_menu_item_draw() for reference.
 static gint
 moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
                              GtkTextDirection direction)
@@ -2353,50 +2354,46 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
     gboolean wide_separators;
     gint separator_height;
-    guint horizontal_padding;
     gint paint_height;
-    GtkBorder border;
+    guint border_width;
+    gint x, y, w, h;
+    GtkBorder padding;
 
     ensure_menu_separator_widget();
     gtk_widget_set_direction(gMenuSeparatorWidget, direction);
 
-    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
-
-    gtk_style_context_save(style);
-
+    border_width = gtk_container_get_border_width(gMenuSeparatorWidget);
     gtk_widget_style_get(gMenuSeparatorWidget,
                          "wide-separators",    &wide_separators,
                          "separator-height",   &separator_height,
-                         "horizontal-padding", &horizontal_padding,
                          NULL);
 
-    gtk_style_context_get_border(style, 0, &border);
+    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
+    gtk_style_context_get_padding(style, 0, &padding);
+
+    x = rect->x + border_width;
+    y = rect->y + border_width;
+    w = rect->width - border_width * 2;
+    h = rect->height - border_width * 2;
 
     if (wide_separators) {
-        if (separator_height > rect->height)
-            separator_height = rect->height;
-
-        gtk_render_frame(style, cr,
-                          rect->x + horizontal_padding + border.left,
-                          rect->y + (rect->height - separator_height - border.top) / 2,
-                          rect->width - 2 * (horizontal_padding + border.left),
-                          separator_height);        
+      gtk_render_frame(style, cr,
+                       x + padding.left,
+                       y + padding.top,
+                       w - padding.left - padding.right,
+                       separator_height);
     } else {
-        paint_height = border.top;
-        if (paint_height > rect->height)
-            paint_height = rect->height;
-        
-        gtk_render_line(style, cr,
-                        rect->x + horizontal_padding + border.left,
-                        rect->y + (rect->height - border.top) / 2,
-                        rect->x + rect->width - horizontal_padding - border.left - 1,
-                        rect->y + (rect->height - border.top) / 2);
+      gtk_render_line(style, cr,
+                      x + padding.left,
+                      y + padding.top,
+                      x + w - padding.right - 1,
+                      y + padding.top);
     }
 
-    gtk_style_context_restore(style);
     return MOZ_GTK_SUCCESS;
 }
 
+// See gtk_menu_item_draw() for reference.
 static gint
 moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state,
@@ -2404,6 +2401,8 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
 {
     GtkStyleContext* style;
     GtkWidget* item_widget;
+    guint border_width;
+    gint x, y, w, h;
 
     if (state->inHover && !state->disabled) {   
         if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
@@ -2424,8 +2423,15 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUITEM);
         gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
 
-        gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
-        gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+        border_width = gtk_container_get_border_width(GTK_CONTAINER(item_widget));
+
+        x = rect->x + border_width;
+        y = rect->y + border_width;
+        w = rect->width - border_width * 2;
+        h = rect->height - border_width * 2;
+
+        gtk_render_background(style, cr, x, y, w, h);
+        gtk_render_frame(style, cr, x, y, w, h);
         gtk_style_context_restore(style);
     }
 
@@ -2455,6 +2461,7 @@ moz_gtk_menu_arrow_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+// See gtk_real_check_menu_item_draw_indicator() for reference.
 static gint
 moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
                               GtkWidgetState* state,
@@ -2463,7 +2470,7 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
 {
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkStyleContext* style;
-    GtkBorder border;
+    GtkBorder padding;
     gint offset;
     gint indicator_size, horizontal_padding;
     gint x, y;
@@ -2490,13 +2497,17 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
       state_flags |= GTK_STATE_FLAG_ACTIVE;
     
     gtk_style_context_set_state(style, state_flags);
-    gtk_style_context_get_border(style, state_flags, &border);
+    gtk_style_context_get_padding(style, state_flags, &padding);
 
     offset = gtk_container_get_border_width(GTK_CONTAINER(gCheckMenuItemWidget)) +
-                                            border.left + 2;
+                                            padding.left + 2;
 
-    x = (direction == GTK_TEXT_DIR_RTL) ?
-          rect->width - indicator_size - offset - horizontal_padding: rect->x + offset + horizontal_padding;
+    if (direction == GTK_TEXT_DIR_RTL) {
+        x = rect->width - indicator_size - offset - horizontal_padding;
+    }
+    else {
+        x = rect->x + offset + horizontal_padding;
+    }
     y = rect->y + (rect->height - indicator_size) / 2;
 
     if (isradio) {
@@ -2535,6 +2546,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     GtkWidget* w;
     GtkStyleContext* style;
     GtkBorder border;
+    GtkBorder padding;
 
     switch (widget) {
     case MOZ_GTK_BUTTON:
@@ -2758,10 +2770,24 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         w = gMenuPopupWidget;
         break;
     case MOZ_GTK_MENUITEM:
-        ensure_menu_item_widget();
-        ensure_menu_bar_item_widget();
-        w = gMenuItemWidget;
-        break;
+        {
+            guint border_width;
+        
+            ensure_menu_item_widget();
+            ensure_menu_bar_item_widget();
+            
+            style = gtk_widget_get_style_context(gMenuItemWidget);
+            gtk_style_context_get_padding(style, 0, &padding);
+
+            border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuItemWidget));
+
+            *left = padding.left + border_width;
+            *right = padding.right + border_width;
+            *top =  padding.top + border_width;
+            *bottom = padding.bottom + border_width;
+
+            return MOZ_GTK_SUCCESS;
+        }
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
         ensure_check_menu_item_widget();
@@ -2912,13 +2938,15 @@ moz_gtk_get_treeview_expander_size(gint* size)
     return MOZ_GTK_SUCCESS;
 }
 
+// See gtk_menu_item_draw() for reference.
 gint
 moz_gtk_get_menu_separator_height(gint *size)
 {
     gboolean  wide_separators;
     gint      separator_height;
-    GtkBorder border;
+    GtkBorder padding;
     GtkStyleContext* style;
+    guint border_width;
 
     ensure_menu_separator_widget();
 
@@ -2927,13 +2955,13 @@ moz_gtk_get_menu_separator_height(gint *size)
                           "separator-height", &separator_height,
                           NULL);
 
-    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
-    gtk_style_context_get_border(style, 0, &border);
+    border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
 
-    if (wide_separators)
-        *size = separator_height + border.top;
-    else
-        *size = border.top + border.bottom;
+    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
+    gtk_style_context_get_padding(style, 0, &padding);
+
+    *size = padding.top + padding.bottom + border_width*2;
+    *size += (wide_separators) ? separator_height : 1;
 
     return MOZ_GTK_SUCCESS;
 }
