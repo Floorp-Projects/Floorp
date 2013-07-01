@@ -8,8 +8,8 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 
-[scriptable, uuid(c6138514-f212-4747-98c2-7abfce3be293)]
-interface nsIStrictTransportSecurityService : nsISupports
+[scriptable, uuid(1ca9de3d-26b8-4e0c-9641-62c380bdd9c7)]
+interface nsISiteSecurityService : nsISupports
 {
     /**
      * Parses a given HTTP header and records the results internally.
@@ -80,7 +80,7 @@ interface nsIStrictTransportSecurityService : nsISupports
 };
 
 %{C++
-#define NS_STSSERVICE_CONTRACTID "@mozilla.org/stsservice;1"
+#define NS_SSSERVICE_CONTRACTID "@mozilla.org/ssservice;1"
 
 #define STS_PERMISSION "sts/use"
 #define STS_SUBDOMAIN_PERMISSION "sts/subd"
