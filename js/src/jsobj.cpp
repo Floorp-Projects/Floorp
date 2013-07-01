@@ -4302,7 +4302,7 @@ JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, Mut
     RootedObject obj(cx, this);
     if (!JSObject::getGeneric(cx, obj, obj, id, &fval))
         return false;
-    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp.address());
+    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp);
 }
 
 JSBool
@@ -4668,7 +4668,7 @@ MaybeCallMethod(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
         vp.setObject(*obj);
         return true;
     }
-    return Invoke(cx, ObjectValue(*obj), vp, 0, NULL, vp.address());
+    return Invoke(cx, ObjectValue(*obj), vp, 0, NULL, vp);
 }
 
 JS_FRIEND_API(JSBool)
