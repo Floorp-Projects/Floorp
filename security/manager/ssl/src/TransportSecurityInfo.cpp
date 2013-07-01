@@ -43,8 +43,7 @@ TransportSecurityInfo::TransportSecurityInfo()
     mSubRequestsNoSecurity(0),
     mErrorCode(0),
     mErrorMessageType(PlainErrorMessage),
-    mPort(0),
-    mIsCertIssuerBlacklisted(false)
+    mPort(0)
 {
 }
 
