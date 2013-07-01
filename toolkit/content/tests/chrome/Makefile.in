@@ -10,7 +10,10 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOCHITEST_CHROME_FILES = 	findbar_window.xul \
+MOCHITEST_CHROME_FILES = \
+  ../widgets/popup_shared.js \
+  ../widgets/tree_shared.js \
+ 	findbar_window.xul \
 		test_findbar.xul \
 		findbar_events_window.xul \
 		test_findbar_events.xul \
