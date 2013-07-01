@@ -334,7 +334,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
 
     /* Otherwise call it and return that object. */
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
-    if (!Invoke(cx, ObjectValue(*obj), vp, 1, &arg, vp.address()))
+    if (!Invoke(cx, ObjectValue(*obj), vp, 1, &arg, vp))
         return false;
     if (vp.isPrimitive()) {
         /*
@@ -584,7 +584,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
             return false;
         }
 
-        if (!Invoke(cx, ObjectOrNullValue(obj), method, 0, NULL, vp.address()))
+        if (!Invoke(cx, ObjectOrNullValue(obj), method, 0, NULL, vp))
             return false;
 
         JSObject *resultObj = ToObject(cx, vp);
@@ -1244,7 +1244,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         /* Call the iterator object's .next method. */
         if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
             return false;
-        if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, NULL, rval.address())) {
+        if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
             if (!cx->isExceptionPending() || !IsStopIteration(cx->getPendingException()))
                 return false;
