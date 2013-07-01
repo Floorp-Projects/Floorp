@@ -51,7 +51,7 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
+  already_AddRefed<SVGAnimatedEnumeration> Operator();
   already_AddRefed<nsIDOMSVGAnimatedNumber> RadiusX();
   already_AddRefed<nsIDOMSVGAnimatedNumber> RadiusY();
   void SetRadius(float rx, float ry);

@@ -71,7 +71,7 @@ SVGGradientElement::GetStringInfo()
                               ArrayLength(sStringInfo));
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGGradientElement::GradientUnits()
 {
   return mEnumAttributes[GRADIENTUNITS].ToDOMAnimatedEnum(this);
@@ -87,7 +87,7 @@ SVGGradientElement::GradientTransform()
            GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGGradientElement::SpreadMethod()
 {
   return mEnumAttributes[SPREADMETHOD].ToDOMAnimatedEnum(this);

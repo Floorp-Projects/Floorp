@@ -64,7 +64,7 @@ public:
   already_AddRefed<DOMSVGAnimatedNumberList> KernelMatrix();
   already_AddRefed<nsIDOMSVGAnimatedInteger> TargetX();
   already_AddRefed<nsIDOMSVGAnimatedInteger> TargetY();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> EdgeMode();
+  already_AddRefed<SVGAnimatedEnumeration> EdgeMode();
   already_AddRefed<SVGAnimatedBoolean> PreserveAlpha();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Divisor();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Bias();

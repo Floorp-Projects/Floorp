@@ -93,13 +93,13 @@ SVGFilterElement::Height()
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFilterElement::FilterUnits()
 {
   return mEnumAttributes[FILTERUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFilterElement::PrimitiveUnits()
 {
   return mEnumAttributes[PRIMITIVEUNITS].ToDOMAnimatedEnum(this);

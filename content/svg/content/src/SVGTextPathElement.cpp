@@ -84,13 +84,13 @@ SVGTextPathElement::StartOffset()
   return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGTextPathElement::Method()
 {
   return mEnumAttributes[METHOD].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGTextPathElement::Spacing()
 {
   return mEnumAttributes[SPACING].ToDOMAnimatedEnum(this);
