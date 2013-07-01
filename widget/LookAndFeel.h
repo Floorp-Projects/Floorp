@@ -352,6 +352,10 @@ public:
      */
     eIntID_WindowsThemeIdentifier,
     /**
+     * Return an appropriate os version identifier.
+     */
+    eIntID_OperatingSystemVersionIdentifier,
+    /**
      * 0: scrollbar button repeats to scroll only when cursor is on the button.
      * 1: scrollbar button repeats to scroll even if cursor is outside of it.
      */
@@ -360,7 +364,6 @@ public:
      * Dealy before showing a tooltip.
      */
     eIntID_TooltipDelay,
-
     /*
      * A Boolean value to determine whether Mac OS X Lion style swipe animations
      * should be used.
@@ -388,6 +391,17 @@ public:
     eWindowsTheme_Royale,
     eWindowsTheme_Zune,
     eWindowsTheme_AeroLite
+  };
+
+  /**
+   * Operating system versions.
+   */
+  enum OperatingSystemVersion {
+    eOperatingSystemVersion_WindowsXP = 0,
+    eOperatingSystemVersion_WindowsVista,
+    eOperatingSystemVersion_Windows7,
+    eOperatingSystemVersion_Windows8,
+    eOperatingSystemVersion_Unknown
   };
 
   enum {
