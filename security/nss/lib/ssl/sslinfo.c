@@ -26,7 +26,6 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     sslSocket *      ss;
     SSLChannelInfo   inf;
     sslSessionID *   sid;
-    PRBool           enoughFirstHsDone = PR_FALSE;
 
     if (!info || len < sizeof inf.length) { 
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -43,14 +42,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     memset(&inf, 0, sizeof inf);
     inf.length = PR_MIN(sizeof inf, len);
 
-    if (ss->firstHsDone) {
-	enoughFirstHsDone = PR_TRUE;
-    } else if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
-	       ssl3_CanFalseStart(ss)) {
-	enoughFirstHsDone = PR_TRUE;
-    }
-
-    if (ss->opt.useSecurity && enoughFirstHsDone) {
+    if (ss->opt.useSecurity && ss->enoughFirstHsDone) {
         sid = ss->sec.ci.sid;
 	inf.protocolVersion  = ss->version;
 	inf.authKeyBits      = ss->sec.authKeyBits;

@@ -61,6 +61,7 @@ public:
   
   void SetNegotiatedNPN(const char *value, uint32_t length);
   void SetHandshakeCompleted(bool aResumedSession);
+  void NoteTimeUntilReady();
 
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
@@ -93,6 +94,30 @@ public:
   void SetTLSEnabled(bool enabled) { mTLSEnabled = enabled; }
 
   void AddPlaintextBytesRead(uint64_t val) { mPlaintextBytesRead += val; }
+
+  bool IsPreliminaryHandshakeDone() const { return mPreliminaryHandshakeDone; }
+  void SetPreliminaryHandshakeDone() { mPreliminaryHandshakeDone = true; }
+
+  void SetKEAUsed(PRUint16 kea) { mKEAUsed = kea; }
+  inline int16_t GetKEAExpected() // infallible in nsISSLSocketControl
+  {
+    int16_t result;
+    mozilla::DebugOnly<nsresult> rv = GetKEAExpected(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+  void SetSymmetricCipherUsed(PRUint16 symmetricCipher)
+  {
+    mSymmetricCipherUsed = symmetricCipher;
+  }
+  inline int16_t GetSymmetricCipherExpected() // infallible in nsISSLSocketControl
+  {
+    int16_t result;
+    mozilla::DebugOnly<nsresult> rv = GetSymmetricCipherExpected(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+
 private:
   PRFileDesc* mFd;
 
@@ -107,6 +132,7 @@ private:
   bool mHandshakeInProgress;
   bool mAllowTLSIntoleranceTimeout;
   bool mRememberClientAuthCertificate;
+  bool mPreliminaryHandshakeDone; // after false start items are complete
   PRIntervalTime mHandshakeStartTime;
   bool mFirstServerHelloReceived;
 
@@ -117,6 +143,14 @@ private:
   bool      mHandshakeCompleted;
   bool      mJoined;
   bool      mSentClientCert;
+  bool      mNotedTimeUntilReady;
+
+  // mKEA* and mSymmetricCipher* are used in false start detetermination
+  // values are from nsISSLSocketControl
+  PRInt16 mKEAUsed;
+  PRInt16 mKEAExpected;
+  PRInt16 mSymmetricCipherUsed;
+  PRInt16 mSymmetricCipherExpected;
 
   uint32_t mProviderFlags;
   mozilla::TimeStamp mSocketCreationTimestamp;
@@ -164,6 +198,9 @@ public:
   bool isRenegoUnrestrictedSite(const nsCString &str);
 
   void clearStoredData();
+
+  bool mFalseStartRequireNPN;
+  bool mFalseStartRequireForwardSecrecy;
 private:
   nsCOMPtr<nsIObserver> mPrefObserver;
 };
