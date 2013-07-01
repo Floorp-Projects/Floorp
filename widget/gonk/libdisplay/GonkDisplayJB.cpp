@@ -35,6 +35,7 @@ GonkDisplayJB::GonkDisplayJB()
     , mFBModule(nullptr)
     , mHwc(nullptr)
     , mFBDevice(nullptr)
+    , mEnabledCallback(nullptr)
 {
     int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &mFBModule);
     ALOGW_IF(err, "%s module not found", GRALLOC_HARDWARE_MODULE_ID);
@@ -121,8 +122,17 @@ GonkDisplayJB::SetEnabled(bool enabled)
     else if (mFBDevice->enableScreen)
         mFBDevice->enableScreen(mFBDevice, enabled);
 
+    if (mEnabledCallback)
+        mEnabledCallback(enabled);
+
     if (!enabled)
         autosuspend_enable();
+}
+
+void
+GonkDisplayJB::OnEnabled(OnEnabledCallbackType callback)
+{
+    mEnabledCallback = callback;
 }
 
 void*
