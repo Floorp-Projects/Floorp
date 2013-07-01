@@ -49,7 +49,7 @@ DISABLED_CSRCS = \
 
 ifeq ($(OS_TARGET),Android)
 VPATH += $(srcdir)/android
-SSRCS := breakpad_getcontext.S
+DISABLED_SSRCS := breakpad_getcontext.S
 TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
 DEFINES += -DNO_STABS_SUPPORT
 endif

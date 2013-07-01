@@ -474,5 +474,10 @@ CPP_SOURCES += [
     'SkXfermode.cpp',
 ]
 
+if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
+    SSRCS += [
+        'memset.arm.S',
+    ]
+
 LIBRARY_NAME = 'skia'
 
