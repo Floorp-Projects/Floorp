@@ -102,6 +102,13 @@ SHARED_LIBRARY_LIBS += \
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/windows \
 	$(NULL)
+else ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/dom/system/mac/$(LIB_PREFIX)domsystemmac_s.$(LIB_SUFFIX) \
+	$(NULL)
+LOCAL_INCLUDES	+= \
+	-I$(topsrcdir)/dom/system/mac \
+	$(NULL)
 else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/android/$(LIB_PREFIX)domsystemandroid_s.$(LIB_SUFFIX) \
