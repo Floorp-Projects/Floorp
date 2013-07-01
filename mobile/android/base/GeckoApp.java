@@ -2076,6 +2076,12 @@ abstract public class GeckoApp
                 mFormAssistPopup.hide();
             refreshChrome();
         }
+
+        if (mAppStateListeners != null) {
+            for (GeckoAppShell.AppStateListener listener: mAppStateListeners) {
+                listener.onConfigurationChanged();
+            }
+        }
     }
 
     @Override
