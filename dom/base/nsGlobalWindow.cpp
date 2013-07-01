@@ -6067,7 +6067,7 @@ nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll)
     if (scroll.y > maxpx) {
       scroll.y = maxpx;
     }
-    sf->ScrollToCSSPixels(nsIntPoint(scroll.x, scroll.y));
+    sf->ScrollToCSSPixels(scroll);
   }
 }
 

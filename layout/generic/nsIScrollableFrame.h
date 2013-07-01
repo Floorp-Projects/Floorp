@@ -156,7 +156,7 @@ public:
    * rounding to CSS pixels) will be exactly aScrollPosition.
    * The scroll mode is INSTANT.
    */
-  virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) = 0;
+  virtual void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition) = 0;
   /**
    * Scrolls to a particular position in float CSS pixels.
    * This does not guarantee that GetScrollPositionCSSPixels equals
