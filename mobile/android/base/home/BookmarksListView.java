@@ -37,20 +37,11 @@ public class BookmarksListView extends HomeListView
     
     public static final String LOGTAG = "GeckoBookmarksListView";
 
-    private int mFolderId = Bookmarks.FIXED_ROOT_ID;
-    private String mFolderTitle = "";
-
     // A cursor based adapter.
     private BookmarksListAdapter mCursorAdapter = null;
 
     // A background task to query the db.
     private BookmarksQueryTask mQueryTask = null;
-
-    // Folder title for the currently shown list of bookmarks.
-    private BookmarkFolderView mFolderView;
-
-    // Check for adding a header view, if needed.
-    private boolean mHasFolderHeader = false;
 
     // The last motion event that was intercepted.
     private MotionEvent mMotionEvent;
@@ -71,10 +62,6 @@ public class BookmarksListView extends HomeListView
 
         // Scaled touch slop for this context.
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-
-        // Folder title view, is always in open state.
-        mFolderView = (BookmarkFolderView) LayoutInflater.from(context).inflate(R.layout.bookmark_folder_row, null);
-        mFolderView.open();
     }
 
     @Override
@@ -83,9 +70,7 @@ public class BookmarksListView extends HomeListView
 
         // Intialize the adapter.
         mCursorAdapter = new BookmarksListAdapter(getContext(), null);
-
-        // We need to add the header before we set the adapter, hence make it null
-        refreshListWithCursor(null);
+        setAdapter(mCursorAdapter);
 
         setOnItemClickListener(this);
         setOnKeyListener(GamepadUtils.getListItemClickDispatcher());
@@ -149,25 +134,29 @@ public class BookmarksListView extends HomeListView
         final ListView list = (ListView) parent;
         final int headerCount = list.getHeaderViewsCount();
 
-        if (mHasFolderHeader) {
-            // If we tap on the folder view (last of the header views),
-            // move back to parent folder.
-            if (position == headerCount - 1) {   
+        if (position < headerCount) {
+            // The click is on a header, don't do anything.
+            return;
+        }
+
+        // Absolute position for the adapter.
+        position -= headerCount;
+
+        if (mCursorAdapter.isShowingChildFolder()) {
+            if (position == 0) {
+                // If we tap on an opened folder, move back to parent folder.
                 mCursorAdapter.moveToParentFolder();
                 return;
             }
-        } else if (position < headerCount) {
-            // The click is on a header, don't do anything.
-            return;
+
+            // Accounting for the folder view.
+            position--;
         }
 
         final Cursor cursor = mCursorAdapter.getCursor();
         if (cursor == null) {
             return;
         }
-
-        // Absolute position for the adapter.
-        position -= headerCount;
 
         cursor.moveToPosition(position);
 
@@ -188,27 +177,8 @@ public class BookmarksListView extends HomeListView
     }
 
     private void refreshListWithCursor(Cursor cursor) {
-        // We need to add the header before we set the adapter, hence making it null.
-        setAdapter(null);
-
-        // Add a header view based on the root folder.
-        if (mFolderId == Bookmarks.FIXED_ROOT_ID) {
-            if (mHasFolderHeader) {
-                removeHeaderView(mFolderView);
-                mHasFolderHeader = false;
-            }
-        } else {
-            if (!mHasFolderHeader) {
-                addHeaderView(mFolderView, null, true);
-                mHasFolderHeader = true;
-            }
-
-            mFolderView.setText(mFolderTitle);
-        }
-
         // This will update the cursorAdapter to use the new one if it already exists.
         mCursorAdapter.changeCursor(cursor);
-        setAdapter(mCursorAdapter);
 
         // Reset the task.
         mQueryTask = null;
@@ -234,7 +204,7 @@ public class BookmarksListView extends HomeListView
             mParentStack = new LinkedList<Pair<Integer, String>>();
 
             // Add the root folder to the stack
-            Pair<Integer, String> rootFolder = new Pair<Integer, String>(mFolderId, mFolderTitle);
+            Pair<Integer, String> rootFolder = new Pair<Integer, String>(Bookmarks.FIXED_ROOT_ID, "");
             mParentStack.addFirst(rootFolder);
         }
 
@@ -245,12 +215,9 @@ public class BookmarksListView extends HomeListView
                 mQueryTask.cancel(false);
             }
 
-            Pair<Integer, String> folderPair = mParentStack.getFirst();
-            mFolderId = folderPair.first;
-            mFolderTitle = folderPair.second;
-
+            final Pair<Integer, String> folderPair = mParentStack.getFirst();
             mQueryTask = new BookmarksQueryTask();
-            mQueryTask.execute(new Integer(mFolderId));
+            mQueryTask.execute(folderPair.first);
         }
 
         /**
@@ -281,6 +248,16 @@ public class BookmarksListView extends HomeListView
          */
         @Override
         public int getItemViewType(int position) {
+            // The position also reflects the opened child folder row.
+            if (isShowingChildFolder()) {
+                if (position == 0) {
+                    return VIEW_TYPE_FOLDER;
+                }
+
+                // Accounting for the folder view.
+                position--;
+            }
+
             Cursor c = getCursor();
 
             if (!c.moveToPosition(position)) {
@@ -343,6 +320,36 @@ public class BookmarksListView extends HomeListView
             return c.getString(c.getColumnIndexOrThrow(Bookmarks.TITLE));
         }
 
+        /**
+         * @return true, if currently showing a child folder, false otherwise.
+         */
+        public boolean isShowingChildFolder() {
+            return (mParentStack.peek().first != Bookmarks.FIXED_ROOT_ID);
+        }
+
+        @Override
+        public int getCount() {
+            return super.getCount() + (isShowingChildFolder() ? 1 : 0);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            // The position also reflects the opened child folder row.
+            if (isShowingChildFolder()) {
+                if (position == 0) {
+                    BookmarkFolderView folder = (BookmarkFolderView) LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_folder_row, null);
+                    folder.setText(mParentStack.peek().second);
+                    folder.open();
+                    return folder;
+                }
+
+                // Accounting for the folder view.
+                position--;
+            }
+
+            return super.getView(position, convertView, parent);
+        }
+
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             final int viewType = getItemViewType(cursor);
@@ -353,6 +360,7 @@ public class BookmarksListView extends HomeListView
             } else {
                 BookmarkFolderView row = (BookmarkFolderView) view;
                 row.setText(getFolderTitle(cursor));
+                row.close();
             }
         }
 
