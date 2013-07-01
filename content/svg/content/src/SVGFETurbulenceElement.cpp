@@ -86,13 +86,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETurbulenceElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFETurbulenceElement::BaseFrequencyX()
 {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFETurbulenceElement::BaseFrequencyY()
 {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
@@ -104,7 +104,7 @@ SVGFETurbulenceElement::NumOctaves()
   return mIntegerAttributes[OCTAVES].ToDOMAnimatedInteger(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFETurbulenceElement::Seed()
 {
   return mNumberAttributes[SEED].ToDOMAnimatedNumber(this);

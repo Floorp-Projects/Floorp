@@ -48,10 +48,10 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedNumber> BaseFrequencyX();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> BaseFrequencyY();
+  already_AddRefed<SVGAnimatedNumber> BaseFrequencyX();
+  already_AddRefed<SVGAnimatedNumber> BaseFrequencyY();
   already_AddRefed<SVGAnimatedInteger> NumOctaves();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Seed();
+  already_AddRefed<SVGAnimatedNumber> Seed();
   already_AddRefed<SVGAnimatedEnumeration> StitchTiles();
   already_AddRefed<SVGAnimatedEnumeration> Type();
 
