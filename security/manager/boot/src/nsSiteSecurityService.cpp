@@ -9,7 +9,7 @@
 #include "nsIPermissionManager.h"
 #include "nsISSLStatus.h"
 #include "nsISSLStatusProvider.h"
-#include "nsStrictTransportSecurityService.h"
+#include "nsSiteSecurityService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -49,7 +49,7 @@ GetSTSLog()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsSTSHostEntry::nsSTSHostEntry(const char* aHost)
+nsSSSHostEntry::nsSSSHostEntry(const char* aHost)
   : mHost(aHost)
   , mExpireTime(0)
   , mStsPermission(STS_UNSET)
@@ -58,7 +58,7 @@ nsSTSHostEntry::nsSTSHostEntry(const char* aHost)
 {
 }
 
-nsSTSHostEntry::nsSTSHostEntry(const nsSTSHostEntry& toCopy)
+nsSSSHostEntry::nsSSSHostEntry(const nsSSSHostEntry& toCopy)
   : mHost(toCopy.mHost)
   , mExpireTime(toCopy.mExpireTime)
   , mStsPermission(toCopy.mStsPermission)
@@ -70,21 +70,21 @@ nsSTSHostEntry::nsSTSHostEntry(const nsSTSHostEntry& toCopy)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-nsStrictTransportSecurityService::nsStrictTransportSecurityService()
+nsSiteSecurityService::nsSiteSecurityService()
   : mUsePreloadList(true)
 {
 }
 
-nsStrictTransportSecurityService::~nsStrictTransportSecurityService()
+nsSiteSecurityService::~nsSiteSecurityService()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsStrictTransportSecurityService,
+NS_IMPL_ISUPPORTS2(nsSiteSecurityService,
                    nsIObserver,
-                   nsIStrictTransportSecurityService)
+                   nsISiteSecurityService)
 
 nsresult
-nsStrictTransportSecurityService::Init()
+nsSiteSecurityService::Init()
 {
    nsresult rv;
 
@@ -103,7 +103,7 @@ nsStrictTransportSecurityService::Init()
 }
 
 nsresult
-nsStrictTransportSecurityService::GetHost(nsIURI *aURI, nsACString &aResult)
+nsSiteSecurityService::GetHost(nsIURI *aURI, nsACString &aResult)
 {
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
   if (!innerURI) return NS_ERROR_FAILURE;
@@ -117,8 +117,8 @@ nsStrictTransportSecurityService::GetHost(nsIURI *aURI, nsACString &aResult)
 }
 
 nsresult
-nsStrictTransportSecurityService::GetPrincipalForURI(nsIURI* aURI,
-                                                     nsIPrincipal** aPrincipal)
+nsSiteSecurityService::GetPrincipalForURI(nsIURI* aURI,
+                                          nsIPrincipal** aPrincipal)
 {
   nsresult rv;
   nsCOMPtr<nsIScriptSecurityManager> securityManager =
@@ -140,10 +140,10 @@ nsStrictTransportSecurityService::GetPrincipalForURI(nsIURI* aURI,
 }
 
 nsresult
-nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
-                                              int64_t maxage,
-                                              bool includeSubdomains,
-                                              uint32_t flags)
+nsSiteSecurityService::SetStsState(nsIURI* aSourceURI,
+                                   int64_t maxage,
+                                   bool includeSubdomains,
+                                   uint32_t flags)
 {
   // If max-age is zero, that's an indication to immediately remove the
   // permissions, so here's a shortcut.
@@ -191,7 +191,7 @@ nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
 }
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::RemoveStsState(nsIURI* aURI, uint32_t aFlags)
+nsSiteSecurityService::RemoveStsState(nsIURI* aURI, uint32_t aFlags)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
@@ -215,11 +215,11 @@ nsStrictTransportSecurityService::RemoveStsState(nsIURI* aURI, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
-                                                   const char* aHeader,
-                                                   uint32_t aFlags,
-                                                   uint64_t *aMaxAge,
-                                                   bool *aIncludeSubdomains)
+nsSiteSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
+                                        const char* aHeader,
+                                        uint32_t aFlags,
+                                        uint64_t *aMaxAge,
+                                        bool *aIncludeSubdomains)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
@@ -242,11 +242,11 @@ nsStrictTransportSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
 }
 
 nsresult
-nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
-                                                           char* aHeader,
-                                                           uint32_t aFlags,
-                                                           uint64_t *aMaxAge,
-                                                           bool *aIncludeSubdomains)
+nsSiteSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
+                                                char* aHeader,
+                                                uint32_t aFlags,
+                                                uint64_t *aMaxAge,
+                                                bool *aIncludeSubdomains)
 {
   STSLOG(("STS: processing header '%s'", aHeader));
 
@@ -358,7 +358,7 @@ nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
 }
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::IsStsHost(const char* aHost, uint32_t aFlags, bool* aResult)
+nsSiteSecurityService::IsStsHost(const char* aHost, uint32_t aFlags, bool* aResult)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
@@ -383,7 +383,7 @@ int STSPreloadCompare(const void *key, const void *entry)
 // Only does exact host matching - the user must decide how to use the returned
 // data. May return null.
 const nsSTSPreload *
-nsStrictTransportSecurityService::GetPreloadListEntry(const char *aHost)
+nsSiteSecurityService::GetPreloadListEntry(const char *aHost)
 {
   PRTime currentTime = PR_Now();
   int32_t timeOffset = 0;
@@ -405,7 +405,7 @@ nsStrictTransportSecurityService::GetPreloadListEntry(const char *aHost)
 }
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* aResult)
+nsSiteSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* aResult)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
@@ -419,7 +419,7 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* 
   NS_ENSURE_SUCCESS(rv, rv);
 
   const nsSTSPreload *preload = nullptr;
-  nsSTSHostEntry *pbEntry = nullptr;
+  nsSSSHostEntry *pbEntry = nullptr;
 
   bool isPrivate = aFlags & nsISocketProvider::NO_PERMANENT_STORAGE;
   if (isPrivate) {
@@ -546,8 +546,8 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* 
 
 // Verify the trustworthiness of the security info (are there any cert errors?)
 NS_IMETHODIMP
-nsStrictTransportSecurityService::ShouldIgnoreStsHeader(nsISupports* aSecurityInfo,
-                                                        bool* aResult)
+nsSiteSecurityService::ShouldIgnoreStsHeader(nsISupports* aSecurityInfo,
+                                             bool* aResult)
 {
   nsresult rv;
   bool tlsIsBroken = false;
@@ -577,13 +577,13 @@ nsStrictTransportSecurityService::ShouldIgnoreStsHeader(nsISupports* aSecurityIn
 }
 
 //------------------------------------------------------------
-// nsStrictTransportSecurityService::nsIObserver
+// nsSiteSecurityService::nsIObserver
 //------------------------------------------------------------
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::Observe(nsISupports *subject,
-                                          const char *topic,
-                                          const PRUnichar *data)
+nsSiteSecurityService::Observe(nsISupports *subject,
+                               const char *topic,
+                               const PRUnichar *data)
 {
   if (strcmp(topic, "last-pb-context-exited") == 0) {
     mPrivateModeHostTable.Clear();
@@ -600,12 +600,12 @@ nsStrictTransportSecurityService::Observe(nsISupports *subject,
 // we're in private browsing mode.
 //------------------------------------------------------------
 nsresult
-nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
-                                                const char *aType,
-                                                uint32_t   aPermission,
-                                                uint32_t   aExpireType,
-                                                int64_t    aExpireTime,
-                                                bool       aIsPrivate)
+nsSiteSecurityService::AddPermission(nsIURI     *aURI,
+                                     const char *aType,
+                                     uint32_t   aPermission,
+                                     uint32_t   aExpireType,
+                                     int64_t    aExpireTime,
+                                     bool       aIsPrivate)
 {
     // Private mode doesn't address user-set (EXPIRE_NEVER) permissions: let
     // those be stored persistently.
@@ -636,7 +636,7 @@ nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
 
     // PutEntry returns an existing entry if there already is one, or it
     // creates a new one if there isn't.
-    nsSTSHostEntry* entry = mPrivateModeHostTable.PutEntry(host.get());
+    nsSSSHostEntry* entry = mPrivateModeHostTable.PutEntry(host.get());
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -646,7 +646,7 @@ nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
     // includeSubdomains (first for the main permission and second for the
     // subdomains permission). If AddPermission() gets called a second time
     // with the STS_SUBDOMAIN_PERMISSION, we just have to flip that bit in
-    // the nsSTSHostEntry.
+    // the nsSSSHostEntry.
     if (strcmp(aType, STS_SUBDOMAIN_PERMISSION) == 0) {
       entry->mIncludeSubdomains = true;
     }
@@ -660,9 +660,9 @@ nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
 }
 
 nsresult
-nsStrictTransportSecurityService::RemovePermission(const nsCString  &aHost,
-                                                   const char       *aType,
-                                                   bool aIsPrivate)
+nsSiteSecurityService::RemovePermission(const nsCString  &aHost,
+                                        const char       *aType,
+                                        bool aIsPrivate)
 {
     // Build up a principal for use with the permission manager.
     // normalize all URIs with https://
@@ -686,7 +686,7 @@ nsStrictTransportSecurityService::RemovePermission(const nsCString  &aHost,
 
     // Make changes in mPrivateModeHostTable only, so any changes will be
     // rolled back when exiting private mode.
-    nsSTSHostEntry* entry = mPrivateModeHostTable.GetEntry(aHost.get());
+    nsSSSHostEntry* entry = mPrivateModeHostTable.GetEntry(aHost.get());
 
     if (!entry) {
       entry = mPrivateModeHostTable.PutEntry(aHost.get());
