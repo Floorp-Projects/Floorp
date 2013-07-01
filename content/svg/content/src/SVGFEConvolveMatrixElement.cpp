@@ -91,13 +91,13 @@ SVGFEConvolveMatrixElement::In1()
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::OrderX()
 {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(nsSVGIntegerPair::eFirst, this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::OrderY()
 {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(nsSVGIntegerPair::eSecond, this);
@@ -110,13 +110,13 @@ SVGFEConvolveMatrixElement::KernelMatrix()
                                                  this, KERNELMATRIX);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::TargetX()
 {
   return mIntegerAttributes[TARGET_X].ToDOMAnimatedInteger(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::TargetY()
 {
   return mIntegerAttributes[TARGET_Y].ToDOMAnimatedInteger(this);

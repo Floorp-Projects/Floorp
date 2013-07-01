@@ -105,14 +105,14 @@ SVGFilterElement::PrimitiveUnits()
   return mEnumAttributes[PRIMITIVEUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFilterElement::FilterResX()
 {
   return mIntegerPairAttributes[FILTERRES].ToDOMAnimatedInteger(nsSVGIntegerPair::eFirst,
                                                                 this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFilterElement::FilterResY()
 {
   return mIntegerPairAttributes[FILTERRES].ToDOMAnimatedInteger(nsSVGIntegerPair::eSecond,

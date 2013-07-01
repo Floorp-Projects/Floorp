@@ -59,11 +59,11 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> OrderX();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> OrderY();
+  already_AddRefed<SVGAnimatedInteger> OrderX();
+  already_AddRefed<SVGAnimatedInteger> OrderY();
   already_AddRefed<DOMSVGAnimatedNumberList> KernelMatrix();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> TargetX();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> TargetY();
+  already_AddRefed<SVGAnimatedInteger> TargetX();
+  already_AddRefed<SVGAnimatedInteger> TargetY();
   already_AddRefed<SVGAnimatedEnumeration> EdgeMode();
   already_AddRefed<SVGAnimatedBoolean> PreserveAlpha();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Divisor();
