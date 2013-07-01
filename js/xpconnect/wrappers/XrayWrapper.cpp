@@ -11,9 +11,7 @@
 #include "WaiveXrayWrapper.h"
 #include "WrapperFactory.h"
 
-#include "nsINode.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsContentUtils.h"
 
 #include "XPCWrapper.h"
@@ -681,44 +679,6 @@ Is(JSObject *wrapper)
 static nsQueryInterface
 do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper);
 
-// Helper function to work around some limitations of the current XPC
-// calling mechanism. See: bug 763897.
-// The idea is that we unwrap the 'this' object, and find the wrapped
-// native that belongs to it. Then we simply make the call directly
-// on it after a Query Interface.
-static JSBool
-mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
-{
-    if (argc < 1) {
-        JS_ReportError(cx, "Not enough arguments");
-        return false;
-    }
-
-    RootedObject wrapper(cx, JS_THIS_OBJECT(cx, vp));
-    RootedString selector(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
-    if (!selector) {
-        return false;
-    }
-    nsDependentJSString selectorStr;
-    NS_ENSURE_TRUE(selectorStr.init(cx, selector), false);
-
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterfaceNative(cx, wrapper);
-    if (!element) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    bool ret;
-    nsresult rv = element->MozMatchesSelector(selectorStr, &ret);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-
-    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(ret));
-    return true;
-}
-
 void
 XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
 {
@@ -735,28 +695,6 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
                                                   JSPropertyDescriptor *desc, unsigned flags)
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
-        Is<nsIDOMElement>(wrapper))
-    {
-        // XPC calling mechanism cannot handle call/bind properly in some cases
-        // especially through xray wrappers. This is a temporary work around for
-        // this problem for mozMatchesSelector. See: bug 763897.
-        desc->obj = wrapper;
-        desc->attrs = JSPROP_ENUMERATE;
-        RootedObject proto(cx);
-        if (!JS_GetPrototype(cx, wrapper, proto.address()))
-            return false;
-        JSFunction *fun = JS_NewFunction(cx, mozMatchesSelectorStub,
-                                         1, 0, proto,
-                                         "mozMatchesSelector");
-        NS_ENSURE_TRUE(fun, false);
-        desc->value = OBJECT_TO_JSVAL(JS_GetFunctionObject(fun));
-        desc->getter = NULL;
-        desc->setter = NULL;
-        desc->shortid = 0;
-        return true;
-    }
 
     desc->obj = NULL;
 
@@ -855,60 +793,6 @@ wrappedJSObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, Mutable
     return WrapperFactory::WaiveXrayAndWrap(cx, vp.address());
 }
 
-static JSBool
-WrapURI(JSContext *cx, nsIURI *uri, MutableHandleValue vp)
-{
-    RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
-    nsresult rv =
-        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, scope, uri, nullptr,
-                                                    &NS_GET_IID(nsIURI), true,
-                                                    vp.address(), nullptr);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
-}
-
-static JSBool
-baseURIObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
-{
-    nsCOMPtr<nsINode> native = do_QueryInterfaceNative(cx, wrapper);
-    if (!native) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    nsCOMPtr<nsIURI> uri = native->GetBaseURI();
-    if (!uri) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return WrapURI(cx, uri, vp);
-}
-
-static JSBool
-nodePrincipal_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
-{
-    nsCOMPtr<nsINode> node = do_QueryInterfaceNative(cx, wrapper);
-    if (!node) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
-    nsresult rv =
-        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nullptr,
-                                                    &NS_GET_IID(nsIPrincipal), true,
-                                                    vp.address(), nullptr);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
-}
-
 bool
 XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                HandleObject wrapper, HandleObject holder, HandleId id,
@@ -973,23 +857,6 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
     // Xray wrappers don't use the regular wrapper hierarchy, so we should be
     // in the wrapper's compartment here, not the wrappee.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (AccessCheck::isChrome(wrapper) &&
-        ((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
-           id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
-          Is<nsINode>(wrapper)))
-    {
-        desc->obj = wrapper;
-        desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
-        if (id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT))
-            desc->getter = baseURIObject_getter;
-        else
-            desc->getter = nodePrincipal_getter;
-        desc->setter = NULL;
-        desc->shortid = 0;
-        desc->value = JSVAL_VOID;
-        return true;
-    }
 
     JSBool hasProp;
     if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
@@ -1589,7 +1456,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
 
     // If we still have nothing, we're done.
     if (!desc->obj)
-      return true;
+        return true;
 
     if (!JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter,
                                desc->setter, desc->attrs) ||

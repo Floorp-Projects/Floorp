@@ -67,31 +67,31 @@ SVGFECompositeElement::In2()
   return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFECompositeElement::Operator()
 {
   return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFECompositeElement::K1()
 {
   return mNumberAttributes[ATTR_K1].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFECompositeElement::K2()
 {
   return mNumberAttributes[ATTR_K2].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFECompositeElement::K3()
 {
   return mNumberAttributes[ATTR_K3].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFECompositeElement::K4()
 {
   return mNumberAttributes[ATTR_K4].ToDOMAnimatedNumber(this);

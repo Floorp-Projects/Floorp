@@ -914,7 +914,7 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     Value thisv = UndefinedValue();
 
     RootedValue rval(cx);
-    if (!Invoke(cx, thisv, ObjectValue(*objectMetadataFunction), 0, NULL, rval.address()))
+    if (!Invoke(cx, thisv, ObjectValue(*objectMetadataFunction), 0, NULL, &rval))
         return false;
 
     if (rval.isObject())

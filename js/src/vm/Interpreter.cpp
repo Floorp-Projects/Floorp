@@ -503,7 +503,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 
 bool
 js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, Value *argv,
-           Value *rval)
+           MutableHandleValue rval)
 {
     InvokeArgs args(cx);
     if (!args.init(argc))
@@ -529,7 +529,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
     if (!Invoke(cx, args))
         return false;
 
-    *rval = args.rval();
+    rval.set(args.rval());
     return true;
 }
 
@@ -588,8 +588,8 @@ js::InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *ar
 }
 
 bool
-js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsigned argc, Value *argv,
-                         Value *rval)
+js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsigned argc,
+                         Value *argv, MutableHandleValue rval)
 {
     /*
      * Invoke could result in another try to get or set the same id again, see

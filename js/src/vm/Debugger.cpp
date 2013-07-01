@@ -565,7 +565,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
             /* Call the onPop handler. */
             RootedValue rval(cx);
             bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
-                                 rval.address());
+                                 &rval);
             RootedValue nextValue(cx);
             JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
 
@@ -758,7 +758,7 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment> &ac,
             Value exc = cx->getPendingException();
             RootedValue rv(cx);
             cx->clearPendingException();
-            if (Invoke(cx, ObjectValue(*object), fval, 1, &exc, rv.address()))
+            if (Invoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
                 return vp ? parseResumptionValue(ac, true, rv, *vp, false) : JSTRAP_CONTINUE;
         }
 
@@ -912,11 +912,11 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     return shape->propid() == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
 }
 
-bool
+static bool
 CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc, Value *argv,
-                    Value *rval)
+                    MutableHandleValue rval)
 {
-    rval->setUndefined();
+    rval.setUndefined();
     JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
         return false;
@@ -944,7 +944,7 @@ Debugger::fireDebuggerStatement(JSContext *cx, MutableHandleValue vp)
         return handleUncaughtException(ac, vp, false);
 
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.address(), rv.address());
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.address(), &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
@@ -971,7 +971,7 @@ Debugger::fireExceptionUnwind(JSContext *cx, MutableHandleValue vp)
         return handleUncaughtException(ac, vp, false);
 
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 2, argv, rv.address());
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 2, argv, &rv);
     JSTrapStatus st = parseResumptionValue(ac, ok, rv, vp);
     if (st == JSTRAP_CONTINUE)
         cx->setPendingException(exc);
@@ -994,7 +994,7 @@ Debugger::fireEnterFrame(JSContext *cx, MutableHandleValue vp)
         return handleUncaughtException(ac, vp, false);
 
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.address(), rv.address());
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.address(), &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
@@ -1016,7 +1016,7 @@ Debugger::fireNewScript(JSContext *cx, HandleScript script)
 
     Value argv[1];
     argv[0].setObject(*dsobj);
-    Value rv;
+    RootedValue rv(cx);
     if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
         handleUncaughtException(ac, true);
 }
@@ -1170,7 +1170,7 @@ Debugger::onTrap(JSContext *cx, MutableHandleValue vp)
                 return dbg->handleUncaughtException(ac, vp, false);
             RootedValue rv(cx);
             Rooted<JSObject*> handler(cx, bp->handler);
-            bool ok = CallMethodIfPresent(cx, handler, "hit", 1, argv, rv.address());
+            bool ok = CallMethodIfPresent(cx, handler, "hit", 1, argv, &rv);
             JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rv, vp, true);
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -1283,7 +1283,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
 
         const Value &handler = frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER);
         RootedValue rval(cx);
-        bool ok = Invoke(cx, ObjectValue(*frame), handler, 0, NULL, rval.address());
+        bool ok = Invoke(cx, ObjectValue(*frame), handler, 0, NULL, &rval);
         JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rval, vp);
         if (st != JSTRAP_CONTINUE)
             return st;
@@ -1312,7 +1312,7 @@ Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Muta
         return handleUncaughtException(ac, false);
 
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, rv.address());
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
@@ -4923,7 +4923,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      * compartment and populate args.rval().
      */
     RootedValue rval(cx);
-    bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, rval.address());
+    bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, args.rval());
 }
 

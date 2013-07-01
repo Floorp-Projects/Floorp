@@ -57,11 +57,11 @@ public:
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
   already_AddRefed<SVGAnimatedString> In2();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> K1();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> K2();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> K3();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> K4();
+  already_AddRefed<SVGAnimatedEnumeration> Operator();
+  already_AddRefed<SVGAnimatedNumber> K1();
+  already_AddRefed<SVGAnimatedNumber> K2();
+  already_AddRefed<SVGAnimatedNumber> K3();
+  already_AddRefed<SVGAnimatedNumber> K4();
   void SetK(float k1, float k2, float k3, float k4);
 
 protected:

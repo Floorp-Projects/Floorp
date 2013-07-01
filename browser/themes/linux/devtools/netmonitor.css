@@ -441,6 +441,10 @@ box.requests-menu-status[code^="5"] {
   margin-top: 0.5em;
 }
 
+#custom-method-value {
+  width: 4.5em;
+}
+
 /* Footer */
 
 #requests-menu-footer {

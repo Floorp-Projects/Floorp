@@ -74,9 +74,6 @@ DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
 // other SVG classes
-DOMCI_CLASS(SVGAnimatedEnumeration)
-DOMCI_CLASS(SVGAnimatedInteger)
-DOMCI_CLASS(SVGAnimatedNumber)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
 
@@ -134,7 +131,6 @@ DOMCI_CLASS(ContentFrameMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
-DOMCI_CLASS(IDBFileHandle)
 DOMCI_CLASS(IDBRequest)
 DOMCI_CLASS(IDBDatabase)
 DOMCI_CLASS(IDBObjectStore)

@@ -10,19 +10,7 @@
 #include "SMILIntegerType.h"
 
 using namespace mozilla;
-
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGInteger::DOMAnimatedInteger, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGInteger::DOMAnimatedInteger)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGInteger::DOMAnimatedInteger)
-
-DOMCI_DATA(SVGAnimatedInteger, nsSVGInteger::DOMAnimatedInteger)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGInteger::DOMAnimatedInteger)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedInteger)
-NS_INTERFACE_MAP_END
+using namespace mozilla::dom;
 
 /* Implementation */
 
@@ -112,15 +100,7 @@ nsSVGInteger::SetAnimValue(int aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateInteger(mAttrEnum);
 }
 
-nsresult
-nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
-                                   nsSVGElement *aSVGElement)
-{
-  *aResult = ToDOMAnimatedInteger(aSVGElement).get();
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 nsSVGInteger::ToDOMAnimatedInteger(nsSVGElement *aSVGElement)
 {
   nsRefPtr<DOMAnimatedInteger> domAnimatedInteger =

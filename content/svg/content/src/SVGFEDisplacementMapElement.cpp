@@ -77,19 +77,19 @@ SVGFEDisplacementMapElement::In2()
   return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEDisplacementMapElement::Scale()
 {
   return mNumberAttributes[SCALE].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFEDisplacementMapElement::XChannelSelector()
 {
   return mEnumAttributes[CHANNEL_X].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFEDisplacementMapElement::YChannelSelector()
 {
   return mEnumAttributes[CHANNEL_Y].ToDOMAnimatedEnum(this);

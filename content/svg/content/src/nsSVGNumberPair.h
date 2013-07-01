@@ -9,11 +9,11 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsIDOMSVGAnimatedNumber.h"
 #include "nsISMILAttr.h"
 #include "nsMathUtils.h"
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/SVGAnimatedNumber.h"
 
 class nsSMILValue;
 
@@ -60,10 +60,7 @@ public:
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
 
-  nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber** aResult,
-                               PairIndex aIndex,
-                               nsSVGElement* aSVGElement);
-  already_AddRefed<nsIDOMSVGAnimatedNumber>
+  already_AddRefed<mozilla::dom::SVGAnimatedNumber>
     ToDOMAnimatedNumber(PairIndex aIndex,
                         nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
@@ -78,37 +75,34 @@ private:
   bool mIsBaseSet;
 
 public:
-  struct DOMAnimatedNumber MOZ_FINAL : public nsIDOMSVGAnimatedNumber
+  struct DOMAnimatedNumber MOZ_FINAL : public mozilla::dom::SVGAnimatedNumber
   {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedNumber)
-
     DOMAnimatedNumber(nsSVGNumberPair* aVal, PairIndex aIndex, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement), mIndex(aIndex) {}
+      : mozilla::dom::SVGAnimatedNumber(aSVGElement)
+      , mVal(aVal)
+      , mIndex(aIndex)
+    {}
     virtual ~DOMAnimatedNumber();
 
     nsSVGNumberPair* mVal; // kept alive because it belongs to content
-    nsRefPtr<nsSVGElement> mSVGElement;
     PairIndex mIndex; // are we the first or second number
 
-    NS_IMETHOD GetBaseVal(float* aResult) MOZ_OVERRIDE
-      { *aResult = mVal->GetBaseValue(mIndex); return NS_OK; }
-    NS_IMETHOD SetBaseVal(float aValue) MOZ_OVERRIDE
-      {
-        if (!NS_finite(aValue)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        mVal->SetBaseValue(aValue, mIndex, mSVGElement);
-        return NS_OK;
-      }
+    virtual float BaseVal() MOZ_OVERRIDE
+    {
+      return mVal->GetBaseValue(mIndex);
+    }
+    virtual void SetBaseVal(float aValue) MOZ_OVERRIDE
+    {
+      MOZ_ASSERT(NS_finite(aValue));
+      mVal->SetBaseValue(aValue, mIndex, mSVGElement);
+    }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetAnimVal(float* aResult) MOZ_OVERRIDE
+    virtual float AnimVal() MOZ_OVERRIDE
     {
       mSVGElement->FlushAnimations();
-      *aResult = mVal->GetAnimValue(mIndex);
-      return NS_OK;
+      return mVal->GetAnimValue(mIndex);
     }
   };
 
