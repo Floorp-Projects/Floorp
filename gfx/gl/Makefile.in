@@ -70,7 +70,7 @@ endif
 
 # Mac is a special snowflake
 ifeq ($(GL_PROVIDER),CGL)
-CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
+DISABLED_CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
 endif
 
 ifdef MOZ_ANDROID_OMTC
