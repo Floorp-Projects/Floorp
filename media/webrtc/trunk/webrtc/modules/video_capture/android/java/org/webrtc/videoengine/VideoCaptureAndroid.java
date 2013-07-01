@@ -20,6 +20,7 @@ import org.webrtc.videoengine.VideoCaptureDeviceInfoAndroid.AndroidVideoCaptureD
 import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
@@ -27,6 +28,10 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
+import android.view.TextureView;
+import android.view.TextureView.SurfaceTextureListener;
+import android.view.View;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -50,6 +55,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     private boolean isCaptureRunning = false;
     private boolean isSurfaceReady = false;
     private SurfaceHolder surfaceHolder = null;
+    private SurfaceTexture surfaceTexture = null;
 
     private final int numCaptureBuffers = 3;
     private int expectedFrameSize = 0;
@@ -64,8 +70,41 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     private int mCaptureWidth = -1;
     private int mCaptureHeight = -1;
     private int mCaptureFPS = -1;
+    private int mCaptureRotation = 0;
 
     private AppStateListener mAppStateListener = null;
+
+    public class MySurfaceTextureListener implements TextureView.SurfaceTextureListener {
+        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            Log.d(TAG, "VideoCaptureAndroid::onSurfaceTextureAvailable");
+
+            captureLock.lock();
+            isSurfaceReady = true;
+            surfaceTexture = surface;
+
+            tryStartCapture(mCaptureWidth, mCaptureHeight, mCaptureFPS);
+            captureLock.unlock();
+        }
+
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surface,
+                                                int width, int height) {
+            // Ignored, Camera does all the work for us
+            // Note that for a TextureView we start on onSurfaceTextureAvailable,
+            // for a SurfaceView we start on surfaceChanged. TextureView
+            // will not give out an onSurfaceTextureSizeChanged during creation.
+        }
+
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            Log.d(TAG, "VideoCaptureAndroid::onSurfaceTextureDestroyed");
+            isSurfaceReady = false;
+            DetachCamera();
+            return true;
+        }
+
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+            // Invoked every time there's a new Camera preview frame
+        }
+    }
 
     public static
     void DeleteVideoCaptureAndroid(VideoCaptureAndroid captureAndroid) {
@@ -78,8 +117,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         captureAndroid.camera = null;
         captureAndroid.context = 0;
 
-        GeckoAppShell.getGeckoInterface().getCameraView().getHolder().
-            removeCallback(captureAndroid);
+        View cameraView = GeckoAppShell.getGeckoInterface().getCameraView();
+        if (cameraView instanceof SurfaceView) {
+            ((SurfaceView)cameraView).getHolder().removeCallback(captureAndroid);
+        } else if (cameraView instanceof TextureView) {
+            // No need to explicitly remove the Listener:
+            // i.e. ((SurfaceView)cameraView).setSurfaceTextureListener(null);
+        }
         ThreadUtils.getUiHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -102,9 +146,16 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         camera = in_camera;
         cameraId = in_cameraId;
         currentDevice = in_device;
+        mCaptureRotation = GetRotateAmount();
 
         try {
-            GeckoAppShell.getGeckoInterface().getCameraView().getHolder().addCallback(this);
+            View cameraView = GeckoAppShell.getGeckoInterface().getCameraView();
+            if (cameraView instanceof SurfaceView) {
+                ((SurfaceView)cameraView).getHolder().addCallback(this);
+            } else if (cameraView instanceof TextureView) {
+                MySurfaceTextureListener listener = new MySurfaceTextureListener();
+                ((TextureView)cameraView).setSurfaceTextureListener(listener);
+            }
             ThreadUtils.getUiHandler().post(new Runnable() {
                 @Override
                 public void run() {
@@ -144,6 +195,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
                 isCaptureStarted = true;
                 tryStartCapture(mCaptureWidth, mCaptureHeight, mCaptureFPS);
                 captureLock.unlock();
+            }
+            @Override
+            public void onConfigurationChanged() {
+                mCaptureRotation = GetRotateAmount();
             }
         };
 
@@ -190,7 +245,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         }
 
         try {
-            camera.setPreviewDisplay(surfaceHolder);
+            if (surfaceHolder != null)
+                camera.setPreviewDisplay(surfaceHolder);
+            if (surfaceTexture != null)
+                camera.setPreviewTexture(surfaceTexture);
 
             CaptureCapabilityAndroid currentCapability =
                     new CaptureCapabilityAndroid();
@@ -268,7 +326,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         return DetachCamera();
     }
 
-    native void ProvideCameraFrame(byte[] data, int length, long captureObject);
+    native void ProvideCameraFrame(byte[] data, int length, int rotation,
+                                   long captureObject);
 
     public void onPreviewFrame(byte[] data, Camera camera) {
         previewBufferLock.lock();
@@ -280,7 +339,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             // If StartCapture has been called but not StopCapture
             // Call the C++ layer with the captured frame
             if (data.length == expectedFrameSize) {
-                ProvideCameraFrame(data, expectedFrameSize, context);
+                ProvideCameraFrame(data, expectedFrameSize, mCaptureRotation,
+                                   context);
                 if (ownsBuffers) {
                     // Give the video buffer to the camera service again.
                     camera.addCallbackBuffer(data);
@@ -288,46 +348,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             }
         }
         previewBufferLock.unlock();
-    }
-
-    // Sets the rotation of the preview render window.
-    // Does not affect the captured video image.
-    public void SetPreviewRotation(int rotation) {
-        Log.v(TAG, "SetPreviewRotation: " + rotation);
-
-        if (camera != null) {
-            previewBufferLock.lock();
-            int width = 0;
-            int height = 0;
-            int framerate = 0;
-            boolean wasCaptureRunning = isCaptureRunning;
-
-            if (isCaptureRunning) {
-                width = mCaptureWidth;
-                height = mCaptureHeight;
-                framerate = mCaptureFPS;
-                StopCapture();
-            }
-
-            int resultRotation = 0;
-            if (currentDevice.frontCameraType ==
-                    VideoCaptureDeviceInfoAndroid.FrontFacingCameraType.Android23) {
-                // this is a 2.3 or later front facing camera.
-                // SetDisplayOrientation will flip the image horizontally
-                // before doing the rotation.
-                resultRotation=(360-rotation) % 360; // compensate the mirror
-            }
-            else {
-                // Back facing or 2.2 or previous front camera
-                resultRotation=rotation;
-            }
-            camera.setDisplayOrientation(resultRotation);
-
-            if (wasCaptureRunning) {
-                StartCapture(width, height, framerate);
-            }
-            previewBufferLock.unlock();
-        }
     }
 
     public void surfaceChanged(SurfaceHolder holder,

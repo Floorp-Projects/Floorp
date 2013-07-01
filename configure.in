@@ -4340,7 +4340,7 @@ MOZ_ARG_WITH_STRING(google-api-keyfile,
 if test -z "$MOZ_GOOGLE_API_KEY"; then
     MOZ_GOOGLE_API_KEY=no-google-api-key
 fi
-AC_DEFINE_UNQUOTED(MOZ_GOOGLE_API_KEY, $MOZ_GOOGLE_API_KEY)
+AC_SUBST(MOZ_GOOGLE_API_KEY)
 
 # Allow the application to influence configure with a confvars.sh script.
 AC_MSG_CHECKING([if app-specific confvars.sh exists])

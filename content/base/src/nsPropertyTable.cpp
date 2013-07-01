@@ -20,8 +20,10 @@
  * nsIAtom pointers, and the values are void pointers.
  */
 
-#include "mozilla/MemoryReporting.h"
 #include "nsPropertyTable.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "pldhash.h"
 #include "nsError.h"
 #include "nsIAtom.h"
