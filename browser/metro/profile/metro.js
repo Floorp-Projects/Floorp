@@ -86,6 +86,9 @@ pref("network.protocol-handler.warn-external.vnd.youtube", false);
 pref("network.protocol-handler.warn-external.ms-windows-store", false);
 pref("network.protocol-handler.external.ms-windows-store", true);
 
+// display the overlay nav buttons
+pref("browser.display.overlaynavbuttons", true);
+
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
 
