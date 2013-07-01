@@ -8,7 +8,6 @@ chrome.jar:
 
   content/aboutCertError.xhtml                 (content/pages/aboutCertError.xhtml)
   content/aboutRights.xhtml                    (content/pages/aboutRights.xhtml)
-  content/aboutCrash.xhtml                     (content/pages/aboutCrash.xhtml)
   content/blockedSite.xhtml                    (content/pages/blockedSite.xhtml)
   content/netError.xhtml                       (content/pages/netError.xhtml)
 
