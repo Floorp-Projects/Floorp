@@ -14,6 +14,7 @@
 #include "nsAString.h"
 #include "nsQueryFrame.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/LookAndFeel.h"
 
 namespace mozilla {
 namespace layout {
@@ -21,9 +22,23 @@ namespace layout {
 NS_IMPL_ISUPPORTS1(ScrollbarActivity, nsIDOMEventListener)
 
 void
+ScrollbarActivity::QueryLookAndFeelVals()
+{
+  // Fade animation constants
+  mScrollbarFadeBeginDelay =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollbarFadeBeginDelay);
+  mScrollbarFadeDuration =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollbarFadeDuration);
+  // Controls whether we keep the mouse move listener so we can display the
+  // scrollbars whenever the user moves the mouse within the scroll area.
+  mDisplayOnMouseMove =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollbarDisplayOnMouseMove);
+}
+
+void
 ScrollbarActivity::Destroy()
 {
-  StopListeningForEvents();
+  StopListeningForEvents(true);
   UnregisterFromRefreshDriver();
   CancelFadeBeginTimer();
 }
@@ -74,7 +89,7 @@ ScrollbarActivity::ActivityStopped()
 NS_IMETHODIMP
 ScrollbarActivity::HandleEvent(nsIDOMEvent* aEvent)
 {
-  if (!mIsActive)
+  if (!mDisplayOnMouseMove && !mIsActive)
     return NS_OK;
 
   nsAutoString type;
@@ -153,26 +168,78 @@ ScrollbarActivity::HandleEventForScrollbar(const nsAString& aType,
 void
 ScrollbarActivity::StartListeningForEvents()
 {
-  if (mListeningForEvents)
+  StartListeningForScrollbarEvents();
+  StartListeningForScrollAreaEvents();
+}
+
+void
+ScrollbarActivity::StopListeningForEvents(bool aIsTeardown)
+{
+  StopListeningForScrollbarEvents();
+  StopListeningForScrollAreaEvents(aIsTeardown);
+}
+
+void
+ScrollbarActivity::StartListeningForScrollbarEvents()
+{
+  if (mListeningForScrollbarEvents)
     return;
 
-  nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
-  nsCOMPtr<nsIDOMEventTarget> scrollAreaTarget = do_QueryInterface(
-                                                   scrollArea->GetContent());
   mHorizontalScrollbar = do_QueryInterface(GetHorizontalScrollbar());
   mVerticalScrollbar = do_QueryInterface(GetVerticalScrollbar());
 
+  AddScrollbarEventListeners(mHorizontalScrollbar);
+  AddScrollbarEventListeners(mVerticalScrollbar);
+
+  mListeningForScrollbarEvents = true;
+}
+
+void
+ScrollbarActivity::StopListeningForScrollbarEvents()
+{
+  if (!mListeningForScrollAreaEvents)
+    return;
+
+  RemoveScrollbarEventListeners(mHorizontalScrollbar);
+  RemoveScrollbarEventListeners(mVerticalScrollbar);
+
+  mHorizontalScrollbar = nullptr;
+  mVerticalScrollbar = nullptr;
+  mListeningForScrollbarEvents = false;
+}
+
+void
+ScrollbarActivity::StartListeningForScrollAreaEvents()
+{
+  if (mListeningForScrollAreaEvents)
+    return;
+
+  nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
+  nsCOMPtr<nsIDOMEventTarget> scrollAreaTarget
+    = do_QueryInterface(scrollArea->GetContent());
   if (scrollAreaTarget) {
     scrollAreaTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), this,
                                        true);
   }
-  StartListeningForEventsOnScrollbar(mHorizontalScrollbar);
-  StartListeningForEventsOnScrollbar(mVerticalScrollbar);
-  mListeningForEvents = true;
+  mListeningForScrollAreaEvents = true;
 }
 
 void
-ScrollbarActivity::StartListeningForEventsOnScrollbar(nsIDOMEventTarget* aScrollbar)
+ScrollbarActivity::StopListeningForScrollAreaEvents(bool aIsTeardown)
+{
+  if ((mListeningForScrollAreaEvents && !mDisplayOnMouseMove) ||
+      (mListeningForScrollAreaEvents && mDisplayOnMouseMove && aIsTeardown)) {
+    nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
+    nsCOMPtr<nsIDOMEventTarget> scrollAreaTarget = do_QueryInterface(scrollArea->GetContent());
+    if (scrollAreaTarget) {
+      scrollAreaTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, true);
+    }
+    mListeningForScrollAreaEvents = false;
+  }
+}
+
+void
+ScrollbarActivity::AddScrollbarEventListeners(nsIDOMEventTarget* aScrollbar)
 {
   if (aScrollbar) {
     aScrollbar->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
@@ -183,27 +250,7 @@ ScrollbarActivity::StartListeningForEventsOnScrollbar(nsIDOMEventTarget* aScroll
 }
 
 void
-ScrollbarActivity::StopListeningForEvents()
-{
-  if (!mListeningForEvents)
-    return;
-
-  nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
-  nsCOMPtr<nsIDOMEventTarget> scrollAreaTarget = do_QueryInterface(scrollArea->GetContent());
-
-  if (scrollAreaTarget) {
-    scrollAreaTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, true);
-  }
-  StopListeningForEventsOnScrollbar(mHorizontalScrollbar);
-  StopListeningForEventsOnScrollbar(mVerticalScrollbar);
-
-  mHorizontalScrollbar = nullptr;
-  mVerticalScrollbar = nullptr;
-  mListeningForEvents = false;
-}
-
-void
-ScrollbarActivity::StopListeningForEventsOnScrollbar(nsIDOMEventTarget* aScrollbar)
+ScrollbarActivity::RemoveScrollbarEventListeners(nsIDOMEventTarget* aScrollbar)
 {
   if (aScrollbar) {
     aScrollbar->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, true);
@@ -242,7 +289,7 @@ ScrollbarActivity::EndFade()
   }
   SetIsActive(false);
   UnregisterFromRefreshDriver();
-  StopListeningForEvents();
+  StopListeningForEvents(false);
 
   NS_ASSERTION(!mIsActive, "should have gone inactive after fade end");
   NS_ASSERTION(!mIsFading, "shouldn't be fading anymore");
@@ -372,10 +419,11 @@ ScrollbarActivity::SetIsFading(bool aNewFading)
 void
 ScrollbarActivity::StartFadeBeginTimer()
 {
-  NS_ASSERTION(!mFadeBeginTimer, "timer already alive!");
-  mFadeBeginTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (!mFadeBeginTimer) {
+    mFadeBeginTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
   mFadeBeginTimer->InitWithFuncCallback(FadeBeginTimerFired, this,
-                                        kScrollbarFadeBeginDelay,
+                                        mScrollbarFadeBeginDelay,
                                         nsITimer::TYPE_ONE_SHOT);
 }
 
@@ -384,7 +432,6 @@ ScrollbarActivity::CancelFadeBeginTimer()
 {
   if (mFadeBeginTimer) {
     mFadeBeginTimer->Cancel();
-    mFadeBeginTimer = nullptr;
   }
 }
 
