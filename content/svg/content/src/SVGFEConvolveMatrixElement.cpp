@@ -122,7 +122,7 @@ SVGFEConvolveMatrixElement::TargetY()
   return mIntegerAttributes[TARGET_Y].ToDOMAnimatedInteger(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFEConvolveMatrixElement::EdgeMode()
 {
   return mEnumAttributes[EDGEMODE].ToDOMAnimatedEnum(this);

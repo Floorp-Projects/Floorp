@@ -59,9 +59,9 @@ public:
   }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> GradientUnits();
+  already_AddRefed<SVGAnimatedEnumeration> GradientUnits();
   already_AddRefed<SVGAnimatedTransformList> GradientTransform();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> SpreadMethod();
+  already_AddRefed<SVGAnimatedEnumeration> SpreadMethod();
   already_AddRefed<SVGAnimatedString> Href();
 
 protected:

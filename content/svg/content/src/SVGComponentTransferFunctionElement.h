@@ -47,7 +47,7 @@ public:
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE = 0;
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Type();
+  already_AddRefed<SVGAnimatedEnumeration> Type();
   already_AddRefed<DOMSVGAnimatedNumberList> TableValues();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Slope();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Intercept();

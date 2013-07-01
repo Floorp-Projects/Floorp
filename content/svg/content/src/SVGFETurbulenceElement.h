@@ -52,8 +52,8 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedNumber> BaseFrequencyY();
   already_AddRefed<nsIDOMSVGAnimatedInteger> NumOctaves();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Seed();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> StitchTiles();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Type();
+  already_AddRefed<SVGAnimatedEnumeration> StitchTiles();
+  already_AddRefed<SVGAnimatedEnumeration> Type();
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
