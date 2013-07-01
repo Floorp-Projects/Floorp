@@ -23,12 +23,6 @@ EXTRA_COMPONENTS := \
   DirectoryProvider.js \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  Startup.jsm \
-  WebappRT.jsm \
-  WebappsHandler.jsm \
-  $(NULL)
-
 PREF_JS_EXPORTS = $(srcdir)/prefs.js \
                   $(NULL)
 

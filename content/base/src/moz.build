@@ -157,3 +157,7 @@ CPP_SOURCES += [
 EXTRA_PP_COMPONENTS += [
     'contentSecurityPolicy.js',
 ]
+
+EXTRA_JS_MODULES += [
+    'CSPUtils.jsm',
+]

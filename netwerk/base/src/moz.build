@@ -103,3 +103,7 @@ if CONFIG['MOZ_PLATFORM_MAEMO']:
         CPP_SOURCES += [
             'nsAutodialQt.cpp',
         ]
+
+EXTRA_JS_MODULES += [
+    'NetUtil.jsm',
+]
