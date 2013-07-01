@@ -73,11 +73,13 @@ LightweightThemeConsumer.prototype = {
   },
 
   _update: function (aData) {
-    if (!aData)
+    if (!aData) {
       aData = { headerURL: "", footerURL: "", textcolor: "", accentcolor: "" };
-
-    this._lastData = aData;
-    aData = LightweightThemeImageOptimizer.optimize(aData, this._win.screen);
+      this._lastData = aData;
+    } else {
+      this._lastData = aData;
+      aData = LightweightThemeImageOptimizer.optimize(aData, this._win.screen);
+    }
 
     var root = this._doc.documentElement;
     var active = !!aData.headerURL;
