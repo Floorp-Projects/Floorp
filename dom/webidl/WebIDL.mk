@@ -163,6 +163,7 @@ webidl_files = \
   HTMLVideoElement.webidl \
   IDBDatabase.webidl \
   IDBFactory.webidl \
+  IDBFileHandle.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   ImageDocument.webidl \
