@@ -50,8 +50,8 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Dx();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Dy();
+  already_AddRefed<SVGAnimatedNumber> Dx();
+  already_AddRefed<SVGAnimatedNumber> Dy();
 
 protected:
   nsIntPoint GetOffset(const nsSVGFilterInstance& aInstance);

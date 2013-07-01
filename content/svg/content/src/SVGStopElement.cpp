@@ -35,12 +35,10 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGStopElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGStopElement::Offset()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> offset;
-  mOffset.ToDOMAnimatedNumber(getter_AddRefs(offset), this);
-  return offset.forget();
+  return mOffset.ToDOMAnimatedNumber(this);
 }
 
 //----------------------------------------------------------------------

@@ -66,10 +66,10 @@ public:
   already_AddRefed<SVGAnimatedInteger> TargetY();
   already_AddRefed<SVGAnimatedEnumeration> EdgeMode();
   already_AddRefed<SVGAnimatedBoolean> PreserveAlpha();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Divisor();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Bias();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthX();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthY();
+  already_AddRefed<SVGAnimatedNumber> Divisor();
+  already_AddRefed<SVGAnimatedNumber> Bias();
+  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthX();
+  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthY();
 
 protected:
   virtual bool OperatesOnPremultipledAlpha(int32_t) MOZ_OVERRIDE {

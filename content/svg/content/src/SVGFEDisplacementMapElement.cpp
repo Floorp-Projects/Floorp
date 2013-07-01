@@ -77,7 +77,7 @@ SVGFEDisplacementMapElement::In2()
   return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEDisplacementMapElement::Scale()
 {
   return mNumberAttributes[SCALE].ToDOMAnimatedNumber(this);

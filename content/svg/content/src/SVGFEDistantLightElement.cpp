@@ -40,13 +40,13 @@ SVGFEDistantLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
           aAttribute == nsGkAtoms::elevation);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEDistantLightElement::Azimuth()
 {
   return mNumberAttributes[AZIMUTH].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEDistantLightElement::Elevation()
 {
   return mNumberAttributes[ELEVATION].ToDOMAnimatedNumber(this);
