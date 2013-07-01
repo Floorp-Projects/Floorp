@@ -194,6 +194,10 @@ class Nursery
         return chunk(numActiveChunks_ - 1).end();
     }
 
+    JS_ALWAYS_INLINE bool isFullyGrown() const {
+        return numActiveChunks_ == NumNurseryChunks;
+    }
+
     JS_ALWAYS_INLINE uintptr_t currentEnd() const {
         JS_ASSERT(runtime_);
         JS_ASSERT(currentEnd_ == chunk(currentChunk_).end());

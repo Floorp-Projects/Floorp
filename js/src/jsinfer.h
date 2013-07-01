@@ -409,6 +409,12 @@ enum {
     /* Flags which indicate dynamic properties of represented objects. */
     OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
 
+    /* Mask/shift for tenuring count. */
+    OBJECT_FLAG_TENURE_COUNT_MASK     = 0x7f000000,
+    OBJECT_FLAG_TENURE_COUNT_SHIFT    = 24,
+    OBJECT_FLAG_TENURE_COUNT_LIMIT    =
+        OBJECT_FLAG_TENURE_COUNT_MASK >> OBJECT_FLAG_TENURE_COUNT_SHIFT,
+
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all flags in DYNAMIC_MASK will also be set.
@@ -1114,6 +1120,39 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      * or NULL if there is none known.
      */
     //inline JSObject *getGlobal();
+
+    /* Tenure counter management. */
+
+    /*
+     * When an object allocation site generates objects that are long lived
+     * enough to frequently be tenured during minor collections, we mark the
+     * site as long lived and allocate directly into the tenured generation.
+     */
+    const static uint32_t MaxJITAllocTenures = OBJECT_FLAG_TENURE_COUNT_LIMIT - 2;
+
+    /*
+     * NewObjectCache is used when we take a stub for allocation. It is used
+     * more rarely, but still in hot paths, so pre-tenure with fewer uses.
+     */
+    const static uint32_t MaxCachedAllocTenures = 64;
+
+    /* Returns true if the allocating script should be recompiled. */
+    bool incrementTenureCount();
+    uint32_t tenureCount() const {
+        return (flags & OBJECT_FLAG_TENURE_COUNT_MASK) >> OBJECT_FLAG_TENURE_COUNT_SHIFT;
+    }
+
+    bool isLongLivedForCachedAlloc() const {
+        return tenureCount() >= MaxCachedAllocTenures;
+    }
+
+    bool isLongLivedForJITAlloc() const {
+        return tenureCount() >= MaxJITAllocTenures;
+    }
+
+    gc::InitialHeap initialHeapForJITAlloc() const {
+        return isLongLivedForJITAlloc() ? gc::TenuredHeap : gc::DefaultHeap;
+    }
 
     /* Helpers */
 
