@@ -85,6 +85,12 @@ struct CSSPixel {
                        NSAppUnitsToIntPixels(aPoint.y, float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 
+  static CSSIntSize FromAppUnitsRounded(const nsSize& aSize)
+  {
+    return CSSIntSize(NSAppUnitsToIntPixels(aSize.width, float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                      NSAppUnitsToIntPixels(aSize.height, float(nsDeviceContext::AppUnitsPerCSSPixel())));
+  }
+
   static CSSIntRect FromAppUnitsRounded(const nsRect& aRect) {
     return CSSIntRect(NSAppUnitsToIntPixels(aRect.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
                       NSAppUnitsToIntPixels(aRect.y, float(nsDeviceContext::AppUnitsPerCSSPixel())),

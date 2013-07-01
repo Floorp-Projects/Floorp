@@ -4061,11 +4061,10 @@ nsGlobalWindow::CSSToDevIntPixels(nsIntSize px)
     presContext->CSSPixelsToDevPixels(px.height));
 }
 
-
-NS_IMETHODIMP
-nsGlobalWindow::GetInnerWidth(int32_t* aInnerWidth)
+nsresult
+nsGlobalWindow::GetInnerSize(CSSIntSize& aSize)
 {
-  FORWARD_TO_OUTER(GetInnerWidth, (aInnerWidth), NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(IsOuterWindow());
 
   EnsureSizeUpToDate();
 
@@ -4075,17 +4074,29 @@ nsGlobalWindow::GetInnerWidth(int32_t* aInnerWidth)
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
-  if (presContext && presShell) {
-    nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
-    if (viewManager) {
-      viewManager->FlushDelayedResize(false);
-    }
-    nsRect shellArea = presContext->GetVisibleArea();
-    *aInnerWidth = nsPresContext::AppUnitsToIntCSSPixels(shellArea.width);
-  } else {
-    *aInnerWidth = 0;
+  if (!presContext || !presShell) {
+    aSize = CSSIntSize(0, 0);
+    return NS_OK;
   }
 
+  nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
+  if (viewManager) {
+    viewManager->FlushDelayedResize(false);
+  }
+  aSize = CSSIntRect::FromAppUnitsRounded(presContext->GetVisibleArea().Size());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetInnerWidth(int32_t* aInnerWidth)
+{
+  FORWARD_TO_OUTER(GetInnerWidth, (aInnerWidth), NS_ERROR_NOT_INITIALIZED);
+
+  CSSIntSize size;
+  nsresult rv = GetInnerSize(size);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aInnerWidth = size.width;
   return NS_OK;
 }
 
@@ -4140,24 +4151,11 @@ nsGlobalWindow::GetInnerHeight(int32_t* aInnerHeight)
 {
   FORWARD_TO_OUTER(GetInnerHeight, (aInnerHeight), NS_ERROR_NOT_INITIALIZED);
 
-  EnsureSizeUpToDate();
+  CSSIntSize size;
+  nsresult rv = GetInnerSize(size);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_STATE(mDocShell);
-
-  nsRefPtr<nsPresContext> presContext;
-  mDocShell->GetPresContext(getter_AddRefs(presContext));
-  nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
-
-  if (presContext && presShell) {
-    nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
-    if (viewManager) {
-      viewManager->FlushDelayedResize(false);
-    }
-    nsRect shellArea = presContext->GetVisibleArea();
-    *aInnerHeight = nsPresContext::AppUnitsToIntCSSPixels(shellArea.height);
-  } else {
-    *aInnerHeight = 0;
-  }
+  *aInnerHeight = size.height;
   return NS_OK;
 }
 
@@ -10855,6 +10853,8 @@ nsGlobalWindow::FlushPendingNotifications(mozFlushType aType)
 void
 nsGlobalWindow::EnsureSizeUpToDate()
 {
+  MOZ_ASSERT(IsOuterWindow());
+
   // If we're a subframe, make sure our size is up to date.  It's OK that this
   // crosses the content/chrome boundary, since chrome can have pending reflows
   // too.
