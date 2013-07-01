@@ -125,6 +125,12 @@ function debug(aMsg) {
   Services.console.logStringMessage(aMsg);
 }
 
+function notifyAsync(aTopic) {
+  Services.tm.mainThread.dispatch(() => {
+    Services.obs.notifyObservers(null, aTopic, "");
+  }, Ci.nsIThread.DISPATCH_NORMAL);
+}
+
 this.SessionStore = {
   get promiseInitialized() {
     return SessionStoreInternal.promiseInitialized.promise;
@@ -764,7 +770,7 @@ let SessionStoreInternal = {
           this._initialState = null;
 
           // Nothing to restore now, notify observers things are complete.
-          Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+          notifyAsync(NOTIFY_WINDOWS_RESTORED);
         } else {
           TelemetryTimestamps.add("sessionRestoreRestoring");
           // make sure that the restored tabs are first in the window
@@ -782,7 +788,7 @@ let SessionStoreInternal = {
       }
       else {
         // Nothing to restore, notify observers things are complete.
-        Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+        notifyAsync(NOTIFY_WINDOWS_RESTORED);
 
         // the next delayed save request should execute immediately
         this._lastSaveTime -= this._interval;
@@ -4317,9 +4323,8 @@ let SessionStoreInternal = {
       return;
 
     // This was the last window restored at startup, notify observers.
-    Services.obs.notifyObservers(null,
-      this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
-      "");
+    notifyAsync(this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED :
+                                        NOTIFY_WINDOWS_RESTORED);
 
     this._browserSetState = false;
     this._restoreCount = -1;
