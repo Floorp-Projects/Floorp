@@ -11,8 +11,10 @@ pref("nglayout.debug.disable_xul_fastload", true);
 pref("devtools.errorconsole.enabled", true);
 #endif
 
-// Enable headless crash reporting by default
-pref("app.reportCrashes", true);
+// Automatically submit crash reports
+pref("app.crashreporter.autosubmit", false);
+// Has the user been prompted about crash reporting?
+pref("app.crashreporter.prompted", false);
 
 // Debug prefs, see input.js
 pref("metro.debug.treatmouseastouch", false);
