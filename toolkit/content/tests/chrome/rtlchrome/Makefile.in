@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,9 +9,11 @@ VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-libs:: rtl.manifest rtl.css rtl.dtd
-	$(INSTALL) @srcdir@/rtl.manifest $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/
-	$(INSTALL) @srcdir@/rtl.css $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/
-	$(INSTALL) @srcdir@/rtl.dtd $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/
+MOCHITEST_CHROME_FILES := \
+  rtl.css \
+  rtl.dtd \
+  rtl.manifest \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
