@@ -17,6 +17,7 @@ from mozbuild.frontend.data import (
     Exports,
     Program,
     XpcshellManifests,
+    IPDLFile,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -221,6 +222,24 @@ class TestEmitterBasic(unittest.TestCase):
             ]
 
         self.assertEqual(sorted(inis), iniByDir)
+
+    def test_ipdl_sources(self):
+        reader = self.reader('ipdl_sources')
+        objs = self.read_topsrcdir(reader)
+
+        ipdls = []
+        for o in objs:
+            if isinstance(o, IPDLFile):
+                ipdls.append('%s/%s' % (o.relativedir, o.basename))
+
+        expected = [
+            'bar/bar.ipdl',
+            'bar/bar2.ipdlh',
+            'foo/foo.ipdl',
+            'foo/foo2.ipdlh',
+        ]
+
+        self.assertEqual(ipdls, expected)
 
 if __name__ == '__main__':
     main()

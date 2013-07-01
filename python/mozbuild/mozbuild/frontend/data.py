@@ -149,6 +149,18 @@ class Exports(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
         self.exports = exports
 
+class IPDLFile(SandboxDerived):
+    """Describes an individual .ipdl source file."""
+
+    __slots__ = (
+        'basename',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.basename = path
+
 class Program(SandboxDerived):
     """Sandbox container object for PROGRAM, which is a unicode string.
 

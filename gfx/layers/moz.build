@@ -248,3 +248,13 @@ CPP_SOURCES += [
     'YCbCrImageDataSerializer.cpp',
 ]
 
+IPDL_SOURCES = [
+    'ipc/LayerTransaction.ipdlh',
+    'ipc/LayersSurfaces.ipdlh',
+    'ipc/PCompositable.ipdl',
+    'ipc/PCompositor.ipdl',
+    'ipc/PGrallocBuffer.ipdl',
+    'ipc/PImageBridge.ipdl',
+    'ipc/PLayer.ipdl',
+    'ipc/PLayerTransaction.ipdl',
+]
