@@ -817,6 +817,13 @@ nsFrameMessageManager::RemoveFromParent()
 void
 nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
 {
+  if (!mDisconnected) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+       obs->NotifyObservers(NS_ISUPPORTS_CAST(nsIContentFrameMessageManager*, this),
+                            "message-manager-disconnect", nullptr);
+    }
+  }
   if (mParentManager && aRemoveFromParent) {
     mParentManager->RemoveChildManager(this);
   }
