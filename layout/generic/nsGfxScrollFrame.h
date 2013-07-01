@@ -170,7 +170,7 @@ public:
                 const nsRect* aRange = nullptr) {
     ScrollToWithOrigin(aScrollPosition, aMode, nsGkAtoms::other, aRange);
   }
-  void ScrollToCSSPixels(nsIntPoint aScrollPosition);
+  void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition);
   void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition);
   nsIntPoint GetScrollPositionCSSPixels();
   void ScrollToImpl(nsPoint aScrollPosition, const nsRect& aRange);
@@ -519,7 +519,7 @@ public:
                         const nsRect* aRange = nullptr) MOZ_OVERRIDE {
     mInner.ScrollTo(aScrollPosition, aMode, aRange);
   }
-  virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) MOZ_OVERRIDE {
+  virtual void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
     mInner.ScrollToCSSPixels(aScrollPosition);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition) MOZ_OVERRIDE {
@@ -783,7 +783,7 @@ public:
                         const nsRect* aRange = nullptr) MOZ_OVERRIDE {
     mInner.ScrollTo(aScrollPosition, aMode, aRange);
   }
-  virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) MOZ_OVERRIDE {
+  virtual void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
     mInner.ScrollToCSSPixels(aScrollPosition);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition) MOZ_OVERRIDE {
