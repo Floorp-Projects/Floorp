@@ -636,6 +636,8 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
 bool
 TryPreserveWrapper(JSObject* obj)
 {
+  MOZ_ASSERT(IsDOMObject(obj));
+
   if (nsISupports* native = UnwrapDOMObjectToISupports(obj)) {
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(native, &cache);
