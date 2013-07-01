@@ -14,14 +14,56 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 MODULE = 'xpcom'
 
 EXPORTS += [
+    'nsArrayEnumerator.h',
+    'nsArrayUtils.h',
+    'nsBaseHashtable.h',
+    'nsCOMArray.h',
+    'nsCOMPtr.h',
+    'nsCRTGlue.h',
+    'nsCategoryCache.h',
+    'nsClassHashtable.h',
+    'nsComponentManagerUtils.h',
     'nsCycleCollectionNoteChild.h',
     'nsCycleCollectionNoteRootCallback.h',
+    'nsCycleCollectionParticipant.h',
     'nsCycleCollectionTraversalCallback.h',
     'nsCycleCollectorUtils.h',
+    'nsDataHashtable.h',
+    'nsDebug.h',
+    'nsDeque.h',
+    'nsEnumeratorUtils.h',
+    'nsHashKeys.h',
+    'nsIClassInfoImpl.h',
+    'nsID.h',
+    'nsIInterfaceRequestorUtils.h',
+    'nsINIParser.h',
+    'nsISupportsImpl.h',
+    'nsISupportsUtils.h',
+    'nsIWeakReferenceUtils.h',
+    'nsInterfaceHashtable.h',
+    'nsJSThingHashtable.h',
+    'nsMemory.h',
     'nsProxyRelease.h',
+    'nsQuickSort.h',
+    'nsRefPtrHashtable.h',
+    'nsServiceManagerUtils.h',
+    'nsStringAPI.h',
+    'nsStringGlue.h',
+    'nsTArray-inl.h',
+    'nsTArray.h',
+    'nsTArrayForwardDeclare.h',
+    'nsTHashtable.h',
+    'nsTObserverArray.h',
     'nsTPriorityQueue.h',
+    'nsTWeakRef.h',
+    'nsTextFormatter.h',
     'nsThreadUtils.h',
+    'nsTraceRefcnt.h',
+    'nsVersionComparator.h',
+    'nsVoidArray.h',
+    'nsWeakReference.h',
     'nsXPTCUtils.h',
+    'pldhash.h',
 ]
 
 EXPORTS.mozilla += [
@@ -54,4 +96,3 @@ CPP_SOURCES += [
 ]
 
 LIBRARY_NAME = 'xpcomglue_s'
-

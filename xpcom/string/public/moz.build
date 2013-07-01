@@ -12,6 +12,7 @@ EXPORTS += [
     'nsCharTraits.h',
     'nsDependentString.h',
     'nsDependentSubstring.h',
+    'nsEmbedString.h',
     'nsLiteralString.h',
     'nsPrintfCString.h',
     'nsPromiseFlatString.h',
@@ -29,9 +30,9 @@ EXPORTS += [
     'nsTSubstring.h',
     'nsTSubstringTuple.h',
     'nsUTF8Utils.h',
+    'nsXPCOMStrings.h',
     'nsXPIDLString.h',
     'string-template-def-char.h',
     'string-template-def-unichar.h',
     'string-template-undef.h',
 ]
-

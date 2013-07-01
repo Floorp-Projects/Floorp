@@ -19,7 +19,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../build \
 	$(NULL)
 
-SDK_HEADERS     = \
+DISABLED_SDK_HEADERS     = \
 	nsXPCOMGlue.h \
 	$(NULL)
 
