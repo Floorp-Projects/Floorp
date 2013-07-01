@@ -189,8 +189,8 @@ class YarrGenerator : private MacroAssembler {
     void matchCharacterClass(RegisterID character, JumpList& matchDest, const CharacterClass* charClass)
     {
         if (charClass->m_table) {
-            ExtendedAddress tableEntry(character, reinterpret_cast<intptr_t>(charClass->m_table->m_table));
-            matchDest.append(branchTest8(charClass->m_table->m_inverted ? Zero : NonZero, tableEntry));
+            ExtendedAddress tableEntry(character, reinterpret_cast<intptr_t>(charClass->m_table));
+            matchDest.append(branchTest8(charClass->m_tableInverted ? Zero : NonZero, tableEntry));
             return;
         }
         Jump unicodeFail;
@@ -766,7 +766,11 @@ class YarrGenerator : private MacroAssembler {
         const RegisterID character = regT0;
         int maxCharactersAtOnce = m_charSize == Char8 ? 4 : 2;
         unsigned ignoreCaseMask = 0;
+#if CPU(BIG_ENDIAN)
+        int allCharacters = ch << (m_charSize == Char8 ? 24 : 16);
+#else
         int allCharacters = ch;
+#endif
         int numberCharacters;
         int startTermPosition = term->inputPosition;
 
@@ -775,7 +779,11 @@ class YarrGenerator : private MacroAssembler {
         ASSERT(!m_pattern.m_ignoreCase || isASCIIAlpha(ch) || isCanonicallyUnique(ch));
 
         if (m_pattern.m_ignoreCase && isASCIIAlpha(ch))
+#if CPU(BIG_ENDIAN)
+            ignoreCaseMask |= 32 << (m_charSize == Char8 ? 24 : 16);
+#else
             ignoreCaseMask |= 32;
+#endif
 
         for (numberCharacters = 1; numberCharacters < maxCharactersAtOnce && nextOp->m_op == OpTerm; ++numberCharacters, nextOp = &m_ops[opIndex + numberCharacters]) {
             PatternTerm* nextTerm = nextOp->m_term;
@@ -788,7 +796,11 @@ class YarrGenerator : private MacroAssembler {
 
             nextOp->m_isDeadCode = true;
 
+#if CPU(BIG_ENDIAN)
+            int shiftAmount = (m_charSize == Char8 ? 24 : 16) - ((m_charSize == Char8 ? 8 : 16) * numberCharacters);
+#else
             int shiftAmount = (m_charSize == Char8 ? 8 : 16) * numberCharacters;
+#endif
 
             UChar currentCharacter = nextTerm->patternCharacter;
 
