@@ -379,7 +379,10 @@ class MarionetteJSTestCase(CommonTestCase):
             self.marionette.set_script_timeout(timeout)
 
         try:
-            results = self.marionette.execute_js_script(js, args, special_powers=True)
+            results = self.marionette.execute_js_script(js,
+                                                        args,
+                                                        special_powers=True,
+                                                        filename=os.path.basename(self.jsFile))
 
             self.assertTrue(not 'timeout' in self.jsFile,
                             'expected timeout not triggered')
