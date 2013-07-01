@@ -65,6 +65,7 @@
 #include "nsIDocument.h"
 
 #include "mozilla/dom/EventTarget.h"
+#include "Units.h"
 
 // JS includes
 #include "jsapi.h"
@@ -442,6 +443,7 @@ public:
   void DispatchDOMWindowCreated();
   virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindow* aOpener,
                                            bool aOriginalOpener);
+  // Outer windows only.
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
   virtual NS_HIDDEN_(nsIDOMWindow*) EnterModalState();
@@ -996,9 +998,14 @@ protected:
                        bool aDoFlush);
   nsresult GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY);
 
+  // Outer windows only.
+  nsresult GetInnerSize(mozilla::CSSIntSize& aSize);
+
   nsresult GetOuterSize(nsIntSize* aSizeCSSPixels);
   nsresult SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth);
   nsRect GetInnerScreenRect();
+
+  void ScrollTo(const mozilla::CSSIntPoint& aScroll);
 
   bool IsFrame()
   {

@@ -52,10 +52,10 @@ public:
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();
   already_AddRefed<SVGAnimatedLength> Height();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> FilterUnits();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> PrimitiveUnits();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> FilterResX();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> FilterResY();
+  already_AddRefed<SVGAnimatedEnumeration> FilterUnits();
+  already_AddRefed<SVGAnimatedEnumeration> PrimitiveUnits();
+  already_AddRefed<SVGAnimatedInteger> FilterResX();
+  already_AddRefed<SVGAnimatedInteger> FilterResY();
   void SetFilterRes(uint32_t filterResX, uint32_t filterResY);
   already_AddRefed<SVGAnimatedString> Href();
 

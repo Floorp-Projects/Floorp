@@ -6995,7 +6995,7 @@ DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub, uint3
         res.set(vp[0]);
     } else {
         JS_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY || op == JSOP_EVAL);
-        if (!Invoke(cx, thisv, callee, argc, args, res.address()))
+        if (!Invoke(cx, thisv, callee, argc, args, res))
             return false;
     }
 

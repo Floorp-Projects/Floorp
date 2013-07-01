@@ -33,7 +33,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Offset();
+  already_AddRefed<SVGAnimatedNumber> Offset();
 
 protected:
 

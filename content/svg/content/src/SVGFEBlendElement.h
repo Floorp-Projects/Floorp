@@ -50,7 +50,7 @@ public:
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
   already_AddRefed<SVGAnimatedString> In2();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Mode();
+  already_AddRefed<SVGAnimatedEnumeration> Mode();
 
 protected:
 

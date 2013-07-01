@@ -5293,7 +5293,7 @@ InvokeFromAsmJS_Ignore(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_t
 {
     RootedValue fval(cx, ObjectValue(*exitDatum->fun));
     RootedValue rval(cx);
-    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval.address()))
+    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, &rval))
         return false;
 
     if (!TryEnablingIon(cx, exitDatum, argc, argv))
@@ -5307,7 +5307,7 @@ InvokeFromAsmJS_ToInt32(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_
 {
     RootedValue fval(cx, ObjectValue(*exitDatum->fun));
     RootedValue rval(cx);
-    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval.address()))
+    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, &rval))
         return false;
 
     if (!TryEnablingIon(cx, exitDatum, argc, argv))
@@ -5326,7 +5326,7 @@ InvokeFromAsmJS_ToNumber(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32
 {
     RootedValue fval(cx, ObjectValue(*exitDatum->fun));
     RootedValue rval(cx);
-    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval.address()))
+    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, &rval))
         return false;
 
     if (!TryEnablingIon(cx, exitDatum, argc, argv))

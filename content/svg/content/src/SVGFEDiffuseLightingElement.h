@@ -36,10 +36,10 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> SurfaceScale();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> DiffuseConstant();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthX();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthY();
+  already_AddRefed<SVGAnimatedNumber> SurfaceScale();
+  already_AddRefed<SVGAnimatedNumber> DiffuseConstant();
+  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthX();
+  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthY();
 
 protected:
   virtual void LightPixel(const float *N, const float *L,

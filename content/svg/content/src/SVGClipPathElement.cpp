@@ -36,12 +36,10 @@ SVGClipPathElement::SVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGClipPathElement::ClipPathUnits()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> unit;
-  mEnumAttributes[CLIPPATHUNITS].ToDOMAnimatedEnum(getter_AddRefs(unit), this);
-  return unit.forget();
+  return mEnumAttributes[CLIPPATHUNITS].ToDOMAnimatedEnum(this);
 }
 
 nsSVGElement::EnumAttributesInfo

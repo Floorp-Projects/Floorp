@@ -421,7 +421,7 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 {
     if (attrs & JSPROP_SETTER) {
         RootedValue opv(cx, CastAsObjectJsval(op));
-        return InvokeGetterOrSetter(cx, obj, opv, 1, vp.address(), vp.address());
+        return InvokeGetterOrSetter(cx, obj, opv, 1, vp.address(), vp);
     }
 
     if (attrs & JSPROP_GETTER)

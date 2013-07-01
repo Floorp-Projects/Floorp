@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedNumber;
-
 interface SVGFEOffsetElement : SVGElement {
   readonly attribute SVGAnimatedString in1;
   readonly attribute SVGAnimatedNumber dx;
