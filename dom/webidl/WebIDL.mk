@@ -232,6 +232,7 @@ webidl_files = \
   SVGAnimatedInteger.webidl \
   SVGAnimatedLength.webidl \
   SVGAnimatedLengthList.webidl \
+  SVGAnimatedNumber.webidl \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPathData.webidl \
   SVGAnimatedPoints.webidl \

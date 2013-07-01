@@ -36,9 +36,9 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedNumber> X();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Y();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Z();
+  already_AddRefed<SVGAnimatedNumber> X();
+  already_AddRefed<SVGAnimatedNumber> Y();
+  already_AddRefed<SVGAnimatedNumber> Z();
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;

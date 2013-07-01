@@ -49,11 +49,11 @@ public:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE = 0;
   already_AddRefed<SVGAnimatedEnumeration> Type();
   already_AddRefed<DOMSVGAnimatedNumberList> TableValues();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Slope();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Intercept();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Amplitude();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Exponent();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Offset();
+  already_AddRefed<SVGAnimatedNumber> Slope();
+  already_AddRefed<SVGAnimatedNumber> Intercept();
+  already_AddRefed<SVGAnimatedNumber> Amplitude();
+  already_AddRefed<SVGAnimatedNumber> Exponent();
+  already_AddRefed<SVGAnimatedNumber> Offset();
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;

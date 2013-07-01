@@ -74,7 +74,7 @@ public:
   gfxFloat GetPathLengthScale(PathLengthScaleForType aFor);
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedNumber> PathLength();
+  already_AddRefed<SVGAnimatedNumber> PathLength();
   float GetTotalLength(ErrorResult& rv);
   already_AddRefed<nsISVGPoint> GetPointAtLength(float distance, ErrorResult& rv);
   uint32_t GetPathSegAtLength(float distance);
