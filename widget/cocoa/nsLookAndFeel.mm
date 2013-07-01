@@ -379,6 +379,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_TouchEnabled:
     case eIntID_MaemoClassic:
     case eIntID_WindowsThemeIdentifier:
+    case eIntID_OperatingSystemVersionIdentifier:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
