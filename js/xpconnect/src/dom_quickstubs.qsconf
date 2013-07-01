@@ -94,7 +94,6 @@ members = [
     'nsIIDBCursor.*',
     'nsIIDBCursorWithValue.*',
     'nsIIDBDatabase.*',
-    'nsIIDBFileHandle.*',
     'nsIIDBIndex.*',
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',
