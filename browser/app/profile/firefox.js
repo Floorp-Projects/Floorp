@@ -426,11 +426,10 @@ pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.animate", true);
-pref("browser.tabs.onTop", true);
-#ifdef XP_WIN
-pref("browser.tabs.drawInTitlebar", true);
-#else
+#ifdef UNIX_BUT_NOT_MAC
 pref("browser.tabs.drawInTitlebar", false);
+#else
+pref("browser.tabs.drawInTitlebar", true);
 #endif
 
 // Where to show tab close buttons:
@@ -1277,3 +1276,6 @@ pref("dom.debug.propagate_gesture_events_through_content", false);
 
 // The request URL of the GeoLocation backend.
 pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
+
+// CustomizableUI debug logging.
+pref("browser.uiCustomization.debug", false);
