@@ -150,7 +150,7 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
 NS_IMETHODIMP
 nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler)
 {
-    SOCKET_LOG(("nsSocketTransportService::AttachSocket [handler=%x]\n", handler));
+    SOCKET_LOG(("nsSocketTransportService::AttachSocket [handler=%p]\n", handler));
 
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
@@ -172,7 +172,7 @@ nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler
 nsresult
 nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *sock)
 {
-    SOCKET_LOG(("nsSocketTransportService::DetachSocket [handler=%x]\n", sock->mHandler));
+    SOCKET_LOG(("nsSocketTransportService::DetachSocket [handler=%p]\n", sock->mHandler));
     NS_ABORT_IF_FALSE((listHead == mActiveList) || (listHead == mIdleList),
                       "DetachSocket invalid head");
 
@@ -207,7 +207,7 @@ nsSocketTransportService::AddToPollList(SocketContext *sock)
     NS_ABORT_IF_FALSE(!(((uint32_t)(sock - mActiveList)) < mActiveListSize),
                       "AddToPollList Socket Already Active");
 
-    SOCKET_LOG(("nsSocketTransportService::AddToPollList [handler=%x]\n", sock->mHandler));
+    SOCKET_LOG(("nsSocketTransportService::AddToPollList [handler=%p]\n", sock->mHandler));
     if (mActiveCount == mActiveListSize) {
         SOCKET_LOG(("  Active List size of %d met\n", mActiveCount));
         if (!GrowActiveList()) {
@@ -230,7 +230,7 @@ nsSocketTransportService::AddToPollList(SocketContext *sock)
 void
 nsSocketTransportService::RemoveFromPollList(SocketContext *sock)
 {
-    SOCKET_LOG(("nsSocketTransportService::RemoveFromPollList [handler=%x]\n", sock->mHandler));
+    SOCKET_LOG(("nsSocketTransportService::RemoveFromPollList [handler=%p]\n", sock->mHandler));
 
     uint32_t index = sock - mActiveList;
     NS_ABORT_IF_FALSE(index < mActiveListSize, "invalid index");
@@ -252,7 +252,7 @@ nsSocketTransportService::AddToIdleList(SocketContext *sock)
     NS_ABORT_IF_FALSE(!(((uint32_t)(sock - mIdleList)) < mIdleListSize),
                       "AddToIdlelList Socket Already Idle");
 
-    SOCKET_LOG(("nsSocketTransportService::AddToIdleList [handler=%x]\n", sock->mHandler));
+    SOCKET_LOG(("nsSocketTransportService::AddToIdleList [handler=%p]\n", sock->mHandler));
     if (mIdleCount == mIdleListSize) {
         SOCKET_LOG(("  Idle List size of %d met\n", mIdleCount));
         if (!GrowIdleList()) {
@@ -271,7 +271,7 @@ nsSocketTransportService::AddToIdleList(SocketContext *sock)
 void
 nsSocketTransportService::RemoveFromIdleList(SocketContext *sock)
 {
-    SOCKET_LOG(("nsSocketTransportService::RemoveFromIdleList [handler=%x]\n", sock->mHandler));
+    SOCKET_LOG(("nsSocketTransportService::RemoveFromIdleList [handler=%p]\n", sock->mHandler));
 
     uint32_t index = sock - mIdleList;
     NS_ASSERTION(index < mIdleListSize, "invalid index in idle list");
@@ -730,7 +730,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
     count = mIdleCount;
     for (i=mActiveCount-1; i>=0; --i) {
         //---
-        SOCKET_LOG(("  active [%u] { handler=%x condition=%x pollflags=%hu }\n", i,
+        SOCKET_LOG(("  active [%u] { handler=%p condition=%x pollflags=%hu }\n", i,
             mActiveList[i].mHandler,
             mActiveList[i].mHandler->mCondition,
             mActiveList[i].mHandler->mPollFlags));
@@ -750,7 +750,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
     }
     for (i=count-1; i>=0; --i) {
         //---
-        SOCKET_LOG(("  idle [%u] { handler=%x condition=%x pollflags=%hu }\n", i,
+        SOCKET_LOG(("  idle [%u] { handler=%p condition=%x pollflags=%hu }\n", i,
             mIdleList[i].mHandler,
             mIdleList[i].mHandler->mCondition,
             mIdleList[i].mHandler->mPollFlags));
