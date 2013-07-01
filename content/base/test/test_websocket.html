@@ -1237,7 +1237,7 @@ function test41()
         var flags = 0;
         if (loadContext.usePrivateBrowsing)
           flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
-        sss.removeStsState(thehost, flags);
+        sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, thehost, flags);
         doTest(42);
        }
      }

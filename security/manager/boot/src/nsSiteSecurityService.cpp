@@ -140,15 +140,16 @@ nsSiteSecurityService::GetPrincipalForURI(nsIURI* aURI,
 }
 
 nsresult
-nsSiteSecurityService::SetStsState(nsIURI* aSourceURI,
-                                   int64_t maxage,
-                                   bool includeSubdomains,
-                                   uint32_t flags)
+nsSiteSecurityService::SetState(uint32_t aType,
+                                nsIURI* aSourceURI,
+                                int64_t maxage,
+                                bool includeSubdomains,
+                                uint32_t flags)
 {
   // If max-age is zero, that's an indication to immediately remove the
   // permissions, so here's a shortcut.
   if (!maxage) {
-    return RemoveStsState(aSourceURI, flags);
+    return RemoveState(aType, aSourceURI, flags);
   }
 
   // Expire time is millis from now.  Since STS max-age is in seconds, and
@@ -191,11 +192,14 @@ nsSiteSecurityService::SetStsState(nsIURI* aSourceURI,
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::RemoveStsState(nsIURI* aURI, uint32_t aFlags)
+nsSiteSecurityService::RemoveState(uint32_t aType, nsIURI* aURI, uint32_t aFlags)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
+  // Only HSTS is supported at the moment.
+  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS,
+                 NS_ERROR_NOT_IMPLEMENTED);
 
   nsAutoCString hostname;
   nsresult rv = GetHost(aURI, hostname);
@@ -215,15 +219,19 @@ nsSiteSecurityService::RemoveStsState(nsIURI* aURI, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
-                                        const char* aHeader,
-                                        uint32_t aFlags,
-                                        uint64_t *aMaxAge,
-                                        bool *aIncludeSubdomains)
+nsSiteSecurityService::ProcessHeader(uint32_t aType,
+                                     nsIURI* aSourceURI,
+                                     const char* aHeader,
+                                     uint32_t aFlags,
+                                     uint64_t *aMaxAge,
+                                     bool *aIncludeSubdomains)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
+  // Only HSTS is supported at the moment.
+  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS,
+                 NS_ERROR_NOT_IMPLEMENTED);
 
   if (aMaxAge != nullptr) {
     *aMaxAge = 0;
@@ -235,18 +243,19 @@ nsSiteSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
 
   char * header = NS_strdup(aHeader);
   if (!header) return NS_ERROR_OUT_OF_MEMORY;
-  nsresult rv = ProcessStsHeaderMutating(aSourceURI, header, aFlags,
-                                         aMaxAge, aIncludeSubdomains);
+  nsresult rv = ProcessHeaderMutating(aType, aSourceURI, header, aFlags,
+                                      aMaxAge, aIncludeSubdomains);
   NS_Free(header);
   return rv;
 }
 
 nsresult
-nsSiteSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
-                                                char* aHeader,
-                                                uint32_t aFlags,
-                                                uint64_t *aMaxAge,
-                                                bool *aIncludeSubdomains)
+nsSiteSecurityService::ProcessHeaderMutating(uint32_t aType,
+                                             nsIURI* aSourceURI,
+                                             char* aHeader,
+                                             uint32_t aFlags,
+                                             uint64_t *aMaxAge,
+                                             bool *aIncludeSubdomains)
 {
   STSLOG(("STS: processing header '%s'", aHeader));
 
@@ -342,7 +351,7 @@ nsSiteSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
   }
 
   // record the successfully parsed header data.
-  SetStsState(aSourceURI, maxAge, foundIncludeSubdomains, aFlags);
+  SetState(aType, aSourceURI, maxAge, foundIncludeSubdomains, aFlags);
 
   if (aMaxAge != nullptr) {
     *aMaxAge = (uint64_t)maxAge;
@@ -355,21 +364,6 @@ nsSiteSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
   return foundUnrecognizedDirective ?
          NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA :
          NS_OK;
-}
-
-NS_IMETHODIMP
-nsSiteSecurityService::IsStsHost(const char* aHost, uint32_t aFlags, bool* aResult)
-{
-  // Should be called on the main thread (or via proxy) since the permission
-  // manager is used and it's not threadsafe.
-  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIURI> uri;
-  nsDependentCString hostString(aHost);
-  nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                          NS_LITERAL_CSTRING("https://") + hostString);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return IsStsURI(uri, aFlags, aResult);
 }
 
 int STSPreloadCompare(const void *key, const void *entry)
@@ -405,11 +399,15 @@ nsSiteSecurityService::GetPreloadListEntry(const char *aHost)
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* aResult)
+nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
+                                   uint32_t aFlags, bool* aResult)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
+  // Only HSTS is supported at the moment.
+  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS,
+                 NS_ERROR_NOT_IMPLEMENTED);
 
   // set default in case if we can't find any STS information
   *aResult = false;
@@ -546,8 +544,8 @@ nsSiteSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* aResult)
 
 // Verify the trustworthiness of the security info (are there any cert errors?)
 NS_IMETHODIMP
-nsSiteSecurityService::ShouldIgnoreStsHeader(nsISupports* aSecurityInfo,
-                                             bool* aResult)
+nsSiteSecurityService::ShouldIgnoreHeader(nsISupports* aSecurityInfo,
+                                          bool* aResult)
 {
   nsresult rv;
   bool tlsIsBroken = false;

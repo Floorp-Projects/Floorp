@@ -136,9 +136,11 @@ public:
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   nsresult GetPrincipalForURI(nsIURI *aURI, nsIPrincipal **aPrincipal);
-  nsresult SetStsState(nsIURI* aSourceURI, int64_t maxage, bool includeSubdomains, uint32_t flags);
-  nsresult ProcessStsHeaderMutating(nsIURI* aSourceURI, char* aHeader, uint32_t flags,
-                                    uint64_t *aMaxAge, bool *aIncludeSubdomains);
+  nsresult SetState(uint32_t aType, nsIURI* aSourceURI, int64_t maxage,
+                    bool includeSubdomains, uint32_t flags);
+  nsresult ProcessHeaderMutating(uint32_t aType, nsIURI* aSourceURI,
+                                 char* aHeader, uint32_t flags,
+                                 uint64_t *aMaxAge, bool *aIncludeSubdomains);
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
 
   // private-mode-preserving permission manager overlay functions
