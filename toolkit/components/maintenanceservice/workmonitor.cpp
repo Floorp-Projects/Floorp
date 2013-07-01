@@ -345,7 +345,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
   // Verify that the updater.exe that we are executing is the same
   // as the one in the installation directory which we are updating.
   // The installation dir that we are installing to is installDir.
-  WCHAR installDirUpdater[MAX_PATH + 1] = {L'\0'};
+  WCHAR installDirUpdater[MAX_PATH + 1] = { L'\0' };
   wcsncpy(installDirUpdater, installDir, MAX_PATH);
   if (!PathAppendSafe(installDirUpdater, L"updater.exe")) {
     LOG_WARN(("Install directory updater could not be determined."));
