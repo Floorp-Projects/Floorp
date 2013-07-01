@@ -14,3 +14,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'jsloader_s'
 
+EXTRA_JS_MODULES += [
+    'ISO8601DateUtils.jsm',
+    'XPCOMUtils.jsm',
+]

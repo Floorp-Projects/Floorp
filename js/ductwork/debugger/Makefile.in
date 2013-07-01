@@ -21,8 +21,4 @@ EXTRA_DSO_LDOPTS += \
   $(MOZ_JS_LIBS) \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  jsdebugger.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

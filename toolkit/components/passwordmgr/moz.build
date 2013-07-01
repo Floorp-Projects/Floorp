@@ -30,3 +30,7 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'storage-mozStorage.js',
 ]
+
+EXTRA_JS_MODULES += [
+    'LoginManagerContent.jsm',
+]
