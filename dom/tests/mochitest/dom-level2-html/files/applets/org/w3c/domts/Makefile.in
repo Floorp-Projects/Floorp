@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEPTH = @DEPTH@
 topsrcdir = @top_srcdir@
@@ -11,11 +11,7 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_ipc.html \
-  ../test/devicestorage_common.js \
+  DOMTSApplet.class \
   $(NULL)
 
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
