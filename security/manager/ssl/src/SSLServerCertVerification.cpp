@@ -310,6 +310,7 @@ CertErrorRunnable::CheckCertOverrides()
   uint32_t remaining_display_errors = mCollectedErrors;
 
   nsresult nsrv;
+  nsCString hostString(mInfoObject->GetHostName());
 
   // Enforce Strict-Transport-Security for hosts that are "STS" hosts:
   // connections must be dropped when there are any certificate errors
@@ -320,9 +321,15 @@ CertErrorRunnable::CheckCertOverrides()
   if (NS_SUCCEEDED(nsrv)) {
     nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
       NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, mInfoObject));
-    nsrv = sss->IsStsHost(mInfoObject->GetHostName(),
-                          mProviderFlags,
-                          &strictTransportSecurityEnabled);
+    nsCOMPtr<nsIURI> uri;
+    nsrv = NS_NewURI(getter_AddRefs(uri),
+                     NS_LITERAL_CSTRING("https://") + hostString);
+    if (NS_SUCCEEDED(nsrv)) {
+      nsrv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
+                              uri,
+                              mProviderFlags,
+                              &strictTransportSecurityEnabled);
+    }
   }
   if (NS_FAILED(nsrv)) {
     return new SSLServerCertVerificationResult(mInfoObject,
@@ -340,7 +347,6 @@ CertErrorRunnable::CheckCertOverrides()
     {
       bool haveOverride;
       bool isTemporaryOverride; // we don't care
-      nsCString hostString(mInfoObject->GetHostName());
       nsrv = overrideService->HasMatchingOverride(hostString, port,
                                                   mCert,
                                                   &overrideBits,
