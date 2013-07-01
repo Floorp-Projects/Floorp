@@ -50,7 +50,7 @@ public:
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedNumber> BaseFrequencyX();
   already_AddRefed<nsIDOMSVGAnimatedNumber> BaseFrequencyY();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> NumOctaves();
+  already_AddRefed<SVGAnimatedInteger> NumOctaves();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Seed();
   already_AddRefed<SVGAnimatedEnumeration> StitchTiles();
   already_AddRefed<SVGAnimatedEnumeration> Type();

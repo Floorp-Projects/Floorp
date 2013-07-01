@@ -74,7 +74,6 @@ DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
 // other SVG classes
-DOMCI_CLASS(SVGAnimatedInteger)
 DOMCI_CLASS(SVGAnimatedNumber)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)

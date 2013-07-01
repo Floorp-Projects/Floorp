@@ -229,6 +229,7 @@ webidl_files = \
   SVGAnimatedAngle.webidl \
   SVGAnimatedBoolean.webidl \
   SVGAnimatedEnumeration.webidl \
+  SVGAnimatedInteger.webidl \
   SVGAnimatedLength.webidl \
   SVGAnimatedLengthList.webidl \
   SVGAnimatedNumberList.webidl \

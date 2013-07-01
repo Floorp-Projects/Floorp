@@ -98,7 +98,7 @@ SVGFETurbulenceElement::BaseFrequencyY()
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFETurbulenceElement::NumOctaves()
 {
   return mIntegerAttributes[OCTAVES].ToDOMAnimatedInteger(this);

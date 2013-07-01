@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedInteger;
 interface SVGAnimatedNumber;
 
 interface SVGFETurbulenceElement : SVGElement {
