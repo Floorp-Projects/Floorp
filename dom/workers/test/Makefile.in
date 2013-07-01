@@ -111,12 +111,6 @@ MOCHITEST_FILES = \
 # Disabled for frequent failures (bug 841505, bug 842344, etc)
 #  test_xhr_timeout.html \
 
-_SUBDIRMOCHITEST_FILES = \
-  relativeLoad_sub_worker.js \
-  relativeLoad_sub_worker2.js \
-  relativeLoad_sub_import.js \
-  $(NULL)
-
 MOCHITEST_CHROME_FILES = \
   test_chromeWorker.xul \
   test_chromeWorkerJSM.xul \
@@ -152,8 +146,5 @@ MOCHITEST_CHROME_FILES = \
   test_bug883784.jsm \
   url_worker.js \
   $(NULL)
-
-libs:: $(_SUBDIRMOCHITEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/subdir
 
 include $(topsrcdir)/config/rules.mk
