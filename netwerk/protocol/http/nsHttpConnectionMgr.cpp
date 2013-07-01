@@ -3327,7 +3327,7 @@ nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
         HttpConnInfo info;
         info.ttl = ent->mIdleConns[i]->TimeToLive();
         info.rtt = ent->mIdleConns[i]->Rtt();
-        data.active.AppendElement(info);
+        data.idle.AppendElement(info);
     }
     data.spdy = ent->mUsingSpdy;
     data.ssl = ent->mConnInfo->UsingSSL();
