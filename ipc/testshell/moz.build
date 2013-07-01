@@ -21,3 +21,8 @@ CPP_SOURCES += [
     'TestShellParent.cpp',
     'XPCShellEnvironment.cpp',
 ]
+
+IPDL_SOURCES = [
+    'PTestShell.ipdl',
+    'PTestShellCommand.ipdl',
+]

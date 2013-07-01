@@ -27,3 +27,6 @@ CPP_SOURCES += [
     'WebSocketChannelParent.cpp',
 ]
 
+IPDL_SOURCES += [
+    'PWebSocket.ipdl',
+]

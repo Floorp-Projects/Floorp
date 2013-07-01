@@ -145,3 +145,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'CocoaSensor.mm',
         'smslib.mm',
     ]
+
+IPDL_SOURCES = [
+    'sandbox/PHal.ipdl',
+]

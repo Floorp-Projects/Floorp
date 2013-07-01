@@ -9,6 +9,7 @@ import logging
 import os
 import types
 
+import mozpack.path
 from mozpack.copier import FilePurger
 from mozpack.manifests import PurgeManifest
 
@@ -16,6 +17,7 @@ from .base import BuildBackend
 from ..frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
+    IPDLFile,
     SandboxDerived,
     VariablePassthru,
     Exports,
@@ -110,6 +112,7 @@ class RecursiveMakeBackend(BuildBackend):
 
     def _init(self):
         self._backend_files = {}
+        self._ipdl_sources = set()
 
         self.summary.managed_count = 0
         self.summary.created_count = 0
@@ -177,6 +180,9 @@ class RecursiveMakeBackend(BuildBackend):
         elif isinstance(obj, Exports):
             self._process_exports(obj.exports, backend_file)
 
+        elif isinstance(obj, IPDLFile):
+            self._ipdl_sources.add(mozpack.path.join(obj.srcdir, obj.basename))
+
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
 
@@ -233,6 +239,28 @@ class RecursiveMakeBackend(BuildBackend):
 
             self._update_from_avoid_write(bf.close())
             self.summary.managed_count += 1
+
+
+        # Write out a master list of all IPDL source files.
+        ipdls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
+            'ipc', 'ipdl', 'ipdlsrcs.mk'))
+        for p in sorted(self._ipdl_sources):
+            ipdls.write('ALL_IPDLSRCS += %s\n' % p)
+            base = os.path.basename(p)
+            root, ext = os.path.splitext(base)
+
+            # Both .ipdl and .ipdlh become .cpp files
+            ipdls.write('CPPSRCS += %s.cpp\n' % root)
+            if ext == '.ipdl':
+                # .ipdl also becomes Child/Parent.cpp files
+                ipdls.write('CPPSRCS += %sChild.cpp\n' % root)
+                ipdls.write('CPPSRCS += %sParent.cpp\n' % root)
+
+        ipdls.write('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
+            for p in self._ipdl_sources))))
+
+        self._update_from_avoid_write(ipdls.close())
+        self.summary.managed_count += 1
 
         # Write out a dependency file used to determine whether a config.status
         # re-run is needed.

@@ -10,6 +10,7 @@ from .data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     Exports,
+    IPDLFile,
     Program,
     ReaderSummary,
     VariablePassthru,
@@ -122,6 +123,9 @@ class TreeMetadataEmitter(object):
 
         for manifest in sandbox.get('XPCSHELL_TESTS_MANIFESTS', []):
             yield XpcshellManifests(sandbox, manifest)
+
+        for ipdl in sandbox.get('IPDL_SOURCES', []):
+            yield IPDLFile(sandbox, ipdl)
 
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)
