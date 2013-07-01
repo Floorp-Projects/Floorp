@@ -762,7 +762,8 @@ class MacroAssembler : public MacroAssemblerSpecific
                                  Label *label);
 
     // Inline allocation.
-    void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail);
+    void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail,
+                    gc::InitialHeap initialHeap = gc::DefaultHeap);
     void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
     void newGCString(const Register &result, Label *fail);
     void newGCShortString(const Register &result, Label *fail);

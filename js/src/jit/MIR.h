@@ -7869,8 +7869,16 @@ class MPostWriteBarrier
   : public MBinaryInstruction,
     public ObjectPolicy<0>
 {
+    bool hasValue_;
+
     MPostWriteBarrier(MDefinition *obj, MDefinition *value)
-      : MBinaryInstruction(obj, value)
+      : MBinaryInstruction(obj, value), hasValue_(true)
+    {
+        setGuard();
+    }
+
+    MPostWriteBarrier(MDefinition *obj)
+      : MBinaryInstruction(obj, NULL), hasValue_(false)
     {
         setGuard();
     }
@@ -7882,12 +7890,20 @@ class MPostWriteBarrier
         return new MPostWriteBarrier(obj, value);
     }
 
+    static MPostWriteBarrier *New(MDefinition *obj) {
+        return new MPostWriteBarrier(obj);
+    }
+
     TypePolicy *typePolicy() {
         return this;
     }
 
     MDefinition *object() const {
         return getOperand(0);
+    }
+
+    bool hasValue() const {
+        return hasValue_;
     }
     MDefinition *value() const {
         return getOperand(1);

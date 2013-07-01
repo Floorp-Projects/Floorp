@@ -610,7 +610,8 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail)
+MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail,
+                           gc::InitialHeap initialHeap /* = gc::DefaultHeap */)
 {
     // Inlined equivalent of js::gc::NewGCThing() without failure case handling.
 
@@ -632,7 +633,10 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
 #ifdef JSGC_GENERATIONAL
     Nursery &nursery = GetIonContext()->runtime->gcNursery;
-    if (nursery.isEnabled() && allocKind <= gc::FINALIZE_OBJECT_LAST) {
+    if (nursery.isEnabled() &&
+        allocKind <= gc::FINALIZE_OBJECT_LAST &&
+        initialHeap != gc::TenuredHeap)
+    {
         // Inline Nursery::allocate. No explicit check for nursery.isEnabled()
         // is needed, as the comparison with the nursery's end will always fail
         // in such cases.
@@ -666,7 +670,8 @@ MacroAssembler::newGCThing(const Register &result, JSObject *templateObject, Lab
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
     JS_ASSERT(!templateObject->hasDynamicElements());
 
-    newGCThing(result, allocKind, fail);
+    gc::InitialHeap initialHeap = templateObject->type()->initialHeapForJITAlloc();
+    newGCThing(result, allocKind, fail, initialHeap);
 }
 
 void
