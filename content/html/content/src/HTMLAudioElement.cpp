@@ -289,12 +289,7 @@ HTMLAudioElement::UpdateAudioChannelPlayingState()
       // Use a weak ref so the audio channel agent can't leak |this|.
       mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
 
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-      if (domDoc) {
-        bool hidden = false;
-        domDoc->GetHidden(&hidden);
-        mAudioChannelAgent->SetVisibilityState(!hidden);
-      }
+      mAudioChannelAgent->SetVisibilityState(!OwnerDoc()->Hidden());
     }
 
     if (mPlayingThroughTheAudioChannel) {
