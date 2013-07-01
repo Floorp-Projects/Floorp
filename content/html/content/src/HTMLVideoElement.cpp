@@ -273,12 +273,7 @@ HTMLVideoElement::WakeLockRelease()
 void
 HTMLVideoElement::WakeLockUpdate()
 {
-  bool hidden = true;
-
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-  if (domDoc) {
-    domDoc->GetHidden(&hidden);
-  }
+  bool hidden = OwnerDoc()->Hidden();
 
   if (mScreenWakeLock && (mPaused || hidden)) {
     mScreenWakeLock->Unlock();
