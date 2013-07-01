@@ -76,7 +76,6 @@ MOCHITEST_FILES_A = \
 		test_bug378969.html \
 		test_bug382113.html \
 		test_bug382871.html \
-		test_bug383430.html \
 		test_bug384003.xhtml \
 		test_bug390219.html \
 		test_bug390735.html \

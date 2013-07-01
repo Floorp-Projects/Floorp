@@ -69,7 +69,7 @@ for (i = 0; i < headers.length; i++) {
 }
 
 // Try setting headers in privileged context
-request = SpecialPowers.wrap(new XMLHttpRequest());
+request = SpecialPowers.createSystemXHR();
 request.open("GET", window.location.href);
 for (i = 0; i < headers.length; i++)
   request.setRequestHeader(headers[i], "test" + i);
