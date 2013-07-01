@@ -12,3 +12,7 @@ CPP_SOURCES += [
     'JavaScriptShared.cpp',
 ]
 
+IPDL_SOURCES += [
+    'JavaScriptTypes.ipdlh',
+    'PJavaScript.ipdl',
+]

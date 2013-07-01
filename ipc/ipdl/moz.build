@@ -8,11 +8,3 @@ if CONFIG['MOZ_IPDL_TESTS']:
     DIRS += ['test']
 
 MODULE = 'ipdlgen'
-
-CPP_SOURCES += [
-    '$(PROTOCOLS:%.ipdl=%.cpp)',
-    '$(PROTOCOLS:%.ipdl=%Child.cpp)',
-    '$(PROTOCOLS:%.ipdl=%Parent.cpp)',
-    '$(PROTOCOLS:%.ipdlh=%.cpp)',
-]
-
