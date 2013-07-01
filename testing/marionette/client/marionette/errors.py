@@ -41,7 +41,7 @@ class MarionetteException(Exception):
 
     def __str__(self):
         if self.stacktrace:
-            return '%s\nstacktrace:\n%s' % (str(self.msg),
+            return '%s\n\tstacktrace:\n%s' % (str(self.msg),
                 ''.join(['\t%s\n' % x for x in self.stacktrace.split('\n')]))
         else:
             return str(self.msg)
