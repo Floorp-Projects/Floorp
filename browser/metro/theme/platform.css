@@ -17,8 +17,8 @@
 }
 
 .text-link {
+  color: @metro_orange@;
   text-decoration: none;
-  color: #1167bd;
 }
 
 textbox,
@@ -116,11 +116,6 @@ button[disabled] {
 
 textbox[isempty="true"] {
   color: @field_mid_foreground_color@;
-}
-
-.link {
-  color: blue;
-  text-decoration: underline;
 }
 
 spinbuttons {
