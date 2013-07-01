@@ -22,6 +22,8 @@ const CHILD_PROCESS_SHUTDOWN_MESSAGE = "child-process-shutdown";
 
 let ppmm = SpecialPowers.Cc["@mozilla.org/parentprocessmessagemanager;1"]
                         .getService(SpecialPowers.Ci.nsIMessageBroadcaster);
+let obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                       .getService(SpecialPowers.Ci.nsIObserverService);
 
 /**
  * Load the example.org site in an <iframe mozbrowser>
@@ -71,7 +73,7 @@ function prepareProcess(frameMM, callback) {
 }
 
 /**
- * Expects an OOP frame's process to shut down and report three
+ * Expects an OOP frame's process to shut down and report four
  * events/messages: an error event on the browser element, and a
  * 'child-process-shutdown' message on both the frame and process
  * message managers.
@@ -80,8 +82,8 @@ function expectFrameProcessShutdown(iframe, frameMM, processMM, callback) {
   let msgCount = 0;
   function countMessage() {
     msgCount += 1;
-    if (msgCount == 3) {
-      ok(true, "Observed all three expected events.");
+    if (msgCount == 4) {
+      ok(true, "Observed all four expected events.");
       callback();
     }
   };
@@ -103,6 +105,15 @@ function expectFrameProcessShutdown(iframe, frameMM, processMM, callback) {
     ok(true, "Received 'child-process-shutdown' message from frame message manager.");
     countMessage();
   });
+
+  obs.addObserver(function observe(subject, type, data) {
+    if (subject == SpecialPowers.unwrap(processMM)) {
+      obs.removeObserver(observe, "message-manager-disconnect");
+      ok(true, "Received 'message-manager-disconnect' notification with " +
+               "frame message manager");
+      countMessage();
+    }
+  }, "message-manager-disconnect", false);
 }
 
 function setUp() {
