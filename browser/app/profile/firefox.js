@@ -135,17 +135,9 @@ pref("app.update.enabled", true);
 // the UI easier to construct.
 pref("app.update.auto", true);
 
-// Defines how the Application Update Service notifies the user about updates:
-//
-// AUM Set to:        Minor Releases:     Major Releases:
-// 0                  download no prompt  download no prompt
-// 1                  download no prompt  download no prompt if no incompatibilities
-// 2                  download no prompt  prompt
-//
 // See chart in nsUpdateService.js source for more details
 // incompatibilities are ignored by updates in Metro
-//
-pref("app.update.mode", 0);
+pref("app.update.mode", 1);
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO
