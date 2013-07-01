@@ -313,11 +313,6 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::IS_GLOBAL_OBJECT |                                        \
   nsIXPCScriptable::WANT_OUTER_OBJECT)
 
-// We need to let JavaScript QI elements to interfaces that are not in
-// the classinfo since XBL can be used to dynamically implement new
-// unknown interfaces on elements, accessibility relies on this being
-// possible.
-
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
