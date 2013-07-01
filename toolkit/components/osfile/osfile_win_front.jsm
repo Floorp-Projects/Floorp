@@ -329,11 +329,21 @@
       * Remove an existing file.
       *
       * @param {string} path The name of the file.
+      * @param {*=} options Additional options.
+      *   - {bool} ignoreAbsent If |false|, throw an error if the file does
+      *     not exist. |true| by default.
+      *
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.remove = function remove(path) {
-       throw_on_zero("remove",
-         WinFile.DeleteFile(path));
+     File.remove = function remove(path, options = {}) {
+       let result = WinFile.DeleteFile(path);
+       if (!result) {
+         if ((!("ignoreAbsent" in options) || options.ignoreAbsent) &&
+             ctypes.winLastError == Const.ERROR_FILE_NOT_FOUND) {
+           return;
+         }
+         throw new File.Error("remove");
+       }
      };
 
      /**
