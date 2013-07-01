@@ -85,3 +85,9 @@ CPP_SOURCES += [
     'PluginStreamParent.cpp',
 ]
 
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    CMMSRCS += [
+        'PluginInterposeOSX.mm',
+        'PluginUtilsOSX.mm',
+    ]

@@ -23,7 +23,7 @@ DEFINES += \
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CMMSRCS   += \
+DISABLED_CMMSRCS   += \
     PluginUtilsOSX.mm \
     PluginInterposeOSX.mm \
     $(NULL)

@@ -6,3 +6,7 @@
 
 LIBRARY_NAME = 'plugin_child_interpose'
 
+CMMSRCS += [
+    "%s.mm" % (LIBRARY_NAME),
+    'plugin_child_quirks.mm',
+]
