@@ -6169,17 +6169,15 @@ function BrowserOpenAddonsMgr(aView) {
   }
 }
 
-function AddKeywordForSearchField() {
-  var node = document.popupNode;
-
+function GetSearchFieldBookmarkData(node) {
   var charset = node.ownerDocument.characterSet;
 
-  var docURI = makeURI(node.ownerDocument.URL,
-                       charset);
+  var formBaseURI = makeURI(node.form.baseURI,
+                            charset);
 
   var formURI = makeURI(node.form.getAttribute("action"),
                         charset,
-                        docURI);
+                        formBaseURI);
 
   var spec = formURI.spec;
 
@@ -6234,14 +6232,27 @@ function AddKeywordForSearchField() {
   else
     spec += "?" + formData.join("&");
 
+  return {
+    spec: spec,
+    title: title,
+    description: description,
+    postData: postData,
+    charSet: charset
+  };
+}
+
+
+function AddKeywordForSearchField() {
+  bookmarkData = GetSearchFieldBookmarkData(document.popupNode);
+
   PlacesUIUtils.showBookmarkDialog({ action: "add"
                                    , type: "bookmark"
-                                   , uri: makeURI(spec)
-                                   , title: title
-                                   , description: description
+                                   , uri: makeURI(bookmarkData.spec)
+                                   , title: bookmarkData.title
+                                   , description: bookmarkData.description
                                    , keyword: ""
-                                   , postData: postData
-                                   , charSet: charset
+                                   , postData: bookmarkData.postData
+                                   , charSet: bookmarkData.charset
                                    , hiddenRows: [ "location"
                                                  , "description"
                                                  , "tags"
