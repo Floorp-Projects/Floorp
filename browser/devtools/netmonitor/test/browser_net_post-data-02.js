@@ -57,6 +57,6 @@ function test() {
       teardown(aMonitor).then(finish);
     });
 
-    aDebuggee.performRequests();
+    aDebuggee.performRequest();
   });
 }
