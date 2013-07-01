@@ -21,13 +21,21 @@ function requestDoneCallback(aHttpRequest )
 function consoleOpened(hud)
 {
   webConsoleClient = hud.ui.webConsoleClient;
-  hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
-    ok(hud.ui._saveRequestAndResponseBodies,
-      "The saveRequestAndResponseBodies property was successfully set.");
+  hud.ui.saveRequestAndResponseBodies = true;
 
-    HUDService.lastFinishedRequestCallback = requestDoneCallback;
-    waitForSuccess(waitForResponses);
-    content.location = TEST_URI;
+  waitForSuccess({
+    name: "saveRequestAndResponseBodies update",
+    validatorFn: function()
+    {
+      return hud.ui.saveRequestAndResponseBodies;
+    },
+    successFn: function()
+    {
+      HUDService.lastFinishedRequestCallback = requestDoneCallback;
+      waitForSuccess(waitForResponses);
+      content.location = TEST_URI;
+    },
+    failureFn: finishTest,
   });
 
   let waitForResponses = {
