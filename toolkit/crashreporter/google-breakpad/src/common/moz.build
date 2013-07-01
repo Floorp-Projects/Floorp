@@ -61,5 +61,10 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         'mac/dump_syms.mm',
     ]
 
+if CONFIG['OS_TARGET'] == 'Android':
+    SSRCS += [
+        'breakpad_getcontext.S',
+    ]
+
 LIBRARY_NAME = 'breakpad_common_s'
 
