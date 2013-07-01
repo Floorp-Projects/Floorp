@@ -1057,7 +1057,10 @@ EnsureKernelLowMemKillerParamsSet()
   nsAutoCString adjParams;
   nsAutoCString minfreeParams;
 
-  for (int i = 0; i < NUM_PROCESS_PRIORITY; i++) {
+  int32_t lowerBoundOfNextOomScoreAdj = OOM_SCORE_ADJ_MIN - 1;
+  int32_t lowerBoundOfNextKillUnderMB = 0;
+
+  for (int i = NUM_PROCESS_PRIORITY - 1; i >= 0; i--) {
     // The system doesn't function correctly if we're missing these prefs, so
     // crash loudly.
 
@@ -1079,11 +1082,19 @@ EnsureKernelLowMemKillerParamsSet()
       MOZ_CRASH();
     }
 
+    // The LMK in kernel silently malfunctions if we assign the parameters
+    // in non-increasing order, so we add this assertion here. See bug 887192.
+    MOZ_ASSERT(oomScoreAdj > lowerBoundOfNextOomScoreAdj);
+    MOZ_ASSERT(killUnderMB > lowerBoundOfNextKillUnderMB);
+
     // adj is in oom_adj units.
     adjParams.AppendPrintf("%d,", OomAdjOfOomScoreAdj(oomScoreAdj));
 
     // minfree is in pages.
     minfreeParams.AppendPrintf("%d,", killUnderMB * 1024 * 1024 / PAGE_SIZE);
+
+    lowerBoundOfNextOomScoreAdj = oomScoreAdj;
+    lowerBoundOfNextKillUnderMB = killUnderMB;
   }
 
   // Strip off trailing commas.
