@@ -128,6 +128,19 @@ PerfSpewer::endBasicBlock(MacroAssembler &masm)
 }
 
 void
+PerfSpewer::writeAsmJSProfile(unsigned long base, unsigned long size, const char *filename,
+                              unsigned lineno, unsigned colIndex, const char *funcName)
+{
+    if (!fp_ || !PerfFuncEnabled() || size == 0U)
+        return;
+
+    fprintf(fp_,
+            "%lx %lx %s:%d:%d: Function %s\n",
+            base, size,
+            filename, lineno, colIndex, funcName);
+}
+
+void
 PerfSpewer::writeProfile(JSScript *script,
                          IonCode *code,
                          MacroAssembler &masm)

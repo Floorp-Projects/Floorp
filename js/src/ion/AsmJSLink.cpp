@@ -11,6 +11,10 @@
 #include "ion/AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
 
+#ifdef JS_ION_PERF
+# include "ion/PerfSpewer.h"
+#endif
+
 #include "ion/Ion.h"
 
 #include "jsfuninlines.h"
@@ -465,6 +469,44 @@ SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
 }
 #endif
 
+#ifdef JS_ION_PERF
+static bool
+SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
+{
+    if (!PerfFuncEnabled())
+        return true;
+
+    PerfSpewer perfSpewer;
+
+    unsigned long base = (unsigned long) module.functionCode();
+
+    const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
+    const char *filename = const_cast<char *>(info.scriptSource_->filename());
+
+    for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
+        const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
+
+        unsigned long start = base + (unsigned long) func.startCodeOffset;
+        unsigned long end   = base + (unsigned long) func.endCodeOffset;
+        JS_ASSERT(end >= start);
+
+        unsigned long size = (end - start);
+
+        JSAutoByteString bytes;
+        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        if (!method_name)
+            return false;
+
+        unsigned lineno = func.lineno;
+        unsigned columnIndex = func.columnIndex;
+
+        perfSpewer.writeAsmJSProfile(start, size, filename, lineno, columnIndex, method_name);
+    }
+
+    return true;
+}
+#endif
+
 JSBool
 js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
@@ -482,6 +524,11 @@ js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
 
 #if defined(MOZ_VTUNE)
     if (!SendFunctionsToVTune(cx, module))
+        return false;
+#endif
+
+#if defined(JS_ION_PERF)
+    if (!SendFunctionsToPerf(cx, module))
         return false;
 #endif
 
