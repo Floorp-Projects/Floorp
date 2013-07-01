@@ -525,7 +525,7 @@
           <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.setup.pair2;</description>
-              <description class="link" flex="1" onclick="Sync.openTutorial();">&sync.setup.tutorial;</description>
+              <description class="text-link" flex="1" onclick="Sync.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox flex="1" pack="center" align="start">
                 <description id="syncsetup-code1" class="syncsetup-code">....</description>
@@ -533,7 +533,7 @@
                 <description id="syncsetup-code3" class="syncsetup-code">....</description>
               </vbox>
               <separator/>
-              <description class="link" flex="1" onclick="Sync.openManual();">&sync.fallback;</description>
+              <description class="text-link" flex="1" onclick="Sync.openManual();">&sync.fallback;</description>
               <separator flex="1"/>
             </scrollbox>
             <hbox class="prompt-buttons">
@@ -582,7 +582,7 @@
           <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
             <vbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.pair.description;</description>
-              <description class="link" flex="1" onclick="SyncPairDevice.close(); Sync.openTutorial();">&sync.setup.tutorial;</description>
+              <description class="text-link" flex="1" onclick="SyncPairDevice.close(); Sync.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox align="center" flex="1">
                 <textbox id="syncpair-code1" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
