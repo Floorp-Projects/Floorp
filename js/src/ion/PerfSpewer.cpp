@@ -35,6 +35,8 @@ js::ion::CheckPerf() {
         const char *env = getenv("IONPERF");
         if (env == NULL) {
             PerfMode = PERF_MODE_NONE;
+            fprintf(stderr, "Warning: JIT perf reporting requires IONPERF set to \"block\" or \"func\". ");
+            fprintf(stderr, "Perf mapping will be deactivated.\n");
         } else if (!strcmp(env, "none")) {
             PerfMode = PERF_MODE_NONE;
         } else if (!strcmp(env, "block")) {
