@@ -73,6 +73,8 @@ EXPORTS += [
     'nsAppDirectoryServiceDefs.h',
     'nsDirectoryService.h',
     'nsDirectoryServiceAtomList.h',
+    'nsDirectoryServiceDefs.h',
+    'nsDirectoryServiceUtils.h',
     'nsEscape.h',
     'nsLinebreakConverter.h',
     'nsLocalFile.h',

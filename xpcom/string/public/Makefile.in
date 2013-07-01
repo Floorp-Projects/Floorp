@@ -11,7 +11,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SDK_HEADERS	=				\
+DISABLED_SDK_HEADERS	=				\
 		nsXPCOMStrings.h		\
 		nsEmbedString.h			\
 		$(NULL)
