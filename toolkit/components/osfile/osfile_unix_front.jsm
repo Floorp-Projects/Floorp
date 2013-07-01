@@ -268,11 +268,21 @@
       * Remove an existing file.
       *
       * @param {string} path The name of the file.
+      * @param {*=} options Additional options.
+      *   - {bool} ignoreAbsent If |false|, throw an error if the file does
+      *     not exist. |true| by default.
+      *
+      * @throws {OS.File.Error} In case of I/O error.
       */
-     File.remove = function remove(path) {
-       throw_on_negative("remove",
-         UnixFile.unlink(path)
-       );
+     File.remove = function remove(path, options = {}) {
+       let result = UnixFile.unlink(path);
+       if (result == -1) {
+         if ((!("ignoreAbsent" in options) || options.ignoreAbsent) &&
+             ctypes.errno == Const.ENOENT) {
+           return;
+         }
+         throw new File.Error("remove");
+       }
      };
 
      /**
