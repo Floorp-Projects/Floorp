@@ -481,6 +481,7 @@ WebConsoleActor.prototype =
           if (this.consoleProgressListener) {
             this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
                                                      MONITOR_FILE_ACTIVITY);
+            this.consoleProgressListener = null;
           }
           stoppedListeners.push(listener);
           break;
