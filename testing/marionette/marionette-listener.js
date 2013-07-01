@@ -555,10 +555,13 @@ function executeWithCallback(msg, useFinish) {
 function emitTouchEvent(type, touch) {
   let loggingInfo = "Marionette: emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
   dump(loggingInfo);
+  /*
+  Disabled per bug 888303
   marionetteLogObj.log(loggingInfo, "TRACE");
   sendSyncMessage("Marionette:shareData",
                   {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
   marionetteLogObj.clearLogs();
+  */
   let domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
   domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
 }
@@ -573,10 +576,13 @@ function emitTouchEvent(type, touch) {
 function emitMouseEvent(doc, type, elClientX, elClientY, detail, button) {
   let loggingInfo = "Marionette: emitting Mouse event of type " + type + " at coordinates (" + elClientX + ", " + elClientY + ") relative to the viewport";
   dump(loggingInfo);
+  /*
+  Disabled per bug 888303
   marionetteLogObj.log(loggingInfo, "TRACE");
   sendSyncMessage("Marionette:shareData",
                   {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
   marionetteLogObj.clearLogs();
+  */
   detail = detail || 1;
   button = button || 0;
   let win = doc.defaultView;
