@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedEnumeration;
-
 interface SVGFEColorMatrixElement : SVGElement {
 
   // Color Matrix Types

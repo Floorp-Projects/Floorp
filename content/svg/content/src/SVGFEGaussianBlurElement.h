@@ -51,8 +51,8 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> StdDeviationX();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> StdDeviationY();
+  already_AddRefed<SVGAnimatedNumber> StdDeviationX();
+  already_AddRefed<SVGAnimatedNumber> StdDeviationY();
   void SetStdDeviation(float stdDeviationX, float stdDeviationY);
 
 protected:

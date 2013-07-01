@@ -387,7 +387,7 @@ SVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpac
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGComponentTransferFunctionElement::Type()
 {
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);
@@ -400,31 +400,31 @@ SVGComponentTransferFunctionElement::TableValues()
     &mNumberListAttributes[TABLEVALUES], this, TABLEVALUES);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGComponentTransferFunctionElement::Slope()
 {
   return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGComponentTransferFunctionElement::Intercept()
 {
   return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGComponentTransferFunctionElement::Amplitude()
 {
   return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGComponentTransferFunctionElement::Exponent()
 {
   return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGComponentTransferFunctionElement::Offset()
 {
   return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(this);

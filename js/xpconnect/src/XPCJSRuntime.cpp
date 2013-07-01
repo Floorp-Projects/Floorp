@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=99: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -71,9 +71,6 @@ const char* XPCJSRuntime::mStrings[] = {
     "__proto__",            // IDX_PROTO
     "__iterator__",         // IDX_ITERATOR
     "__exposedProps__",     // IDX_EXPOSEDPROPS
-    "baseURIObject",        // IDX_BASEURIOBJECT
-    "nodePrincipal",        // IDX_NODEPRINCIPAL
-    "mozMatchesSelector"    // IDX_MOZMATCHESSELECTOR
 };
 
 /***************************************************************************/
@@ -2514,29 +2511,13 @@ CompartmentNameCallback(JSRuntime *rt, JSCompartment *comp,
 }
 
 static bool
-PreserveWrapper(JSContext *cx, JSObject *objArg)
+PreserveWrapper(JSContext *cx, JSObject *obj)
 {
     MOZ_ASSERT(cx);
-    MOZ_ASSERT(objArg);
-    MOZ_ASSERT(js::GetObjectClass(objArg)->ext.isWrappedNative ||
-               mozilla::dom::IsDOMObject(objArg));
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(IS_WN_REFLECTOR(obj) || mozilla::dom::IsDOMObject(obj));
 
-    RootedObject obj(cx, objArg);
-    XPCCallContext ccx(NATIVE_CALLER, cx);
-    if (!ccx.IsValid())
-        return false;
-
-    if (!IS_WN_REFLECTOR(obj))
-        return mozilla::dom::TryPreserveWrapper(obj);
-
-    nsISupports *supports = XPCWrappedNative::Get(obj)->Native();
-
-    // For pre-Paris DOM bindings objects, we only support Node.
-    if (nsCOMPtr<nsINode> node = do_QueryInterface(supports)) {
-        node->PreserveWrapper(supports);
-        return true;
-    }
-    return false;
+    return mozilla::dom::IsDOMObject(obj) && mozilla::dom::TryPreserveWrapper(obj);
 }
 
 static nsresult

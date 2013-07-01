@@ -297,13 +297,14 @@ Shape::getUserId(JSContext *cx, MutableHandleId idp) const
 }
 
 inline bool
-Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, MutableHandleValue vp)
+Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj,
+           MutableHandleValue vp)
 {
     JS_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {
         Value fval = getterValue();
-        return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp.address());
+        return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
     }
 
     Rooted<Shape *> self(cx, this);
@@ -315,13 +316,14 @@ Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, 
 }
 
 inline bool
-Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, MutableHandleValue vp)
+Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
+           MutableHandleValue vp)
 {
     JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
         Value fval = setterValue();
-        return InvokeGetterOrSetter(cx, receiver, fval, 1, vp.address(), vp.address());
+        return InvokeGetterOrSetter(cx, receiver, fval, 1, vp.address(), vp);
     }
 
     if (attrs & JSPROP_GETTER)

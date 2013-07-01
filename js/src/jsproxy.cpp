@@ -155,8 +155,7 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
         return true;
     }
     if (desc.attrs & JSPROP_GETTER)
-        return InvokeGetterOrSetter(cx, receiver, CastAsObjectJsval(desc.getter), 0, NULL,
-                                    vp.address());
+        return InvokeGetterOrSetter(cx, receiver, CastAsObjectJsval(desc.getter), 0, NULL, vp);
     if (!(desc.attrs & JSPROP_SHARED))
         vp.set(desc.value);
     else
@@ -472,7 +471,7 @@ DirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue target(cx, GetProxyPrivate(proxy));
-    return Invoke(cx, args.thisv(), target, args.length(), args.array(), args.rval().address());
+    return Invoke(cx, args.thisv(), target, args.length(), args.array(), args.rval());
 }
 
 bool
@@ -665,7 +664,7 @@ static bool
 Trap(JSContext *cx, HandleObject handler, HandleValue fval, unsigned argc, Value* argv,
      MutableHandleValue rval)
 {
-    return Invoke(cx, ObjectValue(*handler), fval, argc, argv, rval.address());
+    return Invoke(cx, ObjectValue(*handler), fval, argc, argv, rval);
 }
 
 static bool
@@ -1013,7 +1012,7 @@ ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const Call
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue call(cx, GetCall(proxy));
-    return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval().address());
+    return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval());
 }
 
 bool
@@ -1378,7 +1377,7 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
         value
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 2, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step 6
@@ -1487,7 +1486,7 @@ TrapDefineOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHan
         normalizedDesc
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 3, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // steps 7-8
@@ -1668,7 +1667,7 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
         ObjectValue(*target)
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 1, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step f
@@ -1767,7 +1766,7 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
         ObjectValue(*target)
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 1, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step f
@@ -1809,7 +1808,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
         value
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 2, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step 6-7
@@ -1857,7 +1856,7 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdV
         ObjectOrNullValue(target)
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 1, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step f
@@ -1904,7 +1903,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
         value
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 2, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step 6
@@ -1964,7 +1963,7 @@ ScriptedDirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId i
         value
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 2, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step 6
@@ -2034,7 +2033,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
         ObjectOrNullValue(receiver)
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 3, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step 6
@@ -2104,7 +2103,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
         ObjectValue(*receiver)
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 4, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step 6
@@ -2166,7 +2165,7 @@ ScriptedDirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector
         ObjectOrNullValue(target)
     };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, 1, argv, trapResult.address()))
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
     // step f
@@ -2227,7 +2226,7 @@ ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallAr
         ObjectValue(*argsArray)
     };
     RootedValue thisValue(cx, ObjectValue(*handler));
-    return Invoke(cx, thisValue, trap, ArrayLength(argv), argv, args.rval().address());
+    return Invoke(cx, thisValue, trap, ArrayLength(argv), argv, args.rval());
 }
 
 bool
@@ -2264,8 +2263,7 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
         ObjectValue(*argsArray)
     };
     RootedValue thisValue(cx, ObjectValue(*handler));
-    return Invoke(cx, thisValue, trap, ArrayLength(constructArgv), constructArgv,
-                  args.rval().address());
+    return Invoke(cx, thisValue, trap, ArrayLength(constructArgv), constructArgv, args.rval());
 }
 
 ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
