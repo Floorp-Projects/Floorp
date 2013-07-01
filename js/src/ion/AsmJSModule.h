@@ -15,6 +15,10 @@
 #include "jsscript.h"
 #include "jstypedarrayinlines.h"
 
+#if defined(JS_ION_PERF)
+# include "ion/PerfSpewer.h"
+#endif
+
 #include "ion/IonMacroAssembler.h"
 
 namespace js {
@@ -301,6 +305,21 @@ class AsmJSModule
     };
 #endif
 
+#if defined(JS_ION_PERF)
+    struct ProfiledBlocksFunction : public ProfiledFunction
+    {
+        ion::PerfSpewer::BasicBlocksVector blocks;
+
+        ProfiledBlocksFunction(JSAtom *name, unsigned start, unsigned end, ion::PerfSpewer::BasicBlocksVector &blocksVector)
+          : ProfiledFunction(name, start, end), blocks(Move(blocksVector))
+        { }
+
+        ProfiledBlocksFunction(const ProfiledBlocksFunction &copy)
+          : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset), blocks(Move(copy.blocks))
+        { }
+    };
+#endif
+
     // If linking fails, we recompile the function as if it's ordinary JS.
     // This struct holds the data required to do this.
     struct PostLinkFailureInfo
@@ -359,6 +378,7 @@ class AsmJSModule
 #endif
 #if defined(JS_ION_PERF)
     ProfiledFunctionVector                perfProfiledFunctions_;
+    Vector<ProfiledBlocksFunction, 0, SystemAllocPolicy> perfProfiledBlocksFunctions_;
 #endif
 
     uint32_t                              numGlobalVars_;
@@ -520,6 +540,17 @@ class AsmJSModule
     }
     const ProfiledFunction &perfProfiledFunction(unsigned i) const {
         return perfProfiledFunctions_[i];
+    }
+
+    bool trackPerfProfiledBlocks(JSAtom *name, unsigned startCodeOffset, unsigned endCodeOffset, ion::PerfSpewer::BasicBlocksVector &basicBlocks) {
+        ProfiledBlocksFunction func(name, startCodeOffset, endCodeOffset, basicBlocks);
+        return perfProfiledBlocksFunctions_.append(func);
+    }
+    unsigned numPerfBlocksFunctions() const {
+        return perfProfiledBlocksFunctions_.length();
+    }
+    const ProfiledBlocksFunction perfProfiledBlocksFunction(unsigned i) const {
+        return perfProfiledBlocksFunctions_[i];
     }
 #endif
     bool hasArrayView() const {
