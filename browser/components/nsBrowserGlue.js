@@ -516,6 +516,41 @@ BrowserGlue.prototype = {
                           nb.PRIORITY_INFO_LOW, buttons);
   },
 
+  /**
+   * Show a notification bar offering a reset if the profile has been unused for some time.
+   */
+  _resetUnusedProfileNotification: function () {
+    let win = this.getMostRecentBrowserWindow();
+    if (!win)
+      return;
+
+    Cu.import("resource://gre/modules/ResetProfile.jsm");
+    if (!ResetProfile.resetSupported())
+      return;
+
+    let productName = Services.strings
+                              .createBundle("chrome://branding/locale/brand.properties")
+                              .GetStringFromName("brandShortName");
+    let resetBundle = Services.strings
+                              .createBundle("chrome://global/locale/resetProfile.properties");
+
+    let message = resetBundle.formatStringFromName("resetUnusedProfile.message", [productName], 1);
+    let buttons = [
+      {
+        label:     resetBundle.formatStringFromName("resetProfile.resetButton.label", [productName], 1),
+        accessKey: resetBundle.GetStringFromName("resetProfile.resetButton.accesskey"),
+        callback: function () {
+          ResetProfile.openConfirmationDialog(win);
+        }
+      },
+    ];
+
+    let nb = win.document.getElementById("global-notificationbox");
+    nb.appendNotification(message, "reset-unused-profile",
+                          "chrome://global/skin/icons/question-16.png",
+                          nb.PRIORITY_INFO_LOW, buttons);
+  },
+
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded() {
 #ifdef XP_WIN
@@ -530,6 +565,15 @@ BrowserGlue.prototype = {
 #endif
 
     this._trackSlowStartup();
+
+    // Offer to reset a user's profile if it hasn't been used for 60 days.
+    const OFFER_PROFILE_RESET_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000;
+    let processStartupTime = Services.startup.getStartupInfo().process;
+    let lastUse = Services.appinfo.replacedLockTime;
+    if (processStartupTime && lastUse &&
+        processStartupTime.getTime() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
+      this._resetUnusedProfileNotification();
+    }
   },
 
   /**

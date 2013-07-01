@@ -843,6 +843,12 @@
     "extended_statistics_ok": true,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
   },
+  "SSL_TIME_UNTIL_HANDSHAKE_FINISHED": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 200,
+    "description": "ms of SSL wait time for full handshake including TCP and proxy tunneling"
+  },
   "SSL_BYTES_BEFORE_CERT_CALLBACK": {
     "kind": "exponential",
     "high": "32000",
