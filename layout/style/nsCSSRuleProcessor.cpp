@@ -61,7 +61,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Util.h"
-#include "nsXBLChildrenElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
