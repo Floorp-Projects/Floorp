@@ -10,6 +10,8 @@ if toolkit in ('qt', 'gtk2', 'gtk3'):
     DIRS += ['unix']
 elif toolkit == 'windows':
     DIRS += ['windows']
+elif toolkit == 'cocoa':
+    DIRS += ['mac']
 elif toolkit == 'android':
     DIRS += ['android']
 

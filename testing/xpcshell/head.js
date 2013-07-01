@@ -1156,3 +1156,14 @@ function run_next_test()
     do_test_finished(_gRunningTest.name);
   }
 }
+
+try {
+  if (runningInParent) {
+    // Always use network provider for geolocation tests
+    // so we bypass the OSX dialog raised by the corelocation provider
+    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefBranch);
+
+    prefs.setBoolPref("geo.provider.testing", true);
+  }
+} catch (e) { }
