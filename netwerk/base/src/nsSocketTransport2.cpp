@@ -689,7 +689,7 @@ nsSocketTransport::nsSocketTransport()
     , ALLOW_THIS_IN_INITIALIZER_LIST(mOutput(this))
     , mQoSBits(0x00)
 {
-    SOCKET_LOG(("creating nsSocketTransport @%x\n", this));
+    SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
 
     NS_ADDREF(gSocketTransportService);
 
@@ -699,7 +699,7 @@ nsSocketTransport::nsSocketTransport()
 
 nsSocketTransport::~nsSocketTransport()
 {
-    SOCKET_LOG(("destroying nsSocketTransport @%x\n", this));
+    SOCKET_LOG(("destroying nsSocketTransport @%p\n", this));
 
     // cleanup socket type info
     if (mTypes) {
