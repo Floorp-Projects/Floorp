@@ -866,6 +866,21 @@ static void
 CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fun);
 
 bool
+TypeObject::incrementTenureCount()
+{
+    uint32_t count = tenureCount();
+    JS_ASSERT(count <= OBJECT_FLAG_TENURE_COUNT_LIMIT);
+
+    if (count >= OBJECT_FLAG_TENURE_COUNT_LIMIT)
+        return false;
+
+    flags = (flags & ~OBJECT_FLAG_TENURE_COUNT_MASK)
+          | ((count + 1) << OBJECT_FLAG_TENURE_COUNT_SHIFT);
+
+    return count >= MaxJITAllocTenures;
+}
+
+bool
 HeapTypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
 {
     /*
