@@ -270,9 +270,8 @@ interface nsIMemoryReporterManager : nsISupports
 
   /*
    * Get the resident size (aka. RSS, physical memory used).  This reporter
-   * is special-cased because it's interesting, is available on all
-   * platforms, and returns a meaningful result on all common platforms.
-   * Accesses can fail.
+   * is special-cased because it's interesting and is available on most
+   * platforms.  Accesses can fail.
    */
   readonly attribute int64_t resident;
 
