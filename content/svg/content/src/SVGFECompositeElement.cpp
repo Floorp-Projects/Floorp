@@ -67,7 +67,7 @@ SVGFECompositeElement::In2()
   return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFECompositeElement::Operator()
 {
   return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(this);

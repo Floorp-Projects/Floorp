@@ -110,13 +110,13 @@ SVGFETurbulenceElement::Seed()
   return mNumberAttributes[SEED].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFETurbulenceElement::StitchTiles()
 {
   return mEnumAttributes[STITCHTILES].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFETurbulenceElement::Type()
 {
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);

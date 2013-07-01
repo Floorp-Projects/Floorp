@@ -387,7 +387,7 @@ SVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpac
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGComponentTransferFunctionElement::Type()
 {
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);

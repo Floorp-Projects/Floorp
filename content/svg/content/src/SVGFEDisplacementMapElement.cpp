@@ -83,13 +83,13 @@ SVGFEDisplacementMapElement::Scale()
   return mNumberAttributes[SCALE].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFEDisplacementMapElement::XChannelSelector()
 {
   return mEnumAttributes[CHANNEL_X].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFEDisplacementMapElement::YChannelSelector()
 {
   return mEnumAttributes[CHANNEL_Y].ToDOMAnimatedEnum(this);

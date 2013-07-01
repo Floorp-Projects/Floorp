@@ -183,7 +183,6 @@
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMMozBrowserFrame.h"
 
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGLength.h"
@@ -571,8 +570,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // other SVG classes
-  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedEnumeration, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedInteger, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedNumber, nsDOMGenericSH,
@@ -1511,10 +1508,6 @@ nsDOMClassInfo::Init()
   // The SVG document
 
   // other SVG classes
-  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedEnumeration, nsIDOMSVGAnimatedEnumeration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedEnumeration)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedInteger, nsIDOMSVGAnimatedInteger)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
   DOM_CLASSINFO_MAP_END

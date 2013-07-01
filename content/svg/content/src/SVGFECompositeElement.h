@@ -57,7 +57,7 @@ public:
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
   already_AddRefed<SVGAnimatedString> In2();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
+  already_AddRefed<SVGAnimatedEnumeration> Operator();
   already_AddRefed<nsIDOMSVGAnimatedNumber> K1();
   already_AddRefed<nsIDOMSVGAnimatedNumber> K2();
   already_AddRefed<nsIDOMSVGAnimatedNumber> K3();
