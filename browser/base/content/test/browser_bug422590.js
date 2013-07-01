@@ -7,7 +7,7 @@ function test() {
 function testChromeless() {
   // test a chromeless window
   var newWin = openDialog(getBrowserURL(), "_blank",
-                          "chrome,dialog=no,toolbar=no", "about:blank");
+                          "chrome,dialog=no,location=yes,toolbar=no", "about:blank");
   ok(newWin, "got new window");
 
   whenDelayedStartupFinished(newWin, function () {
