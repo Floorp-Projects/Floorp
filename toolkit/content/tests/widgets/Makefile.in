@@ -11,11 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-_CHROME_FILES = \
-		popup_shared.js \
-		tree_shared.js \
-		$(NULL)
-
 MOCHITEST_FILES =	\
 		test_contextmenu_nested.xul \
 		tree_shared.js \
@@ -62,8 +57,4 @@ MOCHITEST_FILES += \
 		$(NULL)
 endif
 
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/../chrome
-
 include $(topsrcdir)/config/rules.mk
-
