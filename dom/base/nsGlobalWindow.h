@@ -1005,6 +1005,8 @@ protected:
   nsresult SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth);
   nsRect GetInnerScreenRect();
 
+  void ScrollTo(const mozilla::CSSIntPoint& aScroll);
+
   bool IsFrame()
   {
     return GetParentInternal() != nullptr;
