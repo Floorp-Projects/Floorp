@@ -85,7 +85,7 @@ endif
 
 ifeq (1,$(LIBJPEG_TURBO_ARM_ASM))
   DISABLED_CSRCS += simd/jsimd_arm.c
-  SSRCS += simd/jsimd_arm_neon.S
+  DISABLED_SSRCS += simd/jsimd_arm_neon.S
 endif
 
 ifeq (1,$(LIBJPEG_TURBO_X64_ASM))
