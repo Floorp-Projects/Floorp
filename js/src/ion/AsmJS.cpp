@@ -1363,6 +1363,18 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 #endif
 
+#ifdef JS_ION_PERF
+    bool trackPerfProfiledFunction(const Func &func, unsigned endCodeOffset) {
+        JSAtom *name = FunctionName(func.fn());
+
+        unsigned lineno = 0U, columnIndex = 0U;
+        tokenStream_.srcCoords.lineNumAndColumnIndex(func.fn()->pn_pos.begin, &lineno, &columnIndex);
+
+        unsigned startCodeOffset = func.codeLabel()->offset();
+        return module_->trackPerfProfiledFunction(name, startCodeOffset, endCodeOffset, lineno, columnIndex);
+    }
+#endif
+
     void setFirstPassComplete() {
         JS_ASSERT(currentPass_ == 1);
         currentPass_ = 2;
@@ -4697,6 +4709,13 @@ GenerateAsmJSCode(ModuleCompiler &m, ModuleCompiler::Func &func,
 #ifdef MOZ_VTUNE
     if (iJIT_IsProfilingActive() == iJIT_SAMPLING_ON) {
         if (!m.trackProfiledFunction(func, m.masm().size()))
+            return false;
+    }
+#endif
+
+#ifdef JS_ION_PERF
+    if (PerfFuncEnabled()) {
+        if (!m.trackPerfProfiledFunction(func, m.masm().size()))
             return false;
     }
 #endif

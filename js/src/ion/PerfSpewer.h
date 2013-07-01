@@ -68,6 +68,8 @@ class PerfSpewer
     void writeProfile(JSScript *script,
                       IonCode *code,
                       MacroAssembler &masm);
+    void writeAsmJSProfile(unsigned long base, unsigned long size, const char *filename,
+                           unsigned lineno, unsigned colIndex, const char *funcName);
 };
 
 } // namespace ion

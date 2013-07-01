@@ -280,16 +280,23 @@ class AsmJSModule
         }
     };
 
-#if defined(MOZ_VTUNE)
+#if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
     // Function information to add to the VTune JIT profiler following linking.
     struct ProfiledFunction
     {
         JSAtom *name;
         unsigned startCodeOffset;
         unsigned endCodeOffset;
+        unsigned lineno;
+        unsigned columnIndex;
 
-        ProfiledFunction(JSAtom *name, unsigned start, unsigned end)
-          : name(name), startCodeOffset(start), endCodeOffset(end)
+        ProfiledFunction(JSAtom *name, unsigned start, unsigned end,
+                         unsigned line = 0U, unsigned column = 0U)
+          : name(name),
+            startCodeOffset(start),
+            endCodeOffset(end),
+            lineno(line),
+            columnIndex(column)
         { }
     };
 #endif
@@ -336,7 +343,7 @@ class AsmJSModule
     typedef Vector<ion::AsmJSBoundsCheck, 0, SystemAllocPolicy> BoundsCheckVector;
 #endif
     typedef Vector<ion::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
-#if defined(MOZ_VTUNE)
+#if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
     typedef Vector<ProfiledFunction, 0, SystemAllocPolicy> ProfiledFunctionVector;
 #endif
 
@@ -349,6 +356,9 @@ class AsmJSModule
 #endif
 #if defined(MOZ_VTUNE)
     ProfiledFunctionVector                profiledFunctions_;
+#endif
+#if defined(JS_ION_PERF)
+    ProfiledFunctionVector                perfProfiledFunctions_;
 #endif
 
     uint32_t                              numGlobalVars_;
@@ -496,6 +506,20 @@ class AsmJSModule
     }
     const ProfiledFunction &profiledFunction(unsigned i) const {
         return profiledFunctions_[i];
+    }
+#endif
+#ifdef JS_ION_PERF
+    bool trackPerfProfiledFunction(JSAtom *name, unsigned startCodeOffset, unsigned endCodeOffset,
+                                   unsigned line, unsigned column)
+    {
+        ProfiledFunction func(name, startCodeOffset, endCodeOffset, line, column);
+        return perfProfiledFunctions_.append(func);
+    }
+    unsigned numPerfFunctions() const {
+        return perfProfiledFunctions_.length();
+    }
+    const ProfiledFunction &perfProfiledFunction(unsigned i) const {
+        return perfProfiledFunctions_[i];
     }
 #endif
     bool hasArrayView() const {
