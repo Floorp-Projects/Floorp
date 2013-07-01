@@ -19,12 +19,16 @@ suite, use::
 
     make -C $OBJDIR mochitest-robocop
 
+To run a specific test case, such as ``testLoad``::
+
+    make -C $OBJDIR mochitest-robocop TEST_PATH=testLoad
+
 The Java files in ``mobile/android/base/tests`` are dependencies of the
 robocop APK built by ``build/mobile/robocop``.  If you modify Java files
 in ``mobile/android/base/tests``, you need to rebuild the robocop APK
 with::
 
-    mach build/mobile/robocop
+    mach build build/mobile/robocop
 
 Changes to ``.html``, ``.css``, ``.sjs``, and ``.js`` files in
 ``mobile/android/base/tests`` do not require rebuilding the robocop
@@ -38,6 +42,6 @@ signed releases on the buildbots).
 As always, changes to ``mobile/android/base``, ``mobile/android/chrome``,
 ``mobile/android/modules``, etc., require::
 
-    mach mobile/android/base && mach package && mach install
+    mach build mobile/android/base && mach package && mach install
 
 as usual.
