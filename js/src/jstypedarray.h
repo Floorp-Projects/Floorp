@@ -195,22 +195,22 @@ class ArrayBufferObject : public JSObject
 
 class BufferView : public JSObject {
   public:
-    /* Offset of view in underlying ArrayBuffer */
+    /* Offset of view in underlying ArrayBufferObject */
     static const size_t BYTEOFFSET_SLOT  = 0;
 
     /* Byte length of view */
     static const size_t BYTELENGTH_SLOT  = 1;
 
-    /* Underlying ArrayBuffer */
+    /* Underlying ArrayBufferObject */
     static const size_t BUFFER_SLOT      = 2;
 
-    /* ArrayBuffers point to a linked list of views, chained through this slot */
+    /* ArrayBufferObjects point to a linked list of views, chained through this slot */
     static const size_t NEXT_VIEW_SLOT   = 3;
 
     /*
-     * When ArrayBuffers are traced during GC, they construct a linked list of
-     * ArrayBuffers with more than one view, chained through this slot of the
-     * first view of each ArrayBuffer
+     * When ArrayBufferObjects are traced during GC, they construct a linked
+     * list of ArrayBufferObjects with more than one view, chained through this
+     * slot of the first view of each ArrayBufferObject.
      */
     static const size_t NEXT_BUFFER_SLOT = 4;
 
