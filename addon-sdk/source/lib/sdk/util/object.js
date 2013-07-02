@@ -54,10 +54,4 @@ function extend(source) {
 }
 exports.extend = extend;
 
-function has(obj, key) obj.hasOwnProperty(key);
-exports.has = has;
 
-function each(obj, fn) {
-  for (let key in obj) has(obj, key) && fn(obj[key], key, obj);
-}
-exports.each = each;

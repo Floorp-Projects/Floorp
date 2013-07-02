@@ -144,12 +144,6 @@ This page lists more theoretical in-depth articles about the SDK.
   <tr>
 
     <td>
-      <h4><a href="dev-guide/guides/content-scripts/cross-domain.html">Cross-domain content scripts</a></h4>
-      How to enable content scripts to interact with content served from different domains.
-    </td>
-
-
-    <td>
       <h4><a href="dev-guide/guides/content-scripts/reddit-example.html">Reddit example</a></h4>
       A simple add-on which uses content scripts.
     </td>
