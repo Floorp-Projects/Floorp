@@ -12,7 +12,7 @@ if not CONFIG['MOZ_NATIVE_NSPR']:
 if not CONFIG['MOZ_NATIVE_SQLITE']:
     add_tier_dir('nss', 'db/sqlite3/src')
 
-if CONFIG['MOZ_PSM'] and not CONFIG['MOZ_NATIVE_NSS']:
+if not CONFIG['MOZ_NATIVE_NSS']:
     add_tier_dir('nss', 'security/build')
 
 include('/config/js/js.mozbuild')
@@ -176,13 +176,7 @@ if CONFIG['MOZ_ENABLE_XREMOTE']:
 if CONFIG['MOZ_SPELLCHECK']:
     add_tier_dir('platform', 'extensions/spellcheck')
 
-if CONFIG['MOZ_PSM']:
-    add_tier_dir('platform', 'security/manager')
-else:
-    add_tier_dir('platform', [
-        'security/manager/boot/public',
-        'security/manager/ssl/public',
-    ])
+add_tier_dir('platform', 'security/manager')
 
 if CONFIG['MOZ_UPDATER']:
     add_tier_dir('platform', 'modules/libmar')
