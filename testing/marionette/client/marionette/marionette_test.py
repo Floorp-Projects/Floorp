@@ -255,7 +255,15 @@ permissions.forEach(function (perm) {
                     self.loglines = self.marionette.get_logs()
                 except Exception, inst:
                     self.loglines = [['Error getting log: %s' % inst]]
-                self.marionette.delete_session()
+                try:
+                    self.marionette.delete_session()
+                except (socket.error, MarionetteException):
+                    # Gecko has crashed?
+                    self.marionette.session = None
+                    try:
+                        self.marionette.client.close()
+                    except socket.error:
+                        pass
         self.marionette = None
 
 class MarionetteTestCase(CommonTestCase):
