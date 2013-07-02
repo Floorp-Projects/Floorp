@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an MediaSource interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  ok(!window.MediaSource, "MediaSource should be hidden behind a pref");
+  var accessThrows = false;
+  try {
+    new MediaSource();
+  } catch (e) {
+    accessThrows = true;
+  }
+  ok(accessThrows, "MediaSource should be hidden behind a pref");
+  SpecialPowers.setBoolPref("media.mediasource.enabled", true);
+  var ms = new MediaSource();
+  ok(ms, "Create a MediaSource object");
+  ok(ms instanceof EventTarget, "MediaSource must be an EventTarget");
+  is(ms.readyState, "closed", "New MediaSource must be in closed state");
+  // Force wrapper creation, tests for leaks.
+  ms.foo = null;
+  var o = URL.createObjectURL(ms);
+  ok(o, "Create an objectURL from the MediaSource");
+  var v = document.createElement("video");
+  document.body.appendChild(v);
+  v.src = o;
+  ms.addEventListener("sourceopen", function () {
+    ok(true, "Receive a sourceopen event");
+    is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
+    var sb = ms.addSourceBuffer("video/webm");
+    ok(sb, "Create a SourceBuffer");
+    is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
+    is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
+    fetch("seek.webm", function (blob) {
+      var r = new FileReader();
+      r.addEventListener("load", function (e) {
+        sb.appendBuffer(new Uint8Array(e.target.result));
+        ms.endOfStream();
+        v.play();
+      });
+      r.readAsArrayBuffer(blob);
+    });
+  });
+  ms.addEventListener("sourceended", function () {
+    ok(true, "Receive a sourceended event");
+    is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
+  });
+  v.addEventListener("playing", function () {
+    is(v.duration, 4, "Video has correct duration");
+    v.parentNode.removeChild(v);
+    SpecialPowers.clearUserPref("media.mediasource.enabled");
+    SimpleTest.finish();
+  });
+});
+
+function fetch(src, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", src, true);
+  xhr.responseType = "blob";
+  xhr.addEventListener("load", function (e) {
+    if (xhr.status != 200) {
+      return false;
+    }
+    cb(xhr.response);
+  });
+  xhr.send();
+};
+</script>
+</pre>
+</body>
+</html>
