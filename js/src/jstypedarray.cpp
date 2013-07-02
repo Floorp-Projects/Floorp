@@ -600,8 +600,8 @@ ArrayBufferObject::createDataViewForThisImpl(JSContext *cx, CallArgs args)
     Rooted<JSObject*> buffer(cx, &args.thisv().toObject());
 
     /*
-     * Pop off the passed-along prototype and delegate to normal DataView
-     * object construction.
+     * Pop off the passed-along prototype and delegate to normal DataViewObject
+     * construction.
      */
     CallArgs frobbedArgs = CallArgsFromVp(args.length() - 1, args.base());
     return DataViewObject::construct(cx, buffer, frobbedArgs, proto);
@@ -1339,7 +1339,7 @@ js::ClampDoubleToUint8(const double x)
 }
 
 /*
- * This method is used to trace TypedArray and DataView objects. We need a
+ * This method is used to trace TypedArray and DataViewObjects. We need a
  * custom tracer because some of an ArrayBufferViewObject's reserved slots are
  * weak references, and some need to be updated specially during moving GCs.
  */
@@ -3804,7 +3804,7 @@ DataViewObject::initClass(JSContext *cx)
     /*
      * Create a helper function to implement the craziness of
      * |new DataView(new otherWindow.ArrayBuffer())|, and install it in the
-     * global for use by the DataView constructor.
+     * global for use by the DataViewObject constructor.
      */
     RootedFunction fun(cx, NewFunction(cx, NullPtr(), ArrayBufferObject::createDataViewForThis,
                                        0, JSFunction::NATIVE_FUN, global, NullPtr()));
