@@ -14,54 +14,7 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
-// Sentinel value used to initialize ArrayBufferViewObjects' NEXT_BUFFER_SLOTs
-// to show that they have not yet been added to any ArrayBufferObject list.
-js::ArrayBufferObject * const UNSET_BUFFER_LINK = reinterpret_cast<js::ArrayBufferObject*>(0x2);
-
-inline void
-js::ArrayBufferObject::setElementsHeader(js::ObjectElements *header, uint32_t bytes)
-{
-    header->flags = 0;
-    header->initializedLength = bytes;
-
-    // NB: one or both of these fields is clobbered by GetViewList to store the
-    // 'views' link. Set them to 0 to effectively initialize 'views' to NULL.
-    header->length = 0;
-    header->capacity = 0;
-}
-
-inline uint32_t
-js::ArrayBufferObject::getElementsHeaderInitializedLength(const js::ObjectElements *header)
-{
-    return header->initializedLength;
-}
-
-inline uint32_t
-js::ArrayBufferObject::byteLength() const
-{
-    JS_ASSERT(is<ArrayBufferObject>());
-    return getElementsHeader()->initializedLength;
-}
-
-inline uint8_t *
-js::ArrayBufferObject::dataPointer() const
-{
-    return (uint8_t *) elements;
-}
-
 namespace js {
-
-inline bool
-ArrayBufferObject::hasData() const
-{
-    return getClass() == &class_;
-}
-
-inline bool
-ArrayBufferObject::isAsmJSArrayBuffer() const
-{
-    return getElementsHeader()->isAsmJSArrayBuffer();
-}
 
 static inline int32_t
 ClampIntForUint8Array(int32_t x)
