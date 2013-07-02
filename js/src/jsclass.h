@@ -207,9 +207,9 @@ typedef void
     JSEnumerateOp       enumerate;                                            \
     JSResolveOp         resolve;                                              \
     JSConvertOp         convert;                                              \
-    FinalizeOp          finalize;                                             \
                                                                               \
     /* Optionally non-null members start here. */                             \
+    FinalizeOp          finalize;                                             \
     JSCheckAccessOp     checkAccess;                                          \
     JSNative            call;                                                 \
     JSHasInstanceOp     hasInstance;                                          \

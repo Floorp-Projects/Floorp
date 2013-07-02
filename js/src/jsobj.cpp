@@ -2402,6 +2402,15 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
 {
     RootedObject protoProto(cx, protoProto_);
 
+    /* Assert mandatory function pointer members. */
+    JS_ASSERT(clasp->addProperty);
+    JS_ASSERT(clasp->delProperty);
+    JS_ASSERT(clasp->getProperty);
+    JS_ASSERT(clasp->setProperty);
+    JS_ASSERT(clasp->enumerate);
+    JS_ASSERT(clasp->resolve);
+    JS_ASSERT(clasp->convert);
+
     RootedAtom atom(cx, Atomize(cx, clasp->name, strlen(clasp->name)));
     if (!atom)
         return NULL;
