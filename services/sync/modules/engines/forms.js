@@ -204,7 +204,6 @@ function FormTracker(name, engine) {
   Tracker.call(this, name, engine);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
-  Svc.Obs.add("profile-change-teardown", this);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -246,9 +245,6 @@ FormTracker.prototype = {
           this.trackEntry(guid);
         }
         break;
-    case "profile-change-teardown":
-      FormWrapper._finalize();
-      break;
     }
   },
 
