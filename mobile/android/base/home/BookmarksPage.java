@@ -5,15 +5,24 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.TopBookmarksView.Thumbnail;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -21,6 +30,11 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A page in about:home that displays a ListView of bookmarks.
@@ -45,6 +59,9 @@ public class BookmarksPage extends HomeFragment {
 
     // Adapter for list of bookmarks.
     private BookmarksListAdapter mListAdapter;
+
+    // Adapter for grid of bookmarks.
+    private TopBookmarksAdapter mTopBookmarksAdapter;
 
     // Callback for loaders.
     private CursorLoaderCallbacks mLoaderCallbacks;
@@ -83,6 +100,10 @@ public class BookmarksPage extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        // Setup the top bookmarks adapter.
+        mTopBookmarksAdapter = new TopBookmarksAdapter(getActivity(), null);
+        mTopBookmarks.setAdapter(mTopBookmarksAdapter);
+
         // Setup the list adapter.
         mListAdapter = new BookmarksListAdapter(getActivity(), null);
         mListAdapter.setOnRefreshFolderListener(new OnRefreshFolderListener() {
@@ -109,6 +130,8 @@ public class BookmarksPage extends HomeFragment {
     public void onDestroyView() {
         mList = null;
         mListAdapter = null;
+        mTopBookmarks = null;
+        mTopBookmarksAdapter = null;
         super.onDestroyView();
     }
 
@@ -201,7 +224,12 @@ public class BookmarksPage extends HomeFragment {
                 }
 
                 case TOP_BOOKMARKS_LOADER_ID: {
-                    mTopBookmarks.refreshFromCursor(c);
+                    mTopBookmarksAdapter.swapCursor(c);
+
+                    // Load the thumbnails.
+                    if (c.getCount() > 0) {
+                        new LoadThumbnailsTask(getActivity()).execute(c);
+                    }
                     break;
                 }
             }
@@ -220,11 +248,86 @@ public class BookmarksPage extends HomeFragment {
 
                 case TOP_BOOKMARKS_LOADER_ID: {
                     if (mTopBookmarks != null) {
-                        mTopBookmarks.refreshFromCursor(null);
+                        mTopBookmarksAdapter.swapCursor(null);
                         break;
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * An AsyncTask to load the thumbnails from a cursor.
+     */
+    private class LoadThumbnailsTask extends UiAsyncTask<Cursor, Void, Map<String, Thumbnail>> {
+        private final Context mContext;
+
+        public LoadThumbnailsTask(Context context) {
+            super(ThreadUtils.getBackgroundHandler());
+            mContext = context;
+        }
+
+        @Override
+        protected Map<String, Thumbnail> doInBackground(Cursor... params) {
+            // TopBookmarksAdapter's cursor.
+            final Cursor adapterCursor = params[0];
+            if (adapterCursor == null || !adapterCursor.moveToFirst()) {
+                return null;
+            }
+
+            final List<String> urls = new ArrayList<String>();
+            do {
+                final String url = adapterCursor.getString(adapterCursor.getColumnIndexOrThrow(URLColumns.URL));
+                urls.add(url);
+            } while (adapterCursor.moveToNext());
+
+            if (urls.size() == 0) {
+                return null;
+            }
+
+            final Map<String, Thumbnail> thumbnails = new HashMap<String, Thumbnail>();
+
+            // Query the DB for thumbnails.
+            final ContentResolver cr = mContext.getContentResolver();
+            final Cursor cursor = BrowserDB.getThumbnailsForUrls(cr, urls);
+
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    do {
+                        // Try to get the thumbnail, if cursor is valid.
+                        String url = cursor.getString(cursor.getColumnIndexOrThrow(Thumbnails.URL));
+                        final byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(Thumbnails.DATA));
+                        final Bitmap bitmap = (b == null ? null : BitmapUtils.decodeByteArray(b));
+
+                        if (bitmap != null) {
+                            thumbnails.put(url, new Thumbnail(bitmap, true));
+                        }
+                    } while (cursor.moveToNext());
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+
+            // Query the DB for favicons for the urls without thumbnails.
+            for (String url : urls) {
+                if (!thumbnails.containsKey(url)) {
+                    final Bitmap bitmap = BrowserDB.getFaviconForUrl(cr, url);
+                    if (bitmap != null) {
+                        // Favicons.scaleImage can return several different size favicons,
+                        // but will at least prevent this from being too large.
+                        thumbnails.put(url, new Thumbnail(Favicons.getInstance().scaleImage(bitmap), false));
+                    }
+                }
+            }
+
+            return thumbnails;
+        }
+
+        @Override
+        public void onPostExecute(Map<String, Thumbnail> thumbnails) {
+            mTopBookmarks.updateThumbnails(thumbnails);
         }
     }
 }
