@@ -1123,3 +1123,11 @@ js::IsInRequest(JSContext *cx)
     return !!cx->runtime()->requestDepth;
 }
 #endif
+
+#ifdef JSGC_GENERATIONAL
+JS_FRIEND_API(void)
+JS_StorePostBarrierCallback(JSContext* cx, void (*callback)(JSTracer *trc, void *key), void *key)
+{
+    cx->runtime()->gcStoreBuffer.putCallback(callback, key);
+}
+#endif /* JSGC_GENERATIONAL */

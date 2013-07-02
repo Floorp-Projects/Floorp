@@ -255,6 +255,14 @@ class HashMap
             remove(p);
     }
 
+    // Infallibly rekey one entry, if present.
+    void rekey(const Lookup &old_key, const Key &new_key) {
+        if (old_key != new_key) {
+            if (Ptr p = lookup(old_key))
+                impl.rekey(p, new_key, new_key);
+        }
+    }
+
     // HashMap is movable
     HashMap(MoveRef<HashMap> rhs) : impl(Move(rhs->impl)) {}
     void operator=(MoveRef<HashMap> rhs) { impl = Move(rhs->impl); }
@@ -802,10 +810,7 @@ class HashTable : private AllocPolicy
         // a new key at the new Lookup position.  |front()| is invalid after
         // this operation until the next call to |popFront()|.
         void rekeyFront(const Lookup &l, const Key &k) {
-            typename HashTableEntry<T>::NonConstT t(Move(this->cur->get()));
-            HashPolicy::setKey(t, const_cast<Key &>(k));
-            table.remove(*this->cur);
-            table.putNewInfallible(l, Move(t));
+            table.rekey(*this->cur, l, k);
             rekeyed = true;
             this->validEntry = false;
         }
@@ -1451,6 +1456,17 @@ class HashTable : private AllocPolicy
         JS_ASSERT(p.found());
         remove(*p.entry_);
         checkUnderloaded();
+    }
+
+    void rekey(Ptr p, const Lookup &l, const Key &k)
+    {
+        JS_ASSERT(table);
+        ReentrancyGuard g(*this);
+        JS_ASSERT(p.found());
+        typename HashTableEntry<T>::NonConstT t(Move(*p));
+        HashPolicy::setKey(t, const_cast<Key &>(k));
+        remove(*p.entry_);
+        putNewInfallible(l, Move(t));
     }
 
 #undef METER
