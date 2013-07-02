@@ -631,12 +631,20 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.add_to_launcher: {
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null) {
-                    String url = tab.getURL();
-                    String title = tab.getDisplayTitle();
-                    Bitmap favicon = tab.getFavicon();
-                    if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
+                    final String url = tab.getURL();
+                    final String title = tab.getDisplayTitle();
+                    if (url == null || title == null) {
+                        return true;
                     }
+
+                    Favicons favicons = Favicons.getInstance();
+                    favicons.loadFavicon(url, tab.getFaviconURL(), 0,
+                    new Favicons.OnFaviconLoadedListener() {
+                        @Override
+                        public void onFaviconLoaded(String url, Bitmap favicon) {
+                            GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
+                        }
+                    });
                 }
                 return true;
             }
@@ -1249,7 +1257,8 @@ abstract public class BrowserApp extends GeckoApp
     private void loadFavicon(final Tab tab) {
         maybeCancelFaviconLoad(tab);
 
-        long id = Favicons.getInstance().loadFavicon(tab.getURL(), tab.getFaviconURL(), !tab.isPrivate(),
+        int flags = Favicons.FLAG_SCALE | (tab.isPrivate() ? 0 : Favicons.FLAG_PERSIST);
+        long id = Favicons.getInstance().loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
                         new Favicons.OnFaviconLoadedListener() {
 
             @Override
