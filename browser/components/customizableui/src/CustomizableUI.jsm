@@ -2097,6 +2097,7 @@ OverflowableToolbar.prototype = {
       this._panel.hidePopup();
     else {
       let doc = aEvent.target.ownerDocument;
+      this._panel.hidden = false;
       let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
       this._panel.openPopup(anchor || this._chevron, "bottomcenter topright");
     }
