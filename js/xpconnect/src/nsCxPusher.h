@@ -26,7 +26,8 @@ class MOZ_STACK_CLASS AutoCxPusher
 {
 public:
   AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
-  ~AutoCxPusher();
+  // XPCShell uses an nsCxPusher, which contains an AutoCxPusher.
+  NS_EXPORT ~AutoCxPusher();
 
   nsIScriptContext* GetScriptContext() { return mScx; }
 
