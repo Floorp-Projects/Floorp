@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { MatchPattern } = require("sdk/util/match-pattern");
+const { MatchPattern } = require("sdk/page-mod/match-pattern");
 
 exports.testMatchPatternTestTrue = function(test) {
   function ok(pattern, url) {
@@ -35,8 +35,6 @@ exports.testMatchPatternTestTrue = function(test) {
   ok(/https:.*zilla.*/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
   ok('*.sample.com', 'http://ex.sample.com/foo.html');
   ok('*.amp.le.com', 'http://ex.amp.le.com');
-
-  ok('data:*', 'data:text/html;charset=utf-8,');
 };
 
 exports.testMatchPatternTestFalse = function(test) {

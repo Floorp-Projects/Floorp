@@ -179,13 +179,9 @@ directory the first time you run
   indicating whether or not the
   add-on supports private browsing. If this value is not <code>true</code>
   or is omitted, then the add-on will not see any private windows or
-  objects, such as tabs, that are associated with private windows. See the
-  documentation for the
-  <a href="modules/sdk/private-browsing.html"><code>private-browsing</code> module</a>.</p>
-    <p><strong><code>cross-domain-content</code></strong>: a list of domains for
-  which content scripts are given cross-domain privileges to access content in
-  iframes or to make XMLHTTPRequests. See the documentation for
-<a href="dev-guide/guides/content-scripts/cross-domain.html">enabling cross-domain content scripts</a>.</p>
+objects, such as tabs, that are associated with private windows. See the
+documentation for the
+<a href="modules/sdk/private-browsing.html"><code>private-browsing</code> module</a>.</p>
   </td>
 </tr>
 

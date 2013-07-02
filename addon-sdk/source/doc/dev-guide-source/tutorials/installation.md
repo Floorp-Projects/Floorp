@@ -143,6 +143,11 @@ This is the `cfx` command-line program.  It's your primary interface to the
 Add-on SDK.  You use it to launch Firefox and test your add-on, package your
 add-on for distribution, view documentation, and run unit tests.
 
+## cfx docs ##
+
+If you're reading these documents online, try running `cfx docs`. This will
+build the documentation for the SDK and display it in a browser.
+
 ## Problems? ##
 
 Try the [Troubleshooting](dev-guide/tutorials/troubleshooting.html)

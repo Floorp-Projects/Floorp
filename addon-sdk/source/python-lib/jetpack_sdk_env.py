@@ -60,7 +60,7 @@ def welcome():
         print ("Your SDK may not work properly.")
         return
 
-    print ("Welcome to the Add-on SDK. For the docs, visit https://addons.mozilla.org/en-US/developers/docs/sdk/latest/")
+    print ("Welcome to the Add-on SDK. Run 'cfx docs' for assistance.")
 
 if __name__ == '__main__':
     welcome()

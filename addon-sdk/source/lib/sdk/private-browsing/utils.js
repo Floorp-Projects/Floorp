@@ -52,10 +52,6 @@ let isWindowPBSupported = exports.isWindowPBSupported =
 // checks that per-tab private browsing is implemented
 let isTabPBSupported = exports.isTabPBSupported =
                        !pbService && !!PrivateBrowsingUtils && is('Fennec') && satisfiesVersion(version, '>=20.0*');
-
-exports.isPermanentPrivateBrowsing = function() {
- return !!(PrivateBrowsingUtils && PrivateBrowsingUtils.permanentPrivateBrowsing);
-}
                        
 function ignoreWindow(window) {
   return !isPrivateBrowsingSupported && isWindowPrivate(window) && !isGlobalPBSupported;
