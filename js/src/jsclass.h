@@ -199,7 +199,7 @@ typedef void
     const char          *name;                                                \
     uint32_t            flags;                                                \
                                                                               \
-    /* Mandatory non-null function pointer members. */                        \
+    /* Mandatory function pointer members. */                                 \
     JSPropertyOp        addProperty;                                          \
     JSDeletePropertyOp  delProperty;                                          \
     JSPropertyOp        getProperty;                                          \
@@ -208,7 +208,7 @@ typedef void
     JSResolveOp         resolve;                                              \
     JSConvertOp         convert;                                              \
                                                                               \
-    /* Optionally non-null members start here. */                             \
+    /* Optional members (may be null). */                                     \
     FinalizeOp          finalize;                                             \
     JSCheckAccessOp     checkAccess;                                          \
     JSNative            call;                                                 \
