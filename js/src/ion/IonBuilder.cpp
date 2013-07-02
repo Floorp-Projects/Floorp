@@ -6272,7 +6272,7 @@ IonBuilder::jsop_getelem()
             return jsop_getelem_dense();
     }
 
-    int arrayType = TypedArray::TYPE_MAX;
+    int arrayType = TypedArrayObject::TYPE_MAX;
     if (ElementAccessIsTypedArray(obj, index, &arrayType))
         return jsop_getelem_typed(arrayType);
 
@@ -6430,7 +6430,7 @@ IonBuilder::getTypedArrayLength(MDefinition *obj)
 {
     if (obj->isConstant() && obj->toConstant()->value().isObject()) {
         JSObject *array = &obj->toConstant()->value().toObject();
-        int32_t length = (int32_t) TypedArray::length(array);
+        int32_t length = (int32_t) TypedArrayObject::length(array);
         obj->setFoldedUnchecked();
         return MConstant::New(Int32Value(length));
     }
@@ -6442,7 +6442,7 @@ IonBuilder::getTypedArrayElements(MDefinition *obj)
 {
     if (obj->isConstant() && obj->toConstant()->value().isObject()) {
         JSObject *array = &obj->toConstant()->value().toObject();
-        void *data = TypedArray::viewData(array);
+        void *data = TypedArrayObject::viewData(array);
 
         // The 'data' pointer can change in rare circumstances
         // (ArrayBufferObject::changeContents).
@@ -6568,19 +6568,19 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         // uint32 reads that may produce either doubles or integers.
         MIRType knownType;
         switch (arrayType) {
-          case TypedArray::TYPE_INT8:
-          case TypedArray::TYPE_UINT8:
-          case TypedArray::TYPE_UINT8_CLAMPED:
-          case TypedArray::TYPE_INT16:
-          case TypedArray::TYPE_UINT16:
-          case TypedArray::TYPE_INT32:
+          case TypedArrayObject::TYPE_INT8:
+          case TypedArrayObject::TYPE_UINT8:
+          case TypedArrayObject::TYPE_UINT8_CLAMPED:
+          case TypedArrayObject::TYPE_INT16:
+          case TypedArrayObject::TYPE_UINT16:
+          case TypedArrayObject::TYPE_INT32:
             knownType = MIRType_Int32;
             break;
-          case TypedArray::TYPE_UINT32:
+          case TypedArrayObject::TYPE_UINT32:
             knownType = allowDouble ? MIRType_Double : MIRType_Int32;
             break;
-          case TypedArray::TYPE_FLOAT32:
-          case TypedArray::TYPE_FLOAT64:
+          case TypedArrayObject::TYPE_FLOAT32:
+          case TypedArrayObject::TYPE_FLOAT64:
             knownType = MIRType_Double;
             break;
           default:
@@ -6614,18 +6614,18 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         // will bailout when we read a double.
         bool needsBarrier = true;
         switch (arrayType) {
-          case TypedArray::TYPE_INT8:
-          case TypedArray::TYPE_UINT8:
-          case TypedArray::TYPE_UINT8_CLAMPED:
-          case TypedArray::TYPE_INT16:
-          case TypedArray::TYPE_UINT16:
-          case TypedArray::TYPE_INT32:
-          case TypedArray::TYPE_UINT32:
+          case TypedArrayObject::TYPE_INT8:
+          case TypedArrayObject::TYPE_UINT8:
+          case TypedArrayObject::TYPE_UINT8_CLAMPED:
+          case TypedArrayObject::TYPE_INT16:
+          case TypedArrayObject::TYPE_UINT16:
+          case TypedArrayObject::TYPE_INT32:
+          case TypedArrayObject::TYPE_UINT32:
             if (types->hasType(types::Type::Int32Type()))
                 needsBarrier = false;
             break;
-          case TypedArray::TYPE_FLOAT32:
-          case TypedArray::TYPE_FLOAT64:
+          case TypedArrayObject::TYPE_FLOAT32:
+          case TypedArrayObject::TYPE_FLOAT64:
             if (allowDouble)
                 needsBarrier = false;
             break;
@@ -6676,7 +6676,7 @@ IonBuilder::jsop_setelem()
     MDefinition *index = current->pop();
     MDefinition *object = current->pop();
 
-    int arrayType = TypedArray::TYPE_MAX;
+    int arrayType = TypedArrayObject::TYPE_MAX;
     if (ElementAccessIsTypedArray(object, index, &arrayType))
         return jsop_setelem_typed(arrayType, SetElem_Normal,
                                   object, index, value);
@@ -6909,7 +6909,7 @@ IonBuilder::jsop_setelem_typed(int arrayType,
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
     MDefinition *toWrite = value;
-    if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
+    if (arrayType == TypedArrayObject::TYPE_UINT8_CLAMPED) {
         toWrite = MClampToUint8::New(value);
         current->add(toWrite->toInstruction());
     }
@@ -6982,7 +6982,7 @@ IonBuilder::jsop_length_fastPath()
             return true;
         }
 
-        if (objTypes && objTypes->getTypedArrayType() != TypedArray::TYPE_MAX) {
+        if (objTypes && objTypes->getTypedArrayType() != TypedArrayObject::TYPE_MAX) {
             current->pop();
             MInstruction *length = getTypedArrayLength(obj);
             current->add(length);

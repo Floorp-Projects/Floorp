@@ -777,17 +777,17 @@ MToInt32::computeRange()
 static Range *GetTypedArrayRange(int type)
 {
     switch (type) {
-      case TypedArray::TYPE_UINT8_CLAMPED:
-      case TypedArray::TYPE_UINT8:  return new Range(0, UINT8_MAX);
-      case TypedArray::TYPE_UINT16: return new Range(0, UINT16_MAX);
-      case TypedArray::TYPE_UINT32: return new Range(0, UINT32_MAX);
+      case TypedArrayObject::TYPE_UINT8_CLAMPED:
+      case TypedArrayObject::TYPE_UINT8:  return new Range(0, UINT8_MAX);
+      case TypedArrayObject::TYPE_UINT16: return new Range(0, UINT16_MAX);
+      case TypedArrayObject::TYPE_UINT32: return new Range(0, UINT32_MAX);
 
-      case TypedArray::TYPE_INT8:   return new Range(INT8_MIN, INT8_MAX);
-      case TypedArray::TYPE_INT16:  return new Range(INT16_MIN, INT16_MAX);
-      case TypedArray::TYPE_INT32:  return new Range(INT32_MIN, INT32_MAX);
+      case TypedArrayObject::TYPE_INT8:   return new Range(INT8_MIN, INT8_MAX);
+      case TypedArrayObject::TYPE_INT16:  return new Range(INT16_MIN, INT16_MAX);
+      case TypedArrayObject::TYPE_INT32:  return new Range(INT32_MIN, INT32_MAX);
 
-      case TypedArray::TYPE_FLOAT32:
-      case TypedArray::TYPE_FLOAT64:
+      case TypedArrayObject::TYPE_FLOAT32:
+      case TypedArrayObject::TYPE_FLOAT64:
         break;
     }
 
@@ -804,7 +804,7 @@ MLoadTypedArrayElement::computeRange()
 void
 MLoadTypedArrayElementStatic::computeRange()
 {
-    if (Range *range = GetTypedArrayRange(TypedArray::type(typedArray_)))
+    if (Range *range = GetTypedArrayRange(TypedArrayObject::type(typedArray_)))
         setRange(range);
 }
 

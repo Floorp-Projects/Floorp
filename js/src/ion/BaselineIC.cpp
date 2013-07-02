@@ -3489,10 +3489,10 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
 static bool
 TypedArrayRequiresFloatingPoint(JSObject *obj)
 {
-    uint32_t type = TypedArray::type(obj);
-    return (type == TypedArray::TYPE_UINT32 ||
-            type == TypedArray::TYPE_FLOAT32 ||
-            type == TypedArray::TYPE_FLOAT64);
+    uint32_t type = TypedArrayObject::type(obj);
+    return (type == TypedArrayObject::TYPE_UINT32 ||
+            type == TypedArrayObject::TYPE_FLOAT32 ||
+            type == TypedArrayObject::TYPE_FLOAT64);
 }
 
 static bool
@@ -3579,7 +3579,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
             return true;
 
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
-        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
+        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArrayObject::type(obj));
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
         if (!typedArrayStub)
             return false;
@@ -3858,14 +3858,14 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Bounds check.
-    masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), scratchReg);
+    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), scratchReg);
     masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
 
     // Load the elements vector.
-    masm.loadPtr(Address(obj, TypedArray::dataOffset()), scratchReg);
+    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), scratchReg);
 
     // Load the value.
-    BaseIndex source(scratchReg, key, ScaleFromElemWidth(TypedArray::slotWidth(type_)));
+    BaseIndex source(scratchReg, key, ScaleFromElemWidth(TypedArrayObject::slotWidth(type_)));
     masm.loadFromTypedArray(type_, source, R0, false, scratchReg, &failure);
 
     // Todo: Allow loading doubles from uint32 arrays, but this requires monitoring.
@@ -4244,7 +4244,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
             return true;
 
-        uint32_t len = TypedArray::length(obj);
+        uint32_t len = TypedArrayObject::length(obj);
         int32_t idx = index.toInt32();
         bool expectOutOfBounds = (idx < 0) || (static_cast<uint32_t>(idx) >= len);
 
@@ -4255,9 +4255,9 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
 
             IonSpew(IonSpew_BaselineIC,
                     "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
-                    obj->lastProperty(), TypedArray::type(obj),
+                    obj->lastProperty(), TypedArrayObject::type(obj),
                     expectOutOfBounds ? "yes" : "no");
-            ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj),
+            ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArrayObject::type(obj),
                                                     expectOutOfBounds);
             ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
             if (!typedArrayStub)
@@ -4645,14 +4645,14 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Bounds check.
     Label oobWrite;
-    masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), scratchReg);
+    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), scratchReg);
     masm.branch32(Assembler::BelowOrEqual, scratchReg, key,
                   expectOutOfBounds_ ? &oobWrite : &failure);
 
     // Load the elements vector.
-    masm.loadPtr(Address(obj, TypedArray::dataOffset()), scratchReg);
+    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), scratchReg);
 
-    BaseIndex dest(scratchReg, key, ScaleFromElemWidth(TypedArray::slotWidth(type_)));
+    BaseIndex dest(scratchReg, key, ScaleFromElemWidth(TypedArrayObject::slotWidth(type_)));
     Address value(BaselineStackReg, ICStackValueOffset);
 
     // We need a second scratch register. It's okay to clobber the type tag of
@@ -4663,11 +4663,11 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     regs.take(scratchReg);
     Register secondScratch = regs.takeAny();
 
-    if (type_ == TypedArray::TYPE_FLOAT32 || type_ == TypedArray::TYPE_FLOAT64) {
+    if (type_ == TypedArrayObject::TYPE_FLOAT32 || type_ == TypedArrayObject::TYPE_FLOAT64) {
         masm.ensureDouble(value, FloatReg0, &failure);
         masm.storeToTypedFloatArray(type_, FloatReg0, dest);
         EmitReturnFromIC(masm);
-    } else if (type_ == TypedArray::TYPE_UINT8_CLAMPED) {
+    } else if (type_ == TypedArrayObject::TYPE_UINT8_CLAMPED) {
         Label notInt32;
         masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
         masm.unboxInt32(value, secondScratch);
@@ -5555,12 +5555,12 @@ ICGetProp_TypedArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Implement the negated version of JSObject::isTypedArray predicate.
     masm.loadObjClass(obj, scratch);
-    masm.branchPtr(Assembler::Below, scratch, ImmWord(&TypedArray::classes[0]), &failure);
+    masm.branchPtr(Assembler::Below, scratch, ImmWord(&TypedArrayObject::classes[0]), &failure);
     masm.branchPtr(Assembler::AboveOrEqual, scratch,
-                   ImmWord(&TypedArray::classes[TypedArray::TYPE_MAX]), &failure);
+                   ImmWord(&TypedArrayObject::classes[TypedArrayObject::TYPE_MAX]), &failure);
 
     // Load length from fixed slot.
-    masm.loadValue(Address(obj, TypedArray::lengthOffset()), R0);
+    masm.loadValue(Address(obj, TypedArrayObject::lengthOffset()), R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
