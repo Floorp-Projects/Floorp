@@ -37,7 +37,6 @@
 #include "plstr.h"
 #include "nsEmbedString.h"
 #include "nsNetCID.h"
-#include "prtime.h"
 
 ////////////////////////////////////////////////////////////////////////
 // CIDs
