@@ -27,13 +27,13 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 //   - ArrayBufferViewObject
 //     - DataViewObject
 //     - TypedArrayObject
-//       - TypedArrayTemplate
+//       - TypedArrayObjectTemplate
 //         - Int8Array
 //         - Uint8Array
 //         - ...
 //
-// Note that |TypedArrayTemplate| is just an implementation detail that makes
-// implementing its various subclasses easier.
+// Note that |TypedArrayObjectTemplate| is just an implementation detail that
+// makes implementing its various subclasses easier.
 
 /*
  * ArrayBufferObject
