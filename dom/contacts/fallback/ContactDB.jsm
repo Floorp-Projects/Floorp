@@ -336,7 +336,9 @@ ContactDB.prototype = {
         if (!objectStore) {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
-        objectStore.createIndex("telMatch", "search.parsedTel", {multiEntry: true});
+        if (!objectStore.indexNames.contains("telMatch")) {
+          objectStore.createIndex("telMatch", "search.parsedTel", {multiEntry: true});
+        }
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
           if (cursor) {
