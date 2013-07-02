@@ -361,7 +361,7 @@ public:
      */
     eIntID_ScrollbarButtonAutoRepeatBehavior,
     /**
-     * Delay before showing a tooltip.
+     * Dealy before showing a tooltip.
      */
     eIntID_TooltipDelay,
     /*
@@ -375,20 +375,8 @@ public:
      * home button. Used on gaia to determine whether a home button
      * is shown.
      */
-     eIntID_PhysicalHomeButton,
- 
-     /*
-      * Controls whether overlay scrollbars display when the user moves
-      * the mouse in a scrollable frame.
-      */
-     eIntID_ScrollbarDisplayOnMouseMove,
- 
-     /*
-      * Overlay scrollbar animation constants.
-      */
-     eIntID_ScrollbarFadeBeginDelay,
-     eIntID_ScrollbarFadeDuration
-};
+    eIntID_PhysicalHomeButton
+  };
 
   /**
    * Windows themes we currently detect.
