@@ -4,12 +4,7 @@
 
 "use strict";
 
-let DEBUG = false;
-
-function updateDebug(aResult) {
-  DEBUG = !!aResult;
-}
-
+const DEBUG = false;
 function debug(s) { dump("-*- ContactManager: " + s + "\n"); }
 
 const Cc = Components.classes;
@@ -31,10 +26,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "pm",
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
-                                   "@mozilla.org/settingsService;1",
-                                   "nsISettingsService");
 
 const CONTACTS_SENDMORE_MINIMUM = 5;
 
@@ -928,16 +919,6 @@ ContactManager.prototype = {
                               "PermissionPromptHelper:AskPermission:OK",
                               "Contacts:GetAll:Next", "Contacts:Revision",
                               "Contacts:Count"]);
-
-    let lock = gSettingsService.createLock();
-    lock.get("dom.mozContacts.debugging.enabled", {
-      handle: function(aName, aResult) {
-        updateDebug(aResult);
-      },
-      handleError: function(aErrorMessage) {
-        if (DEBUG) debug("Error reading dom.mozContacts.debugging.enabled setting: " + aErrorMessage);
-      }
-    });
   },
 
   // Called from DOMRequestIpcHelper
