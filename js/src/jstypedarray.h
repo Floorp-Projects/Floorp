@@ -28,8 +28,8 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 //     - DataViewObject
 //     - TypedArrayObject
 //       - TypedArrayObjectTemplate
-//         - Int8Array
-//         - Uint8Array
+//         - Int8ArrayObject
+//         - Uint8ArrayObject
 //         - ...
 //
 // Note that |TypedArrayObjectTemplate| is just an implementation detail that
