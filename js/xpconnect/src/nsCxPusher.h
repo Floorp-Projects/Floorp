@@ -109,7 +109,7 @@ private:
   void Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   JSContext* mCx;
-  nsCxPusher mPusher;
+  Maybe<AutoCxPusher> mPusher;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -137,7 +137,7 @@ public:
  * you're doing.
  */
 class MOZ_STACK_CLASS AutoPushJSContext {
-  nsCxPusher mPusher;
+  Maybe<AutoCxPusher> mPusher;
   JSContext* mCx;
 
 public:
