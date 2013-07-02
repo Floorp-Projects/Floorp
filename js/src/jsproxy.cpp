@@ -3091,7 +3091,8 @@ proxy_HasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, JSBoo
 
 JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4),
+    Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -3390,23 +3391,6 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-Class js::ProxyClass = {
-    "Proxy",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                    /* finalize */
-    NULL,                    /* checkAccess */
-    NULL,                    /* call */
-    NULL,                    /* hasInstance */
-    proxy                    /* construct */
-};
-
 static JSBool
 proxy_create(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3485,18 +3469,19 @@ static const JSFunctionSpec static_methods[] = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, HandleObject obj)
 {
-    RootedObject module(cx, NewObjectWithClassProto(cx, &ProxyClass, NULL, obj, SingletonObject));
-    if (!module)
+    Rooted<GlobalObject*> global(cx);
+    RootedFunction ctor(cx);
+    ctor = global->createConstructor(cx, proxy, cx->names().Proxy, 2);
+    if (!ctor)
         return NULL;
 
-    if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
+    if (!JS_DefineFunctions(cx, ctor, static_methods))
+        return NULL;
+    if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(ctor),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
-    if (!JS_DefineFunctions(cx, module, static_methods))
-        return NULL;
 
-    MarkStandardClassInitializedNoProto(obj, &ProxyClass);
-
-    return module;
+    MarkStandardClassInitializedNoProto(obj, &ObjectProxyClass);
+    return ctor;
 }
