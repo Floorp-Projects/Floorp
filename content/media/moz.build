@@ -6,6 +6,8 @@
 
 PARALLEL_DIRS += ['encoder']
 
+PARALLEL_DIRS += ['mediasource']
+
 PARALLEL_DIRS += ['webaudio']
 
 if CONFIG['MOZ_RAW']:
