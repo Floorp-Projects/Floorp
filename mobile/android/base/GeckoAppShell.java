@@ -1322,21 +1322,51 @@ public class GeckoAppShell
         return sDensityDpi;
     }
 
+    private static boolean isHighMemoryDevice() {
+        BufferedReader br = null;
+        FileReader fr = null;
+        try {
+            fr = new FileReader("/proc/meminfo");
+            if (fr == null)
+                return false;
+            br = new BufferedReader(fr);
+            String line = br.readLine();
+            while (line != null && !line.startsWith("MemTotal")) {
+                line = br.readLine();
+            }
+            String[] tokens = line.split("\\s+");
+            if (tokens.length >= 2 && Long.parseLong(tokens[1]) >= 786432 /* 768MB in kb*/) {
+                return true;
+            }
+        } catch (Exception ex) {
+        } finally {
+            try {
+                if (fr != null)
+                    fr.close();
+            } catch (IOException ioe) {}
+        }
+        return false;
+    }
+
     /**
      * Returns the colour depth of the default screen. This will either be
      * 24 or 16.
      */
     public static synchronized int getScreenDepth() {
-        if (sScreenDepth == 0 && getGeckoInterface() != null) {
-            switch (getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat()) {
-            case PixelFormat.RGBA_8888 :
-            case PixelFormat.RGBX_8888 :
-            case PixelFormat.RGB_888 :
-                sScreenDepth = 24;
-                break;
-            default:
-                sScreenDepth = 16;
-                break;
+        if (sScreenDepth == 0) {
+            sScreenDepth = 16;
+            if (getGeckoInterface() != null) {
+                switch (getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat()) {
+                    case PixelFormat.RGBA_8888 :
+                    case PixelFormat.RGBX_8888 :
+                    case PixelFormat.RGB_888 :
+                    {
+                        if (isHighMemoryDevice()) {
+                            sScreenDepth = 24;
+                        }
+                        break;
+                    }
+                }
             }
         }
 
