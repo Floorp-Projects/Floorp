@@ -269,7 +269,7 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
 static JSObject *
 NextView(JSObject *obj)
 {
-    return static_cast<JSObject*>(obj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toPrivate());
+    return static_cast<JSObject*>(obj->getFixedSlot(ArrayBufferViewObject::NEXT_VIEW_SLOT).toPrivate());
 }
 
 static HeapPtrObject *
@@ -501,13 +501,13 @@ WeakObjectSlotBarrierPost(JSObject *obj, size_t slot, const char *desc)
 static JSObject *
 BufferLink(JSObject *view)
 {
-    return static_cast<JSObject*>(view->getFixedSlot(BufferView::NEXT_BUFFER_SLOT).toPrivate());
+    return static_cast<JSObject*>(view->getFixedSlot(ArrayBufferViewObject::NEXT_BUFFER_SLOT).toPrivate());
 }
 
 static void
 SetBufferLink(JSObject *view, JSObject *buffer)
 {
-    view->setFixedSlot(BufferView::NEXT_BUFFER_SLOT, PrivateValue(buffer));
+    view->setFixedSlot(ArrayBufferViewObject::NEXT_BUFFER_SLOT, PrivateValue(buffer));
 }
 
 void
@@ -527,14 +527,14 @@ ArrayBufferObject::addView(JSObject *view)
         // is a strong pointer (it will be marked during tracing.)
         JS_ASSERT(NextView(view) == NULL);
     } else {
-        view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(*views));
-        WeakObjectSlotBarrierPost(view, BufferView::NEXT_VIEW_SLOT, "arraybuffer.nextview");
+        view->setFixedSlot(ArrayBufferViewObject::NEXT_VIEW_SLOT, PrivateValue(*views));
+        WeakObjectSlotBarrierPost(view, ArrayBufferViewObject::NEXT_VIEW_SLOT, "arraybuffer.nextview");
 
         // Move the multiview buffer list link into this view since we're
         // prepending it to the list.
         SetBufferLink(view, BufferLink(*views));
         SetBufferLink(*views, UNSET_BUFFER_LINK);
-        WeakObjectSlotBarrierPost(view, BufferView::NEXT_BUFFER_SLOT, "view.nextbuffer");
+        WeakObjectSlotBarrierPost(view, ArrayBufferViewObject::NEXT_BUFFER_SLOT, "view.nextbuffer");
     }
 
     *views = view;
@@ -692,7 +692,7 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
         JSObject *prior = views->get();
         for (JSObject *view = NextView(prior); view; prior = view, view = NextView(view)) {
             MarkObjectUnbarriered(trc, &view, "arraybuffer.views");
-            prior->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(view));
+            prior->setFixedSlot(ArrayBufferViewObject::NEXT_VIEW_SLOT, PrivateValue(view));
         }
         return;
     }
@@ -751,7 +751,7 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
             JS_ASSERT(buffer->compartment() == view->compartment());
             JSObject *nextView = NextView(view);
             if (!IsObjectAboutToBeFinalized(&view)) {
-                view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(prevLiveView));
+                view->setFixedSlot(ArrayBufferViewObject::NEXT_VIEW_SLOT, PrivateValue(prevLiveView));
                 prevLiveView = view;
             }
             view = nextView;
@@ -1340,22 +1340,22 @@ js::ClampDoubleToUint8(const double x)
 
 /*
  * This method is used to trace TypedArray and DataView objects. We need a
- * custom tracer because some of an ArrayBufferView's reserved slots are weak
- * references, and some need to be updated specially during moving GCs.
+ * custom tracer because some of an ArrayBufferViewObject's reserved slots are
+ * weak references, and some need to be updated specially during moving GCs.
  */
 static void
 TraceArrayBufferView(JSTracer *trc, JSObject *obj)
 {
-    HeapSlot &bufSlot = obj->getReservedSlotRef(BufferView::BUFFER_SLOT);
+    HeapSlot &bufSlot = obj->getReservedSlotRef(ArrayBufferViewObject::BUFFER_SLOT);
     MarkSlot(trc, &bufSlot, "typedarray.buffer");
 
     /* Update obj's data slot if the array buffer moved. */
     ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
-    int32_t offset = obj->getReservedSlot(BufferView::BYTEOFFSET_SLOT).toInt32();
+    int32_t offset = obj->getReservedSlot(ArrayBufferViewObject::BYTEOFFSET_SLOT).toInt32();
     obj->initPrivate(buf.dataPointer() + offset);
 
     /* Update NEXT_VEIW_SLOT, if the view moved. */
-    IsSlotMarked(&obj->getReservedSlotRef(BufferView::NEXT_VIEW_SLOT));
+    IsSlotMarked(&obj->getReservedSlotRef(ArrayBufferViewObject::NEXT_VIEW_SLOT));
 }
 
 template<typename NativeType> static inline const int TypeIDOfType();
@@ -4185,7 +4185,7 @@ JS_GetArrayBufferViewBuffer(JSObject *obj)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray() || obj->is<DataViewObject>());
-    return &obj->getFixedSlot(BufferView::BUFFER_SLOT).toObject();
+    return &obj->getFixedSlot(ArrayBufferViewObject::BUFFER_SLOT).toObject();
 }
 
 JS_FRIEND_API(uint32_t)

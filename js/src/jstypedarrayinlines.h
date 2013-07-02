@@ -14,8 +14,8 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
-// Sentinel value used to initialize ArrayBufferViews' NEXT_BUFFER_SLOTs to
-// show that they have not yet been added to any ArrayBufferObject list.
+// Sentinel value used to initialize ArrayBufferViewObjects' NEXT_BUFFER_SLOTs
+// to show that they have not yet been added to any ArrayBufferObject list.
 JSObject * const UNSET_BUFFER_LINK = (JSObject*)0x2;
 
 inline void
