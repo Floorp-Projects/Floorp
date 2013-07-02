@@ -482,6 +482,21 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SwipeAnimationEnabled:
         aResult = 0;
         break;
+    case eIntID_UseOverlayScrollbars:
+        aResult = (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro);
+        break;
+    case eIntID_AllowOverlayScrollbarsOverlap:
+        aResult = 0;
+        break;
+    case eIntID_ScrollbarDisplayOnMouseMove:
+        aResult = 1;
+        break;
+    case eIntID_ScrollbarFadeBeginDelay:
+        aResult = 2500;
+        break;
+    case eIntID_ScrollbarFadeDuration:
+        aResult = 350;
+        break;
     default:
         aResult = 0;
         res = NS_ERROR_FAILURE;
