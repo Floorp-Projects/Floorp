@@ -25,6 +25,19 @@ const CHUNK_SIZE = 20;
 const REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
 
+function exportContact(aRecord) {
+  let contact = {};
+  contact.properties = aRecord.properties;
+
+  for (let field in aRecord.properties)
+    contact.properties[field] = aRecord.properties[field];
+
+  contact.updated = aRecord.updated;
+  contact.published = aRecord.published;
+  contact.id = aRecord.id;
+  return contact;
+}
+
 function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearDispatcher, aFailureCb) {
   let nextIndex = 0;
 
@@ -54,7 +67,7 @@ function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearD
         aNewTxn("readonly", STORE_NAME, function(txn, store) {
           for (let i = start; i < Math.min(start+CHUNK_SIZE, aContacts.length); ++i) {
             store.get(aContacts[i]).onsuccess = function(e) {
-              chunk.push(e.target.result);
+              chunk.push(exportContact(e.target.result));
               count++;
               if (count === aContacts.length) {
                 aCallback(chunk);
@@ -590,19 +603,6 @@ ContactDB.prototype = {
     return contact;
   },
 
-  makeExport: function makeExport(aRecord) {
-    let contact = {};
-    contact.properties = aRecord.properties;
-
-    for (let field in aRecord.properties)
-      contact.properties[field] = aRecord.properties[field];
-
-    contact.updated = aRecord.updated;
-    contact.published = aRecord.published;
-    contact.id = aRecord.id;
-    return contact;
-  },
-
   updateRecordMetadata: function updateRecordMetadata(record) {
     if (!record.id) {
       Cu.reportError("Contact without ID");
@@ -979,7 +979,7 @@ ContactDB.prototype = {
         if (DEBUG) debug("Request successful. Record count: " + event.target.result.length);
         this.sortResults(event.target.result, options);
         for (let i in event.target.result)
-          txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);
+          txn.result[event.target.result[i].id] = exportContact(event.target.result[i]);
       }.bind(this);
     }
   },
@@ -994,7 +994,7 @@ ContactDB.prototype = {
       if (DEBUG) debug("Request successful. Record count:" + event.target.result.length);
       this.sortResults(event.target.result, options);
       for (let i in event.target.result) {
-        txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);
+        txn.result[event.target.result[i].id] = exportContact(event.target.result[i]);
       }
     }.bind(this);
   },
