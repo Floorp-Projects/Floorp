@@ -168,15 +168,17 @@ ConvolverNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
 {
-  switch (aBuffer->NumberOfChannels()) {
-  case 1:
-  case 2:
-  case 4:
-    // Supported number of channels
-    break;
-  default:
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
+  if (aBuffer) {
+    switch (aBuffer->NumberOfChannels()) {
+    case 1:
+    case 2:
+    case 4:
+      // Supported number of channels
+      break;
+    default:
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return;
+    }
   }
 
   mBuffer = aBuffer;
