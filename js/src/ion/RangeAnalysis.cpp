@@ -992,7 +992,7 @@ MLoadTypedArrayElement::computeRange()
 void
 MLoadTypedArrayElementStatic::computeRange()
 {
-    if (Range *range = GetTypedArrayRange(TypedArrayObject::type(typedArray_)))
+    if (Range *range = GetTypedArrayRange(typedArray_->type()))
         setRange(range);
 }
 
