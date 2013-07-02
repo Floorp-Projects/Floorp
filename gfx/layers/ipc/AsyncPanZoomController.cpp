@@ -1480,10 +1480,12 @@ static void GetAPZCAtPointOnSubtree(const ContainerLayer& aLayerIn,
     currLayer = currLayer->GetPrevSibling();
   }
 
-  bool intersect = aLayer.GetVisibleRegion().Contains(nsIntRect(layerPoint.x, layerPoint.y, 1, 1));
+  if (aLayer.GetFrameMetrics().IsScrollable()) {
+    const FrameMetrics& frame = aLayer.GetFrameMetrics();
+    LayerRect layerViewport = frame.mViewport * frame.LayersPixelsPerCSSPixel();
+    bool intersect = layerViewport.Contains(layerPoint.x, layerPoint.y);
 
-  if (intersect) {
-    if (aLayer.GetFrameMetrics().IsScrollable()) {
+    if (intersect) {
       *aApzcOut = aLayer.GetAsyncPanZoomController();
       *aRelativePointOut = LayerIntPoint(NS_lround(layerPoint.x), NS_lround(layerPoint.y));
     }

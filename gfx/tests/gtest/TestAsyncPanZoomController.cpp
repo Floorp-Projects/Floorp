@@ -337,6 +337,7 @@ TEST(AsyncPanZoomController, GetAPZCAtPoint) {
   nsRefPtr<AsyncPanZoomController> apzcSub7 = new AsyncPanZoomController(mcc);
   apzcMain->NotifyLayersUpdated(TestFrameMetrics(), true);
 
+  nsIntRect layerBound;
   ScreenIntPoint touchPoint(20, 20);
   AsyncPanZoomController* apzcOut;
   LayerIntPoint relativePointOut;
@@ -352,6 +353,9 @@ TEST(AsyncPanZoomController, GetAPZCAtPoint) {
 
   // Now we have a root APZC that will match the page
   scrollable.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
+  layerBound = root->GetVisibleRegion().GetBounds();
+  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+                                 layerBound.width, layerBound.height);
   root->AsContainerLayer()->SetFrameMetrics(scrollable);
   root->AsContainerLayer()->SetAsyncPanZoomController(apzcMain);
   AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
@@ -361,6 +365,9 @@ TEST(AsyncPanZoomController, GetAPZCAtPoint) {
 
   // Now we have a sub APZC with a better fit
   scrollable.mScrollId = FrameMetrics::START_SCROLL_ID;
+  layerBound = layers[3]->GetVisibleRegion().GetBounds();
+  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+                                 layerBound.width, layerBound.height);
   layers[3]->AsContainerLayer()->SetFrameMetrics(scrollable);
   layers[3]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub3);
   AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
@@ -374,6 +381,9 @@ TEST(AsyncPanZoomController, GetAPZCAtPoint) {
                  &apzcOut, &relativePointOut);
   EXPECT_EQ(apzcOut, apzcSub3.get()); // We haven't bound apzcSub4 yet
   scrollable.mScrollId++;
+  layerBound = layers[4]->GetVisibleRegion().GetBounds();
+  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+                                 layerBound.width, layerBound.height);
   layers[4]->AsContainerLayer()->SetFrameMetrics(scrollable);
   layers[4]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub4);
   AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
@@ -425,6 +435,9 @@ TEST(AsyncPanZoomController, GetAPZCAtPoint) {
 
   // Transformation chain to layer 7
   scrollable.mScrollId++;
+  layerBound = layers[7]->GetVisibleRegion().GetBounds();
+  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+                                 layerBound.width, layerBound.height);
   layers[7]->AsContainerLayer()->SetFrameMetrics(scrollable);
   layers[7]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub7);
 
