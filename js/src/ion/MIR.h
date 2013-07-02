@@ -4949,6 +4949,8 @@ class MLoadTypedArrayElement
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::TypedArrayElement);
     }
+
+    void computeRange();
 };
 
 // Load a value from a typed array. Out-of-bounds accesses are handled using
