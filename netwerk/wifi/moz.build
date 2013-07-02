@@ -31,6 +31,9 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     CPP_SOURCES += [
         'nsWifiScannerMac.cpp',
     ]
+    CMMSRCS += [
+        'osx_corewlan.mm',
+    ]
 elif CONFIG['OS_ARCH'] == 'WINNT':
     CPP_SOURCES += [
         'nsWifiScannerWin.cpp',
@@ -46,4 +49,3 @@ if CONFIG['MOZ_ENABLE_DBUS']:
     ]
 
 LIBRARY_NAME = 'neckowifi_s'
-
