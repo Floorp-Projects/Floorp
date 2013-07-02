@@ -59,6 +59,7 @@ MOCHITEST_BROWSER_MAIN = \
   browser_openDialog.js \
   browser_types.js \
   browser_inlinesettings.js \
+  browser_inlinesettings_custom.js \
   browser_inlinesettings_info.js \
   browser_tabsettings.js \
   browser_pluginprefs.js \
