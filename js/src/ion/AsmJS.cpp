@@ -598,37 +598,6 @@ operator<=(Type lhs, VarType rhs)
     MOZ_ASSUME_UNREACHABLE("Unexpected rhs type");
 }
 
-// TODO: remove the remaining AddOrSub use of Use
-class Use
-{
-  public:
-    enum Which {
-        Normal,
-        AddOrSub
-    };
-
-  private:
-    Which which_;
-    unsigned *pcount_;
-
-  public:
-    Use()
-      : which_(Which(-1)), pcount_(NULL) {}
-    Use(Which w)
-      : which_(w), pcount_(NULL) { JS_ASSERT(w != AddOrSub); }
-    Use(unsigned *pcount)
-      : which_(AddOrSub), pcount_(pcount) {}
-    Which which() const {
-        return which_;
-    }
-    unsigned &addOrSubCount() const {
-        JS_ASSERT(which_ == AddOrSub);
-        return *pcount_;
-    }
-    bool operator==(Use rhs) const { return which_ == rhs.which_; }
-    bool operator!=(Use rhs) const { return which_ != rhs.which_; }
-};
-
 /*****************************************************************************/
 
 static inline MIRType ToMIRType(MIRType t) { return t; }
@@ -3108,7 +3077,7 @@ CheckVariables(FunctionCompiler &f, ParseNode **stmtIter)
 }
 
 static bool
-CheckExpr(FunctionCompiler &f, ParseNode *expr, Use use, MDefinition **def, Type *type);
+CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type);
 
 static bool
 CheckNumericLiteral(FunctionCompiler &f, ParseNode *num, MDefinition **def, Type *type)
@@ -3202,7 +3171,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType
             return f.failf(shiftNode, "shift amount must be %u", requiredShift);
 
         Type pointerType;
-        if (!CheckExpr(f, pointerNode, Use::Normal, &pointerDef, &pointerType))
+        if (!CheckExpr(f, pointerNode, &pointerDef, &pointerType))
             return false;
 
         if (!pointerType.isIntish())
@@ -3212,7 +3181,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType
             return f.fail(indexExpr, "index expression isn't shifted; must be an Int8/Uint8 access");
 
         Type pointerType;
-        if (!CheckExpr(f, indexExpr, Use::Normal, &pointerDef, &pointerType))
+        if (!CheckExpr(f, indexExpr, &pointerDef, &pointerType))
             return false;
 
         if (!pointerType.isInt())
@@ -3250,7 +3219,7 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
 
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     switch (TypedArrayStoreType(viewType)) {
@@ -3278,7 +3247,7 @@ CheckAssignName(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
 
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     if (const FunctionCompiler::Local *lhsVar = f.lookupLocal(name)) {
@@ -3331,12 +3300,12 @@ CheckMathIMul(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
 
     MDefinition *lhsDef;
     Type lhsType;
-    if (!CheckExpr(f, lhs, Use::Normal, &lhsDef, &lhsType))
+    if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
         return false;
 
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     if (!lhsType.isIntish())
@@ -3361,7 +3330,7 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
 
     MDefinition *argDef;
     Type argType;
-    if (!CheckExpr(f, arg, Use::Normal, &argDef, &argType))
+    if (!CheckExpr(f, arg, &argDef, &argType))
         return false;
 
     if (argType.isSigned()) {
@@ -3393,7 +3362,7 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
 
     MDefinition *argDef;
     Type argType;
-    if (!CheckExpr(f, arg, Use::Normal, &argDef, &argType))
+    if (!CheckExpr(f, arg, &argDef, &argType))
         return false;
 
     if (argType.isDoublish()) {
@@ -3419,7 +3388,7 @@ CheckCallArgs(FunctionCompiler &f, ParseNode *callNode, CheckArgType checkArg,
     for (unsigned i = 0; i < CallArgListLength(callNode); i++, argNode = NextNode(argNode)) {
         MDefinition *def;
         Type type;
-        if (!CheckExpr(f, argNode, Use::Normal, &def, &type))
+        if (!CheckExpr(f, argNode, &def, &type))
             return false;
 
         if (!checkArg(f, argNode, type))
@@ -3558,7 +3527,7 @@ CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDef
 
     MDefinition *indexDef;
     Type indexType;
-    if (!CheckExpr(f, indexNode, Use::Normal, &indexDef, &indexType))
+    if (!CheckExpr(f, indexNode, &indexDef, &indexType))
         return false;
 
     if (!indexType.isIntish())
@@ -3673,6 +3642,8 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltin 
 static bool
 CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
+    JS_CHECK_RECURSION(f.cx(), return false);
+
     ParseNode *callee = CallCallee(call);
 
     if (callee->isKind(PNK_ELEM))
@@ -3713,7 +3684,7 @@ CheckPos(FunctionCompiler &f, ParseNode *pos, MDefinition **def, Type *type)
 
     MDefinition *operandDef;
     Type operandType;
-    if (!CheckExpr(f, operand, Use::Normal, &operandDef, &operandType))
+    if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
     if (operandType.isSigned())
@@ -3737,7 +3708,7 @@ CheckNot(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 
     MDefinition *operandDef;
     Type operandType;
-    if (!CheckExpr(f, operand, Use::Normal, &operandDef, &operandType))
+    if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
     if (!operandType.isInt())
@@ -3756,7 +3727,7 @@ CheckNeg(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 
     MDefinition *operandDef;
     Type operandType;
-    if (!CheckExpr(f, operand, Use::Normal, &operandDef, &operandType))
+    if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
     if (operandType.isInt()) {
@@ -3782,7 +3753,7 @@ CheckCoerceToInt(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *
 
     MDefinition *operandDef;
     Type operandType;
-    if (!CheckExpr(f, operand, Use::Normal, &operandDef, &operandType))
+    if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
     if (operandType.isDouble()) {
@@ -3810,7 +3781,7 @@ CheckBitNot(FunctionCompiler &f, ParseNode *neg, MDefinition **def, Type *type)
 
     MDefinition *operandDef;
     Type operandType;
-    if (!CheckExpr(f, operand, Use::Normal, &operandDef, &operandType))
+    if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
     if (!operandType.isIntish())
@@ -3822,7 +3793,7 @@ CheckBitNot(FunctionCompiler &f, ParseNode *neg, MDefinition **def, Type *type)
 }
 
 static bool
-CheckComma(FunctionCompiler &f, ParseNode *comma, Use use, MDefinition **def, Type *type)
+CheckComma(FunctionCompiler &f, ParseNode *comma, MDefinition **def, Type *type)
 {
     JS_ASSERT(comma->isKind(PNK_COMMA));
     ParseNode *operands = ListHead(comma);
@@ -3835,12 +3806,12 @@ CheckComma(FunctionCompiler &f, ParseNode *comma, Use use, MDefinition **def, Ty
             if (!CheckCall(f, pn, RetType::Void, &_1, &_2))
                 return false;
         } else {
-            if (!CheckExpr(f, pn, Use::Normal, &_1, &_2))
+            if (!CheckExpr(f, pn, &_1, &_2))
                 return false;
         }
     }
 
-    if (!CheckExpr(f, pn, use, def, type))
+    if (!CheckExpr(f, pn, def, type))
         return false;
 
     return true;
@@ -3856,7 +3827,7 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
 
     MDefinition *condDef;
     Type condType;
-    if (!CheckExpr(f, cond, Use::Normal, &condDef, &condType))
+    if (!CheckExpr(f, cond, &condDef, &condType))
         return false;
 
     if (!condType.isInt())
@@ -3868,7 +3839,7 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
 
     MDefinition *thenDef;
     Type thenType;
-    if (!CheckExpr(f, thenExpr, Use::Normal, &thenDef, &thenType))
+    if (!CheckExpr(f, thenExpr, &thenDef, &thenType))
         return false;
 
     BlockVector thenBlocks(f.cx());
@@ -3880,7 +3851,7 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
 
     MDefinition *elseDef;
     Type elseType;
-    if (!CheckExpr(f, elseExpr, Use::Normal, &elseDef, &elseType))
+    if (!CheckExpr(f, elseExpr, &elseDef, &elseType))
         return false;
 
     f.pushPhiInput(elseDef);
@@ -3934,12 +3905,12 @@ CheckMultiply(FunctionCompiler &f, ParseNode *star, MDefinition **def, Type *typ
 
     MDefinition *lhsDef;
     Type lhsType;
-    if (!CheckExpr(f, lhs, Use::Normal, &lhsDef, &lhsType))
+    if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
         return false;
 
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     if (lhsType.isInt() && rhsType.isInt()) {
@@ -3961,49 +3932,71 @@ CheckMultiply(FunctionCompiler &f, ParseNode *star, MDefinition **def, Type *typ
 }
 
 static bool
-CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, Use use, MDefinition **def, Type *type)
+CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type,
+              unsigned *numAddOrSubOut = NULL)
 {
+    JS_CHECK_RECURSION(f.cx(), return false);
+
     JS_ASSERT(expr->isKind(PNK_ADD) || expr->isKind(PNK_SUB));
     ParseNode *lhs = BinaryLeft(expr);
     ParseNode *rhs = BinaryRight(expr);
 
-    Use argUse;
-    unsigned addOrSubCount = 1;
-    if (use.which() == Use::AddOrSub) {
-        if (++use.addOrSubCount() > (1<<20))
-            return f.fail(expr, "too many + or - without intervening coercion");
-        argUse = use;
-    } else {
-        argUse = Use(&addOrSubCount);
-    }
-
     MDefinition *lhsDef, *rhsDef;
     Type lhsType, rhsType;
-    if (!CheckExpr(f, lhs, argUse, &lhsDef, &lhsType))
-        return false;
-    if (!CheckExpr(f, rhs, argUse, &rhsDef, &rhsType))
-        return false;
+    unsigned lhsNumAddOrSub, rhsNumAddOrSub;
 
-    if (lhsType.isInt() && rhsType.isInt()) {
-        *def = expr->isKind(PNK_ADD)
-               ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Int32)
-               : f.binary<MSub>(lhsDef, rhsDef, MIRType_Int32);
-        if (use.which() == Use::AddOrSub)
-            *type = Type::Int;
-        else
-            *type = Type::Intish;
-        return true;
+    if (lhs->isKind(PNK_ADD) || lhs->isKind(PNK_SUB)) {
+        if (!CheckAddOrSub(f, lhs, &lhsDef, &lhsType, &lhsNumAddOrSub))
+            return false;
+        if (lhsType == Type::Intish)
+            lhsType = Type::Int;
+    } else {
+        if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
+            return false;
+        lhsNumAddOrSub = 0;
     }
 
-    if (!lhsType.isDouble())
-        return f.failf(lhs, "%s is not a subtype of double", lhsType.toChars());
-    if (!rhsType.isDouble())
-        return f.failf(rhs, "%s is not a subtype of double", rhsType.toChars());
+    if (rhs->isKind(PNK_ADD) || rhs->isKind(PNK_SUB)) {
+        if (!CheckAddOrSub(f, rhs, &rhsDef, &rhsType, &rhsNumAddOrSub))
+            return false;
+        if (rhsType == Type::Intish)
+            rhsType = Type::Int;
+    } else {
+        if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
+            return false;
+        rhsNumAddOrSub = 0;
+    }
 
-    *def = expr->isKind(PNK_ADD)
-           ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double)
-           : f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
-    *type = Type::Double;
+    unsigned numAddOrSub = lhsNumAddOrSub + rhsNumAddOrSub + 1;
+    if (numAddOrSub > (1<<20))
+        return f.fail(expr, "too many + or - without intervening coercion");
+
+    if (expr->isKind(PNK_ADD)) {
+        if (lhsType.isInt() && rhsType.isInt()) {
+            *def = f.binary<MAdd>(lhsDef, rhsDef, MIRType_Int32);
+            *type = Type::Intish;
+        } else if (lhsType.isDouble() && rhsType.isDouble()) {
+            *def = f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double);
+            *type = Type::Double;
+        } else {
+            return f.failf(expr, "operands to + must both be int or double, got %s and %s",
+                           lhsType.toChars(), rhsType.toChars());
+        }
+    } else {
+        if (lhsType.isInt() && rhsType.isInt()) {
+            *def = f.binary<MSub>(lhsDef, rhsDef, MIRType_Int32);
+            *type = Type::Intish;
+        } else if (lhsType.isDoublish() && rhsType.isDoublish()) {
+            *def = f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
+            *type = Type::Double;
+        } else {
+            return f.failf(expr, "operands to - must both be int or doublish, got %s and %s",
+                           lhsType.toChars(), rhsType.toChars());
+        }
+    }
+
+    if (numAddOrSubOut)
+        *numAddOrSubOut = numAddOrSub;
     return true;
 }
 
@@ -4016,9 +4009,9 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
 
     MDefinition *lhsDef, *rhsDef;
     Type lhsType, rhsType;
-    if (!CheckExpr(f, lhs, Use::Normal, &lhsDef, &lhsType))
+    if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
         return false;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     if (lhsType.isDoublish() && rhsType.isDoublish()) {
@@ -4061,9 +4054,9 @@ CheckComparison(FunctionCompiler &f, ParseNode *comp, MDefinition **def, Type *t
 
     MDefinition *lhsDef, *rhsDef;
     Type lhsType, rhsType;
-    if (!CheckExpr(f, lhs, Use::Normal, &lhsDef, &lhsType))
+    if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
         return false;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     if ((lhsType.isSigned() && rhsType.isSigned()) || (lhsType.isUnsigned() && rhsType.isUnsigned())) {
@@ -4105,7 +4098,7 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 
     if (!onlyOnRight && IsBits32(lhs, identityElement)) {
         Type rhsType;
-        if (!CheckExpr(f, rhs, Use::Normal, def, &rhsType))
+        if (!CheckExpr(f, rhs, def, &rhsType))
             return false;
         if (!rhsType.isIntish())
             return f.failf(bitwise, "%s is not a subtype of intish", rhsType.toChars());
@@ -4117,7 +4110,7 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
             return CheckCall(f, lhs, RetType::Signed, def, type);
 
         Type lhsType;
-        if (!CheckExpr(f, lhs, Use::Normal, def, &lhsType))
+        if (!CheckExpr(f, lhs, def, &lhsType))
             return false;
         if (!lhsType.isIntish())
             return f.failf(bitwise, "%s is not a subtype of intish", lhsType.toChars());
@@ -4126,12 +4119,12 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 
     MDefinition *lhsDef;
     Type lhsType;
-    if (!CheckExpr(f, lhs, Use::Normal, &lhsDef, &lhsType))
+    if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
         return false;
 
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, Use::Normal, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
     if (!lhsType.isIntish())
@@ -4153,7 +4146,7 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 }
 
 static bool
-CheckExpr(FunctionCompiler &f, ParseNode *expr, Use use, MDefinition **def, Type *type)
+CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION(f.cx(), return false);
 
@@ -4172,13 +4165,13 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, Use use, MDefinition **def, Type
       case PNK_NOT:         return CheckNot(f, expr, def, type);
       case PNK_NEG:         return CheckNeg(f, expr, def, type);
       case PNK_BITNOT:      return CheckBitNot(f, expr, def, type);
-      case PNK_COMMA:       return CheckComma(f, expr, use, def, type);
+      case PNK_COMMA:       return CheckComma(f, expr, def, type);
       case PNK_CONDITIONAL: return CheckConditional(f, expr, def, type);
 
       case PNK_STAR:        return CheckMultiply(f, expr, def, type);
 
       case PNK_ADD:
-      case PNK_SUB:         return CheckAddOrSub(f, expr, use, def, type);
+      case PNK_SUB:         return CheckAddOrSub(f, expr, def, type);
 
       case PNK_DIV:
       case PNK_MOD:         return CheckDivOrMod(f, expr, def, type);
@@ -4221,7 +4214,7 @@ CheckExprStatement(FunctionCompiler &f, ParseNode *exprStmt)
     if (expr->isKind(PNK_CALL))
         return CheckCall(f, expr, RetType::Void, &_1, &_2);
 
-    return CheckExpr(f, UnaryKid(exprStmt), Use::Normal, &_1, &_2);
+    return CheckExpr(f, UnaryKid(exprStmt), &_1, &_2);
 }
 
 static bool
@@ -4237,7 +4230,7 @@ CheckWhile(FunctionCompiler &f, ParseNode *whileStmt, const LabelVector *maybeLa
 
     MDefinition *condDef;
     Type condType;
-    if (!CheckExpr(f, cond, Use::Normal, &condDef, &condType))
+    if (!CheckExpr(f, cond, &condDef, &condType))
         return false;
 
     if (!condType.isInt())
@@ -4273,7 +4266,7 @@ CheckFor(FunctionCompiler &f, ParseNode *forStmt, const LabelVector *maybeLabels
     if (maybeInit) {
         MDefinition *_1;
         Type _2;
-        if (!CheckExpr(f, maybeInit, Use::Normal, &_1, &_2))
+        if (!CheckExpr(f, maybeInit, &_1, &_2))
             return false;
     }
 
@@ -4284,7 +4277,7 @@ CheckFor(FunctionCompiler &f, ParseNode *forStmt, const LabelVector *maybeLabels
     MDefinition *condDef;
     if (maybeCond) {
         Type condType;
-        if (!CheckExpr(f, maybeCond, Use::Normal, &condDef, &condType))
+        if (!CheckExpr(f, maybeCond, &condDef, &condType))
             return false;
 
         if (!condType.isInt())
@@ -4306,7 +4299,7 @@ CheckFor(FunctionCompiler &f, ParseNode *forStmt, const LabelVector *maybeLabels
     if (maybeInc) {
         MDefinition *_1;
         Type _2;
-        if (!CheckExpr(f, maybeInc, Use::Normal, &_1, &_2))
+        if (!CheckExpr(f, maybeInc, &_1, &_2))
             return false;
     }
 
@@ -4332,7 +4325,7 @@ CheckDoWhile(FunctionCompiler &f, ParseNode *whileStmt, const LabelVector *maybe
 
     MDefinition *condDef;
     Type condType;
-    if (!CheckExpr(f, cond, Use::Normal, &condDef, &condType))
+    if (!CheckExpr(f, cond, &condDef, &condType))
         return false;
 
     if (!condType.isInt())
@@ -4384,7 +4377,7 @@ CheckIf(FunctionCompiler &f, ParseNode *ifStmt)
 
     MDefinition *condDef;
     Type condType;
-    if (!CheckExpr(f, cond, Use::Normal, &condDef, &condType))
+    if (!CheckExpr(f, cond, &condDef, &condType))
         return false;
 
     if (!condType.isInt())
@@ -4509,7 +4502,7 @@ CheckSwitch(FunctionCompiler &f, ParseNode *switchStmt)
 
     MDefinition *exprDef;
     Type exprType;
-    if (!CheckExpr(f, switchExpr, Use::Normal, &exprDef, &exprType))
+    if (!CheckExpr(f, switchExpr, &exprDef, &exprType))
         return false;
 
     if (!exprType.isSigned())
@@ -4592,7 +4585,7 @@ CheckReturn(FunctionCompiler &f, ParseNode *returnStmt)
 
     MDefinition *def;
     Type type;
-    if (!CheckExpr(f, expr, Use::Normal, &def, &type))
+    if (!CheckExpr(f, expr, &def, &type))
         return false;
 
     RetType retType;
