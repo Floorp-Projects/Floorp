@@ -2795,7 +2795,7 @@ struct JSClass {
     const char          *name;
     uint32_t            flags;
 
-    /* Mandatory non-null function pointer members. */
+    /* Mandatory function pointer members. */
     JSPropertyOp        addProperty;
     JSDeletePropertyOp  delProperty;
     JSPropertyOp        getProperty;
@@ -2803,9 +2803,9 @@ struct JSClass {
     JSEnumerateOp       enumerate;
     JSResolveOp         resolve;
     JSConvertOp         convert;
-    JSFinalizeOp        finalize;
 
-    /* Optionally non-null members start here. */
+    /* Optional members (may be null). */
+    JSFinalizeOp        finalize;
     JSCheckAccessOp     checkAccess;
     JSNative            call;
     JSHasInstanceOp     hasInstance;
