@@ -92,5 +92,7 @@ how to communicate between your add-on and its content scripts using the
 * [Communicating using <code>postMessage()</code>](dev-guide/guides/content-scripts/using-postmessage.html):
 how to communicate between your add-on and its content scripts using the
 <code>postMessage()</code> API
+* [Cross-domain Content Scripts](dev-guide/guides/content-scripts/cross-domain.html):
+how to enable a content script to interact with content served from other domains.
 * [Example](dev-guide/guides/content-scripts/reddit-example.html):
 a simple example add-on using content scripts

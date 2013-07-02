@@ -33,7 +33,7 @@
   "url": "sdk/url",
   "traceback": "sdk/console/traceback",
   "xhr": "sdk/net/xhr",
-  "match-pattern": "sdk/page-mod/match-pattern",
+  "match-pattern": "sdk/util/match-pattern",
   "tab-browser": "sdk/deprecated/tab-browser",
   "file": "sdk/io/file",
   "runtime": "sdk/system/runtime",

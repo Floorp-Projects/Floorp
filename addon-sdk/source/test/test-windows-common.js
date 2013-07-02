@@ -7,7 +7,7 @@ const { Loader } = require('sdk/test/loader');
 const { browserWindows } = require('sdk/windows');
 
 // TEST: browserWindows Iterator
-exports.testBrowserWindowsIterator = function(test) {
+exports.testBrowserWindowsIterator = function(assert) {
   let activeWindowCount = 0;
   let windows = [];
   let i = 0;
@@ -15,45 +15,44 @@ exports.testBrowserWindowsIterator = function(test) {
     if (window === browserWindows.activeWindow)
       activeWindowCount++;
 
-    test.assertEqual(windows.indexOf(window), -1, 'window not already in iterator');
-    test.assertEqual(browserWindows[i++], window, 'browserWindows[x] works');
+    assert.equal(windows.indexOf(window), -1, 'window not already in iterator');
+    assert.equal(browserWindows[i++], window, 'browserWindows[x] works');
     windows.push(window);
   }
-  test.assertEqual(activeWindowCount, 1, 'activeWindow was found in the iterator');
+  assert.equal(activeWindowCount, 1, 'activeWindow was found in the iterator');
 
   i = 0;
   for (let j in browserWindows) {
-    test.assertEqual(j, i++, 'for (x in browserWindows) works');
+    assert.equal(j, i++, 'for (x in browserWindows) works');
   }
 };
 
-exports.testWindowTabsObject_alt = function(test) {
-  test.waitUntilDone();
-
+exports.testWindowTabsObject_alt = function(assert, done) {
   let window = browserWindows.activeWindow;
   window.tabs.open({
-    url: "data:text/html;charset=utf-8,<title>tab 2</title>",
+    url: 'data:text/html;charset=utf-8,<title>tab 2</title>',
     inBackground: true,
     onReady: function onReady(tab) {
-      test.assertEqual(tab.title, "tab 2", "Correct new tab title");
-      test.assertNotEqual(window.tabs.activeTab, tab, "Correct active tab");
+      assert.equal(tab.title, 'tab 2', 'Correct new tab title');
+      assert.notEqual(window.tabs.activeTab, tab, 'Correct active tab');
 
       // end test
-      tab.close(test.done.bind(test));
+      tab.close(done);
     }
   });
 };
 
 // TEST: browserWindows.activeWindow
-exports.testWindowActivateMethod_simple = function(test) {
+exports.testWindowActivateMethod_simple = function(assert) {
   let window = browserWindows.activeWindow;
   let tab = window.tabs.activeTab;
 
   window.activate();
 
-  test.assertEqual(browserWindows.activeWindow, window,
-                   "Active window is active after window.activate() call");
-  test.assertEqual(window.tabs.activeTab, tab,
-                   "Active tab is active after window.activate() call");
-  
+  assert.equal(browserWindows.activeWindow, window,
+               'Active window is active after window.activate() call');
+  assert.equal(window.tabs.activeTab, tab,
+               'Active tab is active after window.activate() call');
 };
+
+require('sdk/test').run(exports);
