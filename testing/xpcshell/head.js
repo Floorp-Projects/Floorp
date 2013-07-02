@@ -477,9 +477,12 @@ function do_execute_soon(callback, aName) {
 function do_throw(error, stack) {
   let filename = "";
   if (!stack) {
-    if (error instanceof Error) {
-      // |error| is an exception object
+    // Use duck typing rather than instanceof in case error came
+    // from another context
+    if ("filename" in error)
       filename = error.fileName;
+    if ("stack" in error) {
+      // |error| is likely an exception object
       stack = error.stack;
     } else {
       stack = Components.stack.caller;
