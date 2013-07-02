@@ -428,7 +428,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
 
 static void
 BuildBackgroundPatternFor(ContainerLayer* aContainer,
-                          ContainerLayer* aShadowRoot,
+                          Layer* aShadowRoot,
                           const ViewConfig& aConfig,
                           const gfxRGBA& aColor,
                           LayerManager* aManager,
@@ -733,7 +733,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     mContainer->SetInheritedScale(1.0f, 1.0f);
   }
 
-  ContainerLayer* shadowRoot = GetRootLayer();
+  Layer* shadowRoot = GetRootLayer();
   if (!shadowRoot) {
     mContainer = nullptr;
     return nullptr;
@@ -930,7 +930,7 @@ RenderFrameParent::GetLayerTreeId() const
   return mLayersId;
 }
 
-ContainerLayer*
+Layer*
 RenderFrameParent::GetRootLayer() const
 {
   LayerTransactionParent* shadowLayers = GetShadowLayers();
@@ -951,7 +951,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsRect bounds = aFrame->EnsureInnerView()->GetBounds() + offset;
   clipState.ClipContentDescendants(bounds);
 
-  ContainerLayer* container = GetRootLayer();
+  Layer* container = GetRootLayer();
   if (aBuilder->IsForEventDelivery() && container) {
     ViewTransform offset =
       ViewTransform(GetContentRectLayerOffset(aFrame, aBuilder));
