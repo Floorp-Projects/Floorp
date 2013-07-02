@@ -117,22 +117,22 @@ is(s.getPropertyPriority("z-index"), "",
    "z-index priority still stored");
 
 s.setProperty("border-radius", "2em", "");
-is(s.getPropertyValue("border-radius"), "2em 2em 2em 2em",
+is(s.getPropertyValue("border-radius"), "2em",
    "border-radius serialization 1")
 
 s.setProperty("border-top-left-radius", "3em 4em", "");
 is(s.getPropertyValue("border-radius"),
-   "3em 2em 2em 2em / 4em 2em 2em 2em",
+   "3em 2em 2em / 4em 2em 2em",
    "border-radius serialization 2");
 
 s.setProperty("border-radius", "2em / 3em", "");
 is(s.getPropertyValue("border-radius"),
-   "2em 2em 2em 2em / 3em 3em 3em 3em",
+   "2em / 3em",
    "border-radius serialization 3")
 
 s.setProperty("border-top-left-radius", "4em", "");
 is(s.getPropertyValue("border-radius"),
-   "4em 2em 2em 2em / 4em 3em 3em 3em",
+   "4em 2em 2em / 4em 3em 3em",
    "border-radius serialization 3");
 
 </script>
