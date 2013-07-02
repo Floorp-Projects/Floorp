@@ -12,9 +12,9 @@
           src="../text.js"></script>
   <script type="application/javascript">
     if (navigator.platform.startsWith("Mac")) {
-      SimpleTest.expectAssertions(0, 16);
+      SimpleTest.expectAssertions(0, 12);
     } else {
-      SimpleTest.expectAssertions(16);
+      SimpleTest.expectAssertions(12);
     }
 
     function doTest()
@@ -130,26 +130,10 @@
       testTextAtOffset(15, BOUNDARY_LINE_START, "hello my friend", 0, 15, IDs);
 
       // BOUNDARY_LINE_END
-      testTextAtOffset(0, BOUNDARY_LINE_END, "hello my friend", 0, 15,
-		       "input", kOk, kOk, kOk,
-		       "div", kOk, kOk, kOk,
-		       "editable", kOk, kOk, kOk,
-		       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(1, BOUNDARY_LINE_END, "hello my friend", 0, 15,
-		       "input", kOk, kOk, kOk,
-		       "div", kOk, kOk, kOk,
-		       "editable", kOk, kOk, kOk,
-		       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(14, BOUNDARY_LINE_END, "hello my friend", 0, 15,
-		       "input", kOk, kOk, kOk,
-		       "div", kOk, kOk, kOk,
-		       "editable", kOk, kOk, kOk,
-		       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(15, BOUNDARY_LINE_END, "hello my friend", 0, 15,
-		       "input", kTodo, kOk, kTodo,
-		       "div", kTodo, kOk, kTodo,
-		       "editable", kTodo, kOk, kTodo,
-		       "textarea", kTodo, kOk, kTodo);
+      testTextAtOffset(0, BOUNDARY_LINE_END, "hello my friend", 0, 15, IDs);
+      testTextAtOffset(1, BOUNDARY_LINE_END, "hello my friend", 0, 15, IDs);
+      testTextAtOffset(14, BOUNDARY_LINE_END, "hello my friend", 0, 15, IDs);
+      testTextAtOffset(15, BOUNDARY_LINE_END, "hello my friend", 0, 15, IDs);
 
       SimpleTest.finish();
     }
@@ -184,6 +168,7 @@
   <div id="div">hello my friend</div>
   <div id="editable" contenteditable="true">hello my friend</div>
   <textarea id="textarea">hello my friend</textarea>
+  <div>XXX: a hack to make text areas/inputs working</div>
 
 </body>
 </html>

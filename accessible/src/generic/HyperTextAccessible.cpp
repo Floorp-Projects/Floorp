@@ -782,8 +782,9 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
 }
 
 int32_t
-HyperTextAccessible::FindWordBoundary(int32_t aOffset, nsDirection aDirection,
-                                      EWordMovementType aWordMovementType)
+HyperTextAccessible::FindBoundary(int32_t aOffset, nsDirection aDirection,
+                                  nsSelectionAmount aAmount,
+                                  EWordMovementType aWordMovementType)
 {
   // Convert hypertext offset to frame-relative offset.
   int32_t offsetInFrame = aOffset, notUsedOffset = aOffset;
@@ -807,8 +808,8 @@ HyperTextAccessible::FindWordBoundary(int32_t aOffset, nsDirection aDirection,
 
   // Return hypertext offset of the boundary of the found word.
   return GetRelativeOffset(mDoc->PresShell(), frameAtOffset, offsetInFrame,
-                           accAtOffset, eSelectWord, aDirection,
-                           (aWordMovementType == eStartWord),
+                           accAtOffset, aAmount, aDirection,
+                           (aWordMovementType == eStartWord || aAmount == eSelectBeginLine),
                            aWordMovementType);
 }
 
@@ -1080,8 +1081,29 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eEndWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
-    case BOUNDARY_LINE_START:
-    case BOUNDARY_LINE_END:
+    case BOUNDARY_LINE_START: {
+      // Home key, arrow down and if not on last line then home key.
+      *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
+      *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectLine);
+      int32_t tmpOffset = FindLineBoundary(*aEndOffset, eDirPrevious, eSelectBeginLine);
+      if (tmpOffset != *aStartOffset)
+        *aEndOffset = tmpOffset;
+
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
+    case BOUNDARY_LINE_END: {
+      // In contrast to word end boundary we follow the spec here. End key,
+      // then up arrow and if not on first line then end key.
+      *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);
+      int32_t tmpOffset = FindLineBoundary(offset, eDirPrevious, eSelectLine);
+      *aStartOffset = FindLineBoundary(tmpOffset, eDirNext, eSelectEndLine);
+      if (*aStartOffset == *aEndOffset)
+        *aStartOffset = 0;
+
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
     case BOUNDARY_ATTRIBUTE_RANGE:
       return GetTextHelper(eGetAt, aBoundaryType, aOffset,
                            aStartOffset, aEndOffset, aText);
