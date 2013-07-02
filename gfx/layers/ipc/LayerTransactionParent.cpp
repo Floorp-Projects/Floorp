@@ -343,7 +343,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     case Edit::TOpSetRoot: {
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
-      mRoot = AsLayerComposite(edit.get_OpSetRoot())->AsContainer();
+      mRoot = AsLayerComposite(edit.get_OpSetRoot())->AsLayer();
       break;
     }
     case Edit::TOpInsertAfter: {
