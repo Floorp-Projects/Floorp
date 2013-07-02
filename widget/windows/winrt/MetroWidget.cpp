@@ -148,6 +148,7 @@ MetroWidget::MetroWidget() :
   if (!gInstanceCount) {
     UserActivity();
     nsTextStore::Initialize();
+    KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
   } // !gInstanceCount
   gInstanceCount++;
 }
@@ -450,104 +451,10 @@ MetroWidget::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                       const nsAString& aCharacters,
                                       const nsAString& aUnmodifiedCharacters)
 {
-  Log("ENTERED SynthesizeNativeKeyEvent");
-
-  // According to MSDN, valid virtual-key codes are in the range 1 to 254.
-  // http://msdn.microsoft.com/en-us/library/windows/desktop/ms646271%28v=vs.85%29.aspx
-  NS_ENSURE_ARG_RANGE(aNativeKeyCode, 1, 254);
-
-  // Store a list of all loaded keyboard layouts
-  int32_t const numKeyboardLayouts = GetKeyboardLayoutList(0, NULL);
-  if (numKeyboardLayouts == 0) {
-    return NS_ERROR_FAILURE;
-  }
-  HKL* keyboardLayoutList = new HKL[numKeyboardLayouts];
-  GetKeyboardLayoutList(numKeyboardLayouts, keyboardLayoutList);
-
-  // Store the current keyboard layout
-  HKL const oldKeyboardLayout = ::GetKeyboardLayout(0);
-  Log("  Current keyboard layout: %08x", oldKeyboardLayout);
-  Log("  Loading keyboard layout: %08x", aNativeKeyboardLayout);
-
-  // Load the requested keyboard layout
-  nsPrintfCString layoutName("%08x", aNativeKeyboardLayout);
-  HKL const newKeyboardLayout = ::LoadKeyboardLayoutA(layoutName.get(),
-                                                      KLF_REPLACELANG);
-  Log("  ::LoadKeyboardLayoutA returned %08x", newKeyboardLayout);
-
-  // We have a list of all keyboard layouts that were loaded before we called
-  // ::LoadKeyboardLayout.  Now, we loop through that list to determine which
-  // of these cases we've hit:
-  //     A) The layout we loaded was already loaded
-  //     B) The layout we loaded was not already loaded, and it replaced
-  //        another layout in the list
-  //     C) The layout we loaded was not already loaded, and it has not
-  //        replaced another layout
-  bool haveLoaded = true;
-  bool haveActivated = false;
-  bool haveReplaced = false;
-  if (GetKeyboardLayoutList(0, NULL) == numKeyboardLayouts) {
-    haveReplaced = true;
-    for (int32_t i = 0; i < numKeyboardLayouts; i++) {
-      if (keyboardLayoutList[i] == newKeyboardLayout) {
-        Log("  %08x found in list of loaded keyboard layouts", newKeyboardLayout);
-        haveLoaded = false;
-        haveReplaced = false;
-        break;
-      }
-    }
-  }
-
-  // If the requested keyboard layout was already active when this function
-  // was called, then we don't need to activate our keyboard layout
-  if (oldKeyboardLayout != newKeyboardLayout) {
-    Log("  %08x != %08x", oldKeyboardLayout, newKeyboardLayout);
-    haveActivated = true;
-    Log("  Activating keyboard layout: %08x", newKeyboardLayout);
-    HKL ret = ::ActivateKeyboardLayout(newKeyboardLayout, KLF_SETFORPROCESS);
-    Log("  ::ActivateKeyboardLayout returned %08x", ret);
-  }
-
-  INPUT inputs[2];
-  memset(&inputs, 0, 2*sizeof(INPUT));
-  inputs[0].type = inputs[1].type = INPUT_KEYBOARD;
-  inputs[0].ki.wVk = inputs[1].ki.wVk = aNativeKeyCode;
-  inputs[1].ki.dwFlags |= KEYEVENTF_KEYUP;
-  SendInputs(aModifierFlags, inputs, 2);
-
-  // Now that all the events have been processed, we can set the keyboard
-  // layout list back to its original state.  If we didn't activate a
-  // keyboard (meaning that the requested keyboard was already the active
-  // keyboard), we don't have to do anything.
-  if (haveActivated) {
-    // If we replaced a keyboard in the layout list, let's be safe and reload
-    // all the keyboards that were in the original list.
-    if (haveReplaced) {
-      Log("  Loading all previous layouts");
-      for (int32_t i = 0; i < numKeyboardLayouts; i++) {
-        nsPrintfCString layoutName("%08x", keyboardLayoutList[i]);
-        HKL ret = ::LoadKeyboardLayoutA(layoutName.get(), KLF_REPLACELANG);
-        Log("    ::LoadKeyboardLayoutA returned %08x", ret);
-      }
-    }
-    // Any keyboards that were in the keyboard layout list when we entered
-    // this function should be loaded, so let's go ahead and activate the
-    // keyboard layout that was active when we entered.
-    Log("  Activating previous layout %08x", oldKeyboardLayout);
-    HKL ret = ::ActivateKeyboardLayout(oldKeyboardLayout, KLF_SETFORPROCESS);
-    Log("  ::ActivateKeyboardLayout returned %08x", ret);
-    // If we loaded a keyboard that was not already loaded, and that didn't
-    // replace another keyboard in the keyboard layout list, let's unload it.
-    if (haveLoaded && !haveReplaced) {
-      Log("  Unloading keyboard layout %08x", newKeyboardLayout);
-      ::UnloadKeyboardLayout(newKeyboardLayout);
-    }
-  }
-
-  delete[] keyboardLayoutList;
-
-  Log("EXITING SynthesizeNativeKeyEvent");
-  return NS_OK;
+  KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
+  return keyboardLayout->SynthesizeNativeKeyEvent(
+           this, aNativeKeyboardLayout, aNativeKeyCode, aModifierFlags,
+           aCharacters, aUnmodifiedCharacters);
 }
 
 nsresult
@@ -678,6 +585,67 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
           MetroApp::PostSleepWakeNotification(false);
           break;
       }
+      break;
+    }
+
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+    {
+      MSG msg = WinUtils::InitMSG(aMsg, aWParam, aLParam, aWnd);
+      // If this method doesn't call NativeKey::HandleKeyDownMessage(), this
+      // method must clean up the redirected message information itself.  For
+      // more information, see above comment of
+      // RedirectedKeyDownMessageManager::AutoFlusher class definition in
+      // KeyboardLayout.h.
+      RedirectedKeyDownMessageManager::AutoFlusher
+        redirectedMsgFlusher(this, msg);
+
+      if (nsTextStore::IsComposingOn(this)) {
+        break;
+      }
+
+      ModifierKeyState modKeyState;
+      NativeKey nativeKey(this, msg, modKeyState);
+      processDefault = !nativeKey.HandleKeyDownMessage();
+      // HandleKeyDownMessage cleaned up the redirected message information
+      // itself, so, we should do nothing.
+      redirectedMsgFlusher.Cancel();
+      break;
+    }
+
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+    {
+      if (nsTextStore::IsComposingOn(this)) {
+        break;
+      }
+
+      MSG msg = WinUtils::InitMSG(aMsg, aWParam, aLParam, aWnd);
+      ModifierKeyState modKeyState;
+      NativeKey nativeKey(this, msg, modKeyState);
+      processDefault = !nativeKey.HandleKeyUpMessage();
+      break;
+    }
+
+    case WM_CHAR:
+    case WM_SYSCHAR:
+    {
+      if (nsTextStore::IsComposingOn(this)) {
+        nsTextStore::CommitComposition(false);
+      }
+
+      MSG msg = WinUtils::InitMSG(aMsg, aWParam, aLParam, aWnd);
+      ModifierKeyState modKeyState;
+      NativeKey nativeKey(this, msg, modKeyState);
+      processDefault = !nativeKey.HandleCharMessage(msg);
+      break;
+    }
+
+    case WM_INPUTLANGCHANGE:
+    {
+      KeyboardLayout::GetInstance()->
+        OnLayoutChange(reinterpret_cast<HKL>(aLParam));
+      processResult = 1;
       break;
     }
 
@@ -974,10 +942,10 @@ MetroWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 bool
 MetroWidget::DispatchWindowEvent(nsGUIEvent* aEvent)
 {
-  nsEventStatus aStatus;
-  if (!aEvent || NS_FAILED(DispatchEvent(aEvent, aStatus)))
-    return false;
-  return true;
+  MOZ_ASSERT(aEvent);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  DispatchEvent(aEvent, status);
+  return (status == nsEventStatus_eConsumeNoDefault);
 }
 
 NS_IMETHODIMP
