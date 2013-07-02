@@ -1185,7 +1185,7 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
 void
 WebGLContext::ClearScreen()
 {
-    bool colorAttachmentsMask[WebGLContext::kMaxColorAttachments] = {false};
+    bool colorAttachmentsMask[WebGLContext::sMaxColorAttachments] = {false};
 
     MakeContextCurrent();
     ScopedBindFramebuffer autoFB(gl, 0);
@@ -1210,7 +1210,7 @@ static bool IsSameFloat(float a, float b) {
 #endif
 
 void
-WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[kMaxColorAttachments])
+WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[sMaxColorAttachments])
 {
     MakeContextCurrent();
 
@@ -1219,7 +1219,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
     bool drawBuffersIsEnabled = IsExtensionEnabled(WEBGL_draw_buffers);
 
-    GLenum currentDrawBuffers[WebGLContext::kMaxColorAttachments];
+    GLenum currentDrawBuffers[WebGLContext::sMaxColorAttachments];
 
     // Fun GL fact: No need to worry about the viewport here, glViewport is just
     // setting up a coordinates transformation, it doesn't affect glClear at all.
@@ -1287,9 +1287,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
 
         if (drawBuffersIsEnabled) {
 
-            MOZ_ASSERT(size_t(mGLMaxDrawBuffers) <= WebGLContext::kMaxColorAttachments);
-
-            GLenum drawBuffersCommand[WebGLContext::kMaxColorAttachments] = { LOCAL_GL_NONE };
+            GLenum drawBuffersCommand[WebGLContext::sMaxColorAttachments] = { LOCAL_GL_NONE };
 
             for(int32_t i = 0; i < mGLMaxDrawBuffers; i++) {
                 GLint temp;
