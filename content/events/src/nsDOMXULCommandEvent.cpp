@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMXULCommandEvent.h"
-#include "prtime.h"
 
 nsDOMXULCommandEvent::nsDOMXULCommandEvent(mozilla::dom::EventTarget* aOwner,
                                            nsPresContext* aPresContext,

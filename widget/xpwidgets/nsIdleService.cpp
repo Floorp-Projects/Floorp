@@ -13,7 +13,6 @@
 #include "nsCOMArray.h"
 #include "prinrval.h"
 #include "prlog.h"
-#include "prtime.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"

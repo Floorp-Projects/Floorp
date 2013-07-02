@@ -5,7 +5,6 @@
 
 #include "nsDOMTransitionEvent.h"
 #include "nsGUIEvent.h"
-#include "prtime.h"
 
 nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
                                            nsPresContext *aPresContext,

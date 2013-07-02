@@ -37,7 +37,6 @@
 #include "nsSMILTypes.h"
 #include "SVGAngle.h"
 #include <algorithm>
-#include "prtime.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(SVG)
 

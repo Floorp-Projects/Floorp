@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMKeyboardEvent.h"
-#include "prtime.h"
 
 nsDOMKeyboardEvent::nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
                                        nsPresContext* aPresContext,

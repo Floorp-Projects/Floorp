@@ -6,7 +6,6 @@
 #include "StreamFunctions.h"
 #include "nsZipHeader.h"
 #include "nsMemory.h"
-#include "prtime.h"
 
 #define ZIP_FILE_HEADER_SIGNATURE 0x04034b50
 #define ZIP_FILE_HEADER_SIZE 30
