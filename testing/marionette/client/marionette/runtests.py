@@ -591,10 +591,10 @@ class MarionetteTestRunner(object):
         for results in results_list:
 
             for tup in results.errors:
-                _extract_xml(*tup, result='error')
+                _extract_xml(tup[0], text=tup[1], result='error')
 
             for tup in results.failures:
-                _extract_xml(*tup, result='failure')
+                _extract_xml(tup[0], text=tup[1], result='failure')
 
             if hasattr(results, 'unexpectedSuccesses'):
                 for test in results.unexpectedSuccesses:
@@ -603,11 +603,11 @@ class MarionetteTestRunner(object):
 
             if hasattr(results, 'skipped'):
                 for tup in results.skipped:
-                    _extract_xml(*tup, result='skipped')
+                    _extract_xml(tup[0], text=tup[1], result='skipped')
 
             if hasattr(results, 'expectedFailures'):
                 for tup in results.expectedFailures:
-                    _extract_xml(*tup, result='skipped')
+                    _extract_xml(tup[0], text=tup[1], result='skipped')
 
             for test in results.tests_passed:
                 _extract_xml(test)
