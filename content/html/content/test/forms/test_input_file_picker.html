@@ -23,10 +23,10 @@
   <input id='h' type='file' accept="foo/baz,image/*,bogus/duh">
   <input id='i' type='file' accept="mime/type;parameter,video/*">
   <input id='j' type='file' accept="audio/*, audio/*, audio/*">
-  <input id='k' type="file" accept="image/gif,image/png" />
-  <input id='l' type="file" accept="image/*,image/gif,image/png" />
-  <input id='m' type="file" accept="image/gif,image/gif" />
-  <input id='n' type="file" accept="" />
+  <input id='k' type="file" accept="image/gif,image/png">
+  <input id='l' type="file" accept="image/*,image/gif,image/png">
+  <input id='m' type="file" accept="image/gif,image/gif">
+  <input id='n' type="file" accept="">
   <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
   <input id='hidden' hidden type='file'>
   <input id='untrusted-click' type='file'>
@@ -43,6 +43,8 @@
   <button id='button-click' onclick="document.getElementById('by-button').click();">foo</button>
   <button id='button-down' onclick="document.getElementById('by-button').click();">foo</button>
   <button id='button-up' onclick="document.getElementById('by-button').click();">foo</button>
+  <div id='div-click' onclick="document.getElementById('by-button').click();" tabindex='1'>foo</div>
+  <div id='div-click-on-demand' onclick="var i=document.createElement('input'); i.type='file'; i.click();" tabindex='1'>foo</div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -94,6 +96,8 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["button-click", 0, undefined, 0],
                 ["button-down", 0, undefined, 0],
                 ["button-up", 0, undefined, 0],
+                ["div-click", 0, undefined, 0],
+                ["div-click-on-demand", 0, undefined, 0],
                ];
 
 var currentTest = 0;
@@ -154,7 +158,9 @@ function launchNextTest() {
     synthesizeMouse(document.getElementById(testData[currentTest][0]), 5, 5, {});
   } else if (testData[currentTest][0] == 'button-click' ||
              testData[currentTest][0] == 'button-down' ||
-             testData[currentTest][0] == 'button-up') {
+             testData[currentTest][0] == 'button-up' ||
+             testData[currentTest][0] == 'div-click' ||
+             testData[currentTest][0] == 'div-click-on-demand') {
     synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]), {});
   } else {
     document.getElementById(testData[currentTest][0]).click();
@@ -193,7 +199,8 @@ function runTests() {
          "File picker should show the correct filter index (" + testName + ")");
 
       if (++currentTest == testData.length) {
-        setTimeout(testDisconnectedElement, 0);
+        MockFilePicker.cleanup();
+        SimpleTest.finish();
       } else {
         launchNextTest();
       }
@@ -201,20 +208,6 @@ function runTests() {
   };
 
   launchNextTest();
-}
-
-function testDisconnectedElement() {
-  MockFilePicker.shown = false;
-  MockFilePicker.showCallback = function(filepicker) {
-    ok(MockFilePicker.shown, "FilePicker should be open!");
-    MockFilePicker.shown = false;
-    MockFilePicker.cleanup();
-    SimpleTest.finish();
-  }
-  var f = document.createElement("input");
-  f.setAttribute("type", "file");
-  f.click();
-  ok(!MockFilePicker.shown, "FilePicker should open asynchronously!");
 }
 
 </script>
