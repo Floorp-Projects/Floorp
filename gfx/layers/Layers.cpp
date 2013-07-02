@@ -7,6 +7,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/Telemetry.h"
@@ -406,36 +407,21 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   Mutated();
 }
 
-static uint8_t sPanZoomUserDataKey;
-struct PanZoomUserData : public LayerUserData {
-  PanZoomUserData(AsyncPanZoomController* aController)
-    : mController(aController)
-  { }
-
-  // We don't keep a strong ref here because PanZoomUserData is only
-  // set transiently, and APZC is thread-safe refcounted so
-  // AddRef/Release is expensive.
-  AsyncPanZoomController* mController;
-};
-
 void
-Layer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
+ContainerLayer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
 {
-  if (controller) {
-    SetUserData(&sPanZoomUserDataKey, new PanZoomUserData(controller));
-  } else {
-    RemoveUserData(&sPanZoomUserDataKey);
-  }
+  mAPZC = controller;
 }
 
 AsyncPanZoomController*
-Layer::GetAsyncPanZoomController()
+ContainerLayer::GetAsyncPanZoomController()
 {
-  LayerUserData* data = GetUserData(&sPanZoomUserDataKey);
-  if (!data) {
-    return nullptr;
+#ifdef DEBUG
+  if (mAPZC) {
+    MOZ_ASSERT(GetFrameMetrics().IsScrollable());
   }
-  return static_cast<PanZoomUserData*>(data)->mController;
+#endif
+  return mAPZC;
 }
 
 void
@@ -701,6 +687,23 @@ Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurf
     mMaskLayer->mEffectiveTransform.PreMultiply(mMaskLayer->GetTransform());
   }
 }
+
+ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
+  : Layer(aManager, aImplData),
+    mFirstChild(nullptr),
+    mLastChild(nullptr),
+    mPreXScale(1.0f),
+    mPreYScale(1.0f),
+    mInheritedXScale(1.0f),
+    mInheritedYScale(1.0f),
+    mUseIntermediateSurface(false),
+    mSupportsComponentAlphaChildren(false),
+    mMayHaveReadbackChild(false)
+{
+  mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
+}
+
+ContainerLayer::~ContainerLayer() {}
 
 void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
