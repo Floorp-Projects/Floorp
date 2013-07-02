@@ -87,7 +87,7 @@ function testWithFrame()
             is(innerNodes[0].querySelector(".name").getAttribute("value"), "<exception>",
               "Should have the right property name for the exception.");
 
-            is(innerNodes[0].querySelector(".value").getAttribute("value"), "[object Error]",
+            is(innerNodes[0].querySelector(".value").getAttribute("value"), "Error",
               "Should have the right property value for the exception.");
 
             // Disable pause on exceptions.

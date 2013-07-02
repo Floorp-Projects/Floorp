@@ -571,7 +571,7 @@ function matchVariablesViewProperty(aProp, aRule, aOptions)
   }
 
   if ("isGenerator" in aRule) {
-    let isGenerator = aProp.displayValue == "[object Generator]";
+    let isGenerator = aProp.displayValue == "Generator";
     if (aRule.isGenerator != isGenerator) {
       info("rule " + aRule.name + " generator test failed");
       return resolve(false);
@@ -612,7 +612,7 @@ function matchVariablesViewProperty(aProp, aRule, aOptions)
  */
 function isVariableViewPropertyIterator(aProp, aWebConsole)
 {
-  if (aProp.displayValue == "[object Iterator]") {
+  if (aProp.displayValue == "Iterator") {
     return Promise.resolve(true);
   }
 

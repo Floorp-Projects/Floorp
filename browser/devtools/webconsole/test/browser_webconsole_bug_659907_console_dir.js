@@ -22,8 +22,8 @@ function consoleOpened(hud) {
 
 function testConsoleDir(hud, ev, view) {
   findVariableViewProperties(view, [
-    { name: "__proto__.__proto__.querySelectorAll", value: "[object Function]" },
-    { name: "location", value: "[object Location]" },
-    { name: "__proto__.write", value: "[object Function]" },
+    { name: "__proto__.__proto__.querySelectorAll", value: "Function" },
+    { name: "location", value: "Location" },
+    { name: "__proto__.write", value: "Function" },
   ], { webconsole: hud }).then(finishTest);
 }
