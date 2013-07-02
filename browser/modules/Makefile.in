@@ -17,6 +17,7 @@ EXTRA_JS_MODULES = \
 	NetworkPrioritizer.jsm \
 	offlineAppCache.jsm \
 	SignInToWebsite.jsm \
+	SitePermissions.jsm \
 	webappsUI.jsm \
 	webrtcUI.jsm \
 	Social.jsm \
