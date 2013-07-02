@@ -37,7 +37,6 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/dom/FileListBinding.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -776,4 +775,27 @@ nsDOMFileInternalUrlHolder::~nsDOMFileInternalUrlHolder() {
     CopyUTF16toUTF8(mUrl, narrowUrl);
     nsBlobProtocolHandler::RemoveDataEntry(narrowUrl);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////
+// nsDOMTemporaryFileBlob implementation
+already_AddRefed<nsIDOMBlob>
+nsDOMTemporaryFileBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
+                                    const nsAString& aContentType)
+{
+  if (aStart + aLength > mLength)
+    return nullptr;
+
+  nsCOMPtr<nsIDOMBlob> t =
+    new nsDOMTemporaryFileBlob(this, aStart + mStartPos, aLength, aContentType);
+  return t.forget();
+}
+
+NS_IMETHODIMP
+nsDOMTemporaryFileBlob::GetInternalStream(nsIInputStream **aStream)
+{
+  nsCOMPtr<nsTemporaryFileInputStream> stream =
+    new nsTemporaryFileInputStream(mFileDescOwner, mStartPos, mStartPos + mLength);
+  stream.forget(aStream);
+  return NS_OK;
 }
