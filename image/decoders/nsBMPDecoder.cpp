@@ -247,12 +247,6 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
             return;
         }
 
-        // Check that our abs height is still valid.
-        if (GetHeight() < 0) {
-            PostDataError();
-            return;
-        }
-
         uint32_t real_height = GetHeight();
 
         // Post our size to the superclass
