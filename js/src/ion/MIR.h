@@ -5012,23 +5012,23 @@ class MLoadTypedArrayElementHole
 // Load a value fallibly or infallibly from a statically known typed array.
 class MLoadTypedArrayElementStatic : public MUnaryInstruction
 {
-    MLoadTypedArrayElementStatic(JSObject *typedArray, MDefinition *ptr)
+    MLoadTypedArrayElementStatic(TypedArrayObject *typedArray, MDefinition *ptr)
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)
     {
-        int type = TypedArrayObject::type(typedArray_);
+        int type = typedArray_->type();
         if (type == TypedArrayObject::TYPE_FLOAT32 || type == TypedArrayObject::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
     }
 
-    CompilerRootObject typedArray_;
+    CompilerRoot<TypedArrayObject*> typedArray_;
     bool fallible_;
 
   public:
     INSTRUCTION_HEADER(LoadTypedArrayElementStatic);
 
-    static MLoadTypedArrayElementStatic *New(JSObject *typedArray, MDefinition *ptr) {
+    static MLoadTypedArrayElementStatic *New(TypedArrayObject *typedArray, MDefinition *ptr) {
         return new MLoadTypedArrayElementStatic(typedArray, ptr);
     }
 
@@ -5182,16 +5182,18 @@ class MStoreTypedArrayElementStatic :
     public MBinaryInstruction
   , public StoreTypedArrayElementStaticPolicy
 {
-    MStoreTypedArrayElementStatic(JSObject *typedArray, MDefinition *ptr, MDefinition *v)
+    MStoreTypedArrayElementStatic(TypedArrayObject *typedArray, MDefinition *ptr, MDefinition *v)
       : MBinaryInstruction(ptr, v), typedArray_(typedArray)
     {}
 
-    CompilerRootObject typedArray_;
+    CompilerRoot<TypedArrayObject*> typedArray_;
 
   public:
     INSTRUCTION_HEADER(StoreTypedArrayElementStatic);
 
-    static MStoreTypedArrayElementStatic *New(JSObject *typedArray, MDefinition *ptr, MDefinition *v) {
+    static MStoreTypedArrayElementStatic *New(TypedArrayObject *typedArray, MDefinition *ptr,
+                                              MDefinition *v)
+    {
         return new MStoreTypedArrayElementStatic(typedArray, ptr, v);
     }
 

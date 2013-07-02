@@ -257,6 +257,8 @@ class ArrayBufferViewObject : public JSObject
 
     void prependToViews(HeapPtr<ArrayBufferViewObject> *views);
 
+    void neuter();
+
     static void trace(JSTracer *trc, JSObject *obj);
 };
 
@@ -270,6 +272,14 @@ class ArrayBufferViewObject : public JSObject
 
 class TypedArrayObject : public ArrayBufferViewObject
 {
+  protected:
+    // Typed array properties stored in slots, beyond those shared by all
+    // ArrayBufferViews.
+    static const size_t LENGTH_SLOT    = ArrayBufferViewObject::NUM_SLOTS;
+    static const size_t TYPE_SLOT      = ArrayBufferViewObject::NUM_SLOTS + 1;
+    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS + 2;
+    static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
+
   public:
     enum {
         TYPE_INT8 = 0,
@@ -289,15 +299,6 @@ class TypedArrayObject : public ArrayBufferViewObject
 
         TYPE_MAX
     };
-
-    /*
-     * Typed array properties stored in slots, beyond those shared by all
-     * ArrayBufferViews.
-     */
-    static const size_t LENGTH_SLOT     = ArrayBufferViewObject::NUM_SLOTS;
-    static const size_t TYPE_SLOT       = ArrayBufferViewObject::NUM_SLOTS + 1;
-    static const size_t RESERVED_SLOTS  = ArrayBufferViewObject::NUM_SLOTS + 2;
-    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
     static Class classes[TYPE_MAX];
     static Class protoClasses[TYPE_MAX];
@@ -329,26 +330,66 @@ class TypedArrayObject : public ArrayBufferViewObject
     static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
                                            HandleSpecialId sid, unsigned *attrsp);
 
-    static inline Value bufferValue(JSObject *obj);
-    static inline Value byteOffsetValue(JSObject *obj);
-    static inline Value byteLengthValue(JSObject *obj);
-    static inline Value lengthValue(JSObject *obj);
+    static Value bufferValue(TypedArrayObject *tarr) {
+        return tarr->getFixedSlot(BUFFER_SLOT);
+    }
+    static Value byteOffsetValue(TypedArrayObject *tarr) {
+        return tarr->getFixedSlot(BYTEOFFSET_SLOT);
+    }
+    static Value byteLengthValue(TypedArrayObject *tarr) {
+        return tarr->getFixedSlot(BYTELENGTH_SLOT);
+    }
+    static Value lengthValue(TypedArrayObject *tarr) {
+        return tarr->getFixedSlot(LENGTH_SLOT);
+    }
 
-    static inline ArrayBufferObject * buffer(JSObject *obj);
-    static inline uint32_t byteOffset(JSObject *obj);
-    static inline uint32_t byteLength(JSObject *obj);
-    static inline uint32_t length(JSObject *obj);
+    ArrayBufferObject *buffer() const {
+        return &bufferValue(const_cast<TypedArrayObject*>(this)).toObject().as<ArrayBufferObject>();
+    }
+    uint32_t byteOffset() const {
+        return byteOffsetValue(const_cast<TypedArrayObject*>(this)).toInt32();
+    }
+    uint32_t byteLength() const {
+        return byteLengthValue(const_cast<TypedArrayObject*>(this)).toInt32();
+    }
+    uint32_t length() const {
+        return lengthValue(const_cast<TypedArrayObject*>(this)).toInt32();
+    }
 
-    static inline uint32_t type(JSObject *obj);
-    static inline void * viewData(JSObject *obj);
+    uint32_t type() const {
+        return getFixedSlot(TYPE_SLOT).toInt32();
+    }
+    void *viewData() const {
+        return static_cast<void*>(getPrivate(DATA_SLOT));
+    }
 
-  public:
-    static bool isArrayIndex(JSObject *obj, jsid id, uint32_t *ip = NULL);
+    inline bool isArrayIndex(jsid id, uint32_t *ip = NULL);
 
-    static void neuter(JSObject *tarray);
+    void neuter();
 
-    static inline uint32_t slotWidth(int atype);
-    static inline int slotWidth(JSObject *obj);
+    static uint32_t slotWidth(int atype) {
+        switch (atype) {
+          case js::TypedArrayObject::TYPE_INT8:
+          case js::TypedArrayObject::TYPE_UINT8:
+          case js::TypedArrayObject::TYPE_UINT8_CLAMPED:
+            return 1;
+          case js::TypedArrayObject::TYPE_INT16:
+          case js::TypedArrayObject::TYPE_UINT16:
+            return 2;
+          case js::TypedArrayObject::TYPE_INT32:
+          case js::TypedArrayObject::TYPE_UINT32:
+          case js::TypedArrayObject::TYPE_FLOAT32:
+            return 4;
+          case js::TypedArrayObject::TYPE_FLOAT64:
+            return 8;
+          default:
+            MOZ_ASSUME_UNREACHABLE("invalid typed array type");
+        }
+    }
+
+    int slotWidth() {
+        return slotWidth(type());
+    }
 
     /*
      * Byte length above which created typed arrays and data views will have
@@ -531,6 +572,9 @@ class DataViewObject : public ArrayBufferViewObject
     template<typename NativeType>
     static bool write(JSContext *cx, Handle<DataViewObject*> obj,
                       CallArgs &args, const char *method);
+
+    void neuter();
+
   private:
     static const JSFunctionSpec jsfuncs[];
 };
