@@ -293,7 +293,9 @@
            hidden="true"
            noautofocus="true"
            consumeoutsideclicks="true"
-           onpopupshown="gIdentityHandler.onPopupShown(event);"
+           onpopupshown="if (event.target == this)
+                           gIdentityHandler.onPopupShown(event);"
+           orient="vertical"
            level="top">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
@@ -327,14 +329,19 @@
             <description id="identity-popup-encryption-label" flex="1"
                          class="identity-popup-description"/>
           </hbox>
-          <!-- Footer button to open security page info -->
-          <hbox id="identity-popup-button-container" pack="end">
-            <button id="identity-popup-more-info-button"
-                    label="&identity.moreInfoLinkText;"
-                    onblur="gIdentityHandler.hideIdentityPopup();"
-                    oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
-          </hbox>
+          <vbox id="identity-popup-permissions">
+            <separator class="thin"/>
+            <label class="identity-popup-label header"
+                   value="&identity.permissions;"/>
+            <vbox id="identity-popup-permission-list" class="indent"/>
+          </vbox>
         </vbox>
+      </hbox>
+      <!-- Footer button to open security page info -->
+      <hbox id="identity-popup-button-container" pack="end">
+        <button id="identity-popup-more-info-button"
+                label="&identity.moreInfoLinkText;"
+                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </hbox>
     </panel>
 
