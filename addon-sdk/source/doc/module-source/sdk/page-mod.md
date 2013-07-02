@@ -303,7 +303,7 @@ Creates a page-mod.
         });
 
     You can specify a set of URLs using a
-    [regular expression](modules/sdk/page-mod/match-pattern.html#Regular Expressions).
+    [regular expression](modules/sdk/util/match-pattern.html#Regular Expressions).
     The pattern must match the entire URL, not just a subset, and has
     `global`, `ignoreCase`, and `multiline` disabled.
 
@@ -321,7 +321,7 @@ Creates a page-mod.
         contentScript: 'window.alert("Page matches ruleset");'
       });
 
-    See the [match-pattern](modules/sdk/page-mod/match-pattern.html) module for
+    See the [match-pattern](modules/sdk/util/match-pattern.html) module for
     a detailed description of match pattern syntax.
 
   @prop [contentScriptFile] {string,array}

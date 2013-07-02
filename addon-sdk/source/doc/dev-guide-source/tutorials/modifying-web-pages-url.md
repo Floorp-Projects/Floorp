@@ -52,7 +52,7 @@ alt="ietf.org eaten by page-mod" />
 ## Specifying the Match Pattern ##
 
 The match pattern uses the
-[`match-pattern`](modules/sdk/page-mod/match-pattern.html)
+[`match-pattern`](modules/sdk/util/match-pattern.html)
 syntax. You can pass a single match-pattern string, or an array.
 
 ## Keeping the Content Script in a Separate File ##
