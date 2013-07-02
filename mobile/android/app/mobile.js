@@ -750,4 +750,4 @@ pref("dom.payment.provider.0.requestMethod", "GET");
 #endif
 
 // Make <audio> and <video> talk to the AudioChannelService.
-pref("media.useAudioChannelService", true);
+pref("media.useAudioChannelService", false);
