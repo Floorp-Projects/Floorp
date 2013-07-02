@@ -18,6 +18,10 @@ const TOOLBARSTATE_LOADED   = 2;
 // Page for which the start UI is shown
 const kStartOverlayURI = "about:start";
 
+// Devtools Messages
+const debugServerStateChanged = "devtools.debugger.remote-enabled";
+const debugServerPortChanged = "devtools.debugger.remote-port";
+
 /**
  * Cache of commonly used elements.
  */
@@ -75,6 +79,14 @@ var BrowserUI = {
 
   lastKnownGoodURL: "", //used when the user wants to escape unfinished url entry
   init: function() {
+
+    // start the debugger now so we can use it on the startup code as well
+    if (Services.prefs.getBoolPref(debugServerStateChanged)) {
+      this.runDebugServer();
+    }
+    Services.prefs.addObserver(debugServerStateChanged, this, false);
+    Services.prefs.addObserver(debugServerPortChanged, this, false);
+
     // listen content messages
     messageManager.addMessageListener("DOMTitleChanged", this);
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
@@ -181,8 +193,38 @@ var BrowserUI = {
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
     PageThumbs.uninit();
+    this.stopDebugServer();
   },
 
+  /************************************
+   * Devtools Debugger
+   */
+  runDebugServer: function runDebugServer(aPort) {
+    let port = aPort || Services.prefs.getIntPref(debugServerPortChanged);
+    if (!DebuggerServer.initialized) {
+      DebuggerServer.init();
+      DebuggerServer.addBrowserActors();
+      DebuggerServer.addActors('chrome://browser/content/dbg-metro-actors.js');
+    }
+    DebuggerServer.openListener(port);
+  },
+
+  stopDebugServer: function stopDebugServer() {
+    if (DebuggerServer.initialized) {
+      DebuggerServer.destroy();
+    }
+  },
+
+  // If the server is not on, port changes have nothing to effect. The new value
+  //    will be picked up if the server is started.
+  // To be consistent with desktop fx, if the port is changed while the server
+  //    is running, restart server.
+  changeDebugPort:function changeDebugPort(aPort) {
+    if (DebuggerServer.initialized) {
+      this.stopDebugServer();
+      this.runDebugServer(aPort);
+    }
+  },
 
   /*********************************
    * Content visibility
@@ -596,6 +638,16 @@ var BrowserUI = {
             break;
           case "browser.urlbar.trimURLs":
             this._mayTrimURLs = Services.prefs.getBoolPref(aData);
+            break;
+          case debugServerStateChanged:
+            if (Services.prefs.getBoolPref(aData)) {
+              this.runDebugServer();
+            } else {
+              this.stopDebugServer();
+            }
+            break;
+          case debugServerPortChanged:
+            this.changeDebugPort(Services.prefs.getIntPref(aData));
             break;
         }
         break;
@@ -1361,12 +1413,6 @@ var StartUI = {
         section.init();
     });
 
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-      DebuggerServer.addActors('chrome://browser/content/dbg-metro-actors.js');
-    }
-    DebuggerServer.openListener(6000);
   },
 
   uninit: function() {
