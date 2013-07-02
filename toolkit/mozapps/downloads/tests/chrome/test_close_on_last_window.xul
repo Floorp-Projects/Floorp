@@ -23,10 +23,6 @@
   <script type="application/javascript">
   <![CDATA[
 
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(2);
-}
-
 const DLMGR_UI_DONE = "download-manager-ui-done";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
