@@ -2611,15 +2611,6 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
 {
     JS_ASSERT(newCount < oldCount);
 
-    /*
-     * Refuse to shrink slots for call objects. This only happens in a very
-     * obscure situation (deleting names introduced by a direct 'eval') and
-     * allowing the slots pointer to change may require updating pointers in
-     * the function's active args/vars information.
-     */
-    if (obj->is<CallObject>())
-        return;
-
     if (newCount == 0) {
         FreeSlots(cx, obj->slots);
         obj->slots = NULL;
