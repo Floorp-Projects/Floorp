@@ -350,6 +350,7 @@ webidl_files = \
   WheelEvent.webidl \
   UndoManager.webidl \
   URLUtils.webidl \
+  VideoPlaybackQuality.webidl \
   VideoStreamTrack.webidl \
   WaveShaperNode.webidl \
   Window.webidl \
