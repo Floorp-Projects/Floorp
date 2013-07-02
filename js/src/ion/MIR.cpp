@@ -2307,25 +2307,25 @@ MInArray::needsNegativeIntCheck() const
 void *
 MLoadTypedArrayElementStatic::base() const
 {
-    return TypedArray::viewData(typedArray_);
+    return TypedArrayObject::viewData(typedArray_);
 }
 
 size_t
 MLoadTypedArrayElementStatic::length() const
 {
-    return TypedArray::byteLength(typedArray_);
+    return TypedArrayObject::byteLength(typedArray_);
 }
 
 void *
 MStoreTypedArrayElementStatic::base() const
 {
-    return TypedArray::viewData(typedArray_);
+    return TypedArrayObject::viewData(typedArray_);
 }
 
 size_t
 MStoreTypedArrayElementStatic::length() const
 {
-    return TypedArray::byteLength(typedArray_);
+    return TypedArrayObject::byteLength(typedArray_);
 }
 
 bool
@@ -2431,7 +2431,7 @@ ion::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType
         return false;
 
     *arrayType = types->getTypedArrayType();
-    return *arrayType != TypedArray::TYPE_MAX;
+    return *arrayType != TypedArrayObject::TYPE_MAX;
 }
 
 bool

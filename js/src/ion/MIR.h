@@ -4923,7 +4923,7 @@ class MLoadTypedArrayElement
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
     }
 
   public:
@@ -4938,7 +4938,7 @@ class MLoadTypedArrayElement
     }
     bool fallible() const {
         // Bailout if the result does not fit in an int32.
-        return arrayType_ == TypedArray::TYPE_UINT32 && type() == MIRType_Int32;
+        return arrayType_ == TypedArrayObject::TYPE_UINT32 && type() == MIRType_Int32;
     }
     MDefinition *elements() const {
         return getOperand(0);
@@ -4968,7 +4968,7 @@ class MLoadTypedArrayElementHole
         setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
     }
 
   public:
@@ -4985,7 +4985,7 @@ class MLoadTypedArrayElementHole
         return allowDouble_;
     }
     bool fallible() const {
-        return arrayType_ == TypedArray::TYPE_UINT32 && !allowDouble_;
+        return arrayType_ == TypedArrayObject::TYPE_UINT32 && !allowDouble_;
     }
     TypePolicy *typePolicy() {
         return this;
@@ -5009,8 +5009,8 @@ class MLoadTypedArrayElementStatic : public MUnaryInstruction
     MLoadTypedArrayElementStatic(JSObject *typedArray, MDefinition *ptr)
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)
     {
-        int type = TypedArray::type(typedArray_);
-        if (type == TypedArray::TYPE_FLOAT32 || type == TypedArray::TYPE_FLOAT64)
+        int type = TypedArrayObject::type(typedArray_);
+        if (type == TypedArrayObject::TYPE_FLOAT32 || type == TypedArrayObject::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
@@ -5063,7 +5063,7 @@ class MStoreTypedArrayElement
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
     }
 
   public:
@@ -5078,13 +5078,13 @@ class MStoreTypedArrayElement
         return arrayType_;
     }
     bool isByteArray() const {
-        return (arrayType_ == TypedArray::TYPE_INT8 ||
-                arrayType_ == TypedArray::TYPE_UINT8 ||
-                arrayType_ == TypedArray::TYPE_UINT8_CLAMPED);
+        return (arrayType_ == TypedArrayObject::TYPE_INT8 ||
+                arrayType_ == TypedArrayObject::TYPE_UINT8 ||
+                arrayType_ == TypedArrayObject::TYPE_UINT8_CLAMPED);
     }
     bool isFloatArray() const {
-        return (arrayType_ == TypedArray::TYPE_FLOAT32 ||
-                arrayType_ == TypedArray::TYPE_FLOAT64);
+        return (arrayType_ == TypedArrayObject::TYPE_FLOAT32 ||
+                arrayType_ == TypedArrayObject::TYPE_FLOAT64);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -5127,7 +5127,7 @@ class MStoreTypedArrayElementHole
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(length->type() == MIRType_Int32);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
     }
 
   public:
@@ -5143,13 +5143,13 @@ class MStoreTypedArrayElementHole
         return arrayType_;
     }
     bool isByteArray() const {
-        return (arrayType_ == TypedArray::TYPE_INT8 ||
-                arrayType_ == TypedArray::TYPE_UINT8 ||
-                arrayType_ == TypedArray::TYPE_UINT8_CLAMPED);
+        return (arrayType_ == TypedArrayObject::TYPE_INT8 ||
+                arrayType_ == TypedArrayObject::TYPE_UINT8 ||
+                arrayType_ == TypedArrayObject::TYPE_UINT8_CLAMPED);
     }
     bool isFloatArray() const {
-        return (arrayType_ == TypedArray::TYPE_FLOAT32 ||
-                arrayType_ == TypedArray::TYPE_FLOAT64);
+        return (arrayType_ == TypedArrayObject::TYPE_FLOAT32 ||
+                arrayType_ == TypedArrayObject::TYPE_FLOAT64);
     }
     TypePolicy *typePolicy() {
         return this;
