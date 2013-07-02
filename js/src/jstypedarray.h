@@ -35,6 +35,8 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 // Note that |TypedArrayObjectTemplate| is just an implementation detail that
 // makes implementing its various subclasses easier.
 
+class ArrayBufferViewObject;
+
 /*
  * ArrayBufferObject
  *
@@ -160,7 +162,7 @@ class ArrayBufferObject : public JSObject
     static inline void setElementsHeader(js::ObjectElements *header, uint32_t bytes);
     static inline uint32_t getElementsHeaderInitializedLength(const js::ObjectElements *header);
 
-    void addView(JSObject *view);
+    void addView(ArrayBufferViewObject *view);
 
     bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
     void changeContents(JSContext *cx, ObjectElements *newHeader);
@@ -195,7 +197,7 @@ class ArrayBufferObject : public JSObject
 
 class ArrayBufferViewObject : public JSObject
 {
-  public:
+  protected:
     /* Offset of view in underlying ArrayBufferObject */
     static const size_t BYTEOFFSET_SLOT  = 0;
 
@@ -216,6 +218,27 @@ class ArrayBufferViewObject : public JSObject
     static const size_t NEXT_BUFFER_SLOT = 4;
 
     static const size_t NUM_SLOTS        = 5;
+
+  public:
+    JSObject *bufferObject() const {
+        return &getFixedSlot(BUFFER_SLOT).toObject();
+    }
+
+    ArrayBufferObject *bufferLink() {
+        return static_cast<ArrayBufferObject*>(getFixedSlot(NEXT_BUFFER_SLOT).toPrivate());
+    }
+
+    inline void setBufferLink(ArrayBufferObject *buffer);
+
+    ArrayBufferViewObject *nextView() const {
+        return static_cast<ArrayBufferViewObject*>(getFixedSlot(NEXT_VIEW_SLOT).toPrivate());
+    }
+
+    inline void setNextView(ArrayBufferViewObject *view);
+
+    void prependToViews(HeapPtr<ArrayBufferViewObject> *views);
+
+    static void trace(JSTracer *trc, JSObject *obj);
 };
 
 /*
@@ -469,5 +492,19 @@ bool
 IsDataView(JSObject *obj);
 
 } // namespace js
+
+template <>
+inline bool
+JSObject::is<js::TypedArrayObject>() const
+{
+    return js::IsTypedArrayClass(getClass());
+}
+
+template <>
+inline bool
+JSObject::is<js::ArrayBufferViewObject>() const
+{
+    return is<js::DataViewObject>() || is<js::TypedArrayObject>();
+}
 
 #endif /* jstypedarray_h */
