@@ -111,7 +111,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
             return format == LOCAL_GL_DEPTH_STENCIL;
         }
         else if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-                 mAttachmentPoint < WebGLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::sMaxColorAttachments)) {
+                 mAttachmentPoint < WebGLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::kMaxColorAttachments)) {
             return (format == LOCAL_GL_ALPHA ||
                     format == LOCAL_GL_LUMINANCE ||
                     format == LOCAL_GL_LUMINANCE_ALPHA ||
@@ -329,10 +329,7 @@ WebGLFramebuffer::GetAttachment(WebGLenum attachment) const {
     if (attachment == LOCAL_GL_STENCIL_ATTACHMENT)
         return mStencilAttachment;
 
-    if (!CheckColorAttachementNumber(attachment, "getAttachment")) {
-        NS_ABORT();
-        return mColorAttachments[0];
-    }
+    MOZ_ASSERT(CheckColorAttachementNumber(attachment, "getAttachment"));
 
     uint32_t colorAttachmentId = uint32_t(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
 
@@ -426,9 +423,9 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
         return false;
 
     uint32_t mask = 0;
-    bool colorAttachmentsMask[WebGLContext::sMaxColorAttachments] = { false };
+    bool colorAttachmentsMask[WebGLContext::kMaxColorAttachments] = { false };
 
-    MOZ_ASSERT( colorAttachmentCount <= WebGLContext::sMaxColorAttachments );
+    MOZ_ASSERT( colorAttachmentCount <= WebGLContext::kMaxColorAttachments );
 
     for (size_t i = 0; i < colorAttachmentCount; i++)
     {
@@ -511,7 +508,7 @@ void WebGLFramebuffer::EnsureColorAttachments(size_t colorAttachmentId) {
         return;
     }
 
-    MOZ_ASSERT( colorAttachmentId < WebGLContext::sMaxColorAttachments );
+    MOZ_ASSERT( colorAttachmentId < WebGLContext::kMaxColorAttachments );
 
     mColorAttachments.SetLength(colorAttachmentId + 1);
 
