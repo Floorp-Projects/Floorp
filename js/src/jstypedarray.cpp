@@ -1145,13 +1145,6 @@ TypedArrayObject::isArrayIndex(JSObject *obj, jsid id, uint32_t *ip)
     return false;
 }
 
-bool
-js::IsDataView(JSObject* obj)
-{
-    JS_ASSERT(obj);
-    return obj->is<DataViewObject>();
-}
-
 void
 TypedArrayObject::neuter(JSObject *tarray)
 {
@@ -2728,6 +2721,70 @@ TypedArrayObjectTemplate<double>::copyIndexToValue(JSObject *tarray, uint32_t in
     vp.setDouble(JS_CANONICALIZE_NAN(val));
 }
 
+static NewObjectKind
+DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
+{
+    if (!proto && byteLength >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH)
+        return SingletonObject;
+    jsbytecode *pc;
+    JSScript *script = cx->currentScript(&pc);
+    if (!script)
+        return GenericObject;
+    return types::UseNewTypeForInitializer(cx, script, pc, &DataViewObject::class_);
+}
+
+inline DataViewObject *
+DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
+                       Handle<ArrayBufferObject*> arrayBuffer, JSObject *protoArg)
+{
+    JS_ASSERT(byteOffset <= INT32_MAX);
+    JS_ASSERT(byteLength <= INT32_MAX);
+
+    RootedObject proto(cx, protoArg);
+    RootedObject obj(cx);
+
+    NewObjectKind newKind = DataViewNewObjectKind(cx, byteLength, proto);
+    obj = NewBuiltinClassInstance(cx, &class_, newKind);
+    if (!obj)
+        return NULL;
+
+    if (proto) {
+        types::TypeObject *type = proto->getNewType(cx, &class_);
+        if (!type)
+            return NULL;
+        obj->setType(type);
+    } else if (cx->typeInferenceEnabled()) {
+        if (byteLength >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH) {
+            JS_ASSERT(obj->hasSingletonType());
+        } else {
+            jsbytecode *pc;
+            RootedScript script(cx, cx->currentScript(&pc));
+            if (script) {
+                if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
+                    return NULL;
+            }
+        }
+    }
+
+    JS_ASSERT(arrayBuffer->is<ArrayBufferObject>());
+
+    DataViewObject &dvobj = obj->as<DataViewObject>();
+    dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
+    dvobj.setFixedSlot(BYTELENGTH_SLOT, Int32Value(byteLength));
+    dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    dvobj.setFixedSlot(NEXT_VIEW_SLOT, PrivateValue(NULL));
+    dvobj.setFixedSlot(NEXT_BUFFER_SLOT, PrivateValue(UNSET_BUFFER_LINK));
+    InitArrayBufferViewDataPointer(obj, arrayBuffer, byteOffset);
+    JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
+
+    // Verify that the private slot is at the expected place
+    JS_ASSERT(dvobj.numFixedSlots() == DATA_SLOT);
+
+    arrayBuffer->as<ArrayBufferObject>().addView(&dvobj);
+
+    return &dvobj;
+}
+
 JSBool
 DataViewObject::construct(JSContext *cx, JSObject *bufobj, const CallArgs &args, HandleObject proto)
 {
@@ -3762,8 +3819,6 @@ template<Value ValueGetter(DataViewObject &view)>
 bool
 DataViewObject::getterImpl(JSContext *cx, CallArgs args)
 {
-    JS_ASSERT(is(args.thisv()));
-
     args.rval().set(ValueGetter(args.thisv().toObject().as<DataViewObject>()));
     return true;
 }
@@ -3795,7 +3850,7 @@ DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject pro
                                 flags, 0, 0);
 }
 
-JSObject *
+/* static */ JSObject *
 DataViewObject::initClass(JSContext *cx)
 {
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
@@ -4175,7 +4230,6 @@ JS_GetDataViewData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return NULL;
-    JS_ASSERT(obj->is<DataViewObject>());
     return obj->as<DataViewObject>().dataPointer();
 }
 
@@ -4185,7 +4239,6 @@ JS_GetDataViewByteLength(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return 0;
-    JS_ASSERT(obj->is<DataViewObject>());
     return obj->as<DataViewObject>().byteLength();
 }
 
@@ -4195,7 +4248,6 @@ JS_GetArrayBufferViewData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return NULL;
-    JS_ASSERT(obj->isTypedArray() || obj->is<DataViewObject>());
     return obj->is<DataViewObject>() ? obj->as<DataViewObject>().dataPointer()
                                      : TypedArrayObject::viewData(obj);
 }
