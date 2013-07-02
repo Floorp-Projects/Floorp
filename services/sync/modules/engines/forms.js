@@ -243,14 +243,18 @@ FormTracker.prototype = {
       case "satchel-storage-changed":
         if (data == "formhistory-add" || data == "formhistory-remove") {
           let guid = subject.QueryInterface(Ci.nsISupportsString).toString();
-          this.addChangedID(guid);
-          this.score += SCORE_INCREMENT_MEDIUM;
+          this.trackEntry(guid);
         }
         break;
     case "profile-change-teardown":
       FormWrapper._finalize();
       break;
     }
+  },
+
+  trackEntry: function (guid) {
+    this.addChangedID(guid);
+    this.score += SCORE_INCREMENT_MEDIUM;
   },
 
   notify: function (formElement, aWindow, actionURI) {
@@ -320,7 +324,10 @@ FormTracker.prototype = {
       // Get the GUID on a delay so that it can be added to the DB first...
       Utils.nextTick(function() {
         this._log.trace("Logging form element: " + [name, el.value]);
-        this.trackEntry(name, el.value);
+        let guid = FormWrapper.getGUID(name, el.value);
+        if (guid) {
+          this.trackEntry(guid);
+        }
       }, this);
     }
   }
