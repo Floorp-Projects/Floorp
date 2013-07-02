@@ -414,7 +414,7 @@ ContainerLayer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
 }
 
 AsyncPanZoomController*
-ContainerLayer::GetAsyncPanZoomController()
+ContainerLayer::GetAsyncPanZoomController() const
 {
 #ifdef DEBUG
   if (mAPZC) {
@@ -618,10 +618,10 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
 }
 
 const gfx3DMatrix
-Layer::GetTransform()
+Layer::GetTransform() const
 {
   gfx3DMatrix transform = mTransform;
-  if (ContainerLayer* c = AsContainerLayer()) {
+  if (const ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
   transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
