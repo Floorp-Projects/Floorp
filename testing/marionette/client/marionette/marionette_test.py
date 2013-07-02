@@ -247,7 +247,8 @@ permissions.forEach(function (perm) {
         self._deleteSession()
 
     def _deleteSession(self):
-        self.duration = time.time() - self.start_time
+        if hasattr(self, 'start_time'):
+            self.duration = time.time() - self.start_time
         if hasattr(self.marionette, 'session'):
             if self.marionette.session is not None:
                 try:
