@@ -2562,55 +2562,55 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 };
 
-class Int8Array : public TypedArrayObjectTemplate<int8_t> {
+class Int8ArrayObject : public TypedArrayObjectTemplate<int8_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT8 };
     static const JSProtoKey key = JSProto_Int8Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint8Array : public TypedArrayObjectTemplate<uint8_t> {
+class Uint8ArrayObject : public TypedArrayObjectTemplate<uint8_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT8 };
     static const JSProtoKey key = JSProto_Uint8Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Int16Array : public TypedArrayObjectTemplate<int16_t> {
+class Int16ArrayObject : public TypedArrayObjectTemplate<int16_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT16 };
     static const JSProtoKey key = JSProto_Int16Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint16Array : public TypedArrayObjectTemplate<uint16_t> {
+class Uint16ArrayObject : public TypedArrayObjectTemplate<uint16_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT16 };
     static const JSProtoKey key = JSProto_Uint16Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Int32Array : public TypedArrayObjectTemplate<int32_t> {
+class Int32ArrayObject : public TypedArrayObjectTemplate<int32_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT32 };
     static const JSProtoKey key = JSProto_Int32Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint32Array : public TypedArrayObjectTemplate<uint32_t> {
+class Uint32ArrayObject : public TypedArrayObjectTemplate<uint32_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT32 };
     static const JSProtoKey key = JSProto_Uint32Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Float32Array : public TypedArrayObjectTemplate<float> {
+class Float32ArrayObject : public TypedArrayObjectTemplate<float> {
   public:
     enum { ACTUAL_TYPE = TYPE_FLOAT32 };
     static const JSProtoKey key = JSProto_Float32Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Float64Array : public TypedArrayObjectTemplate<double> {
+class Float64ArrayObject : public TypedArrayObjectTemplate<double> {
   public:
     enum { ACTUAL_TYPE = TYPE_FLOAT64 };
     static const JSProtoKey key = JSProto_Float64Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint8ClampedArray : public TypedArrayObjectTemplate<uint8_clamped> {
+class Uint8ClampedArrayObject : public TypedArrayObjectTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT8_CLAMPED };
     static const JSProtoKey key = JSProto_Uint8ClampedArray;
@@ -3390,21 +3390,21 @@ const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
  */
 
 #ifndef RELEASE_BUILD
-# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                 \
-const JSFunctionSpec _typedArray::jsfuncs[] = {                                \
-    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                 \
-    JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
-    JS_FN("set", _typedArray::fun_set, 2, JSFUN_GENERIC_NATIVE),               \
-    JS_FN("move", _typedArray::fun_move, 3, JSFUN_GENERIC_NATIVE),             \
-    JS_FS_END                                                                  \
+# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
+const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
+    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                     \
+    JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
+    JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
+    JS_FN("move", _typedArray##Object::fun_move, 3, JSFUN_GENERIC_NATIVE),         \
+    JS_FS_END                                                                      \
 }
 #else
-# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                 \
-const JSFunctionSpec _typedArray::jsfuncs[] = {                                \
-    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                 \
-    JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
-    JS_FN("set", _typedArray::fun_set, 2, JSFUN_GENERIC_NATIVE),               \
-    JS_FS_END                                                                  \
+# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
+const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
+    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                     \
+    JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
+    JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
+    JS_FS_END                                                                      \
 }
 #endif
 
@@ -3514,35 +3514,35 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
         false,      /* isWrappedNative */                                      \
     },                                                                         \
     {                                                                          \
-        _typedArray::obj_lookupGeneric,                                        \
-        _typedArray::obj_lookupProperty,                                       \
-        _typedArray::obj_lookupElement,                                        \
-        _typedArray::obj_lookupSpecial,                                        \
-        _typedArray::obj_defineGeneric,                                        \
-        _typedArray::obj_defineProperty,                                       \
-        _typedArray::obj_defineElement,                                        \
-        _typedArray::obj_defineSpecial,                                        \
-        _typedArray::obj_getGeneric,                                           \
-        _typedArray::obj_getProperty,                                          \
-        _typedArray::obj_getElement,                                           \
-        _typedArray::obj_getElementIfPresent,                                  \
-        _typedArray::obj_getSpecial,                                           \
-        _typedArray::obj_setGeneric,                                           \
-        _typedArray::obj_setProperty,                                          \
-        _typedArray::obj_setElement,                                           \
-        _typedArray::obj_setSpecial,                                           \
-        _typedArray::obj_getGenericAttributes,                                 \
-        _typedArray::obj_getPropertyAttributes,                                \
-        _typedArray::obj_getElementAttributes,                                 \
-        _typedArray::obj_getSpecialAttributes,                                 \
-        _typedArray::obj_setGenericAttributes,                                 \
-        _typedArray::obj_setPropertyAttributes,                                \
-        _typedArray::obj_setElementAttributes,                                 \
-        _typedArray::obj_setSpecialAttributes,                                 \
-        _typedArray::obj_deleteProperty,                                       \
-        _typedArray::obj_deleteElement,                                        \
-        _typedArray::obj_deleteSpecial,                                        \
-        _typedArray::obj_enumerate,                                            \
+        _typedArray##Object::obj_lookupGeneric,                                \
+        _typedArray##Object::obj_lookupProperty,                               \
+        _typedArray##Object::obj_lookupElement,                                \
+        _typedArray##Object::obj_lookupSpecial,                                \
+        _typedArray##Object::obj_defineGeneric,                                \
+        _typedArray##Object::obj_defineProperty,                               \
+        _typedArray##Object::obj_defineElement,                                \
+        _typedArray##Object::obj_defineSpecial,                                \
+        _typedArray##Object::obj_getGeneric,                                   \
+        _typedArray##Object::obj_getProperty,                                  \
+        _typedArray##Object::obj_getElement,                                   \
+        _typedArray##Object::obj_getElementIfPresent,                          \
+        _typedArray##Object::obj_getSpecial,                                   \
+        _typedArray##Object::obj_setGeneric,                                   \
+        _typedArray##Object::obj_setProperty,                                  \
+        _typedArray##Object::obj_setElement,                                   \
+        _typedArray##Object::obj_setSpecial,                                   \
+        _typedArray##Object::obj_getGenericAttributes,                         \
+        _typedArray##Object::obj_getPropertyAttributes,                        \
+        _typedArray##Object::obj_getElementAttributes,                         \
+        _typedArray##Object::obj_getSpecialAttributes,                         \
+        _typedArray##Object::obj_setGenericAttributes,                         \
+        _typedArray##Object::obj_setPropertyAttributes,                        \
+        _typedArray##Object::obj_setElementAttributes,                         \
+        _typedArray##Object::obj_setSpecialAttributes,                         \
+        _typedArray##Object::obj_deleteProperty,                               \
+        _typedArray##Object::obj_deleteElement,                                \
+        _typedArray##Object::obj_deleteSpecial,                                \
+        _typedArray##Object::obj_enumerate,                                    \
         NULL,                /* thisObject  */                                 \
     }                                                                          \
 }
@@ -3639,15 +3639,15 @@ Class TypedArrayObject::protoClasses[TYPE_MAX] = {
 JS_FRIEND_API(bool)
 js::IsTypedArrayThisCheck(JS::IsAcceptableThis test)
 {
-    CHECK(test, Int8Array);
-    CHECK(test, Uint8Array);
-    CHECK(test, Int16Array);
-    CHECK(test, Uint16Array);
-    CHECK(test, Int32Array);
-    CHECK(test, Uint32Array);
-    CHECK(test, Float32Array);
-    CHECK(test, Float64Array);
-    CHECK(test, Uint8ClampedArray);
+    CHECK(test, Int8ArrayObject);
+    CHECK(test, Uint8ArrayObject);
+    CHECK(test, Int16ArrayObject);
+    CHECK(test, Uint16ArrayObject);
+    CHECK(test, Int32ArrayObject);
+    CHECK(test, Uint32ArrayObject);
+    CHECK(test, Float32ArrayObject);
+    CHECK(test, Float64ArrayObject);
+    CHECK(test, Uint8ClampedArrayObject);
     return false;
 }
 #undef CHECK
@@ -3843,15 +3843,15 @@ js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
     if (stop)
         return stop;
 
-    if (!InitTypedArrayClass<Int8Array>(cx) ||
-        !InitTypedArrayClass<Uint8Array>(cx) ||
-        !InitTypedArrayClass<Int16Array>(cx) ||
-        !InitTypedArrayClass<Uint16Array>(cx) ||
-        !InitTypedArrayClass<Int32Array>(cx) ||
-        !InitTypedArrayClass<Uint32Array>(cx) ||
-        !InitTypedArrayClass<Float32Array>(cx) ||
-        !InitTypedArrayClass<Float64Array>(cx) ||
-        !InitTypedArrayClass<Uint8ClampedArray>(cx) ||
+    if (!InitTypedArrayClass<Int8ArrayObject>(cx) ||
+        !InitTypedArrayClass<Uint8ArrayObject>(cx) ||
+        !InitTypedArrayClass<Int16ArrayObject>(cx) ||
+        !InitTypedArrayClass<Uint16ArrayObject>(cx) ||
+        !InitTypedArrayClass<Int32ArrayObject>(cx) ||
+        !InitTypedArrayClass<Uint32ArrayObject>(cx) ||
+        !InitTypedArrayClass<Float32ArrayObject>(cx) ||
+        !InitTypedArrayClass<Float64ArrayObject>(cx) ||
+        !InitTypedArrayClass<Uint8ClampedArrayObject>(cx) ||
         !DataViewObject::initClass(cx))
     {
         return NULL;
@@ -3865,23 +3865,23 @@ js::IsTypedArrayConstructor(const Value &v, uint32_t type)
 {
     switch (type) {
       case TypedArrayObject::TYPE_INT8:
-        return IsNativeFunction(v, Int8Array::class_constructor);
+        return IsNativeFunction(v, Int8ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_UINT8:
-        return IsNativeFunction(v, Uint8Array::class_constructor);
+        return IsNativeFunction(v, Uint8ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_INT16:
-        return IsNativeFunction(v, Int16Array::class_constructor);
+        return IsNativeFunction(v, Int16ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_UINT16:
-        return IsNativeFunction(v, Uint16Array::class_constructor);
+        return IsNativeFunction(v, Uint16ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_INT32:
-        return IsNativeFunction(v, Int32Array::class_constructor);
+        return IsNativeFunction(v, Int32ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_UINT32:
-        return IsNativeFunction(v, Uint32Array::class_constructor);
+        return IsNativeFunction(v, Uint32ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_FLOAT32:
-        return IsNativeFunction(v, Float32Array::class_constructor);
+        return IsNativeFunction(v, Float32ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_FLOAT64:
-        return IsNativeFunction(v, Float64Array::class_constructor);
+        return IsNativeFunction(v, Float64ArrayObject::class_constructor);
       case TypedArrayObject::TYPE_UINT8_CLAMPED:
-        return IsNativeFunction(v, Uint8ClampedArray::class_constructor);
+        return IsNativeFunction(v, Uint8ClampedArrayObject::class_constructor);
     }
     MOZ_ASSUME_UNREACHABLE("unexpected typed array type");
 }
