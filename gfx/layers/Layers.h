@@ -907,11 +907,6 @@ public:
   const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
   Layer* GetMaskLayer() { return mMaskLayer; }
 
-  // These functions allow attaching an AsyncPanZoomController to this layer,
-  // and can be used anytime.
-  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
-  AsyncPanZoomController* GetAsyncPanZoomController();
-
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
   AnimationArray& GetAnimations() { return mAnimations; }
@@ -1381,6 +1376,9 @@ protected:
  */
 class ContainerLayer : public Layer {
 public:
+
+  ~ContainerLayer();
+
   /**
    * CONSTRUCTION PHASE ONLY
    * Insert aChild into the child list of this container. aChild must
@@ -1417,6 +1415,12 @@ public:
       Mutated();
     }
   }
+
+  // These functions allow attaching an AsyncPanZoomController to this layer,
+  // and can be used anytime.
+  // A container layer has an APZC only-if GetFrameMetrics().IsScrollable()
+  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
+  AsyncPanZoomController* GetAsyncPanZoomController();
 
   void SetPreScale(float aXScale, float aYScale)
   {
@@ -1503,20 +1507,7 @@ protected:
   void DidInsertChild(Layer* aLayer);
   void DidRemoveChild(Layer* aLayer);
 
-  ContainerLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData),
-      mFirstChild(nullptr),
-      mLastChild(nullptr),
-      mPreXScale(1.0f),
-      mPreYScale(1.0f),
-      mInheritedXScale(1.0f),
-      mInheritedYScale(1.0f),
-      mUseIntermediateSurface(false),
-      mSupportsComponentAlphaChildren(false),
-      mMayHaveReadbackChild(false)
-  {
-    mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
-  }
+  ContainerLayer(LayerManager* aManager, void* aImplData);
 
   /**
    * A default implementation of ComputeEffectiveTransforms for use by OpenGL
@@ -1534,6 +1525,7 @@ protected:
   Layer* mFirstChild;
   Layer* mLastChild;
   FrameMetrics mFrameMetrics;
+  nsRefPtr<AsyncPanZoomController> mAPZC;
   float mPreXScale;
   float mPreYScale;
   // The resolution scale inherited from the parent layer. This will already

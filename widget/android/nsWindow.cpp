@@ -2493,7 +2493,7 @@ public:
         Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
         AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
         if (targetLayer && targetLayer->AsContainerLayer() && controller) {
-            targetLayer->SetAsyncPanZoomController(controller);
+            targetLayer->AsContainerLayer()->SetAsyncPanZoomController(controller);
             controller->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(), isFirstPaint);
         }
     }

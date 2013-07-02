@@ -51,6 +51,7 @@ WalkTheTree(Layer* aLayer,
   if (RefLayer* ref = aLayer->AsRefLayer()) {
     if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(ref->GetReferentId())) {
       if (Layer* referent = state->mRoot) {
+        ContainerLayer *referentAsContainer = referent->AsContainerLayer();
         if (!ref->GetVisibleRegion().IsEmpty()) {
           ScreenOrientation chromeOrientation = aTargetConfig.orientation();
           ScreenOrientation contentOrientation = state->mTargetConfig.orientation();
@@ -62,12 +63,16 @@ WalkTheTree(Layer* aLayer,
 
         if (OP == Resolve) {
           ref->ConnectReferentLayer(referent);
-          if (AsyncPanZoomController* apzc = state->mController) {
-            referent->SetAsyncPanZoomController(apzc);
+          if (referentAsContainer) {
+            if (AsyncPanZoomController* apzc = state->mController) {
+              referentAsContainer->SetAsyncPanZoomController(apzc);
+            }
           }
         } else {
           ref->DetachReferentLayer(referent);
-          referent->SetAsyncPanZoomController(nullptr);
+          if (referentAsContainer) {
+            referentAsContainer->SetAsyncPanZoomController(nullptr);
+          }
         }
       }
     }
@@ -335,7 +340,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     return appliedTransform;
   }
 
-  if (AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController()) {
+  if (AsyncPanZoomController* controller = container->GetAsyncPanZoomController()) {
     LayerComposite* layerComposite = aLayer->AsLayerComposite();
 
     ViewTransform treeTransform;
