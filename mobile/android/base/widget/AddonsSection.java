@@ -222,7 +222,7 @@ public class AddonsSection extends AboutHomeSection {
         row.setOnKeyListener(GamepadUtils.getClickDispatcher());
 
         Favicons favicons = Favicons.getInstance();
-        favicons.loadFavicon(pageUrl, iconUrl, Favicons.FLAG_PERSIST | Favicons.FLAG_SCALE,
+        favicons.loadFavicon(pageUrl, iconUrl, true,
                 new Favicons.OnFaviconLoadedListener() {
             @Override
             public void onFaviconLoaded(String url, Bitmap favicon) {
