@@ -824,14 +824,6 @@ var gBrowserInit = {
     // setup our common DOMLinkAdded listener
     gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 
-    // setup our MozApplicationManifest listener
-    gBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
-    // listen for offline apps on social
-    let socialBrowser = document.getElementById("social-sidebar-browser");
-    socialBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
-
     // setup simple gestures support
     gGestureSupport.init(true);
 
@@ -977,6 +969,17 @@ var gBrowserInit = {
     TelemetryTimestamps.add("delayedStartupStarted");
 
     this._cancelDelayedStartup();
+
+    // We need to set the MozApplicationManifest event listeners up
+    // before we start loading the home pages in case a document has
+    // a "manifest" attribute, in which the MozApplicationManifest event
+    // will be fired.
+    gBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
+    // listen for offline apps on social
+    let socialBrowser = document.getElementById("social-sidebar-browser");
+    socialBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
 
     var isLoadingBlank = isBlankPageURL(uriToLoad);
 
