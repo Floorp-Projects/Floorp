@@ -386,27 +386,22 @@ class MacroAssemblerX86Shared : public Assembler
         bind(&done);
     }
 
-    bool maybeInlineDouble(uint64_t u, const FloatRegister &dest) {
-        // This implements parts of "13.4 Generating constants" of
-        // "2. Optimizing subroutines in assembly language" by Agner Fog,
-        // generalized to handle any case that can use a pcmpeqw and
-        // up to two shifts.
+    bool maybeInlineDouble(double d, const FloatRegister &dest) {
+        uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
 
+        // Loading zero with xor is specially optimized in hardware.
         if (u == 0) {
             xorpd(dest, dest);
             return true;
         }
 
-        int tz = js_bitscan_ctz64(u);
-        int lz = js_bitscan_clz64(u);
-        if (u == (~uint64_t(0) << (lz + tz) >> lz)) {
-            pcmpeqw(dest, dest);
-            if (tz != 0)
-                psllq(Imm32(lz + tz), dest);
-            if (lz != 0)
-                psrlq(Imm32(lz), dest);
-            return true;
-        }
+        // It is also possible to load several common constants using pcmpeqw
+        // to get all ones and then psllq and psrlq to get zeros at the ends,
+        // as described in "13.4 Generating constants" of
+        // "2. Optimizing subroutines in assembly language" by Agner Fog, and as
+        // previously implemented here. However, with x86 and x64 both using
+        // constant pool loads for double constants, this is probably only
+        // worthwhile in cases where a load is likely to be delayed.
 
         return false;
     }
