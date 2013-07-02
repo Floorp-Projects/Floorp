@@ -315,7 +315,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", NULL } },
                 { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", NULL } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffer, { "DrawBuffer", NULL } },
-                { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", "DrawBuffersARB", NULL } },
+                { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", NULL } },
                 { NULL, { NULL } },
             };
 
@@ -596,20 +596,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mSymbols.fGenVertexArrays = nullptr;
                 mSymbols.fBindVertexArray = nullptr;
                 mSymbols.fDeleteVertexArrays = nullptr;
-            }
-        }
-
-        if (mIsGLES2 && IsExtensionSupported(EXT_draw_buffers)) {
-            SymLoadStruct vaoSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffersEXT", nullptr } },
-                { nullptr, { nullptr } },
-            };
-
-            if (!LoadSymbols(vaoSymbols, trygl, prefix)) {
-                NS_ERROR("GL ES supports EXT_draw_buffers without supplying its function.");
-
-                MarkExtensionUnsupported(EXT_draw_buffers);
-                mSymbols.fDrawBuffers = nullptr;
             }
         }
 
