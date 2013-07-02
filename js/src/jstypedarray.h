@@ -39,9 +39,10 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
  * ArrayBufferObject
  *
  * This class holds the underlying raw buffer that the various
- * ArrayBufferViewObject subclasses (DataView and the TypedArrays) access. It
- * can be created explicitly and passed to an ArrayBufferViewObject subclass,
- * or can be created implicitly by constructing a TypedArray with a size.
+ * ArrayBufferViewObject subclasses (DataViewObject and the TypedArrays)
+ * access. It can be created explicitly and passed to an ArrayBufferViewObject
+ * subclass, or can be created implicitly by constructing a TypedArray with a
+ * size.
  */
 class ArrayBufferObject : public JSObject
 {
