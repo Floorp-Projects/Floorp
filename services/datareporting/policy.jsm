@@ -651,6 +651,13 @@ DataReportingPolicy.prototype = Object.freeze({
   },
 
   /**
+   * Whether the FHR upload enabled setting is locked and can't be changed.
+   */
+  get healthReportUploadLocked() {
+    return this._healthReportPrefs.locked("uploadEnabled");
+  },
+
+  /**
    * Record user acceptance of data submission policy.
    *
    * Data submission will not be allowed to occur until this is called.

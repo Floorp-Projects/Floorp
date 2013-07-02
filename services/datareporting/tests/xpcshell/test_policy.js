@@ -120,6 +120,12 @@ add_test(function test_prefs() {
   do_check_false(hrPrefs.get("uploadEnabled"));
   do_check_false(policy.healthReportUploadEnabled);
 
+  do_check_false(policy.healthReportUploadLocked);
+  hrPrefs.lock("uploadEnabled");
+  do_check_true(policy.healthReportUploadLocked);
+  hrPrefs.unlock("uploadEnabled");
+  do_check_false(policy.healthReportUploadLocked);
+
   run_next_test();
 });
 
