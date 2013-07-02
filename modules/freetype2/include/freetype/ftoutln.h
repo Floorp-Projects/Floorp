@@ -5,7 +5,7 @@
 /*    Support for the FT_Outline type used to store glyph shapes of        */
 /*    most scalable font formats (specification).                          */
 /*                                                                         */
-/*  Copyright 1996-2003, 2005-2011 by                                      */
+/*  Copyright 1996-2003, 2005-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -59,6 +59,7 @@ FT_BEGIN_HEADER
   /*    FT_Outline_Translate                                               */
   /*    FT_Outline_Transform                                               */
   /*    FT_Outline_Embolden                                                */
+  /*    FT_Outline_EmboldenXY                                              */
   /*    FT_Outline_Reverse                                                 */
   /*    FT_Outline_Check                                                   */
   /*                                                                       */
@@ -124,9 +125,11 @@ FT_BEGIN_HEADER
   /*                   outline will *not* necessarily be *freed*, when     */
   /*                   destroying the library, by @FT_Done_FreeType.       */
   /*                                                                       */
-  /*    numPoints   :: The maximal number of points within the outline.    */
+  /*    numPoints   :: The maximum number of points within the outline.    */
+  /*                   Must be smaller than or equal to 0xFFFF (65535).    */
   /*                                                                       */
-  /*    numContours :: The maximal number of contours within the outline.  */
+  /*    numContours :: The maximum number of contours within the outline.  */
+  /*                   This value must be in the range 0 to `numPoints'.   */
   /*                                                                       */
   /* <Output>                                                              */
   /*    anoutline   :: A handle to the new outline.                        */
@@ -348,6 +351,23 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_Outline_Embolden( FT_Outline*  outline,
                        FT_Pos       strength );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Outline_EmboldenXY                                              */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Embolden an outline.  The new outline will be `xstrength' pixels   */
+  /*    wider and `ystrength' pixels higher.  Otherwise, it is similar to  */
+  /*    @FT_Outline_Embolden, which uses the same strength in both         */
+  /*    directions.                                                        */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Outline_EmboldenXY( FT_Outline*  outline,
+                         FT_Pos       xstrength,
+                         FT_Pos       ystrength );
 
 
   /*************************************************************************/
