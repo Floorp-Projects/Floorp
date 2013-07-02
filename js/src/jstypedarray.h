@@ -159,8 +159,19 @@ class ArrayBufferObject : public JSObject
     static bool stealContents(JSContext *cx, JSObject *obj, void **contents,
                               uint8_t **data);
 
-    static inline void setElementsHeader(js::ObjectElements *header, uint32_t bytes);
-    static inline uint32_t getElementsHeaderInitializedLength(const js::ObjectElements *header);
+    static void setElementsHeader(js::ObjectElements *header, uint32_t bytes) {
+        header->flags = 0;
+        header->initializedLength = bytes;
+
+        // NB: one or both of these fields is clobbered by GetViewList to store the
+        // 'views' link. Set them to 0 to effectively initialize 'views' to NULL.
+        header->length = 0;
+        header->capacity = 0;
+    }
+
+    static uint32_t headerInitializedLength(const js::ObjectElements *header) {
+        return header->initializedLength;
+    }
 
     void addView(ArrayBufferViewObject *view);
 
@@ -173,17 +184,25 @@ class ArrayBufferObject : public JSObject
      */
     bool uninlineData(JSContext *cx);
 
-    inline uint32_t byteLength() const;
+    uint32_t byteLength() const {
+        return getElementsHeader()->initializedLength;
+    }
 
-    inline uint8_t * dataPointer() const;
+    inline uint8_t * dataPointer() const {
+        return (uint8_t *) elements;
+    }
 
-   /*
+    /*
      * Check if the arrayBuffer contains any data. This will return false for
      * ArrayBuffer.prototype and neutered ArrayBuffers.
      */
-    inline bool hasData() const;
+    bool hasData() const {
+        return getClass() == &class_;
+    }
 
-    inline bool isAsmJSArrayBuffer() const;
+    bool isAsmJSArrayBuffer() const {
+        return getElementsHeader()->isAsmJSArrayBuffer();
+    }
     static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
     static void neuterAsmJSArrayBuffer(ArrayBufferObject &buffer);
     static void releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj);

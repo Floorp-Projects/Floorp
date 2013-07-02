@@ -54,6 +54,10 @@ using mozilla::PodCopy;
  */
 static const uint8_t ARRAYBUFFER_RESERVED_SLOTS = JSObject::MAX_FIXED_SLOTS - 1;
 
+// Sentinel value used to initialize ArrayBufferViewObjects' NEXT_BUFFER_SLOTs
+// to show that they have not yet been added to any ArrayBufferObject list.
+js::ArrayBufferObject * const UNSET_BUFFER_LINK = reinterpret_cast<js::ArrayBufferObject*>(0x2);
+
 static bool
 ValueIsLength(const Value &v, uint32_t *len)
 {
@@ -212,7 +216,7 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *initda
     // if oldptr is given, then we need to do a realloc
     if (oldptr) {
         ObjectElements *oldheader = static_cast<ObjectElements *>(oldptr);
-        uint32_t oldnbytes = ArrayBufferObject::getElementsHeaderInitializedLength(oldheader);
+        uint32_t oldnbytes = ArrayBufferObject::headerInitializedLength(oldheader);
         newheader = static_cast<ObjectElements *>(maybecx ? maybecx->realloc_(oldptr, size) : js_realloc(oldptr, size));
 
         // if we grew the array, we need to set the new bytes to 0
@@ -244,7 +248,7 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
      * their internal layout can use the object's fixed slots for storage.
      * Set up the object to look like an array with an elements header.
      */
-    JS_ASSERT(is<ArrayBufferObject>() && !hasDynamicSlots() && !hasDynamicElements());
+    JS_ASSERT(!hasDynamicSlots() && !hasDynamicElements());
 
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
@@ -910,7 +914,6 @@ JSBool
 ArrayBufferObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
                                   HandleId id, MutableHandleValue vp)
 {
-    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -918,10 +921,9 @@ ArrayBufferObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject 
 }
 
 JSBool
-ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj,
-                                   HandleObject receiver, HandlePropertyName name, MutableHandleValue vp)
+ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                   HandlePropertyName name, MutableHandleValue vp)
 {
-    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -933,7 +935,6 @@ JSBool
 ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
                                   HandleObject receiver, uint32_t index, MutableHandleValue vp)
 {
-    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -944,7 +945,6 @@ JSBool
 ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
                                            uint32_t index, MutableHandleValue vp, bool *present)
 {
-    JS_ASSERT(obj->is<ArrayBufferObject>());
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -1764,7 +1764,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         obj->setSlot(TYPE_SLOT, Int32Value(ArrayTypeID()));
         obj->setSlot(BUFFER_SLOT, ObjectValue(*bufobj));
 
-        JS_ASSERT(bufobj->is<ArrayBufferObject>());
         Rooted<ArrayBufferObject *> buffer(cx, &bufobj->as<ArrayBufferObject>());
 
         InitArrayBufferViewDataPointer(obj, buffer, byteOffset);
@@ -2765,8 +2764,6 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
             }
         }
     }
-
-    JS_ASSERT(arrayBuffer->is<ArrayBufferObject>());
 
     DataViewObject &dvobj = obj->as<DataViewObject>();
     dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
