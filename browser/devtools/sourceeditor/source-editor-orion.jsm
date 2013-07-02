@@ -123,13 +123,11 @@ const DEFAULT_KEYBINDINGS = [
     action: "Move to Bracket Opening",
     code: Ci.nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET,
     accel: true,
-    shift: true,
   },
   {
     action: "Move to Bracket Closing",
     code: Ci.nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET,
     accel: true,
-    shift: true,
   },
 ];
 
