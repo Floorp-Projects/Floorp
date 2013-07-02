@@ -820,11 +820,6 @@ public class GeckoAppShell
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-            Rect iconBounds = new Rect(0, 0, size, size);
-            canvas.drawBitmap(aSource, null, iconBounds, null);
-            return bitmap;
-        }
 
         // draw a base color
         Paint paint = new Paint();
@@ -832,6 +827,11 @@ public class GeckoAppShell
             // If we aren't drawing a favicon, just use an orange color.
             paint.setColor(Color.HSVToColor(DEFAULT_LAUNCHER_ICON_HSV));
             canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
+        } else if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP) || aSource.getWidth() >= insetSize || aSource.getHeight() >= insetSize) {
+            // otherwise, if this is a webapp or if the icons is lare enough, just draw it
+            Rect iconBounds = new Rect(0, 0, size, size);
+            canvas.drawBitmap(aSource, null, iconBounds, null);
+            return bitmap;
         } else {
             // otherwise use the dominant color from the icon + a layer of transparent white to lighten it somewhat
             int color = BitmapUtils.getDominantColor(aSource);
@@ -852,13 +852,6 @@ public class GeckoAppShell
         // by default, we scale the icon to this size
         int sWidth = insetSize / 2;
         int sHeight = sWidth;
-
-        if (aSource.getWidth() > insetSize || aSource.getHeight() > insetSize) {
-            // however, if the icon is larger than our minimum, we allow it to be drawn slightly larger
-            // (but not necessarily at its full resolution)
-            sWidth = Math.min(size / 3, aSource.getWidth() / 2);
-            sHeight = Math.min(size / 3, aSource.getHeight() / 2);
-        }
 
         int halfSize = size / 2;
         canvas.drawBitmap(aSource,
