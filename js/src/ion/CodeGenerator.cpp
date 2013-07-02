@@ -887,7 +887,7 @@ CodeGenerator::visitReturn(LReturn *lir)
 #endif
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
-        masm.jump(&returnLabel_);
+        masm.jump(returnLabel_);
     return true;
 }
 
@@ -6944,7 +6944,7 @@ CodeGenerator::visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool)
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParallelAbort));
 
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    masm.jump(&returnLabel_);
+    masm.jump(returnLabel_);
     return true;
 }
 
@@ -7004,7 +7004,7 @@ CodeGenerator::visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAb
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PropagateParallelAbort));
 
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    masm.jump(&returnLabel_);
+    masm.jump(returnLabel_);
     return true;
 }
 
@@ -7097,7 +7097,7 @@ CodeGenerator::visitAsmJSReturn(LAsmJSReturn *lir)
         masm.ma_vxfer(d0, r0, r1);
 #endif
     if (current->mir() != *gen->graph().poBegin())
-        masm.jump(&returnLabel_);
+        masm.jump(returnLabel_);
     return true;
 }
 
@@ -7106,7 +7106,7 @@ CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn *lir)
 {
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
-        masm.jump(&returnLabel_);
+        masm.jump(returnLabel_);
     return true;
 }
 

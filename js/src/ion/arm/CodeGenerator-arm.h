@@ -24,8 +24,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   protected:
     // Label for the common return path.
-    NonAssertingLabel returnLabel_;
-    NonAssertingLabel deoptLabel_;
+    HeapLabel *returnLabel_;
+    HeapLabel *deoptLabel_;
     // ugh.  this is not going to be pretty to move over.
     // stack slotted variables are not useful on arm.
     // it looks like this will need to return one of two types.
