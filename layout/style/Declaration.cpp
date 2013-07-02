@@ -232,29 +232,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                         kNotFound, "third subprop must be bottom");
       NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
                         kNotFound, "fourth subprop must be left");
-      const nsCSSValue &topValue = *data->ValueFor(subprops[0]);
-      const nsCSSValue &rightValue = *data->ValueFor(subprops[1]);
-      const nsCSSValue &bottomValue = *data->ValueFor(subprops[2]);
-      const nsCSSValue &leftValue = *data->ValueFor(subprops[3]);
-
-      NS_ABORT_IF_FALSE(topValue.GetUnit() != eCSSUnit_Null, "null top");
-      topValue.AppendToString(subprops[0], aValue);
-      if (topValue != rightValue || topValue != leftValue ||
-          topValue != bottomValue) {
-        aValue.Append(PRUnichar(' '));
-        NS_ABORT_IF_FALSE(rightValue.GetUnit() != eCSSUnit_Null, "null right");
-        rightValue.AppendToString(subprops[1], aValue);
-        if (topValue != bottomValue || rightValue != leftValue) {
-          aValue.Append(PRUnichar(' '));
-          NS_ABORT_IF_FALSE(bottomValue.GetUnit() != eCSSUnit_Null, "null bottom");
-          bottomValue.AppendToString(subprops[2], aValue);
-          if (rightValue != leftValue) {
-            aValue.Append(PRUnichar(' '));
-            NS_ABORT_IF_FALSE(leftValue.GetUnit() != eCSSUnit_Null, "null left");
-            leftValue.AppendToString(subprops[3], aValue);
-          }
-        }
-      }
+      const nsCSSValue* vals[4] = {
+        data->ValueFor(subprops[0]),
+        data->ValueFor(subprops[1]),
+        data->ValueFor(subprops[2]),
+        data->ValueFor(subprops[3])
+      };
+      AppendSidesShorthandToString(subprops, vals, aValue);
       break;
     }
     case eCSSProperty_border_radius:
