@@ -2015,6 +2015,13 @@ GK_ATOM(windows_theme_royale, "windows-theme-royale")
 GK_ATOM(windows_theme_zune, "windows-theme-zune")
 GK_ATOM(windows_theme_generic, "windows-theme-generic")
 
+// windows version info selector metrics, helpful in removing ambiguity
+// in theme selectors.
+GK_ATOM(windows_version_xp, "windows-version-xp")
+GK_ATOM(windows_version_vista, "windows-version-vista")
+GK_ATOM(windows_version_win7, "windows-version-win7")
+GK_ATOM(windows_version_win8, "windows-version-win8")
+
 // And the same again, as media query keywords.
 GK_ATOM(_moz_scrollbar_start_backward, "-moz-scrollbar-start-backward")
 GK_ATOM(_moz_scrollbar_start_forward, "-moz-scrollbar-start-forward")
@@ -2031,6 +2038,7 @@ GK_ATOM(_moz_windows_compositor, "-moz-windows-compositor")
 GK_ATOM(_moz_windows_classic, "-moz-windows-classic")
 GK_ATOM(_moz_windows_glass, "-moz-windows-glass")
 GK_ATOM(_moz_windows_theme, "-moz-windows-theme")
+GK_ATOM(_moz_os_version, "-moz-os-version")
 GK_ATOM(_moz_touch_enabled, "-moz-touch-enabled")
 GK_ATOM(_moz_maemo_classic, "-moz-maemo-classic")
 GK_ATOM(_moz_menubar_drag, "-moz-menubar-drag")

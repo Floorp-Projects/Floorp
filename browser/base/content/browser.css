@@ -390,7 +390,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #identity-popup-content-box:not(.chromeUI) > #identity-popup-chromeLabel,
 #identity-popup-content-box.chromeUI > .identity-popup-label:not(#identity-popup-brandName):not(#identity-popup-chromeLabel),
 #identity-popup-content-box.chromeUI > .identity-popup-description,
-#identity-popup-content-box.chromeUI > #identity-popup-button-container,
+#identity-popup.chromeUI > #identity-popup-button-container,
 #identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-content-host ,

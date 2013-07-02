@@ -353,3 +353,27 @@ add_task(function test_download_public_and_private()
   cleanup();
 });
 
+/**
+ * Download with parental controls enabled.
+ */
+add_task(function test_download_blocked_parental_controls()
+{
+  function cleanup() {
+    DownloadIntegration.shouldBlockInTest = false;
+  }
+  do_register_cleanup(cleanup);
+  DownloadIntegration.shouldBlockInTest = true;
+
+  let download = yield promiseStartLegacyDownload();
+
+  try {
+    yield download.start();
+    do_throw("The download should have blocked.");
+  } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
+    do_check_true(ex.becauseBlockedByParentalControls);
+  }
+
+  do_check_false(download.target.file.exists());
+
+  cleanup();
+});

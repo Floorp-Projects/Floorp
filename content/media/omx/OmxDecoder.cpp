@@ -151,7 +151,8 @@ OmxDecoder::OmxDecoder(MediaResource *aResource,
   mAudioBuffer(nullptr),
   mIsVideoSeeking(false),
   mAudioMetadataRead(false),
-  mPaused(false)
+  mAudioPaused(false),
+  mVideoPaused(false)
 {
   mLooper = new ALooper;
   mLooper->setName("OmxDecoder");
@@ -736,33 +737,44 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 
 nsresult OmxDecoder::Play()
 {
-  if (!mPaused) {
+  if (!mVideoPaused && !mAudioPaused) {
     return NS_OK;
   }
-  if (mVideoSource.get() && mVideoSource->start() != OK) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
-  if (mAudioSource.get()&& mAudioSource->start() != OK) {
+  if (mVideoPaused && mVideoSource.get() && mVideoSource->start() != OK) {
     return NS_ERROR_UNEXPECTED;
   }
-  mPaused = false;
+  mVideoPaused = false;
+
+  if (mAudioPaused && mAudioSource.get() && mAudioSource->start() != OK) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  mAudioPaused = false;
+
   return NS_OK;
 }
 
+// AOSP didn't give implementation on OMXCodec::Pause() and not define
+// OMXCodec::Start() should be called for resuming the decoding. Currently
+// it is customized by a specific open source repository only.
+// ToDo The one not supported OMXCodec::Pause() should return error code here,
+// so OMXCodec::Start() doesn't be called again for resuming. But if someone
+// implement the OMXCodec::Pause() and need a following OMXCodec::Read() with
+// seek option (define in MediaSource.h) then it is still not supported here.
+// We need to fix it until it is really happened.
 void OmxDecoder::Pause()
 {
-  if (mPaused) {
+  if (mVideoPaused || mAudioPaused) {
     return;
   }
-  if (mVideoSource.get()) {
-    mVideoSource->pause();
+
+  if (mVideoSource.get() && mVideoSource->pause() == OK) {
+    mVideoPaused = true;
   }
 
-  if (mAudioSource.get()) {
-    mAudioSource->pause();
+  if (mAudioSource.get() && mAudioSource->pause() == OK) {
+    mAudioPaused = true;
   }
-  mPaused = true;
 }
 
 // Called on ALooper thread.

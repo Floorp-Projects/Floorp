@@ -136,14 +136,14 @@ endif
 
 ifdef USE_ARM_SIMD_GCC
 CSRCS += pixman-arm-simd.c
-SSRCS += pixman-arm-simd-asm.S pixman-arm-simd-asm-scaled.S
+DISABLED_SSRCS += pixman-arm-simd-asm.S pixman-arm-simd-asm-scaled.S
 DEFINES += -DUSE_ARM_SIMD
 endif
 
 ifdef USE_ARM_NEON_GCC
 CSRCS += pixman-arm-neon.c
-SSRCS += pixman-arm-neon-asm.S
-SSRCS += pixman-arm-neon-asm-bilinear.S
+DISABLED_SSRCS += pixman-arm-neon-asm.S
+DISABLED_SSRCS += pixman-arm-neon-asm-bilinear.S
 DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
 endif

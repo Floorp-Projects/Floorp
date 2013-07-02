@@ -3012,6 +3012,20 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+#identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#identity-popup-container {
+  padding: 16px;
+}
+
+#identity-popup-button-container {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.04) 60%, transparent);
+  padding: 16px;
+  margin-top: 5px;
+}
+
 #notification-popup-box {
   position: relative;
   background-color: #fff;

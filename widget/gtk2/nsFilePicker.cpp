@@ -412,10 +412,6 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
   gtk_window_set_modal(window, TRUE);
   if (parent_widget) {
     gtk_window_set_destroy_with_parent(window, TRUE);
-    GtkWindowGroup *parentGroup = gtk_window_get_group(parent_widget);
-    if (parentGroup) {
-      gtk_window_group_add_window(parentGroup, window);
-    }
   }
 
   NS_ConvertUTF16toUTF8 defaultName(mDefault);

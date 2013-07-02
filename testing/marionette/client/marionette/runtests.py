@@ -108,13 +108,19 @@ class MarionetteTestResult(unittest._TextTestResult):
             self.stream.writeln("%s: %s" % (flavour, self.getDescription(test)))
             self.stream.writeln(self.separator2)
             errlines = err.strip().split('\n')
-            for line in errlines[0:-1]:
-                self.stream.writeln("%s" % line)
-            if "TEST-UNEXPECTED-FAIL" in errlines[-1]:
-                self.stream.writeln(errlines[-1])
-            else:
-                self.stream.writeln("TEST-UNEXPECTED-FAIL | %s | %s" %
-                                    (self.getInfo(test), errlines[-1]))
+            lastline = None
+            fail_present = None
+            for line in errlines:
+                if not line.startswith('\t'):
+                    lastline = line
+                if 'TEST-UNEXPECTED-FAIL' in line:
+                    fail_present = True
+            for line in errlines:
+                if line != lastline or fail_present:
+                    self.stream.writeln("%s" % line)
+                else:
+                    self.stream.writeln("TEST-UNEXPECTED-FAIL | %s | %s" %
+                                        (self.getInfo(test), line))
 
     def stopTest(self, *args, **kwargs):
         unittest._TextTestResult.stopTest(self, *args, **kwargs)

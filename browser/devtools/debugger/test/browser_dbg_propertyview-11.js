@@ -52,13 +52,13 @@ function testFrameParameters()
       is(anonymousNodes[1].querySelector(".name").getAttribute("value"), "button",
         "Should have the right property name for |button|.");
 
-      is(anonymousNodes[1].querySelector(".value").getAttribute("value"), "[object HTMLButtonElement]",
+      is(anonymousNodes[1].querySelector(".value").getAttribute("value"), "HTMLButtonElement",
         "Should have the right property value for |button|.");
 
       is(anonymousNodes[2].querySelector(".name").getAttribute("value"), "buttonAsProto",
         "Should have the right property name for |buttonAsProto|.");
 
-      is(anonymousNodes[2].querySelector(".value").getAttribute("value"), "[object Object]",
+      is(anonymousNodes[2].querySelector(".value").getAttribute("value"), "Object",
         "Should have the right property value for |buttonAsProto|.");
 
       let globalScopeObject = gVars.getScopeForNode(globalScope);
@@ -67,7 +67,7 @@ function testFrameParameters()
       is(documentNode.target.querySelector(".name").getAttribute("value"), "document",
         "Should have the right property name for |document|.");
 
-      is(documentNode.target.querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
+      is(documentNode.target.querySelector(".value").getAttribute("value"), "HTMLDocument",
         "Should have the right property value for |document|.");
 
       let buttonNode = gVars.getItemForNode(anonymousNodes[1]);
@@ -116,21 +116,21 @@ function testFrameParameters()
            .getAttribute("value"), "__proto__",
           "Should have the right property name for '__proto__' in buttonNode.");
         ok(buttonNode.get("__proto__").target.querySelector(".value")
-           .getAttribute("value").search(/object/) != -1,
+           .getAttribute("value"), "HTMLButtonElement",
           "'__proto__' in buttonNode should be an object.");
 
         is(buttonAsProtoNode.get("__proto__").target.querySelector(".name")
            .getAttribute("value"), "__proto__",
           "Should have the right property name for '__proto__' in buttonAsProtoNode.");
         ok(buttonAsProtoNode.get("__proto__").target.querySelector(".value")
-           .getAttribute("value").search(/object/) != -1,
+           .getAttribute("value"), "HTMLButtonElement",
           "'__proto__' in buttonAsProtoNode should be an object.");
 
         is(documentNode.get("__proto__").target.querySelector(".name")
            .getAttribute("value"), "__proto__",
           "Should have the right property name for '__proto__' in documentNode.");
         ok(documentNode.get("__proto__").target.querySelector(".value")
-           .getAttribute("value").search(/object/) != -1,
+           .getAttribute("value"), "HTMLDocument",
           "'__proto__' in documentNode should be an object.");
 
         // Now the main course: make sure that the native getters for WebIDL

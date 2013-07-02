@@ -40,6 +40,8 @@ public class Favicons {
 
     public static final long NOT_LOADING = 0;
     public static final long FAILED_EXPIRY_NEVER = -1;
+    public static final int FLAG_PERSIST = 1;
+    public static final int FLAG_SCALE = 2;
 
     private static int sFaviconSmallSize = -1;
     private static int sFaviconLargeSize = -1;
@@ -106,7 +108,7 @@ public class Favicons {
         return BrowserDB.getFaviconUrlForHistoryUrl(mContext.getContentResolver(), pageUrl);
     }
 
-    public long loadFavicon(String pageUrl, String faviconUrl, boolean persist,
+    public long loadFavicon(String pageUrl, String faviconUrl, int flags,
             OnFaviconLoadedListener listener) {
 
         // Handle the case where page url is empty
@@ -128,7 +130,7 @@ public class Favicons {
             return -1;
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(ThreadUtils.getBackgroundHandler(), pageUrl, faviconUrl, persist, listener);
+        LoadFaviconTask task = new LoadFaviconTask(ThreadUtils.getBackgroundHandler(), pageUrl, faviconUrl, flags, listener);
 
         long taskId = task.getId();
         mLoadTasks.put(taskId, task);
@@ -253,10 +255,10 @@ public class Favicons {
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
-        private boolean mPersist;
+        private int mFlags;
 
         public LoadFaviconTask(Handler backgroundThreadHandler,
-                               String pageUrl, String faviconUrl, boolean persist,
+                               String pageUrl, String faviconUrl, int flags,
                                OnFaviconLoadedListener listener) {
             super(backgroundThreadHandler);
 
@@ -267,7 +269,7 @@ public class Favicons {
             mPageUrl = pageUrl;
             mFaviconUrl = faviconUrl;
             mListener = listener;
-            mPersist = persist;
+            mFlags = flags;
         }
 
         // Runs in background thread
@@ -278,7 +280,7 @@ public class Favicons {
 
         // Runs in background thread
         private void saveFaviconToDb(final Bitmap favicon) {
-            if (!mPersist) {
+            if ((mFlags & FLAG_PERSIST) == 0) {
                 return;
             }
 
@@ -377,7 +379,7 @@ public class Favicons {
             if (storedFaviconUrl != null && storedFaviconUrl.equals(mFaviconUrl)) {
                 image = loadFaviconFromDb();
                 if (image != null && image.getWidth() > 0 && image.getHeight() > 0)
-                    return scaleImage(image);
+                    return ((mFlags & FLAG_SCALE) != 0) ? scaleImage(image) : image;
             }
 
             if (isCancelled())
@@ -387,7 +389,7 @@ public class Favicons {
 
             if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
                 saveFaviconToDb(image);
-                image = scaleImage(image);
+                image = ((mFlags & FLAG_SCALE) != 0) ? scaleImage(image) : image;
             } else {
                 image = null;
             }

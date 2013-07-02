@@ -42,4 +42,8 @@
    correct. */
 #undef JS_METHODJIT
 
+/* MOZILLA JSAPI version number components */
+#undef MOZJS_MAJOR_VERSION
+#undef MOZJS_MINOR_VERSION
+
 #endif /* js_config_h___ */

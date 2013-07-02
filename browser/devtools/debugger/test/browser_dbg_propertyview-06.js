@@ -128,9 +128,9 @@ function testSimpleCall() {
       is(localVar5.get("someProp5").target.querySelector(".variables-view-element-details").childNodes.length, 8,
         "The localVar5.someProp5 doesn't contain all the created properties.");
 
-      is(windowVar.target.querySelector(".value").getAttribute("value"), "[object Window]",
+      is(windowVar.target.querySelector(".value").getAttribute("value"), "Window",
         "The grip information for the windowVar wasn't set correctly.");
-      is(documentVar.target.querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
+      is(documentVar.target.querySelector(".value").getAttribute("value"), "HTMLDocument",
         "The grip information for the documentVar wasn't set correctly.");
 
       is(localVar0.target.querySelector(".value").getAttribute("value"), "42",
@@ -143,7 +143,7 @@ function testSimpleCall() {
         "The grip information for the localVar3 wasn't set correctly.");
       is(localVar4.target.querySelector(".value").getAttribute("value"), "null",
         "The grip information for the localVar4 wasn't set correctly.");
-      is(localVar5.target.querySelector(".value").getAttribute("value"), "[object Object]",
+      is(localVar5.target.querySelector(".value").getAttribute("value"), "Object",
         "The grip information for the localVar5 wasn't set correctly.");
 
       is(localVar5.get("someProp0").target.querySelector(".value").getAttribute("value"), "42",
@@ -156,7 +156,7 @@ function testSimpleCall() {
         "The grip information for the localVar3 wasn't set correctly.");
       is(localVar5.get("someProp4").target.querySelector(".value").getAttribute("value"), "null",
         "The grip information for the localVar4 wasn't set correctly.");
-      is(localVar5.get("someProp5").target.querySelector(".value").getAttribute("value"), "[object Object]",
+      is(localVar5.get("someProp5").target.querySelector(".value").getAttribute("value"), "Object",
         "The grip information for the localVar5 wasn't set correctly.");
       is(localVar5.get("someUndefined").target.querySelector(".value").getAttribute("value"), "undefined",
         "The grip information for the someUndefined wasn't set correctly.");
@@ -173,7 +173,7 @@ function testSimpleCall() {
         "The grip information for the sub-localVar3 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someProp4").target.querySelector(".value").getAttribute("value"), "null",
         "The grip information for the sub-localVar4 wasn't set correctly.");
-      is(localVar5.get("someProp5").get("someProp5").target.querySelector(".value").getAttribute("value"), "[object Object]",
+      is(localVar5.get("someProp5").get("someProp5").target.querySelector(".value").getAttribute("value"), "Object",
         "The grip information for the sub-localVar5 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someUndefined").target.querySelector(".value").getAttribute("value"), "undefined",
         "The grip information for the sub-someUndefined wasn't set correctly.");

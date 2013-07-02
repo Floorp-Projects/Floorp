@@ -2221,7 +2221,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 5. */
     double relativeStart;
-    if (!ToInteger(cx, argc >= 1 ? args[0] : UndefinedValue(), &relativeStart))
+    if (!ToInteger(cx, args.handleOrUndefinedAt(0), &relativeStart))
         return false;
 
     /* Step 6. */
@@ -2235,7 +2235,8 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
     uint32_t actualDeleteCount;
     if (argc != 1) {
         double deleteCountDouble;
-        if (!ToInteger(cx, argc >= 2 ? args[1] : Int32Value(0), &deleteCountDouble))
+        RootedValue cnt(cx, argc >= 2 ? args[1] : Int32Value(0));
+        if (!ToInteger(cx, cnt, &deleteCountDouble))
             return false;
         actualDeleteCount = Min(Max(deleteCountDouble, 0.0), double(len - actualStart));
     } else {
@@ -2540,7 +2541,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
 
     if (args.length() > 0) {
         double d;
-        if (!ToInteger(cx, args[0], &d))
+        if (!ToInteger(cx, args.handleAt(0), &d))
             return false;
         if (d < 0) {
             d += length;
@@ -2552,7 +2553,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         begin = (uint32_t)d;
 
         if (args.hasDefined(1)) {
-            if (!ToInteger(cx, args[1], &d))
+            if (!ToInteger(cx, args.handleAt(1), &d))
                 return false;
             if (d < 0) {
                 d += length;

@@ -251,8 +251,8 @@ if test -n "$IS_ALPHA"; then
   MOZJS_ALPHA=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9\.]*\([^0-9]\).*|\1|"`
   changequote([,])
 fi
-AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,"$MOZJS_MAJOR_VERSION")
-AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,"$MOZJS_MINOR_VERSION")
+AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,$MOZJS_MAJOR_VERSION)
+AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,$MOZJS_MINOR_VERSION)
 AC_SUBST(JS_SHELL_NAME)
 AC_SUBST(JS_CONFIG_NAME)
 AC_SUBST(MOZJS_MAJOR_VERSION)
@@ -4412,12 +4412,9 @@ dnl ========================================================
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
 
-if test -n "$JS_STANDALONE"; then
-    ENABLE_INTL_API=1
-fi
-MOZ_ARG_ENABLE_BOOL(intl-api,
-[  --enable-intl-api       Enable ECMAScript Internationalization API (default=yes for standalone JS)],
-    ENABLE_INTL_API=1,
+ENABLE_INTL_API=1
+MOZ_ARG_DISABLE_BOOL(intl-api,
+[  --disable-intl-api      Disable the ECMAScript Internationalization API],
     ENABLE_INTL_API= )
 
 dnl Settings for the implementation of the ECMAScript Internationalization API

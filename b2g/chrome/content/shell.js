@@ -482,9 +482,6 @@ var shell = {
 
         this.reportCrash(true);
 
-        let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
-        chromeWindow.browserDOMWindow = new nsBrowserAccess();
-
         Cu.import('resource://gre/modules/Webapps.jsm');
         DOMApplicationRegistry.allAppsLaunchable = true;
 
@@ -605,37 +602,6 @@ var shell = {
         sender.sendAsyncMessage(activity.response, { success: false });
       }
     }
-  }
-};
-
-function nsBrowserAccess() {
-}
-
-nsBrowserAccess.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
-
-  openURI: function openURI(uri, opener, where, context) {
-    // TODO This should be replaced by an 'open-browser-window' intent
-    let content = shell.contentBrowser.contentWindow;
-    let contentWindow = content.wrappedJSObject;
-    if (!('getApplicationManager' in contentWindow))
-      return null;
-
-    let applicationManager = contentWindow.getApplicationManager();
-    if (!applicationManager)
-      return null;
-
-    let url = uri ? uri.spec : 'about:blank';
-    let window = applicationManager.launch(url, where);
-    return window.contentWindow;
-  },
-
-  openURIInFrame: function openURIInFrame(uri, opener, where, context) {
-    throw new Error('Not Implemented');
-  },
-
-  isTabContentWindow: function isTabContentWindow(contentWindow) {
-    return contentWindow == window;
   }
 };
 

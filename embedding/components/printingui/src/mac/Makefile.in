@@ -12,10 +12,10 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY	= ..
 LIBXUL_LIBRARY	= 1
+FAIL_ON_WARNINGS = 1
 
 
-
-CMMSRCS = nsPrintingPromptServiceX.mm
+DISABLED_CMMSRCS = nsPrintingPromptServiceX.mm
 
 LOCAL_INCLUDES	= \
 		$(NULL)

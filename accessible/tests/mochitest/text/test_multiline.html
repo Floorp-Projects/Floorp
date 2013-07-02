@@ -16,7 +16,7 @@
 
     function doTest()
     {
-      SimpleTest.expectAssertions(46);
+      SimpleTest.expectAssertions(38);
 
       // __o__n__e__w__o__r__d__\n
       //  0  1  2  3  4  5  6  7
@@ -180,48 +180,18 @@
       // getTextAtOffset
 
       // BOUNDARY_LINE_START
-      testTextAtOffset(0, BOUNDARY_LINE_START, "oneword\n", 0, 8,
-                       "div", kTodo, kOk, kTodo,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kTodo, kOk, kTodo,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
-      testTextAtOffset(7, BOUNDARY_LINE_START, "oneword\n", 0, 8,
-                       "div", kOk, kOk, kOk,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(8, BOUNDARY_LINE_START, "\n", 8, 9,
-                       "div", kOk, kOk, kOk,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(9, BOUNDARY_LINE_START, "two words\n", 9, 19,
-                       "div", kTodo, kOk, kTodo,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kTodo, kOk, kTodo,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
-      testTextAtOffset(13, BOUNDARY_LINE_START, "two words\n", 9, 19,
-                       "div", kTodo, kOk, kTodo,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kTodo, kOk, kTodo,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
-      testTextAtOffset(18, BOUNDARY_LINE_START, "two words\n", 9, 19,
-                       "div", kOk, kOk, kOk,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(0, BOUNDARY_LINE_START, "oneword\n", 0, 8, IDs);
+      testTextAtOffset(7, BOUNDARY_LINE_START, "oneword\n", 0, 8, IDs);
+      testTextAtOffset(8, BOUNDARY_LINE_START, "\n", 8, 9, IDs);
+      testTextAtOffset(9, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
+      testTextAtOffset(13, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
+      testTextAtOffset(18, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
       testTextAtOffset(19, BOUNDARY_LINE_START, "", 19, 19,
-                       "div", kTodo, kTodo, kTodo,
+                       "div", kTodo, kTodo, kOk,
                        "divbr", kTodo, kTodo, kOk,
-                       "editable", kTodo, kTodo, kTodo,
+                       "editable", kTodo, kTodo, kOk,
                        "editablebr", kTodo, kTodo, kOk,
-                       "textarea", kTodo, kTodo, kTodo);
+                       "textarea", kTodo, kTodo, kOk);
 
       // BOUNDARY_LINE_END
       testTextAtOffset(0, BOUNDARY_LINE_END, "oneword", 0, 7,
@@ -231,35 +201,35 @@
                        "editablebr", kOk, kOk, kOk,
                        "textarea", kTodo, kOk, kTodo);
       testTextAtOffset(7, BOUNDARY_LINE_END, "oneword", 0, 7,
-                       "div", kTodo, kTodo, kTodo,
-                       "divbr", kTodo, kTodo, kTodo,
-                       "editable", kTodo, kTodo, kTodo,
-                       "editablebr", kTodo, kTodo, kTodo,
-                       "textarea", kTodo, kTodo, kTodo);
+                       "div", kTodo, kOk, kTodo,
+                       "divbr", kOk, kOk, kOk,
+                       "editable", kTodo, kOk, kTodo,
+                       "editablebr", kOk, kOk, kOk,
+                       "textarea", kTodo, kOk, kTodo);
       testTextAtOffset(8, BOUNDARY_LINE_END, "\n", 7, 8,
                        "div", kTodo, kTodo, kTodo,
-                       "divbr", kTodo, kTodo, kTodo,
+                       "divbr", kOk, kOk, kOk,
                        "editable", kTodo, kTodo, kTodo,
-                       "editablebr", kTodo, kTodo, kTodo,
+                       "editablebr", kOk, kOk, kOk,
                        "textarea", kTodo, kTodo, kTodo);
       testTextAtOffset(9, BOUNDARY_LINE_END, "\ntwo words", 8, 18,
-                       "div", kTodo, kOk, kTodo,
+                       "div", kTodo, kTodo, kTodo,
                        "divbr", kOk, kOk, kOk,
-                       "editable", kTodo, kOk, kTodo,
+                       "editable", kTodo, kTodo, kTodo,
                        "editablebr", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
+                       "textarea", kTodo, kTodo, kTodo);
       testTextAtOffset(17, BOUNDARY_LINE_END, "\ntwo words", 8, 18,
-                       "div", kOk, kOk, kOk,
+                       "div", kTodo, kTodo, kTodo,
                        "divbr", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
+                       "editable", kTodo, kTodo, kTodo,
                        "editablebr", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
+                       "textarea", kTodo, kTodo, kTodo);
       testTextAtOffset(18, BOUNDARY_LINE_END, "\ntwo words", 8, 18,
-                       "div", kTodo, kOk, kTodo,
-                       "divbr", kTodo, kOk, kTodo,
-                       "editable", kTodo, kOk, kTodo,
-                       "editablebr", kTodo, kOk, kTodo,
-                       "textarea", kTodo, kOk, kTodo);
+                       "div", kTodo, kTodo, kTodo,
+                       "divbr", kOk, kOk, kOk,
+                       "editable", kTodo, kTodo, kTodo,
+                       "editablebr", kOk, kOk, kOk,
+                       "textarea", kTodo, kTodo, kTodo);
       testTextAtOffset(19, BOUNDARY_LINE_END, "\n", 18, 19,
                        "div", kTodo, kTodo, kTodo,
                        "divbr", kTodo, kTodo, kTodo,
