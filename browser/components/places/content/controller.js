@@ -937,7 +937,7 @@ PlacesController.prototype = {
             gen.next();
           } catch (ex if ex instanceof StopIteration) {}
         }, Ci.nsIThread.DISPATCH_NORMAL); 
-        yield;
+        yield undefined;
       }
     }
     let gen = pagesChunkGenerator(URIs);
