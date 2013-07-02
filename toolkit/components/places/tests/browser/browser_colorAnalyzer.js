@@ -21,7 +21,7 @@ let tests = [];
 function generatorTest() {
   while (tests.length > 0) {
     tests.shift()();
-    yield;
+    yield undefined;
   }
 }
 
