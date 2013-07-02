@@ -1156,7 +1156,7 @@ FileAsTypedArray(JSContext *cx, const char *pathname)
             obj = JS_NewUint8Array(cx, len);
             if (!obj)
                 return NULL;
-            char *buf = (char *) TypedArrayObject::viewData(obj);
+            char *buf = (char *) obj->as<TypedArrayObject>().viewData();
             size_t cc = fread(buf, 1, len, file);
             if (cc != len) {
                 JS_ReportError(cx, "can't read %s: %s", pathname,
@@ -3438,16 +3438,17 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes, NULL, NULL, UndefinedValue()))
         return false;
 
-    JSObject *array = JS_NewUint8Array(cx, nbytes);
-    if (!array) {
+    JSObject *obj = JS_NewUint8Array(cx, nbytes);
+    if (!obj) {
         JS_free(cx, datap);
         return false;
     }
-    JS_ASSERT((uintptr_t(TypedArrayObject::viewData(array)) & 7) == 0);
-    js_memcpy(TypedArrayObject::viewData(array), datap, nbytes);
+    TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
+    JS_ASSERT((uintptr_t(tarr->viewData()) & 7) == 0);
+    js_memcpy(tarr->viewData(), datap, nbytes);
 
     JS_ClearStructuredClone(datap, nbytes);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(array));
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(tarr));
     return true;
 }
 
@@ -3460,16 +3461,17 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }
-    if ((TypedArrayObject::byteLength(obj) & 7) != 0) {
+    TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
+    if ((tarr->byteLength() & 7) != 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }
-    if ((uintptr_t(TypedArrayObject::viewData(obj)) & 7) != 0) {
+    if ((uintptr_t(tarr->viewData()) & 7) != 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_BAD_ALIGNMENT);
         return false;
     }
 
-    if (!JS_ReadStructuredClone(cx, (uint64_t *) TypedArrayObject::viewData(obj), TypedArrayObject::byteLength(obj),
+    if (!JS_ReadStructuredClone(cx, (uint64_t *) tarr->viewData(), tarr->byteLength(),
                                 JS_STRUCTURED_CLONE_VERSION, v.address(), NULL, NULL)) {
         return false;
     }

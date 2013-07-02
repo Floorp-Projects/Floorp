@@ -582,19 +582,20 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
  * swapped; the Int16Array requires that they are.
  */
 bool
-JSStructuredCloneWriter::writeTypedArray(HandleObject arr)
+JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 {
-    if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, TypedArrayObject::length(arr)))
+    Rooted<TypedArrayObject*> tarr(context(), &obj->as<TypedArrayObject>());
+    if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, tarr->length()))
         return false;
-    uint64_t type = TypedArrayObject::type(arr);
+    uint64_t type = tarr->type();
     if (!out.write(type))
         return false;
 
     // Write out the ArrayBuffer tag and contents
-    if (!startWrite(TypedArrayObject::bufferValue(arr)))
+    if (!startWrite(TypedArrayObject::bufferValue(tarr)))
         return false;
 
-    return out.write(TypedArrayObject::byteOffset(arr));
+    return out.write(tarr->byteOffset());
 }
 
 bool

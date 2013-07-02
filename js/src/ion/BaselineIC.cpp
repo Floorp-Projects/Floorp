@@ -3487,9 +3487,9 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
 }
 
 static bool
-TypedArrayRequiresFloatingPoint(JSObject *obj)
+TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
 {
-    uint32_t type = TypedArrayObject::type(obj);
+    uint32_t type = tarr->type();
     return (type == TypedArrayObject::TYPE_UINT32 ||
             type == TypedArrayObject::TYPE_FLOAT32 ||
             type == TypedArrayObject::TYPE_FLOAT64);
@@ -3575,11 +3575,12 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     if (obj->isTypedArray() && rhs.isInt32() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
-        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+        Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
+        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
             return true;
 
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
-        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArrayObject::type(obj));
+        ICGetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type());
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
         if (!typedArrayStub)
             return false;
@@ -4241,23 +4242,23 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
     }
 
     if (obj->isTypedArray() && index.isInt32() && rhs.isNumber()) {
-        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+        Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
+        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
             return true;
 
-        uint32_t len = TypedArrayObject::length(obj);
+        uint32_t len = tarr->length();
         int32_t idx = index.toInt32();
         bool expectOutOfBounds = (idx < 0) || (static_cast<uint32_t>(idx) >= len);
 
-        if (!TypedArraySetElemStubExists(stub, obj, expectOutOfBounds)) {
+        if (!TypedArraySetElemStubExists(stub, tarr, expectOutOfBounds)) {
             // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
             if (expectOutOfBounds)
-                RemoveExistingTypedArraySetElemStub(cx, stub, obj);
+                RemoveExistingTypedArraySetElemStub(cx, stub, tarr);
 
             IonSpew(IonSpew_BaselineIC,
                     "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
-                    obj->lastProperty(), TypedArrayObject::type(obj),
-                    expectOutOfBounds ? "yes" : "no");
-            ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArrayObject::type(obj),
+                    tarr->lastProperty(), tarr->type(), expectOutOfBounds ? "yes" : "no");
+            ICSetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type(),
                                                     expectOutOfBounds);
             ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
             if (!typedArrayStub)

@@ -453,7 +453,7 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
             JS_ASSERT(idx < arrobj->getDenseInitializedLength());
             JSObject::setDenseElementWithType(cx, arrobj, idx, args[elemi]);
         } else {
-            JS_ASSERT(idx < TypedArrayObject::length(arrobj));
+            JS_ASSERT(idx < arrobj->as<TypedArrayObject>().length());
             RootedValue tmp(cx, args[elemi]);
             // XXX: Always non-strict.
             if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))
