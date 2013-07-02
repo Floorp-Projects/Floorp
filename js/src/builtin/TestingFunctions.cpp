@@ -246,7 +246,8 @@ static const struct ParamPair {
     {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
     {"gcBytes",             JSGC_BYTES},
     {"gcNumber",            JSGC_NUMBER},
-    {"sliceTimeBudget",     JSGC_SLICE_TIME_BUDGET}
+    {"sliceTimeBudget",     JSGC_SLICE_TIME_BUDGET},
+    {"markStackLimit",      JSGC_MARK_STACK_LIMIT}
 };
 
 static JSBool
