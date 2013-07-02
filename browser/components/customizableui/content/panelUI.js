@@ -78,6 +78,7 @@ const PanelUI = {
       this.hide();
     } else if (this.panel.state == "closed") {
       this.ensureRegistered();
+      this.panel.hidden = false;
 
       let anchor = aEvent.target;
       let iconAnchor =

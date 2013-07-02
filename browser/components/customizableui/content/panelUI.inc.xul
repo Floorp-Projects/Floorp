@@ -6,6 +6,7 @@
        role="group"
        type="arrow"
        level="top"
+       hidden="true"
        consumeoutsideclicks="true"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
@@ -73,6 +74,7 @@
        role="group"
        type="arrow"
        level="top"
+       hidden="true"
        consumeoutsideclicks="true">
   <vbox id="widget-overflow-list">
   </vbox>
