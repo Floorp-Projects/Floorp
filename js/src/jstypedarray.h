@@ -385,13 +385,15 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
 
 class DataViewObject : public ArrayBufferViewObject
 {
-public:
-    static Class class_;
+    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS;
+    static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
 
-private:
+  private:
     static Class protoClass;
 
-    static inline bool is(const Value &v);
+    static bool is(const Value &v) {
+        return v.isObject() && v.toObject().hasClass(&class_);
+    }
 
     template<Value ValueGetter(DataViewObject &view)>
     static bool
@@ -406,12 +408,43 @@ private:
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
-    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS;
-    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
+    static Class class_;
 
-    static inline Value bufferValue(DataViewObject &view);
-    static inline Value byteOffsetValue(DataViewObject &view);
-    static inline Value byteLengthValue(DataViewObject &view);
+    uint32_t byteOffset() const {
+        int32_t offset = getReservedSlot(BYTEOFFSET_SLOT).toInt32();
+        JS_ASSERT(offset >= 0);
+        return static_cast<uint32_t>(offset);
+    }
+
+    uint32_t byteLength() const {
+        int32_t length = getReservedSlot(BYTELENGTH_SLOT).toInt32();
+        JS_ASSERT(length >= 0);
+        return static_cast<uint32_t>(length);
+    }
+
+    static Value byteOffsetValue(DataViewObject &view) {
+        return Int32Value(view.byteOffset());
+    }
+
+    static Value byteLengthValue(DataViewObject &view) {
+        return Int32Value(view.byteLength());
+    }
+
+    bool hasBuffer() const {
+        return getReservedSlot(BUFFER_SLOT).isObject();
+    }
+
+    ArrayBufferObject &arrayBuffer() const {
+        return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
+    }
+
+    static Value bufferValue(DataViewObject &view) {
+        return view.hasBuffer() ? ObjectValue(view.arrayBuffer()) : UndefinedValue();
+    }
+
+    void *dataPointer() const {
+        return getPrivate();
+    }
 
     static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);
@@ -470,11 +503,6 @@ private:
     static bool setFloat64Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
 
-    inline uint32_t byteLength();
-    inline uint32_t byteOffset();
-    inline ArrayBufferObject & arrayBuffer();
-    inline void *dataPointer();
-    inline bool hasBuffer() const;
     static JSObject *initClass(JSContext *cx);
     static bool getDataPointer(JSContext *cx, Handle<DataViewObject*> obj,
                                CallArgs args, size_t typeSize, uint8_t **data);
@@ -487,9 +515,6 @@ private:
   private:
     static const JSFunctionSpec jsfuncs[];
 };
-
-bool
-IsDataView(JSObject *obj);
 
 } // namespace js
 
