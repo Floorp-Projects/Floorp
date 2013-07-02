@@ -1073,6 +1073,18 @@ RadioInterface.prototype = {
     }
   },
 
+  getMsisdn: function getMsisdn() {
+    let iccInfo = this.rilContext.iccInfo;
+    let number = iccInfo ? iccInfo.msisdn : null;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (number === undefined || number === "undefined") {
+      return null;
+    }
+    return number;
+  },
+
   updateNetworkInfo: function updateNetworkInfo(message) {
     let voiceMessage = message[RIL.NETWORK_INFO_VOICE_REGISTRATION_STATE];
     let dataMessage = message[RIL.NETWORK_INFO_DATA_REGISTRATION_STATE];
@@ -1757,7 +1769,7 @@ RadioInterface.prototype = {
 
     message.type = "sms";
     message.sender = message.sender || null;
-    message.receiver = message.receiver || null;
+    message.receiver = this.getMsisdn();
     message.body = message.fullBody = message.fullBody || null;
     message.timestamp = Date.now();
 
@@ -2984,6 +2996,7 @@ RadioInterface.prototype = {
 
     let sendingMessage = {
       type: "sms",
+      sender: this.getMsisdn(),
       receiver: number,
       body: message,
       deliveryStatusRequested: options.requestStatusReport,
