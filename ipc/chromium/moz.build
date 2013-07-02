@@ -166,6 +166,22 @@ if os_macosx:
         'mach_message_source_mac.cc',
         'transport_dib_mac.cc',
     ]
+    CMMSRCS += [
+        'base_paths_mac.mm',
+        'chrome_application_mac.mm',
+        'chrome_paths_mac.mm',
+        'file_util_mac.mm',
+        'file_version_info_mac.mm',
+        'mac_util.mm',
+        'mach_ipc_mac.mm',
+        'message_pump_mac.mm',
+        'platform_thread_mac.mm',
+        'platform_util_mac.mm',
+        'process_util_mac.mm',
+        'scoped_nsautorelease_pool.mm',
+        'sys_string_conversions_mac.mm',
+        'worker_pool_mac.mm',
+    ]
 
 if os_linux:
     CPP_SOURCES += [
