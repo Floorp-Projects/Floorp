@@ -11,7 +11,7 @@
        },
        {"index":3,"title":"@firefox_community@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/contribute/",
         "iconUri":"chrome://branding/content/favicon32.png"
-       },
+       }
      ]
   }]
 }
