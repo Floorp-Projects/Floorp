@@ -1046,7 +1046,7 @@ png_write_IDAT(png_structp png_ptr, png_bytep data, png_size_t length)
    {
       png_byte buf[4];
 
-      png_write_chunk_header(png_ptr, png_fdAT, (png_uint_32)(4 + length));
+      png_write_chunk_header(png_ptr, png_fdAT, 4 + length);
 
       png_save_uint_32(buf, png_ptr->next_seq_num);
       png_write_chunk_data(png_ptr, buf, 4);
