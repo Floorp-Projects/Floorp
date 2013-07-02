@@ -212,6 +212,9 @@ class StoreBuffer
         void put(const T &t) {
             JS_ASSERT(!owner->inParallelSection());
 
+            /* Ensure T is derived from BufferableRef. */
+            (void)static_cast<const BufferableRef*>(&t);
+
             /* Check if we have been enabled. */
             if (!pos)
                 return;
@@ -348,6 +351,22 @@ class StoreBuffer
         void mark(JSTracer *trc);
     };
 
+    class CallbackRef : public BufferableRef
+    {
+      public:
+        typedef void (*MarkCallback)(JSTracer *trc, void *key);
+
+        CallbackRef(MarkCallback cb, void *k) : callback(cb), key(k) {}
+
+        virtual void mark(JSTracer *trc) {
+            callback(trc, key);
+        }
+
+      private:
+        MarkCallback callback;
+        void *key;
+    };
+
     MonoTypeBuffer<ValueEdge> bufferVal;
     MonoTypeBuffer<CellPtrEdge> bufferCell;
     MonoTypeBuffer<SlotEdge> bufferSlot;
@@ -427,6 +446,11 @@ class StoreBuffer
     template <typename T>
     void putGeneric(const T &t) {
         bufferGeneric.put(t);
+    }
+
+    /* Insert or update a callback entry. */
+    void putCallback(CallbackRef::MarkCallback callback, void *key) {
+        bufferGeneric.put(CallbackRef(callback, key));
     }
 
     /* Mark the source of all edges in the store buffer. */
