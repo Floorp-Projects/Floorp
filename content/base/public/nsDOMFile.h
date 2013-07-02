@@ -19,6 +19,8 @@
 #include "nsString.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsAutoPtr.h"
+#include "nsFileStreams.h"
+#include "nsTemporaryFileInputStream.h"
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
@@ -514,6 +516,42 @@ public:
   nsAutoString mUrl;
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+// This class would take the ownership of aFD and the caller must not close it.
+class nsDOMTemporaryFileBlob : public nsDOMFile
+{
+public:
+  nsDOMTemporaryFileBlob(PRFileDesc* aFD, uint64_t aStartPos, uint64_t aLength,
+                         const nsAString& aContentType)
+    : nsDOMFile(aContentType, aLength),
+      mLength(aLength),
+      mStartPos(aStartPos),
+      mContentType(aContentType)
+  {
+    mFileDescOwner = new nsTemporaryFileInputStream::FileDescOwner(aFD);
+  }
+
+  ~nsDOMTemporaryFileBlob() { }
+  NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+
+protected:
+  nsDOMTemporaryFileBlob(const nsDOMTemporaryFileBlob* aOther, uint64_t aStart, uint64_t aLength,
+                         const nsAString& aContentType)
+    : nsDOMFile(aContentType, aLength),
+      mLength(aLength),
+      mStartPos(aStart),
+      mFileDescOwner(aOther->mFileDescOwner),
+      mContentType(aContentType) { }
+
+  virtual already_AddRefed<nsIDOMBlob>
+  CreateSlice(uint64_t aStart, uint64_t aLength,
+              const nsAString& aContentType) MOZ_OVERRIDE;
+
+private:
+  uint64_t mLength;
+  uint64_t mStartPos;
+  nsRefPtr<nsTemporaryFileInputStream::FileDescOwner> mFileDescOwner;
+  nsString mContentType;
 };
 
 #endif
