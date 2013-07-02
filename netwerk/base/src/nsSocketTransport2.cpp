@@ -1256,6 +1256,12 @@ nsSocketTransport::RecoverFromError()
     // OK to check this outside mLock
     NS_ASSERTION(!mFDconnected, "socket should not be connected");
 
+    // all connection failures need to be reported to DNS so that the next
+    // time we will use a different address if available.
+    if (mState == STATE_CONNECTING && mDNSRecord) {
+        mDNSRecord->ReportUnusable(SocketPort());
+    }
+
     // can only recover from these errors
     if (mCondition != NS_ERROR_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_PROXY_CONNECTION_REFUSED &&
@@ -1277,8 +1283,6 @@ nsSocketTransport::RecoverFromError()
 
     // try next ip address only if past the resolver stage...
     if (mState == STATE_CONNECTING && mDNSRecord) {
-        mDNSRecord->ReportUnusable(SocketPort());
-        
         nsresult rv = mDNSRecord->GetNextAddr(SocketPort(), &mNetAddr);
         if (NS_SUCCEEDED(rv)) {
             SOCKET_LOG(("  trying again with next ip address\n"));
