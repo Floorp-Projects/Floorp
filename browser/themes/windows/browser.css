@@ -2361,21 +2361,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-margin-end: 0;
 }
 
-#identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
-#identity-popup-container {
-  min-width: 280px;
-  padding: 10px;
-}
-
-#identity-popup-button-container {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.04) 60%, transparent);
-  padding: 10px;
-  margin-top: 5px;
-}
-
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -2591,6 +2576,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 #pointerLock-cancel {
   margin: 0px;
+}
+
+#identity-popup-container {
+  min-width: 280px;
 }
 
 /* Bookmarks roots menu-items */
