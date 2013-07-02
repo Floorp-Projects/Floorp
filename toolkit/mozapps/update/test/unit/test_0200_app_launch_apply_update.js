@@ -235,7 +235,8 @@ function checkUpdateFinished() {
   log.append(FILE_UPDATE_LOG);
   if (!log.exists()) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
-      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to be created at " + log.path);
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to " +
+               "be created at " + log.path);
     else
       do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;
@@ -245,7 +246,8 @@ function checkUpdateFinished() {
   let status = readStatusFile();
   if (status == STATE_PENDING || status == STATE_APPLYING) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
-      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates status to not be pending or applying, current status is: " + status);
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates status " +
+               "to not be pending or applying, current status is: " + status);
     else
       do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;
@@ -284,6 +286,24 @@ function checkUpdateFinished() {
   file.append("removed-files");
   do_check_true(file.exists());
   do_check_eq(readFileBytes(file), "update_test/UpdateTestRemoveFile\n");
+
+  checkLogRenameFinished();
+}
+
+function checkLogRenameFinished() {
+  gTimeoutRuns++;
+  // Don't proceed until the update.log has been renamed to last-update.log.
+  let log = getUpdatesDir();
+  log.append("0");
+  log.append(FILE_UPDATE_LOG);
+  if (log.exists()) {
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for update log to " +
+               "be renamed to last-update.log at " + log.path);
+    else
+      do_timeout(CHECK_TIMEOUT_MILLI, checkLogRenameFinished);
+    return;
+  }
 
   let updatesDir = getUpdatesDir();
   log = updatesDir.clone();

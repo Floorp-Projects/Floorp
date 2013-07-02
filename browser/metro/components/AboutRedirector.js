@@ -40,10 +40,6 @@ let modules = {
   home: {
     uri: "about:blank",
     privileged: true
-  },
-  crash: {
-    uri: "chrome://browser/content/aboutCrash.xhtml",
-    privileged: true
   }
 }
 

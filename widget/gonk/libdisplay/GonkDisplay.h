@@ -29,6 +29,10 @@ public:
 
     virtual void SetEnabled(bool enabled) = 0;
 
+    typedef void (*OnEnabledCallbackType)(bool enabled);
+
+    virtual void OnEnabled(OnEnabledCallbackType callback) = 0;
+
     virtual void* GetHWCDevice() = 0;
 
     virtual bool SwapBuffers(EGLDisplay dpy, EGLSurface sur) = 0;

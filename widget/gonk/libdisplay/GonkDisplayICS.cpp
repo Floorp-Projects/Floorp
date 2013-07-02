@@ -25,10 +25,52 @@
 
 #include "mozilla/FileUtils.h"
 #include "mozilla/NullPtr.h"
+#include "mozilla/FileUtils.h"
 
 #include "BootAnimation.h"
 
 using namespace android;
+
+
+namespace {
+static const char* kSleepFile = "/sys/power/wait_for_fb_sleep";
+static const char* kWakeFile = "/sys/power/wait_for_fb_wake";
+static mozilla::GonkDisplay::OnEnabledCallbackType sEnabledCallback;
+static pthread_t sFramebufferWatchThread;
+
+static void *
+frameBufferWatcher(void *)
+{
+    int len = 0;
+    char buf;
+
+    while (true) {
+        // Cannot use epoll here because kSleepFile and kWakeFile are
+        // always ready to read and blocking.
+        {
+            mozilla::ScopedClose fd(open(kSleepFile, O_RDONLY, 0));
+            do {
+                len = read(fd.get(), &buf, 1);
+            } while (len < 0 && errno == EINTR);
+            NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_SLEEP failed");
+        }
+        sEnabledCallback(false);
+
+        {
+            mozilla::ScopedClose fd(open(kWakeFile, O_RDONLY, 0));
+            do {
+                len = read(fd.get(), &buf, 1);
+            } while (len < 0 && errno == EINTR);
+            NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_WAKE failed");
+        }
+        sEnabledCallback(true);
+    }
+
+    return nullptr;
+}
+
+} // anonymous namespace
+
 
 namespace mozilla {
 
@@ -96,6 +138,21 @@ GonkDisplayICS::SetEnabled(bool enabled)
 {
     set_screen_state(enabled);
 }
+
+void
+GonkDisplayICS::OnEnabled(OnEnabledCallbackType callback)
+{
+    if (sEnabledCallback)
+        return;
+    sEnabledCallback = callback;
+
+    // Watching screen on/off state by using a pthread
+    // which implicitly calls exit() when the main thread ends
+    if (pthread_create(&sFramebufferWatchThread, NULL, frameBufferWatcher, NULL)) {
+        NS_RUNTIMEABORT("Failed to create framebufferWatcherThread, aborting...");
+    }
+}
+
 
 void*
 GonkDisplayICS::GetHWCDevice()

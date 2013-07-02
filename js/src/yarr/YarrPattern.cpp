@@ -183,7 +183,7 @@ public:
 
     CharacterClass* charClass()
     {
-        CharacterClass* characterClass = js_new<CharacterClass>(PassRefPtr<CharacterClassTable>(0));
+        CharacterClass* characterClass = js_new<CharacterClass>();
 
         characterClass->m_matches.swap(m_matches);
         characterClass->m_ranges.swap(m_ranges);

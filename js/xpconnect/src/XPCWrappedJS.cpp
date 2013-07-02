@@ -222,7 +222,7 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     NS_ASSERTION(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
     JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
-    JS_CallObjectTracer(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
+    JS_CallHeapObjectTracer(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
 }
 
 // static
@@ -338,7 +338,7 @@ nsXPCWrappedJS::GetNewOrUsed(JSObject* aJSObj,
                        (void*)wrapper, (void*)jsObj);
 #endif
                 XPCAutoLock lock(rt->GetMapLock());
-                map->Add(root);
+                map->Add(cx, root);
             }
 
             if (!CheckMainThreadOnly(root)) {
@@ -371,7 +371,7 @@ nsXPCWrappedJS::GetNewOrUsed(JSObject* aJSObj,
                        (void*)root, (void*)rootJSObj);
 #endif
                 XPCAutoLock lock(rt->GetMapLock());
-                map->Add(root);
+                map->Add(cx, root);
             }
 
             if (!CheckMainThreadOnly(root)) {
@@ -655,7 +655,7 @@ nsXPCWrappedJS::DebugDump(int16_t depth)
 
         bool isRoot = mRoot == this;
         XPC_LOG_ALWAYS(("%s wrapper around JSObject @ %x", \
-                        isRoot ? "ROOT":"non-root", mJSObj));
+                        isRoot ? "ROOT":"non-root", mJSObj.get()));
         char* name;
         GetClass()->GetInterfaceInfo()->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));

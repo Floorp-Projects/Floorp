@@ -83,7 +83,7 @@ DEFINES += -DSK_BUILD_SSSE3
 endif
 else
 ifeq ($(CPU_ARCH)_$(GNU_CC),arm_1)
-SSRCS += memset.arm.S
+DISABLED_SSRCS += memset.arm.S
 endif
 endif
 

@@ -130,6 +130,9 @@ if CONFIG['LIBJPEG_TURBO_ARM_ASM']:
     CSRCS += [
         'simd/jsimd_arm.c',
     ]
+    SSRCS += [
+        'simd/jsimd_arm_neon.S',
+    ]
 elif CONFIG['LIBJPEG_TURBO_X64_ASM']:
     CSRCS += [
         'simd/jsimd_x86_64.c',

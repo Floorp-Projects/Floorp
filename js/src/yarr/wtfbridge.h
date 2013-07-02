@@ -248,7 +248,7 @@ deleteAllValues(Vector<T, N> &v) {
 }
 
 static inline void
-dataLog(const char *fmt, ...)
+dataLogF(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

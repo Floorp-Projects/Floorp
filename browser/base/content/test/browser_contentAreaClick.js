@@ -167,7 +167,7 @@ let gReplacedMethods = [
   "gatherTextUnder",
   "saveURL",
   "openLinkIn",
-  "getShortcutOrURI",
+  "getShortcutOrURIAndPostData",
 ];
 
 // Reference to the new window.
@@ -232,8 +232,8 @@ let gClickHandler = {
 function wrapperMethod(aInvokedMethods, aMethodName) {
   return function () {
     aInvokedMethods.push(aMethodName);
-    // At least getShortcutOrURI requires to return url that is the first param.
-    return arguments[0];
+    // At least getShortcutOrURIAndPostData requires to return url
+    return (aMethodName == "getShortcutOrURIAndPostData") ? arguments.url : arguments[0];
   }
 }
 

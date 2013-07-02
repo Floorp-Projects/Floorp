@@ -13,3 +13,6 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'printingui_s'
 
+CMMSRCS += [
+    'nsPrintingPromptServiceX.mm',
+]

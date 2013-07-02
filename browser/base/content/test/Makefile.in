@@ -326,6 +326,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_offlineQuotaNotification.js \
                  offlineQuotaNotification.html \
                  offlineQuotaNotification.cacheManifest \
+                 browser_addKeywordSearch.js \
                  $(NULL)
 
 # Disable tests on Windows due to frequent failures (bugs 825739, 841341)

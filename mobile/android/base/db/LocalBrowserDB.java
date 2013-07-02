@@ -758,7 +758,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
-        StringBuffer selection = new StringBuffer();
+        StringBuilder selection = new StringBuilder();
         String[] selectionArgs = new String[urls.size()];
 
         for (int i = 0; i < urls.size(); i++) {
@@ -846,7 +846,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
-        StringBuffer selection = new StringBuffer();
+        StringBuilder selection = new StringBuilder();
         String[] selectionArgs = new String[urls.size()];
 
         for (int i = 0; i < urls.size(); i++) {

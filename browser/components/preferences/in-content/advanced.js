@@ -230,7 +230,7 @@ var gAdvancedPane = {
 
     let checkbox = document.getElementById("submitHealthReportBox");
 
-    if (!policy) {
+    if (!policy || policy.healthReportUploadLocked) {
       checkbox.setAttribute("disabled", "true");
       return;
     }

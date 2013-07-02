@@ -1484,7 +1484,13 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       }
     }
 
+    // There is no need to waste time crawling into a frame's children
+    // on a frame change.  The act of reconstructing frames will force
+    // new style contexts to be resolved on all of this frame's
+    // descendants anyway, so we want to avoid wasting time processing
+    // style contexts that we're just going to throw away anyway. - dwh
     if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
+
       DesiredA11yNotifications kidsDesiredA11yNotification =
         aDesiredA11yNotifications;
 #ifdef ACCESSIBILITY
@@ -1523,11 +1529,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         }
       }
 #endif
-
-      // There is no need to waste time crawling into a frame's children on a frame change.
-      // The act of reconstructing frames will force new style contexts to be resolved on all
-      // of this frame's descendants anyway, so we want to avoid wasting time processing
-      // style contexts that we're just going to throw away anyway. - dwh
 
       // now do children
       nsIFrame::ChildListIterator lists(aFrame);

@@ -2652,7 +2652,10 @@ JS_IsGCMarkingTracer(JSTracer *trc);
  * re-inserted with the correct hash.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_IsAboutToBeFinalized(JSObject **obj);
+JS_IsAboutToBeFinalized(JS::Heap<JSObject *> *objp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsAboutToBeFinalizedUnbarriered(JSObject **objp);
 
 typedef enum JSGCParamKey {
     /* Maximum nominal heap before last ditch GC. */
@@ -2795,7 +2798,7 @@ struct JSClass {
     const char          *name;
     uint32_t            flags;
 
-    /* Mandatory non-null function pointer members. */
+    /* Mandatory function pointer members. */
     JSPropertyOp        addProperty;
     JSDeletePropertyOp  delProperty;
     JSPropertyOp        getProperty;
@@ -2803,9 +2806,9 @@ struct JSClass {
     JSEnumerateOp       enumerate;
     JSResolveOp         resolve;
     JSConvertOp         convert;
-    JSFinalizeOp        finalize;
 
-    /* Optionally non-null members start here. */
+    /* Optional members (may be null). */
+    JSFinalizeOp        finalize;
     JSCheckAccessOp     checkAccess;
     JSNative            call;
     JSHasInstanceOp     hasInstance;
@@ -3182,7 +3185,7 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
-JS_IsExtensible(JSObject *obj);
+JS_IsExtensible(JSContext *cx, JS::HandleObject obj, JSBool *extensible);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsNative(JSObject *obj);

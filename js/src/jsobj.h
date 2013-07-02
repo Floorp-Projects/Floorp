@@ -687,7 +687,7 @@ class JSObject : public js::ObjectImpl
      *
      * Notes:
      * 1. getter and setter must be normalized based on flags (see jsscope.cpp).
-     * 2. !isExtensible() checking must be done by callers.
+     * 2. Checks for non-extensibility must be done by callers.
      */
     static js::Shape *addPropertyInternal(JSContext *cx,
                                             JS::HandleObject obj, JS::HandleId id,

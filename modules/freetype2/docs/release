@@ -51,6 +51,13 @@ How to prepare a new release
 
   TODO: Tag the home page CVS on savannah.nongnu.org.
 
+. Check with
+
+    git clean -ndx
+
+  that the git directory is really clean  (and remove extraneous files
+  if necessary).
+
 . Say `make  dist' in both the  freetype2 and freetype2-demos  modules
   to generate the .tar.gz, .tar.bz2, and .zip files.
 
@@ -196,7 +203,7 @@ How to prepare a new release
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2005-2007, 2009, 2011 by
+Copyright 2003, 2005-2007, 2009, 2011-2012 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

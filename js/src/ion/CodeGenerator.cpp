@@ -2573,6 +2573,12 @@ CodeGenerator::generateBody()
 {
     IonScriptCounts *counts = maybeCreateScriptCounts();
 
+#if defined(JS_ION_PERF)
+    PerfSpewer *perfSpewer = &perfSpewer_;
+    if (gen->compilingAsmJS())
+        perfSpewer = &gen->perfSpewer();
+#endif
+
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         current = graph.getBlock(i);
 
@@ -2591,8 +2597,9 @@ CodeGenerator::generateBody()
                 return false;
         }
 
-        if (PerfBlockEnabled())
-            perfSpewer_.startBasicBlock(current->mir(), masm);
+#if defined(JS_ION_PERF)
+        perfSpewer->startBasicBlock(current->mir(), masm);
+#endif
 
         for (; iter != current->end(); iter++) {
             IonSpew(IonSpew_Codegen, "instruction %s", iter->opName());
@@ -2614,8 +2621,9 @@ CodeGenerator::generateBody()
         if (masm.oom())
             return false;
 
-        if (PerfBlockEnabled())
-            perfSpewer_.endBasicBlock(masm);
+#if defined(JS_ION_PERF)
+        perfSpewer->endBasicBlock(masm);
+#endif
     }
 
     JS_ASSERT(pushedArgumentSlots_.empty());

@@ -1762,4 +1762,12 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 extern JS_FRIEND_API(JSBool)
 js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);
 
+#ifdef JSGC_GENERATIONAL
+extern JS_FRIEND_API(void)
+JS_StorePostBarrierCallback(JSContext* cx, void (*callback)(JSTracer *trc, void *key), void *key);
+#else
+inline void
+JS_StorePostBarrierCallback(JSContext* cx, void (*callback)(JSTracer *trc, void *key), void *key) {}
+#endif /* JSGC_GENERATIONAL */
+
 #endif /* jsfriendapi_h */

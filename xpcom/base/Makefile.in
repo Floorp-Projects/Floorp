@@ -32,7 +32,7 @@ endif
 
 endif #if OS_ARCH == WINNT
 
-SDK_HEADERS     = \
+DISABLED_SDK_HEADERS     = \
 		nsAutoPtr.h \
 		nsError.h \
 		ErrorList.h \
@@ -45,7 +45,7 @@ SDK_HEADERS     = \
 		nsObjCExceptions.h \
 
 ifeq ($(OS_ARCH),WINNT)
-SDK_HEADERS += \
+DISABLED_SDK_HEADERS += \
 		nsWindowsHelpers.h \
 		$(NULL)
 endif
