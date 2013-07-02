@@ -304,6 +304,7 @@ HiddenBrowser.prototype = {
   _width: null,
   _height: null,
   _timer: null,
+  _needsFrameScripts: true,
 
   get isPreloaded() {
     return this._browser &&
@@ -317,13 +318,28 @@ HiddenBrowser.prototype = {
       return false;
     }
 
-    let tabbrowser = aTab.ownerDocument.defaultView.gBrowser;
+    let win = aTab.ownerDocument.defaultView;
+    let tabbrowser = win.gBrowser;
+
     if (!tabbrowser) {
       return false;
     }
 
     // Swap docShells.
     tabbrowser.swapNewTabWithBrowser(aTab, this._browser);
+
+    // Load all default frame scripts.
+    if (this._needsFrameScripts) {
+      this._needsFrameScripts = false;
+
+      let mm = aTab.linkedBrowser.messageManager;
+      mm.loadFrameScript("chrome://browser/content/content.js", true);
+      mm.loadFrameScript("chrome://browser/content/content-sessionStore.js", true);
+
+      if ("TabView" in win) {
+        mm.loadFrameScript("chrome://browser/content/tabview-content.js", true);
+      }
+    }
 
     // Start a timer that will kick off preloading the next newtab page.
     this._timer = createTimer(this, PRELOADER_INTERVAL_MS);
