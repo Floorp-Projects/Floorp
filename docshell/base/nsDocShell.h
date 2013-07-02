@@ -76,7 +76,6 @@
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
 #include "nsCRT.h"
-#include "prtime.h"
 
 namespace mozilla {
 namespace dom {

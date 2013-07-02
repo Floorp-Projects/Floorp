@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/Util.h"
 
 #include "nsRuleNode.h"
@@ -41,7 +40,8 @@
 #include "nsPrintfCString.h"
 #include "nsRenderingContext.h"
 #include "nsStyleUtil.h"
-#include "prtime.h"
+
+#include "mozilla/LookAndFeel.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMFocusEvent.h"
-#include "prtime.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

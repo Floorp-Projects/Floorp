@@ -5,7 +5,6 @@
 
 #include "nsDOMAnimationEvent.h"
 #include "nsGUIEvent.h"
-#include "prtime.h"
 
 nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
                                          nsPresContext *aPresContext,

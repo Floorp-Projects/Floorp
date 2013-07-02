@@ -15,7 +15,6 @@
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
-#include "prtime.h"
 
 class nsNavBookmarks;
 class nsIOutputStream;

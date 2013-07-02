@@ -82,10 +82,10 @@ ns_if_addref( T expr )
  * @param _ptr The interface pointer.
  */
 #define NS_RELEASE(_ptr)                                                      \
-  do {                                                                        \
+  PR_BEGIN_MACRO                                                              \
     (_ptr)->Release();                                                        \
     (_ptr) = 0;                                                               \
-  } while (0)
+  PR_END_MACRO
 
 /**
  * Macro for releasing a reference to this interface.
@@ -103,22 +103,22 @@ ns_if_addref( T expr )
  * @param _rc  The reference count.
  */
 #define NS_RELEASE2(_ptr, _rc)                                                \
-  do {                                                                        \
+  PR_BEGIN_MACRO                                                              \
     _rc = (_ptr)->Release();                                                  \
     if (0 == (_rc)) (_ptr) = 0;                                               \
-  } while (0)
+  PR_END_MACRO
 
 /**
  * Macro for releasing a reference to an interface that checks for NULL;
  * @param _ptr The interface pointer.
  */
 #define NS_IF_RELEASE(_ptr)                                                   \
-  do {                                                                        \
+  PR_BEGIN_MACRO                                                              \
     if (_ptr) {                                                               \
       (_ptr)->Release();                                                      \
       (_ptr) = 0;                                                             \
     }                                                                         \
-  } while (0)
+  PR_END_MACRO
 
 /*
  * Often you have to cast an implementation pointer, e.g., |this|, to an

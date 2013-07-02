@@ -9,7 +9,6 @@
 #include "nsSMILAnimationController.h"
 #include "nsSMILAnimationFunction.h"
 #include "nsContentUtils.h"
-#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
