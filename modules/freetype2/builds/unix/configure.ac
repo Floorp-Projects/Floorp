@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright 2001-2012 by
+# Copyright 2001-2013 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.4.9], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.5], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.in])
 
 
 # Don't forget to update docs/VERSION.DLL!
 
-version_info='14:1:8'
+version_info='16:2:10'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -66,32 +66,8 @@ AC_SUBST(CC_BUILD)
 AC_SUBST(EXEEXT_BUILD)
 
 
-
-# get compiler flags right
-
-if test "x$GCC" = xyes; then
-  XX_CFLAGS="-Wall"
-  XX_ANSIFLAGS="-pedantic -ansi"
-else
-  case "$host" in
-  *-dec-osf*)
-    CFLAGS=
-    XX_CFLAGS="-std1 -g3"
-    XX_ANSIFLAGS=
-    ;;
-  *)
-    XX_CFLAGS=
-    XX_ANSIFLAGS=
-    ;;
-  esac
-fi
-AC_SUBST([XX_CFLAGS])
-AC_SUBST([XX_ANSIFLAGS])
-
-
 # auxiliary programs
 
-AC_CHECK_PROG([RMF], [rm], [rm -f])
 AC_CHECK_PROG([RMDIR], [rmdir], [rmdir])
 
 
@@ -127,8 +103,14 @@ AC_CHECK_SIZEOF([long])
 AC_MSG_CHECKING([whether cpp computation of bit length in ftconfig.in works])
 orig_CPPFLAGS="${CPPFLAGS}"
 CPPFLAGS="-I${srcdir} -I. ${CPPFLAGS}"
-ac_clean_files="ft2build.h ftoption.h ftstdlib.h"
-touch ft2build.h ftoption.h ftstdlib.h
+
+ac_clean_files=
+for f in ft2build.h ftoption.h ftstdlib.h; do
+  if test ! -f $f; then
+    ac_clean_files="$ac_clean_files $f"
+    touch $f
+  fi
+done
 
 cat > conftest.c <<\_ACEOF
 #include <limits.h>
@@ -147,7 +129,7 @@ echo >> conftest.c "#endif"
 
 ${CPP} ${CPPFLAGS} conftest.c | ${GREP} ac_cpp_ft > conftest.sh
 eval `cat conftest.sh`
-${RMF} conftest.c conftest.sh confft2build.h ftoption.h ftstdlib.h
+rm -f conftest.* $ac_clean_files
 
 if test x != "x${ac_cpp_ft_sizeof_int}" \
    -a x != x"${ac_cpp_ft_sizeof_long}"; then
@@ -180,7 +162,8 @@ case :${ft_use_autoconf_sizeof_types}:${enable_biarch_config}: in
 esac
 
 if test x"${ft_use_autoconf_sizeof_types}" = xyes; then
-  AC_DEFINE([FT_USE_AUTOCONF_SIZEOF_TYPES])
+  AC_DEFINE([FT_USE_AUTOCONF_SIZEOF_TYPES], [],
+            [Define if autoconf sizeof types should be used.])
 fi
 
 CPPFLAGS="${orig_CPPFLAGS}"
@@ -222,6 +205,48 @@ AC_SUBST([FTSYS_SRC])
 AC_CHECK_FUNCS([memcpy memmove])
 
 
+# get compiler flags right
+#  we try to make the compiler work for C89-strict source.
+#  even if C compiler is GCC and C89 flags are available,
+#  some system headers (e.g. Android Bionic libc) is broken
+#  in C89 mode. we have to check the compilation finishes
+#  successfully.
+#
+if test "x$GCC" = xyes; then
+  XX_CFLAGS="-Wall"
+  XX_ANSIFLAGS=""
+  for a in -pedantic -ansi
+  do
+    AC_MSG_CHECKING([gcc compiler flag ${a} to assure ANSI C works correctly])
+    orig_CFLAGS="${CFLAGS}"
+    CFLAGS="${CFLAGS} ${XX_ANSIFLAGS} ${a}"
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([#include <stdio.h>],[{puts("");return 0;}])
+      ],[
+        AC_MSG_RESULT([ok, add it to XX_ANSIFLAGS])
+        XX_ANSIFLAGS="${XX_ANSIFLAGS} ${a}"
+      ],[
+        AC_MSG_RESULT([no])
+      ])
+    CFLAGS="${orig_CFLAGS}"
+  done
+else
+  case "$host" in
+  *-dec-osf*)
+    CFLAGS=
+    XX_CFLAGS="-std1 -g3"
+    XX_ANSIFLAGS=
+    ;;
+  *)
+    XX_CFLAGS=
+    XX_ANSIFLAGS=
+    ;;
+  esac
+fi
+AC_SUBST([XX_CFLAGS])
+AC_SUBST([XX_ANSIFLAGS])
+
+
 # check for system zlib
 
 # don't quote AS_HELP_STRING!
@@ -229,13 +254,14 @@ AC_ARG_WITH([zlib],
   AS_HELP_STRING([--without-zlib],
                  [use internal zlib instead of system-wide]))
 if test x$with_zlib != xno && test -z "$LIBZ"; then
-  AC_CHECK_LIB([z], [gzsetparams], [AC_CHECK_HEADER([zlib.h], [LIBZ='-lz'])])
+  AC_CHECK_LIB([z],
+               [gzsetparams],
+               [AC_CHECK_HEADER([zlib.h], [LIBZ='-lz'])])
 fi
 if test x$with_zlib != xno && test -n "$LIBZ"; then
-  CFLAGS="$CFLAGS -DFT_CONFIG_OPTION_SYSTEM_ZLIB"
-  LDFLAGS="$LDFLAGS $LIBZ"
   SYSTEM_ZLIB=yes
 fi
+
 
 # check for system libbz2
 
@@ -244,12 +270,36 @@ AC_ARG_WITH([bzip2],
   AS_HELP_STRING([--without-bzip2],
                  [do not support bzip2 compressed fonts]))
 if test x$with_bzip2 != xno && test -z "$LIBBZ2"; then
-  AC_CHECK_LIB([bz2], [BZ2_bzDecompress], [AC_CHECK_HEADER([bzlib.h], [LIBBZ2='-lbz2'])])
+  AC_CHECK_LIB([bz2],
+               [BZ2_bzDecompress],
+               [AC_CHECK_HEADER([bzlib.h], [LIBBZ2='-lbz2'])])
 fi
 if test x$with_bzip2 != xno && test -n "$LIBBZ2"; then
-  CFLAGS="$CFLAGS -DFT_CONFIG_OPTION_USE_BZIP2"
-  LDFLAGS="$LDFLAGS $LIBBZ2"
+  SYSTEM_LIBBZ2=yes
 fi
+
+
+# check for system libpng
+
+HAVE_LIBPNG=no
+AC_ARG_WITH([png],
+  AS_HELP_STRING([--without-png],
+                 [do not support png compressed OpenType embedded bitmaps]))
+if test x$with_png != xno; then
+  AC_MSG_CHECKING([for libpng])
+  if test -z "$LIBPNG_CFLAGS" -a -z "$LIBPNG_LDFLAGS"; then
+    if ! which libpng-config >/dev/null; then
+      AC_MSG_ERROR([`libpng-config' not found;
+either set the LIBPNG_CFLAGS and LIBPNG_LDFLAGS environment variables,
+or pass `--without-png' to the `configure' script.])
+    fi
+    LIBPNG_CFLAGS="`libpng-config --cflags`"
+    LIBPNG_LDFLAGS="`libpng-config --ldflags`"
+  fi
+  HAVE_LIBPNG=yes
+  AC_MSG_RESULT([$LIBPNG_LDFLAGS])
+fi
+
 
 # Some options handling SDKs/archs in CFLAGS should be copied
 # to LDFLAGS. Apple TechNote 2137 recommends to include these
@@ -276,7 +326,7 @@ do
     shift 1
     ;;
   -m32|-m64|-march=*|-mcpu=*) # options taking no argument
-    AC_MSG_RESULT([whether CFLAGS and LDFLAGS share ${c}])
+    AC_MSG_CHECKING([whether CFLAGS and LDFLAGS share ${c}])
     if expr " ${LDFLAGS} " : ".* ${c} *${a}.*" > /dev/null
     then
       AC_MSG_RESULT([yes])
@@ -667,11 +717,8 @@ esac
 AC_SUBST([ftmac_c])
 AC_SUBST([LIBZ])
 AC_SUBST([LIBBZ2])
-AC_SUBST([CFLAGS])
-AC_SUBST([LDFLAGS])
 AC_SUBST([FT2_EXTRA_LIBS])
 AC_SUBST([SYSTEM_ZLIB])
-
 
 LT_INIT(win32-dll)
 
@@ -679,6 +726,24 @@ AC_SUBST([hardcode_libdir_flag_spec])
 AC_SUBST([wl])
 AC_SUBST([build_libtool_libs])
 
+# changing LDFLAGS value should only be done after
+# lt_cv_prog_compiler_static_works test
+if test x$SYSTEM_ZLIB = xyes; then
+  CFLAGS="$CFLAGS -DFT_CONFIG_OPTION_SYSTEM_ZLIB"
+  LDFLAGS="$LDFLAGS $LIBZ"
+fi
+
+if test x$SYSTEM_LIBBZ2 = xyes; then
+  CFLAGS="$CFLAGS -DFT_CONFIG_OPTION_USE_BZIP2"
+  LDFLAGS="$LDFLAGS $LIBBZ2"
+fi
+if test x$HAVE_LIBPNG = xyes; then
+  CFLAGS="$CFLAGS $LIBPNG_CFLAGS -DFT_CONFIG_OPTION_USE_PNG"
+  LDFLAGS="$LDFLAGS $LIBPNG_LDFLAGS"
+fi
+
+AC_SUBST([CFLAGS])
+AC_SUBST([LDFLAGS])
 
 # configuration file -- stay in 8.3 limit
 #
@@ -694,9 +759,7 @@ AC_CONFIG_HEADERS([ftconfig.h:ftconfig.in],
 # and `builds/unix/unix-cc.mk' that will be used by the build system
 #
 AC_CONFIG_FILES([unix-cc.mk:unix-cc.in
-                 unix-def.mk:unix-def.in
-                 freetype-config
-                 freetype2.pc:freetype2.in])
+                 unix-def.mk:unix-def.in])
 
 # re-generate the Jamfile to use libtool now
 #
