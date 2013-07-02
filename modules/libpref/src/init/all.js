@@ -218,9 +218,6 @@ pref("media.navigator.enabled", true);
 // TextTrack support
 pref("media.webvtt.enabled", false);
 
-// Whether to enable MediaSource support
-pref("media.mediasource.enabled", false);
-
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
 #endif

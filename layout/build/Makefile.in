@@ -192,10 +192,6 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/mediasource/$(LIB_PREFIX)gkconmediasource_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 ifdef MOZ_DASH
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/content/media/dash/$(LIB_PREFIX)gkcondash_s.$(LIB_SUFFIX) \

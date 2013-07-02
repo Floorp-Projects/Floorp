@@ -8,7 +8,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIDOMFile.h"
 #include "DOMMediaStream.h"
-#include "mozilla/dom/MediaSource.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h"
@@ -36,17 +35,6 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
 {
   CreateObjectURLInternal(aGlobal.Get(), &aStream,
                           NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME), aOptions,
-                          aResult, aError);
-}
-
-void
-URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
-                     const objectURLOptions& aOptions,
-                     nsString& aResult,
-                     ErrorResult& aError)
-{
-  CreateObjectURLInternal(aGlobal.Get(), &aSource,
-                          NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME), aOptions,
                           aResult, aError);
 }
 
