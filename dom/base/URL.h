@@ -16,8 +16,6 @@ class DOMMediaStream;
 
 namespace dom {
 
-class MediaSource;
-
 class URL MOZ_FINAL
 {
 public:
@@ -29,11 +27,6 @@ public:
   static void CreateObjectURL(const GlobalObject& aGlobal,
                               DOMMediaStream& aStream,
                               const mozilla::dom::objectURLOptions& aOptions,
-                              nsString& aResult,
-                              mozilla::ErrorResult& aError);
-  static void CreateObjectURL(const GlobalObject& aGlobal,
-                              MediaSource& aSource,
-                              const objectURLOptions& aOptions,
                               nsString& aResult,
                               mozilla::ErrorResult& aError);
   static void RevokeObjectURL(const GlobalObject& aGlobal,
