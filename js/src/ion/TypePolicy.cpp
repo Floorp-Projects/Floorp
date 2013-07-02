@@ -468,7 +468,7 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
 {
     MDefinition *curValue = value;
     // First, ensure the value is int32, boolean, double or Value.
-    // The conversion is based on TypedArrayTemplate::setElementTail.
+    // The conversion is based on TypedArrayObjectTemplate::setElementTail.
     switch (value->type()) {
       case MIRType_Int32:
       case MIRType_Double:

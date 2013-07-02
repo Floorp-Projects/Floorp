@@ -1383,18 +1383,18 @@ template<> inline const bool ElementTypeMayBeDouble<uint32_t>() { return true; }
 template<> inline const bool ElementTypeMayBeDouble<float>() { return true; }
 template<> inline const bool ElementTypeMayBeDouble<double>() { return true; }
 
-template<typename NativeType> class TypedArrayTemplate;
+template<typename NativeType> class TypedArrayObjectTemplate;
 
 template<typename ElementType>
 static inline JSObject *
 NewArray(JSContext *cx, uint32_t nelements);
 
 template<typename NativeType>
-class TypedArrayTemplate : public TypedArrayObject
+class TypedArrayObjectTemplate : public TypedArrayObject
 {
   public:
     typedef NativeType ThisType;
-    typedef TypedArrayTemplate<NativeType> ThisTypeArray;
+    typedef TypedArrayObjectTemplate<NativeType> ThisTypedArrayObject;
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
@@ -1926,8 +1926,8 @@ class TypedArrayTemplate : public TypedArrayObject
     Getter(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        return CallNonGenericMethod<ThisTypeArray::IsThisClass,
-                                    ThisTypeArray::GetterImpl<ValueGetter> >(cx, args);
+        return CallNonGenericMethod<ThisTypedArrayObject::IsThisClass,
+                                    ThisTypedArrayObject::GetterImpl<ValueGetter> >(cx, args);
     }
 
     // Define an accessor for a read-only property that invokes a native getter
@@ -2003,7 +2003,8 @@ class TypedArrayTemplate : public TypedArrayObject
     fun_subarray(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        return CallNonGenericMethod<ThisTypeArray::IsThisClass, ThisTypeArray::fun_subarray_impl>(cx, args);
+        return CallNonGenericMethod<ThisTypedArrayObject::IsThisClass,
+                                    ThisTypedArrayObject::fun_subarray_impl>(cx, args);
     }
 
     /* move(begin, end, dest) */
@@ -2066,7 +2067,8 @@ class TypedArrayTemplate : public TypedArrayObject
     fun_move(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        return CallNonGenericMethod<ThisTypeArray::IsThisClass, ThisTypeArray::fun_move_impl>(cx, args);
+        return CallNonGenericMethod<ThisTypedArrayObject::IsThisClass,
+                                    ThisTypedArrayObject::fun_move_impl>(cx, args);
     }
 
     /* set(array[, offset]) */
@@ -2131,7 +2133,8 @@ class TypedArrayTemplate : public TypedArrayObject
     fun_set(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        return CallNonGenericMethod<ThisTypeArray::IsThisClass, ThisTypeArray::fun_set_impl>(cx, args);
+        return CallNonGenericMethod<ThisTypedArrayObject::IsThisClass,
+                                    ThisTypedArrayObject::fun_set_impl>(cx, args);
     }
 
   public:
@@ -2559,55 +2562,55 @@ class TypedArrayTemplate : public TypedArrayObject
     }
 };
 
-class Int8Array : public TypedArrayTemplate<int8_t> {
+class Int8Array : public TypedArrayObjectTemplate<int8_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT8 };
     static const JSProtoKey key = JSProto_Int8Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint8Array : public TypedArrayTemplate<uint8_t> {
+class Uint8Array : public TypedArrayObjectTemplate<uint8_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT8 };
     static const JSProtoKey key = JSProto_Uint8Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Int16Array : public TypedArrayTemplate<int16_t> {
+class Int16Array : public TypedArrayObjectTemplate<int16_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT16 };
     static const JSProtoKey key = JSProto_Int16Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint16Array : public TypedArrayTemplate<uint16_t> {
+class Uint16Array : public TypedArrayObjectTemplate<uint16_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT16 };
     static const JSProtoKey key = JSProto_Uint16Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Int32Array : public TypedArrayTemplate<int32_t> {
+class Int32Array : public TypedArrayObjectTemplate<int32_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT32 };
     static const JSProtoKey key = JSProto_Int32Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint32Array : public TypedArrayTemplate<uint32_t> {
+class Uint32Array : public TypedArrayObjectTemplate<uint32_t> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT32 };
     static const JSProtoKey key = JSProto_Uint32Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Float32Array : public TypedArrayTemplate<float> {
+class Float32Array : public TypedArrayObjectTemplate<float> {
   public:
     enum { ACTUAL_TYPE = TYPE_FLOAT32 };
     static const JSProtoKey key = JSProto_Float32Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Float64Array : public TypedArrayTemplate<double> {
+class Float64Array : public TypedArrayObjectTemplate<double> {
   public:
     enum { ACTUAL_TYPE = TYPE_FLOAT64 };
     static const JSProtoKey key = JSProto_Float64Array;
     static const JSFunctionSpec jsfuncs[];
 };
-class Uint8ClampedArray : public TypedArrayTemplate<uint8_clamped> {
+class Uint8ClampedArray : public TypedArrayObjectTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT8_CLAMPED };
     static const JSProtoKey key = JSProto_Uint8ClampedArray;
@@ -2618,7 +2621,7 @@ template<typename T>
 bool
 ArrayBufferObject::createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args)
 {
-    typedef TypedArrayTemplate<T> ArrayType;
+    typedef TypedArrayObjectTemplate<T> ArrayType;
     JS_ASSERT(IsArrayBuffer(args.thisv()));
     JS_ASSERT(args.length() == 3);
 
@@ -2649,8 +2652,8 @@ ArrayBufferObject::createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Valu
 // less than 32-bits in size.
 template<typename NativeType>
 void
-TypedArrayTemplate<NativeType>::copyIndexToValue(JSObject *tarray, uint32_t index,
-                                                 MutableHandleValue vp)
+TypedArrayObjectTemplate<NativeType>::copyIndexToValue(JSObject *tarray, uint32_t index,
+                                                       MutableHandleValue vp)
 {
     JS_STATIC_ASSERT(sizeof(NativeType) < 4);
 
@@ -2660,8 +2663,8 @@ TypedArrayTemplate<NativeType>::copyIndexToValue(JSObject *tarray, uint32_t inde
 // and we need to specialize for 32-bit integers and floats
 template<>
 void
-TypedArrayTemplate<int32_t>::copyIndexToValue(JSObject *tarray, uint32_t index,
-                                              MutableHandleValue vp)
+TypedArrayObjectTemplate<int32_t>::copyIndexToValue(JSObject *tarray, uint32_t index,
+                                                    MutableHandleValue vp)
 {
     int32_t val = getIndex(tarray, index);
     vp.setInt32(val);
@@ -2669,8 +2672,8 @@ TypedArrayTemplate<int32_t>::copyIndexToValue(JSObject *tarray, uint32_t index,
 
 template<>
 void
-TypedArrayTemplate<uint32_t>::copyIndexToValue(JSObject *tarray, uint32_t index,
-                                               MutableHandleValue vp)
+TypedArrayObjectTemplate<uint32_t>::copyIndexToValue(JSObject *tarray, uint32_t index,
+                                                     MutableHandleValue vp)
 {
     uint32_t val = getIndex(tarray, index);
     vp.setNumber(val);
@@ -2678,8 +2681,8 @@ TypedArrayTemplate<uint32_t>::copyIndexToValue(JSObject *tarray, uint32_t index,
 
 template<>
 void
-TypedArrayTemplate<float>::copyIndexToValue(JSObject *tarray, uint32_t index,
-                                            MutableHandleValue vp)
+TypedArrayObjectTemplate<float>::copyIndexToValue(JSObject *tarray, uint32_t index,
+                                                  MutableHandleValue vp)
 {
     float val = getIndex(tarray, index);
     double dval = val;
@@ -2699,8 +2702,8 @@ TypedArrayTemplate<float>::copyIndexToValue(JSObject *tarray, uint32_t index,
 
 template<>
 void
-TypedArrayTemplate<double>::copyIndexToValue(JSObject *tarray, uint32_t index,
-                                             MutableHandleValue vp)
+TypedArrayObjectTemplate<double>::copyIndexToValue(JSObject *tarray, uint32_t index,
+                                                   MutableHandleValue vp)
 {
     double val = getIndex(tarray, index);
 
@@ -3408,27 +3411,27 @@ const JSFunctionSpec _typedArray::jsfuncs[] = {                                \
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                 \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## Array(JSContext *cx, uint32_t nelements)       \
   {                                                                                          \
-      return TypedArrayTemplate<NativeType>::fromLength(cx, nelements);                      \
+      return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);                \
   }                                                                                          \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayFromArray(JSContext *cx, JSObject *other_)\
   {                                                                                          \
       Rooted<JSObject*> other(cx, other_);                                                   \
-      return TypedArrayTemplate<NativeType>::fromArray(cx, other);                           \
+      return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);                     \
   }                                                                                          \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayWithBuffer(JSContext *cx,                 \
                                JSObject *arrayBuffer_, uint32_t byteOffset, int32_t length)  \
   {                                                                                          \
       Rooted<JSObject*> arrayBuffer(cx, arrayBuffer_);                                       \
       Rooted<JSObject*> proto(cx, NULL);                                                     \
-      return TypedArrayTemplate<NativeType>::fromBuffer(cx, arrayBuffer, byteOffset, length, \
-                                                        proto);                              \
+      return TypedArrayObjectTemplate<NativeType>::fromBuffer(cx, arrayBuffer, byteOffset,   \
+                                                              length, proto);                \
   }                                                                                          \
   JS_FRIEND_API(JSBool) JS_Is ## Name ## Array(JSObject *obj)                                \
   {                                                                                          \
       if (!(obj = CheckedUnwrap(obj)))                                                       \
           return false;                                                                      \
       Class *clasp = obj->getClass();                                                        \
-      return (clasp == &TypedArrayObject::classes[TypedArrayTemplate<NativeType>::ArrayTypeID()]); \
+      return (clasp == &TypedArrayObject::classes[TypedArrayObjectTemplate<NativeType>::ArrayTypeID()]); \
   }
 
 IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int8, int8_t)
@@ -3450,7 +3453,7 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
           return NULL;                                                                      \
                                                                                             \
       Class *clasp = obj->getClass();                                                       \
-      if (clasp != &TypedArrayObject::classes[TypedArrayTemplate<InternalType>::ArrayTypeID()]) \
+      if (clasp != &TypedArrayObject::classes[TypedArrayObjectTemplate<InternalType>::ArrayTypeID()]) \
           return NULL;                                                                      \
                                                                                             \
       *length = TypedArrayObject::length(obj);                                              \
