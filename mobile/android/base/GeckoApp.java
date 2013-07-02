@@ -1203,9 +1203,12 @@ abstract public class GeckoApp
         Tabs.getInstance().attachToActivity(this);
         Favicons.getInstance().attachToContext(this);
 
-        // Check to see if the activity is restarted after configuration change.
-        if (getLastCustomNonConfigurationInstance() != null) {
-            // Restart the application as a safe way to handle the configuration change.
+        // When we detect a locale change, we need to restart Gecko, which
+        // actually means restarting the entire application. This logic should
+        // actually be handled elsewhere since GeckoApp may not be alive to
+        // handle this event if "Don't keep activities" is enabled (filed as
+        // bug 889082).
+        if (((GeckoApplication)getApplication()).needsRestart()) {
             doRestart();
             System.exit(0);
             return;
@@ -2083,13 +2086,6 @@ abstract public class GeckoApp
             }
         }
     }
-
-    @Override
-    public Object onRetainCustomNonConfigurationInstance() {
-        // Send a non-null value so that we can restart the application, 
-        // when activity restarts due to configuration change.
-        return Boolean.TRUE;
-    } 
 
     public String getContentProcessName() {
         return AppConstants.MOZ_CHILD_PROCESS_NAME;
