@@ -214,7 +214,7 @@ function deleteMsgs() {
 function cleanUp() {
   sms.onreceived = null;
   SpecialPowers.removePermission("sms", document);
-  SpecialPowers.clearUserPref("dom.sms.enabled", false);
+  SpecialPowers.clearUserPref("dom.sms.enabled");
   SpecialPowers.clearUserPref("dom.sms.requestStatusReport");
 
   finish();
