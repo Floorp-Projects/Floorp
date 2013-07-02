@@ -389,16 +389,3 @@ function getOwnerBrowserWindow(node) {
   });
 }
 exports.getOwnerBrowserWindow = getOwnerBrowserWindow;
-
-function getParentWindow(window) {
-  try {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShellTreeItem).parent
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow);
-  }
-  catch (e) {}
-  return null;
-}
-exports.getParentWindow = getParentWindow;

@@ -61,15 +61,6 @@ If you've installed the add-on in Firefox, or you're running the
 add-on in the Add-on Builder, then the messages appear in Firefox's
 [Error Console](https://developer.mozilla.org/en/Error_Console).
 
-But note that **by default, calls to `console.log()` will not result
-in any output in the Error Console for any installed add-ons**: this
-includes add-ons installed using the Add-on Builder or using tools
-like the
-[Extension Auto-installer](https://addons.mozilla.org/en-US/firefox/addon/autoinstaller/).
-
-See ["Logging Levels"](dev-guide/console.html#Logging Levels)
-in the console reference documentation for more information on this.
-
 ## Learning More ##
 
 For the complete `console` API, see its
