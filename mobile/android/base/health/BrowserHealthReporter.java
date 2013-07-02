@@ -14,6 +14,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
+import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
 import org.mozilla.gecko.background.healthreport.HealthReportGenerator;
 
@@ -34,16 +35,15 @@ import org.json.JSONObject;
 public class BrowserHealthReporter implements GeckoEventListener {
     private static final String LOGTAG = "GeckoHealthRep";
 
-    public static final long MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-    public static final long MILLISECONDS_PER_SIX_MONTHS = 180 * MILLISECONDS_PER_DAY;
-
     public static final String EVENT_REQUEST  = "HealthReport:Request";
     public static final String EVENT_RESPONSE = "HealthReport:Response";
+
+    protected final Context context;
 
     public BrowserHealthReporter() {
         GeckoAppShell.registerEventListener(EVENT_REQUEST, this);
 
-        final Context context = GeckoAppShell.getContext();
+        context = GeckoAppShell.getContext();
         if (context == null) {
             throw new IllegalStateException("Null Gecko context");
         }
@@ -62,14 +62,11 @@ public class BrowserHealthReporter implements GeckoEventListener {
      * @param lastPingTime timestamp when last health report was uploaded
      *                     (milliseconds since epoch).
      * @param profilePath path of the profile to generate report for.
+     * @throws JSONException if JSON generation fails.
+     * @throws IllegalStateException if the environment does not allow to generate a report.
+     * @return non-null report.
      */
     public JSONObject generateReport(long since, long lastPingTime, String profilePath) throws JSONException {
-        final Context context = GeckoAppShell.getContext();
-        if (context == null) {
-            Log.e(LOGTAG, "Null Gecko context; returning null report.", new RuntimeException());
-            return null;
-        }
-
         // We abuse the life-cycle of an Android ContentProvider slightly by holding
         // onto a ContentProviderClient while we generate a payload. This keeps
         // our database storage alive, while also allowing us to share a database
@@ -86,29 +83,50 @@ public class BrowserHealthReporter implements GeckoEventListener {
             // to close it.
             HealthReportDatabaseStorage storage = EnvironmentBuilder.getStorage(client, profilePath);
             if (storage == null) {
-                Log.e(LOGTAG, "No storage in health reporter; returning null report.", new RuntimeException());
-                return null;
+                throw new IllegalStateException("No storage in Health Reporter.");
             }
 
             HealthReportGenerator generator = new HealthReportGenerator(storage);
-            return generator.generateDocument(since, lastPingTime, profilePath);
+            JSONObject report = generator.generateDocument(since, lastPingTime, profilePath);
+            if (report == null) {
+                throw new IllegalStateException("Not enough profile information to generate report.");
+            }
+            return report;
         } finally {
             client.release();
         }
     }
 
     /**
+     * Get last time a health report was successfully uploaded.
+     *
+     * This is read from shared preferences, so call it from a background
+     * thread.  Bug 882182 tracks making this work with multiple profiles.
+     *
+     * @return milliseconds since the epoch, or 0 if never uploaded.
+     */
+    protected long getLastUploadLocalTime() {
+        return context
+            .getSharedPreferences(HealthReportConstants.PREFS_BRANCH, 0)
+            .getLong(HealthReportConstants.PREF_LAST_UPLOAD_LOCAL_TIME, 0L);
+    }
+
+    /**
      * Generate a new Health Report for the current Gecko profile.
      *
      * This method performs IO, so call it from a background thread.
+     *
+     * @throws JSONException if JSON generation fails.
+     * @throws IllegalStateException if the environment does not allow to generate a report.
+     * @return non-null Health Report.
      */
     public JSONObject generateReport() throws JSONException {
         GeckoProfile profile = GeckoAppShell.getGeckoInterface().getProfile();
         String profilePath = profile.getDir().getAbsolutePath();
 
-        long since = System.currentTimeMillis() - MILLISECONDS_PER_SIX_MONTHS;
-         // TODO: read this from per-profile SharedPreference owned by background uploader.
-        long lastPingTime = since;
+        long since = System.currentTimeMillis() - HealthReportConstants.MILLISECONDS_PER_SIX_MONTHS;
+        long lastPingTime = Math.max(getLastUploadLocalTime(), HealthReportConstants.EARLIEST_LAST_PING);
+
         return generateReport(since, lastPingTime, profilePath);
     }
 
@@ -118,11 +136,12 @@ public class BrowserHealthReporter implements GeckoEventListener {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    JSONObject report = new JSONObject();
+                    JSONObject report = null;
                     try {
-                        report = generateReport();
+                        report = generateReport(); // non-null if it returns.
                     } catch (Exception e) {
-                        Log.e(LOGTAG, "Generating report failed; responding with null.", e);
+                        Log.e(LOGTAG, "Generating report failed; responding with empty report.", e);
+                        report = new JSONObject();
                     }
 
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(EVENT_RESPONSE, report.toString()));
