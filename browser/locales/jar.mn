@@ -63,6 +63,7 @@
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/search.properties               (%chrome/browser/search.properties)
     locale/browser/searchbar.dtd                   (%chrome/browser/searchbar.dtd)
+    locale/browser/sitePermissions.properties      (%chrome/browser/sitePermissions.properties)
     locale/browser/engineManager.dtd               (%chrome/browser/engineManager.dtd)
     locale/browser/engineManager.properties        (%chrome/browser/engineManager.properties)
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
