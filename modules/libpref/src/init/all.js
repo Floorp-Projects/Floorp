@@ -3912,14 +3912,6 @@ pref("browser.zoom.reflowZoom.reflowTimeout", 500);
  */
 pref("browser.zoom.reflowZoom.reflowTextOnPageLoad", true);
 
-
-/**
- * The minimum font size to maintain when double-tap zooming into an element, in
- * twips. The browser will attempt to make the frame large enough to enlarge the
- * font size to this value.
- */
-pref("browser.zoom.reflowZoom.minFontSizeTwips", 120);
-
 // Image-related prefs
 // The maximum size, in bytes, of the decoded images we cache
 pref("image.cache.size", 5242880);
