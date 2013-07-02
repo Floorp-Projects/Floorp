@@ -46,6 +46,8 @@ if (DEBUG) {
 
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
+const RADIOINTERFACE_CID =
+  Components.ID("{6a7c91f0-a2b3-4193-8562-8969296c0b54}");
 const RILNETWORKINTERFACE_CID =
   Components.ID("{3bdd52a9-3965-4130-b569-0ac5afed045e}");
 
@@ -234,29 +236,78 @@ XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
 
 
 function RadioInterfaceLayer() {
-  this.clientId = 0;
+  let options = {
+    debug: debugPref,
+    cellBroadcastDisabled: false
+  };
 
+  try {
+    options.cellBroadcastDisabled =
+      Services.prefs.getBoolPref(kCellBroadcastDisabled);
+  } catch(e) {}
+
+  let numIfaces = this.numRadioInterfaces;
+  debug(numIfaces + " interfaces");
+  this.radioInterfaces = [];
+  for (let clientId = 0; clientId < numIfaces; clientId++) {
+    options.clientId = clientId;
+    this.radioInterfaces.push(new RadioInterface(options));
+  }
+}
+RadioInterfaceLayer.prototype = {
+
+  classID:   RADIOINTERFACELAYER_CID,
+  classInfo: XPCOMUtils.generateCI({classID: RADIOINTERFACELAYER_CID,
+                                    classDescription: "RadioInterfaceLayer",
+                                    interfaces: [Ci.nsIRadioInterfaceLayer]}),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
+                                         Ci.nsIObserver]),
+
+  /**
+   * nsIObserver interface methods.
+   */
+
+  observe: function observe(subject, topic, data) {
+    // Nothing to do now. Just for profile-after-change.
+  },
+
+  /**
+   * nsIRadioInterfaceLayer interface methods.
+   */
+
+  getRadioInterface: function getRadioInterface(clientId) {
+    return this.radioInterfaces[clientId];
+  }
+};
+
+XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
+                            "numRadioInterfaces", function () {
+  try {
+    return Services.prefs.getIntPref("ril.numRadioInterfaces");
+  } catch (e) {
+    return 1;
+  }
+});
+
+function RadioInterface(options) {
+  this.clientId = options.clientId;
+
+  this.dataCallSettings = {};
   this.dataNetworkInterface = new RILNetworkInterface(this, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
+  this.dataCallSettingsMMS = {};
   this.mmsNetworkInterface = new RILNetworkInterface(this, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS);
+  this.dataCallSettingsSUPL = {};
   this.suplNetworkInterface = new RILNetworkInterface(this, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL);
 
-  debug("Starting RIL Worker");
+  debug("Starting RIL Worker[" + this.clientId + "]");
   this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
   this.worker.onerror = this.onerror.bind(this);
   this.worker.onmessage = this.onmessage.bind(this);
 
-  let cellBroadcastDisabledPref = false;
-  try {
-    cellBroadcastDisabledPref =
-      Services.prefs.getBoolPref(kCellBroadcastDisabled);
-  } catch(e) {}
   // Pass initial options to ril_worker.
-  this.worker.postMessage({
-    rilMessageType: "setInitialOptions",
-    debug: debugPref,
-    clientId: this.clientId,
-    cellBroadcastDisabled: cellBroadcastDisabledPref
-  });
+  options.rilMessageType = "setInitialOptions";
+  this.worker.postMessage(options);
 
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
@@ -394,14 +445,14 @@ function RadioInterfaceLayer() {
 
   gSystemWorkerManager.registerRilWorker(this.clientId, this.worker);
 }
-RadioInterfaceLayer.prototype = {
+RadioInterface.prototype = {
 
-  classID:   RADIOINTERFACELAYER_CID,
-  classInfo: XPCOMUtils.generateCI({classID: RADIOINTERFACELAYER_CID,
-                                    classDescription: "RadioInterfaceLayer",
-                                    interfaces: [Ci.nsIRadioInterfaceLayer]}),
+  classID:   RADIOINTERFACE_CID,
+  classInfo: XPCOMUtils.generateCI({classID: RADIOINTERFACE_CID,
+                                    classDescription: "RadioInterface",
+                                    interfaces: [Ci.nsIRadioInterface]}),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterface,
                                          Ci.nsIObserver,
                                          Ci.nsISettingsServiceCallback]),
 
@@ -2036,10 +2087,10 @@ RadioInterfaceLayer.prototype = {
   _changingRadioPower: false,
 
   // APN data for making data calls.
-  dataCallSettings: {},
-  dataCallSettingsMMS: {},
-  dataCallSettingsSUPL: {},
-  _dataCallSettingsToRead: [],
+  dataCallSettings: null,
+  dataCallSettingsMMS: null,
+  dataCallSettingsSUPL: null,
+  _dataCallSettingsToRead: null,
   _oldRilDataEnabledState: null,
 
   // Flag to determine whether to use NITZ. It corresponds to the
@@ -2150,7 +2201,7 @@ RadioInterfaceLayer.prototype = {
 
   worker: null,
 
-  // nsIRadioInterfaceLayer
+  // nsIRadioInterface
 
   setRadioEnabled: function setRadioEnabled(value) {
     debug("Setting radio power to " + value);
@@ -3130,9 +3181,8 @@ RadioInterfaceLayer.prototype = {
   },
 };
 
-function RILNetworkInterface(ril, type)
-{
-  this.mRIL = ril;
+function RILNetworkInterface(radioInterface, type) {
+  this.radioInterface = radioInterface;
   this.initType = type;
 }
 
@@ -3264,8 +3314,8 @@ RILNetworkInterface.prototype = {
     // In case the data setting changed while the datacall was being started or
     // ended, let's re-check the setting and potentially adjust the datacall
     // state again.
-    if (this == this.mRIL.dataNetworkInterface) {
-      this.mRIL.updateRILNetworkInterface();
+    if (this == this.radioInterface.dataNetworkInterface) {
+      this.radioInterface.updateRILNetworkInterface();
     }
 
     if (this.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
@@ -3322,7 +3372,7 @@ RILNetworkInterface.prototype = {
     }
 
     if (!this.registeredAsDataCallCallback) {
-      this.mRIL.registerDataCallCallback(this);
+      this.radioInterface.registerDataCallCallback(this);
       this.registeredAsDataCallCallback = true;
     }
 
@@ -3340,7 +3390,7 @@ RILNetworkInterface.prototype = {
     this.httpProxyPort = this.dataCallSettings.httpProxyPort;
 
     debug("Going to set up data connection with APN " + this.dataCallSettings.apn);
-    let radioTechType = this.mRIL.rilContext.data.type;
+    let radioTechType = this.radioInterface.rilContext.data.type;
     let radioTechnology = RIL.GECKO_RADIO_TECH.indexOf(radioTechType);
     let authType = RIL.RIL_DATACALL_AUTH_TO_GECKO.indexOf(this.dataCallSettings["authtype"]);
     // Use the default authType if the value in database is invalid.
@@ -3349,12 +3399,12 @@ RILNetworkInterface.prototype = {
       debug("Invalid authType " + this.dataCallSettings["authtype"]);
       authType = RIL.RIL_DATACALL_AUTH_TO_GECKO.indexOf(RIL.GECKO_DATACALL_AUTH_DEFAULT);
     }
-    this.mRIL.setupDataCall(radioTechnology,
-                            this.dataCallSettings.apn,
-                            this.dataCallSettings.user,
-                            this.dataCallSettings.passwd,
-                            authType,
-                            "IP");
+    this.radioInterface.setupDataCall(radioTechnology,
+                                       this.dataCallSettings.apn,
+                                       this.dataCallSettings.user,
+                                       this.dataCallSettings.passwd,
+                                       authType,
+                                       "IP");
     this.connecting = true;
   },
 
@@ -3402,7 +3452,7 @@ RILNetworkInterface.prototype = {
     }
     let reason = RIL.DATACALL_DEACTIVATE_NO_REASON;
     debug("Going to disconnet data connection " + this.cid);
-    this.mRIL.deactivateDataCall(this.cid, reason);
+    this.radioInterface.deactivateDataCall(this.cid, reason);
   },
 
   // Entry method for timer events. Used to reconnect to a failed APN
