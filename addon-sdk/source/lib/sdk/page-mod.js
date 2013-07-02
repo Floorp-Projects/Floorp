@@ -12,10 +12,9 @@ module.metadata = {
 const observers = require('./deprecated/observer-service');
 const { Loader, validationAttributes } = require('./content/loader');
 const { Worker } = require('./content/worker');
-const { EventEmitter } = require('./deprecated/events');
-const { List } = require('./deprecated/list');
 const { Registry } = require('./util/registry');
-const { MatchPattern } = require('./page-mod/match-pattern');
+const { EventEmitter } = require('./deprecated/events');
+const { on, emit } = require('./event/core');
 const { validateOptions : validate } = require('./deprecated/api-utils');
 const { Cc, Ci } = require('chrome');
 const { merge } = require('./util/object');
@@ -24,13 +23,16 @@ const { windowIterator } = require('./deprecated/window-utils');
 const { isBrowser, getFrames } = require('./window/utils');
 const { getTabs, getTabContentWindow, getTabForContentWindow,
         getURI: getTabURI } = require('./tabs/utils');
-const { has, hasAny } = require('./util/array');
 const { ignoreWindow } = require('sdk/private-browsing/utils');
 const { Style } = require("./stylesheet/style");
 const { attach, detach } = require("./content/mod");
+const { has, hasAny } = require("./util/array");
+const { Rules } = require("./util/rules");
 
 // Valid values for `attachTo` option
 const VALID_ATTACHTO_OPTIONS = ['existing', 'top', 'frame'];
+
+const mods = new WeakMap();
 
 // contentStyle* / contentScript* are sharing the same validation constraints,
 // so they can be mostly reused, except for the messages.
@@ -42,27 +44,6 @@ const validStyleOptions = {
     msg: 'The `contentStyleFile` option must be a local URL or an array of URLs'
   })
 };
-
-// rules registry
-const RULES = {};
-
-const Rules = EventEmitter.resolve({ toString: null }).compose(List, {
-  add: function() Array.slice(arguments).forEach(function onAdd(rule) {
-    if (this._has(rule))
-      return;
-    // registering rule to the rules registry
-    if (!(rule in RULES))
-      RULES[rule] = new MatchPattern(rule);
-    this._add(rule);
-    this._emit('add', rule);
-  }.bind(this)),
-  remove: function() Array.slice(arguments).forEach(function onRemove(rule) {
-    if (!this._has(rule))
-      return;
-    this._remove(rule);
-    this._emit('remove', rule);
-  }.bind(this)),
-});
 
 /**
  * PageMod constructor (exported below).
@@ -121,13 +102,11 @@ const PageMod = Loader.compose(EventEmitter, {
 
     let include = options.include;
     let rules = this.include = Rules();
-    rules.on('add', this._onRuleAdd = this._onRuleAdd.bind(this));
-    rules.on('remove', this._onRuleRemove = this._onRuleRemove.bind(this));
+    
+    if (!include)
+      throw new Error('The `include` option must always contain atleast one rule');
 
-    if (Array.isArray(include))
-      rules.add.apply(null, include);
-    else
-      rules.add(include);
+    rules.add.apply(rules, [].concat(include));
 
     if (contentStyle || contentStyleFile) {
       this._style = Style({
@@ -138,6 +117,7 @@ const PageMod = Loader.compose(EventEmitter, {
 
     this.on('error', this._onUncaughtError = this._onUncaughtError.bind(this));
     pageModManager.add(this._public);
+    mods.set(this._public, this);
 
     // `_applyOnExistingDocuments` has to be called after `pageModManager.add()`
     // otherwise its calls to `_onContent` method won't do anything.
@@ -146,26 +126,21 @@ const PageMod = Loader.compose(EventEmitter, {
   },
 
   destroy: function destroy() {
-
     if (this._style)
       detach(this._style);
 
-    for each (let rule in this.include)
-      this.include.remove(rule);
+    for (let i in this.include)
+      this.include.remove(this.include[i]);
+
+    mods.delete(this._public);
     pageModManager.remove(this._public);
   },
 
   _applyOnExistingDocuments: function _applyOnExistingDocuments() {
     let mod = this;
     // Returns true if the tab match one rule
-    function isMatchingURI(uri) {
-      // Use Array.some as `include` isn't a native array
-      return Array.some(mod.include, function (rule) {
-        return RULES[rule].test(uri);
-      });
-    }
     let tabs = getAllTabs().filter(function (tab) {
-      return isMatchingURI(getTabURI(tab));
+      return mod.include.matchesAny(getTabURI(tab));
     });
 
     tabs.forEach(function (tab) {
@@ -230,12 +205,6 @@ const PageMod = Loader.compose(EventEmitter, {
       worker.destroy();
     });
   },
-  _onRuleAdd: function _onRuleAdd(url) {
-    pageModManager.on(url, this._onContent);
-  },
-  _onRuleRemove: function _onRuleRemove(url) {
-    pageModManager.off(url, this._onContent);
-  },
   _onUncaughtError: function _onUncaughtError(e) {
     if (this._listeners('error').length == 1)
       console.exception(e);
@@ -258,9 +227,6 @@ const PageModManager = Registry.resolve({
   _destructor: function _destructor() {
     observers.remove('document-element-inserted', this._onContentWindow);
     this._removeAllListeners();
-    for (let rule in RULES) {
-      delete RULES[rule];
-    }
 
     // We need to do some cleaning er PageMods, like unregistering any
     // `contentStyle*`
@@ -285,14 +251,13 @@ const PageModManager = Registry.resolve({
       return;
     }
 
-    for (let rule in RULES)
-      if (RULES[rule].test(document.URL))
-        this._emit(rule, window);
+    this._registry.forEach(function(mod) {
+      if (mod.include.matchesAny(document.URL))
+        mods.get(mod)._onContent(window);
+    });
   },
   off: function off(topic, listener) {
     this.removeListener(topic, listener);
-    if (!this._listeners(topic).length)
-      delete RULES[topic];
   }
 });
 const pageModManager = PageModManager();

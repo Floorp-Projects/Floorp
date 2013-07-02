@@ -312,7 +312,6 @@ Modules not yet supported in Firefox Mobile are
  - [loader/sandbox](modules/sdk/loader/sandbox.html)
  - [net/url](modules/sdk/net/url.html)
  - [net/xhr](modules/sdk/net/xhr.html)
- - [page-mod/match-pattern](modules/sdk/page-mod/match-pattern.html)
  - [platform/xpcom](modules/sdk/platform/xpcom.html)
  - [preferences/service](modules/sdk/preferences/service.html)
  - [system/environment](modules/sdk/system/environment.html)
@@ -330,6 +329,7 @@ Modules not yet supported in Firefox Mobile are
  - [util/collection](modules/sdk/util/collection.html)
  - [util/deprecate](modules/sdk/util/deprecate.html)
  - [util/list](modules/sdk/util/list.html)
+ - [util/match-pattern](modules/sdk/util/match-pattern.html)
  - util/registry
  - [util/uuid](modules/sdk/util/uuid.html)
  - [window/utils](modules/sdk/window/utils.html)

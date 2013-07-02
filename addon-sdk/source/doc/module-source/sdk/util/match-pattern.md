@@ -174,7 +174,7 @@ add-on's [data](modules/sdk/self.html#data) directory, use `resource://`.
 You can specify patterns using a
 [regular expression](https://developer.mozilla.org/en/JavaScript/Guide/Regular_Expressions):
 
-    var { MatchPattern } = require("sdk/page-mod/match-pattern");
+    var { MatchPattern } = require("sdk/util/match-pattern");
     var pattern = new MatchPattern(/.*example.*/);
 
 The regular expression is subject to restrictions based on those applied to the
@@ -233,7 +233,7 @@ pattern `/moz.*/` will not match the URL `http://mozilla.org`.
 
 ## Examples ##
 
-    var { MatchPattern } = require("sdk/page-mod/match-pattern");
+    var { MatchPattern } = require("sdk/util/match-pattern");
     var pattern = new MatchPattern("http://example.com/*");
     console.log(pattern.test("http://example.com/"));       // true
     console.log(pattern.test("http://example.com/foo"));    // true
