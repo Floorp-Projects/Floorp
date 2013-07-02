@@ -19,6 +19,22 @@ namespace js {
 
 typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 
+// The inheritance hierarchy for the various classes relating to typed arrays
+// is as follows.
+//
+// - JSObject
+//   - ArrayBufferObject
+//   - BufferView
+//     - DataViewObject
+//     - TypedArray
+//       - TypedArrayTemplate
+//         - Int8Array
+//         - Uint8Array
+//         - ...
+//
+// Note that |TypedArrayTemplate| is just an implementation detail that makes
+// implementing its various subclasses easier.
+
 /*
  * ArrayBufferObject
  *
@@ -177,7 +193,8 @@ class ArrayBufferObject : public JSObject
  * is currently being used for a namespace in jsfriendapi.h.)
  */
 
-struct BufferView {
+class BufferView : public JSObject {
+  public:
     /* Offset of view in underlying ArrayBuffer */
     static const size_t BYTEOFFSET_SLOT  = 0;
 
@@ -340,7 +357,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
     MOZ_ASSUME_UNREACHABLE("Unexpected array type");
 }
 
-class DataViewObject : public JSObject, public BufferView
+class DataViewObject : public BufferView
 {
 public:
     static Class class_;
