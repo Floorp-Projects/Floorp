@@ -26,7 +26,7 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 //   - ArrayBufferObject
 //   - ArrayBufferViewObject
 //     - DataViewObject
-//     - TypedArray
+//     - TypedArrayObject
 //       - TypedArrayTemplate
 //         - Int8Array
 //         - Uint8Array
@@ -41,8 +41,8 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
  * This class holds the underlying raw buffer that the various
  * ArrayBufferViewObject subclasses (DataViewObject and the TypedArrays)
  * access. It can be created explicitly and passed to an ArrayBufferViewObject
- * subclass, or can be created implicitly by constructing a TypedArray with a
- * size.
+ * subclass, or can be created implicitly by constructing a TypedArrayObject
+ * with a size.
  */
 class ArrayBufferObject : public JSObject
 {
@@ -219,14 +219,16 @@ class ArrayBufferViewObject : public JSObject
 };
 
 /*
- * TypedArray
+ * TypedArrayObject
  *
  * The non-templated base class for the specific typed implementations.
  * This class holds all the member variables that are used by
  * the subclasses.
  */
 
-struct TypedArray : public ArrayBufferViewObject {
+class TypedArrayObject : public ArrayBufferViewObject
+{
+  public:
     enum {
         TYPE_INT8 = 0,
         TYPE_UINT8,
@@ -319,15 +321,15 @@ struct TypedArray : public ArrayBufferViewObject {
 inline bool
 IsTypedArrayClass(const Class *clasp)
 {
-    return &TypedArray::classes[0] <= clasp &&
-           clasp < &TypedArray::classes[TypedArray::TYPE_MAX];
+    return &TypedArrayObject::classes[0] <= clasp &&
+           clasp < &TypedArrayObject::classes[TypedArrayObject::TYPE_MAX];
 }
 
 inline bool
 IsTypedArrayProtoClass(const Class *clasp)
 {
-    return &TypedArray::protoClasses[0] <= clasp &&
-           clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
+    return &TypedArrayObject::protoClasses[0] <= clasp &&
+           clasp < &TypedArrayObject::protoClasses[TypedArrayObject::TYPE_MAX];
 }
 
 bool

@@ -74,86 +74,86 @@ ClampIntForUint8Array(int32_t x)
 }
 
 inline Value
-TypedArray::lengthValue(JSObject *obj)
+TypedArrayObject::lengthValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(LENGTH_SLOT);
 }
 
 inline uint32_t
-TypedArray::length(JSObject *obj)
+TypedArrayObject::length(JSObject *obj)
 {
     return lengthValue(obj).toInt32();
 }
 
 inline Value
-TypedArray::byteOffsetValue(JSObject *obj)
+TypedArrayObject::byteOffsetValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(BYTEOFFSET_SLOT);
 }
 
 inline uint32_t
-TypedArray::byteOffset(JSObject *obj)
+TypedArrayObject::byteOffset(JSObject *obj)
 {
     return byteOffsetValue(obj).toInt32();
 }
 
 inline Value
-TypedArray::byteLengthValue(JSObject *obj)
+TypedArrayObject::byteLengthValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(BYTELENGTH_SLOT);
 }
 
 inline uint32_t
-TypedArray::byteLength(JSObject *obj)
+TypedArrayObject::byteLength(JSObject *obj)
 {
     return byteLengthValue(obj).toInt32();
 }
 
 inline uint32_t
-TypedArray::type(JSObject *obj)
+TypedArrayObject::type(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(TYPE_SLOT).toInt32();
 }
 
 inline Value
-TypedArray::bufferValue(JSObject *obj)
+TypedArrayObject::bufferValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(BUFFER_SLOT);
 }
 
 inline ArrayBufferObject *
-TypedArray::buffer(JSObject *obj)
+TypedArrayObject::buffer(JSObject *obj)
 {
     return &bufferValue(obj).toObject().as<ArrayBufferObject>();
 }
 
 inline void *
-TypedArray::viewData(JSObject *obj)
+TypedArrayObject::viewData(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
     return (void *)obj->getPrivate(DATA_SLOT);
 }
 
 inline uint32_t
-TypedArray::slotWidth(int atype) {
+TypedArrayObject::slotWidth(int atype) {
     switch (atype) {
-    case js::TypedArray::TYPE_INT8:
-    case js::TypedArray::TYPE_UINT8:
-    case js::TypedArray::TYPE_UINT8_CLAMPED:
+    case js::TypedArrayObject::TYPE_INT8:
+    case js::TypedArrayObject::TYPE_UINT8:
+    case js::TypedArrayObject::TYPE_UINT8_CLAMPED:
         return 1;
-    case js::TypedArray::TYPE_INT16:
-    case js::TypedArray::TYPE_UINT16:
+    case js::TypedArrayObject::TYPE_INT16:
+    case js::TypedArrayObject::TYPE_UINT16:
         return 2;
-    case js::TypedArray::TYPE_INT32:
-    case js::TypedArray::TYPE_UINT32:
-    case js::TypedArray::TYPE_FLOAT32:
+    case js::TypedArrayObject::TYPE_INT32:
+    case js::TypedArrayObject::TYPE_UINT32:
+    case js::TypedArrayObject::TYPE_FLOAT32:
         return 4;
-    case js::TypedArray::TYPE_FLOAT64:
+    case js::TypedArrayObject::TYPE_FLOAT64:
         return 8;
     default:
         MOZ_ASSUME_UNREACHABLE("invalid typed array type");
@@ -161,7 +161,7 @@ TypedArray::slotWidth(int atype) {
 }
 
 inline int
-TypedArray::slotWidth(JSObject *obj) {
+TypedArrayObject::slotWidth(JSObject *obj) {
     return slotWidth(type(obj));
 }
 
@@ -204,7 +204,7 @@ InitArrayBufferViewDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t 
 static NewObjectKind
 DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
 {
-    if (!proto && byteLength >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH)
+    if (!proto && byteLength >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH)
         return SingletonObject;
     jsbytecode *pc;
     JSScript *script = cx->currentScript(&pc);
@@ -234,7 +234,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
             return NULL;
         obj->setType(type);
     } else if (cx->typeInferenceEnabled()) {
-        if (byteLength >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH) {
+        if (byteLength >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH) {
             JS_ASSERT(obj->hasSingletonType());
         } else {
             jsbytecode *pc;

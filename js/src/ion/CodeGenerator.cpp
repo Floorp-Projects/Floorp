@@ -3370,7 +3370,7 @@ CodeGenerator::visitTypedArrayLength(LTypedArrayLength *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), out);
+    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), out);
     return true;
 }
 
@@ -3379,7 +3379,7 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, TypedArray::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), out);
     return true;
 }
 
@@ -6262,7 +6262,7 @@ CodeGenerator::visitLoadTypedArrayElement(LLoadTypedArrayElement *lir)
     AnyRegister out = ToAnyRegister(lir->output());
 
     int arrayType = lir->mir()->arrayType();
-    int width = TypedArray::slotWidth(arrayType);
+    int width = TypedArrayObject::slotWidth(arrayType);
 
     Label fail;
     if (lir->index()->isConstant()) {
@@ -6310,16 +6310,16 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
     // Load the length.
     Register scratch = out.scratchReg();
     Int32Key key = ToInt32Key(lir->index());
-    masm.unboxInt32(Address(object, TypedArray::lengthOffset()), scratch);
+    masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
 
     // OOL path if index >= length.
     masm.branchKey(Assembler::BelowOrEqual, scratch, key, ool->entry());
 
     // Load the elements vector.
-    masm.loadPtr(Address(object, TypedArray::dataOffset()), scratch);
+    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
 
     int arrayType = lir->mir()->arrayType();
-    int width = TypedArray::slotWidth(arrayType);
+    int width = TypedArrayObject::slotWidth(arrayType);
 
     Label fail;
     if (key.isConstant()) {
@@ -6371,7 +6371,7 @@ template <typename T>
 static inline void
 StoreToTypedArray(MacroAssembler &masm, int arrayType, const LAllocation *value, const T &dest)
 {
-    if (arrayType == TypedArray::TYPE_FLOAT32 || arrayType == TypedArray::TYPE_FLOAT64) {
+    if (arrayType == TypedArrayObject::TYPE_FLOAT32 || arrayType == TypedArrayObject::TYPE_FLOAT64) {
         masm.storeToTypedFloatArray(arrayType, ToFloatRegister(value), dest);
     } else {
         if (value->isConstant())
@@ -6388,7 +6388,7 @@ CodeGenerator::visitStoreTypedArrayElement(LStoreTypedArrayElement *lir)
     const LAllocation *value = lir->value();
 
     int arrayType = lir->mir()->arrayType();
-    int width = TypedArray::slotWidth(arrayType);
+    int width = TypedArrayObject::slotWidth(arrayType);
 
     if (lir->index()->isConstant()) {
         Address dest(elements, ToInt32(lir->index()) * width);
@@ -6408,7 +6408,7 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole *lir)
     const LAllocation *value = lir->value();
 
     int arrayType = lir->mir()->arrayType();
-    int width = TypedArray::slotWidth(arrayType);
+    int width = TypedArrayObject::slotWidth(arrayType);
 
     bool guardLength = true;
     if (lir->index()->isConstant() && lir->length()->isConstant()) {
