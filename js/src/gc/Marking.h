@@ -30,6 +30,7 @@ namespace js {
 
 class ArgumentsObject;
 class ArrayBufferObject;
+class ArrayBufferViewObject;
 class BaseShape;
 class GlobalObject;
 class UnownedBaseShape;
@@ -95,6 +96,7 @@ DeclMarker(BaseShape, UnownedBaseShape)
 DeclMarker(IonCode, ion::IonCode)
 DeclMarker(Object, ArgumentsObject)
 DeclMarker(Object, ArrayBufferObject)
+DeclMarker(Object, ArrayBufferViewObject)
 DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
