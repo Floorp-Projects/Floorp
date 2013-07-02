@@ -225,6 +225,7 @@ FENNEC_JAVA_FILES = \
   home/SimpleCursorLoader.java \
   home/SuggestClient.java \
   home/TopBookmarkItemView.java \
+  home/TopBookmarksAdapter.java \
   home/TopBookmarksView.java \
   home/TwoLinePageRow.java \
   home/VisitedPage.java \

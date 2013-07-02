@@ -24,7 +24,6 @@ import android.widget.ListView;
  */
 public class BookmarksListView extends HomeListView
                                implements AdapterView.OnItemClickListener{
-    
     public static final String LOGTAG = "GeckoBookmarksListView";
 
     // The last motion event that was intercepted.
