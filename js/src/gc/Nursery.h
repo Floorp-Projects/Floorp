@@ -208,6 +208,13 @@ class Nursery
     size_t moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
 
+    /* Handle relocation of slots/elements embedded in jit-code. */
+    void setSlotsForwardingPointer(HeapSlot *oldSlots, HeapSlot *newSlots, uint32_t nslots);
+    void setElementsForwardingPointer(ObjectElements *oldHeader, ObjectElements *newHeader,
+                                      uint32_t nelems);
+    void forwardBufferPointer(HeapSlot **pSlotsElems);
+    void forwardMovedBuffers(JSRuntime *rt);
+
     /* Handle fallback marking. See the comment in MarkStoreBuffer. */
     void markFallback(gc::Cell *cell);
     void moveFallbackToTenured(gc::MinorCollectionTracer *trc);
