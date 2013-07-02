@@ -995,8 +995,8 @@ gsmsdp_negotiate_offer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         negotiated_transport = SDP_TRANSPORT_RTPSAVPF;
         break;
 
-    case SDP_TRANSPORT_SCTPDTLS:
-        negotiated_transport = SDP_TRANSPORT_SCTPDTLS;
+    case SDP_TRANSPORT_DTLSSCTP:
+        negotiated_transport = SDP_TRANSPORT_DTLSSCTP;
         break;
 
     default:
@@ -1076,8 +1076,8 @@ gsmsdp_negotiate_answer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         negotiated_transport = SDP_TRANSPORT_RTPSAVPF;
         break;
 
-    case SDP_TRANSPORT_SCTPDTLS:
-        negotiated_transport = SDP_TRANSPORT_SCTPDTLS;
+    case SDP_TRANSPORT_DTLSSCTP:
+        negotiated_transport = SDP_TRANSPORT_DTLSSCTP;
         break;
 
     default:
@@ -1315,7 +1315,7 @@ gsmsdp_init_sdp_media_transport (fsmdef_dcb_t *dcb_p, void *sdp_p,
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     if (SDP_MEDIA_APPLICATION == media->type) {
-        media->transport = SDP_TRANSPORT_SCTPDTLS;
+        media->transport = SDP_TRANSPORT_DTLSSCTP;
     } else if (rtpsavpf) {
         media->transport = SDP_TRANSPORT_RTPSAVPF;
     } else if (sdpmode) {
