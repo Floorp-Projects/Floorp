@@ -20,7 +20,9 @@ WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* context)
     GLint maxColorAttachments = 0;
     GLint maxDrawBuffers = 0;
 
-    gl::GLContext* gl = context->GL();
+    MOZ_ASSERT(IsSupported(context), "should not construct WebGLExtensionDrawBuffers : EXT_draw_buffers is not supported");
+
+    GLContext* gl = context->GL();
 
     context->MakeContextCurrent();
 
@@ -28,7 +30,7 @@ WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* context)
     gl->fGetIntegerv(LOCAL_GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
 
     // WEBGL_draw_buffers specifications don't give a maximal value reachable by MAX_COLOR_ATTACHMENTS.
-    maxColorAttachments = std::min(maxColorAttachments, GLint(WebGLContext::sMaxColorAttachments));
+    maxColorAttachments = std::min(maxColorAttachments, GLint(WebGLContext::kMaxColorAttachments));
 
     if (context->MinCapabilityMode())
     {
@@ -54,7 +56,7 @@ void WebGLExtensionDrawBuffers::DrawBuffersWEBGL(const dom::Sequence<GLenum>& bu
         return mContext->ErrorInvalidValue("drawBuffersWEBGL: invalid <buffers> (buffers must not be empty)");
     }
 
-    if (mContext->mBoundFramebuffer == 0)
+    if (!mContext->mBoundFramebuffer)
     {
         // OK: we are rendering in the default framebuffer
 
@@ -73,13 +75,13 @@ void WebGLExtensionDrawBuffers::DrawBuffersWEBGL(const dom::Sequence<GLenum>& bu
         mContext->MakeContextCurrent();
 
         if (buffers[0] == LOCAL_GL_NONE) {
-            const GLenum drawBufffersCommand = LOCAL_GL_NONE;
-            mContext->GL()->fDrawBuffers(1, &drawBufffersCommand);
+            const GLenum drawBuffersCommand = LOCAL_GL_NONE;
+            mContext->GL()->fDrawBuffers(1, &drawBuffersCommand);
             return;
         }
         else if (buffers[0] == LOCAL_GL_BACK) {
-            const GLenum drawBufffersCommand = LOCAL_GL_COLOR_ATTACHMENT0;
-            mContext->GL()->fDrawBuffers(1, &drawBufffersCommand);
+            const GLenum drawBuffersCommand = LOCAL_GL_COLOR_ATTACHMENT0;
+            mContext->GL()->fDrawBuffers(1, &drawBuffersCommand);
             return;
         }
         return mContext->ErrorInvalidOperation("drawBuffersWEBGL: invalid operation (main framebuffer: buffers[0] must be GL_NONE or GL_BACK)");
