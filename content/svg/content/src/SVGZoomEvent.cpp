@@ -9,6 +9,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/Element.h"
+#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
