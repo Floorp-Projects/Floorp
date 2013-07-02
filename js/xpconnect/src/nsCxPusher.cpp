@@ -139,6 +139,7 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull) : mScriptIsRunning(fal
 #endif
 }
 
+NS_EXPORT
 AutoCxPusher::~AutoCxPusher()
 {
   // Leave the request before popping.
