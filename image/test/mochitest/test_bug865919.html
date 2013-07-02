@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=865919
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 865919</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+/* Test for Bug 865919:
+ *  BMP with height of INT32_MIN should fail to decode.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+// Make sure the file actually exists.
+var req = new XMLHttpRequest();
+req.onload  = function() { CallbackAssert(true,  'Request for file succeeded.'); };
+req.onerror = function() { CallbackAssert(false, 'Request for file failed! Failed to test non-existent file.'); };
+req.open('GET', 'INT32_MIN.bmp');
+req.send(null);
+
+var outstandingCallbacks = 2;
+
+function CallbackAssert(assertVal, failText) {
+  ok(assertVal, failText);
+
+  outstandingCallbacks--;
+  ok(outstandingCallbacks >= 0, '`outstandingCallbacks` should be non-negative.');
+  if (outstandingCallbacks)
+    return;
+
+  // No outstanding callbacks remain, so we're done.
+  SimpleTest.finish();
+}
+
+</script>
+
+<div id='content'>
+  <img src='INT32_MIN.bmp'
+       onerror='CallbackAssert(true, "Got expected onerror for INT32_MIN.bmp")'
+       onload='CallbackAssert(false, "Got unexpected onload for INT32_MIN.bmp")'>
+</div>
+
+</body>
+</html>
+
