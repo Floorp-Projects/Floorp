@@ -286,6 +286,7 @@ IsAboutToBeFinalized(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
+
 #ifdef JSGC_GENERATIONAL
     Nursery &nursery = (*thingp)->runtime()->gcNursery;
     if (nursery.isInside(*thingp))
@@ -293,6 +294,16 @@ IsAboutToBeFinalized(T **thingp)
 #endif
     if (!(*thingp)->tenuredZone()->isGCSweeping())
         return false;
+
+    /*
+     * We should return false for things that have been allocated during
+     * incremental sweeping, but this possibility doesn't occur at the moment
+     * because this function is only called at the very start of the sweeping a
+     * compartment group.  Rather than do the extra check, we just assert that
+     * it's not necessary.
+     */
+    JS_ASSERT(!(*thingp)->arenaHeader()->allocatedDuringIncremental);
+
     return !(*thingp)->isMarked();
 }
 
