@@ -42,7 +42,7 @@ function testSimpleCall() {
       is(testVar.target.querySelector(".variables-view-element-details").childNodes.length, 0,
         "Adding type and class properties shouldn't add any new tree nodes.");
 
-      is(testVar.target.querySelector(".value").getAttribute("value"), "[object Window]",
+      is(testVar.target.querySelector(".value").getAttribute("value"), "Window",
         "The information for the variable wasn't set correctly.");
 
 
