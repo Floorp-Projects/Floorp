@@ -47,8 +47,7 @@ TestShellParent::CommandDone(TestShellCommandParent* command,
 PContextWrapperParent*
 TestShellParent::AllocPContextWrapper()
 {
-    ContentParent* cpp = static_cast<ContentParent*>(Manager());
-    return new ContextWrapperParent(cpp);
+    return new ContextWrapperParent();
 }
 
 bool
