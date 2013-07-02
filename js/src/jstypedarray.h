@@ -24,7 +24,7 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 //
 // - JSObject
 //   - ArrayBufferObject
-//   - BufferView
+//   - ArrayBufferViewObject
 //     - DataViewObject
 //     - TypedArray
 //       - TypedArrayTemplate
@@ -38,10 +38,10 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 /*
  * ArrayBufferObject
  *
- * This class holds the underlying raw buffer that the various ArrayBufferView
- * subclasses (DataView and the TypedArrays) access. It can be created
- * explicitly and passed to an ArrayBufferView subclass, or can be created
- * implicitly by constructing a TypedArray with a size.
+ * This class holds the underlying raw buffer that the various
+ * ArrayBufferViewObject subclasses (DataView and the TypedArrays) access. It
+ * can be created explicitly and passed to an ArrayBufferViewObject subclass,
+ * or can be created implicitly by constructing a TypedArray with a size.
  */
 class ArrayBufferObject : public JSObject
 {
@@ -187,13 +187,13 @@ class ArrayBufferObject : public JSObject
 };
 
 /*
- * BufferView
+ * ArrayBufferViewObject
  *
- * Common definitions shared by all ArrayBufferViews. (The name ArrayBufferView
- * is currently being used for a namespace in jsfriendapi.h.)
+ * Common definitions shared by all ArrayBufferViews.
  */
 
-class BufferView : public JSObject {
+class ArrayBufferViewObject : public JSObject
+{
   public:
     /* Offset of view in underlying ArrayBufferObject */
     static const size_t BYTEOFFSET_SLOT  = 0;
@@ -225,7 +225,7 @@ class BufferView : public JSObject {
  * the subclasses.
  */
 
-struct TypedArray : public BufferView {
+struct TypedArray : public ArrayBufferViewObject {
     enum {
         TYPE_INT8 = 0,
         TYPE_UINT8,
@@ -249,9 +249,9 @@ struct TypedArray : public BufferView {
      * Typed array properties stored in slots, beyond those shared by all
      * ArrayBufferViews.
      */
-    static const size_t LENGTH_SLOT     = BufferView::NUM_SLOTS;
-    static const size_t TYPE_SLOT       = BufferView::NUM_SLOTS + 1;
-    static const size_t RESERVED_SLOTS  = BufferView::NUM_SLOTS + 2;
+    static const size_t LENGTH_SLOT     = ArrayBufferViewObject::NUM_SLOTS;
+    static const size_t TYPE_SLOT       = ArrayBufferViewObject::NUM_SLOTS + 1;
+    static const size_t RESERVED_SLOTS  = ArrayBufferViewObject::NUM_SLOTS + 2;
     static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
     static Class classes[TYPE_MAX];
@@ -357,7 +357,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
     MOZ_ASSUME_UNREACHABLE("Unexpected array type");
 }
 
-class DataViewObject : public BufferView
+class DataViewObject : public ArrayBufferViewObject
 {
 public:
     static Class class_;
@@ -380,7 +380,7 @@ private:
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
-    static const size_t RESERVED_SLOTS = BufferView::NUM_SLOTS;
+    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS;
     static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
     static inline Value bufferValue(DataViewObject &view);
