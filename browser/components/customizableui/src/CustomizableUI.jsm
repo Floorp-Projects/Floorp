@@ -2006,37 +2006,56 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
   Object.freeze(this);
 }
 
-const LAZY_RESIZE_INTERVAL_MS = 20;
+const LAZY_RESIZE_INTERVAL_MS = 200;
 
 function OverflowableToolbar(aToolbarNode) {
   this._toolbar = aToolbarNode;
-  this._target = aToolbarNode.customizationTarget;
-  let chevronId = this._toolbar.getAttribute("overflowbutton");
-  let doc = this._toolbar.ownerDocument;
-  this._chevron = doc.getElementById(chevronId);
-  this._panel = doc.getElementById("widget-overflow");
-  this._list = doc.getElementById("widget-overflow-list");
   this._collapsed = [];
   this._enabled = true;
 
   this._toolbar.setAttribute("overflowable", "true");
-  this._toolbar.customizationTarget.addEventListener("overflow", this);
-  let window = doc.defaultView;
-  window.addEventListener("resize", this);
-  window.gNavToolbox.addEventListener("customizationstarting", this);
-  window.gNavToolbox.addEventListener("aftercustomization", this);
-  this._chevron.addEventListener("command", this);
-  this._panel.addEventListener("popuphiding", this);
-  CustomizableUIInternal.ensureButtonsClosePanel(this._panel);
-
-  // The toolbar could initialize in an overflowed state, in which case
-  // the 'overflow' event may have been fired before the handler was registered.
-  this._onOverflow();
+  Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
 }
 
 OverflowableToolbar.prototype = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "browser-delayed-startup-finished" &&
+        aSubject == this._toolbar.ownerDocument.defaultView) {
+      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
+      this.init();
+    }
+  },
+
+  init: function() {
+    this._target = this._toolbar.customizationTarget;
+    let doc = this._toolbar.ownerDocument;
+    this._list = doc.getElementById("widget-overflow-list");
+    this._toolbar.customizationTarget.addEventListener("overflow", this);
+
+    let window = doc.defaultView;
+    window.addEventListener("resize", this);
+    window.gNavToolbox.addEventListener("customizationstarting", this);
+    window.gNavToolbox.addEventListener("aftercustomization", this);
+
+    let chevronId = this._toolbar.getAttribute("overflowbutton");
+    this._chevron = doc.getElementById(chevronId);
+    this._chevron.addEventListener("command", this);
+
+    this._panel = doc.getElementById("widget-overflow");
+    this._panel.addEventListener("popuphiding", this);
+    CustomizableUIInternal.ensureButtonsClosePanel(this._panel);
+
+    this.initialized = true;
+
+    // The toolbar could initialize in an overflowed state, in which case
+    // the 'overflow' event may have been fired before the handler was registered.
+    this._onOverflow();
+  },
 
   uninit: function() {
+    if (!this.initialized) {
+      return;
+    }
     this._disable();
 
     this._toolbar.removeAttribute("overflowable");
