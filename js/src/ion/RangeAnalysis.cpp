@@ -769,10 +769,38 @@ MToInt32::computeRange()
     setRange(new Range(input.lower(), input.upper()));
 }
 
+static Range *GetTypedArrayRange(int type)
+{
+    switch (type) {
+      case TypedArray::TYPE_UINT8_CLAMPED:
+      case TypedArray::TYPE_UINT8:  return new Range(0, UINT8_MAX);
+      case TypedArray::TYPE_UINT16: return new Range(0, UINT16_MAX);
+      case TypedArray::TYPE_UINT32: return new Range(0, UINT32_MAX);
+
+      case TypedArray::TYPE_INT8:   return new Range(INT8_MIN, INT8_MAX);
+      case TypedArray::TYPE_INT16:  return new Range(INT16_MIN, INT16_MAX);
+      case TypedArray::TYPE_INT32:  return new Range(INT32_MIN, INT32_MAX);
+
+      case TypedArray::TYPE_FLOAT32:
+      case TypedArray::TYPE_FLOAT64:
+        break;
+    }
+
+  return NULL;
+}
+
+void
+MLoadTypedArrayElement::computeRange()
+{
+    if (Range *range = GetTypedArrayRange(arrayType()))
+        setRange(range);
+}
+
 void
 MLoadTypedArrayElementStatic::computeRange()
 {
-    setRange(new Range(this));
+    if (Range *range = GetTypedArrayRange(TypedArray::type(typedArray_)))
+        setRange(range);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
