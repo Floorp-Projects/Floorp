@@ -382,8 +382,9 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             bufferRect = nsIntRect(state.mOffset.x, state.mOffset.y,
                                    state.mSize.width, state.mSize.height);
         } else {
-            bufferRect = nsIntRect(visibleRect.x, visibleRect.y,
-                                   state.mSize.width, state.mSize.height);
+            //Since the buffer doesn't have its own offset, assign the whole
+            //surface size as its buffer bounds
+            bufferRect = nsIntRect(0, 0, state.mSize.width, state.mSize.height);
         }
     }
 

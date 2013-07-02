@@ -7,6 +7,8 @@
 MODULE = 'xpcom'
 
 EXPORTS += [
+    'nsXPCOM.h',
+    'nsXPCOMCID.h',
     'nsXPCOMCIDInternal.h',
     'nsXREAppData.h',
     'nsXULAppAPI.h',
@@ -49,4 +51,3 @@ CPP_SOURCES += [
     'nsXPCOMStrings.cpp',
     'nsXPComInit.cpp',
 ]
-

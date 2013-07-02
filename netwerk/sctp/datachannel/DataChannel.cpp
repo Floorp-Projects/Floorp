@@ -1554,7 +1554,7 @@ DataChannelConnection::ClearResets()
     LOG(("Clearing resets for %d streams", mStreamsResetting.Length()));
   }
 
-  for (int32_t i = 0; i < mStreamsResetting.Length(); ++i) {
+  for (uint32_t i = 0; i < mStreamsResetting.Length(); ++i) {
     nsRefPtr<DataChannel> channel;
     channel = FindChannelByStream(mStreamsResetting[i]);
     if (channel) {

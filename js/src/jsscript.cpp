@@ -1249,7 +1249,7 @@ ScriptSource::chars(JSContext *cx)
         JSStableString *cached = cx->runtime()->sourceDataCache.lookup(this);
         if (!cached) {
             const size_t nbytes = sizeof(jschar) * (length_ + 1);
-            jschar *decompressed = static_cast<jschar *>(cx->malloc_(nbytes));
+            jschar *decompressed = static_cast<jschar *>(js_malloc(nbytes));
             if (!decompressed)
                 return NULL;
             if (!DecompressString(data.compressed, compressedLength_,

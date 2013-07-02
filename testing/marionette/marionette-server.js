@@ -877,7 +877,9 @@ MarionetteServerConnection.prototype = {
                        newSandbox: aRequest.newSandbox,
                        async: aRequest.async,
                        timeout: timeout,
-                       specialPowers: aRequest.specialPowers
+                       specialPowers: aRequest.specialPowers,
+                       filename: aRequest.filename,
+                       line: aRequest.line,
                      },
                      command_id);
    }

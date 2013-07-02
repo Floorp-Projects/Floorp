@@ -109,12 +109,6 @@ public:
              ICoreDispatcher* aDispatcher);
   virtual ~MetroInput();
 
-  // This event is received from our CoreDispatcher.  All keyboard and
-  // character events are handled in this function.  See function
-  // definition for more info.
-  HRESULT OnAcceleratorKeyActivated(ICoreDispatcher* aSender,
-                                    IAcceleratorKeyEventArgs* aArgs);
-
   // These input events are received from our window. These are basic
   // pointer and keyboard press events. MetroInput responds to them
   // by sending gecko events and forwarding these input events to its
@@ -170,9 +164,6 @@ private:
   void UnregisterInputEvents();
 
   // Event processing helpers.  See function definitions for more info.
-  void OnKeyDown(uint32_t aVKey);
-  void OnKeyUp(uint32_t aVKey);
-  void OnCharacterReceived(uint32_t aVKey);
   void OnPointerNonTouch(IPointerPoint* aPoint);
   void InitGeckoMouseEventFromPointerPoint(nsMouseEvent& aEvent,
                                            IPointerPoint* aPoint);
@@ -238,18 +229,6 @@ private:
                   nsRefPtr<mozilla::dom::Touch>,
                   nsRefPtr<mozilla::dom::Touch> > mTouches;
 
-  // When a key press is received, we convert the Windows virtual key
-  // into a gecko virtual key to send in a gecko event.
-  //
-  // Source:
-  // http://msdn.microsoft.com
-  //       /en-us/library/windows/apps/windows.system.virtualkey.aspx
-  static uint32_t sVirtualKeyMap[255];
-  static bool sIsVirtualKeyMapInitialized;
-  static void InitializeVirtualKeyMap();
-  static uint32_t GetMozKeyCode(uint32_t aKey);
-  // Computes DOM key name index for the aVirtualKey.
-  static KeyNameIndex GetDOMKeyNameIndex(uint32_t aVirtualKey);
   // These registration tokens are set when we register ourselves to receive
   // events from our window.  We must hold on to them for the entire duration
   // that we want to receive these events.  When we are done, we must
@@ -260,12 +239,6 @@ private:
   EventRegistrationToken mTokenPointerEntered;
   EventRegistrationToken mTokenPointerExited;
   EventRegistrationToken mTokenPointerWheelChanged;
-
-  // This registration token is set when we register ourselves to handle
-  // the `AcceleratorKeyActivated` event received from our CoreDispatcher.
-  // When we are done, we must unregister ourselves with the CoreDispatcher
-  // using this token.
-  EventRegistrationToken mTokenAcceleratorKeyActivated;
 
   // When we register ourselves to handle edge gestures, we receive a
   // token. To we unregister ourselves, we must use the token we received.

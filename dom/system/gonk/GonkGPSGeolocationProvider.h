@@ -98,7 +98,7 @@ private:
   const AGpsRilInterface* mAGpsRilInterface;
   nsCOMPtr<nsIGeolocationUpdate> mLocationCallback;
   nsCOMPtr<nsIThread> mInitThread;
-  nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
+  nsCOMPtr<nsIRadioInterface> mRadioInterface;
 };
 
 #endif /* GonkGPSGeolocationProvider_h */

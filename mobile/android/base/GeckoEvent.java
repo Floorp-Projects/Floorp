@@ -599,7 +599,7 @@ public class GeckoEvent {
     public static GeckoEvent createViewportEvent(ImmutableViewportMetrics metrics, DisplayPortMetrics displayPort) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.VIEWPORT);
         event.mCharacters = "Viewport:Change";
-        StringBuffer sb = new StringBuffer(256);
+        StringBuilder sb = new StringBuilder(256);
         sb.append("{ \"x\" : ").append(metrics.viewportRectLeft)
           .append(", \"y\" : ").append(metrics.viewportRectTop)
           .append(", \"zoom\" : ").append(metrics.zoomFactor)

@@ -56,7 +56,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS = \
+DISABLED_CMMSRCS = \
 	gfxMacPlatformFontList.mm \
 	$(NULL)
 endif

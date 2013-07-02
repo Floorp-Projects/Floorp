@@ -1239,7 +1239,14 @@ class ObjectImpl : public gc::Cell
         return type_->clasp;
     }
 
-    inline bool isExtensible() const;
+    static inline bool
+    isExtensible(JSContext *cx, Handle<ObjectImpl*> obj, bool *extensible);
+
+    // Indicates whether a non-proxy is extensible.  Don't call on proxies!
+    // This method really shouldn't exist -- but there are a few internal
+    // places that want it (JITs and the like), and it'd be a pain to mark them
+    // all as friends.
+    inline bool nonProxyIsExtensible() const;
 
     // Attempt to change the [[Extensible]] bit on |obj| to false.  Callers
     // must ensure that |obj| is currently extensible before calling this!

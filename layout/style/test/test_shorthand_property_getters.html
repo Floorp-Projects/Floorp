@@ -96,6 +96,15 @@ is(e.style.cssText, "border-color: currentcolor;", "should condense to canonical
 e.setAttribute("style", "border-style: ridge none none none");
 is(e.style.borderStyle, "ridge none none", "should condense");
 is(e.style.cssText, "border-style: ridge none none;", "should condense");
+e.setAttribute("style", "border-radius: 1px 1px 1px 1px");
+is(e.style.borderRadius, "1px", "should condense to shortest possible");
+is(e.style.cssText, "border-radius: 1px;", "should condense to shortest possible");
+e.setAttribute("style", "border-radius: 1px 1px 1px 1px / 2px 2px 2px 2px");
+is(e.style.borderRadius, "1px / 2px", "should condense to shortest possible");
+is(e.style.cssText, "border-radius: 1px / 2px;", "should condense to shortest possible");
+e.setAttribute("style", "border-radius: 1px 2px 1px 2px / 1% 2% 3% 2%");
+is(e.style.borderRadius, "1px 2px / 1% 2% 3%", "should condense to shortest possible");
+is(e.style.cssText, "border-radius: 1px 2px / 1% 2% 3%;", "should condense to shortest possible");
 
 // Test that we refuse to serialize the 'background' and 'font'
 // shorthands when some subproperties that can't be expressed in the

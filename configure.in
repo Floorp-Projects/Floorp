@@ -4584,7 +4584,7 @@ cairo-cocoa)
     MOZ_WIDGET_TOOLKIT=cocoa
     AC_DEFINE(MOZ_WIDGET_COCOA)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
-    TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
+    TK_LIBS='-framework CoreLocation -framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
     TK_CFLAGS="-DNO_X11"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
@@ -9364,7 +9364,7 @@ if test "$MOZ_TREE_FREETYPE"; then
    export CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
    export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
    export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
-   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes"
+   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --without-png"
 
    if ! test -e modules; then
      mkdir modules
@@ -9482,6 +9482,11 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
+if test "A" = "A"; then # "$MOZ_BUILDAPP" != "browser", when desktop builds this
+    # The Internationalization API is currently disabled in all non-standalone
+    # SpiderMonkey builds, but it should be turned on for desktop builds soon.
+    ac_configure_args="$ac_configure_args --disable-intl-api"
+fi
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
     ac_configure_args="$ac_configure_args --enable-ctypes"

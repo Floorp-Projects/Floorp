@@ -3912,14 +3912,6 @@ pref("browser.zoom.reflowZoom.reflowTimeout", 500);
  */
 pref("browser.zoom.reflowZoom.reflowTextOnPageLoad", true);
 
-
-/**
- * The minimum font size to maintain when double-tap zooming into an element, in
- * twips. The browser will attempt to make the frame large enough to enlarge the
- * font size to this value.
- */
-pref("browser.zoom.reflowZoom.minFontSizeTwips", 120);
-
 // Image-related prefs
 // The maximum size, in bytes, of the decoded images we cache
 pref("image.cache.size", 5242880);
@@ -4281,6 +4273,9 @@ pref("dom.mms.retrievalRetryIntervals", "60000,300000,600000,1800000");
 
 // Debug enabler for MMS.
 pref("mms.debugging.enabled", false);
+
+// Number of RadioInterface instances to create.
+pref("ril.numRadioInterfaces", 1);
 
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before

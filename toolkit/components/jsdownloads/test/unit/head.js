@@ -451,4 +451,6 @@ add_task(function test_common_initialize()
 
   // Disable integration with the host application requiring profile access.
   DownloadIntegration.dontLoad = true;
+  // Disable the parental controls checking.
+  DownloadIntegration.dontCheckParentalControls = true;
 });

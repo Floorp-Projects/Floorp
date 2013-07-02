@@ -93,7 +93,7 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, HandleObject obj)
           JSObject2JSObjectMap::newMap(XPC_WRAPPER_MAP_SIZE);
         MOZ_ASSERT(scope->mWaiverWrapperMap);
     }
-    if (!scope->mWaiverWrapperMap->Add(obj, waiver))
+    if (!scope->mWaiverWrapperMap->Add(cx, obj, waiver))
         return nullptr;
     return waiver;
 }

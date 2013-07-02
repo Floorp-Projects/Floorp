@@ -609,7 +609,7 @@ num_toString_impl(JSContext *cx, CallArgs args)
     int32_t base = 10;
     if (args.hasDefined(0)) {
         double d2;
-        if (!ToInteger(cx, args[0], &d2))
+        if (!ToInteger(cx, args.handleAt(0), &d2))
             return false;
 
         if (d2 < 2 || d2 > 36) {
@@ -788,7 +788,7 @@ js_num_valueOf(JSContext *cx, unsigned argc, Value *vp)
 const unsigned MAX_PRECISION = 100;
 
 static bool
-ComputePrecisionInRange(JSContext *cx, int minPrecision, int maxPrecision, const Value &v,
+ComputePrecisionInRange(JSContext *cx, int minPrecision, int maxPrecision, HandleValue v,
                         int *precision)
 {
     double prec;
@@ -834,7 +834,7 @@ num_toFixed_impl(JSContext *cx, CallArgs args)
     if (args.length() == 0) {
         precision = 0;
     } else {
-        if (!ComputePrecisionInRange(cx, -20, MAX_PRECISION, args[0], &precision))
+        if (!ComputePrecisionInRange(cx, -20, MAX_PRECISION, args.handleAt(0), &precision))
             return false;
     }
 
@@ -860,7 +860,7 @@ num_toExponential_impl(JSContext *cx, CallArgs args)
         precision = 0;
     } else {
         mode = DTOSTR_EXPONENTIAL;
-        if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, args[0], &precision))
+        if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, args.handleAt(0), &precision))
             return false;
     }
 
@@ -898,7 +898,7 @@ num_toPrecision_impl(JSContext *cx, CallArgs args)
         precision = 0;
     } else {
         mode = DTOSTR_PRECISION;
-        if (!ComputePrecisionInRange(cx, 1, MAX_PRECISION, args[0], &precision))
+        if (!ComputePrecisionInRange(cx, 1, MAX_PRECISION, args.handleAt(0), &precision))
             return false;
     }
 
@@ -983,7 +983,7 @@ Number_toInteger(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
     double asint;
-    if (!ToInteger(cx, args[0], &asint))
+    if (!ToInteger(cx, args.handleAt(0), &asint))
         return false;
     args.rval().setNumber(asint);
     return true;

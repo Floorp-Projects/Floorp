@@ -105,9 +105,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gRIL",
-                                   "@mozilla.org/ril;1",
-                                   "nsIRadioInterfaceLayer");
+XPCOMUtils.defineLazyGetter(this, "gRadioInterface", function () {
+  let ril = Cc["@mozilla.org/ril;1"].getService(Ci["nsIRadioInterfaceLayer"]);
+  // TODO: Bug 854326 - B2G Multi-SIM: support multiple SIM cards for SMS/MMS
+  return ril.getRadioInterface(0);
+});
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageDatabaseService",
                                    "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1",
@@ -176,7 +178,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
     onDisconnectTimerTimeout: function onDisconnectTimerTimeout() {
       if (DEBUG) debug("onDisconnectTimerTimeout: deactivate the MMS data call.");
       if (this.connected) {
-        gRIL.deactivateDataCallByType("mms");
+        gRadioInterface.deactivateDataCallByType("mms");
       }
     },
 
@@ -207,7 +209,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
         this.radioDisabled = false;
       }
 
-      this.connected = gRIL.getDataCallStateByType("mms") ==
+      this.connected = gRadioInterface.getDataCallStateByType("mms") ==
         Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
     },
 
@@ -217,7 +219,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
      * @return true if voice call is roaming.
      */
     isVoiceRoaming: function isVoiceRoaming() {
-      let isRoaming = gRIL.rilContext.voice.roaming;
+      let isRoaming = gRadioInterface.rilContext.voice.roaming;
       if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
       return isRoaming;
     },
@@ -241,7 +243,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
       if (!this.connected) {
         if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
         this.pendingCallbacks.push(callback);
-        gRIL.setupDataCallByType("mms");
+        gRadioInterface.setupDataCallByType("mms");
 
         // Set a timer to clear the buffered MMS requests if the
         // MMS network fails to be connected within a time period.
@@ -318,7 +320,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
       switch (topic) {
         case kNetworkInterfaceStateChangedTopic: {
           this.connected =
-            gRIL.getDataCallStateByType("mms") ==
+            gRadioInterface.getDataCallStateByType("mms") ==
               Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
 
           if (!this.connected) {
@@ -1176,6 +1178,18 @@ MmsService.prototype = {
     return config >= CONFIG_SEND_REPORT_DEFAULT_YES;
   },
 
+  getMsisdn: function getMsisdn() {
+    let iccInfo = gRadioInterface.rilContext.iccInfo;
+    let number = iccInfo ? iccInfo.msisdn : null;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (number === undefined || number === "undefined") {
+      return null;
+    }
+    return number;
+  },
+
   /**
    * Convert intermediate message to indexedDB savable object.
    *
@@ -1217,6 +1231,7 @@ MmsService.prototype = {
       intermediate.sender = "anonymous";
     }
     intermediate.receivers = [];
+    intermediate.msisdn = this.getMsisdn();
     return intermediate;
   },
 
@@ -1626,6 +1641,7 @@ MmsService.prototype = {
     message["deliveryStatusRequested"] = true;
     message["timestamp"] = Date.now();
     message["receivers"] = receivers;
+    message["sender"] = this.getMsisdn();
 
     if (DEBUG) debug("createSavableFromParams: message: " + JSON.stringify(message));
     return message;
@@ -1699,7 +1715,7 @@ MmsService.prototype = {
       }
 
       // For SIM card is not ready.
-      if (gRIL.rilContext.cardState != "ready") {
+      if (gRadioInterface.rilContext.cardState != "ready") {
         if (DEBUG) debug("Error! SIM card is not ready when sending MMS.");
         sendTransactionCb(aDomMessage,
                           Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR);

@@ -11,8 +11,10 @@ pref("nglayout.debug.disable_xul_fastload", true);
 pref("devtools.errorconsole.enabled", true);
 #endif
 
-// Enable headless crash reporting by default
-pref("app.reportCrashes", true);
+// Automatically submit crash reports
+pref("app.crashreporter.autosubmit", false);
+// Has the user been prompted about crash reporting?
+pref("app.crashreporter.prompted", false);
 
 // Debug prefs, see input.js
 pref("metro.debug.treatmouseastouch", false);
@@ -83,6 +85,9 @@ pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
 pref("network.protocol-handler.warn-external.ms-windows-store", false);
 pref("network.protocol-handler.external.ms-windows-store", true);
+
+// display the overlay nav buttons
+pref("browser.display.overlaynavbuttons", true);
 
 /* history max results display */
 pref("browser.display.history.maxresults", 100);

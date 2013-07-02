@@ -706,12 +706,13 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
   }
 };
 
-NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter,
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter,
                    nsIMemoryMultiReporter)
 
 /* static */ void
 nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
 {
+  sDataOwnerMutex.AssertCurrentThreadOwns();
   if (sMemoryReporterRegistered) {
     return;
   }

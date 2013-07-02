@@ -3336,7 +3336,7 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
         return false;
 
     // Object must be extensible, oldShape must be immediate parent of curShape.
-    if (!obj->isExtensible() || obj->lastProperty()->previous() != oldShape)
+    if (!obj->nonProxyIsExtensible() || obj->lastProperty()->previous() != oldShape)
         return false;
 
     // Basic shape checks.

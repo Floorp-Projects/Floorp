@@ -7,6 +7,18 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const EVENT_VIRTUALCURSOR_CHANGED = Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
+const EVENT_STATE_CHANGE = Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE;
+const EVENT_SCROLLING_START = Ci.nsIAccessibleEvent.EVENT_SCROLLING_START;
+const EVENT_TEXT_CARET_MOVED = Ci.nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED;
+const EVENT_TEXT_INSERTED = Ci.nsIAccessibleEvent.EVENT_TEXT_INSERTED;
+const EVENT_TEXT_REMOVED = Ci.nsIAccessibleEvent.EVENT_TEXT_REMOVED;
+const EVENT_FOCUS = Ci.nsIAccessibleEvent.EVENT_FOCUS;
+
+const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
+const ROLE_DOCUMENT = Ci.nsIAccessibleRole.ROLE_DOCUMENT;
+const ROLE_CHROME_WINDOW = Ci.nsIAccessibleRole.ROLE_CHROME_WINDOW;
+
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
   'resource://gre/modules/Services.jsm');
@@ -127,18 +139,18 @@ this.EventManager.prototype = {
 
     // Don't bother with non-content events in firefox.
     if (Utils.MozBuildApp == 'browser' &&
-        aEvent.eventType != Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED &&
+        aEvent.eventType != EVENT_VIRTUALCURSOR_CHANGED &&
         aEvent.accessibleDocument != Utils.CurrentContentDoc) {
       return;
     }
 
     switch (aEvent.eventType) {
-      case Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED:
+      case EVENT_VIRTUALCURSOR_CHANGED:
       {
         let pivot = aEvent.accessible.
           QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
         let position = pivot.position;
-        if (position && position.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME)
+        if (position && position.role == ROLE_INTERNAL_FRAME)
           break;
         let event = aEvent.
           QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
@@ -152,7 +164,7 @@ this.EventManager.prototype = {
 
         break;
       }
-      case Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE:
+      case EVENT_STATE_CHANGE:
       {
         let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
         if (event.state == Ci.nsIAccessibleStates.STATE_CHECKED &&
@@ -164,13 +176,13 @@ this.EventManager.prototype = {
         }
         break;
       }
-      case Ci.nsIAccessibleEvent.EVENT_SCROLLING_START:
+      case EVENT_SCROLLING_START:
       {
         let vc = Utils.getVirtualCursor(aEvent.accessibleDocument);
         vc.moveNext(TraversalRules.Simple, aEvent.accessible, true);
         break;
       }
-      case Ci.nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED:
+      case EVENT_TEXT_CARET_MOVED:
       {
         let acc = aEvent.accessible;
         let characterCount = acc.
@@ -203,8 +215,8 @@ this.EventManager.prototype = {
         this.editState = editState;
         break;
       }
-      case Ci.nsIAccessibleEvent.EVENT_TEXT_INSERTED:
-      case Ci.nsIAccessibleEvent.EVENT_TEXT_REMOVED:
+      case EVENT_TEXT_INSERTED:
+      case EVENT_TEXT_REMOVED:
       {
         if (aEvent.isFromUserInput) {
           // XXX support live regions as well.
@@ -228,13 +240,12 @@ this.EventManager.prototype = {
         }
         break;
       }
-      case Ci.nsIAccessibleEvent.EVENT_FOCUS:
+      case EVENT_FOCUS:
       {
         // Put vc where the focus is at
         let acc = aEvent.accessible;
         let doc = aEvent.accessibleDocument;
-        if (acc.role != Ci.nsIAccessibleRole.ROLE_DOCUMENT &&
-            doc.role != Ci.nsIAccessibleRole.ROLE_CHROME_WINDOW) {
+        if (acc.role != ROLE_DOCUMENT && doc.role != ROLE_CHROME_WINDOW) {
           let vc = Utils.getVirtualCursor(doc);
           vc.moveNext(TraversalRules.Simple, acc, true);
         }

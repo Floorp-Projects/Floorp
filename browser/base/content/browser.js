@@ -9,6 +9,9 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gCharsetMenu = null;
@@ -137,6 +140,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "gBrowserNewTabPreloader",
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
+  "resource:///modules/SitePermissions.jsm");
 
 let gInitialPages = [
   "about:blank",
@@ -818,14 +824,6 @@ var gBrowserInit = {
     // setup our common DOMLinkAdded listener
     gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 
-    // setup our MozApplicationManifest listener
-    gBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
-    // listen for offline apps on social
-    let socialBrowser = document.getElementById("social-sidebar-browser");
-    socialBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
-
     // setup simple gestures support
     gGestureSupport.init(true);
 
@@ -971,6 +969,17 @@ var gBrowserInit = {
     TelemetryTimestamps.add("delayedStartupStarted");
 
     this._cancelDelayedStartup();
+
+    // We need to set the MozApplicationManifest event listeners up
+    // before we start loading the home pages in case a document has
+    // a "manifest" attribute, in which the MozApplicationManifest event
+    // will be fired.
+    gBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
+    // listen for offline apps on social
+    let socialBrowser = document.getElementById("social-sidebar-browser");
+    socialBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
 
     var isLoadingBlank = isBlankPageURL(uriToLoad);
 
@@ -1925,88 +1934,89 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup) {
   } catch (e) {}
 }
 
-function getShortcutOrURI(aURL, aPostDataRef, aMayInheritPrincipal) {
-  // Initialize outparam to false
-  if (aMayInheritPrincipal)
-    aMayInheritPrincipal.value = false;
+function getShortcutOrURIAndPostData(aURL) {
+  return Task.spawn(function() {
+    let mayInheritPrincipal = false;
+    let postData = null;
+    let shortcutURL = null;
+    let keyword = aURL;
+    let param = "";
 
-  var shortcutURL = null;
-  var keyword = aURL;
-  var param = "";
-
-  var offset = aURL.indexOf(" ");
-  if (offset > 0) {
-    keyword = aURL.substr(0, offset);
-    param = aURL.substr(offset + 1);
-  }
-
-  if (!aPostDataRef)
-    aPostDataRef = {};
-
-  var engine = Services.search.getEngineByAlias(keyword);
-  if (engine) {
-    var submission = engine.getSubmission(param);
-    aPostDataRef.value = submission.postData;
-    return submission.uri.spec;
-  }
-
-  [shortcutURL, aPostDataRef.value] =
-    PlacesUtils.getURLAndPostDataForKeyword(keyword);
-
-  if (!shortcutURL)
-    return aURL;
-
-  var postData = "";
-  if (aPostDataRef.value)
-    postData = unescape(aPostDataRef.value);
-
-  if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
-    var charset = "";
-    const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
-    var matches = shortcutURL.match(re);
-    if (matches)
-      [, shortcutURL, charset] = matches;
-    else {
-      // Try to get the saved character-set.
-      try {
-        // makeURI throws if URI is invalid.
-        // Will return an empty string if character-set is not found.
-        charset = PlacesUtils.history.getCharsetForURI(makeURI(shortcutURL));
-      } catch (e) {}
+    let offset = aURL.indexOf(" ");
+    if (offset > 0) {
+      keyword = aURL.substr(0, offset);
+      param = aURL.substr(offset + 1);
     }
 
-    // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
-    // escape() works in those cases, but it doesn't uri-encode +, @, and /.
-    // Therefore we need to manually replace these ASCII characters by their
-    // encodeURIComponent result, to match the behavior of nsEscape() with
-    // url_XPAlphas
-    var encodedParam = "";
-    if (charset && charset != "UTF-8")
-      encodedParam = escape(convertFromUnicode(charset, param)).
-                     replace(/[+@\/]+/g, encodeURIComponent);
-    else // Default charset is UTF-8
-      encodedParam = encodeURIComponent(param);
+    let engine = Services.search.getEngineByAlias(keyword);
+    if (engine) {
+      let submission = engine.getSubmission(param);
+      postData = submission.postData;
+      throw new Task.Result({ postData: submission.postData,
+                              url: submission.uri.spec,
+                              mayInheritPrincipal: mayInheritPrincipal });
+    }
 
-    shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+    [shortcutURL, postData] =
+      PlacesUtils.getURLAndPostDataForKeyword(keyword);
 
-    if (/%s/i.test(postData)) // POST keyword
-      aPostDataRef.value = getPostDataStream(postData, param, encodedParam,
-                                             "application/x-www-form-urlencoded");
-  }
-  else if (param) {
-    // This keyword doesn't take a parameter, but one was provided. Just return
-    // the original URL.
-    aPostDataRef.value = null;
+    if (!shortcutURL)
+      throw new Task.Result({ postData: postData, url: aURL,
+                              mayInheritPrincipal: mayInheritPrincipal });
 
-    return aURL;
-  }
+    let escapedPostData = "";
+    if (postData)
+      escapedPostData = unescape(postData);
 
-  // This URL came from a bookmark, so it's safe to let it inherit the current
-  // document's principal.
-  if (aMayInheritPrincipal)
-    aMayInheritPrincipal.value = true;
+    if (/%s/i.test(shortcutURL) || /%s/i.test(escapedPostData)) {
+      let charset = "";
+      const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+      let matches = shortcutURL.match(re);
+      if (matches)
+        [, shortcutURL, charset] = matches;
+      else {
+        // Try to get the saved character-set.
+        try {
+          // makeURI throws if URI is invalid.
+          // Will return an empty string if character-set is not found.
+          charset = yield PlacesUtils.getCharsetForURI(makeURI(shortcutURL));
+        } catch (e) {}
+      }
 
-  return shortcutURL;
+      // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
+      // escape() works in those cases, but it doesn't uri-encode +, @, and /.
+      // Therefore we need to manually replace these ASCII characters by their
+      // encodeURIComponent result, to match the behavior of nsEscape() with
+      // url_XPAlphas
+      let encodedParam = "";
+      if (charset && charset != "UTF-8")
+        encodedParam = escape(convertFromUnicode(charset, param)).
+                       replace(/[+@\/]+/g, encodeURIComponent);
+      else // Default charset is UTF-8
+        encodedParam = encodeURIComponent(param);
+
+      shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+
+      if (/%s/i.test(escapedPostData)) // POST keyword
+        postData = getPostDataStream(escapedPostData, param, encodedParam,
+                                               "application/x-www-form-urlencoded");
+    }
+    else if (param) {
+      // This keyword doesn't take a parameter, but one was provided. Just return
+      // the original URL.
+      postData = null;
+
+      throw new Task.Result({ postData: postData, url: aURL,
+                              mayInheritPrincipal: mayInheritPrincipal });
+    }
+
+    // This URL came from a bookmark, so it's safe to let it inherit the current
+    // document's principal.
+    mayInheritPrincipal = true;
+
+    throw new Task.Result({ postData: postData, url: shortcutURL,
+                            mayInheritPrincipal: mayInheritPrincipal });
+  });
 }
 
 function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
@@ -2843,12 +2853,13 @@ var newTabButtonObserver = {
   onDrop: function (aEvent)
   {
     let url = browserDragAndDrop.drop(aEvent, { });
-    var postData = {};
-    url = getShortcutOrURI(url, postData);
-    if (url) {
-      // allow third-party services to fixup this URL
-      openNewTabWith(url, null, postData.value, aEvent, true);
-    }
+    Task.spawn(function() {
+      let data = yield getShortcutOrURIAndPostData(url);
+      if (data.url) {
+        // allow third-party services to fixup this URL
+        openNewTabWith(data.url, null, data.postData, aEvent, true);
+      }
+    });
   }
 }
 
@@ -2863,12 +2874,13 @@ var newWindowButtonObserver = {
   onDrop: function (aEvent)
   {
     let url = browserDragAndDrop.drop(aEvent, { });
-    var postData = {};
-    url = getShortcutOrURI(url, postData);
-    if (url) {
-      // allow third-party services to fixup this URL
-      openNewWindowWith(url, null, postData.value, true);
-    }
+    Task.spawn(function() {
+      let data = yield getShortcutOrURIAndPostData(url);
+      if (data.url) {
+        // allow third-party services to fixup this URL
+        openNewWindowWith(data.url, null, data.postData, true);
+      }
+    });
   }
 }
 
@@ -5239,36 +5251,52 @@ function middleMousePaste(event) {
   // bar's behavior (stripsurroundingwhitespace)
   clipboard = clipboard.replace(/\s*\n\s*/g, "");
 
-  let mayInheritPrincipal = { value: false };
-  let url = getShortcutOrURI(clipboard, mayInheritPrincipal);
-  try {
-    makeURI(url);
-  } catch (ex) {
-    // Not a valid URI.
-    return;
+  // if it's not the current tab, we don't need to do anything because the 
+  // browser doesn't exist.
+  let where = whereToOpenLink(event, true, false);
+  let lastLocationChange;
+  if (where == "current") {
+    lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
   }
 
-  try {
-    addToUrlbarHistory(url);
-  } catch (ex) {
-    // Things may go wrong when adding url to session history,
-    // but don't let that interfere with the loading of the url.
-    Cu.reportError(ex);
-  }
+  Task.spawn(function() {
+    let data = yield getShortcutOrURIAndPostData(clipboard);
+    try {
+      makeURI(data.url);
+    } catch (ex) {
+      // Not a valid URI.
+      return;
+    }
 
-  openUILink(url, event,
-             { ignoreButton: true,
-               disallowInheritPrincipal: !mayInheritPrincipal.value });
+    try {
+      addToUrlbarHistory(data.url);
+    } catch (ex) {
+      // Things may go wrong when adding url to session history,
+      // but don't let that interfere with the loading of the url.
+      Cu.reportError(ex);
+    }
+
+    if (where != "current" ||
+        lastLocationChange == gBrowser.selectedBrowser.lastLocationChange) {
+      openUILink(data.url, event,
+                 { ignoreButton: true,
+                   disallowInheritPrincipal: !data.mayInheritPrincipal });
+    }
+  });
 
   event.stopPropagation();
 }
 
 function handleDroppedLink(event, url, name)
 {
-  let postData = { };
-  let uri = getShortcutOrURI(url, postData);
-  if (uri)
-    loadURI(uri, null, postData.value, false);
+  let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
+
+  Task.spawn(function() {
+    let data = yield getShortcutOrURIAndPostData(url);
+    if (data.url &&
+        lastLocationChange == gBrowser.selectedBrowser.lastLocationChange)
+      loadURI(data.url, null, data.postData, false);
+  });
 
   // Keep the event from being handled by the dragDrop listeners
   // built-in to gecko if they happen to be above us.
@@ -5390,7 +5418,6 @@ function charsetLoadListener() {
     gLastBrowserCharset = charset;
   }
 }
-
 
 var gPageStyleMenu = {
 
@@ -6169,17 +6196,15 @@ function BrowserOpenAddonsMgr(aView) {
   }
 }
 
-function AddKeywordForSearchField() {
-  var node = document.popupNode;
-
+function GetSearchFieldBookmarkData(node) {
   var charset = node.ownerDocument.characterSet;
 
-  var docURI = makeURI(node.ownerDocument.URL,
-                       charset);
+  var formBaseURI = makeURI(node.form.baseURI,
+                            charset);
 
   var formURI = makeURI(node.form.getAttribute("action"),
                         charset,
-                        docURI);
+                        formBaseURI);
 
   var spec = formURI.spec;
 
@@ -6234,14 +6259,27 @@ function AddKeywordForSearchField() {
   else
     spec += "?" + formData.join("&");
 
+  return {
+    spec: spec,
+    title: title,
+    description: description,
+    postData: postData,
+    charSet: charset
+  };
+}
+
+
+function AddKeywordForSearchField() {
+  bookmarkData = GetSearchFieldBookmarkData(document.popupNode);
+
   PlacesUIUtils.showBookmarkDialog({ action: "add"
                                    , type: "bookmark"
-                                   , uri: makeURI(spec)
-                                   , title: title
-                                   , description: description
+                                   , uri: makeURI(bookmarkData.spec)
+                                   , title: bookmarkData.title
+                                   , description: bookmarkData.description
                                    , keyword: ""
-                                   , postData: postData
-                                   , charSet: charset
+                                   , postData: bookmarkData.postData
+                                   , charSet: bookmarkData.charset
                                    , hiddenRows: [ "location"
                                                  , "description"
                                                  , "tags"
@@ -6451,6 +6489,14 @@ var gIdentityHandler = {
     delete this._identityIcon;
     return this._identityIcon = document.getElementById("page-proxy-favicon");
   },
+  get _permissionsContainer () {
+    delete this._permissionsContainer;
+    return this._permissionsContainer = document.getElementById("identity-popup-permissions");
+  },
+  get _permissionList () {
+    delete this._permissionList;
+    return this._permissionList = document.getElementById("identity-popup-permission-list");
+  },
 
   /**
    * Rebuild cache of the elements that may or may not exist depending
@@ -6461,10 +6507,14 @@ var gIdentityHandler = {
     delete this._identityIconLabel;
     delete this._identityIconCountryLabel;
     delete this._identityIcon;
+    delete this._permissionsContainer;
+    delete this._permissionList;
     this._identityBox = document.getElementById("identity-box");
     this._identityIconLabel = document.getElementById("identity-icon-label");
     this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
     this._identityIcon = document.getElementById("page-proxy-favicon");
+    this._permissionsContainer = document.getElementById("identity-popup-permissions");
+    this._permissionList = document.getElementById("identity-popup-permission-list");
   },
 
   /**
@@ -6474,6 +6524,7 @@ var gIdentityHandler = {
   handleMoreInfoClick : function(event) {
     displaySecurityInfo();
     event.stopPropagation();
+    this._identityPopup.hidePopup();
   },
 
   /**
@@ -6615,6 +6666,7 @@ var gIdentityHandler = {
       return;
     }
 
+    this._identityPopup.className = newMode;
     this._identityBox.className = newMode;
     this.setIdentityMessages(newMode);
 
@@ -6757,10 +6809,6 @@ var gIdentityHandler = {
     this._identityPopupContentVerif.textContent = verifier;
   },
 
-  hideIdentityPopup : function() {
-    this._identityPopup.hidePopup();
-  },
-
   /**
    * Click handler for the identity-box element in primary chrome.
    */
@@ -6788,6 +6836,8 @@ var gIdentityHandler = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
 
+    this.updateSitePermissions();
+
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
     var self = this;
@@ -6802,7 +6852,11 @@ var gIdentityHandler = {
 
   onPopupShown : function(event) {
     TelemetryStopwatch.finish("FX_IDENTITY_POPUP_OPEN_MS");
+
     document.getElementById('identity-popup-more-info-button').focus();
+
+    this._identityPopup.addEventListener("blur", this, true);
+    this._identityPopup.addEventListener("popuphidden", this);
   },
 
   onDragStart: function (event) {
@@ -6819,6 +6873,72 @@ var gIdentityHandler = {
     dt.setData("text/plain", value);
     dt.setData("text/html", htmlString);
     dt.setDragImage(gProxyFavIcon, 16, 16);
+  },
+ 
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "blur":
+        // Focus hasn't moved yet, need to wait until after the blur event.
+        setTimeout(() => {
+          if (document.activeElement &&
+              document.activeElement.compareDocumentPosition(this._identityPopup) &
+                Node.DOCUMENT_POSITION_CONTAINS)
+            return;
+
+          this._identityPopup.hidePopup();
+        }, 0);
+        break;
+      case "popuphidden":
+        this._identityPopup.removeEventListener("blur", this, true);
+        this._identityPopup.removeEventListener("popuphidden", this);
+        break;
+    }
+  },
+
+  updateSitePermissions: function () {
+    while (this._permissionList.hasChildNodes())
+      this._permissionList.removeChild(this._permissionList.lastChild);
+
+    let uri = gBrowser.currentURI;
+
+    for (let permission of SitePermissions.listPermissions()) {
+      let state = SitePermissions.get(uri, permission);
+
+      if (state == SitePermissions.UNKNOWN)
+        continue;
+
+      let item = this._createPermissionItem(permission, state);
+      this._permissionList.appendChild(item);
+    }
+
+    this._permissionsContainer.hidden = !this._permissionList.hasChildNodes();
+  },
+
+  _createPermissionItem: function (aPermission, aState) {
+    let menulist = document.createElement("menulist");
+    let menupopup = document.createElement("menupopup");
+    for (let state of SitePermissions.getAvailableStates(aPermission)) {
+      let menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("value", state);
+      menuitem.setAttribute("label", SitePermissions.getStateLabel(state));
+      menupopup.appendChild(menuitem);
+    }
+    menulist.appendChild(menupopup);
+    menulist.setAttribute("value", aState);
+    menulist.setAttribute("oncommand", "SitePermissions.set(gBrowser.currentURI, '" +
+                                       aPermission + "', this.value)");
+    menulist.setAttribute("id", "identity-popup-permission:" + aPermission);
+
+    let label = document.createElement("label");
+    label.setAttribute("flex", "1");
+    label.setAttribute("control", menulist.getAttribute("id"));
+    label.setAttribute("value", SitePermissions.getPermissionLabel(aPermission));
+
+    let container = document.createElement("hbox");
+    container.setAttribute("align", "center");
+    container.appendChild(label);
+    container.appendChild(menulist);
+    return container;
   }
 };
 

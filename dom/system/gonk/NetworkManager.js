@@ -228,7 +228,7 @@ NetworkManager.prototype = {
             this.setAndConfigureActive();
             // Update data connection when Wifi connected/disconnected
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              this.mRIL.updateRILNetworkInterface();
+              this.mRIL.getRadioInterface(0).updateRILNetworkInterface();
             }
 
             this.onConnectionChanged(network);
@@ -245,14 +245,14 @@ NetworkManager.prototype = {
             }
             // Remove routing table in /proc/net/route
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              this.resetRoutingTable(this._activeInfo);
+              this.resetRoutingTable(network);
             }
             // Abort ongoing captive portal detection on the wifi interface
             CaptivePortalDetectionHelper.notify(CaptivePortalDetectionHelper.EVENT_DISCONNECT, network);
             this.setAndConfigureActive();
             // Update data connection when Wifi connected/disconnected
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              this.mRIL.updateRILNetworkInterface();
+              this.mRIL.getRadioInterface(0).updateRILNetworkInterface();
             }
             break;
         }

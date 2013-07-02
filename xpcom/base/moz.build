@@ -41,23 +41,38 @@ XPIDL_MODULE = 'xpcom_base'
 MODULE = 'xpcom'
 
 EXPORTS += [
+    'ErrorList.h',
+    'ErrorListCDefines.h',
+    'ErrorListCxxDefines.h',
     'nsAgg.h',
+    'nsAtomicRefcnt.h',
+    'nsAutoPtr.h',
     'nsAutoRef.h',
     'nsCom.h',
+    'nsCycleCollector.h',
     'nsDebugImpl.h',
+    'nsError.h',
     'nsGZFileWriter.h',
     'nsIAllocator.h',
     'nsIID.h',
     'nsISizeOf.h',
+    'nsISupportsBase.h',
     'nsISupportsObsolete.h',
     'nsInterfaceRequestorAgg.h',
+    'nsObjCExceptions.h',
     'nsStackWalk.h',
     'nsTraceRefcntImpl.h',
     'nsWeakPtr.h',
+    'nscore.h',
 ]
 
 if CONFIG['MOZ_DEBUG']:
     EXPORTS += ['pure.h']
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS += [
+        'nsWindowsHelpers.h',
+    ]
 
 EXPORTS.mozilla += [
     'AvailableMemoryTracker.h',
