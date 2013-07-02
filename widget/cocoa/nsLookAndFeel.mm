@@ -358,6 +358,15 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_AllowOverlayScrollbarsOverlap:
       aResult = AllowOverlayScrollbarsOverlap() ? 1 : 0;
       break;
+    case eIntID_ScrollbarDisplayOnMouseMove:
+      aResult = 0;
+      break;
+    case eIntID_ScrollbarFadeBeginDelay:
+      aResult = 450;
+      break;
+    case eIntID_ScrollbarFadeDuration:
+      aResult = 200;
+      break;
     case eIntID_TreeOpenDelay:
       aResult = 1000;
       break;
