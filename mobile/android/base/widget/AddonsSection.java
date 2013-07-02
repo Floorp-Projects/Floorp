@@ -102,7 +102,7 @@ public class AddonsSection extends AboutHomeSection {
         String str = null;
         try {
             byte[] buf = new byte[32768];
-            StringBuffer jsonString = new StringBuffer();
+            StringBuilder jsonString = new StringBuilder();
             int read = 0;
             while ((read = fileStream.read(buf, 0, 32768)) != -1)
                 jsonString.append(new String(buf, 0, read));
