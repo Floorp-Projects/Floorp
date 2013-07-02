@@ -1374,7 +1374,7 @@ let CustomizableUIInternal = {
       defaultArea: null,
       allowedAreas: [],
       shortcut: null,
-      description: null,
+      tooltiptext: null,
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
@@ -1392,7 +1392,7 @@ let CustomizableUIInternal = {
       widget[prop] = aData[prop];
     }
 
-    const kOptStringProps = ["name", "tooltiptext", "shortcut"];
+    const kOptStringProps = ["label", "tooltiptext", "shortcut"];
     for (let prop of kOptStringProps) {
       if (typeof aData[prop] == "string") {
         widget[prop] = aData[prop];
@@ -1860,7 +1860,7 @@ Object.freeze(this.CustomizableUI);
 function WidgetGroupWrapper(aWidget) {
   this.isGroup = true;
 
-  const kBareProps = ["id", "source", "type", "disabled", "name", "description"];
+  const kBareProps = ["id", "source", "type", "disabled", "label", "tooltiptext"];
   for (let prop of kBareProps) {
     let propertyName = prop;
     this.__defineGetter__(propertyName, function() aWidget[propertyName]);
@@ -1909,7 +1909,7 @@ function WidgetSingleWrapper(aWidget, aNode) {
     this[prop] = aWidget[prop];
   }
 
-  const nodeProps = ["label", "description"];
+  const nodeProps = ["label", "tooltiptext"];
   for (let prop of nodeProps) {
     let propertyName = prop;
     // Look at the node for these, instead of the widget data, to ensure the
