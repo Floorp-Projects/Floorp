@@ -5,6 +5,8 @@
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
+const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
+
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
   'resource://gre/modules/accessibility/Utils.jsm');
@@ -100,7 +102,7 @@ function virtualCursorControl(aMessage) {
 function forwardMessage(aVirtualCursor, aMessage) {
   try {
     let acc = aVirtualCursor.position;
-    if (acc && acc.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME) {
+    if (acc && acc.role == ROLE_INTERNAL_FRAME) {
       let mm = Utils.getMessageManager(acc.DOMNode);
       mm.addMessageListener(aMessage.name, virtualCursorControl);
       aMessage.json.origin = 'parent';
