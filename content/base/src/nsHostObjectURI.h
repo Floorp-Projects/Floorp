@@ -14,8 +14,9 @@
 #include "nsSimpleURI.h"
 
 /**
- * These URIs refer to host objects: Blobs, with scheme "blob", and
- * MediaStreams, with scheme "mediastream".
+ * These URIs refer to host objects: Blobs, with scheme "blob",
+ * MediaStreams, with scheme "mediastream", and MediaSources, with scheme
+ * "mediasource".
  */
 class nsHostObjectURI : public nsSimpleURI,
                         public nsIURIWithPrincipal

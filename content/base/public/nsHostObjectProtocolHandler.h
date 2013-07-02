@@ -12,11 +12,18 @@
 
 #define BLOBURI_SCHEME "blob"
 #define MEDIASTREAMURI_SCHEME "mediastream"
+#define MEDIASOURCEURI_SCHEME "mediasource"
 
 class nsIDOMBlob;
 class nsIDOMMediaStream;
 class nsIPrincipal;
 class nsIInputStream;
+
+namespace mozilla {
+namespace dom {
+class MediaSource;
+}
+}
 
 class nsHostObjectProtocolHandler : public nsIProtocolHandler
 {
@@ -55,6 +62,12 @@ public:
   NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
 };
 
+class nsMediaSourceProtocolHandler : public nsHostObjectProtocolHandler
+{
+public:
+  NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
+};
+
 inline bool IsBlobURI(nsIURI* aUri)
 {
   bool isBlob;
@@ -67,11 +80,20 @@ inline bool IsMediaStreamURI(nsIURI* aUri)
   return NS_SUCCEEDED(aUri->SchemeIs(MEDIASTREAMURI_SCHEME, &isStream)) && isStream;
 }
 
+inline bool IsMediaSourceURI(nsIURI* aUri)
+{
+  bool isMediaSource;
+  return NS_SUCCEEDED(aUri->SchemeIs(MEDIASOURCEURI_SCHEME, &isMediaSource)) && isMediaSource;
+}
+
 extern nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream);
 
 extern nsresult
 NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream);
+
+extern nsresult
+NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource);
 
 #define NS_BLOBPROTOCOLHANDLER_CID \
 { 0xb43964aa, 0xa078, 0x44b2, \
@@ -80,5 +102,9 @@ NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream);
 #define NS_MEDIASTREAMPROTOCOLHANDLER_CID \
 { 0x27d1fa24, 0x2b73, 0x4db3, \
 	{ 0xab, 0x48, 0xb9, 0x83, 0x83, 0x40, 0xe0, 0x81 } }
+
+#define NS_MEDIASOURCEPROTOCOLHANDLER_CID \
+{ 0x12ef31fc, 0xa8fb, 0x4661, \
+	{ 0x9a, 0x63, 0xfb, 0x61, 0x04,0x5d, 0xb8, 0x61 } }
 
 #endif /* nsHostObjectProtocolHandler_h */
