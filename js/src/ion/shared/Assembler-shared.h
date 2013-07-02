@@ -278,19 +278,11 @@ class Label : public LabelBase
     }
 };
 
-// Label's destructor asserts that if it has been used it has also been bound.
-// In the case long-lived labels, however, failed compilation (e.g. OOM) will
-// trigger this failure innocuously. This Label silences the assertion.
-class NonAssertingLabel : public Label
+// Wrapper around Label, on the heap, to avoid a bogus assert with OOM.
+struct HeapLabel
+  : public TempObject,
+    public Label
 {
-  public:
-    ~NonAssertingLabel()
-    {
-#ifdef DEBUG
-        if (used())
-            bind(0);
-#endif
-    }
 };
 
 class RepatchLabel

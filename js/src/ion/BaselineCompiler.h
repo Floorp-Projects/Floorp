@@ -184,9 +184,9 @@ namespace ion {
 class BaselineCompiler : public BaselineCompilerSpecific
 {
     FixedList<Label>            labels_;
-    NonAssertingLabel           return_;
+    HeapLabel *                 return_;
 #ifdef JSGC_GENERATIONAL
-    NonAssertingLabel           postBarrierSlot_;
+    HeapLabel *                 postBarrierSlot_;
 #endif
 
     // Native code offset right before the scope chain is initialized.

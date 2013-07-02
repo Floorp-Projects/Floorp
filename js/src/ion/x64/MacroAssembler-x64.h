@@ -45,16 +45,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     bool dynamicAlignment_;
     bool enoughMemory_;
 
-    struct Double {
-        double value;
-        NonAssertingLabel uses;
-        Double(double value) : value(value) {}
-    };
-    Vector<Double, 0, IonAllocPolicy> doubles_;
-
-    typedef HashMap<double, size_t, DefaultHasher<double>, IonAllocPolicy> DoubleMap;
-    DoubleMap doubleMap_;
-
     void setupABICall(uint32_t arg);
 
   protected:
@@ -80,10 +70,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         enoughMemory_(true)
     {
     }
-
-    // The buffer is about to be linked, make sure any constant pools or excess
-    // bookkeeping has been flushed to the instruction stream.
-    void finish();
 
     bool oom() const {
         return MacroAssemblerX86Shared::oom() || !enoughMemory_;
@@ -952,7 +938,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cvtsi2sd(operand.valueReg(), dest);
     }
 
-    void loadConstantDouble(double d, const FloatRegister &dest);
+    void loadConstantDouble(double d, const FloatRegister &dest) {
+        union DoublePun {
+            uint64_t u;
+            double d;
+        } pun;
+        pun.d = d;
+        if (!maybeInlineDouble(pun.u, dest)) {
+            mov(ImmWord(pun.u), ScratchReg);
+            movqsd(ScratchReg, dest);
+        }
+    }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         loadConstantDouble(*dp, dest);
     }
