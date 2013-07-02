@@ -1,5 +1,5 @@
 // Forward to the target if the trap is not defined
-var names = Object.keys(new Proxy(Object.create(Object.create(null, {
+var names = Object.keys(Proxy(Object.create(Object.create(null, {
     a: {
         enumerable: true,
         configurable: true

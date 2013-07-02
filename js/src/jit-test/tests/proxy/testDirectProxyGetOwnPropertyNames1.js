@@ -1,5 +1,5 @@
 // Forward to the target if the trap is not defined
-var names = Object.getOwnPropertyNames(new Proxy(Object.create(Object.create(null, {
+var names = Object.getOwnPropertyNames(Proxy(Object.create(Object.create(null, {
     a: {
         enumerable: true,
         configurable: true
