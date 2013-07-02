@@ -104,7 +104,7 @@ ToClampedIndex(JSContext *cx, const Value &v, uint32_t length, uint32_t *out)
 }
 
 /*
- * ArrayBuffer
+ * ArrayBufferObject
  *
  * This class holds the underlying raw buffer that the TypedArray classes
  * access.  It can be created explicitly and passed to a TypedArray, or
@@ -523,8 +523,8 @@ ArrayBufferObject::addView(JSObject *view)
 
     HeapPtrObject *views = GetViewList(this);
     if (*views == NULL) {
-        // This ArrayBuffer will have a single view at this point, so it is a
-        // strong pointer (it will be marked during tracing.)
+        // This ArrayBufferObject will have a single view at this point, so it
+        // is a strong pointer (it will be marked during tracing.)
         JS_ASSERT(NextView(view) == NULL);
     } else {
         view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(*views));
@@ -645,7 +645,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents,
             ArrayBufferObject::neuterAsmJSArrayBuffer(buffer);
     }
 
-    // Neuter the donor ArrayBuffer and all views of it
+    // Neuter the donor ArrayBufferObject and all views of it
     ArrayBufferObject::setElementsHeader(header, 0);
     GetViewList(&buffer)->init(views);
     for (JSObject *view = views; view; view = NextView(view))
@@ -668,17 +668,17 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
         obj->setPrivateUnbarriered(delegate);
     }
 
-    // ArrayBuffers need to maintain a list of possibly-weak pointers to their
-    // views. The straightforward way to update the weak pointers would be in
-    // the views' finalizers, but giving views finalizers means they cannot be
-    // swept in the background. This results in a very high performance cost.
-    // Instead, ArrayBuffers with a single view hold a strong pointer to the
-    // view. This can entrain garbage when the single view becomes otherwise
-    // unreachable while the buffer is still live, but this is expected to be
-    // rare. ArrayBuffers with 0-1 views are expected to be by far the most
-    // common cases. ArrayBuffers with multiple views are collected into a
-    // linked list during collection, and then swept to prune out their dead
-    // views.
+    // ArrayBufferObjects need to maintain a list of possibly-weak pointers to
+    // their views. The straightforward way to update the weak pointers would
+    // be in the views' finalizers, but giving views finalizers means they
+    // cannot be swept in the background. This results in a very high
+    // performance cost.  Instead, ArrayBufferObjects with a single view hold a
+    // strong pointer to the view. This can entrain garbage when the single
+    // view becomes otherwise unreachable while the buffer is still live, but
+    // this is expected to be rare. ArrayBufferObjects with 0-1 views are
+    // expected to be by far the most common cases. ArrayBufferObjects with
+    // multiple views are collected into a linked list during collection, and
+    // then swept to prune out their dead views.
 
     HeapPtrObject *views = GetViewList(&obj->as<ArrayBufferObject>());
     if (!*views)
@@ -743,8 +743,8 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
         JS_ASSERT(nextBuffer != UNSET_BUFFER_LINK);
         SetBufferLink(*views, UNSET_BUFFER_LINK);
 
-        // Rebuild the list of views of the ArrayBuffer, discarding dead views.
-        // If there is only one view, it will have already been marked.
+        // Rebuild the list of views of the ArrayBufferObject, discarding dead
+        // views.  If there is only one view, it will have already been marked.
         JSObject *prevLiveView = NULL;
         JSObject *view = *views;
         while (view) {
@@ -2147,7 +2147,7 @@ class TypedArrayTemplate
              * machinery underlying NonGenericMethodGuard directly to proxy the
              * native call. We will end up with a wrapper in the origin
              * compartment for a view in the target compartment referencing the
-             * ArrayBuffer in that same compartment.
+             * ArrayBufferObject in that same compartment.
              */
             JSObject *wrapped = CheckedUnwrap(bufobj);
             if (!wrapped) {
@@ -2164,9 +2164,9 @@ class TypedArrayTemplate
                  *
                  * Rather than hack some crazy solution together, implement
                  * this all using a private helper function, created when
-                 * ArrayBuffer was initialized and cached in the global.  This
-                 * reuses all the existing cross-compartment crazy so we don't
-                 * have to do anything *uniquely* crazy here.
+                 * ArrayBufferObject was initialized and cached in the global.
+                 * This reuses all the existing cross-compartment crazy so we
+                 * don't have to do anything *uniquely* crazy here.
                  */
 
                 Rooted<JSObject*> proto(cx);
