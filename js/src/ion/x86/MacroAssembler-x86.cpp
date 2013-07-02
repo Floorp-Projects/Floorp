@@ -8,7 +8,6 @@
 #include "ion/BaselineFrame.h"
 #include "ion/MoveEmitter.h"
 #include "ion/IonFrames.h"
-#include "mozilla/Casting.h"
 
 #include "jsscriptinlines.h"
 
@@ -18,7 +17,12 @@ using namespace js::ion;
 void
 MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
 {
-    if (maybeInlineDouble(d, dest))
+    union DoublePun {
+        uint64_t u;
+        double d;
+    } dpun;
+    dpun.d = d;
+    if (maybeInlineDouble(dpun.u, dest))
         return;
 
     if (!doubleMap_.initialized()) {
@@ -38,19 +42,8 @@ MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
             return;
     }
     Double &dbl = doubles_[doubleIndex];
-    JS_ASSERT(!dbl.uses.bound());
-
-    masm.movsd_mr(reinterpret_cast<const void *>(dbl.uses.prev()), dest.code());
+    masm.movsd_mr(reinterpret_cast<void *>(dbl.uses.prev()), dest.code());
     dbl.uses.setPrev(masm.size());
-}
-
-void
-MacroAssemblerX86::loadStaticDouble(const double *dp, const FloatRegister &dest) {
-    if (maybeInlineDouble(*dp, dest))
-        return;
-
-    // x86 can just load from any old immediate address.
-    movsd(dp, dest);
 }
 
 void

@@ -8,64 +8,11 @@
 #include "ion/BaselineFrame.h"
 #include "ion/MoveEmitter.h"
 #include "ion/IonFrames.h"
-#include "mozilla/Casting.h"
 
 #include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;
-
-void
-MacroAssemblerX64::loadConstantDouble(double d, const FloatRegister &dest)
-{
-    if (maybeInlineDouble(d, dest))
-        return;
-
-    if (!doubleMap_.initialized()) {
-        enoughMemory_ &= doubleMap_.init();
-        if (!enoughMemory_)
-            return;
-    }
-    size_t doubleIndex;
-    DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d);
-    if (p) {
-        doubleIndex = p->value;
-    } else {
-        doubleIndex = doubles_.length();
-        enoughMemory_ &= doubles_.append(Double(d));
-        enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
-        if (!enoughMemory_)
-            return;
-    }
-    Double &dbl = doubles_[doubleIndex];
-    JS_ASSERT(!dbl.uses.bound());
-
-    // The constants will be stored in a pool appended to the text (see
-    // finish()), so they will always be a fixed distance from the
-    // instructions which reference them. This allows the instructions to use
-    // PC-relative addressing. Use "jump" label support code, because we need
-    // the same PC-relative address patching that jumps use.
-    JmpSrc j = masm.movsd_ripr(dest.code());
-    JmpSrc prev = JmpSrc(dbl.uses.use(j.offset()));
-    masm.setNextJump(j, prev);
-}
-
-void
-MacroAssemblerX64::finish()
-{
-    JS_STATIC_ASSERT(CodeAlignment >= sizeof(double));
-
-    if (!doubles_.empty())
-        masm.align(sizeof(double));
-
-    for (size_t i = 0; i < doubles_.length(); i++) {
-        Double &dbl = doubles_[i];
-        bind(&dbl.uses);
-        masm.doubleConstant(dbl.value);
-    }
-
-    MacroAssemblerX86Shared::finish();
-}
 
 void
 MacroAssemblerX64::setupABICall(uint32_t args)
