@@ -411,6 +411,13 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
         if (pcOffset >= tn->start + tn->length)
             continue;
 
+        // Skip if the try note's stack depth exceeds the frame's stack depth.
+        // See the big comment in TryNoteIter::settle for more info.
+        JS_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed);
+        size_t stackDepth = frame.baselineFrame()->numValueSlots() - script->nfixed;
+        if (tn->stackDepth > stackDepth)
+            continue;
+
         // Unwind scope chain (pop block objects).
         if (cx->isExceptionPending())
             UnwindScope(cx, frame.baselineFrame(), tn->stackDepth);
