@@ -22,7 +22,6 @@ enum ShaderProgramType {
     RGBXLayerProgramType,
     BGRXLayerProgramType,
     RGBARectLayerProgramType,
-    BGRARectLayerProgramType,
     RGBAExternalLayerProgramType,
     ColorLayerProgramType,
     YCbCrLayerProgramType,
