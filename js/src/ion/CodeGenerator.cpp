@@ -5476,11 +5476,21 @@ CodeGenerator::link()
     if (callTargets.length() > 0)
         ionScript->copyCallTargetEntries(callTargets.begin());
 
-    // The correct state for prebarriers is unknown until the end of compilation,
-    // since a GC can occur during code generation. All barriers are emitted
-    // off-by-default, and are toggled on here if necessary.
-    if (cx->zone()->needsBarrier())
-        ionScript->toggleBarriers(true);
+    switch (executionMode) {
+      case SequentialExecution:
+        // The correct state for prebarriers is unknown until the end of compilation,
+        // since a GC can occur during code generation. All barriers are emitted
+        // off-by-default, and are toggled on here if necessary.
+        if (cx->zone()->needsBarrier())
+            ionScript->toggleBarriers(true);
+        break;
+      case ParallelExecution:
+        // We don't run incremental GC during parallel execution; no need to
+        // turn on barriers.
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
 
     return true;
 }
