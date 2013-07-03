@@ -35,14 +35,16 @@ function runShiftLeftClickTest() {
   let listener = new WindowListener(getBrowserURL(), function(aWindow) {
     Services.wm.removeListener(listener);
     addPageShowListener(aWindow.gBrowser.selectedBrowser, function() {
-      info("URL should be loaded in a new window");
-      is(gURLBar.value, "", "Urlbar reverted to original value");       
-      is(gFocusManager.focusedElement, null, "There should be no focused element");
-      is(gFocusManager.focusedWindow, aWindow.gBrowser.contentWindow, "Content window should be focused");
-      is(aWindow.gURLBar.value, TEST_VALUE, "New URL is loaded in new window");
+      executeSoon(function () {
+        info("URL should be loaded in a new window");
+        is(gURLBar.value, "", "Urlbar reverted to original value");       
+        is(gFocusManager.focusedElement, null, "There should be no focused element");
+        is(gFocusManager.focusedWindow, aWindow.gBrowser.contentWindow, "Content window should be focused");
+        is(aWindow.gURLBar.value, TEST_VALUE, "New URL is loaded in new window");
 
-      aWindow.close();
-      runNextTest();
+        aWindow.close();
+        runNextTest();
+      });
     }, "http://example.com/");
   });
   Services.wm.addListener(listener);
