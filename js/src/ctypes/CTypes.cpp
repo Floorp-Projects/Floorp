@@ -34,9 +34,9 @@
 #include "jscompartment.h"
 #include "jsnum.h"
 #include "jsprf.h"
-#include "jstypedarray.h"
 
 #include "ctypes/Library.h"
+#include "vm/TypedArrayObject.h"
 
 using namespace std;
 

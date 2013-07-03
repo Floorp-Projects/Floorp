@@ -9,12 +9,12 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jstypedarray.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"

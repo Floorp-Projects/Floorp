@@ -17,7 +17,6 @@
 #include "jsinfer.h"
 #include "jsprf.h"
 #include "jsproxy.h"
-#include "jstypedarray.h"
 
 #include "builtin/ParallelArray.h"
 #include "ion/IonFrames.h"
@@ -27,6 +26,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/NumberObject.h"
 #include "vm/StringObject.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jsanalyzeinlines.h"
 #include "jscntxtinlines.h"

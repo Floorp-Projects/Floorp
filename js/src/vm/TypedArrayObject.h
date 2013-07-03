@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jstypedarray_h
-#define jstypedarray_h
+#ifndef vm_TypedArrayObject_h
+#define vm_TypedArrayObject_h
 
 #include "jsapi.h"
 #include "jsclass.h"
@@ -605,4 +605,4 @@ JSObject::is<js::ArrayBufferViewObject>() const
     return is<js::DataViewObject>() || is<js::TypedArrayObject>();
 }
 
-#endif /* jstypedarray_h */
+#endif /* vm_TypedArrayObject_h */
