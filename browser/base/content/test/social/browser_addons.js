@@ -20,7 +20,8 @@ let manifest2 = { // used for testing install
   origin: "https://test1.example.com",
   sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://test1.example.com/browser/browser/base/content/test/moz.png"
+  iconURL: "https://test1.example.com/browser/browser/base/content/test/moz.png",
+  version: 1
 };
 
 function test() {
@@ -272,5 +273,49 @@ var tests = {
         });
       });
     });
+  },
+  testUpgradeProviderFromWorker: function(next) {
+    // add the provider, change the pref, add it again. The provider at that
+    // point should be upgraded
+    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      let doc = tab.linkedBrowser.contentDocument;
+      let installFrom = doc.nodePrincipal.origin;
+      Services.prefs.setCharPref("social.whitelist", installFrom);
+      Social.installProvider(doc, manifest2, function(addonManifest) {
+        SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+          Social.enabled = true;
+          checkSocialUI();
+          is(Social.provider.manifest.version, 1, "manifest version is 1")
+          // watch for the provider-update and tell the worker to update
+          SocialService.registerProviderListener(function providerListener(topic, data) {
+            if (topic != "provider-update")
+              return;
+            SocialService.unregisterProviderListener(providerListener);
+            observeProviderSet(function() {
+              Services.prefs.clearUserPref("social.whitelist");
+              executeSoon(function() {
+                is(Social.provider.manifest.version, 2, "manifest version is 2");
+                Social.uninstallProvider(addonManifest.origin);
+                gBrowser.removeTab(tab);
+                next();
+              })
+            });
+          });
+          let port = Social.provider.getWorkerPort();
+          port.postMessage({topic: "worker.update", data: true});
+        });
+      });
+    });
   }
+}
+
+
+function observeProviderSet(cb) {
+  Services.obs.addObserver(function providerSet(subject, topic, data) {
+    Services.obs.removeObserver(providerSet, "social:provider-set");
+    info("social:provider-set observer was notified");
+    // executeSoon to let the browser UI observers run first
+    executeSoon(cb);
+  }, "social:provider-set", false);
 }
