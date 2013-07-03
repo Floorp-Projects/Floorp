@@ -56,6 +56,7 @@ let Keyboard = {
       }
     } else {
       mm.addMessageListener('Forms:Input', this);
+      mm.addMessageListener('Forms:SelectionChange', this);
 
       // When not running apps OOP, we need to load forms.js here since this
       // won't happen from dom/ipc/preload.js
