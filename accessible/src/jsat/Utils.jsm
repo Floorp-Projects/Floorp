@@ -224,6 +224,42 @@ this.Utils = {
   getPixelsPerCSSPixel: function getPixelsPerCSSPixel(aWindow) {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils).screenPixelsPerCSSPixel;
+  },
+
+  getBounds: function getBounds(aAccessible) {
+      let objX = {}, objY = {}, objW = {}, objH = {};
+      aAccessible.getBounds(objX, objY, objW, objH);
+      return new Rect(objX.value, objY.value, objW.value, objH.value);
+  },
+
+  inHiddenSubtree: function inHiddenSubtree(aAccessible) {
+    for (let acc=aAccessible; acc; acc=acc.parent) {
+      if (JSON.parse(Utils.getAttributes(acc).hidden)) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  isAliveAndVisible: function isAliveAndVisible(aAccessible) {
+    if (!aAccessible) {
+      return false;
+    }
+
+    try {
+      let extstate = {};
+      let state = {};
+      aAccessible.getState(state, extstate);
+      if (extstate.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT ||
+          state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE ||
+          Utils.inHiddenSubtree(aAccessible)) {
+        return false;
+      }
+    } catch (x) {
+      return false;
+    }
+
+    return true;
   }
 };
 
@@ -559,11 +595,7 @@ PivotContext.prototype = {
 
   get bounds() {
     if (!this._bounds) {
-      let objX = {}, objY = {}, objW = {}, objH = {};
-
-      this._accessible.getBounds(objX, objY, objW, objH);
-
-      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value);
+      this._bounds = Utils.getBounds(this._accessible);
     }
 
     return this._bounds.clone();
@@ -573,7 +605,7 @@ PivotContext.prototype = {
     try {
       let extstate = {};
       aAccessible.getState({}, extstate);
-      return !!(aAccessible.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
+      return !!(extstate.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
     } catch (x) {
       return true;
     }
