@@ -22,7 +22,8 @@ function testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aGenerator
   var accessible = getAccessible(aAccOrElmOrID);
   var oldAccessible = getAccessible(aOldAccOrElmOrID);
   var context = new PivotContext(accessible, oldAccessible);
-  var output = aGenerator.genForContext(context);
+  var output = aGenerator.genForContext(context).output;
+
   isDeeply(output, expected,
     "Context output is correct for " + aAccOrElmOrID);
 }
