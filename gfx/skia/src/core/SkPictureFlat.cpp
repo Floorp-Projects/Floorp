@@ -119,7 +119,8 @@ SkFlatData* SkFlatData::Create(SkFlatController* controller, const void* obj,
     size_t allocSize = sizeof(SkFlatData) + size + sizeof(uint32_t);
     SkFlatData* result = (SkFlatData*) controller->allocThrow(allocSize);
 
-    result->fIndex = index;
+    result->setIndex(index);
+    result->setTopBotUnwritten();
     result->fFlatSize = size;
 
     // put the serialized contents into the data section of the new allocation

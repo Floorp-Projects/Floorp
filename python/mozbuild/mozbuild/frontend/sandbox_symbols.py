@@ -140,6 +140,12 @@ VARIABLES = {
         that exist. These generally have .cpp, .cc, or .cxx extensions.
         """),
 
+    'HOST_CPPSRCS': (StrictOrderingOnAppendList, list, [],
+        """C++ source files to compile with the host compiler.
+
+        This variable contains a list of C++ source files to compile.
+        """),
+
     'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
         """C source files to compile with the host compiler.
 

@@ -17,6 +17,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'PseudoStack.h',
         'shared-libraries.h',
     ]
+    EXTRA_JS_MODULES = [
+        'Profiler.jsm',
+    ]
     CPP_SOURCES += [
         'platform.cpp',
         'nsProfilerFactory.cpp',

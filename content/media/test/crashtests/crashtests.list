@@ -49,3 +49,4 @@ load 881775.html
 load 882956.html
 test-pref(media.webvtt.enabled,true) load 882549.html
 load 884459.html
+load 889042.html

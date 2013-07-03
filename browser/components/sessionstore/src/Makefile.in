@@ -16,16 +16,6 @@ DISABLED_EXTRA_COMPONENTS = \
   nsSessionStartup.js \
   $(NULL)
 
-JS_MODULES_PATH := modules/sessionstore
-
-EXTRA_JS_MODULES := \
-  DocumentUtils.jsm \
-  SessionStorage.jsm \
-  SessionMigration.jsm \
-  XPathGenerator.jsm \
-  _SessionFile.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES := \
 	SessionStore.jsm \
 	$(NULL)

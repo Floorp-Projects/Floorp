@@ -1,11 +1,9 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 
 #include "SkMatrix.h"
 #include "Sk64.h"
@@ -169,6 +167,43 @@ bool operator==(const SkMatrix& a, const SkMatrix& b) {
 }
 
 #endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool SkMatrix::isSimilarity(SkScalar tol) const {
+    // if identity or translate matrix
+    TypeMask mask = this->getType();
+    if (mask <= kTranslate_Mask) {
+        return true;
+    }
+    if (mask & kPerspective_Mask) {
+        return false;
+    }
+
+    SkScalar mx = fMat[kMScaleX];
+    SkScalar my = fMat[kMScaleY];
+    // if no skew, can just compare scale factors
+    if (!(mask & kAffine_Mask)) {
+        return !SkScalarNearlyZero(mx) && SkScalarNearlyEqual(SkScalarAbs(mx), SkScalarAbs(my));
+    }
+    SkScalar sx = fMat[kMSkewX];
+    SkScalar sy = fMat[kMSkewY];
+
+    // degenerate matrix, non-similarity
+    if (SkScalarNearlyZero(mx) && SkScalarNearlyZero(my)
+        && SkScalarNearlyZero(sx) && SkScalarNearlyZero(sy)) {
+        return false;
+    }
+
+    // it has scales and skews, but it could also be rotation, check it out.
+    SkVector vec[2];
+    vec[0].set(mx, sx);
+    vec[1].set(sy, my);
+
+    return SkScalarNearlyZero(vec[0].dot(vec[1]), SkScalarSquare(tol)) &&
+           SkScalarNearlyEqual(vec[0].lengthSqd(), vec[1].lengthSqd(),
+                SkScalarSquare(tol));
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -544,7 +579,14 @@ bool SkMatrix::setRectToRect(const SkRect& src, const SkRect& dst,
         fMat[kMSkewX]  = fMat[kMSkewY] =
         fMat[kMPersp0] = fMat[kMPersp1] = 0;
 
-        this->setTypeMask(kScale_Mask | kTranslate_Mask | kRectStaysRect_Mask);
+        unsigned mask = kRectStaysRect_Mask;
+        if (sx != SK_Scalar1 || sy != SK_Scalar1) {
+            mask |= kScale_Mask;
+        }
+        if (tx || ty) {
+            mask |= kTranslate_Mask;
+        }
+        this->setTypeMask(mask);
     }
     // shared cleanup
     fMat[kMPersp2] = kMatrix22Elem;
@@ -841,8 +883,49 @@ bool SkMatrix::asAffine(SkScalar affine[6]) const {
     return true;
 }
 
-bool SkMatrix::invert(SkMatrix* inv) const {
-    int         isPersp = this->hasPerspective();
+bool SkMatrix::invertNonIdentity(SkMatrix* inv) const {
+    SkASSERT(!this->isIdentity());
+
+    TypeMask mask = this->getType();
+
+    if (0 == (mask & ~(kScale_Mask | kTranslate_Mask))) {
+        bool invertible = true;
+        if (inv) {
+            if (mask & kScale_Mask) {
+                SkScalar invX = fMat[kMScaleX];
+                SkScalar invY = fMat[kMScaleY];
+                if (0 == invX || 0 == invY) {
+                    return false;
+                }
+                invX = SkScalarInvert(invX);
+                invY = SkScalarInvert(invY);
+
+                // Must be careful when writing to inv, since it may be the
+                // same memory as this.
+
+                inv->fMat[kMSkewX] = inv->fMat[kMSkewY] =
+                inv->fMat[kMPersp0] = inv->fMat[kMPersp1] = 0;
+
+                inv->fMat[kMScaleX] = invX;
+                inv->fMat[kMScaleY] = invY;
+                inv->fMat[kMPersp2] = kMatrix22Elem;
+                inv->fMat[kMTransX] = -SkScalarMul(fMat[kMTransX], invX);
+                inv->fMat[kMTransY] = -SkScalarMul(fMat[kMTransY], invY);
+
+                inv->setTypeMask(mask | kRectStaysRect_Mask);
+            } else {
+                // translate only
+                inv->setTranslate(-fMat[kMTransX], -fMat[kMTransY]);
+            }
+        } else {    // inv is NULL, just check if we're invertible
+            if (!fMat[kMScaleX] || !fMat[kMScaleY]) {
+                invertible = false;
+            }
+        }
+        return invertible;
+    }
+
+    int         isPersp = mask & kPerspective_Mask;
     int         shift;
     SkDetScalar scale = sk_inv_determinant(fMat, isPersp, &shift);
 
@@ -1725,7 +1808,7 @@ SkScalar SkMatrix::getMaxStretch() const {
     SkScalar largerRoot;
     SkScalar bSqd = SkScalarMul(b,b);
     // if upper left 2x2 is orthogonal save some math
-    if (bSqd <= SK_ScalarNearlyZero) {
+    if (bSqd <= SK_ScalarNearlyZero*SK_ScalarNearlyZero) {
         largerRoot = SkMaxScalar(a, c);
     } else {
         SkScalar aminusc = a - c;
@@ -1777,14 +1860,15 @@ uint32_t SkMatrix::readFromMemory(const void* buffer) {
     return 9 * sizeof(SkScalar);
 }
 
+#ifdef SK_DEVELOPER
 void SkMatrix::dump() const {
     SkString str;
-    this->toDumpString(&str);
+    this->toString(&str);
     SkDebugf("%s\n", str.c_str());
 }
 
-void SkMatrix::toDumpString(SkString* str) const {
-    str->printf("[%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f]",
+void SkMatrix::toString(SkString* str) const {
+    str->appendf("[%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f]",
 #ifdef SK_SCALAR_IS_FLOAT
              fMat[0], fMat[1], fMat[2], fMat[3], fMat[4], fMat[5],
              fMat[6], fMat[7], fMat[8]);
@@ -1793,4 +1877,57 @@ void SkMatrix::toDumpString(SkString* str) const {
     SkFixedToFloat(fMat[3]), SkFixedToFloat(fMat[4]), SkFixedToFloat(fMat[5]),
     SkFractToFloat(fMat[6]), SkFractToFloat(fMat[7]), SkFractToFloat(fMat[8]));
 #endif
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+#include "SkMatrixUtils.h"
+
+bool SkTreatAsSprite(const SkMatrix& mat, int width, int height,
+                     unsigned subpixelBits) {
+    // quick reject on affine or perspective
+    if (mat.getType() & ~(SkMatrix::kScale_Mask | SkMatrix::kTranslate_Mask)) {
+        return false;
+    }
+
+    // quick success check
+    if (!subpixelBits && !(mat.getType() & ~SkMatrix::kTranslate_Mask)) {
+        return true;
+    }
+
+    // mapRect supports negative scales, so we eliminate those first
+    if (mat.getScaleX() < 0 || mat.getScaleY() < 0) {
+        return false;
+    }
+
+    SkRect dst;
+    SkIRect isrc = { 0, 0, width, height };
+
+    {
+        SkRect src;
+        src.set(isrc);
+        mat.mapRect(&dst, src);
+    }
+
+    // just apply the translate to isrc
+    isrc.offset(SkScalarRoundToInt(mat.getTranslateX()),
+                SkScalarRoundToInt(mat.getTranslateY()));
+
+    if (subpixelBits) {
+        isrc.fLeft <<= subpixelBits;
+        isrc.fTop <<= subpixelBits;
+        isrc.fRight <<= subpixelBits;
+        isrc.fBottom <<= subpixelBits;
+
+        const float scale = 1 << subpixelBits;
+        dst.fLeft *= scale;
+        dst.fTop *= scale;
+        dst.fRight *= scale;
+        dst.fBottom *= scale;
+    }
+
+    SkIRect idst;
+    dst.round(&idst);
+    return isrc == idst;
 }

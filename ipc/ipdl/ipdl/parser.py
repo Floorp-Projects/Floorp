@@ -144,6 +144,7 @@ reserved = set((
         'struct',
         'sync',
         'union',
+        'urgent',
         'using'))
 tokens = [
     'COLONCOLON', 'ID', 'STRING'
@@ -605,11 +606,13 @@ def p_OptionalSendSemanticsQual(p):
 def p_SendSemanticsQual(p):
     """SendSemanticsQual : ASYNC
                          | RPC
+                         | URGENT
                          | SYNC"""
     s = p[1]
-    if 'async' == s: p[0] = ASYNC
-    elif 'rpc' == s: p[0] = RPC
-    elif 'sync'== s: p[0] = SYNC
+    if 'async' == s: p[0] =    ASYNC
+    elif 'rpc' == s: p[0] =    RPC
+    elif 'sync' == s: p[0] =   SYNC
+    elif 'urgent' == s: p[0] = URGENT
     else:
         assert 0
 

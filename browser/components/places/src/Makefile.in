@@ -15,9 +15,5 @@ DISABLED_EXTRA_COMPONENTS = \
   PlacesProtocolHandler.js \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  PlacesUIUtils.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

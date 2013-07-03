@@ -22,9 +22,9 @@ public:
     virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
     virtual BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode*) const SK_OVERRIDE;
     virtual GradientType asAGradient(GradientInfo* info) const SK_OVERRIDE;
-    virtual GrCustomStage* asNewCustomStage(GrContext* context,
-                                            GrSamplerState* sampler) const SK_OVERRIDE;
+    virtual GrEffectRef* asNewEffect(GrContext* context, const SkPaint&) const SK_OVERRIDE;
 
+    SK_DEVELOPER_TO_STRING()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkLinearGradient)
 
 protected:
@@ -38,4 +38,3 @@ private:
 };
 
 #endif
-

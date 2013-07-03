@@ -2535,8 +2535,12 @@ void MediaDecoderStateMachine::AdvanceFrame()
       ScheduleStateMachine();
       return;
     }
-    mDecoder->GetFrameStatistics().NotifyPresentedFrame();
+    MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
+    frameStats.NotifyPresentedFrame();
     remainingTime = currentFrame->mEndTime - clock_time;
+    int64_t frameDuration = currentFrame->mEndTime - currentFrame->mTime;
+    double displayError = fabs(double(frameDuration - remainingTime) / USECS_PER_S);
+    frameStats.NotifyPlaybackJitter(displayError);
     currentFrame = nullptr;
   }
 

@@ -8,6 +8,7 @@
 #include "gfxASurface.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Atomics.h"
 
 class gfxImageSurface;
 
@@ -66,7 +67,7 @@ private:
   nsRefPtr<gfxImageSurface>         mSurface;
   const gfxASurface::gfxImageFormat mFormat;
   const unsigned char*              mSurfaceData;
-  int32_t                           mReadCount;
+  mozilla::Atomic<int32_t>                           mReadCount;
 };
 
 #endif // GFXCOWSURFACEWRAPPER

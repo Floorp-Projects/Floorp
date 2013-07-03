@@ -185,6 +185,7 @@ menulist {
 
 .menu-popup > richlistbox > scrollbox {
   width: 100%;
+  overflow-x: hidden !important;
 }
 
 .menu-popup richlistitem {

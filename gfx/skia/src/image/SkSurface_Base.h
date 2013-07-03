@@ -23,7 +23,7 @@ public:
      */
     virtual SkCanvas* onNewCanvas() = 0;
 
-    virtual SkSurface* onNewSurface(const SkImage::Info&, SkColorSpace*) = 0;
+    virtual SkSurface* onNewSurface(const SkImage::Info&) = 0;
 
     /**
      *  Allocate an SkImage that represents the current contents of the surface.
@@ -51,7 +51,7 @@ public:
      *
      *  The default implementation does nothing.
      */
-    virtual void onCopyOnWrite(SkImage* cachedImage, SkCanvas*);
+    virtual void onCopyOnWrite(SkImage* cachedImage, SkCanvas*) = 0;
 
     inline SkCanvas* getCachedCanvas();
     inline SkImage* getCachedImage();
@@ -73,4 +73,3 @@ private:
 };
 
 #endif
-

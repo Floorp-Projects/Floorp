@@ -103,7 +103,7 @@ struct Module
 
 } // namespace
 
-#if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
+#if defined(MOZILLA_INTERNAL_API)
 #  define NSMODULE_NAME(_name) _name##_NSModule
 #  define NSMODULE_DECL(_name) extern mozilla::Module const *const NSMODULE_NAME(_name)
 #  define NSMODULE_DEFN(_name) NSMODULE_DECL(_name)

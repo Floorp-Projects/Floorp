@@ -49,7 +49,6 @@
 #include "nsIClassInfo.h"
 #include "nsLocalFile.h"
 #include "nsReadableUtils.h"
-#include "nsStaticComponents.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prcmon.h"
@@ -78,6 +77,10 @@
 using namespace mozilla;
 
 PRLogModuleInfo* nsComponentManagerLog = nullptr;
+
+// defined in nsStaticXULComponents.cpp to contain all the components in
+// libxul.
+extern mozilla::Module const *const *const kPStaticModules[];
 
 #if 0 || defined (DEBUG_timeless)
  #define SHOW_DENIED_ON_SHUTDOWN

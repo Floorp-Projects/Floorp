@@ -196,7 +196,7 @@ void SkARGB32_Blitter::blitV(int x, int y, int height, SkAlpha alpha) {
     }
 
     unsigned dst_scale = 255 - SkGetPackedA32(color);
-    uint32_t rowBytes = fDevice.rowBytes();
+    size_t rowBytes = fDevice.rowBytes();
     while (--height >= 0) {
         device[0] = color + SkAlphaMulQ(device[0], dst_scale);
         device = (uint32_t*)((char*)device + rowBytes);
@@ -263,6 +263,17 @@ void SkARGB32_Black_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// Special version of SkBlitRow::Factory32 that knows we're in kSrc_Mode,
+// instead of kSrcOver_Mode
+static void blend_srcmode(SkPMColor* SK_RESTRICT device,
+                          const SkPMColor* SK_RESTRICT span,
+                          int count, U8CPU aa) {
+    int aa256 = SkAlpha255To256(aa);
+    for (int i = 0; i < count; ++i) {
+        device[i] = SkFourByteInterp256(span[i], device[i], aa256);
+    }
+}
+
 SkARGB32_Shader_Blitter::SkARGB32_Shader_Blitter(const SkBitmap& device,
                             const SkPaint& paint) : INHERITED(device, paint) {
     fBuffer = (SkPMColor*)sk_malloc_throw(device.width() * (sizeof(SkPMColor)));
@@ -278,6 +289,23 @@ SkARGB32_Shader_Blitter::SkARGB32_Shader_Blitter(const SkBitmap& device,
     fProc32 = SkBlitRow::Factory32(flags);
     // we call this on the output from the shader + alpha from the aa buffer
     fProc32Blend = SkBlitRow::Factory32(flags | SkBlitRow::kGlobalAlpha_Flag32);
+
+    fShadeDirectlyIntoDevice = false;
+    if (fXfermode == NULL) {
+        if (fShader->getFlags() & SkShader::kOpaqueAlpha_Flag) {
+            fShadeDirectlyIntoDevice = true;
+        }
+    } else {
+        SkXfermode::Mode mode;
+        if (fXfermode->asMode(&mode)) {
+            if (SkXfermode::kSrc_Mode == mode) {
+                fShadeDirectlyIntoDevice = true;
+                fProc32Blend = blend_srcmode;
+            }
+        }
+    }
+
+    fConstInY = SkToBool(fShader->getFlags() & SkShader::kConstInY32_Flag);
 }
 
 SkARGB32_Shader_Blitter::~SkARGB32_Shader_Blitter() {
@@ -290,7 +318,7 @@ void SkARGB32_Shader_Blitter::blitH(int x, int y, int width) {
 
     uint32_t*   device = fDevice.getAddr32(x, y);
 
-    if (fXfermode == NULL && (fShader->getFlags() & SkShader::kOpaqueAlpha_Flag)) {
+    if (fShadeDirectlyIntoDevice) {
         fShader->shadeSpan(x, y, device, width);
     } else {
         SkPMColor*  span = fBuffer;
@@ -303,13 +331,89 @@ void SkARGB32_Shader_Blitter::blitH(int x, int y, int width) {
     }
 }
 
+void SkARGB32_Shader_Blitter::blitRect(int x, int y, int width, int height) {
+    SkASSERT(x >= 0 && y >= 0 &&
+             x + width <= fDevice.width() && y + height <= fDevice.height());
+
+    uint32_t*   device = fDevice.getAddr32(x, y);
+    size_t      deviceRB = fDevice.rowBytes();
+    SkShader*   shader = fShader;
+    SkPMColor*  span = fBuffer;
+
+    if (fConstInY) {
+        if (fShadeDirectlyIntoDevice) {
+            // shade the first row directly into the device
+            fShader->shadeSpan(x, y, device, width);
+            span = device;
+            while (--height > 0) {
+                device = (uint32_t*)((char*)device + deviceRB);
+                memcpy(device, span, width << 2);
+            }
+        } else {
+            fShader->shadeSpan(x, y, span, width);
+            SkXfermode* xfer = fXfermode;
+            if (xfer) {
+                do {
+                    xfer->xfer32(device, span, width, NULL);
+                    y += 1;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            } else {
+                SkBlitRow::Proc32 proc = fProc32;
+                do {
+                    proc(device, span, width, 255);
+                    y += 1;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            }
+        }
+        return;
+    }
+
+    if (fShadeDirectlyIntoDevice) {
+        void* ctx;
+        SkShader::ShadeProc shadeProc = fShader->asAShadeProc(&ctx);
+        if (shadeProc) {
+            do {
+                shadeProc(ctx, x, y, device, width);
+                y += 1;
+                device = (uint32_t*)((char*)device + deviceRB);
+            } while (--height > 0);
+        } else {
+            do {
+                shader->shadeSpan(x, y, device, width);
+                y += 1;
+                device = (uint32_t*)((char*)device + deviceRB);
+            } while (--height > 0);
+        }
+    } else {
+        SkXfermode* xfer = fXfermode;
+        if (xfer) {
+            do {
+                shader->shadeSpan(x, y, span, width);
+                xfer->xfer32(device, span, width, NULL);
+                y += 1;
+                device = (uint32_t*)((char*)device + deviceRB);
+            } while (--height > 0);
+        } else {
+            SkBlitRow::Proc32 proc = fProc32;
+            do {
+                shader->shadeSpan(x, y, span, width);
+                proc(device, span, width, 255);
+                y += 1;
+                device = (uint32_t*)((char*)device + deviceRB);
+            } while (--height > 0);
+        }
+    }
+}
+
 void SkARGB32_Shader_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
                                         const int16_t runs[]) {
     SkPMColor*  span = fBuffer;
     uint32_t*   device = fDevice.getAddr32(x, y);
     SkShader*   shader = fShader;
 
-    if (fXfermode) {
+    if (fXfermode && !fShadeDirectlyIntoDevice) {
         for (;;) {
             SkXfermode* xfer = fXfermode;
 
@@ -333,7 +437,8 @@ void SkARGB32_Shader_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
             antialias += count;
             x += count;
         }
-    } else if (fShader->getFlags() & SkShader::kOpaqueAlpha_Flag) {
+    } else if (fShadeDirectlyIntoDevice ||
+               (fShader->getFlags() & SkShader::kOpaqueAlpha_Flag)) {
         for (;;) {
             int count = *runs;
             if (count <= 0) {
@@ -354,7 +459,7 @@ void SkARGB32_Shader_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
             antialias += count;
             x += count;
         }
-    } else {    // no xfermode but the shader not opaque
+    } else {
         for (;;) {
             int count = *runs;
             if (count <= 0) {
@@ -434,3 +539,100 @@ void SkARGB32_Shader_Blitter::blitMask(const SkMask& mask, const SkIRect& clip) 
     }
 }
 
+void SkARGB32_Shader_Blitter::blitV(int x, int y, int height, SkAlpha alpha) {
+    SkASSERT(x >= 0 && y >= 0 && y + height <= fDevice.height());
+
+    uint32_t*   device = fDevice.getAddr32(x, y);
+    size_t      deviceRB = fDevice.rowBytes();
+    SkShader*   shader = fShader;
+
+    if (fConstInY) {
+        SkPMColor c;
+        fShader->shadeSpan(x, y, &c, 1);
+
+        if (fShadeDirectlyIntoDevice) {
+            if (255 == alpha) {
+                do {
+                    *device = c;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            } else {
+                do {
+                    *device = SkFourByteInterp(c, *device, alpha);
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            }
+        } else {
+            SkXfermode* xfer = fXfermode;
+            if (xfer) {
+                do {
+                    xfer->xfer32(device, &c, 1, &alpha);
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            } else {
+                SkBlitRow::Proc32 proc = (255 == alpha) ? fProc32 : fProc32Blend;
+                do {
+                    proc(device, &c, 1, alpha);
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            }
+        }
+        return;
+    }
+
+    if (fShadeDirectlyIntoDevice) {
+        void* ctx;
+        SkShader::ShadeProc shadeProc = fShader->asAShadeProc(&ctx);
+        if (255 == alpha) {
+            if (shadeProc) {
+                do {
+                    shadeProc(ctx, x, y, device, 1);
+                    y += 1;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            } else {
+                do {
+                    shader->shadeSpan(x, y, device, 1);
+                    y += 1;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            }
+        } else {    // alpha < 255
+            SkPMColor c;
+            if (shadeProc) {
+                do {
+                    shadeProc(ctx, x, y, &c, 1);
+                    *device = SkFourByteInterp(c, *device, alpha);
+                    y += 1;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            } else {
+                do {
+                    shader->shadeSpan(x, y, &c, 1);
+                    *device = SkFourByteInterp(c, *device, alpha);
+                    y += 1;
+                    device = (uint32_t*)((char*)device + deviceRB);
+                } while (--height > 0);
+            }
+        }
+    } else {
+        SkPMColor* span = fBuffer;
+        SkXfermode* xfer = fXfermode;
+        if (xfer) {
+            do {
+                shader->shadeSpan(x, y, span, 1);
+                xfer->xfer32(device, span, 1, &alpha);
+                y += 1;
+                device = (uint32_t*)((char*)device + deviceRB);
+            } while (--height > 0);
+        } else {
+            SkBlitRow::Proc32 proc = (255 == alpha) ? fProc32 : fProc32Blend;
+            do {
+                shader->shadeSpan(x, y, span, 1);
+                proc(device, span, 1, alpha);
+                y += 1;
+                device = (uint32_t*)((char*)device + deviceRB);
+            } while (--height > 0);
+        }
+    }
+}

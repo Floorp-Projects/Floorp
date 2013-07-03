@@ -6,13 +6,14 @@
  * found in the LICENSE file.
  */
 #include "gl/SkNativeGLContext.h"
+#include "AvailabilityMacros.h"
 
 SkNativeGLContext::AutoContextRestore::AutoContextRestore() {
-    fOldAGLContext = aglGetCurrentContext();
+    fOldCGLContext = CGLGetCurrentContext();
 }
 
 SkNativeGLContext::AutoContextRestore::~AutoContextRestore() {
-    aglSetCurrentContext(fOldAGLContext);
+    CGLSetCurrentContext(fOldCGLContext);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,38 +27,39 @@ SkNativeGLContext::~SkNativeGLContext() {
 }
 
 void SkNativeGLContext::destroyGLContext() {
-    if (fContext) {
-        aglDestroyContext(fContext);
+    if (NULL != fContext) {
+        CGLReleaseContext(fContext);
     }
 }
 
 const GrGLInterface* SkNativeGLContext::createGLContext() {
-    GLint major, minor;
-    // AGLContext ctx;
+    SkASSERT(NULL == fContext);
 
-    aglGetVersion(&major, &minor);
-    //SkDebugf("---- agl version %d %d\n", major, minor);
-
-    const GLint pixelAttrs[] = {
-        AGL_RGBA,
-        AGL_ACCELERATED,
-        AGL_NONE
+    CGLPixelFormatAttribute attributes[] = {
+#if MAC_OS_X_VERSION_10_7
+        kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute) kCGLOGLPVersion_3_2_Core,
+#endif
+        (CGLPixelFormatAttribute)0
     };
-    AGLPixelFormat format = aglChoosePixelFormat(NULL, 0, pixelAttrs);
-    if (NULL == format) {
-        SkDebugf("Format could not be found.\n");
-        this->destroyGLContext();
-        return NULL;
-    }
-    fContext = aglCreateContext(format, NULL);
-    if (NULL == fContext) {
-        SkDebugf("Context could not be created.\n");
-        this->destroyGLContext();
-        return NULL;
-    }
-    aglDestroyPixelFormat(format);
+    CGLPixelFormatObj pixFormat;
+    GLint npix;
 
-    aglSetCurrentContext(fContext);
+    CGLChoosePixelFormat(attributes, &pixFormat, &npix);
+
+    if (NULL == pixFormat) {
+        SkDebugf("CGLChoosePixelFormat failed.");
+        return NULL;
+    }
+
+    CGLCreateContext(pixFormat, NULL, &fContext);
+    CGLReleasePixelFormat(pixFormat);
+
+    if (NULL == fContext) {
+        SkDebugf("CGLCreateContext failed.");
+        return NULL;
+    }
+
+    CGLSetCurrentContext(fContext);
 
     const GrGLInterface* interface = GrGLCreateNativeInterface();
     if (NULL == interface) {
@@ -70,5 +72,5 @@ const GrGLInterface* SkNativeGLContext::createGLContext() {
 }
 
 void SkNativeGLContext::makeCurrent() const {
-    aglSetCurrentContext(fContext);
+    CGLSetCurrentContext(fContext);
 }

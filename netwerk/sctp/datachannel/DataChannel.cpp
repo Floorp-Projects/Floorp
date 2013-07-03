@@ -13,7 +13,20 @@
 
 #define SCTP_DEBUG 1
 #define SCTP_STDINT_INCLUDE "mozilla/StandardInteger.h"
+
+#ifdef _MSC_VER
+// Disable "warning C4200: nonstandard extension used : zero-sized array in
+//          struct/union"
+// ...which the third-party file usrsctp.h runs afoul of.
+#pragma warning(push)
+#pragma warning(disable:4200)
+#endif
+
 #include "usrsctp.h"
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #include "DataChannelLog.h"
 
