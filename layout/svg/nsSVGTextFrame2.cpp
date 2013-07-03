@@ -1732,11 +1732,10 @@ void
 TextFrameIterator::PushBaseline(nsIFrame* aNextFrame)
 {
   uint8_t baseline = aNextFrame->StyleSVGReset()->mDominantBaseline;
-  if (baseline != NS_STYLE_DOMINANT_BASELINE_AUTO) {
-    mBaselines.AppendElement(baseline);
-  } else {
-    mBaselines.AppendElement(mBaselines[mBaselines.Length() - 1]);
+  if (baseline == NS_STYLE_DOMINANT_BASELINE_AUTO) {
+    baseline = mBaselines.LastElement();
   }
+  mBaselines.AppendElement(baseline);
 }
 
 void
