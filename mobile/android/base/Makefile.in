@@ -220,6 +220,7 @@ FENNEC_JAVA_FILES = \
   home/HomePagerTabStrip.java \
   home/FadedTextView.java \
   home/FaviconsLoader.java \
+  home/ReadingListPage.java \
   home/SearchEngine.java \
   home/SearchEngineRow.java \
   home/SimpleCursorLoader.java \
