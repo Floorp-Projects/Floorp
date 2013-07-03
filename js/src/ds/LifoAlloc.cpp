@@ -6,7 +6,11 @@
 
 #include "ds/LifoAlloc.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 using namespace js;
+
+using mozilla::RoundUpPow2;
 
 namespace js {
 namespace detail {

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MathAlgorithms.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -25,6 +26,8 @@
 
 using namespace js;
 using namespace js::ion;
+
+using mozilla::FloorLog2;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
@@ -406,8 +409,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             if (!mul->canOverflow()) {
                 // If it cannot overflow, we can do lots of optimizations
                 Register src = ToRegister(lhs);
-                uint32_t shift;
-                JS_FLOOR_LOG2(shift, constant);
+                uint32_t shift = FloorLog2(constant);
                 uint32_t rest = constant - (1 << shift);
                 // See if the constant has one bit set, meaning it can be encoded as a bitshift
                 if ((1 << shift) == constant) {
@@ -416,8 +418,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
                 } else {
                     // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
                     // (1<<C1) | (1<<C2), which can be computed using an add and a shift
-                    uint32_t shift_rest;
-                    JS_FLOOR_LOG2(shift_rest, rest);
+                    uint32_t shift_rest = FloorLog2(rest);
                     if ((1u << shift_rest) == rest) {
                         masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
                         if (shift_rest != 0)
@@ -429,8 +430,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
                 // To stay on the safe side, only optimize things that are a
                 // power of 2.
 
-                uint32_t shift;
-                JS_FLOOR_LOG2(shift, constant);
+                uint32_t shift = FloorLog2(constant);
                 if ((1 << shift) == constant) {
                     // dest = lhs * pow(2,shift)
                     masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
