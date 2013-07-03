@@ -102,6 +102,12 @@
 #ifdef MOZ_METRO
 @BINPATH@/vccorlib110.dll
 #endif
+#elif MOZ_MSVC_REDIST == 1800
+@BINPATH@/msvcp120.dll
+@BINPATH@/msvcr120.dll
+#ifdef MOZ_METRO
+@BINPATH@/vccorlib120.dll
+#endif
 #endif
 #endif
 #endif
