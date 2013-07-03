@@ -84,8 +84,8 @@ NrIceMediaStream::Create(NrIceCtx *ctx,
                                   const_cast<char *>(name.c_str()),
                                   components, &stream->stream_);
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't create ICE media stream for '"
-         << name << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't create ICE media stream for '"
+              << name << "'");
     return nullptr;
   }
 
@@ -115,8 +115,8 @@ nsresult NrIceMediaStream::ParseAttributes(std::vector<std::string>&
                                                   &attributes_in[0] : nullptr,
                                                   attributes_in.size());
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't parse attributes for stream "
-         << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't parse attributes for stream "
+              << name_ << "'");
     return NS_ERROR_FAILURE;
   }
 
@@ -127,7 +127,7 @@ nsresult NrIceMediaStream::ParseAttributes(std::vector<std::string>&
 nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate) {
   int r;
 
-  MOZ_MTLOG(PR_LOG_DEBUG, "NrIceCtx(" << ctx_->name() << ")/STREAM(" <<
+  MOZ_MTLOG(ML_DEBUG, "NrIceCtx(" << ctx_->name() << ")/STREAM(" <<
             name() << ") : parsing trickle candidate " << candidate);
 
   r = nr_ice_peer_ctx_parse_trickle_candidate(ctx_->peer(),
@@ -137,12 +137,12 @@ nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate) {
                                               );
   if (r) {
     if (r == R_ALREADY) {
-      MOZ_MTLOG(PR_LOG_ERROR, "Trickle candidates are redundant for stream '"
-         << name_ << "' because it is completed");
+      MOZ_MTLOG(ML_ERROR, "Trickle candidates are redundant for stream '"
+                << name_ << "' because it is completed");
 
     } else {
-      MOZ_MTLOG(PR_LOG_ERROR, "Couldn't parse trickle candidate for stream '"
-         << name_ << "'");
+      MOZ_MTLOG(ML_ERROR, "Couldn't parse trickle candidate for stream '"
+                << name_ << "'");
       return NS_ERROR_FAILURE;
     }
   }
@@ -158,7 +158,7 @@ void NrIceMediaStream::EmitAllCandidates() {
   r = nr_ice_media_stream_get_attributes(stream_,
                                          &attrs, &attrct);
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't get ICE candidates for '"
+    MOZ_MTLOG(ML_ERROR, "Couldn't get ICE candidates for '"
          << name_ << "'");
     return;
   }
@@ -180,8 +180,8 @@ nsresult NrIceMediaStream::GetDefaultCandidate(int component,
   r = nr_ice_media_stream_get_default_candidate(stream_,
                                                 component, &cand);
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't get default ICE candidate for '"
-         << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't get default ICE candidate for '"
+              << name_ << "'");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -210,8 +210,8 @@ std::vector<std::string> NrIceMediaStream::GetCandidates() const {
   r = nr_ice_media_stream_get_attributes(stream_,
                                          &attrs, &attrct);
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't get ICE candidates for '"
-         << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't get ICE candidates for '"
+              << name_ << "'");
     return ret;
   }
 
@@ -235,7 +235,7 @@ nsresult NrIceMediaStream::SendPacket(int component_id,
                                    component_id,
                                    const_cast<unsigned char *>(data), len);
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't send media on '" << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "Couldn't send media on '" << name_ << "'");
     if (r == R_WOULDBLOCK) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
@@ -248,13 +248,13 @@ nsresult NrIceMediaStream::SendPacket(int component_id,
 
 
 void NrIceMediaStream::Ready() {
-  MOZ_MTLOG(PR_LOG_DEBUG, "Marking stream ready '" << name_ << "'");
+  MOZ_MTLOG(ML_DEBUG, "Marking stream ready '" << name_ << "'");
   state_ = ICE_OPEN;
   SignalReady(this);
 }
 
 void NrIceMediaStream::Close() {
-  MOZ_MTLOG(PR_LOG_DEBUG, "Marking stream closed '" << name_ << "'");
+  MOZ_MTLOG(ML_DEBUG, "Marking stream closed '" << name_ << "'");
   state_ = ICE_CLOSED;
   stream_ = nullptr;
 }

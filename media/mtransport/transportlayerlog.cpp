@@ -26,7 +26,7 @@ void TransportLayerLogging::WasInserted() {
 
 TransportResult
 TransportLayerLogging::SendPacket(const unsigned char *data, size_t len) {
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << "SendPacket(" << len << ")");
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << len << ")");
 
   if (downward_) {
     return downward_->SendPacket(data, len);
@@ -37,7 +37,7 @@ TransportLayerLogging::SendPacket(const unsigned char *data, size_t len) {
 }
 
 void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << "Received StateChange to " << state);
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Received StateChange to " << state);
 
   SetState(state);
 }
@@ -45,7 +45,7 @@ void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
 void TransportLayerLogging::PacketReceived(TransportLayer* layer,
                                            const unsigned char *data,
                                            size_t len) {
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << "PacketReceived(" << len << ")");
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "PacketReceived(" << len << ")");
 
   SignalPacketReceived(this, data, len);
 }

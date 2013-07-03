@@ -93,7 +93,7 @@ nsresult NrIceResolver::Init() {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   dns_ = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Could not acquire DNS service");
+    MOZ_MTLOG(ML_ERROR, "Could not acquire DNS service");
   }
   return rv;
 }
@@ -104,7 +104,7 @@ nr_resolver *NrIceResolver::AllocateResolver() {
   int r = nr_resolver_create_int((void *)this, vtbl_, &resolver);
   MOZ_ASSERT(!r);
   if(r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "nr_resolver_create_int failed");
+    MOZ_MTLOG(ML_ERROR, "nr_resolver_create_int failed");
     return nullptr;
   }
   // We must be available to allocators until they all call DestroyResolver,
@@ -152,7 +152,7 @@ int NrIceResolver::resolve(nr_resolver_resource *resource,
   nsCOMPtr<PendingResolution> pr;
 
   if (resource->transport_protocol != IPPROTO_UDP) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Only UDP is supported.");
+    MOZ_MTLOG(ML_ERROR, "Only UDP is supported.");
     ABORT(R_NOT_FOUND);
   }
   pr = new PendingResolution(sts_thread_, resource->port? resource->port : 3478,
@@ -160,7 +160,7 @@ int NrIceResolver::resolve(nr_resolver_resource *resource,
   if (NS_FAILED(dns_->AsyncResolve(nsAutoCString(resource->domain_name),
                                    nsIDNSService::RESOLVE_DISABLE_IPV6, pr,
                                    sts_thread_, getter_AddRefs(pr->request_)))) {
-    MOZ_MTLOG(PR_LOG_ERROR, "AsyncResolve failed.");
+    MOZ_MTLOG(ML_ERROR, "AsyncResolve failed.");
     ABORT(R_NOT_FOUND);
   }
   // Because the C API offers no "finished" method to release the handle we

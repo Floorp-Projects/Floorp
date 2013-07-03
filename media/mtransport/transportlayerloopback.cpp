@@ -62,10 +62,10 @@ void TransportLayerLoopback::Connect(TransportLayerLoopback* peer) {
 
 TransportResult
 TransportLayerLoopback::SendPacket(const unsigned char *data, size_t len) {
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << "SendPacket(" << len << ")");
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << len << ")");
 
   if (!peer_) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Discarding packet because peer not attached");
+    MOZ_MTLOG(ML_ERROR, "Discarding packet because peer not attached");
     return TE_ERROR;
   }
 
@@ -78,7 +78,7 @@ TransportLayerLoopback::SendPacket(const unsigned char *data, size_t len) {
 
 nsresult TransportLayerLoopback::QueuePacket(const unsigned char *data,
                                          size_t len) {
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << " Enqueuing packet of length " << len);
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing packet of length " << len);
   MOZ_ASSERT(packets_lock_);
 
   PR_Lock(packets_lock_);
@@ -100,7 +100,7 @@ void TransportLayerLoopback::DeliverPackets() {
     QueuedPacket *packet = packets_.front();
     packets_.pop();
 
-    MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << " Delivering packet of length " <<
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Delivering packet of length " <<
          packet->len());
     SignalPacketReceived(this, packet->data(), packet->len());
 

@@ -78,10 +78,10 @@ class TransportLayerLossy : public TransportLayer {
   ~TransportLayerLossy () {}
 
   virtual TransportResult SendPacket(const unsigned char *data, size_t len) {
-    MOZ_MTLOG(PR_LOG_NOTICE, LAYER_INFO << "SendPacket(" << len << ")");
+    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "SendPacket(" << len << ")");
 
     if (loss_mask_ & (1 << (packet_ % 32))) {
-      MOZ_MTLOG(PR_LOG_NOTICE, "Dropping packet");
+      MOZ_MTLOG(ML_NOTICE, "Dropping packet");
       ++packet_;
       return len;
     }
