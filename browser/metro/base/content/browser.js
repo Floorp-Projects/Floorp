@@ -73,7 +73,9 @@ var Browser = {
     BrowserTouchHandler.init();
     PopupBlockerObserver.init();
 
-    // Init the touch scrollbox
+    // Warning, total hack ahead. All of the real-browser related scrolling code
+    // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
+    // to redo all the dragging code.
     this.contentScrollbox = Elements.browsers;
     this.contentScrollboxScroller = {
       scrollBy: function(aDx, aDy) {
@@ -145,6 +147,10 @@ var Browser = {
     messageManager.addMessageListener("Browser:TapOnSelection", this);
     messageManager.addMessageListener("Browser:PluginClickToPlayClicked", this);
 
+    // Let everyone know what kind of mouse input we are
+    // starting with:
+    InputSourceHelper.fireUpdate();
+
     Task.spawn(function() {
       // Activation URIs come from protocol activations, secondary tiles, and file activations
       let activationURI = yield this.getShortcutOrURI(MetroUtils.activationURI);
@@ -192,9 +198,6 @@ var Browser = {
       } else {
         loadStartupURI();
       }
-
-      // Notify about our input type
-      InputSourceHelper.fireUpdate();
 
       // Broadcast a UIReady message so add-ons know we are finished with startup
       let event = document.createEvent("Events");
