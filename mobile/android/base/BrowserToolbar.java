@@ -218,6 +218,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
         mActivity.getSiteIdentityPopup().setAnchor(mSiteSecurity);
 
+        mProgressSpinner = (AnimationDrawable) res.getDrawable(R.drawable.progress_spinner);
 
         mStop = (ImageButton) findViewById(R.id.stop);
         mReader = (ImageButton) findViewById(R.id.reader);
@@ -341,8 +342,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 setProgressVisibility(false);
             }
         });
-
-        mProgressSpinner = (AnimationDrawable) getResources().getDrawable(R.drawable.progress_spinner);
 
         mReader.setOnClickListener(new Button.OnClickListener() {
             @Override

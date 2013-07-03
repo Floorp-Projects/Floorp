@@ -28,8 +28,7 @@ using namespace js::ion;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
-  : CodeGeneratorShared(gen, graph, masm),
-    deoptLabel_(NULL)
+  : CodeGeneratorShared(gen, graph, masm)
 {
 }
 
@@ -46,17 +45,13 @@ CodeGeneratorARM::generatePrologue()
         masm.checkStackAlignment();
     }
 
-    // Allocate returnLabel_ on the heap, so we don't run its destructor and
-    // assert-not-bound in debug mode on compilation failure.
-    returnLabel_ = new HeapLabel();
-
     return true;
 }
 
 bool
 CodeGeneratorARM::generateEpilogue()
 {
-    masm.bind(returnLabel_); 
+    masm.bind(&returnLabel_); 
     if (gen->compilingAsmJS()) {
         // Pop the stack we allocated at the start of the function.
         masm.freeStack(frameDepth_);
@@ -152,9 +147,9 @@ CodeGeneratorARM::generateOutOfLineCode()
     if (!CodeGeneratorShared::generateOutOfLineCode())
         return false;
 
-    if (deoptLabel_) {
+    if (deoptLabel_.used()) {
         // All non-table-based bailouts will go here.
-        masm.bind(deoptLabel_);
+        masm.bind(&deoptLabel_);
 
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
@@ -264,12 +259,10 @@ CodeGeneratorARM::bailout(LSnapshot *snapshot)
 bool
 CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout *ool)
 {
-    if (!deoptLabel_)
-        deoptLabel_ = new HeapLabel();
     masm.ma_mov(Imm32(ool->snapshot()->snapshotOffset()), ScratchRegister);
     masm.ma_push(ScratchRegister);
     masm.ma_push(ScratchRegister);
-    masm.ma_b(deoptLabel_);
+    masm.ma_b(&deoptLabel_);
     return true;
 }
 

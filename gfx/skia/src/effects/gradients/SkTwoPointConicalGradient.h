@@ -61,13 +61,14 @@ public:
                                  SkMatrix* matrix,
                                  TileMode* xy) const;
     virtual SkShader::GradientType asAGradient(GradientInfo* info) const  SK_OVERRIDE;
-    virtual GrCustomStage* asNewCustomStage(GrContext* context,
-        GrSamplerState* sampler) const SK_OVERRIDE;
+    virtual GrEffectRef* asNewEffect(GrContext* context, const SkPaint& paint) const SK_OVERRIDE;
+    virtual bool isOpaque() const SK_OVERRIDE;
 
     SkScalar getCenterX1() const { return SkPoint::Distance(fCenter1, fCenter2); }
     SkScalar getStartRadius() const { return fRadius1; }
     SkScalar getDiffRadius() const { return fRadius2 - fRadius1; }
 
+    SK_DEVELOPER_TO_STRING()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkTwoPointConicalGradient)
 
 protected:
@@ -83,4 +84,3 @@ private:
 };
 
 #endif
-

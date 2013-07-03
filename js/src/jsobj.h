@@ -209,7 +209,6 @@ extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
 extern Class ObjectClass;
-extern Class ProxyClass;
 
 class ArrayBufferObject;
 class GlobalObject;

@@ -10,7 +10,7 @@
 
 #include "SkXfermode.h"
 
-class SkArithmeticMode : public SkXfermode {
+class SK_API SkArithmeticMode : public SkXfermode {
 public:
     /**
      *  result = clamp[k1 * src * dst + k2 * src + k3 * dst + k4]
@@ -24,7 +24,9 @@ public:
      */
     static SkXfermode* Create(SkScalar k1, SkScalar k2,
                               SkScalar k3, SkScalar k4);
+
+private:
+    typedef SkXfermode INHERITED;
 };
 
 #endif
-

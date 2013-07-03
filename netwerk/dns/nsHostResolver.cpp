@@ -22,7 +22,6 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
 #include "nsAutoPtr.h"
-#include "pratom.h"
 #include "prthread.h"
 #include "prerror.h"
 #include "prtime.h"

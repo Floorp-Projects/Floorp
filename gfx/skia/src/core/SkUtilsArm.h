@@ -21,9 +21,9 @@
 #define SK_ARM_NEON_MODE_ALWAYS   1
 #define SK_ARM_NEON_MODE_DYNAMIC  2
 
-#if defined(__arm__) && defined(__ARM_HAVE_OPTIONAL_NEON_SUPPORT)
+#if defined(SK_CPU_ARM) && defined(__ARM_HAVE_OPTIONAL_NEON_SUPPORT)
 #  define SK_ARM_NEON_MODE  SK_ARM_NEON_MODE_DYNAMIC
-#elif defined(__arm__) && defined(__ARM_HAVE_NEON)
+#elif defined(SK_CPU_ARM) && defined(__ARM_HAVE_NEON)
 #  define SK_ARM_NEON_MODE  SK_ARM_NEON_MODE_ALWAYS
 #else
 #  define SK_ARM_NEON_MODE  SK_ARM_NEON_MODE_NONE
@@ -39,11 +39,11 @@
 // probes the CPU at runtime (and caches the result).
 
 #if SK_ARM_NEON_IS_NONE
-static bool sk_cpu_arm_has_neon(void) {
+static inline bool sk_cpu_arm_has_neon(void) {
     return false;
 }
 #elif SK_ARM_NEON_IS_ALWAYS
-static bool sk_cpu_arm_has_neon(void) {
+static inline bool sk_cpu_arm_has_neon(void) {
     return true;
 }
 #else // SK_ARM_NEON_IS_DYNAMIC

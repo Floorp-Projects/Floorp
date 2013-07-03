@@ -1231,11 +1231,11 @@ GetPropertyIC::attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *o
 
     // Implement the negated version of JSObject::isTypedArray predicate.
     masm.loadObjClass(object(), tmpReg);
-    masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArray::classes[0]), &failures);
-    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArray::classes[TypedArray::TYPE_MAX]), &failures);
+    masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArrayObject::classes[0]), &failures);
+    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArrayObject::classes[TypedArrayObject::TYPE_MAX]), &failures);
 
     // Load length.
-    masm.loadTypedOrValue(Address(object(), TypedArray::lengthOffset()), output());
+    masm.loadTypedOrValue(Address(object(), TypedArrayObject::lengthOffset()), output());
 
     /* Success. */
     attacher.jumpRejoin(masm);
@@ -2267,12 +2267,12 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     RepatchStubAppender attacher(*this);
 
     // The array type is the object within the table of typed array classes.
-    int arrayType = TypedArray::type(obj);
+    int arrayType = TypedArrayObject::type(obj);
 
     // The output register is not yet specialized as a float register, the only
     // way to accept float typed arrays for now is to return a Value type.
-    DebugOnly<bool> floatOutput = arrayType == TypedArray::TYPE_FLOAT32 ||
-                                  arrayType == TypedArray::TYPE_FLOAT64;
+    DebugOnly<bool> floatOutput = arrayType == TypedArrayObject::TYPE_FLOAT32 ||
+                                  arrayType == TypedArrayObject::TYPE_FLOAT64;
     JS_ASSERT_IF(!output().hasValue(), !floatOutput);
 
     Register tmpReg = output().scratchReg().gpr();
@@ -2334,7 +2334,7 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     }
 
     // Guard on the initialized length.
-    Address length(object(), TypedArray::lengthOffset());
+    Address length(object(), TypedArrayObject::lengthOffset());
     masm.branch32(Assembler::BelowOrEqual, length, indexReg, &failures);
 
     // Save the object register on the stack in case of failure.
@@ -2343,11 +2343,11 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     masm.push(object());
 
     // Load elements vector.
-    masm.loadPtr(Address(object(), TypedArray::dataOffset()), elementReg);
+    masm.loadPtr(Address(object(), TypedArrayObject::dataOffset()), elementReg);
 
     // Load the value. We use an invalid register because the destination
     // register is necessary a non double register.
-    int width = TypedArray::slotWidth(arrayType);
+    int width = TypedArrayObject::slotWidth(arrayType);
     BaseIndex source(elementReg, indexReg, ScaleFromElemWidth(width));
     if (output().hasValue())
         masm.loadFromTypedArray(arrayType, source, output().valueReg(), true,
@@ -2535,9 +2535,9 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
             if ((idval.isInt32()) ||
                 (idval.isString() && GetIndexFromString(idval.toString()) != UINT32_MAX))
             {
-                int arrayType = TypedArray::type(obj);
-                bool floatOutput = arrayType == TypedArray::TYPE_FLOAT32 ||
-                                   arrayType == TypedArray::TYPE_FLOAT64;
+                int arrayType = TypedArrayObject::type(obj);
+                bool floatOutput = arrayType == TypedArrayObject::TYPE_FLOAT32 ||
+                                   arrayType == TypedArrayObject::TYPE_FLOAT64;
                 if (!floatOutput || cache.output().hasValue()) {
                     if (!cache.attachTypedArrayElement(cx, ion, obj, idval))
                         return false;

@@ -8,8 +8,6 @@
 #include <os2safe.h>
 #endif
 
-#define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
-
 #if defined(MOZ_WIDGET_QT)
 #include <QApplication>
 #include <QStringList>
@@ -121,7 +119,6 @@ using mozilla::scache::StartupCache;
 #include "nsEmbedCID.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
-#include "nsStaticComponents.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsXPIDLString.h"

@@ -2160,8 +2160,8 @@ StackTypeSet::getTypedArrayType()
     Class *clasp = getKnownClass();
 
     if (clasp && IsTypedArrayClass(clasp))
-        return clasp - &TypedArray::classes[0];
-    return TypedArray::TYPE_MAX;
+        return clasp - &TypedArrayObject::classes[0];
+    return TypedArrayObject::TYPE_MAX;
 }
 
 bool

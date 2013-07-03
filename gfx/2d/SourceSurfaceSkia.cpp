@@ -109,12 +109,6 @@ SourceSurfaceSkia::DrawTargetWillChange()
 }
 
 void
-SourceSurfaceSkia::DrawTargetDestroyed()
-{
-  mDrawTarget = nullptr;
-}
-
-void
 SourceSurfaceSkia::MarkIndependent()
 {
   if (mDrawTarget) {

@@ -10,37 +10,43 @@
 #ifndef GrGpuGL_DEFINED
 #define GrGpuGL_DEFINED
 
+
 #include "GrBinHashKey.h"
 #include "GrDrawState.h"
 #include "GrGpu.h"
-#include "GrGLContextInfo.h"
+#include "GrGLContext.h"
 #include "GrGLIndexBuffer.h"
 #include "GrGLIRect.h"
 #include "GrGLProgram.h"
 #include "GrGLStencilBuffer.h"
 #include "GrGLTexture.h"
+#include "GrGLVertexArray.h"
 #include "GrGLVertexBuffer.h"
 #include "../GrTHashCache.h"
 
+#ifdef SK_DEVELOPER
+#define PROGRAM_CACHE_STATS
+#endif
+
 class GrGpuGL : public GrGpu {
 public:
-    GrGpuGL(const GrGLContextInfo& ctxInfo);
+    GrGpuGL(const GrGLContext& ctx, GrContext* context);
     virtual ~GrGpuGL();
 
-    const GrGLInterface* glInterface() const {
-        return fGLContextInfo.interface();
-    }
-    GrGLBinding glBinding() const { return fGLContextInfo.binding(); }
-    GrGLVersion glVersion() const { return fGLContextInfo.version(); }
-    GrGLSLGeneration glslGeneration() const {
-        return fGLContextInfo.glslGeneration();
-    }
+    const GrGLInterface* glInterface() const { return fGLContext.interface(); }
+    GrGLBinding glBinding() const { return fGLContext.info().binding(); }
+    GrGLVersion glVersion() const { return fGLContext.info().version(); }
+    GrGLSLGeneration glslGeneration() const { return fGLContext.info().glslGeneration(); }
+
+    // Used by GrGLProgram to bind necessary textures for GrGLEffects.
+    void bindTexture(int unitIdx, const GrTextureParams& params, GrGLTexture* texture);
+
+    bool programUnitTest(int maxStages);
 
     // GrGpu overrides
-    virtual GrPixelConfig preferredReadPixelsConfig(GrPixelConfig config)
-                                                            const SK_OVERRIDE;
-    virtual GrPixelConfig preferredWritePixelsConfig(GrPixelConfig config)
-                                                            const SK_OVERRIDE;
+    virtual GrPixelConfig preferredReadPixelsConfig(GrPixelConfig config) const SK_OVERRIDE;
+    virtual GrPixelConfig preferredWritePixelsConfig(GrPixelConfig config) const SK_OVERRIDE;
+    virtual bool canWriteTexturePixels(const GrTexture*, GrPixelConfig srcConfig) const SK_OVERRIDE;
     virtual bool readPixelsWillPayForYFlip(
                                     GrRenderTarget* renderTarget,
                                     int left, int top,
@@ -51,10 +57,35 @@ public:
 
     virtual void abandonResources() SK_OVERRIDE;
 
-    bool programUnitTest();
+    const GrGLCaps& glCaps() const { return *fGLContext.info().caps(); }
 
+    // These functions should be used to bind GL objects. They track the GL state and skip redundant
+    // bindings. Making the equivalent glBind calls directly will confuse the state tracking.
+    void bindVertexArray(GrGLuint id) {
+        fHWGeometryState.setVertexArrayID(this, id);
+    }
+    void bindIndexBufferAndDefaultVertexArray(GrGLuint id) {
+        fHWGeometryState.setIndexBufferIDOnDefaultVertexArray(this, id);
+    }
+    void bindVertexBuffer(GrGLuint id) {
+        fHWGeometryState.setVertexBufferID(this, id);
+    }
 
-protected:
+    // These callbacks update state tracking when GL objects are deleted. They are called from
+    // GrGLResource onRelease functions.
+    void notifyVertexArrayDelete(GrGLuint id) {
+        fHWGeometryState.notifyVertexArrayDelete(id);
+    }
+    void notifyVertexBufferDelete(GrGLuint id) {
+        fHWGeometryState.notifyVertexBufferDelete(id);
+    }
+    void notifyIndexBufferDelete(GrGLuint id) {
+        fHWGeometryState.notifyIndexBufferDelete(id);
+    }
+    void notifyTextureDelete(GrGLTexture* texture);
+    void notifyRenderTargetDelete(GrRenderTarget* renderTarget);
+
+private:
     // GrGpu overrides
     virtual void onResetContext() SK_OVERRIDE;
 
@@ -66,10 +97,8 @@ protected:
     virtual GrIndexBuffer* onCreateIndexBuffer(uint32_t size,
                                                bool dynamic) SK_OVERRIDE;
     virtual GrPath* onCreatePath(const SkPath&) SK_OVERRIDE;
-    virtual GrTexture* onCreatePlatformTexture(
-        const GrPlatformTextureDesc& desc) SK_OVERRIDE;
-    virtual GrRenderTarget* onCreatePlatformRenderTarget(
-        const GrPlatformRenderTargetDesc& desc) SK_OVERRIDE;
+    virtual GrTexture* onWrapBackendTexture(const GrBackendTextureDesc&) SK_OVERRIDE;
+    virtual GrRenderTarget* onWrapBackendRenderTarget(const GrBackendRenderTargetDesc&) SK_OVERRIDE;
     virtual bool createStencilBufferForRenderTarget(GrRenderTarget* rt,
                                                     int width,
                                                     int height) SK_OVERRIDE;
@@ -86,92 +115,58 @@ protected:
                               int width, int height,
                               GrPixelConfig,
                               void* buffer,
-                              size_t rowBytes,
-                              bool invertY) SK_OVERRIDE;
+                              size_t rowBytes) SK_OVERRIDE;
 
-    virtual void onWriteTexturePixels(GrTexture* texture,
+    virtual bool onWriteTexturePixels(GrTexture* texture,
                                       int left, int top, int width, int height,
                                       GrPixelConfig config, const void* buffer,
                                       size_t rowBytes) SK_OVERRIDE;
 
     virtual void onResolveRenderTarget(GrRenderTarget* target) SK_OVERRIDE;
 
-    virtual void onGpuDrawIndexed(GrPrimitiveType type,
-                                  uint32_t startVertex,
-                                  uint32_t startIndex,
-                                  uint32_t vertexCount,
-                                  uint32_t indexCount) SK_OVERRIDE;
-    virtual void onGpuDrawNonIndexed(GrPrimitiveType type,
-                                     uint32_t vertexCount,
-                                     uint32_t numVertices) SK_OVERRIDE;
+    virtual void onGpuDraw(const DrawInfo&) SK_OVERRIDE;
 
     virtual void setStencilPathSettings(const GrPath&,
-                                        GrPathFill,
+                                        SkPath::FillType,
                                         GrStencilSettings* settings)
                                         SK_OVERRIDE;
-    virtual void onGpuStencilPath(const GrPath*, GrPathFill) SK_OVERRIDE;
+    virtual void onGpuStencilPath(const GrPath*, SkPath::FillType) SK_OVERRIDE;
 
     virtual void clearStencil() SK_OVERRIDE;
     virtual void clearStencilClip(const GrIRect& rect,
                                   bool insideClip) SK_OVERRIDE;
-    virtual bool flushGraphicsState(DrawType) SK_OVERRIDE;
-    virtual void setupGeometry(int* startVertex,
-                               int* startIndex,
-                               int vertexCount,
-                               int indexCount) SK_OVERRIDE;
-
-private:
-
-    const GrGLCaps& glCaps() const { return fGLContextInfo.caps(); }
+    virtual bool flushGraphicsState(DrawType, const GrDeviceCoordTexture* dstCopy) SK_OVERRIDE;
 
     // binds texture unit in GL
     void setTextureUnit(int unitIdx);
 
-    // binds appropriate vertex and index buffers, also returns any extra
-    // extra verts or indices to offset by.
-    void setBuffers(bool indexed,
-                    int* extraVertexOffset,
-                    int* extraIndexOffset);
+    // Sets up vertex attribute pointers and strides. On return indexOffsetInBytes gives the offset
+    // an into the index buffer. It does not account for drawInfo.startIndex() but rather the start
+    // index is relative to the returned offset.
+    void setupGeometry(const DrawInfo& info, size_t* indexOffsetInBytes);
 
     // Subclasses should call this to flush the blend state.
-    // The params should be the final coeffecients to apply
+    // The params should be the final coefficients to apply
     // (after any blending optimizations or dual source blending considerations
     // have been accounted for).
-    void flushBlend(bool isLines,
-                    GrBlendCoeff srcCoeff,
-                    GrBlendCoeff dstCoeff);
+    void flushBlend(bool isLines, GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff);
 
-    bool hasExtension(const char* ext) const {
-        return fGLContextInfo.hasExtension(ext);
-    }
+    bool hasExtension(const char* ext) const { return fGLContext.info().hasExtension(ext); }
 
-    const GrGLContextInfo& glContextInfo() const { return fGLContextInfo; }
-
-    // adjusts texture matrix to account for orientation
-    static void AdjustTextureMatrix(const GrGLTexture* texture,
-                                    GrMatrix* matrix);
-
-    // subclass may try to take advantage of identity tex matrices.
-    // This helper determines if matrix will be identity after all
-    // adjustments are applied.
-    static bool TextureMatrixIsIdentity(const GrGLTexture* texture,
-                                        const GrSamplerState& sampler);
+    const GrGLContext& glContext() const { return fGLContext; }
 
     static bool BlendCoeffReferencesConstant(GrBlendCoeff coeff);
 
-    // for readability of function impls
-    typedef GrGLProgram::Desc        ProgramDesc;
-    typedef ProgramDesc::StageDesc   StageDesc;
-
     class ProgramCache : public ::GrNoncopyable {
     public:
-        ProgramCache(const GrGLContextInfo& gl);
+        ProgramCache(const GrGLContext& gl);
+        ~ProgramCache();
 
         void abandon();
-        GrGLProgram* getProgram(const GrGLProgram::Desc& desc, const GrCustomStage** stages);
+        GrGLProgram* getProgram(const GrGLProgramDesc& desc, const GrEffectStage* stages[]);
     private:
         enum {
-            kKeySize = sizeof(ProgramDesc),
+            kKeySize = sizeof(GrGLProgramDesc),
             // We may actually have kMaxEntries+1 shaders in the GL context because we create a new
             // shader before evicting from the cache.
             kMaxEntries = 32
@@ -206,39 +201,15 @@ private:
         Entry                       fEntries[kMaxEntries];
         int                         fCount;
         unsigned int                fCurrLRUStamp;
-        const GrGLContextInfo&      fGL;
+        const GrGLContext&          fGL;
+#ifdef PROGRAM_CACHE_STATS
+        int                         fTotalRequests;
+        int                         fCacheMisses;
+#endif
     };
 
-    // binds the texture and sets its texture params
-    // This may also perform a downsample on the src texture which may or may
-    // not modify the scissor test and rect. So in flushGraphicsState a
-    // call to flushScissor must occur after all textures have been flushed via
-    // this function.
-    void flushBoundTextureAndParams(int stage);
-    void flushBoundTextureAndParams(int stage,
-                                    const GrTextureParams& params,
-                                    GrGLTexture* nextTexture);
-
-    // sets the texture matrix for the currently bound program
-    void flushTextureMatrix(int stage);
-
-    // sets the color specified by GrDrawState::setColor()
-    void flushColor(GrColor color);
-
-    // sets the color specified by GrDrawState::setCoverage()
-    void flushCoverage(GrColor color);
-
-    // sets the MVP matrix uniform for currently bound program
-    void flushViewMatrix(DrawType type);
-
-    // flushes the parameters to two point radial gradient
-    void flushRadial2(int stage);
-
-    // flushes the parameters for convolution
-    void flushConvolution(int stage);
-
-    // flushes the color matrix
-    void flushColorMatrix();
+    // sets the matrix for path stenciling (uses the GL fixed pipe matrices)
+    void flushPathStencilMatrix();
 
     // flushes dithering, color-mask, and face culling stat
     void flushMiscFixedFunctionState();
@@ -247,28 +218,10 @@ private:
     // flushing the scissor after that function is called.
     void flushScissor();
 
-    void buildProgram(bool isPoints,
-                      BlendOptFlags blendOpts,
-                      GrBlendCoeff dstCoeff,
-                      const GrCustomStage** customStages,
-                      ProgramDesc* desc);
-
-    // Inits GrDrawTarget::Caps, sublcass may enable additional caps.
-    void initCaps();
-
     void initFSAASupport();
 
     // determines valid stencil formats
     void initStencilFormats();
-
-    // notify callbacks to update state tracking when related
-    // objects are bound to GL or deleted outside of the class
-    void notifyVertexBufferBind(const GrGLVertexBuffer* buffer);
-    void notifyVertexBufferDelete(const GrGLVertexBuffer* buffer);
-    void notifyIndexBufferBind(const GrGLIndexBuffer* buffer);
-    void notifyIndexBufferDelete(const GrGLIndexBuffer* buffer);
-    void notifyTextureDelete(GrGLTexture* texture);
-    void notifyRenderTargetDelete(GrRenderTarget* renderTarget);
 
     void setSpareTextureUnit();
 
@@ -297,12 +250,7 @@ private:
 
     void fillInConfigRenderableTable();
 
-    friend class GrGLVertexBuffer;
-    friend class GrGLIndexBuffer;
-    friend class GrGLTexture;
-    friend class GrGLRenderTarget;
-
-    GrGLContextInfo fGLContextInfo;
+    GrGLContext fGLContext;
 
     // GL program-related state
     ProgramCache*               fProgramCache;
@@ -313,8 +261,8 @@ private:
     ///@{
     int                         fHWActiveTextureUnitIdx;
     GrGLuint                    fHWProgramID;
-    GrColor                     fHWConstAttribColor;
-    GrColor                     fHWConstAttribCoverage;
+
+    GrGLProgram::SharedGLState  fSharedGLProgramState;
 
     enum TriState {
         kNo_TriState,
@@ -334,12 +282,109 @@ private:
 
     GrGLIRect   fHWViewport;
 
-    struct {
-        size_t                  fVertexOffset;
-        GrVertexLayout          fVertexLayout;
-        const GrVertexBuffer*   fVertexBuffer;
-        const GrIndexBuffer*    fIndexBuffer;
-        bool                    fArrayPtrsDirty;
+    /**
+     * Tracks bound vertex and index buffers and vertex attrib array state.
+     */
+    class HWGeometryState {
+    public:
+        HWGeometryState() { fVBOVertexArray = NULL; this->invalidate(); }
+
+        ~HWGeometryState() { SkSafeUnref(fVBOVertexArray); }
+
+        void invalidate() {
+            fBoundVertexArrayIDIsValid = false;
+            fBoundVertexBufferIDIsValid = false;
+            fDefaultVertexArrayBoundIndexBufferID = false;
+            fDefaultVertexArrayBoundIndexBufferIDIsValid = false;
+            fDefaultVertexArrayAttribState.invalidate();
+        }
+
+        void notifyVertexArrayDelete(GrGLuint id) {
+            if (fBoundVertexArrayIDIsValid && fBoundVertexArrayID == id) {
+                // Does implicit bind to 0
+                fBoundVertexArrayID = 0;
+            }
+        }
+
+        void setVertexArrayID(GrGpuGL* gpu, GrGLuint arrayID) {
+            if (!gpu->glCaps().vertexArrayObjectSupport()) {
+                GrAssert(0 == arrayID);
+                return;
+            }
+            if (!fBoundVertexArrayIDIsValid || arrayID != fBoundVertexArrayID) {
+                GR_GL_CALL(gpu->glInterface(), BindVertexArray(arrayID));
+                fBoundVertexArrayIDIsValid = true;
+                fBoundVertexArrayID = arrayID;
+            }
+        }
+
+        void notifyVertexBufferDelete(GrGLuint id) {
+            if (fBoundVertexBufferIDIsValid && id == fBoundVertexBufferID) {
+                fBoundVertexBufferID = 0;
+            }
+            if (NULL != fVBOVertexArray) {
+                fVBOVertexArray->notifyVertexBufferDelete(id);
+            }
+            fDefaultVertexArrayAttribState.notifyVertexBufferDelete(id);
+        }
+
+        void notifyIndexBufferDelete(GrGLuint id) {
+            if (fDefaultVertexArrayBoundIndexBufferIDIsValid &&
+                id == fDefaultVertexArrayBoundIndexBufferID) {
+                fDefaultVertexArrayBoundIndexBufferID = 0;
+            }
+            if (NULL != fVBOVertexArray) {
+                fVBOVertexArray->notifyIndexBufferDelete(id);
+            }
+        }
+
+        void setVertexBufferID(GrGpuGL* gpu, GrGLuint id) {
+            if (!fBoundVertexBufferIDIsValid || id != fBoundVertexBufferID) {
+                GR_GL_CALL(gpu->glInterface(), BindBuffer(GR_GL_ARRAY_BUFFER, id));
+                fBoundVertexBufferIDIsValid = true;
+                fBoundVertexBufferID = id;
+            }
+        }
+
+        /**
+         * Binds the default vertex array and binds the index buffer. This is used when binding
+         * an index buffer in order to update it.
+         */
+        void setIndexBufferIDOnDefaultVertexArray(GrGpuGL* gpu, GrGLuint id) {
+            this->setVertexArrayID(gpu, 0);
+            if (!fDefaultVertexArrayBoundIndexBufferIDIsValid ||
+                id != fDefaultVertexArrayBoundIndexBufferID) {
+                GR_GL_CALL(gpu->glInterface(), BindBuffer(GR_GL_ELEMENT_ARRAY_BUFFER, id));
+                fDefaultVertexArrayBoundIndexBufferIDIsValid = true;
+                fDefaultVertexArrayBoundIndexBufferID = id;
+            }
+        }
+
+        /**
+         * Binds the vertex array object that should be used to render from the vertex buffer.
+         * The vertex array is bound and its attrib array state object is returned. The vertex
+         * buffer is bound. The index buffer (if non-NULL) is bound to the vertex array. The
+         * returned GrGLAttribArrayState should be used to set vertex attribute arrays.
+         */
+        GrGLAttribArrayState* bindArrayAndBuffersToDraw(GrGpuGL* gpu,
+                                                        const GrGLVertexBuffer* vbuffer,
+                                                        const GrGLIndexBuffer* ibuffer);
+
+    private:
+        GrGLuint                fBoundVertexArrayID;
+        GrGLuint                fBoundVertexBufferID;
+        bool                    fBoundVertexArrayIDIsValid;
+        bool                    fBoundVertexBufferIDIsValid;
+
+        GrGLuint                fDefaultVertexArrayBoundIndexBufferID;
+        bool                    fDefaultVertexArrayBoundIndexBufferIDIsValid;
+        // We return a non-const pointer to this from bindArrayAndBuffersToDraw when vertex array 0
+        // is bound. However, this class is internal to GrGpuGL and this object never leaks out of
+        // GrGpuGL.
+        GrGLAttribArrayState    fDefaultVertexArrayAttribState;
+
+        // This is used when we're using a core profile and the vertices are in a VBO.
+        GrGLVertexArray*        fVBOVertexArray;
     } fHWGeometryState;
 
     struct {
@@ -366,33 +411,24 @@ private:
         }
     } fHWAAState;
 
-    struct {
-        GrMatrix    fViewMatrix;
-        SkISize     fRTSize;
-        void invalidate() {
-            fViewMatrix = GrMatrix::InvalidMatrix();
-            fRTSize.fWidth = -1; // just make the first value compared illegal.
-        }
-    } fHWPathMatrixState;
 
-    GrStencilSettings       fHWStencilSettings;
-    TriState                fHWStencilTestEnabled;
+    GrGLProgram::MatrixState    fHWPathStencilMatrixState;
 
-    GrDrawState::DrawFace   fHWDrawFace;
-    TriState                fHWWriteToColor;
-    TriState                fHWDitherEnabled;
-    GrRenderTarget*         fHWBoundRenderTarget;
-    GrTexture*              fHWBoundTextures[GrDrawState::kNumStages];
+    GrStencilSettings           fHWStencilSettings;
+    TriState                    fHWStencilTestEnabled;
+
+    GrDrawState::DrawFace       fHWDrawFace;
+    TriState                    fHWWriteToColor;
+    TriState                    fHWDitherEnabled;
+    GrRenderTarget*             fHWBoundRenderTarget;
+    GrTexture*                  fHWBoundTextures[GrDrawState::kNumStages];
     ///@}
 
     // we record what stencil format worked last time to hopefully exit early
     // from our loop that tries stencil formats and calls check fb status.
     int fLastSuccessfulStencilFmtIdx;
 
-    bool fPrintedCaps;
-
     typedef GrGpu INHERITED;
 };
 
 #endif
-

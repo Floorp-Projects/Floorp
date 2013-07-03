@@ -9,14 +9,15 @@
 #include "GrGLShaderVar.h"
 #include "SkString.h"
 
-GrGLSLGeneration GrGetGLSLGeneration(GrGLBinding binding,
-                                   const GrGLInterface* gl) {
+GrGLSLGeneration GrGetGLSLGeneration(GrGLBinding binding, const GrGLInterface* gl) {
     GrGLSLVersion ver = GrGLGetGLSLVersion(gl);
     switch (binding) {
         case kDesktop_GrGLBinding:
             GrAssert(ver >= GR_GLSL_VER(1,10));
             if (ver >= GR_GLSL_VER(1,50)) {
                 return k150_GrGLSLGeneration;
+            } else if (ver >= GR_GLSL_VER(1,40)) {
+                return k140_GrGLSLGeneration;
             } else if (ver >= GR_GLSL_VER(1,30)) {
                 return k130_GrGLSLGeneration;
             } else {
@@ -32,8 +33,7 @@ GrGLSLGeneration GrGetGLSLGeneration(GrGLBinding binding,
     }
 }
 
-const char* GrGetGLSLVersionDecl(GrGLBinding binding,
-                                   GrGLSLGeneration gen) {
+const char* GrGetGLSLVersionDecl(GrGLBinding binding, GrGLSLGeneration gen) {
     switch (gen) {
         case k110_GrGLSLGeneration:
             if (kES2_GrGLBinding == binding) {
@@ -47,6 +47,9 @@ const char* GrGetGLSLVersionDecl(GrGLBinding binding,
         case k130_GrGLSLGeneration:
             GrAssert(kDesktop_GrGLBinding == binding);
             return "#version 130\n";
+        case k140_GrGLSLGeneration:
+            GrAssert(kDesktop_GrGLBinding == binding);
+            return "#version 140\n";
         case k150_GrGLSLGeneration:
             GrAssert(kDesktop_GrGLBinding == binding);
             return "#version 150\n";
@@ -56,23 +59,12 @@ const char* GrGetGLSLVersionDecl(GrGLBinding binding,
     }
 }
 
-bool GrGLSLSetupFSColorOuput(GrGLSLGeneration gen,
-                             const char* nameIfDeclared,
-                             GrGLShaderVar* var) {
+bool GrGLSLSetupFSColorOuput(GrGLSLGeneration gen, const char* nameIfDeclared, GrGLShaderVar* var) {
     bool declaredOutput = k110_GrGLSLGeneration != gen;
     var->set(kVec4f_GrSLType,
              GrGLShaderVar::kOut_TypeModifier,
              declaredOutput ? nameIfDeclared : "gl_FragColor");
     return declaredOutput;
-}
-
-GrSLType GrSLFloatVectorType (int count) {
-    GR_STATIC_ASSERT(kFloat_GrSLType == 1);
-    GR_STATIC_ASSERT(kVec2f_GrSLType == 2);
-    GR_STATIC_ASSERT(kVec3f_GrSLType == 3);
-    GR_STATIC_ASSERT(kVec4f_GrSLType == 4);
-    GrAssert(count > 0 && count <= 4);
-    return (GrSLType)(count);
 }
 
 const char* GrGLSLVectorHomogCoord(int count) {
@@ -91,7 +83,7 @@ const char* GrGLSLVectorNonhomogCoords(int count) {
     return NONHOMOGS[count];
 }
 
-const char* GrGLSLVectorNonhomogCoord(GrSLType type) {
+const char* GrGLSLVectorNonhomogCoords(GrSLType type) {
     return GrGLSLVectorNonhomogCoords(GrSLTypeToVecLength(type));
 }
 

@@ -11,6 +11,20 @@
 #include "GrResourceCache.h"
 #include "GrResource.h"
 
+
+GrResourceKey::ResourceType GrResourceKey::GenerateResourceType() {
+    static int32_t gNextType = 0;
+
+    int32_t type = sk_atomic_inc(&gNextType);
+    if (type >= (1 << 8 * sizeof(ResourceType))) {
+        GrCrash("Too many Resource Types");
+    }
+
+    return static_cast<ResourceType>(type);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 GrResourceEntry::GrResourceEntry(const GrResourceKey& key, GrResource* resource)
         : fKey(key), fResource(resource) {
     // we assume ownership of the resource, and will unref it when we die
@@ -30,36 +44,6 @@ void GrResourceEntry::validate() const {
     fResource->validate();
 }
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-class GrResourceCache::Key {
-    typedef GrResourceEntry T;
-
-    const GrResourceKey& fKey;
-public:
-    Key(const GrResourceKey& key) : fKey(key) {}
-
-    uint32_t getHash() const { return fKey.hashIndex(); }
-
-    static bool LT(const T& entry, const Key& key) {
-        return entry.key() < key.fKey;
-    }
-    static bool EQ(const T& entry, const Key& key) {
-        return entry.key() == key.fKey;
-    }
-#if GR_DEBUG
-    static uint32_t GetHash(const T& entry) {
-        return entry.key().hashIndex();
-    }
-    static bool LT(const T& a, const T& b) {
-        return a.key() < b.key();
-    }
-    static bool EQ(const T& a, const T& b) {
-        return a.key() == b.key();
-    }
-#endif
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +78,7 @@ GrResourceCache::~GrResourceCache() {
         fCache.remove(entry->fKey, entry);
 
         // remove from our llist
-        this->internalDetach(entry, false);
+        this->internalDetach(entry);
 
         delete entry;
     }
@@ -121,11 +105,11 @@ void GrResourceCache::setLimits(int maxResources, size_t maxResourceBytes) {
 }
 
 void GrResourceCache::internalDetach(GrResourceEntry* entry,
-                                    bool clientDetach) {
+                                     BudgetBehaviors behavior) {
     fList.remove(entry);
 
     // update our stats
-    if (clientDetach) {
+    if (kIgnore_BudgetBehavior == behavior) {
         fClientDetachedCount += 1;
         fClientDetachedBytes += entry->resource()->sizeInBytes();
 
@@ -139,20 +123,24 @@ void GrResourceCache::internalDetach(GrResourceEntry* entry,
 #endif
 
     } else {
+        GrAssert(kAccountFor_BudgetBehavior == behavior);
+
         fEntryCount -= 1;
         fEntryBytes -= entry->resource()->sizeInBytes();
     }
 }
 
 void GrResourceCache::attachToHead(GrResourceEntry* entry,
-                                   bool clientReattach) {
+                                   BudgetBehaviors behavior) {
     fList.addToHead(entry);
 
     // update our stats
-    if (clientReattach) {
+    if (kIgnore_BudgetBehavior == behavior) {
         fClientDetachedCount -= 1;
         fClientDetachedBytes -= entry->resource()->sizeInBytes();
     } else {
+        GrAssert(kAccountFor_BudgetBehavior == behavior);
+
         fEntryCount += 1;
         fEntryBytes += entry->resource()->sizeInBytes();
 
@@ -167,16 +155,40 @@ void GrResourceCache::attachToHead(GrResourceEntry* entry,
     }
 }
 
-GrResource* GrResourceCache::find(const GrResourceKey& key) {
+// This functor just searches for an entry with only a single ref (from
+// the texture cache itself). Presumably in this situation no one else
+// is relying on the texture.
+class GrTFindUnreffedFunctor {
+public:
+    bool operator()(const GrResourceEntry* entry) const {
+        return 1 == entry->resource()->getRefCnt();
+    }
+};
+
+GrResource* GrResourceCache::find(const GrResourceKey& key, uint32_t ownershipFlags) {
     GrAutoResourceCacheValidate atcv(this);
 
-    GrResourceEntry* entry = fCache.find(key);
+    GrResourceEntry* entry = NULL;
+
+    if (ownershipFlags & kNoOtherOwners_OwnershipFlag) {
+        GrTFindUnreffedFunctor functor;
+
+        entry = fCache.find<GrTFindUnreffedFunctor>(key, functor);
+    } else {
+        entry = fCache.find(key);
+    }
+
     if (NULL == entry) {
         return NULL;
     }
 
-    this->internalDetach(entry, false);
-    this->attachToHead(entry, false);
+    if (ownershipFlags & kHide_OwnershipFlag) {
+        this->makeExclusive(entry);
+    } else {
+        // Make this resource MRU
+        this->internalDetach(entry);
+        this->attachToHead(entry);
+    }
 
     return entry->fResource;
 }
@@ -185,7 +197,9 @@ bool GrResourceCache::hasKey(const GrResourceKey& key) const {
     return NULL != fCache.find(key);
 }
 
-void GrResourceCache::create(const GrResourceKey& key, GrResource* resource) {
+void GrResourceCache::addResource(const GrResourceKey& key,
+                                  GrResource* resource,
+                                  uint32_t ownershipFlags) {
     GrAssert(NULL == resource->getCacheEntry());
     // we don't expect to create new resources during a purge. In theory
     // this could cause purgeAsNeeded() into an infinite loop (e.g.
@@ -197,19 +211,21 @@ void GrResourceCache::create(const GrResourceKey& key, GrResource* resource) {
     GrResourceEntry* entry = SkNEW_ARGS(GrResourceEntry, (key, resource));
     resource->setCacheEntry(entry);
 
-    this->attachToHead(entry, false);
+    this->attachToHead(entry);
     fCache.insert(key, entry);
 
-#if GR_DUMP_TEXTURE_UPLOAD
-    GrPrintf("--- add resource to cache %p, count=%d bytes= %d %d\n",
-             entry, fEntryCount, resource->sizeInBytes(), fEntryBytes);
-#endif
+    if (ownershipFlags & kHide_OwnershipFlag) {
+        this->makeExclusive(entry);
+    }
+
 }
 
 void GrResourceCache::makeExclusive(GrResourceEntry* entry) {
     GrAutoResourceCacheValidate atcv(this);
 
-    this->internalDetach(entry, true);
+    // When scratch textures are detached (to hide them from future finds) they
+    // still count against the resource budget
+    this->internalDetach(entry, kIgnore_BudgetBehavior);
     fCache.remove(entry->key(), entry);
 
 #if GR_DEBUG
@@ -238,7 +254,10 @@ void GrResourceCache::makeNonExclusive(GrResourceEntry* entry) {
 #endif
 
     if (entry->resource()->isValid()) {
-        attachToHead(entry, true);
+        // Since scratch textures still count against the cache budget even
+        // when they have been removed from the cache, re-adding them doesn't
+        // alter the budget information.
+        attachToHead(entry, kIgnore_BudgetBehavior);
         fCache.insert(entry->key(), entry);
     } else {
         this->removeInvalidResource(entry);
@@ -290,15 +309,7 @@ void GrResourceCache::purgeAsNeeded() {
                     fCache.remove(entry->key(), entry);
 
                     // remove from our llist
-                    this->internalDetach(entry, false);
-
-        #if GR_DUMP_TEXTURE_UPLOAD
-                    GrPrintf("--- ~resource from cache %p [%d %d]\n",
-                             entry->resource(),
-                             entry->resource()->width(),
-                             entry->resource()->height());
-        #endif
-
+                    this->internalDetach(entry);
                     delete entry;
                 }
                 entry = prev;

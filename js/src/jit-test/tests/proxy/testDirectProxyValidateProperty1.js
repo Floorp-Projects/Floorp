@@ -9,7 +9,7 @@ Object.defineProperty(target, 'foo', {
     configurable: false
 });
 assertThrowsInstanceOf(function () {
-    Object.getOwnPropertyDescriptor(new Proxy(target, {
+    Object.getOwnPropertyDescriptor(Proxy(target, {
         getOwnPropertyDescriptor: function (target, name) {
             return {
                 configurable: true

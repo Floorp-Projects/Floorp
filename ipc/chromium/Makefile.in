@@ -49,7 +49,7 @@ endif # } OS_POSIX
 
 ifdef OS_MACOSX # {
 
-CMMSRCS += \
+DISABLED_CMMSRCS += \
   base_paths_mac.mm \
   file_util_mac.mm \
   file_version_info_mac.mm \

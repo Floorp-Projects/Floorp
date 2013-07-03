@@ -18,7 +18,7 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CMMSRCS += xpcshellMacUtils.mm
+DISABLED_CMMSRCS += xpcshellMacUtils.mm
 endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

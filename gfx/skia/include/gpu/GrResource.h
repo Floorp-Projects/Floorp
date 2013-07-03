@@ -12,7 +12,7 @@
 
 #include "GrRefCnt.h"
 
-#include "SkTDLinkedList.h"
+#include "SkTInternalLList.h"
 
 class GrGpu;
 class GrContext;
@@ -57,20 +57,28 @@ public:
      */
     virtual size_t sizeInBytes() const = 0;
 
-     /**
-      * Retrieves the context that owns the resource. Note that it is possible
-      * for this to return NULL. When resources have been release()ed or
-      * abandon()ed they no longer have an owning context. Destroying a
-      * GrContext automatically releases all its resources.
-      */
+    /**
+     * Retrieves the context that owns the resource. Note that it is possible
+     * for this to return NULL. When resources have been release()ed or
+     * abandon()ed they no longer have an owning context. Destroying a
+     * GrContext automatically releases all its resources.
+     */
     const GrContext* getContext() const;
     GrContext* getContext();
 
     void setCacheEntry(GrResourceEntry* cacheEntry) { fCacheEntry = cacheEntry; }
     GrResourceEntry* getCacheEntry() { return fCacheEntry; }
 
+    void incDeferredRefCount() const { GrAssert(fDeferredRefCount >= 0); ++fDeferredRefCount; }
+    void decDeferredRefCount() const { GrAssert(fDeferredRefCount > 0); --fDeferredRefCount; }
+
 protected:
-    explicit GrResource(GrGpu* gpu);
+    /**
+     * isWrapped indicates we have wrapped a client-created backend resource in a GrResource. If it
+     * is true then the client is responsible for the lifetime of the underlying backend resource.
+     * Otherwise, our onRelease() should free the resource.
+     */
+    GrResource(GrGpu* gpu, bool isWrapped);
     virtual ~GrResource();
 
     GrGpu* getGpu() const { return fGpu; }
@@ -81,22 +89,27 @@ protected:
     virtual void onAbandon() {};
 
     bool isInCache() const { return NULL != fCacheEntry; }
+    bool isWrapped() const { return kWrapped_Flag & fFlags; }
 
 private:
-
 #if GR_DEBUG
     friend class GrGpu; // for assert in GrGpu to access getGpu
 #endif
 
-    GrGpu*      fGpu;       // not reffed. The GrGpu can be deleted while there
-                            // are still live GrResources. It will call
-                            // release() on all such resources in its
-                            // destructor.
+    // We're in an internal doubly linked list
+    SK_DECLARE_INTERNAL_LLIST_INTERFACE(GrResource);
 
-    // we're a dlinklist
-    SK_DEFINE_DLINKEDLIST_INTERFACE(GrResource);
+    GrGpu*              fGpu;               // not reffed. The GrGpu can be deleted while there
+                                            // are still live GrResources. It will call
+                                            // release() on all such resources in its
+                                            // destructor.
+    GrResourceEntry*    fCacheEntry;        // NULL if not in cache
+    mutable int         fDeferredRefCount;  // How many references in deferred drawing buffers.
 
-    GrResourceEntry* fCacheEntry;  // NULL if not in cache
+    enum Flags {
+        kWrapped_Flag = 0x1,
+    };
+    uint32_t         fFlags;
 
     typedef GrRefCnt INHERITED;
 };

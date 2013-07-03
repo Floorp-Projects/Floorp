@@ -820,11 +820,10 @@ AbstractFramePtr::popWith(JSContext *cx) const
         MOZ_ASSUME_UNREACHABLE("Invalid frame");
 }
 
-Activation::Activation(JSContext *cx, Kind kind, bool active)
+Activation::Activation(JSContext *cx, Kind kind)
   : cx_(cx),
     compartment_(cx->compartment()),
     prev_(cx->mainThread().activation_),
-    active_(active),
     savedFrameChain_(0),
     kind_(kind)
 {

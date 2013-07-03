@@ -18,8 +18,4 @@ DISABLED_EXTRA_COMPONENTS = \
   storage-Legacy.js \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  LoginManagerContent.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

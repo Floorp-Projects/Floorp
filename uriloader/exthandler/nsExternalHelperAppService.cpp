@@ -2441,6 +2441,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   // 5. Information from plugins
   // 6. The "ext-to-type-mapping" category
 
+  // Early return if called with an empty extension parameter
+  if (aFileExt.IsEmpty())
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsresult rv = NS_OK;
   // First of all, check our default entries
   for (size_t i = 0; i < ArrayLength(defaultMimeEntries); i++)

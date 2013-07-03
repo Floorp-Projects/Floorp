@@ -239,9 +239,7 @@ _ENABLE_PIC=1
 
 ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
-ifdef MODULE_NAME
-DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
-else
+ifndef MODULE_NAME
 $(error Component makefile does not specify MODULE_NAME.)
 endif
 endif

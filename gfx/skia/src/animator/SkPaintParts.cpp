@@ -92,12 +92,10 @@ bool SkDrawTypeface::add() {
 }
 
 #ifdef SK_DUMP_ENABLED
-void SkDrawTypeface::dump(SkAnimateMaker* maker) {
+void SkDrawTypeface::dump(SkAnimateMaker*) {
     SkDebugf("%*s<typeface fontName=\"%s\" ", SkDisplayList::fIndent, "", fontName.c_str());
     SkString string;
     SkDump::GetEnumString(SkType_FontStyle, style, &string);
     SkDebugf("style=\"%s\" />\n", string.c_str());
 }
 #endif
-
-

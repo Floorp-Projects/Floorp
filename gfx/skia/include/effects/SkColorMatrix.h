@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2007 The Android Open Source Project
  *
@@ -6,13 +5,12 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkColorMatrix_DEFINED
 #define SkColorMatrix_DEFINED
 
 #include "SkScalar.h"
 
-class SkColorMatrix {
+class SK_API SkColorMatrix {
 public:
     SkScalar    fMat[20];
 
@@ -41,6 +39,12 @@ public:
     void setSaturation(SkScalar sat);
     void setRGB2YUV();
     void setYUV2RGB();
+
+    bool operator==(const SkColorMatrix& other) const {
+        return 0 == memcmp(fMat, other.fMat, sizeof(fMat));
+    }
+
+    bool operator!=(const SkColorMatrix& other) const { return !((*this) == other); }
 };
 
 #endif

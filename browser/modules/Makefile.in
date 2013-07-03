@@ -11,31 +11,10 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_JS_MODULES = \
-	BrowserNewTabPreloader.jsm \
-	openLocationLastURL.jsm \
-	NetworkPrioritizer.jsm \
-	offlineAppCache.jsm \
-	SignInToWebsite.jsm \
-	SitePermissions.jsm \
-	webappsUI.jsm \
-	webrtcUI.jsm \
-	Social.jsm \
-	SharedFrame.jsm \
-	$(NULL)
-
 EXTRA_PP_JS_MODULES = \
 	AboutHomeUtils.jsm \
 	RecentWindow.jsm \
 	$(NULL)
-
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXTRA_JS_MODULES += \
-	WindowsJumpLists.jsm \
-	WindowsPreviewPerTab.jsm \
-	$(NULL)
-endif
 
 ifdef MOZILLA_OFFICIAL
 DEFINES += -DMOZILLA_OFFICIAL=1

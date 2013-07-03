@@ -2416,9 +2416,9 @@ nsHttpConnectionMgr::TimeoutTickCB(const nsACString &key,
                 LOG(("Force timeout of half open to %s after %.2fms.\n",
                      ent->mConnInfo->HashKey().get(), delta));
                 if (half->SocketTransport())
-                    half->SocketTransport()->Close(NS_ERROR_NET_TIMEOUT);
+                    half->SocketTransport()->Close(NS_ERROR_ABORT);
                 if (half->BackupTransport())
-                    half->BackupTransport()->Close(NS_ERROR_NET_TIMEOUT);
+                    half->BackupTransport()->Close(NS_ERROR_ABORT);
             }
 
             // If this half open hangs around for 5 seconds after we've closed() it

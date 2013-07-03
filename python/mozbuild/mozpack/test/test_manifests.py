@@ -46,3 +46,6 @@ class TestPurgeManifest(TestWithTmpDir):
         with self.assertRaises(UnreadablePurgeManifest):
             PurgeManifest.from_path(p)
 
+
+if __name__ == '__main__':
+    mozunit.main()

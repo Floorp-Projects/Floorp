@@ -33,10 +33,12 @@ static void vertline(int y, int stopy, SkFixed fx, SkFixed dx,
     } while (++y < stopy);
 }
 
+#ifdef SK_DEBUG
 static bool canConvertFDot6ToFixed(SkFDot6 x) {
     const int maxDot6 = SK_MaxS32 >> (16 - 6);
     return SkAbs32(x) <= maxDot6;
 }
+#endif
 
 void SkScan::HairLineRgn(const SkPoint& pt0, const SkPoint& pt1,
                          const SkRegion* clip, SkBlitter* blitter) {
@@ -191,10 +193,6 @@ void SkScan::HairRect(const SkRect& rect, const SkRasterClip& clip,
 #include "SkPath.h"
 #include "SkGeometry.h"
 
-static bool quad_too_curvy(const SkPoint pts[3]) {
-    return true;
-}
-
 static int compute_int_quad_dist(const SkPoint pts[3]) {
     // compute the vector between the control point ([1]) and the middle of the
     // line connecting the start and end ([0] and [2])
@@ -218,7 +216,7 @@ static void hairquad(const SkPoint pts[3], const SkRegion* clip, SkBlitter* blit
                      void (*lineproc)(const SkPoint&, const SkPoint&, const SkRegion* clip, SkBlitter*))
 {
 #if 1
-    if (level > 0 && quad_too_curvy(pts))
+    if (level > 0)
     {
         SkPoint tmp[5];
 
@@ -245,15 +243,10 @@ static void hairquad(const SkPoint pts[3], const SkRegion* clip, SkBlitter* blit
 #endif
 }
 
-static bool cubic_too_curvy(const SkPoint pts[4])
-{
-    return true;
-}
-
 static void haircubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* blitter, int level,
                       void (*lineproc)(const SkPoint&, const SkPoint&, const SkRegion*, SkBlitter*))
 {
-    if (level > 0 && cubic_too_curvy(pts))
+    if (level > 0)
     {
         SkPoint tmp[7];
 
@@ -276,7 +269,6 @@ static void hair_path(const SkPath& path, const SkRasterClip& rclip, SkBlitter* 
     }
 
     SkAAClipBlitterWrapper wrap;
-    const SkIRect* clipR = NULL;
     const SkRegion* clip = NULL;
 
     {
@@ -288,7 +280,6 @@ static void hair_path(const SkPath& path, const SkRasterClip& rclip, SkBlitter* 
             return;
         }
         if (!rclip.quickContains(ibounds)) {
-            clipR = &rclip.getBounds();
             if (rclip.isBW()) {
                 clip = &rclip.bwRgn();
             } else {
