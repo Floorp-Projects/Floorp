@@ -6,6 +6,7 @@
 
 #include "nsDOMTextEvent.h"
 #include "nsPrivateTextRange.h"
+#include "prtime.h"
 
 nsDOMTextEvent::nsDOMTextEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,
