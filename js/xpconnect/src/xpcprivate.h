@@ -3257,8 +3257,6 @@ public:
         return mStack.IsEmpty() ? NULL : mStack[mStack.Length() - 1].cx;
     }
 
-    JSContext *Pop();
-    bool Push(JSContext *cx);
     JSContext *GetSafeJSContext();
     bool HasJSContext(JSContext *cx);
 
@@ -3266,6 +3264,15 @@ public:
     { return &mStack; }
 
 private:
+    friend class mozilla::AutoCxPusher;
+    friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);;
+    friend void xpc::PopJSContextNoScriptContext();
+
+    // We make these private so that stack manipulation can only happen
+    // through one of the above friends.
+    JSContext *Pop();
+    bool Push(JSContext *cx);
+
     AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
     JSContext*  mOwnSafeJSContext;
