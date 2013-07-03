@@ -14,7 +14,6 @@
 #include "jslibmath.h"
 #include "jsinfer.h"
 #include "jsinferinlines.h"
-#include "jstypedarrayinlines.h"
 #include "ion/TypePolicy.h"
 #include "ion/IonAllocPolicy.h"
 #include "ion/InlineList.h"
@@ -24,6 +23,7 @@
 #include "ion/Bailouts.h"
 #include "ion/FixedList.h"
 #include "ion/CompilerRoot.h"
+#include "vm/ScopeObject.h"
 
 namespace js {
 namespace ion {

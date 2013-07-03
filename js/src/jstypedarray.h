@@ -579,6 +579,16 @@ class DataViewObject : public ArrayBufferViewObject
     static const JSFunctionSpec jsfuncs[];
 };
 
+static inline int32_t
+ClampIntForUint8Array(int32_t x)
+{
+    if (x < 0)
+        return 0;
+    if (x > 255)
+        return 255;
+    return x;
+}
+
 } // namespace js
 
 template <>

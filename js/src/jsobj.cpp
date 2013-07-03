@@ -44,7 +44,6 @@
 #include "jsboolinlines.h"
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
-#include "jstypedarrayinlines.h"
 #include "builtin/Iterator-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/ArgumentsObject-inl.h"

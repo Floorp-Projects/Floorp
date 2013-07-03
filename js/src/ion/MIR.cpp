@@ -17,8 +17,10 @@
 #include "ion/IonSpewer.h"
 #include "jsnum.h"
 #include "jsstr.h"
+
 #include "jsatominlines.h"
-#include "jstypedarrayinlines.h"
+
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::ion;
