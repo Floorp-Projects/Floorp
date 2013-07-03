@@ -36,7 +36,6 @@
 #include "jsreflect.h"
 #include "jsscript.h"
 #include "jstypedarray.h"
-#include "jstypedarrayinlines.h"
 #include "jsworkers.h"
 #include "jswrapper.h"
 #include "perf/jsperf.h"

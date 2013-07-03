@@ -18,7 +18,6 @@
 #include "ion/Ion.h"
 
 #include "jsfuninlines.h"
-#include "jstypedarrayinlines.h"
 
 using namespace js;
 using namespace js::ion;

@@ -17,7 +17,6 @@
 #include "vm/Interpreter.h"
 
 #include "jsfuninlines.h"
-#include "jstypedarrayinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
