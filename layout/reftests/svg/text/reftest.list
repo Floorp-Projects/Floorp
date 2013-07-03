@@ -176,6 +176,7 @@ fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg
 HTTP(../..) == filter-applied.svg filter-applied-ref.svg
 
 # selection
+needs-focus == deselectAll.svg deselectAll-ref.svg
 needs-focus == selectSubString.svg selectSubString-ref.svg
 needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
