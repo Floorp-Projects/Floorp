@@ -325,6 +325,10 @@ void
 js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
 {
     HeapSlot *old = *pSlotsElems;
+
+    if (!isInside(old))
+        return;
+
     /*
      * If the elements buffer is zero length, the "first" item could be inside
      * of the next object or past the end of the allocable area.  However,
@@ -333,18 +337,8 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
      * end of the allocable area. Thus, it is always safe to read the first
      * word of |old| here.
      */
-    JS_ASSERT(isInside(old));
     *pSlotsElems = *reinterpret_cast<HeapSlot **>(old);
     JS_ASSERT(!isInside(*pSlotsElems));
-}
-
-void
-js::Nursery::forwardMovedBuffers(JSRuntime *rt)
-{
-    /*
-    for (current = rt->list; ; current = current->next)
-        forwardBufferPointer(current->item);
-    */
 }
 
 void *
@@ -603,9 +597,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
         JSObject *obj = static_cast<JSObject*>(p->forwardingAddress());
         JS_TraceChildren(&trc, obj, MapAllocToTraceKind(obj->tenuredGetAllocKind()));
     }
-
-    /* Forward any slot or elements pointers that were baked into jit code. */
-    forwardMovedBuffers(rt);
 
     /* Resize the nursery. */
     double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
