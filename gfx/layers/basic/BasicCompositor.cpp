@@ -78,6 +78,7 @@ protected:
   IntSize mSize;
 };
 
+void
 DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, PlanarYCbCrImage::Data& aData)
 {
   aData.mYChannel = aDeserializer.GetYData();
@@ -141,8 +142,8 @@ public:
 
     mSize = IntSize(size.width, size.height);
     mFormat =
-      (format == gfxASurface::CONTENT_COLOR_ALPHA) ? FORMAT_B8G8R8A8 :
-                                                     FORMAT_B8G8R8X8;
+      (format == gfxASurface::ImageFormatARGB32) ? FORMAT_B8G8R8A8 :
+                                                   FORMAT_B8G8R8X8;
   }
 
 };
