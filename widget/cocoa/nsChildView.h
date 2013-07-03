@@ -496,7 +496,7 @@ public:
   NS_IMETHOD        StartComplexTextInputForCurrentEvent();
 
   virtual nsTransparencyMode GetTransparencyMode();
-  virtual void                SetTransparencyMode(nsTransparencyMode aMode);
+  virtual void SetTransparencyMode(nsTransparencyMode aMode);
 
   virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                             int32_t aNativeKeyCode,
