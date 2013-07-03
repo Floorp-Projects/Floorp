@@ -3572,7 +3572,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     }
 
     // Check for TypedArray[int] => Number accesses.
-    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber() &&
+    if (obj->is<TypedArrayObject>() && rhs.isInt32() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
         Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
@@ -3592,7 +3592,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     // GetElem operations on non-native objects other than typed arrays cannot
     // be cached by either Baseline or Ion. Indicate this in the cache so that
     // Ion does not generate a cache for this op.
-    if (!obj->isNative() && !obj->isTypedArray())
+    if (!obj->isNative() && !obj->is<TypedArrayObject>())
         stub->noteNonNativeAccess();
 
     return true;
@@ -4197,7 +4197,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         index.isInt32() && index.toInt32() >= 0 &&
         !rhs.isMagic(JS_ELEMENTS_HOLE))
     {
-        JS_ASSERT(!obj->isTypedArray());
+        JS_ASSERT(!obj->is<TypedArrayObject>());
 
         bool addingCase;
         size_t protoDepth;
@@ -4241,7 +4241,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         return true;
     }
 
-    if (obj->isTypedArray() && index.isInt32() && rhs.isNumber()) {
+    if (obj->is<TypedArrayObject>() && index.isInt32() && rhs.isNumber()) {
         Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
         if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
             return true;
@@ -5181,7 +5181,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         stub->addNewStub(newStub);
         return true;
     }
-    if (obj->isTypedArray()) {
+    if (obj->is<TypedArrayObject>()) {
         JS_ASSERT(res.isInt32());
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(TypedArray.length) stub");
         ICGetProp_TypedArrayLength::Compiler compiler(cx);

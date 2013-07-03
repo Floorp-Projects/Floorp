@@ -1173,7 +1173,7 @@ GetSingletonPropertyType(JSContext *cx, JSObject *rawObjArg, HandleId id)
     if (JSID_IS_VOID(id))
         return Type::UnknownType();
 
-    if (obj->isTypedArray()) {
+    if (obj->is<TypedArrayObject>()) {
         if (id == id_length(cx))
             return Type::Int32Type();
         obj = obj->getProto();

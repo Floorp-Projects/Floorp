@@ -1659,7 +1659,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     obj_enumerate(JSContext *cx, HandleObject tarray, JSIterateOp enum_op,
                   MutableHandleValue statep, MutableHandleId idp)
     {
-        JS_ASSERT(tarray->isTypedArray());
+        JS_ASSERT(tarray->is<TypedArrayObject>());
 
         uint32_t index;
         switch (enum_op) {
@@ -2068,7 +2068,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         RootedObject arg0(cx, args[0].toObjectOrNull());
-        if (arg0->isTypedArray()) {
+        if (arg0->is<TypedArrayObject>()) {
             if (arg0->as<TypedArrayObject>().length() > tarray->length() - offset) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
                 return false;
@@ -2217,7 +2217,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     fromArray(JSContext *cx, HandleObject other)
     {
         uint32_t len;
-        if (other->isTypedArray()) {
+        if (other->is<TypedArrayObject>()) {
             len = other->as<TypedArrayObject>().length();
         } else if (!GetLengthProperty(cx, other, &len)) {
             return NULL;
@@ -2322,7 +2322,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         Rooted<TypedArrayObject*> thisTypedArray(cx, &thisTypedArrayObj->as<TypedArrayObject>());
         JS_ASSERT(offset <= thisTypedArray->length());
         JS_ASSERT(len <= thisTypedArray->length() - offset);
-        if (ar->isTypedArray())
+        if (ar->is<TypedArrayObject>())
             return copyFromTypedArray(cx, thisTypedArray, ar, offset);
 
         const Value *src = NULL;
@@ -3977,14 +3977,14 @@ JS_FRIEND_API(JSBool)
 JS_IsTypedArrayObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->isTypedArray() : false;
+    return obj ? obj->is<TypedArrayObject>() : false;
 }
 
 JS_FRIEND_API(JSBool)
 JS_IsArrayBufferViewObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? (obj->isTypedArray() || obj->is<DataViewObject>()) : false;
+    return obj ? obj->is<ArrayBufferViewObject>() : false;
 }
 
 JS_FRIEND_API(uint32_t)
@@ -4105,7 +4105,7 @@ JS_GetArrayBufferViewType(JSObject *obj)
     if (!obj)
         return ArrayBufferView::TYPE_MAX;
 
-    if (obj->isTypedArray())
+    if (obj->is<TypedArrayObject>())
         return static_cast<JSArrayBufferViewType>(obj->as<TypedArrayObject>().type());
     else if (obj->is<DataViewObject>())
         return ArrayBufferView::TYPE_DATAVIEW;
