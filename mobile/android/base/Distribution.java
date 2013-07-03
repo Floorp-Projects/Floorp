@@ -81,11 +81,8 @@ public final class Distribution {
                     File distDir = new File("/system/" + context.getPackageName() + "/distribution");
                     if (distDir.exists()) {
                         distributionSet = true;
-<<<<<<< local
                         distPath = distDir.getPath();
                         settings.edit().putString(pathKeyName, distPath).commit();
-=======
->>>>>>> other
                     }
                 }
 
