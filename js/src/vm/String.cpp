@@ -6,6 +6,7 @@
 
 #include "vm/String-inl.h"
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
@@ -18,6 +19,7 @@ using namespace js;
 
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
+using mozilla::RoundUpPow2;
 
 bool
 JSString::isShort() const

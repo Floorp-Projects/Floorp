@@ -8,6 +8,7 @@
 #define ds_LifoAlloc_h
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -175,7 +176,7 @@ class LifoAlloc
     BumpChunk *getOrCreateChunk(size_t n);
 
     void reset(size_t defaultChunkSize) {
-        JS_ASSERT(RoundUpPow2(defaultChunkSize) == defaultChunkSize);
+        JS_ASSERT(mozilla::RoundUpPow2(defaultChunkSize) == defaultChunkSize);
         first = latest = last = NULL;
         defaultChunkSize_ = defaultChunkSize;
         markCount = 0;

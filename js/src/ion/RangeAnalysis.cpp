@@ -24,6 +24,7 @@ using namespace js;
 using namespace js::ion;
 
 using mozilla::Abs;
+using mozilla::CountLeadingZeroes32;
 using mozilla::ExponentComponent;
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
@@ -466,9 +467,9 @@ Range *
 Range::or_(const Range *lhs, const Range *rhs)
 {
     // When one operand is always 0 or always -1, it's a special case where we
-    // can compute a fully precise result. Handling these up front also protects
-    // the code below from calling js_bitscan_clz32 with a zero operand or from
-    // shifting an int32_t by 32.
+    // can compute a fully precise result. Handling these up front also
+    // protects the code below from calling CountLeadingZeroes32 with a zero
+    // operand or from shifting an int32_t by 32.
     if (lhs->lower_ == lhs->upper_) {
         if (lhs->lower_ == 0)
             return new Range(*rhs);
@@ -482,8 +483,8 @@ Range::or_(const Range *lhs, const Range *rhs)
             return new Range(*rhs);;
     }
 
-    // The code below uses js_bitscan_clz32, which has undefined behavior if its
-    // operand is 0. We rely on the code above to protect it.
+    // The code below uses CountLeadingZeroes32, which has undefined behavior
+    // if its operand is 0. We rely on the code above to protect it.
     JS_ASSERT_IF(lhs->lower_ >= 0, lhs->upper_ != 0);
     JS_ASSERT_IF(rhs->lower_ >= 0, rhs->upper_ != 0);
     JS_ASSERT_IF(lhs->upper_ < 0, lhs->lower_ != -1);
@@ -496,17 +497,17 @@ Range::or_(const Range *lhs, const Range *rhs)
         // Both operands are non-negative, so the result won't be less than either.
         lower = Max(lhs->lower_, rhs->lower_);
         // The result will have leading zeros where both operands have leading zeros.
-        upper = UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
-                                  js_bitscan_clz32(rhs->upper_));
+        upper = UINT32_MAX >> Min(CountLeadingZeroes32(lhs->upper_),
+                                  CountLeadingZeroes32(rhs->upper_));
     } else {
         // The result will have leading ones where either operand has leading ones.
         if (lhs->upper_ < 0) {
-            unsigned leadingOnes = js_bitscan_clz32(~lhs->lower_);
+            unsigned leadingOnes = CountLeadingZeroes32(~lhs->lower_);
             lower = Max(lower, int64_t(~int32_t(UINT32_MAX >> leadingOnes)));
             upper = -1;
         }
         if (rhs->upper_ < 0) {
-            unsigned leadingOnes = js_bitscan_clz32(~rhs->lower_);
+            unsigned leadingOnes = CountLeadingZeroes32(~rhs->lower_);
             lower = Max(lower, int64_t(~int32_t(UINT32_MAX >> leadingOnes)));
             upper = -1;
         }
@@ -543,7 +544,7 @@ Range::xor_(const Range *lhs, const Range *rhs)
 
     // Handle cases where lhs or rhs is always zero specially, because they're
     // easy cases where we can be perfectly precise, and because it protects the
-    // js_bitscan_clz32 calls below from seeing 0 operands, which would be
+    // CountLeadingZeroes32 calls below from seeing 0 operands, which would be
     // undefined behavior.
     int32_t lower = INT32_MIN;
     int32_t upper = INT32_MAX;
@@ -560,8 +561,8 @@ Range::xor_(const Range *lhs, const Range *rhs)
         // set all bits that don't correspond to leading zero bits in the
         // other to one. For each one, this gives an upper bound for the
         // result, so we can take the minimum between the two.
-        unsigned lhsLeadingZeros = js_bitscan_clz32(lhsUpper);
-        unsigned rhsLeadingZeros = js_bitscan_clz32(rhsUpper);
+        unsigned lhsLeadingZeros = CountLeadingZeroes32(lhsUpper);
+        unsigned rhsLeadingZeros = CountLeadingZeroes32(rhsUpper);
         upper = Min(rhsUpper | int32_t(UINT32_MAX >> lhsLeadingZeros),
                     lhsUpper | int32_t(UINT32_MAX >> rhsLeadingZeros));
     }

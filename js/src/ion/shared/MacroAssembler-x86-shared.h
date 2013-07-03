@@ -7,6 +7,7 @@
 #ifndef ion_shared_MacroAssembler_x86_shared_h
 #define ion_shared_MacroAssembler_x86_shared_h
 
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 
 #ifdef JS_CPU_X86

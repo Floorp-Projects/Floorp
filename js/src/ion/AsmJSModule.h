@@ -7,6 +7,8 @@
 #ifndef ion_AsmJSModule_h
 #define ion_AsmJSModule_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #ifdef JS_ION
 
 #include "gc/Marking.h"
@@ -689,8 +691,7 @@ class AsmJSModule
             return;
 
         ion::AutoFlushCache afc("patchBoundsCheck");
-        uint32_t bits;
-        JS_CEILING_LOG2(bits, heapSize);
+        uint32_t bits = mozilla::CeilingLog2(heapSize);
 
         for (unsigned i = 0; i < boundsChecks_.length(); i++)
             ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(boundsChecks_[i].offset() + code_));
