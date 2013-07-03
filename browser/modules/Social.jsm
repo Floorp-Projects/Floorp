@@ -162,6 +162,23 @@ this.Social = {
       if (topic == "provider-added" || topic == "provider-removed") {
         this._updateProviderCache(data);
         Services.obs.notifyObservers(null, "social:providers-changed", null);
+        return;
+      }
+      if (topic == "provider-update") {
+        // a provider has self-updated its manifest, we need to update our
+        // cache and possibly reload if it was the current provider.
+        let provider = data;
+        SocialService.getOrderedProviderList(function(providers) {
+          Social._updateProviderCache(providers);
+          Services.obs.notifyObservers(null, "social:providers-changed", null);
+          // if we need a reload, do it now
+          if (provider.enabled) {
+            Social.enabled = false;
+            Services.tm.mainThread.dispatch(function() {
+              Social.enabled = true;
+            }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+          }
+        });
       }
     }.bind(this));
   },
