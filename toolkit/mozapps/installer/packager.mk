@@ -357,6 +357,19 @@ ifdef MOZ_ENABLE_SZIP
 SZIP_LIBRARIES := $(ASSET_SO_LIBRARIES)
 endif
 
+# Fennec's OMNIJAR_NAME can include a directory; for example, it might
+# be "assets/omni.ja". This path specifies where the omni.ja file
+# lives in the APK, but should not root the resources it contains
+# under assets/ (i.e., resources should not live at chrome://assets/).
+# packager.py writes /omni.ja in order to be consistent with the
+# layout expected by language repacks. Therefore, we move it to the
+# correct path here, in INNER_MAKE_PACKAGE. See comment about
+# OMNIJAR_NAME in configure.in.
+
+# OMNIJAR_DIR is './' for "omni.ja", 'assets/' for "assets/omni.ja".
+OMNIJAR_DIR := $(dir $(OMNIJAR_NAME))
+OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
+
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   $(if $(ALREADY_SZIPPED),,$(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(MOZ_SZIP_FLAGS) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && )) \
@@ -369,7 +382,9 @@ INNER_MAKE_PACKAGE	= \
     rm $(_ABS_DIST)/gecko.ap_ && \
     $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(ASSET_SO_LIBRARIES) && \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) $(SZIP_LIBRARIES) && \
-    $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(OMNIJAR_NAME)) && \
+    $(if $(filter-out ./,$(OMNIJAR_DIR)), \
+      mkdir -p $(OMNIJAR_DIR) && mv $(OMNIJAR_NAME) $(OMNIJAR_DIR) && ) \
+    $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(OMNIJAR_DIR)$(OMNIJAR_NAME)) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
   cp $(_ABS_DIST)/gecko.ap_ $(_ABS_DIST)/gecko.apk && \
   $(ZIP) -j0 $(_ABS_DIST)/gecko.apk $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
@@ -378,13 +393,21 @@ INNER_MAKE_PACKAGE	= \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE)
 
+# Language repacks root the resources contained in assets/omni.ja
+# under assets/, but the repacks expect them to be rooted at /.
+# Therefore, we we move the omnijar back to / so the resources are
+# under the root here, in INNER_UNMAKE_PACKAGE. See comments about
+# OMNIJAR_NAME earlier in this file and in configure.in.
+
 INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \
   ( cd $(MOZ_PKG_DIR) && \
     $(UNZIP) $(UNPACKAGE) && \
     mv lib/$(ABI_DIR)/libmozglue.so . && \
     mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
-    rm -rf lib/$(ABI_DIR) )
+    rm -rf lib/$(ABI_DIR) \
+    $(if $(filter-out ./,$(OMNIJAR_DIR)), \
+      && mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME)) )
 endif
 
 ifeq ($(MOZ_PKG_FORMAT),DMG)
@@ -584,8 +607,12 @@ endif
 
 export NO_PKG_FILES USE_ELF_HACK ELF_HACK_FLAGS
 
+# Override the value of OMNIJAR_NAME from config.status with the value
+# set earlier in this file.
+
 stage-package: $(MOZ_PKG_MANIFEST)
 	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
+	OMNIJAR_NAME=$(OMNIJAR_NAME) \
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) \
 		--format $(MOZ_PACKAGER_FORMAT) \
 		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \
