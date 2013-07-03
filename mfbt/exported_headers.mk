@@ -32,6 +32,7 @@ EXPORTS_mozilla += \
   MemoryChecking.h \
   MemoryReporting.h \
   MSStdInt.h \
+  Move.h \
   NullPtr.h \
   PodOperations.h \
   Poison.h \
