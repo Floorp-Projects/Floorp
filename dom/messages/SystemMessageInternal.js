@@ -47,6 +47,11 @@ function debug(aMsg) {
   // dump("-- SystemMessageInternal " + Date.now() + " : " + aMsg + "\n");
 }
 
+
+const MSG_SENT_SUCCESS = 0;
+const MSG_SENT_FAILURE_PERM_DENIED = 1;
+const MSG_SENT_FAILURE_APP_NOT_RUNNING = 2;
+
 // Implementation of the component used by internal users.
 
 function SystemMessageInternal() {
@@ -158,13 +163,16 @@ SystemMessageInternal.prototype = {
     debug("Sending " + aType + " " + JSON.stringify(aMessage) +
       " for " + aPageURI.spec + " @ " + aManifestURI.spec);
 
+    let result = this._sendMessageCommon(aType,
+                                         aMessage,
+                                         messageID,
+                                         aPageURI.spec,
+                                         aManifestURI.spec);
+    debug("Returned status of sending message: " + result);
+
     // Don't need to open the pages and queue the system message
     // which was not allowed to be sent.
-    if (!this._sendMessageCommon(aType,
-                                 aMessage,
-                                 messageID,
-                                 aPageURI.spec,
-                                 aManifestURI.spec)) {
+    if (result === MSG_SENT_FAILURE_PERM_DENIED) {
       return;
     }
 
@@ -173,8 +181,10 @@ SystemMessageInternal.prototype = {
       // Queue this message in the corresponding pages.
       this._queueMessage(page, aMessage, messageID);
 
-      // Open app pages to handle their pending messages.
-      this._openAppPage(page, aMessage);
+        if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
+          // Don't open the page again if we already sent the message to it.
+          this._openAppPage(page, aMessage);
+        }
     }
   },
 
@@ -196,21 +206,27 @@ SystemMessageInternal.prototype = {
     // Find pages that registered an handler for this type.
     this._pages.forEach(function(aPage) {
       if (aPage.type == aType) {
+        let result = this._sendMessageCommon(aType,
+                                             aMessage,
+                                             messageID,
+                                             aPage.uri,
+                                             aPage.manifest);
+        debug("Returned status of sending message: " + result);
+
+
         // Don't need to open the pages and queue the system message
         // which was not allowed to be sent.
-        if (!this._sendMessageCommon(aType,
-                                     aMessage,
-                                     messageID,
-                                     aPage.uri,
-                                     aPage.manifest)) {
+        if (result === MSG_SENT_FAILURE_PERM_DENIED) {
           return;
         }
 
         // Queue this message in the corresponding pages.
         this._queueMessage(aPage, aMessage, messageID);
 
-        // Open app pages to handle their pending messages.
-        this._openAppPage(aPage, aMessage);
+        if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
+          // Open app pages to handle their pending messages.
+          this._openAppPage(aPage, aMessage);
+        }
       }
     }, this);
   },
@@ -525,7 +541,7 @@ SystemMessageInternal.prototype = {
           .isSystemMessagePermittedToSend(aType,
                                           aPageURI,
                                           aManifestURI)) {
-      return false;
+      return MSG_SENT_FAILURE_PERM_DENIED;
     }
 
     let appPageIsRunning = false;
@@ -571,9 +587,11 @@ SystemMessageInternal.prototype = {
       // message when the page finishes handling the system message with other
       // pending messages. At that point, we'll release the lock we acquired.
       this._acquireCpuWakeLock(pageKey);
+      return MSG_SENT_FAILURE_APP_NOT_RUNNING;
+    } else {
+      return MSG_SENT_SUCCESS;
     }
 
-    return true;
   },
 
   classID: Components.ID("{70589ca5-91ac-4b9e-b839-d6a88167d714}"),
