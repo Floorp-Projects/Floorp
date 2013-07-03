@@ -223,7 +223,7 @@ SessionStore.prototype = {
 
           // Do a restore, triggered by Java
           let data = JSON.parse(aData);
-          this.restoreLastSession(data.restoringOOM, data.sessionString);
+          this.restoreLastSession(data.normalRestore, data.sessionString);
         } else if (this._shouldRestore) {
           // Do a restore triggered by Gecko (e.g., if
           // browser.sessionstore.resume_session_once is true). In these cases,
@@ -956,7 +956,7 @@ SessionStore.prototype = {
     return this._shouldRestore;
   },
 
-  restoreLastSession: function ss_restoreLastSession(aRestoringOOM, aSessionString) {
+  restoreLastSession: function ss_restoreLastSession(aNormalRestore, aSessionString) {
     let self = this;
 
     function restoreWindow(data) {
@@ -972,10 +972,13 @@ SessionStore.prototype = {
     }
 
     try {
-      if (!aRestoringOOM && !this._shouldRestore) {
-        // If we're here, it means we're restoring from a crash (not an OOM
-        // kill). Check prefs and other conditions to make sure we want to
-        // continue with the restore.
+      if (!aNormalRestore && !this._shouldRestore) {
+        // If we're here, it means we're restoring from a crash. Check prefs
+        // and other conditions to make sure we want to continue with the
+        // restore.
+        // TODO: Since the tabs have already been created as stubs after
+        // crashing, it's too late to try to abort the restore here. This logic
+        // should be moved to Java; see bug 889722.
 
         // Disable crash recovery if it has been turned off.
         if (!Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash")) {
