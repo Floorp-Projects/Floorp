@@ -1,0 +1,39 @@
+From: George Wright <gwright@mozilla.com>
+Date: Thu, 20 Jun 2013 09:21:21 -0400
+Subject: Bug 848491 - Re-apply bug 795538 - Ensure we use the correct colour (and alpha) for the clamp values r=mattwoodrow
+
+
+diff --git a/gfx/skia/src/effects/gradients/SkGradientShader.cpp b/gfx/skia/src/effects/gradients/SkGradientShader.cpp
+index 27a9c46..ce077b5 100644
+--- a/gfx/skia/src/effects/gradients/SkGradientShader.cpp
++++ b/gfx/skia/src/effects/gradients/SkGradientShader.cpp
+@@ -500,15 +500,17 @@ const SkPMColor* SkGradientShaderBase::getCache32() const {
+     }
+ 
+     // Write the clamp colours into the first and last entries of fCache32
+-    fCache32[kCache32ClampLower] = SkPackARGB32(fCacheAlpha,
+-                                                SkColorGetR(fOrigColors[0]),
+-                                                SkColorGetG(fOrigColors[0]),
+-                                                SkColorGetB(fOrigColors[0]));
+-
+-    fCache32[kCache32ClampUpper] = SkPackARGB32(fCacheAlpha,
+-                                                SkColorGetR(fOrigColors[fColorCount - 1]),
+-                                                SkColorGetG(fOrigColors[fColorCount - 1]),
+-                                                SkColorGetB(fOrigColors[fColorCount - 1]));
++    fCache32[kCache32ClampLower] = SkPremultiplyARGBInline(SkMulDiv255Round(SkColorGetA(fOrigColors[0]),
++                                                                            fCacheAlpha),
++                                                           SkColorGetR(fOrigColors[0]),
++                                                           SkColorGetG(fOrigColors[0]),
++                                                           SkColorGetB(fOrigColors[0]));
++
++    fCache32[kCache32ClampUpper] = SkPremultiplyARGBInline(SkMulDiv255Round(SkColorGetA(fOrigColors[fColorCount - 1]),
++                                                                            fCacheAlpha),
++                                                           SkColorGetR(fOrigColors[fColorCount - 1]),
++                                                           SkColorGetG(fOrigColors[fColorCount - 1]),
++                                                           SkColorGetB(fOrigColors[fColorCount - 1]));
+ 
+     return fCache32;
+ }
+-- 
+1.7.11.7
+
