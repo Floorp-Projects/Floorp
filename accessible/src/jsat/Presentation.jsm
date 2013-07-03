@@ -240,12 +240,12 @@ AndroidPresenter.prototype = {
         this._braillePresenter = new BraillePresenter();
       }
       brailleText = this._braillePresenter.pivotChanged(aContext, aReason).
-                         details.text;
+                         details;
     }
 
     androidEvents.push({eventType: (isExploreByTouch) ?
                           this.ANDROID_VIEW_HOVER_ENTER : focusEventType,
-                        text: UtteranceGenerator.genForContext(aContext),
+                        text: UtteranceGenerator.genForContext(aContext).output,
                         bounds: aContext.bounds,
                         clickable: aContext.accessible.actionCount > 0,
                         checkable: !!(state &
@@ -397,7 +397,7 @@ SpeechPresenter.prototype = {
         actions: [
           {method: 'playEarcon', data: 'tick', options: {}},
           {method: 'speak',
-            data: UtteranceGenerator.genForContext(aContext).join(' '),
+            data: UtteranceGenerator.genForContext(aContext).output.join(' '),
             options: {enqueue: true}}
         ]
       }
@@ -452,9 +452,10 @@ BraillePresenter.prototype = {
       return null;
     }
 
-    let text = BrailleGenerator.genForContext(aContext);
+    let brailleOutput = BrailleGenerator.genForContext(aContext);
+    brailleOutput.output = brailleOutput.output.join(' ');
 
-    return { type: this.type, details: {text: text.join(' ')} };
+    return { type: this.type, details: brailleOutput };
   }
 
 };

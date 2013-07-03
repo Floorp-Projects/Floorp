@@ -47,9 +47,12 @@ this.OutputGenerator = {
    * @param {PivotContext} aContext object that generates and caches
    *    context information for a given accessible and its relationship with
    *    another accessible.
-   * @return {Array} An array of strings. Depending on the utterance order,
+   * @return {Object} An object that neccessarily has an output property which
+   *    is an array of strings. Depending on the utterance order,
    *    the strings describe the context for an accessible object either
    *    starting from the accessible's ancestry or accessible's subtree.
+   *    The object may also have properties specific to the type of output
+   *    generated.
    */
   genForContext: function genForContext(aContext) {
     let output = [];
@@ -65,8 +68,7 @@ this.OutputGenerator = {
       return (nameRule & NAME_FROM_SUBTREE_RULE) &&
         (Utils.getAttributes(aAccessible)['explicit-name'] === 'true');
     };
-    let outputOrder = typeof gUtteranceOrder.value == 'number' ?
-                      gUtteranceOrder.value : this.defaultOutputOrder;
+    let outputOrder = this._getOutputOrder();
     let contextStart = this._getContextStart(aContext);
 
     if (outputOrder === OUTPUT_DESC_FIRST) {
@@ -84,7 +86,7 @@ this.OutputGenerator = {
     // Clean up the white space.
     let trimmed;
     output = [trimmed for (word of output) if (trimmed = word.trim())];
-    return output;
+    return {output: output};
   },
 
 
@@ -164,8 +166,7 @@ this.OutputGenerator = {
     }
 
     if (name) {
-      let outputOrder = typeof gUtteranceOrder.value == 'number' ?
-                        gUtteranceOrder.value : this.defaultOutputOrder;
+      let outputOrder = this._getOutputOrder();
       aOutput[outputOrder === OUTPUT_DESC_FIRST ?
         'push' : 'unshift'](name);
     }
@@ -183,6 +184,11 @@ this.OutputGenerator = {
     let str = gStringBundle.GetStringFromName(this._getOutputName(aString));
     str = PluralForm.get(aCount, str);
     return str.replace('#1', aCount);
+  },
+
+  _getOutputOrder: function _getOutputOrder() {
+    return typeof gUtteranceOrder.value === 'number' ?
+           gUtteranceOrder.value : this.defaultOutputOrder;
   },
 
   roleRuleMap: {
@@ -561,6 +567,20 @@ this.BrailleGenerator = {
   __proto__: OutputGenerator,
 
   defaultOutputOrder: OUTPUT_DESC_LAST,
+
+  genForContext: function genForContext(aContext) {
+    let output = OutputGenerator.genForContext.apply(this, arguments);
+    let outputOrder = this._getOutputOrder();
+
+    let acc = aContext.accessible;
+    if (acc instanceof Ci.nsIAccessibleText) {
+      output.endOffset = outputOrder === OUTPUT_DESC_FIRST ?
+                         output.output.join(' ').length : acc.characterCount;
+      output.startOffset = output.endOffset - acc.characterCount;
+    }
+
+    return output;
+  },
 
   objectOutputFunctions: {
 
