@@ -1033,21 +1033,6 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
   return true;
 }
 
-// static
-void
-nsFrameScriptExecutor::Traverse(nsFrameScriptExecutor *tmp,
-                                nsCycleCollectionTraversalCallback &cb)
-{
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-}
-
-// static
-void
-nsFrameScriptExecutor::Unlink(nsFrameScriptExecutor* aTmp)
-{
-  aTmp->mGlobal = nullptr;
-}
-
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 
 nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
