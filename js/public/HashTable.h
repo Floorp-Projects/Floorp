@@ -648,8 +648,8 @@ class HashTableEntry
     }
 
     void swap(HashTableEntry *other) {
-        Swap(keyHash, other->keyHash);
-        Swap(mem, other->mem);
+        mozilla::Swap(keyHash, other->keyHash);
+        mozilla::Swap(mem, other->mem);
     }
 
     T &get() { JS_ASSERT(isLive()); return *mem.addr(); }
