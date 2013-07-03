@@ -1042,7 +1042,6 @@ class JSObject : public js::ObjectImpl
     /* Direct subtypes of JSObject: */
     inline bool isObject()           const { return hasClass(&js::ObjectClass); }
     using js::ObjectImpl::isProxy;
-    inline bool isTypedArray()       const;
 
     /* Subtypes of Proxy. */
     inline bool isWrapper()                 const;

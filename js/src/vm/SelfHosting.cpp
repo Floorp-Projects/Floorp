@@ -443,7 +443,7 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
 
         JS_ASSERT(args[arri].isObject());
         JS_ASSERT(args[arri].toObject().isNative() ||
-                  args[arri].toObject().isTypedArray());
+                  args[arri].toObject().is<TypedArrayObject>());
         JS_ASSERT(args[idxi].isInt32());
 
         RootedObject arrobj(cx, &args[arri].toObject());

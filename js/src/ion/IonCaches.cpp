@@ -1213,7 +1213,7 @@ GetPropertyIC::attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
 bool
 GetPropertyIC::attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
 {
-    JS_ASSERT(obj->isTypedArray());
+    JS_ASSERT(obj->is<TypedArrayObject>());
     JS_ASSERT(!idempotent());
 
     Label failures;
@@ -1481,7 +1481,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
                 // The next execution should cause an invalidation because the type
                 // does not fit.
                 isCacheable = false;
-            } else if (obj->isTypedArray() && !cache.hasTypedArrayLengthStub()) {
+            } else if (obj->is<TypedArrayObject>() && !cache.hasTypedArrayLengthStub()) {
                 isCacheable = true;
                 if (!cache.attachTypedArrayLength(cx, ion, obj))
                     return false;
@@ -2497,7 +2497,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                 return false;
             attachedStub = true;
         }
-        if (!attachedStub && obj->isTypedArray()) {
+        if (!attachedStub && obj->is<TypedArrayObject>()) {
             if ((idval.isInt32()) ||
                 (idval.isString() && GetIndexFromString(idval.toString()) != UINT32_MAX))
             {

@@ -215,7 +215,7 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
             }
         }
 
-        if (obj->isTypedArray()) {
+        if (obj->is<TypedArrayObject>()) {
             vp.setInt32(obj->as<TypedArrayObject>().length());
             return true;
         }
@@ -552,7 +552,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {
-            if (analyze && !objArg->isNative() && !objArg->isTypedArray()) {
+            if (analyze && !objArg->isNative() && !objArg->is<TypedArrayObject>()) {
                 JSScript *script = NULL;
                 jsbytecode *pc = NULL;
                 types::TypeScript::GetPcScript(cx, &script, &pc);
@@ -579,8 +579,11 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
             if (script->hasAnalysis()) {
                 script->analysis()->getCode(pc).getStringElement = true;
 
-                if (!objArg->is<ArrayObject>() && !objArg->isNative() && !objArg->isTypedArray())
+                if (!objArg->is<ArrayObject>() && !objArg->isNative() &&
+                    !objArg->is<TypedArrayObject>())
+                {
                     script->analysis()->getCode(pc).nonNativeGetElement = true;
+                }
             }
         }
 
