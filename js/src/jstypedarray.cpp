@@ -1775,10 +1775,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
 #ifdef DEBUG
         uint32_t bufferByteLength = buffer->byteLength();
-        uint32_t arrayByteLength = static_cast<uint32_t>(byteLengthValue(obj).toInt32());
-        uint32_t arrayByteOffset = static_cast<uint32_t>(byteOffsetValue(obj).toInt32());
+        uint32_t arrayByteLength = obj->byteLength();
+        uint32_t arrayByteOffset = obj->byteOffset();
         JS_ASSERT(buffer->dataPointer() <= obj->viewData());
-        JS_ASSERT(bufferByteLength - byteOffsetValue(obj).toInt32() >= arrayByteLength);
+        JS_ASSERT(bufferByteLength - arrayByteOffset >= arrayByteLength);
         JS_ASSERT(arrayByteOffset <= bufferByteLength);
 
         // Verify that the private slot is at the expected place
@@ -2012,7 +2012,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         uint32_t byteSize = nelts * sizeof(NativeType);
 
 #ifdef DEBUG
-        uint32_t viewByteLength = byteLengthValue(tarray).toInt32();
+        uint32_t viewByteLength = tarray->byteLength();
         JS_ASSERT(byteDest <= viewByteLength);
         JS_ASSERT(byteSrc <= viewByteLength);
         JS_ASSERT(byteDest + byteSize <= viewByteLength);
@@ -2262,7 +2262,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         uint32_t length = end - begin;
 
         JS_ASSERT(begin < UINT32_MAX / sizeof(NativeType));
-        uint32_t arrayByteOffset = byteOffsetValue(tarray).toInt32();
+        uint32_t arrayByteOffset = tarray->byteOffset();
         JS_ASSERT(UINT32_MAX - begin * sizeof(NativeType) >= arrayByteOffset);
         uint32_t byteOffset = arrayByteOffset + begin * sizeof(NativeType);
 
@@ -2375,7 +2375,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         NativeType *dest = static_cast<NativeType*>(thisTypedArray->viewData()) + offset;
 
         if (tarray->type() == thisTypedArray->type()) {
-            js_memcpy(dest, tarray->viewData(), byteLengthValue(tarray).toInt32());
+            js_memcpy(dest, tarray->viewData(), tarray->byteLength());
             return true;
         }
 
@@ -2446,7 +2446,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         JS_ASSERT(offset <= self->length());
 
         NativeType *dest = static_cast<NativeType*>(self->viewData()) + offset;
-        uint32_t byteLength = byteLengthValue(tarray).toInt32();
+        uint32_t byteLength = tarray->byteLength();
 
         if (tarray->type() == self->type()) {
             memmove(dest, tarray->viewData(), byteLength);
@@ -4272,7 +4272,7 @@ JS_GetArrayBufferViewByteLength(JSObject *obj)
         return 0;
     return obj->is<DataViewObject>()
            ? obj->as<DataViewObject>().byteLength()
-           : TypedArrayObject::byteLengthValue(&obj->as<TypedArrayObject>()).toInt32();
+           : obj->as<TypedArrayObject>().byteLength();
 }
 
 JS_FRIEND_API(JSObject *)
@@ -4285,7 +4285,7 @@ JS_GetObjectAsArrayBufferView(JSObject *obj, uint32_t *length, uint8_t **data)
 
     *length = obj->is<DataViewObject>()
               ? obj->as<DataViewObject>().byteLength()
-              : TypedArrayObject::byteLengthValue(&obj->as<TypedArrayObject>()).toInt32();
+              : obj->as<TypedArrayObject>().byteLength();
 
     *data = static_cast<uint8_t*>(obj->is<DataViewObject>()
                                   ? obj->as<DataViewObject>().dataPointer()
