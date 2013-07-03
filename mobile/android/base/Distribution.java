@@ -56,9 +56,15 @@ public final class Distribution {
                     return;
                 }
 
+                // This pref stores the path to the distribution directory. If it is null, Gecko
+                // looks for distribution files in /data/data/org.mozilla.xxx/distribution.
+                String pathKeyName = context.getPackageName() + ".distribution_path";
+                String distPath = null;
+
                 // Send a message to Gecko if we've set a distribution.
                 if (state == STATE_SET) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
+                    distPath = settings.getString(pathKeyName, null);
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", distPath));
                     return;
                 }
 
@@ -75,11 +81,16 @@ public final class Distribution {
                     File distDir = new File("/system/" + context.getPackageName() + "/distribution");
                     if (distDir.exists()) {
                         distributionSet = true;
+<<<<<<< local
+                        distPath = distDir.getPath();
+                        settings.edit().putString(pathKeyName, distPath).commit();
+=======
+>>>>>>> other
                     }
                 }
 
                 if (distributionSet) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", distPath));
                     settings.edit().putInt(keyName, STATE_SET).commit();
                 } else {
                     settings.edit().putInt(keyName, STATE_NONE).commit();

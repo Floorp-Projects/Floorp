@@ -10,15 +10,12 @@ XPIDL_SOURCES += [
 
 MODULE = 'MobileComponents'
 
-EXTRA_COMPONENTS += [
-    'BrowserCLH.js',
-    'HelperAppDialog.js',
-    'Sidebar.js',
-]
-
 EXTRA_PP_COMPONENTS += [
     'AboutRedirector.js',
+    'BrowserCLH.js',
     'DirectoryProvider.js',
+    'HelperAppDialog.js',
     'MobileComponents.manifest',
     'SessionStore.js',
+    'Sidebar.js',
 ]
