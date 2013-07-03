@@ -35,8 +35,6 @@
 #include "jsdate.h"
 #include "jstypedarray.h"
 
-#include "jstypedarrayinlines.h"
-
 #include "vm/BooleanObject-inl.h"
 #include "vm/RegExpObject-inl.h"
 

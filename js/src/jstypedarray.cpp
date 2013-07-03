@@ -30,7 +30,7 @@
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
-#include "jstypedarrayinlines.h"
+#include "jsobjinlines.h"
 
 #include "vm/GlobalObject-inl.h"
 
@@ -1362,6 +1362,36 @@ template<typename NativeType> class TypedArrayObjectTemplate;
 template<typename ElementType>
 static inline JSObject *
 NewArray(JSContext *cx, uint32_t nelements);
+
+#ifdef JSGC_GENERATIONAL
+class ArrayBufferViewByteOffsetRef : public gc::BufferableRef
+{
+    JSObject *obj;
+
+  public:
+    explicit ArrayBufferViewByteOffsetRef(JSObject *obj) : obj(obj) {}
+
+    void mark(JSTracer *trc) {
+        MarkObjectUnbarriered(trc, &obj, "TypedArray");
+        obj->getClass()->trace(trc, obj);
+    }
+};
+#endif
+
+static inline void
+InitArrayBufferViewDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteOffset)
+{
+    /*
+     * N.B. The base of the array's data is stored in the object's
+     * private data rather than a slot to avoid alignment restrictions
+     * on private Values.
+     */
+    obj->initPrivate(buffer->dataPointer() + byteOffset);
+#ifdef JSGC_GENERATIONAL
+    if (IsInsideNursery(obj->runtime(), buffer) && buffer->hasFixedElements())
+        obj->runtime()->gcStoreBuffer.putGeneric(ArrayBufferViewByteOffsetRef(obj));
+#endif
+}
 
 template<typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject

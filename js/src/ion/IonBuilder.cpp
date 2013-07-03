@@ -21,7 +21,6 @@
 
 #include "jsanalyzeinlines.h"
 #include "jsscriptinlines.h"
-#include "jstypedarrayinlines.h"
 
 #include "ion/CompileInfo-inl.h"
 #include "ion/ExecutionModeInlines.h"

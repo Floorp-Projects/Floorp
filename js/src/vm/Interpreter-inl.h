@@ -23,7 +23,6 @@
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
 #include "jsopcodeinlines.h"
-#include "jstypedarrayinlines.h"
 #include "vm/GlobalObject-inl.h"
 #include "vm/Stack-inl.h"
 
