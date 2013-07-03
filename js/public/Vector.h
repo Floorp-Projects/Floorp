@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TypeTraits.h"
 
 #include "js/TemplateLib.h"
@@ -261,7 +262,7 @@ class Vector : private AllocPolicy
     mozilla::AlignedStorage<sInlineBytes> storage;
 
 #ifdef DEBUG
-    friend class ReentrancyGuard;
+    friend class mozilla::ReentrancyGuard;
     bool entered;
 #endif
 
@@ -524,7 +525,7 @@ class Vector : private AllocPolicy
 
 /* This does the re-entrancy check plus several other sanity checks. */
 #define REENTRANCY_GUARD_ET_AL \
-    ReentrancyGuard g(*this); \
+    mozilla::ReentrancyGuard g(*this); \
     MOZ_ASSERT_IF(usingInlineStorage(), mCapacity == sInlineCapacity); \
     MOZ_ASSERT(reserved() <= mCapacity); \
     MOZ_ASSERT(mLength <= reserved()); \
