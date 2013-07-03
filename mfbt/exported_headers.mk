@@ -9,6 +9,7 @@
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla += \
+  AllocPolicy.h \
   Assertions.h \
   Atomics.h \
   Attributes.h \
