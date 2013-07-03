@@ -10,10 +10,5 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_EXTRA_COMPONENTS = \
-  BrowserPlaces.manifest \
-  PlacesProtocolHandler.js \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

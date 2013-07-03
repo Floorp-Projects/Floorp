@@ -17,15 +17,6 @@ LIBXUL_LIBRARY = 1
 # definition of MOZ_SUITE is only added via config.mk
 include $(topsrcdir)/config/config.mk
 
-ifndef MOZ_SUITE
-# XXX - Until Suite builds off XULRunner we can't guarantee our implementation
-# of nsIDownloadManagerUI overrides toolkit's.
-DISABLED_EXTRA_COMPONENTS = \
-  nsDownloadManagerUI.js \
-  nsDownloadManagerUI.manifest \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(TK_CFLAGS)

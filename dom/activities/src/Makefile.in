@@ -16,13 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-DISABLED_EXTRA_COMPONENTS = \
-  ActivityOptions.js \
-  ActivityProxy.js \
-  ActivityRequestHandler.js \
-  ActivityWrapper.js \
-  Activities.manifest \
-  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
