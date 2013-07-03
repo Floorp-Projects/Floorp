@@ -682,8 +682,13 @@ MAbs::computeRange()
 
     Range other(getOperand(0));
 
-    Range *range = new Range(0,
-                             Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper())),
+    int64_t max = 0;
+    if (other.isInt32())
+        max = Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper()));
+    else
+        max = RANGE_INF_MAX;
+
+    Range *range = new Range(0, max,
                              other.isDecimal(),
                              other.exponent());
     setRange(range);
