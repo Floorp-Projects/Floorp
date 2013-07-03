@@ -11,13 +11,13 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "jsobj.h"
 #include "jspropertytree.h"
 #include "jstypes.h"
 
 #include "gc/Heap.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
+#include "vm/ObjectImpl.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
