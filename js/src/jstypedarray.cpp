@@ -3813,15 +3813,15 @@ const JSFunctionSpec DataViewObject::jsfuncs[] = {
     JS_FS_END
 };
 
-template<Value ValueGetter(DataViewObject &view)>
+template<Value ValueGetter(DataViewObject *view)>
 bool
 DataViewObject::getterImpl(JSContext *cx, CallArgs args)
 {
-    args.rval().set(ValueGetter(args.thisv().toObject().as<DataViewObject>()));
+    args.rval().set(ValueGetter(&args.thisv().toObject().as<DataViewObject>()));
     return true;
 }
 
-template<Value ValueGetter(DataViewObject &view)>
+template<Value ValueGetter(DataViewObject *view)>
 JSBool
 DataViewObject::getter(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3829,7 +3829,7 @@ DataViewObject::getter(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<is, getterImpl<ValueGetter> >(cx, args);
 }
 
-template<Value ValueGetter(DataViewObject &view)>
+template<Value ValueGetter(DataViewObject *view)>
 bool
 DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject proto)
 {

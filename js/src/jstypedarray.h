@@ -455,39 +455,39 @@ class DataViewObject : public ArrayBufferViewObject
         return v.isObject() && v.toObject().hasClass(&class_);
     }
 
-    template<Value ValueGetter(DataViewObject &view)>
+    template<Value ValueGetter(DataViewObject *view)>
     static bool
     getterImpl(JSContext *cx, CallArgs args);
 
-    template<Value ValueGetter(DataViewObject &view)>
+    template<Value ValueGetter(DataViewObject *view)>
     static JSBool
     getter(JSContext *cx, unsigned argc, Value *vp);
 
-    template<Value ValueGetter(DataViewObject &view)>
+    template<Value ValueGetter(DataViewObject *view)>
     static bool
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
     static Class class_;
 
+    static Value byteOffsetValue(DataViewObject *view) {
+        Value v = view->getReservedSlot(BYTEOFFSET_SLOT);
+        JS_ASSERT(v.toInt32() >= 0);
+        return v;
+    }
+
+    static Value byteLengthValue(DataViewObject *view) {
+        Value v = view->getReservedSlot(BYTELENGTH_SLOT);
+        JS_ASSERT(v.toInt32() >= 0);
+        return v;
+    }
+
     uint32_t byteOffset() const {
-        int32_t offset = getReservedSlot(BYTEOFFSET_SLOT).toInt32();
-        JS_ASSERT(offset >= 0);
-        return static_cast<uint32_t>(offset);
+        return byteOffsetValue(const_cast<DataViewObject*>(this)).toInt32();
     }
 
     uint32_t byteLength() const {
-        int32_t length = getReservedSlot(BYTELENGTH_SLOT).toInt32();
-        JS_ASSERT(length >= 0);
-        return static_cast<uint32_t>(length);
-    }
-
-    static Value byteOffsetValue(DataViewObject &view) {
-        return Int32Value(view.byteOffset());
-    }
-
-    static Value byteLengthValue(DataViewObject &view) {
-        return Int32Value(view.byteLength());
+        return byteLengthValue(const_cast<DataViewObject*>(this)).toInt32();
     }
 
     bool hasBuffer() const {
@@ -498,8 +498,8 @@ class DataViewObject : public ArrayBufferViewObject
         return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
     }
 
-    static Value bufferValue(DataViewObject &view) {
-        return view.hasBuffer() ? ObjectValue(view.arrayBuffer()) : UndefinedValue();
+    static Value bufferValue(DataViewObject *view) {
+        return view->hasBuffer() ? ObjectValue(view->arrayBuffer()) : UndefinedValue();
     }
 
     void *dataPointer() const {
