@@ -77,9 +77,10 @@ interface nsISessionStore : nsISupports
 
   /**
    * Restores the previous browser session using a fast, lightweight strategy
-   * @param aRestoringOOM  Whether this is an OOM restore from Android
+   * @param aNormalRestore True for a normal session restore; false for a crash
+   *                       restore.
    * @param aSessionString The session string to restore from. If null, the
    *                       backup session file is read from.
    */
-  void restoreLastSession(in boolean aRestoringOOM, in AString aSessionString);
+  void restoreLastSession(in boolean aNormalRestore, in AString aSessionString);
 };
