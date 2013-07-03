@@ -10,7 +10,7 @@
 %{C++
 
 #include "nscore.h"
-#include "prtime.h"
+typedef int64_t PRTime;
 
 /*
  * Forward declarations for new string types

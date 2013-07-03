@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMCompositionEvent.h"
+#include "prtime.h"
 
 nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,

@@ -18,6 +18,7 @@
 #include "nsIScrollableFrame.h"
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
+#include "prtime.h"
 
 using namespace mozilla;
 
