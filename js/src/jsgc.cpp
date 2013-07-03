@@ -2917,8 +2917,8 @@ MarkGrayReferences(JSRuntime *rt)
                 gcmarker->markBufferedGrayRoots(zone);
         } else {
             JS_ASSERT(!rt->gcIsIncremental);
-            if (JSTraceDataOp op = rt->gcGrayRootsTraceOp)
-                (*op)(gcmarker, rt->gcGrayRootsData);
+            if (JSTraceDataOp op = rt->gcGrayRootTracer.op)
+                (*op)(gcmarker, rt->gcGrayRootTracer.data);
         }
         SliceBudget budget;
         gcmarker->drainMarkStack(budget);
