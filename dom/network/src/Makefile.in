@@ -14,17 +14,8 @@ LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
-DISABLED_EXTRA_COMPONENTS = \
-	TCPSocket.js \
-	TCPSocketParentIntermediary.js \
-	TCPSocket.manifest \
-	$(NULL)
 
 ifdef MOZ_B2G_RIL
-DISABLED_EXTRA_COMPONENTS += \
-  NetworkStatsManager.manifest \
-  NetworkStatsManager.js \
-  $(NULL)
 endif
 
 include $(topsrcdir)/dom/dom-config.mk

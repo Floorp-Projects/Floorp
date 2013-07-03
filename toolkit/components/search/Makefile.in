@@ -9,10 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_EXTRA_COMPONENTS = \
-  toolkitsearch.manifest \
-  nsSearchSuggestions.js \
-  $(NULL)
 
 DEFINES += -DMOZ_DISTRIBUTION_ID=$(MOZ_DISTRIBUTION_ID)
 

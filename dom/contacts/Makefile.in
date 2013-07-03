@@ -11,9 +11,5 @@ include $(DEPTH)/config/autoconf.mk
 
 VPATH += $(srcdir)/fallback
 
-DISABLED_EXTRA_COMPONENTS =        \
-  ContactManager.js       \
-  ContactManager.manifest \
-  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
