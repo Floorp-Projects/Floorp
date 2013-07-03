@@ -1,0 +1,50 @@
+From: George Wright <george@mozilla.com>
+Date: Mon, 14 Jan 2013 17:59:09 -0500
+Subject: Bug 848491 - Re-apply Bug 795549 - Move TileProc functions into their own file to ensure they only exist once in a library
+
+
+diff --git a/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h b/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h
+index b9dbf1b..729ce4e 100644
+--- a/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h
++++ b/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h
+@@ -37,34 +37,9 @@ static inline void sk_memset32_dither(uint32_t dst[], uint32_t v0, uint32_t v1,
+     }
+ }
+ 
+-//  Clamp
+-
+-static inline SkFixed clamp_tileproc(SkFixed x) {
+-    return SkClampMax(x, 0xFFFF);
+-}
+-
+-// Repeat
+-
+-static inline SkFixed repeat_tileproc(SkFixed x) {
+-    return x & 0xFFFF;
+-}
+-
+-// Mirror
+-
+-// Visual Studio 2010 (MSC_VER=1600) optimizes bit-shift code incorrectly.
+-// See http://code.google.com/p/skia/issues/detail?id=472
+-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+-#pragma optimize("", off)
+-#endif
+-
+-static inline SkFixed mirror_tileproc(SkFixed x) {
+-    int s = x << 15 >> 31;
+-    return (x ^ s) & 0xFFFF;
+-}
+-
+-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+-#pragma optimize("", on)
+-#endif
++SkFixed clamp_tileproc(SkFixed x);
++SkFixed repeat_tileproc(SkFixed x);
++SkFixed mirror_tileproc(SkFixed x);
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+-- 
+1.7.11.7
+
