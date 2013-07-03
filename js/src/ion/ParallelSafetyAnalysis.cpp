@@ -38,6 +38,7 @@ using parallel::SpewCompile;
 
 #define PERMIT(T) (1 << T)
 
+#define PERMIT_INT32 (PERMIT(MIRType_Int32))
 #define PERMIT_NUMERIC (PERMIT(MIRType_Int32) | PERMIT(MIRType_Double))
 
 #define SPECIALIZED_OP(op, flags)                                               \
@@ -137,14 +138,14 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(GetDynamicName)
     UNSAFE_OP(FilterArguments)
     UNSAFE_OP(CallDirectEval)
-    SAFE_OP(BitNot)
+    SPECIALIZED_OP(BitNot, PERMIT_INT32)
     UNSAFE_OP(TypeOf)
     SAFE_OP(ToId)
-    SAFE_OP(BitAnd)
-    SAFE_OP(BitOr)
-    SAFE_OP(BitXor)
-    SAFE_OP(Lsh)
-    SAFE_OP(Rsh)
+    SPECIALIZED_OP(BitAnd, PERMIT_INT32)
+    SPECIALIZED_OP(BitOr, PERMIT_INT32)
+    SPECIALIZED_OP(BitXor, PERMIT_INT32)
+    SPECIALIZED_OP(Lsh, PERMIT_INT32)
+    SPECIALIZED_OP(Rsh, PERMIT_INT32)
     SPECIALIZED_OP(Ursh, PERMIT_NUMERIC)
     SPECIALIZED_OP(MinMax, PERMIT_NUMERIC)
     SAFE_OP(Abs)
