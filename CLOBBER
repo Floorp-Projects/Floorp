@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 880917 needs a clobber for the removal of testVersion.cpp
+Bug 855130 needs a clobber.
