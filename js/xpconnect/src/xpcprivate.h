@@ -1138,7 +1138,7 @@ private:
     mozilla::AutoPushJSContext      mPusher;
     State                           mState;
 
-    nsXPConnect*                    mXPC;
+    nsRefPtr<nsXPConnect>           mXPC;
 
     XPCContext*                     mXPCContext;
     JSContext*                      mJSContext;

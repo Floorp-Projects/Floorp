@@ -49,11 +49,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
     // hook into call context chain.
     mPrevCallContext = XPCJSRuntime::Get()->SetCallContext(this);
 
-    // We only need to addref xpconnect once so only do it if this is the first
-    // context in the chain.
-    if (!mPrevCallContext)
-        NS_ADDREF(mXPC);
-
     mState = HAVE_CONTEXT;
 
     if (!obj)
@@ -241,21 +236,12 @@ XPCCallContext::SystemIsBeingShutDown()
 
 XPCCallContext::~XPCCallContext()
 {
-    // do cleanup...
-
-    bool shouldReleaseXPC = false;
-
     if (mXPCContext) {
         mXPCContext->SetCallingLangType(mPrevCallerLanguage);
 
         DebugOnly<XPCCallContext*> old = XPCJSRuntime::Get()->SetCallContext(mPrevCallContext);
         NS_ASSERTION(old == this, "bad pop from per thread data");
-
-        shouldReleaseXPC = mPrevCallContext == nullptr;
     }
-
-    if (shouldReleaseXPC && mXPC)
-        NS_RELEASE(mXPC);
 }
 
 /* readonly attribute nsISupports Callee; */
