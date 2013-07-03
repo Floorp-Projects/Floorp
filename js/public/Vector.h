@@ -1096,15 +1096,15 @@ Vector<T,N,AP>::swap(Vector &other)
         mBegin = other.mBegin;
         other.mBegin = other.inlineStorage();
     } else if (!usingInlineStorage() && !other.usingInlineStorage()) {
-        Swap(mBegin, other.mBegin);
+        mozilla::Swap(mBegin, other.mBegin);
     } else {
         // This case is a no-op, since we'd set both to use their inline storage.
     }
 
-    Swap(mLength, other.mLength);
-    Swap(mCapacity, other.mCapacity);
+    mozilla::Swap(mLength, other.mLength);
+    mozilla::Swap(mCapacity, other.mCapacity);
 #ifdef DEBUG
-    Swap(mReserved, other.mReserved);
+    mozilla::Swap(mReserved, other.mReserved);
 #endif
 }
 
