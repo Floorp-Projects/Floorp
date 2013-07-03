@@ -288,18 +288,28 @@ class JSObject : public js::ObjectImpl
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
 
   public:
-    inline bool setDelegate(JSContext *cx);
+    bool setDelegate(JSContext *cx) {
+        return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
+    }
 
-    inline bool isBoundFunction() const;
+    bool isBoundFunction() const {
+        return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION);
+    }
 
     inline bool hasSpecialEquality() const;
 
-    inline bool watched() const;
-    inline bool setWatched(JSContext *cx);
+    bool watched() const {
+        return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
+    }
+    bool setWatched(JSContext *cx) {
+        return setFlag(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
+    }
 
     /* See StackFrame::varObj. */
     inline bool isVarObj();
-    inline bool setVarObj(JSContext *cx);
+    bool setVarObj(JSContext *cx) {
+        return setFlag(cx, js::BaseShape::VAROBJ);
+    }
 
     /*
      * Objects with an uncacheable proto can have their prototype mutated
@@ -307,18 +317,28 @@ class JSObject : public js::ObjectImpl
      * and JIT inline caches should not be filled for lookups across prototype
      * lookups on the object.
      */
-    inline bool hasUncacheableProto() const;
-    inline bool setUncacheableProto(JSContext *cx);
+    bool hasUncacheableProto() const {
+        return lastProperty()->hasObjectFlag(js::BaseShape::UNCACHEABLE_PROTO);
+    }
+    bool setUncacheableProto(JSContext *cx) {
+        return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
+    }
 
     /*
      * Whether SETLELEM was used to access this object. See also the comment near
      * PropertyTree::MAX_HEIGHT.
      */
-    inline bool hadElementsAccess() const;
-    inline bool setHadElementsAccess(JSContext *cx);
+    bool hadElementsAccess() const {
+        return lastProperty()->hasObjectFlag(js::BaseShape::HAD_ELEMENTS_ACCESS);
+    }
+    bool setHadElementsAccess(JSContext *cx) {
+        return setFlag(cx, js::BaseShape::HAD_ELEMENTS_ACCESS);
+    }
 
   public:
-    inline bool nativeEmpty() const;
+    bool nativeEmpty() const {
+        return lastProperty()->isEmptyShape();
+    }
 
     bool shadowingShapeChange(JSContext *cx, const js::Shape &shape);
 
@@ -326,11 +346,17 @@ class JSObject : public js::ObjectImpl
      * Whether there may be indexed properties on this object, excluding any in
      * the object's elements.
      */
-    inline bool isIndexed() const;
+    bool isIndexed() const {
+        return lastProperty()->hasObjectFlag(js::BaseShape::INDEXED);
+    }
 
-    inline uint32_t propertyCount() const;
+    uint32_t propertyCount() const {
+        return lastProperty()->entryCount();
+    }
 
-    inline bool hasShapeTable() const;
+    bool hasShapeTable() const {
+        return lastProperty()->hasTable();
+    }
 
     void sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes);
 
@@ -446,7 +472,9 @@ class JSObject : public js::ObjectImpl
      * to recover this information in the object's type information after it
      * is purged on GC.
      */
-    inline bool setIteratedSingleton(JSContext *cx);
+    bool setIteratedSingleton(JSContext *cx) {
+        return setFlag(cx, js::BaseShape::ITERATED_SINGLETON);
+    }
 
     /*
      * Mark an object as requiring its default 'new' type to have unknown
@@ -490,7 +518,9 @@ class JSObject : public js::ObjectImpl
      */
 
     /* Access the parent link of an object. */
-    inline JSObject *getParent() const;
+    JSObject *getParent() const {
+        return lastProperty()->getObjectParent();
+    }
     static bool setParent(JSContext *cx, js::HandleObject obj, js::HandleObject newParent);
 
     /*
@@ -501,7 +531,9 @@ class JSObject : public js::ObjectImpl
     inline JSObject *enclosingScope();
 
     /* Access the metadata on an object. */
-    inline JSObject *getMetadata() const;
+    inline JSObject *getMetadata() const {
+        return lastProperty()->getObjectMetadata();
+    }
     static bool setMetadata(JSContext *cx, js::HandleObject obj, js::HandleObject newMetadata);
 
     inline js::GlobalObject &global() const;
@@ -546,7 +578,7 @@ class JSObject : public js::ObjectImpl
     static const char *className(JSContext *cx, js::HandleObject obj);
 
     /* Accessors for elements. */
-    inline bool ensureElements(JSContext *cx, uint32_t cap);
+    inline bool ensureElements(JSContext *cx, uint32_t capacity);
     bool growElements(js::ThreadSafeContext *tcx, uint32_t newcap);
     void shrinkElements(JSContext *cx, uint32_t cap);
     void setDynamicElements(js::ObjectElements *header) {
