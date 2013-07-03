@@ -75,10 +75,6 @@ public final class Distribution {
                     File distDir = new File("/system/" + context.getPackageName() + "/distribution");
                     if (distDir.exists()) {
                         distributionSet = true;
-
-                        // Store the path to the distribution directory, to be used in getBookmarks.
-                        String pathKeyName = context.getPackageName() + ".distribution_path";
-                        settings.edit().putString(pathKeyName, distDir.getPath()).commit();
                     }
                 }
 
@@ -172,16 +168,11 @@ public final class Distribution {
                     inputStream = new FileInputStream(systemFile);
                 }
             } else {
-                // Otherwise, look for bookmarks.json in the stored distribution path,
-                // or in the data directory if that pref doesn't exist.
-                String pathKeyName = context.getPackageName() + ".distribution_path";
-                String distPath = settings.getString(pathKeyName, null);
-
-                File distDir = null;
-                if (distPath != null) {
-                    distDir = new File(distPath);
-                } else {
-                    distDir = new File(context.getApplicationInfo().dataDir, "distribution");
+                // Otherwise, first look for the distribution in the data directory.
+                File distDir = new File(context.getApplicationInfo().dataDir, "distribution");
+                if (!distDir.exists()) {
+                    // If that doesn't exist, then we must be using a distribution from the system directory.
+                    distDir = new File("/system/" + context.getPackageName() + "/distribution");
                 }
 
                 File file = new File(distDir, "bookmarks.json");
