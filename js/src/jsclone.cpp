@@ -33,7 +33,8 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "jsdate.h"
-#include "jstypedarray.h"
+
+#include "vm/TypedArrayObject.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/RegExpObject-inl.h"

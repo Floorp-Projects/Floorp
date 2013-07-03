@@ -35,7 +35,6 @@
 #include "json.h"
 #include "jsreflect.h"
 #include "jsscript.h"
-#include "jstypedarray.h"
 #include "jsworkers.h"
 #include "jswrapper.h"
 #include "perf/jsperf.h"
@@ -44,6 +43,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "vm/Shape.h"
+#include "vm/TypedArrayObject.h"
 
 #include "prmjtime.h"
 
