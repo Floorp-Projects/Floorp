@@ -159,7 +159,7 @@ public:
   //
   // To pre-render a margin of 100 CSS pixels around the window,
   // { x = -100, y = - 100,
-  //   width = window.innerWidth + 100, height = window.innerHeight + 100 }
+  //   width = window.innerWidth + 200, height = window.innerHeight + 200 }
   //
   // This is only valid on the root layer. Nested iframes do not have a
   // displayport set on them. See bug 775452.
@@ -237,11 +237,10 @@ public:
   // will always be 2.0 no matter what the viewport or composition
   // bounds.
   //
-  // In the steady state (no animations), and ignoring DPI, then the
-  // following is usually true
+  // In the steady state (no animations), the following is usually true
   //
   //  intrinsicScale = (mCompositionBounds / mViewport)
-  //  mResolution = mZoom * intrinsicScale
+  //  mResolution = mZoom * intrinsicScale / mDevPixelsPerCSSPixel
   //
   // When this is not true, we're probably asynchronously sampling a
   // zoom animation for content.
