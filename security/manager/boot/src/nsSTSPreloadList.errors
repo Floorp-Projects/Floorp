@@ -10,7 +10,9 @@ bigshinylock.minazo.net: could not connect to host
 braintreegateway.com: could not connect to host
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
+carlolly.co.uk: did not receive HSTS header
 cert.se: max-age too low: 2628001
+check.torproject.org: could not connect to host
 checkout.google.com: did not receive HSTS header
 chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
@@ -18,10 +20,8 @@ chromiumcodereview.appspot.com: did not receive HSTS header
 code.google.com: did not receive HSTS header
 codereview.appspot.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
-conformal.com: could not connect to host
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: could not connect to host
-cyphertite.com: could not connect to host
 dl.google.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
 drive.google.com: did not receive HSTS header
@@ -47,7 +47,6 @@ jitsi.org: did not receive HSTS header
 jottit.com: did not receive HSTS header
 kiwiirc.com: max-age too low: 5256000
 ledgerscope.net: max-age too low: 86400
-linx.net: did not receive HSTS header
 lists.mayfirst.org: did not receive HSTS header
 logentries.com: did not receive HSTS header
 mail.google.com: did not receive HSTS header
@@ -78,6 +77,7 @@ square.com: max-age too low: 1296000
 squareup.com: max-age too low: 1296000
 ssl.google-analytics.com: did not receive HSTS header
 ssl.panoramio.com: did not receive HSTS header
+stocktrade.de: could not connect to host
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header
@@ -97,7 +97,7 @@ www.logentries.com: did not receive HSTS header
 www.makeyourlaws.org: did not receive HSTS header
 www.moneybookers.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
-www.paycheckrecords.com: did not receive HSTS header
+www.paycheckrecords.com: max-age too low: 86400
 www.paypal.com: max-age too low: 14400
 www.sandbox.mydigipass.com: could not connect to host
 www.surfeasy.com: did not receive HSTS header

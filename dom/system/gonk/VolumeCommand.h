@@ -69,7 +69,7 @@ private:
                       nsACString& aResponseStr)
   {
     mResponseCode = aResponseCode;
-#ifdef ANDROID_VERSION >= 17
+#if ANDROID_VERSION >= 17
     // There's a sequence number here that we don't care about
     // We expect it to be 0. See VolumeCommand::SetCmd
     mResponseStr = Substring(aResponseStr, 2);
@@ -127,7 +127,7 @@ public:
   void SetCmd(const nsACString& aCommand)
   {
     mCmd.Truncate();
-#ifdef ANDROID_VERSION >= 17
+#if ANDROID_VERSION >= 17
     // JB requires a sequence number at the beginning of messages.
     // It doesn't matter what we use, so we use 0.
     mCmd = "0 ";
