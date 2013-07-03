@@ -669,7 +669,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   if (TabChild *tc = GetTabChildFrom(presShell)) {
     metrics.mZoom = tc->GetZoom();
   }
-  metrics.mResolution = resolution;
+  metrics.mResolution = LayoutDeviceToLayerScale(presShell->GetXResolution(),
+                                                 presShell->GetYResolution());
 
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(
     (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
