@@ -128,7 +128,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if not os.path.exists(state_env_dir):
             print('Creating global state directory from environment variable: %s'
                 % state_env_dir)
-            os.makedirs(state_env_dir, mode=0777)
+            os.makedirs(state_env_dir, mode=0o770)
             print('Please re-run mach.')
             sys.exit(1)
     else:

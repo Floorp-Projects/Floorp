@@ -7844,7 +7844,15 @@ else
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "android"; then
-    dnl On Android, static resources live in the assets/ folder of the APK.
+    dnl Fennec's static resources live in the assets/ folder of the
+    dnl APK.  Adding a path to the name here works because we only
+    dnl have one omnijar file in the final package (which is not the
+    dnl case on desktop), and necessitates some contortions during
+    dnl packaging so that the resources in the omnijar are considered
+    dnl as rooted at / and not as rooted at assets/ (which again is
+    dnl not the case on desktop: there are omnijars rooted at webrtc/,
+    dnl etc). packager.mk handles changing the rooting of the single
+    dnl omnijar.
     OMNIJAR_NAME=assets/omni.ja
 else
     OMNIJAR_NAME=omni.ja
