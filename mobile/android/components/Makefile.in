@@ -25,8 +25,4 @@ EXTRA_COMPONENTS = \
         FilePicker.js \
         $(NULL)
 
-DEFINES += \
-  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -7371,6 +7371,9 @@ var Distribution = {
   // File used to store campaign data
   _file: null,
 
+  // Path to distribution directory for distribution customizations
+  _path: null,
+
   init: function dc_init() {
     Services.obs.addObserver(this, "Distribution:Set", false);
     Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
@@ -7392,6 +7395,8 @@ var Distribution = {
   observe: function dc_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "Distribution:Set":
+        this._path = aData;
+
         // Reload the default prefs so we can observe "prefservice:after-app-defaults"
         Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);
         break;
@@ -7432,12 +7437,20 @@ var Distribution = {
   },
 
   getPrefs: function dc_getPrefs() {
-    // Get the distribution directory, and bail if it doesn't exist.
-    let file = FileUtils.getDir("XREAppDist", [], false);
-    if (!file.exists())
-      return;
-
+    let file;
+    if (this._path) {
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(this._path);
+      // Store the path in a pref for DirectoryProvider to read.
+      Services.prefs.setCharPref("distribution.path", this._path);
+    } else {
+      // If a path isn't specified, look in the data directory:
+      // /data/data/org.mozilla.xxx/distribution
+      file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+      file.append("distribution");
+    }
     file.append("preferences.json");
+
     this.readJSON(file, this.applyPrefs);
   },
 
