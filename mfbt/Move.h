@@ -136,6 +136,16 @@ Move(const T& t)
   return MoveRef<T>(const_cast<T&>(t));
 }
 
+/** Swap |t| and |u| using move-construction if possible. */
+template<typename T>
+inline void
+Swap(T& t, T& u)
+{
+  T tmp(Move(t));
+  t = Move(u);
+  u = Move(tmp);
+}
+
 } // namespace mozilla
 
 #endif // mozilla_Move_h_

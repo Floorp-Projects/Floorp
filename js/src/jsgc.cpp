@@ -8,11 +8,14 @@
 
 #include "jsgc.h"
 
-#include "prmjtime.h"
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 #include "mozilla/Util.h"
+
+#include "prmjtime.h"
+
+using mozilla::Swap;
 
 /*
  * This code implements a mark-and-sweep garbage collector. The mark phase is
@@ -3080,7 +3083,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
         Chunk *chunk = r.front();
         ChunkBitmap *bitmap = &chunk->bitmap;
         ChunkBitmap *entry = map.lookup(chunk)->value;
-        js::Swap(*entry, *bitmap);
+        Swap(*entry, *bitmap);
     }
 
     /* Restore the weak map and array buffer lists. */
