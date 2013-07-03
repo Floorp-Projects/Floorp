@@ -167,23 +167,6 @@ public final class GeckoProfile {
     }
 
     /**
-     * Determines whether the tabs from the previous session should be
-     * automatically restored.
-     *
-     * sessionstore.js is moved to sessionstore.bak on a clean quit, so if we
-     * still have sessionstore.js at startup, that means we were killed
-     * uncleanly. This is caused by either 1) a crash, or 2) being killed by
-     * android because of memory constraints. Either way, the existence of this
-     * file indicates that we'll want to restore the previous session.
-     *
-     * @return whether the previous session should be restored
-     */
-    public boolean shouldRestoreSession() {
-        File sessionFile = getFile("sessionstore.js");
-        return sessionFile != null && sessionFile.exists();
-    }
-
-    /**
      * Moves the session file to the backup session file.
      *
      * sessionstore.js should hold the current session, and sessionstore.bak
