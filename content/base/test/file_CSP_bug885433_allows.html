@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+The Content-Security-Policy header for this file is:
+
+  Content-Security-Policy: img-src 'self';
+
+It does not include any of the default-src, script-src, or style-src
+directives. It should allow the use of unsafe-inline and unsafe-eval on
+scripts, and unsafe-inline on styles, because no directives related to scripts
+or styles are specified.
+-->
+<html>
+<body>
+  <ol>
+    <li id="unsafe-inline-script-allowed">Inline script allowed (this text should be green)</li>
+    <li id="unsafe-eval-script-allowed">Eval script allowed (this text should be green)</li>
+    <li id="unsafe-inline-style-allowed">Inline style allowed (this text should be green)</li>
+  </ol>
+
+  <script>
+    // Use inline script to set a style attribute
+    document.getElementById("unsafe-inline-script-allowed").style.color = "green";
+
+    // Use eval to set a style attribute
+    // try/catch is used because CSP causes eval to throw an exception when it
+    // is blocked, which would derail the rest of the tests  in this file.
+    try {
+      eval('document.getElementById("unsafe-eval-script-allowed").style.color = "green";');
+    } catch (e) {}
+  </script>
+
+  <style>
+    li#unsafe-inline-style-allowed {
+      color: green;
+    }
+  </style>
+</body>
+</html>
