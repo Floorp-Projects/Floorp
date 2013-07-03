@@ -14,6 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Util.h"
 
@@ -879,7 +880,7 @@ class HashTable : private AllocPolicy
 #   define METER(x)
 #endif
 
-    friend class js::ReentrancyGuard;
+    friend class mozilla::ReentrancyGuard;
     mutable mozilla::DebugOnly<bool> entered;
     mozilla::DebugOnly<uint64_t>     mutationCount;
 
@@ -1355,7 +1356,7 @@ class HashTable : private AllocPolicy
 
     Ptr lookup(const Lookup &l) const
     {
-        ReentrancyGuard g(*this);
+        mozilla::ReentrancyGuard g(*this);
         HashNumber keyHash = prepareHash(l);
         return Ptr(lookup(l, keyHash, 0));
     }
@@ -1368,7 +1369,7 @@ class HashTable : private AllocPolicy
 
     AddPtr lookupForAdd(const Lookup &l) const
     {
-        ReentrancyGuard g(*this);
+        mozilla::ReentrancyGuard g(*this);
         HashNumber keyHash = prepareHash(l);
         Entry &entry = lookup(l, keyHash, sCollisionBit);
         AddPtr p(entry, keyHash);
@@ -1379,7 +1380,7 @@ class HashTable : private AllocPolicy
     template <class U>
     bool add(AddPtr &p, const U &rhs)
     {
-        ReentrancyGuard g(*this);
+        mozilla::ReentrancyGuard g(*this);
         JS_ASSERT(mutationCount == p.mutationCount);
         JS_ASSERT(table);
         JS_ASSERT(!p.found());
@@ -1440,7 +1441,7 @@ class HashTable : private AllocPolicy
     {
         p.mutationCount = mutationCount;
         {
-            ReentrancyGuard g(*this);
+            mozilla::ReentrancyGuard g(*this);
             p.entry_ = &lookup(l, p.keyHash, sCollisionBit);
         }
         return p.found() || add(p, u);
@@ -1449,7 +1450,7 @@ class HashTable : private AllocPolicy
     void remove(Ptr p)
     {
         JS_ASSERT(table);
-        ReentrancyGuard g(*this);
+        mozilla::ReentrancyGuard g(*this);
         JS_ASSERT(p.found());
         remove(*p.entry_);
         checkUnderloaded();
@@ -1458,7 +1459,7 @@ class HashTable : private AllocPolicy
     void rekey(Ptr p, const Lookup &l, const Key &k)
     {
         JS_ASSERT(table);
-        ReentrancyGuard g(*this);
+        mozilla::ReentrancyGuard g(*this);
         JS_ASSERT(p.found());
         typename HashTableEntry<T>::NonConstT t(mozilla::Move(*p));
         HashPolicy::setKey(t, const_cast<Key &>(k));

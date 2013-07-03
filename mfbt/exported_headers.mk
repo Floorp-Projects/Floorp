@@ -38,6 +38,7 @@ EXPORTS_mozilla += \
   Poison.h \
   Range.h \
   RangedPtr.h \
+  ReentrancyGuard.h \
   RefPtr.h \
   Scoped.h \
   SHA1.h \
