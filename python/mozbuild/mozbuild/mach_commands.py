@@ -70,7 +70,7 @@ class TerminalLoggingHandler(logging.Handler):
 
         try:
             if self.footer:
-                    self.footer.clear()
+                self.footer.clear()
 
             self.fh.write(msg)
             self.fh.write('\n')
@@ -208,12 +208,12 @@ class BuildOutputManager(LoggingMixin):
         self.t = terminal
         self.footer = BuildProgressFooter(terminal, monitor)
 
-        handler = TerminalLoggingHandler()
-        handler.setFormatter(log_manager.terminal_formatter)
-        handler.footer = self.footer
+        self.handler = TerminalLoggingHandler()
+        self.handler.setFormatter(log_manager.terminal_formatter)
+        self.handler.footer = self.footer
 
-        old = log_manager.replace_terminal_handler(handler)
-        handler.level = old.level
+        old = log_manager.replace_terminal_handler(self.handler)
+        self.handler.level = old.level
 
     def __enter__(self):
         return self
@@ -248,7 +248,13 @@ class BuildOutputManager(LoggingMixin):
         if relevant:
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
         elif state_changed:
-            self.refresh()
+            # The lock acquisition was inserted in an attempt to isolate
+            # an I/O error 5. It may or may not actually make things better.
+            self.handler.acquire()
+            try:
+                self.refresh()
+            finally:
+                self.handler.release()
 
 
 @CommandProvider
