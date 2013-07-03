@@ -810,9 +810,9 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
       // See bug 884190 for more information.
       NotifyDialer(NS_LITERAL_STRING("CHLD=0"));
     } else if (chld == '1') {
-      NotifyDialer(NS_LITERAL_STRING("CHUP+ATA"));
+      NotifyDialer(NS_LITERAL_STRING("CHLD=1"));
     } else if (chld == '2') {
-      NotifyDialer(NS_LITERAL_STRING("CHLD+ATA"));
+      NotifyDialer(NS_LITERAL_STRING("CHLD=2"));
     } else {
       NS_WARNING("Wrong value of command [AT+CHLD]");
       valid = false;
