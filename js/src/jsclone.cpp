@@ -689,7 +689,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
         } else if (obj->is<DateObject>()) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
-        } else if (obj->isTypedArray()) {
+        } else if (obj->is<TypedArrayObject>()) {
             return writeTypedArray(obj);
         } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
             return writeArrayBuffer(obj);
