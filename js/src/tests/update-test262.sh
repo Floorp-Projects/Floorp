@@ -114,8 +114,13 @@ done
 cp ${js_src_tests_dir}/supporting/test262-browser.js ${test262_dir}/browser.js
 cat ${js_src_tests_dir}/supporting/sta.js ${js_src_tests_dir}/supporting/test262-shell.js > ${test262_dir}/shell.js
 
-# Restore the Intl tests' jstests adapter files.
-cp ${js_src_tests_dir}/supporting/test402-browser.js ${test262_dir}/intl402/browser.js
+# Restore the Intl tests' jstests adapter files. Loading include files into the
+# browser from a script so that they become synchronously available to that same
+# script is basically impossible. Instead, just concatenate all the scripts
+# together into one script loaded before the test executes.
+cat ${js_src_tests_dir}/supporting/test402-browser.js \
+    ${js_src_tests_dir}/supporting/testBuiltInObject.js \
+    ${js_src_tests_dir}/supporting/testIntl.js > ${test262_dir}/intl402/browser.js
 cp ${js_src_tests_dir}/supporting/test402-shell.js ${test262_dir}/intl402/shell.js
 
 # Keep a record of what we imported.
