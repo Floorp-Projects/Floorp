@@ -93,6 +93,9 @@ class Nursery
     template <typename T>
     JS_ALWAYS_INLINE bool getForwardedPointer(T **ref);
 
+    /* Forward a slots/elements pointer stored in an Ion frame. */
+    void forwardBufferPointer(HeapSlot **pSlotsElems);
+
   private:
     /*
      * The start and end pointers are stored under the runtime so that we can
@@ -208,12 +211,10 @@ class Nursery
     size_t moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
 
-    /* Handle relocation of slots/elements embedded in jit-code. */
+    /* Handle relocation of slots/elements pointers stored in Ion frames. */
     void setSlotsForwardingPointer(HeapSlot *oldSlots, HeapSlot *newSlots, uint32_t nslots);
     void setElementsForwardingPointer(ObjectElements *oldHeader, ObjectElements *newHeader,
                                       uint32_t nelems);
-    void forwardBufferPointer(HeapSlot **pSlotsElems);
-    void forwardMovedBuffers(JSRuntime *rt);
 
     /* Handle fallback marking. See the comment in MarkStoreBuffer. */
     void markFallback(gc::Cell *cell);
