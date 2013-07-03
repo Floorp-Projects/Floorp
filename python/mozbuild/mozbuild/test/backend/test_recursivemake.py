@@ -175,6 +175,10 @@ class TestRecursiveMakeBackend(BackendTester):
                 'GTEST_CSRCS += test1.c',
                 'GTEST_CSRCS += test2.c',
             ],
+            'HOST_CPPSRCS': [
+                'HOST_CPPSRCS += bar.cpp',
+                'HOST_CPPSRCS += foo.cpp',
+            ],
             'HOST_CSRCS': [
                 'HOST_CSRCS += bar.c',
                 'HOST_CSRCS += foo.c',
