@@ -20,9 +20,5 @@ LOCAL_INCLUDES = \
   $(SQLITE_CFLAGS) \
   $(NULL)
 
-DISABLED_EXTRA_COMPONENTS = \
-  nsUrlClassifierHashCompleter.js \
-  nsURLClassifier.manifest \
-  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
