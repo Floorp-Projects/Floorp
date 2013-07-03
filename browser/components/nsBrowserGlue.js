@@ -65,6 +65,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
                                   "resource://gre/modules/PlacesBackups.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
@@ -1268,7 +1270,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 13;
+    const UI_VERSION = 14;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1456,6 +1458,13 @@ BrowserGlue.prototype = {
           Services.prefs.setBoolPref("plugins.notifyMissingFlash", false);
       }
       catch (ex) {}
+    }
+
+    if (currentUIVersion < 14) {
+      // DOM Storage doesn't specially handle about: pages anymore.
+      let path = OS.Path.join(OS.Constants.Path.profileDir,
+                              "chromeappsstore.sqlite");
+      OS.File.remove(path);
     }
 
     if (this._dirty)
