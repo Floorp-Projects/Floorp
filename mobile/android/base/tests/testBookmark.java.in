@@ -20,7 +20,7 @@ public class testBookmark extends PixelTest  {
     private String[] defaultBookmarks = new String[] {
         "about:firefox",
         "about:home",
-        "http://support.mozilla.org/en-US/products/mobile",
+        "https://support.mozilla.org",
         "https://addons.mozilla.org/en-US/android/"
     };
 
