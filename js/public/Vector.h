@@ -533,7 +533,7 @@ class Vector : private AllocPolicy
 /* Vector Implementation */
 
 template <class T, size_t N, class AllocPolicy>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
   : AllocPolicy(ap), mBegin((T *)storage.addr()), mLength(0),
     mCapacity(sInlineCapacity)
@@ -544,7 +544,7 @@ Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
 
 /* Move constructor. */
 template <class T, size_t N, class AllocPolicy>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T, N, AllocPolicy>::Vector(mozilla::MoveRef<Vector> rhs)
     : AllocPolicy(rhs)
 #ifdef DEBUG
@@ -582,7 +582,7 @@ Vector<T, N, AllocPolicy>::Vector(mozilla::MoveRef<Vector> rhs)
 
 /* Move assignment. */
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T, N, AP> &
 Vector<T, N, AP>::operator=(mozilla::MoveRef<Vector> rhs)
 {
@@ -592,7 +592,7 @@ Vector<T, N, AP>::operator=(mozilla::MoveRef<Vector> rhs)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T,N,AP>::~Vector()
 {
     REENTRANCY_GUARD_ET_AL;
@@ -630,7 +630,7 @@ Vector<T,N,AP>::convertToHeapStorage(size_t newCap)
 }
 
 template <class T, size_t N, class AP>
-JS_NEVER_INLINE bool
+MOZ_NEVER_INLINE bool
 Vector<T,N,AP>::growStorageBy(size_t incr)
 {
     MOZ_ASSERT(mLength + incr > mCapacity);
@@ -756,7 +756,7 @@ Vector<T,N,AP>::shrinkBy(size_t incr)
 
 template <class T, size_t N, class AP>
 template <bool InitNewElems>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::growByImpl(size_t incr)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -776,14 +776,14 @@ Vector<T,N,AP>::growByImpl(size_t incr)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::growBy(size_t incr)
 {
     return growByImpl<true>(incr);
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::growByUninitialized(size_t incr)
 {
     return growByImpl<false>(incr);
@@ -802,7 +802,7 @@ Vector<T,N,AP>::resize(size_t newLength)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::resizeUninitialized(size_t newLength)
 {
     size_t curLength = mLength;
@@ -847,7 +847,7 @@ Vector<T,N,AP>::canAppendWithoutRealloc(size_t needed) const
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(U t)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -864,7 +864,7 @@ Vector<T,N,AP>::append(U t)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::internalAppend(U u)
 {
     MOZ_ASSERT(mLength + 1 <= mReserved);
@@ -874,7 +874,7 @@ Vector<T,N,AP>::internalAppend(U u)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::appendN(const T &t, size_t needed)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -890,7 +890,7 @@ Vector<T,N,AP>::appendN(const T &t, size_t needed)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::internalAppendN(const T &t, size_t needed)
 {
     MOZ_ASSERT(mLength + needed <= mReserved);
@@ -937,7 +937,7 @@ Vector<T,N,AP>::erase(T *it)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -955,7 +955,7 @@ Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::internalAppend(const U *insBegin, size_t insLength)
 {
     MOZ_ASSERT(mLength + insLength <= mReserved);
@@ -982,14 +982,14 @@ Vector<T,N,AP>::internalAppend(const Vector<U,O,BP> &other)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, size_t insLength)
 {
     return this->append(insBegin, insBegin + insLength);
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::popBack()
 {
     REENTRANCY_GUARD_ET_AL;
@@ -999,7 +999,7 @@ Vector<T,N,AP>::popBack()
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE T
+MOZ_ALWAYS_INLINE T
 Vector<T,N,AP>::popCopy()
 {
     T ret = back();
