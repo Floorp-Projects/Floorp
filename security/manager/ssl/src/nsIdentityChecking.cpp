@@ -110,6 +110,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
    * In other words, if you add another list, that uses the same dotted_oid
    * as an existing entry, then please use the same oid_name.
    */
+#ifdef DEBUG
   {
     // This is the testing EV signature.
     // C=US, ST=CA, L=Mountain View, O=Mozilla - EV debug test CA, OU=Security Engineering, CN=EV Testing (untrustworthy) CA/name=ev-test-ca/emailAddress=charlatan@testing.example.com
@@ -125,6 +126,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "AK/FPSJmJkky",
     nullptr
   },
+#endif
   {
     // OU=Security Communication EV RootCA1,O="SECOM Trust Systems CO.,LTD.",C=JP
     "1.2.392.200091.100.721.1",
@@ -1082,10 +1084,12 @@ nsNSSComponent::IdentityInfoInit()
 
     entry.cert = CERT_FindCertByIssuerAndSN(nullptr, &ias);
 
+#ifdef DEBUG
     // The debug CA info is at position 0, and is NOT on the NSS root db
     if (iEV != 0) {
        NS_ASSERTION(entry.cert, "Could not find EV root in NSS storage");
     }
+#endif
 
     SECITEM_FreeItem(&ias.derIssuer, false);
     SECITEM_FreeItem(&ias.serialNumber, false);
