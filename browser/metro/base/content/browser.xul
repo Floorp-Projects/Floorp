@@ -52,7 +52,7 @@
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
     <broadcaster id="bcast_urlbarState" mode="view"/>
-    <broadcaster id="bcast_preciseInput" input="precise"/>
+    <broadcaster id="bcast_preciseInput" input="imprecise"/>
     <broadcaster id="bcast_windowState" viewstate=""/>
   </broadcasterset>
 
