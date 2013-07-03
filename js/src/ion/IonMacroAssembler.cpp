@@ -1081,6 +1081,25 @@ MacroAssembler::handleFailure(ExecutionMode executionMode)
 }
 
 void
+MacroAssembler::pushCalleeToken(Register callee, ExecutionMode mode)
+{
+    // Tag and push a callee, then clear the tag after pushing. This is needed
+    // if we dereference the callee pointer after pushing it as part of a
+    // frame.
+    tagCallee(callee, mode);
+    push(callee);
+    clearCalleeTag(callee, mode);
+}
+
+void
+MacroAssembler::PushCalleeToken(Register callee, ExecutionMode mode)
+{
+    tagCallee(callee, mode);
+    Push(callee);
+    clearCalleeTag(callee, mode);
+}
+
+void
 MacroAssembler::tagCallee(Register callee, ExecutionMode mode)
 {
     switch (mode) {
