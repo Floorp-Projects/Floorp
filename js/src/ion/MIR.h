@@ -263,7 +263,6 @@ class AliasSet {
 class MDefinition : public MNode
 {
     friend class MBasicBlock;
-    friend class Loop;
 
   public:
     enum Opcode {
@@ -314,7 +313,6 @@ class MDefinition : public MNode
     void setFlags(uint32_t flags) {
         flags_ |= flags;
     }
-    virtual bool neverHoist() const { return false; }
   public:
     MDefinition()
       : id_(0),
@@ -332,6 +330,9 @@ class MDefinition : public MNode
     void printName(FILE *fp);
     static void PrintOpcodeName(FILE *fp, Opcode op);
     virtual void printOpcode(FILE *fp);
+
+    // For LICM.
+    virtual bool neverHoist() const { return false; }
 
     void setTrackedPc(jsbytecode *pc) {
         trackedPc_ = pc;
