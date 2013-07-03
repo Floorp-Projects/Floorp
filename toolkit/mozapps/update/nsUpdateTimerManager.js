@@ -132,7 +132,7 @@ TimerManager.prototype = {
         nextDelay = delay;
     }
 
-    // Each timer calls tryFire(), which figures out which is the the one that
+    // Each timer calls tryFire(), which figures out which is the one that
     // wanted to be called earliest. That one will be fired; the others are
     // skipped and will be done later.
     var now = Math.round(Date.now() / 1000);
@@ -169,7 +169,6 @@ TimerManager.prototype = {
       let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
       let value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
       let [cid, method, timerID, prefInterval, defaultInterval] = value.split(",");
-      let lastUpdateTime;
 
       defaultInterval = parseInt(defaultInterval);
       // cid and method are validated below when calling notify.
@@ -182,16 +181,19 @@ TimerManager.prototype = {
 
       let interval = getPref("getIntPref", prefInterval, defaultInterval);
       let prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/,
-                                                                  timerID);
-      if (Services.prefs.prefHasUserValue(prefLastUpdate)) {
-        lastUpdateTime = Services.prefs.getIntPref(prefLastUpdate);
-      }
-      else {
-        // Initialize the last update time to 0 so that we check for
-        // an update the first time the interval expires.
+                                                                      timerID);
+      // Initialize the last update time to 0 when the preference isn't set so
+      // the timer will be notified soon after a new profile's first use.
+      let lastUpdateTime = getPref("getIntPref", prefLastUpdate, 0);
+
+      // If the last update time is greater than the current time then reset
+      // it to 0 and the timer manager will correct the value when it fires
+      // next for this consumer.
+      if (lastUpdateTime > now)
         lastUpdateTime = 0;
+
+      if (lastUpdateTime == 0)
         Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
-      }
 
       tryFire(function() {
         try {
@@ -211,6 +213,14 @@ TimerManager.prototype = {
     for (let _timerID in this._timers) {
       let timerID = _timerID; // necessary for the closure to work properly
       let timerData = this._timers[timerID];
+      // If the last update time is greater than the current time then reset
+      // it to 0 and the timer manager will correct the value when it fires
+      // next for this consumer.
+      if (timerData.lastUpdateTime > now) {
+        let prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
+        timerData.lastUpdateTime = 0;
+        Services.prefs.setIntPref(prefLastUpdate, timerData.lastUpdateTime);
+      }
       tryFire(function() {
         if (timerData.callback instanceof Ci.nsITimerCallback) {
           try {
@@ -228,7 +238,7 @@ TimerManager.prototype = {
         }
         lastUpdateTime = now;
         timerData.lastUpdateTime = lastUpdateTime;
-        var prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
+        let prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
         Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
         updateNextDelay(timerData.lastUpdateTime + timerData.interval - now);
       }, timerData.lastUpdateTime + timerData.interval);
@@ -281,14 +291,15 @@ TimerManager.prototype = {
    */
   registerTimer: function TM_registerTimer(id, callback, interval) {
     LOG("TimerManager:registerTimer - id: " + id);
-    var prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
-    var lastUpdateTime;
-    if (Services.prefs.prefHasUserValue(prefLastUpdate)) {
-      lastUpdateTime = Services.prefs.getIntPref(prefLastUpdate);
-    } else {
-      lastUpdateTime = Math.round(Date.now() / 1000);
+    let prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
+    // Initialize the last update time to 0 when the preference isn't set so
+    // the timer will be notified soon after a new profile's first use.
+    let lastUpdateTime = getPref("getIntPref", prefLastUpdate, 0);
+    let now = Math.round(Date.now() / 1000);
+    if (lastUpdateTime > now)
+      lastUpdateTime = 0;
+    if (lastUpdateTime == 0)
       Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
-    }
     this._timers[id] = { callback       : callback,
                          interval       : interval,
                          lastUpdateTime : lastUpdateTime };
