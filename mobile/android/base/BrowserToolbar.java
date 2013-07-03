@@ -420,7 +420,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
             });
         }
 
-        mFocusOrder = Arrays.asList(mBack, mForward,  mReader, mSiteSecurity, mStop, mTabs);
+        // We use different layouts on phones and tablets, so adjust the focus
+        // order appropriately.
+        if (HardwareUtils.isTablet()) {
+            mFocusOrder = Arrays.asList(mTabs, mBack, mForward, mLayout,
+                    mSiteSecurity, mReader, mStop, mActionItemBar, mMenu);
+        } else {
+            mFocusOrder = Arrays.asList(mLayout, mSiteSecurity, mReader, mStop,
+                    mTabs, mMenu);
+        }
+    }
     }
 
     @Override
@@ -873,13 +882,35 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private void updateFocusOrder() {
         View prevView = null;
 
+        // If the element that has focus becomes disabled or invisible, focus
+        // is given to the URL bar.
+        boolean needsNewFocus = false;
+
         for (View view : mFocusOrder) {
-            if (view.getVisibility() != View.VISIBLE)
+            if (view.getVisibility() != View.VISIBLE || !view.isEnabled()) {
+                if (view.hasFocus()) {
+                    needsNewFocus = true;
+                }
                 continue;
+            }
 
             if (prevView != null) {
+                if (view == mActionItemBar) {
+                    final int childCount = mActionItemBar.getChildCount();
+                    if (childCount > 1) {
+                        View firstChild = mActionItemBar.getChildAt(0);
+                        firstChild.setNextFocusLeftId(prevView.getId());
+                        prevView.setNextFocusRightId(firstChild.getId());
+                    }
+                    view = mActionItemBar.getChildAt(childCount - 1);
+                }
+
                 view.setNextFocusLeftId(prevView.getId());
                 prevView.setNextFocusRightId(view.getId());
+            }
+
+            if (needsNewFocus) {
+                mLayout.requestFocus();
             }
 
             prevView = view;
