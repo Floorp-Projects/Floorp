@@ -24,28 +24,30 @@ namespace layers {
 /* static */ TemporaryRef<ContentClient>
 ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
-  if (aForwarder->GetCompositorBackendType() != LAYERS_OPENGL &&
-      aForwarder->GetCompositorBackendType() != LAYERS_D3D11 &&
-      aForwarder->GetCompositorBackendType() != LAYERS_BASIC) {
+  LayersBackend backend = aForwarder->GetCompositorBackendType();
+  if (backend != LAYERS_OPENGL &&
+      backend != LAYERS_D3D11 &&
+      backend != LAYERS_BASIC) {
         return nullptr;
   }
 
   bool useDoubleBuffering = false;
 
 #ifdef XP_WIN
-  if (aForwarder->GetCompositorBackendType() == LAYERS_D3D11) {
+  if (backend == LAYERS_D3D11) {
     useDoubleBuffering = !!gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
   } else
 #endif
   {
-    useDoubleBuffering = LayerManagerComposite::SupportsDirectTexturing();
+    useDoubleBuffering = LayerManagerComposite::SupportsDirectTexturing() ||
+                         backend == LAYERS_BASIC;
   }
 
   if (useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
     return new ContentClientDoubleBuffered(aForwarder);
   }
 #ifdef XP_MACOSX
-  if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
+  if (backend == LAYERS_OPENGL) {
     return new ContentClientIncremental(aForwarder);
   }
 #endif
