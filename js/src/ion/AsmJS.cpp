@@ -5694,14 +5694,18 @@ static void
 EnableActivation(AsmJSActivation *activation)
 {
     JSContext *cx = activation->cx();
-    cx->mainThread().activation()->setActive();
+    Activation *act = cx->mainThread().activation();
+    JS_ASSERT(act->isJit());
+    act->asJit()->setActive(cx);
 }
 
 static void
 DisableActivation(AsmJSActivation *activation)
 {
     JSContext *cx = activation->cx();
-    cx->mainThread().activation()->setActive(false);
+    Activation *act = cx->mainThread().activation();
+    JS_ASSERT(act->isJit());
+    act->asJit()->setActive(cx, false);
 }
 
 static void

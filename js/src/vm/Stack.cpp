@@ -1269,33 +1269,46 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
 }
 #endif
 
-void
-Activation::setActive(bool active)
-{
-    // Only allowed to deactivate/activate if activation is top.
-    // (Not tested and will probably fail in other situations.)
-    JS_ASSERT(cx()->mainThread().activation_ == this);
-    JS_ASSERT(active != active_);
-    active_ = active;
-
-    // Restore ionTop
-    if (!active && isJit())
-        cx()->mainThread().ionTop = asJit()->prevIonTop();
-}
-
 ion::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active)
-  : Activation(cx, Jit, active),
-    prevIonTop_(cx->mainThread().ionTop),
-    prevIonJSContext_(cx->mainThread().ionJSContext),
-    firstFrameIsConstructing_(firstFrameIsConstructing)
+  : Activation(cx, Jit),
+    firstFrameIsConstructing_(firstFrameIsConstructing),
+    active_(active)
 {
-    cx->mainThread().ionJSContext = cx;
+    if (active) {
+        prevIonTop_ = cx->mainThread().ionTop;
+        prevIonJSContext_ = cx->mainThread().ionJSContext;
+        cx->mainThread().ionJSContext = cx;
+    } else {
+        prevIonTop_ = NULL;
+        prevIonJSContext_ = NULL;
+    }
 }
 
 ion::JitActivation::~JitActivation()
 {
-    cx_->mainThread().ionTop = prevIonTop_;
-    cx_->mainThread().ionJSContext = prevIonJSContext_;
+    if (active_) {
+        cx_->mainThread().ionTop = prevIonTop_;
+        cx_->mainThread().ionJSContext = prevIonJSContext_;
+    }
+}
+
+void
+ion::JitActivation::setActive(JSContext *cx, bool active)
+{
+    // Only allowed to deactivate/activate if activation is top.
+    // (Not tested and will probably fail in other situations.)
+    JS_ASSERT(cx->mainThread().activation_ == this);
+    JS_ASSERT(active != active_);
+    active_ = active;
+
+    if (active) {
+        prevIonTop_ = cx->mainThread().ionTop;
+        prevIonJSContext_ = cx->mainThread().ionJSContext;
+        cx->mainThread().ionJSContext = cx;
+    } else {
+        cx->mainThread().ionTop = prevIonTop_;
+        cx->mainThread().ionJSContext = prevIonJSContext_;
+    }
 }
 
 InterpreterFrameIterator &
@@ -1325,7 +1338,7 @@ ActivationIterator &
 ActivationIterator::operator++()
 {
     JS_ASSERT(activation_);
-    if (activation_->isJit())
+    if (activation_->isJit() && activation_->asJit()->isActive())
         jitTop_ = activation_->asJit()->prevIonTop();
     activation_ = activation_->prev();
     settle();
@@ -1335,8 +1348,8 @@ ActivationIterator::operator++()
 void
 ActivationIterator::settle()
 {
-    while (!done() && !activation_->isActive()) {
-        if (activation_->isJit())
+    while (!done() && activation_->isJit() && !activation_->asJit()->isActive()) {
+        if (activation_->asJit()->isActive())
             jitTop_ = activation_->asJit()->prevIonTop();
         activation_ = activation_->prev();
     }
