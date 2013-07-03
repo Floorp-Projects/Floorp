@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+The Content-Security-Policy header for this file is:
+
+  Content-Security-Policy: default-src 'self';
+
+The Content-Security-Policy header for this file includes the default-src
+directive, which triggers the default behavior of blocking unsafe-inline and
+unsafe-eval on scripts, and unsafe-inline on styles.
+-->
+<html>
+<body>
+  <ol>
+    <li id="unsafe-inline-script-blocked">Inline script blocked (this text should be black)</li>
+    <li id="unsafe-eval-script-blocked">Eval script blocked (this text should be black)</li>
+    <li id="unsafe-inline-style-blocked">Inline style blocked (this text should be black)</li>
+  </ol>
+
+  <script>
+    // Use inline script to set a style attribute
+    document.getElementById("unsafe-inline-script-blocked").style.color = "green";
+
+    // Use eval to set a style attribute
+    // try/catch is used because CSP causes eval to throw an exception when it
+    // is blocked, which would derail the rest of the tests  in this file.
+    try {
+      eval('document.getElementById("unsafe-eval-script-blocked").style.color = "green";');
+    } catch (e) {}
+  </script>
+
+  <style>
+    li#unsafe-inline-style-blocked {
+      color: green;
+    }
+  </style>
+</body>
+</html>
