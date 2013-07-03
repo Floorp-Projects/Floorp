@@ -269,7 +269,7 @@ this.AccessFu = {
         this.Input.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
       case 'Accessibility:ActivateObject':
-        this.Input.activateCurrent();
+        this.Input.activateCurrent(JSON.parse(aData));
         break;
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
@@ -465,6 +465,13 @@ var Output = {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
         androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
+      if (androidEvent.brailleText && 'output' in androidEvent.brailleText) {
+        this.brailleStartOffset = androidEvent.brailleText.startOffset;
+        this.brailleEndOffset = androidEvent.brailleText.endOffset;
+        // We need to append a space at the end so that the routing key corresponding
+        // to the end of the output (i.e. the space) can be hit to move the caret there.
+        androidEvent.brailleText = androidEvent.brailleText.output + ' ';
+      }
       this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
@@ -684,9 +691,11 @@ var Input = {
     mm.sendAsyncMessage('AccessFu:MoveCaret', aDetails);
   },
 
-  activateCurrent: function activateCurrent() {
+  activateCurrent: function activateCurrent(aData) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:Activate', {});
+    let offset = aData && typeof aData.keyIndex === 'number' ?
+                 aData.keyIndex - Output.brailleStartOffset : -1;
+    mm.sendAsyncMessage('AccessFu:Activate', {offset: offset});
   },
 
   sendContextMenuMessage: function sendContextMenuMessage() {
