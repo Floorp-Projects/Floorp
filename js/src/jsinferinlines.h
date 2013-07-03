@@ -9,6 +9,7 @@
 #ifndef jsinferinlines_h
 #define jsinferinlines_h
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsarray.h"
@@ -1099,9 +1100,7 @@ HashSetCapacity(unsigned count)
     if (count <= SET_ARRAY_SIZE)
         return SET_ARRAY_SIZE;
 
-    unsigned log2;
-    JS_FLOOR_LOG2(log2, count);
-    return 1 << (log2 + 2);
+    return 1 << (mozilla::FloorLog2(count) + 2);
 }
 
 /* Compute the FNV hash for the low 32 bits of v. */
