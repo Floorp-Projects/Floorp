@@ -46,15 +46,15 @@ using parallel::SpewCompile;
         return visitSpecializedInstruction(ins, ins->specialization(), flags);  \
     }
 
-#define UNSAFE_OP(op)                                               \
-    virtual bool visit##op(M##op *ins) {                            \
-        SpewMIR(ins, "Unsafe");                                     \
-        return markUnsafe();                                        \
+#define UNSAFE_OP(op)                                                         \
+    virtual bool visit##op(M##op *ins) {                                      \
+        SpewMIR(ins, "Unsafe");                                               \
+        return markUnsafe();                                                  \
     }
 
-#define WRITE_GUARDED_OP(op, obj)                   \
-    virtual bool visit##op(M##op *prop) {           \
-        return insertWriteGuard(prop, prop->obj()); \
+#define WRITE_GUARDED_OP(op, obj)                                             \
+    virtual bool visit##op(M##op *prop) {                                     \
+        return insertWriteGuard(prop, prop->obj());                           \
     }
 
 #define MAYBE_WRITE_GUARDED_OP(op, obj)                                       \
