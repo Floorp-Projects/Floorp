@@ -1580,15 +1580,8 @@ bool
 ParallelGetPropertyIC::canAttachReadSlot(LockedJSContext &cx, JSObject *obj,
                                          MutableHandleObject holder, MutableHandleShape shape)
 {
-    // Parallel execution should only cache native objects.
-    if (!obj->isNative())
-        return false;
-
-    if (IsIdempotentAndMaybeHasHooks(*this, obj))
-        return false;
-
-    // Bail if we have hooks.
-    if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric)
+    // Bail if we have hooks or are not native.
+    if (!obj->hasIdempotentProtoChain())
         return false;
 
     if (!js::LookupPropertyPure(obj, NameToId(name()), holder.address(), shape.address()))
@@ -1603,9 +1596,6 @@ ParallelGetPropertyIC::canAttachReadSlot(LockedJSContext &cx, JSObject *obj,
     {
         return false;
     }
-
-    if (IsIdempotentAndHasSingletonHolder(*this, holder, shape))
-        return false;
 
     return true;
 }
@@ -1626,11 +1616,7 @@ ParallelGetPropertyIC::attachReadSlot(LockedJSContext &cx, IonScript *ion,
     MacroAssembler masm(cx);
     GenerateReadSlot(cx, ion, masm, attacher, obj, name(), holder, shape, object(), output());
 
-    const char *attachKind = "parallel non-idempotent reading";
-    if (idempotent())
-        attachKind = "parallel idempotent reading";
-
-    if (!linkAndAttachStub(cx, masm, attacher, ion, attachKind))
+    if (!linkAndAttachStub(cx, masm, attacher, ion, "parallel reading"))
         return false;
 
     *attachedStub = true;
@@ -1651,17 +1637,13 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
 
     ParallelGetPropertyIC &cache = ion->getCache(cacheIndex).toParallelGetProperty();
 
-    RootedScript script(pt);
-    jsbytecode *pc;
-    cache.getScriptedLocation(&script, &pc);
-
     // Grab the property early, as the pure path is fast anyways and doesn't
     // need a lock. If we can't do it purely, bail out of parallel execution.
     if (!GetPropertyPure(obj, NameToId(cache.name()), vp.address()))
         return TP_RETRY_SEQUENTIALLY;
 
-    // Avoid unnecessary locking if cannot attach stubs and idempotent.
-    if (cache.idempotent() && !cache.canAttachStub())
+    // Avoid unnecessary locking if cannot attach stubs.
+    if (!cache.canAttachStub())
         return TP_SUCCESS;
 
     {
@@ -1687,24 +1669,10 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
                 return TP_FATAL;
 
             if (!attachedStub) {
-                if (cache.idempotent())
-                    topScript->invalidatedIdempotentCache = true;
-
                 // ParallelDo will take care of invalidating all bailed out
                 // scripts, so just bail out now.
                 return TP_RETRY_SEQUENTIALLY;
             }
-        }
-
-        if (!cache.idempotent()) {
-#if JS_HAS_NO_SUCH_METHOD
-            // Straight up bail if there's this __noSuchMethod__ hook.
-            if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp.isPrimitive()))
-                return TP_RETRY_SEQUENTIALLY;
-#endif
-
-            // Monitor changes to cache entry.
-            types::TypeScript::Monitor(cx, script, pc, vp);
         }
     }
 
