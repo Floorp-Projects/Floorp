@@ -6371,6 +6371,12 @@ IonBuilder::jsop_getelem_dense()
     MInstruction *elements = MElements::New(obj);
     current->add(elements);
 
+    // Note: to help GVN, use the original MElements instruction and not
+    // MConvertElementsToDoubles as operand. This is fine because converting
+    // elements to double does not change the initialized length.
+    MInitializedLength *initLength = MInitializedLength::New(elements);
+    current->add(initLength);
+
     // If we can load the element as a definite double, make sure to check that
     // the array has been converted to homogenous doubles first.
     //
@@ -6390,9 +6396,6 @@ IonBuilder::jsop_getelem_dense()
         objTypes->convertDoubleElements(cx) == types::StackTypeSet::AlwaysConvertToDoubles;
     if (loadDouble)
         elements = addConvertElementsToDoubles(elements);
-
-    MInitializedLength *initLength = MInitializedLength::New(elements);
-    current->add(initLength);
 
     MInstruction *load;
 
