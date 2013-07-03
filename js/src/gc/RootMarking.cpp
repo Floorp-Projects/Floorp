@@ -760,13 +760,15 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     }
 
     /* The embedding can register additional roots here. */
-    if (JSTraceDataOp op = rt->gcBlackRootsTraceOp)
-        (*op)(trc, rt->gcBlackRootsData);
+    for (size_t i = 0; i < rt->gcBlackRootTracers.length(); i++) {
+        const JSRuntime::ExtraTracer &e = rt->gcBlackRootTracers[i];
+        (*e.op)(trc, e.data);
+    }
 
     /* During GC, we don't mark gray roots at this stage. */
-    if (JSTraceDataOp op = rt->gcGrayRootsTraceOp) {
+    if (JSTraceDataOp op = rt->gcGrayRootTracer.op) {
         if (!IS_GC_MARKING_TRACER(trc))
-            (*op)(trc, rt->gcGrayRootsData);
+            (*op)(trc, rt->gcGrayRootTracer.data);
     }
 }
 
@@ -774,9 +776,9 @@ void
 js::gc::BufferGrayRoots(GCMarker *gcmarker)
 {
     JSRuntime *rt = gcmarker->runtime;
-    if (JSTraceDataOp op = rt->gcGrayRootsTraceOp) {
+    if (JSTraceDataOp op = rt->gcGrayRootTracer.op) {
         gcmarker->startBufferingGrayRoots();
-        (*op)(gcmarker, rt->gcGrayRootsData);
+        (*op)(gcmarker, rt->gcGrayRootTracer.data);
         gcmarker->endBufferingGrayRoots();
     }
 }
