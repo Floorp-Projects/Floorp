@@ -245,7 +245,7 @@
   }
 
   /* Need to constrain the glass fog to avoid overlapping layers, see bug 886281. */
-  #navigator-toolbox:not(:-moz-lwtheme) {
+  #main-window:not([customizing]):not([customize-exiting]) #navigator-toolbox:not(:-moz-lwtheme) {
     overflow-y: hidden;
   }
 
