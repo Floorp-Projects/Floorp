@@ -2639,6 +2639,7 @@ class MBitNot
             return AliasSet::Store(AliasSet::Any);
         return AliasSet::None();
     }
+    void computeRange();
 };
 
 class MTypeOf
@@ -2784,6 +2785,7 @@ class MBitOr : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return getOperand(0); // x | x => x
     }
+    void computeRange();
 };
 
 class MBitXor : public MBinaryBitwiseInstruction
@@ -2806,6 +2808,7 @@ class MBitXor : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return this;
     }
+    void computeRange();
 };
 
 class MShiftInstruction
@@ -2912,6 +2915,8 @@ class MUrsh : public MShiftInstruction
     bool fallible() {
         return canOverflow();
     }
+
+    void computeRange();
 };
 
 class MBinaryArithInstruction
@@ -3017,6 +3022,7 @@ class MMinMax
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    void computeRange();
 };
 
 class MAbs
@@ -3305,7 +3311,6 @@ class MAdd : public MBinaryArithInstruction
         }
         return add;
     }
-    void analyzeTruncateBackward();
 
     double getIdentity() {
         return 0;

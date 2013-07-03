@@ -458,6 +458,51 @@ Range::and_(const Range *lhs, const Range *rhs)
 }
 
 Range *
+Range::or_(const Range *lhs, const Range *rhs)
+{
+    int64_t lower = INT32_MIN;
+    int64_t upper = INT32_MAX;
+
+    // If the sign bits are the same, the result has the same sign.
+    if (lhs->lower_ >= 0 && rhs->lower_ >= 0)
+        lower = 0;
+    else if (lhs->upper_ < 0 || rhs->upper_ < 0)
+        upper = -1;
+
+    return new Range(lower, upper);
+}
+
+Range *
+Range::xor_(const Range *lhs, const Range *rhs)
+{
+    int64_t lower = INT32_MIN;
+    int64_t upper = INT32_MAX;
+
+    // If the sign bits are identical, the result is non-negative.
+    if (lhs->lower_ >= 0 && rhs->lower_ >= 0)
+        lower = 0;
+    else if (lhs->upper_ < 0 && rhs->upper_ < 0)
+        lower = 0;
+
+    return new Range(lower, upper);
+}
+
+Range *
+Range::not_(const Range *op)
+{
+    int64_t lower = INT32_MIN;
+    int64_t upper = INT32_MAX;
+
+    // Not inverts all bits, including the sign bit.
+    if (op->lower_ >= 0)
+        upper = -1;
+    else if (op->upper_ < 0)
+        lower = 0;
+
+    return new Range(lower, upper);
+}
+
+Range *
 Range::mul(const Range *lhs, const Range *rhs)
 {
     bool decimal = lhs->isDecimal() || rhs->isDecimal();
@@ -475,21 +520,116 @@ Range::mul(const Range *lhs, const Range *rhs)
 }
 
 Range *
-Range::shl(const Range *lhs, int32_t c)
+Range::lsh(const Range *lhs, int32_t c)
 {
     int32_t shift = c & 0x1f;
-    return new Range(
-        (int64_t)lhs->lower_ << shift,
-        (int64_t)lhs->upper_ << shift);
+
+    // If the shift doesn't loose bits or shift bits into the sign bit, we
+    // can simply compute the correct range by shifting.
+    if (((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
+        ((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
+    {
+        return new Range(
+            (int64_t)lhs->lower_ << shift,
+            (int64_t)lhs->upper_ << shift);
+    }
+
+    return new Range(INT32_MIN, INT32_MAX);
 }
 
 Range *
-Range::shr(const Range *lhs, int32_t c)
+Range::rsh(const Range *lhs, int32_t c)
 {
     int32_t shift = c & 0x1f;
     return new Range(
         (int64_t)lhs->lower_ >> shift,
         (int64_t)lhs->upper_ >> shift);
+}
+
+Range *
+Range::ursh(const Range *lhs, int32_t c)
+{
+    int32_t shift = c & 0x1f;
+
+    // If the value is always non-negative or always negative, we can simply
+    // compute the correct range by shifting.
+    if ((lhs->lower_ >= 0 && !lhs->isUpperInfinite()) ||
+        (lhs->upper_ < 0 && !lhs->isLowerInfinite()))
+    {
+        return new Range(
+            (int64_t)((uint32_t)lhs->lower_ >> shift),
+            (int64_t)((uint32_t)lhs->upper_ >> shift));
+    }
+
+    // Otherwise return the most general range after the shift.
+    return new Range(0, (int64_t)(UINT32_MAX >> shift));
+}
+
+Range *
+Range::lsh(const Range *lhs, const Range *rhs)
+{
+    return new Range(INT32_MIN, INT32_MAX);
+}
+
+Range *
+Range::rsh(const Range *lhs, const Range *rhs)
+{
+    return new Range(Min(lhs->lower(), 0), Max(lhs->upper(), 0));
+}
+
+Range *
+Range::ursh(const Range *lhs, const Range *rhs)
+{
+    return new Range(0, (lhs->lower() >= 0 && !lhs->isUpperInfinite()) ? lhs->upper() : UINT32_MAX);
+}
+
+Range *
+Range::abs(const Range *op)
+{
+    // Get the lower and upper values of the operand, and adjust them
+    // for infinities. Range's constructor treats any value beyond the
+    // int32_t range as infinity.
+    int64_t l = (int64_t)op->lower() - op->isLowerInfinite();
+    int64_t u = (int64_t)op->upper() + op->isUpperInfinite();
+
+    return new Range(Max(Max(int64_t(0), l), -u),
+                     Max(Abs(l), Abs(u)),
+                     op->isDecimal(),
+                     op->exponent());
+}
+
+Range *
+Range::min(const Range *lhs, const Range *rhs)
+{
+    // Get the lower and upper values of the operand, and adjust them
+    // for infinities. Range's constructor treats any value beyond the
+    // int32_t range as infinity.
+    int64_t leftLower = (int64_t)lhs->lower() - lhs->isLowerInfinite();
+    int64_t leftUpper = (int64_t)lhs->upper() + lhs->isUpperInfinite();
+    int64_t rightLower = (int64_t)rhs->lower() - rhs->isLowerInfinite();
+    int64_t rightUpper = (int64_t)rhs->upper() + rhs->isUpperInfinite();
+
+    return new Range(Min(leftLower, rightLower),
+                     Min(leftUpper, rightUpper),
+                     lhs->isDecimal() || rhs->isDecimal(),
+                     Max(lhs->exponent(), rhs->exponent()));
+}
+
+Range *
+Range::max(const Range *lhs, const Range *rhs)
+{
+    // Get the lower and upper values of the operand, and adjust them
+    // for infinities. Range's constructor treats any value beyond the
+    // int32_t range as infinity.
+    int64_t leftLower = (int64_t)lhs->lower() - lhs->isLowerInfinite();
+    int64_t leftUpper = (int64_t)lhs->upper() + lhs->isUpperInfinite();
+    int64_t rightLower = (int64_t)rhs->lower() - rhs->isLowerInfinite();
+    int64_t rightUpper = (int64_t)rhs->upper() + rhs->isUpperInfinite();
+
+    return new Range(Max(leftLower, rightLower),
+                     Max(leftUpper, rightUpper),
+                     lhs->isDecimal() || rhs->isDecimal(),
+                     Max(lhs->exponent(), rhs->exponent()));
 }
 
 bool
@@ -651,27 +791,74 @@ MBitAnd::computeRange()
 }
 
 void
+MBitOr::computeRange()
+{
+    Range left(getOperand(0));
+    Range right(getOperand(1));
+    setRange(Range::or_(&left, &right));
+}
+
+void
+MBitXor::computeRange()
+{
+    Range left(getOperand(0));
+    Range right(getOperand(1));
+    setRange(Range::xor_(&left, &right));
+}
+
+void
+MBitNot::computeRange()
+{
+    Range op(getOperand(0));
+    setRange(Range::not_(&op));
+}
+
+void
 MLsh::computeRange()
 {
-    MDefinition *right = getOperand(1);
-    if (!right->isConstant())
-        return;
+    Range left(getOperand(0));
+    Range right(getOperand(1));
 
-    int32_t c = right->toConstant()->value().toInt32();
-    Range other(getOperand(0));
-    setRange(Range::shl(&other, c));
+    MDefinition *rhs = getOperand(1);
+    if (!rhs->isConstant()) {
+        setRange(Range::lsh(&left, &right));
+        return;
+    }
+
+    int32_t c = rhs->toConstant()->value().toInt32();
+    setRange(Range::lsh(&left, c));
 }
 
 void
 MRsh::computeRange()
 {
-    MDefinition *right = getOperand(1);
-    if (!right->isConstant())
-        return;
+    Range left(getOperand(0));
+    Range right(getOperand(1));
 
-    int32_t c = right->toConstant()->value().toInt32();
-    Range other(getOperand(0));
-    setRange(Range::shr(&other, c));
+    MDefinition *rhs = getOperand(1);
+    if (!rhs->isConstant()) {
+        setRange(Range::rsh(&left, &right));
+        return;
+    }
+
+    int32_t c = rhs->toConstant()->value().toInt32();
+    setRange(Range::rsh(&left, c));
+}
+
+void
+MUrsh::computeRange()
+{
+    Range left(getOperand(0));
+    Range right(getOperand(1));
+
+    MDefinition *rhs = getOperand(1);
+    if (!rhs->isConstant()) {
+        setRange(Range::ursh(&left, &right));
+        return;
+    }
+
+    int32_t c = rhs->toConstant()->value().toInt32();
+    setRange(Range::ursh(&left, c));
 }
 
 void
@@ -681,17 +868,18 @@ MAbs::computeRange()
         return;
 
     Range other(getOperand(0));
+    setRange(Range::abs(&other));
+}
 
-    int64_t max = 0;
-    if (other.isInt32())
-        max = Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper()));
-    else
-        max = RANGE_INF_MAX;
+void
+MMinMax::computeRange()
+{
+    if (specialization_ != MIRType_Int32 && specialization_ != MIRType_Double)
+        return;
 
-    Range *range = new Range(0, max,
-                             other.isDecimal(),
-                             other.exponent());
-    setRange(range);
+    Range left(getOperand(0));
+    Range right(getOperand(1));
+    setRange(isMax() ? Range::max(&left, &right) : Range::min(&left, &right));
 }
 
 void
@@ -719,7 +907,7 @@ MSub::computeRange()
 void
 MMul::computeRange()
 {
-    if ((specialization() != MIRType_Int32 && specialization() != MIRType_Double) || isTruncated())
+    if (specialization() != MIRType_Int32 && specialization() != MIRType_Double)
         return;
     Range left(getOperand(0));
     Range right(getOperand(1));
@@ -1537,7 +1725,7 @@ RangeAnalysis::truncate()
             }
 
             // Set truncated flag if range analysis ensure that it has no
-            // rounding errors and no freactional part.
+            // rounding errors and no fractional part.
             const Range *r = iter->range();
             if (!r || r->hasRoundingErrors())
                 continue;
