@@ -559,7 +559,13 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
 
   nsCocoaWindow* windowWidget = GetXULWindowWidget();
   if (windowWidget) {
+    nsTransparencyMode old = windowWidget->GetTransparencyMode();
     windowWidget->SetTransparencyMode(aMode);
+    if (windowWidget->GetTransparencyMode() != old) {
+      // Our layer manager depends on the transparency, so recreate it if the
+      // transparency changes.
+      mLayerManager = nullptr;
+    }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
