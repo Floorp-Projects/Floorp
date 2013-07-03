@@ -518,6 +518,7 @@ class PerThreadData : public js::PerThreadDataFriendFields
   private:
     friend class js::Activation;
     friend class js::ActivationIterator;
+    friend class js::ion::JitActivation;
     friend class js::AsmJSActivation;
 
     /*
