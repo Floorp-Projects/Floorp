@@ -90,6 +90,7 @@ class TreeMetadataEmitter(object):
             GTEST_CMMSRCS='GTEST_CMM_SOURCES',
             GTEST_CPPSRCS='GTEST_CPP_SOURCES',
             GTEST_CSRCS='GTEST_C_SOURCES',
+            HOST_CPPSRCS='HOST_CPPSRCS',
             HOST_CSRCS='HOST_CSRCS',
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
             JS_MODULES_PATH='JS_MODULES_PATH',
