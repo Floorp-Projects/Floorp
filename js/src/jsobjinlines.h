@@ -118,18 +118,6 @@ JSObject::finalize(js::FreeOp *fop)
     finish(fop);
 }
 
-inline JSObject *
-JSObject::getParent() const
-{
-    return lastProperty()->getObjectParent();
-}
-
-inline JSObject *
-JSObject::getMetadata() const
-{
-    return lastProperty()->getObjectMetadata();
-}
-
 inline void
 JSObject::setLastPropertyInfallible(js::Shape *shape)
 {
@@ -555,66 +543,11 @@ JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject 
     }
 }
 
-inline bool JSObject::setIteratedSingleton(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::ITERATED_SINGLETON);
-}
-
-inline bool JSObject::setDelegate(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
-}
-
 inline bool JSObject::isVarObj()
 {
     if (is<js::DebugScopeObject>())
         return as<js::DebugScopeObject>().scope().isVarObj();
     return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ);
-}
-
-inline bool JSObject::setVarObj(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::VAROBJ);
-}
-
-inline bool JSObject::setWatched(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
-}
-
-inline bool JSObject::hasUncacheableProto() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::UNCACHEABLE_PROTO);
-}
-
-inline bool JSObject::setUncacheableProto(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
-}
-
-inline bool JSObject::hadElementsAccess() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::HAD_ELEMENTS_ACCESS);
-}
-
-inline bool JSObject::setHadElementsAccess(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::HAD_ELEMENTS_ACCESS);
-}
-
-inline bool JSObject::isBoundFunction() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION);
-}
-
-inline bool JSObject::isIndexed() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::INDEXED);
-}
-
-inline bool JSObject::watched() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
 }
 
 /* static */ inline JSObject *
@@ -755,24 +688,6 @@ JSObject::nativeSetSlotWithType(JSContext *cx, js::HandleObject obj, js::Shape *
 {
     obj->nativeSetSlot(shape->slot(), value);
     js::types::AddTypePropertyId(cx, obj, shape->propid(), value);
-}
-
-inline bool
-JSObject::nativeEmpty() const
-{
-    return lastProperty()->isEmptyShape();
-}
-
-inline uint32_t
-JSObject::propertyCount() const
-{
-    return lastProperty()->entryCount();
-}
-
-inline bool
-JSObject::hasShapeTable() const
-{
-    return lastProperty()->hasTable();
 }
 
 /* static */ inline JSBool
@@ -1156,18 +1071,6 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, NewObjectKind newKind = Gen
     return NewBuiltinClassInstance(cx, clasp, allocKind, newKind);
 }
 
-bool
-FindClassPrototype(JSContext *cx, HandleObject scope, JSProtoKey protoKey,
-                   MutableHandleObject protop, Class *clasp);
-
-/*
- * Create a plain object with the specified type. This bypasses getNewType to
- * avoid losing creation site information for objects made by scripted 'new'.
- */
-JSObject *
-NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
-                  NewObjectKind newKind = GenericObject);
-
 // Used to optimize calls to (new Object())
 bool
 NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
@@ -1322,22 +1225,5 @@ js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
              JSObject **ctorp = NULL,
              js::gc::AllocKind ctorKind = JSFunction::FinalizeKind);
-
-/*
- * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent
- * scope, else it reshapes the scope and prototype chains it links. It calls
- * js_PurgeScopeChainHelper, which asserts that obj is flagged as a delegate
- * (i.e., obj has ever been on a prototype or parent chain).
- */
-extern bool
-js_PurgeScopeChainHelper(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-inline bool
-js_PurgeScopeChain(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
-{
-    if (obj->isDelegate())
-        return js_PurgeScopeChainHelper(cx, obj, id);
-    return true;
-}
 
 #endif /* jsobjinlines_h */
