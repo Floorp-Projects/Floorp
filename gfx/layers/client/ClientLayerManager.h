@@ -55,7 +55,7 @@ public:
 
   virtual void FlushRendering() MOZ_OVERRIDE;
 
-  virtual bool NeedsWidgetInvalidation() MOZ_OVERRIDE { return false; }
+  virtual bool NeedsWidgetInvalidation() MOZ_OVERRIDE { return Compositor::GetBackend() == LAYERS_BASIC; }
 
   ShadowableLayer* Hold(Layer* aLayer);
 
