@@ -11,10 +11,10 @@ function test() {
   tab.linkedBrowser.addEventListener("load", (function(event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
-    is(BookmarkingUI.star.getAttribute("tooltiptext"),
+    is(BookmarkingUI.button.getAttribute("tooltiptext"),
        BookmarkingUI._unstarredTooltip,
        "Star icon should have the unstarred tooltip text");
-  
+
     gBrowser.removeCurrentTab();
     finish();
   }), true);
