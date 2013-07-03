@@ -12,8 +12,12 @@ dictionary NetworkStatsOptions
    * Connection type used to filter which network stats will be returned:
    * 'mobile', 'wifi' or null.
    * If null, stats for both mobile and wifi are returned.
+   *
+   * Manifest URL used to retrieve network stats per app.
+   * If null, system stats (regardless of the app) are returned.
    */
   DOMString connectionType;
+  DOMString manifestURL;
   jsval start;              // date
   jsval end;                // date
 };
@@ -22,10 +26,12 @@ dictionary NetworkStatsOptions
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
   /**
-   * Query network interface statistics.
+   * Query network statistics.
    *
    * If options.connectionType is not provided, return statistics for all known
    * network interfaces.
+   *
+   * If options.manifestURL is not provided, return statistics regardless of the app.
    *
    * If successful, the request result will be an nsIDOMMozNetworkStats object.
    *
