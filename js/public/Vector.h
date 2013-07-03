@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
 #include "js/TemplateLib.h"
@@ -78,7 +79,7 @@ struct VectorImpl
     template <class U>
     static inline void moveConstruct(T *dst, const U *srcbeg, const U *srcend) {
         for (const U *p = srcbeg; p != srcend; ++p, ++dst)
-            new(dst) T(Move(*p));
+            new(dst) T(mozilla::Move(*p));
     }
 
     /*
@@ -104,7 +105,7 @@ struct VectorImpl
         if (!newbuf)
             return false;
         for (T *dst = newbuf, *src = v.beginNoCheck(); src != v.endNoCheck(); ++dst, ++src)
-            new(dst) T(Move(*src));
+            new(dst) T(mozilla::Move(*src));
         VectorImpl::destroy(v.beginNoCheck(), v.endNoCheck());
         v.free_(v.mBegin);
         v.mBegin = newbuf;
@@ -308,8 +309,8 @@ class Vector : private AllocPolicy
     typedef T ElementType;
 
     Vector(AllocPolicy = AllocPolicy());
-    Vector(MoveRef<Vector>); /* Move constructor. */
-    Vector &operator=(MoveRef<Vector>); /* Move assignment. */
+    Vector(mozilla::MoveRef<Vector>); /* Move constructor. */
+    Vector &operator=(mozilla::MoveRef<Vector>); /* Move assignment. */
     ~Vector();
 
     /* accessors */
@@ -539,7 +540,7 @@ Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
 /* Move constructor. */
 template <class T, size_t N, class AllocPolicy>
 JS_ALWAYS_INLINE
-Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
+Vector<T, N, AllocPolicy>::Vector(mozilla::MoveRef<Vector> rhs)
     : AllocPolicy(rhs)
 #ifdef DEBUG
     , entered(false)
@@ -578,7 +579,7 @@ Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
 template <class T, size_t N, class AP>
 JS_ALWAYS_INLINE
 Vector<T, N, AP> &
-Vector<T, N, AP>::operator=(MoveRef<Vector> rhs)
+Vector<T, N, AP>::operator=(mozilla::MoveRef<Vector> rhs)
 {
     this->~Vector();
     new(this) Vector(rhs);
