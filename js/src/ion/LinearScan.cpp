@@ -453,7 +453,7 @@ LinearScanAllocator::populateSafepoints()
     for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
         LinearScanVirtualRegister *reg = &vregs[i];
 
-        if (!reg->def() || (!IsTraceable(reg) && !IsNunbox(reg)))
+        if (!reg->def() || (!IsTraceable(reg) && !IsSlotsOrElements(reg) && !IsNunbox(reg)))
             continue;
 
         firstSafepoint = findFirstSafepoint(reg->getInterval(0), firstSafepoint);
@@ -484,7 +484,20 @@ LinearScanAllocator::populateSafepoints()
 
             LSafepoint *safepoint = ins->safepoint();
 
-            if (!IsNunbox(reg)) {
+            if (IsSlotsOrElements(reg)) {
+                LiveInterval *interval = reg->intervalFor(inputOf(ins));
+                if (!interval)
+                    continue;
+
+                LAllocation *a = interval->getAllocation();
+                if (a->isGeneralReg() && !ins->isCall())
+                    safepoint->addSlotsOrElementsRegister(a->toGeneralReg()->reg());
+
+                if (isSpilledAt(interval, inputOf(ins))) {
+                    if (!safepoint->addSlotsOrElementsSlot(reg->canonicalSpillSlot()))
+                        return false;
+                }
+            } else if (!IsNunbox(reg)) {
                 JS_ASSERT(IsTraceable(reg));
 
                 LiveInterval *interval = reg->intervalFor(inputOf(ins));

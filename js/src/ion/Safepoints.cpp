@@ -48,11 +48,13 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 {
     GeneralRegisterSet gc = safepoint->gcRegs();
     GeneralRegisterSet spilled = safepoint->liveRegs().gprs();
+    GeneralRegisterSet slots = safepoint->slotsOrElementsRegs();
     GeneralRegisterSet valueRegs;
 
     WriteRegisterMask(stream_, spilled.bits());
     if (!spilled.empty()) {
         WriteRegisterMask(stream_, gc.bits());
+        WriteRegisterMask(stream_, slots.bits());
 
 #ifdef JS_PUNBOX64
         valueRegs = safepoint->valueRegs();
@@ -69,9 +71,11 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
         for (GeneralRegisterForwardIterator iter(spilled); iter.more(); iter++) {
             const char *type = gc.has(*iter)
                                ? "gc"
-                               : valueRegs.has(*iter)
-                                 ? "value"
-                                 : "any";
+                               : slots.has(*iter)
+                                 ? "slots"
+                                 : valueRegs.has(*iter)
+                                   ? "value"
+                                   : "any";
             IonSpew(IonSpew_Safepoints, "    %s reg: %s", type, (*iter).name());
         }
     }
@@ -110,6 +114,21 @@ SafepointWriter::writeGcSlots(LSafepoint *safepoint)
                      stream_,
                      slots.length(),
                      slots.begin());
+}
+
+void
+SafepointWriter::writeSlotsOrElementsSlots(LSafepoint *safepoint)
+{
+    LSafepoint::SlotList &slots = safepoint->slotsOrElementsSlots();
+
+    stream_.writeUnsigned(slots.length());
+
+    for (uint32_t i = 0; i < slots.length(); i++) {
+#ifdef DEBUG
+        IonSpew(IonSpew_Safepoints, "    slots/elements slot: %d", slots[i]);
+#endif
+        stream_.writeUnsigned(slots[i]);
+    }
 }
 
 void
@@ -289,6 +308,8 @@ SafepointWriter::encode(LSafepoint *safepoint)
     writeNunboxParts(safepoint);
 #endif
 
+    writeSlotsOrElementsSlots(safepoint);
+
     endEntry();
     safepoint->setOffset(safepointOffset);
 }
@@ -311,8 +332,10 @@ SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
     if (allSpills_.empty()) {
         gcSpills_ = allSpills_;
         valueSpills_ = allSpills_;
+        slotsOrElementsSpills_ = allSpills_;
     } else {
         gcSpills_ = GeneralRegisterSet(stream_.readUnsigned());
+        slotsOrElementsSpills_ = GeneralRegisterSet(stream_.readUnsigned());
 #ifdef JS_PUNBOX64
         valueSpills_ = GeneralRegisterSet(stream_.readUnsigned());
 #endif
@@ -401,6 +424,7 @@ SafepointReader::advanceFromValueSlots()
     nunboxSlotsRemaining_ = stream_.readUnsigned();
 #else
     nunboxSlotsRemaining_ = 0;
+    advanceFromNunboxSlots();
 #endif
 }
 
@@ -423,8 +447,10 @@ PartFromStream(CompactBufferReader &stream, NunboxPartKind kind, uint32_t info)
 bool
 SafepointReader::getNunboxSlot(LAllocation *type, LAllocation *payload)
 {
-    if (!nunboxSlotsRemaining_--)
+    if (!nunboxSlotsRemaining_--) {
+        advanceFromNunboxSlots();
         return false;
+    }
 
     uint16_t header = stream_.readFixedUint16_t();
     NunboxPartKind typeKind = (NunboxPartKind)((header >> TYPE_KIND_SHIFT) & PART_KIND_MASK);
@@ -437,3 +463,17 @@ SafepointReader::getNunboxSlot(LAllocation *type, LAllocation *payload)
     return true;
 }
 
+void
+SafepointReader::advanceFromNunboxSlots()
+{
+    slotsOrElementsSlotsRemaining_ = stream_.readUnsigned();
+}
+
+bool
+SafepointReader::getSlotsOrElementsSlot(uint32_t *slot)
+{
+    if (!slotsOrElementsSlotsRemaining_--)
+        return false;
+    *slot = stream_.readUnsigned();
+    return true;
+}
