@@ -27,6 +27,7 @@
 #include "gc/Heap.h"
 
 #include "vm/ObjectImpl.h"
+#include "vm/Shape.h"
 #include "vm/String.h"
 
 namespace JS {
@@ -40,7 +41,6 @@ class BaseProxyHandler;
 struct GCMarker;
 struct NativeIterator;
 class Nursery;
-class Shape;
 struct StackShape;
 
 namespace mjit { class Compiler; }
@@ -219,8 +219,6 @@ class SetObject;
 class StrictArgumentsObject;
 
 }  /* namespace js */
-
-#define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
 
 /*
  * The public interface for an object.

@@ -20,6 +20,8 @@
 #include "vm/NumericConversions.h"
 #include "vm/String.h"
 
+#define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
+
 namespace js {
 
 class Debugger;
