@@ -682,8 +682,13 @@ MAbs::computeRange()
 
     Range other(getOperand(0));
 
-    Range *range = new Range(0,
-                             Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper())),
+    int64_t max = 0;
+    if (other.isInt32())
+        max = Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper()));
+    else
+        max = RANGE_INF_MAX;
+
+    Range *range = new Range(0, max,
                              other.isDecimal(),
                              other.exponent());
     setRange(range);
@@ -769,10 +774,38 @@ MToInt32::computeRange()
     setRange(new Range(input.lower(), input.upper()));
 }
 
+static Range *GetTypedArrayRange(int type)
+{
+    switch (type) {
+      case TypedArrayObject::TYPE_UINT8_CLAMPED:
+      case TypedArrayObject::TYPE_UINT8:  return new Range(0, UINT8_MAX);
+      case TypedArrayObject::TYPE_UINT16: return new Range(0, UINT16_MAX);
+      case TypedArrayObject::TYPE_UINT32: return new Range(0, UINT32_MAX);
+
+      case TypedArrayObject::TYPE_INT8:   return new Range(INT8_MIN, INT8_MAX);
+      case TypedArrayObject::TYPE_INT16:  return new Range(INT16_MIN, INT16_MAX);
+      case TypedArrayObject::TYPE_INT32:  return new Range(INT32_MIN, INT32_MAX);
+
+      case TypedArrayObject::TYPE_FLOAT32:
+      case TypedArrayObject::TYPE_FLOAT64:
+        break;
+    }
+
+  return NULL;
+}
+
+void
+MLoadTypedArrayElement::computeRange()
+{
+    if (Range *range = GetTypedArrayRange(arrayType()))
+        setRange(range);
+}
+
 void
 MLoadTypedArrayElementStatic::computeRange()
 {
-    setRange(new Range(this));
+    if (Range *range = GetTypedArrayRange(TypedArrayObject::type(typedArray_)))
+        setRange(range);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

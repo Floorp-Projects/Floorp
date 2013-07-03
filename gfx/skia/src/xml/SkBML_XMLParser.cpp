@@ -15,7 +15,7 @@
 static uint8_t rbyte(SkStream& s)
 {
     uint8_t b;
-    size_t size = s.read(&b, 1);
+    SkDEBUGCODE(size_t size = ) s.read(&b, 1);
     SkASSERT(size == 1);
     return b;
 }
@@ -179,6 +179,3 @@ void BML_XMLParser::Read(SkStream& s, SkXMLParser& output)
     SkXMLParserWriter writer(&output);
     Read(s, writer);
 }
-
-
-

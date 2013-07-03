@@ -2141,6 +2141,8 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
       "FROM moz_places "
       "WHERE url = :page_url "
     );
+    NS_ENSURE_STATE(stmt);
+
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.spec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2150,11 +2152,12 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
       "FROM moz_places "
       "WHERE guid = :guid "
     );
+    NS_ENSURE_STATE(stmt);
+
     rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), _place.guid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_ENSURE_TRUE(stmt, rv);
   mozStorageStatementScoper scoper(stmt);
 
   rv = stmt->ExecuteStep(_exists);

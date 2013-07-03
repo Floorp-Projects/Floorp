@@ -12,11 +12,12 @@
 #include "SkFlattenableBuffers.h"
 
 #include "SkRefCnt.h"
-#include "SkBitmap.h"
 #include "SkBitmapHeap.h"
 #include "SkPath.h"
+#include "SkPicture.h"
 #include "SkWriter32.h"
 
+class SkBitmap;
 class SkFlattenable;
 class SkFactorySet;
 class SkNamedFactorySet;
@@ -74,9 +75,23 @@ public:
     SkRefCntSet* getTypefaceRecorder() const { return fTFSet; }
     SkRefCntSet* setTypefaceRecorder(SkRefCntSet*);
 
-    void setBitmapHeap(SkBitmapHeap* bitmapHeap) {
-        SkRefCnt_SafeAssign(fBitmapHeap, bitmapHeap);
-    }
+    /**
+     * Set an SkBitmapHeap to store bitmaps rather than flattening.
+     *
+     * Incompatible with an EncodeBitmap function. If an EncodeBitmap function is set, setting an
+     * SkBitmapHeap will set the function to NULL in release mode and crash in debug.
+     */
+    void setBitmapHeap(SkBitmapHeap*);
+
+    /**
+     * Provide a function to encode an SkBitmap to an SkStream. writeBitmap will attempt to use
+     * bitmapEncoder to store the SkBitmap. If the reader does not provide a function to decode, it
+     * will not be able to restore SkBitmaps, but will still be able to read the rest of the stream.
+     *
+     * Incompatible with the SkBitmapHeap. If an encoder is set fBitmapHeap will be set to NULL in
+     * release and crash in debug.
+     */
+    void setBitmapEncoder(SkPicture::EncodeBitmap);
 
 private:
     SkFactorySet* fFactorySet;
@@ -85,6 +100,8 @@ private:
 
     SkBitmapHeap* fBitmapHeap;
     SkRefCntSet* fTFSet;
+
+    SkPicture::EncodeBitmap fBitmapEncoder;
 
     typedef SkFlattenableWriteBuffer INHERITED;
 };

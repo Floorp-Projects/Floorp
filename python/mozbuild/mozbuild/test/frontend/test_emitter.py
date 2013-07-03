@@ -134,6 +134,7 @@ class TestEmitterBasic(unittest.TestCase):
             GTEST_CSRCS=['test1.c', 'test2.c'],
             GTEST_CMMSRCS=['test1.mm', 'test2.mm'],
             GTEST_CPPSRCS=['test1.cpp', 'test2.cpp'],
+            HOST_CPPSRCS=['fans.cpp', 'tans.cpp'],
             HOST_CSRCS=['fans.c', 'tans.c'],
             HOST_LIBRARY_NAME='host_fans',
             LIBRARY_NAME='lib_name',

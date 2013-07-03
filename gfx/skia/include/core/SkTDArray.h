@@ -102,11 +102,25 @@ public:
      */
     size_t bytes() const { return fCount * sizeof(T); }
 
-    T*  begin() const { return fArray; }
-    T*  end() const { return fArray ? fArray + fCount : NULL; }
-    T&  operator[](int index) const {
+    T*  begin() { return fArray; }
+    const T*  begin() const { return fArray; }
+    T*  end() { return fArray ? fArray + fCount : NULL; }
+    const T*  end() const { return fArray ? fArray + fCount : NULL; }
+
+    T&  operator[](int index) {
         SkASSERT((unsigned)index < fCount);
         return fArray[index];
+    }
+    const T&  operator[](int index) const {
+        SkASSERT((unsigned)index < fCount);
+        return fArray[index];
+    }
+
+    T&  getAt(int index)  {
+        return (*this)[index];
+    }
+    const T&  getAt(int index) const {
+        return (*this)[index];
     }
 
     void reset() {
@@ -300,6 +314,15 @@ public:
             iter += 1;
         }
         this->reset();
+    }
+
+    void visitAll(void visitor(T&)) {
+        T* stop = this->end();
+        for (T* curr = this->begin(); curr < stop; curr++) {
+            if (*curr) {
+                visitor(*curr);
+            }
+        }
     }
 
 #ifdef SK_DEBUG

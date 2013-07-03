@@ -1443,6 +1443,13 @@ xpicleanup@BIN_SUFFIX@
       vccorlib110.dll
     #endif
   #endif
+  #if MOZ_MSVC_REDIST != 1800
+    msvcp120.dll
+    msvcr120.dll
+    #ifdef MOZ_METRO
+      vccorlib120.dll
+    #endif
+  #endif
   plugins/npnul32.dll
 #endif
 @DLL_PREFIX@xpcom_core@DLL_SUFFIX@

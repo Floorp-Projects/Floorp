@@ -27,52 +27,11 @@ SkTypeface* SkFontHost::CreateTypefaceFromFile(char const*) {
     return NULL;
 }
 
-// static
-SkAdvancedTypefaceMetrics* SkFontHost::GetAdvancedTypefaceMetrics(
-        uint32_t fontID,
-        SkAdvancedTypefaceMetrics::PerGlyphInfo perGlyphInfo,
-        const uint32_t* glyphIDs,
-        uint32_t glyphIDsCount) {
-    SkDEBUGFAIL("SkFontHost::GetAdvancedTypefaceMetrics unimplemented");
-    return NULL;
-}
-
-void SkFontHost::FilterRec(SkScalerContext::Rec* rec) {
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-SkStream* SkFontHost::OpenStream(uint32_t uniqueID) {
-    SkDEBUGFAIL("SkFontHost::OpenStream unimplemented");
+#include "SkFontMgr.h"
+
+SkFontMgr* SkFontMgr::Factory() {
+    // todo
     return NULL;
 }
-
-size_t SkFontHost::GetFileName(SkFontID fontID, char path[], size_t length,
-                               int32_t* index) {
-    SkDebugf("SkFontHost::GetFileName unimplemented\n");
-    return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-void SkFontHost::Serialize(const SkTypeface* face, SkWStream* stream) {
-    SkDEBUGFAIL("SkFontHost::Serialize unimplemented");
-}
-
-SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
-    SkDEBUGFAIL("SkFontHost::Deserialize unimplemented");
-    return NULL;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-SkScalerContext* SkFontHost::CreateScalerContext(const SkDescriptor* desc) {
-    SkDEBUGFAIL("SkFontHost::CreateScalarContext unimplemented");
-    return NULL;
-}
-
-SkFontID SkFontHost::NextLogicalFont(SkFontID currFontID, SkFontID origFontID) {
-    return 0;
-}
-
-

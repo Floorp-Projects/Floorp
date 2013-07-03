@@ -1,0 +1,27 @@
+From: George Wright <gw@gwright.org.uk>
+Date: Thu, 25 Apr 2013 20:40:12 -0400
+Subject: Bug 848491 - Re-apply Bug 777614 - Add our SkUserConfig.h
+
+
+diff --git a/gfx/skia/include/config/SkUserConfig.h b/gfx/skia/include/config/SkUserConfig.h
+index 63fc90d..c965e91 100644
+--- a/gfx/skia/include/config/SkUserConfig.h
++++ b/gfx/skia/include/config/SkUserConfig.h
+@@ -201,4 +201,14 @@
+  */
+ //#define SK_SUPPORT_GPU 1
+ 
++/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
++ */
++#define SK_DISABLE_DITHER_32BIT_GRADIENT
++
++/*  Don't include stdint.h on windows as it conflicts with our build system.
++ */
++#ifdef SK_BUILD_FOR_WIN32 
++    #define SK_IGNORE_STDINT_DOT_H 
++#endif 
++
+ #endif
+-- 
+1.7.11.7
+

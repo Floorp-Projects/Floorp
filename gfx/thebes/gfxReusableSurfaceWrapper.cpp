@@ -4,7 +4,6 @@
 
 #include "gfxReusableSurfaceWrapper.h"
 #include "gfxImageSurface.h"
-#include "pratom.h"
 
 gfxReusableSurfaceWrapper::gfxReusableSurfaceWrapper(gfxImageSurface* aSurface)
   : mSurface(aSurface)
@@ -42,13 +41,13 @@ void
 gfxReusableSurfaceWrapper::ReadLock()
 {
   NS_CheckThreadSafe(_mOwningThread.GetThread(), "Only the owner thread can call ReadOnlyLock");
-  PR_ATOMIC_INCREMENT(&mReadCount);
+  mReadCount++;
 }
 
 void
 gfxReusableSurfaceWrapper::ReadUnlock()
 {
-  PR_ATOMIC_DECREMENT(&mReadCount);
+  mReadCount--;
   NS_ABORT_IF_FALSE(mReadCount >= 0, "Should not be negative");
 }
 

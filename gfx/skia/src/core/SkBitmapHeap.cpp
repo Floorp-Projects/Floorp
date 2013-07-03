@@ -367,13 +367,17 @@ int32_t SkBitmapHeap::insert(const SkBitmap& originalBitmap) {
     // TODO if there is a shared pixel ref don't count it
     // If the SkBitmap does not share an SkPixelRef with an SkBitmap already
     // in the SharedHeap, also include the size of its pixels.
-    entry->fBytesAllocated += originalBitmap.getSize();
+    entry->fBytesAllocated = originalBitmap.getSize();
 
     // add the bytes from this entry to the total count
     fBytesAllocated += entry->fBytesAllocated;
 
     if (fOwnerCount != IGNORE_OWNERS) {
-        entry->addReferences(fOwnerCount);
+        if (fDeferAddingOwners) {
+            *fDeferredEntries.append() = entry->fSlot;
+        } else {
+            entry->addReferences(fOwnerCount);
+        }
     }
     if (fPreferredCount != UNLIMITED_SIZE) {
         this->appendToLRU(fLookupTable[searchIndex]);

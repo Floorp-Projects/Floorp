@@ -9,12 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_JS_MODULES = \
-		HUDService.jsm \
-		NetworkPanel.jsm \
-		WebConsolePanel.jsm \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 libs::

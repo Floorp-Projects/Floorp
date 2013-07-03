@@ -39,15 +39,18 @@ public:
         kNativeGL_BackEndType,
     };
 
-    bool attach(SkBackEndTypes attachType, int msaaSampleCount);
+    struct AttachmentInfo {
+        int fSampleCount;
+        int fStencilBits;
+    };
+
+    bool attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo*);
     void detach();
     void present();
 
     int getMSAASampleCount() const { return fMSAASampleCount; }
 
     //static bool PostEvent(SkEvent* evt, SkEventSinkID, SkMSec delay);
-
-    //static bool WndProc(SkUnixWindow* w,  XEvent &e);
 
 protected:
     // Overridden from from SkWindow:
@@ -63,7 +66,7 @@ private:
     void mapWindowAndWait();
 
     void closeWindow();
-    void initWindow(int newMSAASampleCount);
+    void initWindow(int newMSAASampleCount, AttachmentInfo* info);
 
     SkUnixWindow fUnixWindow;
 

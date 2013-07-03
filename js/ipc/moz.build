@@ -6,16 +6,9 @@
 
 MODULE = 'js'
 
-EXPORTS.mozilla.jsipc += [
-    'CPOWTypes.h',
-    'ContextWrapperChild.h',
-    'ContextWrapperParent.h',
-    'ObjectWrapperChild.h',
-    'ObjectWrapperParent.h',
-]
-
 CPP_SOURCES += [
-    'ObjectWrapperChild.cpp',
-    'ObjectWrapperParent.cpp',
+    'JavaScriptChild.cpp',
+    'JavaScriptParent.cpp',
+    'JavaScriptShared.cpp',
 ]
 

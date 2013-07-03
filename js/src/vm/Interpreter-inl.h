@@ -216,7 +216,7 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
         }
 
         if (obj->isTypedArray()) {
-            vp.setInt32(TypedArray::length(obj));
+            vp.setInt32(TypedArrayObject::length(obj));
             return true;
         }
     }

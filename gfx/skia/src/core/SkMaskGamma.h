@@ -22,46 +22,28 @@
  */
 class SkColorSpaceLuminance : SkNoncopyable {
 public:
-    virtual ~SkColorSpaceLuminance() {};
+    virtual ~SkColorSpaceLuminance() { }
 
     /** Converts a color component luminance in the color space to a linear luma. */
-    virtual SkScalar toLuma(SkScalar luminance) const = 0;
+    virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const = 0;
     /** Converts a linear luma to a color component luminance in the color space. */
-    virtual SkScalar fromLuma(SkScalar luma) const = 0;
+    virtual SkScalar fromLuma(SkScalar gamma, SkScalar luma) const = 0;
 
     /** Converts a color to a luminance value. */
-    U8CPU computeLuminance(SkColor c) const {
-        SkScalar r = toLuma(SkIntToScalar(SkColorGetR(c)) / 255);
-        SkScalar g = toLuma(SkIntToScalar(SkColorGetG(c)) / 255);
-        SkScalar b = toLuma(SkIntToScalar(SkColorGetB(c)) / 255);
+    static U8CPU computeLuminance(SkScalar gamma, SkColor c) {
+        const SkColorSpaceLuminance& luminance = Fetch(gamma);
+        SkScalar r = luminance.toLuma(gamma, SkIntToScalar(SkColorGetR(c)) / 255);
+        SkScalar g = luminance.toLuma(gamma, SkIntToScalar(SkColorGetG(c)) / 255);
+        SkScalar b = luminance.toLuma(gamma, SkIntToScalar(SkColorGetB(c)) / 255);
         SkScalar luma = r * SkFloatToScalar(SK_LUM_COEFF_R) +
                         g * SkFloatToScalar(SK_LUM_COEFF_G) +
                         b * SkFloatToScalar(SK_LUM_COEFF_B);
         SkASSERT(luma <= SK_Scalar1);
-        return SkScalarRoundToInt(fromLuma(luma) * 255);
+        return SkScalarRoundToInt(luminance.fromLuma(gamma, luma) * 255);
     }
-};
 
-class SkSRGBLuminance : public SkColorSpaceLuminance {
-public:
-    SkScalar toLuma(SkScalar luminance) const SK_OVERRIDE;
-    SkScalar fromLuma(SkScalar luma) const SK_OVERRIDE;
-};
-
-class SkGammaLuminance : public SkColorSpaceLuminance {
-public:
-    SkGammaLuminance(SkScalar gamma);
-    SkScalar toLuma(SkScalar luminance) const SK_OVERRIDE;
-    SkScalar fromLuma(SkScalar luma) const SK_OVERRIDE;
-private:
-    SkScalar fGamma;
-    SkScalar fGammaInverse;
-};
-
-class SkLinearLuminance : public SkColorSpaceLuminance {
-public:
-    SkScalar toLuma(SkScalar luminance) const SK_OVERRIDE;
-    SkScalar fromLuma(SkScalar luma) const SK_OVERRIDE;
+    /** Retrieves the SkColorSpaceLuminance for the given gamma. */
+    static const SkColorSpaceLuminance& Fetch(SkScalar gamma);
 };
 
 ///@{
@@ -95,8 +77,8 @@ template<> /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) {
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS> class SkTMaskPreBlend;
 
 void SkTMaskGamma_build_correcting_lut(uint8_t table[256], U8CPU srcI, SkScalar contrast,
-                                       const SkColorSpaceLuminance& srcConvert,
-                                       const SkColorSpaceLuminance& dstConvert);
+                                       const SkColorSpaceLuminance& srcConvert, SkScalar srcGamma,
+                                       const SkColorSpaceLuminance& dstConvert, SkScalar dstGamma);
 
 /**
  * A regular mask contains linear alpha values. A gamma correcting mask
@@ -113,8 +95,8 @@ template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS> class SkTMaskGamma : p
 public:
     SK_DECLARE_INST_COUNT_TEMPLATE(SkTMaskGamma)
 
-    SkTMaskGamma() : fIsLinear(true) {
-    }
+    /** Creates a linear SkTMaskGamma. */
+    SkTMaskGamma() : fIsLinear(true) { }
 
     /**
      * Creates tables to convert linear alpha values to gamma correcting alpha
@@ -125,21 +107,23 @@ public:
      * @param paint The color space in which the paint color was chosen.
      * @param device The color space of the target device.
      */
-    SkTMaskGamma(SkScalar contrast,
-                 const SkColorSpaceLuminance& paint,
-                 const SkColorSpaceLuminance& device) : fIsLinear(false) {
-        for (U8CPU i = 0; i < (1 << kLuminanceBits_Max); ++i) {
-            U8CPU lum = sk_t_scale255<kLuminanceBits_Max>(i);
-            SkTMaskGamma_build_correcting_lut(fGammaTables[i], lum, contrast, paint, device);
+    SkTMaskGamma(SkScalar contrast, SkScalar paintGamma, SkScalar deviceGamma) : fIsLinear(false) {
+        const SkColorSpaceLuminance& paintConvert = SkColorSpaceLuminance::Fetch(paintGamma);
+        const SkColorSpaceLuminance& deviceConvert = SkColorSpaceLuminance::Fetch(deviceGamma);
+        for (U8CPU i = 0; i < (1 << MAX_LUM_BITS); ++i) {
+            U8CPU lum = sk_t_scale255<MAX_LUM_BITS>(i);
+            SkTMaskGamma_build_correcting_lut(fGammaTables[i], lum, contrast,
+                                              paintConvert, paintGamma,
+                                              deviceConvert, deviceGamma);
         }
     }
 
-    /** Given a color, returns the closest cannonical color. */
-    static SkColor cannonicalColor(SkColor color) {
+    /** Given a color, returns the closest canonical color. */
+    static SkColor CanonicalColor(SkColor color) {
         return SkColorSetRGB(
-                   sk_t_scale255<kLuminanceBits_R>(SkColorGetR(color) >> (8 - kLuminanceBits_R)),
-                   sk_t_scale255<kLuminanceBits_G>(SkColorGetG(color) >> (8 - kLuminanceBits_G)),
-                   sk_t_scale255<kLuminanceBits_B>(SkColorGetB(color) >> (8 - kLuminanceBits_B)));
+                   sk_t_scale255<R_LUM_BITS>(SkColorGetR(color) >> (8 - R_LUM_BITS)),
+                   sk_t_scale255<G_LUM_BITS>(SkColorGetG(color) >> (8 - G_LUM_BITS)),
+                   sk_t_scale255<B_LUM_BITS>(SkColorGetB(color) >> (8 - B_LUM_BITS)));
     }
 
     /** The type of the mask pre-blend which will be returned from preBlend(SkColor). */
@@ -150,18 +134,13 @@ public:
      * values into gamma correcting alpha values when drawing the given color
      * through the mask. The destination color will be approximated.
      */
-    PreBlend preBlend(SkColor color);
+    PreBlend preBlend(SkColor color) const;
 
 private:
-    enum LuminanceBits {
-        kLuminanceBits_R = R_LUM_BITS,
-        kLuminanceBits_G = G_LUM_BITS,
-        kLuminanceBits_B = B_LUM_BITS,
-        kLuminanceBits_Max = B_LUM_BITS > (R_LUM_BITS > G_LUM_BITS ? R_LUM_BITS : G_LUM_BITS)
-                           ? B_LUM_BITS
-                           : (R_LUM_BITS > G_LUM_BITS ? R_LUM_BITS : G_LUM_BITS)
-    };
-    uint8_t fGammaTables[1 << kLuminanceBits_Max][256];
+    static const int MAX_LUM_BITS =
+          B_LUM_BITS > (R_LUM_BITS > G_LUM_BITS ? R_LUM_BITS : G_LUM_BITS)
+        ? B_LUM_BITS : (R_LUM_BITS > G_LUM_BITS ? R_LUM_BITS : G_LUM_BITS);
+    uint8_t fGammaTables[1 << MAX_LUM_BITS][256];
     bool fIsLinear;
 
     typedef SkRefCnt INHERITED;
@@ -179,29 +158,35 @@ SK_DEFINE_INST_COUNT_TEMPLATE(
  * value for that channel. This class is immutable.
  *
  * If fR, fG, or fB is NULL, all of them will be. This indicates that no mask
- * pre blend should be applied.
+ * pre blend should be applied. SkTMaskPreBlend::isApplicable() is provided as
+ * a convenience function to test for the absence of this case.
  */
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS> class SkTMaskPreBlend {
 private:
-    SkTMaskPreBlend(SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>* parent,
-                    const uint8_t* r,
-                    const uint8_t* g,
-                    const uint8_t* b)
-    : fParent(parent), fR(r), fG(g), fB(b) {
-        SkSafeRef(parent);
-    }
-    SkAutoTUnref<SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS> > fParent;
+    SkTMaskPreBlend(const SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>* parent,
+                    const uint8_t* r, const uint8_t* g, const uint8_t* b)
+    : fParent(SkSafeRef(parent)), fR(r), fG(g), fB(b) { }
+
+    SkAutoTUnref<const SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS> > fParent;
     friend class SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>;
 public:
+    /** Creates a non applicable SkTMaskPreBlend. */
+    SkTMaskPreBlend() : fParent(), fR(NULL), fG(NULL), fB(NULL) { }
+
     /**
      * This copy contructor exists for correctness, but should never be called
      * when return value optimization is enabled.
      */
     SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that)
-    : fParent(that.fParent.get()), fR(that.fR), fG(that.fG), fB(that.fB) {
-        SkSafeRef(fParent.get());
-    }
+    : fParent(SkSafeRef(that.fParent.get())), fR(that.fR), fG(that.fG), fB(that.fB) { }
+
     ~SkTMaskPreBlend() { }
+
+    /** True if this PreBlend should be applied. When false, fR, fG, and fB are NULL. */
+    bool isApplicable() const {
+        return NULL != this->fG;
+    }
+
     const uint8_t* fR;
     const uint8_t* fG;
     const uint8_t* fB;
@@ -209,14 +194,12 @@ public:
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
 SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>
-SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) {
-    return fIsLinear ? SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>(
-                          NULL, NULL, NULL, NULL)
-                      : SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>(
-                          this,
-                          fGammaTables[SkColorGetR(color) >> (8 - kLuminanceBits_Max)],
-                          fGammaTables[SkColorGetG(color) >> (8 - kLuminanceBits_Max)],
-                          fGammaTables[SkColorGetB(color) >> (8 - kLuminanceBits_Max)]);
+SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const {
+    return fIsLinear ? SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>()
+                     : SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>(this,
+                         fGammaTables[SkColorGetR(color) >> (8 - MAX_LUM_BITS)],
+                         fGammaTables[SkColorGetG(color) >> (8 - MAX_LUM_BITS)],
+                         fGammaTables[SkColorGetB(color) >> (8 - MAX_LUM_BITS)]);
 }
 
 ///@{

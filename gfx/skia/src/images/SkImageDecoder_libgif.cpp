@@ -18,12 +18,15 @@
 
 class SkGIFImageDecoder : public SkImageDecoder {
 public:
-    virtual Format getFormat() const {
+    virtual Format getFormat() const SK_OVERRIDE {
         return kGIF_Format;
     }
 
 protected:
-    virtual bool onDecode(SkStream* stream, SkBitmap* bm, Mode mode);
+    virtual bool onDecode(SkStream* stream, SkBitmap* bm, Mode mode) SK_OVERRIDE;
+
+private:
+    typedef SkImageDecoder INHERITED;
 };
 
 static const uint8_t gStartingIterlaceYValue[] = {
@@ -99,7 +102,11 @@ static int DecodeCallBackProc(GifFileType* fileType, GifByteType* out,
 
 void CheckFreeExtension(SavedImage* Image) {
     if (Image->ExtensionBlocks) {
+#if GIFLIB_MAJOR < 5
         FreeExtension(Image);
+#else
+        GifFreeExtensions(&Image->ExtensionBlockCount, &Image->ExtensionBlocks);
+#endif
     }
 }
 
@@ -151,7 +158,11 @@ static bool error_return(GifFileType* gif, const SkBitmap& bm,
 }
 
 bool SkGIFImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* bm, Mode mode) {
+#if GIFLIB_MAJOR < 5
     GifFileType* gif = DGifOpen(sk_stream, DecodeCallBackProc);
+#else
+    GifFileType* gif = DGifOpen(sk_stream, DecodeCallBackProc, NULL);
+#endif
     if (NULL == gif) {
         return error_return(gif, *bm, "DGifOpen");
     }
@@ -166,6 +177,9 @@ bool SkGIFImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* bm, Mode mode) {
     int width, height;
     GifRecordType recType;
     GifByteType *extData;
+#if GIFLIB_MAJOR >= 5
+    int extFunction;
+#endif
     int transpIndex = -1;   // -1 means we don't have it (yet)
 
     do {
@@ -191,10 +205,17 @@ bool SkGIFImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* bm, Mode mode) {
                 return error_return(gif, *bm, "chooseFromOneChoice");
             }
 
-            bm->setConfig(SkBitmap::kIndex8_Config, width, height);
-            if (SkImageDecoder::kDecodeBounds_Mode == mode)
+            if (SkImageDecoder::kDecodeBounds_Mode == mode) {
+                bm->setConfig(SkBitmap::kIndex8_Config, width, height);
                 return true;
+            }
 
+            // No Bitmap reuse supported for this format
+            if (!bm->isNull()) {
+                return false;
+            }
+
+            bm->setConfig(SkBitmap::kIndex8_Config, width, height);
             SavedImage* image = &gif->SavedImages[gif->ImageCount-1];
             const GifImageDesc& desc = image->ImageDesc;
 
@@ -296,21 +317,35 @@ bool SkGIFImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* bm, Mode mode) {
             } break;
 
         case EXTENSION_RECORD_TYPE:
+#if GIFLIB_MAJOR < 5
             if (DGifGetExtension(gif, &temp_save.Function,
                                  &extData) == GIF_ERROR) {
+#else
+            if (DGifGetExtension(gif, &extFunction, &extData) == GIF_ERROR) {
+#endif
                 return error_return(gif, *bm, "DGifGetExtension");
             }
 
             while (extData != NULL) {
                 /* Create an extension block with our data */
+#if GIFLIB_MAJOR < 5
                 if (AddExtensionBlock(&temp_save, extData[0],
                                       &extData[1]) == GIF_ERROR) {
+#else
+                if (GifAddExtensionBlock(&gif->ExtensionBlockCount,
+                                         &gif->ExtensionBlocks,
+                                         extFunction,
+                                         extData[0],
+                                         &extData[1]) == GIF_ERROR) {
+#endif
                     return error_return(gif, *bm, "AddExtensionBlock");
                 }
                 if (DGifGetExtensionNext(gif, &extData) == GIF_ERROR) {
                     return error_return(gif, *bm, "DGifGetExtensionNext");
                 }
+#if GIFLIB_MAJOR < 5
                 temp_save.Function = 0;
+#endif
             }
             break;
 

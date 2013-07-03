@@ -10,12 +10,13 @@
 #include "nsIPrincipal.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMMediaStream.h"
+#include "mozilla/dom/MediaSource.h"
 
 // -----------------------------------------------------------------------
 // Hash table
 struct DataInfo
 {
-  // mObject must be an nsIDOMBlob or an nsIDOMMediaStream
+  // mObject is expected to be an nsIDOMBlob, nsIDOMMediaStream, or MediaSource
   nsCOMPtr<nsISupports> mObject;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
@@ -183,7 +184,8 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NS_ERROR_DOM_BAD_URI;
   }
   nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(info->mObject);
-  if (!blob) {
+  nsCOMPtr<mozilla::dom::MediaSource> mediasource = do_QueryInterface(info->mObject);
+  if (!blob && !mediasource) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
@@ -197,7 +199,12 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 #endif
 
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = blob->GetInternalStream(getter_AddRefs(stream));
+  nsresult rv = NS_OK;
+  if (blob) {
+    rv = blob->GetInternalStream(getter_AddRefs(stream));
+  } else {
+    stream = mediasource->CreateInternalStream();
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;
@@ -209,25 +216,30 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
 
   nsString type;
-  rv = blob->GetType(type);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(info->mObject);
-  if (file) {
-    nsString filename;
-    rv = file->GetName(filename);
+  if (blob) {
+    rv = blob->GetType(type);
     NS_ENSURE_SUCCESS(rv, rv);
-    channel->SetContentDispositionFilename(filename);
-  }
 
-  uint64_t size;
-  rv = blob->GetSize(&size);
-  NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t size;
+    rv = blob->GetSize(&size);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(info->mObject);
+    if (file) {
+      nsString filename;
+      rv = file->GetName(filename);
+      NS_ENSURE_SUCCESS(rv, rv);
+      channel->SetContentDispositionFilename(filename);
+    }
+
+    channel->SetContentLength(size);
+  } else {
+    type = mediasource->GetType();
+  }
 
   channel->SetOwner(owner);
   channel->SetOriginalURI(uri);
   channel->SetContentType(NS_ConvertUTF16toUTF8(type));
-  channel->SetContentLength(size);
 
   channel.forget(result);
 
@@ -254,6 +266,13 @@ NS_IMETHODIMP
 nsMediaStreamProtocolHandler::GetScheme(nsACString &result)
 {
   result.AssignLiteral(MEDIASTREAMURI_SCHEME);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMediaSourceProtocolHandler::GetScheme(nsACString &result)
+{
+  result.AssignLiteral(MEDIASOURCEURI_SCHEME);
   return NS_OK;
 }
 
@@ -286,5 +305,21 @@ NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream)
 
   *aStream = stream;
   NS_ADDREF(*aStream);
+  return NS_OK;
+}
+
+nsresult
+NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource)
+{
+  NS_ASSERTION(IsMediaSourceURI(aURI), "Only call this with mediasource URIs");
+
+  *aSource = nullptr;
+
+  nsCOMPtr<mozilla::dom::MediaSource> source = do_QueryInterface(GetDataObject(aURI));
+  if (!source) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  source.forget(aSource);
   return NS_OK;
 }

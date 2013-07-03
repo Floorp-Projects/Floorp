@@ -2995,8 +2995,10 @@ MacroAssemblerARMCompat::setupABICall(uint32_t args)
 #else
     usedSlots_ = 0;
 #endif
-    floatArgsInGPR[0] = VFPRegister();
-    floatArgsInGPR[1] = VFPRegister();
+    floatArgsInGPR[0] = MoveOperand();
+    floatArgsInGPR[1] = MoveOperand();
+    floatArgsInGPRValid[0] = false;
+    floatArgsInGPRValid[1] = false;
 }
 
 void
@@ -3081,7 +3083,8 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
     MoveOperand dest;
     if (GetIntArgReg(usedSlots_, 0, &destReg)) {
         if (from.isDouble()) {
-            floatArgsInGPR[destReg.code() >> 1] = VFPRegister(from.floatReg());
+            floatArgsInGPR[destReg.code() >> 1] = from;
+            floatArgsInGPRValid[destReg.code() >> 1] = true;
             useResolver = false;
         } else if (from.isGeneralReg() && from.reg() == destReg) {
             // No need to move anything
@@ -3150,8 +3153,26 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust)
         emitter.finish();
     }
     for (int i = 0; i < 2; i++) {
-        if (!floatArgsInGPR[i].isInvalid())
-            ma_vxfer(floatArgsInGPR[i], Register::FromCode(i*2), Register::FromCode(i*2+1));
+        if (floatArgsInGPRValid[i]) {
+            MoveOperand from = floatArgsInGPR[i];
+            Register to0 = Register::FromCode(i * 2), to1 = Register::FromCode(i * 2 + 1);
+
+            if (from.isFloatReg()) {
+                ma_vxfer(VFPRegister(from.floatReg()), to0, to1);
+            } else {
+                JS_ASSERT(from.isFloatAddress());
+                // Note: We can safely use the MoveOperand's displacement here,
+                // even if the base is SP: MoveEmitter::toOperand adjusts
+                // SP-relative operands by the difference between the current
+                // stack usage and stackAdjust, which emitter.finish() resets
+                // to 0.
+                //
+                // Warning: if the offset isn't within [-255,+255] then this
+                // will assert-fail (or, if non-debug, load the wrong words).
+                // Nothing uses such an offset at the time of this writing.
+                ma_ldrd(EDtrAddr(from.base(), EDtrOffImm(from.disp())), to0, to1);
+            }
+        }
     }
     checkStackAlignment();
 

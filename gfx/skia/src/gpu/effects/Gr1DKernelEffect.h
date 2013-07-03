@@ -9,6 +9,7 @@
 #define Gr1DKernelEffect_DEFINED
 
 #include "GrSingleTextureEffect.h"
+#include "SkMatrix.h"
 
 /**
  * Base class for 1D kernel effects. The kernel operates either in X or Y and
@@ -18,6 +19,7 @@
  * read. Since the center pixel is also read, the total width is one larger than
  * two times the radius.
  */
+
 class Gr1DKernelEffect : public GrSingleTextureEffect {
 
 public:
@@ -29,7 +31,7 @@ public:
     Gr1DKernelEffect(GrTexture* texture,
                      Direction direction,
                      int radius)
-        : GrSingleTextureEffect(texture)
+        : GrSingleTextureEffect(texture, MakeDivByTextureWHMatrix(texture))
         , fDirection(direction)
         , fRadius(radius) {}
 

@@ -1838,7 +1838,8 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
         return false;
     }
 
-    // special handling for file: URIs
+    // For file scheme, reject unless the files are identical. See
+    // NS_RelaxStrictFileOriginPolicy for enforcing file same-origin checking
     if (targetScheme.EqualsLiteral("file"))
     {
         // in traditional unsafe behavior all files are the same origin
@@ -1905,6 +1906,93 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
     }
 
     return NS_GetRealPort(targetBaseURI) == NS_GetRealPort(sourceBaseURI);
+}
+
+inline bool
+NS_URIIsLocalFile(nsIURI *aURI)
+{
+  nsCOMPtr<nsINetUtil> util = do_GetNetUtil();
+
+  bool isFile;
+  return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
+                                nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                                &isFile)) &&
+         isFile;
+}
+
+// When strict file origin policy is enabled, SecurityCompareURIs will fail for
+// file URIs that do not point to the same local file. This call provides an
+// alternate file-specific origin check that allows target files that are
+// contained in the same directory as the source.
+//
+// https://developer.mozilla.org/en-US/docs/Same-origin_policy_for_file:_URIs
+inline bool
+NS_RelaxStrictFileOriginPolicy(nsIURI *aTargetURI,
+                               nsIURI *aSourceURI,
+                               bool aAllowDirectoryTarget = false)
+{
+  if (!NS_URIIsLocalFile(aTargetURI)) {
+    // This is probably not what the caller intended
+    NS_NOTREACHED("NS_RelaxStrictFileOriginPolicy called with non-file URI");
+    return false;
+  }
+
+  if (!NS_URIIsLocalFile(aSourceURI)) {
+    // If the source is not also a file: uri then forget it
+    // (don't want resource: principals in a file: doc)
+    //
+    // note: we're not de-nesting jar: uris here, we want to
+    // keep archive content bottled up in its own little island
+    return false;
+  }
+
+  //
+  // pull out the internal files
+  //
+  nsCOMPtr<nsIFileURL> targetFileURL(do_QueryInterface(aTargetURI));
+  nsCOMPtr<nsIFileURL> sourceFileURL(do_QueryInterface(aSourceURI));
+  nsCOMPtr<nsIFile> targetFile;
+  nsCOMPtr<nsIFile> sourceFile;
+  bool targetIsDir;
+
+  // Make sure targetFile is not a directory (bug 209234)
+  // and that it exists w/out unescaping (bug 395343)
+  if (!sourceFileURL || !targetFileURL ||
+      NS_FAILED(targetFileURL->GetFile(getter_AddRefs(targetFile))) ||
+      NS_FAILED(sourceFileURL->GetFile(getter_AddRefs(sourceFile))) ||
+      !targetFile || !sourceFile ||
+      NS_FAILED(targetFile->Normalize()) ||
+#ifndef MOZ_WIDGET_ANDROID
+      NS_FAILED(sourceFile->Normalize()) ||
+#endif
+      (!aAllowDirectoryTarget &&
+       (NS_FAILED(targetFile->IsDirectory(&targetIsDir)) || targetIsDir))) {
+    return false;
+  }
+
+  //
+  // If the file to be loaded is in a subdirectory of the source
+  // (or same-dir if source is not a directory) then it will
+  // inherit its source principal and be scriptable by that source.
+  //
+  bool sourceIsDir;
+  bool contained = false;
+  nsresult rv = sourceFile->IsDirectory(&sourceIsDir);
+  if (NS_SUCCEEDED(rv) && sourceIsDir) {
+    rv = sourceFile->Contains(targetFile, true, &contained);
+  } else {
+    nsCOMPtr<nsIFile> sourceParent;
+    rv = sourceFile->GetParent(getter_AddRefs(sourceParent));
+    if (NS_SUCCEEDED(rv) && sourceParent) {
+      rv = sourceParent->Contains(targetFile, true, &contained);
+    }
+  }
+
+  if (NS_SUCCEEDED(rv) && contained) {
+    return true;
+  }
+
+  return false;
 }
 
 inline bool

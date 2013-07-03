@@ -77,3 +77,6 @@ CPP_SOURCES += [
     'nsHttpTransaction.cpp',
 ]
 
+EXTRA_JS_MODULES += [
+    'UserAgentOverrides.jsm',
+]

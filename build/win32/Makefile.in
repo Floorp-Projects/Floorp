@@ -56,6 +56,13 @@ REDIST_FILES = \
   $(NULL)
 endif
 
+ifeq (1800,$(_MSC_VER))
+REDIST_FILES = \
+  msvcp120.dll \
+  msvcr120.dll \
+  $(NULL)
+endif
+
 ifdef REDIST_FILES
 libs-preqs = \
   $(call mkdir_deps,$(FINAL_TARGET)) \

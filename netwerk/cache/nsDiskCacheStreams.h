@@ -16,7 +16,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 
-#include "pratom.h"
+#include "mozilla/Atomics.h"
 
 class nsDiskCacheInputStream;
 class nsDiskCacheDevice;
@@ -34,10 +34,10 @@ public:
 
     nsresult    ClearBinding();
     
-    void        IncrementInputStreamCount() { PR_ATOMIC_INCREMENT(&mInStreamCount); }
+    void        IncrementInputStreamCount() { mInStreamCount++; }
     void        DecrementInputStreamCount()
                 {
-                    PR_ATOMIC_DECREMENT(&mInStreamCount);
+                    mInStreamCount--;
                     NS_ASSERTION(mInStreamCount >= 0, "mInStreamCount has gone negative");
                 }
 
@@ -58,7 +58,7 @@ private:
 
     nsDiskCacheBinding *        mBinding;       // not an owning reference
     nsDiskCacheDevice *         mDevice;
-    int32_t                     mInStreamCount;
+    mozilla::Atomic<int32_t>                     mInStreamCount;
     PRFileDesc *                mFD;
 
     uint32_t                    mStreamEnd;     // current size of data

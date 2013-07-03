@@ -12,6 +12,7 @@
 #include "SkBlurMask.h"
 #include "SkEmbossMask.h"
 #include "SkFlattenableBuffers.h"
+#include "SkString.h"
 
 static inline int pin2byte(int n) {
     if (n < 0) {
@@ -60,12 +61,12 @@ SkEmbossMaskFilter::SkEmbossMaskFilter(const Light& light, SkScalar blurRadius)
     normalize(fLight.fDirection);
 }
 
-SkMask::Format SkEmbossMaskFilter::getFormat() {
+SkMask::Format SkEmbossMaskFilter::getFormat() const {
     return SkMask::k3D_Format;
 }
 
 bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
-                                    const SkMatrix& matrix, SkIPoint* margin) {
+                            const SkMatrix& matrix, SkIPoint* margin) const {
     SkScalar radius = matrix.mapRadius(fBlurRadius);
 
     if (!SkBlurMask::Blur(dst, src, radius, SkBlurMask::kInner_Style,
@@ -132,4 +133,23 @@ void SkEmbossMaskFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
     buffer.writeScalar(fBlurRadius);
 }
 
-SK_DEFINE_FLATTENABLE_REGISTRAR(SkEmbossMaskFilter)
+#ifdef SK_DEVELOPER
+void SkEmbossMaskFilter::toString(SkString* str) const {
+    str->append("SkEmbossMaskFilter: (");
+
+    str->append("direction: (");
+    str->appendScalar(fLight.fDirection[0]);
+    str->append(", ");
+    str->appendScalar(fLight.fDirection[1]);
+    str->append(", ");
+    str->appendScalar(fLight.fDirection[2]);
+    str->append(") ");
+
+    str->appendf("ambient: %d specular: %d ",
+        fLight.fAmbient, fLight.fSpecular);
+
+    str->append("blurRadius: ");
+    str->appendScalar(fBlurRadius);
+    str->append(")");
+}
+#endif

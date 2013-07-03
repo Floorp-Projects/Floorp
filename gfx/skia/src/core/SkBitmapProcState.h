@@ -137,6 +137,10 @@ private:
 
     MatrixProc chooseMatrixProc(bool trivial_matrix);
     bool chooseProcs(const SkMatrix& inv, const SkPaint&);
+    ShaderProc32 chooseShaderProc32();
+
+    // Return false if we failed to setup for fast translate (e.g. overflow)
+    bool setupForTranslate();
 
 #ifdef SK_DEBUG
     static void DebugMatrixProc(const SkBitmapProcState&,

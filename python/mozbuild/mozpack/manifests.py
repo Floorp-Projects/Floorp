@@ -47,7 +47,7 @@ class PurgeManifest(object):
 
         version = fh.readline().rstrip()
         if version != '1':
-            raise UnreadablePurgeManifest('Unknown manifest version: ' %
+            raise UnreadablePurgeManifest('Unknown manifest version: %s' %
                 version)
 
         m.relpath = fh.readline().rstrip()

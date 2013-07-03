@@ -592,6 +592,7 @@ public:
   nsIPresShell *GetShell()const  { return mShell; }
 
   void DisconnectFromPresShell();
+  nsresult ClearNormalSelection();
 private:
   nsresult TakeFocus(nsIContent *aNewFocus,
                      uint32_t aContentOffset,
@@ -677,7 +678,6 @@ private:
   // Might return null
   nsIContent* GetParentTable(nsIContent *aCellNode) const;
   nsresult CreateAndAddRange(nsINode *aParentNode, int32_t aOffset);
-  nsresult ClearNormalSelection();
 
   nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;

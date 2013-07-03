@@ -289,9 +289,6 @@ protected:
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
                                     CacheFailedBehavior aBehavior = DONT_EXECUTE);
   bool InitTabChildGlobalInternal(nsISupports* aScope, const nsACString& aID);
-  static void Traverse(nsFrameScriptExecutor *tmp,
-                       nsCycleCollectionTraversalCallback &cb);
-  static void Unlink(nsFrameScriptExecutor* aTmp);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   static nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>* sCachedScripts;
