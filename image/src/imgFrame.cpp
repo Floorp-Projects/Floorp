@@ -684,6 +684,17 @@ nsresult imgFrame::UnlockImageData()
   if (mPalettedImageData)
     return NS_OK;
 
+  // FIXME: Bug 795737
+  // If this image has been drawn since we were locked, it has had snapshots
+  // added, and we need to remove them before calling MarkDirty.
+  if (mImageSurface)
+    mImageSurface->Flush();
+
+#ifdef USE_WIN_SURFACE
+  if (mWinSurface)
+    mWinSurface->Flush();
+#endif
+
   // Assume we've been written to.
   if (mImageSurface)
     mImageSurface->MarkDirty();
@@ -709,6 +720,9 @@ void imgFrame::ApplyDirtToSurfaces()
 
   MutexAutoLock lock(mDirtyMutex);
   if (mDirty) {
+    // FIXME: Bug 795737
+    // If this image has been drawn since we were locked, it has had snapshots
+    // added, and we need to remove them before calling MarkDirty.
     if (mImageSurface)
       mImageSurface->Flush();
 
