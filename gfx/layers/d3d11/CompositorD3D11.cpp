@@ -381,21 +381,21 @@ CompositorD3D11::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
 }
 
 void
-CompositorD3D11::SetPSForEffect(Effect *aEffect, MaskMode aMaskMode)
+CompositorD3D11::SetPSForEffect(Effect *aEffect, MaskType aMaskType)
 {
   switch (aEffect->mType) {
   case EFFECT_SOLID_COLOR:
-    mContext->PSSetShader(mAttachments->mSolidColorShader[aMaskMode], nullptr, 0);
+    mContext->PSSetShader(mAttachments->mSolidColorShader[aMaskType], nullptr, 0);
     return;
   case EFFECT_BGRA:
   case EFFECT_RENDER_TARGET:
-    mContext->PSSetShader(mAttachments->mRGBAShader[aMaskMode], nullptr, 0);
+    mContext->PSSetShader(mAttachments->mRGBAShader[aMaskType], nullptr, 0);
     return;
   case EFFECT_BGRX:
-    mContext->PSSetShader(mAttachments->mRGBShader[aMaskMode], nullptr, 0);
+    mContext->PSSetShader(mAttachments->mRGBShader[aMaskType], nullptr, 0);
     return;
   case EFFECT_YCBCR:
-    mContext->PSSetShader(mAttachments->mYCbCrShader[aMaskMode], nullptr, 0);
+    mContext->PSSetShader(mAttachments->mYCbCrShader[aMaskType], nullptr, 0);
     return;
   }
 }
@@ -416,14 +416,14 @@ CompositorD3D11::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
 
   bool isPremultiplied = true;
 
-  MaskMode maskMode = UNMASKED;
+  MaskType maskType = MaskNone;
 
   if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
     if (aTransform.Is2D()) {
-      maskMode = MASKED;
+      maskType = Mask2d;
     } else {
       MOZ_ASSERT(aEffectChain.mPrimaryEffect->mType == EFFECT_BGRA);
-      maskMode = MASKED3D;
+      maskType = Mask3d;
     }
 
     EffectMask *maskEffect = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
@@ -450,9 +450,9 @@ CompositorD3D11::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
   scissor.bottom = aClipRect.YMost();
   mContext->RSSetScissorRects(1, &scissor);
   mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-  mContext->VSSetShader(mAttachments->mVSQuadShader[maskMode], nullptr, 0);
+  mContext->VSSetShader(mAttachments->mVSQuadShader[maskType], nullptr, 0);
 
-  SetPSForEffect(aEffectChain.mPrimaryEffect, maskMode);
+  SetPSForEffect(aEffectChain.mPrimaryEffect, maskType);
 
   switch (aEffectChain.mPrimaryEffect->mType) {
   case EFFECT_SOLID_COLOR: {
@@ -667,26 +667,26 @@ CompositorD3D11::CreateShaders()
   HRESULT hr;
 
 
-  hr = mDevice->CreateVertexShader(LayerQuadVS, sizeof(LayerQuadVS), nullptr, byRef(mAttachments->mVSQuadShader[UNMASKED]));
+  hr = mDevice->CreateVertexShader(LayerQuadVS, sizeof(LayerQuadVS), nullptr, byRef(mAttachments->mVSQuadShader[MaskNone]));
   if (FAILED(hr)) {
     return false;
   }
 
-  hr = mDevice->CreateVertexShader(LayerQuadMaskVS, sizeof(LayerQuadMaskVS), nullptr, byRef(mAttachments->mVSQuadShader[MASKED]));
+  hr = mDevice->CreateVertexShader(LayerQuadMaskVS, sizeof(LayerQuadMaskVS), nullptr, byRef(mAttachments->mVSQuadShader[Mask2d]));
   if (FAILED(hr)) {
     return false;
   }
 
-  hr = mDevice->CreateVertexShader(LayerQuadMask3DVS, sizeof(LayerQuadMask3DVS), nullptr, byRef(mAttachments->mVSQuadShader[MASKED3D]));
+  hr = mDevice->CreateVertexShader(LayerQuadMask3DVS, sizeof(LayerQuadMask3DVS), nullptr, byRef(mAttachments->mVSQuadShader[Mask3d]));
   if (FAILED(hr)) {
     return false;
   }
 
-#define LOAD_PIXEL_SHADER(x) hr = mDevice->CreatePixelShader(x, sizeof(x), nullptr, byRef(mAttachments->m##x[UNMASKED])); \
+#define LOAD_PIXEL_SHADER(x) hr = mDevice->CreatePixelShader(x, sizeof(x), nullptr, byRef(mAttachments->m##x[MaskNone])); \
   if (FAILED(hr)) { \
     return false; \
   } \
-  hr = mDevice->CreatePixelShader(x##Mask, sizeof(x##Mask), nullptr, byRef(mAttachments->m##x[MASKED])); \
+  hr = mDevice->CreatePixelShader(x##Mask, sizeof(x##Mask), nullptr, byRef(mAttachments->m##x[Mask2d])); \
   if (FAILED(hr)) { \
     return false; \
   }
@@ -698,7 +698,7 @@ CompositorD3D11::CreateShaders()
 
 #undef LOAD_PIXEL_SHADER
 
-  hr = mDevice->CreatePixelShader(RGBAShaderMask3D, sizeof(RGBAShaderMask3D), nullptr, byRef(mAttachments->mRGBAShader[MASKED3D]));
+  hr = mDevice->CreatePixelShader(RGBAShaderMask3D, sizeof(RGBAShaderMask3D), nullptr, byRef(mAttachments->mRGBAShader[Mask3d]));
   if (FAILED(hr)) {
     return false;
   }
