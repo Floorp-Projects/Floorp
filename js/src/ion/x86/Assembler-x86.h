@@ -13,8 +13,6 @@
 #include "ion/IonCode.h"
 #include "mozilla/Util.h"
 
-#include "jsscriptinlines.h"
-
 namespace js {
 namespace ion {
 
