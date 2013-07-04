@@ -147,9 +147,9 @@ struct PlanarYCbCrOGLBackendData : public ImageBackendData
 
 struct CairoOGLBackendData : public ImageBackendData
 {
-  CairoOGLBackendData() : mLayerProgram(gl::RGBALayerProgramType) {}
+  CairoOGLBackendData() : mLayerProgram(RGBALayerProgramType) {}
   GLTexture mTexture;
-  gl::ShaderProgramType mLayerProgram;
+  ShaderProgramType mLayerProgram;
   gfxIntSize mTextureSize;
 };
 
