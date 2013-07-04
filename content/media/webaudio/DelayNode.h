@@ -9,7 +9,6 @@
 
 #include "AudioNode.h"
 #include "AudioParam.h"
-#include "PlayingRefChangeHandler.h"
 
 namespace mozilla {
 namespace dom {
@@ -35,7 +34,6 @@ public:
 private:
   static void SendDelayToStream(AudioNode* aNode);
   friend class DelayNodeEngine;
-  friend class PlayingRefChangeHandler<DelayNode>;
 
 private:
   nsRefPtr<AudioParam> mDelay;
