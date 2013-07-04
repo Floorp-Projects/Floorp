@@ -8,7 +8,6 @@
 #include "ion/MIRGraph.h"
 #include "ion/LIR.h"
 #include "ion/IonSpewer.h"
-#include "ion/LIR-inl.h"
 #include "ion/shared/CodeGenerator-shared.h"
 
 using namespace js;
