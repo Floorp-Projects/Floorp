@@ -192,6 +192,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_pluginnotification.js \
                  browser_plugins_added_dynamically.js \
                  browser_CTP_drag_drop.js \
+                 browser_CTP_data_urls.js \
                  browser_pluginplaypreview.js \
                  browser_pluginplaypreview2.js \
                  browser_private_browsing_window.js \
@@ -278,6 +279,7 @@ MOCHITEST_BROWSER_FILES = \
                  plugin_bug820497.html \
                  plugin_hidden_to_visible.html \
                  plugin_two_types.html \
+                 plugin_data_url.html \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
