@@ -34,20 +34,11 @@ class XPathEvaluatorParseContext : public txIParseContext
 {
 public:
     XPathEvaluatorParseContext(nsIDOMXPathNSResolver* aResolver,
-                               nsTArray<int32_t> *aNamespaceIDs,
-                               nsTArray<nsCString> *aContractIDs,
-                               nsCOMArray<nsISupports> *aState,
                                bool aIsCaseSensitive)
         : mResolver(aResolver),
-          mNamespaceIDs(aNamespaceIDs),
-          mContractIDs(aContractIDs),
-          mState(aState),
           mLastError(NS_OK),
           mIsCaseSensitive(aIsCaseSensitive)
     {
-        NS_ASSERTION(mContractIDs ||
-                     (!mNamespaceIDs || mNamespaceIDs->Length() == 0),
-                     "Need contract IDs if there are namespaces.");
     }
 
     nsresult getError()
@@ -63,9 +54,6 @@ public:
 
 private:
     nsIDOMXPathNSResolver* mResolver;
-    nsTArray<int32_t> *mNamespaceIDs;
-    nsTArray<nsCString> *mContractIDs;
-    nsCOMArray<nsISupports> *mState;
     nsresult mLastError;
     bool mIsCaseSensitive;
 };
@@ -73,29 +61,12 @@ private:
 NS_IMPL_AGGREGATED(XPathEvaluator)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(XPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
-    NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
 NS_INTERFACE_MAP_END
 
 XPathEvaluator::XPathEvaluator(nsISupports *aOuter)
+    : mDocument(do_GetWeakReference(aOuter))
 {
     NS_INIT_AGGREGATED(aOuter);
-}
-
-nsresult
-XPathEvaluator::Init()
-{
-    nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(fOuter);
-
-    return document ? SetDocument(document) : NS_OK;
-}
-
-NS_IMETHODIMP
-XPathEvaluator::CreateExpression(const nsAString & aExpression,
-                                 nsIDOMXPathNSResolver *aResolver,
-                                 nsIDOMXPathExpression **aResult)
-{
-    return CreateExpression(aExpression, aResolver, (nsTArray<int32_t>*)nullptr,
-                            nullptr, nullptr, aResult);
 }
 
 NS_IMETHODIMP
@@ -131,53 +102,8 @@ XPathEvaluator::Evaluate(const nsAString & aExpression,
 
 
 NS_IMETHODIMP
-XPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
-{
-    mDocument = do_GetWeakReference(aDocument);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 XPathEvaluator::CreateExpression(const nsAString & aExpression,
                                  nsIDOMXPathNSResolver *aResolver,
-                                 nsTArray<nsString> *aNamespaceURIs,
-                                 nsTArray<nsCString> *aContractIDs,
-                                 nsCOMArray<nsISupports> *aState,
-                                 nsIDOMXPathExpression **aResult)
-{
-    nsTArray<int32_t> namespaceIDs;
-    if (aNamespaceURIs) {
-        uint32_t count = aNamespaceURIs->Length();
-
-        if (!aContractIDs || aContractIDs->Length() != count) {
-            return NS_ERROR_FAILURE;
-        }
-
-        if (!namespaceIDs.SetLength(count)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        uint32_t i;
-        for (i = 0; i < count; ++i) {
-            if (aContractIDs->ElementAt(i).IsEmpty()) {
-                return NS_ERROR_FAILURE;
-            }
-
-            nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURIs->ElementAt(i), namespaceIDs[i]);
-        }
-    }
-
-
-    return CreateExpression(aExpression, aResolver, &namespaceIDs, aContractIDs,
-                            aState, aResult);
-}
-
-nsresult
-XPathEvaluator::CreateExpression(const nsAString & aExpression,
-                                 nsIDOMXPathNSResolver *aResolver,
-                                 nsTArray<int32_t> *aNamespaceIDs,
-                                 nsTArray<nsCString> *aContractIDs,
-                                 nsCOMArray<nsISupports> *aState,
                                  nsIDOMXPathExpression **aResult)
 {
     nsresult rv;
@@ -192,9 +118,7 @@ XPathEvaluator::CreateExpression(const nsAString & aExpression,
     }
 
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    XPathEvaluatorParseContext pContext(aResolver, aNamespaceIDs,
-                                        aContractIDs, aState,
-                                        !(doc && doc->IsHTML()));
+    XPathEvaluatorParseContext pContext(aResolver, !(doc && doc->IsHTML()));
 
     nsAutoPtr<Expr> expression;
     rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
@@ -230,7 +154,6 @@ XPathEvaluator::Constructor(const GlobalObject& aGlobal,
                             ErrorResult& rv)
 {
     nsRefPtr<XPathEvaluator> newObj = new XPathEvaluator(nullptr);
-    newObj->Init();
     return newObj.forget();
 }
 
@@ -309,21 +232,7 @@ XPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
                                                 int32_t aID,
                                                 FunctionCall** aFn)
 {
-    nsresult rv = NS_ERROR_XPATH_UNKNOWN_FUNCTION;
-
-    uint32_t i, count = mNamespaceIDs ? mNamespaceIDs->Length() : 0;
-    for (i = 0; i < count; ++i) {
-        if (mNamespaceIDs->ElementAt(i) == aID) {
-            nsISupports *state = mState ? mState->SafeObjectAt(i) : nullptr;
-            rv = TX_ResolveFunctionCallXPCOM(mContractIDs->ElementAt(i), aID,
-                                             aName, state, aFn);
-            if (NS_SUCCEEDED(rv)) {
-                break;
-            }
-        }
-    }
-
-    return rv;
+    return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 }
 
 bool XPathEvaluatorParseContext::caseInsensitiveNameTests()
