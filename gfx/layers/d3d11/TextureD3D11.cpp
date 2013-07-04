@@ -299,7 +299,8 @@ TextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
                                   nsIntRegion *aRegion,
                                   nsIntPoint *aOffset)
 {
-  MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TShmem);
+  MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TShmem ||
+             aImage.type() == SurfaceDescriptor::TMemoryImage);
 
   AutoOpenSurface openSurf(OPEN_READ_ONLY, aImage);
 
