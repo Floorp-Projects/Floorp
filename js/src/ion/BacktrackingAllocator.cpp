@@ -6,6 +6,8 @@
 
 #include "ion/BacktrackingAllocator.h"
 
+#include "jsprf.h"
+
 using namespace js;
 using namespace js::ion;
 

@@ -690,61 +690,6 @@ extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc,
 extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc,
                               js::types::Type type);
 
-inline bool
-UseNewTypeForClone(JSFunction *fun)
-{
-    if (!fun->isInterpreted())
-        return false;
-
-    if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite)
-        return true;
-
-    if (fun->isArrow())
-        return false;
-
-    if (fun->hasSingletonType())
-        return false;
-
-    /*
-     * When a function is being used as a wrapper for another function, it
-     * improves precision greatly to distinguish between different instances of
-     * the wrapper; otherwise we will conflate much of the information about
-     * the wrapped functions.
-     *
-     * An important example is the Class.create function at the core of the
-     * Prototype.js library, which looks like:
-     *
-     * var Class = {
-     *   create: function() {
-     *     return function() {
-     *       this.initialize.apply(this, arguments);
-     *     }
-     *   }
-     * };
-     *
-     * Each instance of the innermost function will have a different wrapped
-     * initialize method. We capture this, along with similar cases, by looking
-     * for short scripts which use both .apply and arguments. For such scripts,
-     * whenever creating a new instance of the function we both give that
-     * instance a singleton type and clone the underlying script.
-     */
-
-    uint32_t begin, end;
-    if (fun->hasScript()) {
-        if (!fun->nonLazyScript()->usesArgumentsAndApply)
-            return false;
-        begin = fun->nonLazyScript()->sourceStart;
-        end = fun->nonLazyScript()->sourceEnd;
-    } else {
-        if (!fun->lazyScript()->usesArgumentsAndApply())
-            return false;
-        begin = fun->lazyScript()->begin();
-        end = fun->lazyScript()->end();
-    }
-
-    return end - begin <= 100;
-}
-
 /////////////////////////////////////////////////////////////////////
 // Script interface functions
 /////////////////////////////////////////////////////////////////////

@@ -19,6 +19,7 @@
 #include "jsstr.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 
 #include "vm/Shape-inl.h"
 

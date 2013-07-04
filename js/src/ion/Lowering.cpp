@@ -16,6 +16,8 @@
 #include "ion/shared/Lowering-shared-inl.h"
 #include "mozilla/DebugOnly.h"
 
+#include "jsinferinlines.h"
+
 using namespace js;
 using namespace ion;
 
