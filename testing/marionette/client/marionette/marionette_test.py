@@ -7,6 +7,7 @@ import os
 import re
 import functools
 import sys
+import socket
 import time
 import types
 import unittest
