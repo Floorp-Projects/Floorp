@@ -62,6 +62,9 @@ NS_NewHTMLTrackElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 namespace mozilla {
 namespace dom {
 
+// The default value for kKindTable is "subtitles"
+static const char* kKindTableDefaultString = kKindTable->tag;
+
 /** HTMLTrackElement */
 HTMLTrackElement::HTMLTrackElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
@@ -89,6 +92,12 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_4(HTMLTrackElement, nsGenericHTMLElement,
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLTrackElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
+
+void
+HTMLTrackElement::GetKind(DOMString& aKind) const
+{
+  GetEnumAttr(nsGkAtoms::kind, kKindTableDefaultString, aKind);
+}
 
 void
 HTMLTrackElement::OnChannelRedirect(nsIChannel* aChannel,
@@ -130,37 +139,19 @@ HTMLTrackElement::CreateTextTrack()
   nsString label, srcLang;
   GetSrclang(srcLang);
   GetLabel(label);
-  mTrack = new TextTrack(OwnerDoc()->GetParentObject(), Kind(), label, srcLang);
+
+  TextTrackKind kind;
+  if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::kind)) {
+    kind = static_cast<TextTrackKind>(value->GetEnumValue());
+  } else {
+    kind = TextTrackKind::Subtitles;
+  }
+
+  mTrack = new TextTrack(OwnerDoc()->GetParentObject(), kind, label, srcLang);
 
   if (mMediaParent) {
     mMediaParent->AddTextTrack(mTrack);
   }
-}
-
-TextTrackKind
-HTMLTrackElement::Kind() const
-{
-  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::kind);
-  if (!value) {
-    return TextTrackKind::Subtitles;
-  }
-  return static_cast<TextTrackKind>(value->GetEnumValue());
-}
-
-static EnumEntry
-StringFromKind(TextTrackKind aKind)
-{
-  return TextTrackKindValues::strings[static_cast<int>(aKind)];
-}
-
-void
-HTMLTrackElement::SetKind(TextTrackKind aKind, ErrorResult& aError)
-{
-  const EnumEntry& string = StringFromKind(aKind);
-  nsAutoString kind;
-
-  kind.AssignASCII(string.value, string.length);
-  SetHTMLAttr(nsGkAtoms::kind, kind, aError);
 }
 
 bool
@@ -169,16 +160,6 @@ HTMLTrackElement::ParseAttribute(int32_t aNamespaceID,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
-  // Map html attribute string values to TextTrackKind enums.
-  static const nsAttrValue::EnumTable kKindTable[] = {
-    { "subtitles", static_cast<int16_t>(TextTrackKind::Subtitles) },
-    { "captions", static_cast<int16_t>(TextTrackKind::Captions) },
-    { "descriptions", static_cast<int16_t>(TextTrackKind::Descriptions) },
-    { "chapters", static_cast<int16_t>(TextTrackKind::Chapters) },
-    { "metadata", static_cast<int16_t>(TextTrackKind::Metadata) },
-    { 0 }
-  };
-
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::kind) {
     // Case-insensitive lookup, with the first element as the default.
     return aResult.ParseEnumValue(aValue, kKindTable, false, kKindTable);

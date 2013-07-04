@@ -10,7 +10,7 @@
 [Pref="media.webvtt.enabled"]
 interface HTMLTrackElement : HTMLElement {
   [SetterThrows, Pure]
-  attribute TextTrackKind kind;
+  attribute DOMString kind;
   [SetterThrows, Pure]
   attribute DOMString src;
   [SetterThrows, Pure]
