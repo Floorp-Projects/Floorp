@@ -22,8 +22,8 @@ INACTIVE_COMPONENT = 1
 endif
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) \
 		$(MOZ_PIXMAN_CFLAGS) $(MOZ_PLATFORM_MAEMO_CFLAGS)

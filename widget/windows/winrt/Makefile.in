@@ -36,7 +36,6 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 MIDL_GENERATED_FILES = \
 	UIABridge_i.c \
@@ -57,5 +56,6 @@ do_interfaces_gen: UIABridge.idl
 export:: do_interfaces_gen
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
