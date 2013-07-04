@@ -210,7 +210,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     JSObject *objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return NULL;
-    RootedObject proto(cx, NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL, SingletonObject));
+    RootedObject proto(cx, NewObjectWithGivenProto(cx, &JSObject::class_, objProto, NULL, SingletonObject));
     if (!proto)
         return NULL;
 

@@ -393,7 +393,9 @@ extern JS_FRIEND_DATA(js::Class*) FunctionProxyClassPtr;
 extern JS_FRIEND_DATA(js::Class*) ObjectProxyClassPtr;
 extern JS_FRIEND_DATA(js::Class*) OuterWindowProxyClassPtr;
 
-extern JS_FRIEND_DATA(js::Class) ObjectClass;
+// This is equal to |&JSObject::class_|.  Use it in places where you don't want
+// to #include jsobj.h.
+extern JS_FRIEND_DATA(js::Class*) ObjectClassPtr;
 
 inline js::Class *
 GetObjectClass(JSObject *obj)

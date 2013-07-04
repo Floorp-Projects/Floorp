@@ -190,7 +190,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
-extern Class ObjectClass;
 
 class ArrayBufferObject;
 class GlobalObject;
@@ -224,6 +223,8 @@ class JSObject : public js::ObjectImpl
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
 
   public:
+    static js::Class class_;
+
     /*
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.
@@ -1009,9 +1010,6 @@ class JSObject : public js::ObjectImpl
         JS_ASSERT(is<T>());
         return *static_cast<const T *>(this);
     }
-
-    /* Direct subtypes of JSObject: */
-    inline bool isObject()           const { return hasClass(&js::ObjectClass); }
 
     /* Subtypes of Proxy. */
     inline bool isWrapper()                 const;

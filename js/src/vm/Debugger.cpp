@@ -832,7 +832,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
     }
 
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
         !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
@@ -883,7 +883,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     bool okResumption = rv.isObject();
     if (okResumption) {
         obj = &rv.toObject();
-        okResumption = obj->isObject();
+        okResumption = obj->is<JSObject>();
     }
     if (okResumption) {
         shape = obj->lastProperty();
@@ -3274,7 +3274,7 @@ DebuggerScript_getAllColumnOffsets(JSContext *cx, unsigned argc, Value *vp)
         if (!flowData[offset].hasNoEdges() &&
             (flowData[offset].lineno() != lineno ||
              flowData[offset].column() != column)) {
-            RootedObject entry(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+            RootedObject entry(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
             if (!entry)
                 return false;
 
@@ -4206,7 +4206,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
     /* If evalWithBindings, create the inner environment. */
     if (bindings) {
         /* TODO - This should probably be a Call object, like ES5 strict eval. */
-        env = NewObjectWithGivenProto(cx, &ObjectClass, NULL, env);
+        env = NewObjectWithGivenProto(cx, &JSObject::class_, NULL, env);
         if (!env)
             return false;
         RootedId id(cx);

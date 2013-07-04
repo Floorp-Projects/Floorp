@@ -1081,14 +1081,14 @@ NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 static inline JSObject *
 CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind = GenericObject)
 {
-    JS_ASSERT(baseobj->getClass() == &ObjectClass);
+    JS_ASSERT(baseobj->getClass() == &JSObject::class_);
     JS_ASSERT(!baseobj->inDictionaryMode());
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
     JS_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->tenuredGetAllocKind());
     RootedObject obj(cx);
-    obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
+    obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     if (!obj)
         return NULL;
 
