@@ -12,7 +12,6 @@
 #include "ion/LinearScan.h"
 #include "ion/IonBuilder.h"
 #include "ion/IonSpewer.h"
-#include "ion/LIR-inl.h"
 
 using namespace js;
 using namespace js::ion;
