@@ -42,6 +42,9 @@
         titlemodifier_normal="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
         titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
+#ifdef CAN_DRAW_IN_TITLEBAR
+        tabsintitlebar="true"
+#endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         lightweightthemes="true"
         lightweightthemesfooter="browser-bottombox"
