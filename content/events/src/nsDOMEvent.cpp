@@ -51,12 +51,13 @@ nsDOMEvent::nsDOMEvent(mozilla::dom::EventTarget* aOwner,
 nsDOMEvent::nsDOMEvent(nsPIDOMWindow* aParent)
 {
   ConstructorInit(static_cast<nsGlobalWindow *>(aParent), nullptr, nullptr);
-  SetIsDOMBinding();
 }
 
-void nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
-                                 nsPresContext* aPresContext, nsEvent* aEvent)
+void
+nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
+                            nsPresContext* aPresContext, nsEvent* aEvent)
 {
+  SetIsDOMBinding();
   SetOwner(aOwner);
 
   mPrivateDataDuplicated = false;
@@ -122,14 +123,10 @@ nsDOMEvent::~nsDOMEvent()
   }
 }
 
-DOMCI_DATA(Event, nsDOMEvent)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIJSNativeInitializer, !IsDOMBinding())
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEvent)
@@ -160,6 +157,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
         break;
       case NS_MUTATION_EVENT:
         static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode = nullptr;
+        break;
+      case NS_FOCUS_EVENT:
+        static_cast<nsFocusEvent*>(tmp->mEvent)->relatedTarget = nullptr;
         break;
       default:
         break;
@@ -202,6 +202,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
         cb.NoteXPCOMChild(
           static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode);
+        break;
+      case NS_FOCUS_EVENT:
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
+        cb.NoteXPCOMChild(
+          static_cast<nsFocusEvent*>(tmp->mEvent)->relatedTarget);
         break;
       default:
         break;
@@ -325,57 +330,6 @@ nsDOMEvent::SetTrusted(bool aTrusted)
   mEvent->mFlags.mIsTrusted = aTrusted;
 }
 
-NS_IMETHODIMP
-nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                       const JS::CallArgs& aArgs)
-{
-  MOZ_ASSERT(!IsDOMBinding());
-  NS_ENSURE_TRUE(aArgs.length() >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-
-  bool trusted = false;
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aOwner);
-  if (w) {
-    nsCOMPtr<nsIDocument> d = w->GetExtantDoc();
-    if (d) {
-      trusted = nsContentUtils::IsChromeDoc(d);
-      nsIPresShell* s = d->GetShell();
-      if (s) {
-        InitPresContextData(s->GetPresContext());
-      }
-    }
-  }
-
-  if (!mOwner) {
-    mOwner = w;
-  }
-
-  JSString* jsstr = JS_ValueToString(aCx, aArgs[0]);
-  if (!jsstr) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
-
-  JS::Anchor<JSString*> deleteProtector(jsstr);
-
-  nsDependentJSString type;
-  NS_ENSURE_STATE(type.init(aCx, jsstr));
-
-  nsresult rv = InitFromCtor(type, aCx, aArgs.length() >= 2 ? &(aArgs[1]) : nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SetTrusted(trusted);
-  return NS_OK;
-}
-
-nsresult
-nsDOMEvent::InitFromCtor(const nsAString& aType,
-                         JSContext* aCx, JS::Value* aVal)
-{
-  mozilla::idl::EventInit d;
-  nsresult rv = d.Init(aCx, aVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return InitEvent(aType, d.bubbles, d.cancelable);
-}
-
 bool
 nsDOMEvent::Init(mozilla::dom::EventTarget* aGlobal)
 {
@@ -402,7 +356,7 @@ nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                         mozilla::ErrorResult& aRv)
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
-  nsRefPtr<nsDOMEvent> e = nsDOMEvent::CreateEvent(t, nullptr, nullptr);
+  nsRefPtr<nsDOMEvent> e = new nsDOMEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
@@ -1330,6 +1284,6 @@ nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
                         nsEvent *aEvent) 
 {
   nsRefPtr<nsDOMEvent> it =
-    nsDOMEvent::CreateEvent(aOwner, aPresContext, aEvent);
+    new nsDOMEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

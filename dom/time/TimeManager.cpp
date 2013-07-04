@@ -2,56 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
-#include "nsIDOMClassInfo.h"
-#include "nsITimeService.h"
 #include "TimeManager.h"
 
-#ifdef MOZ_TIME_MANAGER
-DOMCI_DATA(MozTimeManager, mozilla::dom::time::TimeManager)
-#endif
+#include "mozilla/dom/MozTimeManagerBinding.h"
+#include "nsContentUtils.h"
+#include "nsITimeService.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
 namespace time {
 
-NS_INTERFACE_MAP_BEGIN(TimeManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozTimeManager)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-#ifdef MOZ_TIME_MANAGER
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozTimeManager)
-#endif
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(TimeManager)
-NS_IMPL_RELEASE(TimeManager)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TimeManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TimeManager)
 
-nsresult
-TimeManager::Set(const JS::Value& date, JSContext* ctx) {
-  double dateMSec;
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(TimeManager, mWindow)
 
-  if (date.isObject()) {
-    JS::Rooted<JSObject*> dateObj(ctx, date.toObjectOrNull());
+JSObject*
+TimeManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return MozTimeManagerBinding::Wrap(aCx, aScope, this);
+}
 
-    if (JS_ObjectIsDate(ctx, dateObj) && js_DateIsValid(dateObj)) {
-      dateMSec = js_DateGetMsecSinceEpoch(dateObj);
-    }
-    else {
-      NS_WARN_IF_FALSE(JS_ObjectIsDate(ctx, dateObj), "This is not a Date object");
-      NS_WARN_IF_FALSE(js_DateIsValid(dateObj), "Date is not valid");
-      return NS_ERROR_INVALID_ARG;
-    }
-  } else if (date.isNumber()) {
-    dateMSec = date.toNumber();
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
+void
+TimeManager::Set(Date& aDate)
+{
+  Set(aDate.TimeStamp());
+}
 
+void
+TimeManager::Set(double aTime)
+{
   nsCOMPtr<nsITimeService> timeService = do_GetService(TIMESERVICE_CONTRACTID);
   if (timeService) {
-    return timeService->Set(dateMSec);
+    timeService->Set(aTime);
   }
-  return NS_OK;
 }
 
 } // namespace time

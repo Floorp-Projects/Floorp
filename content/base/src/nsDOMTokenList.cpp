@@ -231,7 +231,9 @@ nsDOMTokenList::Remove(const nsAString& aToken, ErrorResult& aError)
 }
 
 bool
-nsDOMTokenList::Toggle(const nsAString& aToken, ErrorResult& aError)
+nsDOMTokenList::Toggle(const nsAString& aToken,
+                       const Optional<bool>& aForce,
+                       ErrorResult& aError)
 {
   aError = CheckToken(aToken);
   if (aError.Failed()) {
@@ -239,14 +241,24 @@ nsDOMTokenList::Toggle(const nsAString& aToken, ErrorResult& aError)
   }
 
   const nsAttrValue* attr = GetParsedAttr();
+  const bool forceOn = aForce.WasPassed() && aForce.Value();
+  const bool forceOff = aForce.WasPassed() && !aForce.Value();
 
-  if (attr && attr->Contains(aToken)) {
-    RemoveInternal(attr, aToken);
-    return false;
+  bool isPresent = attr && attr->Contains(aToken);
+
+  if (isPresent) {
+    if (!forceOn) {
+      RemoveInternal(attr, aToken);
+      isPresent = false;
+    }
+  } else {
+    if (!forceOff) {
+      AddInternal(attr, aToken);
+      isPresent = true;
+    }
   }
 
-  AddInternal(attr, aToken);
-  return true;
+  return isPresent;
 }
 
 void

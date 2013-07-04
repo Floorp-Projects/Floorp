@@ -40,14 +40,15 @@ function test() {
         is(tab.getAttribute("selected"), "true",
           "The response tab in the network details pane should be selected.");
 
+        is(tabpanel.querySelector("#response-content-info-header")
+          .hasAttribute("hidden"), true,
+          "The response info header doesn't have the intended visibility.");
         is(tabpanel.querySelector("#response-content-json-box")
           .hasAttribute("hidden"), false,
           "The response content json box doesn't have the intended visibility.");
-
         is(tabpanel.querySelector("#response-content-textarea-box")
           .hasAttribute("hidden"), true,
           "The response content textarea box doesn't have the intended visibility.");
-
         is(tabpanel.querySelector("#response-content-image-box")
           .hasAttribute("hidden"), true,
           "The response content image box doesn't have the intended visibility.");
@@ -73,7 +74,7 @@ function test() {
         is(jsonScope.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
           "__proto__", "The second json property name was incorrect.");
         is(jsonScope.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
-          "[object Object]", "The second json property value was incorrect.");
+          "Object", "The second json property value was incorrect.");
       }
     });
 

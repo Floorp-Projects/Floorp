@@ -35,8 +35,8 @@ DefineStaticJSVals(JSContext* cx)
 
 int HandlerFamily;
 
-js::ListBaseShadowsResult
-DOMListShadows(JSContext* cx, JSHandleObject proxy, JSHandleId id)
+js::DOMProxyShadowsResult
+DOMProxyShadows(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
 {
   JS::Value v = js::GetProxyExtra(proxy, JSPROXYSLOT_EXPANDO);
   if (v.isObject()) {
@@ -59,15 +59,15 @@ DOMListShadows(JSContext* cx, JSHandleObject proxy, JSHandleId id)
 }
 
 // Store the information for the specialized ICs.
-struct SetListBaseInformation
+struct SetDOMProxyInformation
 {
-  SetListBaseInformation() {
-    js::SetListBaseInformation((void*) &HandlerFamily,
-                               js::JSSLOT_PROXY_EXTRA + JSPROXYSLOT_EXPANDO, DOMListShadows);
+  SetDOMProxyInformation() {
+    js::SetDOMProxyInformation((void*) &HandlerFamily,
+                               js::JSSLOT_PROXY_EXTRA + JSPROXYSLOT_EXPANDO, DOMProxyShadows);
   }
 };
 
-SetListBaseInformation gSetListBaseInformation;
+SetDOMProxyInformation gSetDOMProxyInformation;
 
 // static
 JSObject*
@@ -81,6 +81,7 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 
   if (v.isObject()) {
     js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, UndefinedValue());
+    xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
   } else {
     js::ExpandoAndGeneration* expandoAndGeneration =
       static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
@@ -91,7 +92,6 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
     expandoAndGeneration->expando = UndefinedValue();
   }
 
-  xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
 
   return &v.toObject();
 }
@@ -122,28 +122,33 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj)
     return nullptr;
   }
 
+  nsISupports* native = UnwrapDOMObject<nsISupports>(obj);
+  nsWrapperCache* cache;
+  CallQueryInterface(native, &cache);
+  if (expandoAndGeneration) {
+    cache->PreserveWrapper(native);
+    expandoAndGeneration->expando.setObject(*expando);
+
+    return expando;
+  }
+
   XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
   if (!scope->RegisterDOMExpandoObject(obj)) {
     return nullptr;
   }
 
-  nsWrapperCache* cache;
-  CallQueryInterface(UnwrapDOMObject<nsISupports>(obj), &cache);
   cache->SetPreservingWrapper(true);
-
-  if (expandoAndGeneration) {
-    expandoAndGeneration->expando.setObject(*expando);
-  } else {
-    js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
-  }
+  js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
 
   return expando;
 }
 
 bool
-DOMProxyHandler::isExtensible(JSObject *proxy)
+DOMProxyHandler::isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
 {
-  return true; // always extensible per WebIDL
+  // always extensible per WebIDL
+  *extensible = true;
+  return true;
 }
 
 bool

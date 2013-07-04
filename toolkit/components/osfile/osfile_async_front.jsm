@@ -45,7 +45,7 @@ if (OS.Constants.Win) {
 let Type = OS.Shared.Type;
 
 // The library of promises.
-Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 // The implementation of communications
 Components.utils.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
@@ -110,11 +110,6 @@ let clone = function clone(object, refs = noRefs) {
   }
   return result;
 };
-
-/**
- * A shared constant used to normalize a set of options to nothing.
- */
-const noOptions = {};
 
 let worker = new PromiseWorker(
   "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
@@ -313,7 +308,7 @@ File.prototype = {
    * @resolves {number} The number of bytes effectively read.
    * @rejects {OS.File.Error}
    */
-  readTo: function readTo(buffer, options = noOptions) {
+  readTo: function readTo(buffer, options = {}) {
     // If |buffer| is a typed array and there is no |bytes| options, we
     // need to extract the |byteLength| now, as it will be lost by
     // communication
@@ -351,7 +346,7 @@ File.prototype = {
    *
    * @return {number} The number of bytes actually written.
    */
-  write: function write(buffer, options = noOptions) {
+  write: function write(buffer, options = {}) {
     // If |buffer| is a typed array and there is no |bytes| options,
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
@@ -621,16 +616,17 @@ File.exists = function exists(path) {
  * until the contents are fully written, the destination file is
  * not modified.
  *
- * By default, files are flushed for additional safety, i.e. to lower
- * the risks of losing data in case the device is suddenly removed or
- * in case of sudden shutdown. This additional safety is important
- * for user-critical data (e.g. preferences, application data, etc.)
- * but comes at a performance cost. For non-critical data (e.g. cache,
- * thumbnails, etc.), you may wish to deactivate flushing by passing
- * option |flush: false|.
+ * Limitation: In a few extreme cases (hardware failure during the
+ * write, user unplugging disk during the write, etc.), data may be
+ * corrupted. If your data is user-critical (e.g. preferences,
+ * application data, etc.), you may ish to pass option |flush: true|
+ * to decrease the vulnerability to such extreme cases. Note, however,
+ * that activating |flush| is expensive in terms of performance and
+ * battery usage and is not sufficient to totally eliminate this
+ * vulnarability.
  *
  * Important note: In the current implementation, option |tmpPath|
- * is required. This requirement should disappear as part of bug 793660.
+ * is required.
  *
  * @param {string} path The path of the file to modify.
  * @param {Typed Array | C pointer} buffer A buffer containing the bytes to write.
@@ -641,18 +637,16 @@ File.exists = function exists(path) {
  * - {string} tmpPath The path at which to write the temporary file.
  * - {bool} noOverwrite - If set, this function will fail if a file already
  * exists at |path|. The |tmpPath| is not overwritten if |path| exist.
- * - {bool} flush - If set to |false|, the function will not flush the
- * file. This improves performance considerably, but the resulting
- * behavior is slightly less safe: if the system shuts down improperly
- * (typically due to a kernel freeze or a power failure) or if the
- * device is disconnected or removed before the buffer is flushed, the
- * file may be corrupted.
- *
+ * - {bool} flush - If set to |true|, the function will flush the
+ * file. This is considerably slower but slightly safer: if
+ * the system shuts down improperly (typically due to a kernel freeze
+ * or a power failure) or if the device is disconnected before the buffer
+ * is flushed, the file has more changes of not being corrupted.
  *
  * @return {promise}
  * @resolves {number} The number of bytes actually written.
  */
-File.writeAtomic = function writeAtomic(path, buffer, options = noOptions) {
+File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   // Copy |options| to avoid modifying the original object but preserve the
   // reference to |outExecutionDuration| option if it is passed.
   options = clone(options, ["outExecutionDuration"]);

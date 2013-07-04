@@ -6,10 +6,12 @@
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
-if toolkit in ('qt', 'gtk2'):
+if toolkit in ('qt', 'gtk2', 'gtk3'):
     DIRS += ['unix']
 elif toolkit == 'windows':
     DIRS += ['windows']
+elif toolkit == 'cocoa':
+    DIRS += ['mac']
 elif toolkit == 'android':
     DIRS += ['android']
 
@@ -29,14 +31,6 @@ MODULE = 'dom'
 EXPORTS += [
     'nsDeviceSensors.h',
 ]
-
-if CONFIG['MOZ_GAMEPAD']:
-    EXPORTS.mozilla.dom = [
-        'GamepadService.h',
-    ]
-    CPP_SOURCES += [
-        'GamepadService.cpp',
-    ]
 
 EXPORTS.mozilla += [
     'OSFileConstants.h',

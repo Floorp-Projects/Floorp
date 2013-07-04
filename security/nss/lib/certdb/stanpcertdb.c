@@ -32,7 +32,7 @@
 #include "dev.h"
 
 PRBool
-SEC_CertNicknameConflict(const char *nickname, SECItem *derSubject,
+SEC_CertNicknameConflict(const char *nickname, const SECItem *derSubject,
 			 CERTCertDBHandle *handle)
 {
     CERTCertificate *cert;

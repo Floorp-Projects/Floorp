@@ -40,6 +40,8 @@ var PREF_EM_CHECK_COMPATIBILITY;
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
+const SHUTDOWN_EVENT                  = "profile-before-change";
+
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -451,7 +453,7 @@ var AddonManagerInternal = {
 
     this.recordTimestamp("AMI_startup_begin");
 
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, SHUTDOWN_EVENT, false);
 
     let appChanged = undefined;
 
@@ -682,7 +684,7 @@ var AddonManagerInternal = {
    */
   shutdown: function AMI_shutdown() {
     LOG("shutdown");
-    Services.obs.removeObserver(this, "xpcom-shutdown");
+    Services.obs.removeObserver(this, SHUTDOWN_EVENT);
     Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_STRICT_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
@@ -711,7 +713,7 @@ var AddonManagerInternal = {
    * @see nsIObserver
    */
   observe: function AMI_observe(aSubject, aTopic, aData) {
-    if (aTopic == "xpcom-shutdown") {
+    if (aTopic == SHUTDOWN_EVENT) {
       this.shutdown();
       return;
     }
@@ -1453,6 +1455,35 @@ var AddonManagerInternal = {
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
     this.getInstallsByTypes(null, aCallback);
+  },
+
+  /**
+   * Synchronously map a URI to the corresponding Addon ID.
+   *
+   * Mappable URIs are limited to in-application resources belonging to the
+   * add-on, such as Javascript compartments, XUL windows, XBL bindings, etc.
+   * but do not include URIs from meta data, such as the add-on homepage.
+   *
+   * @param  aURI
+   *         nsIURI to map to an addon id
+   * @return string containing the Addon ID or null
+   * @see    amIAddonManager.mapURIToAddonID
+   */
+  mapURIToAddonID: function AMI_mapURIToAddonID(aURI) {
+    if (!(aURI instanceof Ci.nsIURI)) {
+      throw Components.Exception("aURI is not a nsIURI",
+                                 Cr.NS_ERROR_INVALID_ARG);
+    }
+    // Try all providers
+    let providers = this.providers.slice(0);
+    for (let provider of providers) {
+      var id = callProvider(provider, "mapURIToAddonID", null, aURI);
+      if (id !== null) {
+        return id;
+      }
+    }
+
+    return null;
   },
 
   /**
@@ -2338,6 +2369,10 @@ this.AddonManager = {
 
   getAllInstalls: function AM_getAllInstalls(aCallback) {
     AddonManagerInternal.getAllInstalls(aCallback);
+  },
+
+  mapURIToAddonID: function AM_mapURIToAddonID(aURI) {
+    return AddonManagerInternal.mapURIToAddonID(aURI);
   },
 
   isInstallEnabled: function AM_isInstallEnabled(aType) {

@@ -15,14 +15,19 @@ public class GeckoSubMenu extends GeckoMenu
                           implements SubMenu {
     private static final String LOGTAG = "GeckoSubMenu";
 
-    private Context mContext;
-
     // MenuItem associated with this submenu.
     private MenuItem mMenuItem;
 
+    public GeckoSubMenu(Context context) {
+        super(context);
+    }
+
     public GeckoSubMenu(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
+    }
+
+    public GeckoSubMenu(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
     }
 
     @Override

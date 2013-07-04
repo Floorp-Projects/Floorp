@@ -84,9 +84,9 @@ exports.publicConstructor = function publicConstructor(privateCtor) {
 exports.validateOptions = function validateOptions(options, requirements) {
   options = options || {};
   let validatedOptions = {};
-  let mapThrew = false;
 
   for (let key in requirements) {
+    let mapThrew = false;
     let req = requirements[key];
     let [optsVal, keyInOpts] = (key in options) ?
                                [options[key], true] :

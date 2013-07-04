@@ -9,6 +9,9 @@
  */
 
 #include "nsAttrAndChildArray.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "nsMappedAttributeElement.h"
 #include "prbit.h"
 #include "nsString.h"
@@ -836,7 +839,7 @@ nsAttrAndChildArray::SetChildAtPos(void** aPos, nsIContent* aChild,
 }
 
 size_t
-nsAttrAndChildArray::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsAttrAndChildArray::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   if (mImpl) {

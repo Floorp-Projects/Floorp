@@ -6,3 +6,9 @@
 
 TEST_DIRS += ['test']
 
+EXTRA_JS_MODULES += [
+    'HUDService.jsm',
+    'NetworkPanel.jsm',
+    'WebConsolePanel.jsm',
+]
+

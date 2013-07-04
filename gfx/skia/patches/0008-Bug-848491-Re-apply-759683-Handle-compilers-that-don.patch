@@ -1,0 +1,35 @@
+From: George Wright <gw@gwright.org.uk>
+Date: Thu, 25 Apr 2013 20:49:45 -0400
+Subject: Bug 848491 - Re-apply 759683 - Handle compilers that don't support SSSE3 intrinsics
+
+
+diff --git a/gfx/skia/src/opts/opts_check_SSE2.cpp b/gfx/skia/src/opts/opts_check_SSE2.cpp
+index 6370058..18f68d6 100644
+--- a/gfx/skia/src/opts/opts_check_SSE2.cpp
++++ b/gfx/skia/src/opts/opts_check_SSE2.cpp
+@@ -86,9 +86,13 @@ static inline bool hasSSSE3() {
+ #else
+ 
+ static inline bool hasSSSE3() {
++#if defined(SK_BUILD_SSSE3)
+     int cpu_info[4] = { 0 };
+     getcpuid(1, cpu_info);
+     return (cpu_info[2] & 0x200) != 0;
++#else
++    return false;
++#endif
+ }
+ #endif
+ 
+@@ -104,7 +108,7 @@ static bool cachedHasSSSE3() {
+ 
+ void SkBitmapProcState::platformProcs() {
+     if (cachedHasSSSE3()) {
+-#if !defined(SK_BUILD_FOR_ANDROID)
++#if !defined(SK_BUILD_FOR_ANDROID) && defined(SK_BUILD_SSSE3)
+         // Disable SSSE3 optimization for Android x86
+         if (fSampleProc32 == S32_opaque_D32_filter_DX) {
+             fSampleProc32 = S32_opaque_D32_filter_DX_SSSE3;
+-- 
+1.7.11.7
+

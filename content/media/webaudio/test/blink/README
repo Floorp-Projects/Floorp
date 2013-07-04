@@ -1,0 +1,9 @@
+This directory contains tests originally borrowed from the Blink Web Audio test
+suite.
+
+The process of borrowing tests from Blink is as follows:
+
+* Import the pristine file from the Blink repo, noting the revision in the
+  commit message.
+* Modify the test files to turn the LayoutTest into a mochitest-plain and add
+* them to the test suite in a separate commit.

@@ -47,15 +47,15 @@
   border-radius: 5px;
   position: absolute;
   background: #0095dd;
-  left:0px;
-  top:0px;
+  left: 0;
+  top: 0;
 }
 
 
 @keyframes orbit {
   0% {
     opacity: 1;
-    z-index:99;
+    z-index: 99;
     transform: rotate(180deg);
     animation-timing-function: ease-out;
   }
@@ -64,39 +64,34 @@
     opacity: 1;
     transform: rotate(300deg);
     animation-timing-function: linear;
-    origin:0%;
   }
 
   30% {
     opacity: 1;
-    transform:rotate(410deg);
+    transform: rotate(410deg);
     animation-timing-function: ease-in-out;
-    origin:7%;
   }
 
   39% {
     opacity: 1;
     transform: rotate(645deg);
     animation-timing-function: linear;
-    origin:30%;
   }
 
   70% {
     opacity: 1;
     transform: rotate(770deg);
     animation-timing-function: ease-out;
-    origin:39%;
   }
 
   75% {
     opacity: 1;
     transform: rotate(900deg);
     animation-timing-function: ease-out;
-    origin:70%;
   }
 
   76%, 100% {
     opacity: 0;
-    transform:rotate(900deg);
+    transform: rotate(900deg);
   }
 }

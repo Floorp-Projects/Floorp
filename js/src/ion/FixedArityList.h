@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_fixed_arity_list_h__
-#define jsion_ion_fixed_arity_list_h__
+#ifndef ion_FixedArityList_h
+#define ion_FixedArityList_h
 
 namespace js {
 namespace ion {
@@ -35,19 +35,14 @@ class FixedArityList<T, 0>
 {
   public:
     T &operator [](size_t index) {
-        JS_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
+        MOZ_ASSUME_UNREACHABLE("no items");
     }
     const T &operator [](size_t index) const {
-        JS_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
+        MOZ_ASSUME_UNREACHABLE("no items");
     }
 };
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_fixed_arity_list_h__
-
+#endif /* ion_FixedArityList_h */

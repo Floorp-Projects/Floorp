@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/Stack.h"
+#ifndef builtin_Eval_h
+#define builtin_Eval_h
 
-#ifndef Eval_h__
-#define Eval_h__
+#include "vm/Stack.h"
 
 namespace js {
 
@@ -47,4 +47,4 @@ extern JSPrincipals *
 PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx);
 
 }  // namespace js
-#endif  // Eval_h__
+#endif /* builtin_Eval_h */

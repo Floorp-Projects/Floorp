@@ -53,6 +53,7 @@ typedef char realGLboolean;
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/GenericRefCounted.h"
 
 namespace android {
     class GraphicBuffer;
@@ -83,9 +84,8 @@ typedef uintptr_t SharedTextureHandle;
 
 class GLContext
     : public GLLibraryLoader
+    , public GenericAtomicRefCounted
 {
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
-
 protected:
     typedef class gfx::SharedSurface SharedSurface;
     typedef gfx::SharedSurfaceType SharedSurfaceType;
@@ -250,7 +250,7 @@ public:
     virtual GLLibraryEGL* GetLibraryEGL() { return nullptr; }
 
     virtual void MakeCurrent_EGLSurface(void* surf) {
-        MOZ_NOT_REACHED("Must be called against a GLContextEGL.");
+        MOZ_CRASH("Must be called against a GLContextEGL.");
     }
 
     /**
@@ -1000,6 +1000,7 @@ public:
         ARB_pixel_buffer_object,
         ARB_ES2_compatibility,
         OES_texture_float,
+        OES_texture_float_linear,
         ARB_texture_float,
         EXT_unpack_subimage,
         OES_standard_derivatives,
@@ -1023,6 +1024,11 @@ public:
         OES_EGL_image_external,
         EXT_packed_depth_stencil,
         OES_element_index_uint,
+        OES_vertex_array_object,
+        ARB_vertex_array_object,
+        APPLE_vertex_array_object,
+        ARB_draw_buffers,
+        EXT_draw_buffers,
         Extensions_Max
     };
 
@@ -1810,7 +1816,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fDrawBuffers(GLsizei n, GLenum* bufs) {
+    void fDrawBuffers(GLsizei n, const GLenum* bufs) {
         BEFORE_GL_CALL;
         mSymbols.fDrawBuffers(n, bufs);
         AFTER_GL_CALL;
@@ -2867,6 +2873,39 @@ public:
         ASSERT_SYMBOL_PRESENT(fEGLImageTargetRenderbufferStorage);
         mSymbols.fEGLImageTargetRenderbufferStorage(target, image);
         AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY fBindVertexArray(GLuint array)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindVertexArray);
+        mSymbols.fBindVertexArray(array);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY fDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteVertexArrays);
+        mSymbols.fDeleteVertexArrays(n, arrays);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY fGenVertexArrays(GLsizei n, GLuint *arrays)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGenVertexArrays);
+        mSymbols.fGenVertexArrays(n, arrays);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean GLAPIENTRY fIsVertexArray(GLuint array)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsVertexArray);
+        realGLboolean ret = mSymbols.fIsVertexArray(array);
+        AFTER_GL_CALL;
+        return ret;
     }
 
 #undef ASSERT_SYMBOL_PRESENT

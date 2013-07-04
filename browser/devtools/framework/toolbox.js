@@ -351,6 +351,9 @@ Toolbox.prototype = {
     let id = toolDefinition.id;
 
     let radio = this.doc.createElement("radio");
+    // The radio element is not being used in the conventional way, thus
+    // the devtools-tab class replaces the radio XBL binding with its base
+    // binding (the control-item binding).
     radio.className = "toolbox-tab devtools-tab";
     radio.id = "toolbox-tab-" + id;
     radio.setAttribute("toolid", id);
@@ -371,7 +374,15 @@ Toolbox.prototype = {
 
     if (toolDefinition.icon) {
       let image = this.doc.createElement("image");
-      image.setAttribute("src", toolDefinition.icon);
+      image.className = "default-icon";
+      image.setAttribute("src",
+                         toolDefinition.icon || toolDefinition.highlightedicon);
+      radio.appendChild(image);
+      // Adding the highlighted icon image
+      image = this.doc.createElement("image");
+      image.className = "highlighted-icon";
+      image.setAttribute("src",
+                         toolDefinition.highlightedicon || toolDefinition.icon);
       radio.appendChild(image);
     }
 
@@ -410,7 +421,7 @@ Toolbox.prototype = {
   },
 
   /**
-   * Load a tool with a given id.
+   * Ensure the tool with the given id is loaded.
    *
    * @param {string} id
    *        The id of the tool to load.
@@ -420,11 +431,22 @@ Toolbox.prototype = {
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
 
     if (iframe) {
-      this.once(id + "-ready", () => { deferred.resolve() });
+      let panel = this._toolPanels.get(id);
+      if (panel) {
+        deferred.resolve(panel);
+      } else {
+        this.once(id + "-ready", (panel) => {
+          deferred.resolve(panel);
+        });
+      }
       return deferred.promise;
     }
 
     let definition = gDevTools.getToolDefinitionMap().get(id);
+    if (!definition) {
+      deferred.reject(new Error("no such tool id "+id));
+      return deferred.promise;
+    }
     iframe = this.doc.createElement("iframe");
     iframe.className = "toolbox-panel-iframe";
     iframe.id = "toolbox-panel-iframe-" + id;
@@ -459,8 +481,6 @@ Toolbox.prototype = {
    *        The id of the tool to switch to
    */
   selectTool: function TBOX_selectTool(id) {
-    let deferred = Promise.defer();
-
     let selected = this.doc.querySelector(".devtools-tab[selected]");
     if (selected) {
       selected.removeAttribute("selected");
@@ -508,41 +528,37 @@ Toolbox.prototype = {
     deck.selectedIndex = index;
 
     this._currentToolId = id;
-
-    let resolveSelected = panel => {
-      this.emit("select", id);
-      this.emit(id + "-selected", panel);
-      deferred.resolve(panel);
-    };
-
-    let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
-    if (!iframe) {
-      this.loadTool(id).then((panel) => {
-        this.emit("select", id);
-        this.emit(id + "-selected", panel);
-        deferred.resolve(panel);
-      });
-    } else {
-      let panel = this._toolPanels.get(id);
-      // only emit 'select' event if the iframe has been loaded
-      if (panel && (!panel.contentDocument ||
-                    panel.contentDocument.readyState == "complete")) {
-        resolveSelected(panel);
-      }
-      else if (panel) {
-        let boundLoad = function() {
-          panel.removeEventListener("DOMContentLoaded", boundLoad, true);
-          resolveSelected(panel);
-        };
-        panel.addEventListener("DOMContentLoaded", boundLoad, true);
-      }
-    }
-
     if (id != "options") {
       Services.prefs.setCharPref(this._prefs.LAST_TOOL, id);
     }
 
-    return deferred.promise;
+    return this.loadTool(id).then((panel) => {
+      this.emit("select", id);
+      this.emit(id + "-selected", panel);
+      return panel;
+    });
+  },
+
+  /**
+   * Highlights the tool's tab if it is not the currently selected tool.
+   *
+   * @param {string} id
+   *        The id of the tool to highlight
+   */
+  highlightTool: function TBOX_highlightTool(id) {
+    let tab = this.doc.getElementById("toolbox-tab-" + id);
+    tab && tab.classList.add("highlighted");
+  },
+
+  /**
+   * De-highlights the tool's tab.
+   *
+   * @param {string} id
+   *        The id of the tool to unhighlight
+   */
+  unhighlightTool: function TBOX_unhighlightTool(id) {
+    let tab = this.doc.getElementById("toolbox-tab-" + id);
+    tab && tab.classList.remove("highlighted");
   },
 
   /**
@@ -727,6 +743,14 @@ Toolbox.prototype = {
 
     gDevTools.off("tool-registered", this._toolRegistered);
     gDevTools.off("tool-unregistered", this._toolUnregistered);
+
+    // Revert docShell.allowJavascript back to it's original value if it was
+    // changed via the Disable JS option.
+    if (typeof this._origAllowJavascript != "undefined") {
+      let docShell = this._host.hostTab.linkedBrowser.docShell;
+      docShell.allowJavascript = this._origAllowJavascript;
+      delete this._origAllowJavascript;
+    }
 
     let outstanding = [];
 

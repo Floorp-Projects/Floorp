@@ -18,9 +18,9 @@ requestLongerTimeout(2);
 function test()
 {
   gPrevPref = Services.prefs.getBoolPref(
-    "devtools.debugger.ui.pause-on-exceptions");
+    "devtools.debugger.pause-on-exceptions");
   Services.prefs.setBoolPref(
-    "devtools.debugger.ui.pause-on-exceptions", true);
+    "devtools.debugger.pause-on-exceptions", true);
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
@@ -71,7 +71,7 @@ function testWithFrame()
           gDebugger.removeEventListener("Debugger:FetchedVariables", testB, false);
           Services.tm.currentThread.dispatch({ run: function() {
 
-            var frames = gDebugger.DebuggerView.StackFrames._container._list,
+            var frames = gDebugger.DebuggerView.StackFrames.widget._list,
                 scopes = gDebugger.DebuggerView.Variables._list,
                 innerScope = scopes.firstChild,
                 innerNodes = innerScope.querySelector(".variables-view-element-details").childNodes;
@@ -87,7 +87,7 @@ function testWithFrame()
             is(innerNodes[0].querySelector(".name").getAttribute("value"), "<exception>",
               "Should have the right property name for the exception.");
 
-            is(innerNodes[0].querySelector(".value").getAttribute("value"), "[object Error]",
+            is(innerNodes[0].querySelector(".value").getAttribute("value"), "Error",
               "Should have the right property value for the exception.");
 
             // Disable pause on exceptions.

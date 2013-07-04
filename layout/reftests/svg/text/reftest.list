@@ -157,6 +157,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == dynamic-font-size-4.svg dynamic-font-size-4-ref.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
 == dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
+fuzzy-if(!d2d,14,2) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
 
 # text and masks
 HTTP(../..) == mask-applied.svg mask-applied-ref.svg
@@ -175,6 +176,7 @@ fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg
 HTTP(../..) == filter-applied.svg filter-applied-ref.svg
 
 # selection
+needs-focus == deselectAll.svg deselectAll-ref.svg
 needs-focus == selectSubString.svg selectSubString-ref.svg
 needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 needs-focus == selectSubString-3.svg selectSubString-3-ref.svg

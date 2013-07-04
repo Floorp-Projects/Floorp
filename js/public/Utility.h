@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_utility_h__
-#define js_utility_h__
+#ifndef js_Utility_h
+#define js_Utility_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -41,7 +41,6 @@ namespace js {}
 
 #define JS_ASSERT(expr)           MOZ_ASSERT(expr)
 #define JS_ASSERT_IF(cond, expr)  MOZ_ASSERT_IF(cond, expr)
-#define JS_NOT_REACHED(reason)    MOZ_NOT_REACHED(reason)
 #define JS_ALWAYS_TRUE(expr)      MOZ_ALWAYS_TRUE(expr)
 #define JS_ALWAYS_FALSE(expr)     MOZ_ALWAYS_FALSE(expr)
 
@@ -170,7 +169,7 @@ static JS_INLINE void js_free(void* p)
 }
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
-JS_BEGIN_EXTERN_C
+extern "C" {
 
 /*
  * Replace bit-scanning code sequences with CPU-specific instructions to
@@ -204,33 +203,47 @@ __BitScanReverse32(unsigned int val)
 }
 # define js_bitscan_ctz32(val)  __BitScanForward32(val)
 # define js_bitscan_clz32(val)  __BitScanReverse32(val)
-# define JS_HAS_BUILTIN_BITSCAN32
 
 #if defined(_M_AMD64) || defined(_M_X64)
 unsigned char _BitScanForward64(unsigned long * Index, unsigned __int64 Mask);
 unsigned char _BitScanReverse64(unsigned long * Index, unsigned __int64 Mask);
 # pragma intrinsic(_BitScanForward64,_BitScanReverse64)
+#endif
 
 __forceinline static int
 __BitScanForward64(unsigned __int64 val)
 {
+#if defined(_M_AMD64) || defined(_M_X64)
     unsigned long idx;
 
     _BitScanForward64(&idx, val);
     return (int)idx;
+#else
+    uint32_t lo = (uint32_t)val;
+    uint32_t hi = (uint32_t)(val >> 32);
+    return lo != 0 ?
+           js_bitscan_ctz32(lo) :
+           32 + js_bitscan_ctz32(hi);
+#endif
 }
 __forceinline static int
 __BitScanReverse64(unsigned __int64 val)
 {
+#if defined(_M_AMD64) || defined(_M_X64)
     unsigned long idx;
 
     _BitScanReverse64(&idx, val);
     return (int)(63-idx);
+#else
+    uint32_t lo = (uint32_t)val;
+    uint32_t hi = (uint32_t)(val >> 32);
+    return hi != 0 ?
+           js_bitscan_clz32(hi) :
+           32 + js_bitscan_clz32(lo);
+#endif
 }
 # define js_bitscan_ctz64(val)  __BitScanForward64(val)
 # define js_bitscan_clz64(val)  __BitScanReverse64(val)
-# define JS_HAS_BUILTIN_BITSCAN64
-#endif
 #elif MOZ_IS_GCC
 
 #if MOZ_GCC_VERSION_AT_LEAST(3, 4, 0)
@@ -246,14 +259,14 @@ __BitScanReverse64(unsigned __int64 val)
 #endif
 
 #if defined(USE_BUILTIN_CTZ)
+
+JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(uint32_t));
 # define js_bitscan_ctz32(val)  __builtin_ctz(val)
 # define js_bitscan_clz32(val)  __builtin_clz(val)
-# define JS_HAS_BUILTIN_BITSCAN32
-# if (JS_BYTES_PER_WORD == 8)
-#  define js_bitscan_ctz64(val)  __builtin_ctzll(val)
-#  define js_bitscan_clz64(val)  __builtin_clzll(val)
-#  define JS_HAS_BUILTIN_BITSCAN64
-# endif
+
+JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(uint64_t));
+# define js_bitscan_ctz64(val)  __builtin_ctzll(val)
+# define js_bitscan_clz64(val)  __builtin_clzll(val)
 
 # undef USE_BUILTIN_CTZ
 
@@ -263,7 +276,6 @@ __BitScanReverse64(unsigned __int64 val)
 ** Macro version of JS_CeilingLog2: Compute the log of the least power of
 ** 2 greater than or equal to _n. The result is returned in _log2.
 */
-#ifdef JS_HAS_BUILTIN_BITSCAN32
 /*
  * Use intrinsic function or count-leading-zeros to calculate ceil(log2(_n)).
  * The macro checks for "n <= 1" and not "n != 0" as js_bitscan_clz32(0) is
@@ -274,25 +286,6 @@ __BitScanReverse64(unsigned __int64 val)
         unsigned int j_ = (unsigned int)(_n);                                 \
         (_log2) = (j_ <= 1 ? 0 : 32 - js_bitscan_clz32(j_ - 1));              \
     JS_END_MACRO
-#else
-# define JS_CEILING_LOG2(_log2,_n)                                            \
-    JS_BEGIN_MACRO                                                            \
-        uint32_t j_ = (uint32_t)(_n);                                         \
-        (_log2) = 0;                                                          \
-        if ((j_) & ((j_)-1))                                                  \
-            (_log2) += 1;                                                     \
-        if ((j_) >> 16)                                                       \
-            (_log2) += 16, (j_) >>= 16;                                       \
-        if ((j_) >> 8)                                                        \
-            (_log2) += 8, (j_) >>= 8;                                         \
-        if ((j_) >> 4)                                                        \
-            (_log2) += 4, (j_) >>= 4;                                         \
-        if ((j_) >> 2)                                                        \
-            (_log2) += 2, (j_) >>= 2;                                         \
-        if ((j_) >> 1)                                                        \
-            (_log2) += 1;                                                     \
-    JS_END_MACRO
-#endif
 
 /*
 ** Macro version of JS_FloorLog2: Compute the log of the greatest power of
@@ -300,7 +293,6 @@ __BitScanReverse64(unsigned __int64 val)
 **
 ** This is equivalent to finding the highest set bit in the word.
 */
-#ifdef JS_HAS_BUILTIN_BITSCAN32
 /*
  * Use js_bitscan_clz32 or count-leading-zeros to calculate floor(log2(_n)).
  * Since js_bitscan_clz32(0) is undefined, the macro set the loweset bit to 1
@@ -310,43 +302,18 @@ __BitScanReverse64(unsigned __int64 val)
     JS_BEGIN_MACRO                                                            \
         (_log2) = 31 - js_bitscan_clz32(((unsigned int)(_n)) | 1);            \
     JS_END_MACRO
-#else
-# define JS_FLOOR_LOG2(_log2,_n)                                              \
-    JS_BEGIN_MACRO                                                            \
-        uint32_t j_ = (uint32_t)(_n);                                         \
-        (_log2) = 0;                                                          \
-        if ((j_) >> 16)                                                       \
-            (_log2) += 16, (j_) >>= 16;                                       \
-        if ((j_) >> 8)                                                        \
-            (_log2) += 8, (j_) >>= 8;                                         \
-        if ((j_) >> 4)                                                        \
-            (_log2) += 4, (j_) >>= 4;                                         \
-        if ((j_) >> 2)                                                        \
-            (_log2) += 2, (j_) >>= 2;                                         \
-        if ((j_) >> 1)                                                        \
-            (_log2) += 1;                                                     \
-    JS_END_MACRO
-#endif
 
 #if JS_BYTES_PER_WORD == 4
-# ifdef JS_HAS_BUILTIN_BITSCAN32
 #  define js_FloorLog2wImpl(n)                                                \
     ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
-# else
-JS_PUBLIC_API(size_t) js_FloorLog2wImpl(size_t n);
-# endif
 #elif JS_BYTES_PER_WORD == 8
-# ifdef JS_HAS_BUILTIN_BITSCAN64
 #  define js_FloorLog2wImpl(n)                                                \
     ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
-# else
-JS_PUBLIC_API(size_t) js_FloorLog2wImpl(size_t n);
-# endif
 #else
 # error "NOT SUPPORTED"
 #endif
 
-JS_END_EXTERN_C
+} // extern "C"
 
 /*
  * Internal function.
@@ -846,11 +813,6 @@ inline bool IsPoisonedPtr(T *v)
 
 }
 
-/*
- * This is SpiderMonkey's equivalent to |nsMallocSizeOfFun|.
- */
-typedef size_t(*JSMallocSizeOfFun)(const void *p);
-
 /* sixgill annotation defines */
 #ifndef HAVE_STATIC_ANNOTATIONS
 # define HAVE_STATIC_ANNOTATIONS
@@ -892,4 +854,4 @@ typedef size_t(*JSMallocSizeOfFun)(const void *p);
 # define STATIC_SKIP_INFERENCE STATIC_INVARIANT(skip_inference())
 #endif /* HAVE_STATIC_ANNOTATIONS */
 
-#endif /* js_utility_h__ */
+#endif /* js_Utility_h */

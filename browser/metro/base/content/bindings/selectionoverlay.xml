@@ -10,9 +10,9 @@
       <html:div flex="1" class="selection-overlay-inner window-width window-height" anonid="selection-overlay-inner">
         <xul:stack>
           <html:div anonid="selection-overlay-debug" class="window-width window-height"/>
-          <xul:toolbarbutton id="selectionhandle-mark1" label="^" left="10" top="10" hidden="true"/>
-          <xul:toolbarbutton id="selectionhandle-mark2" label="^" left="10" top="10" hidden="true"/>
-          <xul:toolbarbutton id="selectionhandle-mark3" label="^" left="10" top="10" hidden="true"/>
+          <xul:toolbarbutton anonid="selectionhandle-mark1" class="selectionhandle" label="^" left="10" top="10" hidden="true"/>
+          <xul:toolbarbutton anonid="selectionhandle-mark2" class="selectionhandle" label="^" left="10" top="10" hidden="true"/>
+          <xul:toolbarbutton anonid="selectionhandle-mark3" class="selectionhandle" label="^" left="10" top="10" hidden="true"/>
         </xul:stack>
       </html:div>
     </content>
@@ -62,18 +62,11 @@
         </getter>
       </property>
 
-      <method name="init">
+      <method name="getMarker">
+        <parameter name="aMarkerId"/>
         <body>
           <![CDATA[
-          this.enabled = true;
-          ]]>
-        </body>
-      </method>
-
-      <method name="shutdown">
-        <body>
-          <![CDATA[
-          this.enabled = false;
+            return document.getAnonymousElementByAttribute(this, "anonid", aMarkerId);
           ]]>
         </body>
       </method>

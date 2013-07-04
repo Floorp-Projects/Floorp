@@ -47,30 +47,43 @@
 )
 
 /**
+ * A predicate matching pages on rev_host, based on a given host value.
+ * 'host' may be either the moz_hosts.host column or an alias representing an
+ * equivalent value.
+ */
+#define HOST_TO_REVHOST_PREDICATE \
+  "rev_host = get_unreversed_host(host || '.') || '.' " \
+  "OR rev_host = get_unreversed_host(host || '.') || '.www.'"
+
+/**
  * Select the best prefix for a host, based on existing pages registered for it.
  * Prefixes have a priority, from the top to the bottom, so that secure pages
  * have higher priority, and more generically "www." prefixed hosts come before
  * unprefixed ones.
- * Each condition just checks if a page exists for a specific prefixed host,
- * and if so returns the relative prefix.
+ * Given a host, examine associated pages and:
+ *  - if all of the typed pages start with https://www. return https://www.
+ *  - if all of the typed pages start with https:// return https://
+ *  - if all of the typed pages start with ftp: return ftp://
+ *  - if all of the typed pages start with www. return www.
+ *  - otherwise don't use any prefix
  */
 #define HOSTS_PREFIX_PRIORITY_FRAGMENT \
   "SELECT CASE " \
-    "WHEN EXISTS( " \
-      "SELECT 1 FROM moz_places WHERE url BETWEEN 'https://www.' || host || '/' " \
-                                             "AND 'https://www.' || host || '/' || X'FFFF' " \
+    "WHEN 1 = ( " \
+      "SELECT min(substr(url,1,12) = 'https://www.') FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'https://www.' " \
-    "WHEN EXISTS( " \
-      "SELECT 1 FROM moz_places WHERE url BETWEEN 'https://' || host || '/' " \
-                                             "AND 'https://' || host || '/' || X'FFFF' " \
+    "WHEN 1 = ( " \
+      "SELECT min(substr(url,1,8) = 'https://') FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'https://' " \
-    "WHEN EXISTS( " \
-      "SELECT 1 FROM moz_places WHERE url BETWEEN 'ftp://' || host || '/' " \
-                                             "AND 'ftp://' || host || '/' || X'FFFF' " \
+    "WHEN 1 = ( " \
+      "SELECT min(substr(url,1,4) = 'ftp:') FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'ftp://' " \
-    "WHEN EXISTS( " \
-      "SELECT 1 FROM moz_places WHERE url BETWEEN 'http://www.' || host || '/' " \
-                                             "AND 'http://www.' || host || '/' || X'FFFF' " \
+    "WHEN 1 = ( " \
+      "SELECT min(substr(url,1,11) = 'http://www.') FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'www.' " \
   "END "
 
@@ -109,9 +122,7 @@
              "OR rev_host = get_unreversed_host(host || '.') || '.www.' " \
       "); " \
     "UPDATE moz_hosts " \
-    "SET prefix = (" \
-      HOSTS_PREFIX_PRIORITY_FRAGMENT \
-    ") " \
+    "SET prefix = (" HOSTS_PREFIX_PRIORITY_FRAGMENT ") " \
     "WHERE host = fixup_url(get_unreversed_host(OLD.rev_host)); " \
   "END" \
 )

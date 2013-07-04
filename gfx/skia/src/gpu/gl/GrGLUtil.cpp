@@ -8,7 +8,6 @@
 
 #include "GrGLUtil.h"
 
-
 void GrGLClearErr(const GrGLInterface* gl) {
     while (GR_GL_NO_ERROR != gl->fGetError()) {}
 }
@@ -149,27 +148,19 @@ GrGLSLVersion GrGLGetGLSLVersionFromString(const char* versionString) {
     return 0;
 }
 
-bool GrGLHasExtensionFromString(const char* ext, const char* extensionString) {
-    int extLength = strlen(ext);
-
-    while (true) {
-        int n = strcspn(extensionString, " ");
-        if (n == extLength && 0 == strncmp(ext, extensionString, n)) {
-            return true;
+GrGLVendor GrGLGetVendorFromString(const char* vendorString) {
+    if (NULL != vendorString) {
+        if (0 == strcmp(vendorString, "ARM")) {
+            return kARM_GrGLVendor;
         }
-        if (0 == extensionString[n]) {
-            return false;
+        if (0 == strcmp(vendorString, "Imagination Technologies")) {
+            return kImagination_GrGLVendor;
         }
-        extensionString += n+1;
+        if (0 == strcmp(vendorString, "Intel")) {
+            return kIntel_GrGLVendor;
+        }
     }
-
-    return false;
-}
-
-bool GrGLHasExtension(const GrGLInterface* gl, const char* ext) {
-    const GrGLubyte* glstr;
-    GR_GL_CALL_RET(gl, glstr, GetString(GR_GL_EXTENSIONS));
-    return GrGLHasExtensionFromString(ext, (const char*) glstr);
+    return kOther_GrGLVendor;
 }
 
 GrGLBinding GrGLGetBindingInUse(const GrGLInterface* gl) {
@@ -188,4 +179,10 @@ GrGLSLVersion GrGLGetGLSLVersion(const GrGLInterface* gl) {
     const GrGLubyte* v;
     GR_GL_CALL_RET(gl, v, GetString(GR_GL_SHADING_LANGUAGE_VERSION));
     return GrGLGetGLSLVersionFromString((const char*) v);
+}
+
+GrGLVendor GrGLGetVendor(const GrGLInterface* gl) {
+    const GrGLubyte* v;
+    GR_GL_CALL_RET(gl, v, GetString(GR_GL_VENDOR));
+    return GrGLGetVendorFromString((const char*) v);
 }

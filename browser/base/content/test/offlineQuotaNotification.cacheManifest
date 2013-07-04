@@ -1,0 +1,7 @@
+CACHE MANIFEST
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+# store a "large" file so an "over quota warning" will be issued - any file
+# larger than 1kb and in '_BROWSER_FILES' should be right...
+title_test.svg

@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscompartment_inlines_h___
-#define jscompartment_inlines_h___
+#ifndef jscompartmentinlines_h
+#define jscompartmentinlines_h
 
 #include "jscompartment.h"
+
+#include "jscntxtinlines.h"
 
 inline void
 JSCompartment::initGlobal(js::GlobalObject &global)
@@ -26,7 +28,7 @@ JSCompartment::maybeGlobal() const
 
 js::AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
   : cx_(cx),
-    origin_(cx->compartment)
+    origin_(cx->compartment())
 {
     cx_->enterCompartment(target->compartment());
 }
@@ -34,30 +36,6 @@ js::AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
 js::AutoCompartment::~AutoCompartment()
 {
     cx_->leaveCompartment(origin_);
-}
-
-void *
-js::Allocator::onOutOfMemory(void *p, size_t nbytes)
-{
-    return zone->rt->onOutOfMemory(p, nbytes);
-}
-
-void
-js::Allocator::updateMallocCounter(size_t nbytes)
-{
-    zone->rt->updateMallocCounter(zone, nbytes);
-}
-
-void
-js::Allocator::reportAllocationOverflow()
-{
-    js_ReportAllocationOverflow(NULL);
-}
-
-inline void *
-js::Allocator::parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize)
-{
-    return arenas.parallelAllocate(zone, thingKind, thingSize);
 }
 
 namespace js {
@@ -77,9 +55,9 @@ class AutoEnterAtomsCompartment
   public:
     AutoEnterAtomsCompartment(JSContext *cx)
       : cx(cx),
-        oldCompartment(cx->compartment)
+        oldCompartment(cx->compartment())
     {
-        cx->setCompartment(cx->runtime->atomsCompartment);
+        cx->setCompartment(cx->runtime()->atomsCompartment);
     }
 
     ~AutoEnterAtomsCompartment()
@@ -90,4 +68,4 @@ class AutoEnterAtomsCompartment
 
 } /* namespace js */
 
-#endif /* jscompartment_inlines_h___ */
+#endif /* jscompartmentinlines_h */

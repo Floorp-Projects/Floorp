@@ -54,20 +54,6 @@ nsSVGElement::AngleInfo SVGMarkerElement::sAngleInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGOrientType::DOMAnimatedEnum, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGOrientType::DOMAnimatedEnum)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGOrientType::DOMAnimatedEnum)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGOrientType::DOMAnimatedEnum)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedEnumeration)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedEnumeration)
-NS_INTERFACE_MAP_END
-
-//----------------------------------------------------------------------
 // Implementation
 
 nsresult
@@ -86,10 +72,10 @@ nsSVGOrientType::SetBaseValue(uint16_t aValue,
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 nsSVGOrientType::ToDOMAnimatedEnum(nsSVGElement *aSVGElement)
 {
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> toReturn =
+  nsRefPtr<SVGAnimatedEnumeration> toReturn =
     new DOMAnimatedEnum(this, aSVGElement);
   return toReturn.forget();
 }
@@ -134,7 +120,7 @@ SVGMarkerElement::RefY()
   return mLengthAttributes[REFY].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGMarkerElement::MarkerUnits()
 {
   return mEnumAttributes[MARKERUNITS].ToDOMAnimatedEnum(this);
@@ -152,7 +138,7 @@ SVGMarkerElement::MarkerHeight()
   return mLengthAttributes[MARKERHEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGMarkerElement::OrientType()
 {
   return mOrientType.ToDOMAnimatedEnum(this);

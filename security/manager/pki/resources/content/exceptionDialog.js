@@ -212,7 +212,7 @@ function updateCertStatus() {
   var shortDesc3, longDesc3;
   var use2 = false;
   var use3 = false;
-  let bucketId = gNsISecTel.WARNING_BAD_CERT_ADD_EXCEPTION_BASE;
+  let bucketId = gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_BASE;
   if(gCert) {
     if(gBroken) { 
       var mms = "addExceptionDomainMismatchShort";
@@ -223,13 +223,13 @@ function updateCertStatus() {
       var utl = "addExceptionUnverifiedOrBadSignatureLong";
       var use1 = false;
       if (gSSLStatus.isDomainMismatch) {
-        bucketId += gNsISecTel.WARNING_BAD_CERT_ADD_EXCEPTION_FLAG_DOMAIN;
+        bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_DOMAIN;
         use1 = true;
         shortDesc = mms;
         longDesc  = mml;
       }
       if (gSSLStatus.isNotValidAtThisTime) {
-        bucketId += gNsISecTel.WARNING_BAD_CERT_ADD_EXCEPTION_FLAG_TIME;
+        bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_TIME;
         if (!use1) {
           use1 = true;
           shortDesc = exs;
@@ -242,7 +242,7 @@ function updateCertStatus() {
         }
       }
       if (gSSLStatus.isUntrusted) {
-        bucketId += gNsISecTel.WARNING_BAD_CERT_ADD_EXCEPTION_FLAG_UNTRUSTED;
+        bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_UNTRUSTED;
         if (!use1) {
           use1 = true;
           shortDesc = uts;
@@ -331,7 +331,7 @@ function updateCertStatus() {
  * Handle user request to display certificate details
  */
 function viewCertButtonClick() {
-  gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_CLICK_VIEW_CERT);
+  gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_TOP_CLICK_VIEW_CERT);
   if (gCert)
     viewCertHelper(this, gCert);
     
@@ -347,24 +347,24 @@ function addException() {
   var overrideService = Components.classes["@mozilla.org/security/certoverride;1"]
                                   .getService(Components.interfaces.nsICertOverrideService);
   var flags = 0;
-  let confirmBucketId = gNsISecTel.WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_BASE;
+  let confirmBucketId = gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
   if (gSSLStatus.isUntrusted) {
     flags |= overrideService.ERROR_UNTRUSTED;
-    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
+    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
   }
   if (gSSLStatus.isDomainMismatch) {
     flags |= overrideService.ERROR_MISMATCH;
-    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
+    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
   }
   if (gSSLStatus.isNotValidAtThisTime) {
     flags |= overrideService.ERROR_TIME;
-    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_TIME;
+    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME;
   }
   
   var permanentCheckbox = document.getElementById("permanent");
   var shouldStorePermanently = permanentCheckbox.checked && !inPrivateBrowsingMode();
   if(!permanentCheckbox.checked)
-   gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_DONT_REMEMBER_EXCEPTION);
+   gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_TOP_DONT_REMEMBER_EXCEPTION);
 
   gSecHistogram.add(confirmBucketId);
   var uri = getURI();

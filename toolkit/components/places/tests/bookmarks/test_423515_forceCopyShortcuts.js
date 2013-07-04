@@ -83,14 +83,14 @@ add_task(function test_force_copy() {
       this._str += aData;
     }
   };
-  PlacesUtils.serializeNodeAsJSONToOutputStream(queryNode, stream, false, true);
+  Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
+  yield BookmarkJSONUtils.serializeNodeAsJSONToOutputStream(queryNode, stream, false, true);
 
   LOG("SERIALIZED: " + stream._str);
 
   PlacesUtils.bookmarks.removeItem(queryId);
 
   // import
-  Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
   yield BookmarkJSONUtils.importJSONNode(stream._str, PlacesUtils.toolbarFolderId, -1);
 
   // query for node

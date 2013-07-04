@@ -20,7 +20,7 @@ const XML_PREFIX =  "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"" 
                     "extensionVersion=\"1.0\" installDate=\"1238441400314\" " +
                     "isCompleteUpdate=\"true\" name=\"Update Test 1.0\" " +
                     "serviceURL=\"https://example.com/\" showNeverForVersion=" +
-                    "\"false\" showPrompt=\"false\" showSurvey=\"false\" type=" +
+                    "\"false\" showPrompt=\"false\" type=" +
                     "\"minor\" version=\"version 1.0\" detailsURL=" +
                     "\"http://example.com/\" previousAppVersion=\"1.0\" " +
                     "statusText=\"The Update was successfully installed\" " +

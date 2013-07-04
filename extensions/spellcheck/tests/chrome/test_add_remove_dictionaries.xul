@@ -64,44 +64,50 @@ function RunTest() {
   ok(map.exists());
   hunspell.addDirectory(map);
 
-  // test that base and map dictionaries are available
-  var dicts = getDictionaryList(editor);
-  isnot(dicts.indexOf("base_utf"), -1, "base is available");
-  isnot(dicts.indexOf("maputf"), -1, "map is available");
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+  onSpellCheck(textbox, function () {
 
-  // select base dictionary
-  setCurrentDictionary(editor, "base_utf");
+    // test that base and map dictionaries are available
+    var dicts = getDictionaryList(editor);
+    isnot(dicts.indexOf("base_utf"), -1, "base is available");
+    isnot(dicts.indexOf("maputf"), -1, "map is available");
 
-  SimpleTest.executeSoon(function() {
-    // test that base dictionary is in use
-    is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");
-    is(getCurrentDictionary(editor), "base_utf", "current dictionary");
+    // select base dictionary
+    setCurrentDictionary(editor, "base_utf");
 
-    // select map dictionary
-    setCurrentDictionary(editor, "maputf");
+    onSpellCheck(textbox, function () {
+      // test that base dictionary is in use
+      is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");
+      is(getCurrentDictionary(editor), "base_utf", "current dictionary");
 
-    SimpleTest.executeSoon(function() {
-      // test that map dictionary is in use
-      is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
-      is(getCurrentDictionary(editor), "maputf", "current dictionary");
+      // select map dictionary
+      setCurrentDictionary(editor, "maputf");
 
-      // uninstall map dictionary
-      hunspell.removeDirectory(map);
+      onSpellCheck(textbox, function () {
+        // test that map dictionary is in use
+        is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
+        is(getCurrentDictionary(editor), "maputf", "current dictionary");
 
-      SimpleTest.executeSoon(function() {
-        // test that map dictionary is not in use
-        isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
-        isnot(getCurrentDictionary(editor), "maputf", "current dictionary");
+        // uninstall map dictionary
+        hunspell.removeDirectory(map);
 
-        // test that base dictionary is available and map dictionary is unavailable
-        var dicts = getDictionaryList(editor);
-        isnot(dicts.indexOf("base_utf"), -1, "base is available");
-        is(dicts.indexOf("maputf"), -1, "map is unavailable");
+        onSpellCheck(textbox, function () {
+          // test that map dictionary is not in use
+          isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
+          isnot(getCurrentDictionary(editor), "maputf", "current dictionary");
 
-        // uninstall base dictionary
-        hunspell.removeDirectory(base);
+          // test that base dictionary is available and map dictionary is unavailable
+          var dicts = getDictionaryList(editor);
+          isnot(dicts.indexOf("base_utf"), -1, "base is available");
+          is(dicts.indexOf("maputf"), -1, "map is unavailable");
 
-        SimpleTest.finish();
+          // uninstall base dictionary
+          hunspell.removeDirectory(base);
+
+          onSpellCheck(textbox, function () {
+            SimpleTest.finish();
+          });
+        });
       });
     });
   });

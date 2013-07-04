@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME   = neckowifi_s
 LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
@@ -20,7 +19,7 @@ FAIL_ON_WARNINGS := 1
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-CMMSRCS = osx_corewlan.mm
+DISABLED_CMMSRCS = osx_corewlan.mm
 endif
 
 ifeq ($(OS_ARCH),SunOS)

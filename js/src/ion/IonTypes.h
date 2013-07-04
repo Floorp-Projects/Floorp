@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_types_h_
-#define jsion_types_h_
+#ifndef ion_IonTypes_h
+#define ion_IonTypes_h
 
 #include "js/Value.h"
-#include <jstypes.h>
+#include "jstypes.h"
 
 namespace js {
 namespace ion {
@@ -67,9 +67,8 @@ BailoutKindString(BailoutKind kind)
       case Bailout_CachedShapeGuard:
         return "Bailout_CachedShapeGuard";
       default:
-        JS_NOT_REACHED("Invalid BailoutKind");
+        MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
     }
-    return "INVALID_BAILOUT_KIND";
 }
 #endif
 
@@ -118,8 +117,7 @@ MIRTypeFromValueType(JSValueType type)
       case JSVAL_TYPE_UNKNOWN:
         return MIRType_Value;
       default:
-        JS_NOT_REACHED("unexpected jsval type");
-        return MIRType_None;
+        MOZ_ASSUME_UNREACHABLE("unexpected jsval type");
     }
 }
 
@@ -186,8 +184,7 @@ StringFromMIRType(MIRType type)
     case MIRType_ForkJoinSlice:
       return "ForkJoinSlice";
     default:
-      JS_NOT_REACHED("Unknown MIRType.");
-      return "";
+      MOZ_ASSUME_UNREACHABLE("Unknown MIRType.");
   }
 }
 
@@ -211,5 +208,4 @@ IsNullOrUndefined(MIRType type)
 } // namespace ion
 } // namespace js
 
-#endif // jsion_types_h_
-
+#endif /* ion_IonTypes_h */

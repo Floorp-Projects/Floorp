@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+PARALLEL_DIRS += ['encoder']
+
+PARALLEL_DIRS += ['mediasource']
+
 PARALLEL_DIRS += ['webaudio']
 
 if CONFIG['MOZ_RAW']:
@@ -34,6 +38,7 @@ PARALLEL_DIRS += ['webrtc']
 
 if CONFIG['MOZ_OMX_DECODER']:
     PARALLEL_DIRS += ['omx']
+    PARALLEL_DIRS += ['omx/mediaresourcemanager']
 
 if CONFIG['MOZ_WEBSPEECH']:
     PARALLEL_DIRS += ['webspeech']
@@ -68,6 +73,7 @@ EXPORTS += [
     'SharedBuffer.h',
     'StreamBuffer.h',
     'TimeVarying.h',
+    'TrackUnionStream.h',
     'VideoFrameContainer.h',
     'VideoSegment.h',
     'VideoUtils.h',
@@ -81,6 +87,7 @@ EXPORTS.mozilla.dom += [
     'TextTrackCue.h',
     'TextTrackCueList.h',
     'TextTrackList.h',
+    'VideoPlaybackQuality.h',
     'VideoStreamTrack.h',
 ]
 
@@ -108,7 +115,9 @@ CPP_SOURCES += [
     'TextTrackCueList.cpp',
     'TextTrackList.cpp',
     'VideoFrameContainer.cpp',
+    'VideoPlaybackQuality.cpp',
     'VideoSegment.cpp',
     'VideoStreamTrack.cpp',
     'VideoUtils.cpp',
+    'WebVTTLoadListener.cpp',
 ]

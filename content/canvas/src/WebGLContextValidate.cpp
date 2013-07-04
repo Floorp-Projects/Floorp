@@ -4,6 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+#include "WebGLBuffer.h"
+#include "WebGLVertexAttribData.h"
+#include "WebGLShader.h"
+#include "WebGLProgram.h"
+#include "WebGLUniformLocation.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLTexture.h"
+#include "WebGLVertexArray.h"
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
@@ -65,6 +74,18 @@ WebGLProgram::UpdateInfo()
         }
     }
 
+    if (!mUniformInfoMap) {
+        mUniformInfoMap = new CStringToUniformInfoMap;
+        mUniformInfoMap->Init();
+        for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+            for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
+	        const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+	        const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
+	        mUniformInfoMap->Put(uniform.mapped, info);
+            }
+        }
+    }
+
     return true;
 }
 
@@ -92,9 +113,9 @@ WebGLContext::ValidateBuffers(uint32_t *maxAllowedCount, const char *info)
     }
 
     uint32_t maxAllowed = UINT32_MAX;
-    uint32_t attribs = mAttribBuffers.Length();
+    uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
     for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mAttribBuffers[i];
+        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[i];
 
         // If the attrib array isn't enabled, there's nothing to check;
         // it's a static value.
@@ -830,18 +851,7 @@ WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *loca
 
 bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
 {
-    if (index >= mAttribBuffers.Length()) {
-        if (index == WebGLuint(-1)) {
-             ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLocation() call, "
-                               "where this return value -1 means that the passed name didn't correspond to an active attribute in "
-                               "the specified program.", info);
-        } else {
-             ErrorInvalidValue("%s: index %d is out of range", info, index);
-        }
-        return false;
-    } else {
-        return true;
-    }
+    return mBoundVertexArray->EnsureAttribIndex(index, info);
 }
 
 bool WebGLContext::ValidateStencilParamsForDrawCall()
@@ -885,13 +895,10 @@ WebGLContext::InitAndValidateGL()
     mActiveTexture = 0;
     mWebGLError = LOCAL_GL_NO_ERROR;
 
-    mAttribBuffers.Clear();
-
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
 
     mBoundArrayBuffer = nullptr;
-    mBoundElementArrayBuffer = nullptr;
     mCurrentProgram = nullptr;
 
     mBoundFramebuffer = nullptr;
@@ -913,8 +920,6 @@ WebGLContext::InitAndValidateGL()
         GenerateWarning("GL_MAX_VERTEX_ATTRIBS: %d is < 8!", mGLMaxVertexAttribs);
         return false;
     }
-
-    mAttribBuffers.SetLength(mGLMaxVertexAttribs);
 
     // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
     // even though the hardware supports much more.  The
@@ -1002,22 +1007,12 @@ WebGLContext::InitAndValidateGL()
         // specifically enabled on desktop GLSL.
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
 
-        // we don't do the following glEnable(GL_POINT_SPRITE) on ATI cards on Windows, because bug 602183 shows that it causes
-        // crashes in the ATI/Windows driver; and point sprites on ATI seem like a lost cause anyway, see
-        //    http://www.gamedev.net/community/forums/topic.asp?topic_id=525643
-        // Also, if the ATI/Windows driver implements a recent GL spec version, this shouldn't be needed anyway.
-#ifdef XP_WIN
-        if (!(gl->WorkAroundDriverBugs() &&
-              gl->Vendor() == gl::GLContext::VendorATI))
-#else
-        if (true)
-#endif
-        {
-            // gl_PointCoord is always available in ES2 GLSL and in newer desktop GLSL versions, but apparently
-            // not in OpenGL 2 and apparently not (due to a driver bug) on certain NVIDIA setups. See:
-            //   http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=261472
-            gl->fEnable(LOCAL_GL_POINT_SPRITE);
-        }
+        // gl_PointCoord is always available in ES2 GLSL and in newer desktop GLSL versions, but apparently
+        // not in OpenGL 2 and apparently not (due to a driver bug) on certain NVIDIA setups. See:
+        //   http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=261472
+        // Note that this used to cause crashes on old ATI drivers... hopefully not a significant
+        // problem anymore. See bug 602183.
+        gl->fEnable(LOCAL_GL_POINT_SPRITE);
     }
 
 #ifdef XP_MACOSX
@@ -1063,6 +1058,10 @@ WebGLContext::InitAndValidateGL()
                                      "memory-pressure",
                                      false);
     }
+
+    mDefaultVertexArray = new WebGLVertexArray(this);
+    mDefaultVertexArray->mAttribBuffers.SetLength(mGLMaxVertexAttribs);
+    mBoundVertexArray = mDefaultVertexArray;
 
     return true;
 }

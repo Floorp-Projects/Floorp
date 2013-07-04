@@ -224,6 +224,9 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     // EndTransaction will complete it.
     return false;
   }
+  if (mWidget) {
+    mWidget->PrepareWindowEffects();
+  }
   ForwardTransaction();
   MakeSnapshotIfRequired();
   return true;
@@ -258,6 +261,16 @@ ClientLayerManager::MakeSnapshotIfRequired()
     }
   }
   mShadowTarget = nullptr;
+}
+
+void
+ClientLayerManager::FlushRendering()
+{
+  if (mWidget) {
+    if (CompositorChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
+      remoteRenderer->SendFlushRendering();
+    }
+  }
 }
 
 void
@@ -395,18 +408,15 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
     // This is derived from the code in
     // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
     const gfx3DMatrix& rootTransform = GetRoot()->GetTransform();
-    float devPixelRatioX = 1 / rootTransform.GetXScale();
-    float devPixelRatioY = 1 / rootTransform.GetYScale();
-    const gfx::Rect& metricsDisplayPort =
+    CSSToLayerScale paintScale = metrics.mDevPixelsPerCSSPixel
+        / LayerToLayoutDeviceScale(rootTransform.GetXScale(), rootTransform.GetYScale());
+    const CSSRect& metricsDisplayPort =
       (aDrawingCritical && !metrics.mCriticalDisplayPort.IsEmpty()) ?
         metrics.mCriticalDisplayPort : metrics.mDisplayPort;
-    gfx::Rect displayPort((metricsDisplayPort.x + metrics.mScrollOffset.x) * devPixelRatioX,
-                          (metricsDisplayPort.y + metrics.mScrollOffset.y) * devPixelRatioY,
-                          metricsDisplayPort.width * devPixelRatioX,
-                          metricsDisplayPort.height * devPixelRatioY);
+    LayerRect displayPort = (metricsDisplayPort + metrics.mScrollOffset) * paintScale;
 
     return AndroidBridge::Bridge()->ProgressiveUpdateCallback(
-      aHasPendingNewThebesContent, displayPort, devPixelRatioX, aDrawingCritical,
+      aHasPendingNewThebesContent, displayPort, paintScale.scale, aDrawingCritical,
       aViewport, aScaleX, aScaleY);
   }
 #endif

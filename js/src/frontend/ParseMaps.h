@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ParseMaps_h__
-#define ParseMaps_h__
+#ifndef frontend_ParseMaps_h
+#define frontend_ParseMaps_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TypeTraits.h"
@@ -45,7 +45,6 @@ class ParseMapPool
 
     RecyclableMaps      all;
     RecyclableMaps      recyclable;
-    JSContext           *cx;
 
     void checkInvariants();
 
@@ -79,8 +78,6 @@ class ParseMapPool
     }
 
   public:
-    explicit ParseMapPool(JSContext *cx) : cx(cx) {}
-
     ~ParseMapPool() {
         purgeAll();
     }
@@ -471,4 +468,4 @@ struct IsPod<js::frontend::DefinitionList> : TrueType {};
 
 } /* namespace mozilla */
 
-#endif
+#endif /* frontend_ParseMaps_h */

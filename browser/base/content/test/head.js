@@ -111,12 +111,24 @@ function getTestPlugin(aName) {
   return null;
 }
 
+// after a test is done using the plugin doorhanger, we should just clear
+// any permissions that may have crept in
+function clearAllPluginPermissions() {
+  let perms = Services.perms.enumerator;
+  while (perms.hasMoreElements()) {
+    let perm = perms.getNext();
+    if (perm.type.startsWith('plugin')) {
+      Services.perms.remove(perm.host, perm.type);
+    }
+  }
+}
+
 function updateBlocklist(aCallback) {
   var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
                           .getService(Ci.nsITimerCallback);
   var observer = function() {
-    aCallback();
     Services.obs.removeObserver(observer, "blocklist-updated");
+    SimpleTest.executeSoon(aCallback);
   };
   Services.obs.addObserver(observer, "blocklist-updated", false);
   blocklistNotifier.notify(null);
@@ -195,6 +207,21 @@ function promiseIsURIVisited(aURI, aExpectedValue) {
   });
 
   return deferred.promise;
+}
+
+function whenNewTabLoaded(aWindow, aCallback) {
+  aWindow.BrowserOpenTab();
+
+  let browser = aWindow.gBrowser.selectedBrowser;
+  if (browser.contentDocument.readyState === "complete") {
+    aCallback();
+    return;
+  }
+
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    aCallback();
+  }, true);
 }
 
 function addVisits(aPlaceInfo, aCallback) {

@@ -4,14 +4,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_compileinfo_inl_h__
-#define jsion_compileinfo_inl_h__
+#ifndef ion_CompileInfo_inl_h
+#define ion_CompileInfo_inl_h
 
-#include "CompileInfo.h"
+#include "ion/CompileInfo.h"
+#include "jsgcinlines.h"
 #include "jsscriptinlines.h"
 
 using namespace js;
 using namespace ion;
+
+CompileInfo::CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
+                         ExecutionMode executionMode)
+  : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
+    executionMode_(executionMode)
+{
+    JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
+
+    // The function here can flow in from anywhere so look up the canonical function to ensure that
+    // we do not try to embed a nursery pointer in jit-code.
+    if (fun_) {
+        fun_ = fun_->nonLazyScript()->function();
+        JS_ASSERT(fun_->isTenured());
+    }
+
+    nimplicit_ = StartArgSlot(script, fun)              /* scope chain and argument obj */
+               + (fun ? 1 : 0);                         /* this */
+    nargs_ = fun ? fun->nargs : 0;
+    nlocals_ = script->nfixed;
+    nstack_ = script->nslots - script->nfixed;
+    nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
+}
 
 const char *
 CompileInfo::filename() const
@@ -61,4 +84,4 @@ CompileInfo::getNote(JSContext *cx, jsbytecode *pc) const
     return js_GetSrcNote(cx, script(), pc);
 }
 
-#endif // jsion_compileinfo_inl_h__
+#endif /* ion_CompileInfo_inl_h */

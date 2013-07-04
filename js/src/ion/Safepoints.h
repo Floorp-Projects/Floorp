@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_include_safepoints_h_
-#define jsion_include_safepoints_h_
+#ifndef ion_Safepoints_h
+#define ion_Safepoints_h
 
-#include "Registers.h"
-#include "CompactBuffer.h"
-#include "BitSet.h"
+#include "ion/Registers.h"
+#include "ion/CompactBuffer.h"
+#include "ion/BitSet.h"
 
-#include "shared/Assembler-shared.h"
+#include "ion/shared/Assembler-shared.h"
 
 namespace js {
 namespace ion {
@@ -107,5 +107,4 @@ class SafepointReader
 } // namespace ion
 } // namespace js
 
-#endif // jsion_include_safepoints_h_
-
+#endif /* ion_Safepoints_h */

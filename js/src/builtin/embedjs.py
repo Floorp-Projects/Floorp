@@ -64,7 +64,7 @@ namespace js {
 namespace selfhosted {
     static const %(sources_type)s data[] = { %(sources_data)s };
 
-    static const %(sources_type)s *%(sources_name)s = reinterpret_cast<const %(sources_type)s *>(data);
+    static const %(sources_type)s * const %(sources_name)s = reinterpret_cast<const %(sources_type)s *>(data);
 
     uint32_t GetCompressedSize() {
         return %(compressed_total_length)i;

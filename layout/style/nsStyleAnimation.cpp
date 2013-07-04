@@ -343,6 +343,22 @@ SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
   aValue.SetArrayValue(arr, eCSSUnit_Calc);
 }
 
+static void
+SetCalcValue(const CalcValue& aCalc, nsCSSValue& aValue)
+{
+  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
+  if (!aCalc.mHasPercent) {
+    arr->Item(0).SetFloatValue(aCalc.mLength, eCSSUnit_Pixel);
+  } else {
+    nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
+    arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
+    arr2->Item(0).SetFloatValue(aCalc.mLength, eCSSUnit_Pixel);
+    arr2->Item(1).SetPercentValue(aCalc.mPercent);
+  }
+
+  aValue.SetArrayValue(arr, eCSSUnit_Calc);
+}
+
 static already_AddRefed<nsStringBuffer>
 GetURIAsUtf16StringBuffer(nsIURI* aUri)
 {
@@ -967,15 +983,13 @@ AddCSSValueCanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
 {
   CalcValue v1 = ExtractCalcValue(aValue1);
   CalcValue v2 = ExtractCalcValue(aValue2);
-  NS_ABORT_IF_FALSE(v1.mHasPercent || v2.mHasPercent,
-                    "only used on properties that always have percent in calc");
-  nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2),
-                              acalc = nsCSSValue::Array::Create(1);
-  a->Item(0).SetFloatValue(aCoeff1 * v1.mLength + aCoeff2 * v2.mLength,
-                           eCSSUnit_Pixel);
-  a->Item(1).SetPercentValue(aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent);
-  acalc->Item(0).SetArrayValue(a, eCSSUnit_Calc_Plus);
-  aResult.SetArrayValue(acalc, eCSSUnit_Calc);
+  CalcValue result;
+  result.mLength = aCoeff1 * v1.mLength + aCoeff2 * v2.mLength;
+  result.mPercent = aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent;
+  result.mHasPercent = v1.mHasPercent || v2.mHasPercent;
+  MOZ_ASSERT(result.mHasPercent || result.mPercent == 0.0f,
+             "can't have a nonzero percentage part without having percentages");
+  SetCalcValue(result, aResult);
 }
 
 static void

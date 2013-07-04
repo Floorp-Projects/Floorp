@@ -30,6 +30,7 @@
 #ifdef XP_MACOSX
       <hbox id="toolbox-controls">
         <toolbarbutton id="toolbox-close"
+                       class="devtools-closebutton"
                        tooltiptext="&toolboxCloseButton.tooltip;"/>
         <hbox id="toolbox-dock-buttons"/>
       </hbox>
@@ -42,6 +43,7 @@
       <hbox id="toolbox-controls">
         <hbox id="toolbox-dock-buttons"/>
         <toolbarbutton id="toolbox-close"
+                       class="devtools-closebutton"
                        tooltiptext="&toolboxCloseButton.tooltip;"/>
       </hbox>
 #endif

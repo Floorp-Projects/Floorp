@@ -34,12 +34,17 @@ public:
   FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus);
   virtual ~FTPChannelParent();
 
+  bool Init(const FTPChannelCreationArgs& aOpenArgs);
+
 protected:
-  virtual bool RecvAsyncOpen(const URIParams& uri,
-                             const uint64_t& startPos,
-                             const nsCString& entityID,
-                             const OptionalInputStreamParams& uploadStream) MOZ_OVERRIDE;
-  virtual bool RecvConnectChannel(const uint32_t& channelId) MOZ_OVERRIDE;
+  bool DoAsyncOpen(const URIParams& aURI, const uint64_t& aStartPos,
+                   const nsCString& aEntityID,
+                   const OptionalInputStreamParams& aUploadStream);
+
+  // used to connect redirected-to channel in parent with just created
+  // ChildChannel.  Used during HTTP->FTP redirects.
+  bool ConnectChannel(const uint32_t& channelId);
+
   virtual bool RecvCancel(const nsresult& status) MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;

@@ -11,6 +11,10 @@
 #include "nsXULAppAPI.h"
 #include "GLContext.h"
 #include "SurfaceStream.h"
+#include "SharedSurface.h"
+#ifdef MOZ_WIDGET_GONK
+#include "SharedSurfaceGralloc.h"
+#endif
 
 using namespace mozilla::gl;
 
@@ -95,9 +99,33 @@ CanvasClientWebGL::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   mTextureClient->EnsureAllocated(aSize, gfxASurface::CONTENT_COLOR);
 
   GLScreenBuffer* screen = aLayer->mGLContext->Screen();
-  SurfaceStreamHandle handle = screen->Stream()->GetShareHandle();
+  SurfaceStream* stream = screen->Stream();
 
-  mTextureClient->SetDescriptor(SurfaceStreamDescriptor(handle, false));
+  bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
+  if (isCrossProcess) {
+    // swap staging -> consumer so we can send it to the compositor
+    SharedSurface* surf = stream->SwapConsumer();
+    if (!surf) {
+      printf_stderr("surf is null post-SwapConsumer!\n");
+      return;
+    }
+
+#ifdef MOZ_WIDGET_GONK
+    if (surf->Type() != SharedSurfaceType::Gralloc) {
+      printf_stderr("Unexpected non-Gralloc SharedSurface in IPC path!");
+      return;
+    }
+
+    SharedSurface_Gralloc* grallocSurf = SharedSurface_Gralloc::Cast(surf);
+    mTextureClient->SetDescriptor(grallocSurf->GetDescriptor());
+#else
+    printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
+    MOZ_ASSERT(false);
+#endif
+  } else {
+    SurfaceStreamHandle handle = stream->GetShareHandle();
+    mTextureClient->SetDescriptor(SurfaceStreamDescriptor(handle, false));
+  }
 
   aLayer->Painted();
 }

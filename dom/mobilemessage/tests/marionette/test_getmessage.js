@@ -4,6 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
+SpecialPowers.setBoolPref("dom.sms.requestStatusReport", true);
 SpecialPowers.addPermission("sms", true, document);
 
 const REMOTE = "5559997777"; // the remote number
@@ -213,7 +214,9 @@ function deleteMsgs() {
 function cleanUp() {
   sms.onreceived = null;
   SpecialPowers.removePermission("sms", document);
-  SpecialPowers.setBoolPref("dom.sms.enabled", false);
+  SpecialPowers.clearUserPref("dom.sms.enabled");
+  SpecialPowers.clearUserPref("dom.sms.requestStatusReport");
+
   finish();
 }
 

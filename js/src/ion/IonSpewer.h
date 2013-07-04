@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_spewer_h__
-#define jsion_ion_spewer_h__
+#ifndef ion_IonSpewer_h
+#define ion_IonSpewer_h
 
 #include <stdarg.h>
 
 #include "mozilla/DebugOnly.h"
 
-#include "C1Spewer.h"
-#include "JSONSpewer.h"
+#include "ion/C1Spewer.h"
+#include "ion/JSONSpewer.h"
 
 namespace js {
 namespace ion {
@@ -197,5 +197,4 @@ class AutoDisableSpew
 } /* ion */
 } /* js */
 
-#endif /* jsion_ion_spewer_h__ */
-
+#endif /* ion_IonSpewer_h */

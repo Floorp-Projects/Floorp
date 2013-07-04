@@ -1,0 +1,20 @@
+[
+{
+"size": 141304652,
+"digest": "0bbba7483a483803fa0277ddeeb3f8f9592b57cb83d57794c366fb8a3541b47f0ab901c071b7ceb6828bceec7170e5d5c05c5b1dcc926c70f3da46a7e224f078",
+"algorithm": "sha512",
+"filename": "backup-leo.tar.xz"
+},
+{
+"size": 1570553,
+"digest": "ea03de74df73b05e939c314cd15c54aac7b5488a407b7cc4f5f263f3049a1f69642c567dd35c43d0bc3f0d599d0385a26ab2dd947a6b18f9044e4918b382eea7",
+"algorithm": "sha512",
+"filename": "Adreno200-AU_LINUX_ANDROID_ICS_CHOCO_CS.04.00.03.06.001.zip"
+},
+{
+"size": 5091328,
+"digest": "c9f93f7abf2fc5706ecc07787c30970980931d230047df7c3d180aad99ab144cc733188d13f1538b293161e1ee59b1c0c9ff09f4ebcdb78f2958eafa06ae4108",
+"algorithm": "sha512",
+"filename": "boot.img"
+}
+]

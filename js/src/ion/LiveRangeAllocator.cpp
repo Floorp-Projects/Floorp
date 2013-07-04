@@ -6,10 +6,10 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "LiveRangeAllocator.h"
+#include "ion/LiveRangeAllocator.h"
 
-#include "BacktrackingAllocator.h"
-#include "LinearScan.h"
+#include "ion/BacktrackingAllocator.h"
+#include "ion/LinearScan.h"
 
 using namespace js;
 using namespace js::ion;
@@ -30,8 +30,7 @@ Requirement::priority() const
         return 2;
 
       default:
-        JS_NOT_REACHED("Unknown requirement kind.");
-        return -1;
+        MOZ_ASSUME_UNREACHABLE("Unknown requirement kind.");
     }
 }
 
@@ -351,16 +350,9 @@ VirtualRegister::getFirstInterval()
     return intervals_[0];
 }
 
-// Dummy function to instantiate LiveRangeAllocator for each template instance.
-void
-EnsureLiveRangeAllocatorInstantiation(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
-{
-    LiveRangeAllocator<LinearScanVirtualRegister> lsra(mir, lir, graph, true);
-    lsra.buildLivenessInfo();
-
-    LiveRangeAllocator<BacktrackingVirtualRegister> backtracking(mir, lir, graph, false);
-    backtracking.buildLivenessInfo();
-}
+// Instantiate LiveRangeAllocator for each template instance.
+template bool LiveRangeAllocator<LinearScanVirtualRegister>::buildLivenessInfo();
+template bool LiveRangeAllocator<BacktrackingVirtualRegister>::buildLivenessInfo();
 
 #ifdef DEBUG
 static inline bool
@@ -642,7 +634,8 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                             return false;
                     }
                 } else {
-                    CodePosition to = ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
+                    CodePosition to =
+                        ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
                     if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), to))
                         return false;
                 }
@@ -708,7 +701,8 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                             to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                         }
                     } else {
-                        to = (use->usedAtStart() || ins->isCall()) ? inputOf(*ins) : outputOf(*ins);
+                        to = (use->usedAtStart() || ins->isCall())
+                           ? inputOf(*ins) : outputOf(*ins);
                         if (use->isFixedRegister()) {
                             LAllocation reg(AnyRegister::FromCode(use->registerCode()));
                             for (size_t i = 0; i < ins->numDefs(); i++) {

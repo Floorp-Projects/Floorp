@@ -31,10 +31,10 @@
 
 #if ENABLE_ASSEMBLER && WTF_OS_WINDOWS
 
-#include "windows.h"
-#include "wtf/Assertions.h"
+#include <windows.h>
+#include "assembler/wtf/Assertions.h"
 
-#include "OSAllocator.h"
+#include "yarr/OSAllocator.h"
 
 namespace WTF {
 

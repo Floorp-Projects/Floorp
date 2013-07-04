@@ -69,6 +69,7 @@ class RefTest(object):
       prefsFile.write('user_pref("reftest.ignoreWindowSize", true);\n')
     if options.filter != None:
       prefsFile.write('user_pref("reftest.filter", %s);\n' % self.makeJSString(options.filter))
+    prefsFile.write('user_pref("reftest.focusFilterMode", %s);\n' % self.makeJSString(options.focusFilterMode))
 
     for v in options.extraPrefs:
       thispref = v.split("=")
@@ -255,6 +256,13 @@ class ReftestOptions(OptionParser):
                            "RegExp constructor) to test against URLs in the reftest manifest; "
                            "only test items that have a matching test URL will be run.")
     defaults["filter"] = None
+
+    self.add_option("--focus-filter-mode",
+                    action = "store", type = "string", dest = "focusFilterMode",
+                    help = "filters tests to run by whether they require focus. "
+                           "Valid values are `all', `needs-focus', or `non-needs-focus'. "
+                           "Defaults to `all'.")
+    defaults["focusFilterMode"] = "all"
 
     self.set_defaults(**defaults)
 

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=796850
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for ByteString support</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=796850">Mozilla Bug 796850</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+  /** Test for Bug 796850 **/
+  var xhr = new XMLHttpRequest();
+  caught = false;
+  try {
+    xhr.open("\u5427", "about:mozilla", true);
+  }
+  catch (TypeError) {
+    caught = true;
+  }
+  ok(caught, "Character values > 255 not rejected for ByteString");
+
+</script>
+</pre>
+</body>
+</html>

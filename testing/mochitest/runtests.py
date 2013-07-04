@@ -263,6 +263,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "launches tests in immersive browser")
     defaults["immersiveMode"] = False
 
+    self.add_option("--httpd-path", action = "store",
+                    type = "string", dest = "httpdPath",
+                    help = "path to the httpd.js file")
+    defaults["httpdPath"] = None
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -410,6 +415,11 @@ class MochitestServer:
     self.httpPort = options.httpPort
     self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
     self.testPrefix = "'webapprt_'" if options.webapprtContent else "undefined"
+    if options.httpdPath:
+        self._httpdPath = options.httpdPath
+    else:
+        self._httpdPath = '.'
+    self._httpdPath = os.path.abspath(self._httpdPath)
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -428,7 +438,7 @@ class MochitestServer:
 
     args = ["-g", self._xrePath,
             "-v", "170",
-            "-f", "./" + "httpd.js",
+            "-f", self._httpdPath + "/httpd.js",
             "-e", """const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s';
                      const _TEST_PREFIX = %(testPrefix)s; const _DISPLAY_RESULTS = %(displayResults)s;""" %
                    {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer,

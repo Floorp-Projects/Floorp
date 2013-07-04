@@ -391,3 +391,78 @@ function ArrayStaticReduceRight(list, callbackfn) {
     else
         return callFunction(ArrayReduceRight, list, callbackfn);
 }
+
+/* ES6 draft 2013-05-14 15.4.3.23. */
+function ArrayFind(predicate/*, thisArg*/) {
+    /* Steps 1-2. */
+    var O = ToObject(this);
+
+    /* Steps 3-5. */
+    var len = ToInteger(O.length);
+
+    /* Step 6. */
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.find');
+    if (!IsCallable(predicate))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+
+    /* Step 7. */
+    var T = arguments.length > 1 ? arguments[1] : undefined;
+
+    /* Steps 8-9. */
+    /* Steps a (implicit), and e. */
+    /* Note: this will hang in some corner-case situations, because of IEEE-754 numbers' 
+     * imprecision for large values. Example:
+     * var obj = { 18014398509481984: true, length: 18014398509481988 };
+     * Array.prototype.find.call(obj, () => true);
+     */
+    for (var k = 0; k < len; k++) {
+        /* Steps b and c (implicit) */
+        if (k in O) {
+            /* Step d. */
+            var kValue = O[k];
+            if (callFunction(predicate, T, kValue, k, O))
+                return kValue;
+        }
+    }
+
+    /* Step 10. */
+    return undefined;
+}
+
+/* ES6 draft 2013-05-14 15.4.3.23. */
+function ArrayFindIndex(predicate/*, thisArg*/) {
+    /* Steps 1-2. */
+    var O = ToObject(this);
+
+    /* Steps 3-5. */
+    var len = ToInteger(O.length);
+
+    /* Step 6. */
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.find');
+    if (!IsCallable(predicate))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+
+    /* Step 7. */
+    var T = arguments.length > 1 ? arguments[1] : undefined;
+
+    /* Steps 8-9. */
+    /* Steps a (implicit), and e. */
+    /* Note: this will hang in some corner-case situations, because of IEEE-754 numbers' 
+     * imprecision for large values. Example:
+     * var obj = { 18014398509481984: true, length: 18014398509481988 };
+     * Array.prototype.find.call(obj, () => true);
+     */
+    for (var k = 0; k < len; k++) {
+        /* Steps b and c (implicit) */
+        if (k in O) {
+            /* Step d. */
+            if (callFunction(predicate, T, O[k], k, O))
+                return k;
+        }
+    }
+
+    /* Step 10. */
+    return -1;
+}

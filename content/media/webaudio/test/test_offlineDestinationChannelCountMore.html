@@ -12,7 +12,6 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var ctx = new OfflineAudioContext(6, 100, 22050);
 
   var buf = ctx.createBuffer(2, 100, ctx.sampleRate);
@@ -37,7 +36,6 @@ addLoadEvent(function() {
       compareBuffers(e.renderedBuffer.getChannelData(i), emptyBuffer.getChannelData(0));
     }
 
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   };
 });

@@ -153,10 +153,10 @@ var tests = {
       function() { // the "load" callback.
         executeSoon(function() {
           todo_is(panelCallbackCount, 0, "Bug 833207 - should be no callback when error page loads.");
-          let iframe = SocialChatBar.chatbar.selectedChat.iframe;
-          waitForCondition(function() iframe.contentDocument.location.href.indexOf("about:socialerror?")==0,
+          let chat = SocialChatBar.chatbar.selectedChat;
+          waitForCondition(function() chat.contentDocument.location.href.indexOf("about:socialerror?")==0,
                            function() {
-                            SocialChatBar.chatbar.selectedChat.close();
+                            chat.close();
                             next();
                             },
                            "error page didn't appear");

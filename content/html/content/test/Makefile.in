@@ -212,7 +212,6 @@ MOCHITEST_FILES = \
 		test_bug659596.html \
 		test_bug659743.xml \
 		test_bug660663.html \
-		test_bug664299.html \
 		test_bug666200.html \
 		test_bug666666.html \
 		test_bug669012.html \
@@ -259,6 +258,7 @@ MOCHITEST_FILES = \
 		test_q_attributes_reflection.html \
 		test_html_attributes_reflection.html \
 		test_bug651956.html \
+		test_bug674927.html \
 		test_bug694503.html \
 		test_object_plugin_nav.html \
 		test_bug742030.html \
@@ -273,6 +273,7 @@ MOCHITEST_FILES = \
 		test_bug827426.html \
 		test_bug838582.html \
 		test_bug839913.html \
+		test_bug840877.html \
 		test_bug841466.html \
 		test_iframe_sandbox_inheritance.html \
 		file_iframe_sandbox_a_if1.html \
@@ -306,6 +307,7 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_pass.js \
 		file_iframe_sandbox_fail.js \
 		test_iframe_sandbox_navigation.html \
+		test_iframe_sandbox_navigation2.html \
 		file_iframe_sandbox_d_if1.html \
 		file_iframe_sandbox_d_if2.html \
 		file_iframe_sandbox_d_if3.html \
@@ -319,6 +321,15 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_d_if11.html \
 		file_iframe_sandbox_d_if12.html \
 		file_iframe_sandbox_d_if13.html \
+		file_iframe_sandbox_d_if14.html \
+		file_iframe_sandbox_d_if15.html \
+		file_iframe_sandbox_d_if16.html \
+		file_iframe_sandbox_d_if17.html \
+		file_iframe_sandbox_d_if18.html \
+		file_iframe_sandbox_d_if19.html \
+		file_iframe_sandbox_d_if20.html \
+		file_iframe_sandbox_d_if21.html \
+		file_iframe_sandbox_d_if22.html \
 		file_iframe_sandbox_navigation_start.html \
 		file_iframe_sandbox_navigation_pass.html \
 		file_iframe_sandbox_navigation_fail.html \
@@ -328,8 +339,19 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_e_if4.html \
 		file_iframe_sandbox_e_if5.html \
 		file_iframe_sandbox_e_if6.html \
+		file_iframe_sandbox_e_if7.html \
+		file_iframe_sandbox_e_if8.html \
+		file_iframe_sandbox_e_if9.html \
+		file_iframe_sandbox_e_if10.html \
+		file_iframe_sandbox_e_if11.html \
+		file_iframe_sandbox_e_if12.html \
+		file_iframe_sandbox_e_if13.html \
+		file_iframe_sandbox_e_if14.html \
+		file_iframe_sandbox_e_if15.html \
+		file_iframe_sandbox_e_if16.html \
 		file_iframe_sandbox_top_navigation_pass.html \
 		file_iframe_sandbox_top_navigation_fail.html \
+		file_iframe_sandbox_window_navigation_fail.html \
 		test_iframe_sandbox_plugins.html \
 		file_iframe_sandbox_f_if1.html \
 		file_iframe_sandbox_f_if2.html \
@@ -337,6 +359,7 @@ MOCHITEST_FILES = \
 		test_iframe_sandbox_workers.html \
 		file_iframe_sandbox_g_if1.html \
 		file_iframe_sandbox_worker.js \
+		test_img_attributes_reflection.html \
 		test_named_options.html \
 		test_htmlcollection.html \
 		test_formelements.html \
@@ -356,6 +379,21 @@ MOCHITEST_FILES = \
 		wakelock.ogg \
 		wakelock.ogv \
 		test_bug869040.html \
+		test_bug870787.html \
+		test_bug879319.html \
+		allowMedia.sjs \
+		test_bug874758.html \
+		test_bug885024.html \
+		test_track.html \
+		test_track_disabled.html \
+		test_srcdoc.html \
+		file_srcdoc.html \
+		test_srcdoc-2.html \
+		file_srcdoc-2.html \
+		$(NULL)
+
+MOCHITEST_CHROME_FILES = \
+		test_allowMedia.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

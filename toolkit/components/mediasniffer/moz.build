@@ -17,3 +17,6 @@ CPP_SOURCES += [
     'nsMediaSnifferModule.cpp',
 ]
 
+CSRCS += [
+    'mp3sniff.c',
+]

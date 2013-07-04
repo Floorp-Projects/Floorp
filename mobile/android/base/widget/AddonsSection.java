@@ -102,7 +102,7 @@ public class AddonsSection extends AboutHomeSection {
         String str = null;
         try {
             byte[] buf = new byte[32768];
-            StringBuffer jsonString = new StringBuffer();
+            StringBuilder jsonString = new StringBuilder();
             int read = 0;
             while ((read = fileStream.read(buf, 0, 32768)) != -1)
                 jsonString.append(new String(buf, 0, read));
@@ -222,7 +222,7 @@ public class AddonsSection extends AboutHomeSection {
         row.setOnKeyListener(GamepadUtils.getClickDispatcher());
 
         Favicons favicons = Favicons.getInstance();
-        favicons.loadFavicon(pageUrl, iconUrl, true,
+        favicons.loadFavicon(pageUrl, iconUrl, Favicons.FLAG_PERSIST | Favicons.FLAG_SCALE,
                 new Favicons.OnFaviconLoadedListener() {
             @Override
             public void onFaviconLoaded(String url, Bitmap favicon) {

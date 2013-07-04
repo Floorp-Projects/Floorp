@@ -100,15 +100,6 @@ Sanitizer.prototype = {
       {
         var cookieMgr = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
         cookieMgr.removeAll();
-
-        // clear any network geolocation provider sessions
-        try {
-          var branch = Services.prefs.getBranch("geo.wifi.access_token.");
-          branch.deleteBranch("");
-
-          branch = Services.prefs.getBranch("geo.request.remember.");
-          branch.deleteBranch("");
-        } catch (e) {dump(e);}
       },
       
       get canClear()

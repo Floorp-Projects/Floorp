@@ -13,6 +13,7 @@
 #include "gfxUtils.h"
 #include "imgDecoderObserver.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
@@ -39,9 +40,10 @@ class SVGRootRenderingObserver MOZ_FINAL : public nsSVGRenderingObserver {
 public:
   SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
                            VectorImage*        aVectorImage)
-    : nsSVGRenderingObserver(),
-      mDocWrapper(aDocWrapper),
-      mVectorImage(aVectorImage)
+    : nsSVGRenderingObserver()
+    , mDocWrapper(aDocWrapper)
+    , mVectorImage(aVectorImage)
+    , mHonoringInvalidations(true)
   {
     MOZ_ASSERT(mDocWrapper, "Need a non-null SVG document wrapper");
     MOZ_ASSERT(mVectorImage, "Need a non-null VectorImage");
@@ -54,15 +56,14 @@ public:
     mInObserverList = true;
   }
 
-  void ResumeListening()
-  {
-    // GetReferencedElement adds us back to our target's observer list.
-    GetReferencedElement();
-  }
-
   virtual ~SVGRootRenderingObserver()
   {
     StopListening();
+  }
+
+  void ResumeHonoringInvalidations()
+  {
+    mHonoringInvalidations = true;
   }
 
 protected:
@@ -76,29 +77,31 @@ protected:
     Element* elem = GetTarget();
     MOZ_ASSERT(elem, "missing root SVG node");
 
-    if (!mDocWrapper->ShouldIgnoreInvalidation()) {
+    if (mHonoringInvalidations && !mDocWrapper->ShouldIgnoreInvalidation()) {
       nsIFrame* frame = elem->GetPrimaryFrame();
       if (!frame || frame->PresContext()->PresShell()->IsDestroying()) {
         // We're being destroyed. Bail out.
         return;
       }
 
-      mVectorImage->InvalidateObserver();
+      // Ignore further invalidations until we draw.
+      mHonoringInvalidations = false;
 
-      // We may have been removed from the observer list by our caller. Rather
-      // than add ourselves back here, we wait until Draw gets called, ensuring
-      // that we coalesce invalidations between Draw calls.
-    } else {
-      // Here we may also have been removed from the observer list, but since
-      // we're not sending an invalidation, Draw won't get called. We need to
-      // add ourselves back immediately.
-      ResumeListening();
+      mVectorImage->InvalidateObserver();
     }
+
+    // Our caller might've removed us from rendering-observer list.
+    // Add ourselves back!
+    if (!mInObserverList) {
+      nsSVGEffects::AddRenderingObserver(elem, this);
+      mInObserverList = true;
+    } 
   }
 
   // Private data
   const nsRefPtr<SVGDocumentWrapper> mDocWrapper;
   VectorImage* const mVectorImage;   // Raw pointer because it owns me.
+  bool mHonoringInvalidations;
 };
 
 class SVGParseCompleteListener MOZ_FINAL : public nsStubDocumentObserver {
@@ -339,7 +342,7 @@ VectorImage::FrameRect(uint32_t aWhichFrame)
 }
 
 size_t
-VectorImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+VectorImage::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // We're not storing the source data -- we just feed that directly to
   // our helper SVG document as we receive it, for it to parse.
@@ -348,7 +351,7 @@ VectorImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeO
 }
 
 size_t
-VectorImage::HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+VectorImage::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // XXXdholbert TODO: return num bytes used by helper SVG doc. (bug 590790)
   return 0;
@@ -690,36 +693,56 @@ VectorImage::Draw(gfxContext* aContext,
   AutoSVGRenderingState autoSVGState(aSVGContext,
                                      time,
                                      mSVGDocumentWrapper->GetRootSVGElem());
-  mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
+
+  // gfxUtils::DrawPixelSnapped may rasterize this image to a temporary surface
+  // if we hit the tiling path. Unfortunately, the temporary surface isn't
+  // created at the size at which we'll ultimately draw, causing fuzzy output.
+  // To fix this we pre-apply the transform's scaling to the drawing parameters
+  // and then remove the scaling from the transform, so the fact that temporary
+  // surfaces won't take the scaling into account doesn't matter. (Bug 600207.)
+  gfxSize scale(aUserSpaceToImageSpace.ScaleFactors(true));
+  gfxPoint translation(aUserSpaceToImageSpace.GetTranslation());
+
+  // Rescale everything.
+  nsIntSize scaledViewport(aViewportSize.width / scale.width,
+                           aViewportSize.height / scale.height);
+  gfxIntSize scaledViewportGfx(scaledViewport.width, scaledViewport.height);
+  nsIntRect scaledSubimage(aSubimage);
+  scaledSubimage.ScaleRoundOut(1.0 / scale.width, 1.0 / scale.height);
+
+  // Remove the scaling from the transform.
+  gfxMatrix unscale;
+  unscale.Translate(gfxPoint(translation.x / scale.width,
+                             translation.y / scale.height));
+  unscale.Scale(1.0 / scale.width, 1.0 / scale.height);
+  unscale.Translate(-translation);
+  gfxMatrix unscaledTransform(aUserSpaceToImageSpace * unscale);
+
+  mSVGDocumentWrapper->UpdateViewportBounds(scaledViewport);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-  // XXXdholbert Do we need to convert image size from
-  // CSS pixels to dev pixels here? (is gfxCallbackDrawable's 2nd arg in dev
-  // pixels?)
-  gfxIntSize imageSizeGfx(aViewportSize.width, aViewportSize.height);
-
   // Based on imgFrame::Draw
-  gfxRect sourceRect = aUserSpaceToImageSpace.Transform(aFill);
-  gfxRect imageRect(0, 0, aViewportSize.width, aViewportSize.height);
-  gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
+  gfxRect sourceRect = unscaledTransform.Transform(aFill);
+  gfxRect imageRect(0, 0, scaledViewport.width, scaledViewport.height);
+  gfxRect subimage(scaledSubimage.x, scaledSubimage.y,
+                   scaledSubimage.width, scaledSubimage.height);
 
 
   nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
-                           nsIntRect(nsIntPoint(0, 0), aViewportSize),
+                           nsIntRect(nsIntPoint(0, 0), scaledViewport),
                            aFlags);
 
-  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, imageSizeGfx);
+  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, scaledViewportGfx);
 
   gfxUtils::DrawPixelSnapped(aContext, drawable,
-                             aUserSpaceToImageSpace,
+                             unscaledTransform,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter,
                              aFlags);
 
-  // Allow ourselves to fire FrameChanged and OnStopFrame again.
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
-  mRenderingObserver->ResumeListening();
+  mRenderingObserver->ResumeHonoringInvalidations();
 
   return NS_OK;
 }
@@ -740,6 +763,11 @@ VectorImage::StartDecoding()
   return NS_OK;
 }
 
+bool
+VectorImage::IsDecoded()
+{
+  return mIsFullyLoaded || mError;
+}
 
 //******************************************************************************
 /* void lockImage() */

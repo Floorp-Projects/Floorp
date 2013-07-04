@@ -59,6 +59,8 @@ function doPageErrors()
 
 function doConsoleCalls()
 {
+  ConsoleAPIStorage.clearEvents();
+
   top.console.log("foobarBaz-log", undefined);
   top.console.info("foobarBaz-info", null);
   top.console.warn("foobarBaz-warn", document.body);
@@ -100,17 +102,32 @@ let consoleAPICalls = 0;
 let pageErrors = 0;
 
 let handlers = {
-  onConsoleAPICall: function onConsoleAPICall()
+  onConsoleAPICall: function onConsoleAPICall(aMessage)
   {
-    consoleAPICalls++;
+    for (let msg of expectedConsoleCalls) {
+      if (msg.functionName == aMessage.functionName &&
+          msg.filename.test(aMessage.filename)) {
+        consoleAPICalls++;
+        break;
+      }
+    }
     if (consoleAPICalls == expectedConsoleCalls.length) {
       checkConsoleAPICache();
     }
   },
 
-  onConsoleServiceMessage: function onConsoleServiceMessage()
+  onConsoleServiceMessage: function onConsoleServiceMessage(aMessage)
   {
-    pageErrors++;
+    if (!(aMessage instanceof Ci.nsIScriptError)) {
+      return;
+    }
+    for (let msg of expectedPageErrors) {
+      if (msg.category == aMessage.category &&
+          msg.errorMessage.test(aMessage.errorMessage)) {
+        pageErrors++;
+        break;
+      }
+    }
     if (pageErrors == expectedPageErrors.length) {
       testPageErrors();
     }
@@ -143,14 +160,23 @@ function onAttach1(aState, aResponse)
 function onCachedConsoleAPI(aState, aResponse)
 {
   let msgs = aResponse.messages;
+  info("cached console messages: " + msgs.length);
 
-  is(msgs.length, expectedConsoleCalls.length,
+  ok(msgs.length >= expectedConsoleCalls.length,
      "number of cached console messages");
 
-  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
-    info("checking received cached message #" + aIndex);
-    checkConsoleAPICall(msgs[aIndex], expectedConsoleCalls[aIndex]);
-  });
+  for (let msg of msgs) {
+    for (let expected of expectedConsoleCalls) {
+      if (expected.functionName == msg.functionName &&
+          expected.filename.test(msg.filename)) {
+        expectedConsoleCalls.splice(expectedConsoleCalls.indexOf(expected));
+        checkConsoleAPICall(msg, expected);
+        break;
+      }
+    }
+  }
+
+  is(expectedConsoleCalls.length, 0, "all expected messages have been found");
 
   closeDebugger(aState, function() {
     consoleServiceListener = new ConsoleServiceListener(null, handlers);
@@ -175,14 +201,23 @@ function onAttach2(aState, aResponse)
 function onCachedPageErrors(aState, aResponse)
 {
   let msgs = aResponse.messages;
+  info("cached page errors: " + msgs.length);
 
-  is(msgs.length, expectedPageErrors.length,
+  ok(msgs.length >= expectedPageErrors.length,
      "number of cached page errors");
 
-  expectedPageErrors.forEach(function(aMessage, aIndex) {
-    info("checking received cached message #" + aIndex);
-    checkObject(msgs[aIndex], expectedPageErrors[aIndex]);
-  });
+  for (let msg of msgs) {
+    for (let expected of expectedPageErrors) {
+      if (expected.category == msg.category &&
+          expected.errorMessage.test(msg.errorMessage)) {
+        expectedPageErrors.splice(expectedPageErrors.indexOf(expected));
+        checkObject(msg, expected);
+        break;
+      }
+    }
+  }
+
+  is(expectedPageErrors.length, 0, "all expected messages have been found");
 
   closeDebugger(aState, function() {
     SimpleTest.finish();

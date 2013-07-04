@@ -9,7 +9,7 @@
 #define GrSWMaskHelper_DEFINED
 
 #include "GrColor.h"
-#include "GrMatrix.h"
+#include "SkMatrix.h"
 #include "GrNoncopyable.h"
 #include "SkBitmap.h"
 #include "SkDraw.h"
@@ -21,6 +21,7 @@ class GrAutoScratchTexture;
 class GrContext;
 class GrTexture;
 class SkPath;
+class SkStrokeRec;
 class GrDrawTarget;
 
 /**
@@ -47,15 +48,15 @@ public:
     // may be accumulated in the helper during creation, "resultBounds"
     // allows the caller to specify the region of interest - to limit the
     // amount of work.
-    bool init(const GrIRect& resultBounds, const GrMatrix* matrix);
+    bool init(const GrIRect& resultBounds, const SkMatrix* matrix);
 
     // Draw a single rect into the accumulation bitmap using the specified op
     void draw(const GrRect& rect, SkRegion::Op op,
               bool antiAlias, uint8_t alpha);
 
     // Draw a single path into the accumuation bitmap using the specified op
-    void draw(const SkPath& path, SkRegion::Op op,
-              GrPathFill fill, bool antiAlias, uint8_t alpha);
+    void draw(const SkPath& path, const SkStrokeRec& stroke, SkRegion::Op op,
+              bool antiAlias, uint8_t alpha);
 
     // Helper function to get a scratch texture suitable for capturing the
     // result (i.e., right size & format)
@@ -74,10 +75,10 @@ public:
     // to the GPU. The result is returned in "result".
     static GrTexture* DrawPathMaskToTexture(GrContext* context,
                                             const SkPath& path,
+                                            const SkStrokeRec& stroke,
                                             const GrIRect& resultBounds,
-                                            GrPathFill fill,
                                             bool antiAlias,
-                                            GrMatrix* matrix);
+                                            SkMatrix* matrix);
 
     // This utility routine is used to add a path's mask to some other draw.
     // The ClipMaskManager uses it to accumulate clip masks while the
@@ -96,7 +97,7 @@ public:
 protected:
 private:
     GrContext*      fContext;
-    GrMatrix        fMatrix;
+    SkMatrix        fMatrix;
     SkBitmap        fBM;
     SkDraw          fDraw;
     SkRasterClip    fRasterClip;

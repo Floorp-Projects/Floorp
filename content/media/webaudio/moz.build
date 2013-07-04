@@ -17,6 +17,10 @@ EXPORTS += [
     'WebAudioUtils.h',
 ]
 
+EXPORTS.mozilla += [
+    'FFTBlock.h',
+]
+
 EXPORTS.mozilla.dom += [
     'AnalyserNode.h',
     'AudioBuffer.h',
@@ -30,15 +34,17 @@ EXPORTS.mozilla.dom += [
     'BiquadFilterNode.h',
     'ChannelMergerNode.h',
     'ChannelSplitterNode.h',
+    'ConvolverNode.h',
     'DelayNode.h',
     'DynamicsCompressorNode.h',
     'EnableWebAudioCheck.h',
     'GainNode.h',
+    'MediaStreamAudioDestinationNode.h',
     'OfflineAudioCompletionEvent.h',
     'PannerNode.h',
+    'PeriodicWave.h',
     'ScriptProcessorNode.h',
     'WaveShaperNode.h',
-    'WaveTable.h',
 ]
 
 CPP_SOURCES += [
@@ -54,17 +60,19 @@ CPP_SOURCES += [
     'BiquadFilterNode.cpp',
     'ChannelMergerNode.cpp',
     'ChannelSplitterNode.cpp',
+    'ConvolverNode.cpp',
     'DelayNode.cpp',
     'DynamicsCompressorNode.cpp',
     'EnableWebAudioCheck.cpp',
     'GainNode.cpp',
     'MediaBufferDecoder.cpp',
+    'MediaStreamAudioDestinationNode.cpp',
     'OfflineAudioCompletionEvent.cpp',
     'PannerNode.cpp',
+    'PeriodicWave.cpp',
     'ScriptProcessorNode.cpp',
     'ThreeDPoint.cpp',
     'WaveShaperNode.cpp',
-    'WaveTable.cpp',
     'WebAudioUtils.cpp',
 ]
 

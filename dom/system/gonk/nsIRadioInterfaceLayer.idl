@@ -79,8 +79,8 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(c1c9d1e6-fec6-4c99-880d-7a310d736e64)]
-interface nsIRadioInterfaceLayer : nsISupports
+[scriptable, uuid(6dde3eaf-243d-4afa-abdb-95c94c2b1c7a)]
+interface nsIRadioInterface : nsISupports
 {
   /**
    * Activates or deactivates radio power.
@@ -120,4 +120,12 @@ interface nsIRadioInterfaceLayer : nsISupports
   void sendSMS(in DOMString number,
                in DOMString message,
                in nsIMobileMessageCallback request);
+};
+
+[scriptable, uuid(44b03951-1444-4c03-bd37-0bcb3a01b56f)]
+interface nsIRadioInterfaceLayer : nsISupports
+{
+  readonly attribute unsigned long numRadioInterfaces;
+
+  nsIRadioInterface getRadioInterface(in long clientId);
 };

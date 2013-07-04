@@ -23,6 +23,7 @@
 #include "nsIXPCScriptable.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsIXPCScriptable.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -84,6 +85,7 @@
 #endif
 
 using namespace mozilla;
+using namespace JS;
 
 class XPCShellDirProvider : public nsIDirectoryServiceProvider2
 {
@@ -145,7 +147,7 @@ JSPrincipals *gJSPrincipals = nullptr;
 nsAutoString *gWorkingDirectory = nullptr;
 
 static JSBool
-GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+GetLocationProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
 #if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
@@ -489,10 +491,11 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Version(JSContext *cx, unsigned argc, jsval *vp)
 {
+    JSVersion origVersion = JS_GetVersion(cx);
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(origVersion));
     if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
-        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])))));
-    else
-        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
+        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
+                                    JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])));
     return true;
 }
 
@@ -677,19 +680,6 @@ SendCommand(JSContext* cx,
     return true;
 }
 
-static JSBool
-GetChildGlobalObject(JSContext* cx,
-                     unsigned,
-                     jsval* vp)
-{
-    JS::Rooted<JSObject*> global(cx);
-    if (XRE_GetChildGlobalObject(cx, global.address())) {
-        JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(global));
-        return true;
-    }
-    return false;
-}
-
 /*
  * JSContext option name to flag map. The option names are in alphabetical
  * order for better reporting.
@@ -698,7 +688,7 @@ static const struct JSOption {
     const char  *name;
     uint32_t    flag;
 } js_options[] = {
-    {"strict",          JSOPTION_STRICT},
+    {"strict",          JSOPTION_EXTRA_WARNINGS},
     {"werror",          JSOPTION_WERROR},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };
@@ -819,6 +809,84 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp)
   return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
+static JSBool
+Blob(JSContext *cx, unsigned argc, jsval *vp)
+{
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  nsCOMPtr<nsISupports> native =
+    do_CreateInstance("@mozilla.org/dom/multipart-blob;1");
+  if (!native) {
+    JS_ReportError(cx, "Could not create native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+  NS_ASSERTION(initializer, "what?");
+
+  nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not initialize native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not get XPConnent service!");
+    return false;
+  }
+
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
+  rv = xpc->WrapNativeToJSVal(cx, global, native, nullptr,
+                              &NS_GET_IID(nsISupports), true,
+                              args.rval().address(), nullptr);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not wrap native object!");
+    return false;
+  }
+
+  return true;
+}
+
+static JSBool
+File(JSContext *cx, unsigned argc, jsval *vp)
+{
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  nsCOMPtr<nsISupports> native =
+    do_CreateInstance("@mozilla.org/dom/multipart-file;1");
+  if (!native) {
+    JS_ReportError(cx, "Could not create native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+  NS_ASSERTION(initializer, "what?");
+
+  nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not initialize native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not get XPConnent service!");
+    return false;
+  }
+
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
+  rv = xpc->WrapNativeToJSVal(cx, global, native, nullptr,
+                              &NS_GET_IID(nsISupports), true,
+                              args.rval().address(), nullptr);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not wrap native object!");
+    return false;
+  }
+
+  return true;
+}
+
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -838,9 +906,10 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("dumpHeap",        DumpHeap,       5,0),
 #endif
     JS_FS("sendCommand",     SendCommand,    1,0),
-    JS_FS("getChildGlobalObject", GetChildGlobalObject, 0,0),
     JS_FS("atob",            Atob,           1,0),
     JS_FS("btoa",            Btoa,           1,0),
+    JS_FS("Blob",            Blob,           2,JSFUN_CONSTRUCTOR),
+    JS_FS("File",            File,           2,JSFUN_CONSTRUCTOR),
     JS_FS_END
 };
 
@@ -851,7 +920,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
+env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -905,7 +974,7 @@ env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 }
 
 static JSBool
-env_enumerate(JSContext *cx, JSHandleObject obj)
+env_enumerate(JSContext *cx, HandleObject obj)
 {
     static JSBool reflected;
     char **evp, *name, *value;
@@ -937,7 +1006,7 @@ env_enumerate(JSContext *cx, JSHandleObject obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             JS::MutableHandleObject objp)
 {
     JSString *idstr, *valstr;
@@ -1150,7 +1219,7 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
         case 'S':
             JS_ToggleOptions(cx, JSOPTION_WERROR);
         case 's':
-            JS_ToggleOptions(cx, JSOPTION_STRICT);
+            JS_ToggleOptions(cx, JSOPTION_EXTRA_WARNINGS);
             break;
         case 'I':
             JS_ToggleOptions(cx, JSOPTION_COMPILE_N_GO);
@@ -1236,7 +1305,8 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
             if (++i == argc) {
                 return usage();
             }
-            JS_SetVersion(cx, JSVersion(atoi(argv[i])));
+            JS_SetVersionForCompartment(js::GetContextCompartment(cx),
+                                        JSVersion(atoi(argv[i])));
             break;
         case 'W':
             reportWarnings = false;
@@ -1309,242 +1379,6 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
     if (filename || isInteractive)
         Process(cx, obj, filename, forceTTY);
     return gExitCode;
-}
-
-/***************************************************************************/
-
-class FullTrustSecMan
-  : public nsIScriptSecurityManager
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSECURITYMANAGER
-  NS_DECL_NSISCRIPTSECURITYMANAGER
-
-  FullTrustSecMan();
-  virtual ~FullTrustSecMan();
-
-  void SetSystemPrincipal(nsIPrincipal *aPrincipal) {
-    mSystemPrincipal = aPrincipal;
-  }
-
-private:
-  nsCOMPtr<nsIPrincipal> mSystemPrincipal;
-};
-
-NS_INTERFACE_MAP_BEGIN(FullTrustSecMan)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCSecurityManager)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptSecurityManager)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCSecurityManager)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(FullTrustSecMan)
-NS_IMPL_RELEASE(FullTrustSecMan)
-
-FullTrustSecMan::FullTrustSecMan()
-{
-  mSystemPrincipal = nullptr;
-}
-
-FullTrustSecMan::~FullTrustSecMan()
-{
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID,
-                                  nsISupports *aObj, nsIClassInfo *aClassInfo,
-                                  void * *aPolicy)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
-{
-    return NS_OK;
-}
-
-/* void CanAccess (in uint32_t aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in jsval aName, inout voidPtr aPolicy); */
-NS_IMETHODIMP
-FullTrustSecMan::CanAccess(uint32_t aAction,
-                           nsAXPCNativeCallContext *aCallContext,
-                           JSContext * aJSContext, JSObject * aJSObject,
-                           nsISupports *aObj, nsIClassInfo *aClassInfo,
-                           jsid aName, void * *aPolicy)
-{
-    return NS_OK;
-}
-
-/* [noscript] void checkPropertyAccess (in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in string aClassName, in jsid aProperty, in uint32_t aAction); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
-                                     JSObject * aJSObject,
-                                     const char *aClassName,
-                                     jsid aProperty, uint32_t aAction)
-{
-    return NS_OK;
-}
-
-/* [noscript] void checkLoadURIFromScript (in JSContextPtr cx, in nsIURI uri); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIFromScript(JSContext * cx, nsIURI *uri)
-{
-    return NS_OK;
-}
-
-/* void checkLoadURIWithPrincipal (in nsIPrincipal aPrincipal, in nsIURI uri, in unsigned long flags); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
-                                           nsIURI *uri, uint32_t flags)
-{
-    return NS_OK;
-}
-
-/* void checkLoadURIStrWithPrincipal (in nsIPrincipal aPrincipal, in AUTF8String uri, in unsigned long flags); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
-                                              const nsACString & uri,
-                                              uint32_t flags)
-{
-    return NS_OK;
-}
-
-/* [noscript] void checkFunctionAccess (in JSContextPtr cx, in voidPtr funObj, in voidPtr targetObj); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckFunctionAccess(JSContext * cx, void * funObj,
-                                     void * targetObj)
-{
-    return NS_OK;
-}
-
-/* [noscript] boolean canExecuteScripts (in JSContextPtr cx, in nsIPrincipal principal); */
-NS_IMETHODIMP
-FullTrustSecMan::CanExecuteScripts(JSContext * cx, nsIPrincipal *principal,
-                                   bool *_retval)
-{
-    *_retval = true;
-    return NS_OK;
-}
-
-/* [noscript] nsIPrincipal getSubjectPrincipal (); */
-NS_IMETHODIMP
-FullTrustSecMan::GetSubjectPrincipal(nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* [noscript] nsIPrincipal getSystemPrincipal (); */
-NS_IMETHODIMP
-FullTrustSecMan::GetSystemPrincipal(nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* [noscript] nsIPrincipal getSimpleCodebasePrincipal (in nsIURI aURI); */
-NS_IMETHODIMP
-FullTrustSecMan::GetSimpleCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* [noscript] nsIPrincipal getNoAppCodebasePrincipal (in nsIURI aURI); */
-NS_IMETHODIMP
-FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-/* [noscript] nsIPrincipal getCodebasePrincipal (in nsIURI aURI); */
-NS_IMETHODIMP
-FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-/* [noscript] nsIPrincipal getAppCodebasePrincipal (in nsIURI aURI, unsigned long appid, bool inMozBrowser); */
-NS_IMETHODIMP
-FullTrustSecMan::GetAppCodebasePrincipal(nsIURI *aURI, uint32_t aAppId, bool aInMozBrowser, nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-/* [noscript] nsIPrincipal getDocShellCodebasePrincipal (in nsIURI aURI, nsIDocShell docShell); */
-NS_IMETHODIMP
-FullTrustSecMan::GetDocShellCodebasePrincipal(nsIURI *aURI, nsIDocShell* aDocShell, nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-/* [noscript] nsIPrincipal getObjectPrincipal (in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,
-                                    nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* [noscript] boolean subjectPrincipalIsSystem (); */
-NS_IMETHODIMP
-FullTrustSecMan::SubjectPrincipalIsSystem(bool *_retval)
-{
-    *_retval = true;
-    return NS_OK;
-}
-
-/* [noscript] void checkSameOrigin (in JSContextPtr aJSContext, in nsIURI aTargetURI); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI)
-{
-    return NS_OK;
-}
-
-/* void checkSameOriginURI (in nsIURI aSourceURI, in nsIURI aTargetURI); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
-                                    bool reportError)
-{
-    return NS_OK;
-}
-
-/* [noscript] nsIPrincipal getChannelPrincipal (in nsIChannel aChannel); */
-NS_IMETHODIMP
-FullTrustSecMan::GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* boolean isSystemPrincipal (in nsIPrincipal aPrincipal); */
-NS_IMETHODIMP
-FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal, bool *_retval)
-{
-    *_retval = aPrincipal == mSystemPrincipal;
-    return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIPrincipal *)
-FullTrustSecMan::GetCxSubjectPrincipal(JSContext *cx)
-{
-    return mSystemPrincipal;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, uint32_t aAppId,
-                                   bool aInMozBrowser,
-                                   nsACString& aExtendedOrigin)
-{
-  aExtendedOrigin.Truncate();
-  return NS_OK;
 }
 
 /***************************************************************************/
@@ -1636,7 +1470,6 @@ ContextCallback(JSContext *cx, unsigned contextOp)
 
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
-        JS_SetVersion(cx, JSVERSION_LATEST);
     }
     return true;
 }
@@ -1816,9 +1649,6 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        JS::Rooted<JSObject*> glob(cx);
-        JS::Rooted<JSObject*> envobj(cx);
-
         argc--;
         argv++;
         ProcessArgsForCompartment(cx, argv, argc);
@@ -1829,13 +1659,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        // Since the caps security system might set a default security manager
-        // we will be sure that the secman on this context gives full trust.
-        nsRefPtr<FullTrustSecMan> secman = new FullTrustSecMan();
-        xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);
-
         nsCOMPtr<nsIPrincipal> systemprincipal;
-
         // Fetch the system principal and store it away in a global, to use for
         // script compilation in Load() and ProcessFile() (including interactive
         // eval loop)
@@ -1851,7 +1675,6 @@ main(int argc, char **argv, char **envp)
                     // fetch the JS principals and stick in a global
                     gJSPrincipals = nsJSPrincipals::get(systemprincipal);
                     JS_HoldPrincipals(gJSPrincipals);
-                    secman->SetSystemPrincipal(systemprincipal);
                 }
             } else {
                 fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
@@ -1880,24 +1703,27 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        JS::CompartmentOptions options;
+        options.setZone(JS::SystemZone)
+               .setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject *>(backstagePass),
                                                   systemprincipal,
                                                   0,
-                                                  JS::SystemZone,
+                                                  options,
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;
 
-        glob = holder->GetJSObject();
-        if (!glob) {
-            return 1;
-        }
-
-        backstagePass->SetGlobalObject(glob);
-
         {
+            JS::Rooted<JSObject*> glob(cx, holder->GetJSObject());
+            if (!glob) {
+                return 1;
+            }
+
+            backstagePass->SetGlobalObject(glob);
+
             JSAutoCompartment ac(cx, glob);
 
             if (!JS_InitReflect(cx, glob)) {
@@ -1911,6 +1737,7 @@ main(int argc, char **argv, char **envp)
                 return 1;
             }
 
+            JS::Rooted<JSObject*> envobj(cx);
             envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
             if (!envobj) {
                 JS_EndRequest(cx);

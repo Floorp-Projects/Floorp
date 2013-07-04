@@ -9,11 +9,10 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = accessibility_toolkit_s
 EXPORT_LIBRARY = ..
 LIBXUL_LIBRARY = 1
 
-CMMSRCS = \
+DISABLED_CMMSRCS = \
           AccessibleWrap.mm \
           DocAccessibleWrap.mm \
           mozAccessible.mm \

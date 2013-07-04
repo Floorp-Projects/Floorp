@@ -24,8 +24,11 @@
          * from SpecialPowers-wrapped objects is unreliable.  Because of that,
          * `dialogMonitor` now tracks the number of open windows rather than
          * specific window objects.
+         *
+         * NB: Because the constructor (above) adds |this| directly as an observer,
+         * we need to do SpecialPowers.wrapCallbackObject directly on the prototype.
          */
-        dialogMonitor.prototype = {
+        dialogMonitor.prototype = SpecialPowers.wrapCallbackObject({
             windowsOpen : 0,
             windowsRegistered : 0,
 
@@ -61,7 +64,7 @@
                 this.windowsOpen = 0;
                 this.windowsRegistered = 0;
             }
-        }
+        });
 
         var monitor = new dialogMonitor();
 
@@ -120,7 +123,7 @@
             SimpleTest.finish();
         }
 
-	var resolveCallback = {
+	var resolveCallback = SpecialPowers.wrapCallbackObject({
 	QueryInterface : function (iid) {
 	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
@@ -133,7 +136,7 @@
           initLogins(pi);
           doTest(testNum);
 	}
-	};
+	});
 
 	function startup() {
             //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.

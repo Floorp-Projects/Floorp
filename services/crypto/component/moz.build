@@ -18,3 +18,5 @@ CPP_SOURCES += [
     'nsSyncJPAKE.cpp',
 ]
 
+LIBRARY_NAME = 'services-crypto'
+

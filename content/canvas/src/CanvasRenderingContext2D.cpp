@@ -98,13 +98,22 @@
 #include "mozilla/dom/TextMetrics.h"
 
 #ifdef USE_SKIA_GPU
+#undef free // apparently defined by some windows header, clashing with a free()
+            // method in SkTypes.h
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "GLContextSkia.h"
 #include "SurfaceTypes.h"
+using mozilla::gl::GLContext;
+using mozilla::gl::GLContextProvider;
 #endif
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+#include "mozilla/layers/ShadowLayers.h"
 #endif
 
 // windows.h (included by chromium code) defines this, in its infinite wisdom
@@ -121,10 +130,6 @@ namespace mgfx = mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
-
-static float kDefaultFontSize = 10.0;
-static NS_NAMED_LITERAL_STRING(kDefaultFontName, "sans-serif");
-static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
 
 // Cap sigma to avoid overly large temp surfaces.
 const Float SIGMA_MAX = 100;
@@ -440,15 +445,20 @@ public:
     CanvasRenderingContext2DUserData* self =
       static_cast<CanvasRenderingContext2DUserData*>(aData);
     CanvasRenderingContext2D* context = self->mContext;
-    if (self->mContext && context->mGLContext) {
-      if (self->mContext->mTarget != nullptr) {
-        // Since SkiaGL default to store drawing command until flush
-        // We will have to flush it before present.
-        self->mContext->mTarget->Flush();
-      }
-      context->mGLContext->MakeCurrent();
-      context->mGLContext->PublishFrame();
+    if (!context)
+      return;
+
+    GLContext* glContext = static_cast<GLContext*>(context->mTarget->GetGLContext());
+    if (!glContext)
+      return;
+
+    if (context->mTarget) {
+      // Since SkiaGL default to store drawing command until flush
+      // We will have to flush it before present.
+      context->mTarget->Flush();
     }
+    glContext->MakeCurrent();
+    glContext->PublishFrame();
   }
 #endif
 
@@ -547,6 +557,10 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 {
   sNumLivingContexts++;
   SetIsDOMBinding();
+
+#if USE_SKIA_GPU
+  mForceSoftware = false;
+#endif
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
@@ -560,6 +574,12 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   if (!sNumLivingContexts) {
     NS_IF_RELEASE(sErrorTarget);
   }
+
+#if USE_SKIA_GPU
+  std::vector<CanvasRenderingContext2D*>::iterator iter = std::find(DemotableContexts().begin(), DemotableContexts().end(), this);
+  if (iter != DemotableContexts().end())
+    DemotableContexts().erase(iter);
+#endif
 }
 
 JSObject*
@@ -621,7 +641,6 @@ CanvasRenderingContext2D::Reset()
 
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
-  mThebesSurface = nullptr;
   mIsEntireFrameInvalid = false;
   mPredictManyRedrawCalls = false;
 
@@ -713,11 +732,6 @@ CanvasRenderingContext2D::Redraw()
     return NS_OK;
   }
 
-  if (!mThebesSurface)
-    mThebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-  mThebesSurface->MarkDirty();
-
   nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(nullptr);
@@ -745,11 +759,6 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
     return;
   }
 
-  if (!mThebesSurface)
-    mThebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-  mThebesSurface->MarkDirty();
-
   nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(&r);
@@ -767,6 +776,62 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
     mTarget->GetTransform().TransformBounds(ToRect(r));
   Redraw(newr);
 }
+
+#if USE_SKIA_GPU
+
+void CanvasRenderingContext2D::Demote()
+{
+  if (!IsTargetValid() || mForceSoftware)
+    return;
+
+  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  RefPtr<DrawTarget> oldTarget = mTarget;
+  mTarget = nullptr;
+  mForceSoftware = true;
+
+  // Recreate target, now demoted to software only
+  EnsureTarget();
+  if (!IsTargetValid())
+    return;
+
+  // Put back the content from the old DrawTarget
+  mgfx::Rect r(0, 0, mWidth, mHeight);
+  mTarget->DrawSurface(snapshot, r, r);
+}
+
+std::vector<CanvasRenderingContext2D*>&
+CanvasRenderingContext2D::DemotableContexts()
+{
+  static std::vector<CanvasRenderingContext2D*> contexts;
+  return contexts;
+}
+
+void
+CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
+{
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  const size_t kMaxContexts = 2;
+#else
+  const size_t kMaxContexts = 16;
+#endif
+
+  std::vector<CanvasRenderingContext2D*>& contexts = DemotableContexts();
+  if (contexts.size() < kMaxContexts)
+    return;
+
+  CanvasRenderingContext2D* oldest = contexts.front();
+  contexts.erase(contexts.begin());
+
+  oldest->Demote();
+}
+
+void
+CanvasRenderingContext2D::AddDemotableContext(CanvasRenderingContext2D* context)
+{
+  DemotableContexts().push_back(context);
+}
+
+#endif
 
 void
 CanvasRenderingContext2D::EnsureTarget()
@@ -798,19 +863,32 @@ CanvasRenderingContext2D::EnsureTarget()
          SurfaceCaps caps = SurfaceCaps::ForRGBA();
          caps.preserve = true;
 
-         mGLContext = mozilla::gl::GLContextProvider::CreateOffscreen(gfxIntSize(size.width,
-                                                                                 size.height),
-                                                                      caps,
-                                                                      mozilla::gl::GLContext::ContextFlagsNone);
+#ifdef MOZ_WIDGET_GONK
+         layers::ShadowLayerForwarder *forwarder = layerManager->AsShadowForwarder();
+         if (forwarder) {
+           caps.surfaceAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
+         }
+#endif
 
-         if (mGLContext) {
-           mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
+         DemoteOldestContextIfNecessary();
+
+         nsRefPtr<GLContext> glContext;
+
+         if (!mForceSoftware) {
+           glContext = GLContextProvider::CreateOffscreen(gfxIntSize(size.width, size.height),
+                                                          caps, GLContext::ContextFlagsNone);
+         }
+
+         if (glContext) {
+           SkAutoTUnref<GrGLInterface> i(CreateGrGLInterfaceFromGLContext(glContext));
+           mTarget = Factory::CreateDrawTargetSkiaWithGLContextAndGrGLInterface(glContext, i, size, format);
+           AddDemotableContext(this);
          } else {
            mTarget = layerManager->CreateDrawTarget(size, format);
          }
        } else
 #endif
-         mTarget = layerManager->CreateDrawTarget(size, format);
+       mTarget = layerManager->CreateDrawTarget(size, format);
      } else {
        mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(size, format);
      }
@@ -891,11 +969,11 @@ CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell,
                                                 int32_t height)
 {
   mDocShell = shell;
-  mThebesSurface = surface;
 
   SetDimensions(width, height);
   mTarget = gfxPlatform::GetPlatform()->
     CreateDrawTargetForSurface(surface, IntSize(width, height));
+
   if (!mTarget) {
     EnsureErrorTarget();
     mTarget = sErrorTarget;
@@ -1319,11 +1397,11 @@ WrapStyle(JSContext* cx, JSObject* objArg,
     case CanvasRenderingContext2D::CMG_STYLE_GRADIENT:
     {
       JS::Rooted<JSObject*> obj(cx, objArg);
-      ok = dom::WrapObject(cx, obj, supports, v.address());
+      ok = dom::WrapObject(cx, obj, supports, &v);
       break;
     }
     default:
-      MOZ_NOT_REACHED("unexpected CanvasMultiGetterType");
+      MOZ_CRASH("unexpected CanvasMultiGetterType");
   }
   if (!ok) {
     error.Throw(NS_ERROR_FAILURE);
@@ -2084,6 +2162,9 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
     return;
   }
 
+  // add a rule to prevent text zoom from affecting the style
+  rules.AppendElement(new nsDisableTextZoomStyleRule);
+
   nsRefPtr<nsStyleContext> sc =
       styleSet->ResolveStyleForRules(parentContext, rules);
   if (!sc) {
@@ -2102,21 +2183,20 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
 
   // use CSS pixels instead of dev pixels to avoid being affected by page zoom
   const uint32_t aupcp = nsPresContext::AppUnitsPerCSSPixel();
-  // un-zoom the font size to avoid being affected by text-only zoom
-  //
-  // Purposely ignore the font size that respects the user's minimum
-  // font preference (fontStyle->mFont.size) in favor of the computed
-  // size (fontStyle->mSize).  See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=698652.
-  const nscoord fontSize = nsStyleFont::UnZoomText(parentContext->PresContext(), fontStyle->mSize);
 
   bool printerFont = (presShell->GetPresContext()->Type() == nsPresContext::eContext_PrintPreview ||
                       presShell->GetPresContext()->Type() == nsPresContext::eContext_Print);
 
+  // Purposely ignore the font size that respects the user's minimum
+  // font preference (fontStyle->mFont.size) in favor of the computed
+  // size (fontStyle->mSize).  See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=698652.
+  MOZ_ASSERT(!fontStyle->mAllowZoom,
+             "expected text zoom to be disabled on this nsStyleFont");
   gfxFontStyle style(fontStyle->mFont.style,
                      fontStyle->mFont.weight,
                      fontStyle->mFont.stretch,
-                     NSAppUnitsToFloatPixels(fontSize, float(aupcp)),
+                     NSAppUnitsToFloatPixels(fontStyle->mSize, float(aupcp)),
                      language,
                      fontStyle->mFont.sizeAdjust,
                      fontStyle->mFont.systemFont,
@@ -2643,7 +2723,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     anchorY = -fontMetrics.emDescent;
     break;
   default:
-      MOZ_NOT_REACHED("unexpected TextBaseline");
+    MOZ_CRASH("unexpected TextBaseline");
   }
 
   processor.mPt.y += anchorY;
@@ -2708,12 +2788,14 @@ gfxFontGroup *CanvasRenderingContext2D::GetCurrentFontStyle()
   // use lazy initilization for the font group since it's rather expensive
   if (!CurrentState().fontGroup) {
     ErrorResult err;
+    NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
+    static float kDefaultFontSize = 10.0;
     SetFont(kDefaultFontStyle, err);
     if (err.Failed()) {
       gfxFontStyle style;
       style.size = kDefaultFontSize;
       CurrentState().fontGroup =
-        gfxPlatform::GetPlatform()->CreateFontGroup(kDefaultFontName,
+        gfxPlatform::GetPlatform()->CreateFontGroup(NS_LITERAL_STRING("sans-serif"),
                                                     &style,
                                                     nullptr);
       if (CurrentState().fontGroup) {
@@ -3207,23 +3289,56 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_ASYNC_DECODE_IMAGES) {
     renderDocFlags |= nsIPresShell::RENDER_ASYNC_DECODE_IMAGES;
   }
+  if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) {
+    renderDocFlags |= nsIPresShell::RENDER_DRAWWINDOW_NOT_FLUSHING;
+  }
 
   // gfxContext-over-Azure may modify the DrawTarget's transform, so
   // save and restore it
   Matrix matrix = mTarget->GetTransform();
   nsRefPtr<gfxContext> thebes;
+  nsRefPtr<gfxASurface> drawSurf;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget)) {
     thebes = new gfxContext(mTarget);
+    thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
+                                matrix._22, matrix._31, matrix._32));
   } else {
-    nsRefPtr<gfxASurface> drawSurf;
-    GetThebesSurface(getter_AddRefs(drawSurf));
+    drawSurf =
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(w), ceil(h)),
+                                                         gfxASurface::CONTENT_COLOR_ALPHA);
+    if (!drawSurf) {
+      error.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    drawSurf->SetDeviceOffset(gfxPoint(-floor(x), -floor(y)));
     thebes = new gfxContext(drawSurf);
+    thebes->Translate(gfxPoint(floor(x), floor(y)));
   }
-  thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
-                              matrix._22, matrix._31, matrix._32));
+
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
-  mTarget->SetTransform(matrix);
+  if (drawSurf) {
+    gfxIntSize size = drawSurf->GetSize();
+
+    drawSurf->SetDeviceOffset(gfxPoint(0, 0));
+    nsRefPtr<gfxImageSurface> img = drawSurf->GetAsReadableARGB32ImageSurface();
+    if (!img || !img->Data()) {
+      error.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    RefPtr<SourceSurface> data =
+      mTarget->CreateSourceSurfaceFromData(img->Data(),
+                                           IntSize(size.width, size.height),
+                                           img->Stride(),
+                                           FORMAT_B8G8R8A8);
+    mgfx::Rect rect(0, 0, w, h);
+    mTarget->DrawSurface(data, rect, rect);
+    mTarget->Flush();
+  } else {
+    mTarget->SetTransform(matrix);
+  }
 
   // note that x and y are coordinates in the document that
   // we're drawing; x and y are drawn to 0,0 in current user
@@ -3667,20 +3782,15 @@ NS_IMETHODIMP
 CanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
 {
   EnsureTarget();
-  if (!mThebesSurface) {
-    mThebesSurface =
+
+  nsRefPtr<gfxASurface> thebesSurface =
       gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
 
-    if (!mThebesSurface) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    // Normally GetThebesSurfaceForDrawTarget will handle the flush, when
-    // we're returning a cached ThebesSurface we need to flush here.
-    mTarget->Flush();
+  if (!thebesSurface) {
+    return NS_ERROR_FAILURE;
   }
 
-  *surface = mThebesSurface;
+  *surface = thebesSurface;
   NS_ADDREF(*surface);
 
   return NS_OK;
@@ -3796,10 +3906,11 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
   CanvasLayer::Data data;
 #ifdef USE_SKIA_GPU
-  if (mGLContext) {
+  GLContext* glContext = static_cast<GLContext*>(mTarget->GetGLContext());
+  if (glContext) {
     canvasLayer->SetPreTransactionCallback(
             CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
-    data.mGLContext = mGLContext;
+    data.mGLContext = glContext;
   } else
 #endif
   {

@@ -4,9 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#ifndef jsion_mir_opcodes_h__
-#define jsion_mir_opcodes_h__
+#ifndef ion_MOpcodes_h
+#define ion_MOpcodes_h
 
 namespace js {
 namespace ion {
@@ -55,6 +54,7 @@ namespace ion {
     _(MinMax)                                                               \
     _(Abs)                                                                  \
     _(Sqrt)                                                                 \
+    _(Atan2)                                                                \
     _(Pow)                                                                  \
     _(PowHalf)                                                              \
     _(Random)                                                               \
@@ -65,6 +65,7 @@ namespace ion {
     _(Div)                                                                  \
     _(Mod)                                                                  \
     _(Concat)                                                               \
+    _(ParConcat)                                                            \
     _(CharCodeAt)                                                           \
     _(FromCharCode)                                                         \
     _(Return)                                                               \
@@ -167,6 +168,7 @@ namespace ion {
     _(GetDOMProperty)                                                       \
     _(SetDOMProperty)                                                       \
     _(IsCallable)                                                           \
+    _(HaveSameClass)                                                        \
     _(AsmJSNeg)                                                             \
     _(AsmJSUDiv)                                                            \
     _(AsmJSUMod)                                                            \
@@ -211,7 +213,7 @@ class MInstructionVisitor // interface i.e. pure abstract class
 class MInstructionVisitorWithDefaults : public MInstructionVisitor
 {
   public:
-#define VISIT_INS(op) virtual bool visit##op(M##op *) { JS_NOT_REACHED("NYI: " #op); return false; }
+#define VISIT_INS(op) virtual bool visit##op(M##op *) { MOZ_ASSUME_UNREACHABLE("NYI: " #op); }
     MIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };
@@ -219,5 +221,4 @@ class MInstructionVisitorWithDefaults : public MInstructionVisitor
 } // namespace ion
 } // namespace js
 
-#endif // jsion_mir_opcodes_h__
-
+#endif /* ion_MOpcodes_h */

@@ -118,6 +118,12 @@ class TestMozbuildObject(unittest.TestCase):
 
         self.assertRaises(Exception, base.get_binary_path, where="somewhere")
 
+        p = base.get_binary_path('foobar', validate_exists=False)
+        if platform.startswith('win32'):
+            self.assertTrue(p.endswith('foobar.exe'))
+        else:
+            self.assertTrue(p.endswith('foobar'))
+
 class TestPathArgument(unittest.TestCase):
     def test_path_argument(self):
         # Absolute path

@@ -4,24 +4,76 @@
 
 #include "Hal.h"
 
+#include <algorithm>
+
+#include <nsITimer.h>
+
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
+
 namespace mozilla {
 namespace hal_impl {
+
+static void
+TimerCallbackFunc(nsITimer *aTimer, void *aClosure)
+{
+  hal::NotifyAlarmFired();
+}
+
+static StaticRefPtr<nsITimer> sTimer;
 
 bool
 EnableAlarm()
 {
-  return false;
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    ClearOnShutdown(&sTimer);
+  }
+
+  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
+  sTimer = timer;
+  MOZ_ASSERT(sTimer);
+  return true;
 }
 
 void
 DisableAlarm()
 {
+  /*
+   * DisableAlarm() may be called after sTimer has been set to null by
+   * ClearOnShutdown().
+   */
+  if (sTimer) {
+    sTimer->Cancel();
+  }
 }
 
 bool
 SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 {
-  return false;
+  if (!sTimer) {
+    HAL_LOG(("We should have enabled the alarm"));
+    MOZ_ASSERT(false);
+    return false;
+  }
+
+  // Do the math to convert aSeconds and aNanoseconds into milliseconds since
+  // the epoch.
+  int64_t milliseconds = static_cast<int64_t>(aSeconds) * 1000 +
+                         static_cast<int64_t>(aNanoseconds) / 1000000;
+
+  // nsITimer expects relative milliseconds.
+  int64_t relMilliseconds = milliseconds - PR_Now() / 1000;
+
+  // If the alarm time is in the past relative to PR_Now(),
+  // we choose to immediately fire the alarm. Passing 0 means nsITimer will
+  // queue a timeout event immediately.
+  sTimer->InitWithFuncCallback(TimerCallbackFunc, nullptr,
+                               clamped<int64_t>(relMilliseconds, 0, INT32_MAX),
+                               nsITimer::TYPE_ONE_SHOT);
+  return true;
 }
 
 } // hal_impl

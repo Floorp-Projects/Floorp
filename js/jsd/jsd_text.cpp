@@ -172,7 +172,7 @@ strncasecomp (const char* one, const char * two, int n)
     }
 }
 
-static char file_url_prefix[]    = "file:";
+static const char file_url_prefix[] = "file:";
 #define FILE_URL_PREFIX_LEN     (sizeof file_url_prefix - 1)
 
 char*

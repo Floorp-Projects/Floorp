@@ -17,6 +17,7 @@
 
 class nsIOutputStream;
 class nsIInputStream;
+class nsIVolumeMountLock;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -28,6 +29,9 @@ class BluetoothOppManager : public BluetoothSocketObserver
                           , public BluetoothProfileManagerBase
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   /*
    * Channel of reserved services are fixed values, please check
    * function add_reserved_service_records() in
@@ -70,12 +74,10 @@ public:
 
   void ExtractPacketHeaders(const ObexHeaderSet& aHeader);
   bool ExtractBlobHeaders();
-  nsresult HandleShutdown();
 
   // Return true if there is an ongoing file-transfer session, please see
   // Bug 827267 for more information.
   bool IsTransferring();
-  void GetAddress(nsAString& aDeviceAddress);
 
   // Implement interface BluetoothSocketObserver
   void ReceiveSocketData(
@@ -89,9 +91,13 @@ public:
                                    const nsAString& aServiceUuid,
                                    int aChannel) MOZ_OVERRIDE;
   virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
+  virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;
 
 private:
   BluetoothOppManager();
+  bool Init();
+  void HandleShutdown();
+
   void StartFileTransfer();
   void StartSendingNextFile();
   void FileTransferComplete();
@@ -111,7 +117,7 @@ private:
   void ClearQueue();
   void RetrieveSentFileName();
   void NotifyAboutFileChange();
-
+  bool AcquireSdcardMountLock();
   /**
    * OBEX session status.
    * Set when OBEX session is established.
@@ -197,7 +203,7 @@ private:
   nsCOMPtr<nsIThread> mReadFileThread;
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIInputStream> mInputStream;
-
+  nsCOMPtr<nsIVolumeMountLock> mMountLock;
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
   nsRefPtr<DeviceStorageFile> mDsFile;
 

@@ -17,3 +17,5 @@ CPP_SOURCES += [
     'nsGeckoUtils.cpp',
 ]
 
+LIBRARY_NAME = 'android'
+

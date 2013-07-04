@@ -272,13 +272,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         leaf = None
 
-        if what == 'app':
-            leaf = substs['MOZ_APP_NAME'] + substs['BIN_SUFFIX']
-        elif what == 'xpcshell':
-            leaf = 'xpcshell'
-        else:
-            raise Exception("Don't know how to locate binary: %s" % what)
-
+        leaf = (substs['MOZ_APP_NAME'] if what == 'app' else what) + substs['BIN_SUFFIX']
         path = os.path.join(stem, leaf)
 
         if validate_exists and not os.path.exists(path):

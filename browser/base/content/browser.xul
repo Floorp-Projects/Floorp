@@ -97,6 +97,8 @@
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
                 command="Browser:BookmarkAllTabs"/>
+      <menuitem id="context_closeTabsToTheEnd" label="&closeTabsToTheEnd.label;" accesskey="&closeTabsToTheEnd.accesskey;"
+                oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab);"/>
       <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuseparator/>
@@ -285,25 +287,24 @@
 
     <menupopup id="placesContext"/>
 
-    <panel id="notification-popup"
-           type="arrow"
-           footertype="promobox"
-           position="after_start"
-           hidden="true"
-           orient="vertical"
-           role="alert"/>
-
     <!-- Popup for site identity information -->
     <panel id="identity-popup"
            type="arrow"
            hidden="true"
            noautofocus="true"
            consumeoutsideclicks="true"
-           onpopupshown="gIdentityHandler.onPopupShown(event);"
+           onpopupshown="if (event.target == this)
+                           gIdentityHandler.onPopupShown(event);"
+           orient="vertical"
            level="top">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
+          <label id="identity-popup-brandName"
+                 class="identity-popup-label"
+                 value="&brandFullName;"/>
+          <label id="identity-popup-chromeLabel"
+                 class="identity-popup-label"/>
           <label id="identity-popup-connectedToLabel"
                  class="identity-popup-label"
                  value="&identity.connectedTo;"/>
@@ -328,14 +329,19 @@
             <description id="identity-popup-encryption-label" flex="1"
                          class="identity-popup-description"/>
           </hbox>
-          <!-- Footer button to open security page info -->
-          <hbox id="identity-popup-button-container" pack="end">
-            <button id="identity-popup-more-info-button"
-                    label="&identity.moreInfoLinkText;"
-                    onblur="gIdentityHandler.hideIdentityPopup();"
-                    oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
-          </hbox>
+          <vbox id="identity-popup-permissions">
+            <separator class="thin"/>
+            <label class="identity-popup-label header"
+                   value="&identity.permissions;"/>
+            <vbox id="identity-popup-permission-list" class="indent"/>
+          </vbox>
         </vbox>
+      </hbox>
+      <!-- Footer button to open security page info -->
+      <hbox id="identity-popup-button-container" pack="end">
+        <button id="identity-popup-more-info-button"
+                label="&identity.moreInfoLinkText;"
+                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </hbox>
     </panel>
 
@@ -380,57 +386,7 @@
 #endif
     </tooltip>
 
-    <popupnotification id="webRTC-shareDevices-notification" hidden="true">
-      <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
-        <separator class="thin"/>
-        <label value="&getUserMedia.selectCamera.label;"
-               accesskey="&getUserMedia.selectCamera.accesskey;"
-               control="webRTC-selectCamera-menulist"/>
-        <menulist id="webRTC-selectCamera-menulist">
-          <menupopup id="webRTC-selectCamera-menupopup"/>
-        </menulist>
-      </popupnotificationcontent>
-      <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
-        <separator class="thin"/>
-        <label value="&getUserMedia.selectMicrophone.label;"
-               accesskey="&getUserMedia.selectMicrophone.accesskey;"
-               control="webRTC-selectMicrophone-menulist"/>
-        <menulist id="webRTC-selectMicrophone-menulist">
-          <menupopup id="webRTC-selectMicrophone-menupopup"/>
-        </menulist>
-      </popupnotificationcontent>
-    </popupnotification>
-
-    <popupnotification id="geolocation-notification" hidden="true">
-      <popupnotificationcontent orient="vertical" align="start">
-        <separator class="thin"/>
-        <label id="geolocation-learnmore-link" class="text-link"/>
-      </popupnotificationcontent>
-    </popupnotification>
-
-    <popupnotification id="servicesInstall-notification" hidden="true">
-      <popupnotificationcontent orient="vertical" align="start">
-        <separator class="thin"/>
-        <label id="servicesInstall-learnmore-link" class="text-link"/>
-      </popupnotificationcontent>
-    </popupnotification>
-
-    <popupnotification id="pointerLock-notification" hidden="true">
-      <popupnotificationcontent orient="vertical" align="start">
-        <separator class="thin"/>
-        <label id="pointerLock-cancel" value="&pointerLock.notification.message;"/>
-      </popupnotificationcontent>
-    </popupnotification>
-
-    <popupnotification id="mixed-content-blocked-notification" hidden="true">
-      <popupnotificationcontent orient="vertical" align="start">
-        <separator/>
-        <description id="mixed-content-blocked-moreinfo">&mixedContentBlocked.moreinfo;</description>
-        <separator/>
-        <label id="mixed-content-blocked-helplink" class="text-link"
-               value="&mixedContentBlocked.helplink;"/>
-      </popupnotificationcontent>
-    </popupnotification>
+#include popup-notifications.inc
 
   </popupset>
 
@@ -741,6 +697,9 @@
                    hidden="true"
                    skipintoolbarset="true"
                    observes="socialActiveBroadcaster">
+        <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
+                   oncommand="PopupNotifications._reshowNotifications(this,
+                                document.getElementById('social-sidebar-browser'));"/>
         <toolbarbutton id="social-provider-button"
                        class="toolbarbutton-1"
                        type="menu">
@@ -1080,6 +1039,7 @@
                context="contentAreaContextMenu"
                disableglobalhistory="true"
                tooltip="aHTMLTooltip"
+               popupnotificationanchor="social-notification-icon"
                flex="1"
                style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>
@@ -1119,11 +1079,8 @@
                          tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
 #endif
           <stack class="gclitoolbar-stack-node" flex="1">
-            <hbox class="gclitoolbar-prompt">
-              <label class="gclitoolbar-prompt-label">&#187;</label>
-            </hbox>
-            <hbox class="gclitoolbar-complete-node"/>
             <textbox class="gclitoolbar-input-node" rows="1"/>
+            <hbox class="gclitoolbar-complete-node"/>
           </stack>
           <toolbarbutton id="developer-toolbar-toolbox-button"
                          class="developer-toolbar-button"

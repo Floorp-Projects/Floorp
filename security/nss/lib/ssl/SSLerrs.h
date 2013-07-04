@@ -403,3 +403,12 @@ ER3(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_VERSION, (SSL_ERROR_BASE + 124),
 
 ER3(SSL_ERROR_RX_UNEXPECTED_CERT_STATUS,       (SSL_ERROR_BASE + 125),
 "SSL received an unexpected Certificate Status handshake message.")
+
+ER3(SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM, (SSL_ERROR_BASE + 126),
+"Unsupported hash algorithm used by TLS peer.")
+
+ER3(SSL_ERROR_DIGEST_FAILURE, (SSL_ERROR_BASE + 127),
+"Digest function failed.")
+
+ER3(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM, (SSL_ERROR_BASE + 128),
+"Incorrect signature algorithm specified in a digitally-signed element.")

@@ -28,6 +28,7 @@ EXPORTS += [
     'nsDOMClassInfoClasses.h',
     'nsDOMClassInfoID.h',
     'nsDOMJSUtils.h',
+    'nsDOMNavigationTiming.h',
     'nsDOMString.h',
     'nsFocusManager.h',
     'nsIDOMClassInfo.h',
@@ -47,6 +48,7 @@ EXPORTS += [
     'nsJSUtils.h',
     'nsPIDOMWindow.h',
     'nsPIWindowRoot.h',
+    'nsPerformance.h',
     'nsStructuredCloneContainer.h',
     'nsWindowMemoryReporter.h',
     'nsWrapperCache.h',
@@ -95,5 +97,19 @@ CPP_SOURCES += [
     'nsStructuredCloneContainer.cpp',
     'nsWindowMemoryReporter.cpp',
     'nsWindowRoot.cpp',
+    'nsWrapperCache.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'ConsoleAPI.js',
+    'ConsoleAPI.manifest',
+    'SiteSpecificUserAgent.js',
+    'SiteSpecificUserAgent.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'ConsoleAPIStorage.jsm',
+    'DOMRequestHelper.jsm',
+    'IndexedDBHelper.jsm',
+    'ObjectWrapper.jsm',
+]

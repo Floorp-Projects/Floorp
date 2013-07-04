@@ -565,7 +565,8 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
             script->mOutOfLine = false;
             if (doc)
                 script->Compile(mText, mTextLength, mDocumentURL,
-                                script->mLineNo, doc, mPrototype);
+                                script->mLineNo, doc,
+                                mPrototype->GetScriptGlobalObject());
         }
 
         FlushText(false);
@@ -944,9 +945,9 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
 
   // Don't process scripts that aren't known
   if (langID != nsIProgrammingLanguage::UNKNOWN) {
-      nsIScriptGlobalObject* globalObject = nullptr; // borrowed reference
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
       if (doc)
-          globalObject = doc->GetScriptGlobalObject();
+          globalObject = do_QueryInterface(doc->GetWindow());
       nsRefPtr<nsXULPrototypeScript> script =
           new nsXULPrototypeScript(aLineNumber, version);
       if (! script)

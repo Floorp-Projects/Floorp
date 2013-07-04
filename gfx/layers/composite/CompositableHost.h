@@ -186,6 +186,7 @@ public:
 
   virtual void Attach(Layer* aLayer, Compositor* aCompositor)
   {
+    MOZ_ASSERT(aCompositor, "Compositor is required");
     SetCompositor(aCompositor);
     SetLayer(aLayer);
   }

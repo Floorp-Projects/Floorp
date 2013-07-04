@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_coderef_h__
-#define jsion_coderef_h__
+#ifndef ion_IonCode_h
+#define ion_IonCode_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#include "IonTypes.h"
+#include "ion/IonTypes.h"
+#include "ion/AsmJS.h"
 #include "gc/Heap.h"
 
 // For RecompileInfo
@@ -134,7 +136,7 @@ class IonCode : public gc::Cell
     JS::Zone *zone() const { return tenuredZone(); }
     static void readBarrier(IonCode *code);
     static void writeBarrierPre(IonCode *code);
-    static void writeBarrierPost(IonCode *code, void *addr);
+    static void writeBarrierPost(IonCode *code, void *addr) {}
     static inline ThingRootKind rootKind() { return THING_ROOT_ION_CODE; }
 };
 
@@ -247,6 +249,10 @@ struct IonScript
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
 
+    // If non-null, the list of AsmJSModules
+    // that contain an optimized call directly into this IonScript.
+    Vector<DependentAsmJSModuleExit> *dependentAsmJSModules;
+
   private:
     inline uint8_t *bottomBuffer() {
         return reinterpret_cast<uint8_t *>(this);
@@ -286,6 +292,19 @@ struct IonScript
     JSScript **callTargetList() {
         return (JSScript **) &bottomBuffer()[callTargetList_];
     }
+    bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
+    void removeDependentAsmJSModule(DependentAsmJSModuleExit exit) {
+        JS_ASSERT(dependentAsmJSModules);
+        for (size_t i = 0; i < dependentAsmJSModules->length(); i++) {
+            if (dependentAsmJSModules->begin()[i].module == exit.module &&
+                dependentAsmJSModules->begin()[i].exitIndex == exit.exitIndex)
+            {
+                dependentAsmJSModules->erase(dependentAsmJSModules->begin() + i);
+                break;
+            }
+        }
+    }
+    void detachDependentAsmJSModules(FreeOp *fop);
 
   private:
     void trace(JSTracer *trc);
@@ -417,7 +436,7 @@ struct IonScript
     size_t callTargetEntries() const {
         return callTargetEntries_;
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this);
     }
     EncapsulatedValue &getConstant(size_t index) {
@@ -706,5 +725,4 @@ IsMarked(const ion::VMFunction *)
 
 } // namespace js
 
-#endif // jsion_coderef_h__
-
+#endif /* ion_IonCode_h */

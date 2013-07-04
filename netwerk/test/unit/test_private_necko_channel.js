@@ -24,6 +24,7 @@ function run_test() {
   httpserver.start(4444);
 
   var channel = setupChannel(testpath);
+  channel.loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance();
 
   channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
   channel.setPrivate(true);

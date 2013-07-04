@@ -169,8 +169,8 @@ function run_test() {
 
   setEnvironment();
 
-  // Backup the updater.ini if it exists by moving it. This prevents the post
-  // update executable from being launched if it is specified.
+  // Backup the updater.ini file if it exists by moving it. This prevents the
+  // post update executable from being launched if it is specified.
 //XXX disabled until bug 820933 and bug 820934 are fixed
 if (0) {
   let updaterIni = processDir.clone();
@@ -180,8 +180,14 @@ if (0) {
   }
 }
 
+  // Backup the updater-settings.ini file if it exists by moving it.
   let updateSettingsIni = processDir.clone();
-  updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(processDir, FILE_UPDATE_SETTINGS_INI_BAK);
+  }
+  updateSettingsIni = processDir.clone();
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   // Initiate a background update.
@@ -229,11 +235,18 @@ function end_test() {
   resetEnvironment();
 
   let processDir = getAppDir();
-  // Restore the backup of the updater.ini if it exists
+  // Restore the backup of the updater.ini if it exists.
   let updaterIni = processDir.clone();
   updaterIni.append(FILE_UPDATER_INI_BAK);
   if (updaterIni.exists()) {
     updaterIni.moveTo(processDir, FILE_UPDATER_INI);
+  }
+
+  // Restore the backed up updater-settings.ini if it exists.
+  let updateSettingsIni = processDir.clone();
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
+  if (updateSettingsIni.exists()) {
+    updateSettingsIni.moveTo(processDir, FILE_UPDATE_SETTINGS_INI);
   }
 
   // Remove the files added by the update.
@@ -259,88 +272,11 @@ function end_test() {
   cleanUp();
 }
 
-/**
- * The observer for the call to nsIProcess:runAsync.
- */
-let gProcessObserver = {
-  observe: function PO_observe(subject, topic, data) {
-    logTestInfo("topic " + topic + ", process exitValue " + gProcess.exitValue);
-    if (gAppTimer) {
-      gAppTimer.cancel();
-      gAppTimer = null;
-    }
-    if (topic != "process-finished" || gProcess.exitValue != 0) {
-      do_throw("Failed to launch application");
-    }
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
-  },
-  QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsIObserver])
-};
-
-/**
- * The timer callback to kill the process if it takes too long.
- */
-let gTimerCallback = {
-  notify: function TC_notify(aTimer) {
-    gAppTimer = null;
-    if (gProcess.isRunning) {
-      gProcess.kill();
-    }
-    do_throw("launch application timer expired");
-  },
-  QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsITimerCallback])
-};
-
 function shouldAdjustPathsOnMac() {
   // When running xpcshell tests locally, xpcshell and firefox-bin do not live
   // in the same directory.
   let dir = getCurrentProcessDir();
   return (IS_MACOSX && dir.leafName != "MacOS");
-}
-
-/**
- * This function copies the entire process directory over to a new one which we
- * can write to, so that we can test under Windows which holds locks on opened
- * files.
- */
-function adjustPathsOnWindows() {
-  // We copy the entire GRE directory into another location so that xpcshell
-  // running doesn't prevent the updater from moving stuff around.
-  let tmpDir = do_get_profile();
-  tmpDir.append("ExecutableDir.tmp");
-  tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 0755);
-  let procDir = getCurrentProcessDir();
-  copyDirRecursive(procDir, tmpDir, "bin");
-  let newDir = tmpDir.clone();
-  newDir.append("bin");
-  gWindowsBinDir = newDir;
-  logTestInfo("Using this new bin directory: " + gWindowsBinDir.path);
-  // Note that this directory will be deleted as part of the xpcshell teardown,
-  // so we don't need to remove it explicitly.
-
-  // We need to make NS_GRE_DIR point to the new bindir, since
-  // nsUpdateProcessor::ProcessUpdate uses NS_GRE_DIR to construct the
-  // destination path name which would be passed to updater.exe.
-  let dirProvider = {
-    getFile: function DP_getFile(prop, persistent) {
-      persistent.value = true;
-      if (prop == NS_GRE_DIR)
-        return getAppDir();
-      return null;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(AUS_Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(AUS_Ci.nsISupports))
-        return this;
-      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  let ds = Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService);
-  ds.QueryInterface(AUS_Ci.nsIProperties).undefine(NS_GRE_DIR);
-  ds.registerProvider(dirProvider);
-  do_register_cleanup(function() {
-    ds.unregisterProvider(dirProvider);
-  });
 }
 
 /**

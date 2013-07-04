@@ -50,6 +50,16 @@ exports['test:test for each'] = function(test) {
   }
 };
 
+exports['test:test for of'] = function(test) {
+  let fixture = new List(3, 2, 1);
+
+  test.assertEqual(3, fixture.length, 'length is 3');
+  let i = 3;
+  for (let value of fixture) {
+    test.assertEqual(i--, value, 'value should match');
+  }
+};
+
 exports['test:test toString'] = function(test) {
   let fixture = List(3, 2, 1);
 

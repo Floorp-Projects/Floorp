@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MatchPairs_h__
-#define MatchPairs_h__
+#ifndef vm_MatchPairs_h
+#define vm_MatchPairs_h
+
+#include "ds/LifoAlloc.h"
 
 /*
  * RegExp match results are succinctly represented by pairs of integer
@@ -156,4 +158,4 @@ struct MatchConduit
 
 } /* namespace js */
 
-#endif /* MatchPairs_h__ */
+#endif /* vm_MatchPairs_h */

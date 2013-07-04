@@ -29,7 +29,7 @@ const WindowDom = Trait.compose({
   get isPrivateBrowsing() {
     deprecateUsage('`browserWindow.isPrivateBrowsing` is deprecated, please ' +
                    'consider using ' +
-                   '`require("private-browsing").isPrivate(browserWindow)` ' +
+                   '`require("sdk/private-browsing").isPrivate(browserWindow)` ' +
                    'instead.');
     return isWindowPrivate(this._window);
   }

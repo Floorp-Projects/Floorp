@@ -55,6 +55,7 @@ gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aTransform)
   , mGfxPattern(NULL)
   , mSourceSurface(aSurface)
   , mTransform(aTransform)
+  , mExtend(EXTEND_NONE)
 {
 }
 
@@ -121,6 +122,23 @@ gfxPattern::GetMatrix() const
   if (mPattern) {
     cairo_matrix_t mat;
     cairo_pattern_get_matrix(mPattern, &mat);
+    return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
+  } else {
+    // invert at the higher precision of gfxMatrix
+    // cause we need to convert at some point anyways
+    gfxMatrix mat = ThebesMatrix(mTransform);
+    mat.Invert();
+    return mat;
+  }
+}
+
+gfxMatrix
+gfxPattern::GetInverseMatrix() const
+{
+  if (mPattern) {
+    cairo_matrix_t mat;
+    cairo_pattern_get_matrix(mPattern, &mat);
+    cairo_matrix_invert(&mat);
     return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
   } else {
     return ThebesMatrix(mTransform);
@@ -306,7 +324,7 @@ gfxPattern::SetExtend(GraphicsExtend extend)
   } else {
     // This is always a surface pattern and will default to EXTEND_PAD
     // for EXTEND_PAD_EDGE.
-    mExtend = ToExtendMode(extend);
+    mExtend = extend;
   }
 }
 
@@ -341,7 +359,7 @@ gfxPattern::Extend() const
   if (mPattern) {
     return (GraphicsExtend)cairo_pattern_get_extend(mPattern);
   } else {
-    return ThebesExtend(mExtend);
+    return mExtend;
   }
 }
 

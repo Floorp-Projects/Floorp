@@ -15,6 +15,7 @@
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
+#include "nsIObserver.h"
 #include <algorithm>
 class nsIContent;
 class nsAutoRollup;
@@ -37,6 +38,21 @@ class CompositorParent;
 namespace base {
 class Thread;
 }
+
+class nsBaseWidget;
+
+class WidgetShutdownObserver MOZ_FINAL : public nsIObserver
+{
+public:
+  WidgetShutdownObserver(nsBaseWidget* aWidget)
+    : mWidget(aWidget)
+  { }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  nsBaseWidget *mWidget;
+};
 
 /**
  * Common widget implementation used as base class for native
@@ -191,7 +207,7 @@ public:
 
 #ifdef ACCESSIBILITY
   // Get the accessible for the window.
-  mozilla::a11y::Accessible* GetAccessible();
+  mozilla::a11y::Accessible* GetRootAccessible();
 #endif
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
@@ -253,6 +269,8 @@ public:
   virtual bool            ShouldUseOffMainThreadCompositing();
 
   static nsIRollupListener* GetActiveRollupListener();
+
+  void Shutdown();
 
 protected:
 
@@ -356,6 +374,7 @@ protected:
   nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
+  nsCOMPtr<WidgetShutdownObserver> mShutdownObserver;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;

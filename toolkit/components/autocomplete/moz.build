@@ -22,3 +22,5 @@ CPP_SOURCES += [
     'nsAutoCompleteSimpleResult.cpp',
 ]
 
+LIBRARY_NAME = 'tkautocomplete'
+

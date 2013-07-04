@@ -27,14 +27,14 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef LinkBuffer_h
-#define LinkBuffer_h
+#ifndef assembler_assembler_LinkBuffer_h
+#define assembler_assembler_LinkBuffer_h
 
 #include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER
 
-#include <assembler/MacroAssembler.h>
+#include "assembler/assembler/MacroAssembler.h"
 
 namespace JSC {
 
@@ -230,4 +230,4 @@ protected:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // LinkBuffer_h
+#endif /* assembler_assembler_LinkBuffer_h */

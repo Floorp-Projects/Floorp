@@ -6,12 +6,12 @@
 
 #include <stdio.h>
 
-#include "MIR.h"
-#include "AliasAnalysis.h"
-#include "MIRGraph.h"
-#include "Ion.h"
-#include "IonBuilder.h"
-#include "IonSpewer.h"
+#include "ion/MIR.h"
+#include "ion/AliasAnalysis.h"
+#include "ion/MIRGraph.h"
+#include "ion/Ion.h"
+#include "ion/IonBuilder.h"
+#include "ion/IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;

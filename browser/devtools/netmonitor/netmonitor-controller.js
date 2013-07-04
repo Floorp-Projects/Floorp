@@ -250,6 +250,7 @@ TargetEventsHandler.prototype = {
       case "will-navigate": {
         // Reset UI.
         NetMonitorView.RequestsMenu.reset();
+        NetMonitorView.Sidebar.reset();
         NetMonitorView.NetworkDetails.reset();
 
         // Reset global helpers cache.
@@ -531,6 +532,14 @@ let Prefs = new ViewHelpers.Prefs("devtools.netmonitor", {
 });
 
 /**
+ * Returns true if this is document is in RTL mode.
+ * @return boolean
+ */
+XPCOMUtils.defineLazyGetter(window, "isRTL", function() {
+  return window.getComputedStyle(document.documentElement, null).direction == "rtl";
+});
+
+/**
  * Convenient way of emitting events from the panel window.
  */
 EventEmitter.decorate(this);
@@ -545,9 +554,6 @@ NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
  * Export some properties to the global scope for easier access.
  */
 Object.defineProperties(window, {
-  "create": {
-    get: function() ViewHelpers.create
-  },
   "gNetwork": {
     get: function() NetMonitorController.NetworkEventsHandler
   }

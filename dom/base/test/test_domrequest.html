@@ -50,13 +50,26 @@ req.onerror = function(e) {
   ev = e;
 }
 reqserv.fireError(req, "OhMyError");
-ok(ev, "got success event");
+ok(ev, "got error event");
 is(ev.type, "error", "correct type during error");
 is(ev.target, req, "correct target during error");
 is(req.readyState, "done", "correct readyState after error");
 is(req.error.name, "OhMyError", "correct error after error");
 is(req.result, undefined, "correct result after error");
 
+// fire detailed error
+req = reqserv.createRequest(window);
+ev = null;
+req.onerror = function(e) {
+  ev = e;
+};
+reqserv.fireDetailedError(req, new DOMError("detailedError"));
+ok(ev, "got error event");
+is(ev.type, "error", "correct type during error");
+is(ev.target, req, "correct target during error");
+is(req.readyState, "done", "correct readyState after error");
+is(req.error.name, "detailedError", "correct error after error");
+is(req.result, undefined, "correct result after error");
 </script>
 </pre>
 </body>

@@ -1,11 +1,9 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 
 #ifndef SkDashPathEffect_DEFINED
 #define SkDashPathEffect_DEFINED
@@ -38,14 +36,19 @@ public:
 
         Note: only affects stroked paths.
     */
-    SkDashPathEffect(const SkScalar intervals[], int count, SkScalar phase, bool scaleToFit = false);
+    SkDashPathEffect(const SkScalar intervals[], int count, SkScalar phase,
+                     bool scaleToFit = false);
     virtual ~SkDashPathEffect();
 
-    virtual bool filterPath(SkPath* dst, const SkPath& src, SkStrokeRec*) SK_OVERRIDE;
+    virtual bool filterPath(SkPath* dst, const SkPath& src,
+                            SkStrokeRec*, const SkRect*) const SK_OVERRIDE;
 
-    // overrides for SkFlattenable
-    //  This method is not exported to java.
-    virtual Factory getFactory();
+    virtual bool asPoints(PointData* results, const SkPath& src,
+                          const SkStrokeRec&, const SkMatrix&,
+                          const SkRect*) const SK_OVERRIDE;
+
+    virtual Factory getFactory() SK_OVERRIDE;
+
     static SkFlattenable* CreateProc(SkFlattenableReadBuffer&);
 
 protected:
@@ -65,4 +68,3 @@ private:
 };
 
 #endif
-

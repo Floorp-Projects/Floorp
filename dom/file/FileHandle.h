@@ -16,7 +16,7 @@
 #include "nsDOMEventTargetHelper.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/FileHandleBinding.h"
+#include "mozilla/dom/FileModeBinding.h"
 
 class nsIDOMFile;
 class nsIFileStorage;

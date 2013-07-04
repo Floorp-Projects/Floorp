@@ -129,7 +129,9 @@ public:
         mReason(aInfo->getStatus()),
         mSdpStr(),
         mCallState(aInfo->getCallState()),
-        mStateStr(aInfo->callStateToString(mCallState)) {
+        mFsmState(aInfo->getFsmState()),
+        mStateStr(aInfo->callStateToString(mCallState)),
+        mFsmStateStr(aInfo->fsmStateToString(mFsmState)) {
     if (mCallState == REMOTESTREAMADD) {
       MediaStreamTable *streams = NULL;
       streams = aInfo->getMediaStreams();
@@ -173,7 +175,8 @@ public:
   NS_IMETHOD Run() {
 
     CSFLogInfo(logTag, "PeerConnectionObserverDispatch processing "
-                       "mCallState = %d (%s)", mCallState, mStateStr.c_str());
+               "mCallState = %d (%s), mFsmState = %d (%s)",
+               mCallState, mStateStr.c_str(), mFsmState, mFsmStateStr.c_str());
 
     if (mCallState == SETLOCALDESCERROR || mCallState == SETREMOTEDESCERROR) {
       const std::vector<std::string> &errors = mPC->GetSdpParseErrors();
@@ -190,6 +193,23 @@ public:
     if (mReason.length()) {
       CSFLogInfo(logTag, "Message contains error: %d: %s",
                  mCode, mReason.c_str());
+    }
+
+    /*
+     * While the fsm_states_t (FSM_DEF_*) constants are a proper superset
+     * of SignalingState, and the order in which the SignalingState values
+     * appear matches the order they appear in fsm_states_t, their underlying
+     * numeric representation is different. Hence, we need to perform an
+     * offset calculation to map from one to the other.
+     */
+
+    if (mFsmState >= FSMDEF_S_STABLE && mFsmState <= FSMDEF_S_CLOSED) {
+      int offset = FSMDEF_S_STABLE - PeerConnectionImpl::kSignalingStable;
+      mPC->SetSignalingState_m(
+        static_cast<PeerConnectionImpl::SignalingState>(mFsmState - offset));
+    } else {
+      CSFLogError(logTag, ": **** UNHANDLED SIGNALING STATE : %d (%s)",
+                  mFsmState, mFsmStateStr.c_str());
     }
 
     switch (mCallState) {
@@ -290,7 +310,9 @@ private:
   std::string mReason;
   std::string mSdpStr;
   cc_call_state_t mCallState;
+  fsmdef_states_t mFsmState;
   std::string mStateStr;
+  std::string mFsmStateStr;
   nsRefPtr<RemoteSourceStreamInfo> mRemoteStream;
 };
 
@@ -300,6 +322,7 @@ PeerConnectionImpl::PeerConnectionImpl()
 : mRole(kRoleUnknown)
   , mCall(NULL)
   , mReadyState(kNew)
+  , mSignalingState(kSignalingStable)
   , mIceState(kIceGathering)
   , mPCObserver(NULL)
   , mWindow(NULL)
@@ -312,8 +335,8 @@ PeerConnectionImpl::PeerConnectionImpl()
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
-  CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %p",
-             __FUNCTION__, (void *) this);
+  CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %s",
+             __FUNCTION__, mHandle.c_str());
 }
 
 PeerConnectionImpl::~PeerConnectionImpl()
@@ -326,8 +349,8 @@ PeerConnectionImpl::~PeerConnectionImpl()
     CSFLogError(logTag, "PeerConnectionCtx is already gone. Ignoring...");
   }
 
-  CSFLogInfo(logTag, "%s: PeerConnectionImpl destructor invoked for %p",
-             __FUNCTION__, (void *) this);
+  CSFLogInfo(logTag, "%s: PeerConnectionImpl destructor invoked for %s",
+             __FUNCTION__, mHandle.c_str());
   CloseInt();
 
 #ifdef MOZILLA_INTERNAL_API
@@ -399,7 +422,8 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
  * In JS, an RTCConfiguration looks like this:
  *
  * { "iceServers": [ { url:"stun:23.21.150.121" },
- *                   { url:"turn:turn.example.org", credential:"mypass", "username"} ] }
+ *                   { url:"turn:turn.example.org?transport=udp",
+ *                     username: "jib", credential:"mypass"} ] }
  *
  * This function converts an already-validated jsval that looks like the above
  * into an IceConfiguration object.
@@ -449,6 +473,13 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
       nsAutoCString path;
       rv = url->GetPath(path);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Tolerate '?transport=udp' by stripping it.
+      int32_t questionmark = path.FindChar('?');
+      if (questionmark >= 0) {
+        path.SetLength(questionmark);
+      }
+
       rv = net_GetAuthURLParser()->ParseAuthority(path.get(), path.Length(),
                                                   nullptr,  nullptr,
                                                   nullptr,  nullptr,
@@ -503,27 +534,6 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 {
   nsresult res;
 
-  // Generate a random handle
-  unsigned char handle_bin[8];
-  SECStatus rv;
-  rv = PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
-  if (rv != SECSuccess) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  char hex[17];
-  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
-    handle_bin[0],
-    handle_bin[1],
-    handle_bin[2],
-    handle_bin[3],
-    handle_bin[4],
-    handle_bin[5],
-    handle_bin[6],
-    handle_bin[7]);
-
-  mHandle = hex;
-
   // Invariant: we receive configuration one way or the other but not both (XOR)
   MOZ_ASSERT(!aConfiguration != !aRTCConfiguration);
 #ifdef MOZILLA_INTERNAL_API
@@ -550,6 +560,28 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mWindow = do_QueryInterface(aWindow);
   NS_ENSURE_STATE(mWindow);
 #endif
+
+  // Generate a random handle
+  unsigned char handle_bin[8];
+  SECStatus rv;
+  rv = PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
+  if (rv != SECSuccess) {
+    MOZ_CRASH();
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  char hex[17];
+  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+    handle_bin[0],
+    handle_bin[1],
+    handle_bin[2],
+    handle_bin[3],
+    handle_bin[4],
+    handle_bin[5],
+    handle_bin[6],
+    handle_bin[7]);
+
+  mHandle = hex;
 
   res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);
@@ -699,8 +731,8 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-  CSFLogDebug(logTag,"%s DataChannelConnection %p attached to %p",
-              __FUNCTION__, (void*) mDataConnection.get(), (void *) this);
+  CSFLogDebug(logTag,"%s DataChannelConnection %p attached to %s",
+              __FUNCTION__, (void*) mDataConnection.get(), mHandle.c_str());
 #endif
   return NS_OK;
 }
@@ -1209,6 +1241,16 @@ PeerConnectionImpl::GetReadyState(uint32_t* aState)
 }
 
 NS_IMETHODIMP
+PeerConnectionImpl::GetSignalingState(uint32_t* aState)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  MOZ_ASSERT(aState);
+
+  *aState = mSignalingState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PeerConnectionImpl::GetSipccState(uint32_t* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -1245,7 +1287,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close()
 {
-  CSFLogDebug(logTag, "%s: for %p", __FUNCTION__, (void *) this);
+  CSFLogDebug(logTag, "%s: for %s", __FUNCTION__, mHandle.c_str());
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt();
@@ -1258,14 +1300,14 @@ PeerConnectionImpl::CloseInt()
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   if (mCall) {
-    CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %p; "
-               "ending call", __FUNCTION__, (void *) this);
+    CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
+               "ending call", __FUNCTION__, mHandle.c_str());
     mCall->endCall();
   }
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
-    CSFLogInfo(logTag, "%s: Destroying DataChannelConnection %p for %p",
-               __FUNCTION__, (void *) mDataConnection.get(), (void *) this);
+    CSFLogInfo(logTag, "%s: Destroying DataChannelConnection %p for %s",
+               __FUNCTION__, (void *) mDataConnection.get(), mHandle.c_str());
     mDataConnection->Destroy();
     mDataConnection = nullptr; // it may not go away until the runnables are dead
   }
@@ -1372,6 +1414,22 @@ PeerConnectionImpl::ChangeReadyState(PeerConnectionImpl::ReadyState aReadyState)
                                       // static_cast needed to work around old Android NDK r5c compiler
                                       static_cast<int>(IPeerConnectionObserver::kReadyState)),
     NS_DISPATCH_NORMAL);
+}
+
+void
+PeerConnectionImpl::SetSignalingState_m(SignalingState aSignalingState)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  if (mSignalingState == aSignalingState) {
+    return;
+  }
+
+  mSignalingState = aSignalingState;
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
+  pco->OnStateChange(IPeerConnectionObserver::kSignalingState);
 }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)

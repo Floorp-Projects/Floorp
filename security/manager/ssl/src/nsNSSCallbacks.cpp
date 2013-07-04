@@ -23,6 +23,7 @@
 #include "nsIConsoleService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsCRT.h"
+#include "nsNetUtil.h"
 #include "SharedSSLState.h"
 
 #include "ssl.h"
@@ -823,23 +824,204 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg)
   return runnable->mResult;
 }
 
+// call with shutdown prevention lock held
+static void
+PreliminaryHandshakeDone(PRFileDesc* fd)
+{
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+  if (!infoObject)
+    return;
+
+  if (infoObject->IsPreliminaryHandshakeDone())
+    return;
+
+  infoObject->SetPreliminaryHandshakeDone();
+  infoObject->SetFirstServerHelloReceived();
+
+  // Get the NPN value.
+  SSLNextProtoState state;
+  unsigned char npnbuf[256];
+  unsigned int npnlen;
+
+  if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess) {
+    if (state == SSL_NEXT_PROTO_NEGOTIATED) {
+      infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
+    }
+    else {
+      infoObject->SetNegotiatedNPN(nullptr, 0);
+    }
+    mozilla::Telemetry::Accumulate(Telemetry::SSL_NPN_TYPE, state);
+  }
+  else {
+    infoObject->SetNegotiatedNPN(nullptr, 0);
+  }
+}
+
+SECStatus
+CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
+{
+  *canFalseStart = false;
+
+  nsNSSShutDownPreventionLock locker;
+
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+  if (!infoObject) {
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  if (infoObject->isAlreadyShutDown()) {
+    MOZ_CRASH("SSL socket used after NSS shut down");
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  PreliminaryHandshakeDone(fd);
+
+  SSLChannelInfo channelInfo;
+  if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) != SECSuccess) {
+    return SECSuccess;
+  }
+
+  SSLCipherSuiteInfo cipherInfo;
+  if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                             sizeof (cipherInfo)) != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                      " KEA %d\n", fd,
+                                      static_cast<int32_t>(cipherInfo.keaType)));
+    return SECSuccess;
+  }
+
+  if (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                      "SSL Version must be >= TLS1 %x\n", fd,
+                                      static_cast<int32_t>(channelInfo.protocolVersion)));
+    return SECSuccess;
+  }
+
+  // never do false start without one of these key exchange algorithms
+  if (cipherInfo.keaType != ssl_kea_rsa &&
+      cipherInfo.keaType != ssl_kea_dh &&
+      cipherInfo.keaType != ssl_kea_ecdh) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                      "unsupported KEA %d\n", fd,
+                                      static_cast<int32_t>(cipherInfo.keaType)));
+    return SECSuccess;
+  }
+
+  // never do false start without at least 80 bits of key material. This should
+  // be redundant to an NSS precondition
+  if (cipherInfo.effectiveKeyBits < 80) {
+    MOZ_CRASH("NSS is not enforcing the precondition that the effective "
+              "key size must be >= 80 bits for false start");
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                      "key too small %d\n", fd,
+                                      static_cast<int32_t>(cipherInfo.effectiveKeyBits)));
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  // XXX: An attacker can choose which protocols are advertised in the
+  // NPN extension. TODO(Bug 861311): We should restrict the ability
+  // of an attacker leverage this capability by restricting false start
+  // to the same protocol we previously saw for the server, after the
+  // first successful connection to the server.
+
+  // Enforce NPN to do false start if policy requires it. Do this as an
+  // indicator if server compatibility.
+  nsSSLIOLayerHelpers& helpers = infoObject->SharedState().IOLayerHelpers();
+  if (helpers.mFalseStartRequireNPN) {
+    nsAutoCString negotiatedNPN;
+    if (NS_FAILED(infoObject->GetNegotiatedNPN(negotiatedNPN)) ||
+        !negotiatedNPN.Length()) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                        "NPN cannot be verified\n", fd));
+      return SECSuccess;
+    }
+  }
+
+  // If we're not using eliptical curve kea then make sure we've seen the
+  // same kea from this host in the past, to limit the potential for downgrade
+  // attacks.
+  if (cipherInfo.keaType != ssl_kea_ecdh) {
+
+    if (helpers.mFalseStartRequireForwardSecrecy) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                        "KEA used is %d, but "
+                                        "require-forward-secrecy configured.\n",
+                                        fd, static_cast<int32_t>(cipherInfo.keaType)));
+      return SECSuccess;
+    }
+
+    int16_t expected = infoObject->GetKEAExpected();
+    if (cipherInfo.keaType != expected) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                        "KEA used is %d, expected %d\n", fd,
+                                        static_cast<int32_t>(cipherInfo.keaType),
+                                        static_cast<int32_t>(expected)));
+      return SECSuccess;
+    }
+
+    // whitelist the expected key exchange algorithms that are
+    // acceptable for false start when seen before.
+    if (expected != ssl_kea_rsa && expected != ssl_kea_dh &&
+        expected != ssl_kea_ecdh) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                        "KEA used, %d, "
+                                        "is not supported with False Start.\n",
+                                        fd, static_cast<int32_t>(expected)));
+      return SECSuccess;
+    }
+  }
+
+  // If we're not using AES then verify that this is the historically expected
+  // symmetrical cipher for this host, to limit potential for downgrade attacks.
+  if (cipherInfo.symCipher != ssl_calg_aes) {
+    int16_t expected = infoObject->GetSymmetricCipherExpected();
+    if (cipherInfo.symCipher != expected) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                        "Symmetric cipher used is %d, expected %d\n",
+                                        fd, static_cast<int32_t>(cipherInfo.symCipher),
+                                        static_cast<int32_t>(expected)));
+      return SECSuccess;
+    }
+
+    // whitelist the expected ciphers that are
+    // acceptable for false start when seen before.
+    if ((expected != ssl_calg_rc4) && (expected != ssl_calg_3des) &&
+        (expected != ssl_calg_aes)) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+                                        "Symmetric cipher used, %d, "
+                                        "is not supported with False Start.\n",
+                                        fd, static_cast<int32_t>(expected)));
+      return SECSuccess;
+    }
+  }
+
+  infoObject->NoteTimeUntilReady();
+  *canFalseStart = true;
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] ok\n", fd));
+  return SECSuccess;
+}
+
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsNSSShutDownPreventionLock locker;
   int32_t sslStatus;
-  char* signer = nullptr;
   char* cipherName = nullptr;
   int32_t keyLength;
-  nsresult rv;
   int32_t encryptBits;
 
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
 
   // certificate validation sets FirstServerHelloReceived, so if that flag
-  // is absent at handshake time we have a resumed session.
+  // is absent at handshake time we have a resumed session. Check this before
+  // PreliminaryHandshakeDone() because that function also sets that flag.
   bool isResumedSession = !(infoObject->GetFirstServerHelloReceived());
 
-  // This is the first callback on resumption handshakes
-  infoObject->SetFirstServerHelloReceived();
+  // Do the bookkeeping that needs to be done after the
+  // server's ServerHello...ServerHelloDone have been processed, but that doesn't
+  // need the handshake to be completed.
+  PreliminaryHandshakeDone(fd);
 
   // If the handshake completed, then we know the site is TLS tolerant (if this
   // was a TLS connection).
@@ -847,7 +1029,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   ioLayerHelpers.rememberTolerantSite(infoObject);
 
   if (SECSuccess != SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
-                                       &encryptBits, &signer, nullptr)) {
+                                       &encryptBits, nullptr, nullptr)) {
     return;
   }
 
@@ -883,116 +1065,76 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     }
   }
 
-
   ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
-  const char* caName = nullptr; // caName is a pointer only, no ownership
-  char* certOrgName = CERT_GetOrgName(&serverCert->issuer);
-  caName = certOrgName ? certOrgName : signer;
 
-  const char* verisignName = "Verisign, Inc.";
-  // If the CA name is RSA Data Security, then change the name to the real
-  // name of the company i.e. VeriSign, Inc.
-  if (nsCRT::strcmp((const char*)caName, "RSA Data Security, Inc.") == 0) {
-    caName = verisignName;
+  infoObject->SetSecurityState(secStatus);
+
+  /* Set the SSL Status information */
+  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
+  if (!status) {
+    status = new nsSSLStatus();
+    infoObject->SetSSLStatus(status);
   }
 
-  nsAutoString shortDesc;
-  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUTF16(caName)) };
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = nssComponent->PIPBundleFormatStringFromName("SignedBy",
-                                                   formatStrings, 1,
-                                                   shortDesc);
+  RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject,
+                                                             status);
 
-    nsMemory::Free(const_cast<PRUnichar*>(formatStrings[0]));
+  RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert));
+  nsCOMPtr<nsIX509Cert> prevcert;
+  infoObject->GetPreviousCert(getter_AddRefs(prevcert));
 
-    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
-    infoObject->SetSecurityState(secStatus);
-    infoObject->SetShortSecurityDescription(shortDesc.get());
-
-    /* Set the SSL Status information */
-    RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
-    if (!status) {
-      status = new nsSSLStatus();
-      infoObject->SetSSLStatus(status);
+  bool equals_previous = false;
+  if (prevcert && nssc) {
+    nsresult rv = nssc->Equals(prevcert, &equals_previous);
+    if (NS_FAILED(rv)) {
+      equals_previous = false;
     }
-
-    RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject,
-                                                               status);
-
-    if (serverCert) {
-      RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert));
-      nsCOMPtr<nsIX509Cert> prevcert;
-      infoObject->GetPreviousCert(getter_AddRefs(prevcert));
-
-      bool equals_previous = false;
-      if (prevcert && nssc) {
-        nsresult rv = nssc->Equals(prevcert, &equals_previous);
-        if (NS_FAILED(rv)) {
-          equals_previous = false;
-        }
-      }
-
-      if (equals_previous) {
-        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-               ("HandshakeCallback using PREV cert %p\n", prevcert.get()));
-        status->mServerCert = prevcert;
-      }
-      else {
-        if (status->mServerCert) {
-          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-                 ("HandshakeCallback KEEPING cert %p\n", status->mServerCert.get()));
-        }
-        else {
-          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-                 ("HandshakeCallback using NEW cert %p\n", nssc.get()));
-          status->mServerCert = nssc;
-        }
-      }
-    }
-
-    status->mHaveKeyLengthAndCipher = true;
-    status->mKeyLength = keyLength;
-    status->mSecretKeyLength = encryptBits;
-    status->mCipherName.Assign(cipherName);
-
-    // Get the NPN value.
-    SSLNextProtoState state;
-    unsigned char npnbuf[256];
-    unsigned int npnlen;
-    
-    if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess) {
-      if (state == SSL_NEXT_PROTO_NEGOTIATED)
-        infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
-      else
-        infoObject->SetNegotiatedNPN(nullptr, 0);
-      mozilla::Telemetry::Accumulate(Telemetry::SSL_NPN_TYPE, state);
-    }
-    else
-      infoObject->SetNegotiatedNPN(nullptr, 0);
-
-    SSLChannelInfo channelInfo;
-    if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
-      // Get the protocol version for telemetry
-      // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
-      unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
-      Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
-
-      SSLCipherSuiteInfo cipherInfo;
-      if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
-                                 sizeof (cipherInfo)) == SECSuccess) {
-        // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
-        Telemetry::Accumulate(Telemetry::SSL_KEY_EXCHANGE_ALGORITHM,
-                              cipherInfo.keaType);
-      }
-      
-    }
-    infoObject->SetHandshakeCompleted(isResumedSession);
   }
+
+  if (equals_previous) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+            ("HandshakeCallback using PREV cert %p\n", prevcert.get()));
+    status->mServerCert = prevcert;
+  }
+  else {
+    if (status->mServerCert) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+              ("HandshakeCallback KEEPING cert %p\n", status->mServerCert.get()));
+    }
+    else {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+              ("HandshakeCallback using NEW cert %p\n", nssc.get()));
+      status->mServerCert = nssc;
+    }
+  }
+
+  status->mHaveKeyLengthAndCipher = true;
+  status->mKeyLength = keyLength;
+  status->mSecretKeyLength = encryptBits;
+  status->mCipherName.Assign(cipherName);
+
+  SSLChannelInfo channelInfo;
+  if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
+    // Get the protocol version for telemetry
+    // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
+    unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
+    Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+
+    SSLCipherSuiteInfo cipherInfo;
+    if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                               sizeof (cipherInfo)) == SECSuccess) {
+      // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
+      Telemetry::Accumulate(Telemetry::SSL_KEY_EXCHANGE_ALGORITHM,
+                            cipherInfo.keaType);
+      infoObject->SetKEAUsed(cipherInfo.keaType);
+      infoObject->SetSymmetricCipherUsed(cipherInfo.symCipher);
+    }
+  }
+
+  infoObject->NoteTimeUntilReady();
+  infoObject->SetHandshakeCompleted(isResumedSession);
 
   PORT_Free(cipherName);
-  PR_FREEIF(certOrgName);
-  PR_Free(signer);
 }
 
 struct OCSPDefaultResponders {

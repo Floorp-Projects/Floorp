@@ -9,6 +9,10 @@
   direction: ltr;
 }
 
+.breadcrumbs-widget-item {
+  -moz-user-focus: normal;
+}
+
 /* SideMenuWidget */
 
 .side-menu-widget-container {
@@ -44,5 +48,12 @@
 .variables-view-scope[non-header] > .title,
 .variable-or-property[non-header] > .title,
 .variable-or-property[non-match] > .title {
+  display: none;
+}
+
+.variable-or-property:not([safe-getter]) > tooltip > label[value=WebIDL],
+.variable-or-property:not([non-extensible]) > tooltip > label[value=extensible],
+.variable-or-property:not([frozen]) > tooltip > label[value=frozen],
+.variable-or-property:not([sealed]) > tooltip > label[value=sealed] {
   display: none;
 }

@@ -114,10 +114,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, bool *aDidMerg
 
   EditTxn *editTxn = (EditTxn*)aTransaction;  //XXX: hack, not safe!  need nsIEditTransaction!
   // determine if this incoming txn is a placeholder txn
-  nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
-  // can't do_QueryInterface() above due to our broken transaction interfaces.
-  // instead have to brute it below. ugh. 
-  editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+  nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryObject(editTxn);
 
   // we are absorbing all txn's if mAbsorb is lit.
   if (mAbsorb)
@@ -164,12 +161,8 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, bool *aDidMerg
          (mName.get() == nsGkAtoms::DeleteTxnName)) 
          && !mCommitted ) 
     {
-      nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
-      // can't do_QueryInterface() above due to our broken transaction interfaces.
-      // instead have to brute it below. ugh. 
-      editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
-      if (plcTxn)
-      {
+      nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryObject(editTxn);
+      if (plcTxn) {
         nsCOMPtr<nsIAtom> atom;
         plcTxn->GetTxnName(getter_AddRefs(atom));
         if (atom && (atom == mName))

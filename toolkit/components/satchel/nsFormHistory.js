@@ -10,10 +10,16 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
+
 const DB_VERSION = 4;
 const DAY_IN_MS  = 86400000; // 1 day in milliseconds
 
 function FormHistory() {
+    Deprecated.warning(
+        "nsIFormHistory2 is deprecated and will be removed in a future version",
+        "https://bugzilla.mozilla.org/show_bug.cgi?id=879118");
     this.init();
 }
 

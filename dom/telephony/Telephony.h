@@ -41,7 +41,7 @@ class Telephony : public nsDOMEventTargetHelper,
 
   // Cached calls array object. Cleared whenever mCalls changes and then rebuilt
   // once a page looks for the liveCalls attribute.
-  JSObject* mCallsArray;
+  JS::Heap<JSObject*> mCallsArray;
 
   bool mRooted;
   bool mEnumerated;

@@ -22,3 +22,5 @@ CPP_SOURCES += [
     'nsPrintPreviewListener.cpp',
 ]
 
+LIBRARY_NAME = 'gkprinting_s'
+

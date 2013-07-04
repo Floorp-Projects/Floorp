@@ -437,7 +437,7 @@
     <implementation>
       <constructor>
       <![CDATA[
-        this.control.addEventListener("command", this.valueToPreference.bind(this), false);
+        this.control.addEventListener("command", this.inputChanged.bind(this), false);
       ]]>
       </constructor>
 

@@ -50,7 +50,7 @@
 
 .devtools-menulist:-moz-focusring,
 .devtools-toolbarbutton:-moz-focusring {
-  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline: 1px dotted hsla(210,30%,85%,0.7);
   outline-offset: -4px;
 }
 
@@ -188,11 +188,13 @@
 /* Close button */
 
 .devtools-closebutton {
-  list-style-image: url("chrome://browser/skin/devtools/toolbarbutton-close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url("chrome://browser/skin/devtools/close.png");
+  -moz-appearance: none;
+  border: none;
+  margin: 0 4px;
   min-width: 16px;
   width: 16px;
-  margin: 0 4px;
+  opacity: 0.6;
 }
 
 .devtools-closebutton > .toolbarbutton-text {
@@ -200,11 +202,11 @@
 }
 
 .devtools-closebutton:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  opacity: 0.8;
 }
 
 .devtools-closebutton:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+  opacity: 1;
 }
 
 /* Splitters */

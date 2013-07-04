@@ -195,7 +195,7 @@ function fourthSearch(i, string, token) {
        gEditor.getCaretPosition().col == 8 + token.length + i,
       "The editor didn't remain at the correct token. (6)");
 
-    is(gSources._container.getAttribute("label"), noMatchingSources,
+    is(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should display a notice that no scripts match the searched token.");
     is(gSources.visibleItems.length, 0,
       "No scripts should be displayed in the scripts container after a bogus search.");
@@ -207,7 +207,7 @@ function fourthSearch(i, string, token) {
        gEditor.getCaretPosition().col == 8 + token.length + i,
       "The editor didn't remain at the correct token. (7)");
 
-    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+    isnot(gSources.widget.getAttribute("label"), noMatchingSources,
       "The scripts container should not display a notice after the searchbox was emptied.");
     is(gSources.visibleItems.length, 2,
       "Not all the scripts are shown after the searchbox was emptied.");
@@ -226,7 +226,7 @@ function noMatchingSourcesSingleCharCheck(token, i) {
      gEditor.getCaretPosition().col == 8 + token.length + i,
     "The editor didn't remain at the correct token. (8)");
 
-  is(gSources._container.getAttribute("label"), noMatchingSources,
+  is(gSources.widget.getAttribute("label"), noMatchingSources,
     "The scripts container should display a notice after no matches are found.");
   is(gSources.visibleItems.length, 0,
     "No scripts should be shown after no matches are found.");

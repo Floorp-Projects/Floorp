@@ -12,15 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/rdf/util/src/objs.mk
 include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
-LIBRARY_NAME = xul
 MSVC_ENABLE_PGO := 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-# This is going to be a framework named "XUL", not an ordinary library named
-# "libxul.dylib"
-LIBRARY_NAME=XUL
 # Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
 # setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
 # as-is so that dependencies of the form -ltracemalloc still work.
@@ -186,7 +182,7 @@ COMPONENT_LIBS += \
   $(NULL)
 
 ifdef MOZ_XUL
-ifdef MOZ_ENABLE_GTK2
+ifdef MOZ_ENABLE_GTK
 COMPONENT_LIBS += \
   unixproxy \
   $(NULL)
@@ -269,6 +265,10 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
+ifdef MOZ_ENABLE_GTK3
+COMPONENT_LIBS += widget_gtk3
+endif
+
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
 endif
@@ -280,7 +280,7 @@ endif
 endif
 
 # Platform-specific icon channel stuff - supported mostly-everywhere
-ifneq (,$(filter windows os2 mac cocoa gtk2 qt android,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2 mac cocoa gtk2 gtk3 qt android,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
@@ -295,10 +295,6 @@ COMPONENT_LIBS += widget_gonk
 endif
 
 STATIC_LIBS += thebes gl ycbcr
-
-ifdef MOZ_ENABLE_GTEST
-COMPONENT_LIBS += gtest xpcom_glue_gtest
-endif
 
 ifdef MOZ_ENABLE_PROFILER_SPS
 COMPONENT_LIBS += profiler
@@ -495,7 +491,7 @@ endif
 endif
 endif
 
-EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR)
 
 DEFINES += -DIMPL_XREAPI
 
@@ -530,8 +526,9 @@ ifdef MOZ_ENABLE_DBUS
 EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
-ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
+ifdef MOZ_WIDGET_GTK
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(XT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 
@@ -630,8 +627,10 @@ ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
 endif
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_GSTREAMER
 EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
+endif
 endif
 
 # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
@@ -644,6 +643,17 @@ PP_TARGETS += LIBXUL_AUTOLOAD
 LIBXUL_AUTOLOAD = libxul.so-gdb.py.in
 LIBXUL_AUTOLOAD_FLAGS := -Dtopsrcdir=$(abspath $(topsrcdir))
 endif
+
+ifdef MAKE_FRAMEWORK
+EFFECTIVE_LIB_PREFIX=
+EFFECTIVE_LIB_SUFFIX=
+else
+EFFECTIVE_LIB_PREFIX=$(DLL_PREFIX)
+EFFECTIVE_LIB_SUFFIX=$(DLL_SUFFIX)
+endif
+
+GTEST_LIB = $(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME)$(EFFECTIVE_LIB_SUFFIX)
+EXTRA_MDDEPEND_FILES = $(GTEST_LIB).pp
 
 include $(topsrcdir)/config/rules.mk
 
@@ -682,7 +692,37 @@ ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
 LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
 endif
 
+ifndef LINK_GTEST
 libs:: $(FINAL_TARGET)/dependentlibs.list
+else
+libs::
+endif
+
+.PHONY: gtestxul
+
+$(FINAL_TARGET)/dependentlibs.list.gtest: $(FINAL_TARGET)/dependentlibs.list
+	sed -e "s|$(SHARED_LIBRARY)|gtest/$(SHARED_LIBRARY)|" $< > $@
+
+# Remove this target when actually linking gtest to prevent redefining
+# the implicit rules.mk target
+ifndef LINK_GTEST
+
+gtestxul: $(GTEST_LIB)
+
+$(GTEST_LIB): $(FINAL_TARGET)/dependentlibs.list.gtest
+	$(MKDIR) -p $(EFFECTIVE_LIB_PREFIX)gtest
+	$(MAKE) libs SHARED_LIBRARY_NAME=gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME) FINAL_TARGET=$(FINAL_TARGET)/gtest SDK_LIBRARY= IMPORT_LIB_DEST=$(IMPORT_LIB_DEST)/gtest LINK_GTEST=true
+endif
+
+ifdef LINK_GTEST
+
+COMPONENT_LIBS += \
+  gtest \
+  gfxtest \
+  $(NULL)
+endif
 
 $(FINAL_TARGET)/dependentlibs.list: dependentlibs.py $(SHARED_LIBRARY) $(wildcard $(if $(wildcard $(FINAL_TARGET)/dependentlibs.list),$(addprefix $(FINAL_TARGET)/,$(shell cat $(FINAL_TARGET)/dependentlibs.list))))
 	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) $(if $(TOOLCHAIN_PREFIX),$(addprefix -p ,$(TOOLCHAIN_PREFIX))) > $@
+
+

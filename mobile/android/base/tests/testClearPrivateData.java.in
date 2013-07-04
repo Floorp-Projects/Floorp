@@ -30,7 +30,7 @@ public class testClearPrivateData extends PixelTest  {
         waitForText("Browser Blank Page 01");
 
         // Clearing private data
-        selectSettingsItem("Privacy & Security", "Clear private data");
+        selectSettingsItem("Privacy", "Clear private data");
         mAsserter.ok(mSolo.searchButton("Clear data"),"checking clear button","clear button exists");
         mSolo.clickOnButton("Clear data");
         // TODO: extra long wait here for bug 837274

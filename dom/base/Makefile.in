@@ -15,20 +15,11 @@ LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   SiteSpecificUserAgent.js \
   SiteSpecificUserAgent.manifest \
   ConsoleAPI.js \
   ConsoleAPI.manifest \
-  $(NULL)
-
-EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
-  $(NULL)
-
-EXTRA_JS_MODULES += \
-  DOMRequestHelper.jsm \
-  IndexedDBHelper.jsm \
-  ObjectWrapper.jsm \
   $(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk

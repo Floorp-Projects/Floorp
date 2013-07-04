@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UnreachableCodeElimination.h"
-#include "IonAnalysis.h"
-#include "AliasAnalysis.h"
-#include "ValueNumbering.h"
+#include "ion/UnreachableCodeElimination.h"
+#include "ion/IonAnalysis.h"
+#include "ion/AliasAnalysis.h"
+#include "ion/ValueNumbering.h"
 
 using namespace js;
 using namespace ion;
@@ -157,10 +157,12 @@ UnreachableCodeElimination::checkDependencyAndRemoveUsesFromUnmarkedBlocks(MDefi
         rerunAliasAnalysis_ = true;
 
     for (MUseIterator iter(instr->usesBegin()); iter != instr->usesEnd(); ) {
-        if (!iter->consumer()->block()->isMarked())
+        if (!iter->consumer()->block()->isMarked()) {
+            instr->setUseRemovedUnchecked();
             iter = instr->removeUse(iter);
-        else
+        } else {
             iter++;
+        }
     }
 }
 
@@ -231,6 +233,22 @@ UnreachableCodeElimination::removeUnmarkedBlocksAndClearDominators()
                                 break;
                             }
                         }
+                    }
+                }
+            }
+
+            // When we remove a call, we can't leave the corresponding MPassArg
+            // in the graph. Since lowering will fail. Replace it with the
+            // argument for the exceptional case when it is kept alive in a
+            // ResumePoint. DCE will remove the unused MPassArg instruction.
+            for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
+                if (iter->isCall()) {
+                    MCall *call = iter->toCall();
+                    for (size_t i = 0; i < call->numStackArgs(); i++) {
+                        JS_ASSERT(call->getArg(i)->isPassArg());
+                        JS_ASSERT(call->getArg(i)->defUseCount() == 1);
+                        MPassArg *arg = call->getArg(i)->toPassArg();
+                        arg->replaceAllUsesWith(arg->getArgument());
                     }
                 }
             }

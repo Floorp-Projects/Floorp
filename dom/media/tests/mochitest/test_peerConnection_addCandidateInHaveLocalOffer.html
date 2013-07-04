@@ -1,0 +1,44 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "784519",
+    title: "addCandidate (answer) in 'have-local-offer'"
+  });
+
+  var test;
+  runTest(function () {
+    test = new PeerConnectionTest();
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.chain.removeAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION");
+
+    test.chain.append([[
+      "PC_LOCAL_ADD_CANDIDATE",
+      function (test) {
+        test.pcLocal.addIceCandidateAndFail(
+          mozRTCIceCandidate(
+            {candidate:"1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+             sdpMLineIndex: 1}),
+          function(err) {
+            is(err.name, "INVALID_STATE", "Error is INVALID_STATE");
+            test.next();
+          } );
+      }
+    ]]);
+
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

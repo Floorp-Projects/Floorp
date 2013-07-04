@@ -5,7 +5,7 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://services-common/utils.js");
 
@@ -80,7 +80,7 @@ add_task(function test_reconnect() {
 
 add_task(function test_future_schema_errors() {
   let backend = yield Metrics.Storage("future_schema_errors");
-  backend._connection.schemaVersion = 2;
+  yield backend._connection.setSchemaVersion(2);
   yield backend.close();
 
   let backend2;

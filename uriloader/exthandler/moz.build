@@ -71,7 +71,7 @@ else:
         'nsOSHelperAppService.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+if CONFIG['MOZ_ENABLE_GTK']:
     CPP_SOURCES += [
         'nsGNOMERegistry.cpp',
         'nsMIMEInfoUnix.cpp',

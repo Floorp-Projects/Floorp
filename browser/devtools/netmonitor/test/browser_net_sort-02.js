@@ -43,10 +43,10 @@ function test() {
           return testContents([4, 3, 2, 1, 0]);
         })
         .then(() => {
-          info("Clearing status sort.");
+          info("Testing status sort, ascending. Checking sort loops correctly.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-status-button"));
-          testHeaders();
-          return testContents([0, 2, 4, 3, 1]);
+          testHeaders("status", "ascending");
+          return testContents([0, 1, 2, 3, 4]);
         })
         .then(() => {
           info("Testing method sort, ascending.");
@@ -61,10 +61,10 @@ function test() {
           return testContents([4, 3, 2, 1, 0]);
         })
         .then(() => {
-          info("Clearing method sort.");
+          info("Testing method sort, ascending. Checking sort loops correctly.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-method-button"));
-          testHeaders();
-          return testContents([0, 2, 4, 3, 1]);
+          testHeaders("method", "ascending");
+          return testContents([0, 1, 2, 3, 4]);
         })
         .then(() => {
           info("Testing file sort, ascending.");
@@ -79,10 +79,10 @@ function test() {
           return testContents([4, 3, 2, 1, 0]);
         })
         .then(() => {
-          info("Clearing file sort.");
+          info("Testing file sort, ascending. Checking sort loops correctly.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-file-button"));
-          testHeaders();
-          return testContents([0, 2, 4, 3, 1]);
+          testHeaders("file", "ascending");
+          return testContents([0, 1, 2, 3, 4]);
         })
         .then(() => {
           info("Testing type sort, ascending.");
@@ -97,10 +97,10 @@ function test() {
           return testContents([4, 3, 2, 1, 0]);
         })
         .then(() => {
-          info("Clearing type sort.");
+          info("Testing type sort, ascending. Checking sort loops correctly.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-type-button"));
-          testHeaders();
-          return testContents([0, 2, 4, 3, 1]);
+          testHeaders("type", "ascending");
+          return testContents([0, 1, 2, 3, 4]);
         })
         .then(() => {
           info("Testing size sort, ascending.");
@@ -115,9 +115,27 @@ function test() {
           return testContents([4, 3, 2, 1, 0]);
         })
         .then(() => {
-          info("Clearing size sort.");
+          info("Testing size sort, ascending. Checking sort loops correctly.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
-          testHeaders();
+          testHeaders("size", "ascending");
+          return testContents([0, 1, 2, 3, 4]);
+        })
+        .then(() => {
+          info("Testing waterfall sort, ascending.");
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+          testHeaders("waterfall", "ascending");
+          return testContents([0, 2, 4, 3, 1]);
+        })
+        .then(() => {
+          info("Testing waterfall sort, descending.");
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+          testHeaders("waterfall", "descending");
+          return testContents([4, 2, 0, 1, 3]);
+        })
+        .then(() => {
+          info("Testing waterfall sort, ascending. Checking sort loops correctly.");
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+          testHeaders("waterfall", "ascending");
           return testContents([0, 2, 4, 3, 1]);
         })
         .then(() => {

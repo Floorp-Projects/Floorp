@@ -4,7 +4,7 @@
 'use strict';
 
 module.metadata = {
-  'stability': 'experimental'
+  'stability': 'deprecated'
 };
 
 const { WindowTracker } = require('./deprecated/window-utils');
@@ -17,6 +17,12 @@ const { ns } = require("./core/namespace");
 const addonURL = data.url('index.html');
 
 const windows = ns();
+
+require("./util/deprecate").deprecateUsage(
+  "The addon-page module is deprecated." +
+  "In the new Firefox UI design all pages will include navigational elements;" +
+  "once the new design ships, using the addon-page module will not have any effect."
+);
 
 WindowTracker({
   onTrack: function onTrack(window) {

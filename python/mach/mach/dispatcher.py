@@ -177,8 +177,15 @@ class CommandAction(argparse.Action):
         # just the command data then supplement the main help's output with
         # this 2nd parser's. We use a custom formatter class to ignore some of
         # the help output.
-        c_parser = argparse.ArgumentParser(formatter_class=CommandFormatter,
-            add_help=False)
+        parser_args = {
+            'formatter_class': CommandFormatter,
+            'add_help': False,
+        }
+
+        if handler.allow_all_arguments:
+            parser_args['prefix_chars'] = '+'
+
+        c_parser = argparse.ArgumentParser(**parser_args)
 
         group = c_parser.add_argument_group('Command Arguments')
 

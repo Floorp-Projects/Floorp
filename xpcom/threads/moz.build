@@ -47,3 +47,5 @@ CPP_SOURCES += [
     'nsTimerImpl.cpp',
 ]
 
+LIBRARY_NAME = 'xpcomthreads_s'
+

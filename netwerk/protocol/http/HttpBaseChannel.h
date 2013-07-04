@@ -34,6 +34,8 @@
 #include "PrivateBrowsingChannel.h"
 #include "mozilla/net/DNS.h"
 
+extern PRLogModuleInfo *gHttpLog;
+
 namespace mozilla {
 namespace net {
 
@@ -339,7 +341,8 @@ protected:
 template <class T>
 nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
 {
-  LOG(("HttpAsyncAborter::AsyncAbort [this=%p status=%x]\n", mThis, status));
+  PR_LOG(gHttpLog, 4,
+         ("HttpAsyncAborter::AsyncAbort [this=%p status=%x]\n", mThis, status));
 
   mThis->mStatus = status;
   mThis->mIsPending = false;
@@ -356,8 +359,8 @@ inline void HttpAsyncAborter<T>::HandleAsyncAbort()
   NS_PRECONDITION(!mCallOnResume, "How did that happen?");
 
   if (mThis->mSuspendCount) {
-    LOG(("Waiting until resume to do async notification [this=%p]\n",
-         mThis));
+    PR_LOG(gHttpLog, 4,
+           ("Waiting until resume to do async notification [this=%p]\n", mThis));
     mCallOnResume = &T::HandleAsyncAbort;
     return;
   }

@@ -27,13 +27,18 @@ const { getTabForWindow } = require('../tabs/helpers');
 const { getTabForContentWindow } = require('../tabs/utils');
 
 /* Trick the linker in order to ensure shipping these files in the XPI.
-  require('./content-proxy.js');
   require('./content-worker.js');
   Then, retrieve URL of these files in the XPI:
 */
 let prefix = module.uri.split('worker.js')[0];
-const CONTENT_PROXY_URL = prefix + 'content-proxy.js';
 const CONTENT_WORKER_URL = prefix + 'content-worker.js';
+
+// Fetch additional list of domains to authorize access to for each content
+// script. It is stored in manifest `metadata` field which contains
+// package.json data. This list is originaly defined by authors in
+// `permissions` attribute of their package.json addon file.
+const permissions = require('@loader/options').metadata['permissions'] || {};
+const EXPANDED_PRINCIPALS = permissions['cross-domain-content'] || [];
 
 const JS_VERSION = '1.8';
 
@@ -43,15 +48,6 @@ const ERR_DESTROYED =
 
 const ERR_FROZEN = "The page is currently hidden and can no longer be used " +
                    "until it is visible again.";
-
-/**
- * This key is not exported and should only be used for proxy tests.
- * The following `PRIVATE_KEY` is used in addon module scope in order to tell
- * Worker API to expose `UNWRAP_ACCESS_KEY` in content script.
- * This key allows test-content-proxy.js to unwrap proxy with valueOf:
- *   let xpcWrapper = proxyWrapper.valueOf(UNWRAP_ACCESS_KEY);
- */
-const PRIVATE_KEY = {};
 
 
 const WorkerSandbox = EventEmitter.compose({
@@ -83,11 +79,6 @@ const WorkerSandbox = EventEmitter.compose({
    */
   emitSync: function emitSync() {
     let args = Array.slice(arguments);
-    // Bug 732716: Ensure wrapping xrays sent to the content script
-    // otherwise it will have access to raw xraywrappers and content script
-    // will assume it is an user object coming from the content script sandbox
-    if ("_wrap" in this)
-      args = args.map(this._wrap);
     return this._emitToContent(args);
   },
 
@@ -128,27 +119,39 @@ const WorkerSandbox = EventEmitter.compose({
     let window = worker._window;
     let proto = window;
 
+    // Eventually use expanded principal sandbox feature, if some are given.
+    //
+    // But prevent it when the Worker isn't used for a content script but for
+    // injecting `addon` object into a Panel, Widget, ... scope.
+    // That's because:
+    // 1/ It is useless to use multiple domains as the worker is only used
+    // to communicate with the addon,
+    // 2/ By using it it would prevent the document to have access to any JS
+    // value of the worker. As JS values coming from multiple domain principals
+    // can't be accessed by "mono-principals" (principal with only one domain).
+    // Even if this principal is for a domain that is specified in the multiple
+    // domain principal.
+    let principals  = window;
+    let wantXHRConstructor = false;
+    if (EXPANDED_PRINCIPALS.length > 0 && !worker._injectInDocument) {
+      principals = EXPANDED_PRINCIPALS.concat(window);
+      // We have to replace XHR constructor of the content document
+      // with a custom cross origin one, automagically added by platform code:
+      delete proto.XMLHttpRequest;
+      wantXHRConstructor = true;
+    }
+
     // Instantiate trusted code in another Sandbox in order to prevent content
     // script from messing with standard classes used by proxy and API code.
-    let apiSandbox = sandbox(window, { wantXrays: true, sameZoneAs: window });
+    let apiSandbox = sandbox(principals, { wantXrays: true, sameZoneAs: window });
     apiSandbox.console = console;
-
-    // Build content proxies only if the document has a non-system principal
-    // And only on old firefox versions that doesn't ship bug 738244
-    if (USE_JS_PROXIES && XPCNativeWrapper.unwrap(window) !== window) {
-      // Execute the proxy code
-      load(apiSandbox, CONTENT_PROXY_URL);
-      // Get a reference of the window's proxy
-      proto = apiSandbox.create(window);
-      // Keep a reference to `wrap` function for `emitSync` usage
-      this._wrap = apiSandbox.wrap;
-    }
 
     // Create the sandbox and bind it to window in order for content scripts to
     // have access to all standard globals (window, document, ...)
-    let content = this._sandbox = sandbox(window, {
+    let content = this._sandbox = sandbox(principals, {
       sandboxPrototype: proto,
       wantXrays: true,
+      wantXHRConstructor: wantXHRConstructor,
       sameZoneAs: window
     });
     // We have to ensure that window.top and window.parent are the exact same
@@ -231,12 +234,6 @@ const WorkerSandbox = EventEmitter.compose({
         self._addonWorker._onContentScriptEvent.apply(self._addonWorker, arguments);
     });
 
-    // Internal feature that is only used by SDK tests:
-    // Expose unlock key to content script context.
-    // See `PRIVATE_KEY` definition for more information.
-    if (apiSandbox && worker._expose_key)
-      content.UNWRAP_ACCESS_KEY = apiSandbox.UNWRAP_ACCESS_KEY;
-
     // Inject `addon` global into target document if document is trusted,
     // `addon` in document is equivalent to `self` in content script.
     if (worker._injectInDocument) {
@@ -314,7 +311,6 @@ const WorkerSandbox = EventEmitter.compose({
     this.emitSync("detach");
     this._sandbox = null;
     this._addonWorker = null;
-    this._wrap = null;
   },
 
   /**
@@ -472,11 +468,6 @@ const Worker = EventEmitter.compose({
       this.contentScript = options.contentScript;
 
     this._setListeners(options);
-
-    // Internal feature that is only used by SDK unit tests.
-    // See `PRIVATE_KEY` definition for more information.
-    if ('exposeUnlockKey' in options && options.exposeUnlockKey === PRIVATE_KEY)
-      this._expose_key = true;
 
     unload.ensure(this._public, "destroy");
 

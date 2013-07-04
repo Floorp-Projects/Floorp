@@ -7,6 +7,7 @@
 #ifndef nsISizeOf_h___
 #define nsISizeOf_h___
 
+#include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
 
 #define NS_ISIZEOF_IID \
@@ -21,12 +22,12 @@ public:
   /**
    * Measures the size of the things pointed to by the object.
    */
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
   /**
    * Like SizeOfExcludingThis, but also includes the size of the object itself.
    */
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISizeOf, NS_ISIZEOF_IID)

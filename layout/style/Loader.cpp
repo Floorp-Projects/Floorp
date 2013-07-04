@@ -16,6 +16,7 @@
 
 /* loading of CSS style sheets using the network APIs */
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #include "mozilla/css/Loader.h"
@@ -2442,13 +2443,13 @@ Loader::UnlinkCachedSheets()
 
 struct SheetMemoryCounter {
   size_t size;
-  nsMallocSizeOfFun mallocSizeOf;
+  mozilla::MallocSizeOf mallocSizeOf;
 };
 
 static size_t
 CountSheetMemory(URIPrincipalAndCORSModeHashKey* /* unused */,
                  const nsRefPtr<nsCSSStyleSheet>& aSheet,
-                 nsMallocSizeOfFun aMallocSizeOf,
+                 mozilla::MallocSizeOf aMallocSizeOf,
                  void* /* unused */)
 {
   // If aSheet has a parent, then its parent will report it so we don't
@@ -2462,7 +2463,7 @@ CountSheetMemory(URIPrincipalAndCORSModeHashKey* /* unused */,
 }
 
 size_t
-Loader::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t s = aMallocSizeOf(this);
 

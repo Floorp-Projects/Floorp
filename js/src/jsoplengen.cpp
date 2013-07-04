@@ -41,6 +41,8 @@ main(int argc, char **argv)
         perror("fopen");
         return EXIT_FAILURE;
     }
+    fputs("#ifndef JSAUTOOPLEN_H___\n", fp);
+    fputs("#define JSAUTOOPLEN_H___\n", fp);
     fputs("/*\n"
           " * Automatically generated header with JS opcode length constants.\n"
           " *\n"
@@ -77,6 +79,8 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
+
+    fputs("#endif  // JSAUTOOPLEN_H___\n", fp);
 
     if (fclose(fp)) {
         perror("fclose");

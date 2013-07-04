@@ -10,6 +10,7 @@
 #include "GLContext.h"
 #include "LayerManagerOGLProgram.h"
 #include "mozilla/layers/Effects.h"
+#include "nsTArray.h"
 
 #include "mozilla/TimeStamp.h"
 
@@ -134,6 +135,13 @@ public:
            gl::RGBARectLayerProgramType : gl::RGBALayerProgramType;
   }
 
+  /**
+   * The compositor provides with temporary textures for use with direct
+   * textruing like gralloc texture.
+   * Doing so lets us use gralloc the way it has been designed to be used
+   * (see https://wiki.mozilla.org/Platform/GFX/Gralloc)
+   */
+  GLuint GetTemporaryTexture(GLenum aUnit);
 private:
   /** 
    * Context target, nullptr when drawing directly to our swap chain.
@@ -319,6 +327,9 @@ private:
   bool mDestroyed;
 
   nsAutoPtr<FPSState> mFPS;
+  // Textures used for direct texturing of buffers like gralloc.
+  // The index of the texture in this array must correspond to the texture unit.
+  nsTArray<GLuint> mTextures;
   static bool sDrawFPS;
   static bool sFrameCounter;
 };

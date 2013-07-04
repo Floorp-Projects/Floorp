@@ -1,0 +1,6 @@
+{
+  "id": "content-permissions",
+  "permissions": {
+    "cross-domain-content": ["http://localhost:8099"]
+  }
+}

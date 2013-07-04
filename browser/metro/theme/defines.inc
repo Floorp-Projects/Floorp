@@ -3,7 +3,6 @@
 %define panel_dark_color #41464C
 %define panel_dark_background url(chrome://browser/skin/images/panel-dark.png)
 %define panel_light_color #F1F1F1
-%define panel_light_background url(chrome://browser/skin/images/panel-light.png)
 
 %define field_sizing 30px
 %define field_foreground_color #000000
@@ -30,8 +29,16 @@
 %define thumbnail_width 232px
 %define thumbnail_height 148px
 
+%define grid_column_width 131px
+%define grid_double_column_width 262px
+%define grid_row_height 86px
+%define grid_double_row_height 172px
+
+%define compactgrid_column_width 62px
+%define compactgrid_row_height 62px
+
 %define tile_border_color #dbdcde
-%define tile_width 200px
+%define tile_spacing 12px
 
 %define scroller_thickness 4px
 %define scroller_minimum 8px
@@ -83,3 +90,8 @@
 % easing function and duration for animations match winJS showPanel method
 %define metro_animation_duration 550ms
 %define metro_animation_easing cubic-bezier(0.1, 0.9, 0.2, 1)
+
+% this is meant to be slower than the system keyboard such
+% that the bars slide up after the keyboard is in place.
+%define appbar_keyboard_slideup_duration 750ms
+

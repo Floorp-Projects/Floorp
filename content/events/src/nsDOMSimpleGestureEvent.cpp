@@ -21,7 +21,6 @@ nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwn
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
     static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
-  SetIsDOMBinding();
 }
 
 nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
@@ -41,7 +40,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 /* attribute unsigned long allowedDirections; */
 NS_IMETHODIMP
-nsDOMSimpleGestureEvent::GetAllowedDirections(PRUint32 *aAllowedDirections)
+nsDOMSimpleGestureEvent::GetAllowedDirections(uint32_t *aAllowedDirections)
 {
   NS_ENSURE_ARG_POINTER(aAllowedDirections);
   *aAllowedDirections =
@@ -50,7 +49,7 @@ nsDOMSimpleGestureEvent::GetAllowedDirections(PRUint32 *aAllowedDirections)
 }
 
 NS_IMETHODIMP
-nsDOMSimpleGestureEvent::SetAllowedDirections(PRUint32 aAllowedDirections)
+nsDOMSimpleGestureEvent::SetAllowedDirections(uint32_t aAllowedDirections)
 {
   static_cast<nsSimpleGestureEvent*>(mEvent)->allowedDirections =
     aAllowedDirections;

@@ -39,7 +39,6 @@ class ProxyBehaviour
   virtual imgStatusTracker& GetStatusTracker() const = 0;
   virtual imgRequest* GetOwner() const = 0;
   virtual void SetOwner(imgRequest* aOwner) = 0;
-  virtual bool IsStatic() = 0;
 };
 
 class RequestBehaviour : public ProxyBehaviour
@@ -64,8 +63,6 @@ class RequestBehaviour : public ProxyBehaviour
     }
   }
 
-  virtual bool IsStatic() { return false; }
-
  private:
   // We maintain the following invariant:
   // The proxy is registered at most with a single imgRequest as an observer,
@@ -81,11 +78,6 @@ class RequestBehaviour : public ProxyBehaviour
 mozilla::image::Image*
 RequestBehaviour::GetImage() const
 {
-  if (mOwnerHasImage && !mOwner) {
-    NS_WARNING("If mOwnerHasImage is true mOwner must be true");
-    MOZ_CRASH();
-  }
-  
   if (!mOwnerHasImage)
     return nullptr;
   return GetStatusTracker().GetImage();
@@ -100,11 +92,6 @@ RequestBehaviour::GetStatusTracker() const
   // That's why this method uses mOwner->GetStatusTracker() instead of just
   // mOwner->mStatusTracker -- we might have a null mImage and yet have an
   // mOwner with a non-null mImage (and a null mStatusTracker pointer).
-  if (mOwnerHasImage && !mOwner) {
-    NS_WARNING("If mOwnerHasImage is true mOwner must be true");
-    MOZ_CRASH();
-  }
-  
   return mOwner->GetStatusTracker();
 }
 
@@ -178,11 +165,6 @@ nsresult imgRequestProxy::Init(imgRequest* aOwner,
 
   NS_ABORT_IF_FALSE(mAnimationConsumers == 0, "Cannot have animation before Init");
 
-  if (!mBehaviour->IsStatic() && !aOwner) {
-    NS_WARNING("Non-static imgRequestProxies should be initialized with an owner");
-    MOZ_CRASH();
-  }
-  
   mBehaviour->SetOwner(aOwner);
   mListener = aObserver;
   // Make sure to addref mListener before the AddProxy call below, since
@@ -230,11 +212,6 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   }
 
   GetOwner()->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER);
-
-  if (!mBehaviour->IsStatic() && !aNewOwner) {
-    NS_WARNING("Non-static imgRequestProxies should be only changed to a non-null owner");
-    MOZ_CRASH();
-  }
 
   mBehaviour->SetOwner(aNewOwner);
 
@@ -585,10 +562,6 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgINotificationObserver* aObserver,
 {
   nsresult result;
   imgRequestProxy* proxy;
-  if (mBehaviour->IsStatic()) {
-    NS_WARNING("Calling non-static imgRequestProxy::Clone with static mBehaviour");
-    MOZ_CRASH();
-  }
   result = Clone(aObserver, &proxy);
   *aClone = proxy;
   return result;
@@ -1049,8 +1022,6 @@ public:
     MOZ_ASSERT(!aOwner, "We shouldn't be giving static requests a non-null owner.");
   }
 
-  virtual bool IsStatic() { return true; }
-
 private:
   // Our image. We have to hold a strong reference here, because that's normally
   // the job of the underlying request.
@@ -1074,17 +1045,9 @@ NS_IMETHODIMP imgRequestProxyStatic::GetImagePrincipal(nsIPrincipal **aPrincipal
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 imgRequestProxyStatic::Clone(imgINotificationObserver* aObserver,
-                             imgIRequest** aClone)
+                             imgRequestProxy** aClone)
 {
-  nsresult result;
-  imgRequestProxy* proxy;
-  if (!mBehaviour->IsStatic()) {
-    NS_WARNING("Calling static imgRequestProxy::Clone with non-static mBehaviour");
-    MOZ_CRASH();
-  }
-  result = PerformClone(aObserver, NewStaticProxy, &proxy);
-  *aClone = proxy;
-  return result;
+  return PerformClone(aObserver, NewStaticProxy, aClone);
 }

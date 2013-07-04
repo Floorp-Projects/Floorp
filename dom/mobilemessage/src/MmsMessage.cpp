@@ -366,8 +366,7 @@ MmsMessage::GetDelivery(nsAString& aDelivery)
     case eDeliveryState_Unknown:
     case eDeliveryState_EndGuard:
     default:
-      MOZ_NOT_REACHED("We shouldn't get any other delivery state!");
-      return NS_ERROR_UNEXPECTED;
+      MOZ_CRASH("We shouldn't get any other delivery state!");
   }
 
   return NS_OK;
@@ -409,8 +408,7 @@ MmsMessage::GetDeliveryStatus(JSContext* aCx, JS::Value* aDeliveryStatus)
         break;
       case eDeliveryStatus_EndGuard:
       default:
-        MOZ_NOT_REACHED("We shouldn't get any other delivery status!");
-        return NS_ERROR_UNEXPECTED;
+        MOZ_CRASH("We shouldn't get any other delivery status!");
     }
     tempStrArray.AppendElement(statusStr);
   }

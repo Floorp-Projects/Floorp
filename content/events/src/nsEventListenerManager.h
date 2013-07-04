@@ -18,6 +18,7 @@
 #include "nsTObserverArray.h"
 #include "nsGUIEvent.h"
 #include "nsIJSEventListener.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventListenerBinding.h"
 
@@ -400,7 +401,7 @@ public:
 
   bool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   void MarkForCC();
 
@@ -536,11 +537,8 @@ protected:
   mozilla::dom::EventTarget*                mTarget;  //WEAK
   nsCOMPtr<nsIAtom>                         mNoListenerForEventAtom;
 
-  static uint32_t                           mInstanceCount;
-  static jsid                               sAddListenerID;
-
-  friend class nsEventTargetChainItem;
-  static uint32_t                           sCreatedCount;
+  friend class ELMCreationDetector;
+  static uint32_t                           sMainThreadCreatedCount;
 };
 
 /**

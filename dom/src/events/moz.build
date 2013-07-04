@@ -10,3 +10,5 @@ CPP_SOURCES += [
     'nsJSEventListener.cpp',
 ]
 
+LIBRARY_NAME = 'jsdomevents_s'
+

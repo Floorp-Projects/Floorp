@@ -30,3 +30,12 @@ CPP_SOURCES += [
     'nsOpenWindowEventDetail.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'BrowserElementParent.js',
+    'BrowserElementParent.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'BrowserElementParent.jsm',
+    'BrowserElementPromptService.jsm',
+]

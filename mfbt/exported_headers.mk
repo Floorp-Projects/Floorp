@@ -29,6 +29,7 @@ EXPORTS_mozilla += \
   LinkedList.h \
   MathAlgorithms.h \
   MemoryChecking.h \
+  MemoryReporting.h \
   MSStdInt.h \
   NullPtr.h \
   PodOperations.h \

@@ -32,30 +32,55 @@ static GonkDisplayJB* sGonkDisplay = nullptr;
 GonkDisplayJB::GonkDisplayJB()
     : mList(nullptr)
     , mModule(nullptr)
+    , mFBModule(nullptr)
     , mHwc(nullptr)
+    , mFBDevice(nullptr)
+    , mEnabledCallback(nullptr)
 {
-    int err = hw_get_module(HWC_HARDWARE_MODULE_ID, &mModule);
+    int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &mFBModule);
+    ALOGW_IF(err, "%s module not found", GRALLOC_HARDWARE_MODULE_ID);
+    if (!err) {
+        err = framebuffer_open(mFBModule, &mFBDevice);
+        ALOGW_IF(err, "could not open framebuffer");
+    }
+
+    if (!err) {
+        mWidth = mFBDevice->width;
+        mHeight = mFBDevice->height;
+        xdpi = mFBDevice->xdpi;
+        /* The emulator actually reports RGBA_8888, but EGL doesn't return
+         * any matching configuration. We force RGBX here to fix it. */
+        surfaceformat = HAL_PIXEL_FORMAT_RGBX_8888;
+    }
+
+    err = hw_get_module(HWC_HARDWARE_MODULE_ID, &mModule);
     ALOGW_IF(err, "%s module not found", HWC_HARDWARE_MODULE_ID);
-    if (err)
-        return;
+    if (!err) {
+        err = hwc_open_1(mModule, &mHwc);
+        ALOGE_IF(err, "%s device failed to initialize (%s)",
+                 HWC_HARDWARE_COMPOSER, strerror(-err));
+    }
 
-    err = hwc_open_1(mModule, &mHwc);
-    ALOGE_IF(err, "%s device failed to initialize (%s)",
-             HWC_HARDWARE_COMPOSER, strerror(-err));
+    if (!err) {
+        if (mFBDevice) {
+            framebuffer_close(mFBDevice);
+            mFBDevice = nullptr;
+        }
 
-    int32_t values[3];
-    const uint32_t attrs[] = {
-        HWC_DISPLAY_WIDTH,
-        HWC_DISPLAY_HEIGHT,
-        HWC_DISPLAY_DPI_X,
-        HWC_DISPLAY_NO_ATTRIBUTE
-    };
-    mHwc->getDisplayAttributes(mHwc, 0, 0, attrs, values);
+        int32_t values[3];
+        const uint32_t attrs[] = {
+            HWC_DISPLAY_WIDTH,
+            HWC_DISPLAY_HEIGHT,
+            HWC_DISPLAY_DPI_X,
+            HWC_DISPLAY_NO_ATTRIBUTE
+        };
+        mHwc->getDisplayAttributes(mHwc, 0, 0, attrs, values);
 
-    mWidth = values[0];
-    mHeight = values[1];
-    xdpi = values[2];
-    surfaceformat = HAL_PIXEL_FORMAT_RGBA_8888;
+        mWidth = values[0];
+        mHeight = values[1];
+        xdpi = values[2];
+        surfaceformat = HAL_PIXEL_FORMAT_RGBA_8888;
+    }
 
     mAlloc = new GraphicBufferAlloc();
     mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, mAlloc);
@@ -64,7 +89,8 @@ GonkDisplayJB::GonkDisplayJB()
     mSTClient = stc;
 
     mList = (hwc_display_contents_1_t *)malloc(sizeof(*mList) + (sizeof(hwc_layer_1_t)*2));
-    mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, 0);
+    if (mHwc)
+        mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, 0);
 
     status_t error;
     mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER, &error);
@@ -75,6 +101,8 @@ GonkDisplayJB::~GonkDisplayJB()
 {
     if (mHwc)
         hwc_close_1(mHwc);
+    if (mFBDevice)
+        framebuffer_close(mFBDevice);
     free(mList);
 }
 
@@ -87,13 +115,25 @@ GonkDisplayJB::GetNativeWindow()
 void
 GonkDisplayJB::SetEnabled(bool enabled)
 {
-    if (enabled) {
+    if (enabled)
         autosuspend_disable();
-        mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, false);
-    } else {
-        mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, true);
+
+    if (mHwc)
+        mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, !enabled);
+    else if (mFBDevice->enableScreen)
+        mFBDevice->enableScreen(mFBDevice, enabled);
+
+    if (mEnabledCallback)
+        mEnabledCallback(enabled);
+
+    if (!enabled)
         autosuspend_enable();
-    }
+}
+
+void
+GonkDisplayJB::OnEnabled(OnEnabledCallbackType callback)
+{
+    mEnabledCallback = callback;
 }
 
 void*
@@ -117,6 +157,12 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 bool
 GonkDisplayJB::Post(buffer_handle_t buf, int fence)
 {
+    if (!mHwc) {
+        if (fence >= 0)
+            close(fence);
+        return !mFBDevice->post(mFBDevice, buf);
+    }
+
     hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = {NULL};
     const hwc_rect_t r = { 0, 0, mWidth, mHeight };
     displays[HWC_DISPLAY_PRIMARY] = mList;

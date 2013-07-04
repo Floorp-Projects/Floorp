@@ -247,11 +247,75 @@ public:
     return mId;
   }
 
-  void DisplayCue();
+  /**
+   * Overview of WEBVTT cuetext and anonymous content setup.
+   *
+   * webvtt_nodes are the parsed version of WEBVTT cuetext. WEBVTT cuetext is
+   * the portion of a WEBVTT cue that specifies what the caption will actually
+   * show up as on screen.
+   *
+   * WEBVTT cuetext can contain markup that loosely relates to HTML markup. It
+   * can contain tags like <b>, <u>, <i>, <c>, <v>, <ruby>, <rt>, <lang>,
+   * including timestamp tags.
+   *
+   * When the caption is ready to be displayed the webvtt_nodes are converted
+   * over to anonymous DOM content. <i>, <u>, <b>, <ruby>, and <rt> all become
+   * HTMLElements of their corresponding HTML markup tags. <c> and <v> are
+   * converted to <span> tags. Timestamp tags are converted to XML processing
+   * instructions. Additionally, all cuetext tags support specifying of classes.
+   * This takes the form of <foo.class.subclass>. These classes are then parsed
+   * and set as the anonymous content's class attribute.
+   *
+   * Rules on constructing DOM objects from webvtt_nodes can be found here
+   * http://dev.w3.org/html5/webvtt/#webvtt-cue-text-dom-construction-rules.
+   * Current rules are taken from revision on April 15, 2013.
+   */
+
+  /**
+   * Converts the TextTrackCue's cuetext into a tree of DOM objects and attaches
+   * it to a div on it's owning TrackElement's MediaElement's caption overlay.
+   */
+  void RenderCue();
+
+  /**
+   * Produces a tree of anonymous content based on the tree of the processed
+   * cue text. This lives in a tree of C nodes whose head is mHead.
+   *
+   * Returns a DocumentFragment that is the head of the tree of anonymous
+   * content.
+   */
+  already_AddRefed<DocumentFragment> GetCueAsHTML();
+
+  /**
+   * Converts mHead to a list of DOM elements and attaches it to aParentContent.
+   *
+   * Processes the C node tree in a depth-first pre-order traversal and creates
+   * a mirrored DOM tree. The conversion rules come from the webvtt DOM
+   * construction rules:
+   * http://dev.w3.org/html5/webvtt/#webvtt-cue-text-dom-construction-rules
+   * Current rules taken from revision on May 13, 2013.
+   */
+  void
+  ConvertNodeTreeToDOMTree(nsIContent* aParentContent);
+
+  /**
+   * Converts an internal webvtt node, i.e. one that has children, to an
+   * anonymous HTMLElement.
+   */
+  already_AddRefed<nsIContent>
+  ConvertInternalNodeToContent(const webvtt_node* aWebVTTNode);
+
+  /**
+   * Converts a leaf webvtt node, i.e. one that does not have children, to
+   * either a text node or processing instruction.
+   */
+  already_AddRefed<nsIContent>
+  ConvertLeafNodeToContent(const webvtt_node* aWebVTTNode);
 
 private:
   void CueChanged();
   void SetDefaultCueSettings();
+  void CreateCueOverlay();
 
   nsCOMPtr<nsISupports> mGlobal;
   nsString mText;
@@ -269,6 +333,9 @@ private:
   nsString mVertical;
   int mLine;
   TextTrackCueAlign mAlign;
+
+  // Anonymous child which is appended to VideoFrame's caption display div.
+  nsCOMPtr<nsIContent> mCueDiv;
 };
 
 } // namespace dom

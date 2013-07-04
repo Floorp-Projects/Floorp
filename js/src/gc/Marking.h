@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_marking_h___
-#define gc_marking_h___
+#ifndef gc_Marking_h
+#define gc_Marking_h
 
 #include "jsgc.h"
 #include "jscntxt.h"
@@ -30,6 +30,7 @@ namespace js {
 
 class ArgumentsObject;
 class ArrayBufferObject;
+class ArrayBufferViewObject;
 class BaseShape;
 class GlobalObject;
 class UnownedBaseShape;
@@ -95,6 +96,7 @@ DeclMarker(BaseShape, UnownedBaseShape)
 DeclMarker(IonCode, ion::IonCode)
 DeclMarker(Object, ArgumentsObject)
 DeclMarker(Object, ArrayBufferObject)
+DeclMarker(Object, ArrayBufferViewObject)
 DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
@@ -182,9 +184,6 @@ MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 }
 
 void
-MarkValueRootRangeMaybeNullPayload(JSTracer *trc, size_t len, Value *vec, const char *name);
-
-void
 MarkTypeRoot(JSTracer *trc, types::Type *v, const char *name);
 
 bool
@@ -194,6 +193,9 @@ bool
 IsValueAboutToBeFinalized(Value *v);
 
 /*** Slot Marking ***/
+
+bool
+IsSlotMarked(HeapSlot *s);
 
 void
 MarkSlot(JSTracer *trc, HeapSlot *s, const char *name);
@@ -410,4 +412,4 @@ TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
 
 } /* namespace js */
 
-#endif /* gc_marking_h___ */
+#endif /* gc_Marking_h */

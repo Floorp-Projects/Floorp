@@ -61,8 +61,7 @@ SharedSurface_GL::Copy(SharedSurface_GL* src, SharedSurface_GL* dest,
             gl->BlitFramebufferToFramebuffer(0, destWrapper.FB(),
                                              src->Size(), dest->Size());
         } else {
-            MOZ_NOT_REACHED("Unhandled dest->AttachType().");
-            return;
+            MOZ_CRASH("Unhandled dest->AttachType().");
         }
 
         if (srcNeedsUnlock)
@@ -99,8 +98,7 @@ SharedSurface_GL::Copy(SharedSurface_GL* src, SharedSurface_GL* dest,
             gl->BlitFramebufferToFramebuffer(srcWrapper.FB(), 0,
                                              src->Size(), dest->Size());
         } else {
-            MOZ_NOT_REACHED("Unhandled src->AttachType().");
-            return;
+            MOZ_CRASH("Unhandled src->AttachType().");
         }
 
         if (destNeedsUnlock)
@@ -137,8 +135,7 @@ SharedSurface_GL::Copy(SharedSurface_GL* src, SharedSurface_GL* dest,
             return;
         }
 
-        MOZ_NOT_REACHED("Unhandled dest->AttachType().");
-        return;
+        MOZ_CRASH("Unhandled dest->AttachType().");
     }
 
     if (src->AttachType() == AttachmentType::GLRenderbuffer) {
@@ -164,12 +161,10 @@ SharedSurface_GL::Copy(SharedSurface_GL* src, SharedSurface_GL* dest,
             return;
         }
 
-        MOZ_NOT_REACHED("Unhandled dest->AttachType().");
-        return;
+        MOZ_CRASH("Unhandled dest->AttachType().");
     }
 
-    MOZ_NOT_REACHED("Unhandled src->AttachType().");
-    return;
+    MOZ_CRASH("Unhandled src->AttachType().");
 }
 
 void
@@ -264,8 +259,7 @@ SharedSurface_Basic::Create(GLContext* gl,
         format = gfxASurface::ImageFormatARGB32;
         break;
     default:
-        MOZ_NOT_REACHED("Unhandled Tex format.");
-        return nullptr;
+        MOZ_CRASH("Unhandled Tex format.");
     }
     return new SharedSurface_Basic(gl, size, hasAlpha, format, tex);
 }
@@ -314,8 +308,8 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
                              const gfxIntSize& size,
                              bool hasAlpha)
 {
-    MOZ_ASSERT(prodGL && consGL);
-    MOZ_ASSERT(prodGL->SharesWith(consGL));
+    MOZ_ASSERT(prodGL);
+    MOZ_ASSERT(!consGL || prodGL->SharesWith(consGL));
 
     prodGL->MakeCurrent();
     GLuint tex = prodGL->CreateTextureForOffscreen(formats, size);
@@ -339,9 +333,10 @@ SharedSurface_GLTexture::~SharedSurface_GLTexture()
 void
 SharedSurface_GLTexture::Fence()
 {
+    MutexAutoLock lock(mMutex);
     mGL->MakeCurrent();
 
-    if (mGL->IsExtensionSupported(GLContext::ARB_sync)) {
+    if (mConsGL && mGL->IsExtensionSupported(GLContext::ARB_sync)) {
         if (mSync) {
             mGL->fDeleteSync(mSync);
             mSync = 0;
@@ -361,10 +356,13 @@ SharedSurface_GLTexture::Fence()
 bool
 SharedSurface_GLTexture::WaitSync()
 {
+    MutexAutoLock lock(mMutex);
     if (!mSync) {
         // We must have used glFinish instead of glFenceSync.
         return true;
     }
+
+    MOZ_ASSERT(mConsGL, "Did you forget to call a deferred `SetConsumerGL()`?");
     mConsGL->MakeCurrent();
     MOZ_ASSERT(mConsGL->IsExtensionSupported(GLContext::ARB_sync));
 
@@ -375,6 +373,15 @@ SharedSurface_GLTexture::WaitSync()
     mSync = 0;
 
     return true;
+}
+
+void
+SharedSurface_GLTexture::SetConsumerGL(GLContext* consGL)
+{
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(consGL);
+    MOZ_ASSERT(mGL->SharesWith(consGL));
+    mConsGL = consGL;
 }
 
 } /* namespace gfx */

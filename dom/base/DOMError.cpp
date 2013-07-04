@@ -21,6 +21,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMError)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+DOMError::DOMError(nsPIDOMWindow* aWindow)
+  : mWindow(aWindow)
+{
+  SetIsDOMBinding();
+}
+
 DOMError::DOMError(nsPIDOMWindow* aWindow, nsresult aValue)
   : mWindow(aWindow)
 {

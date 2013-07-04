@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsopcodeinlines_h__
-#define jsopcodeinlines_h__
+#ifndef jsopcodeinlines_h
+#define jsopcodeinlines_h
 
 #include "jsautooplen.h"
 
-#include "frontend/BytecodeEmitter.h"
+#include "frontend/SourceNotes.h"
 
 namespace js {
 
@@ -83,22 +83,6 @@ BytecodeFallsThrough(JSOp op)
       default:
         return true;
     }
-}
-
-static inline PropertyName *
-GetNameFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
-{
-    if (op == JSOP_LENGTH)
-        return cx->names().length;
-
-    // The method JIT's implementation of instanceof contains an internal lookup
-    // of the prototype property.
-    if (op == JSOP_INSTANCEOF)
-        return cx->names().classPrototype;
-
-    PropertyName *name;
-    GET_NAME_FROM_BYTECODE(script, pc, 0, name);
-    return name;
 }
 
 class BytecodeRange {
@@ -194,4 +178,4 @@ public:
 
 }
 
-#endif /* jsopcodeinlines_h__ */
+#endif /* jsopcodeinlines_h */

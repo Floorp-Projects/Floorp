@@ -203,7 +203,7 @@ static void PrintParameterUsage(void)
     fprintf(stderr, 
             "%-20s Restricts the set of enabled SSL/TLS protocols versions.\n"
             "%-20s All versions are enabled by default.\n"
-            "%-20s Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1\n"
+            "%-20s Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1 tls1.2\n"
             "%-20s Example: \"-V ssl3:\" enables SSL 3 and newer.\n",
             "-V [min]:[max]", "", "", "");
     fprintf(stderr, "%-20s Prints only payload data. Skips HTTP header.\n", "-S");

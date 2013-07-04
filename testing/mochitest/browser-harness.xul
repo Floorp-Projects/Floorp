@@ -12,6 +12,7 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/chunkifyTests.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
     #results {
       margin: 5px;
@@ -164,7 +165,7 @@
 
     // Returns an array of browserTest objects for all the selected tests
     function listTests() {
-      [links, singleTestPath] = getTestList();
+      var links = getTestList();
       if (!links)
         return [];
 
@@ -178,6 +179,12 @@
       var fileNames = [];
       var fileNameRegexp = /browser_.+\.js$/;
       srvScope.arrayOfTestFiles(links, fileNames, fileNameRegexp);
+
+      if (gConfig.totalChunks && gConfig.thisChunk) {
+        fileNames = chunkifyTests(fileNames, gConfig.totalChunks,
+                                  gConfig.thisChunk, gConfig.chunkByDir);
+      }
+
       return fileNames.map(function (f) new browserTest(f));
     }
 

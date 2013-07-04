@@ -29,3 +29,6 @@ if CONFIG['OS_TARGET'] == 'Android':
     CPP_SOURCES += [
         'BionicGlue.cpp',
     ]
+
+LIBRARY_NAME = 'mozglue'
+

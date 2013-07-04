@@ -3,13 +3,26 @@ load(libdir + "asserts.js");
 
 assertAsmTypeFail(USE_ASM+"function f(){i=i|0} function g() { f(0) } return g");
 assertAsmTypeFail(USE_ASM+"function f(i){i=i|0} function g() { f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){} function g() { f()|0 } return g");
+assertAsmTypeFail(USE_ASM+"function f(){} function g() { +f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){} function g() { return f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { +f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { f()|f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0.0} function g() { f()|0 } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0.0} function g() { ~~f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0.0} function g() { -f() } return g");
 assertAsmTypeFail(USE_ASM+"function f(i,j,k,l){i=i|0;j=j|0;k=k|0;l=l|0} function g() { f(0,1,2) } return g");
 assertAsmTypeFail(USE_ASM+"function f(i,j,k,l){i=i|0;j=j|0;k=k|0;l=l|0} function g() { f(0,1,2,3,4) } return g");
 assertAsmTypeFail(USE_ASM+"function f(i){i=i|0} function g() { f(.1) } return g");
 assertAsmTypeFail(USE_ASM+"function f(i){i=+i} function g() { f(1) } return g");
-assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { var i=0.1; i=f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { var i=0.1; i=f()|0 } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { var i=0.1; i=+f() } return g");
 assertAsmTypeFail(USE_ASM+"function f(){return 0.1} function g() { var i=0; i=f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0.1} function g() { var i=0; i=f()|0 } return g");
+assertAsmTypeFail(USE_ASM+"function f(){return 0.1} function g() { var i=0; i=+f() } return g");
+assertAsmTypeFail(USE_ASM+"function f(){} function g() { (1, f()) } return g");
 
+assertEq(asmLink(asmCompile(USE_ASM+"var x=0; function f() {x=42} function g() { return (f(),x)|0 } return g"))(), 42);
 assertEq(asmLink(asmCompile(USE_ASM+"function f() {return 42} function g() { return f()|0 } return g"))(), 42);
 assertEq(asmLink(asmCompile(USE_ASM+"function g(i) { i=i|0; return (i+2)|0 } function h(i) { i=i|0; return ((g(i)|0)+8)|0 } return h"))(50), 60);
 assertEq(asmLink(asmCompile(USE_ASM+"function g(i) { i=i|0; return (i+2)|0 } function h(i) { i=i|0; return ((g(i)|0)+i)|0 } return h"))(50), 102);

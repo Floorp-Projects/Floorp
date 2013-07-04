@@ -1,0 +1,85 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=c: */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include URIParams;
+include InputStreamParams;
+include "mozilla/net/PHttpChannelParams.h";
+
+using mozilla::void_t;
+using RequestHeaderTuples;
+using nsHttpAtom;
+
+namespace mozilla {
+namespace net {
+
+//-----------------------------------------------------------------------------
+// HTTP IPDL structs
+//-----------------------------------------------------------------------------
+
+struct HttpChannelOpenArgs
+{
+  URIParams                   uri;
+  // - TODO: bug 571161: unclear if any HTTP channel clients ever
+  // set originalURI != uri (about:credits?); also not clear if
+  // chrome channel would ever need to know.  Get rid of next arg?
+  OptionalURIParams           original;
+  OptionalURIParams           doc;
+  OptionalURIParams           referrer;
+  OptionalURIParams           apiRedirectTo;
+  uint32_t                    loadFlags;
+  RequestHeaderTuples         requestHeaders;
+  nsHttpAtom                  requestMethod;
+  OptionalInputStreamParams   uploadStream;
+  bool                        uploadStreamHasHeaders;
+  uint16_t                    priority;
+  uint8_t                     redirectionLimit;
+  bool                        allowPipelining;
+  bool                        forceAllowThirdPartyCookie;
+  bool                        resumeAt;
+  uint64_t                    startPos;
+  nsCString                   entityID;
+  bool                        chooseApplicationCache;
+  nsCString                   appCacheClientID;
+  bool                        allowSpdy;
+};
+
+struct HttpChannelConnectArgs
+{
+  uint32_t channelId;
+};
+
+union HttpChannelCreationArgs
+{
+  HttpChannelOpenArgs;      // For AsyncOpen: the common case.
+  HttpChannelConnectArgs;   // Used for redirected-to channels
+};
+
+//-----------------------------------------------------------------------------
+// FTP IPDL structs
+//-----------------------------------------------------------------------------
+
+struct FTPChannelOpenArgs
+{
+  URIParams uri;
+  uint64_t startPos;
+  nsCString entityID;
+  OptionalInputStreamParams uploadStream;
+};
+
+struct FTPChannelConnectArgs
+{
+  uint32_t channelId;
+};
+
+union FTPChannelCreationArgs
+{
+  FTPChannelOpenArgs;      // For AsyncOpen: the common case.
+  FTPChannelConnectArgs;   // Used for redirected-to channels
+};
+
+} // namespace ipc
+} // namespace mozilla

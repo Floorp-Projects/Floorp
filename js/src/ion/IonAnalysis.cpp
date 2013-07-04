@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "IonBuilder.h"
-#include "MIRGraph.h"
-#include "Ion.h"
-#include "IonAnalysis.h"
+#include "ion/IonBuilder.h"
+#include "ion/MIRGraph.h"
+#include "ion/Ion.h"
+#include "ion/IonAnalysis.h"
+#include "ion/LIR.h"
 
 using namespace js;
 using namespace js::ion;
@@ -569,8 +570,7 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
         v = MagicValue(JS_OPTIMIZED_ARGUMENTS);
         break;
       default:
-        JS_NOT_REACHED("unexpected type");
-        return;
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
     MConstant *c = MConstant::New(v);
     // The instruction pass will insert the box
@@ -667,7 +667,7 @@ IntersectDominators(MBasicBlock *block1, MBasicBlock *block2)
             MBasicBlock *idom = finger2->immediateDominator();
             if (idom == finger2)
                 return NULL; // Empty intersection.
-            finger2 = finger2->immediateDominator();
+            finger2 = idom;
         }
     }
     return finger1;
@@ -704,8 +704,10 @@ ComputeImmediateDominators(MIRGraph &graph)
             // Find the first common dominator.
             for (size_t i = 1; i < block->numPredecessors(); i++) {
                 MBasicBlock *pred = block->getPredecessor(i);
-                if (pred->immediateDominator() != NULL)
-                    newIdom = IntersectDominators(pred, newIdom);
+                if (pred->immediateDominator() == NULL)
+                    continue;
+
+                newIdom = IntersectDominators(pred, newIdom);
 
                 // If there is no common dominator, the block self-dominates.
                 if (newIdom == NULL) {
@@ -783,9 +785,9 @@ ion::BuildDominatorTree(MIRGraph &graph)
         MBasicBlock *block = worklist.popCopy();
         block->setDomIndex(index);
 
-        for (size_t i = 0; i < block->numImmediatelyDominatedBlocks(); i++) {
-            if (!worklist.append(block->getImmediatelyDominatedBlock(i)))
-                return false;
+        if (!worklist.append(block->immediatelyDominatedBlocksBegin(),
+                             block->immediatelyDominatedBlocksEnd())) {
+            return false;
         }
         index++;
     }
@@ -905,28 +907,8 @@ CheckUseImpliesOperand(MInstruction *ins, MUse *use)
 }
 #endif // DEBUG
 
-#ifdef DEBUG
-static void
-AssertReversePostOrder(MIRGraph &graph)
-{
-    // Check that every block is visited after all its predecessors (except backedges).
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        JS_ASSERT(!block->isMarked());
-
-        for (size_t i = 0; i < block->numPredecessors(); i++) {
-            MBasicBlock *pred = block->getPredecessor(i);
-            JS_ASSERT_IF(!pred->isLoopBackedge(), pred->isMarked());
-        }
-
-        block->mark();
-    }
-
-    graph.unmarkBlocks();
-}
-#endif
-
 void
-ion::AssertGraphCoherency(MIRGraph &graph)
+ion::AssertBasicGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
     // Assert successor and predecessor list coherency.
@@ -952,7 +934,34 @@ ion::AssertGraphCoherency(MIRGraph &graph)
     }
 
     JS_ASSERT(graph.numBlocks() == count);
+#endif
+}
 
+#ifdef DEBUG
+static void
+AssertReversePostOrder(MIRGraph &graph)
+{
+    // Check that every block is visited after all its predecessors (except backedges).
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        JS_ASSERT(!block->isMarked());
+
+        for (size_t i = 0; i < block->numPredecessors(); i++) {
+            MBasicBlock *pred = block->getPredecessor(i);
+            JS_ASSERT_IF(!pred->isLoopBackedge(), pred->isMarked());
+        }
+
+        block->mark();
+    }
+
+    graph.unmarkBlocks();
+}
+#endif
+
+void
+ion::AssertGraphCoherency(MIRGraph &graph)
+{
+#ifdef DEBUG
+    AssertBasicGraphCoherency(graph);
     AssertReversePostOrder(graph);
 #endif
 }
@@ -1348,9 +1357,9 @@ ion::EliminateRedundantChecks(MIRGraph &graph)
         MBasicBlock *block = worklist.popCopy();
 
         // Add all immediate dominators to the front of the worklist.
-        for (size_t i = 0; i < block->numImmediatelyDominatedBlocks(); i++) {
-            if (!worklist.append(block->getImmediatelyDominatedBlock(i)))
-                return false;
+        if (!worklist.append(block->immediatelyDominatedBlocksBegin(),
+                             block->immediatelyDominatedBlocksEnd())) {
+            return false;
         }
 
         for (MDefinitionIterator iter(block); iter; ) {
@@ -1378,6 +1387,100 @@ ion::EliminateRedundantChecks(MIRGraph &graph)
     }
 
     JS_ASSERT(index == graph.numBlocks());
+    return true;
+}
+
+// If the given block contains a goto and nothing interesting before that,
+// return the goto. Return NULL otherwise.
+static LGoto *
+FindLeadingGoto(LBlock *bb)
+{
+    for (LInstructionIterator ins(bb->begin()); ins != bb->end(); ins++) {
+        // Ignore labels.
+        if (ins->isLabel())
+            continue;
+        // Ignore empty move groups.
+        if (ins->isMoveGroup() && ins->toMoveGroup()->numMoves() == 0)
+            continue;
+        // If we have a goto, we're good to go.
+        if (ins->isGoto())
+            return ins->toGoto();
+        break;
+    }
+    return NULL;
+}
+
+// Eliminate blocks containing nothing interesting besides gotos. These are
+// often created by optimizer, which splits all critical edges. If these
+// splits end up being unused after optimization and register allocation,
+// fold them back away to avoid unnecessary branching.
+bool
+ion::UnsplitEdges(LIRGraph *lir)
+{
+    for (size_t i = 0; i < lir->numBlocks(); i++) {
+        LBlock *bb = lir->getBlock(i);
+        MBasicBlock *mirBlock = bb->mir();
+
+        // Renumber the MIR blocks as we go, since we may remove some.
+        mirBlock->setId(i);
+
+        // Register allocation is done by this point, so we don't need the phis
+        // anymore. Clear them to avoid needed to keep them current as we edit
+        // the CFG.
+        bb->clearPhis();
+        mirBlock->discardAllPhis();
+
+        // First make sure the MIR block looks sane. Some of these checks may be
+        // over-conservative, but we're attempting to keep everything in MIR
+        // current as we modify the LIR, so only proceed if the MIR is simple.
+        if (mirBlock->numPredecessors() == 0 || mirBlock->numSuccessors() != 1 ||
+            !mirBlock->resumePointsEmpty() || !mirBlock->begin()->isGoto())
+        {
+            continue;
+        }
+
+        // The MIR block is empty, but check the LIR block too (in case the
+        // register allocator inserted spill code there, or whatever).
+        LGoto *theGoto = FindLeadingGoto(bb);
+        if (!theGoto)
+            continue;
+        MBasicBlock *target = theGoto->target();
+        if (target == mirBlock || target != mirBlock->getSuccessor(0))
+            continue;
+
+        // If we haven't yet cleared the phis for the successor, do so now so
+        // that the CFG manipulation routines don't trip over them.
+        if (!target->phisEmpty()) {
+            target->discardAllPhis();
+            target->lir()->clearPhis();
+        }
+
+        // Edit the CFG to remove lir/mirBlock and reconnect all its edges.
+        for (size_t j = 0; j < mirBlock->numPredecessors(); j++) {
+            MBasicBlock *mirPred = mirBlock->getPredecessor(j);
+
+            for (size_t k = 0; k < mirPred->numSuccessors(); k++) {
+                if (mirPred->getSuccessor(k) == mirBlock) {
+                    mirPred->replaceSuccessor(k, target);
+                    if (!target->addPredecessorWithoutPhis(mirPred))
+                        return false;
+                }
+            }
+
+            LInstruction *predTerm = *mirPred->lir()->rbegin();
+            for (size_t k = 0; k < predTerm->numSuccessors(); k++) {
+                if (predTerm->getSuccessor(k) == mirBlock)
+                    predTerm->setSuccessor(k, target);
+            }
+        }
+        target->removePredecessor(mirBlock);
+
+        // Zap the block.
+        lir->removeBlock(i);
+        lir->mir().removeBlock(mirBlock);
+        --i;
+    }
+
     return true;
 }
 

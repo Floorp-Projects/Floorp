@@ -55,7 +55,7 @@ function starttest(){
   ok(app != null, "Got an app "); 
 
   var origin = app.origin 
-  var nodePrincipal = SpecialPowers.getNodePrincipal(document);
+  var nodePrincipal = SpecialPowers.wrap(document).nodePrincipal;
   var appPrincipal = createPrincipal(manifest, true);
   var noappPrincipal = createPrincipal(origin, false);
 

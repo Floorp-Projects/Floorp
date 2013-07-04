@@ -4,24 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NumberObject_inl_h___
-#define NumberObject_inl_h___
+#ifndef vm_NumberObject_inl_h
+#define vm_NumberObject_inl_h
 
-#include "NumberObject.h"
+#include "vm/NumberObject.h"
+
+#include "jsobjinlines.h"
 
 namespace js {
 
 inline NumberObject *
 NumberObject::create(JSContext *cx, double d)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &NumberClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)
         return NULL;
-    NumberObject &numobj = obj->asNumber();
+    NumberObject &numobj = obj->as<NumberObject>();
     numobj.setPrimitiveValue(d);
     return &numobj;
 }
 
 } // namespace js
 
-#endif /* NumberObject_inl_h__ */
+#endif /* vm_NumberObject_inl_h */

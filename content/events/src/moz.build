@@ -9,7 +9,6 @@ MODULE = 'content'
 EXPORTS += [
     'nsDOMEvent.h',
     'nsDOMEventTargetHelper.h',
-    'nsDOMGamepad.h',
     'nsDOMTouchEvent.h',
     'nsDOMUIEvent.h',
     'nsEventListenerManager.h',
@@ -19,6 +18,9 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     'Touch.h',
 ]
+
+if CONFIG['MOZ_WEBSPEECH']:
+    EXPORTS.mozilla.dom += ['SpeechRecognitionError.h']
 
 CPP_SOURCES += [
     'DOMWheelEvent.cpp',
@@ -38,6 +40,7 @@ CPP_SOURCES += [
     'nsDOMDragEvent.cpp',
     'nsDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
+    'nsDOMFocusEvent.cpp',
     'nsDOMKeyboardEvent.cpp',
     'nsDOMMessageEvent.cpp',
     'nsDOMMouseEvent.cpp',
@@ -61,7 +64,5 @@ CPP_SOURCES += [
     'nsPrivateTextRange.cpp',
 ]
 
-if CONFIG['MOZ_GAMEPAD']:
-    CPP_SOURCES += [
-        'nsDOMGamepad.cpp',
-    ]
+if CONFIG['MOZ_WEBSPEECH']:
+    CPP_SOURCES += ['SpeechRecognitionError.cpp']

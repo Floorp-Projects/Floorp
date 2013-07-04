@@ -18,7 +18,6 @@ public final class GamepadUtils {
     private static final int SONY_XPERIA_GAMEPAD_DEVICE_ID = 196611;
 
     private static View.OnKeyListener sClickDispatcher;
-    private static View.OnKeyListener sListItemClickDispatcher;
 
     private GamepadUtils() {
     }
@@ -79,26 +78,6 @@ public final class GamepadUtils {
             };
         }
         return sClickDispatcher;
-    }
-
-    public static View.OnKeyListener getListItemClickDispatcher() {
-        if (sListItemClickDispatcher == null) {
-            sListItemClickDispatcher = new View.OnKeyListener() {
-                @Override
-                public boolean onKey(View v, int keyCode, KeyEvent event) {
-                    if (isActionKeyDown(event) && (v instanceof ListView)) {
-                        ListView view = (ListView)v;
-                        AdapterView.OnItemClickListener listener = view.getOnItemClickListener();
-                        if (listener != null) {
-                            listener.onItemClick(view, view.getSelectedView(), view.getSelectedItemPosition(), view.getSelectedItemId());
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            };
-        }
-        return sListItemClickDispatcher;
     }
 
     public static KeyEvent translateSonyXperiaGamepadKeys(int keyCode, KeyEvent event) {

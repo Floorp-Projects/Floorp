@@ -10,3 +10,5 @@ CPP_SOURCES += [
     'nsBrowserStatusFilter.cpp',
 ]
 
+LIBRARY_NAME = 'mozbrwsr_s'
+

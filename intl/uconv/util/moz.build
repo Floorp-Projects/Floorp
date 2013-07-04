@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'nsUnicodeEncodeHelper.cpp',
 ]
 
+LIBRARY_NAME = 'ucvutil_s'
+

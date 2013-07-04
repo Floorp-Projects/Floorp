@@ -28,30 +28,30 @@ asserts-if(gtk2Widget,0-6) != backgr_border-table-quirks.html empty.html
 # would also be good to test table-header-group and table-footer-group
 # (and rows and row groups in the presence of their reordering)
 # Also need to test different values of background-origin and background-clip.
-skip-if(B2G) random-if(bug685516) == border-separate-table-cell.html border-separate-table-cell-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-separate-table-column-group.html border-separate-table-column-group-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-separate-table-column.html border-separate-table-column-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-separate-table-row-group.html border-separate-table-row-group-ref.html # bug 773482
-random-if(bug685516) == border-separate-table-row.html border-separate-table-row-ref.html
-skip-if(B2G) random-if(bug685516) == border-separate-table.html border-separate-table-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-collapse-table-cell.html border-collapse-table-cell-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-collapse-table-column-group.html border-collapse-table-column-group-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-collapse-table-column.html border-collapse-table-column-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-collapse-table-row-group.html border-collapse-table-row-group-ref.html # bug 773482
-random-if(bug685516) == border-collapse-table-row.html border-collapse-table-row-ref.html
-random-if(bug685516) == border-collapse-table.html border-collapse-table-ref.html
-skip-if(B2G) random-if(bug685516) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html # bug 773482
+skip-if(B2G) == border-separate-table-cell.html border-separate-table-cell-ref.html # bug 773482
+skip-if(B2G) == border-separate-table-column-group.html border-separate-table-column-group-ref.html # bug 773482
+skip-if(B2G) == border-separate-table-column.html border-separate-table-column-ref.html # bug 773482
+skip-if(B2G) == border-separate-table-row-group.html border-separate-table-row-group-ref.html # bug 773482
+== border-separate-table-row.html border-separate-table-row-ref.html
+skip-if(B2G) == border-separate-table.html border-separate-table-ref.html # bug 773482
+skip-if(B2G) == border-collapse-table-cell.html border-collapse-table-cell-ref.html # bug 773482
+skip-if(B2G) == border-collapse-table-column-group.html border-collapse-table-column-group-ref.html # bug 773482
+skip-if(B2G) == border-collapse-table-column.html border-collapse-table-column-ref.html # bug 773482
+skip-if(B2G) == border-collapse-table-row-group.html border-collapse-table-row-group-ref.html # bug 773482
+== border-collapse-table-row.html border-collapse-table-row-ref.html
+== border-collapse-table.html border-collapse-table-ref.html
+skip-if(B2G) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html # bug 773482
 fails == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
 fails == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
-skip-if(B2G) random-if(bug685516) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html # bug 773482
+skip-if(B2G) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html # bug 773482
+skip-if(B2G) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html # bug 773482
+skip-if(B2G) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html # bug 773482
+skip-if(B2G) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html # bug 773482
 fails == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
 fails == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html # bug 424274
-random-if(bug685516) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
-skip-if(B2G) random-if(bug685516) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html # bug 773482
-skip-if(B2G) random-if(bug685516) == border-separate-opacity-table.html border-separate-opacity-table-ref.html # bug 773482
+== border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
+skip-if(B2G) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html # bug 773482
+skip-if(B2G) == border-separate-opacity-table.html border-separate-opacity-table-ref.html # bug 773482
 != scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html 
 != scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html     
 != scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-notref.html

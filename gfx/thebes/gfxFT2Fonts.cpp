@@ -35,7 +35,9 @@
 #include "prlog.h"
 #include "prinit.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/gfx/2D.h"
 
 // rounding and truncation functions for a Freetype floating point number
 // (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
@@ -556,12 +558,6 @@ gfxFT2Font::~gfxFT2Font()
 {
 }
 
-cairo_font_face_t *
-gfxFT2Font::CairoFontFace()
-{
-    return GetFontEntry()->CairoFontFace();
-}
-
 /**
  * Look up the font in the gfxFont cache. If we don't find it, create one.
  * In either case, add a ref, append it to the aFonts array, and return it ---
@@ -642,7 +638,7 @@ gfxFT2Font::FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd)
 }
 
 void
-gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxFT2Font::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes*   aSizes) const
 {
     gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -651,9 +647,27 @@ gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxFT2Font::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxFT2Font::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes*   aSizes) const
 {
     aSizes->mFontInstances += aMallocSizeOf(this);
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
+
+#ifdef USE_SKIA
+mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
+gfxFT2Font::GetGlyphRenderingOptions()
+{
+  mozilla::gfx::FontHinting hinting;
+
+  if (gfxPlatform::GetPlatform()->FontHintingEnabled()) {
+    hinting = mozilla::gfx::FONT_HINTING_NORMAL;
+  } else {
+    hinting = mozilla::gfx::FONT_HINTING_NONE;
+  }
+
+  // We don't want to force the use of the autohinter over the font's built in hints
+  return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, false);
+}
+#endif
+

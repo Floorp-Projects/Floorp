@@ -559,7 +559,7 @@ this.PlacesUtils = {
         };
 
         let [node, shouldClose] = convertNode(aNode);
-        this.serializeNodeAsJSONToOutputStream(node, writer, true, aForceCopy);
+        this._serializeNodeAsJSONToOutputStream(node, writer, true, aForceCopy);
         if (shouldClose)
           node.containerOpen = false;
 
@@ -1326,8 +1326,8 @@ this.PlacesUtils = {
    * @param   aExcludeItems
    *          An array of item ids that should not be written to the backup.
    */
-  serializeNodeAsJSONToOutputStream:
-  function PU_serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand,
+  _serializeNodeAsJSONToOutputStream:
+  function PU__serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand,
                                                 aResolveShortcuts,
                                                 aExcludeItems) {
     function addGenericProperties(aPlacesNode, aJSNode) {
@@ -1383,9 +1383,11 @@ this.PlacesUtils = {
 
       // last character-set
       var uri = PlacesUtils._uri(aPlacesNode.uri);
-      var lastCharset = PlacesUtils.history.getCharsetForURI(uri);
-      if (lastCharset)
+      try {
+        var lastCharset = PlacesUtils.annotations.getPageAnnotation(
+                            uri, PlacesUtils.CHARSET_ANNO);
         aJSNode.charset = lastCharset;
+      } catch (e) {}
     }
 
     function addSeparatorProperties(aPlacesNode, aJSNode) {
@@ -1518,6 +1520,36 @@ this.PlacesUtils = {
     else {
       throw Cr.NS_ERROR_UNEXPECTED;
     }
+  },
+
+  /**
+   * Serializes the given node (and all its descendents) as JSON
+   * and writes the serialization to the given output stream.
+   *
+   * @param   aNode
+   *          An nsINavHistoryResultNode
+   * @param   aStream
+   *          An nsIOutputStream. NOTE: it only uses the write(str, len)
+   *          method of nsIOutputStream. The caller is responsible for
+   *          closing the stream.
+   * @param   aIsUICommand
+   *          Boolean - If true, modifies serialization so that each node self-contained.
+   *          For Example, tags are serialized inline with each bookmark.
+   * @param   aResolveShortcuts
+   *          Converts folder shortcuts into actual folders.
+   * @param   aExcludeItems
+   *          An array of item ids that should not be written to the backup.
+   */
+  serializeNodeAsJSONToOutputStream:
+  function PU_serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand,
+                                                aResolveShortcuts,
+                                                aExcludeItems) {
+    Deprecated.warning(
+      "serializeNodeAsJSONToOutputStream is deprecated and will be removed in a future version",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=854761");
+
+    this._serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand,
+                                            aResolveShortcuts, aExcludeItems);
   },
 
   /**
@@ -1723,6 +1755,56 @@ this.PlacesUtils = {
 
       deferred.resolve(charset);
     }, Ci.nsIThread.DISPATCH_NORMAL);
+
+    return deferred.promise;
+  },
+
+  /**
+   * Promised wrapper for mozIAsyncHistory::updatePlaces for a single place.
+   *
+   * @param aPlaces
+   *        a single mozIPlaceInfo object
+   * @resolves {Promise}
+   */
+  promiseUpdatePlace: function PU_promiseUpdatePlaces(aPlace) {
+    let deferred = Promise.defer();
+    PlacesUtils.asyncHistory.updatePlaces(aPlace, {
+      _placeInfo: null,
+      handleResult: function handleResult(aPlaceInfo) {
+        this._placeInfo = aPlaceInfo;
+      },
+      handleError: function handleError(aResultCode, aPlaceInfo) {
+        deferred.reject(new Components.Exception("Error", aResultCode));
+      },
+      handleCompletion: function() {
+        deferred.resolve(this._placeInfo);
+      }
+    });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Promised wrapper for mozIAsyncHistory::getPlacesInfo for a single place.
+   *
+   * @param aPlaceIdentifier
+   *        either an nsIURI or a GUID (@see getPlacesInfo)
+   * @resolves to the place info object handed to handleResult.
+   */
+  promisePlaceInfo: function PU_promisePlaceInfo(aPlaceIdentifier) {
+    let deferred = Promise.defer();
+    PlacesUtils.asyncHistory.getPlacesInfo(aPlaceIdentifier, {
+      _placeInfo: null,
+      handleResult: function handleResult(aPlaceInfo) {
+        this._placeInfo = aPlaceInfo;
+      },
+      handleError: function handleError(aResultCode, aPlaceInfo) {
+        deferred.reject(new Components.Exception("Error", aResultCode));
+      },
+      handleCompletion: function() {
+        deferred.resolve(this._placeInfo);
+      }
+    });
 
     return deferred.promise;
   }

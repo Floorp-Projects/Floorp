@@ -65,7 +65,7 @@ function testScriptSearching() {
 }
 
 function doSearch() {
-  is(gSearchView._container._parent.hidden, true,
+  is(gSearchView.widget._parent.hidden, true,
     "The global search pane shouldn't be visible yet.");
 
   gDebugger.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
@@ -89,7 +89,7 @@ function doSearch() {
 
 function testFocusLost()
 {
-  is(gSearchView._container._parent.hidden, false,
+  is(gSearchView.widget._parent.hidden, false,
     "The global search pane should be visible after a search.");
 
   gDebugger.addEventListener("Debugger:GlobalSearch:ViewCleared", function _onEvent(aEvent) {
@@ -112,7 +112,7 @@ function testFocusLost()
 }
 
 function reshowSearch() {
-  is(gSearchView._container._parent.hidden, true,
+  is(gSearchView.widget._parent.hidden, true,
     "The global search pane shouldn't be visible after the search was stopped.");
 
   gDebugger.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
@@ -136,7 +136,7 @@ function reshowSearch() {
 
 function testEscape()
 {
-  is(gSearchView._container._parent.hidden, false,
+  is(gSearchView.widget._parent.hidden, false,
     "The global search pane should be visible after a re-search.");
 
   gDebugger.addEventListener("Debugger:GlobalSearch:ViewCleared", function _onEvent(aEvent) {
@@ -160,7 +160,7 @@ function testEscape()
 
 function finalCheck()
 {
-  is(gSearchView._container._parent.hidden, true,
+  is(gSearchView.widget._parent.hidden, true,
     "The global search pane shouldn't be visible after the search was escaped.");
 
   closeDebuggerAndFinish();

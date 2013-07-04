@@ -1,6 +1,6 @@
-diff --git Libpng15/pngget.c Libpng15-apng/pngget.c
---- Libpng15/pngget.c	2013-03-27 20:21:25.997445906 -0500
-+++ Libpng15-apng/pngget.c	2013-04-05 09:03:41.474710443 -0500
+diff --git libpng-1.5.16-orig/pngget.c libpng-1.5.16-sf/pngget.c
+--- libpng-1.5.16-orig/pngget.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngget.c	2013-06-23 14:46:09.000000000 -0400
 @@ -1135,9 +1135,171 @@ png_get_palette_max(png_const_structp pn
     if (png_ptr != NULL && info_ptr != NULL)
        return png_ptr->num_palette_max;
@@ -173,37 +173,59 @@ diff --git Libpng15/pngget.c Libpng15-apng/pngget.c
 +}
 +#endif /* PNG_APNG_SUPPORTED */
  #endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */
-diff --git Libpng15/png.h Libpng15-apng/png.h
---- Libpng15/png.h	2013-03-27 20:21:25.890862785 -0500
-+++ Libpng15-apng/png.h	2013-04-05 09:08:47.597309275 -0500
-@@ -433,24 +433,18 @@
- /* Careful here.  At one time, Guy wanted to use 082, but that would be octal.
-  * We must not include leading zeros.
-  * Versions 0.7 through 1.0.0 were in the range 0 to 100 here (only
-  * version 1.0.0 was mis-numbered 100 instead of 10000).  From
-  * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
+diff --git libpng-1.5.16-orig/png.h libpng-1.5.16-sf/png.h
+--- libpng-1.5.16-orig/png.h	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/png.h	2013-06-23 14:46:09.000000000 -0400
+@@ -446,16 +446,20 @@
   */
- #define PNG_LIBPNG_VER 10515 /* 1.5.15 */
- 
--/* Library configuration: these options cannot be changed after
-- * the library has been built.
-- */
--#ifndef PNGLCONF_H
--    /* If pnglibconf.h is missing, you can
--     * copy scripts/pnglibconf.h.prebuilt to pnglibconf.h
--     */
--#   include "pnglibconf.h"
-+#ifndef MOZPNGCONF_H
-+#   include "mozpngconf.h"
+ #ifndef PNGLCONF_H
+     /* If pnglibconf.h is missing, you can
+      * copy scripts/pnglibconf.h.prebuilt to pnglibconf.h
+      */
+ #   include "pnglibconf.h"
  #endif
  
++#define PNG_APNG_SUPPORTED
++#define PNG_READ_APNG_SUPPORTED
++#define PNG_WRITE_APNG_SUPPORTED
++
  #ifndef PNG_VERSION_INFO_ONLY
  #  ifndef PNG_BUILDING_SYMBOL_TABLE
    /*
     *   Standard header files (not needed for the version info or while
     *   building symbol table -- see scripts/pnglibconf.dfa)
     */
-@@ -833,16 +827,20 @@ typedef png_info FAR * FAR * png_infopp;
+ #    ifdef PNG_SETJMP_SUPPORTED
+ #      include <setjmp.h>
+@@ -553,16 +557,27 @@ extern "C" {
+  * Otherwise the calls are mapped to png_error.
+  */
+ 
+ /* Section 2: type definitions, including structures and compile time
+  * constants.
+  * See pngconf.h for base types that vary by machine/system
+  */
+ 
++#ifdef PNG_APNG_SUPPORTED
++/* dispose_op flags from inside fcTL */
++#define PNG_DISPOSE_OP_NONE        0x00
++#define PNG_DISPOSE_OP_BACKGROUND  0x01
++#define PNG_DISPOSE_OP_PREVIOUS    0x02
++
++/* blend_op flags from inside fcTL */
++#define PNG_BLEND_OP_SOURCE        0x00
++#define PNG_BLEND_OP_OVER          0x01
++#endif /* PNG_APNG_SUPPORTED */
++
+ /* This triggers a compiler error in png.c, if png.c and png.h
+  * do not agree upon the version number.
+  */
+ typedef char* png_libpng_version_1_5_16;
+ 
+ /* Three color definitions.  The order of the red, green, and blue, (and the
+  * exact size) is not important, although the size of the fields need to
+  * be png_byte or png_uint_16 (as defined below).
+@@ -836,16 +851,20 @@ typedef png_info FAR * FAR * png_infopp;
  #define PNG_INFO_oFFs 0x0100
  #define PNG_INFO_tIME 0x0200
  #define PNG_INFO_pCAL 0x0400
@@ -224,7 +246,7 @@ diff --git Libpng15/png.h Libpng15-apng/png.h
  typedef struct png_row_info_struct
  {
     png_uint_32 width;    /* width of row */
-@@ -878,16 +876,20 @@ typedef PNG_CALLBACK(void, *png_flush_pt
+@@ -881,16 +900,20 @@ typedef PNG_CALLBACK(void, *png_flush_pt
  typedef PNG_CALLBACK(void, *png_read_status_ptr, (png_structp, png_uint_32,
      int));
  typedef PNG_CALLBACK(void, *png_write_status_ptr, (png_structp, png_uint_32,
@@ -245,26 +267,15 @@ diff --git Libpng15/png.h Libpng15-apng/png.h
   * then reset to 0 for the next pass.
   *
   * Use PNG_ROW_FROM_PASS_ROW(row, pass) and PNG_COL_FROM_PASS_COL(col, pass) to
-@@ -2657,16 +2659,96 @@ PNG_EXPORT(207, void, png_save_uint_16,
- PNG_EXPORT(234, void, png_set_check_for_invalid_index, (png_structp png_ptr,
-     int allowed));
- #  ifdef PNG_GET_PALETTE_MAX_SUPPORTED
- PNG_EXPORT(235, int, png_get_palette_max, (png_const_structp png_ptr,
-     png_const_infop info_ptr));
- #  endif
- #endif /* CHECK_FOR_INVALID_INDEX */
+@@ -2700,27 +2723,99 @@ PNG_EXPORT(235, int, png_get_palette_max
  
-+#ifdef PNG_APNG_SUPPORTED
-+/* dispose_op flags from inside fcTL */
-+#define PNG_DISPOSE_OP_NONE        0x00
-+#define PNG_DISPOSE_OP_BACKGROUND  0x01
-+#define PNG_DISPOSE_OP_PREVIOUS    0x02
-+
-+/* blend_op flags from inside fcTL */
-+#define PNG_BLEND_OP_SOURCE        0x00
-+#define PNG_BLEND_OP_OVER          0x01
-+#endif /* PNG_APNG_SUPPORTED */
-+
+ PNG_EXPORT(236, int, png_set_option, (png_structp png_ptr, int option,
+    int onoff));
+ #endif
+ 
+ /*******************************************************************************
+  *  END OF HARDWARE OPTIONS
+  ******************************************************************************/
 +#ifdef PNG_APNG_SUPPORTED
 +PNG_EXPORT(237, png_uint_32, png_get_acTL, (png_structp png_ptr,
 +   png_infop info_ptr, png_uint_32 *num_frames, png_uint_32 *num_plays));
@@ -333,16 +344,8 @@ diff --git Libpng15/png.h Libpng15-apng/png.h
 +   png_infop info_ptr));
 +#endif /* PNG_WRITE_APNG_SUPPORTED */
 +#endif /* PNG_APNG_SUPPORTED */
-+
- /*******************************************************************************
-  *  IMPLEMENTATION OPTIONS
-  *******************************************************************************
-  *
-  * Support for arbitrary implementation-specific optimizations.  The API allows
-  * particular options to be turned on or off.  'Option' is the number of the
-  * option and 'onoff' is 0 (off) or non-0 (on).  The value returned is given
-  * by the PNG_OPTION_ defines below.
-@@ -2707,17 +2789,21 @@ PNG_EXPORT(236, int, png_set_option, (pn
+ 
+ /* Maintainer: Put new public prototypes here ^, in libpng.3, and project
   * defs
   */
  
@@ -351,11 +354,11 @@ diff --git Libpng15/png.h Libpng15-apng/png.h
   * scripts/symbols.def as well.
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
-+#  ifdef PNG_APNG_SUPPORTED
++#ifdef PNG_APNG_SUPPORTED
 +  PNG_EXPORT_LAST_ORDINAL(256);
-+#  else
++#else
    PNG_EXPORT_LAST_ORDINAL(236);
-+#  endif /* PNG_APNG_SUPPORTED */
++#endif /* PNG_APNG_SUPPORTED */
  #endif
  
  #ifdef __cplusplus
@@ -364,9 +367,9 @@ diff --git Libpng15/png.h Libpng15-apng/png.h
  
  #endif /* PNG_VERSION_INFO_ONLY */
  /* Do not put anything past this line */
-diff --git Libpng15/pnginfo.h Libpng15-apng/pnginfo.h
---- Libpng15/pnginfo.h	2013-03-27 20:21:25.931778532 -0500
-+++ Libpng15-apng/pnginfo.h	2013-04-05 08:35:44.489862426 -0500
+diff --git libpng-1.5.16-orig/pnginfo.h libpng-1.5.16-sf/pnginfo.h
+--- libpng-1.5.16-orig/pnginfo.h	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pnginfo.h	2013-06-23 14:46:09.000000000 -0400
 @@ -260,10 +260,23 @@ defined(PNG_READ_BACKGROUND_SUPPORTED)
  
  #ifdef PNG_INFO_IMAGE_SUPPORTED
@@ -391,9 +394,9 @@ diff --git Libpng15/pnginfo.h Libpng15-apng/pnginfo.h
 +
  };
  #endif /* PNGINFO_H */
-diff --git Libpng15/pngpread.c Libpng15-apng/pngpread.c
---- Libpng15/pngpread.c	2013-03-27 20:21:26.018949507 -0500
-+++ Libpng15-apng/pngpread.c	2013-04-05 08:35:44.500787013 -0500
+diff --git libpng-1.5.16-orig/pngpread.c libpng-1.5.16-sf/pngpread.c
+--- libpng-1.5.16-orig/pngpread.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngpread.c	2013-06-23 14:46:09.000000000 -0400
 @@ -210,16 +210,119 @@ png_push_read_chunk(png_structp png_ptr,
        png_crc_read(png_ptr, chunk_tag, 4);
        png_ptr->chunk_name = PNG_CHUNK_FROM_STRING(chunk_tag);
@@ -721,9 +724,9 @@ diff --git Libpng15/pngpread.c Libpng15-apng/pngpread.c
  
     return png_ptr->io_ptr;
  }
-diff --git Libpng15/pngpriv.h Libpng15-apng/pngpriv.h
---- Libpng15/pngpriv.h	2013-03-27 20:21:25.916383806 -0500
-+++ Libpng15-apng/pngpriv.h	2013-04-05 08:35:44.512724367 -0500
+diff --git libpng-1.5.16-orig/pngpriv.h libpng-1.5.16-sf/pngpriv.h
+--- libpng-1.5.16-orig/pngpriv.h	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngpriv.h	2013-06-23 14:46:09.000000000 -0400
 @@ -456,16 +456,20 @@
  #define PNG_HAVE_sRGB               0x80
  #define PNG_HAVE_CHUNK_HEADER      0x100
@@ -828,9 +831,9 @@ diff --git Libpng15/pngpriv.h Libpng15-apng/pngpriv.h
      int_green_x, png_fixed_point int_green_y, png_fixed_point int_blue_x,
      png_fixed_point int_blue_y));
  #endif
-diff --git Libpng15/pngread.c Libpng15-apng/pngread.c
---- Libpng15/pngread.c	2013-03-27 20:21:26.031382541 -0500
-+++ Libpng15-apng/pngread.c	2013-04-05 08:35:44.521542241 -0500
+diff --git libpng-1.5.16-orig/pngread.c libpng-1.5.16-sf/pngread.c
+--- libpng-1.5.16-orig/pngread.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngread.c	2013-06-23 14:46:09.000000000 -0400
 @@ -235,16 +235,19 @@ png_read_info(png_structp png_ptr, png_i
        {
           if (!(png_ptr->mode & PNG_HAVE_IHDR))
@@ -1030,10 +1033,10 @@ diff --git Libpng15/pngread.c Libpng15-apng/pngread.c
               "Decompression error");
  
     } while (png_ptr->zstream.avail_out);
-diff --git Libpng15/pngrutil.c Libpng15-apng/pngrutil.c
---- Libpng15/pngrutil.c	2013-03-27 20:21:26.096904976 -0500
-+++ Libpng15-apng/pngrutil.c	2013-04-05 08:35:44.532243804 -0500
-@@ -542,16 +542,21 @@ png_handle_IHDR(png_structp png_ptr, png
+diff --git libpng-1.5.16-orig/pngrutil.c libpng-1.5.16-sf/pngrutil.c
+--- libpng-1.5.16-orig/pngrutil.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngrutil.c	2013-06-23 14:46:09.000000000 -0400
+@@ -540,16 +540,21 @@ png_handle_IHDR(png_structp png_ptr, png
     width = png_get_uint_31(png_ptr, buf);
     height = png_get_uint_31(png_ptr, buf + 4);
     bit_depth = buf[8];
@@ -1055,7 +1058,7 @@ diff --git Libpng15/pngrutil.c Libpng15-apng/pngrutil.c
     png_ptr->color_type = (png_byte)color_type;
  #ifdef PNG_MNG_FEATURES_SUPPORTED
     png_ptr->filter_type = (png_byte)filter_type;
-@@ -2619,16 +2624,189 @@ png_handle_iTXt(png_structp png_ptr, png
+@@ -2617,16 +2622,189 @@ png_handle_iTXt(png_structp png_ptr, png
     png_free(png_ptr, png_ptr->chunkdata);
     png_ptr->chunkdata = NULL;
  
@@ -1245,7 +1248,7 @@ diff --git Libpng15/pngrutil.c Libpng15-apng/pngrutil.c
   */
  void /* PRIVATE */
  png_handle_unknown(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
-@@ -4109,9 +4287,86 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED
+@@ -4107,9 +4285,86 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED
     png_debug1(3, "iwidth = %u,", png_ptr->iwidth);
     png_debug1(3, "num_rows = %u,", png_ptr->num_rows);
     png_debug1(3, "rowbytes = %lu,", (unsigned long)png_ptr->rowbytes);
@@ -1332,9 +1335,9 @@ diff --git Libpng15/pngrutil.c Libpng15-apng/pngrutil.c
 +#endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
 +#endif /* PNG_READ_APNG_SUPPORTED */
  #endif /* PNG_READ_SUPPORTED */
-diff --git Libpng15/pngset.c Libpng15-apng/pngset.c
---- Libpng15/pngset.c	2013-03-27 20:21:26.109362380 -0500
-+++ Libpng15-apng/pngset.c	2013-04-05 08:35:44.543863869 -0500
+diff --git libpng-1.5.16-orig/pngset.c libpng-1.5.16-sf/pngset.c
+--- libpng-1.5.16-orig/pngset.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngset.c	2013-06-23 14:46:09.000000000 -0400
 @@ -257,16 +257,21 @@ png_set_IHDR(png_structp png_ptr, png_in
         (PNG_UINT_32_MAX >> 3)      /* 8-byte RRGGBBAA pixels */
         - 48       /* bigrowbuf hack */
@@ -1515,9 +1518,9 @@ diff --git Libpng15/pngset.c Libpng15-apng/pngset.c
     png_unknown_chunkp np;
     int i;
  
-diff --git Libpng15/pngstruct.h Libpng15-apng/pngstruct.h
---- Libpng15/pngstruct.h	2013-03-27 20:21:25.924524405 -0500
-+++ Libpng15-apng/pngstruct.h	2013-04-05 08:35:44.553970531 -0500
+diff --git libpng-1.5.16-orig/pngstruct.h libpng-1.5.16-sf/pngstruct.h
+--- libpng-1.5.16-orig/pngstruct.h	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngstruct.h	2013-06-23 14:46:09.000000000 -0400
 @@ -288,16 +288,37 @@ struct png_struct_def
     png_uint_32 mng_features_permitted;
  #endif
@@ -1556,9 +1559,164 @@ diff --git Libpng15/pngstruct.h Libpng15-apng/pngstruct.h
     png_malloc_ptr malloc_fn;      /* function for allocating memory */
     png_free_ptr free_fn;          /* function for freeing memory */
  #endif
-diff --git Libpng15/pngwrite.c Libpng15-apng/pngwrite.c
---- Libpng15/pngwrite.c	2013-03-27 20:21:26.156957173 -0500
-+++ Libpng15-apng/pngwrite.c	2013-04-05 08:35:44.564786237 -0500
+diff --git libpng-1.5.16-orig/pngtest.c libpng-1.5.16-sf/pngtest.c
+--- libpng-1.5.16-orig/pngtest.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngtest.c	2013-06-23 14:46:09.000000000 -0400
+@@ -830,16 +830,20 @@ test_one_file(PNG_CONST char *inname, PN
+    png_infop write_info_ptr = NULL;
+    png_infop write_end_info_ptr = NULL;
+ #endif
+    png_bytep row_buf;
+    png_uint_32 y;
+    png_uint_32 width, height;
+    int num_pass, pass;
+    int bit_depth, color_type;
++#ifdef PNG_APNG_SUPPORTED
++   png_uint_32 num_frames;
++   png_uint_32 num_plays;
++#endif
+ 
+    row_buf = NULL;
+    error_parameters.file_name = inname;
+ 
+    if ((fpin = fopen(inname, "rb")) == NULL)
+    {
+       fprintf(STDERR, "Could not find input file %s\n", inname);
+       return (1);
+@@ -1279,16 +1283,30 @@ test_one_file(PNG_CONST char *inname, PN
+              ((int)trans_color->red > sample_max ||
+              (int)trans_color->green > sample_max ||
+              (int)trans_color->blue > sample_max))))
+             png_set_tRNS(write_ptr, write_info_ptr, trans_alpha, num_trans,
+                trans_color);
+       }
+    }
+ #endif
++#ifdef PNG_APNG_SUPPORTED
++   if (png_get_valid(read_ptr, read_info_ptr, PNG_INFO_acTL))
++   {
++      if (png_get_acTL(read_ptr, read_info_ptr, &num_frames, &num_plays))
++      {
++         png_byte is_hidden;
++         pngtest_debug2("Handling acTL chunks (frames %ld, plays %ld)",
++                    num_frames, num_plays);
++         png_set_acTL(write_ptr, write_info_ptr, num_frames, num_plays);
++         is_hidden = png_get_first_frame_is_hidden(read_ptr, read_info_ptr);
++         png_set_first_frame_is_hidden(write_ptr, write_info_ptr, is_hidden);
++      }
++   }
++#endif
+ #ifdef PNG_WRITE_UNKNOWN_CHUNKS_SUPPORTED
+    {
+       png_unknown_chunkp unknowns;
+       int num_unknowns = png_get_unknown_chunks(read_ptr, read_info_ptr,
+          &unknowns);
+ 
+       if (num_unknowns)
+       {
+@@ -1344,16 +1362,99 @@ test_one_file(PNG_CONST char *inname, PN
+    num_pass = 1;
+ #endif
+ 
+ #ifdef PNGTEST_TIMING
+    t_stop = (float)clock();
+    t_misc += (t_stop - t_start);
+    t_start = t_stop;
+ #endif
++#ifdef PNG_APNG_SUPPORTED
++   if (png_get_valid(read_ptr, read_info_ptr, PNG_INFO_acTL))
++   {
++      png_uint_32 frame;
++      for (frame = 0; frame < num_frames; frame++)
++      {
++         png_uint_32 frame_width;
++         png_uint_32 frame_height;
++         png_uint_32 x_offset;
++         png_uint_32 y_offset;
++         png_uint_16 delay_num;
++         png_uint_16 delay_den;
++         png_byte dispose_op;
++         png_byte blend_op;
++         png_read_frame_head(read_ptr, read_info_ptr);
++         if (png_get_valid(read_ptr, read_info_ptr, PNG_INFO_fcTL))
++         {
++            png_get_next_frame_fcTL(read_ptr, read_info_ptr,
++                                    &frame_width, &frame_height,
++                                    &x_offset, &y_offset,
++                                    &delay_num, &delay_den,
++                                    &dispose_op, &blend_op);
++         }
++         else
++         {
++            frame_width = width;
++            frame_height = height;
++            x_offset = 0;
++            y_offset = 0;
++            delay_num = 1;
++            delay_den = 1;
++            dispose_op = PNG_DISPOSE_OP_NONE;
++            blend_op = PNG_BLEND_OP_SOURCE;
++         }
++#ifdef PNG_WRITE_APNG_SUPPORTED
++         png_write_frame_head(write_ptr, write_info_ptr, (png_bytepp)&row_buf,
++                              frame_width, frame_height,
++                              x_offset, y_offset,
++                              delay_num, delay_den,
++                              dispose_op, blend_op);
++#endif
++         for (pass = 0; pass < num_pass; pass++)
++         {
++            pngtest_debug1("Writing row data for pass %d", pass);
++            for (y = 0; y < frame_height; y++)
++            {
++#ifndef SINGLE_ROWBUF_ALLOC
++               pngtest_debug2("Allocating row buffer (pass %d, y = %ld)...", pass, y);
++               row_buf = (png_bytep)png_malloc(read_ptr,
++                  png_get_rowbytes(read_ptr, read_info_ptr));
++               pngtest_debug2("0x%08lx (%ld bytes)", (unsigned long)row_buf,
++                  png_get_rowbytes(read_ptr, read_info_ptr));
++#endif /* !SINGLE_ROWBUF_ALLOC */
++               png_read_rows(read_ptr, (png_bytepp)&row_buf, NULL, 1);
++
++#ifdef PNG_WRITE_SUPPORTED
++#ifdef PNGTEST_TIMING
++               t_stop = (float)clock();
++               t_decode += (t_stop - t_start);
++               t_start = t_stop;
++#endif
++               png_write_rows(write_ptr, (png_bytepp)&row_buf, 1);
++#ifdef PNGTEST_TIMING
++               t_stop = (float)clock();
++               t_encode += (t_stop - t_start);
++               t_start = t_stop;
++#endif
++#endif /* PNG_WRITE_SUPPORTED */
++
++#ifndef SINGLE_ROWBUF_ALLOC
++               pngtest_debug2("Freeing row buffer (pass %d, y = %ld)", pass, y);
++               png_free(read_ptr, row_buf);
++               row_buf = NULL;
++#endif /* !SINGLE_ROWBUF_ALLOC */
++            }
++         }
++#ifdef PNG_WRITE_APNG_SUPPORTED
++         png_write_frame_tail(write_ptr, write_info_ptr);
++#endif
++      }
++   }
++   else
++#endif
+    for (pass = 0; pass < num_pass; pass++)
+    {
+       pngtest_debug1("Writing row data for pass %d", pass);
+       for (y = 0; y < height; y++)
+       {
+ #ifndef SINGLE_ROWBUF_ALLOC
+          pngtest_debug2("Allocating row buffer (pass %d, y = %u)...", pass, y);
+          row_buf = (png_bytep)png_malloc(read_ptr,
+diff --git libpng-1.5.16-orig/pngwrite.c libpng-1.5.16-sf/pngwrite.c
+--- libpng-1.5.16-orig/pngwrite.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngwrite.c	2013-06-23 14:46:09.000000000 -0400
 @@ -53,16 +53,20 @@ png_write_info_before_PLTE(png_structp p
  #ifdef PNG_WRITE_INTERLACING_SUPPORTED
         info_ptr->interlace_type);
@@ -1580,7 +1738,7 @@ diff --git Libpng15/pngwrite.c Libpng15-apng/pngwrite.c
     if (info_ptr->valid & PNG_INFO_sRGB)
        png_write_sRGB(png_ptr, (int)info_ptr->srgb_intent);
  #endif
-@@ -305,16 +309,22 @@ png_write_end(png_structp png_ptr, png_i
+@@ -305,16 +309,21 @@ png_write_end(png_structp png_ptr, png_i
     if (!(png_ptr->mode & PNG_HAVE_IDAT))
        png_error(png_ptr, "No IDATs written into file");
  
@@ -1589,7 +1747,6 @@ diff --git Libpng15/pngwrite.c Libpng15-apng/pngwrite.c
        png_benign_error(png_ptr, "Wrote palette index exceeding num_palette");
  #endif
  
-+    /* See if user wants us to write information chunks */
 +#ifdef PNG_WRITE_APNG_SUPPORTED
 +   if (png_ptr->num_frames_written != png_ptr->num_frames_to_write)
 +      png_error(png_ptr, "Not enough frames written");
@@ -1603,7 +1760,7 @@ diff --git Libpng15/pngwrite.c Libpng15-apng/pngwrite.c
  #endif
  #ifdef PNG_WRITE_tIME_SUPPORTED
        /* Check to see if user has supplied a time chunk */
-@@ -1662,9 +1672,47 @@ png_write_png(png_structp png_ptr, png_i
+@@ -1662,9 +1671,47 @@ png_write_png(png_structp png_ptr, png_i
  
     /* It is REQUIRED to call this to finish writing the rest of the file */
     png_write_end(png_ptr, info_ptr);
@@ -1651,9 +1808,9 @@ diff --git Libpng15/pngwrite.c Libpng15-apng/pngwrite.c
 +}
 +#endif /* PNG_WRITE_APNG_SUPPORTED */
  #endif /* PNG_WRITE_SUPPORTED */
-diff --git Libpng15/pngwutil.c Libpng15-apng/pngwutil.c
---- Libpng15/pngwutil.c	2013-03-27 20:21:26.188217743 -0500
-+++ Libpng15-apng/pngwutil.c	2013-04-05 08:35:44.574964508 -0500
+diff --git libpng-1.5.16-orig/pngwutil.c libpng-1.5.16-sf/pngwutil.c
+--- libpng-1.5.16-orig/pngwutil.c	2013-05-23 07:45:22.000000000 -0400
++++ libpng-1.5.16-sf/pngwutil.c	2013-06-23 14:46:09.000000000 -0400
 @@ -813,16 +813,21 @@ png_write_IHDR(png_structp png_ptr, png_
     buf[9] = (png_byte)color_type;
     buf[10] = (png_byte)compression_type;
@@ -1835,3 +1992,35 @@ diff --git Libpng15/pngwutil.c Libpng15-apng/pngwutil.c
 +}
 +#endif /* PNG_WRITE_APNG_SUPPORTED */
  #endif /* PNG_WRITE_SUPPORTED */
+diff --git libpng-1.5.16-orig/scripts/symbols.def libpng-1.5.16-sf/scripts/symbols.def
+--- libpng-1.5.16-orig/scripts/symbols.def	2013-05-23 07:45:23.000000000 -0400
++++ libpng-1.5.16-sf/scripts/symbols.def	2013-06-23 14:46:09.000000000 -0400
+@@ -237,8 +237,28 @@ EXPORTS
+  png_set_scale_16 @229
+  png_get_cHRM_XYZ @230
+  png_get_cHRM_XYZ_fixed @231
+  png_set_cHRM_XYZ @232
+  png_set_cHRM_XYZ_fixed @233
+  png_set_check_for_invalid_index @234
+  png_get_palette_max @235
+  png_set_option @236
++ png_get_acTL @237
++ png_set_acTL @238
++ png_get_num_frames @239
++ png_get_num_plays @240
++ png_get_next_frame_fcTL @241
++ png_set_next_frame_fcTL @242
++ png_get_next_frame_width @243
++ png_get_next_frame_height @244
++ png_get_next_frame_x_offset @245
++ png_get_next_frame_y_offset @246
++ png_get_next_frame_delay_num @247
++ png_get_next_frame_delay_den @248
++ png_get_next_frame_dispose_op @249
++ png_get_next_frame_blend_op @250
++ png_get_first_frame_is_hidden @251
++ png_set_first_frame_is_hidden @252
++ png_read_frame_head @253
++ png_set_progressive_frame_fn @254
++ png_write_frame_head @255
++ png_write_frame_tail @256

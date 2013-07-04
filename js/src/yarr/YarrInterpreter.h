@@ -25,11 +25,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef YarrInterpreter_h
-#define YarrInterpreter_h
+#ifndef yarr_YarrInterpreter_h
+#define yarr_YarrInterpreter_h
 
 #include "jscntxt.h"
-#include "YarrPattern.h"
+
+#include "yarr/YarrPattern.h"
 
 namespace WTF {
 class BumpPointerAllocator;
@@ -393,4 +394,4 @@ unsigned interpret(JSContext *cx, BytecodePattern*, const UChar* input, unsigned
 
 } } // namespace JSC::Yarr
 
-#endif // YarrInterpreter_h
+#endif /* yarr_YarrInterpreter_h */

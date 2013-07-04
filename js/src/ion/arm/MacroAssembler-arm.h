@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_macro_assembler_arm_h__
-#define jsion_macro_assembler_arm_h__
+#ifndef ion_arm_MacroAssembler_arm_h
+#define ion_arm_MacroAssembler_arm_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -238,6 +238,9 @@ class MacroAssemblerARM : public Assembler
     // implicitly assumes that we can overwrite dest at the beginning of the sequence
     void ma_mod_mask(Register src, Register dest, Register hold, int32_t shift);
 
+    // division
+    void ma_sdiv(Register num, Register div, Register dest, Condition cond = Always);
+
     // memory
     // shortcut for when we know we're transferring 32 bits of data
     void ma_dtr(LoadStore ls, Register rn, Imm32 offset, Register rt,
@@ -357,9 +360,9 @@ class MacroAssemblerARM : public Assembler
         }
         if (mode == DB) {
             return transferMultipleByRunsImpl
-                <FloatRegisterIterator>(set, ls, rm, mode, -1);
+                <FloatRegisterBackwardIterator>(set, ls, rm, mode, -1);
         }
-        JS_NOT_REACHED("Invalid data transfer addressing mode");
+        MOZ_ASSUME_UNREACHABLE("Invalid data transfer addressing mode");
     }
 
 private:
@@ -417,7 +420,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     bool dynamicAlignment_;
 
     bool enoughMemory_;
-    VFPRegister floatArgsInGPR[2];
+
+    // Used to work around the move resolver's lack of support for
+    // moving into register pairs, which the softfp ABI needs.
+    MoveResolver::MoveOperand floatArgsInGPR[2];
+    bool floatArgsInGPRValid[2];
+
     // Compute space needed for the function call and set the properties of the
     // callee.  It returns the space which has to be allocated for calling the
     // function.
@@ -480,10 +488,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(Imm32(imm.value), dest);
     }
     void mov(Register src, Address dest) {
-        JS_NOT_REACHED("NYI-IC");
+        MOZ_ASSUME_UNREACHABLE("NYI-IC");
     }
     void mov(Address src, Register dest) {
-        JS_NOT_REACHED("NYI-IC");
+        MOZ_ASSUME_UNREACHABLE("NYI-IC");
     }
 
     void call(const Register reg) {
@@ -990,6 +998,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_push(reg);
     }
     void pushValue(const Address &addr);
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
+    void Pop(const ValueOperand &val) {
+        popValue(val);
+        framePushed_ -= sizeof(Value);
+    }
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
     void storePayload(const Value &val, Register base, Register index, int32_t shift = defaultShift);
@@ -1340,4 +1356,4 @@ typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_macro_assembler_arm_h__
+#endif /* ion_arm_MacroAssembler_arm_h */

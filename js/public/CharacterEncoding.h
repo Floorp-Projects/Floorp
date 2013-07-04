@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_CharacterEncoding_h___
-#define js_CharacterEncoding_h___
+#ifndef js_CharacterEncoding_h
+#define js_CharacterEncoding_h
 
 #include "mozilla/Range.h"
 
@@ -152,4 +152,4 @@ TwoByteCharsToNewUTF8CharsZ(JSContext *cx, TwoByteChars tbchars);
 inline void JS_free(JS::Latin1CharsZ &ptr) { js_free((void*)ptr.get()); }
 inline void JS_free(JS::UTF8CharsZ &ptr) { js_free((void*)ptr.get()); }
 
-#endif // js_CharacterEncoding_h___
+#endif /* js_CharacterEncoding_h */

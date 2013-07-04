@@ -60,7 +60,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     JS_ASSERT(!parent->inDictionary());
     JS_ASSERT(!child->parent);
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(cx->compartment == compartment);
+    JS_ASSERT(cx->compartment() == compartment);
     JS_ASSERT(child->compartment() == parent->compartment());
 
     KidsPointer *kidp = &parent->kids;
@@ -267,7 +267,8 @@ Shape::dump(JSContext *cx, FILE *fp) const
             str = JSID_TO_ATOM(propid);
         } else {
             JS_ASSERT(JSID_IS_OBJECT(propid));
-            JSString *s = ToStringSlow<CanGC>(cx, IdToValue(propid));
+            RootedValue v(cx, IdToValue(propid));
+            JSString *s = ToStringSlow<CanGC>(cx, v);
             fputs("object ", fp);
             str = s ? s->ensureLinear(cx) : NULL;
         }

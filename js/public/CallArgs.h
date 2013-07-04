@@ -26,8 +26,8 @@
  * methods' implementations, potentially under time pressure.
  */
 
-#ifndef js_CallArgs_h___
-#define js_CallArgs_h___
+#ifndef js_CallArgs_h
+#define js_CallArgs_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -58,6 +58,8 @@ extern JS_PUBLIC_API(JS::Value)
 JS_ComputeThis(JSContext *cx, JS::Value *vp);
 
 namespace JS {
+
+extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
 
 /*
  * JS::CallReceiver encapsulates access to the callee, |this|, and eventual
@@ -299,6 +301,16 @@ class MOZ_STACK_CLASS CallArgsBase :
     }
 
     /*
+     * Returns the i-th zero-indexed argument as a handle, or |undefined| if
+     * there's no such argument.
+     */
+    HandleValue handleOrUndefinedAt(unsigned i) const {
+        return i < length()
+               ? HandleValue::fromMarkedLocation(&this->argv_[i])
+               : UndefinedHandleValue;
+    }
+
+    /*
      * Returns true if the i-th zero-indexed argument is present and is not
      * |undefined|.
      */
@@ -388,4 +400,4 @@ JS_THIS(JSContext *cx, JS::Value *vp)
  */
 #define JS_THIS_VALUE(cx,vp)    ((vp)[1])
 
-#endif /* js_CallArgs_h___ */
+#endif /* js_CallArgs_h */

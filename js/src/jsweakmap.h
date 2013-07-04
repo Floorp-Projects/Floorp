@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsweakmap_h___
-#define jsweakmap_h___
+#ifndef jsweakmap_h
+#define jsweakmap_h
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -134,7 +134,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     typedef typename Base::Range Range;
 
     explicit WeakMap(JSContext *cx, JSObject *memOf=NULL)
-        : Base(cx), WeakMapBase(memOf, cx->compartment) { }
+        : Base(cx), WeakMapBase(memOf, cx->compartment()) { }
 
   private:
     bool markValue(JSTracer *trc, Value *x) {
@@ -244,4 +244,4 @@ protected:
 extern JSObject *
 js_InitWeakMapClass(JSContext *cx, js::HandleObject obj);
 
-#endif
+#endif /* jsweakmap_h */

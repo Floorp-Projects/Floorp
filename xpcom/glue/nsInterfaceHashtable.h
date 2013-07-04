@@ -135,7 +135,7 @@ nsInterfaceHashtable<KeyClass,Interface>::Get(KeyType aKey) const
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
   if (!ent)
-    return NULL;
+    return nullptr;
 
   nsCOMPtr<Interface> copy = ent->mData;
   return copy.forget();

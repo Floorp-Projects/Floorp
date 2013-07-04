@@ -4,12 +4,19 @@
 
 #include "base/pickle.h"
 
+#include "mozilla/Endian.h"
+#include "mozilla/TypeTraits.h"
+#include "mozilla/Util.h"
+
 #include <stdlib.h>
 
 #include <limits>
 #include <string>
 
 //------------------------------------------------------------------------------
+
+MOZ_STATIC_ASSERT(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
+		  "Insufficient alignment");
 
 // static
 const int Pickle::kPayloadUnit = 64;
@@ -19,7 +26,75 @@ static const uint32_t kCapacityReadOnly = (uint32_t) -1;
 
 static const char kBytePaddingMarker = char(0xbf);
 
-// Payload is uint32_t aligned.
+namespace {
+
+// We want to copy data to our payload as efficiently as possible.
+// memcpy fits the bill for copying, but not all compilers or
+// architectures support inlining memcpy from void*, which has unknown
+// static alignment.  However, we know that all the members of our
+// payload will be aligned on memberAlignmentType boundaries.  We
+// therefore use that knowledge to construct a copier that will copy
+// efficiently (via standard C++ assignment mechanisms) if the datatype
+// needs that alignment or less, and memcpy otherwise.  (The compiler
+// may still inline memcpy, of course.)
+
+template<typename T, size_t size, bool hasSufficientAlignment>
+struct Copier
+{
+  static void Copy(T* dest, void** iter) {
+    memcpy(dest, *iter, sizeof(T));
+  }
+};
+
+// Copying 64-bit quantities happens often enough and can easily be made
+// worthwhile on 32-bit platforms, so handle it specially.  Only do it
+// if 64-bit types aren't sufficiently aligned; the alignment
+// requirements for them vary between 32-bit platforms.
+#ifndef HAVE_64BIT_OS
+template<typename T>
+struct Copier<T, sizeof(uint64_t), false>
+{
+  static void Copy(T* dest, void** iter) {
+#if MOZ_LITTLE_ENDIAN
+    static const int loIndex = 0, hiIndex = 1;
+#else
+    static const int loIndex = 1, hiIndex = 0;
+#endif
+    MOZ_STATIC_ASSERT(MOZ_ALIGNOF(uint32_t*) == MOZ_ALIGNOF(void*),
+		      "Pointers have different alignments");
+    uint32_t* src = *reinterpret_cast<uint32_t**>(iter);
+    uint32_t* uint32dest = reinterpret_cast<uint32_t*>(dest);
+    uint32dest[loIndex] = src[loIndex];
+    uint32dest[hiIndex] = src[hiIndex];
+  }
+};
+#endif
+
+template<typename T, size_t size>
+struct Copier<T, size, true>
+{
+  static void Copy(T* dest, void** iter) {
+    // The reinterpret_cast is only safe if two conditions hold:
+    // (1) If the alignment of T* is the same as void*;
+    // (2) The alignment of the data in *iter is at least as
+    //     big as MOZ_ALIGNOF(T).
+    // Check the first condition, as the second condition is already
+    // known to be true, or we wouldn't be here.
+    MOZ_STATIC_ASSERT(MOZ_ALIGNOF(T*) == MOZ_ALIGNOF(void*),
+		      "Pointers have different alignments");
+    *dest = *(*reinterpret_cast<T**>(iter));
+  }
+};
+
+template<typename T>
+void CopyFromIter(T* dest, void** iter) {
+  MOZ_STATIC_ASSERT(mozilla::IsPod<T>::value, "Copied type must be a POD type");
+  Copier<T, sizeof(T), (MOZ_ALIGNOF(T) <= sizeof(Pickle::memberAlignmentType))>::Copy(dest, iter);
+}
+
+} // anonymous namespace
+
+// Payload is sizeof(Pickle::memberAlignmentType) aligned.
 
 Pickle::Pickle()
     : header_(NULL),
@@ -32,10 +107,10 @@ Pickle::Pickle()
 
 Pickle::Pickle(int header_size)
     : header_(NULL),
-      header_size_(AlignInt(header_size, sizeof(uint32_t))),
+      header_size_(AlignInt(header_size)),
       capacity_(0),
       variable_buffer_offset_(0) {
-  DCHECK(static_cast<uint32_t>(header_size) >= sizeof(Header));
+  DCHECK(static_cast<memberAlignmentType>(header_size) >= sizeof(Header));
   DCHECK(header_size <= kPayloadUnit);
   Resize(kPayloadUnit);
   header_->payload_size = 0;
@@ -47,7 +122,7 @@ Pickle::Pickle(const char* data, int data_len)
       capacity_(kCapacityReadOnly),
       variable_buffer_offset_(0) {
   DCHECK(header_size_ >= sizeof(Header));
-  DCHECK(header_size_ == AlignInt(header_size_, sizeof(uint32_t)));
+  DCHECK(header_size_ == AlignInt(header_size_));
 }
 
 Pickle::Pickle(const Pickle& other)
@@ -98,7 +173,7 @@ bool Pickle::ReadInt16(void** iter, int16_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -112,7 +187,7 @@ bool Pickle::ReadUInt16(void** iter, uint16_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -126,10 +201,7 @@ bool Pickle::ReadInt(void** iter, int* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  // TODO(jar) bug 1129285: Pickle should be cleaned up, and not dependent on
-  // alignment.
-  // Next line is otherwise the same as: memcpy(result, *iter, sizeof(*result));
-  *result = *reinterpret_cast<int*>(*iter);
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -146,9 +218,7 @@ bool Pickle::ReadLong(void** iter, long* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(bigResult)))
     return false;
 
-  // TODO(jar) bug 1129285: Pickle should be cleaned up, and not dependent on
-  // alignment.
-  memcpy(&bigResult, *iter, sizeof(bigResult));
+  CopyFromIter(&bigResult, iter);
   DCHECK(bigResult <= LONG_MAX && bigResult >= LONG_MIN);
   *result = static_cast<long>(bigResult);
 
@@ -167,9 +237,7 @@ bool Pickle::ReadULong(void** iter, unsigned long* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(bigResult)))
     return false;
 
-  // TODO(jar) bug 1129285: Pickle should be cleaned up, and not dependent on
-  // alignment.
-  memcpy(&bigResult, *iter, sizeof(bigResult));
+  CopyFromIter(&bigResult, iter);
   DCHECK(bigResult <= ULONG_MAX);
   *result = static_cast<unsigned long>(bigResult);
 
@@ -194,9 +262,7 @@ bool Pickle::ReadSize(void** iter, size_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(bigResult)))
     return false;
 
-  // TODO(jar) bug 1129285: Pickle should be cleaned up, and not dependent on
-  // alignment.
-  memcpy(&bigResult, *iter, sizeof(bigResult));
+  CopyFromIter(&bigResult, iter);
   DCHECK(bigResult <= std::numeric_limits<size_t>::max());
   *result = static_cast<size_t>(bigResult);
 
@@ -212,7 +278,7 @@ bool Pickle::ReadInt32(void** iter, int32_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -226,7 +292,7 @@ bool Pickle::ReadUInt32(void** iter, uint32_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -240,7 +306,7 @@ bool Pickle::ReadInt64(void** iter, int64_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -254,7 +320,7 @@ bool Pickle::ReadUInt64(void** iter, uint64_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -268,7 +334,7 @@ bool Pickle::ReadDouble(void** iter, double* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -285,7 +351,7 @@ bool Pickle::ReadIntPtr(void** iter, intptr_t* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(bigResult)))
     return false;
 
-  memcpy(&bigResult, *iter, sizeof(bigResult));
+  CopyFromIter(&bigResult, iter);
   DCHECK(bigResult <= std::numeric_limits<intptr_t>::max() && bigResult >= std::numeric_limits<intptr_t>::min());
   *result = static_cast<intptr_t>(bigResult);
 
@@ -301,7 +367,7 @@ bool Pickle::ReadUnsignedChar(void** iter, unsigned char* result) const {
   if (!IteratorHasRoomFor(*iter, sizeof(*result)))
     return false;
 
-  memcpy(result, *iter, sizeof(*result));
+  CopyFromIter(result, iter);
 
   UpdateIter(iter, sizeof(*result));
   return true;
@@ -411,9 +477,9 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
   DCHECK(alignment % 4 == 0) << "Must be at least 32-bit aligned!";
 
   // write at an alignment-aligned offset from the beginning of the header
-  uint32_t offset = AlignInt(header_->payload_size, sizeof(uint32_t));
+  uint32_t offset = AlignInt(header_->payload_size);
   uint32_t padding = (header_size_ + offset) %  alignment;
-  uint32_t new_size = offset + padding + AlignInt(length, sizeof(uint32_t));
+  uint32_t new_size = offset + padding + AlignInt(length);
   uint32_t needed_size = header_size_ + new_size;
 
   if (needed_size > capacity_ && !Resize(std::max(capacity_ * 2, needed_size)))
@@ -441,8 +507,9 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
 void Pickle::EndWrite(char* dest, int length) {
   // Zero-pad to keep tools like purify from complaining about uninitialized
   // memory.
-  if (length % sizeof(uint32_t))
-    memset(dest + length, 0, sizeof(uint32_t) - (length % sizeof(uint32_t)));
+  if (length % sizeof(memberAlignmentType))
+    memset(dest + length, 0,
+	   sizeof(memberAlignmentType) - (length % sizeof(memberAlignmentType)));
 }
 
 bool Pickle::WriteBytes(const void* data, int data_len, uint32_t alignment) {
@@ -494,7 +561,7 @@ char* Pickle::BeginWriteData(int length) {
   if (!WriteInt(length))
     return NULL;
 
-  char *data_ptr = BeginWrite(length, sizeof(uint32_t));
+  char *data_ptr = BeginWrite(length, sizeof(memberAlignmentType));
   if (!data_ptr)
     return NULL;
 
@@ -525,7 +592,7 @@ void Pickle::TrimWriteData(int new_length) {
 }
 
 bool Pickle::Resize(uint32_t new_capacity) {
-  new_capacity = AlignInt(new_capacity, kPayloadUnit);
+  new_capacity = ConstantAligner<kPayloadUnit>::align(new_capacity);
 
   void* p = realloc(header_, new_capacity);
   if (!p)
@@ -540,8 +607,8 @@ bool Pickle::Resize(uint32_t new_capacity) {
 const char* Pickle::FindNext(uint32_t header_size,
                              const char* start,
                              const char* end) {
-  DCHECK(header_size == AlignInt(header_size, sizeof(uint32_t)));
-  DCHECK(header_size <= static_cast<uint32_t>(kPayloadUnit));
+  DCHECK(header_size == AlignInt(header_size));
+  DCHECK(header_size <= static_cast<memberAlignmentType>(kPayloadUnit));
 
   const Header* hdr = reinterpret_cast<const Header*>(start);
   const char* payload_base = start + header_size;

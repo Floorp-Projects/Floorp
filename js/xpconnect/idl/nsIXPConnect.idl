@@ -44,7 +44,7 @@ class nsWrapperCache;
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
-      native ZoneSpecifier(uintptr_t);
+[ref] native JSCompartmentOptions(JS::CompartmentOptions);
 [ref] native JSCallArgsRef(const JS::CallArgs);
       native JSHandleId(JS::HandleId);
 
@@ -291,7 +291,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(4d292c29-9d18-403b-b98e-2056e550a3b4)]
+[uuid(bd61342d-8a88-4f23-8d2d-1782fff02d26)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -318,14 +318,15 @@ interface nsIXPConnect : nsISupports
      *                   compartment. Can be null if not on the main thread.
      * @param aFlags one of the flags below specifying what options this
      *               global object wants.
+     * @param aOptions JSAPI-specific options for the new compartment.
      */
     nsIXPConnectJSObjectHolder
     initClassesWithNewWrappedGlobal(
-                  in JSContextPtr aJSContext,
-                  in nsISupports  aCOMObj,
-                  in nsIPrincipal aPrincipal,
-                  in uint32_t     aFlags,
-                  in ZoneSpecifier aZoneSpec);
+                  in JSContextPtr         aJSContext,
+                  in nsISupports          aCOMObj,
+                  in nsIPrincipal         aPrincipal,
+                  in uint32_t             aFlags,
+                  in JSCompartmentOptions aOptions);
 
     const uint32_t INIT_JS_STANDARD_CLASSES  = 1 << 0;
     // Free bit here!
@@ -440,23 +441,11 @@ interface nsIXPConnect : nsISupports
     getNativeOfWrapper(in JSContextPtr aJSContext,
                        in JSObjectPtr  aJSObj);
 
-    void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
-                                        in nsIXPCSecurityManager aManager,
-                                        in uint16_t flags);
-
-    void getSecurityManagerForJSContext(in JSContextPtr aJSContext,
-                                        out nsIXPCSecurityManager aManager,
-                                        out uint16_t flags);
-
     /**
     * The security manager to use when the current JSContext has no security
     * manager.
     */
-    void setDefaultSecurityManager(in nsIXPCSecurityManager aManager,
-                                   in uint16_t flags);
-
-    void getDefaultSecurityManager(out nsIXPCSecurityManager aManager,
-                                   out uint16_t flags);
+    void setDefaultSecurityManager(in nsIXPCSecurityManager aManager);
 
     nsIStackFrame
     createStackFrameLocation(in uint32_t       aLanguage,
@@ -573,27 +562,6 @@ interface nsIXPConnect : nsISupports
                                          in boolean returnStringOnly);
 
     /**
-     * Root JS objects held by aHolder.
-     * @param aHolder The object that hold the JS objects that should be rooted.
-     * @param aTrace The tracer for aHolder.
-     */
-    [noscript,notxpcom] void addJSHolder(in voidPtr aHolder,
-                                         in nsScriptObjectTracerPtr aTracer);
-
-    /**
-     * Stop rooting the JS objects held by aHolder.
-     * @param aHolder The object that hold the rooted JS objects.
-     */
-    [noscript,notxpcom] void removeJSHolder(in voidPtr aHolder);
-
-    /**
-     * Test to see if a JS holder is in our hashtable.
-     * Only available in debug builds.
-     * @param aHolder The object to test for.
-     */
-    [noscript,notxpcom] bool testJSHolder(in voidPtr aHolder);
-
-    /**
      * Note aJSContext as a child to the cycle collector.
      * @param aJSContext The JSContext to note.
      * @param aCb The cycle collection traversal callback.
@@ -641,12 +609,6 @@ interface nsIXPConnect : nsISupports
      */
     nsIXPConnectJSObjectHolder holdObject(in JSContextPtr aJSContext,
                                           in JSObjectPtr aObject);
-
-    /**
-     * Return the caller object of the current call from JS.
-     */
-    [noscript,notxpcom] void getCaller(out JSContextPtr aJSContext,
-                                       out JSObjectPtr aObject);
 
     /**
      * When we place the browser in JS debug mode, there can't be any

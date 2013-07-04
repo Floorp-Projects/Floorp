@@ -1,7 +1,7 @@
 == calc-background-linear-gradient-1.html calc-background-linear-gradient-1-ref.html
-random-if(bug685516) == calc-background-image-gradient-1.html calc-background-image-gradient-1-ref.html
-random-if(bug685516) == calc-background-position-1.html calc-background-position-1-ref.html
-random-if(bug685516) == calc-background-size-1.html calc-background-size-1-ref.html
+== calc-background-image-gradient-1.html calc-background-image-gradient-1-ref.html
+== calc-background-position-1.html calc-background-position-1-ref.html
+== calc-background-size-1.html calc-background-size-1-ref.html
 == calc-border-radius-1.html calc-border-radius-1-ref.html
 == calc-height-block-1.html calc-height-block-1-ref.html
 skip-if(B2G) == calc-height-table-1.html calc-height-table-1-ref.html

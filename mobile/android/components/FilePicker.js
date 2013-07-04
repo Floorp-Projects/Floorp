@@ -235,7 +235,7 @@ FilePicker.prototype = {
         if (this.mIndex >= this.mFiles.length) {
           throw Components.results.NS_ERROR_FAILURE;
         }
-        return map(this.mFiles[this.mIndex++]);
+        return mapFunction(this.mFiles[this.mIndex++]);
       }
     };
   },

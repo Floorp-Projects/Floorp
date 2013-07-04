@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:svg="http://www.w3.org/2000/svg"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="boom();">
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+function boom()
+{
+  var x = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "hbox");
+  generatedShape = document.getElementById("s").childNodes[3];
+  generatedShape.appendChild(x);
+  document.documentElement.removeChild(document.getElementById("s"));
+  ok(true, "Didn't crash");
+  SimpleTest.finish();
+}
+
+</script>
+
+  <html:div datasources="file_bug330010.rdf" ref="urn:root" flex="1" id="s">
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?root"/>
+          <triple subject="?root"
+                  predicate="urn:croczilla:xulsvg1:shapes"
+                  object="?shapes"/>
+          <member container="?shapes" child="?shape" id="m"/>
+        </conditions>
+        <action>
+          <hbox id="p" uri="?shape" />
+       </action>
+     </rule>
+   </template>
+ </html:div>
+</window>

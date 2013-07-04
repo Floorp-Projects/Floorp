@@ -5,18 +5,51 @@
 #ifndef mozilla_dom_time_TimeManager_h
 #define mozilla_dom_time_TimeManager_h
 
-#include "nsIDOMTimeManager.h"
 #include "mozilla/Attributes.h"
+#include "nsISupports.h"
+#include "nsPIDOMWindow.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
+
+class Date;
+
 namespace time {
 
-class TimeManager MOZ_FINAL : public nsIDOMMozTimeManager
+class TimeManager MOZ_FINAL : public nsISupports
+                            , public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZTIMEMANAGER
+  static bool PrefEnabled()
+  {
+#ifdef MOZ_TIME_MANAGER
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TimeManager)
+
+  explicit TimeManager(nsPIDOMWindow* aWindow)
+    : mWindow(aWindow)
+  {
+    SetIsDOMBinding();
+  }
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return mWindow;
+  }
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
+
+  void Set(Date& aDate);
+  void Set(double aTime);
+
+private:
+  nsCOMPtr<nsPIDOMWindow> mWindow;
 };
 
 } // namespace time

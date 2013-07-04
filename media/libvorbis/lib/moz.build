@@ -6,3 +6,5 @@
 
 MODULE = 'vorbis'
 
+LIBRARY_NAME = 'vorbis'
+

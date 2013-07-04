@@ -6,8 +6,8 @@
 
 #include "jscntxt.h"
 #include "jsstr.h"
-#include "Library.h"
-#include "CTypes.h"
+#include "ctypes/Library.h"
+#include "ctypes/CTypes.h"
 #include "prlink.h"
 
 namespace js {

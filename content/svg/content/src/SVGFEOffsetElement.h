@@ -49,9 +49,9 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Dx();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Dy();
+  already_AddRefed<SVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedNumber> Dx();
+  already_AddRefed<SVGAnimatedNumber> Dy();
 
 protected:
   nsIntPoint GetOffset(const nsSVGFilterInstance& aInstance);

@@ -10,19 +10,17 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
-
-_BROWSER_FILES = \
-                 browser_NetworkPrioritizer.js \
-                 # bug 793906 - temporarily disabling desktop UI while working on b2g
-                 # browser_SignInToWebsite.js \
-                 $(NULL)
+MOCHITEST_BROWSER_FILES := \
+  browser_NetworkPrioritizer.js \
+  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-_BROWSER_FILES += \
-                 browser_taskbar_preview.js \
-                 $(NULL)
+MOCHITEST_BROWSER_FILES += \
+  browser_taskbar_preview.js \
+  $(NULL)
 endif
 
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+# bug 793906 - temporarily disabling desktop UI while working on b2g
+# browser_SignInToWebsite.js
+
+include $(topsrcdir)/config/rules.mk

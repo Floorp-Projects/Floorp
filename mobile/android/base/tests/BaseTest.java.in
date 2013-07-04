@@ -18,9 +18,12 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
+import android.view.inputmethod.InputMethodManager;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -39,6 +42,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_LIST_ATTEMPTS = 3;
+    private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
     public static final int MAX_WAIT_MS = 3000;
 
     private static Class<Activity> mLauncherActivityClass;
@@ -52,6 +56,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private String mLogFile;
     protected String mProfile;
     public Device mDevice;
+    private boolean menuSettingsTimedOut = false;
 
     protected void blockForGeckoReady() {
         try {
@@ -171,19 +176,15 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             mAsserter.ok(clicked != false, "checking that awesome bar clicked", "awesome bar was clicked");
             return null;
         }
-        // Wait for click to take effect before waiting for activity
-        // (otherwise we sometimes get the previous activity).
-        // Previously, waitForIdleSync was used here but it was found
-        // to hang very occasionally.
-        mSolo.sleep(2000);
-        Activity activity = inst.waitForMonitor(monitor);
+        inst.waitForMonitor(monitor);
         // Give the activity time to render itself and initialize views 
         // before continuing, so that views are created before access
         // attempts are made. Again, waitForIdleSync was used here
         // previously, but replaced with a sleep to avoid hangs.
         // TODO: Investigate and document why these pauses are required.
         mSolo.sleep(2000);
-        return activity;
+
+        return mSolo.getCurrentActivity();
     }
 
     /**
@@ -401,22 +402,50 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return rc;
     }
 
+    /**
+     * Wait for <text> to be visible and also be enabled/clickable.
+     */
+    public boolean waitForEnabledText(String text) {
+        final String testText = text;
+        boolean rc = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                // Solo.getText() could be used here, except that it sometimes
+                // hits an assertion when the requested text is not found.
+                ArrayList<View> views = mSolo.getCurrentViews();
+                for (View view : views) {
+                    if (view instanceof TextView) {
+                        TextView tv = (TextView)view;
+                        String viewText = tv.getText().toString();
+                        if (tv.isEnabled() && viewText != null && viewText.matches(testText)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }, MAX_WAIT_ENABLED_TEXT_MS);
+        if (!rc) {
+            // log out failed wait for diagnostic purposes only;
+            // failures are sometimes expected/normal
+            mAsserter.dumpLog("waitForEnabledText timeout on "+text);
+        }
+        return rc;
+    }
+
+
     /** 
      * Select <item> from Menu > "Settings" > <section>
      */
     public void selectSettingsItem(String section, String item) {
         String itemName = "^" + item + "$";
         selectMenuItem("Settings");
-        // On tablets, settings are arranged in a hierarchy; if the item is not 
-        // in the first ("General") section, the section must be selected first.
-        if (mDevice.type.equals("tablet") && 
-            section != null &&
-            !section.equals("General")) {
-            String sectionName = "^" + section + "$";
-            waitForText(sectionName);
-            mSolo.clickOnText(sectionName);
-        }
-        waitForText(itemName);
+        String sectionName = "^" + section + "$";
+        // Click on section name.
+        waitForEnabledText(sectionName);
+        mSolo.clickOnText(sectionName);
+        // Click on item.
+        waitForEnabledText(itemName);
         mSolo.clickOnText(itemName);
     }
 
@@ -424,9 +453,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         // build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        if (waitForText(itemName)) {
+        if (!menuSettingsTimedOut && waitForText(itemName)) {
             mSolo.clickOnText(itemName);
         } else {
+            // Record that we've timed out waiting for "Settings" on the top menu
+            // screen so we can skip the timeout step next time.
+            menuSettingsTimedOut = true;
             if (mSolo.searchText("(^More$|^Tools$)")) {
                 mSolo.clickOnText("(^More$|^Tools$)");
             }
@@ -470,6 +502,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         String tabCountText = tabCount.getText();
         int tabCountInt = Integer.parseInt(tabCountText);
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
+    }
+
+    // Used to perform clicks on pop-up buttons without having to close the virtual keyboard
+    public void clickOnButton(String label) {
+        final Button button = mSolo.getButton(label);
+        try {
+            runTestOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    button.performClick();
+                }
+            });
+       } catch (Throwable throwable) {
+           mAsserter.ok(false, "Unable to click the button","Was unable to click button ");
+       }
+    }
+
+    // Used to hide/show the virtual keyboard
+    public void toggleVKB() {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
     }
 
     protected boolean isBookmark(String[] bookmarks, String aValue) {
@@ -673,7 +726,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActions.sendKeys(addedText);
         mSolo.clickOnText("OK");
         waitForText("Bookmark updated");
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
     }
 
     public boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
@@ -689,22 +741,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
 
-        // If the OS is not Gingerbread the vkb will be opened so we need to close it in order to press the "Cancel" button
-        // XXX: This is not true on all devices, but is true on our current automation test machines...
-        if (!(mDevice.version.equals("2.x"))) {
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
-        }
-
         // Check if the new text was added
         if (mSolo.searchText(addedText)) {
-            mSolo.clickOnText("Cancel");
+            clickOnButton("Cancel");
             waitForText("about:home");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
             return true;
         } else {
-            mSolo.clickOnText("Cancel");
+            clickOnButton("Cancel");
             waitForText("about:home");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
             return false;
         }
     }

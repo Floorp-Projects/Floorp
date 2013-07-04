@@ -4,3 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXTRA_COMPONENTS += [
+    'AppsService.js',
+    'AppsService.manifest',
+    'Webapps.manifest',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'Webapps.js',
+]
+
+EXTRA_JS_MODULES += [
+    'AppDownloadManager.jsm',
+    'AppsServiceChild.jsm',
+    'FreeSpaceWatcher.jsm',
+    'OfflineCacheInstaller.jsm',
+    'PermissionsInstaller.jsm',
+    'PermissionsTable.jsm',
+]

@@ -39,10 +39,6 @@ AppendAndRemoveThread(PRThread *key, nsRefPtr<nsThread> &thread, void *arg)
   return PL_DHASH_REMOVE;
 }
 
-//-----------------------------------------------------------------------------
-
-nsThreadManager nsThreadManager::sInstance;
-
 // statically allocated instance
 NS_IMETHODIMP_(nsrefcnt) nsThreadManager::AddRef() { return 2; }
 NS_IMETHODIMP_(nsrefcnt) nsThreadManager::Release() { return 1; }

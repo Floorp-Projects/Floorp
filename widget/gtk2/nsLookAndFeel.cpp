@@ -625,6 +625,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_WindowsClassic:
     case eIntID_WindowsDefaultTheme:
     case eIntID_WindowsThemeIdentifier:
+    case eIntID_OperatingSystemVersionIdentifier:
         aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
@@ -990,7 +991,7 @@ nsLookAndFeel::Init()
     g_object_unref(menu);
 #else
     GdkRGBA color;
-    GtkStyleContext *style
+    GtkStyleContext *style;
 
     GtkWidgetPath *path = gtk_widget_path_new();
     gtk_widget_path_append_type(path, GTK_TYPE_WINDOW);
@@ -1013,13 +1014,10 @@ nsLookAndFeel::Init()
     g_object_unref(style);
 
     // Text colors
-    GtkWidget *textView = gtk_text_view_new();
-    style = gtk_widget_get_style_context(textView);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
-    sMozFieldBackground = GDK_RGBA_TO_NS_RGB(color);
-    gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
+    gtk_style_context_get_background_color(mViewStyle, GTK_STATE_FLAG_NORMAL, &color);
+    sMozFieldBackground = GDK_RGBA_TO_NS_RGBA(color);
+    gtk_style_context_get_color(mViewStyle, GTK_STATE_FLAG_NORMAL, &color);
     sMozFieldText = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_widget_destroy(textView);
 
     // Window colors
     style = create_context(path);

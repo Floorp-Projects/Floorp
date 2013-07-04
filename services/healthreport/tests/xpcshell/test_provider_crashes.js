@@ -15,8 +15,13 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 
 function run_test() {
-  makeFakeAppDir().then(run_next_test, do_throw);
+  run_next_test();
 }
+
+// run_test() needs to finish synchronously, so we do async init here.
+add_task(function test_init() {
+  yield makeFakeAppDir();
+});
 
 let gPending = {};
 let gSubmitted = {};

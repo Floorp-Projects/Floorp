@@ -47,13 +47,13 @@ const DEFAULT_EDITOR_CONFIG = {
   showLineNumbers: true
 };
 const GENERIC_VARIABLES_VIEW_SETTINGS = {
-  lazyEmpty: false,
+  lazyEmpty: true,
   lazyEmptyDelay: 10, // ms
   searchEnabled: true,
-  descriptorTooltip: false,
   editableValueTooltip: "",
   editableNameTooltip: "",
   preventDisableOnChage: true,
+  preventDescriptorModifiers: true,
   eval: () => {},
   switch: () => {}
 };
@@ -165,7 +165,7 @@ let NetMonitorView = {
     }
 
     if (aTabIndex !== undefined) {
-      $("#details-pane").selectedIndex = aTabIndex;
+      $("#event-details-pane").selectedIndex = aTabIndex;
     }
   },
 
@@ -260,9 +260,7 @@ ToolbarView.prototype = {
 function RequestsMenuView() {
   dumpn("RequestsMenuView was instantiated");
 
-  this._cache = new Map(); // Can't use a WeakMap because keys are strings.
   this._flushRequests = this._flushRequests.bind(this);
-  this._onRequestItemRemoved = this._onRequestItemRemoved.bind(this);
   this._onSelect = this._onSelect.bind(this);
   this._onResize = this._onResize.bind(this);
   this._byFile = this._byFile.bind(this);
@@ -270,20 +268,21 @@ function RequestsMenuView() {
   this._byType = this._byType.bind(this);
 }
 
-create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
+RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the network monitor is started.
    */
   initialize: function() {
     dumpn("Initializing the RequestsMenuView");
 
-    this.node = new SideMenuWidget($("#requests-menu-contents"), false);
+    this.widget = new SideMenuWidget($("#requests-menu-contents"), false);
     this._summary = $("#request-menu-network-summary");
 
-    this.node.maintainSelectionVisible = false;
-    this.node.autoscrollWithAppendedItems = true;
+    this.allowFocusOnRightClick = true;
+    this.widget.maintainSelectionVisible = false;
+    this.widget.autoscrollWithAppendedItems = true;
 
-    this.node.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("select", this._onSelect, false);
     window.addEventListener("resize", this._onResize, false);
   },
 
@@ -293,7 +292,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the SourcesView");
 
-    this.node.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("select", this._onSelect, false);
     window.removeEventListener("resize", this._onResize, false);
   },
 
@@ -338,33 +337,86 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     this._registerLastRequestEnd(unixTime);
 
     // Append a network request item to this container.
-    let requestItem = this.push(menuView, {
+    let requestItem = this.push([menuView, aId, ""], {
       attachment: {
-        id: aId,
         startedDeltaMillis: unixTime - this._firstRequestStartedMillis,
         startedMillis: unixTime,
         method: aMethod,
         url: aUrl,
         isXHR: aIsXHR
-      },
-      finalize: this._onRequestItemRemoved
+      }
     });
 
     $("#details-pane-toggle").disabled = false;
     $("#requests-menu-empty-notice").hidden = true;
 
     this.refreshSummary();
-    this._cache.set(aId, requestItem);
+    this.refreshZebra();
+
+    if (aId == this._preferredItemId) {
+      this.selectedItem = requestItem;
+    }
   },
+
+  /**
+   * Create a new custom request form populated with the data from
+   * the currently selected request.
+   */
+  cloneSelectedRequest: function() {
+    let selected = this.selectedItem.attachment;
+
+    // Create the element node for the network request item.
+    let menuView = this._createMenuView(selected.method, selected.url);
+
+    let newItem = this.push([menuView,, ""], {
+      attachment: Object.create(selected, {
+        isCustom: { value: true }
+      })
+    });
+
+    // Immediately switch to new request pane.
+    this.selectedItem = newItem;
+  },
+
+  /**
+   * Send a new HTTP request using the data in the custom request form.
+   */
+  sendCustomRequest: function() {
+    let selected = this.selectedItem.attachment;
+
+    let data = Object.create(selected, {
+      headers: { value: selected.requestHeaders.headers }
+    });
+
+    if (selected.requestPostData) {
+      data.body = selected.requestPostData.postData.text;
+    }
+
+    NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
+      let id = response.eventActor.actor;
+      this._preferredItemId = id;
+    });
+
+    this.closeCustomRequest();
+  },
+
+  /**
+   * Remove the currently selected custom request.
+   */
+  closeCustomRequest: function() {
+    this.remove(this.selectedItem);
+
+    NetMonitorView.Sidebar.toggle(false);
+   },
 
   /**
    * Filters all network requests in this container by a specified type.
    *
    * @param string aType
-   *        Either null, "html", "css", "js", "xhr", "fonts", "images", "media"
+   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
    *        or "flash".
    */
-  filterOn: function(aType) {
+  filterOn: function(aType = "all") {
     let target = $("#requests-menu-filter-" + aType + "-button");
     let buttons = document.querySelectorAll(".requests-menu-footer-button");
 
@@ -372,16 +424,15 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       if (button != target) {
         button.removeAttribute("checked");
       } else {
-        button.setAttribute("checked", "");
+        button.setAttribute("checked", "true");
       }
     }
 
-    // Filter on nothing.
-    if (!target) {
-      this.filterContents(() => true);
-    }
     // Filter on whatever was requested.
-    else switch (aType) {
+    switch (aType) {
+      case "all":
+        this.filterContents(() => true);
+        break;
       case "html":
         this.filterContents(this._onHtml);
         break;
@@ -409,15 +460,17 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     }
 
     this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**
    * Sorts all network requests in this container by a specified detail.
    *
    * @param string aType
-   *        Either null, "status", "method", "file", "domain", "type" or "size".
+   *        Either "status", "method", "file", "domain", "type", "size" or
+   *        "waterfall".
    */
-  sortBy: function(aType) {
+  sortBy: function(aType = "waterfall") {
     let target = $("#requests-menu-" + aType + "-button");
     let headers = document.querySelectorAll(".requests-menu-header-button");
 
@@ -430,24 +483,17 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     let direction = "";
     if (target) {
-      if (!target.hasAttribute("sorted")) {
-        target.setAttribute("sorted", direction = "ascending");
-        target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
-      } else if (target.getAttribute("sorted") == "ascending") {
+      if (target.getAttribute("sorted") == "ascending") {
         target.setAttribute("sorted", direction = "descending");
         target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedDesc"));
       } else {
-        target.removeAttribute("sorted");
-        target.removeAttribute("tooltiptext");
+        target.setAttribute("sorted", direction = "ascending");
+        target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
       }
     }
 
-    // Sort by timing.
-    if (!target || !direction) {
-      this.sortContents(this._byTiming);
-    }
     // Sort by whatever was requested.
-    else switch (aType) {
+    switch (aType) {
       case "status":
         if (direction == "ascending") {
           this.sortContents(this._byStatus);
@@ -490,16 +536,26 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
           this.sortContents((a, b) => !this._bySize(a, b));
         }
         break;
+      case "waterfall":
+        if (direction == "ascending") {
+          this.sortContents(this._byTiming);
+        } else {
+          this.sortContents((a, b) => !this._byTiming(a, b));
+        }
+        break;
     }
+
+    this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**
    * Predicates used when filtering items.
    *
-   * @param MenuItem aItem
-   *        The filtered menu item.
+   * @param object aItem
+   *        The filtered item.
    * @return boolean
-   *         True if the menu item should be visible, false otherwise.
+   *         True if the item should be visible, false otherwise.
    */
   _onHtml: function({ attachment: { mimeType } })
     mimeType && mimeType.contains("/html"),
@@ -544,10 +600,10 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   /**
    * Predicates used when sorting items.
    *
-   * @param MenuItem aFirst
-   *        The first menu item used in the comparison.
-   * @param MenuItem aSecond
-   *        The second menu item used in the comparison.
+   * @param object aFirst
+   *        The first item used in the comparison.
+   * @param object aSecond
+   *        The second item used in the comparison.
    * @return number
    *         -1 to sort aFirst to a lower index than aSecond
    *          0 to leave aFirst and aSecond unchanged with respect to each other
@@ -604,6 +660,26 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Adds odd/even attributes to all the visible items in this container.
+   */
+  refreshZebra: function() {
+    let visibleItems = this.orderedVisibleItems;
+
+    for (let i = 0, len = visibleItems.length; i < len; i++) {
+      let requestItem = visibleItems[i];
+      let requestTarget = requestItem.target;
+
+      if (i % 2 == 0) {
+        requestTarget.setAttribute("even", "");
+        requestTarget.removeAttribute("odd");
+      } else {
+        requestTarget.setAttribute("odd", "");
+        requestTarget.removeAttribute("even");
+      }
+    }
+  },
+
+  /**
    * Schedules adding additional information to a network request.
    *
    * @param string aId
@@ -634,7 +710,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     // For each queued additional information packet, get the corresponding
     // request item in the view and update it based on the specified data.
     for (let [id, data] of this._updateQueue) {
-      let requestItem = this._cache.get(id);
+      let requestItem = this.getItemByValue(id);
       if (!requestItem) {
         // Packet corresponds to a dead request item, target navigated.
         continue;
@@ -670,11 +746,11 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
             break;
           case "status":
             requestItem.attachment.status = value;
-            this._updateMenuView(requestItem, key, value);
+            this.updateMenuView(requestItem, key, value);
             break;
           case "statusText":
             requestItem.attachment.statusText = value;
-            this._updateMenuView(requestItem, key,
+            this.updateMenuView(requestItem, key,
               requestItem.attachment.status + " " +
               requestItem.attachment.statusText);
             break;
@@ -683,11 +759,11 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
             break;
           case "contentSize":
             requestItem.attachment.contentSize = value;
-            this._updateMenuView(requestItem, key, value);
+            this.updateMenuView(requestItem, key, value);
             break;
           case "mimeType":
             requestItem.attachment.mimeType = value;
-            this._updateMenuView(requestItem, key, value);
+            this.updateMenuView(requestItem, key, value);
             break;
           case "responseContent":
             requestItem.attachment.responseContent = value;
@@ -695,7 +771,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
           case "totalTime":
             requestItem.attachment.totalTime = value;
             requestItem.attachment.endedMillis = requestItem.attachment.startedMillis + value;
-            this._updateMenuView(requestItem, key, value);
+            this.updateMenuView(requestItem, key, value);
             this._registerLastRequestEnd(requestItem.attachment.endedMillis);
             break;
           case "eventTimings":
@@ -707,7 +783,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       // This update may have additional information about a request which
       // isn't shown yet in the network details pane.
       let selectedItem = this.selectedItem;
-      if (selectedItem && selectedItem.attachment.id == id) {
+      if (selectedItem && selectedItem.value == id) {
         NetMonitorView.NetworkDetails.populate(selectedItem.attachment);
       }
     }
@@ -723,6 +799,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     this.sortContents();
     this.filterContents();
     this.refreshSummary();
+    this.refreshZebra();
   },
 
   /**
@@ -736,23 +813,11 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *         The network request view.
    */
   _createMenuView: function(aMethod, aUrl) {
-    let uri = nsIURL(aUrl);
-    let nameWithQuery = this._getUriNameWithQuery(uri);
-    let hostPort = this._getUriHostPort(uri);
-
     let template = $("#requests-menu-item-template");
     let fragment = document.createDocumentFragment();
 
-    let method = $(".requests-menu-method", template);
-    method.setAttribute("value", aMethod);
-
-    let file = $(".requests-menu-file", template);
-    file.setAttribute("value", nameWithQuery);
-    file.setAttribute("tooltiptext", nameWithQuery);
-
-    let domain = $(".requests-menu-domain", template);
-    domain.setAttribute("value", hostPort);
-    domain.setAttribute("tooltiptext", hostPort);
+    this.updateMenuView(template, 'method', aMethod);
+    this.updateMenuView(template, 'url', aUrl);
 
     let waterfall = $(".requests-menu-waterfall", template);
     waterfall.style.backgroundImage = this._cachedWaterfallBackground;
@@ -768,29 +833,55 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   /**
    * Updates the information displayed in a network request item view.
    *
-   * @param MenuItem aItem
+   * @param object aItem
    *        The network request item in this container.
    * @param string aKey
    *        The type of information that is to be updated.
    * @param any aValue
    *        The new value to be shown.
    */
-  _updateMenuView: function(aItem, aKey, aValue) {
+  updateMenuView: function(aItem, aKey, aValue) {
+    let target = aItem.target || aItem;
+
     switch (aKey) {
+      case "method": {
+        let node = $(".requests-menu-method", target);
+        node.setAttribute("value", aValue);
+        break;
+      }
+      case "url": {
+        let uri;
+        try {
+          uri = nsIURL(aValue);
+        } catch(e) {
+          break; // User input may not make a well-formed url yet.
+        }
+        let nameWithQuery = this._getUriNameWithQuery(uri);
+        let hostPort = this._getUriHostPort(uri);
+
+        let node = $(".requests-menu-file", target);
+        node.setAttribute("value", nameWithQuery);
+        node.setAttribute("tooltiptext", nameWithQuery);
+
+        let domain = $(".requests-menu-domain", target);
+        domain.setAttribute("value", hostPort);
+        domain.setAttribute("tooltiptext", hostPort);
+        break;
+      }
       case "status": {
-        let node = $(".requests-menu-status", aItem.target);
+        let node = $(".requests-menu-status", target);
         node.setAttribute("code", aValue);
         break;
       }
       case "statusText": {
-        let node = $(".requests-menu-status-and-method", aItem.target);
+        let node = $(".requests-menu-status-and-method", target);
         node.setAttribute("tooltiptext", aValue);
         break;
       }
       case "contentSize": {
         let kb = aValue / 1024;
         let size = L10N.numberWithDecimals(kb, CONTENT_SIZE_DECIMALS);
-        let node = $(".requests-menu-size", aItem.target);
+        let node = $(".requests-menu-size", target);
         let text = L10N.getFormatStr("networkMenu.sizeKB", size);
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", text);
@@ -798,14 +889,14 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       }
       case "mimeType": {
         let type = this._getAbbreviatedMimeType(aValue);
-        let node = $(".requests-menu-type", aItem.target);
+        let node = $(".requests-menu-type", target);
         let text = CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type;
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", aValue);
         break;
       }
       case "totalTime": {
-        let node = $(".requests-menu-timings-total", aItem.target);
+        let node = $(".requests-menu-timings-total", target);
         let text = L10N.getFormatStr("networkMenu.totalMS", aValue); // integer
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", text);
@@ -817,7 +908,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   /**
    * Creates a waterfall representing timing information in a network request item view.
    *
-   * @param MenuItem aItem
+   * @param object aItem
    *        The network request item in this container.
    * @param object aTimings
    *        An object containing timing information.
@@ -892,15 +983,16 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     // Apply CSS transforms to each waterfall in this container totalTime
     // accurately translate and resize as needed.
-    for (let [, { target, attachment }] of this._cache) {
+    for (let { target, attachment } in this) {
       let timingsNode = $(".requests-menu-timings", target);
       let startCapNode = $(".requests-menu-timings-cap.start", target);
       let endCapNode = $(".requests-menu-timings-cap.end", target);
       let totalNode = $(".requests-menu-timings-total", target);
+      let direction = window.isRTL ? -1 : 1;
 
       // Render the timing information at a specific horizontal translation
       // based on the delta to the first monitored event network.
-      let translateX = "translateX(" + attachment.startedDeltaMillis + "px)";
+      let translateX = "translateX(" + (direction * attachment.startedDeltaMillis) + "px)";
 
       // Based on the total time passed until the last request, rescale
       // all the waterfalls to a reasonable size.
@@ -911,8 +1003,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       let revScaleX = "scaleX(" + (1 / scale) + ")";
 
       timingsNode.style.transform = scaleX + " " + translateX;
-      startCapNode.style.transform = revScaleX + " translateX(0.5px)";
-      endCapNode.style.transform = revScaleX + " translateX(-0.5px)";
+      startCapNode.style.transform = revScaleX + " translateX(" + (direction * 0.5) + "px)";
+      endCapNode.style.transform = revScaleX + " translateX(" + (direction * -0.5) + "px)";
       totalNode.style.transform = revScaleX;
     }
   },
@@ -924,7 +1016,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *        The current waterfall scale.
    */
   _showWaterfallDivisionLabels: function(aScale) {
-    let container = $("#requests-menu-waterfall-header-box");
+    let container = $("#requests-menu-waterfall-button");
     let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
 
     // Nuke all existing labels.
@@ -947,10 +1039,11 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
       // Insert one label for each division on the current scale.
       let fragment = document.createDocumentFragment();
+      let direction = window.isRTL ? -1 : 1;
 
       for (let x = 0; x < availableWidth; x += scaledStep) {
         let divisionMS = (x / aScale).toFixed(0);
-        let translateX = "translateX(" + (x | 0) + "px)";
+        let translateX = "translateX(" + ((direction * x) | 0) + "px)";
 
         let node = document.createElement("label");
         let text = L10N.getFormatStr("networkMenu.divisionMS", divisionMS);
@@ -1009,7 +1102,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       for (let i = 1; i <= REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES; i++) {
         let increment = scaledStep * Math.pow(2, i);
         for (let x = 0; x < canvasWidth; x += increment) {
-          data32[x | 0] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
+          let position = (window.isRTL ? canvasWidth - x : x) | 0;
+          data32[position] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
         }
         alphaComponent += REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD;
       }
@@ -1025,7 +1119,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * Reapplies the current waterfall background on all request items.
    */
   _flushWaterfallBackgrounds: function() {
-    for (let [, { target }] of this._cache) {
+    for (let { target } in this) {
       let waterfallNode = $(".requests-menu-waterfall", target);
       waterfallNode.style.backgroundImage = this._cachedWaterfallBackground;
     }
@@ -1035,6 +1129,9 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * Hides the overflowing columns in the requests table.
    */
   _hideOverflowingColumns: function() {
+    if (window.isRTL) {
+      return;
+    }
     let table = $("#network-table");
     let toolbar = $("#requests-menu-toolbar");
     let columns = [
@@ -1058,25 +1155,14 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * Function called each time a network request item is removed.
-   *
-   * @param MenuItem aItem
-   *        The corresponding menu item.
-   */
-  _onRequestItemRemoved: function(aItem) {
-    dumpn("Finalizing network request item: " + aItem);
-    this._cache.delete(aItem.attachment.id);
-  },
-
-  /**
    * The selection listener for this container.
    */
   _onSelect: function({ detail: item }) {
     if (item) {
-      NetMonitorView.NetworkDetails.populate(item.attachment);
-      NetMonitorView.NetworkDetails.toggle(true);
+      NetMonitorView.Sidebar.populate(item.attachment);
+      NetMonitorView.Sidebar.toggle(true);
     } else {
-      NetMonitorView.NetworkDetails.toggle(false);
+      NetMonitorView.Sidebar.toggle(false);
     }
   },
 
@@ -1086,6 +1172,14 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   _onResize: function(e) {
     // Allow requests to settle down first.
     drain("resize-events", RESIZE_REFRESH_RATE, () => this._flushWaterfallViews(true));
+  },
+
+  /**
+   * Handle the context menu opening. Hide items if no request is selected.
+   */
+  _onContextShowing: function() {
+    let element = $("#request-menu-context-resend");
+    element.hidden = !this.selectedItem || this.selectedItem.attachment.isCustom;
   },
 
   /**
@@ -1167,7 +1261,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * empty set.
    *
    * @param array aItemsArray
-   * @return MenuItem
+   * @return object
    */
   _getOldestRequest: function(aItemsArray) {
     if (!aItemsArray.length) {
@@ -1182,7 +1276,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * empty set.
    *
    * @param array aItemsArray
-   * @return MenuItem
+   * @return object
    */
   _getNewestRequest: function(aItemsArray) {
     if (!aItemsArray.length) {
@@ -1202,12 +1296,15 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       let waterfall = $("#requests-menu-waterfall-header-box");
       let containerBounds = container.getBoundingClientRect();
       let waterfallBounds = waterfall.getBoundingClientRect();
-      this._cachedWaterfallWidth = containerBounds.width - waterfallBounds.left;
+      if (!window.isRTL) {
+        this._cachedWaterfallWidth = containerBounds.width - waterfallBounds.left;
+      } else {
+        this._cachedWaterfallWidth = waterfallBounds.right;
+      }
     }
     return this._cachedWaterfallWidth;
   },
 
-  _cache: null,
   _summary: null,
   _canvas: null,
   _ctx: null,
@@ -1219,6 +1316,162 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   _updateTimeout: null,
   _resizeTimeout: null
 });
+
+/**
+ * Functions handling the sidebar details view.
+ */
+function SidebarView() {
+  dumpn("SidebarView was instantiated");
+}
+
+SidebarView.prototype = {
+  /**
+   * Sets this view hidden or visible. It's visible by default.
+   *
+   * @param boolean aVisibleFlag
+   *        Specifies the intended visibility.
+   */
+  toggle: function(aVisibleFlag) {
+    NetMonitorView.toggleDetailsPane({ visible: aVisibleFlag });
+    NetMonitorView.RequestsMenu._flushWaterfallViews(true);
+  },
+
+  /**
+   * Populates this view with the specified data.
+   *
+   * @param object aData
+   *        The data source (this should be the attachment of a request item).
+   */
+  populate: function(aData) {
+    if (aData.isCustom) {
+      NetMonitorView.CustomRequest.populate(aData);
+      $("#details-pane").selectedIndex = 0;
+    } else {
+      NetMonitorView.NetworkDetails.populate(aData);
+      $("#details-pane").selectedIndex = 1;
+    }
+  },
+
+  /**
+   * Hides this container.
+   */
+  reset: function() {
+    this.toggle(false);
+  }
+}
+
+/**
+ * Functions handling the custom request view.
+ */
+function CustomRequestView() {
+  dumpn("CustomRequestView was instantiated");
+}
+
+CustomRequestView.prototype = {
+  /**
+   * Populates this view with the specified data.
+   *
+   * @param object aData
+   *        The data source (this should be the attachment of a request item).
+   */
+  populate: function(aData) {
+    $("#custom-url-value").value = aData.url;
+    $("#custom-method-value").value = aData.method;
+    $("#custom-headers-value").value =
+       writeHeaderText(aData.requestHeaders.headers);
+
+    if (aData.requestPostData) {
+      let body = aData.requestPostData.postData.text;
+
+      gNetwork.getString(body).then((aString) => {
+        $("#custom-postdata-value").value =  aString;
+      });
+    }
+
+    this.updateCustomQuery(aData.url);
+  },
+
+  /**
+   * Handle user input in the custom request form.
+   *
+   * @param object aField
+   *        the field that the user updated.
+   */
+  onUpdate: function(aField) {
+    let selectedItem = NetMonitorView.RequestsMenu.selectedItem;
+    let field = aField;
+    let value;
+
+    switch(aField) {
+      case 'method':
+        value = $("#custom-method-value").value.trim();
+        selectedItem.attachment.method = value;
+        break;
+      case 'url':
+        value = $("#custom-url-value").value;
+        this.updateCustomQuery(value);
+        selectedItem.attachment.url = value;
+        break;
+      case 'query':
+        let query = $("#custom-query-value").value;
+        this.updateCustomUrl(query);
+        field = 'url';
+        value = $("#custom-url-value").value
+        selectedItem.attachment.url = value;
+        break;
+      case 'body':
+        value = $("#custom-postdata-value").value;
+        selectedItem.attachment.requestPostData = {
+          postData: {
+            text: value
+          }
+        };
+        break;
+      case 'headers':
+        let headersText = $("#custom-headers-value").value;
+        value = parseHeaderText(headersText);
+        selectedItem.attachment.requestHeaders = {
+          headers: value
+        };
+        break;
+    }
+
+    NetMonitorView.RequestsMenu.updateMenuView(selectedItem, field, value);
+  },
+
+  /**
+   * Update the query string field based on the url.
+   *
+   * @param object aUrl
+   *        url to extract query string from.
+   */
+  updateCustomQuery: function(aUrl) {
+    let paramsArray = parseQueryString(nsIURL(aUrl).query);
+    if (!paramsArray) {
+      $("#custom-query").hidden = true;
+      return;
+    }
+    $("#custom-query").hidden = false;
+    $("#custom-query-value").value = writeQueryText(paramsArray);
+  },
+
+  /**
+   * Update the url based on the query string field.
+   *
+   * @param object aQueryText
+   *        contents of the query string field.
+   */
+  updateCustomUrl: function(aQueryText) {
+    let params = parseQueryText(aQueryText);
+    let queryString = writeQueryString(params);
+
+    let url = $("#custom-url-value").value;
+    let oldQuery = nsIURL(url).query;
+    let path = url.replace(oldQuery, queryString);
+
+    $("#custom-url-value").value = path;
+  }
+}
 
 /**
  * Functions handling the requests details view.
@@ -1234,28 +1487,28 @@ NetworkDetailsView.prototype = {
    * Initialization function, called when the network monitor is started.
    */
   initialize: function() {
-    dumpn("Initializing the RequestsMenuView");
+    dumpn("Initializing the NetworkDetailsView");
 
-    this.node = $("#details-pane");
+    this.widget = $("#event-details-pane");
 
     this._headers = new VariablesView($("#all-headers"),
-      Object.create(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        emptyText: { value: L10N.getStr("headersEmptyText"), enumerable: true },
-        searchPlaceholder: { value: L10N.getStr("headersFilterText"), enumerable: true }
+      Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        emptyText: L10N.getStr("headersEmptyText"),
+        searchPlaceholder: L10N.getStr("headersFilterText")
       }));
     this._cookies = new VariablesView($("#all-cookies"),
-      Object.create(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        emptyText: { value: L10N.getStr("cookiesEmptyText"), enumerable: true },
-        searchPlaceholder: { value: L10N.getStr("cookiesFilterText"), enumerable: true }
+      Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        emptyText: L10N.getStr("cookiesEmptyText"),
+        searchPlaceholder: L10N.getStr("cookiesFilterText")
       }));
     this._params = new VariablesView($("#request-params"),
-      Object.create(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        emptyText: { value: L10N.getStr("paramsEmptyText"), enumerable: true },
-        searchPlaceholder: { value: L10N.getStr("paramsFilterText"), enumerable: true }
+      Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        emptyText: L10N.getStr("paramsEmptyText"),
+        searchPlaceholder: L10N.getStr("paramsFilterText")
       }));
     this._json = new VariablesView($("#response-content-json"),
-      Object.create(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        searchPlaceholder: { value: L10N.getStr("jsonFilterText"), enumerable: true }
+      Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        searchPlaceholder: L10N.getStr("jsonFilterText")
       }));
 
     this._paramsQueryString = L10N.getStr("paramsQueryString");
@@ -1266,32 +1519,20 @@ NetworkDetailsView.prototype = {
     this._requestCookies = L10N.getStr("requestCookies");
     this._responseCookies = L10N.getStr("responseCookies");
 
-    $("tabpanels", this.node).addEventListener("select", this._onTabSelect);
+    $("tabpanels", this.widget).addEventListener("select", this._onTabSelect);
   },
 
   /**
    * Destruction function, called when the network monitor is closed.
    */
   destroy: function() {
-    dumpn("Destroying the SourcesView");
+    dumpn("Destroying the NetworkDetailsView");
   },
 
   /**
-   * Sets this view hidden or visible. It's visible by default.
-   *
-   * @param boolean aVisibleFlag
-   *        Specifies the intended visibility.
-   */
-  toggle: function(aVisibleFlag) {
-    NetMonitorView.toggleDetailsPane({ visible: aVisibleFlag });
-    NetMonitorView.RequestsMenu._flushWaterfallViews(true);
-  },
-
-  /**
-   * Hides and resets this container (removes all the networking information).
+   * Resets this container (removes all the networking information).
    */
   reset: function() {
-    this.toggle(false);
     this._dataSrc = null;
   },
 
@@ -1305,6 +1546,7 @@ NetworkDetailsView.prototype = {
     $("#request-params-box").setAttribute("flex", "1");
     $("#request-params-box").hidden = false;
     $("#request-post-data-textarea-box").hidden = true;
+    $("#response-content-info-header").hidden = true;
     $("#response-content-json-box").hidden = true;
     $("#response-content-textarea-box").hidden = true;
     $("#response-content-image-box").hidden = true;
@@ -1323,7 +1565,7 @@ NetworkDetailsView.prototype = {
    */
   _onTabSelect: function() {
     let { src, populated } = this._dataSrc || {};
-    let tab = this.node.selectedIndex;
+    let tab = this.widget.selectedIndex;
 
     // Make sure the data source is valid and don't populate the same tab twice.
     if (!src || populated[tab]) {
@@ -1435,7 +1677,7 @@ NetworkDetailsView.prototype = {
     headersScope.expanded = true;
 
     for (let header of aResponse.headers) {
-      let headerVar = headersScope.addVar(header.name, { null: true }, true);
+      let headerVar = headersScope.addItem(header.name, {}, true);
       gNetwork.getString(header.value).then((aString) => headerVar.setGrip(aString));
     }
   },
@@ -1478,7 +1720,7 @@ NetworkDetailsView.prototype = {
     cookiesScope.expanded = true;
 
     for (let cookie of aResponse.cookies) {
-      let cookieVar = cookiesScope.addVar(cookie.name, { null: true }, true);
+      let cookieVar = cookiesScope.addItem(cookie.name, {}, true);
       gNetwork.getString(cookie.value).then((aString) => cookieVar.setGrip(aString));
 
       // By default the cookie name and value are shown. If this is the only
@@ -1519,20 +1761,23 @@ NetworkDetailsView.prototype = {
    *
    * @param object aHeadersResponse
    *        The "requestHeaders" message received from the server.
-   * @param object aPostResponse
+   * @param object aPostDataResponse
    *        The "requestPostData" message received from the server.
    */
-  _setRequestPostParams: function(aHeadersResponse, aPostResponse) {
-    if (!aHeadersResponse || !aPostResponse) {
+  _setRequestPostParams: function(aHeadersResponse, aPostDataResponse) {
+    if (!aHeadersResponse || !aPostDataResponse) {
       return;
     }
-    let contentType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
-    let text = aPostResponse.postData.text;
-
-    gNetwork.getString(text).then((aString) => {
+    gNetwork.getString(aPostDataResponse.postData.text).then((aString) => {
       // Handle query strings (poor man's forms, e.g. "?foo=bar&baz=42").
-      if (contentType.value.contains("x-www-form-urlencoded")) {
-        this._addParams(this._paramsFormData, aString);
+      let cType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
+      let cString = cType ? cType.value : "";
+      if (cString.contains("x-www-form-urlencoded") ||
+          aString.contains("x-www-form-urlencoded")) {
+        let formDataGroups = aString.split(/\r\n|\n|\r/);
+        for (let group of formDataGroups) {
+          this._addParams(this._paramsFormData, group);
+        }
       }
       // Handle actual forms ("multipart/form-data" content type).
       else {
@@ -1558,22 +1803,19 @@ NetworkDetailsView.prototype = {
    *
    * @param string aName
    *        The type of params to populate (get or post).
-   * @param string aParams
+   * @param string aQueryString
    *        A query string of params (e.g. "?foo=bar&baz=42").
    */
-  _addParams: function(aName, aParams) {
-    // Turn the params string into an array containing { name: value } tuples.
-    let paramsArray = aParams.replace(/^[?&]/, "").split("&").map((e) =>
-      let (param = e.split("=")) {
-        name: NetworkHelper.convertToUnicode(unescape(param[0])),
-        value: NetworkHelper.convertToUnicode(unescape(param[1]))
-      });
-
+  _addParams: function(aName, aQueryString) {
+    let paramsArray = parseQueryString(aQueryString);
+    if (!paramsArray) {
+      return;
+    }
     let paramsScope = this._params.addScope(aName);
     paramsScope.expanded = true;
 
     for (let param of paramsArray) {
-      let headerVar = paramsScope.addVar(param.name, { null: true }, true);
+      let headerVar = paramsScope.addItem(param.name, {}, true);
       headerVar.setGrip(param.value);
     }
   },
@@ -1595,18 +1837,42 @@ NetworkDetailsView.prototype = {
     gNetwork.getString(text).then((aString) => {
       // Handle json.
       if (mimeType.contains("/json")) {
-        $("#response-content-json-box").hidden = false;
         let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
         let sanitizedJSON = aString.replace(jsonpRegex, "");
         let callbackPadding = aString.match(jsonpRegex);
 
-        let jsonScopeName = callbackPadding
-          ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
-          : L10N.getStr("jsonScopeName");
+        // Make sure this is an valid JSON object first. If so, nicely display
+        // the parsing results in a variables view. Otherwise, simply show
+        // the contents as plain text.
+        try {
+          var jsonObject = JSON.parse(sanitizedJSON);
+        } catch (e) {
+          var parsingError = e;
+        }
 
-        let jsonScope = this._json.addScope(jsonScopeName);
-        jsonScope.addVar().populate(JSON.parse(sanitizedJSON), { expanded: true });
-        jsonScope.expanded = true;
+        // Valid JSON.
+        if (jsonObject) {
+          $("#response-content-json-box").hidden = false;
+          let jsonScopeName = callbackPadding
+            ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
+            : L10N.getStr("jsonScopeName");
+
+          let jsonScope = this._json.addScope(jsonScopeName);
+          jsonScope.addItem().populate(jsonObject, { expanded: true });
+          jsonScope.expanded = true;
+        }
+        // Malformed JSON.
+        else {
+          $("#response-content-textarea-box").hidden = false;
+          NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+            aEditor.setMode(SourceEditor.MODES.JAVASCRIPT);
+            aEditor.setText(aString);
+          });
+          let infoHeader = $("#response-content-info-header");
+          infoHeader.setAttribute("value", parsingError);
+          infoHeader.setAttribute("tooltiptext", parsingError);
+          infoHeader.hidden = false;
+        }
       }
       // Handle images.
       else if (mimeType.contains("image/")) {
@@ -1757,6 +2023,110 @@ function nsIURL(aUrl, aStore = nsIURL.store) {
 nsIURL.store = new Map();
 
 /**
+ * Parse a url's query string into its components
+ *
+ * @param  string aQueryString
+ *         The query part of a url
+ * @return array
+ *         Array of query params {name, value}
+ */
+function parseQueryString(aQueryString) {
+  // Make sure there's at least one param available.
+  if (!aQueryString || !aQueryString.contains("=")) {
+    return;
+  }
+  // Turn the params string into an array containing { name: value } tuples.
+  let paramsArray = aQueryString.replace(/^[?&]/, "").split("&").map((e) =>
+    let (param = e.split("=")) {
+      name: NetworkHelper.convertToUnicode(unescape(param[0])),
+      value: NetworkHelper.convertToUnicode(unescape(param[1]))
+    });
+  return paramsArray;
+}
+
+/**
+ * Parse text representation of HTTP headers.
+ *
+ * @param  string aText
+ *         Text of headers
+ * @return array
+ *         Array of headers info {name, value}
+ */
+function parseHeaderText(aText) {
+  return parseRequestText(aText, ":");
+}
+
+/**
+ * Parse readable text list of a query string.
+ *
+ * @param  string aText
+ *         Text of query string represetation
+ * @return array
+ *         Array of query params {name, value}
+ */
+function parseQueryText(aText) {
+  return parseRequestText(aText, "=");
+}
+
+/**
+ * Parse a text representation of a name:value list with
+ * the given name:value divider character.
+ *
+ * @param  string aText
+ *         Text of list
+ * @return array
+ *         Array of headers info {name, value}
+ */
+function parseRequestText(aText, aDivider) {
+  let regex = new RegExp("(.+?)\\" + aDivider + "\\s*(.+)");
+  let pairs = [];
+  for (let line of aText.split("\n")) {
+    let matches;
+    if (matches = regex.exec(line)) {
+      let [, name, value] = matches;
+      pairs.push({name: name, value: value});
+    }
+  }
+  return pairs;
+}
+
+/**
+ * Write out a list of headers into a chunk of text
+ *
+ * @param array aHeaders
+ *        Array of headers info {name, value}
+ * @return string aText
+ *         List of headers in text format
+ */
+function writeHeaderText(aHeaders) {
+  return [(name + ": " + value) for ({name, value} of aHeaders)].join("\n");
+}
+
+/**
+ * Write out a list of query params into a chunk of text
+ *
+ * @param array aParams
+ *        Array of query params {name, value}
+ * @return string
+ *         List of query params in text format
+ */
+function writeQueryText(aParams) {
+  return [(name + "=" + value) for ({name, value} of aParams)].join("\n");
+}
+
+/**
+ * Write out a list of query params into a query string
+ *
+ * @param array aParams
+ *        Array of query  params {name, value}
+ * @return string
+ *         Query string that can be appended to a url.
+ */
+function writeQueryString(aParams) {
+  return [(name + "=" + value) for ({name, value} of aParams)].join("&");
+}
+
+/**
  * Helper for draining a rapid succession of events and invoking a callback
  * once everything settles down.
  */
@@ -1771,4 +2141,6 @@ drain.store = new Map();
  */
 NetMonitorView.Toolbar = new ToolbarView();
 NetMonitorView.RequestsMenu = new RequestsMenuView();
+NetMonitorView.Sidebar = new SidebarView();
+NetMonitorView.CustomRequest = new CustomRequestView();
 NetMonitorView.NetworkDetails = new NetworkDetailsView();

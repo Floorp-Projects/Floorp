@@ -359,6 +359,10 @@ const DownloadsIndicatorView = {
       return;
     }
 
+    if (!DownloadsCommon.animateNotifications) {
+      return;
+    }
+
     // No need to show visual notification if the panel is visible.
     if (DownloadsPanel.isPanelShowing) {
       return;

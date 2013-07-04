@@ -149,6 +149,17 @@ ContainerRender(ContainerT* aContainer,
     aManager->GetCompositor()->DrawQuad(rect, clipRect, effectChain, opacity,
                                         transform, gfx::Point(aOffset.x, aOffset.y));
   }
+
+  if (aContainer->GetFrameMetrics().IsScrollable()) {
+    gfx::Matrix4x4 transform;
+    ToMatrix4x4(aContainer->GetEffectiveTransform(), transform);
+
+    gfx::Rect rect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
+    gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
+    aManager->GetCompositor()->DrawDiagnostics(gfx::Color(1.0, 0.0, 0.0, 1.0),
+                                               rect, clipRect,
+                                               transform, gfx::Point(aOffset.x, aOffset.y));
+  }
 }
 
 ContainerLayerComposite::ContainerLayerComposite(LayerManagerComposite *aManager)

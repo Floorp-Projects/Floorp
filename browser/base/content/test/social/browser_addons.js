@@ -48,6 +48,14 @@ function test() {
 function installListener(next, aManifest) {
   let expectEvent = "onInstalling";
   let prefname = getManifestPrefname(aManifest);
+  // wait for the actual removal to call next
+  SocialService.registerProviderListener(function providerListener(topic, data) {
+    if (topic == "provider-removed") {
+      SocialService.unregisterProviderListener(providerListener);
+      executeSoon(next);
+    }
+  });
+
   return {
     onInstalling: function(addon) {
       is(expectEvent, "onInstalling", "install started");
@@ -73,7 +81,6 @@ function installListener(next, aManifest) {
       is(addon.manifest.origin, aManifest.origin, "provider uninstalled");
       ok(!Services.prefs.prefHasUserValue(prefname), "manifest is not in user-prefs");
       AddonManager.removeAddonListener(this);
-      next();
     }
   };
 }

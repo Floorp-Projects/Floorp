@@ -52,7 +52,7 @@ function test() {
       ok(true, "Tool open");
 
       let tabbox = panel.panelDoc.getElementById("sidebar");
-      panel.sidebar = new ToolSidebar(tabbox, panel, true);
+      panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
 
       panel.sidebar.on("new-tab-registered", function(event, id) {
         registeredTabs[id] = true;
@@ -119,11 +119,23 @@ function test() {
         panel.sidebar.hide();
         is(panel.sidebar._tabbox.getAttribute("hidden"), "true", "Sidebar hidden");
         is(panel.sidebar.getWindowForTab("tab1").location.href, tab1URL, "Window is accessible");
-        finishUp(panel);
+        testWidth(panel);
       });
     });
 
     panel.sidebar.select("tab2");
+  }
+
+  function testWidth(panel) {
+    let tabbox = panel.panelDoc.getElementById("sidebar");
+    tabbox.width = 420;
+    panel.sidebar.destroy().then(function() {
+      tabbox.width = 0;
+      panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
+      panel.sidebar.show();
+      is(panel.panelDoc.getElementById("sidebar").width, 420, "Width restored")
+      finishUp(panel);
+    });
   }
 
   function finishUp(panel) {

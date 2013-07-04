@@ -57,22 +57,32 @@ function test() {
                             cmd("dbg continue", function() {
                               is(output.value, "dbg continue", "debugger continued");
 
-                              helpers.audit(options, [{
-                                setup: "dbg close",
-                                completed: false,
-                                exec: { output: "" }
-                              }]);
+                              function closeDebugger(cb) {
+                                helpers.audit(options, [{
+                                  setup: "dbg close",
+                                  completed: false,
+                                  exec: { output: "" }
+                                }]);
 
-                              let toolbox = gDevTools.getToolbox(options.target);
-                              if (!toolbox) {
-                                ok(true, "Debugger was closed.");
-                                deferred.resolve();
-                              } else {
-                                toolbox.on("destroyed", function () {
+                                let toolbox = gDevTools.getToolbox(options.target);
+                                if (!toolbox) {
                                   ok(true, "Debugger was closed.");
-                                  deferred.resolve();
-                                });
+                                  cb();
+                                } else {
+                                  toolbox.on("destroyed", function () {
+                                    ok(true, "Debugger was closed.");
+                                    cb();
+                                  });
+                                }
                               }
+
+                              // We're closing the debugger twice to make sure
+                              // 'dbg close' doesn't error when toolbox is already
+                              // closed. See bug 884638 for more info.
+
+                              closeDebugger(() => {
+                                closeDebugger(() => deferred.resolve());
+                              });
                             });
                           });
                         });

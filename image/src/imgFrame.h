@@ -7,6 +7,7 @@
 #ifndef imgFrame_h
 #define imgFrame_h
 
+#include "mozilla/MemoryReporting.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsSize.h"
@@ -48,7 +49,9 @@ public:
   bool GetIsPaletted() const;
   bool GetHasAlpha() const;
   void GetImageData(uint8_t **aData, uint32_t *length) const;
+  uint8_t* GetImageData() const;
   void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
+  uint32_t* GetPaletteData() const;
 
   int32_t GetTimeout() const;
   void SetTimeout(int32_t aTimeout);
@@ -102,14 +105,14 @@ public:
 
   size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
            gfxASurface::MemoryLocation aLocation,
-           nsMallocSizeOfFun aMallocSizeOf) const;
+           mozilla::MallocSizeOf aMallocSizeOf) const;
 
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
-
-private: // methods
   uint32_t PaletteDataLength() const {
     return ((1 << mPaletteDepth) * sizeof(uint32_t));
   }
+
+private: // methods
 
   struct SurfaceWithFormat {
     nsRefPtr<gfxDrawable> mDrawable;

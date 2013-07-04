@@ -35,6 +35,7 @@ MOCHITEST_CHROME_FILES = \
 	test_prerendered_transforms.html \
 	test_printpreview.xul \
 	     printpreview_helper.xul \
+	     animated.gif \
 	test_printpreview_bug396024.xul \
 	     printpreview_bug396024_helper.xul \
 	test_printpreview_bug482976.xul \

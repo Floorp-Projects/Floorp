@@ -9,7 +9,6 @@ VPATH	  = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= mozgnome
 FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 FAIL_ON_WARNINGS = 1
@@ -33,5 +32,10 @@ CXXFLAGS += \
 	$(MOZ_GNOMEVFS_CFLAGS) \
 	$(MOZ_GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(MOZ_GTK2_CFLAGS) \
 	$(NULL)
+
+ifdef MOZ_ENABLE_GTK
+CXXFLAGS += \
+	$(TK_CFLAGS) \
+	$(NULL)
+endif

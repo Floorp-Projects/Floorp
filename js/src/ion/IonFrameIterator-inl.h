@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_frame_iterator_inl_h__
-#define jsion_frame_iterator_inl_h__
+#ifndef ion_IonFrameIterator_inl_h
+#define ion_IonFrameIterator_inl_h
+
+#ifdef JS_ION
 
 #include "ion/BaselineFrame.h"
 #include "ion/IonFrameIterator.h"
@@ -26,13 +28,13 @@ SnapshotIterator::readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Va
     else
         skip();
 
+    // Skip slot for arguments object.
+    if (script->argumentsHasVarBinding())
+        skip();
+
     if (thisv)
         *thisv = read();
     else
-        skip();
-
-    // Skip slot for arguments object.
-    if (script->argumentsHasVarBinding())
         skip();
 
     unsigned i = 0;
@@ -159,6 +161,10 @@ InlineFrameIteratorMaybeGC<allowGC>::thisObject() const
     // scopeChain
     s.skip();
 
+    // Arguments object.
+    if (script()->argumentsHasVarBinding())
+        s.skip();
+
     // In strict modes, |this| may not be an object and thus may not be
     // readable which can either segv in read or trigger the assertion.
     Value v = s.read();
@@ -232,4 +238,6 @@ IonFrameIterator::baselineFrame() const
 } // namespace ion
 } // namespace js
 
-#endif // jsion_frame_iterator_inl_h__
+#endif // JS_ION
+
+#endif /* ion_IonFrameIterator_inl_h */

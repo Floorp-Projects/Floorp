@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_assembler_shared_h__
-#define jsion_assembler_shared_h__
+#ifndef ion_shared_Assembler_shared_h
+#define ion_shared_Assembler_shared_h
 
 #include <limits.h>
 
@@ -63,8 +63,7 @@ ScaleFromElemWidth(int shift)
         return TimesEight;
     }
 
-    JS_NOT_REACHED("Invalid scale");
-    return TimesOne;
+    MOZ_ASSUME_UNREACHABLE("Invalid scale");
 }
 
 // Used for 32-bit immediates which do not require relocation.
@@ -86,8 +85,7 @@ struct Imm32
           case TimesEight:
             return Imm32(3);
         };
-        JS_NOT_REACHED("Invalid scale");
-        return Imm32(-1);
+        MOZ_ASSUME_UNREACHABLE("Invalid scale");
     }
 
     static inline Imm32 FactorOf(enum Scale s) {
@@ -120,6 +118,20 @@ struct ImmGCPtr
 
     explicit ImmGCPtr(const gc::Cell *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     {
+        JS_ASSERT(!IsPoisonedPtr(ptr));
+        JS_ASSERT_IF(ptr, ptr->isTenured());
+    }
+
+  protected:
+    ImmGCPtr() : value(0) {}
+};
+
+// Used for immediates which require relocation and may be traced during minor GC.
+struct ImmMaybeNurseryPtr : public ImmGCPtr
+{
+    explicit ImmMaybeNurseryPtr(gc::Cell *ptr)
+    {
+        this->value = reinterpret_cast<uintptr_t>(ptr);
         JS_ASSERT(!IsPoisonedPtr(ptr));
     }
 };
@@ -266,11 +278,19 @@ class Label : public LabelBase
     }
 };
 
-// Wrapper around Label, on the heap, to avoid a bogus assert with OOM.
-struct HeapLabel
-  : public TempObject,
-    public Label
+// Label's destructor asserts that if it has been used it has also been bound.
+// In the case long-lived labels, however, failed compilation (e.g. OOM) will
+// trigger this failure innocuously. This Label silences the assertion.
+class NonAssertingLabel : public Label
 {
+  public:
+    ~NonAssertingLabel()
+    {
+#ifdef DEBUG
+        if (used())
+            bind(0);
+#endif
+    }
 };
 
 class RepatchLabel
@@ -547,5 +567,4 @@ class CodeLocationLabel
 } // namespace ion
 } // namespace js
 
-#endif // jsion_assembler_shared_h__
-
+#endif /* ion_shared_Assembler_shared_h */

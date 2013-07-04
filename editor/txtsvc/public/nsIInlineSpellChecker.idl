@@ -10,8 +10,7 @@ interface nsISelection;
 interface nsIEditor;
 interface nsIEditorSpellCheck;
 
-[scriptable, uuid(df635540-d073-47b8-8678-18776130691d)]
-
+[scriptable, uuid(b7b7a77c-40c4-4196-b0b7-b0338243b3fe)]
 interface nsIInlineSpellChecker : nsISupports
 {
   readonly attribute nsIEditorSpellCheck spellChecker;
@@ -40,6 +39,8 @@ interface nsIInlineSpellChecker : nsISupports
   void ignoreWord(in AString aWord);
   void ignoreWords([array, size_is(aCount)] in wstring aWordsToIgnore, in unsigned long aCount);
   void updateCurrentDictionary();
+
+  readonly attribute boolean spellCheckPending;
 };
 
 %{C++

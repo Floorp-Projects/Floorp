@@ -11,6 +11,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "imgRequestProxy.h"
+#include "Units.h"
 
 namespace mozilla {
 namespace dom {
@@ -114,21 +115,21 @@ public:
   uint32_t NaturalWidth();
   uint32_t NaturalHeight();
   bool Complete();
-  int32_t Hspace()
+  uint32_t Hspace()
   {
-    return GetIntAttr(nsGkAtoms::hspace, 0);
+    return GetUnsignedIntAttr(nsGkAtoms::hspace, 0);
   }
-  void SetHspace(int32_t aHspace, ErrorResult& aError)
+  void SetHspace(uint32_t aHspace, ErrorResult& aError)
   {
-    SetHTMLIntAttr(nsGkAtoms::hspace, aHspace, aError);
+    SetUnsignedIntAttr(nsGkAtoms::hspace, aHspace, aError);
   }
-  int32_t Vspace()
+  uint32_t Vspace()
   {
-    return GetIntAttr(nsGkAtoms::vspace, 0);
+    return GetUnsignedIntAttr(nsGkAtoms::vspace, 0);
   }
-  void SetVspace(int32_t aVspace, ErrorResult& aError)
+  void SetVspace(uint32_t aVspace, ErrorResult& aError)
   {
-    SetHTMLIntAttr(nsGkAtoms::vspace, aVspace, aError);
+    SetUnsignedIntAttr(nsGkAtoms::vspace, aVspace, aError);
   }
 
   // The XPCOM versions of the following getters work for Web IDL bindings as well
@@ -173,12 +174,30 @@ public:
     SetHTMLAttr(nsGkAtoms::lowsrc, aLowsrc, aError);
   }
 
+#ifdef DEBUG
+  nsIDOMHTMLFormElement* GetForm() const;
+#endif
+  void SetForm(nsIDOMHTMLFormElement* aForm);
+  void ClearForm(bool aRemoveFromForm);
+
 protected:
-  nsIntPoint GetXY();
+  CSSIntPoint GetXY();
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  void UpdateFormOwner();
+
+  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                 const nsAttrValueOrString* aValue,
+                                 bool aNotify) MOZ_OVERRIDE;
+
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+
+  // This is a weak reference that this element and the HTMLFormElement
+  // cooperate in maintaining.
+  HTMLFormElement* mForm;
 };
 
 } // namespace dom

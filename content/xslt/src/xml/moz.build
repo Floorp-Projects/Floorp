@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'txXMLUtils.cpp',
 ]
 
+LIBRARY_NAME = 'txxml_s'
+

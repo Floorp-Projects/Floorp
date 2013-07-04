@@ -1,0 +1,28 @@
+commit 986fb3ec557aa7aeb8788360224708ffa2955072
+Author: Jacek Caban <jacek@codeweavers.com>
+Date:   Wed Jun 12 17:30:47 2013 +0200
+
+    Use __declspec(dllexport) on mingw build.
+
+diff --git a/media/libopus/include/opus_defines.h b/media/libopus/include/opus_defines.h
+index db6b3b7..b64049b 100644
+--- a/media/libopus/include/opus_defines.h
++++ b/media/libopus/include/opus_defines.h
+@@ -72,14 +72,14 @@ extern "C" {
+ /** @cond OPUS_INTERNAL_DOC */
+ /**Export control for opus functions */
+ 
+-#if defined(__GNUC__) && defined(OPUS_BUILD)
+-# define OPUS_EXPORT __attribute__ ((visibility ("default")))
+-#elif defined(WIN32)
++#if defined(WIN32)
+ # ifdef OPUS_BUILD
+ #   define OPUS_EXPORT __declspec(dllexport)
+ # else
+ #   define OPUS_EXPORT __declspec(dllimport)
+ # endif
++#elif defined(__GNUC__) && defined(OPUS_BUILD)
++# define OPUS_EXPORT __attribute__ ((visibility ("default")))
+ #else
+ # define OPUS_EXPORT
+ #endif

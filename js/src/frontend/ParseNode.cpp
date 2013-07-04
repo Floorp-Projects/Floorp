@@ -8,10 +8,6 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 
-#include "jsscriptinlines.h"
-
-#include "frontend/ParseMaps-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "frontend/Parser-inl.h"
 
 using namespace js;
@@ -346,24 +342,10 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
     return handler->new_<BinaryNode>(kind, op, left, right);
 }
 
-// Note: the parse context passed into this may not equal the associated
-// parser's current context.
-NameNode *
-NameNode::create(ParseNodeKind kind, JSAtom *atom, FullParseHandler *handler,
-                 ParseContext<FullParseHandler> *pc)
-{
-    ParseNode *pn = ParseNode::create(kind, PN_NAME, handler);
-    if (pn) {
-        pn->pn_atom = atom;
-        ((NameNode *)pn)->initCommon(pc);
-    }
-    return (NameNode *)pn;
-}
-
 const char *
 Definition::kindString(Kind kind)
 {
-    static const char *table[] = {
+    static const char * const table[] = {
         "", js_var_str, js_const_str, js_let_str, js_function_str, "argument", "unknown"
     };
 
@@ -399,16 +381,14 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 
       case PN_CODE:
         if (pn->getKind() == PNK_MODULE) {
-            JS_NOT_REACHED("module nodes cannot be cloned");
-            return NULL;
-        } else {
-            NULLCHECK(pn->pn_funbox =
-                      newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
-            NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
-            pn->pn_cookie = opn->pn_cookie;
-            pn->pn_dflags = opn->pn_dflags;
-            pn->pn_blockid = opn->pn_blockid;
+            MOZ_ASSUME_UNREACHABLE("module nodes cannot be cloned");
         }
+        NULLCHECK(pn->pn_funbox =
+                  newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
+        NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
+        pn->pn_cookie = opn->pn_cookie;
+        pn->pn_dflags = opn->pn_dflags;
+        pn->pn_blockid = opn->pn_blockid;
         break;
 
       case PN_LIST:
@@ -519,7 +499,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
 
                 pn2 = handler.new_<BinaryNode>(PNK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
             } else if (opn2->isArity(PN_NULLARY)) {
-                JS_ASSERT(opn2->isKind(PNK_COMMA));
+                JS_ASSERT(opn2->isKind(PNK_ELISION));
                 pn2 = cloneParseTree(opn2);
             } else {
                 pn2 = cloneLeftHandSide(opn2);
@@ -564,7 +544,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
 
 #ifdef DEBUG
 
-static const char *parseNodeNames[] = {
+static const char * const parseNodeNames[] = {
 #define STRINGIFY(name) #name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
 #undef STRINGIFY
@@ -769,7 +749,7 @@ ObjectBox::ObjectBox(JSObject *object, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(!object->isFunction());
+    JS_ASSERT(!object->is<JSFunction>());
 }
 
 ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
@@ -777,7 +757,7 @@ ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(object->isFunction());
+    JS_ASSERT(object->is<JSFunction>());
     JS_ASSERT(asFunctionBox()->function() == function);
 }
 
@@ -800,7 +780,7 @@ ObjectBox::ObjectBox(Module *module, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(NULL)
 {
-    JS_ASSERT(object->isModule());
+    JS_ASSERT(object->is<Module>());
 }
 
 void

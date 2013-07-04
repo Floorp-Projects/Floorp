@@ -85,8 +85,7 @@ void SkDrawBitmap::dump(SkAnimateMaker* maker) {
 }
 #endif
 
-void SkDrawBitmap::onEndElement(SkAnimateMaker& maker) {
-    SkASSERT(format != (SkBitmap::Config) -1);
+void SkDrawBitmap::onEndElement(SkAnimateMaker&) {
     SkASSERT(width != -1);
     SkASSERT(height != -1);
     SkASSERT(rowBytes >= 0);
@@ -190,9 +189,9 @@ void SkImageBaseBitmap::resolve() {
         fBitmap.reset();
 
         //SkStream* stream = SkStream::GetURIStream(fUriBase, src.c_str());
-        SkStream* stream = new SkFILEStream(src.c_str());
-
-        SkAutoTDelete<SkStream> autoDel(stream);
-        SkImageDecoder::DecodeStream(stream, &fBitmap);
+        SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(src.c_str()));
+        if (stream.get()) {
+            SkImageDecoder::DecodeStream(stream, &fBitmap);
+        }
     }
 }

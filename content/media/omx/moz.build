@@ -15,5 +15,6 @@ CPP_SOURCES += [
     'MediaOmxDecoder.cpp',
     'MediaOmxReader.cpp',
     'OmxDecoder.cpp',
+    'OMXCodecProxy.cpp',
 ]
 

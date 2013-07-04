@@ -4,24 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gc/Statistics.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
-#include "jscrashformat.h"
 #include "jscrashreport.h"
 #include "jsprf.h"
-#include "jsprobes.h"
 #include "jsutil.h"
 #include "prmjtime.h"
-
 #include "gc/Memory.h"
-#include "gc/Statistics.h"
-
-#include "gc/Barrier-inl.h"
 
 using namespace js;
 using namespace js::gcstats;
@@ -256,8 +251,7 @@ ExplainReason(JS::gcreason::Reason reason)
         GCREASONS(SWITCH_REASON)
 
         default:
-          JS_NOT_REACHED("bad GC reason");
-          return "?";
+          MOZ_ASSUME_UNREACHABLE("bad GC reason");
 #undef SWITCH_REASON
     }
 }
@@ -277,7 +271,7 @@ struct PhaseInfo
 
 static const Phase PHASE_NO_PARENT = PHASE_LIMIT;
 
-static PhaseInfo phases[] = {
+static const PhaseInfo phases[] = {
     { PHASE_GC_BEGIN, "Begin Callback", PHASE_NO_PARENT },
     { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread", PHASE_NO_PARENT },
     { PHASE_MARK_DISCARD_CODE, "Mark Discard Code", PHASE_NO_PARENT },

@@ -65,6 +65,8 @@ public class BrowserDB {
 
         public boolean isVisited(ContentResolver cr, String uri);
 
+        public int getReadingListCount(ContentResolver cr);
+
         public boolean isBookmark(ContentResolver cr, String uri);
 
         public boolean isReadingListItem(ContentResolver cr, String uri);
@@ -112,6 +114,8 @@ public class BrowserDB {
         public void unpinAllSites(ContentResolver cr);
 
         public Cursor getPinnedSites(ContentResolver cr, int limit);
+
+        public Cursor getBookmarkForUrl(ContentResolver cr, String url);
     }
 
     static {
@@ -191,6 +195,10 @@ public class BrowserDB {
 
     public static boolean isVisited(ContentResolver cr, String uri) {
         return sDb.isVisited(cr, uri);
+    }
+
+    public static int getReadingListCount(ContentResolver cr) {
+        return sDb.getReadingListCount(cr);
     }
 
     public static boolean isBookmark(ContentResolver cr, String uri) {
@@ -287,6 +295,10 @@ public class BrowserDB {
 
     public static Cursor getPinnedSites(ContentResolver cr, int limit) {
         return sDb.getPinnedSites(cr, limit);
+    }
+
+    public static Cursor getBookmarkForUrl(ContentResolver cr, String url) {
+        return sDb.getBookmarkForUrl(cr, url);
     }
 
     public static class PinnedSite {

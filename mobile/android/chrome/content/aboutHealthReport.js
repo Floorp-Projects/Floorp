@@ -18,6 +18,9 @@ const PREF_UPLOAD_ENABLED = "android.not_a_preference.healthreport.uploadEnabled
 // Name of Gecko Pref specifying report content location.
 const PREF_REPORTURL = "datareporting.healthreport.about.reportUrl";
 
+// Monotonically increasing wrapper API version number.
+const WRAPPER_VERSION = 1;
+
 const EVENT_HEALTH_REQUEST = "HealthReport:Request";
 const EVENT_HEALTH_RESPONSE = "HealthReport:Response";
 
@@ -37,6 +40,7 @@ let healthReportWrapper = {
     iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
     let report = this._getReportURI();
     iframe.src = report.spec;
+    console.log("AboutHealthReport: loading content from " + report.spec);
 
     sharedPrefs.addObserver(PREF_UPLOAD_ENABLED, this, false);
     Services.obs.addObserver(this, EVENT_HEALTH_RESPONSE, false);
@@ -57,7 +61,10 @@ let healthReportWrapper = {
 
   _getReportURI: function () {
     let url = Services.urlFormatter.formatURLPref(PREF_REPORTURL);
-    return Services.io.newURI(url, null, null);
+    // This handles URLs that already have query parameters.
+    let uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+    uri.query += ((uri.query != "") ? "&v=" : "v=") + WRAPPER_VERSION;
+    return uri;
   },
 
   onOptIn: function () {
@@ -73,7 +80,7 @@ let healthReportWrapper = {
   },
 
   updatePrefState: function () {
-    console.log("AboutHealthReport: page requested pref state.");
+    console.log("AboutHealthReport: sending pref state to page.");
     try {
       let prefs = {
         enabled: sharedPrefs.getBoolPref(PREF_UPLOAD_ENABLED),
@@ -116,6 +123,21 @@ let healthReportWrapper = {
     iframe.contentWindow.postMessage(data, reportUrl);
   },
 
+  showSettings: function () {
+    console.log("AboutHealthReport: showing settings.");
+    sendMessageToJava({
+      type: "Settings:Show",
+      resource: "preferences_vendor",
+    });
+  },
+
+  launchUpdater: function () {
+    console.log("AboutHealthReport: launching updater.");
+    sendMessageToJava({
+      type: "Updater:Launch",
+    });
+  },
+
   handleRemoteCommand: function (evt) {
     switch (evt.detail.command) {
       case "DisableDataSubmission":
@@ -130,6 +152,12 @@ let healthReportWrapper = {
       case "RequestCurrentPayload":
         this.refreshPayload();
         break;
+      case "ShowSettings":
+        this.showSettings();
+        break;
+      case "LaunchUpdater":
+        this.launchUpdater();
+        break;
       default:
         Cu.reportError("Unexpected remote command received: " + evt.detail.command +
                        ". Ignoring command.");
@@ -142,7 +170,7 @@ let healthReportWrapper = {
     iframe.addEventListener("RemoteHealthReportCommand",
                             function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);},
                             false);
-    healthReportWrapper.updatePrefState();
+    healthReportWrapper.injectData("begin", null);
   },
 
   // error handling

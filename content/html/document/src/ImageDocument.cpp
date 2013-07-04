@@ -39,7 +39,6 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -82,8 +81,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsPIDOMWindow> domWindow =
-    do_QueryInterface(imgDoc->GetScriptGlobalObject());
+  nsCOMPtr<nsPIDOMWindow> domWindow = imgDoc->GetWindow();
   NS_ENSURE_TRUE(domWindow, NS_ERROR_UNEXPECTED);
 
   // Do a ShouldProcess check to see whether to keep loading the image.
@@ -145,13 +143,9 @@ NS_IMPL_ADDREF_INHERITED(ImageDocument, MediaDocument)
 NS_IMPL_RELEASE_INHERITED(ImageDocument, MediaDocument)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(ImageDocument)
-  NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(ImageDocument)
-    NS_INTERFACE_TABLE_ENTRY(ImageDocument, nsIImageDocument)
-    NS_INTERFACE_TABLE_ENTRY(ImageDocument, imgINotificationObserver)
-    NS_INTERFACE_TABLE_ENTRY(ImageDocument, nsIDOMEventListener)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(MediaDocument)
+  NS_INTERFACE_TABLE_INHERITED3(ImageDocument, nsIImageDocument,
+                                imgINotificationObserver, nsIDOMEventListener)
+NS_INTERFACE_TABLE_TAIL_INHERITING(MediaDocument)
 
 
 nsresult
@@ -212,11 +206,6 @@ ImageDocument::Destroy()
     if (mObservingImageLoader) {
       nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
       if (imageLoader) {
-        // Push a null JSContext on the stack so that code that
-        // nsImageLoadingContent doesn't think it's being called by JS.  See
-        // Bug 631241
-        nsCxPusher pusher;
-        pusher.PushNull();
         imageLoader->RemoveObserver(this);
       }
     }
@@ -455,7 +444,7 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
   nsDOMTokenList* classList = mImageContent->AsElement()->GetClassList();
   mozilla::ErrorResult rv;
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
-    if (mImageContent) {
+    if (mImageContent && !nsContentUtils::IsChildOfSameType(this)) {
       // Update the background-color of the image only after the
       // image has been decoded to prevent flashes of just the
       // background-color.
@@ -466,7 +455,7 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
 
   if (aType == imgINotificationObserver::DISCARD) {
     // mImageContent can be null if the document is already destroyed
-    if (mImageContent) {
+    if (mImageContent && !nsContentUtils::IsChildOfSameType(this)) {
       // Remove any decoded-related styling when the image is unloaded.
       classList->Remove(NS_LITERAL_STRING("decoded"), rv);
       NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
@@ -603,12 +592,6 @@ ImageDocument::CreateSyntheticDocument()
 
   nsAutoCString src;
   mDocumentURI->GetSpec(src);
-
-  // Push a null JSContext on the stack so that code that runs within
-  // the below code doesn't think it's being called by JS. See bug
-  // 604262.
-  nsCxPusher pusher;
-  pusher.PushNull();
 
   NS_ConvertUTF8toUTF16 srcString(src);
   // Make sure not to start the image load from here...

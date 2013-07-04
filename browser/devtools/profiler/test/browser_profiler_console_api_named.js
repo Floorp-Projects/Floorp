@@ -23,41 +23,31 @@ function testConsoleProfile(hud) {
 
   let profilesStarted = 0;
 
-  function profileEnd(_, uid) {
-    let profile = gPanel.profiles.get(uid);
+  function endProfile() {
+    if (++profilesStarted < 2)
+      return;
 
-    profile.once("started", () => {
-      if (++profilesStarted < 2)
-        return;
-
-      gPanel.off("profileCreated", profileEnd);
-      gPanel.profiles.get(2).once("stopped", () => {
-        openProfiler(gTab, checkProfiles);
-      });
-
-      hud.jsterm.execute("console.profileEnd('Second')");
-    });
+    gPanel.controller.off("profileStart", endProfile);
+    gPanel.controller.once("profileEnd", () => openProfiler(gTab, checkProfiles));
+    hud.jsterm.execute("console.profileEnd('Second')");
   }
 
-  gPanel.on("profileCreated", profileEnd);
+  gPanel.controller.on("profileStart", endProfile);
   hud.jsterm.execute("console.profile('Second')");
   hud.jsterm.execute("console.profile('Third')");
 }
 
 function checkProfiles(toolbox) {
   let panel = toolbox.getPanel("jsprofiler");
-  let getTitle = (uid) =>
-    panel.document.querySelector("li#profile-" + uid + " > h1").textContent;
 
-  is(getTitle(1), "Profile 1", "Profile 1 doesn't have a star next to it.");
-  is(getTitle(2), "Second", "Second doesn't have a star next to it.");
-  is(getTitle(3), "Third *", "Third does have a star next to it.");
+  is(getSidebarItem(1, panel).attachment.name, "Second", "Name in sidebar is OK");
+  is(getSidebarItem(1, panel).attachment.state, PROFILE_COMPLETED, "State in sidebar is OK");
 
   // Make sure we can still stop profiles via the queue pop.
 
-  gPanel.profiles.get(3).once("stopped", () => {
+  gPanel.controller.once("profileEnd", () => {
     openProfiler(gTab, () => {
-      is(getTitle(3), "Third", "Third doesn't have a star next to it.");
+      is(getSidebarItem(2, panel).attachment.state, PROFILE_COMPLETED, "State in sidebar is OK");
       tearDown(gTab, () => gTab = gPanel = null);
     });
   });

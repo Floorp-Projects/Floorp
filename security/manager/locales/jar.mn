@@ -14,4 +14,3 @@
   locale/@AB_CD@/pippki/pippki.properties     (%chrome/pippki/pippki.properties)
   locale/@AB_CD@/pippki/certManager.dtd       (%chrome/pippki/certManager.dtd)
   locale/@AB_CD@/pippki/deviceManager.dtd     (%chrome/pippki/deviceManager.dtd)
-  locale/@AB_CD@/pippki/validation.dtd        (%chrome/pippki/validation.dtd)

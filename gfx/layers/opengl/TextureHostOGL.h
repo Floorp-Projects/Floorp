@@ -21,6 +21,7 @@ namespace mozilla {
 namespace layers {
 
 class TextureImageTextureHostOGL;
+class CompositorOGL;
 
 /*
  * TextureHost implementations for the OpenGL backend.
@@ -46,9 +47,10 @@ class TextureSourceOGL
 public:
   virtual bool IsValid() const = 0;
   virtual void BindTexture(GLenum aTextureUnit) = 0;
+  virtual void ReleaseTexture() = 0;
   virtual gfx::IntSize GetSize() const = 0;
   virtual gl::ShaderProgramType GetShaderProgram() const {
-    MOZ_NOT_REACHED("unhandled shader type");
+    MOZ_CRASH("unhandled shader type");
   }
   // TODO: Noone's implementing this anymore, should see if we need this.
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
@@ -71,7 +73,7 @@ GetProgramTypeForTexture(const TextureHost *aTextureHost)
   case gfx::FORMAT_R8G8B8A8:
     return gl::RGBALayerProgramType;;
   default:
-    MOZ_NOT_REACHED("unhandled program type");
+    MOZ_CRASH("unhandled program type");
   }
 }
 
@@ -137,6 +139,11 @@ public:
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE
   {
     mTexture->BindTexture(aTextureUnit);
+  }
+
+  void ReleaseTexture() MOZ_OVERRIDE
+  {
+    mTexture->ReleaseTexture();
   }
 
   gfx::IntSize GetSize() const MOZ_OVERRIDE;
@@ -262,6 +269,10 @@ public:
     {
       mTexImage->BindTexture(aUnit);
     }
+    void ReleaseTexture() MOZ_OVERRIDE
+    {
+      mTexImage->ReleaseTexture();
+    }
     virtual bool IsValid() const MOZ_OVERRIDE
     {
       return !!mTexImage;
@@ -372,7 +383,7 @@ public:
     // Lock already bound us!
     MOZ_ASSERT(activetex == LOCAL_GL_TEXTURE0);
   }
-  void ReleaseTexture() {}
+  void ReleaseTexture() MOZ_OVERRIDE {}
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType()
   {
@@ -459,7 +470,7 @@ public:
     mGL->fActiveTexture(activetex);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
   }
-  void ReleaseTexture() {
+  void ReleaseTexture() MOZ_OVERRIDE {
   }
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
@@ -517,6 +528,7 @@ public:
     mGL->fActiveTexture(aTextureUnit);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
   }
+  virtual void ReleaseTexture() MOZ_OVERRIDE {}
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
   {
     return mSize;
@@ -554,7 +566,7 @@ private:
   gfx::IntSize mSize;
   GLuint mTextureHandle;
   GLenum mGLFormat;
-  gl::GLContext* mGL;
+  nsRefPtr<gl::GLContext> mGL;
 };
 
 #ifdef MOZ_WIDGET_GONK
@@ -568,22 +580,11 @@ class GrallocTextureHostOGL
   , public TextureSourceOGL
 {
 public:
-  GrallocTextureHostOGL()
-    : mGL(nullptr)
-    , mTextureTarget(0)
-    , mGLTexture(0)
-    , mEGLImage(0)
-  {
-  }
+  GrallocTextureHostOGL();
 
   ~GrallocTextureHostOGL();
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
-
-  virtual GLuint GetTextureHandle()
-  {
-    return mGLTexture;
-  }
 
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
                           nsIntRegion* aRegion = nullptr,
@@ -623,6 +624,7 @@ public:
 #endif
 
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
+  void ReleaseTexture() MOZ_OVERRIDE {}
 
   virtual gfx::SurfaceFormat GetFormat() const;
 
@@ -651,14 +653,19 @@ public:
     DeleteTextures();
   }
 
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+
 private:
+  gl::GLContext* gl() const;
+
   void DeleteTextures();
 
-  RefPtr<gl::GLContext> mGL;
+  RefPtr<CompositorOGL> mCompositor;
   android::sp<android::GraphicBuffer> mGraphicBuffer;
   GLenum mTextureTarget;
-  GLuint mGLTexture;
   EGLImage mEGLImage;
+  //Set when the composer needs to swap RB pixels of gralloc buffer
+  bool mIsRBSwapped;
 };
 #endif
 

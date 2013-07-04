@@ -114,13 +114,13 @@
     <implementation implements="nsIDOMEventListener">
       <constructor>
         <![CDATA[
-          window.addEventListener("MozContextUIExpand", this, true);
+          window.addEventListener("MozContextUITabsShow", this, true);
         ]]>
       </constructor>
 
       <destructor>
         <![CDATA[
-          window.removeEventListener("MozContextUIExpand", this, true);
+          window.removeEventListener("MozContextUITabsShow", this, true);
         ]]>
       </destructor>
 
@@ -129,7 +129,7 @@
         <body>
           <![CDATA[
             switch (event.type) {
-              case "MozContextUIExpand":
+              case "MozContextUITabsShow":
                 this.strip.ensureElementIsVisible(this.selectedTab, false);
                 break;
             }

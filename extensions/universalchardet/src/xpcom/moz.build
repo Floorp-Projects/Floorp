@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'nsUniversalCharDetModule.cpp',
 ]
 
+LIBRARY_NAME = 'universalchardet'
+

@@ -45,13 +45,21 @@ interface BiquadFilterNode : AudioNode {
  */
 [PrefControlled]
 partial interface BiquadFilterNode {
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short LOWPASS = 0;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short HIGHPASS = 1;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short BANDPASS = 2;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short LOWSHELF = 3;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short HIGHSHELF = 4;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short PEAKING = 5;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short NOTCH = 6;
+    [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short ALLPASS = 7;
 };
 

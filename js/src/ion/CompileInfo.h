@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_compileinfo_h__
-#define jsion_compileinfo_h__
+#ifndef ion_CompileInfo_h
+#define ion_CompileInfo_h
 
-#include "Registers.h"
+#include "ion/Registers.h"
 
 namespace js {
 namespace ion {
@@ -40,18 +40,7 @@ class CompileInfo
 {
   public:
     CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
-                ExecutionMode executionMode)
-      : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
-        executionMode_(executionMode)
-    {
-        JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
-        nimplicit_ = StartArgSlot(script, fun)              /* scope chain and argument obj */
-                   + (fun ? 1 : 0);                         /* this */
-        nargs_ = fun ? fun->nargs : 0;
-        nlocals_ = script->nfixed;
-        nstack_ = script->nslots - script->nfixed;
-        nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
-    }
+                ExecutionMode executionMode);
 
     CompileInfo(unsigned nlocals, ExecutionMode executionMode)
       : script_(NULL), fun_(NULL), osrPc_(NULL), constructing_(false),
@@ -211,4 +200,4 @@ class CompileInfo
 } // namespace ion
 } // namespace js
 
-#endif
+#endif /* ion_CompileInfo_h */

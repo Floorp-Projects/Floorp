@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_codegen_arm_h__
-#define jsion_codegen_arm_h__
+#ifndef ion_arm_CodeGenerator_arm_h
+#define ion_arm_CodeGenerator_arm_h
 
-#include "Assembler-arm.h"
+#include "ion/arm/Assembler-arm.h"
 #include "ion/shared/CodeGenerator-shared.h"
 
 namespace js {
@@ -24,8 +24,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   protected:
     // Label for the common return path.
-    HeapLabel *returnLabel_;
-    HeapLabel *deoptLabel_;
+    NonAssertingLabel returnLabel_;
+    NonAssertingLabel deoptLabel_;
     // ugh.  this is not going to be pretty to move over.
     // stack slotted variables are not useful on arm.
     // it looks like this will need to return one of two types.
@@ -75,12 +75,12 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitMulI(LMulI *ins);
 
     virtual bool visitDivI(LDivI *ins);
+    virtual bool visitSoftDivI(LSoftDivI *ins);
     virtual bool visitDivPowTwoI(LDivPowTwoI *ins);
     virtual bool visitModI(LModI *ins);
     virtual bool visitModPowTwoI(LModPowTwoI *ins);
     virtual bool visitModMaskI(LModMaskI *ins);
     virtual bool visitPowHalfD(LPowHalfD *ins);
-    virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitShiftI(LShiftI *ins);
     virtual bool visitUrshD(LUrshD *ins);
 
@@ -117,6 +117,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
+
+    bool divICommon(MDiv *mir, Register lhs, Register rhs, Register output, LSnapshot *snapshot,
+                    Label &done);
 
   public:
     CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
@@ -195,5 +198,4 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_codegen_arm_h__
-
+#endif /* ion_arm_CodeGenerator_arm_h */

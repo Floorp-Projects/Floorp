@@ -227,6 +227,15 @@ class Message : public Pickle {
   // Get a file descriptor from the message. Returns false on error.
   //   iter: a Pickle iterator to the current location in the message.
   bool ReadFileDescriptor(void** iter, base::FileDescriptor* descriptor) const;
+
+#if defined(OS_MACOSX)
+  void set_fd_cookie(uint32_t cookie) {
+    header()->cookie = cookie;
+  }
+  uint32_t fd_cookie() const {
+    return header()->cookie;
+  }
+#endif
 #endif
 
 #ifdef IPC_MESSAGE_LOG_ENABLED
@@ -285,6 +294,9 @@ class Message : public Pickle {
     uint32_t flags;   // specifies control flags for the message
 #if defined(OS_POSIX)
     uint32_t num_fds; // the number of descriptors included with this message
+# if defined(OS_MACOSX)
+    uint32_t cookie;  // cookie to ACK that the descriptors have been read.
+# endif
 #endif
     // For RPC messages, a guess at what the *other* side's stack depth is.
     uint32_t rpc_remote_stack_depth_guess;

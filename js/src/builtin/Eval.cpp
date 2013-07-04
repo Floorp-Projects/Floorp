@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/Eval.h"
+
+#include "mozilla/HashFunctions.h"
+
 #include "jscntxt.h"
 #include "jsonparser.h"
 
-#include "builtin/Eval.h"
 #include "frontend/BytecodeCompiler.h"
-#include "mozilla/HashFunctions.h"
 #include "vm/GlobalObject.h"
 
 #include "vm/Interpreter-inl.h"
@@ -96,13 +98,13 @@ class EvalScriptGuard
 
     ~EvalScriptGuard() {
         if (script_) {
-            CallDestroyScriptHook(cx_->runtime->defaultFreeOp(), script_);
+            CallDestroyScriptHook(cx_->runtime()->defaultFreeOp(), script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
             EvalCacheEntry cacheEntry = {script_, lookup_.callerScript, lookup_.pc};
             lookup_.str = lookupStr_;
             if (lookup_.str && IsEvalCacheCandidate(script_))
-                cx_->runtime->evalCache.relookupOrAdd(p_, lookup_, cacheEntry);
+                cx_->runtime()->evalCache.relookupOrAdd(p_, lookup_, cacheEntry);
         }
     }
 
@@ -113,10 +115,10 @@ class EvalScriptGuard
         lookup_.callerScript = callerScript;
         lookup_.version = cx_->findVersion();
         lookup_.pc = pc;
-        p_ = cx_->runtime->evalCache.lookupForAdd(lookup_);
+        p_ = cx_->runtime()->evalCache.lookupForAdd(lookup_);
         if (p_) {
             script_ = p_->script;
-            cx_->runtime->evalCache.remove(p_);
+            cx_->runtime()->evalCache.remove(p_);
             CallNewScriptHook(cx_, script_, NullPtr());
             script_->isCachedEval = false;
             script_->isActiveEval = true;
@@ -205,8 +207,8 @@ MarkFunctionsWithinEvalScript(JSScript *script)
 
     for (size_t i = start; i < objects->length; i++) {
         JSObject *obj = objects->vector[i];
-        if (obj->isFunction()) {
-            JSFunction *fun = obj->toFunction();
+        if (obj->is<JSFunction>()) {
+            JSFunction *fun = &obj->as<JSFunction>();
             if (fun->hasScript())
                 fun->nonLazyScript()->directlyInsideEval = true;
             else if (fun->isInterpretedLazy())
@@ -232,7 +234,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
 {
     JS_ASSERT((evalType == INDIRECT_EVAL) == !caller);
     JS_ASSERT((evalType == INDIRECT_EVAL) == !pc);
-    JS_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->isGlobal());
+    JS_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->is<GlobalObject>());
     AssertInnerizedScopeChain(cx, *scopeobj);
 
     Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeobj->global());
@@ -260,7 +262,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     unsigned staticLevel;
     RootedValue thisv(cx);
     if (evalType == DIRECT_EVAL) {
-        JS_ASSERT_IF(caller.isStackFrame(), !caller.asStackFrame()->runningInIon());
+        JS_ASSERT_IF(caller.isStackFrame(), !caller.asStackFrame()->runningInJit());
         staticLevel = caller.script()->staticLevel + 1;
 
         // Direct calls to eval are supposed to see the caller's |this|. If we
@@ -360,7 +362,7 @@ js::DirectEvalFromIon(JSContext *cx,
     EvalScriptGuard esg(cx);
 
     // Ion will not perform cross compartment direct eval calls.
-    JSPrincipals *principals = cx->compartment->principals;
+    JSPrincipals *principals = cx->compartment()->principals;
 
     esg.lookupInEvalCache(stableStr, callerScript, pc);
 
@@ -403,7 +405,7 @@ static inline bool
 WarnOnTooManyArgs(JSContext *cx, const CallArgs &args)
 {
     if (args.length() > 1) {
-        Rooted<JSScript*> script(cx, cx->stack.currentScript());
+        Rooted<JSScript*> script(cx, cx->currentScript());
         if (script && !script->warnedAboutTwoArgumentEval) {
             static const char TWO_ARGUMENT_WARNING[] =
                 "Support for eval(code, scopeObject) has been removed. "
@@ -465,8 +467,9 @@ js::IsAnyBuiltinEval(JSFunction *fun)
 JSPrincipals *
 js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
 {
-    JS_ASSERT(IsAnyBuiltinEval(call.callee().toFunction()) ||
-              IsBuiltinFunctionConstructor(call.callee().toFunction()));
+    JSObject &callee = call.callee();
+    JS_ASSERT(IsAnyBuiltinEval(&callee.as<JSFunction>()) ||
+              callee.as<JSFunction>().isBuiltinFunctionConstructor());
 
     // To compute the principals of the compiled eval/Function code, we simply
     // use the callee's principals. To see why the caller's principals are
@@ -482,5 +485,5 @@ js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
     // compiled code will be run with the callee's scope chain, this would make
     // fp->script()->compartment() != fp->compartment().
 
-    return call.callee().compartment()->principals;
+    return callee.compartment()->principals;
 }

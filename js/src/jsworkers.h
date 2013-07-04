@@ -10,8 +10,8 @@
  * web workers.
  */
 
-#ifndef jsworkers_h___
-#define jsworkers_h___
+#ifndef jsworkers_h
+#define jsworkers_h
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
@@ -22,6 +22,8 @@
 #include "ion/Ion.h"
 
 namespace js {
+
+struct AsmJSParallelTask;
 
 namespace ion {
   class IonBuilder;
@@ -166,8 +168,8 @@ OffThreadCompilationEnabled(JSContext *cx)
 {
 #ifdef JS_PARALLEL_COMPILATION
     return ion::js_IonOptions.parallelCompilation
-        && cx->runtime->useHelperThreads()
-        && cx->runtime->helperThreadCount() != 0;
+        && cx->runtime()->useHelperThreads()
+        && cx->runtime()->helperThreadCount() != 0;
 #else
     return false;
 #endif
@@ -255,4 +257,4 @@ class AutoUnlockWorkerThreadState
 
 } /* namespace js */
 
-#endif // jsworkers_h___
+#endif /* jsworkers_h */

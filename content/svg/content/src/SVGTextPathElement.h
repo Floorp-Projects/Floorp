@@ -53,9 +53,9 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> StartOffset();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Method();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Spacing();
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedEnumeration> Method();
+  already_AddRefed<SVGAnimatedEnumeration> Spacing();
+  already_AddRefed<SVGAnimatedString> Href();
 
  protected:
 

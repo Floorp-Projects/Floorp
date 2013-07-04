@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_perfspewer_h__
-#define js_ion_perfspewer_h__
+#ifndef ion_PerfSpewer_h
+#define ion_PerfSpewer_h
 
 #include <stdio.h>
 
 #include "jsscript.h"
-#include "IonMacroAssembler.h"
+#include "ion/IonMacroAssembler.h"
 #include "js/RootingAPI.h"
 
 class JSScript;
@@ -37,43 +37,60 @@ static inline bool PerfEnabled() { return false; }
 
 class PerfSpewer
 {
-  private:
+  protected:
     static uint32_t nextFunctionIndex;
+    FILE *fp_;
 
+  public:
     struct Record {
         const char *filename;
         unsigned lineNumber;
         unsigned columnNumber;
         uint32_t id;
         Label start, end;
+        unsigned startOffset, endOffset;
 
         Record(const char *filename,
                unsigned lineNumber,
                unsigned columnNumber,
                uint32_t id)
           : filename(filename), lineNumber(lineNumber),
-            columnNumber(columnNumber), id(id)
+            columnNumber(columnNumber), id(id),
+            startOffset(0u), endOffset(0u)
         {}
     };
 
-    FILE *fp_;
-    Vector<Record, 1, SystemAllocPolicy> basicBlocks_;
+    typedef Vector<Record, 1, SystemAllocPolicy> BasicBlocksVector;
+  protected:
+    BasicBlocksVector basicBlocks_;
 
   public:
     PerfSpewer();
-    ~PerfSpewer();
+    virtual ~PerfSpewer();
 
-    bool init(const char *path);
-
-    bool startBasicBlock(MBasicBlock *blk, MacroAssembler &masm);
+    virtual bool startBasicBlock(MBasicBlock *blk, MacroAssembler &masm);
     bool endBasicBlock(MacroAssembler &masm);
     void writeProfile(JSScript *script,
                       IonCode *code,
                       MacroAssembler &masm);
 };
 
+class AsmJSPerfSpewer : public PerfSpewer
+{
+  public:
+    bool startBasicBlock(MBasicBlock *blk, MacroAssembler &masm);
+
+    void noteBlocksOffsets(MacroAssembler &masm);
+    BasicBlocksVector &basicBlocks() { return basicBlocks_; }
+
+    void writeBlocksMap(unsigned long baseAddress, unsigned long funcStartOffset,
+                        unsigned long funcSize, const char *filename, const char *funcName,
+                        const BasicBlocksVector &basicBlocks);
+    void writeFunctionMap(unsigned long base, unsigned long size, const char *filename,
+                          unsigned lineno, unsigned colIndex, const char *funcName);
+};
+
 } // namespace ion
 } // namespace js
 
-#endif // js_ion_perfspewer_h__
-
+#endif /* ion_PerfSpewer_h */

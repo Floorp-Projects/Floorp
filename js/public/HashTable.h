@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_HashTable_h__
-#define js_HashTable_h__
+#ifndef js_HashTable_h
+#define js_HashTable_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Util.h"
@@ -203,10 +205,10 @@ class HashMap
 
     // Don't just call |impl.sizeOfExcludingThis()| because there's no
     // guarantee that |impl| is the first field in HashMap.
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return impl.sizeOfExcludingThis(mallocSizeOf);
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
@@ -251,6 +253,14 @@ class HashMap
     void remove(const Lookup &l) {
         if (Ptr p = lookup(l))
             remove(p);
+    }
+
+    // Infallibly rekey one entry, if present.
+    void rekey(const Lookup &old_key, const Key &new_key) {
+        if (old_key != new_key) {
+            if (Ptr p = lookup(old_key))
+                impl.rekey(p, new_key, new_key);
+        }
     }
 
     // HashMap is movable
@@ -411,10 +421,10 @@ class HashSet
 
     // Don't just call |impl.sizeOfExcludingThis()| because there's no
     // guarantee that |impl| is the first field in HashSet.
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return impl.sizeOfExcludingThis(mallocSizeOf);
     }
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
@@ -542,18 +552,11 @@ struct DefaultHasher<double>
     typedef double Lookup;
     static HashNumber hash(double d) {
         JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-        union {
-            struct {
-                uint32_t lo;
-                uint32_t hi;
-            } s;
-            double d;
-        } u;
-        u.d = d;
-        return u.s.lo ^ u.s.hi;
+        uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
+        return HashNumber(u ^ (u >> 32));
     }
     static bool match(double lhs, double rhs) {
-        return lhs == rhs;
+        return mozilla::BitwiseCast<uint64_t>(lhs) == mozilla::BitwiseCast<uint64_t>(rhs);
     }
 };
 
@@ -807,10 +810,7 @@ class HashTable : private AllocPolicy
         // a new key at the new Lookup position.  |front()| is invalid after
         // this operation until the next call to |popFront()|.
         void rekeyFront(const Lookup &l, const Key &k) {
-            typename HashTableEntry<T>::NonConstT t(Move(this->cur->get()));
-            HashPolicy::setKey(t, const_cast<Key &>(k));
-            table.remove(*this->cur);
-            table.putNewInfallible(l, Move(t));
+            table.rekey(*this->cur, l, k);
             rekeyed = true;
             this->validEntry = false;
         }
@@ -1346,12 +1346,12 @@ class HashTable : private AllocPolicy
         return gen;
     }
 
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     {
         return mallocSizeOf(table);
     }
 
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
@@ -1458,11 +1458,21 @@ class HashTable : private AllocPolicy
         checkUnderloaded();
     }
 
+    void rekey(Ptr p, const Lookup &l, const Key &k)
+    {
+        JS_ASSERT(table);
+        ReentrancyGuard g(*this);
+        JS_ASSERT(p.found());
+        typename HashTableEntry<T>::NonConstT t(Move(*p));
+        HashPolicy::setKey(t, const_cast<Key &>(k));
+        remove(*p.entry_);
+        putNewInfallible(l, Move(t));
+    }
+
 #undef METER
 };
 
 }  // namespace detail
 }  // namespace js
 
-#endif  // js_HashTable_h__
-
+#endif  /* js_HashTable_h */

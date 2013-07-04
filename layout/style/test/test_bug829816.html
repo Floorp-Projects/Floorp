@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=829816
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 829816</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <style type="text/css">
+    b { content: "\0";      counter-reset: \0      }
+    b { content: "\00";     counter-reset: \00     }
+    b { content: "\000";    counter-reset: \000    }
+    b { content: "\0000";   counter-reset: \0000   }
+    b { content: "\00000";  counter-reset: \00000  }
+    b { content: "\000000"; counter-reset: \000000 }
+  </style>
+
+  <!-- U+0000 characters in <style> would be replaced by the HTML parser -->
+  <link rel="stylesheet" type="text/css" href="file_bug829816.css"/>
+
+  <script type="application/javascript">
+
+  /** Test for Bug 829816 **/
+  var ss = document.styleSheets[1];
+
+  for (var i = 0; i < 6; i++) {
+    is(ss.cssRules[i].style.content, "\"\uFFFD\"",
+        "\\0 in strings should be converted to U+FFFD");
+    is(ss.cssRules[i].style.counterReset, "\uFFFD",
+        "\\0 in identifiers should be converted to U+FFFD");
+  }
+
+  is(document.styleSheets[2].cssRules[0].style.content, "\"\uFFFD\"",
+      "U+0000 in strings should be converted to U+FFFD");
+  is(document.styleSheets[2].cssRules[0].style.counterReset, "\uFFFD",
+      "U+0000 in identifiers should be converted to U+FFFD");
+  is(document.styleSheets[2].cssRules[1].style.content, "\"\uFFFD\"",
+      "U+0000 in strings should be converted to U+FFFD");
+  is(document.styleSheets[2].cssRules[1].style.counterReset, "\uFFFD",
+      "U+0000 in identifiers should be converted to U+FFFD");
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=829816">Mozilla Bug 829816</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

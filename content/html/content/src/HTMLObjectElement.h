@@ -12,7 +12,6 @@
 #include "nsObjectLoadingContent.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIConstraintValidation.h"
-#include "nsIDOMGetSVGDocument.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +20,6 @@ class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
                                   , public nsObjectLoadingContent
                                   , public nsIDOMHTMLObjectElement
                                   , public nsIConstraintValidation
-                                  , public nsIDOMGetSVGDocument
 {
 public:
   HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -44,9 +42,6 @@ public:
 
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
-
-  // nsIDOMGetSVGDocument
-  NS_DECL_NSIDOMGETSVGDOCUMENT
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,

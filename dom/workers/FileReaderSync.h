@@ -53,7 +53,7 @@ public:
                      ErrorResult& aRv);
 
   // From nsICharsetDetectionObserver
-  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
+  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf) MOZ_OVERRIDE;
 };
 
 END_WORKERS_NAMESPACE

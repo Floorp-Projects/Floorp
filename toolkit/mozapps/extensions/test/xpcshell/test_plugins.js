@@ -8,6 +8,7 @@ var gID = null;
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
 
   startupManager();
   AddonManager.addAddonListener(AddonListener);
@@ -91,7 +92,7 @@ function run_test_1() {
       do_check_true(p.isCompatible);
       do_check_true(p.providesUpdatesSecurely);
       do_check_eq(p.blocklistState, 0);
-      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE);
+      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE | AddonManager.PERM_CAN_ASK_TO_ACTIVATE);
       do_check_eq(p.pendingOperations, 0);
       do_check_true(p.size > 0);
       do_check_eq(p.size, getFileSize(testPlugin));
@@ -169,6 +170,8 @@ function run_test_4() {
   AddonManager.getAddonByID(gID, function(p) {
     do_check_neq(p, null);
     do_check_eq(p.name, "Test Plug-in");
+
+    Services.prefs.clearUserPref("plugins.click_to_play");
 
     do_test_finished();
   });

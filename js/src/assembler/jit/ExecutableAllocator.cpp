@@ -25,13 +25,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "ExecutableAllocator.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
 #include "js/MemoryMetrics.h"
 
 #if ENABLE_ASSEMBLER
-
-#include "prmjtime.h"
 
 namespace JSC {
 

@@ -32,6 +32,7 @@ const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
+const PREF_APP_UPDATE_METRO_ENABLED       = "app.update.metro.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
@@ -42,7 +43,8 @@ const PREF_APP_UPDATE_POSTUPDATE          = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
-const PREF_APP_UPDATE_STAGE_ENABLED       = "app.update.staging.enabled";
+const PREF_APP_UPDATE_STAGING_ENABLED     = "app.update.staging.enabled";
+const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -80,11 +82,11 @@ const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
 #endif
 
 #ifdef XP_WIN
-#define SKIP_STAGE_UPDATES_TEST
+#define CHECK_CAN_USE_SERVICE
 #elifdef MOZ_WIDGET_GONK
 // In Gonk, the updater will remount the /system partition to move staged files
 // into place, so we skip the test here to keep things isolated.
-#define SKIP_STAGE_UPDATES_TEST
+#define CHECK_CAN_USE_SERVICE
 #endif
 
 const DIR_UPDATES         = "updates";
@@ -180,6 +182,7 @@ const DEFAULT_SOCKET_MAX_ERRORS = 10;
 const DEFAULT_UPDATE_RETRY_TIMEOUT = 2000;
 
 var gLocale     = null;
+
 #ifdef MOZ_B2G
 var gVolumeMountLock = null;
 XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
@@ -454,7 +457,7 @@ function getPerInstallationMutexName(aGlobal) {
     hasher.init(hasher.SHA1);
 
   Components.utils.import("resource://gre/modules/Services.jsm");
-  var exeFile = Services.dirsvc.get("XREExeF", Components.interfaces.nsILocalFile);
+  var exeFile = Services.dirsvc.get(KEY_EXECUTABLE, Components.interfaces.nsILocalFile);
 
   let converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
@@ -468,10 +471,11 @@ function getPerInstallationMutexName(aGlobal) {
 
 /**
  * Whether or not the current instance has the update mutex. The update mutex
- * gives protection against 2 browsers from the same installation updating:
+ * gives protection against 2 applications from the same installation updating:
  * 1) Running multiple profiles from the same installation path
- * 2) Running a Metro and Desktop browser at the same time from the same path
- * 3) 2 browsers running in 2 different user sessions from the same path
+ * 2) Running a Metro and Desktop application at the same time from the same
+ *    path
+ * 3) 2 applications running in 2 different user sessions from the same path
  *
  * @return true if this instance holds the update mutex
  */
@@ -489,13 +493,13 @@ function hasUpdateMutex() {
 
 XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
   function submitHasPermissionsTelemetryPing(val) {
-      try {
-        let h = Services.telemetry.getHistogramById("UPDATER_HAS_PERMISSIONS");
-        h.add(+val);
-      } catch(e) {
-        // Don't allow any exception to be propagated.
-        Components.utils.reportError(e);
-      }
+    try {
+      let h = Services.telemetry.getHistogramById("UPDATER_HAS_PERMISSIONS");
+      h.add(+val);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
   }
 
   try {
@@ -583,8 +587,9 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
   }
 
   if (!hasUpdateMutex()) {
-    LOG("gCanApplyUpdates - unable to apply updates because another " +
-        "browser is already handling updates for this installation.");
+    LOG("gCanApplyUpdates - unable to apply updates because another instance" +
+        "of the application is already handling updates for this " +
+        "installation.");
     return false;
   }
 
@@ -593,63 +598,118 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
   return true;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpdates() {
+/**
+ * Whether or not the application can stage an update.
+ *
+ * @return true if updates can be staged.
+ */
+function getCanStageUpdates() {
   // If background updates are disabled, then just bail out!
-  if (!getPref("getBoolPref", PREF_APP_UPDATE_STAGE_ENABLED, false)) {
-    LOG("gCanStageUpdates - staging updates is disabled by preference " + PREF_APP_UPDATE_STAGE_ENABLED);
+  if (!getPref("getBoolPref", PREF_APP_UPDATE_STAGING_ENABLED, false)) {
+    LOG("getCanStageUpdates - staging updates is disabled by preference " +
+        PREF_APP_UPDATE_STAGING_ENABLED);
     return false;
   }
 
-#ifdef SKIP_STAGE_UPDATES_TEST
+#ifdef CHECK_CAN_USE_SERVICE
   if (getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
-    LOG("gCanStageUpdates - able to stage updates because we'll use the service");
+    LOG("getCanStageUpdates - able to stage updates because we'll use the service");
     return true;
   }
 #endif
 
-  try {
-    var updateTestFile = getInstallDirRoot();
-    updateTestFile.append(FILE_PERMS_TEST);
-    LOG("gCanStageUpdates - testing write access " + updateTestFile.path);
-    testWriteAccess(updateTestFile, true);
-#ifndef XP_MACOSX
-    // On all platforms except Mac, we need to test the parent directory as well,
-    // as we need to be able to move files in that directory during the replacing
-    // step.
-    updateTestFile = getInstallDirRoot().parent;
-    updateTestFile.append(FILE_PERMS_TEST);
-    LOG("gCanStageUpdates - testing write access " + updateTestFile.path);
-    updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
-                                FileUtils.PERMS_DIRECTORY);
-    updateTestFile.remove(false);
-#endif
-  }
-  catch (e) {
-     LOG("gCanStageUpdates - unable to stage updates. Exception: " + e);
-    // No write privileges
-    return false;
-  }
-
   if (!hasUpdateMutex()) {
-    LOG("gCanStageUpdates - unable to stage updates because another " +
-        "browser is already handling updates for this installation.");
+    LOG("getCanStageUpdates - unable to apply updates because another " +
+        "instance of the application is already handling updates for this " +
+        "installation.");
     return false;
   }
 
-  LOG("gCanStageUpdates - able to stage updates");
+  /**
+   * Whether or not the application can stage an update for the current session.
+   * These checks are only performed once per session due to using a lazy getter.
+   *
+   * @return true if updates can be staged for this session.
+   */
+  XPCOMUtils.defineLazyGetter(this, "canStageUpdatesSession", function canStageUpdatesSession() {
+    try {
+      var updateTestFile = getInstallDirRoot();
+      updateTestFile.append(FILE_PERMS_TEST);
+      LOG("canStageUpdatesSession - testing write access " +
+          updateTestFile.path);
+      testWriteAccess(updateTestFile, true);
+#ifndef XP_MACOSX
+      // On all platforms except Mac, we need to test the parent directory as
+      // well, as we need to be able to move files in that directory during the
+      // replacing step.
+      updateTestFile = getInstallDirRoot().parent;
+      updateTestFile.append(FILE_PERMS_TEST);
+      LOG("canStageUpdatesSession - testing write access " +
+          updateTestFile.path);
+      updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
+                                  FileUtils.PERMS_DIRECTORY);
+      updateTestFile.remove(false);
+#endif
+    }
+    catch (e) {
+       LOG("canStageUpdatesSession - unable to stage updates. Exception: " +
+           e);
+      // No write privileges
+      return false;
+    }
+
+    LOG("canStageUpdatesSession - able to stage updates");
+    return true;
+  });
+
+  return canStageUpdatesSession;
+}
+
+XPCOMUtils.defineLazyGetter(this, "gIsMetro", function aus_gIsMetro() {
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  try {
+    let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
+                    createInstance(Ci.nsIWinMetroUtils);
+    return metroUtils && metroUtils.immersive;
+  } catch (e) {}
+#endif
+#endif
+
+  return false;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gMetroUpdatesEnabled", function aus_gMetroUpdatesEnabled() {
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  if (gIsMetro) {
+    let metroUpdate = getPref("getBoolPref", PREF_APP_UPDATE_METRO_ENABLED, true);
+    if (!metroUpdate) {
+      LOG("gMetroUpdatesEnabled - unable to automatically check for metro " +
+          "updates, disabled by pref");
+      return false;
+    }
+  }
+#endif
+#endif
+
   return true;
 });
 
 XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckForUpdates() {
-  // If the administrator has locked the app update functionality
-  // OFF - this is not just a user setting, so disable the manual
-  // UI too.
+  // If the administrator has disabled app update and locked the preference so
+  // users can't check for updates. This preference check is ok in this lazy
+  // getter since locked prefs don't change until the application is restarted.
   var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
   if (!enabled && Services.prefs.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
     LOG("gCanCheckForUpdates - unable to automatically check for updates, " +
-        "disabled by pref");
+        "the preference is disabled and admistratively locked.");
+    return false;
+  }
+
+  if (!gMetroUpdatesEnabled) {
     return false;
   }
 
@@ -668,7 +728,8 @@ XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckF
 
   if (!hasUpdateMutex()) {
     LOG("gCanCheckForUpdates - unable to apply updates because another " +
-        "browser is already handling updates for this installation.");
+        "instance of the application is already handling updates for this " +
+        "installation.");
     return false;
   }
 
@@ -735,21 +796,22 @@ function getUpdateDirCreate(pathArray) {
   return FileUtils.getDir(KEY_UPDROOT, pathArray, true);
 }
 
- /**
- #  Gets the specified directory at the specified hierarchy under the
- #  update root directory and without creating it if it doesn't exist.
- #  @param   pathArray
- #           An array of path components to locate beneath the directory
- #           specified by |key|
- #  @return  nsIFile object for the location specified.
-  */
+/**
+#  Gets the specified directory at the specified hierarchy under the
+#  update root directory and without creating it if it doesn't exist.
+#  @param   pathArray
+#           An array of path components to locate beneath the directory
+#           specified by |key|
+#  @return  nsIFile object for the location specified.
+ */
 function getUpdateDirNoCreate(pathArray) {
   return FileUtils.getDir(KEY_UPDROOT, pathArray, false);
 }
 
 /**
-#  Gets the application base directory.
-#  @return  nsIFile object for the application base directory.
+ * Gets the application base directory.
+ *
+ * @return  nsIFile object for the application base directory.
  */
 function getAppBaseDir() {
   return Services.dirsvc.get(KEY_EXECUTABLE, Ci.nsIFile).parent;
@@ -1500,8 +1562,8 @@ function Update(update) {
   this.isCompleteUpdate = false;
   this.isOSUpdate = false;
   this.showPrompt = false;
-  this.showSurvey = false;
   this.showNeverForVersion = false;
+  this.unsupported = false;
   this.channel = "default";
   this.promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
 
@@ -1526,7 +1588,7 @@ function Update(update) {
     this._patches.push(patch);
   }
 
-  if (0 == this._patches.length)
+  if (this._patches.length == 0 && !update.hasAttribute("unsupported"))
     throw Cr.NS_ERROR_ILLEGAL_VALUE;
 
   // Fallback to the behavior prior to bug 530872 if the update does not have an
@@ -1571,8 +1633,8 @@ function Update(update) {
       if(!isNaN(attr.value))
         this.promptWaitTime = parseInt(attr.value);
     }
-    else if (attr.name == "showSurvey")
-      this.showSurvey = attr.value == "true";
+    else if (attr.name == "unsupported")
+      this.unsupported = attr.value == "true";
     else if (attr.name == "version") {
       // Prevent version from replacing displayVersion if displayVersion is
       // present in the update xml.
@@ -1711,7 +1773,6 @@ Update.prototype = {
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
     update.setAttribute("showPrompt", this.showPrompt);
     update.setAttribute("promptWaitTime", this.promptWaitTime);
-    update.setAttribute("showSurvey", this.showSurvey);
     update.setAttribute("type", this.type);
     // for backwards compatibility in case the user downgrades
     update.setAttribute("version", this.displayVersion);
@@ -1729,6 +1790,8 @@ Update.prototype = {
       update.setAttribute("previousAppVersion", this.previousAppVersion);
     if (this.statusText)
       update.setAttribute("statusText", this.statusText);
+    if (this.unsupported)
+      update.setAttribute("unsupported", this.unsupported);
     updates.documentElement.appendChild(update);
 
     for (var p in this._properties) {
@@ -1806,6 +1869,7 @@ const UpdateServiceFactory = {
 function UpdateService() {
   LOG("Creating UpdateService");
   Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.prefs.addObserver("app.update.log", this, false);
 #ifdef MOZ_WIDGET_GONK
   // PowerManagerService::SyncProfile (which is called for Reboot, PowerOff
   // and Restart) sends the profile-change-net-teardown event. We can then
@@ -1859,11 +1923,17 @@ UpdateService.prototype = {
     case "network:offline-status-changed":
       this._offlineStatusChanged(data);
       break;
+    case "nsPref:changed":
+      if (data == PREF_APP_UPDATE_LOG) {
+        gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
+      }
+      break;
 #ifdef MOZ_WIDGET_GONK
     case "profile-change-net-teardown": // fall thru
 #endif
     case "xpcom-shutdown":
       Services.obs.removeObserver(this, topic);
+      Services.prefs.removeObserver("app.update.log", this);
 
       if (this._retryTimer) {
         this._retryTimer.cancel();
@@ -1887,7 +1957,7 @@ UpdateService.prototype = {
 
   /**
    * Perform post-processing on updates lingering in the updates directory
-   * from a previous browser session - either report install failures (and
+   * from a previous application session - either report install failures (and
    * optionally attempt to fetch a different version if appropriate) or
    * notify the user of install success.
    */
@@ -2025,9 +2095,11 @@ UpdateService.prototype = {
       // version.
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
                                       "UPDATER_UPDATES_ENABLED");
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_METRO_ENABLED,
+                                      "UPDATER_UPDATES_METRO_ENABLED");
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
                                       "UPDATER_UPDATES_AUTOMATIC");
-      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGE_ENABLED,
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGING_ENABLED,
                                       "UPDATER_STAGE_ENABLED");
 
 #ifdef XP_WIN
@@ -2307,6 +2379,9 @@ UpdateService.prototype = {
     if (updates.length == 0)
       return null;
 
+    if (updates.length == 1 && updates[0].unsupported)
+      return updates[0];
+
     // Choose the newest of the available minor and major updates.
     var majorUpdate = null;
     var minorUpdate = null;
@@ -2384,14 +2459,30 @@ UpdateService.prototype = {
       return;
     }
 
-    var update = this.selectUpdate(updates, updates.length);
-    if (!update)
-      return;
-
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled) {
       LOG("UpdateService:_selectAndInstallUpdate - not prompting because " +
           "update is disabled");
+      return;
+    }
+
+    if (!gMetroUpdatesEnabled) {
+      return;
+    }
+
+    var update = this.selectUpdate(updates, updates.length);
+    if (!update) {
+      return;
+    }
+
+    if (update.unsupported) {
+      LOG("UpdateService:_selectAndInstallUpdate - update not supported for " +
+          "this system");
+      if (!getPref("getBoolPref", PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED, false)) {
+        LOG("UpdateService:_selectAndInstallUpdate - notifying that the " +
+            "update is not supported for this system");
+        this._showPrompt(update);
+      }
       return;
     }
 
@@ -2432,14 +2523,18 @@ UpdateService.prototype = {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because the " +
           "update snippet specified showPrompt");
       this._showPrompt(update);
-      return;
+      if (!gIsMetro) {
+        return;
+      }
     }
 
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
       this._showPrompt(update);
-      return;
+      if (!gIsMetro) {
+        return;
+      }
     }
 
     if (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1) == 0) {
@@ -2642,7 +2737,7 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   get canStageUpdates() {
-    return gCanStageUpdates;
+    return getCanStageUpdates();
   },
 
   /**
@@ -2731,32 +2826,19 @@ UpdateService.prototype = {
     return this._downloader.downloadUpdate(update);
   },
 
-  applyUpdateInBackground: function AUS_applyUpdateInBackground(update) {
-    // If we can't stage an update, then just bail out!
-    if (!gCanStageUpdates) {
-      return;
-    }
-
-    LOG("UpdateService:applyUpdateInBackground called with the following update: " +
-        update.name);
-
-    // Initiate the update in the background
-    try {
-      Cc["@mozilla.org/updates/update-processor;1"].
-        createInstance(Ci.nsIUpdateProcessor).
-        processUpdate(update);
-    } catch (e) {
-      // Fail gracefully in case the application does not support the update
-      // processor service.
-    }
-  },
-
   /**
    * See nsIUpdateService.idl
    */
   pauseDownload: function AUS_pauseDownload() {
-    if (this.isDownloading)
+    if (this.isDownloading) {
       this._downloader.cancel();
+    } else if (this._retryTimer) {
+      // Download status is still consider as 'downloading' during retry.
+      // We need to cancel both retry and download at this stage.
+      this._retryTimer.cancel();
+      this._retryTimer = null;
+      this._downloader.cancel();
+    }
   },
 
   /**
@@ -3081,6 +3163,7 @@ UpdateManager.prototype = {
 
     // Do this after *everything* else, since it will likely cause the app
     // to shut down.
+#ifdef MOZ_WIDGET_GONK
     if (update.state == STATE_APPLIED) {
       // Notify the user that an update has been staged and is ready for
       // installation (i.e. that they should restart the application). We do
@@ -3091,6 +3174,23 @@ UpdateManager.prototype = {
     } else {
       releaseSDCardMountLock();
     }
+#else
+    // Only prompt when the UI isn't already open.
+    let windowType = getPref("getCharPref", PREF_APP_UPDATE_ALTWINDOWTYPE, null);
+    if (Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME) ||
+        windowType && Services.wm.getMostRecentWindow(windowType)) {
+      return;
+    }
+
+    if (update.state == STATE_APPLIED || update.state == STATE_APPLIED_SVC ||
+        update.state == STATE_PENDING || update.state == STATE_PENDING_SVC) {
+      // Notify the user that an update has been staged and is ready for
+      // installation (i.e. that they should restart the application).
+      var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+                     createInstance(Ci.nsIUpdatePrompt);
+      prompter.showUpdateDownloaded(update, true);
+    }
+#endif
   },
 
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
@@ -3226,7 +3326,7 @@ Checker.prototype = {
     }
 
     if (updatesElement.nodeName != "updates") {
-      LOG("Checker:updates get - unexpected node name!");
+      LOG("Checker:_updates get - unexpected node name!");
       throw new Error("Unexpected node name, expected: updates, got: " +
                       updatesElement.nodeName);
     }
@@ -3243,7 +3343,7 @@ Checker.prototype = {
       try {
         var update = new Update(updateElement);
       } catch (e) {
-        LOG("Checker:updates get - invalid <update/>, ignoring...");
+        LOG("Checker:_updates get - invalid <update/>, ignoring...");
         continue;
       }
       update.serviceURL = this.getUpdateURL(this._forced);
@@ -3303,7 +3403,7 @@ Checker.prototype = {
       if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
         Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
 
-      // Tell the Update Service about the updates
+      // Tell the callback about the updates
       this._callback.onCheckComplete(event.target, updates, updates.length);
     }
     catch (e) {
@@ -3364,6 +3464,10 @@ Checker.prototype = {
    */
   _enabled: true,
   get enabled() {
+    if (!gMetroUpdatesEnabled) {
+      return false;
+    }
+
     return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) &&
            gCanCheckForUpdates && this._enabled;
   },
@@ -3918,12 +4022,9 @@ Downloader.prototype = {
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
         state = shouldUseService() ? STATE_PENDING_SVC : STATE_PENDING
-
-        // We only need to explicitly show the prompt if this is a background
-        // download, since otherwise some kind of UI is already visible and
-        // that UI will notify.
-        if (this.background)
-          shouldShowPrompt = !getPref("getBoolPref", PREF_APP_UPDATE_STAGE_ENABLED, false);
+        if (this.background) {
+          shouldShowPrompt = !getCanStageUpdates();
+        }
 
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
@@ -3934,7 +4035,6 @@ Downloader.prototype = {
       else {
         LOG("Downloader:onStopRequest - download verification failed");
         state = STATE_DOWNLOAD_FAILED;
-
         status = Cr.NS_ERROR_CORRUPTED_CONTENT;
 
         // Yes, this code is a string.
@@ -4062,6 +4162,28 @@ Downloader.prototype = {
       return;
     }
 
+    if (state == STATE_PENDING || state == STATE_PENDING_SVC) {
+      if (getCanStageUpdates()) {
+        LOG("Downloader:onStopRequest - attempting to stage update: " +
+            this._update.name);
+
+        // Initiate the update in the background
+        try {
+          Cc["@mozilla.org/updates/update-processor;1"].
+            createInstance(Ci.nsIUpdateProcessor).
+            processUpdate(this._update);
+        } catch (e) {
+          // Fail gracefully in case the application does not support the update
+          // processor service.
+          LOG("Downloader:onStopRequest - failed to stage update. Exception: " +
+              e);
+          if (this.background) {
+            shouldShowPrompt = true;
+          }
+        }
+      }
+    }
+
     // Do this after *everything* else, since it will likely cause the app
     // to shut down.
     if (shouldShowPrompt) {
@@ -4071,13 +4193,6 @@ Downloader.prototype = {
       var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateDownloaded(this._update, true);
-    }
-
-    if (state == STATE_PENDING || state == STATE_PENDING_SVC) {
-      // Initiate the background update job.
-      Cc["@mozilla.org/updates/update-service;1"].
-        getService(Ci.nsIApplicationUpdateService).
-        applyUpdateInBackground(this._update);
     }
 
     if (shouldRegisterOnlineObserver) {

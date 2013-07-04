@@ -19,7 +19,7 @@ IS_COMPONENT = 1
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   toolkitplaces.manifest \
   nsLivemarkService.js \
   nsTaggingService.js \
@@ -29,17 +29,8 @@ EXTRA_COMPONENTS = \
   $(NULL)
 
 ifdef MOZ_XUL
-EXTRA_COMPONENTS += nsPlacesAutoComplete.js nsPlacesAutoComplete.manifest
+DISABLED_EXTRA_COMPONENTS += nsPlacesAutoComplete.js nsPlacesAutoComplete.manifest
 endif
-
-EXTRA_JS_MODULES = \
-  PlacesDBUtils.jsm \
-  ColorAnalyzer_worker.js \
-  ColorConversion.js \
-  ClusterLib.js \
-  BookmarkJSONUtils.jsm \
-  PlacesBackups.jsm \
-  $(NULL)
 
 EXTRA_PP_JS_MODULES = \
   BookmarkHTMLUtils.jsm \

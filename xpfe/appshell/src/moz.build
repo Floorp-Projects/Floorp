@@ -19,3 +19,5 @@ CPP_SOURCES += [
     'nsXULWindow.cpp',
 ]
 
+LIBRARY_NAME = 'nsappshell'
+

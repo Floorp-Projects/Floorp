@@ -1,8 +1,9 @@
 # HG changeset patch
 # User Ted Mielczarek <ted.mielczarek@gmail.com>
 # Date 1360255134 18000
-# Node ID d7bfb673574a3afe8b4f76f42fb52e2545770dad
-# Parent  d23a69a6c34a1f1c21e241f37b388c8689f2386b
+#      Thu Feb 07 11:38:54 2013 -0500
+# Node ID 79cecfef3c2a10d719fe1af9fae2e5257109b028
+# Parent 08f184a7e6d6d15ecc20abd56bc4e36669c0c68a
 Rework PostfixEvaluator to use a UniqueString type
 Patch by Julian Seward <jseward@acm.org>, R=ted
 
@@ -27,7 +28,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_source_line_resolver_types.h \
  	src/processor/basic_source_line_resolver.cc \
  	src/processor/binarystream.h \
-@@ -426,16 +427,17 @@
+@@ -430,16 +431,17 @@
  src_tools_linux_dump_syms_dump_syms_SOURCES = \
  	src/common/dwarf_cfi_to_module.cc \
  	src/common/dwarf_cu_to_module.cc \
@@ -45,7 +46,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/common/linux/elfutils.cc \
  	src/common/linux/file_id.cc \
  	src/common/linux/linux_libc_support.cc \
-@@ -469,16 +471,17 @@
+@@ -473,16 +475,17 @@
  	src/common/memory_range_unittest.cc \
  	src/common/module.cc \
  	src/common/module_unittest.cc \
@@ -63,7 +64,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/common/dwarf/dwarf2reader.cc \
  	src/common/dwarf/dwarf2reader_cfi_unittest.cc \
  	src/common/dwarf/dwarf2reader_die_unittest.cc \
-@@ -557,31 +560,33 @@
+@@ -561,31 +564,33 @@
  src_processor_basic_source_line_resolver_unittest_CPPFLAGS = \
  	-I$(top_srcdir)/src \
  	-I$(top_srcdir)/src/testing/include \
@@ -97,7 +98,7 @@ diff --git a/Makefile.am b/Makefile.am
  	-I$(top_srcdir)/src \
  	-I$(top_srcdir)/src/testing/include \
  	-I$(top_srcdir)/src/testing/gtest/include \
-@@ -602,16 +607,17 @@
+@@ -606,16 +611,17 @@
  src_processor_exploitability_unittest_CPPFLAGS = \
  	-I$(top_srcdir)/src \
  	-I$(top_srcdir)/src/testing/include \
@@ -115,7 +116,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_code_modules.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/call_stack.o \
-@@ -654,16 +660,17 @@
+@@ -659,16 +665,17 @@
  src_processor_fast_source_line_resolver_unittest_CPPFLAGS = \
  	-I$(top_srcdir)/src \
  	-I$(top_srcdir)/src/testing/include \
@@ -133,7 +134,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/pathname_stripper.o \
  	src/processor/logging.o \
  	src/processor/source_line_resolver_base.o \
-@@ -692,16 +699,17 @@
+@@ -697,16 +704,17 @@
  src_processor_minidump_processor_unittest_CPPFLAGS = \
  	-I$(top_srcdir)/src \
  	-I$(top_srcdir)/src/testing/include \
@@ -151,7 +152,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/exploitability.o \
  	src/processor/exploitability_win.o \
  	src/processor/logging.o \
-@@ -806,16 +814,17 @@
+@@ -812,16 +820,17 @@
  src_processor_pathname_stripper_unittest_LDADD = \
  	src/processor/pathname_stripper.o \
  	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
@@ -169,7 +170,7 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/range_map_unittest.cc
  src_processor_range_map_unittest_LDADD = \
  	src/processor/logging.o \
-@@ -936,16 +945,17 @@
+@@ -943,16 +952,17 @@
  	src/processor/logging.o \
  	src/processor/minidump.o \
  	src/processor/pathname_stripper.o
@@ -212,7 +213,7 @@ diff --git a/Makefile.in b/Makefile.in
  	src/processor/call_stack.cc src/processor/cfi_frame_info.cc \
  	src/processor/cfi_frame_info.h \
  	src/processor/contained_range_map-inl.h \
-@@ -330,16 +331,17 @@
+@@ -332,16 +333,17 @@
  	src/processor/static_map_iterator-inl.h \
  	src/processor/static_map_iterator.h \
  	src/processor/static_map-inl.h src/processor/static_map.h \
@@ -230,7 +231,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.$(OBJEXT) \
-@@ -518,17 +520,18 @@
+@@ -525,17 +527,18 @@
  	src/common/dwarf_cu_to_module_unittest.cc \
  	src/common/dwarf_line_to_module.cc \
  	src/common/dwarf_line_to_module_unittest.cc \
@@ -250,7 +251,7 @@ diff --git a/Makefile.in b/Makefile.in
  	src/common/dwarf/dwarf2reader_cfi_unittest.cc \
  	src/common/dwarf/dwarf2reader_die_unittest.cc \
  	src/common/linux/dump_symbols.cc \
-@@ -562,16 +565,17 @@
+@@ -569,16 +572,17 @@
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-memory_range_unittest.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-module.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-module_unittest.$(OBJEXT) \
@@ -268,7 +269,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2reader.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2reader_cfi_unittest.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2reader_die_unittest.$(OBJEXT) \
-@@ -630,16 +634,17 @@
+@@ -637,16 +641,17 @@
  	src/testing/gtest/src/gtest-all.cc \
  	src/testing/src/gmock-all.cc
  @DISABLE_PROCESSOR_FALSE@am_src_processor_basic_source_line_resolver_unittest_OBJECTS = src/processor/src_processor_basic_source_line_resolver_unittest-basic_source_line_resolver_unittest.$(OBJEXT) \
@@ -286,7 +287,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/tokenize.o \
  @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
  @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
-@@ -664,16 +669,17 @@
+@@ -671,16 +676,17 @@
  @DISABLE_PROCESSOR_FALSE@am_src_processor_cfi_frame_info_unittest_OBJECTS = src/processor/src_processor_cfi_frame_info_unittest-cfi_frame_info_unittest.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest-all.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest_main.$(OBJEXT) \
@@ -304,7 +305,7 @@ diff --git a/Makefile.in b/Makefile.in
  am__src_processor_contained_range_map_unittest_SOURCES_DIST =  \
  	src/processor/contained_range_map_unittest.cc
  @DISABLE_PROCESSOR_FALSE@am_src_processor_contained_range_map_unittest_OBJECTS = src/processor/contained_range_map_unittest.$(OBJEXT)
-@@ -706,16 +712,17 @@
+@@ -713,16 +719,17 @@
  @DISABLE_PROCESSOR_FALSE@am_src_processor_exploitability_unittest_OBJECTS = src/processor/src_processor_exploitability_unittest-exploitability_unittest.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_exploitability_unittest-gtest-all.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_exploitability_unittest-gtest_main.$(OBJEXT) \
@@ -322,7 +323,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
-@@ -740,16 +747,17 @@
+@@ -748,16 +755,17 @@
  	src/testing/gtest/src/gtest-all.cc \
  	src/testing/src/gmock-all.cc
  @DISABLE_PROCESSOR_FALSE@am_src_processor_fast_source_line_resolver_unittest_OBJECTS = src/processor/src_processor_fast_source_line_resolver_unittest-fast_source_line_resolver_unittest.$(OBJEXT) \
@@ -340,7 +341,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
-@@ -786,16 +794,17 @@
+@@ -794,16 +802,17 @@
  	src/testing/src/gmock-all.cc
  @DISABLE_PROCESSOR_FALSE@am_src_processor_minidump_processor_unittest_OBJECTS = src/processor/src_processor_minidump_processor_unittest-minidump_processor_unittest.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_minidump_processor_unittest-gtest-all.$(OBJEXT) \
@@ -358,7 +359,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
-@@ -817,16 +826,17 @@
+@@ -826,16 +835,17 @@
  @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
  am__src_processor_minidump_stackwalk_SOURCES_DIST =  \
  	src/processor/minidump_stackwalk.cc
@@ -376,7 +377,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
-@@ -879,16 +889,17 @@
+@@ -889,16 +899,17 @@
  @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
  am__src_processor_postfix_evaluator_unittest_SOURCES_DIST =  \
  	src/processor/postfix_evaluator_unittest.cc
@@ -394,7 +395,7 @@ diff --git a/Makefile.in b/Makefile.in
  	src/processor/range_map_unittest.cc
  @DISABLE_PROCESSOR_FALSE@am_src_processor_range_map_unittest_OBJECTS = src/processor/range_map_unittest.$(OBJEXT)
  src_processor_range_map_unittest_OBJECTS =  \
-@@ -1058,33 +1069,35 @@
+@@ -1069,33 +1080,35 @@
  src_tools_linux_core2md_core2md_OBJECTS =  \
  	$(am_src_tools_linux_core2md_core2md_OBJECTS)
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@src_tools_linux_core2md_core2md_DEPENDENCIES = src/client/linux/libbreakpad_client.a
@@ -431,7 +432,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/elfutils.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/file_id.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/linux_libc_support.$(OBJEXT) \
-@@ -1405,16 +1418,17 @@
+@@ -1416,16 +1429,17 @@
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/source_line_resolver_interface.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame_cpu.h \
@@ -449,7 +450,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver_types.h \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.cc \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.h \
-@@ -1603,16 +1617,17 @@
+@@ -1618,16 +1632,17 @@
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@src_tools_linux_dump_syms_dump_syms_SOURCES = \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_cfi_to_module.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_cu_to_module.cc \
@@ -467,7 +468,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/elfutils.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/file_id.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/linux_libc_support.cc \
-@@ -1646,16 +1661,17 @@
+@@ -1661,16 +1676,17 @@
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/memory_range_unittest.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/module.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/module_unittest.cc \
@@ -485,7 +486,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader_cfi_unittest.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader_die_unittest.cc \
-@@ -1738,32 +1754,34 @@
+@@ -1753,32 +1769,34 @@
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
@@ -520,7 +521,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_CPPFLAGS = \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
-@@ -1788,16 +1806,17 @@
+@@ -1803,16 +1821,17 @@
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
@@ -538,7 +539,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
-@@ -1844,16 +1863,17 @@
+@@ -1860,16 +1879,17 @@
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
@@ -556,7 +557,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
-@@ -1886,16 +1906,17 @@
+@@ -1902,16 +1922,17 @@
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
@@ -574,7 +575,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
-@@ -2012,16 +2033,17 @@
+@@ -2029,16 +2050,17 @@
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
  
@@ -592,7 +593,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/range_map_unittest.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_range_map_unittest_LDADD = \
-@@ -2151,16 +2173,17 @@
+@@ -2169,16 +2191,17 @@
  @DISABLE_PROCESSOR_FALSE@	src/processor/minidump.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o
  
@@ -610,7 +611,7 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
-@@ -2508,16 +2531,18 @@
+@@ -2527,16 +2550,18 @@
  	@$(MKDIR_P) src/client/linux
  	@: > src/client/linux/$(am__dirstamp)
  src/client/linux/libbreakpad_client.a: $(src_client_linux_libbreakpad_client_a_OBJECTS) $(src_client_linux_libbreakpad_client_a_DEPENDENCIES) $(EXTRA_src_client_linux_libbreakpad_client_a_DEPENDENCIES) src/client/linux/$(am__dirstamp)
@@ -629,7 +630,7 @@ diff --git a/Makefile.in b/Makefile.in
  	@: > src/processor/$(DEPDIR)/$(am__dirstamp)
  src/processor/basic_code_modules.$(OBJEXT):  \
  	src/processor/$(am__dirstamp) \
-@@ -2835,16 +2860,19 @@
+@@ -2863,16 +2888,19 @@
  	src/common/$(am__dirstamp) \
  	src/common/$(DEPDIR)/$(am__dirstamp)
  src/common/src_common_dumper_unittest-stabs_to_module_unittest.$(OBJEXT):  \
@@ -649,7 +650,7 @@ diff --git a/Makefile.in b/Makefile.in
  	@: > src/common/dwarf/$(DEPDIR)/$(am__dirstamp)
  src/common/dwarf/src_common_dumper_unittest-bytereader.$(OBJEXT):  \
  	src/common/dwarf/$(am__dirstamp) \
-@@ -3440,28 +3468,30 @@
+@@ -3470,28 +3498,30 @@
  	-rm -f src/common/src_common_dumper_unittest-memory_range_unittest.$(OBJEXT)
  	-rm -f src/common/src_common_dumper_unittest-module.$(OBJEXT)
  	-rm -f src/common/src_common_dumper_unittest-module_unittest.$(OBJEXT)
@@ -680,7 +681,7 @@ diff --git a/Makefile.in b/Makefile.in
  	-rm -f src/processor/cfi_frame_info.$(OBJEXT)
  	-rm -f src/processor/contained_range_map_unittest.$(OBJEXT)
  	-rm -f src/processor/disassembler_x86.$(OBJEXT)
-@@ -3630,26 +3660,28 @@
+@@ -3663,26 +3693,28 @@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-memory_range_unittest.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-module.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-module_unittest.Po@am__quote@
@@ -709,7 +710,7 @@ diff --git a/Makefile.in b/Makefile.in
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/dwarf2reader.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader_unittest.Po@am__quote@
-@@ -4412,16 +4444,30 @@
+@@ -4474,16 +4506,30 @@
  
  src/common/src_common_dumper_unittest-test_assembler.obj: src/common/test_assembler.cc
  @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_common_dumper_unittest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/src_common_dumper_unittest-test_assembler.obj -MD -MP -MF src/common/$(DEPDIR)/src_common_dumper_unittest-test_assembler.Tpo -c -o src/common/src_common_dumper_unittest-test_assembler.obj `if test -f 'src/common/test_assembler.cc'; then $(CYGPATH_W) 'src/common/test_assembler.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/test_assembler.cc'; fi`
@@ -1353,7 +1354,7 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
 diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
 --- a/src/common/linux/dump_symbols.cc
 +++ b/src/common/linux/dump_symbols.cc
-@@ -80,16 +80,17 @@
+@@ -81,16 +81,17 @@
  using google_breakpad::ElfClass64;
  using google_breakpad::FindElfSectionByName;
  using google_breakpad::GetOffset;
@@ -1371,7 +1372,7 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
  // Wrapper class to make sure opened file is closed.
  //
  class FDWrapper {
-@@ -270,17 +271,17 @@
+@@ -278,17 +279,17 @@
  
  // Fill REGISTER_NAMES with the register names appropriate to the
  // machine architecture given in HEADER, indexed by the register
@@ -1390,7 +1391,7 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
        *register_names = DwarfCFIToModule::RegisterNames::ARM();
        return true;
      case EM_X86_64:
-@@ -298,17 +299,17 @@
+@@ -306,17 +307,17 @@
                    const typename ElfClass::Shdr* section,
                    const bool eh_frame,
                    const typename ElfClass::Shdr* got_section,
@@ -1412,7 +1413,7 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
 diff --git a/src/common/mac/dump_syms.mm b/src/common/mac/dump_syms.mm
 --- a/src/common/mac/dump_syms.mm
 +++ b/src/common/mac/dump_syms.mm
-@@ -305,17 +305,17 @@
+@@ -313,17 +313,17 @@
  }
  
  bool DumpSymbols::ReadCFI(google_breakpad::Module *module,
@@ -1452,7 +1453,24 @@ diff --git a/src/common/module.cc b/src/common/module.cc
  using std::dec;
  using std::endl;
  using std::hex;
-@@ -270,21 +271,35 @@
+@@ -255,36 +256,50 @@
+           strerror(errno));
+   return false;
+ }
+ 
+ std::ostream& operator<<(std::ostream& stream, const Module::Expr& expr) {
+   assert(!expr.invalid());
+   switch (expr.how_) {
+     case Module::kExprSimple:
+-      stream << expr.ident_ << " " << expr.offset_ << " +";
++      stream << FromUniqueString(expr.ident_) << " " << expr.offset_ << " +";
+       break;
+     case Module::kExprSimpleMem:
+-      stream << expr.ident_ << " " << expr.offset_ << " + ^";
++      stream << FromUniqueString(expr.ident_) << " " << expr.offset_ << " + ^";
+       break;
+     case Module::kExprPostfix:
+       stream << expr.postfix_; break;
      case Module::kExprInvalid:
      default:
        break;
@@ -1610,7 +1628,7 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    const Module::Address DUP_ADDRESS = 0xd35402aac7a7ad5cLL;
    const Module::Address DUP_SIZE = 0x200b26e605f99071LL;
    const Module::Address DUP_PARAMETER_SIZE = 0xf14ac4fed48c4a99LL;
-@@ -125,21 +127,23 @@
+@@ -125,21 +127,27 @@
    function->lines.push_back(line1);
  
    m.AddFunction(function);
@@ -1627,6 +1645,10 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
 +  entry->initial_rules[ustr__ZDcfa()] = Module::Expr("he was a handsome man");
 +  entry->initial_rules[ToUniqueString("and")] =
 +      Module::Expr("what i want to know is");
++  entry->initial_rules[ToUniqueString("stallion")] =
++      Module::Expr(ToUniqueString("and break"), 8, false);
++  entry->initial_rules[ToUniqueString("onetwothreefourfive")] =
++      Module::Expr(ToUniqueString("pigeonsjustlikethat"), 42, true);
 +  entry->rule_changes[0x30f9e5c83323973eULL][ToUniqueString("how")] =
 +      Module::Expr("do you like your blueeyed boy");
 +  entry->rule_changes[0x30f9e5c83323973eULL][ToUniqueString("Mister")] =
@@ -1639,7 +1661,28 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
  
    m.Write(s, ALL_SYMBOL_DATA);
    string contents = s.str();
-@@ -229,21 +233,23 @@
+@@ -147,17 +155,19 @@
+                "FILE 0 filename-a.cc\n"
+                "FILE 1 filename-b.cc\n"
+                "FUNC 9410dc39a798c580 2922088f98d3f6fc e5e9aa008bd5f0d0"
+                " A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)\n"
+                "b03cc3106d47eb91 cf621b8d324d0eb 67519080 0\n"
+                "9410dc39a798c580 1c2be6d6c5af2611 41676901 1\n"
+                "STACK CFI INIT 6434d177ce326ca 49fc9ca7c7c13dc2"
+                " .cfa: he was a handsome man"
+-               " and: what i want to know is\n"
++               " and: what i want to know is"
++               " onetwothreefourfive: pigeonsjustlikethat 42 + ^"
++               " stallion: and break 8 +\n"
+                "STACK CFI 6434d177ce326cb"
+                " Mister: Death"
+                " how: do you like your blueeyed boy\n",
+                contents.c_str());
+ }
+ 
+ TEST(Write, OmitUnusedFiles) {
+   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
+@@ -229,21 +239,23 @@
    function->lines.push_back(line1);
  
    m.AddFunction(function);
@@ -1668,7 +1711,7 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
  
    m.Write(s, NO_CFI);
    string contents = s.str();
-@@ -305,33 +311,36 @@
+@@ -305,33 +317,36 @@
    entry1->address = 0xddb5f41285aa7757ULL;
    entry1->size = 0x1486493370dc5073ULL;
    m.AddStackFrameEntry(entry1);
@@ -1713,7 +1756,7 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    string contents = s.str();
    EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
                 "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
-@@ -352,33 +361,39 @@
+@@ -352,33 +367,39 @@
    // Check that GetStackFrameEntries works.
    vector<Module::StackFrameEntry *> entries;
    m.GetStackFrameEntries(&entries);
@@ -1762,7 +1805,7 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    ASSERT_EQ(0U, entries[2]->initial_rules.size());
    ASSERT_EQ(0U, entries[2]->rule_changes.size());
  }
-@@ -585,33 +600,36 @@
+@@ -585,33 +606,36 @@
    entry1->address = 0x2000;
    entry1->size = 0x900;
    m.AddStackFrameEntry(entry1);
@@ -3928,7 +3971,7 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
 diff --git a/src/processor/stackwalker_amd64.cc b/src/processor/stackwalker_amd64.cc
 --- a/src/processor/stackwalker_amd64.cc
 +++ b/src/processor/stackwalker_amd64.cc
-@@ -49,49 +49,49 @@
+@@ -50,49 +50,49 @@
  
  const StackwalkerAMD64::CFIWalker::RegisterSet
  StackwalkerAMD64::cfi_register_map_[] = {

@@ -8,6 +8,7 @@
 #define mozilla_places_History_h_
 
 #include "mozilla/IHistory.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozIAsyncHistory.h"
 #include "nsIDownloadHistory.h"
@@ -73,15 +74,16 @@ public:
    *
    * @param _place
    *        The VisitData for the place we need to know information about.
-   * @return true if the page was recorded in moz_places, false otherwise.
+   * @param [out] _exists
+   *        Whether or the page was recorded in moz_places, false otherwise.
    */
-  bool FetchPageInfo(VisitData& _place);
+  nsresult FetchPageInfo(VisitData& _place, bool* _exists);
 
   /**
    * Get the number of bytes of memory this History object is using,
    * including sizeof(*this))
    */
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   /**
    * Obtains a pointer to this service.
@@ -191,7 +193,7 @@ private:
    * SizeOfIncludingThis().
    */
   static size_t SizeOfEntryExcludingThis(KeyClass* aEntry,
-                                         nsMallocSizeOfFun aMallocSizeOf,
+                                         mozilla::MallocSizeOf aMallocSizeOf,
                                          void*);
 
   nsTHashtable<KeyClass> mObservers;

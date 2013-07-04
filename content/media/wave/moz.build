@@ -16,3 +16,5 @@ CPP_SOURCES += [
     'WaveReader.cpp',
 ]
 
+LIBRARY_NAME = 'gkconwave_s'
+

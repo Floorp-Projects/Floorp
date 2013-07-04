@@ -12,7 +12,7 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
 
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
-loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
+loader.loadSubScript("chrome://marionette/content/marionette-common.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -67,6 +67,11 @@ let lastCoordinates = null;
 let isTap = false;
 // whether to send mouse event
 let mouseEventsOnly = false;
+
+Cu.import("resource://gre/modules/services-common/log4moz.js");
+let logger = Log4Moz.repository.getLogger("Marionette");
+logger.info("loaded marionette-listener.js");
+
 /**
  * Called when listener is first started up. 
  * The listener sends its unique window ID and its current URI to the actor.
@@ -274,6 +279,7 @@ function resetValues() {
   mouseEventsOnly = false;
 }
 
+
 /*
  * Marionette Methods
  */
@@ -379,7 +385,7 @@ function executeScript(msg, directInject) {
         let data = NetUtil.readInputStreamToString(stream, stream.available());
         script = data + script;
       }
-      let res = Cu.evalInSandbox(script, sandbox, "1.8");
+      let res = Cu.evalInSandbox(script, sandbox, "1.8", "dummy file" ,0);
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
@@ -401,16 +407,16 @@ function executeScript(msg, directInject) {
         return;
       }
 
-      let scriptSrc = "let __marionetteFunc = function(){" + script + "};" +
-                      "__marionetteFunc.apply(null, __marionetteParams);";
+      script = "let __marionetteFunc = function(){" + script + "};" +
+                   "__marionetteFunc.apply(null, __marionetteParams);";
       if (importedScripts.exists()) {
         let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].  
                       createInstance(Components.interfaces.nsIFileInputStream);
         stream.init(importedScripts, -1, 0, 0);
         let data = NetUtil.readInputStreamToString(stream, stream.available());
-        scriptSrc = data + scriptSrc;
+        script = data + script;
       }
-      let res = Cu.evalInSandbox(scriptSrc, sandbox, "1.8");
+      let res = Cu.evalInSandbox(script, sandbox, "1.8", "dummy file", 0);
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
@@ -419,7 +425,12 @@ function executeScript(msg, directInject) {
   }
   catch (e) {
     // 17 = JavascriptException
-    sendError(e.name + ': ' + e.message, 17, e.stack, asyncTestCommandId);
+    let error = createStackMessage(e,
+                                   "execute_script",
+                                   msg.json.filename,
+                                   msg.json.line,
+                                   script);
+    sendError(error[0], 17, error[1], asyncTestCommandId);
   }
 }
 
@@ -526,11 +537,15 @@ function executeWithCallback(msg, useFinish) {
       let data = NetUtil.readInputStreamToString(stream, stream.available());
       scriptSrc = data + scriptSrc;
     }
-    Cu.evalInSandbox(scriptSrc, sandbox, "1.8");
+    Cu.evalInSandbox(scriptSrc, sandbox, "1.8", "dummy file", 0);
   } catch (e) {
     // 17 = JavascriptException
-    sandbox.asyncComplete(e.name + ': ' + e.message, 17,
-                          e.stack, asyncTestCommandId);
+    let error = createStackMessage(e,
+                                   "execute_async_script",
+                                   msg.json.filename,
+                                   msg.json.line,
+                                   scriptSrc);
+    sandbox.asyncComplete(error[0], 17, error[1], asyncTestCommandId);
   }
 }
 
@@ -538,7 +553,15 @@ function executeWithCallback(msg, useFinish) {
  * This function creates a touch event given a touch type and a touch
  */
 function emitTouchEvent(type, touch) {
-  // Using domWindowUtils
+  let loggingInfo = "Marionette: emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
+  dump(loggingInfo);
+  /*
+  Disabled per bug 888303
+  marionetteLogObj.log(loggingInfo, "TRACE");
+  sendSyncMessage("Marionette:shareData",
+                  {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+  marionetteLogObj.clearLogs();
+  */
   let domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
   domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
 }
@@ -551,11 +574,19 @@ function emitTouchEvent(type, touch) {
  *           elClientX and elClientY are the coordinates of the mouse relative to the viewport
  */
 function emitMouseEvent(doc, type, elClientX, elClientY, detail, button) {
+  let loggingInfo = "Marionette: emitting Mouse event of type " + type + " at coordinates (" + elClientX + ", " + elClientY + ") relative to the viewport";
+  dump(loggingInfo);
+  /*
+  Disabled per bug 888303
+  marionetteLogObj.log(loggingInfo, "TRACE");
+  sendSyncMessage("Marionette:shareData",
+                  {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+  marionetteLogObj.clearLogs();
+  */
   detail = detail || 1;
   button = button || 0;
-  var win = doc.defaultView;
+  let win = doc.defaultView;
   // Figure out the element the mouse would be over at (x, y)
-  var target = doc.elementFromPoint(elClientX, elClientY);
   utils.synthesizeMouseAtPoint(elClientX, elClientY, {type: type, button: button, clickCount: detail}, win);
 }
 
@@ -894,11 +925,11 @@ function emitMultiEvents(type, touch, touches) {
   let win = doc.defaultView;
   // touches that are in the same document
   let documentTouches = doc.createTouchList(touches.filter(function(t) {
-    return t.target.ownerDocument === doc;
+    return ((t.target.ownerDocument === doc) && (type != 'touchcancel'));
   }));
   // touches on the same target
   let targetTouches = doc.createTouchList(touches.filter(function(t) {
-    return t.target === target;
+    return ((t.target === target) && ((type != 'touchcancel') || (type != 'touchend')));
   }));
   // Create changed touches
   let changedTouches = doc.createTouchList(touch);
@@ -1057,26 +1088,43 @@ function multiAction(msg) {
  */
 function goUrl(msg) {
   let command_id = msg.json.command_id;
+
+  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  let start = new Date().getTime();
+  let end = null;
+  function checkLoad(){
+    end = new Date().getTime();
+    let errorRegex = /about:.+(error)|(blocked)\?/;
+    let elapse = end - start;
+    if (msg.json.pageTimeout == null || elapse <= msg.json.pageTimeout){
+      if (curWindow.document.readyState == "complete"){
+        sendOk(command_id);
+        checkTimer.cancel();
+      }
+      else if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)){
+        sendError("Error loading page", 13, null, command_id);
+      }
+      else{
+        checkTimer.cancel();
+        checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+    }
+    else{
+      sendError("Error loading page, timed out", 21, null, command_id);
+    }
+  }
   // Prevent DOMContentLoaded events from frames from invoking this code,
   // unless the event is coming from the frame associated with the current
   // window (i.e., someone has used switch_to_frame).
   let onDOMContentLoaded = function onDOMContentLoaded(event){
-    if (msg.json.pageTimeout != null){
-      checkTimer.cancel();
-    }
     if (!event.originalTarget.defaultView.frameElement ||
       event.originalTarget.defaultView.frameElement == curWindow.frameElement) {
-      removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-      let errorRegex = /about:.+(error)|(blocked)\?/;
-      if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)) {
-        sendError("Error loading page", 13, null, command_id);
-        return;
-      }
-      sendOk(command_id);
+      checkLoad();
     }
   };
+
   function timerFunc(){
-    sendError("Error loading page", 13, null, command_id);
+    sendError("Error loading page, timed out", 21, null, command_id);
     removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
   }
   if (msg.json.pageTimeout != null){

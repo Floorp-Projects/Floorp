@@ -8,6 +8,7 @@ browser.jar:
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
   skin/classic/browser/aboutSessionRestore-window-icon.png
+  skin/classic/browser/aboutWelcomeBack.css                 (../shared/aboutWelcomeBack.css)
   skin/classic/browser/aboutCertError.css
   skin/classic/browser/aboutCertError_sectionCollapsed.png
   skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png
@@ -39,7 +40,7 @@ browser.jar:
   skin/classic/browser/Info.png
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/KUI-background.png
-  skin/classic/browser/linen-pattern.png
+  skin/classic/browser/subtle-pattern.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
   skin/classic/browser/notification-16.png
@@ -94,8 +95,10 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/webRTC-sharingDevice-16.png
   skin/classic/browser/webRTC-sharingDevice-16@2x.png
+  skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/buttons@2x.png             (downloads/buttons@2x.png)
+  skin/classic/browser/downloads/contentAreaDownloadsView.css (downloads/contentAreaDownloadsView.css)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-glow@2x.png       (downloads/download-glow@2x.png)
   skin/classic/browser/downloads/download-notification-finish.png  (downloads/download-notification-finish.png)
@@ -105,8 +108,7 @@ browser.jar:
   skin/classic/browser/downloads/download-summary.png       (downloads/download-summary.png)
   skin/classic/browser/downloads/download-summary@2x.png    (downloads/download-summary@2x.png)
   skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
-  skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
-  skin/classic/browser/downloads/contentAreaDownloadsView.css (downloads/contentAreaDownloadsView.css)
+  skin/classic/browser/downloads/indicator.css              (downloads/indicator.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
@@ -174,7 +176,7 @@ browser.jar:
   skin/classic/browser/social/services-64@2x.png            (social/services-64@2x.png)
   skin/classic/browser/social/share-button.png              (social/share-button.png)
   skin/classic/browser/social/share-button-active.png       (social/share-button-active.png)
-  skin/classic/browser/social/chat-close.png                             (social/chat-close.png)
+  skin/classic/browser/social/chat-icons.png                             (social/chat-icons.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/newtab@2x.png                          (tabbrowser/newtab@2x.png)
@@ -212,14 +214,12 @@ browser.jar:
   skin/classic/browser/devtools/dark-theme.css              (devtools/dark-theme.css)
   skin/classic/browser/devtools/light-theme.css             (devtools/light-theme.css)
   skin/classic/browser/devtools/widgets.css                 (devtools/widgets.css)
-  skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
-  skin/classic/browser/devtools/commandline.png             (devtools/commandline.png)
+  skin/classic/browser/devtools/commandline-icon.png        (devtools/commandline-icon.png)
   skin/classic/browser/devtools/command-paintflashing.png   (devtools/command-paintflashing.png)
   skin/classic/browser/devtools/command-responsivemode.png  (devtools/command-responsivemode.png)
   skin/classic/browser/devtools/command-scratchpad.png      (devtools/command-scratchpad.png)
   skin/classic/browser/devtools/command-tilt.png            (devtools/command-tilt.png)
   skin/classic/browser/devtools/alerticon-warning.png       (devtools/alerticon-warning.png)
-  skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
   skin/classic/browser/devtools/ruleview.css                (devtools/ruleview.css)
   skin/classic/browser/devtools/commandline.css             (devtools/commandline.css)
   skin/classic/browser/devtools/checkbox-dark.png           (devtools/checkbox-dark.png)
@@ -230,7 +230,6 @@ browser.jar:
   skin/classic/browser/devtools/orion-task.png              (devtools/orion-task.png)
   skin/classic/browser/devtools/orion-breakpoint.png        (devtools/orion-breakpoint.png)
   skin/classic/browser/devtools/orion-debug-location.png    (devtools/orion-debug-location.png)
-  skin/classic/browser/devtools/toolbarbutton-close.png     (devtools/toolbarbutton-close.png)
 * skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.png                  (devtools/webconsole.png)
@@ -285,21 +284,23 @@ browser.jar:
   skin/classic/browser/devtools/responsive-se-resizer.png   (devtools/responsive-se-resizer.png)
   skin/classic/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
   skin/classic/browser/devtools/responsive-background.png   (devtools/responsive-background.png)
-  skin/classic/browser/devtools/tools-icons-small.png       (devtools/tools-icons-small.png)
+  skin/classic/browser/devtools/toggle-tools.png            (devtools/toggle-tools.png)
   skin/classic/browser/devtools/dock-bottom.png             (devtools/dock-bottom.png)
   skin/classic/browser/devtools/dock-side.png               (devtools/dock-side.png)
-  skin/classic/browser/devtools/floating-scrollbars.css     (devtools/floating-scrollbars.css)
-  skin/classic/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)
 * skin/classic/browser/devtools/inspector.css               (devtools/inspector.css)
+  skin/classic/browser/devtools/profiler-stopwatch.png      (devtools/profiler-stopwatch.png)
   skin/classic/browser/devtools/toolbox.css                 (devtools/toolbox.css)
   skin/classic/browser/devtools/tool-options.png            (devtools/tool-options.png)
   skin/classic/browser/devtools/tool-webconsole.png         (devtools/tool-webconsole.png)
   skin/classic/browser/devtools/tool-debugger.png           (devtools/tool-debugger.png)
+  skin/classic/browser/devtools/tool-debugger-paused.png    (devtools/tool-debugger-paused.png)
   skin/classic/browser/devtools/tool-inspector.png          (devtools/tool-inspector.png)
   skin/classic/browser/devtools/tool-styleeditor.png        (devtools/tool-styleeditor.png)
   skin/classic/browser/devtools/tool-profiler.png           (devtools/tool-profiler.png)
   skin/classic/browser/devtools/tool-network.png            (devtools/tool-network.png)
   skin/classic/browser/devtools/close.png                   (devtools/close.png)
+  skin/classic/browser/devtools/vview-delete.png            (devtools/vview-delete.png)
+  skin/classic/browser/devtools/vview-edit.png              (devtools/vview-edit.png)
   skin/classic/browser/devtools/undock.png                  (devtools/undock.png)
   skin/classic/browser/devtools/font-inspector.css          (devtools/font-inspector.css)
   skin/classic/browser/devtools/computedview.css            (devtools/computedview.css)

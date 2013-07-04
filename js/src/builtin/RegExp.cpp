@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/RegExp.h"
+
 #include "jscntxt.h"
 
 #include "vm/StringBuffer.h"
 
-#include "builtin/RegExp.h"
+#include "jsobjinlines.h"
 
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
@@ -204,7 +206,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
     if (args.length() == 0) {
         RegExpStatics *res = cx->regExpStatics();
-        Rooted<JSAtom*> empty(cx, cx->runtime->emptyString);
+        Rooted<JSAtom*> empty(cx, cx->runtime()->emptyString);
         RegExpObject *reobj = builder.build(empty, res->getFlags());
         if (!reobj)
             return false;
@@ -222,7 +224,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         /*
          * Beware, sourceObj may be a (transparent) proxy to a RegExp, so only
          * use generic (proxyable) operations on sourceObj that do not assume
-         * sourceObj.isRegExp().
+         * sourceObj.is<RegExpObject>().
          */
         RootedObject sourceObj(cx, &sourceValue.toObject());
 
@@ -263,7 +265,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 
     RootedAtom source(cx);
     if (sourceValue.isUndefined()) {
-        source = cx->runtime->emptyString;
+        source = cx->runtime()->emptyString;
     } else {
         /* Coerce to string and compile. */
         JSString *str = ToString<CanGC>(cx, sourceValue);
@@ -277,7 +279,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 
     RegExpFlag flags = RegExpFlag(0);
     if (args.hasDefined(1)) {
-        RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
+        RootedString flagStr(cx, ToString<CanGC>(cx, args.handleAt(1)));
         if (!flagStr)
             return false;
         args[1].setString(flagStr);
@@ -304,14 +306,14 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 JS_ALWAYS_INLINE bool
 IsRegExp(const Value &v)
 {
-    return v.isObject() && v.toObject().hasClass(&RegExpClass);
+    return v.isObject() && v.toObject().is<RegExpObject>();
 }
 
 JS_ALWAYS_INLINE bool
 regexp_compile_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
-    RegExpObjectBuilder builder(cx, &args.thisv().toObject().asRegExp());
+    RegExpObjectBuilder builder(cx, &args.thisv().toObject().as<RegExpObject>());
     return CompileRegExpObject(cx, builder, args);
 }
 
@@ -351,7 +353,7 @@ regexp_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
 
-    JSString *str = args.thisv().toObject().asRegExp().toString(cx);
+    JSString *str = args.thisv().toObject().as<RegExpObject>().toString(cx);
     if (!str)
         return false;
 
@@ -491,15 +493,15 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    RootedObject proto(cx, global->createBlankPrototype(cx, &RegExpClass));
+    RootedObject proto(cx, global->createBlankPrototype(cx, &RegExpObject::class_));
     if (!proto)
         return NULL;
     proto->setPrivate(NULL);
 
     HandlePropertyName empty = cx->names().empty;
-    RegExpObjectBuilder builder(cx, &proto->asRegExp());
+    RegExpObjectBuilder builder(cx, &proto->as<RegExpObject>());
     if (!builder.build(empty, RegExpFlag(0)))
         return NULL;
 
@@ -528,7 +530,7 @@ RegExpRunStatus
 js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string, MatchConduit &matches)
 {
     /* Step 1 (b) was performed by CallNonGenericMethod. */
-    Rooted<RegExpObject*> reobj(cx, &regexp->asRegExp());
+    Rooted<RegExpObject*> reobj(cx, &regexp->as<RegExpObject>());
 
     RegExpGuard re(cx);
     if (!reobj->getShared(cx, &re))
@@ -542,7 +544,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string, Match
         return RegExpRunStatus_Error;
 
     /* Step 4. */
-    Value lastIndex = reobj->getLastIndex();
+    RootedValue lastIndex(cx, reobj->getLastIndex());
     size_t length = input->length();
 
     /* Step 5. */
@@ -602,7 +604,7 @@ ExecuteRegExp(JSContext *cx, CallArgs args, MatchConduit &matches)
     RootedObject regexp(cx, &args.thisv().toObject());
 
     /* Step 2. */
-    RootedString string(cx, ToString<CanGC>(cx, args.get(0)));
+    RootedString string(cx, ToString<CanGC>(cx, args.handleOrUndefinedAt(0)));
     if (!string)
         return RegExpRunStatus_Error;
 
@@ -622,7 +624,7 @@ regexp_exec_impl(JSContext *cx, CallArgs args)
      * and CreateRegExpMatchResult().
      */
     RootedObject regexp(cx, &args.thisv().toObject());
-    RootedString string(cx, ToString<CanGC>(cx, args.get(0)));
+    RootedString string(cx, ToString<CanGC>(cx, args.handleOrUndefinedAt(0)));
     if (!string)
         return false;
 

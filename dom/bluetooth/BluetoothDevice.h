@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_bluetooth_bluetoothdevice_h__
 #define mozilla_dom_bluetooth_bluetoothdevice_h__
 
+#include "mozilla/Attributes.h"
 #include "BluetoothCommon.h"
 #include "BluetoothPropertyContainer.h"
 #include "nsDOMEventTargetHelper.h"
@@ -48,7 +49,7 @@ public:
     return static_cast<EventTarget*>(this);
   }
 
-  void SetPropertyByValue(const BluetoothNamedValue& aValue);
+  void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
 
   void Unroot();
 private:
@@ -57,8 +58,8 @@ private:
   ~BluetoothDevice();
   void Root();
 
-  JSObject* mJsUuids;
-  JSObject* mJsServices;
+  JS::Heap<JSObject*> mJsUuids;
+  JS::Heap<JSObject*> mJsServices;
 
   nsString mAdapterPath;
   nsString mAddress;

@@ -15,12 +15,14 @@
 
 #include "jsmath.h"
 
+#include "jslibmath.h"
+
 #include "mozilla/Constants.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MemoryReporting.h"
 
 #include <fcntl.h>
-#include <stdlib.h>
 
 #ifdef XP_UNIX
 # include <unistd.h>
@@ -31,8 +33,6 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
-#include "jslibmath.h"
 #include "jscompartment.h"
 
 #include "jsobjinlines.h"
@@ -73,7 +73,7 @@ using mozilla::SpecificNaN;
 #define M_SQRT1_2       0.70710678118654752440
 #endif
 
-static JSConstDoubleSpec math_constants[] = {
+static const JSConstDoubleSpec math_constants[] = {
     {M_E,       "E",            0, {0,0,0}},
     {M_LOG2E,   "LOG2E",        0, {0,0,0}},
     {M_LOG10E,  "LOG10E",       0, {0,0,0}},
@@ -95,7 +95,7 @@ MathCache::MathCache() {
 }
 
 size_t
-MathCache::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
+MathCache::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     return mallocSizeOf(this);
 }
@@ -115,17 +115,20 @@ Class js::MathClass = {
 JSBool
 js_math_abs(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    z = Abs(x);
-    vp->setNumber(z);
-    return JS_TRUE;
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    double z = Abs(x);
+    args.rval().setNumber(z);
+    return true;
 }
 
 double
@@ -141,20 +144,24 @@ js::math_acos_impl(MathCache *cache, double x)
 JSBool
 js::math_acos(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_acos_impl(mathCache, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_acos_impl(mathCache, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 double
@@ -170,20 +177,24 @@ js::math_asin_impl(MathCache *cache, double x)
 JSBool
 js::math_asin(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_asin_impl(mathCache, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_asin_impl(mathCache, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 double
@@ -195,66 +206,73 @@ js::math_atan_impl(MathCache *cache, double x)
 JSBool
 js::math_atan(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_atan_impl(mathCache, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_atan_impl(mathCache, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 double
-js::ecmaAtan2(double x, double y)
+js::ecmaAtan2(double y, double x)
 {
 #if defined(_MSC_VER)
     /*
      * MSVC's atan2 does not yield the result demanded by ECMA when both x
      * and y are infinite.
      * - The result is a multiple of pi/4.
-     * - The sign of x determines the sign of the result.
-     * - The sign of y determines the multiplicator, 1 or 3.
+     * - The sign of y determines the sign of the result.
+     * - The sign of x determines the multiplicator, 1 or 3.
      */
-    if (IsInfinite(x) && IsInfinite(y)) {
-        double z = js_copysign(M_PI / 4, x);
-        if (y < 0)
+    if (IsInfinite(y) && IsInfinite(x)) {
+        double z = js_copysign(M_PI / 4, y);
+        if (x < 0)
             z *= 3;
         return z;
     }
 #endif
 
 #if defined(SOLARIS) && defined(__GNUC__)
-    if (x == 0) {
-        if (MOZ_DOUBLE_IS_NEGZERO(y))
-            return js_copysign(M_PI, x);
-        if (y == 0)
-            return x;
+    if (y == 0) {
+        if (IsNegativeZero(x))
+            return js_copysign(M_PI, y);
+        if (x == 0)
+            return y;
     }
 #endif
-    return atan2(x, y);
+    return atan2(y, x);
 }
 
 JSBool
 js::math_atan2(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, y, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc <= 1) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() <= 1) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x) || !ToNumber(cx, vp[3], &y))
-        return JS_FALSE;
-    z = ecmaAtan2(x, y);
-    vp->setDouble(z);
-    return JS_TRUE;
+
+    double x, y;
+    if (!ToNumber(cx, args.handleAt(0), &x) || !ToNumber(cx, args.handleAt(1), &y))
+        return false;
+
+    double z = ecmaAtan2(x, y);
+    args.rval().setDouble(z);
+    return true;
 }
 
 double
@@ -270,17 +288,20 @@ js_math_ceil_impl(double x)
 JSBool
 js_math_ceil(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    z = js_math_ceil_impl(x);
-    vp->setNumber(z);
-    return JS_TRUE;
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    double z = js_math_ceil_impl(x);
+    args.rval().setNumber(z);
+    return true;
 }
 
 double
@@ -292,20 +313,24 @@ js::math_cos_impl(MathCache *cache, double x)
 JSBool
 js::math_cos(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_cos_impl(mathCache, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_cos_impl(mathCache, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 double
@@ -325,20 +350,24 @@ js::math_exp_impl(MathCache *cache, double x)
 JSBool
 js::math_exp(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_exp_impl(mathCache, x);
-    vp->setNumber(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_exp_impl(mathCache, x);
+    args.rval().setNumber(z);
+    return true;
 }
 
 double
@@ -350,17 +379,20 @@ js_math_floor_impl(double x)
 JSBool
 js_math_floor(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    z = js_math_floor_impl(x);
-    vp->setNumber(z);
-    return JS_TRUE;
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    double z = js_math_floor_impl(x);
+    args.rval().setNumber(z);
+    return true;
 }
 
 JSBool
@@ -394,20 +426,24 @@ js::math_log_impl(MathCache *cache, double x)
 JSBool
 js::math_log(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_log_impl(mathCache, x);
-    vp->setNumber(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_log_impl(mathCache, x);
+    args.rval().setNumber(z);
+    return true;
 }
 
 JSBool
@@ -415,10 +451,10 @@ js_math_max(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    double x;
     double maxval = NegativeInfinity();
     for (unsigned i = 0; i < args.length(); i++) {
-        if (!ToNumber(cx, args[i], &x))
+        double x;
+        if (!ToNumber(cx, args.handleAt(i), &x))
             return false;
         // Math.max(num, NaN) => NaN, Math.max(-0, +0) => +0
         if (x > maxval || IsNaN(x) || (x == maxval && IsNegative(maxval)))
@@ -433,10 +469,10 @@ js_math_min(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    double x;
     double minval = PositiveInfinity();
     for (unsigned i = 0; i < args.length(); i++) {
-        if (!ToNumber(cx, args[i], &x))
+        double x;
+        if (!ToNumber(cx, args.handleAt(i), &x))
             return false;
         // Math.min(num, NaN) => NaN, Math.min(-0, +0) => -0
         if (x < minval || IsNaN(x) || (x == minval && IsNegativeZero(x)))
@@ -517,38 +553,42 @@ js::ecmaPow(double x, double y)
 JSBool
 js_math_pow(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, y;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc <= 1) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() <= 1) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x) || !ToNumber(cx, vp[3], &y))
-        return JS_FALSE;
+
+    double x, y;
+    if (!ToNumber(cx, args.handleAt(0), &x) || !ToNumber(cx, args.handleAt(1), &y))
+        return false;
+
     /*
      * Special case for square roots. Note that pow(x, 0.5) != sqrt(x)
      * when x = -0.0, so we have to guard for this.
      */
     if (IsFinite(x) && x != 0.0) {
         if (y == 0.5) {
-            vp->setNumber(sqrt(x));
-            return JS_TRUE;
+            args.rval().setNumber(sqrt(x));
+            return true;
         }
         if (y == -0.5) {
-            vp->setNumber(1.0/sqrt(x));
-            return JS_TRUE;
+            args.rval().setNumber(1.0/sqrt(x));
+            return true;
         }
     }
+
     /* pow(x, +-0) is always 1, even for x = NaN. */
     if (y == 0) {
-        vp->setInt32(1);
-        return JS_TRUE;
+        args.rval().setInt32(1);
+        return true;
     }
 
     double z = ecmaPow(x, y);
 
-    vp->setNumber(z);
-    return JS_TRUE;
+    args.rval().setNumber(z);
+    return true;
 }
 #if defined(_MSC_VER)
 # pragma optimize("", on)
@@ -627,7 +667,7 @@ random_next(uint64_t *rngState, int bits)
 static inline double
 random_nextDouble(JSContext *cx)
 {
-    uint64_t *rng = &cx->compartment->rngState;
+    uint64_t *rng = &cx->compartment()->rngState;
     return double((random_next(rng, 26) << 27) + random_next(rng, 27)) / RNG_DSCALE;
 }
 
@@ -641,9 +681,10 @@ math_random_no_outparam(JSContext *cx)
 JSBool
 js_math_random(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     double z = random_nextDouble(cx);
-    vp->setDouble(z);
-    return JS_TRUE;
+    args.rval().setDouble(z);
+    return true;
 }
 
 JSBool /* ES5 15.8.2.15. */
@@ -657,7 +698,7 @@ js_math_round(JSContext *cx, unsigned argc, Value *vp)
     }
 
     double x;
-    if (!ToNumber(cx, args[0], &x))
+    if (!ToNumber(cx, args.handleAt(0), &x))
         return false;
 
     int32_t i;
@@ -685,39 +726,47 @@ js::math_sin_impl(MathCache *cache, double x)
 JSBool
 js::math_sin(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_sin_impl(mathCache, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_sin_impl(mathCache, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 JSBool
 js_math_sqrt(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = mathCache->lookup(sqrt, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = mathCache->lookup(sqrt, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 double
@@ -729,28 +778,33 @@ js::math_tan_impl(MathCache *cache, double x)
 JSBool
 js::math_tan(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
-        return JS_FALSE;
-    MathCache *mathCache = cx->runtime->getMathCache(cx);
+
+    double x;
+    if (!ToNumber(cx, args.handleAt(0), &x))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
     if (!mathCache)
-        return JS_FALSE;
-    z = math_tan_impl(mathCache, x);
-    vp->setDouble(z);
-    return JS_TRUE;
+        return false;
+
+    double z = math_tan_impl(mathCache, x);
+    args.rval().setDouble(z);
+    return true;
 }
 
 #if JS_HAS_TOSOURCE
 static JSBool
 math_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setString(cx->names().Math);
-    return JS_TRUE;
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(cx->names().Math);
+    return true;
 }
 #endif
 

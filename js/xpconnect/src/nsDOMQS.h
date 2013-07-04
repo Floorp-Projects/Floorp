@@ -8,7 +8,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "HTMLOptGroupElement.h"
@@ -68,7 +68,6 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                              _interface **ppThis,                             \
                              nsISupports **pThisRef,                          \
                              jsval *pThisVal,                                 \
-                             XPCLazyCallContext *lccx,                        \
                              bool failureFatal)                               \
 {                                                                             \
     nsresult rv;                                                              \
@@ -76,7 +75,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
         castNativeFromWrapper(cx, obj, _bit,                                  \
                               ProtoIDAndDepth<_interface>::PrototypeID,       \
                               ProtoIDAndDepth<_interface>::Depth,             \
-                              pThisRef, pThisVal, lccx, &rv);                 \
+                              pThisRef, pThisVal, &rv);                       \
     *ppThis = NULL;  /* avoids uninitialized warnings in callers */           \
     if (failureFatal && !native)                                              \
         return xpc_qsThrow(cx, rv);                                           \
@@ -232,7 +231,7 @@ UnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,                     \
 } /* namespace mozilla */
 
 DEFINE_UNWRAP_CAST_HTML(canvas, mozilla::dom::HTMLCanvasElement)
-DEFINE_UNWRAP_CAST_HTML(form, nsHTMLFormElement)
+DEFINE_UNWRAP_CAST_HTML(form, mozilla::dom::HTMLFormElement)
 DEFINE_UNWRAP_CAST_HTML(img, mozilla::dom::HTMLImageElement)
 DEFINE_UNWRAP_CAST_HTML(optgroup, mozilla::dom::HTMLOptGroupElement)
 DEFINE_UNWRAP_CAST_HTML(option, mozilla::dom::HTMLOptionElement)

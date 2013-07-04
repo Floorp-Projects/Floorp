@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Safepoints.h"
-#include "IonSpewer.h"
-#include "LIR.h"
+#include "ion/Safepoints.h"
+#include "ion/IonSpewer.h"
+#include "ion/LIR.h"
 
 using namespace js;
 using namespace ion;
@@ -66,7 +66,7 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 
 #ifdef DEBUG
     if (IonSpewEnabled(IonSpew_Safepoints)) {
-        for (GeneralRegisterIterator iter(spilled); iter.more(); iter++) {
+        for (GeneralRegisterForwardIterator iter(spilled); iter.more(); iter++) {
             const char *type = gc.has(*iter)
                                ? "gc"
                                : valueRegs.has(*iter)

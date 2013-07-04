@@ -484,12 +484,12 @@ function clickAndSwitch() {
     }
   });
 
-  ok(gFilteredSources._container._parent.querySelectorAll(".results-panel-item")[0]
+  ok(gFilteredSources.widget._parent.querySelectorAll(".results-panel-item")[0]
      .classList.contains("results-panel-item"),
      "The first visible item target isn't the correct one.");
 
   EventUtils.sendMouseEvent({ type: "click" },
-    gFilteredSources._container._parent.querySelectorAll(".results-panel-item")[0],
+    gFilteredSources.widget._parent.querySelectorAll(".results-panel-item")[0],
     gDebugger);
 }
 
@@ -571,12 +571,12 @@ function clickAndSwitchAgain() {
     }
   });
 
-  ok(gFilteredSources._container._parent.querySelectorAll(".results-panel-item")[2]
+  ok(gFilteredSources.widget._parent.querySelectorAll(".results-panel-item")[2]
      .classList.contains("results-panel-item"),
      "The first visible item target isn't the correct one.");
 
   EventUtils.sendMouseEvent({ type: "click" },
-    gFilteredSources._container._parent.querySelectorAll(".results-panel-item")[2],
+    gFilteredSources.widget._parent.querySelectorAll(".results-panel-item")[2],
     gDebugger);
 }
 

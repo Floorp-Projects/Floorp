@@ -135,4 +135,39 @@ let tests = [
     do_check_throws(function () cps.getGlobal("foo", null, null));
     yield true;
   },
+
+  function set_invalidateCache() {
+    // (1) Set a pref and wait for it to finish.
+    yield set("a.com", "foo", 1);
+
+    // (2) It should be cached.
+    getCachedOK(["a.com", "foo"], true, 1);
+
+    // (3) Set the pref to a new value but don't wait for it to finish.
+    cps.set("a.com", "foo", 2, null, {
+      handleCompletion: function () {
+        // (6) The pref should be cached after setting it.
+        getCachedOK(["a.com", "foo"], true, 2);
+      },
+    });
+
+    // (4) Group "a.com" and name "foo" should no longer be cached.
+    getCachedOK(["a.com", "foo"], false);
+
+    // (5) Call getByDomainAndName.
+    var fetchedPref;
+    cps.getByDomainAndName("a.com", "foo", null, {
+      handleResult: function (pref) {
+        fetchedPref = pref;
+      },
+      handleCompletion: function () {
+        // (7) Finally, this callback should be called after set's above.
+        do_check_true(!!fetchedPref);
+        do_check_eq(fetchedPref.value, 2);
+        next();
+      },
+    });
+
+    yield;
+  },
 ];

@@ -23,6 +23,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 
+#ifdef XP_MACOSX
+#include <CoreServices/CoreServices.h>
+#endif
+
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -58,6 +62,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_pixel_buffer_object",
     "GL_ARB_ES2_compatibility",
     "GL_OES_texture_float",
+    "GL_OES_texture_float_linear",
     "GL_ARB_texture_float",
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
@@ -81,6 +86,11 @@ static const char *sExtensionNames[] = {
     "GL_OES_EGL_image_external",
     "GL_EXT_packed_depth_stencil",
     "GL_OES_element_index_uint",
+    "GL_OES_vertex_array_object",
+    "GL_ARB_vertex_array_object",
+    "GL_APPLE_vertex_array_object",
+    "GL_ARB_draw_buffers",
+    "GL_EXT_draw_buffers",
     nullptr
 };
 
@@ -407,6 +417,13 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         InitExtensions();
 
+        // Disable extensions with partial or incorrect support.
+        if (WorkAroundDriverBugs()) {
+            if (Renderer() == RendererAdrenoTM320) {
+                MarkExtensionUnsupported(OES_standard_derivatives);
+            }
+        }
+
         NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
                      (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
                      "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
@@ -536,6 +553,52 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (IsExtensionSupported(ARB_vertex_array_object) ||
+            IsExtensionSupported(OES_vertex_array_object)) {
+            SymLoadStruct vaoSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArray", "IsVertexArrayOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArrays", "GenVertexArraysOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArray", "BindVertexArrayOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArrays", "DeleteVertexArraysOES", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(&vaoSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports Vertex Array Object without supplying its functions.");
+
+                MarkExtensionUnsupported(ARB_vertex_array_object);
+                MarkExtensionUnsupported(OES_vertex_array_object);
+                MarkExtensionUnsupported(APPLE_vertex_array_object);
+                mSymbols.fIsVertexArray = nullptr;
+                mSymbols.fGenVertexArrays = nullptr;
+                mSymbols.fBindVertexArray = nullptr;
+                mSymbols.fDeleteVertexArrays = nullptr;
+            }
+        }
+        else if (IsExtensionSupported(APPLE_vertex_array_object)) {
+            /*
+             * separate call to LoadSymbols with APPLE_vertex_array_object to work around
+             * a driver bug : the IsVertexArray symbol (without suffix) can be present but unusable.
+             */
+            SymLoadStruct vaoSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArrayAPPLE", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArraysAPPLE", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArrayAPPLE", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArraysAPPLE", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(&vaoSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports Vertex Array Object without supplying its functions.");
+
+                MarkExtensionUnsupported(APPLE_vertex_array_object);
+                mSymbols.fIsVertexArray = nullptr;
+                mSymbols.fGenVertexArrays = nullptr;
+                mSymbols.fBindVertexArray = nullptr;
+                mSymbols.fDeleteVertexArrays = nullptr;
+            }
+        }
+
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nullptr } },
@@ -560,14 +623,38 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
 
 #ifdef XP_MACOSX
-        if (mWorkAroundDriverBugs &&
-            mVendor == VendorIntel) {
-            // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-            mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
-            mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
-            // for good measure, we align renderbuffers on what we do for 2D textures
-            mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
-            mNeedsTextureSizeChecks = true;
+        if (mWorkAroundDriverBugs) {
+            if (mVendor == VendorIntel) {
+                SInt32 major, minor;
+                OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
+                OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
+
+                // For 2D textures, see bug 737182 for the original restriction to 4K and
+                // see bug 807096 for why we further restricted it to 2K on < 10.8
+                // For good measure, we align renderbuffers on what we do for 2D textures
+                if (err1 != noErr || err2 != noErr ||
+                    major < 10 || (major == 10 && minor < 8)) {
+                    mMaxTextureSize        = std::min(mMaxTextureSize, 2048);
+                    mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize, 2048);
+                }
+                else {
+                    mMaxTextureSize        = std::min(mMaxTextureSize, 4096);
+                    mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize, 4096);
+                }
+                // For cube map textures, see bug 684882.
+                mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
+                mNeedsTextureSizeChecks = true;
+            } else if (mVendor == VendorNVIDIA) {
+                SInt32 major, minor;
+                OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
+                OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
+
+                if (err1 != noErr || err2 != noErr ||
+                    major < 10 || (major == 10 && minor < 8)) {
+                    mMaxTextureSize = std::min(mMaxTextureSize, 4096);
+                    mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize, 4096);
+                }
+            }
         }
 #endif
 #ifdef MOZ_X11
@@ -879,8 +966,12 @@ GLContext::UpdatePixelFormat()
     MOZ_ASSERT(caps.color == !!format.blue);
 
     MOZ_ASSERT(caps.alpha == !!format.alpha);
-    MOZ_ASSERT(caps.depth == !!format.depth);
-    MOZ_ASSERT(caps.stencil == !!format.stencil);
+
+    // These we either must have if they're requested, or
+    // we can have if they're not.
+    MOZ_ASSERT(caps.depth == !!format.depth || !caps.depth);
+    MOZ_ASSERT(caps.stencil == !!format.stencil || !caps.stencil);
+
     MOZ_ASSERT(caps.antialias == (format.samples > 1));
 #endif
     mPixelFormat = new PixelBufferFormat(format);
@@ -1353,13 +1444,27 @@ GLContext::MarkDestroyed()
 
 static void SwapRAndBComponents(gfxImageSurface* surf)
 {
-    for (int j = 0; j < surf->Height(); ++j) {
-        uint32_t* row = (uint32_t*)(surf->Data() + surf->Stride() * j);
-        for (int i = 0; i < surf->Width(); ++i) {
-            *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
-            row++;
-        }
+  uint8_t *row = surf->Data();
+
+  size_t rowBytes = surf->Width()*4;
+  size_t rowHole = surf->Stride() - rowBytes;
+
+  size_t rows = surf->Height();
+
+  while (rows) {
+
+    const uint8_t *rowEnd = row + rowBytes;
+
+    while (row != rowEnd) {
+      row[0] ^= row[2];
+      row[2] ^= row[0];
+      row[0] ^= row[2];
+      row += 4;
     }
+
+    row += rowHole;
+    --rows;
+  }
 }
 
 static already_AddRefed<gfxImageSurface> YInvertImageSurface(gfxImageSurface* aSurf)
@@ -1646,8 +1751,7 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
             break;
 
         default:
-            MOZ_NOT_REACHED("Bad format.");
-            return;
+            MOZ_CRASH("Bad format.");
     }
     MOZ_ASSERT(dest->Stride() == dest->Width() * destPixelSize);
 
@@ -1680,8 +1784,7 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
                 break;
             }
             default: {
-                MOZ_NOT_REACHED("Bad read format.");
-                return;
+                MOZ_CRASH("Bad read format.");
             }
         }
 
@@ -1702,8 +1805,7 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
                 break;
             }
             default: {
-                MOZ_NOT_REACHED("Bad read type.");
-                return;
+                MOZ_CRASH("Bad read type.");
             }
         }
 

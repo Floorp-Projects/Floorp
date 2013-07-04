@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_frames_inl_h__
-#define jsion_frames_inl_h__
+#ifndef ion_IonFrames_inl_h
+#define ion_IonFrames_inl_h
+
+#ifdef JS_ION
 
 #include "ion/IonFrames.h"
 #include "ion/IonFrameIterator.h"
 #include "ion/LIR.h"
+
+#include "ion/IonFrameIterator-inl.h"
 
 namespace js {
 namespace ion {
@@ -43,9 +47,8 @@ SizeOfFramePrefix(FrameType type)
       case IonFrame_Osr:
         return IonOsrFrameLayout::Size();
       default:
-        JS_NOT_REACHED("unknown frame type");
+        MOZ_ASSUME_UNREACHABLE("unknown frame type");
     }
-    return 0;
 }
 
 inline IonCommonFrameLayout *
@@ -147,5 +150,6 @@ GetTopBaselineFrame(JSContext *cx)
 } // namespace ion
 } // namespace js
 
-#endif // jsion_frames_inl_h__
+#endif // JS_ION
 
+#endif /* ion_IonFrames_inl_h */

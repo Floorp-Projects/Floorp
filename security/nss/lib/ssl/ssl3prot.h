@@ -210,11 +210,51 @@ typedef struct {
     } u;
 } SSL3ServerParams;
 
+/* This enum reflects HashAlgorithm enum from
+ * https://tools.ietf.org/html/rfc5246#section-7.4.1.4.1
+ *
+ * When updating, be sure to also update ssl3_TLSHashAlgorithmToOID. */
+enum {
+    tls_hash_md5 = 1,
+    tls_hash_sha1 = 2,
+    tls_hash_sha224 = 3,
+    tls_hash_sha256 = 4,
+    tls_hash_sha384 = 5,
+    tls_hash_sha512 = 6
+};
+
+/* This enum reflects SignatureAlgorithm enum from
+ * https://tools.ietf.org/html/rfc5246#section-7.4.1.4.1 */
+typedef enum {
+    tls_sig_rsa = 1,
+    tls_sig_dsa = 2,
+    tls_sig_ecdsa = 3
+} TLSSignatureAlgorithm;
+
+typedef struct {
+    SECOidTag hashAlg;
+    TLSSignatureAlgorithm sigAlg;
+} SSL3SignatureAndHashAlgorithm;
+
+/* SSL3HashesIndividually contains a combination MD5/SHA1 hash, as used in TLS
+ * prior to 1.2. */
 typedef struct {
     PRUint8 md5[16];
     PRUint8 sha[20];
+} SSL3HashesIndividually;
+
+/* SSL3Hashes contains an SSL hash value. The digest is contained in |u.raw|
+ * which, if |hashAlg==SEC_OID_UNKNOWN| is also a SSL3HashesIndividually
+ * struct. */
+typedef struct {
+    unsigned int len;
+    SECOidTag hashAlg;
+    union {
+	PRUint8 raw[64];
+	SSL3HashesIndividually s;
+    } u;
 } SSL3Hashes;
-     
+
 typedef struct {
     union {
 	SSL3Opaque anonymous;
@@ -272,7 +312,7 @@ typedef enum {
     sender_server = 0x53525652
 } SSL3Sender;
 
-typedef SSL3Hashes SSL3Finished;   
+typedef SSL3HashesIndividually SSL3Finished;   
 
 typedef struct {
     SSL3Opaque verify_data[12];

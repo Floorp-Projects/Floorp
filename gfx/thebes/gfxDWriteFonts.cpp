@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxDWriteFonts.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "gfxDWriteShaper.h"
 #include "gfxHarfBuzzShaper.h"
 #include <algorithm>
@@ -668,7 +671,7 @@ gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph)
 }
 
 void
-gfxDWriteFont::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFont::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                    FontCacheSizes*   aSizes) const
 {
     gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
@@ -677,7 +680,7 @@ gfxDWriteFont::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 void
-gfxDWriteFont::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+gfxDWriteFont::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                    FontCacheSizes*   aSizes) const
 {
     aSizes->mFontInstances += aMallocSizeOf(this);

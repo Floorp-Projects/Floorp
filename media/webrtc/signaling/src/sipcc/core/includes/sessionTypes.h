@@ -52,6 +52,7 @@ typedef struct {
 
 typedef struct {
   int          state;
+  int          fsm_state;
   int          attr;
   int          inst;
   line_t       line_id;

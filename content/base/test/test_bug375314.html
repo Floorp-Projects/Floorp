@@ -62,6 +62,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
+policy = SpecialPowers.wrapCallbackObject(policy);
 
 // Register content policy
 var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager

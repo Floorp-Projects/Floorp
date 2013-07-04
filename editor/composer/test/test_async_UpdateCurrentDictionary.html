@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=856270
+-->
+<head>
+  <title>Test for Bug 856270 - Async UpdateCurrentDictionary</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=856270">Mozilla Bug 856270</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="editor" spellcheck="true"></textarea>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(start);
+
+function start() {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+  var textarea = document.getElementById("editor");
+  textarea.focus();
+
+  onSpellCheck(textarea, function () {
+    var isc = textarea.editor.getInlineSpellChecker(false);
+    ok(isc, "Inline spell checker should exist after focus and spell check");
+    var sc = isc.spellChecker;
+    isnot(sc.GetCurrentDictionary(), lang,
+          "Current dictionary should not be set yet.");
+
+    // First, set the lang attribute on the textarea, call Update, and make
+    // sure the spell checker's language was updated appropriately.
+    var lang = "en-US";
+    textarea.setAttribute("lang", lang);
+    sc.UpdateCurrentDictionary(function () {
+      is(sc.GetCurrentDictionary(), lang,
+         "UpdateCurrentDictionary should set the current dictionary.");
+
+      // Second, make some Update calls, but then do a Set.  The Set should
+      // effectively cancel the Updates, but the Updates' callbacks should be
+      // called nonetheless.
+      var numCalls = 3;
+      for (var i = 0; i < numCalls; i++) {
+        sc.UpdateCurrentDictionary(function () {
+          is(sc.GetCurrentDictionary(), "",
+             "No dictionary should be active after Update.");
+          if (--numCalls == 0)
+            SimpleTest.finish();
+        });
+      }
+      try {
+        sc.SetCurrentDictionary("testing-XX");
+      }
+      catch (err) {
+        // Set throws NS_ERROR_NOT_AVAILABLE because "testing-XX" isn't really
+        // an available dictionary.
+      }
+      is(sc.GetCurrentDictionary(), "",
+         "No dictionary should be active after Set.");
+    });
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
+

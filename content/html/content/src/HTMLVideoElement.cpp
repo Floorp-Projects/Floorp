@@ -33,20 +33,23 @@
 #include "nsIPowerManagerService.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
+#include "mozilla/Preferences.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
 
 namespace mozilla {
 namespace dom {
 
+static bool sVideoStatsEnabled;
+
 NS_IMPL_ADDREF_INHERITED(HTMLVideoElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLVideoElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLVideoElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLVideoElement,
-                                               HTMLMediaElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(HTMLMediaElement)
+  NS_INTERFACE_TABLE_INHERITED2(HTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 
@@ -160,6 +163,9 @@ NS_IMPL_URI_ATTR(HTMLVideoElement, Poster, poster)
 uint32_t HTMLVideoElement::MozParsedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
 }
 
@@ -172,6 +178,9 @@ NS_IMETHODIMP HTMLVideoElement::GetMozParsedFrames(uint32_t *aMozParsedFrames)
 uint32_t HTMLVideoElement::MozDecodedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
@@ -184,6 +193,9 @@ NS_IMETHODIMP HTMLVideoElement::GetMozDecodedFrames(uint32_t *aMozDecodedFrames)
 uint32_t HTMLVideoElement::MozPresentedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
 }
 
@@ -196,6 +208,9 @@ NS_IMETHODIMP HTMLVideoElement::GetMozPresentedFrames(uint32_t *aMozPresentedFra
 uint32_t HTMLVideoElement::MozPaintedFrames()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   layers::ImageContainer* container = GetImageContainer();
   return container ? container->GetPaintCount() : 0;
 }
@@ -243,6 +258,33 @@ HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
   WakeLockUpdate();
 }
 
+already_AddRefed<dom::VideoPlaybackQuality>
+HTMLVideoElement::VideoPlaybackQuality()
+{
+  nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  NS_ENSURE_TRUE(window, nullptr);
+  nsPerformance* perf = window->GetPerformance();
+  NS_ENSURE_TRUE(perf, nullptr);
+  DOMHighResTimeStamp creationTime = perf->GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+
+  uint64_t totalFrames = 0;
+  uint64_t droppedFrames = 0;
+  uint64_t corruptedFrames = 0;
+  double playbackJitter = 0.0;
+  if (mDecoder && sVideoStatsEnabled) {
+    MediaDecoder::FrameStatistics& stats = mDecoder->GetFrameStatistics();
+    totalFrames = stats.GetParsedFrames();
+    droppedFrames = totalFrames - stats.GetPresentedFrames();
+    corruptedFrames = totalFrames - stats.GetDecodedFrames();
+    playbackJitter = stats.GetPlaybackJitter();
+  }
+
+  nsRefPtr<dom::VideoPlaybackQuality> playbackQuality =
+    new dom::VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
+                                  corruptedFrames, playbackJitter);
+  return playbackQuality.forget();
+}
+
 void
 HTMLVideoElement::WakeLockCreate()
 {
@@ -258,12 +300,7 @@ HTMLVideoElement::WakeLockRelease()
 void
 HTMLVideoElement::WakeLockUpdate()
 {
-  bool hidden = true;
-
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-  if (domDoc) {
-    domDoc->GetHidden(&hidden);
-  }
+  bool hidden = OwnerDoc()->Hidden();
 
   if (mScreenWakeLock && (mPaused || hidden)) {
     mScreenWakeLock->Unlock();
@@ -282,5 +319,10 @@ HTMLVideoElement::WakeLockUpdate()
   }
 }
 
+void
+HTMLVideoElement::Init()
+{
+  Preferences::AddBoolVarCache(&sVideoStatsEnabled, "media.video_stats.enabled");
+}
 } // namespace dom
 } // namespace mozilla

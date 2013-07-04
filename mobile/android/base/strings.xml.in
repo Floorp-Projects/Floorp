@@ -58,6 +58,7 @@
   <string name="bookmark_added">&bookmark_added;</string>
   <string name="bookmark_removed">&bookmark_removed;</string>
   <string name="bookmark_updated">&bookmark_updated;</string>
+  <string name="bookmark_options">&bookmark_options;</string>
 
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
@@ -79,14 +80,17 @@
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
-  <string name="pref_category_general">&pref_category_general;</string>
-  <string name="pref_category_privacy">&pref_category_privacy;</string>
-  <string name="pref_category_content">&pref_category_content;</string>
+  <string name="pref_category_customize">&pref_category_customize;</string>
+  <string name="pref_category_display">&pref_category_display;</string>
+  <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
+  <string name="pref_category_vendor">&pref_category_vendor;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
-  <string name="pref_header_general">&pref_header_general;</string>
-  <string name="pref_header_privacy">&pref_header_privacy;</string>
-  <string name="pref_header_content">&pref_header_content;</string>
-  <string name="pref_about_firefox">&pref_about_firefox;</string>
+
+  <string name="pref_header_customize">&pref_header_customize;</string>
+  <string name="pref_header_display">&pref_header_display;</string>
+  <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
+  <string name="pref_header_vendor">&pref_header_vendor;</string>
+
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
   <string name="pref_cookies_menu">&pref_cookies_menu;</string>
@@ -134,6 +138,11 @@
   <string name="pref_update_autodownload_disabled">&pref_update_autodownload_disabled;</string>
   <string name="pref_update_autodownload_enabled">&pref_update_autodownload_enabled;</string>
 
+
+  <string name="pref_about_firefox">&pref_about_firefox;</string>
+  <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
+  <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>
+
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
   <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>
   <string name="datareporting_notification_action">&datareporting_notification_action;</string>
@@ -144,9 +153,12 @@
   <string name="datareporting_telemetry_title">&datareporting_telemetry_title;</string>
   <string name="datareporting_telemetry_summary">&datareporting_telemetry_summary;</string>
   <string name="datareporting_fhr_title">&datareporting_fhr_title;</string>
-  <string name="datareporting_fhr_summary">&datareporting_fhr_summary;</string>
+  <string name="datareporting_fhr_summary2">&datareporting_fhr_summary2;</string>
+  <string name="datareporting_abouthr_title">&datareporting_abouthr_title;</string>
   <string name="datareporting_crashreporter_title_short">&datareporting_crashreporter_title_short;</string>
   <string name="datareporting_crashreporter_summary">&datareporting_crashreporter_summary;</string>
+  <string name="datareporting_wifi_title">&datareporting_wifi_title;</string>
+  <string name="datareporting_wifi_summary">&datareporting_wifi_summary;</string>
 
   <string name="go">&go;</string>
   <string name="search">&search;</string>
@@ -261,6 +273,13 @@
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>
   <string name="identity_run_by">&identity_run_by;</string>
+  <string name="loaded_mixed_content_message">&loaded_mixed_content_message;</string>
+  <string name="blocked_mixed_content_message_top">&blocked_mixed_content_message_top;</string>
+  <string name="blocked_mixed_content_message_bottom">&blocked_mixed_content_message_bottom;</string>
+  <string name="learn_more">&learn_more;</string>
+  <string name="enable_protection">&enable_protection;</string>
+  <string name="disable_protection">&disable_protection;</string>
+  <string name="keep_blocking">&keep_blocking;</string>
 
   <!-- Clear private data -->
   <string name="private_data_success">&private_data_success;</string>

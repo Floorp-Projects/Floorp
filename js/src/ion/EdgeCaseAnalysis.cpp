@@ -6,12 +6,12 @@
 
 #include <stdio.h>
 
-#include "Ion.h"
-#include "IonBuilder.h"
-#include "IonSpewer.h"
-#include "EdgeCaseAnalysis.h"
-#include "MIR.h"
-#include "MIRGraph.h"
+#include "ion/Ion.h"
+#include "ion/IonBuilder.h"
+#include "ion/IonSpewer.h"
+#include "ion/EdgeCaseAnalysis.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 using namespace js;
 using namespace js::ion;

@@ -20,7 +20,7 @@
 #include "base/message_pump_libevent.h"
 #endif
 #if defined(OS_LINUX) || defined(OS_BSD)
-#ifdef MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK)
 #include "base/message_pump_glib.h"
 #endif
 #ifdef MOZ_WIDGET_QT
@@ -86,7 +86,7 @@ MessageLoop* MessageLoop::current() {
   return lazy_tls_ptr.Pointer()->Get();
 }
 
-PRInt32 message_loop_id_seq = 0;
+int32_t message_loop_id_seq = 0;
 
 MessageLoop::MessageLoop(Type type)
     : type_(type),

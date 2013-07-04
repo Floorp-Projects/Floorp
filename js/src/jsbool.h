@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsbool_h___
-#define jsbool_h___
+#ifndef jsbool_h
+#define jsbool_h
 /*
  * JS boolean interface.
  */
 
 #include "jsapi.h"
-#include "jsobj.h"
 
 extern JSObject *
 js_InitBooleanClass(JSContext *cx, js::HandleObject obj);
@@ -22,8 +21,8 @@ js_BooleanToString(JSContext *cx, JSBool b);
 namespace js {
 
 inline bool
-BooleanGetPrimitiveValue(JSContext *cx, HandleObject obj, Value *vp);
+BooleanGetPrimitiveValue(HandleObject obj, JSContext *cx);
 
 } /* namespace js */
 
-#endif /* jsbool_h___ */
+#endif /* jsbool_h */

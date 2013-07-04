@@ -16,10 +16,11 @@
 #include "Logging.h"
 
 #if defined(ANDROID)
+#include <sys/syscall.h>
+
 #include <android/api-level.h>
 #if __ANDROID_API__ < 8
 /* Android API < 8 doesn't provide sigaltstack */
-#include <sys/syscall.h>
 
 extern "C" {
 
@@ -32,14 +33,6 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 #endif /* ANDROID */
 
 using namespace mozilla;
-
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-#ifndef PAGE_MASK
-#define PAGE_MASK (~ (PAGE_SIZE - 1))
-#endif
 
 /**
  * dlfcn.h replacements functions
@@ -115,7 +108,7 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
     // get the Phdr location from there.
     uint8_t mapped;
     // If the page is not mapped, mincore returns an error.
-    if (!mincore(const_cast<void*>(it->l_addr), PAGE_SIZE, &mapped)) {
+    if (!mincore(const_cast<void*>(it->l_addr), PageSize(), &mapped)) {
       const Elf::Ehdr *ehdr = Elf::Ehdr::validate(it->l_addr);
       if (ehdr) {
         info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(
@@ -181,8 +174,6 @@ LeafName(const char *path)
 LibHandle::~LibHandle()
 {
   free(path);
-  if (mappable && mappable->GetKind() != Mappable::MAPPABLE_EXTRACT_FILE)
-    delete mappable;
 }
 
 const char *
@@ -194,9 +185,8 @@ LibHandle::GetName() const
 size_t
 LibHandle::GetMappableLength() const
 {
-  MOZ_ASSERT(mappable != NULL, "GetMappableLength needs to be called first,"
-                               " and only once");
-  mappable = GetMappable();
+  if (!mappable)
+    mappable = GetMappable();
   if (!mappable)
     return 0;
   return mappable->GetLength();
@@ -205,17 +195,25 @@ LibHandle::GetMappableLength() const
 void *
 LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const
 {
-  MOZ_ASSERT(mappable == NULL, "MappableMMap must be called after"
-                               " GetMappableLength");
-  return mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
+  if (!mappable)
+    mappable = GetMappable();
+  if (!mappable)
+    return MAP_FAILED;
+  void* mapped = mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
+  if (mapped != MAP_FAILED) {
+    /* Ensure the availability of all pages within the mapping */
+    for (size_t off = 0; off < length; off += PageSize()) {
+      mappable->ensure(reinterpret_cast<char *>(mapped) + off);
+    }
+  }
+  return mapped;
 }
 
 void
 LibHandle::MappableMUnmap(void *addr, size_t length) const
 {
-  MOZ_ASSERT(mappable == NULL, "MappableMUnmap must be called after"
-                               " MappableMMap and GetMappableLength");
-  mappable->munmap(addr, length);
+  if (mappable)
+    mappable->munmap(addr, length);
 }
 
 /**
@@ -227,12 +225,12 @@ SystemElf::Load(const char *path, int flags)
   /* The Android linker returns a handle when the file name matches an
    * already loaded library, even when the full path doesn't exist */
   if (path && path[0] == '/' && (access(path, F_OK) == -1)){
-    debug("dlopen(\"%s\", 0x%x) = %p", path, flags, (void *)NULL);
+    DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, (void *)NULL);
     return NULL;
   }
 
   void *handle = dlopen(path, flags);
-  debug("dlopen(\"%s\", 0x%x) = %p", path, flags, handle);
+  DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, handle);
   ElfLoader::Singleton.lastError = dlerror();
   if (handle) {
     SystemElf *elf = new SystemElf(path, handle);
@@ -246,7 +244,7 @@ SystemElf::~SystemElf()
 {
   if (!dlhandle)
     return;
-  debug("dlclose(%p [\"%s\"])", dlhandle, GetPath());
+  DEBUG_LOG("dlclose(%p [\"%s\"])", dlhandle, GetPath());
   dlclose(dlhandle);
   ElfLoader::Singleton.lastError = dlerror();
   ElfLoader::Singleton.Forget(this);
@@ -256,7 +254,7 @@ void *
 SystemElf::GetSymbolPtr(const char *symbol) const
 {
   void *sym = dlsym(dlhandle, symbol);
-  debug("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
+  DEBUG_LOG("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
   ElfLoader::Singleton.lastError = dlerror();
   return sym;
 }
@@ -347,9 +345,9 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     handle = SystemElf::Load(name, flags);
 
   delete [] abs_path;
-  debug("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path, flags,
-        reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
-        static_cast<void *>(handle));
+  DEBUG_LOG("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path, flags,
+            reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
+            static_cast<void *>(handle));
 
   return handle;
 }
@@ -414,14 +412,14 @@ ElfLoader::Forget(LibHandle *handle)
 {
   LibHandleList::iterator it = std::find(handles.begin(), handles.end(), handle);
   if (it != handles.end()) {
-    debug("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
-                                            handle->GetPath());
+    DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
+                                                handle->GetPath());
     if (dbg && !handle->IsSystemElf())
       dbg.Remove(static_cast<CustomElf *>(handle));
     handles.erase(it);
   } else {
-    debug("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
-          reinterpret_cast<void *>(handle), handle->GetPath());
+    DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
+              reinterpret_cast<void *>(handle), handle->GetPath());
   }
 }
 
@@ -453,13 +451,13 @@ ElfLoader::~ElfLoader()
     for (LibHandleList::reverse_iterator it = list.rbegin();
          it < list.rend(); ++it) {
       if ((*it)->IsSystemElf()) {
-        debug("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
-              "[%d direct refs, %d refs total]", (*it)->GetPath(),
-              (*it)->DirectRefCount(), (*it)->refCount());
+        DEBUG_LOG("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
+                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
+                  (*it)->DirectRefCount(), (*it)->refCount());
       } else {
-        debug("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
-              "[%d direct refs, %d refs total]", (*it)->GetPath(),
-              (*it)->DirectRefCount(), (*it)->refCount());
+        DEBUG_LOG("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
+                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
+                  (*it)->DirectRefCount(), (*it)->refCount());
         /* Not removing, since it could have references to other libraries,
          * destroying them as a side effect, and possibly leaving dangling
          * pointers in the handle list we're scanning */
@@ -515,8 +513,8 @@ void
 ElfLoader::DestructorCaller::Call()
 {
   if (destructor) {
-    debug("ElfLoader::DestructorCaller::Call(%p, %p, %p)",
-          FunctionPtr(destructor), object, dso_handle);
+    DEBUG_LOG("ElfLoader::DestructorCaller::Call(%p, %p, %p)",
+              FunctionPtr(destructor), object, dso_handle);
     destructor(object);
     destructor = NULL;
   }
@@ -596,7 +594,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
     if (auxv->type == AT_PHDR) {
       phdrs.Init(reinterpret_cast<Elf::Phdr*>(auxv->value));
       /* Assume the base address is the first byte of the same page */
-      base = reinterpret_cast<char *>(auxv->value & PAGE_MASK);
+      base = reinterpret_cast<char *>(PageAlignedPtr(auxv->value));
     }
     if (auxv->type == AT_PHNUM)
       phdrs.Init(auxv->value);
@@ -604,7 +602,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
   }
 
   if (!phdrs) {
-    debug("Couldn't find program headers");
+    DEBUG_LOG("Couldn't find program headers");
     return;
   }
 
@@ -613,26 +611,27 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
    * definitions in the program executable. Trying to map anonymous memory
    * with a hint giving the base address will return a different address
    * if something is mapped there, and the base address otherwise. */
-  MappedPtr mem(mmap(base, PAGE_SIZE, PROT_NONE,
-                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), PAGE_SIZE);
+  MappedPtr mem(MemoryRange::mmap(base, PageSize(), PROT_NONE,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   if (mem == base) {
     /* If program headers aren't mapped, try to map them */
     int fd = open("/proc/self/exe", O_RDONLY);
     if (fd == -1) {
-      debug("Failed to open /proc/self/exe");
+      DEBUG_LOG("Failed to open /proc/self/exe");
       return;
     }
-    mem.Assign(mmap(base, PAGE_SIZE, PROT_READ, MAP_PRIVATE, fd, 0), PAGE_SIZE);
+    mem.Assign(MemoryRange::mmap(base, PageSize(), PROT_READ, MAP_PRIVATE,
+                                 fd, 0));
     /* If we don't manage to map at the right address, just give up. */
     if (mem != base) {
-      debug("Couldn't read program headers");
+      DEBUG_LOG("Couldn't read program headers");
       return;
     }
   }
   /* Sanity check: the first bytes at the base address should be an ELF
    * header. */
   if (!Elf::Ehdr::validate(base)) {
-     debug("Couldn't find program base");
+     DEBUG_LOG("Couldn't find program base");
      return;
   }
 
@@ -651,7 +650,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
       dyns.Init(base + phdr->p_vaddr, phdr->p_filesz);
   }
   if (!dyns) {
-    debug("Failed to find PT_DYNAMIC section in program");
+    DEBUG_LOG("Failed to find PT_DYNAMIC section in program");
     return;
   }
 
@@ -662,7 +661,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
       break;
     }
   }
-  debug("DT_DEBUG points at %p", static_cast<void *>(dbg));
+  DEBUG_LOG("DT_DEBUG points at %p", static_cast<void *>(dbg));
 }
 
 /**
@@ -674,26 +673,38 @@ class EnsureWritable
 {
 public:
   template <typename T>
-  EnsureWritable(T *&ptr)
+  EnsureWritable(T *ptr, size_t length_ = sizeof(T))
   {
-    prot = getProt((uintptr_t) &ptr);
-    if (prot == -1)
+    MOZ_ASSERT(length_ < PageSize());
+    prot = -1;
+    page = MAP_FAILED;
+
+    char *firstPage = PageAlignedPtr(reinterpret_cast<char *>(ptr));
+    char *lastPageEnd = PageAlignedEndPtr(reinterpret_cast<char *>(ptr) + length_);
+    length = lastPageEnd - firstPage;
+    uintptr_t start = reinterpret_cast<uintptr_t>(firstPage);
+    uintptr_t end;
+
+    prot = getProt(start, &end);
+    if (prot == -1 || (start + length) > end)
       MOZ_CRASH();
-    /* Pointers are aligned such that their value can't be spanning across
-     * 2 pages. */
-    page = (void*)((uintptr_t) &ptr & PAGE_MASK);
-    if (!(prot & PROT_WRITE))
-      mprotect(page, PAGE_SIZE, prot | PROT_WRITE);
+
+    if (prot & PROT_WRITE)
+      return;
+
+    page = firstPage;
+    mprotect(page, length, prot | PROT_WRITE);
   }
 
   ~EnsureWritable()
   {
-    if (!(prot & PROT_WRITE))
-      mprotect(page, PAGE_SIZE, prot);
+    if (page != MAP_FAILED) {
+      mprotect(page, length, prot);
+}
   }
 
 private:
-  int getProt(uintptr_t addr)
+  int getProt(uintptr_t addr, uintptr_t *end)
   {
     /* The interesting part of the /proc/self/maps format looks like:
      * startAddr-endAddr rwxp */
@@ -718,6 +729,7 @@ private:
         result |= PROT_EXEC;
       else if (perms[2] != '-')
         return -1;
+      *end = endAddr;
       return result;
     }
     return -1;
@@ -725,6 +737,7 @@ private:
 
   int prot;
   void *page;
+  size_t length;
 };
 
 /**
@@ -756,7 +769,7 @@ ElfLoader::DebuggerHelper::Add(ElfLoader::link_map *map)
     firstAdded = map;
     /* When adding a library for the first time, r_map points to data
      * handled by the system linker, and that data may be read-only */
-    EnsureWritable w(dbg->r_map->l_prev);
+    EnsureWritable w(&dbg->r_map->l_prev);
     dbg->r_map->l_prev = map;
   } else
     dbg->r_map->l_prev = map;
@@ -780,7 +793,7 @@ ElfLoader::DebuggerHelper::Remove(ElfLoader::link_map *map)
     firstAdded = map->l_prev;
     /* When removing the first added library, its l_next is going to be
      * data handled by the system linker, and that data may be read-only */
-    EnsureWritable w(map->l_next->l_prev);
+    EnsureWritable w(&map->l_next->l_prev);
     map->l_next->l_prev = map->l_prev;
   } else
     map->l_next->l_prev = map->l_prev;
@@ -788,14 +801,108 @@ ElfLoader::DebuggerHelper::Remove(ElfLoader::link_map *map)
   dbg->r_brk();
 }
 
-SEGVHandler::SEGVHandler()
+#if defined(ANDROID)
+/* As some system libraries may be calling signal() or sigaction() to
+ * set a SIGSEGV handler, effectively breaking MappableSeekableZStream,
+ * or worse, restore our SIGSEGV handler with wrong flags (which using
+ * signal() will do), we want to hook into the system's sigaction() to
+ * replace it with our own wrapper instead, so that our handler is never
+ * replaced. We used to only do that with libraries this linker loads,
+ * but it turns out at least one system library does call signal() and
+ * breaks us (libsc-a3xx.so on the Samsung Galaxy S4).
+ * As libc's signal (bsd_signal/sysv_signal, really) calls sigaction
+ * under the hood, instead of calling the signal system call directly,
+ * we only need to hook sigaction. This is true for both bionic and
+ * glibc.
+ */
+
+/* libc's sigaction */
+extern "C" int
+sigaction(int signum, const struct sigaction *act,
+          struct sigaction *oldact);
+
+/* Simple reimplementation of sigaction. This is roughly equivalent
+ * to the assembly that comes in bionic, but not quite equivalent to
+ * glibc's implementation, so we only use this on Android. */
+int
+sys_sigaction(int signum, const struct sigaction *act,
+              struct sigaction *oldact)
 {
+  return syscall(__NR_sigaction, signum, act, oldact);
+}
+
+/* Replace the first instructions of the given function with a jump
+ * to the given new function. */
+template <typename T>
+static bool
+Divert(T func, T new_func)
+{
+  void *ptr = FunctionPtr(func);
+  uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+
+#if defined(__i386__)
+  // A 32-bit jump is a 5 bytes instruction.
+  EnsureWritable w(ptr, 5);
+  *reinterpret_cast<unsigned char *>(addr) = 0xe9; // jmp
+  *reinterpret_cast<intptr_t *>(addr + 1) =
+    reinterpret_cast<uintptr_t>(new_func) - addr - 5; // target displacement
+  return true;
+#elif defined(__arm__)
+  const unsigned char trampoline[] = {
+                            // .thumb
+    0x46, 0x04,             // nop
+    0x78, 0x47,             // bx pc
+    0x46, 0x04,             // nop
+                            // .arm
+    0x04, 0xf0, 0x1f, 0xe5, // ldr pc, [pc, #-4]
+                            // .word <new_func>
+  };
+  const unsigned char *start;
+  if (addr & 0x01) {
+    /* Function is thumb, the actual address of the code is without the
+     * least significant bit. */
+    addr--;
+    /* The arm part of the trampoline needs to be 32-bit aligned */
+    if (addr & 0x02)
+      start = trampoline;
+    else
+      start = trampoline + 2;
+  } else {
+    /* Function is arm, we only need the arm part of the trampoline */
+    start = trampoline + 6;
+  }
+
+  size_t len = sizeof(trampoline) - (start - trampoline);
+  EnsureWritable w(reinterpret_cast<void *>(addr), len + sizeof(void *));
+  memcpy(reinterpret_cast<void *>(addr), start, len);
+  *reinterpret_cast<void **>(addr + len) = FunctionPtr(new_func);
+  cacheflush(addr, addr + len + sizeof(void *), 0);
+  return true;
+#else
+  return false;
+#endif
+}
+#else
+#define sys_sigaction sigaction
+template <typename T>
+static bool
+Divert(T func, T new_func)
+{
+  return false;
+}
+#endif
+
+SEGVHandler::SEGVHandler()
+: registeredHandler(false)
+{
+  if (!Divert(sigaction, __wrap_sigaction))
+    return;
   /* Setup an alternative stack if the already existing one is not big
    * enough, or if there is none. */
   if (sigaltstack(NULL, &oldStack) == -1 || !oldStack.ss_sp ||
       oldStack.ss_size < stackSize) {
-    stackPtr.Assign(mmap(NULL, stackSize, PROT_READ | PROT_WRITE,
-                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), stackSize);
+    stackPtr.Assign(MemoryRange::mmap(NULL, stackSize, PROT_READ | PROT_WRITE,
+                                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
     stack_t stack;
     stack.ss_sp = stackPtr;
     stack.ss_size = stackSize;
@@ -809,7 +916,7 @@ SEGVHandler::SEGVHandler()
   sigemptyset(&action.sa_mask);
   action.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
   action.sa_restorer = NULL;
-  sigaction(SIGSEGV, &action, &this->action);
+  registeredHandler = !sys_sigaction(SIGSEGV, &action, &this->action);
 }
 
 SEGVHandler::~SEGVHandler()
@@ -817,14 +924,14 @@ SEGVHandler::~SEGVHandler()
   /* Restore alternative stack for signals */
   sigaltstack(&oldStack, NULL);
   /* Restore original signal handler */
-  sigaction(SIGSEGV, &this->action, NULL);
+  sys_sigaction(SIGSEGV, &this->action, NULL);
 }
 
 /* TODO: "properly" handle signal masks and flags */
 void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
 {
   //ASSERT(signum == SIGSEGV);
-  debug("Caught segmentation fault @%p", info->si_addr);
+  DEBUG_LOG("Caught segmentation fault @%p", info->si_addr);
 
   /* Check whether we segfaulted in the address space of a CustomElf. We're
    * only expecting that to happen as an access error. */
@@ -832,7 +939,7 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
     mozilla::RefPtr<LibHandle> handle =
       ElfLoader::Singleton.GetHandleByPtr(info->si_addr);
     if (handle && !handle->IsSystemElf()) {
-      debug("Within the address space of a CustomElf");
+      DEBUG_LOG("Within the address space of a CustomElf");
       CustomElf *elf = static_cast<CustomElf *>(static_cast<LibHandle *>(handle));
       if (elf->mappable->ensure(info->si_addr))
         return;
@@ -842,56 +949,30 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   /* Redispatch to the registered handler */
   SEGVHandler &that = ElfLoader::Singleton;
   if (that.action.sa_flags & SA_SIGINFO) {
-    debug("Redispatching to registered handler @%p",
-          FunctionPtr(that.action.sa_sigaction));
+    DEBUG_LOG("Redispatching to registered handler @%p",
+              FunctionPtr(that.action.sa_sigaction));
     that.action.sa_sigaction(signum, info, context);
   } else if (that.action.sa_handler == SIG_DFL) {
-    debug("Redispatching to default handler");
+    DEBUG_LOG("Redispatching to default handler");
     /* Reset the handler to the default one, and trigger it. */
-    sigaction(signum, &that.action, NULL);
+    sys_sigaction(signum, &that.action, NULL);
     raise(signum);
   } else if (that.action.sa_handler != SIG_IGN) {
-    debug("Redispatching to registered handler @%p",
-          FunctionPtr(that.action.sa_handler));
+    DEBUG_LOG("Redispatching to registered handler @%p",
+              FunctionPtr(that.action.sa_handler));
     that.action.sa_handler(signum);
   } else {
-    debug("Ignoring");
+    DEBUG_LOG("Ignoring");
   }
-}
-  
-sighandler_t
-__wrap_signal(int signum, sighandler_t handler)
-{
-  /* Use system signal() function for all but SIGSEGV signals. */
-  if (signum != SIGSEGV)
-    return signal(signum, handler);
-
-  SEGVHandler &that = ElfLoader::Singleton;
-  union {
-    sighandler_t signal;
-    void (*sigaction)(int, siginfo_t *, void *);
-  } oldHandler;
-
-  /* Keep the previous handler to return its value */
-  if (that.action.sa_flags & SA_SIGINFO) {
-    oldHandler.sigaction = that.action.sa_sigaction;
-  } else {
-    oldHandler.signal = that.action.sa_handler;
-  }
-  /* Set the new handler */
-  that.action.sa_handler = handler;
-  that.action.sa_flags = 0;
-
-  return oldHandler.signal;
 }
 
 int
-__wrap_sigaction(int signum, const struct sigaction *act,
-                 struct sigaction *oldact)
+SEGVHandler::__wrap_sigaction(int signum, const struct sigaction *act,
+                              struct sigaction *oldact)
 {
   /* Use system sigaction() function for all but SIGSEGV signals. */
   if (signum != SIGSEGV)
-    return sigaction(signum, act, oldact);
+    return sys_sigaction(signum, act, oldact);
 
   SEGVHandler &that = ElfLoader::Singleton;
   if (oldact)

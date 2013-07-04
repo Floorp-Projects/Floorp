@@ -6,7 +6,7 @@ Object.defineProperty(target, 'foo', {
     enumerable: false,
     configurable: true
 });
-var desc = Object.getOwnPropertyDescriptor(new Proxy(target, {}), 'foo');
+var desc = Object.getOwnPropertyDescriptor(Proxy(target, {}), 'foo');
 assertEq(desc.value, 'bar');
 assertEq(desc.writable, true);
 assertEq(desc.enumerable, false);
@@ -20,4 +20,4 @@ Object.defineProperty(proto, 'foo', {
     configurable: true
 });
 var target = Object.create(proto);
-assertEq(Object.getOwnPropertyDescriptor(new Proxy(target, {}), 'foo'), undefined);
+assertEq(Object.getOwnPropertyDescriptor(Proxy(target, {}), 'foo'), undefined);

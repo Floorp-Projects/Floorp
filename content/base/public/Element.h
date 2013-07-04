@@ -39,6 +39,7 @@
 #include "nsAttrValue.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsIHTMLCollection.h"
+#include "Units.h"
 
 class nsIDOMEventListener;
 class nsIFrame;
@@ -104,6 +105,9 @@ enum {
 
 #undef ELEMENT_FLAG_BIT
 
+// Make sure we have space for our bits
+ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
+
 namespace mozilla {
 namespace dom {
 
@@ -112,8 +116,8 @@ class UndoManager;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
-{ 0xcae9f7e7, 0x6163, 0x47b5, \
- { 0xa1, 0x63, 0x30, 0xc8, 0x1d, 0x2d, 0x79, 0x39 } }
+{ 0xec962aa7, 0x53ee, 0x46ff, \
+  { 0x90, 0x34, 0x68, 0xea, 0x79, 0x9d, 0x7d, 0xf7 } }
 
 class Element : public FragmentOrElement
 {
@@ -671,8 +675,8 @@ public:
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     if (sf) {
-      sf->ScrollToCSSPixels(nsIntPoint(sf->GetScrollPositionCSSPixels().x,
-                                       aScrollTop));
+      sf->ScrollToCSSPixels(CSSIntPoint(sf->GetScrollPositionCSSPixels().x,
+                                        aScrollTop));
     }
   }
   int32_t ScrollLeft()
@@ -684,8 +688,8 @@ public:
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     if (sf) {
-      sf->ScrollToCSSPixels(nsIntPoint(aScrollLeft,
-                                       sf->GetScrollPositionCSSPixels().y));
+      sf->ScrollToCSSPixels(CSSIntPoint(aScrollLeft,
+                                        sf->GetScrollPositionCSSPixels().y));
     }
   }
   int32_t ScrollWidth();
@@ -918,6 +922,22 @@ public:
    */
   NS_HIDDEN_(nsresult) SetBoolAttr(nsIAtom* aAttr, bool aValue);
 
+  /**
+   * Retrieve the ratio of font-size-inflated text font size to computed font
+   * size for this element. This will query the element for its primary frame,
+   * and then use this to get font size inflation information about the frame.
+   *
+   * @returns The font size inflation ratio (inflated font size to uninflated
+   *          font size) for the primary frame of this element. Returns 1.0
+   *          by default if font size inflation is not enabled. Returns -1
+   *          if the element does not have a primary frame.
+   *
+   * @note The font size inflation ratio that is returned is actually the
+   *       font size inflation data for the element's _primary frame_, not the
+   *       element itself, but for most purposes, this should be sufficient.
+   */
+  float FontSizeInflation();
+
 protected:
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
@@ -1050,14 +1070,6 @@ protected:
    * Internal hook for converting an attribute name-string to an atomized name
    */
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
-
-  /**
-   * Retrieve the rectangle for the offsetX properties, which
-   * are coordinates relative to the returned element.
-   *
-   * @param aRect offset rectangle
-   */
-  virtual Element* GetOffsetRect(nsRect& aRect);
 
   nsIFrame* GetStyledFrame();
 
@@ -1260,14 +1272,6 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
                                                                             \
   return rv;                                                                \
 }
-
-#define DOMCI_NODE_DATA(_interface, _class)                             \
-  DOMCI_DATA(_interface, _class)                                        \
-  nsXPCClassInfo* _class::GetClassInfo()                                \
-  {                                                                     \
-    return static_cast<nsXPCClassInfo*>(                                \
-      NS_GetDOMClassInfoInstance(eDOMClassInfo_##_interface##_id));     \
-  }
 
 /**
  * A macro to implement the getter and setter for a given string

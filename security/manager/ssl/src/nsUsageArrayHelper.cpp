@@ -11,6 +11,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsNSSCertificate.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nspr.h"
 #include "secerr.h"
@@ -67,8 +68,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
                           PRUnichar **outUsages)
 {
   if (!aCertUsage) {
-    MOZ_NOT_REACHED("caller should have supplied non-zero aCertUsage");
-    return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
+    MOZ_CRASH("caller should have supplied non-zero aCertUsage");
   }
 
   if (isFatalError(previousCheckResult)) {
@@ -114,8 +114,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
     typestr = "VerifyAnyCA";
     break;
   default:
-    MOZ_NOT_REACHED("unknown cert usage passed to check()");
-    return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
+    MOZ_CRASH("unknown cert usage passed to check()");
   }
 
   SECStatus rv = certVerifier->VerifyCert(mCert, aCertUsage,

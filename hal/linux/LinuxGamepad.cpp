@@ -140,6 +140,7 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
 
   nsRefPtr<GamepadService> service(GamepadService::GetService());
   gamepad.index = service->AddGamepad(gamepad.idstring,
+                                      mozilla::dom::NoMapping,
                                       gamepad.numButtons,
                                       gamepad.numAxes);
 

@@ -26,10 +26,10 @@ NS_IMPL_RELEASE_INHERITED(HTMLLegendElement, Element)
 
 // QueryInterface implementation for HTMLLegendElement
 NS_INTERFACE_TABLE_HEAD(HTMLLegendElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLLegendElement, nsIDOMHTMLLegendElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLegendElement,
-                                               nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLLegendElement, nsIDOMHTMLLegendElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLLegendElement
@@ -164,12 +164,12 @@ HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
   Focus(rv);
 }
 
-already_AddRefed<nsHTMLFormElement>
+already_AddRefed<HTMLFormElement>
 HTMLLegendElement::GetForm()
 {
   Element* form = GetFormElement();
   MOZ_ASSERT_IF(form, form->IsHTML(nsGkAtoms::form));
-  nsRefPtr<nsHTMLFormElement> ret = static_cast<nsHTMLFormElement*>(form);
+  nsRefPtr<HTMLFormElement> ret = static_cast<HTMLFormElement*>(form);
   return ret.forget();
 }
 

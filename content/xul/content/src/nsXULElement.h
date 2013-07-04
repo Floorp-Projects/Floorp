@@ -43,7 +43,7 @@ class nsIDocShell;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
-class nsIScriptGlobalObjectOwner;
+class nsIScriptGlobalObject;
 class nsXULPrototypeNode;
 typedef nsTArray<nsRefPtr<nsXULPrototypeNode> > nsPrototypeArray;
 
@@ -231,7 +231,7 @@ public:
     nsresult Compile(const PRUnichar* aText, int32_t aTextLength,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
-                     nsIScriptGlobalObjectOwner* aGlobalOwner);
+                     nsIScriptGlobalObject* aGlobal);
 
     void UnlinkJSObjects();
 
@@ -243,13 +243,13 @@ public:
     // &mScriptObject pointer can't go stale.
     JS::Handle<JSScript*> GetScriptObject()
     {
-        return JS::Handle<JSScript*>::fromMarkedLocation(&mScriptObject);
+        return JS::Handle<JSScript*>(mScriptObject);
     }
 
     void TraceScriptObject(JSTracer* aTrc)
     {
         if (mScriptObject) {
-            JS_CallScriptTracer(aTrc, &mScriptObject, "active window XUL prototype script");
+            JS_CallHeapScriptTracer(aTrc, &mScriptObject, "active window XUL prototype script");
         }
     }
 
@@ -267,7 +267,7 @@ public:
     mozilla::dom::XULDocument* mSrcLoadWaiters;   // [OWNER] but not COMPtr
     uint32_t                 mLangVersion;
 private:
-    JSScript*                mScriptObject;
+    JS::Heap<JSScript*>      mScriptObject;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode
@@ -344,8 +344,7 @@ enum {
   XUL_ELEMENT_HAS_POPUP_LISTENER =        XUL_ELEMENT_FLAG_BIT(2)
 };
 
-// Make sure we have space for our bits
-PR_STATIC_ASSERT((ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2) < 32);
+ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
 
 #undef XUL_ELEMENT_FLAG_BIT
 

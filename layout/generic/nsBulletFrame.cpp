@@ -242,6 +242,15 @@ public:
       return;
     }
 
+    nsCOMPtr<imgIContainer> image = f->GetImage();
+    if (aBuilder->ShouldSyncDecodeImages() && image && !image->IsDecoded()) {
+      // If we are going to do a sync decode and we are not decoded then we are
+      // going to be drawing something different from what is currently there,
+      // so we add our bounds to the invalid region.
+      bool snap;
+      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+    }
+
     return nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
   }
 };
@@ -459,8 +468,12 @@ static bool DecimalLeadingZeroToText(int32_t ordinal, nsString& result)
 static bool OtherDecimalToText(int32_t ordinal, PRUnichar zeroChar, nsString& result)
 {
    PRUnichar diff = zeroChar - PRUnichar('0');
+   // We're going to be appending to whatever is in "result" already, so make
+   // sure to only munge the new bits.  Note that we can't just grab the pointer
+   // to the new stuff here, since appending to the string can realloc.
+   size_t offset = result.Length();
    DecimalToText(ordinal, result);
-   PRUnichar* p = result.BeginWriting();
+   PRUnichar* p = result.BeginWriting() + offset;
    if (ordinal < 0) {
      // skip the leading '-'
      ++p;
@@ -472,12 +485,16 @@ static bool OtherDecimalToText(int32_t ordinal, PRUnichar zeroChar, nsString& re
 static bool TamilToText(int32_t ordinal,  nsString& result)
 {
    PRUnichar diff = 0x0BE6 - PRUnichar('0');
+   // We're going to be appending to whatever is in "result" already, so make
+   // sure to only munge the new bits.  Note that we can't just grab the pointer
+   // to the new stuff here, since appending to the string can realloc.
+   size_t offset = result.Length();
    DecimalToText(ordinal, result); 
    if (ordinal < 1 || ordinal > 9999) {
      // Can't do those in this system.
      return false;
    }
-   PRUnichar* p = result.BeginWriting();
+   PRUnichar* p = result.BeginWriting() + offset;
    for(; '\0' != *p ; p++) 
       if(*p != PRUnichar('0'))
          *p += diff;
@@ -1604,6 +1621,18 @@ nsBulletFrame::SetFontSizeInflation(float aInflation)
   VoidPtrOrFloat u;
   u.f = aInflation;
   Properties().Set(FontSizeInflationProperty(), u.p);
+}
+
+already_AddRefed<imgIContainer>
+nsBulletFrame::GetImage() const
+{
+  if (mImageRequest && StyleList()->GetListStyleImage()) {
+    nsCOMPtr<imgIContainer> imageCon;
+    mImageRequest->GetImage(getter_AddRefs(imageCon));
+    return imageCon.forget();
+  }
+
+  return nullptr;
 }
 
 nscoord

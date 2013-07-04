@@ -1,4 +1,4 @@
-load 459439-1.html
+skip-if(B2G) load 459439-1.html # bug 888557
 load 466607-1.html
 load 466945-1.html
 load 468763-1.html
@@ -15,6 +15,7 @@ skip-if(Android||B2G) load 789075-1.html # load failed, bug 833371 for B2G
 load 844563.html
 load 846612.html
 load 852838.html
+load 865537-1.html
 load 868504.html
 load 874869.html
 load 874915.html
@@ -36,3 +37,16 @@ load 878014.html
 load 878328.html
 load 878407.html
 load 878478.html
+load 877527.html
+load 880129.html
+skip-if(B2G) test-pref(media.webaudio.enabled,true) load 880202.html # load failed, bug 833371 for B2G
+load 880342-1.html
+load 880342-2.html
+load 880384.html
+load 880404.html
+load 880724.html
+load 881775.html
+load 882956.html
+test-pref(media.webvtt.enabled,true) load 882549.html
+load 884459.html
+load 889042.html

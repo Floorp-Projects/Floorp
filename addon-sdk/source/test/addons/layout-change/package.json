@@ -1,3 +1,4 @@
 {
-  "id": "test-layout-change"
+  "id": "test-layout-change",
+  "ignore-deprecated-path": true
 }

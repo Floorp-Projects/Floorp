@@ -143,7 +143,7 @@ public:
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
    */
-  Overscroll ScaleWillOverscroll(float aScale, int32_t aFocus);
+  Overscroll ScaleWillOverscroll(float aScale, float aFocus);
 
   /**
    * If a scale will overscroll the axis, this returns the amount and in what
@@ -153,7 +153,7 @@ public:
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
    */
-  float ScaleWillOverscrollAmount(float aScale, int32_t aFocus);
+  float ScaleWillOverscrollAmount(float aScale, float aFocus);
 
   /**
    * Checks if an axis will overscroll in both directions by computing the

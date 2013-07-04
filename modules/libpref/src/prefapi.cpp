@@ -26,6 +26,7 @@
 #include "plbase64.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PContent.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
@@ -292,8 +293,7 @@ SetPrefValue(const char* aPrefName, const dom::PrefValue& aValue,
         return PREF_SetBoolPref(aPrefName, aValue.get_bool(),
                                 setDefault);
     default:
-        MOZ_NOT_REACHED();
-        return NS_ERROR_FAILURE;
+        MOZ_CRASH();
     }
 }
 
@@ -425,7 +425,7 @@ GetPrefValueFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref,
         *settingValue = !!value->boolVal;
         return;
     default:
-        MOZ_NOT_REACHED();
+        MOZ_CRASH();
     }
 }
 
@@ -807,7 +807,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
 }
 
 size_t
-pref_SizeOfPrivateData(nsMallocSizeOfFun aMallocSizeOf)
+pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
 {
     size_t n = PL_SizeOfArenaPoolExcludingPool(&gPrefNameArena, aMallocSizeOf);
     for (struct CallbackNode* node = gCallbacks; node; node = node->next) {

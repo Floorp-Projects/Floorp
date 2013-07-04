@@ -30,12 +30,11 @@ using namespace mozilla::dom;
 // nsISupports methods:
 
 NS_INTERFACE_TABLE_HEAD(nsMathMLElement)
-  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsMathMLElement)
-    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMNode)
-    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMElement)
-    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsILink)
-    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, Link)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_INTERFACE_TABLE_INHERITED4(nsMathMLElement,
+                                nsIDOMNode,
+                                nsIDOMElement,
+                                nsILink,
+                                Link)
   NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
@@ -226,7 +225,7 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   nsIAtom* tag = Tag();
   if (tag == nsGkAtoms::ms_ || tag == nsGkAtoms::mi_ ||
       tag == nsGkAtoms::mn_ || tag == nsGkAtoms::mo_ ||
-      tag == nsGkAtoms::mtext_)
+      tag == nsGkAtoms::mtext_ || tag == nsGkAtoms::mspace_)
     return FindAttributeDependence(aAttribute, tokenMap);
   if (tag == nsGkAtoms::mstyle_ ||
       tag == nsGkAtoms::math)
@@ -937,12 +936,6 @@ nsMathMLElement::GetLinkTarget(nsAString& aTarget)
     }
     OwnerDoc()->GetBaseTarget(aTarget);
   }
-}
-
-nsLinkState
-nsMathMLElement::GetLinkState() const
-{
-  return Link::GetLinkState();
 }
 
 already_AddRefed<nsIURI>

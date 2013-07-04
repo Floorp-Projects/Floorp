@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef ion_IonAnalysis_h
+#define ion_IonAnalysis_h
 
 // This file declares various analysis passes that operate on MIR.
 
-#include "IonAllocPolicy.h"
-#include "MIR.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/MIR.h"
 
 namespace js {
 namespace ion {
@@ -48,6 +48,9 @@ bool
 BuildPhiReverseMapping(MIRGraph &graph);
 
 void
+AssertBasicGraphCoherency(MIRGraph &graph);
+
+void
 AssertGraphCoherency(MIRGraph &graph);
 
 void
@@ -55,6 +58,9 @@ AssertExtendedGraphCoherency(MIRGraph &graph);
 
 bool
 EliminateRedundantChecks(MIRGraph &graph);
+
+bool
+UnsplitEdges(LIRGraph *lir);
 
 class MDefinition;
 
@@ -99,8 +105,7 @@ class LinearSum
     LinearSum(const LinearSum &other)
       : constant_(other.constant_)
     {
-        for (size_t i = 0; i < other.terms_.length(); i++)
-            terms_.append(other.terms_[i]);
+        terms_.append(other.terms_);
     }
 
     bool multiply(int32_t scale);
@@ -122,5 +127,4 @@ class LinearSum
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_analysis_h__
-
+#endif /* ion_IonAnalysis_h */

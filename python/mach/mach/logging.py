@@ -150,10 +150,15 @@ class LoggingManager(object):
     @property
     def terminal(self):
         if not self._terminal and blessings:
-            terminal = blessings.Terminal(stream=sys.stdout)
+            # Sometimes blessings fails to set up the terminal. In that case,
+            # silently fail.
+            try:
+                terminal = blessings.Terminal(stream=sys.stdout)
 
-            if terminal.is_a_tty:
-                self._terminal = terminal
+                if terminal.is_a_tty:
+                    self._terminal = terminal
+            except Exception:
+                pass
 
         return self._terminal
 

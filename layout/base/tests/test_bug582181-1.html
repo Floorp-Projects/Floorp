@@ -29,19 +29,22 @@ function test() {
   var textInput = $("testInput");
   var s1, s2, s3, equal, str1, str2;
 
-  textInput.focus();
   s1 = snapshotWindow(window);
 
+  textInput.focus();
   synthesizeKey("VK_DOWN", { });
   synthesizeKey("VK_DOWN", { });
   synthesizeKey("VK_ENTER", { });
+  textInput.blur();
   s2 = snapshotWindow(window);
 
   [equal, str1, str2] = compareSnapshots(s1, s2, true);
   ok(equal, "enter after text shouldn't change rendering: expected " +
      str1 + " but got " + str2);
 
+  textInput.focus();
   synthesizeKey("VK_BACK_SPACE", { });
+  textInput.blur();
   s3 = snapshotWindow(window);
 
   [equal, str1, str2] = compareSnapshots(s1, s3, true);

@@ -16,7 +16,7 @@
 #include "nsCheapSets.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 
 class nsIDOMHTMLOptionElement;
 class nsISelectControlFrame;
@@ -150,7 +150,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aVal, aRv);
   }
-  nsHTMLFormElement* GetForm() const
+  HTMLFormElement* GetForm() const
   {
     return nsGenericHTMLFormElement::GetForm();
   }
@@ -399,6 +399,14 @@ public:
                aError);
   }
 
+  /**
+   * Is this a combobox?
+   */
+  bool IsCombobox() const
+  {
+    return !Multiple() && Size() <= 1;
+  }
+
 protected:
   friend class SafeOptionListMutation;
 
@@ -539,19 +547,6 @@ protected:
    * @return the select frame, or null
    */
   nsISelectControlFrame* GetSelectFrame();
-
-  /**
-   * Is this a combobox?
-   */
-  bool IsCombobox() {
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
-      return false;
-    }
-
-    uint32_t size = 1;
-    GetSize(&size);
-    return size <= 1;
-  }
 
   /**
    * Helper method for dispatching ContentReset notifications to list

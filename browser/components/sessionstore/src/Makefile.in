@@ -10,19 +10,10 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsSessionStore.manifest \
   nsSessionStore.js \
   nsSessionStartup.js \
-  $(NULL)
-
-JS_MODULES_PATH := $(FINAL_TARGET)/modules/sessionstore
-
-EXTRA_JS_MODULES := \
-  DocumentUtils.jsm \
-  SessionStorage.jsm \
-  XPathGenerator.jsm \
-  _SessionFile.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES := \

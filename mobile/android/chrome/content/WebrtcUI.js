@@ -5,9 +5,72 @@
 
 var WebrtcUI = {
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "getUserMedia:request") {
+    if (aTopic === "getUserMedia:request") {
       this.handleRequest(aSubject, aTopic, aData);
+    } else if (aTopic === "recording-device-events") {
+      switch (aData) {
+        case "shutdown":
+        case "starting":
+          this.notify();
+          break;
+      }
     }
+  },
+
+  get notificationId() {
+    delete this.notificationId;
+    return this.notificationId = uuidgen.generateUUID().toString();
+  },
+
+  notify: function() {
+    let windows = MediaManagerService.activeMediaCaptureWindows;
+    let count = windows.Count();
+    let msg = {};
+    if (count == 0) {
+      msg = {
+        type: "Notification:Hide",
+        id: this.notificationId
+      }
+    } else {
+      msg = {
+        type: "Notification:Show",
+        id: this.notificationId,
+        title: Strings.brand.GetStringFromName("brandShortName"),
+        when: null, // hide the date row
+        light: [0xFF9500FF, 1000, 1000],
+        ongoing: true
+      };
+
+      let cameraActive = false;
+      let audioActive = false;
+      for (let i = 0; i < count; i++) {
+        let win = windows.GetElementAt(i);
+        let hasAudio = {};
+        let hasVideo = {};
+        MediaManagerService.mediaCaptureWindowState(win, hasVideo, hasAudio);
+        if (hasVideo.value) cameraActive = true;
+        if (hasAudio.value) audioActive = true;
+      }
+
+      if (cameraActive && audioActive) {
+        msg.text = Strings.browser.GetStringFromName("getUserMedia.sharingCameraAndMicrophone.message2");
+        msg.smallicon = "drawable:alert_mic_camera";
+      } else if (cameraActive) {
+        msg.text = Strings.browser.GetStringFromName("getUserMedia.sharingCamera.message2");
+        msg.smallicon = "drawable:alert_camera";
+      } else if (audioActive) {
+        msg.text = Strings.browser.GetStringFromName("getUserMedia.sharingMicrophone.message2");
+        msg.smallicon = "drawable:alert_mic";
+      } else {
+        // somethings wrong. lets throw
+        throw "Couldn't find any cameras or microphones being used"
+      }
+
+      if (count > 1)
+        msg.count = count;
+    }
+
+    sendMessageToJava(msg);
   },
 
   handleRequest: function handleRequest(aSubject, aTopic, aData) {
@@ -52,7 +115,6 @@ var WebrtcUI = {
           allowedDevices.AppendElement(videoDevices[videoId]);
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
-        // TODO: Show tab-specific indicator for the active camera/mic access.
       }
     }];
   },

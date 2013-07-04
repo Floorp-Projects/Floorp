@@ -41,6 +41,15 @@ function runTests()
 
     ok(found, "found the property");
 
-    finish();
+    let tabbox = sidebar._sidebar._tabbox;
+    is(tabbox.width, 300, "Scratchpad sidebar width is correct");
+    ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible");
+    sidebar.hide();
+    ok(tabbox.hasAttribute("hidden"), "Scratchpad sidebar hidden");
+    sp.inspect().then(function() {
+      is(tabbox.width, 300, "Scratchpad sidebar width is still correct");
+      ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible again");
+      finish();
+    });
   });
 }

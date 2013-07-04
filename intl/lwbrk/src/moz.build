@@ -12,7 +12,7 @@ CPP_SOURCES += [
     'nsSemanticUnitScanner.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+if CONFIG['MOZ_WIDGET_GTK']:
     CPP_SOURCES += [
         'nsPangoBreaker.cpp',
     ]
@@ -28,3 +28,6 @@ else:
     CPP_SOURCES += [
         'nsRuleBreaker.cpp',
     ]
+
+LIBRARY_NAME = 'lwbrk_s'
+

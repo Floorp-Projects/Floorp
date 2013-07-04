@@ -378,7 +378,7 @@ nsWyciwygChannel::Open(nsIInputStream ** aReturn)
 NS_IMETHODIMP
 nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
-  LOG(("nsWyciwygChannel::AsyncOpen [this=%x]\n", this));
+  LOG(("nsWyciwygChannel::AsyncOpen [this=%p]\n", this));
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_ARG_POINTER(listener);
@@ -484,7 +484,7 @@ nsWyciwygChannel::CloseCacheEntryInternal(nsresult reason)
   NS_ASSERTION(IsOnCacheIOThread(), "wrong thread");
 
   if (mCacheEntry) {
-    LOG(("nsWyciwygChannel::CloseCacheEntryInternal [this=%x ]", this));
+    LOG(("nsWyciwygChannel::CloseCacheEntryInternal [this=%p ]", this));
     mCacheOutputStream = 0;
     mCacheInputStream = 0;
 
@@ -571,7 +571,7 @@ nsWyciwygChannel::GetCharsetAndSource(int32_t* aSource, nsACString& aCharset)
 NS_IMETHODIMP
 nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor * aCacheEntry, nsCacheAccessMode aMode, nsresult aStatus)
 {
-  LOG(("nsWyciwygChannel::OnCacheEntryAvailable [this=%x entry=%x "
+  LOG(("nsWyciwygChannel::OnCacheEntryAvailable [this=%p entry=%x "
        "access=%x status=%x]\n", this, aCacheEntry, aMode, aStatus));
 
   // if the channel's already fired onStopRequest, 
@@ -587,7 +587,7 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor * aCacheEntry, n
 
   nsresult rv;
   if (NS_FAILED(mStatus)) {
-    LOG(("channel was canceled [this=%x status=%x]\n", this, mStatus));
+    LOG(("channel was canceled [this=%p status=%x]\n", this, mStatus));
     rv = mStatus;
   }
   else { // advance to the next state...
@@ -619,7 +619,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
                                   nsIInputStream *input,
                                   uint64_t offset, uint32_t count)
 {
-  LOG(("nsWyciwygChannel::OnDataAvailable [this=%x request=%x offset=%llu count=%u]\n",
+  LOG(("nsWyciwygChannel::OnDataAvailable [this=%p request=%x offset=%llu count=%u]\n",
       this, request, offset, count));
 
   nsresult rv;
@@ -641,7 +641,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 NS_IMETHODIMP
 nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
-  LOG(("nsWyciwygChannel::OnStartRequest [this=%x request=%x\n",
+  LOG(("nsWyciwygChannel::OnStartRequest [this=%p request=%x\n",
       this, request));
 
   return mListener->OnStartRequest(this, mListenerContext);
@@ -651,7 +651,7 @@ nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 NS_IMETHODIMP
 nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult status)
 {
-  LOG(("nsWyciwygChannel::OnStopRequest [this=%x request=%x status=%d\n",
+  LOG(("nsWyciwygChannel::OnStopRequest [this=%p request=%x status=%d\n",
       this, request, status));
 
   if (NS_SUCCEEDED(mStatus))
@@ -722,7 +722,7 @@ nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
 nsresult
 nsWyciwygChannel::ReadFromCache()
 {
-  LOG(("nsWyciwygChannel::ReadFromCache [this=%x] ", this));
+  LOG(("nsWyciwygChannel::ReadFromCache [this=%p] ", this));
 
   NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_FAILURE);
   nsresult rv;

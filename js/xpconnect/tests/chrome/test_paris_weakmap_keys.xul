@@ -47,7 +47,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
 
 
   // AudioContext is the only Paris bindings non-nsISupports refCounted class.
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 
   // non-nsISupports cycle-collected classes should fail as weak map keys.
   let context = new AudioContext();
@@ -74,7 +73,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
 
     is(live_map.get(get_div_style()), 12345, "Live map should have live style with right value after GC.");
 
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   });
 

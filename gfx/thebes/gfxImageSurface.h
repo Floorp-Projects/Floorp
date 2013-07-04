@@ -6,6 +6,7 @@
 #ifndef GFX_IMAGESURFACE_H
 #define GFX_IMAGESURFACE_H
 
+#include "mozilla/MemoryReporting.h"
 #include "gfxASurface.h"
 #include "gfxPoint.h"
 
@@ -113,9 +114,9 @@ public:
 
     static long ComputeStride(const gfxIntSize&, gfxImageFormat);
 
-    virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+    virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
         MOZ_OVERRIDE;
-    virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
         MOZ_OVERRIDE;
     virtual bool SizeOfIsMeasured() const MOZ_OVERRIDE;
 

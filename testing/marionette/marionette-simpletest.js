@@ -5,7 +5,7 @@
  * The Marionette object, passed to the script context.
  */
 
-function Marionette(scope, window, context, logObj, timeout, testName) {
+this.Marionette = function Marionette(scope, window, context, logObj, timeout, testName) {
   this.scope = scope;
   this.window = window;
   this.tests = [];

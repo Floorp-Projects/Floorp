@@ -83,6 +83,13 @@
   <preference id="app.update.auto"
               name="app.update.auto"
               type="bool"/>
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  <preference id="app.update.metro.enabled"
+              name="app.update.metro.enabled"
+              type="bool"/>
+#endif
+#endif
   <preference id="app.update.mode"
               name="app.update.mode"
               type="int"/>
@@ -110,9 +117,6 @@
   <preference id="security.disable_button.openCertManager"
               name="security.disable_button.openCertManager"
               type="bool"/>
-  <preference id="security.OCSP.disable_button.managecrl"
-              name="security.OCSP.disable_button.managecrl"
-              type="bool"/>
   <preference id="security.disable_button.openDeviceManager"
               name="security.disable_button.openDeviceManager"
               type="bool"/>
@@ -122,6 +126,7 @@
   <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
   <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
 #endif
+  <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 
 <hbox class="heading" data-category="paneAdvanced" hidden="true">
   <image class="preference-icon" type="advanced"/>
@@ -352,9 +357,22 @@
         <caption label="&updateApp.label;"/>
         <radiogroup id="updateRadioGroup"
                     oncommand="gAdvancedPane.updateWritePrefs();">
-          <radio value="auto"
-                label="&updateAuto.label;"
-                accesskey="&updateAuto.accesskey;"/>
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+              <radio id="autoMetro"
+                     value="autoMetro"
+                     label="&updateAutoMetro.label;"
+                     accesskey="&updateAutoMetro.accesskey;"/>
+              <hbox id="autoMetroIndent"
+                    class="indent">
+                <label value="&updateAutoMetroWarn.label;"/>
+              </hbox>
+#endif
+#endif
+          <radio id="autoDesktop"
+                 value="auto"
+                 label="&updateAuto1.label;"
+                 accesskey="&updateAuto1.accesskey;"/>
           <hbox class="indent">
             <checkbox id="warnIncompatible"
                       label="&updateAutoAddonWarn.label;"
@@ -425,10 +443,6 @@
                   label="&viewCerts.label;" accesskey="&viewCerts.accesskey;"
                   oncommand="gAdvancedPane.showCertificates();"
                   preference="security.disable_button.openCertManager"/>
-          <button id="viewCRLButton"
-                  label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;"
-                  oncommand="gAdvancedPane.showCRLs();"
-                  preference="security.OCSP.disable_button.managecrl"/>
           <button id="verificationButton"
                   label="&verify2.label;" accesskey="&verify2.accesskey;"
                   oncommand="gAdvancedPane.showOCSP();"/>

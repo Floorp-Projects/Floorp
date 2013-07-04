@@ -12,15 +12,19 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = gkconmedia_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
-endif # !_MSC_VER
 
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES  += \
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/layout/generic \
+  -I$(topsrcdir)/layout/xul/base/src \
+  $(NULL)
 
 DEFINES  += -D_IMPL_NS_LAYOUT
 CFLAGS   += $(GSTREAMER_CFLAGS)

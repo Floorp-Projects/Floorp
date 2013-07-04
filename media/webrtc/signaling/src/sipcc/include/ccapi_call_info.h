@@ -7,6 +7,7 @@
 
 #include "ccapi_types.h"
 #include "peer_connection_types.h"
+#include "fsmdef_states.h"
 
 /**
  * get Line on which this call is
@@ -21,6 +22,13 @@ cc_lineid_t CCAPI_CallInfo_getLine(cc_callinfo_ref_t handle);
  * @return call state
  */
 cc_call_state_t CCAPI_CallInfo_getCallState(cc_callinfo_ref_t handle);
+
+/**
+ * get FSM state
+ * @param [in] handle - call info handle
+ * @return fsm state
+ */
+fsmdef_states_t CCAPI_CallInfo_getFsmState(cc_callinfo_ref_t handle);
 
 /**
  * get call attributes
