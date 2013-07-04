@@ -16,7 +16,6 @@
 #include "nsGUIEvent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
-#include "nsIJSNativeInitializer.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventBinding.h"
 #include "nsIScriptGlobalObject.h"

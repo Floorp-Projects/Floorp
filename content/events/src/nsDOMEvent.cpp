@@ -31,7 +31,6 @@
 #include "DictionaryHelpers.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
-#include "nsDOMClassInfoID.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsPIWindowRoot.h"
 #include "nsGlobalWindow.h"
