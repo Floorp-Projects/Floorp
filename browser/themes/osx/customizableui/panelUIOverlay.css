@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%define menuPanelWidth 26em
+
+%include ../../shared/customizableui/panelUIOverlay.inc.css
+
+@media (min-resolution: 2dppx) {
+  #customization-palette toolbarbutton > .toolbarbutton-icon,
+  #PanelUI-mainView toolbarbutton > .toolbarbutton-icon {
+    width: 20px;
+  }
+}
+
+#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child),
+#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child) {
+  -moz-margin-start: 0;
+}
+#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:last-child),
+#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:last-child) {
+  -moz-margin-end: 0;
+}
+#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child):not(:last-child),
+#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child):not(:last-child) {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#zoom-controls[customizableui-areatype="menu-panel"] > #zoom-in-button,
+#zoom-controls[customizableui-areatype="menu-panel"] > #zoom-out-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
+  padding-left: 12px;
+  padding-right: 12px;
+}
