@@ -29,6 +29,7 @@ LIBXUL_LIBRARY  = 1
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES += -DHAVE_OFF64_T -DSK_BUILD_FOR_ANDROID_NDK
 
@@ -44,6 +45,3 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/content/media/omx/mediaresourcemanager \
 	-I$(srcdir) \
 	$(NULL)
-
-
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
