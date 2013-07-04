@@ -13,7 +13,6 @@
 #include "jscntxt.h"
 #include "jslibmath.h"
 #include "jsinfer.h"
-#include "jsinferinlines.h"
 #include "ion/TypePolicy.h"
 #include "ion/IonAllocPolicy.h"
 #include "ion/InlineList.h"
@@ -26,6 +25,9 @@
 #include "vm/ScopeObject.h"
 
 namespace js {
+
+class StringObject;
+
 namespace ion {
 
 class BaselineInspector;
