@@ -4837,30 +4837,6 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
   return aDocument->GetViewportInfo(aDisplayWidth, aDisplayHeight);
 }
 
-#ifdef MOZ_WIDGET_ANDROID
-/* static */
-double
-nsContentUtils::GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget)
-{
-  int32_t prefValue = Preferences::GetInt("browser.viewport.scaleRatio", 0);
-  if (prefValue > 0) {
-    return double(prefValue) / 100.0;
-  }
-
-  float dpi = aWidget->GetDPI();
-  if (dpi < 200.0) {
-    // Includes desktop displays, LDPI and MDPI Android devices
-    return 1.0;
-  }
-  if (dpi < 300.0) {
-    // Includes Nokia N900, and HDPI Android devices
-    return 1.5;
-  }
-  // For very high-density displays like the iPhone 4, use an integer ratio.
-  return floor(dpi / 150.0);
-}
-#endif
-
 /* static */
 nsresult
 nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,

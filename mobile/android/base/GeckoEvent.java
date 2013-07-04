@@ -426,6 +426,13 @@ public class GeckoEvent {
                 mPointRadii[index] = new Point((int)size,(int)size);
                 mOrientations[index] = 0;
             }
+            if (!keepInViewCoordinates) {
+                // If we are converting to gecko CSS pixels, then we should adjust the
+                // radii as well
+                float zoom = GeckoAppShell.getLayerView().getViewportMetrics().zoomFactor;
+                mPointRadii[index].x /= zoom;
+                mPointRadii[index].y /= zoom;
+            }
             mPressures[index] = event.getPressure(eventIndex);
         } catch (Exception ex) {
             Log.e(LOGTAG, "Error creating motion point " + index, ex);
