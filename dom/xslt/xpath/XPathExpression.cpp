@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Move.h"
-#include "nsXPathExpression.h"
+#include "XPathExpression.h"
 #include "txExpr.h"
 #include "txExprResult.h"
 #include "nsError.h"
@@ -15,26 +15,28 @@
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 
-using namespace mozilla::dom;
 using mozilla::Move;
 
-NS_IMPL_CYCLE_COLLECTION(nsXPathExpression, mDocument)
+DOMCI_DATA(XPathExpression, mozilla::dom::XPathExpression)
+ 
+namespace mozilla {
+namespace dom {
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXPathExpression)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXPathExpression)
+NS_IMPL_CYCLE_COLLECTION(XPathExpression, mDocument)
 
-DOMCI_DATA(XPathExpression, nsXPathExpression)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(XPathExpression)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(XPathExpression)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXPathExpression)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPathExpression)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathExpression)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSXPathExpression)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathExpression)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XPathExpression)
 NS_INTERFACE_MAP_END
 
-nsXPathExpression::nsXPathExpression(nsAutoPtr<Expr>&& aExpression,
-                                     txResultRecycler* aRecycler,
-                                     nsIDOMDocument *aDocument)
+XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
+                                 txResultRecycler* aRecycler,
+                                 nsIDOMDocument *aDocument)
     : mExpression(Move(aExpression)),
       mRecycler(aRecycler),
       mDocument(aDocument)
@@ -42,21 +44,21 @@ nsXPathExpression::nsXPathExpression(nsAutoPtr<Expr>&& aExpression,
 }
 
 NS_IMETHODIMP
-nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
-                            uint16_t aType,
-                            nsISupports *aInResult,
-                            nsISupports **aResult)
+XPathExpression::Evaluate(nsIDOMNode *aContextNode,
+                          uint16_t aType,
+                          nsISupports *aInResult,
+                          nsISupports **aResult)
 {
     return EvaluateWithContext(aContextNode, 1, 1, aType, aInResult, aResult);
 }
 
 NS_IMETHODIMP
-nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
-                                       uint32_t aContextPosition,
-                                       uint32_t aContextSize,
-                                       uint16_t aType,
-                                       nsISupports *aInResult,
-                                       nsISupports **aResult)
+XPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
+                                     uint32_t aContextPosition,
+                                     uint32_t aContextSize,
+                                     uint16_t aType,
+                                     nsISupports *aInResult,
+                                     nsISupports **aResult)
 {
     nsCOMPtr<nsINode> context = do_QueryInterface(aContextNode);
     NS_ENSURE_ARG(context);
@@ -150,53 +152,63 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
 }
 
 /*
- * Implementation of the txIEvalContext private to nsXPathExpression
+ * Implementation of the txIEvalContext private to XPathExpression
  * EvalContextImpl bases on only one context node and no variables
  */
 
 nsresult
-nsXPathExpression::EvalContextImpl::getVariable(int32_t aNamespace,
-                                                nsIAtom* aLName,
-                                                txAExprResult*& aResult)
+XPathExpression::EvalContextImpl::getVariable(int32_t aNamespace,
+                                              nsIAtom* aLName,
+                                              txAExprResult*& aResult)
 {
     aResult = 0;
     return NS_ERROR_INVALID_ARG;
 }
 
-bool nsXPathExpression::EvalContextImpl::isStripSpaceAllowed(const txXPathNode& aNode)
+bool
+XPathExpression::EvalContextImpl::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     return false;
 }
 
-void* nsXPathExpression::EvalContextImpl::getPrivateContext()
+void*
+XPathExpression::EvalContextImpl::getPrivateContext()
 {
     // we don't have a private context here.
     return nullptr;
 }
 
-txResultRecycler* nsXPathExpression::EvalContextImpl::recycler()
+txResultRecycler*
+XPathExpression::EvalContextImpl::recycler()
 {
     return mRecycler;
 }
 
-void nsXPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,
-                                                      nsresult aRes)
+void
+XPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,
+                                               nsresult aRes)
 {
     mLastError = aRes;
     // forward aMsg to console service?
 }
 
-const txXPathNode& nsXPathExpression::EvalContextImpl::getContextNode()
+const txXPathNode&
+XPathExpression::EvalContextImpl::getContextNode()
 {
     return mContextNode;
 }
 
-uint32_t nsXPathExpression::EvalContextImpl::size()
+uint32_t
+XPathExpression::EvalContextImpl::size()
 {
     return mContextSize;
 }
 
-uint32_t nsXPathExpression::EvalContextImpl::position()
+uint32_t
+XPathExpression::EvalContextImpl::position()
 {
     return mContextPosition;
 }
+
+} // namespace dom
+} // namespace mozilla
