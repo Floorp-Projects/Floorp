@@ -52,15 +52,6 @@ enum BufferMode {
   BUFFER_BUFFERED
 };
 
-// The kinds of mask layer a shader can support
-// We rely on the items in this enum being sequential
-enum MaskType {
-  MaskNone = 0,   // no mask layer
-  Mask2d,         // mask layer for layers with 2D transforms
-  Mask3d,         // mask layer for layers with 3D transforms
-  NumMaskTypes
-};
-
 // LayerRenderState for Composer2D
 // We currently only support Composer2D using gralloc. If we want to be backed
 // by other surfaces we will need a more generic LayerRenderState.
