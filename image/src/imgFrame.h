@@ -8,6 +8,7 @@
 #define imgFrame_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsSize.h"
@@ -40,6 +41,7 @@ public:
             uint32_t aImageFlags = imgIContainer::FLAG_NONE);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
+  bool GetIsDirty();
 
   nsIntRect GetRect() const;
   gfxASurface::gfxImageFormat GetFormat() const;
@@ -70,7 +72,7 @@ public:
 
   nsresult LockImageData();
   nsresult UnlockImageData();
-  void MarkImageDataDirty();
+  void ApplyDirtToSurfaces();
 
   nsresult GetSurface(gfxASurface **aSurface) const
   {
@@ -147,6 +149,8 @@ private: // data
 
   nsIntRect    mDecoded;
 
+  mozilla::Mutex mDirtyMutex;
+
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
   // The paletted data comes first, then the image data itself.
@@ -177,6 +181,7 @@ private: // data
 #ifdef XP_WIN
   bool mIsDDBSurface;
 #endif
+  bool mDirty;
 };
 
 namespace mozilla {
