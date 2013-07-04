@@ -15,6 +15,6 @@ test(function() {
   });
   assert_throws(new TypeError(), function() {
     gl.texImage2D(0, 0, 0, 0, 0, { get width() { throw 7 }, get height() { throw 7 }, data: new Uint8ClampedArray(10) });
-  };
+  });
 });
 </script>
