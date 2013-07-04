@@ -146,8 +146,10 @@
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
           aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
           this.content.socialErrorListener.remove();
+          aTarget.content.socialErrorListener.remove();
           this.content.swapDocShells(aTarget.content);
-          Social.setErrorListener(this.content, function(aBrowser) {
+          Social.setErrorListener(this.content, function(aBrowser) {}); // 'this' will be destroyed soon.
+          Social.setErrorListener(aTarget.content, function(aBrowser) {
             aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
           });
         ]]></body>
@@ -190,7 +192,7 @@
           let win = findChromeWindowForChats();
           let chatbar = win.SocialChatBar.chatbar;
           chatbar.openChat(provider, "about:blank", win => {
-            chatbar.selectedChat.swapDocShells(this);
+            this.swapDocShells(chatbar.selectedChat);
             chatbar.focus();
             this.close();
           });
