@@ -382,28 +382,6 @@ JSAPIToJSFunctionFlags(unsigned flags)
 
 namespace js {
 
-/* Valueified JS_IsConstructing. */
-static JS_ALWAYS_INLINE bool
-IsConstructing(const Value *vp)
-{
-#ifdef DEBUG
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    if (callee->is<JSFunction>()) {
-        JSFunction *fun = &callee->as<JSFunction>();
-        JS_ASSERT(fun->isNativeConstructor());
-    } else {
-        JS_ASSERT(callee->getClass()->construct != NULL);
-    }
-#endif
-    return vp[1].isMagic();
-}
-
-inline bool
-IsConstructing(CallReceiver call)
-{
-    return IsConstructing(call.base());
-}
-
 extern JSBool
 Function(JSContext *cx, unsigned argc, Value *vp);
 
@@ -507,5 +485,16 @@ js_fun_call(JSContext *cx, unsigned argc, js::Value *vp);
 extern JSObject*
 js_fun_bind(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
             js::Value *boundArgs, unsigned argslen);
+
+#ifdef DEBUG
+namespace JS {
+namespace detail {
+
+JS_PUBLIC_API(void)
+CheckIsValidConstructible(Value calleev);
+
+} // namespace detail
+} // namespace JS
+#endif
 
 #endif /* jsfun_h */
