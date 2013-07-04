@@ -16,6 +16,7 @@
 #include "GLDefs.h"
 #include "gfx3DMatrix.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/CompositorTypes.h"
 #include "gfxColor.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/RefPtr.h"
