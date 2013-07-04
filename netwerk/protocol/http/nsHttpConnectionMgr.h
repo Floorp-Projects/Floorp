@@ -113,7 +113,8 @@ public:
     // connection manager, nor is the submitter obligated to actually submit a
     // real transaction for this connectionInfo.
     nsresult SpeculativeConnect(nsHttpConnectionInfo *,
-                                nsIInterfaceRequestor *);
+                                nsIInterfaceRequestor *,
+                                uint32_t caps = 0);
 
     // called when a connection is done processing a transaction.  if the
     // connection can be reused then it will be added to the idle list, else
@@ -134,11 +135,6 @@ public:
     // called from main thread to post a new request token bucket
     // to the socket thread
     nsresult UpdateRequestTokenBucket(mozilla::net::EventTokenBucket *aBucket);
-
-    // Lookup/Cancel HTTP->SPDY redirections
-    bool GetSpdyAlternateProtocol(nsACString &key);
-    void ReportSpdyAlternateProtocol(nsHttpConnection *);
-    void RemoveSpdyAlternateProtocol(nsACString &key);
 
     // Pipielining Interfaces and Datatypes
 
@@ -650,12 +646,6 @@ private:
     // be accessed from the socket thread.
     //
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
-
-    // mAlternateProtocolHash is used only for spdy/* upgrades for now
-    // protected by the monitor
-    nsTHashtable<nsCStringHashKey> mAlternateProtocolHash;
-    static PLDHashOperator TrimAlternateProtocolHash(nsCStringHashKey *entry,
-                                                     void *closure);
 
     static PLDHashOperator ReadConnectionEntry(const nsACString &key,
                                                nsAutoPtr<nsConnectionEntry> &ent,

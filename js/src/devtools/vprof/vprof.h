@@ -41,8 +41,8 @@
 //    the number of registers can be changed in vprof.h
 //
 
-#ifndef __VPROF__
-#define __VPROF__
+#ifndef devtools_vprof_vprof_h
+#define devtools_vprof_vprof_h
 //
 // If the application for which you want to use vprof is threaded, THREADED must be defined as 1, otherwise define it as 0
 //
@@ -272,4 +272,4 @@ typedef struct entry {
 #define _DVAR2 ((entry_t)vprofID)->dvar[2]
 #define _DVAR3 ((entry_t)vprofID)->dvar[3]
 
-#endif /* __VPROF__ */
+#endif /* devtools_vprof_vprof_h */

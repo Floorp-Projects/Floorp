@@ -49,10 +49,10 @@ MOZINFO_FILES := \
 PKG_STAGE = $(DIST)/test-package-stage
 
 libs::
-	$(INSTALL) $(srcdir)/xpcshell.ini $(DEPTH)/_tests/xpcshell
+	$(INSTALL) xpcshell.ini $(DEPTH)/_tests/xpcshell
 	$(INSTALL) $(srcdir)/xpcshell_b2g.ini $(DEPTH)/_tests/xpcshell
 	$(INSTALL) $(srcdir)/xpcshell_android.ini $(DEPTH)/_tests/xpcshell
-	cp $(srcdir)/xpcshell.ini $(DEPTH)/_tests/xpcshell/all-test-dirs.list
+	cp $(DEPTH)/_tests/xpcshell/xpcshell.ini $(DEPTH)/_tests/xpcshell/all-test-dirs.list
 
 # Run selftests
 check::

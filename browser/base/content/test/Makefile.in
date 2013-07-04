@@ -39,7 +39,7 @@ MOCHITEST_FILES = \
 		$(NULL)
 
 # test_contextmenu.html is disabled on Linux due to bug 513558
-ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+ifndef MOZ_WIDGET_GTK
 MOCHITEST_FILES += \
 		audio.ogg \
 		test_contextmenu.html \
@@ -59,8 +59,9 @@ endif
 # browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
 
 # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
+# browser_bug386835.js is disabled for intermittent failures (bug 880226)
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES = \
                  head.js \
                  browser_typeAheadFind.js \
                  browser_keywordSearch.js \
@@ -73,7 +74,6 @@ _BROWSER_FILES = \
                  browser_bug329212.js \
                  browser_bug356571.js \
                  browser_bug380960.js \
-                 browser_bug386835.js \
                  browser_bug405137.js \
                  browser_bug406216.js \
                  browser_bug409481.js \
@@ -191,12 +191,12 @@ _BROWSER_FILES = \
                  browser_plainTextLinks.js \
                  browser_pluginnotification.js \
                  browser_plugins_added_dynamically.js \
-                 browser_CTPScriptPlugin.js \
                  browser_CTP_drag_drop.js \
                  browser_pluginplaypreview.js \
                  browser_pluginplaypreview2.js \
                  browser_private_browsing_window.js \
                  browser_relatedTabs.js \
+                 browser_removeTabsToTheEnd.js \
                  browser_sanitize-passwordDisabledHosts.js \
                  browser_sanitize-sitepermissions.js \
                  browser_sanitize-timespans.js \
@@ -264,13 +264,6 @@ _BROWSER_FILES = \
                  plugin_test.html \
                  plugin_test2.html \
                  plugin_test3.html \
-                 plugin_test_noScriptNoPopup.html \
-                 plugin_test_scriptedPopup1.html \
-                 plugin_test_scriptedPopup2.html \
-                 plugin_test_scriptedPopup3.html \
-                 plugin_test_scriptedNoPopup1.html \
-                 plugin_test_scriptedNoPopup2.html \
-                 plugin_test_scriptedNoPopup3.html \
                  plugin_alternate_content.html \
                  plugin_both.html \
                  plugin_both2.html \
@@ -282,7 +275,6 @@ _BROWSER_FILES = \
                  plugin_bug752516.html \
                  plugin_bug787619.html \
                  plugin_bug797677.html \
-                 plugin_bug818009.html \
                  plugin_bug820497.html \
                  plugin_hidden_to_visible.html \
                  plugin_two_types.html \
@@ -312,12 +304,12 @@ _BROWSER_FILES = \
                  browser_bug744745.js \
                  browser_bug787619.js \
                  browser_bug812562.js \
-                 browser_bug818009.js \
                  browser_bug818118.js \
                  browser_bug820497.js \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
                  blockNoPlugins.xml \
+                 blockPluginHard.xml \
                  browser_utilityOverlay.js \
                  browser_bug676619.js \
                  download_page.html \
@@ -331,40 +323,41 @@ _BROWSER_FILES = \
                  browser_blob-channelname.js \
                  browser_aboutHealthReport.js \
                  healthreport_testRemoteCommands.html \
+                 browser_offlineQuotaNotification.js \
+                 offlineQuotaNotification.html \
+                 offlineQuotaNotification.cacheManifest \
+                 browser_addKeywordSearch.js \
                  $(NULL)
 
 # Disable tests on Windows due to frequent failures (bugs 825739, 841341)
 ifneq (windows,$(MOZ_WIDGET_TOOLKIT))
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
                  browser_bookmark_titles.js \
                  browser_popupNotification.js \
                  $(NULL)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
 		browser_bug462289.js \
 		$(NULL)
 else
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
 		browser_bug565667.js \
 		$(NULL)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 # Bug 766546.
-BROWSER_FILES += \
-    browser_bug561636.js \
-		$(NULL)
+MOCHITEST_BROWSER_FILES += \
+  browser_bug561636.js \
+  $(NULL)
 endif
 
 ifdef MOZ_DATA_REPORTING
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
   browser_datareporting_notification.js \
   $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

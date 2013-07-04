@@ -353,10 +353,19 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = eScrollThumbStyle_Proportional;
       break;
     case eIntID_UseOverlayScrollbars:
-      aResult = UseOverlayScrollbars() ? 1 : 0;
+      aResult = SystemWantsOverlayScrollbars() ? 1 : 0;
       break;
     case eIntID_AllowOverlayScrollbarsOverlap:
       aResult = AllowOverlayScrollbarsOverlap() ? 1 : 0;
+      break;
+    case eIntID_ScrollbarDisplayOnMouseMove:
+      aResult = 0;
+      break;
+    case eIntID_ScrollbarFadeBeginDelay:
+      aResult = 450;
+      break;
+    case eIntID_ScrollbarFadeDuration:
+      aResult = 200;
       break;
     case eIntID_TreeOpenDelay:
       aResult = 1000;
@@ -379,6 +388,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_TouchEnabled:
     case eIntID_MaemoClassic:
     case eIntID_WindowsThemeIdentifier:
+    case eIntID_OperatingSystemVersionIdentifier:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
@@ -471,6 +481,11 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 }
 
 bool nsLookAndFeel::UseOverlayScrollbars()
+{
+  return GetInt(eIntID_UseOverlayScrollbars) != 0;
+}
+
+bool nsLookAndFeel::SystemWantsOverlayScrollbars()
 {
   return ([NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
           [NSScroller preferredScrollerStyle] == mozNSScrollerStyleOverlay);

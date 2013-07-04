@@ -830,7 +830,9 @@ class Dumper_Mac(Dumper):
                         stdout=open("/dev/null","w"))
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols
+            self.output_pid(sys.stderr, "No symbols found in file: %s" % (file,))
             result['status'] = False
+            result['files'] = (file, )
             return result
 
         result['status'] = True

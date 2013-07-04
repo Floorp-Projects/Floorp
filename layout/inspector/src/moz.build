@@ -26,3 +26,6 @@ if CONFIG['MOZ_XUL']:
     CPP_SOURCES += [
         'inDOMView.cpp',
     ]
+
+LIBRARY_NAME = 'inspector_s'
+

@@ -65,7 +65,7 @@ createCert(char *inFileName)
                 pkixTestErrorMsg = "Unable to open cert file";
                 goto cleanup;
         } else {
-                rv = SECU_ReadDERFromFile(&certDER, inFile, PR_FALSE);
+                rv = SECU_ReadDERFromFile(&certDER, inFile, PR_FALSE, PR_FALSE);
                 if (!rv){
                         buf = (void *)certDER.data;
                         len = certDER.len;

@@ -72,9 +72,6 @@ function testCSSPruning(hudRef) {
     {
       let msg = hudRef.outputNode.querySelector(".webconsole-msg-cssparser " +
                                                 ".webconsole-msg-repeat");
-      if (msg) {
-        console.debug(msg, msg.getAttribute("value"));
-      }
       return msg && msg.getAttribute("value") == 5;
     },
     successFn: function()

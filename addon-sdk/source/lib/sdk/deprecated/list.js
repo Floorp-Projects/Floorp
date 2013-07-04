@@ -111,8 +111,15 @@ const List = Trait.resolve({ toString: null }).compose({
   __iterator__: function __iterator__(onKeys, onKeyValue) {
     let array = this._keyValueMap.slice(0),
         i = -1;
-    for each(let element in array)
+    for (let element of array)
       yield onKeyValue ? [++i, element] : onKeys ? ++i : element;
+  },
+  iterator: function iterator() {
+    let array = this._keyValueMap.slice(0);
+
+    for (let element of array)
+      yield element;
   }
+
 });
 exports.List = List;

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "tests.h"
+#include "jsapi-tests/tests.h"
 #include "js/RootingAPI.h"
 #include "jsobj.h"
 #include <stdio.h>
@@ -51,7 +51,9 @@ bool JSAPITest::definePrint()
 JSObject * JSAPITest::createGlobal(JSPrincipals *principals)
 {
     /* Create the global object. */
-    global = JS_NewGlobalObject(cx, getGlobalClass(), principals);
+    JS::CompartmentOptions options;
+    options.setVersion(JSVERSION_LATEST);
+    global = JS_NewGlobalObject(cx, getGlobalClass(), principals, options);
     if (!global)
         return NULL;
     JS_AddNamedObjectRoot(cx, &global, "test-global");

@@ -14,8 +14,11 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
+import org.mozilla.gecko.R;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -204,6 +207,23 @@ public final class BitmapUtils {
             Log.e(LOGTAG, "exception decoding bitmap from data URI: " + dataURI, e);
         }
         return null;
+    }
+
+    public static int getResource(Uri resourceUrl, int defaultIcon) {
+        int icon = defaultIcon;
+
+        final String scheme = resourceUrl.getScheme();
+        if ("drawable".equals(scheme)) {
+            String resource = resourceUrl.getSchemeSpecificPart();
+            resource = resource.substring(resource.lastIndexOf('/') + 1);
+            try {
+                final Class<R.drawable> drawableClass = R.drawable.class;
+                final Field f = drawableClass.getField(resource);
+                icon = f.getInt(null);
+            } catch (final Exception e) {} // just means the resource doesn't exist
+            resourceUrl = null;
+        }
+        return icon;
     }
 }
 

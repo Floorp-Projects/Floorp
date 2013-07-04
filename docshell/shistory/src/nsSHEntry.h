@@ -62,6 +62,8 @@ private:
   nsCOMArray<nsISHEntry>   mChildren;
   bool                     mURIWasModified;
   nsCOMPtr<nsIStructuredCloneContainer> mStateData;
+  bool                     mIsSrcdocEntry;
+  nsString                 mSrcdocData;
 };
 
 #endif /* nsSHEntry_h */

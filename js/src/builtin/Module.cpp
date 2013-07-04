@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsobjinlines.h"
 #include "builtin/Module.h"
+
+#include "jsobjinlines.h"
 
 using namespace js;
 
-Class js::ModuleClass = {
+Class Module::class_ = {
     "Module",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */
@@ -21,13 +22,25 @@ Class js::ModuleClass = {
     JS_ConvertStub
 };
 
-Module *
-js_NewModule(JSContext *cx, HandleAtom atom)
+inline void
+Module::setAtom(JSAtom *atom)
 {
-    RootedObject object(cx, NewBuiltinClassInstance(cx, &ModuleClass));
+    setReservedSlot(ATOM_SLOT, StringValue(atom));
+}
+
+inline void
+Module::setScript(JSScript *script)
+{
+    setReservedSlot(SCRIPT_SLOT, PrivateValue(script));
+}
+
+Module *
+Module::create(JSContext *cx, HandleAtom atom)
+{
+    RootedObject object(cx, NewBuiltinClassInstance(cx, &class_));
     if (!object)
         return NULL;
-    RootedModule module(cx, &object->asModule());
+    RootedModule module(cx, &object->as<Module>());
     module->setAtom(atom);
     module->setScript(NULL);
     return module;

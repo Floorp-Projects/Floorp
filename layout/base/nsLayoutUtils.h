@@ -20,11 +20,11 @@ class nsClientRectList;
 class nsFontFaceList;
 class nsIImageLoadingContent;
 
+#include "mozilla/MemoryReporting.h"
 #include "nsChangeHint.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
-#include "nsView.h"
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIPresShell.h"
@@ -41,6 +41,7 @@ class nsIImageLoadingContent;
 
 class nsBlockFrame;
 class gfxDrawable;
+class nsView;
 
 namespace mozilla {
 class SVGImageContext;
@@ -143,6 +144,14 @@ public:
    * This is aPrimaryFrame itself except for tableOuter frames.
    */
   static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
+
+  /**
+   * Given a content node,
+   * return the frame that has the non-psuedoelement style context for
+   * the content.  May return null.
+   * This is aContent->GetPrimaryFrame() except for tableOuter frames.
+   */
+  static nsIFrame* GetStyleFrame(const nsIContent* aContent);
 
   /**
    * IsGeneratedContentFor returns true if aFrame is the outermost
@@ -1569,7 +1578,7 @@ public:
    *    total = SizeOfTextRunsForFrames(rootFrame, mallocSizeOf, false);
    */
   static size_t SizeOfTextRunsForFrames(nsIFrame* aFrame,
-                                        nsMallocSizeOfFun aMallocSizeOf,
+                                        mozilla::MallocSizeOf aMallocSizeOf,
                                         bool clear);
 
   /**
@@ -1578,11 +1587,6 @@ public:
    */
   static bool HasAnimationsForCompositor(nsIContent* aContent,
                                          nsCSSProperty aProperty);
-
-  /**
-   * Checks if CSS 3D transforms are currently enabled.
-   */
-  static bool Are3DTransformsEnabled();
 
   /**
    * Checks if off-main-thread animations are enabled.

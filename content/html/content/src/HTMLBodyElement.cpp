@@ -30,8 +30,8 @@ namespace dom {
 //----------------------------------------------------------------------
 
 BodyRule::BodyRule(HTMLBodyElement* aPart)
+  : mPart(aPart)
 {
-  mPart = aPart;
 }
 
 BodyRule::~BodyRule()
@@ -204,10 +204,10 @@ NS_IMPL_RELEASE_INHERITED(HTMLBodyElement, Element)
 
 // QueryInterface implementation for HTMLBodyElement
 NS_INTERFACE_TABLE_HEAD(HTMLBodyElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLBodyElement, nsIDOMHTMLBodyElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLBodyElement,
-                                               nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLBodyElement, nsIDOMHTMLBodyElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 
@@ -349,9 +349,7 @@ HTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (mContentStyleRule) {
     mContentStyleRule->mPart = nullptr;
-
-    // destroy old style rule
-    NS_RELEASE(mContentStyleRule);
+    mContentStyleRule = nullptr;
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);  
@@ -420,7 +418,6 @@ HTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     // XXXbz should this use OwnerDoc() or GetCurrentDoc()?
     // sXBL/XBL2 issue!
     mContentStyleRule = new BodyRule(this);
-    NS_IF_ADDREF(mContentStyleRule);
   }
   if (aRuleWalker && mContentStyleRule) {
     aRuleWalker->Forward(mContentStyleRule);

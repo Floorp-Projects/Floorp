@@ -61,6 +61,7 @@ foreignObject {
 
 *|*::-moz-svg-text {
   unicode-bidi: inherit;
+  vector-effect: inherit;
 }
 
 *[xml|space=preserve] {

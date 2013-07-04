@@ -29,6 +29,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
@@ -59,6 +60,10 @@ public class ProfileMigrator {
     private boolean mLongOperationStartRun;
     private Runnable mLongOperationStopCallback;
     private LocalBrowserDB mDB;
+
+    // Delay before running one-time "cleanup" tasks that may be needed
+    // after a version upgrade.
+    private static final int CLEANUP_DEFERRAL_SECONDS = 15;
 
     // Default number of history entries to migrate in one run.
     private static final int DEFAULT_HISTORY_MIGRATE_COUNT = 2000;
@@ -340,6 +345,15 @@ public class ProfileMigrator {
     public void launchMoveProfile() {
         // Make sure the profile is on internal storage.
         new MoveProfileTask().run();
+    }
+
+    public void launchDeferredCleanup() {
+        // Do any relevant cleanup shortly after startup to deal with "residue"
+        // from older versions of Gecko.
+        // This cleanup is done on the ProfileMigrator background thread,
+        // CLEANUP_DEFERRAL_SECONDS seconds after startup.
+        Handler handler = new Handler();
+        handler.postDelayed(new DeferredCleanupTask(), CLEANUP_DEFERRAL_SECONDS * 1000);
     }
 
     public boolean areBookmarksMigrated() {
@@ -688,6 +702,49 @@ public class ProfileMigrator {
         public void run() {
             // XXX: Land dependent bugs (732069) first
             // cleanupXULLibCache();
+        }
+    }
+
+    private class DeferredCleanupTask implements Runnable {
+        // The cleanup-version setting is recorded to avoid repeating the same
+        // tasks on subsequent startups; CURRENT_CLEANUP_VERSION may be updated
+        // if we need to do additional cleanup for future Gecko versions.
+
+        private static final String CLEANUP_VERSION = "cleanup-version";
+        private static final int CURRENT_CLEANUP_VERSION = 1;
+
+        @Override
+        public void run() {
+            long cleanupVersion = getPreferences().getInt(CLEANUP_VERSION, 0);
+
+            if (cleanupVersion < 1) {
+                // Reduce device storage footprint by removing .ttf files from
+                // the res/fonts directory: we no longer need to copy our
+                // bundled fonts out of the APK in order to use them.
+                // See https://bugzilla.mozilla.org/show_bug.cgi?id=878674.
+                File dir = new File("res/fonts");
+                if (dir.exists() && dir.isDirectory()) {
+                    for (File file : dir.listFiles()) {
+                        if (file.isFile() && file.getName().endsWith(".ttf")) {
+                            Log.i(LOGTAG, "deleting " + file.toString());
+                            file.delete();
+                        }
+                    }
+                    if (!dir.delete()) {
+                        Log.w(LOGTAG, "unable to delete res/fonts directory (not empty?)");
+                    } else {
+                        Log.i(LOGTAG, "res/fonts directory deleted");
+                    }
+                }
+            }
+
+            // Additional cleanup needed for future versions would go here
+
+            if (cleanupVersion != CURRENT_CLEANUP_VERSION) {
+                SharedPreferences.Editor editor = getPreferences().edit();
+                editor.putInt(CLEANUP_VERSION, CURRENT_CLEANUP_VERSION);
+                editor.commit();
+            }
         }
     }
 

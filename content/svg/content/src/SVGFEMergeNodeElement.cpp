@@ -37,7 +37,7 @@ SVGFEMergeNodeElement::AttributeAffectsRendering(int32_t aNameSpaceID,
   return aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::in;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEMergeNodeElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);

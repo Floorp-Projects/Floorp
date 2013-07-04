@@ -11,6 +11,16 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 const backgroundPageThumbsContent = {
 
   init: function () {
+    // Arrange to prevent (most) popup dialogs for this window - popups done
+    // in the parent (eg, auth) aren't prevented, but alert() etc are.
+    let dwu = content.
+                QueryInterface(Ci.nsIInterfaceRequestor).
+                getInterface(Ci.nsIDOMWindowUtils);
+    dwu.preventFurtherDialogs();
+
+    docShell.allowMedia = false;
+    docShell.allowPlugins = false;
+
     // Stop about:blank from loading.  If it finishes loading after a capture
     // request is received, it could trigger the capture's load listener.
     this._webNav.stop(Ci.nsIWebNavigation.STOP_NETWORK);
@@ -34,8 +44,6 @@ const backgroundPageThumbsContent = {
       removeEventListener("load", this._onLoad, true);
       delete this._onLoad;
 
-      // The viewport is always reset to a small size after load, so resize it.
-      this._sizeViewport();
       let canvas = PageThumbs._createCanvas(content);
       PageThumbs._captureToCanvas(content, canvas);
 
@@ -55,19 +63,6 @@ const backgroundPageThumbsContent = {
     addEventListener("load", this._onLoad, true);
     this._webNav.loadURI(msg.json.url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                          null, null, null);
-  },
-
-  _sizeViewport: function () {
-    let width = {};
-    let height = {};
-    Cc["@mozilla.org/gfx/screenmanager;1"].
-      getService(Ci.nsIScreenManager).
-      primaryScreen.
-      GetRect({}, {}, width, height);
-    content.
-      QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils).
-      setCSSViewport(width.value, height.value);
   },
 };
 

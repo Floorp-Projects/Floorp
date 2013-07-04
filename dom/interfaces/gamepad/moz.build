@@ -9,4 +9,5 @@ XPIDL_MODULE = 'dom_gamepad'
 XPIDL_SOURCES = [
   'nsIDOMGamepad.idl',
   'nsIGamepadServiceTest.idl',
+  'nsINavigatorGamepads.idl',
   ]

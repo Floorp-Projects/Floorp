@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jspropertytree_h___
-#define jspropertytree_h___
+#ifndef jspropertytree_h
+#define jspropertytree_h
 
 #include "jsalloc.h"
 
@@ -104,4 +104,4 @@ class PropertyTree
 
 } /* namespace js */
 
-#endif /* jspropertytree_h___ */
+#endif /* jspropertytree_h */

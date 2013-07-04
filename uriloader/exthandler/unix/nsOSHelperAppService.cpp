@@ -14,7 +14,7 @@
 
 #include "nsOSHelperAppService.h"
 #include "nsMIMEInfoUnix.h"
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include "nsGNOMERegistry.h"
 #endif
 #include "nsISupports.h"
@@ -1160,7 +1160,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
     *aHandlerExists = true;
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
   // Check the GConf registry for a protocol handler
   *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
 #if (MOZ_PLATFORM_MAEMO == 5) && defined (MOZ_ENABLE_GNOMEVFS)
@@ -1173,7 +1173,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
 {
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
   nsGNOMERegistry::GetAppDescForScheme(aScheme, _retval);
   return _retval.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 #else
@@ -1268,7 +1268,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
 
   if (NS_FAILED(rv) || majorType.IsEmpty()) {
     
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
     LOG(("Looking in GNOME registry\n"));
     nsRefPtr<nsMIMEInfoBase> gnomeInfo =
       nsGNOMERegistry::GetFromExtension(aFileExt);
@@ -1386,7 +1386,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
           NS_LossyConvertUTF16toASCII(handler).get(),
           NS_LossyConvertUTF16toASCII(mailcap_description).get()));
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
   nsRefPtr<nsMIMEInfoBase> gnomeInfo;
   if (handler.IsEmpty()) {
     // No useful data yet.  Check the GNOME registry.  Unfortunately, newer
@@ -1409,7 +1409,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
                                  extensions,
                                  mime_types_description);
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
   if (gnomeInfo) {
     LOG(("Got MIMEInfo from GNOME registry without extensions; setting them "
          "to %s\n", NS_LossyConvertUTF16toASCII(extensions).get()));

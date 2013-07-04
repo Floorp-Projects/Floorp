@@ -85,19 +85,19 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEConvolveMatrixElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEConvolveMatrixElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::OrderX()
 {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(nsSVGIntegerPair::eFirst, this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::OrderY()
 {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(nsSVGIntegerPair::eSecond, this);
@@ -110,19 +110,19 @@ SVGFEConvolveMatrixElement::KernelMatrix()
                                                  this, KERNELMATRIX);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::TargetX()
 {
   return mIntegerAttributes[TARGET_X].ToDOMAnimatedInteger(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 SVGFEConvolveMatrixElement::TargetY()
 {
   return mIntegerAttributes[TARGET_Y].ToDOMAnimatedInteger(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGFEConvolveMatrixElement::EdgeMode()
 {
   return mEnumAttributes[EDGEMODE].ToDOMAnimatedEnum(this);
@@ -134,26 +134,26 @@ SVGFEConvolveMatrixElement::PreserveAlpha()
   return mBooleanAttributes[PRESERVEALPHA].ToDOMAnimatedBoolean(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEConvolveMatrixElement::Divisor()
 {
   return mNumberAttributes[DIVISOR].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEConvolveMatrixElement::Bias()
 {
   return mNumberAttributes[BIAS].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEConvolveMatrixElement::KernelUnitLengthX()
 {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst,
                                                                        this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGFEConvolveMatrixElement::KernelUnitLengthY()
 {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond,

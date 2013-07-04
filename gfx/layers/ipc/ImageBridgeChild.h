@@ -148,6 +148,8 @@ public:
    */
   void ConnectAsync(ImageBridgeParent* aParent);
 
+  static void IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier);
+
   void BeginTransaction();
   void EndTransaction();
 
@@ -199,7 +201,7 @@ public:
    */
   bool
   AllocSurfaceDescriptorGrallocNow(const gfxIntSize& aSize,
-                                   const uint32_t& aContent,
+                                   const uint32_t& aFormat,
                                    const uint32_t& aUsage,
                                    SurfaceDescriptor* aBuffer);
 
@@ -337,8 +339,9 @@ protected:
 
   CompositableTransaction* mTxn;
 
+  // ISurfaceAllocator
   virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
-                                                  gfxASurface::gfxContentType aContent,
+                                                  uint32_t aFormat, uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle) MOZ_OVERRIDE;
 };
 

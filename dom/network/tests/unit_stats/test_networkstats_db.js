@@ -10,7 +10,7 @@ const netStatsDb = new NetworkStatsDB(this);
 function filterTimestamp(date) {
   var sampleRate = netStatsDb.sampleRate;
   var offset = date.getTimezoneOffset() * 60 * 1000;
-  return Math.floor((date.getTime() - offset) / sampleRate) * sampleRate + offset;
+  return Math.floor((date.getTime() - offset) / sampleRate) * sampleRate;
 }
 
 add_test(function test_sampleRate() {
@@ -335,8 +335,8 @@ add_test(function test_find () {
   var sampleRate = netStatsDb.sampleRate;
   var start = Date.now();
   var saveDate = filterTimestamp(new Date());
-  var end = start + (sampleRate * (samples - 1));
-  start -= sampleRate;
+  var end = new Date(start + (sampleRate * (samples - 1)));
+  start = new Date(start - sampleRate);
   var stats = [];
   for (var i = 0; i < samples; i++) {i
     stats.push({connectionType: "wifi", timestamp:    saveDate + (sampleRate * i),
@@ -353,8 +353,8 @@ add_test(function test_find () {
     netStatsDb.find(function (error, result) {
       do_check_eq(error, null);
       do_check_eq(result.connectionType, "wifi");
-      do_check_eq(result.start.getTime(), start);
-      do_check_eq(result.end.getTime(), end);
+      do_check_eq(result.start.getTime(), start.getTime());
+      do_check_eq(result.end.getTime(), end.getTime());
       do_check_eq(result.data.length, samples + 1);
       do_check_eq(result.data[0].rxBytes, null);
       do_check_eq(result.data[1].rxBytes, 0);
@@ -363,8 +363,8 @@ add_test(function test_find () {
       netStatsDb.findAll(function (error, result) {
         do_check_eq(error, null);
         do_check_eq(result.connectionType, null);
-        do_check_eq(result.start.getTime(), start);
-        do_check_eq(result.end.getTime(), end);
+        do_check_eq(result.start.getTime(), start.getTime());
+        do_check_eq(result.end.getTime(), end.getTime());
         do_check_eq(result.data.length, samples + 1);
         do_check_eq(result.data[0].rxBytes, null);
         do_check_eq(result.data[1].rxBytes, 0);

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -212,6 +212,20 @@ FT_BEGIN_HEADER
   /* necessary such as memory loading of font files.                       */
   /*                                                                       */
 /* #define FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /*  PNG bitmap support.                                                  */
+  /*                                                                       */
+  /*   FreeType now handles loading color bitmap glyphs in the PNG format. */
+  /*   This requires help from the external libpng library.  Uncompressed  */
+  /*   color bitmaps do not need any external libraries and will be        */
+  /*   supported regardless of this configuration.                         */
+  /*                                                                       */
+  /*   Define this macro if you want to enable this `feature'.             */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_USE_PNG */
 
 
   /*************************************************************************/
@@ -560,6 +574,28 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* Define TT_CONFIG_OPTION_SUBPIXEL_HINTING if you want to compile       */
+  /* EXPERIMENTAL subpixel hinting support into the TrueType driver.  This */
+  /* replaces the native TrueType hinting mechanism when anything but      */
+  /* FT_RENDER_MODE_MONO is requested.                                     */
+  /*                                                                       */
+  /* Enabling this causes the TrueType driver to ignore instructions under */
+  /* certain conditions.  This is done in accordance with the guide here,  */
+  /* with some minor differences:                                          */
+  /*                                                                       */
+  /*  http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx */
+  /*                                                                       */
+  /* By undefining this, you only compile the code necessary to hint       */
+  /* TrueType glyphs with native TT hinting.                               */
+  /*                                                                       */
+  /*   This option requires TT_CONFIG_OPTION_BYTECODE_INTERPRETER to be    */
+  /*   defined.                                                            */
+  /*                                                                       */
+/* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING */
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* If you define TT_CONFIG_OPTION_UNPATENTED_HINTING, a special version  */
   /* of the TrueType bytecode interpreter is used that doesn't implement   */
   /* any of the patented opcodes and algorithms.  The patents related to   */
@@ -669,7 +705,7 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* T1_MAX_DICT_DEPTH is the maximal depth of nest dictionaries and       */
+  /* T1_MAX_DICT_DEPTH is the maximum depth of nest dictionaries and       */
   /* arrays in the Type 1 stream (see t1load.c).  A minimum of 4 is        */
   /* required.                                                             */
   /*                                                                       */
@@ -716,6 +752,25 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
+  /****         C F F   D R I V E R    C O N F I G U R A T I O N        ****/
+  /****                                                                 ****/
+  /*************************************************************************/
+  /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* CFF_CONFIG_OPTION_OLD_ENGINE controls whether the pre-Adobe CFF       */
+  /* engine gets compiled into FreeType.  If defined, it is possible to    */
+  /* switch between the two engines using the `hinting-engine' property of */
+  /* the cff driver module.                                                */
+  /*                                                                       */
+/* #define CFF_CONFIG_OPTION_OLD_ENGINE */
+
+
+  /*************************************************************************/
+  /*************************************************************************/
+  /****                                                                 ****/
   /****    A U T O F I T   M O D U L E    C O N F I G U R A T I O N     ****/
   /****                                                                 ****/
   /*************************************************************************/
@@ -752,37 +807,10 @@ FT_BEGIN_HEADER
 
 
   /*
-   * Define this variable if you want to keep the layout of internal
-   * structures that was used prior to FreeType 2.2.  This also compiles in
-   * a few obsolete functions to avoid linking problems on typical Unix
-   * distributions.
-   *
-   * For embedded systems or building a new distribution from scratch, it
-   * is recommended to disable the macro since it reduces the library's code
-   * size and activates a few memory-saving optimizations as well.
+   *  This macro is obsolete.  Support has been removed in FreeType
+   *  version 2.5.
    */
-#define FT_CONFIG_OPTION_OLD_INTERNALS
-
-
-  /*
-   *  To detect legacy cache-lookup call from a rogue client (<= 2.1.7),
-   *  we restrict the number of charmaps in a font.  The current API of
-   *  FTC_CMapCache_Lookup() takes cmap_index & charcode, but old API
-   *  takes charcode only.  To determine the passed value is for cmap_index
-   *  or charcode, the possible cmap_index is restricted not to exceed
-   *  the minimum possible charcode by a rogue client.  It is also very
-   *  unlikely that a rogue client is interested in Unicode values 0 to 15.
-   *
-   *  NOTE: The original threshold was 4 deduced from popular number of
-   *        cmap subtables in UCS-4 TrueType fonts, but now it is not
-   *        irregular for OpenType fonts to have more than 4 subtables,
-   *        because variation selector subtables are available for Apple
-   *        and Microsoft platforms.
-   */
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-#define FT_MAX_CHARMAP_CACHEABLE 15
-#endif
+/* #define FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
   /*

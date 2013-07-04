@@ -24,13 +24,15 @@ public:
     return 0x2022;
   }
 
+  static bool UseOverlayScrollbars();
+
 protected:
 
   // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
   static const int kThemeScrollBarArrowsBoth = 2;
   static const int kThemeScrollBarArrowsUpperLeft = 3;
 
-  static bool UseOverlayScrollbars();
+  static bool SystemWantsOverlayScrollbars();
   static bool AllowOverlayScrollbarsOverlap();
 };
 

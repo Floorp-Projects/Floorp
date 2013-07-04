@@ -51,7 +51,7 @@ public:
                JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
   bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, JS::AutoIdVector& props) MOZ_OVERRIDE;
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
-  bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+  bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible) MOZ_OVERRIDE;
 
   static JSObject* GetExpandoObject(JSObject* obj)
   {
@@ -70,6 +70,7 @@ public:
     v = expandoAndGeneration->expando;
     return v.isUndefined() ? nullptr : &v.toObject();
   }
+  /* GetAndClearExpandoObject does not DROP or clear the preserving wrapper flag. */
   static JSObject* GetAndClearExpandoObject(JSObject* obj);
   static JSObject* EnsureExpandoObject(JSContext* cx,
                                        JS::Handle<JSObject*> obj);
@@ -136,9 +137,6 @@ FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, JS::Value v, b
   desc->value = v;
   FillPropertyDescriptor(desc, obj, readonly);
 }
-
-JSObject*
-EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
 } // namespace dom
 } // namespace mozilla

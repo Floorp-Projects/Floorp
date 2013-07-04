@@ -8,7 +8,6 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.util.GamepadUtils;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -52,7 +51,6 @@ public class BookmarksListView extends HomeListView
         super.onAttachedToWindow();
 
         setOnItemClickListener(this);
-        setOnKeyListener(GamepadUtils.getListItemClickDispatcher());
     }
 
     @Override

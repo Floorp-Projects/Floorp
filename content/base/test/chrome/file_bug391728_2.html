@@ -36,24 +36,20 @@ document.addEventListener("PluginBindingAttached", plugin_binding_attached, true
 <div><object id="plugin3" style="width: 100px; height: 100px" type="application/x-unknown"></object></div>
 <div><object id="plugin4" style="width: 100px; height: 100px" data="data:application/x-unknown,test"></object></div>
 
-<!-- The mimetype of the actual data is supposed to be used in preference -->
-<div><embed id="plugin5" style="width: 100px; height: 100px" type="application/x-test" src="data:application/x-unknown,test"></div>
-<div><object id="plugin6" style="width: 100px; height: 100px" type="application/x-test" data="data:application/x-unknown,test"></object></div>
-
 <!-- Params are not considered content -->
-<div><object id="plugin7" style="width: 100px; height: 100px" type="application/x-unknown">
+<div><object id="plugin5" style="width: 100px; height: 100px" type="application/x-unknown">
   <param name="foo" value="bar">
 </object></div>
-<div><object id="plugin8" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
+<div><object id="plugin6" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
   <param name="foo" value="bar">
 </object></div>
 
 <!-- Nor is whitespace -->
-<div><object id="plugin9" style="width: 100px; height: 100px" type="application/x-unknown">
+<div><object id="plugin7" style="width: 100px; height: 100px" type="application/x-unknown">
 
   
 </object></div>
-<div><object id="plugin10" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
+<div><object id="plugin8" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
 
   
 </object></div>
@@ -69,14 +65,14 @@ document.addEventListener("PluginBindingAttached", plugin_binding_attached, true
 <!-- Even other plugins are considered content so no errors dispatched from these
      objects, but the inner embeds do get processed -->
 <div><object id="fallback3" style="width: 100px; height: 100px" type="application/x-unknown">
-  <embed id="plugin11" style="width: 100px; height: 100px" type="application/x-unknown">
+  <embed id="plugin9" style="width: 100px; height: 100px" type="application/x-unknown">
 </object></div>
 <div><object id="fallback4" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
-  <embed id="plugin12" style="width: 100px; height: 100px" type="application/x-unknown">
+  <embed id="plugin10" style="width: 100px; height: 100px" type="application/x-unknown">
 </object></div>
 
 <!-- pluginurl was removed in bug 548133, and should not affect fallback -->
-<div><object id="plugin13" style="width: 100px; height: 100px" type="application/x-unknown">
+<div><object id="plugin11" style="width: 100px; height: 100px" type="application/x-unknown">
     <param name="pluginurl">
 </object></div>
 

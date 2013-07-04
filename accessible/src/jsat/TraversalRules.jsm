@@ -9,10 +9,47 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+const FILTER_IGNORE = Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+const FILTER_MATCH = Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+const FILTER_IGNORE_SUBTREE = Ci.nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
+
+const ROLE_MENUITEM = Ci.nsIAccessibleRole.ROLE_MENUITEM;
+const ROLE_LINK = Ci.nsIAccessibleRole.ROLE_LINK;
+const ROLE_PAGETAB = Ci.nsIAccessibleRole.ROLE_PAGETAB;
+const ROLE_GRAPHIC = Ci.nsIAccessibleRole.ROLE_GRAPHIC;
+const ROLE_STATICTEXT = Ci.nsIAccessibleRole.ROLE_STATICTEXT;
+const ROLE_TEXT_LEAF = Ci.nsIAccessibleRole.ROLE_TEXT_LEAF;
+const ROLE_PUSHBUTTON = Ci.nsIAccessibleRole.ROLE_PUSHBUTTON;
+const ROLE_SPINBUTTON = Ci.nsIAccessibleRole.ROLE_SPINBUTTON;
+const ROLE_CHECKBUTTON = Ci.nsIAccessibleRole.ROLE_CHECKBUTTON;
+const ROLE_RADIOBUTTON = Ci.nsIAccessibleRole.ROLE_RADIOBUTTON;
+const ROLE_COMBOBOX = Ci.nsIAccessibleRole.ROLE_COMBOBOX;
+const ROLE_PROGRESSBAR = Ci.nsIAccessibleRole.ROLE_PROGRESSBAR;
+const ROLE_BUTTONDROPDOWN = Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN;
+const ROLE_BUTTONMENU = Ci.nsIAccessibleRole.ROLE_BUTTONMENU;
+const ROLE_CHECK_MENU_ITEM = Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM;
+const ROLE_PASSWORD_TEXT = Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT;
+const ROLE_RADIO_MENU_ITEM = Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM;
+const ROLE_TOGGLE_BUTTON = Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
+const ROLE_ENTRY = Ci.nsIAccessibleRole.ROLE_ENTRY;
+const ROLE_LIST = Ci.nsIAccessibleRole.ROLE_LIST;
+const ROLE_DEFINITION_LIST = Ci.nsIAccessibleRole.ROLE_DEFINITION_LIST;
+const ROLE_LISTITEM = Ci.nsIAccessibleRole.ROLE_LISTITEM;
+const ROLE_BUTTONDROPDOWNGRID = Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID;
+const ROLE_LISTBOX = Ci.nsIAccessibleRole.ROLE_LISTBOX;
+const ROLE_SLIDER = Ci.nsIAccessibleRole.ROLE_SLIDER;
+const ROLE_HEADING = Ci.nsIAccessibleRole.ROLE_HEADING;
+const ROLE_TERM = Ci.nsIAccessibleRole.ROLE_TERM;
+const ROLE_SEPARATOR = Ci.nsIAccessibleRole.ROLE_SEPARATOR;
+const ROLE_TABLE = Ci.nsIAccessibleRole.ROLE_TABLE;
+const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
+
 this.EXPORTED_SYMBOLS = ['TraversalRules'];
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
 
 function BaseTraversalRule(aRoles, aMatchFunc) {
   this._matchRoles = aRoles;
@@ -31,83 +68,84 @@ BaseTraversalRule.prototype = {
 
     match: function BaseTraversalRule_match(aAccessible)
     {
-      if (aAccessible.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME) {
+      if (aAccessible.role == ROLE_INTERNAL_FRAME) {
         return (Utils.getMessageManager(aAccessible.DOMNode)) ?
-          Ci.nsIAccessibleTraversalRule.FILTER_MATCH :
-          Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+          FILTER_MATCH  | FILTER_IGNORE_SUBTREE : FILTER_IGNORE;
       }
 
       if (this._matchFunc)
         return this._matchFunc(aAccessible);
 
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+      return FILTER_MATCH;
     },
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
 };
 
 var gSimpleTraversalRoles =
-  [Ci.nsIAccessibleRole.ROLE_MENUITEM,
-   Ci.nsIAccessibleRole.ROLE_LINK,
-   Ci.nsIAccessibleRole.ROLE_PAGETAB,
-   Ci.nsIAccessibleRole.ROLE_GRAPHIC,
-   Ci.nsIAccessibleRole.ROLE_STATICTEXT,
-   Ci.nsIAccessibleRole.ROLE_TEXT_LEAF,
-   Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
-   Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-   Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-   Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-   Ci.nsIAccessibleRole.ROLE_PROGRESSBAR,
-   Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-   Ci.nsIAccessibleRole.ROLE_BUTTONMENU,
-   Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
-   Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
-   Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
-   Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-   Ci.nsIAccessibleRole.ROLE_ENTRY,
+  [ROLE_MENUITEM,
+   ROLE_LINK,
+   ROLE_PAGETAB,
+   ROLE_GRAPHIC,
+   ROLE_STATICTEXT,
+   ROLE_TEXT_LEAF,
+   ROLE_PUSHBUTTON,
+   ROLE_CHECKBUTTON,
+   ROLE_RADIOBUTTON,
+   ROLE_COMBOBOX,
+   ROLE_PROGRESSBAR,
+   ROLE_BUTTONDROPDOWN,
+   ROLE_BUTTONMENU,
+   ROLE_CHECK_MENU_ITEM,
+   ROLE_PASSWORD_TEXT,
+   ROLE_RADIO_MENU_ITEM,
+   ROLE_TOGGLE_BUTTON,
+   ROLE_ENTRY,
    // Used for traversing in to child OOP frames.
-   Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME];
+   ROLE_INTERNAL_FRAME];
 
 this.TraversalRules = {
   Simple: new BaseTraversalRule(
     gSimpleTraversalRoles,
     function Simple_match(aAccessible) {
       switch (aAccessible.role) {
-      case Ci.nsIAccessibleRole.ROLE_COMBOBOX:
+      case ROLE_COMBOBOX:
         // We don't want to ignore the subtree because this is often
         // where the list box hangs out.
-        return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-      case Ci.nsIAccessibleRole.ROLE_TEXT_LEAF:
+        return FILTER_MATCH;
+      case ROLE_TEXT_LEAF:
         {
           // Nameless text leaves are boring, skip them.
           let name = aAccessible.name;
           if (name && name.trim())
-            return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+            return FILTER_MATCH;
           else
-            return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+            return FILTER_IGNORE;
         }
-      case Ci.nsIAccessibleRole.ROLE_LINK:
+      case ROLE_LINK:
         // If the link has children we should land on them instead.
         // Image map links don't have children so we need to match those.
         if (aAccessible.childCount == 0)
-          return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+          return FILTER_MATCH;
         else
-          return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
-      case Ci.nsIAccessibleRole.ROLE_STATICTEXT:
+          return FILTER_IGNORE;
+      case ROLE_STATICTEXT:
         {
           let parent = aAccessible.parent;
           // Ignore prefix static text in list items. They are typically bullets or numbers.
           if (parent.childCount > 1 && aAccessible.indexInParent == 0 &&
-              parent.role == Ci.nsIAccessibleRole.ROLE_LISTITEM)
-            return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+              parent.role == ROLE_LISTITEM)
+            return FILTER_IGNORE;
 
-          return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+          return FILTER_MATCH;
         }
+      case ROLE_GRAPHIC:
+        return TraversalRules._shouldSkipImage(aAccessible);
       default:
         // Ignore the subtree, if there is one. So that we don't land on
         // the same content that was already presented by its parent.
-        return Ci.nsIAccessibleTraversalRule.FILTER_MATCH |
-          Ci.nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
+        return FILTER_MATCH |
+          FILTER_IGNORE_SUBTREE;
       }
     }
   ),
@@ -115,13 +153,13 @@ this.TraversalRules = {
   SimpleTouch: new BaseTraversalRule(
     gSimpleTraversalRoles,
     function Simple_match(aAccessible) {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH |
-        Ci.nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
+      return FILTER_MATCH |
+        FILTER_IGNORE_SUBTREE;
     }
   ),
 
   Anchor: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_LINK],
+    [ROLE_LINK],
     function Anchor_match(aAccessible)
     {
       // We want to ignore links, only focus named anchors.
@@ -129,56 +167,59 @@ this.TraversalRules = {
       let extraState = {};
       aAccessible.getState(state, extraState);
       if (state.value & Ci.nsIAccessibleStates.STATE_LINKED) {
-        return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+        return FILTER_IGNORE;
       } else {
-        return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+        return FILTER_MATCH;
       }
     }),
 
   Button: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
-     Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
-     Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID]),
+    [ROLE_PUSHBUTTON,
+     ROLE_SPINBUTTON,
+     ROLE_TOGGLE_BUTTON,
+     ROLE_BUTTONDROPDOWN,
+     ROLE_BUTTONDROPDOWNGRID]),
 
   Combobox: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-     Ci.nsIAccessibleRole.ROLE_LISTBOX]),
+    [ROLE_COMBOBOX,
+     ROLE_LISTBOX]),
 
   Entry: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_ENTRY,
-     Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT]),
+    [ROLE_ENTRY,
+     ROLE_PASSWORD_TEXT]),
 
   FormElement: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
-     Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
-     Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID,
-     Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-     Ci.nsIAccessibleRole.ROLE_LISTBOX,
-     Ci.nsIAccessibleRole.ROLE_ENTRY,
-     Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
-     Ci.nsIAccessibleRole.ROLE_PAGETAB,
-     Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-     Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
-     Ci.nsIAccessibleRole.ROLE_SLIDER,
-     Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-     Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM]),
+    [ROLE_PUSHBUTTON,
+     ROLE_SPINBUTTON,
+     ROLE_TOGGLE_BUTTON,
+     ROLE_BUTTONDROPDOWN,
+     ROLE_BUTTONDROPDOWNGRID,
+     ROLE_COMBOBOX,
+     ROLE_LISTBOX,
+     ROLE_ENTRY,
+     ROLE_PASSWORD_TEXT,
+     ROLE_PAGETAB,
+     ROLE_RADIOBUTTON,
+     ROLE_RADIO_MENU_ITEM,
+     ROLE_SLIDER,
+     ROLE_CHECKBUTTON,
+     ROLE_CHECK_MENU_ITEM]),
 
   Graphic: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_GRAPHIC]),
+    [ROLE_GRAPHIC],
+    function Graphic_match(aAccessible) {
+      return TraversalRules._shouldSkipImage(aAccessible);
+    }),
 
   Heading: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_HEADING]),
+    [ROLE_HEADING]),
 
   ListItem: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_LISTITEM,
-     Ci.nsIAccessibleRole.ROLE_TERM]),
+    [ROLE_LISTITEM,
+     ROLE_TERM]),
 
   Link: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_LINK],
+    [ROLE_LINK],
     function Link_match(aAccessible)
     {
       // We want to ignore anchors, only focus real links.
@@ -186,30 +227,37 @@ this.TraversalRules = {
       let extraState = {};
       aAccessible.getState(state, extraState);
       if (state.value & Ci.nsIAccessibleStates.STATE_LINKED) {
-        return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+        return FILTER_MATCH;
       } else {
-        return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+        return FILTER_IGNORE;
       }
     }),
 
   List: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_LIST,
-     Ci.nsIAccessibleRole.ROLE_DEFINITION_LIST]),
+    [ROLE_LIST,
+     ROLE_DEFINITION_LIST]),
 
   PageTab: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_PAGETAB]),
+    [ROLE_PAGETAB]),
 
   RadioButton: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-     Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM]),
+    [ROLE_RADIOBUTTON,
+     ROLE_RADIO_MENU_ITEM]),
 
   Separator: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_SEPARATOR]),
+    [ROLE_SEPARATOR]),
 
   Table: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_TABLE]),
+    [ROLE_TABLE]),
 
   Checkbox: new BaseTraversalRule(
-    [Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-     Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM])
+    [ROLE_CHECKBUTTON,
+     ROLE_CHECK_MENU_ITEM]),
+
+  _shouldSkipImage: function _shouldSkipImage(aAccessible) {
+    if (gSkipEmptyImages.value && aAccessible.name === '') {
+      return FILTER_IGNORE;
+    }
+    return FILTER_MATCH;
+  }
 };

@@ -49,6 +49,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
 	browser_webconsole_bug_583816_No_input_and_Tab_key_pressed.js \
+	browser_webconsole_bug_734061_No_input_change_and_Tab_key_pressed.js \
 	browser_webconsole_bug_594477_clickable_output.js \
 	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
@@ -135,6 +136,12 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_817834_add_edited_input_to_history.js \
 	browser_console_addonsdk_loader_exception.js \
 	browser_console_error_source_click.js \
+	browser_console_clear_on_reload.js \
+	browser_console_keyboard_accessibility.js \
+	browser_console_filters.js \
+	browser_console_dead_objects.js \
+	browser_console_iframe_messages.js \
+	browser_console_variables_view_while_debugging_and_inspecting.js \
 	head.js \
 	$(NULL)
 
@@ -172,15 +179,12 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-595934-css-loader.html \
 	test-bug-595934-css-loader.css \
 	test-bug-595934-css-loader.css^headers^ \
-	test-bug-595934-dom-html.html \
 	test-bug-595934-imagemap.html \
 	test-bug-595934-html.html \
 	test-bug-595934-malformedxml.xhtml \
 	test-bug-595934-svg.xhtml \
 	test-bug-595934-workers.html \
 	test-bug-595934-workers.js \
-	test-bug-595934-dom-html-external.html \
-	test-bug-595934-dom-html-external.js \
 	test-bug-595934-canvas.html \
 	test-bug-595934-canvas.js \
 	test-bug-595934-css-parser.html \
@@ -237,6 +241,10 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-837351-security-errors.html \
 	test-bug-869003-top-window.html \
 	test-bug-869003-iframe.html \
+	test-consoleiframes.html \
+	test-iframe1.html \
+	test-iframe2.html \
+	test-iframe3.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

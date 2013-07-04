@@ -83,7 +83,6 @@ nsDOMUIEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
   nsRefPtr<nsDOMUIEvent> e = new nsDOMUIEvent(t, nullptr, nullptr);
-  e->SetIsDOMBinding();
   bool trusted = e->Init(t);
   aRv = e->InitUIEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
                        aParam.mDetail);
@@ -177,29 +176,6 @@ nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
 }
 
 // ---- nsDOMNSUIEvent implementation -------------------
-nsIntPoint
-nsDOMUIEvent::GetPagePoint()
-{
-  if (mPrivateDataDuplicated) {
-    return mPagePoint;
-  }
-
-  nsIntPoint pagePoint = GetClientPoint();
-
-  // If there is some scrolling, add scroll info to client point.
-  if (mPresContext && mPresContext->GetPresShell()) {
-    nsIPresShell* shell = mPresContext->GetPresShell();
-    nsIScrollableFrame* scrollframe = shell->GetRootScrollFrameAsScrollable();
-    if (scrollframe) {
-      nsPoint pt = scrollframe->GetScrollPosition();
-      pagePoint += nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                              nsPresContext::AppUnitsToIntCSSPixels(pt.y));
-    }
-  }
-
-  return pagePoint;
-}
-
 NS_IMETHODIMP
 nsDOMUIEvent::GetPageX(int32_t* aPageX)
 {
@@ -386,7 +362,7 @@ nsDOMUIEvent::IsChar() const
     default:
       return false;
   }
-  MOZ_NOT_REACHED("Switch handles all cases.");
+  MOZ_CRASH("Switch handles all cases.");
 }
 
 NS_IMETHODIMP
@@ -541,6 +517,5 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsGUIEvent *aEvent) 
 {
   nsDOMUIEvent* it = new nsDOMUIEvent(aOwner, aPresContext, aEvent);
-  it->SetIsDOMBinding();
   return CallQueryInterface(it, aInstancePtrResult);
 }

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsprf_h___
-#define jsprf_h___
+#ifndef jsprf_h
+#define jsprf_h
 
 /*
 ** API for PR printf like routines. Supports the following formats
@@ -75,4 +75,4 @@ extern JS_PUBLIC_API(char*) JS_vsmprintf(const char *fmt, va_list ap);
 extern JS_PUBLIC_API(char*) JS_vsprintf_append(char *last, const char *fmt, va_list ap);
 extern JS_PUBLIC_API(uint32_t) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
 
-#endif /* jsprf_h___ */
+#endif /* jsprf_h */

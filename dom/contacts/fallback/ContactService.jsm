@@ -16,6 +16,7 @@ this.EXPORTED_SYMBOLS = [];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContactDB.jsm");
+Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -42,22 +43,44 @@ let ContactService = {
     this._db = new ContactDB(myGlobal);
     this._db.init(myGlobal);
 
+    let countryName = PhoneNumberUtils.getCountryName();
+    if (Services.prefs.getPrefType("dom.phonenumber.substringmatching." + countryName) == Ci.nsIPrefBranch.PREF_INT) {
+      if (DEBUG) debug("Enable Substring Matching for Phone Numbers: " + countryName);
+      let val = Services.prefs.getIntPref("dom.phonenumber.substringmatching." + countryName);
+      if (val && val > 0) {
+        this._db.enableSubstringMatching(val);
+      }
+    }
+
     Services.obs.addObserver(this, "profile-before-change", false);
+    Services.prefs.addObserver("dom.phonenumber.substringmatching", this, false);
   },
 
   observe: function(aSubject, aTopic, aData) {
-    myGlobal = null;
-    this._messages.forEach(function(msgName) {
-      ppmm.removeMessageListener(msgName, this);
-    }.bind(this));
-    Services.obs.removeObserver(this, "profile-before-change");
-    ppmm = null;
-    this._messages = null;
-    if (this._db)
-      this._db.close();
-    this._db = null;
-    this._children = null;
-    this._cursors = null;
+    if (aTopic === 'profile-before-change') {
+      myGlobal = null;
+      this._messages.forEach(function(msgName) {
+        ppmm.removeMessageListener(msgName, this);
+      }.bind(this));
+      Services.obs.removeObserver(this, "profile-before-change");
+      Services.prefs.removeObserver("dom.phonenumber.substringmatching", this);
+      ppmm = null;
+      this._messages = null;
+      if (this._db)
+        this._db.close();
+      this._db = null;
+      this._children = null;
+      this._cursors = null;
+    } else if (aTopic === 'nsPref:changed' && aData.contains("dom.phonenumber.substringmatching")) {
+      // We don't fully support changing substringMatching during runtime. This is mostly for testing.
+      let countryName = PhoneNumberUtils.getCountryName();
+      if (Services.prefs.getPrefType("dom.phonenumber.substringmatching." + countryName) == Ci.nsIPrefBranch.PREF_INT) {
+        let val = Services.prefs.getIntPref("dom.phonenumber.substringmatching." + countryName);
+        if (val && val > 0) {
+          this._db.enableSubstringMatching(val);
+        }
+      }
+    }
   },
 
   assertPermission: function(aMessage, aPerm) {
@@ -120,7 +143,7 @@ let ContactService = {
               throw e;
             }
           }.bind(this),
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { errorMsg: aErrorMsg }); },
+          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.cursorId, errorMsg: aErrorMsg }); },
           msg.findOptions, msg.cursorId);
         break;
       case "Contacts:GetAll:SendNow":

@@ -51,11 +51,11 @@ function createDocument()
 function selectNode(aInspector)
 {
   inspector = aInspector;
-  inspector.selection.setNode(div);
   inspector.sidebar.once("ruleview-ready", function() {
     ruleview = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
     inspector.sidebar.select("ruleview");
-    performTests();
+    inspector.selection.setNode(div);
+    inspector.once("inspector-updated", performTests);
   });
 }
 
@@ -64,40 +64,60 @@ function performTests()
   // toggle the class
   inspector.togglePseudoClass(pseudo);
 
-  testAdded();
+  // Wait for the "pseudoclass" event so we know the
+  // inspector has been told of the pseudoclass lock change.
+  inspector.selection.once("pseudoclass", () => {
+    // Give the rule view time to update.
+    executeSoon(() => {
+      testAdded();
 
-  // toggle the lock off
-  inspector.togglePseudoClass(pseudo);
+      // toggle the lock off and wait for the pseudoclass event again.
+      inspector.togglePseudoClass(pseudo);
+      inspector.selection.once("pseudoclass", () => {
+        // Give the rule view time to update.
+        executeSoon(() => {
+          testRemoved();
+          testRemovedFromUI();
 
-  testRemoved();
-  testRemovedFromUI();
-
-  // toggle it back on
-  inspector.togglePseudoClass(pseudo);
-
-  testNavigate();
-
-  // close the inspector
-  finishUp();
+          // toggle it back on
+          inspector.togglePseudoClass(pseudo);
+          inspector.selection.once("pseudoclass", () => {
+            testNavigate(() => {
+              // close the inspector
+              finishUp();
+            });
+          });
+        });
+      });
+    });
+  });
 }
 
-function testNavigate()
+function testNavigate(callback)
 {
   inspector.selection.setNode(parentDiv);
+  inspector.once("inspector-updated", () => {
 
-  // make sure it's still on after naving to parent
-  is(DOMUtils.hasPseudoClassLock(div, pseudo), true,
-       "pseudo-class lock is still applied after inspecting ancestor");
+    // make sure it's still on after naving to parent
+    is(DOMUtils.hasPseudoClassLock(div, pseudo), true,
+         "pseudo-class lock is still applied after inspecting ancestor");
 
-  inspector.selection.setNode(div2);
+    inspector.selection.setNode(div2);
+    inspector.selection.once("pseudoclass", () => {
+      // make sure it's removed after naving to a non-hierarchy node
+      is(DOMUtils.hasPseudoClassLock(div, pseudo), false,
+           "pseudo-class lock is removed after inspecting sibling node");
 
-  // make sure it's removed after naving to a non-hierarchy node
-  is(DOMUtils.hasPseudoClassLock(div, pseudo), false,
-       "pseudo-class lock is removed after inspecting sibling node");
-
-  // toggle it back on
-  inspector.selection.setNode(div);
-  inspector.togglePseudoClass(pseudo);
+      // toggle it back on
+      inspector.selection.setNode(div);
+      inspector.once("inspector-updated", () => {
+        inspector.togglePseudoClass(pseudo);
+        inspector.selection.once("pseudoclass", () => {
+          callback();
+        });
+      });
+    });
+  });
 }
 
 function testAdded()

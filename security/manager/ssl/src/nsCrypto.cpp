@@ -12,9 +12,9 @@
 #include "nsXPIDLString.h"
 #include "nsISaveAsCharset.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-#include "nsNSSComponent.h"
 #include "nsKeygenHandler.h"
 #include "nsKeygenThread.h"
 #include "nsNSSCertificate.h"

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsproxy_h___
-#define jsproxy_h___
+#ifndef jsproxy_h
+#define jsproxy_h
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -129,7 +129,7 @@ class JS_FRIEND_API(BaseProxyHandler)
                          MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    virtual bool isExtensible(JSObject *proxy) = 0;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) = 0;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
@@ -190,7 +190,7 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
-    virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
@@ -242,7 +242,7 @@ class Proxy
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    static bool isExtensible(JSObject *proxy);
+    static bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible);
     static bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
     static bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
@@ -426,6 +426,6 @@ class JS_FRIEND_API(AutoWaivePolicy) {
 } /* namespace js */
 
 extern JS_FRIEND_API(JSObject *)
-js_InitProxyClass(JSContext *cx, JSHandleObject obj);
+js_InitProxyClass(JSContext *cx, JS::HandleObject obj);
 
-#endif
+#endif /* jsproxy_h */

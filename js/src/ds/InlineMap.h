@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef InlineMap_h__
-#define InlineMap_h__
+#ifndef ds_InlineMap_h
+#define ds_InlineMap_h
 
 #include "js/HashTable.h"
 
@@ -22,7 +22,7 @@ template <typename K, typename V, size_t InlineElems>
 class InlineMap
 {
   public:
-    typedef HashMap<K, V, DefaultHasher<K>, TempAllocPolicy> WordMap;
+    typedef HashMap<K, V, DefaultHasher<K>, SystemAllocPolicy> WordMap;
 
     struct InlineElem
     {
@@ -79,8 +79,8 @@ class InlineMap
     }
 
   public:
-    explicit InlineMap(JSContext *cx)
-      : inlNext(0), inlCount(0), map(cx) {
+    explicit InlineMap()
+      : inlNext(0), inlCount(0) {
         checkStaticInvariants(); /* Force the template to instantiate the static invariants. */
     }
 
@@ -373,4 +373,4 @@ class InlineMap
 
 } /* namespace js */
 
-#endif
+#endif /* ds_InlineMap_h */

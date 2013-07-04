@@ -5,11 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "jscompartment.h"
-#include "FullParseHandler.h"
-#include "SyntaxParseHandler.h"
+#include "frontend/FullParseHandler.h"
+#include "frontend/SyntaxParseHandler.h"
 
-#include "ParseMaps-inl.h"
+#include "frontend/ParseMaps-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -50,7 +49,7 @@ ParseMapPool::allocateFresh()
     if (!all.reserve(newAllLength) || !recyclable.reserve(newAllLength))
         return NULL;
 
-    AtomMapT *map = cx->new_<AtomMapT>(cx);
+    AtomMapT *map = js_new<AtomMapT>();
     if (!map)
         return NULL;
 
@@ -133,5 +132,5 @@ frontend::InitAtomMap(JSContext *cx, frontend::AtomIndexMap *indices, HeapPtrAto
     }
 }
 
-template class AtomDecls<FullParseHandler>;
-template class AtomDecls<SyntaxParseHandler>;
+template class js::frontend::AtomDecls<FullParseHandler>;
+template class js::frontend::AtomDecls<SyntaxParseHandler>;

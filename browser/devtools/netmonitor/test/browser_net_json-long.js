@@ -46,14 +46,15 @@ function test() {
         is(tab.getAttribute("selected"), "true",
           "The response tab in the network details pane should be selected.");
 
+        is(tabpanel.querySelector("#response-content-info-header")
+          .hasAttribute("hidden"), true,
+          "The response info header doesn't have the intended visibility.");
         is(tabpanel.querySelector("#response-content-json-box")
           .hasAttribute("hidden"), false,
           "The response content json box doesn't have the intended visibility.");
-
         is(tabpanel.querySelector("#response-content-textarea-box")
           .hasAttribute("hidden"), true,
           "The response content textarea box doesn't have the intended visibility.");
-
         is(tabpanel.querySelector("#response-content-image-box")
           .hasAttribute("hidden"), true,
           "The response content image box doesn't have the intended visibility.");
@@ -76,7 +77,7 @@ function test() {
         is(jsonScope.querySelectorAll(names)[0].getAttribute("value"),
           "0", "The first json property name was incorrect.");
         is(jsonScope.querySelectorAll(values)[0].getAttribute("value"),
-          "[object Object]", "The first json property value was incorrect.");
+          "Object", "The first json property value was incorrect.");
 
         is(jsonScope.querySelectorAll(names)[1].getAttribute("value"),
           "greeting", "The second json property name was incorrect.");
@@ -86,7 +87,7 @@ function test() {
         is(Array.slice(jsonScope.querySelectorAll(names), -1).shift().getAttribute("value"),
           "__proto__", "The last json property name was incorrect.");
         is(Array.slice(jsonScope.querySelectorAll(values), -1).shift().getAttribute("value"),
-          "[object Object]", "The last json property value was incorrect.");
+          "Object", "The last json property value was incorrect.");
       }
     });
 

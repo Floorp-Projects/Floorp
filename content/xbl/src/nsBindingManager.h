@@ -44,6 +44,7 @@ public:
   ~nsBindingManager();
 
   nsXBLBinding* GetBinding(nsIContent* aContent);
+  nsXBLBinding* GetBindingWithContent(nsIContent* aContent);
   nsresult SetBinding(nsIContent* aContent, nsXBLBinding* aBinding);
 
   nsIContent* GetInsertionParent(nsIContent* aContent);
@@ -62,39 +63,13 @@ public:
   void RemovedFromDocument(nsIContent* aContent, nsIDocument* aOldDocument)
   {
     if (aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-      RemovedFromDocumentInternal(aContent, aOldDocument,
-                                  aContent->GetBindingParent());
+      RemovedFromDocumentInternal(aContent, aOldDocument);
     }
   }
   void RemovedFromDocumentInternal(nsIContent* aContent,
-                                   nsIDocument* aOldDocument,
-                                   nsIContent* aContentBindingParent);
+                                   nsIDocument* aOldDocument);
 
   nsIAtom* ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID);
-
-  /**
-   * Return a list of all explicit children, including any children
-   * that may have been inserted via XBL insertion points.
-   */
-  nsresult GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-
-  /**
-   * Non-COMy version of GetContentListFor.
-   */
-  nsINodeList* GetContentListFor(nsIContent* aContent);
-
-  /**
-   * Set the insertion point children for the specified element.
-   * The binding manager assumes ownership of aList.
-   */
-  nsresult SetContentListFor(nsIContent* aContent,
-                             nsInsertionPointList* aList);
-
-  /**
-   * Determine whether or not the explicit child list has been altered
-   * by XBL insertion points.
-   */
-  bool HasContentListFor(nsIContent* aContent);
 
   /**
    * Return the nodelist of "anonymous" kids for this node.  This might
@@ -103,59 +78,7 @@ public:
    * returning a non-null list for nodes which have a binding attached.
    */
   nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-
-  /**
-   * Same as above, but without the XPCOM goop
-   */
   nsINodeList* GetAnonymousNodesFor(nsIContent* aContent);
-
-  /**
-   * Set the anonymous child content for the specified element.
-   * The binding manager assumes ownership of aList.
-   */
-  nsresult SetAnonymousNodesFor(nsIContent* aContent,
-                                nsInsertionPointList* aList);
-
-  /**
-   * Retrieves the anonymous list of children if the element has one;
-   * otherwise, retrieves the list of explicit children. N.B. that if
-   * the explicit child list has not been altered by XBL insertion
-   * points, then aResult will be null.
-   */
-  nsresult GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-
-  /**
-   * Non-COMy version of GetXBLChildNodesFor
-   */
-  nsINodeList* GetXBLChildNodesFor(nsIContent* aContent);
-
-  /**
-   * Given a parent element and a child content, determine where the
-   * child content should be inserted in the parent element's
-   * anonymous content tree. Specifically, aChild should be inserted
-   * beneath aResult at the index specified by aIndex.
-   */
-  // XXXbz That's false.  The aIndex doesn't seem to accurately reflect
-  // anything resembling reality in terms of inserting content.  It's really
-  // only used to tell apart two different insertion points with the same
-  // insertion parent when managing our internal data structures.  We really
-  // shouldn't be handing it out in our public API, since it's not useful to
-  // anyone.
-  nsIContent* GetInsertionPoint(nsIContent* aParent,
-                                const nsIContent* aChild, uint32_t* aIndex);
-
-  /**
-   * Return the unfiltered insertion point for the specified parent
-   * element. If other filtered insertion points exist,
-   * aMultipleInsertionPoints will be set to true.
-   */
-  nsIContent* GetSingleInsertionPoint(nsIContent* aParent, uint32_t* aIndex,
-                                      bool* aMultipleInsertionPoints);
-
-  nsIContent* GetNestedInsertionPoint(nsIContent* aParent,
-                                      const nsIContent* aChild);
-  nsIContent* GetNestedSingleInsertionPoint(nsIContent* aParent,
-                                            bool* aMultipleInsertionPoints);
 
   nsresult ClearBinding(nsIContent* aContent);
   nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
@@ -205,17 +128,21 @@ public:
   void BeginOutermostUpdate();
   void EndOutermostUpdate();
 
+  // When removing an insertion point or a parent of one, clear the insertion
+  // points and their insertion parents.
+  void ClearInsertionPointsRecursively(nsIContent* aContent);
+
   // Called when the document is going away
   void DropDocumentReference();
+
+  nsIContent* FindNestedInsertionPoint(nsIContent* aContainer,
+                                       nsIContent* aChild);
+
+  nsIContent* FindNestedSingleInsertionPoint(nsIContent* aContainer, bool* aMulti);
 
 protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
   nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
-
-  nsINodeList* GetXBLChildNodesInternal(nsIContent* aContent,
-                                        bool* aIsAnonymousContentList);
-  nsINodeList* GetAnonymousNodesInternal(nsIContent* aContent,
-                                         bool* aIsAnonymousContentList);
 
   // Called by ContentAppended and ContentInserted to handle a single child
   // insertion.  aChild must not be null.  aContainer may be null.
@@ -223,19 +150,6 @@ protected:
   // true if this child is being appended, not inserted.
   void HandleChildInsertion(nsIContent* aContainer, nsIContent* aChild,
                             uint32_t aIndexInContainer, bool aAppend);
-
-  // For the given container under which a child is being added, given
-  // insertion parent and given index of the child being inserted, find the
-  // right nsXBLInsertionPoint and the right index in that insertion point to
-  // insert it at.  If null is returned, aInsertionIndex might be garbage.
-  // aAppend controls what should be returned as the aInsertionIndex if the
-  // right index can't be found.  If true, the length of the insertion point
-  // will be returned; otherwise 0 will be returned.
-  nsXBLInsertionPoint* FindInsertionPointAndIndex(nsIContent* aContainer,
-                                                  nsIContent* aInsertionParent,
-                                                  uint32_t aIndexInContainer,
-                                                  int32_t aAppend,
-                                                  int32_t* aInsertionIndex);
 
   // Same as ProcessAttachedQueue, but also nulls out
   // mProcessAttachedQueueEvent
@@ -246,28 +160,9 @@ protected:
 
 // MEMBER VARIABLES
 protected: 
-  void RemoveInsertionParent(nsIContent* aParent);
   // A mapping from nsIContent* to the nsXBLBinding* that is
   // installed on that element.
   nsRefPtrHashtable<nsISupportsHashKey,nsXBLBinding> mBindingTable;
-
-  // A mapping from nsIContent* to an nsAnonymousContentList*.  This
-  // list contains an accurate reflection of our *explicit* children
-  // (once intermingled with insertion points) in the altered DOM.
-  // There is an entry for a content node in this table only if that
-  // content node has some <children> kids.
-  PLDHashTable mContentListTable;
-
-  // A mapping from nsIContent* to an nsAnonymousContentList*.  This
-  // list contains an accurate reflection of our *anonymous* children
-  // (if and only if they are intermingled with insertion points) in
-  // the altered DOM.  This table is not used if no insertion points
-  // were defined directly underneath a <content> tag in a binding.
-  // The NodeList from the <content> is used instead as a performance
-  // optimization.  There is an entry for a content node in this table
-  // only if that content node has a binding with a <content> attached
-  // and this <content> contains <children> elements directly.
-  PLDHashTable mAnonymousNodesTable;
 
   // A mapping from nsIContent* to nsIContent*.  The insertion parent
   // is our one true parent in the transformed DOM.  This gives us a

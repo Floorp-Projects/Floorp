@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
-#include "nsIDOMSVGDocument.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"
@@ -36,12 +35,11 @@ NS_IMPL_RELEASE_INHERITED(HTMLIFrameElement, Element)
 
 // QueryInterface implementation for HTMLIFrameElement
 NS_INTERFACE_TABLE_HEAD(HTMLIFrameElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLIFrameElement,
-                                   nsIDOMHTMLIFrameElement,
-                                   nsIDOMGetSVGDocument)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLIFrameElement,
-                                               nsGenericHTMLFrameElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFrameElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLIFrameElement,
+                                nsIDOMHTMLIFrameElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 
@@ -57,6 +55,7 @@ NS_IMPL_URI_ATTR(HTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Width, width)
 NS_IMPL_BOOL_ATTR(HTMLIFrameElement, AllowFullscreen, allowfullscreen)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Sandbox, sandbox)
+NS_IMPL_STRING_ATTR(HTMLIFrameElement, Srcdoc, srcdoc)
 
 void
 HTMLIFrameElement::GetItemValueText(nsAString& aValue)
@@ -80,12 +79,6 @@ NS_IMETHODIMP
 HTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 {
   return nsGenericHTMLFrameElement::GetContentWindow(aContentWindow);
-}
-
-NS_IMETHODIMP
-HTMLIFrameElement::GetSVGDocument(nsIDOMDocument **aResult)
-{
-  return GetContentDocument(aResult);
 }
 
 bool
@@ -207,6 +200,24 @@ HTMLIFrameElement::GetAttributeMappingFunction() const
 }
 
 nsresult
+HTMLIFrameElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           bool aNotify)
+{
+  nsresult rv = nsGenericHTMLFrameElement::SetAttr(aNameSpaceID, aName,
+                                                   aPrefix, aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::srcdoc) {
+    // Don't propagate error here. The attribute was successfully set, that's
+    // what we should reflect.
+    LoadSrc();
+  }
+
+  return NS_OK;
+}
+
+nsresult
 HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify)
@@ -233,6 +244,23 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
                                             aNotify);
+}
+
+nsresult
+HTMLIFrameElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                             bool aNotify)
+{
+  // Invoke on the superclass.
+  nsresult rv = nsGenericHTMLFrameElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::srcdoc) {
+    // Fall back to the src attribute, if any
+    LoadSrc();
+  }
+
+  return NS_OK;
 }
 
 uint32_t

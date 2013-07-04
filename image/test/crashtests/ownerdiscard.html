@@ -26,6 +26,7 @@
       imgLoadingContent.removeObserver(gObserver);
       setTimeout("document.documentElement.className = '';", 0);
     }
+    observer = SpecialPowers.wrapCallbackObject(observer);
     var gObserver = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                     .createScriptedObserver(observer);
     var imgLoadingContent =

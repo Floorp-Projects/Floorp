@@ -199,7 +199,7 @@ void nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 //******************************************************************************
 void nsGIFDecoder2::EndImageFrame()
 {
-  RasterImage::FrameAlpha alpha = RasterImage::kFrameHasAlpha;
+  FrameBlender::FrameAlpha alpha = FrameBlender::kFrameHasAlpha;
 
   // First flush all pending image data 
   if (!mGIFStruct.images_decoded) {
@@ -218,7 +218,7 @@ void nsGIFDecoder2::EndImageFrame()
     }
     // This transparency check is only valid for first frame
     if (mGIFStruct.is_transparent && !mSawTransparency) {
-      alpha = RasterImage::kFrameOpaque;
+      alpha = FrameBlender::kFrameOpaque;
     }
   }
   mCurrentRow = mLastFlushedRow = -1;
@@ -241,7 +241,7 @@ void nsGIFDecoder2::EndImageFrame()
 
   // Tell the superclass we finished a frame
   PostFrameStop(alpha,
-                RasterImage::FrameDisposalMethod(mGIFStruct.disposal_method),
+                FrameBlender::FrameDisposalMethod(mGIFStruct.disposal_method),
                 mGIFStruct.delay_time);
 
   // Reset the transparent pixel
@@ -816,7 +816,9 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, uint32_t aCount)
     /* Netscape-specific GIF extension: animation looping */
     case gif_netscape_extension_block:
       if (*q)
-        GETN(*q, gif_consume_netscape_extension);
+        // We might need to consume 3 bytes in
+        // gif_consume_netscape_extension, so make sure we have at least that.
+        GETN(std::max(3, static_cast<int>(*q)), gif_consume_netscape_extension);
       else
         GETN(1, gif_image_start);
       break;
@@ -830,15 +832,15 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, uint32_t aCount)
           mGIFStruct.loop_count = GETINT16(q + 1);
           GETN(1, gif_netscape_extension_block);
           break;
-        
+
         case 2:
           /* Wait for specified # of bytes to enter buffer */
-          // Don't do this, this extension doesn't exist (isn't used at all) 
+          // Don't do this, this extension doesn't exist (isn't used at all)
           // and doesn't do anything, as our streaming/buffering takes care of it all...
           // See: http://semmix.pl/color/exgraf/eeg24.htm
           GETN(1, gif_netscape_extension_block);
           break;
-  
+
         default:
           // 0,3-7 are yet to be defined netscape extension codes
           mGIFStruct.state = gif_error;

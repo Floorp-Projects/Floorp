@@ -46,7 +46,7 @@ function addScriptAndCheckOrder(method, callback) {
   let sv = gDebugger.SourceUtils;
   let vs = gDebugger.DebuggerView.Sources;
   vs.empty();
-  vs._container.removeEventListener("select", vs._onScriptsChange, false);
+  vs.widget.removeEventListener("select", vs._onScriptsChange, false);
 
   let urls = [
     { href: "ici://some.address.com/random/", leaf: "subrandom/" },

@@ -10,7 +10,29 @@ ASFILES = ['bar.s', 'foo.asm']
 
 DEFINES = ['-Dbar', '-Dfoo']
 
+EXTRA_COMPONENTS = ['bar.js', 'foo.js']
+EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
+
+GTEST_C_SOURCES = ['test1.c', 'test2.c']
+GTEST_CMM_SOURCES = ['test1.mm', 'test2.mm']
+GTEST_CPP_SOURCES = ['test1.cpp', 'test2.cpp']
+
+HOST_CPPSRCS = ['bar.cpp', 'foo.cpp']
+HOST_CSRCS = ['bar.c', 'foo.c']
+
+HOST_LIBRARY_NAME = 'host_bar'
+
+LIBRARY_NAME = 'lib_name'
+LIBS = ['bar.lib', 'foo.lib']
+
+SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
+
+SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']
 
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']
+
+CMMSRCS = ['bar.mm', 'foo.mm']
+
+SSRCS = ['bar.S', 'foo.S']

@@ -9,6 +9,9 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gCharsetMenu = null;
@@ -115,10 +118,10 @@ XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
   return new tmp.DeveloperToolbar(window, document.getElementById("developer-toolbar"));
 });
 
-XPCOMUtils.defineLazyGetter(this, "DebuggerUI", function() {
+XPCOMUtils.defineLazyGetter(this, "BrowserDebuggerProcess", function() {
   let tmp = {};
-  Cu.import("resource:///modules/devtools/DebuggerUI.jsm", tmp);
-  return new tmp.DebuggerUI(window);
+  Cu.import("resource:///modules/devtools/DebuggerProcess.jsm", tmp);
+  return tmp.BrowserDebuggerProcess;
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "Social",
@@ -138,11 +141,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "gBrowserNewTabPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
+  "resource:///modules/SitePermissions.jsm");
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
   "about:home",
   "about:privatebrowsing",
+  "about:welcomeback",
   "about:sessionrestore"
 ];
 
@@ -752,9 +759,9 @@ var gBrowserInit = {
 
     // Note that the XBL binding is untrusted
     gBrowser.addEventListener("PluginBindingAttached", gPluginHandler, true, true);
-    gBrowser.addEventListener("PluginScripted",        gPluginHandler, true);
     gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
+    gBrowser.addEventListener("PluginInstantiated",    gPluginHandler, true);
 
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 
@@ -805,7 +812,7 @@ var gBrowserInit = {
     // enable global history
     try {
       if (!gMultiProcessBrowser)
-        gBrowser.docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
+      gBrowser.docShell.useGlobalHistory = true;
     } catch(ex) {
       Cu.reportError("Places database may be locked: " + ex);
     }
@@ -816,10 +823,6 @@ var gBrowserInit = {
 
     // setup our common DOMLinkAdded listener
     gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
-
-    // setup our MozApplicationManifest listener
-    gBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
 
     // setup simple gestures support
     gGestureSupport.init(true);
@@ -966,6 +969,17 @@ var gBrowserInit = {
     TelemetryTimestamps.add("delayedStartupStarted");
 
     this._cancelDelayedStartup();
+
+    // We need to set the MozApplicationManifest event listeners up
+    // before we start loading the home pages in case a document has
+    // a "manifest" attribute, in which the MozApplicationManifest event
+    // will be fired.
+    gBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
+    // listen for offline apps on social
+    let socialBrowser = document.getElementById("social-sidebar-browser");
+    socialBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
 
     var isLoadingBlank = isBlankPageURL(uriToLoad);
 
@@ -1266,10 +1280,6 @@ var gBrowserInit = {
       Cu.reportError("Could not end startup crash tracking: " + ex);
     }
 
-    Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
-    setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
-    TelemetryTimestamps.add("delayedStartupFinished");
-
 #ifdef XP_WIN
 #ifdef MOZ_METRO
     gMetroPrefs.prefDomain.forEach(function(prefName) {
@@ -1278,6 +1288,10 @@ var gBrowserInit = {
     }, this);
 #endif
 #endif
+
+    Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+    setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
+    TelemetryTimestamps.add("delayedStartupFinished");
   },
 
   onUnload: function() {
@@ -1920,88 +1934,89 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup) {
   } catch (e) {}
 }
 
-function getShortcutOrURI(aURL, aPostDataRef, aMayInheritPrincipal) {
-  // Initialize outparam to false
-  if (aMayInheritPrincipal)
-    aMayInheritPrincipal.value = false;
+function getShortcutOrURIAndPostData(aURL) {
+  return Task.spawn(function() {
+    let mayInheritPrincipal = false;
+    let postData = null;
+    let shortcutURL = null;
+    let keyword = aURL;
+    let param = "";
 
-  var shortcutURL = null;
-  var keyword = aURL;
-  var param = "";
-
-  var offset = aURL.indexOf(" ");
-  if (offset > 0) {
-    keyword = aURL.substr(0, offset);
-    param = aURL.substr(offset + 1);
-  }
-
-  if (!aPostDataRef)
-    aPostDataRef = {};
-
-  var engine = Services.search.getEngineByAlias(keyword);
-  if (engine) {
-    var submission = engine.getSubmission(param);
-    aPostDataRef.value = submission.postData;
-    return submission.uri.spec;
-  }
-
-  [shortcutURL, aPostDataRef.value] =
-    PlacesUtils.getURLAndPostDataForKeyword(keyword);
-
-  if (!shortcutURL)
-    return aURL;
-
-  var postData = "";
-  if (aPostDataRef.value)
-    postData = unescape(aPostDataRef.value);
-
-  if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
-    var charset = "";
-    const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
-    var matches = shortcutURL.match(re);
-    if (matches)
-      [, shortcutURL, charset] = matches;
-    else {
-      // Try to get the saved character-set.
-      try {
-        // makeURI throws if URI is invalid.
-        // Will return an empty string if character-set is not found.
-        charset = PlacesUtils.history.getCharsetForURI(makeURI(shortcutURL));
-      } catch (e) {}
+    let offset = aURL.indexOf(" ");
+    if (offset > 0) {
+      keyword = aURL.substr(0, offset);
+      param = aURL.substr(offset + 1);
     }
 
-    // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
-    // escape() works in those cases, but it doesn't uri-encode +, @, and /.
-    // Therefore we need to manually replace these ASCII characters by their
-    // encodeURIComponent result, to match the behavior of nsEscape() with
-    // url_XPAlphas
-    var encodedParam = "";
-    if (charset && charset != "UTF-8")
-      encodedParam = escape(convertFromUnicode(charset, param)).
-                     replace(/[+@\/]+/g, encodeURIComponent);
-    else // Default charset is UTF-8
-      encodedParam = encodeURIComponent(param);
+    let engine = Services.search.getEngineByAlias(keyword);
+    if (engine) {
+      let submission = engine.getSubmission(param);
+      postData = submission.postData;
+      throw new Task.Result({ postData: submission.postData,
+                              url: submission.uri.spec,
+                              mayInheritPrincipal: mayInheritPrincipal });
+    }
 
-    shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+    [shortcutURL, postData] =
+      PlacesUtils.getURLAndPostDataForKeyword(keyword);
 
-    if (/%s/i.test(postData)) // POST keyword
-      aPostDataRef.value = getPostDataStream(postData, param, encodedParam,
-                                             "application/x-www-form-urlencoded");
-  }
-  else if (param) {
-    // This keyword doesn't take a parameter, but one was provided. Just return
-    // the original URL.
-    aPostDataRef.value = null;
+    if (!shortcutURL)
+      throw new Task.Result({ postData: postData, url: aURL,
+                              mayInheritPrincipal: mayInheritPrincipal });
 
-    return aURL;
-  }
+    let escapedPostData = "";
+    if (postData)
+      escapedPostData = unescape(postData);
 
-  // This URL came from a bookmark, so it's safe to let it inherit the current
-  // document's principal.
-  if (aMayInheritPrincipal)
-    aMayInheritPrincipal.value = true;
+    if (/%s/i.test(shortcutURL) || /%s/i.test(escapedPostData)) {
+      let charset = "";
+      const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+      let matches = shortcutURL.match(re);
+      if (matches)
+        [, shortcutURL, charset] = matches;
+      else {
+        // Try to get the saved character-set.
+        try {
+          // makeURI throws if URI is invalid.
+          // Will return an empty string if character-set is not found.
+          charset = yield PlacesUtils.getCharsetForURI(makeURI(shortcutURL));
+        } catch (e) {}
+      }
 
-  return shortcutURL;
+      // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
+      // escape() works in those cases, but it doesn't uri-encode +, @, and /.
+      // Therefore we need to manually replace these ASCII characters by their
+      // encodeURIComponent result, to match the behavior of nsEscape() with
+      // url_XPAlphas
+      let encodedParam = "";
+      if (charset && charset != "UTF-8")
+        encodedParam = escape(convertFromUnicode(charset, param)).
+                       replace(/[+@\/]+/g, encodeURIComponent);
+      else // Default charset is UTF-8
+        encodedParam = encodeURIComponent(param);
+
+      shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+
+      if (/%s/i.test(escapedPostData)) // POST keyword
+        postData = getPostDataStream(escapedPostData, param, encodedParam,
+                                               "application/x-www-form-urlencoded");
+    }
+    else if (param) {
+      // This keyword doesn't take a parameter, but one was provided. Just return
+      // the original URL.
+      postData = null;
+
+      throw new Task.Result({ postData: postData, url: aURL,
+                              mayInheritPrincipal: mayInheritPrincipal });
+    }
+
+    // This URL came from a bookmark, so it's safe to let it inherit the current
+    // document's principal.
+    mayInheritPrincipal = true;
+
+    throw new Task.Result({ postData: postData, url: shortcutURL,
+                            mayInheritPrincipal: mayInheritPrincipal });
+  });
 }
 
 function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
@@ -2296,10 +2311,23 @@ function BrowserOnAboutPageLoad(doc) {
       Services.prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
     }
     docElt.setAttribute("snippetsVersion", AboutHomeUtils.snippetsVersion);
-    docElt.setAttribute("searchEngineName",
-                        AboutHomeUtils.defaultSearchEngine.name);
-    docElt.setAttribute("searchEngineURL",
-                        AboutHomeUtils.defaultSearchEngine.searchURL);
+
+    function updateSearchEngine() {
+      let engine = AboutHomeUtils.defaultSearchEngine;
+      docElt.setAttribute("searchEngineName", engine.name);
+      docElt.setAttribute("searchEngineURL", engine.searchURL);
+    }
+    updateSearchEngine();
+
+    // Listen for the event that's triggered when the user changes search engine.
+    // At this point we simply reload about:home to reflect the change.
+    Services.obs.addObserver(updateSearchEngine, "browser-search-engine-modified", false);
+
+    // Remove the observer when the page is reloaded or closed.
+    doc.defaultView.addEventListener("pagehide", function removeObserver() {
+      doc.defaultView.removeEventListener("pagehide", removeObserver);
+      Services.obs.removeObserver(updateSearchEngine, "browser-search-engine-modified");
+    }, false);
 
 #ifdef MOZ_SERVICES_HEALTHREPORT
     doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
@@ -2341,10 +2369,13 @@ let BrowserOnClick = {
   onAboutCertError: function BrowserOnClick_onAboutCertError(aTargetElm, aOwnerDoc) {
     let elmId = aTargetElm.getAttribute("id");
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
 
     switch (elmId) {
       case "exceptionDialogButton":
-        secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_CLICK_ADD_EXCEPTION);
+        if (isTopFrame) {
+          secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CLICK_ADD_EXCEPTION);
+        }
         let params = { exceptionAdded : false };
 
         try {
@@ -2368,16 +2399,22 @@ let BrowserOnClick = {
         break;
 
       case "getMeOutOfHereButton":
-        secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_GET_ME_OUT_OF_HERE);
+        if (isTopFrame) {
+          secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_GET_ME_OUT_OF_HERE);
+        }
         getMeOutOfHere();
         break;
 
       case "technicalContent":
-        secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TECHNICAL_DETAILS);
+        if (isTopFrame) {
+          secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_TECHNICAL_DETAILS);
+        }
         break;
 
       case "expertContent":
-        secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_UNDERSTAND_RISKS);
+        if (isTopFrame) {
+          secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_UNDERSTAND_RISKS);
+        }
         break;
 
     }
@@ -2816,12 +2853,13 @@ var newTabButtonObserver = {
   onDrop: function (aEvent)
   {
     let url = browserDragAndDrop.drop(aEvent, { });
-    var postData = {};
-    url = getShortcutOrURI(url, postData);
-    if (url) {
-      // allow third-party services to fixup this URL
-      openNewTabWith(url, null, postData.value, aEvent, true);
-    }
+    Task.spawn(function() {
+      let data = yield getShortcutOrURIAndPostData(url);
+      if (data.url) {
+        // allow third-party services to fixup this URL
+        openNewTabWith(data.url, null, data.postData, aEvent, true);
+      }
+    });
   }
 }
 
@@ -2836,12 +2874,13 @@ var newWindowButtonObserver = {
   onDrop: function (aEvent)
   {
     let url = browserDragAndDrop.drop(aEvent, { });
-    var postData = {};
-    url = getShortcutOrURI(url, postData);
-    if (url) {
-      // allow third-party services to fixup this URL
-      openNewWindowWith(url, null, postData.value, true);
-    }
+    Task.spawn(function() {
+      let data = yield getShortcutOrURIAndPostData(url);
+      if (data.url) {
+        // allow third-party services to fixup this URL
+        openNewWindowWith(data.url, null, data.postData, true);
+      }
+    });
   }
 }
 
@@ -3590,6 +3629,7 @@ function mimeTypeIsTextBased(aMimeType)
          aMimeType.endsWith("+xml") ||
          aMimeType == "application/x-javascript" ||
          aMimeType == "application/javascript" ||
+         aMimeType == "application/json" ||
          aMimeType == "application/xml" ||
          aMimeType == "mozilla.application/cached-xul";
 }
@@ -4292,6 +4332,8 @@ var TabsProgressListener = {
           return;
         aBrowser.removeEventListener("click", BrowserOnClick, true);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
+        if (event.target.documentElement)
+          event.target.documentElement.removeAttribute("hasBrowserHandlers");
       }, true);
 
       // We also want to make changes to page UI for unprivileged about pages.
@@ -4849,7 +4891,8 @@ function fireSidebarFocusedEvent() {
  */
 var gMetroPrefs = {
   prefDomain: ["app.update.auto", "app.update.enabled",
-               "app.update.service.enabled"],
+               "app.update.service.enabled",
+               "app.update.metro.enabled"],
   observe: function (aSubject, aTopic, aPrefName)
   {
     if (aTopic != "nsPref:changed")
@@ -5208,36 +5251,52 @@ function middleMousePaste(event) {
   // bar's behavior (stripsurroundingwhitespace)
   clipboard = clipboard.replace(/\s*\n\s*/g, "");
 
-  let mayInheritPrincipal = { value: false };
-  let url = getShortcutOrURI(clipboard, mayInheritPrincipal);
-  try {
-    makeURI(url);
-  } catch (ex) {
-    // Not a valid URI.
-    return;
+  // if it's not the current tab, we don't need to do anything because the 
+  // browser doesn't exist.
+  let where = whereToOpenLink(event, true, false);
+  let lastLocationChange;
+  if (where == "current") {
+    lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
   }
 
-  try {
-    addToUrlbarHistory(url);
-  } catch (ex) {
-    // Things may go wrong when adding url to session history,
-    // but don't let that interfere with the loading of the url.
-    Cu.reportError(ex);
-  }
+  Task.spawn(function() {
+    let data = yield getShortcutOrURIAndPostData(clipboard);
+    try {
+      makeURI(data.url);
+    } catch (ex) {
+      // Not a valid URI.
+      return;
+    }
 
-  openUILink(url, event,
-             { ignoreButton: true,
-               disallowInheritPrincipal: !mayInheritPrincipal.value });
+    try {
+      addToUrlbarHistory(data.url);
+    } catch (ex) {
+      // Things may go wrong when adding url to session history,
+      // but don't let that interfere with the loading of the url.
+      Cu.reportError(ex);
+    }
+
+    if (where != "current" ||
+        lastLocationChange == gBrowser.selectedBrowser.lastLocationChange) {
+      openUILink(data.url, event,
+                 { ignoreButton: true,
+                   disallowInheritPrincipal: !data.mayInheritPrincipal });
+    }
+  });
 
   event.stopPropagation();
 }
 
 function handleDroppedLink(event, url, name)
 {
-  let postData = { };
-  let uri = getShortcutOrURI(url, postData);
-  if (uri)
-    loadURI(uri, null, postData.value, false);
+  let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
+
+  Task.spawn(function() {
+    let data = yield getShortcutOrURIAndPostData(url);
+    if (data.url &&
+        lastLocationChange == gBrowser.selectedBrowser.lastLocationChange)
+      loadURI(data.url, null, data.postData, false);
+  });
 
   // Keep the event from being handled by the dragDrop listeners
   // built-in to gecko if they happen to be above us.
@@ -5359,7 +5418,6 @@ function charsetLoadListener() {
     gLastBrowserCharset = charset;
   }
 }
-
 
 var gPageStyleMenu = {
 
@@ -5596,6 +5654,14 @@ var OfflineApps = {
       if (browser.contentWindow == aContentWindow)
         return browser;
     }
+    // handle other browser/iframe elements that may need popupnotifications
+    let browser = aContentWindow
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocShell)
+                          .chromeEventHandler;
+    if (browser.getAttribute("popupnotificationanchor"))
+      return browser;
     return null;
   },
 
@@ -5632,6 +5698,15 @@ var OfflineApps = {
       }
     }
 
+    // is this from a non-tab browser/iframe?
+    browsers = document.querySelectorAll("iframe[popupnotificationanchor] | browser[popupnotificationanchor]");
+    for (let browser of browsers) {
+      uri = this._getManifestURI(browser.contentWindow);
+      if (uri && uri.equals(aCacheUpdate.manifestURI)) {
+        return browser;
+      }
+    }
+
     return null;
   },
 
@@ -5639,25 +5714,20 @@ var OfflineApps = {
     if (!aBrowser)
       return;
 
-    var notificationBox = gBrowser.getNotificationBox(aBrowser);
-    var notification = notificationBox.getNotificationWithValue("offline-app-usage");
-    if (!notification) {
-      var buttons = [{
-          label: gNavigatorBundle.getString("offlineApps.manageUsage"),
-          accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
-          callback: OfflineApps.manage
-        }];
+    let mainAction = {
+      label: gNavigatorBundle.getString("offlineApps.manageUsage"),
+      accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
+      callback: OfflineApps.manage
+    };
 
-      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
-      const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-      var message = gNavigatorBundle.getFormattedString("offlineApps.usage",
-                                                        [ aURI.host,
-                                                          warnQuota / 1024 ]);
+    let warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+    let message = gNavigatorBundle.getFormattedString("offlineApps.usage",
+                                                      [ aURI.host,
+                                                        warnQuota / 1024 ]);
 
-      notificationBox.appendNotification(message, "offline-app-usage",
-                                         "chrome://browser/skin/Info.png",
-                                         priority, buttons);
-    }
+    let anchorID = "indexedDB-notification-icon";
+    PopupNotifications.show(aBrowser, "offline-app-usage", message,
+                            anchorID, mainAction);
 
     // Now that we've warned once, prevent the warning from showing up
     // again.
@@ -5993,7 +6063,7 @@ function warnAboutClosingWindow() {
   // Popups aren't considered full browser windows.
   let isPBWindow = PrivateBrowsingUtils.isWindowPrivate(window);
   if (!isPBWindow && !toolbar.visible)
-    return gBrowser.warnAboutClosingTabs(true);
+    return gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
 
   // Figure out if there's at least one other browser window around.
   let e = Services.wm.getEnumerator("navigator:browser");
@@ -6028,7 +6098,7 @@ function warnAboutClosingWindow() {
   }
 
   if (nonPopupPresent) {
-    return isPBWindow || gBrowser.warnAboutClosingTabs(true);
+    return isPBWindow || gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
   }
 
   let os = Services.obs;
@@ -6046,7 +6116,7 @@ function warnAboutClosingWindow() {
   // OS X doesn't quit the application when the last window is closed, but keeps
   // the session alive. Hence don't prompt users to save tabs, but warn about
   // closing multiple tabs.
-  return isPBWindow || gBrowser.warnAboutClosingTabs(true);
+  return isPBWindow || gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
 #else
   return true;
 #endif
@@ -6126,17 +6196,15 @@ function BrowserOpenAddonsMgr(aView) {
   }
 }
 
-function AddKeywordForSearchField() {
-  var node = document.popupNode;
-
+function GetSearchFieldBookmarkData(node) {
   var charset = node.ownerDocument.characterSet;
 
-  var docURI = makeURI(node.ownerDocument.URL,
-                       charset);
+  var formBaseURI = makeURI(node.form.baseURI,
+                            charset);
 
   var formURI = makeURI(node.form.getAttribute("action"),
                         charset,
-                        docURI);
+                        formBaseURI);
 
   var spec = formURI.spec;
 
@@ -6191,14 +6259,27 @@ function AddKeywordForSearchField() {
   else
     spec += "?" + formData.join("&");
 
+  return {
+    spec: spec,
+    title: title,
+    description: description,
+    postData: postData,
+    charSet: charset
+  };
+}
+
+
+function AddKeywordForSearchField() {
+  bookmarkData = GetSearchFieldBookmarkData(document.popupNode);
+
   PlacesUIUtils.showBookmarkDialog({ action: "add"
                                    , type: "bookmark"
-                                   , uri: makeURI(spec)
-                                   , title: title
-                                   , description: description
+                                   , uri: makeURI(bookmarkData.spec)
+                                   , title: bookmarkData.title
+                                   , description: bookmarkData.description
                                    , keyword: ""
-                                   , postData: postData
-                                   , charSet: charset
+                                   , postData: bookmarkData.postData
+                                   , charSet: bookmarkData.charset
                                    , hiddenRows: [ "location"
                                                  , "description"
                                                  , "tags"
@@ -6361,6 +6442,11 @@ var gIdentityHandler = {
     return this._identityPopupContentBox =
       document.getElementById("identity-popup-content-box");
   },
+  get _identityPopupChromeLabel () {
+    delete this._identityPopupChromeLabel;
+    return this._identityPopupChromeLabel =
+      document.getElementById("identity-popup-chromeLabel");
+  },
   get _identityPopupContentHost () {
     delete this._identityPopupContentHost;
     return this._identityPopupContentHost =
@@ -6403,6 +6489,14 @@ var gIdentityHandler = {
     delete this._identityIcon;
     return this._identityIcon = document.getElementById("page-proxy-favicon");
   },
+  get _permissionsContainer () {
+    delete this._permissionsContainer;
+    return this._permissionsContainer = document.getElementById("identity-popup-permissions");
+  },
+  get _permissionList () {
+    delete this._permissionList;
+    return this._permissionList = document.getElementById("identity-popup-permission-list");
+  },
 
   /**
    * Rebuild cache of the elements that may or may not exist depending
@@ -6413,10 +6507,14 @@ var gIdentityHandler = {
     delete this._identityIconLabel;
     delete this._identityIconCountryLabel;
     delete this._identityIcon;
+    delete this._permissionsContainer;
+    delete this._permissionList;
     this._identityBox = document.getElementById("identity-box");
     this._identityIconLabel = document.getElementById("identity-icon-label");
     this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
     this._identityIcon = document.getElementById("page-proxy-favicon");
+    this._permissionsContainer = document.getElementById("identity-popup-permissions");
+    this._permissionList = document.getElementById("identity-popup-permission-list");
   },
 
   /**
@@ -6426,6 +6524,7 @@ var gIdentityHandler = {
   handleMoreInfoClick : function(event) {
     displaySecurityInfo();
     event.stopPropagation();
+    this._identityPopup.hidePopup();
   },
 
   /**
@@ -6567,6 +6666,7 @@ var gIdentityHandler = {
       return;
     }
 
+    this._identityPopup.className = newMode;
     this._identityBox.className = newMode;
     this.setIdentityMessages(newMode);
 
@@ -6631,6 +6731,8 @@ var gIdentityHandler = {
                         "rtl" : "ltr";
       break; }
     case this.IDENTITY_MODE_CHROMEUI:
+      let brandBundle = document.getElementById("bundle_brand");
+      icon_label = brandBundle.getString("brandShortName");
       break;
     default:
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
@@ -6692,6 +6794,12 @@ var gIdentityHandler = {
       else if (iData.country) // Country only
         supplemental += iData.country;
       break; }
+    case this.IDENTITY_MODE_CHROMEUI: {
+      let brandBundle = document.getElementById("bundle_brand");
+      let brandShortName = brandBundle.getString("brandShortName");
+      this._identityPopupChromeLabel.textContent = gNavigatorBundle.getFormattedString("identity.chrome",
+                                                                                       [brandShortName]);
+      break; }
     }
 
     // Push the appropriate strings out to the UI
@@ -6699,10 +6807,6 @@ var gIdentityHandler = {
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
-  },
-
-  hideIdentityPopup : function() {
-    this._identityPopup.hidePopup();
   },
 
   /**
@@ -6719,10 +6823,8 @@ var gIdentityHandler = {
       return; // Left click, space or enter only
     }
 
-    // Don't allow left click, space or enter if the location
-    // is chrome UI or the location has been modified.
-    if (this._mode == this.IDENTITY_MODE_CHROMEUI ||
-        gURLBar.getAttribute("pageproxystate") != "valid") {
+    // Don't allow left click, space or enter if the location has been modified.
+    if (gURLBar.getAttribute("pageproxystate") != "valid") {
       TelemetryStopwatch.cancel("FX_IDENTITY_POPUP_OPEN_MS");
       return;
     }
@@ -6733,6 +6835,8 @@ var gIdentityHandler = {
 
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
+
+    this.updateSitePermissions();
 
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
@@ -6748,7 +6852,11 @@ var gIdentityHandler = {
 
   onPopupShown : function(event) {
     TelemetryStopwatch.finish("FX_IDENTITY_POPUP_OPEN_MS");
+
     document.getElementById('identity-popup-more-info-button').focus();
+
+    this._identityPopup.addEventListener("blur", this, true);
+    this._identityPopup.addEventListener("popuphidden", this);
   },
 
   onDragStart: function (event) {
@@ -6765,6 +6873,72 @@ var gIdentityHandler = {
     dt.setData("text/plain", value);
     dt.setData("text/html", htmlString);
     dt.setDragImage(gProxyFavIcon, 16, 16);
+  },
+ 
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "blur":
+        // Focus hasn't moved yet, need to wait until after the blur event.
+        setTimeout(() => {
+          if (document.activeElement &&
+              document.activeElement.compareDocumentPosition(this._identityPopup) &
+                Node.DOCUMENT_POSITION_CONTAINS)
+            return;
+
+          this._identityPopup.hidePopup();
+        }, 0);
+        break;
+      case "popuphidden":
+        this._identityPopup.removeEventListener("blur", this, true);
+        this._identityPopup.removeEventListener("popuphidden", this);
+        break;
+    }
+  },
+
+  updateSitePermissions: function () {
+    while (this._permissionList.hasChildNodes())
+      this._permissionList.removeChild(this._permissionList.lastChild);
+
+    let uri = gBrowser.currentURI;
+
+    for (let permission of SitePermissions.listPermissions()) {
+      let state = SitePermissions.get(uri, permission);
+
+      if (state == SitePermissions.UNKNOWN)
+        continue;
+
+      let item = this._createPermissionItem(permission, state);
+      this._permissionList.appendChild(item);
+    }
+
+    this._permissionsContainer.hidden = !this._permissionList.hasChildNodes();
+  },
+
+  _createPermissionItem: function (aPermission, aState) {
+    let menulist = document.createElement("menulist");
+    let menupopup = document.createElement("menupopup");
+    for (let state of SitePermissions.getAvailableStates(aPermission)) {
+      let menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("value", state);
+      menuitem.setAttribute("label", SitePermissions.getStateLabel(state));
+      menupopup.appendChild(menuitem);
+    }
+    menulist.appendChild(menupopup);
+    menulist.setAttribute("value", aState);
+    menulist.setAttribute("oncommand", "SitePermissions.set(gBrowser.currentURI, '" +
+                                       aPermission + "', this.value)");
+    menulist.setAttribute("id", "identity-popup-permission:" + aPermission);
+
+    let label = document.createElement("label");
+    label.setAttribute("flex", "1");
+    label.setAttribute("control", menulist.getAttribute("id"));
+    label.setAttribute("value", SitePermissions.getPermissionLabel(aPermission));
+
+    let container = document.createElement("hbox");
+    container.setAttribute("align", "center");
+    container.appendChild(label);
+    container.appendChild(menulist);
+    return container;
   }
 };
 
@@ -6947,6 +7121,13 @@ var TabContextMenu = {
     // Only one of pin/unpin should be visible
     document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
     document.getElementById("context_unpinTab").hidden = !this.contextTab.pinned;
+
+    // Disable "Close Tabs to the Right" if there are no tabs
+    // following it and hide it when the user rightclicked on a pinned
+    // tab.
+    document.getElementById("context_closeTabsToTheEnd").disabled =
+      gBrowser.getTabsToTheEndFrom(this.contextTab).length == 0;
+    document.getElementById("context_closeTabsToTheEnd").hidden = this.contextTab.pinned;
 
     // Disable "Close other Tabs" if there is only one unpinned tab and
     // hide it when the user rightclicked on a pinned tab.

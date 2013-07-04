@@ -259,6 +259,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_
 
   nsigners = NSS_CMSSignedData_SignerInfoCount(sigd);
   PR_ASSERT(nsigners > 0);
+  NS_ENSURE_TRUE(nsigners > 0, NS_ERROR_UNEXPECTED);
   si = NSS_CMSSignedData_GetSignerInfo(sigd, 0);
 
   // See bug 324474. We want to make sure the signing cert is 

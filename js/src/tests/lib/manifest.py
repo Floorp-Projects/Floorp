@@ -344,7 +344,8 @@ def load(location, xul_tester, reldir = ''):
 
     # Any file whose basename matches something in this set is ignored.
     EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
-                    'user.js', 'test262-browser.js', 'test262-shell.js',
+                    'user.js', 'sta.js',
+                    'test262-browser.js', 'test262-shell.js',
                     'test402-browser.js', 'test402-shell.js',
                     'testBuiltInObject.js', 'testIntl.js',
                     'js-test-driver-begin.js', 'js-test-driver-end.js'))

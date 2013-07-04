@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Assembler-x86.h"
+#include "ion/x86/Assembler-x86.h"
 #include "gc/Marking.h"
 
 using namespace js;
@@ -28,13 +28,13 @@ ABIArgGenerator::next(MIRType type)
         stackOffset_ += sizeof(uint64_t);
         break;
       default:
-        JS_NOT_REACHED("Unexpected argument type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
     return current_;
 }
 
-const Register ABIArgGenerator::NonArgReturnVolatileReg1 = ecx;
-const Register ABIArgGenerator::NonArgReturnVolatileReg2 = edx;
+const Register ABIArgGenerator::NonArgReturnVolatileReg0 = ecx;
+const Register ABIArgGenerator::NonArgReturnVolatileReg1 = edx;
 const Register ABIArgGenerator::NonVolatileReg = ebx;
 
 void

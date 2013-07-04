@@ -27,7 +27,7 @@ DISABLED_CSRCS += \
 		$(NULL)
 endif
 
-SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
+DISABLED_SIMPLE_PROGRAMS = $(CSRCS:.c=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 

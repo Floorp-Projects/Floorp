@@ -45,6 +45,13 @@ const List = Class({
                 i = -1;
     for each(let element in array)
       yield onKeyValue ? [++i, element] : onKeys ? ++i : element;
+  },
+  iterator: function iterator() {
+    let array = listNS(this).keyValueMap.slice(0),
+                i = -1;
+
+    for (let element of array)
+      yield element;
   }
 });
 exports.List = List;

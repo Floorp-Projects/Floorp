@@ -25,6 +25,9 @@ const CSP_VIOLATION_TOPIC = "csp-on-violate-policy";
 const CSP_TYPE_XMLHTTPREQUEST_SPEC_COMPLIANT = "csp_type_xmlhttprequest_spec_compliant";
 const CSP_TYPE_WEBSOCKET_SPEC_COMPLIANT = "csp_type_websocket_spec_compliant";
 
+const WARN_FLAG = Ci.nsIScriptError.warningFlag;
+const ERROR_FLAG = Ci.nsIScriptError.ERROR_FLAG;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/CSPUtils.jsm");
@@ -180,13 +183,13 @@ ContentSecurityPolicy.prototype = {
       break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT:
       if (!this._policy.allowsInlineScripts)
-        this._asyncReportViolation('self',null,'inline script base restriction',
+        this._asyncReportViolation('self', null, 'inline script base restriction',
                                    'violated base restriction: Inline Scripts will not execute',
                                    aSourceFile, aScriptSample, aLineNum);
       break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_EVAL:
       if (!this._policy.allowsEvalInScripts)
-        this._asyncReportViolation('self',null,'eval script base restriction',
+        this._asyncReportViolation('self', null, 'eval script base restriction',
                                    'violated base restriction: Code will not be created from strings',
                                    aSourceFile, aScriptSample, aLineNum);
       break;
@@ -360,7 +363,7 @@ ContentSecurityPolicy.prototype = {
       } else {
          violationMessage = CSPLocalizer.getFormatStr("directiveViolated", [violatedDirective]);
       }
-      this._policy.warn(violationMessage,
+      this._policy.log(WARN_FLAG, violationMessage,
                         (aSourceFile) ? aSourceFile : null,
                         (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
                         (aLineNum) ? aLineNum : null);
@@ -425,8 +428,8 @@ ContentSecurityPolicy.prototype = {
         } catch(e) {
           // it's possible that the URI was invalid, just log a
           // warning and skip over that.
-          this._policy.warn(CSPLocalizer.getFormatStr("triedToSendReport", [uris[i]]));
-          this._policy.warn(CSPLocalizer.getFormatStr("errorWas", [e.toString()]));
+          this._policy.log(WARN_FLAG, CSPLocalizer.getFormatStr("triedToSendReport", [uris[i]]));
+          this._policy.log(WARN_FLAG, CSPLocalizer.getFormatStr("errorWas", [e.toString()]));
         }
       }
     }
@@ -555,10 +558,24 @@ ContentSecurityPolicy.prototype = {
     if (res != Ci.nsIContentPolicy.ACCEPT) {
       CSPdebug("blocking request for " + aContentLocation.asciiSpec);
       try {
-        let directive = this._policy._directives[cspContext];
-        let violatedPolicy = (directive._isImplicit
-                                ? 'default-src' : cspContext)
-                                + ' ' + directive.toString();
+        let directive = "unknown directive",
+            violatedPolicy = "unknown policy";
+
+        // The policy might not explicitly declare each source directive (so
+        // the cspContext may be implicit).  If so, we have to report
+        // violations as appropriate: specific or the default-src directive.
+        if (this._policy._directives.hasOwnProperty(cspContext)) {
+          directive = this._policy._directives[cspContext];
+          violatedPolicy = cspContext + ' ' + directive.toString();
+        } else if (this._policy._directives.hasOwnProperty("default-src")) {
+          directive = this._policy._directives["default-src"];
+          violatedPolicy = "default-src " + directive.toString();
+        } else {
+          violatedPolicy = "unknown directive";
+          CSPdebug('ERROR in blocking content: ' +
+                   'CSP is not sure which part of the policy caused this block');
+        }
+
         this._asyncReportViolation(aContentLocation, aOriginalUri, violatedPolicy);
       } catch(e) {
         CSPdebug('---------------- ERROR: ' + e);
@@ -663,7 +680,7 @@ CSPReportRedirectSink.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect: function channel_redirect(oldChannel, newChannel,
                                                     flags, callback) {
-    this._policy.warn(CSPLocalizer.getFormatStr("reportPostRedirect", [oldChannel.URI.asciiSpec]));
+    this._policy.log(WARN_FLAG, CSPLocalizer.getFormatStr("reportPostRedirect", [oldChannel.URI.asciiSpec]));
 
     // cancel the old channel so XHR failure callback happens
     oldChannel.cancel(Cr.NS_ERROR_ABORT);

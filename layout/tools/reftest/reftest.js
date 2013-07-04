@@ -44,7 +44,11 @@ var gIgnoreWindowSize = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
-var gFilter = null;
+var gURLFilterRegex = null;
+const FOCUS_FILTER_ALL_TESTS = "all";
+const FOCUS_FILTER_NEEDS_FOCUS_TESTS = "needs-focus";
+const FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS = "non-needs-focus";
+var gFocusFilterMode = FOCUS_FILTER_ALL_TESTS;
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -103,6 +107,7 @@ var gExpectingProcessCrash = false;
 var gExpectedCrashDumpFiles = [];
 var gUnexpectedCrashDumpFiles = { };
 var gCrashDumpDir;
+var gFailedNoPaint = false;
 
 const TYPE_REFTEST_EQUAL = '==';
 const TYPE_REFTEST_NOTEQUAL = '!=';
@@ -132,8 +137,7 @@ var gPrefsToRestore = [];
 const gProtocolRE = /^\w+:/;
 const gPrefItemRE = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
 
-var HTTP_SERVER_PORT = 4444;
-const HTTP_SERVER_PORTS_TO_TRY = 50;
+var gHttpServerPort = -1;
 
 // whether to run slow tests or not
 var gRunSlowTests = true;
@@ -342,7 +346,11 @@ function InitAndStartRefTests()
     }
 
     try {
-        gFilter = new RegExp(prefs.getCharPref("reftest.filter"));
+        gURLFilterRegex = new RegExp(prefs.getCharPref("reftest.filter"));
+    } catch(e) {}
+
+    try {
+        gFocusFilterMode = prefs.getCharPref("reftest.focusFilterMode");
     } catch(e) {}
 
     gWindowUtils = gContainingWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
@@ -379,19 +387,8 @@ function InitAndStartRefTests()
 function StartHTTPServer()
 {
     gServer.registerContentType("sjs", "sjs");
-    // We want to try different ports in case the port we want
-    // is being used.
-    var tries = HTTP_SERVER_PORTS_TO_TRY;
-    do {
-        try {
-            gServer.start(HTTP_SERVER_PORT);
-            return;
-        } catch (ex) {
-            ++HTTP_SERVER_PORT;
-            if (--tries == 0)
-                throw ex;
-        }
-    } while (true);
+    gServer.start(-1);
+    gHttpServerPort = gServer.identity.primaryPort;
 }
 
 function StartTests()
@@ -430,7 +427,7 @@ function StartTests()
     }
 #else
     try {
-        // Need to read the manifest once we have the final HTTP_SERVER_PORT.
+        // Need to read the manifest once we have gHttpServerPort..
         var args = window.arguments[0].wrappedJSObject;
 
         if ("nocache" in args && args["nocache"])
@@ -577,6 +574,14 @@ function BuildConditionSandbox(aURL) {
     sandbox.qtWidget = xr.widgetToolkit == "qt";
     sandbox.winWidget = xr.widgetToolkit == "windows";
 
+    if (sandbox.Android) {
+        var sysInfo = CC["@mozilla.org/system-info;1"].getService(CI.nsIPropertyBag2);
+
+        // This is currently used to distinguish Android 4.0.3 (SDK version 15)
+        // and later from Android 2.x
+        sandbox.AndroidVersion = sysInfo.getPropertyAsInt32("version");
+    }
+
 #if MOZ_ASAN
     sandbox.AddressSanitizer = true;
 #else
@@ -675,7 +680,6 @@ function BuildConditionSandbox(aURL) {
     // Tests shouldn't care about this except for when they need to
     // crash the content process
     sandbox.browserIsRemote = gBrowserIsRemote;
-    sandbox.bug685516 = sandbox.browserIsRemote && sandbox.Android;
 
     // Distinguish the Fennecs:
     sandbox.xulFennec    = sandbox.Android &&  sandbox.browserIsRemote;
@@ -726,7 +730,13 @@ function ReadTopManifest(aFileURL)
 
 function AddTestItem(aTest)
 {
-    if (gFilter && !gFilter.test(aTest.url1.spec))
+    if (gURLFilterRegex && !gURLFilterRegex.test(aTest.url1.spec))
+        return;
+    if (gFocusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
+        !aTest.needsFocus)
+        return;
+    if (gFocusFilterMode == FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS &&
+        aTest.needsFocus)
         return;
     gURLs.push(aTest);
 }
@@ -1081,9 +1091,8 @@ function ServeFiles(manifestPrincipal, depth, aURL, files)
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(CI.nsIScriptSecurityManager);
 
-    var testbase = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
-                                         path + dirPath,
-                                     null, null);
+    var testbase = gIOService.newURI("http://localhost:" + gHttpServerPort +
+                                     path + dirPath, null, null);
 
     function FileToURI(file)
     {
@@ -1147,6 +1156,7 @@ function StartCurrentTest()
         DoneTests();
     }
     else {
+        gDumpLog("REFTEST TEST-START | " + gURLs[0].prettyPath + "\n");
         var currentTest = gTotalTests - gURLs.length;
         gContainingWindow.document.title = "reftest: " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
@@ -1244,7 +1254,7 @@ function StartCurrentURI(aState)
         gContainingWindow.setTimeout(RecordResult, 0);
     } else {
         var currentTest = gTotalTests - gURLs.length;
-        gDumpLog("REFTEST TEST-START | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
+        gDumpLog("REFTEST TEST-LOAD | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)\n");
         LogInfo("START " + gCurrentURL);
         var type = gURLs[0].type
@@ -1404,6 +1414,18 @@ function UpdateCurrentCanvasForInvalidation(rects)
     }
 }
 
+function UpdateWholeCurrentCanvasForInvalidation()
+{
+    LogInfo("Updating entire canvas for invalidation");
+
+    if (!gCurrentCanvas) {
+        return;
+    }
+
+    var ctx = gCurrentCanvas.getContext("2d");
+    DoDrawWindow(ctx, 0, 0, gCurrentCanvas.width, gCurrentCanvas.height);
+}
+
 function RecordResult(testRunTime, errorMsg, scriptResults)
 {
     LogInfo("RecordResult fired");
@@ -1551,39 +1573,49 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             }
 
             // whether the comparison result matches what is in the manifest
-            var test_passed = (equal == (gURLs[0].type == TYPE_REFTEST_EQUAL));
+            var test_passed = (equal == (gURLs[0].type == TYPE_REFTEST_EQUAL)) && !gFailedNoPaint;
 
             output = outputs[expected][test_passed];
 
             ++gTestResults[output.n];
 
-            var result = "REFTEST " + output.s + " | " +
-                         gURLs[0].prettyPath + " | "; // the URL being tested
-            switch (gURLs[0].type) {
-                case TYPE_REFTEST_NOTEQUAL:
-                    result += "image comparison (!=)";
-                    break;
-                case TYPE_REFTEST_EQUAL:
-                    result += "image comparison (==)";
-                    break;
-            }
-
-            if (!test_passed && expected == EXPECTED_PASS ||
-                !test_passed && expected == EXPECTED_FUZZY ||
-                test_passed && expected == EXPECTED_FAIL) {
-                if (!equal) {
-                    result += ", max difference: " + maxDifference.value + ", number of differing pixels: " + differences + "\n";
-                    result += "REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n";
-                    result += "REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n";
+            // It's possible that we failed both reftest-no-paint and the normal comparison, but we don't
+            // have a way to annotate these separately, so just print an error for the no-paint failure.
+            if (gFailedNoPaint) {
+                if (expected == EXPECTED_FAIL) {
+                    gDumpLog("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath + " | failed reftest-no-paint\n");
                 } else {
-                    result += "\n";
-                    gDumpLog("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
+                    gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath + " | failed reftest-no-paint\n");
                 }
             } else {
-                result += "\n";
-            }
+                var result = "REFTEST " + output.s + " | " +
+                             gURLs[0].prettyPath + " | "; // the URL being tested
+                switch (gURLs[0].type) {
+                    case TYPE_REFTEST_NOTEQUAL:
+                        result += "image comparison (!=)";
+                        break;
+                    case TYPE_REFTEST_EQUAL:
+                        result += "image comparison (==)";
+                        break;
+                }
 
-            gDumpLog(result);
+                if (!test_passed && expected == EXPECTED_PASS ||
+                    !test_passed && expected == EXPECTED_FUZZY ||
+                    test_passed && expected == EXPECTED_FAIL) {
+                    if (!equal) {
+                        result += ", max difference: " + maxDifference.value + ", number of differing pixels: " + differences + "\n";
+                        result += "REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n";
+                        result += "REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n";
+                    } else {
+                        result += "\n";
+                        gDumpLog("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
+                    }
+                } else {
+                    result += "\n";
+                }
+
+                gDumpLog(result);
+            }
 
             if (!test_passed && expected == EXPECTED_PASS) {
                 FlushTestLog();
@@ -1649,7 +1681,7 @@ function FindUnexpectedCrashDumpFiles()
                 gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gCurrentURL +
                          " | This test left crash dumps behind, but we weren't expecting it to!\n");
             }
-            gDumpLog("REFTEST INFO | Found unexpected crash dump file" + path +
+            gDumpLog("REFTEST INFO | Found unexpected crash dump file " + path +
                      ".\n");
             gUnexpectedCrashDumpFiles[path] = true;
         }
@@ -1672,6 +1704,7 @@ function FinishTestItem()
     // and tests will continue.
     SetAsyncScroll(false);
     SendClear();
+    gFailedNoPaint = false;
 }
 
 function DoAssertionCheck(numAsserts)
@@ -1713,6 +1746,8 @@ function DoAssertionCheck(numAsserts)
                  expectedAssertions + "\n");
         }
     }
+
+    gDumpLog("REFTEST TEST-END | " + gURLs[0].prettyPath + "\n");
 
     // And start the next test.
     gURLs.shift();
@@ -1766,6 +1801,10 @@ function RegisterMessageListenersAndLoadContentScript()
         function (m) { RecvFailedLoad(m.json.why); }
     );
     gBrowserMessageManager.addMessageListener(
+        "reftest:FailedNoPaint",
+        function (m) { RecvFailedNoPaint(); }
+    );
+    gBrowserMessageManager.addMessageListener(
         "reftest:InitCanvasWithSnapshot",
         function (m) { return RecvInitCanvasWithSnapshot(); }
     );
@@ -1784,6 +1823,10 @@ function RegisterMessageListenersAndLoadContentScript()
     gBrowserMessageManager.addMessageListener(
         "reftest:UpdateCanvasForInvalidation",
         function (m) { RecvUpdateCanvasForInvalidation(m.json.rects); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:UpdateWholeCanvasForInvalidation",
+        function (m) { RecvUpdateWholeCanvasForInvalidation(); }
     );
     gBrowserMessageManager.addMessageListener(
         "reftest:ExpectProcessCrash",
@@ -1826,6 +1869,11 @@ function RecvFailedLoad(why)
     LoadFailed(why);
 }
 
+function RecvFailedNoPaint()
+{
+    gFailedNoPaint = true;
+}
+
 function RecvInitCanvasWithSnapshot()
 {
     var painted = InitCurrentCanvasWithSnapshot();
@@ -1858,6 +1906,11 @@ function RecvTestDone(runtimeMs)
 function RecvUpdateCanvasForInvalidation(rects)
 {
     UpdateCurrentCanvasForInvalidation(rects);
+}
+
+function RecvUpdateWholeCanvasForInvalidation()
+{
+    UpdateWholeCurrentCanvasForInvalidation();
 }
 
 function OnProcessCrashed(subject, topic, data)

@@ -62,7 +62,7 @@ public:
   SVGPathElement* GetReferencedPath();
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
 
 protected:
   class PathReference : public nsReferencedElement {

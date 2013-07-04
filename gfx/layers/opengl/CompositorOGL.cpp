@@ -269,7 +269,7 @@ CompositorOGL::CreateContext()
 void
 CompositorOGL::AddPrograms(ShaderProgramType aType)
 {
-  for (PRUint32 maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
+  for (uint32_t maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
     if (ProgramProfileOGL::ProgramExists(aType, static_cast<MaskType>(maskType))) {
       mPrograms[aType].mVariations[maskType] = new ShaderProgramOGL(this->gl(),
         ProgramProfileOGL::GetProfileFor(aType, static_cast<MaskType>(maskType)));
@@ -279,9 +279,34 @@ CompositorOGL::AddPrograms(ShaderProgramType aType)
   }
 }
 
+GLuint
+CompositorOGL::GetTemporaryTexture(GLenum aTextureUnit)
+{
+  size_t index = aTextureUnit - LOCAL_GL_TEXTURE0;
+  // lazily grow the array of temporary textures
+  if (mTextures.Length() <= index) {
+    size_t prevLength = mTextures.Length();
+    mTextures.SetLength(index + 1);
+    for(unsigned i = prevLength; i <= index; ++i) {
+      mTextures[i] = 0;
+    }
+  }
+  // lazily initialize the temporary textures
+  if (!mTextures[index]) {
+    gl()->MakeCurrent();
+    gl()->fGenTextures(1, &mTextures[index]);
+  }
+  return mTextures[index];
+}
+
 void
 CompositorOGL::Destroy()
 {
+  if (gl() && mTextures.Length() > 0) {
+    gl()->MakeCurrent();
+    gl()->fDeleteTextures(mTextures.Length(), &mTextures[0]);
+  }
+  mTextures.SetLength(0);
   if (!mDestroyed) {
     mDestroyed = true;
     CleanupResources();
@@ -384,7 +409,7 @@ CompositorOGL::Initialize()
     mGLContext->fGenFramebuffers(1, &testFBO);
     GLuint testTexture = 0;
 
-    for (PRUint32 i = 0; i < ArrayLength(textureTargets); i++) {
+    for (uint32_t i = 0; i < ArrayLength(textureTargets); i++) {
       GLenum target = textureTargets[i];
       if (!target)
           continue;
@@ -639,7 +664,7 @@ void
 CompositorOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 {
   for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
-    for (PRUint32 mask = MaskNone; mask < NumMaskTypes; ++mask) {
+    for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {
       if (mPrograms[i].mVariations[mask]) {
         mPrograms[i].mVariations[mask]->CheckAndSetProjectionMatrix(aMatrix);
       }
@@ -952,6 +977,29 @@ CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
   }
 }
 
+struct MOZ_STACK_CLASS AutoBindTexture
+{
+  AutoBindTexture() : mTexture(nullptr) {}
+  AutoBindTexture(TextureSourceOGL* aTexture, GLenum aTextureUnit)
+   : mTexture(nullptr) { Bind(aTexture, aTextureUnit); }
+  ~AutoBindTexture()
+  {
+    if (mTexture) {
+      mTexture->ReleaseTexture();
+    }
+  }
+
+  void Bind(TextureSourceOGL* aTexture, GLenum aTextureUnit)
+  {
+    MOZ_ASSERT(!mTexture);
+    mTexture = aTexture;
+    mTexture->BindTexture(aTextureUnit);
+  }
+
+private:
+  TextureSourceOGL* mTexture;
+};
+
 void
 CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
                         const EffectChain &aEffectChain,
@@ -1031,8 +1079,9 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
 
       program->SetRenderColor(color);
 
+      AutoBindTexture bindMask;
       if (maskType != MaskNone) {
-        sourceMask->BindTexture(LOCAL_GL_TEXTURE0);
+        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE0);
         program->SetMaskTextureUnit(0);
         program->SetMaskLayerTransform(maskQuadTransform);
       }
@@ -1055,7 +1104,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
                                        LOCAL_GL_ONE, LOCAL_GL_ONE);
       }
 
-      source->AsSourceOGL()->BindTexture(LOCAL_GL_TEXTURE0);
+      AutoBindTexture bindSource(source->AsSourceOGL(), LOCAL_GL_TEXTURE0);
       if (programType == gl::RGBALayerExternalProgramType) {
         program->SetTextureTransform(source->AsSourceOGL()->GetTextureTransform());
       }
@@ -1066,9 +1115,10 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);
 
+      AutoBindTexture bindMask;
       if (maskType != MaskNone) {
         mGLContext->fActiveTexture(LOCAL_GL_TEXTURE1);
-        sourceMask->BindTexture(LOCAL_GL_TEXTURE1);
+        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE1);
         program->SetMaskTextureUnit(1);
         program->SetMaskLayerTransform(maskQuadTransform);
       }
@@ -1097,18 +1147,19 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
 
       gfxPattern::GraphicsFilter filter = ThebesFilter(effectYCbCr->mFilter);
 
-      sourceY->BindTexture(LOCAL_GL_TEXTURE0);
+      AutoBindTexture bindY(sourceY, LOCAL_GL_TEXTURE0);
       mGLContext->ApplyFilterToBoundTexture(filter);
-      sourceCb->BindTexture(LOCAL_GL_TEXTURE1);
+      AutoBindTexture bindCb(sourceCb, LOCAL_GL_TEXTURE1);
       mGLContext->ApplyFilterToBoundTexture(filter);
-      sourceCr->BindTexture(LOCAL_GL_TEXTURE2);
+      AutoBindTexture bindCr(sourceCr, LOCAL_GL_TEXTURE2);
       mGLContext->ApplyFilterToBoundTexture(filter);
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetLayerOpacity(aOpacity);
 
+      AutoBindTexture bindMask;
       if (maskType != MaskNone) {
-        sourceMask->BindTexture(LOCAL_GL_TEXTURE3);
+        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE3);
         program->SetMaskTextureUnit(3);
         program->SetMaskLayerTransform(maskQuadTransform);
       }
@@ -1129,8 +1180,9 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);
 
+      AutoBindTexture bindMask;
       if (maskType != MaskNone) {
-        sourceMask->BindTexture(LOCAL_GL_TEXTURE1);
+        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE1);
         program->SetMaskTextureUnit(1);
         program->SetMaskLayerTransform(maskQuadTransform);
       }
@@ -1158,7 +1210,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
         return;
       }
 
-      for (PRInt32 pass = 1; pass <=2; ++pass) {
+      for (int32_t pass = 1; pass <=2; ++pass) {
         ShaderProgramOGL* program;
         if (pass == 1) {
           program = GetProgram(gl::ComponentAlphaPass1ProgramType, maskType);
@@ -1170,8 +1222,8 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
                                    LOCAL_GL_ONE, LOCAL_GL_ONE);
         }
 
-        sourceOnBlack->BindTexture(LOCAL_GL_TEXTURE0);
-        sourceOnWhite->BindTexture(LOCAL_GL_TEXTURE1);
+        AutoBindTexture bindSourceOnBlack(sourceOnBlack, LOCAL_GL_TEXTURE0);
+        AutoBindTexture bindSourceOnWhite(sourceOnWhite, LOCAL_GL_TEXTURE1);
 
         program->Activate();
         program->SetBlackTextureUnit(0);
@@ -1180,8 +1232,9 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
         program->SetLayerTransform(aTransform);
         program->SetRenderOffset(aOffset.x, aOffset.y);
         program->SetLayerQuadRect(aRect);
+        AutoBindTexture bindMask;
         if (maskType != MaskNone) {
-          sourceMask->BindTexture(LOCAL_GL_TEXTURE2);
+          bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE2);
           program->SetMaskTextureUnit(2);
           program->SetMaskLayerTransform(maskQuadTransform);
         }
@@ -1298,7 +1351,7 @@ CompositorOGL::CopyToTarget(gfxContext *aTarget, const gfxMatrix& aTransform)
   GLint width = rect.width;
   GLint height = rect.height;
 
-  if ((PRInt64(width) * PRInt64(height) * PRInt64(4)) > PR_INT32_MAX) {
+  if ((int64_t(width) * int64_t(height) * int64_t(4)) > PR_INT32_MAX) {
     NS_ERROR("Widget size too big - integer overflow!");
     return;
   }

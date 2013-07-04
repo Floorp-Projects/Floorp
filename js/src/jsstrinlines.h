@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsstrinlines_h___
-#define jsstrinlines_h___
+#ifndef jsstrinlines_h
+#define jsstrinlines_h
 
 #include "mozilla/Attributes.h"
 
@@ -27,7 +27,7 @@ class RopeBuilder {
 
   public:
     RopeBuilder(JSContext *cx)
-      : cx(cx), res(cx, cx->runtime->emptyString)
+      : cx(cx), res(cx, cx->runtime()->emptyString)
     {}
 
     inline bool append(HandleString str) {
@@ -124,4 +124,4 @@ CompareChars(const jschar *s1, size_t l1, const jschar *s2, size_t l2, int32_t *
 
 }  /* namespace js */
 
-#endif /* jsstrinlines_h___ */
+#endif /* jsstrinlines_h */

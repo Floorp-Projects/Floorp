@@ -6,7 +6,7 @@
 #include "nsIDOMEvent.idl"
 
 /**
- * The nsIDOMCloseEvent interface is the interface to the event
+ * The CloseEvent interface is the interface to the event
  * close on a WebSocket object.
  *
  * For more information on this interface, please see

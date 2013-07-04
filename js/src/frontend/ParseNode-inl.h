@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ParseNode_inl_h__
-#define ParseNode_inl_h__
+#ifndef frontend_ParseNode_inl_h
+#define frontend_ParseNode_inl_h
 
-#include "frontend/Parser.h"
 #include "frontend/ParseNode.h"
+#include "frontend/SharedContext.h"
 
 namespace js {
 namespace frontend {
@@ -44,18 +44,7 @@ ParseNode::atom() const
     return isKind(PNK_MODULE) ? pn_modulebox->module()->atom() : pn_atom;
 }
 
-inline void
-NameNode::initCommon(ParseContext<FullParseHandler> *pc)
-{
-    pn_expr = NULL;
-    pn_cookie.makeFree();
-    pn_dflags = (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
-                ? PND_BLOCKCHILD
-                : 0;
-    pn_blockid = pc->blockid();
-}
-
 } /* namespace frontend */
 } /* namespace js */
 
-#endif /* ParseNode_inl_h__ */
+#endif /* frontend_ParseNode_inl_h */

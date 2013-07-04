@@ -8,7 +8,6 @@
 // Moz headers (alphabetical)
 #include "MetroUtils.h" // Logging, POINT_CEIL_*, ActivateGenericInstance, etc
 #include "MetroWidget.h" // MetroInput::mWidget
-#include "npapi.h" // NPEvent
 #include "mozilla/dom/Touch.h"  // Touch
 #include "nsTArray.h" // Touch lists
 #include "nsIDOMSimpleGestureEvent.h" // Constants for gesture events
@@ -99,12 +98,6 @@ namespace {
                      pressure);
   }
 
-  bool
-  IsControlCharacter(uint32_t aCharCode) {
-    return (0x1F >= aCharCode
-         || (0x7F <= aCharCode && 0x9F >= aCharCode));
-  }
-
   /**
    * Converts from the Devices::Input::PointerDeviceType enumeration
    * to a nsIDOMMouseEvent::MOZ_SOURCE_* value.
@@ -154,118 +147,6 @@ namespace {
     aData->mChanged = false;
     return PL_DHASH_NEXT;
   }
-
-  // In response to keyboard events, we create an `NPEvent` and point the
-  // `pluginEvent` member of our `nsInputEvent` to it.  We must set the
-  // `wParam` and `lParam` members of our `NPEvent` according to what
-  // Windows would have sent for this particular WM_* message.  See the
-  // following documentation for descriptions of what these values should
-  // be for the various keyboard events.
-  //
-  // This union is used when setting up the lParam for keyboard events.
-  union LParamForKeyEvents {
-    uintptr_t lParam;
-    struct {
-      // bits 0-15    Repeat count, always 1 for WM_KEYUP
-      uint16_t repeatCount;
-      // bits 16-23   Scan code
-      uint8_t scanCode;
-      // See LParamFlagsForKeyEvents
-      uint8_t flags;
-    } parts;
-  };
-  // The high-order byte of the lParam for keyboard events is a set of bit
-  // flags that specifies information about the key being pressed/released.
-  enum LParamFlagsForKeyEvents {
-    // bit 24       1 if the key is an extended key, 0 otherwise
-    isExtendedKey = 1,
-    // bits 25-28   Reserved; do not use
-    // bit 29       1 if ALT is held down while key was pressed
-    //              Always 0 for WM_KEYDOWN
-    //              Always 0 for WM_KEYUP
-    isMenuKeyDown = 1<<5,
-    // bit 30       Previous key state. 1 if key was down before this message.
-    //              Always 1 for WM_KEYUP
-    wasKeyDown = 1<<6,
-    // bit 31       1 if key is being released, 0 if key is being pressed.
-    //              Always 0 for WM_KEYDOWN
-    //              Always 1 for WM_KEYUP
-    isKeyReleased = 1<<7
-  };
-  // This helper function sets up the lParam for plugin events that we create
-  // in response to keyboard events.
-  void
-  InitPluginKeyEventLParamFromKeyStatus(
-                      uintptr_t& aLParam,
-                      UI::Core::CorePhysicalKeyStatus const& aKeyStatus) {
-    LParamForKeyEvents lParam;
-
-    lParam.parts.repeatCount = aKeyStatus.RepeatCount;
-    lParam.parts.scanCode = aKeyStatus.ScanCode;
-    if (aKeyStatus.IsExtendedKey) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::isExtendedKey;
-    }
-    if (aKeyStatus.IsMenuKeyDown) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::isMenuKeyDown;
-    }
-    if (aKeyStatus.WasKeyDown) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::wasKeyDown;
-    }
-    if (aKeyStatus.IsKeyReleased) {
-      lParam.parts.flags |= LParamFlagsForKeyEvents::isKeyReleased;
-    }
-
-    aLParam = lParam.lParam;
-  }
-
-  // In response to mouse events, we create an `NPEvent` and point the
-  // `pluginEvent` member of our `nsInputEvent` to it.  We must set the
-  // `wParam` and `lParam` members of our `NPEvent` according to what
-  // Windows would have sent for this particular WM_* message.  See the
-  // following documentation for descriptions of what these values should
-  // be for the various mouse events.
-  //
-  // This union is used when setting up the lParam for mouse events.
-  union LParamForMouseEvents {
-    uintptr_t lParam;
-    // lParam is the position at which the event occurred.
-    struct lParamDeconstruction {
-      // The low-order word is the x-coordinate
-      uint16_t x;
-      // The high-order word is the y-coordinate
-      uint16_t y;
-    } parts;
-  };
-  // This helper function sets up the wParam and lParam for plugin events
-  // that we create in response to mouse events.
-  void
-  InitPluginMouseEventParams(nsInputEvent const& aEvent,
-                             uintptr_t& aWParam,
-                             uintptr_t& aLParam) {
-    // wParam is a mask indicating whether certain virtual keys are down.
-    aWParam = 0;
-    if (IS_VK_DOWN(VK_LBUTTON)) {
-      aWParam |= MK_LBUTTON;
-    }
-    if (IS_VK_DOWN(VK_MBUTTON)) {
-      aWParam |= MK_MBUTTON;
-    }
-    if (IS_VK_DOWN(VK_RBUTTON)) {
-      aWParam |= MK_RBUTTON;
-    }
-    if (aEvent.IsControl()) {
-      aWParam |= MK_CONTROL;
-    }
-    if (aEvent.IsShift()) {
-      aWParam |= MK_SHIFT;
-    }
-
-    Foundation::Point logPoint = MetroUtils::PhysToLog(aEvent.refPoint);
-    LParamForMouseEvents lParam;
-    lParam.parts.x = static_cast<uint16_t>(NS_round(logPoint.X));
-    lParam.parts.y = static_cast<uint16_t>(NS_round(logPoint.Y));
-    aLParam = lParam.lParam;
-  }
 }
 
 namespace mozilla {
@@ -290,7 +171,6 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   mTokenPointerEntered.value = 0;
   mTokenPointerExited.value = 0;
   mTokenPointerWheelChanged.value = 0;
-  mTokenAcceleratorKeyActivated.value = 0;
   mTokenEdgeStarted.value = 0;
   mTokenEdgeCanceled.value = 0;
   mTokenEdgeCompleted.value = 0;
@@ -301,12 +181,6 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   mTokenRightTapped.value = 0;
 
   mTouches.Init();
-
-  // Note that this is not thread-safe.
-  if (!sIsVirtualKeyMapInitialized) {
-    InitializeVirtualKeyMap();
-    sIsVirtualKeyMapInitialized = true;
-  }
 
   // Create our Gesture Recognizer
   ActivateGenericInstance(RuntimeClass_Windows_UI_Input_GestureRecognizer,
@@ -320,51 +194,6 @@ MetroInput::~MetroInput()
 {
   LogFunction();
   UnregisterInputEvents();
-}
-
-/**
- * This function handles the `AcceleratorKeyActivated` event, which is fired
- * every time a keyboard key is pressed or released, and every time that a
- * character (unicode or otherwise) is identified as having been inputted
- * by the user.
- *
- * @param sender the CoreDispatcher that fired this event
- * @param aArgs the event-specific args we use when processing this event
- * @returns S_OK
- */
-HRESULT
-MetroInput::OnAcceleratorKeyActivated(UI::Core::ICoreDispatcher* sender,
-                                      UI::Core::IAcceleratorKeyEventArgs* aArgs) {
-  UI::Core::CoreAcceleratorKeyEventType type;
-  System::VirtualKey vkey;
-  UI::Core::CorePhysicalKeyStatus keyStatus;
-
-  aArgs->get_EventType(&type);
-  aArgs->get_VirtualKey(&vkey);
-  aArgs->get_KeyStatus(&keyStatus);
-
-#ifdef DEBUG_INPUT
-  LogFunction();
-  Log("Accelerator key! Type: %d Value: %d", type, vkey);
-#endif
-
-  switch(type) {
-    case UI::Core::CoreAcceleratorKeyEventType_KeyUp:
-    case UI::Core::CoreAcceleratorKeyEventType_SystemKeyUp:
-      OnKeyUp(vkey, keyStatus);
-      break;
-    case UI::Core::CoreAcceleratorKeyEventType_KeyDown:
-    case UI::Core::CoreAcceleratorKeyEventType_SystemKeyDown:
-      OnKeyDown(vkey, keyStatus);
-      break;
-    case UI::Core::CoreAcceleratorKeyEventType_Character:
-    case UI::Core::CoreAcceleratorKeyEventType_SystemCharacter:
-    case UI::Core::CoreAcceleratorKeyEventType_UnicodeCharacter:
-      OnCharacterReceived(vkey, keyStatus);
-      break;
-  }
-
-  return S_OK;
 }
 
 /**
@@ -528,30 +357,6 @@ MetroInput::OnPointerWheelChanged(UI::Core::ICoreWindow* aSender,
     previousVertLeftOverDelta %= WHEEL_DELTA;
   }
 
-  NPEvent pluginEvent;
-  pluginEvent.event = horzEvent ? WM_MOUSEHWHEEL : WM_MOUSEWHEEL;
-
-  union {
-    uintptr_t wParam;
-    uint16_t parts[2];
-  } wParam;
-
-  // This sets lParam and the low-order word of wParam
-  InitPluginMouseEventParams(wheelEvent,
-                             wParam.wParam,
-                             pluginEvent.lParam);
-
-  // The high-order word of wParam is the number of detents the wheel has
-  // traveled. Positive values mean the wheel was rotated forward or to the
-  // right.  Negative values mean the wheel was rotated backward (toward the
-  // user) or to the left.
-  wParam.parts[1] = horzEvent
-                  ? wheelEvent.lineOrPageDeltaX
-                  : wheelEvent.lineOrPageDeltaY * -1;
-
-  pluginEvent.wParam = wParam.wParam;
-
-  wheelEvent.pluginEvent = static_cast<void*>(&pluginEvent);
   DispatchEventIgnoreStatus(&wheelEvent);
 
   WRL::ComPtr<UI::Input::IPointerPoint> point;
@@ -560,144 +365,6 @@ MetroInput::OnPointerWheelChanged(UI::Core::ICoreWindow* aSender,
                                              wheelEvent.IsShift(),
                                              wheelEvent.IsControl());
   return S_OK;
-}
-
-// This helper function is used when a character has been received by our
-// app.  This function is responsible for sending an appropriate gecko
-// event in response to the character entered.
-void
-MetroInput::OnCharacterReceived(uint32_t aCharCode,
-                                UI::Core::CorePhysicalKeyStatus const& aKeyStatus)
-{
-  // We only send NS_KEY_PRESS events for printable characters
-  if (IsControlCharacter(aCharCode)) {
-    return;
-  }
-
-  nsKeyEvent keyEvent(true, NS_KEY_PRESS, mWidget.Get());
-  mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(keyEvent);
-  keyEvent.time = ::GetMessageTime();
-  keyEvent.isChar = true;
-  keyEvent.charCode = aCharCode;
-  keyEvent.mKeyNameIndex = KEY_NAME_INDEX_PrintableKey;
-
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_CHAR;
-  InitPluginKeyEventLParamFromKeyStatus(pluginEvent.lParam,
-                                        aKeyStatus);
-  // The wParam of WM_CHAR messages is a single utf-16 character.
-  // If charCode cannot be represented in a single utf-16 character,
-  // then we must send two WM_CHAR messages; one with a high surrogate
-  // and one with a low surrogate.
-  if (IS_IN_BMP(aCharCode)) {
-    pluginEvent.wParam = aCharCode;
-  } else {
-    pluginEvent.wParam = H_SURROGATE(aCharCode);
-    nsPluginEvent surrogateEvent(true, NS_PLUGIN_INPUT_EVENT, mWidget.Get());
-    surrogateEvent.time = ::GetMessageTime();
-    surrogateEvent.pluginEvent = static_cast<void*>(&pluginEvent);
-    DispatchEventIgnoreStatus(&surrogateEvent);
-    pluginEvent.wParam = L_SURROGATE(aCharCode);
-  }
-
-  keyEvent.pluginEvent = static_cast<void*>(&pluginEvent);
-
-  DispatchEventIgnoreStatus(&keyEvent);
-}
-
-// This helper function is responsible for sending an appropriate gecko
-// event in response to a keyboard key being pressed down.
-void
-MetroInput::OnKeyDown(uint32_t aVKey,
-                      UI::Core::CorePhysicalKeyStatus const& aKeyStatus)
-{
-  // We can only send a gecko event if there is a gecko virtual key code that
-  // corresponds to the Windows virtual key code
-  uint32_t mozKey = GetMozKeyCode(aVKey);
-  if (!mozKey) {
-    return;
-  }
-
-  nsKeyEvent keyEvent(true, NS_KEY_DOWN, mWidget.Get());
-  mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(keyEvent);
-  keyEvent.time = ::GetMessageTime();
-  keyEvent.keyCode = mozKey;
-  keyEvent.mKeyNameIndex = GetDOMKeyNameIndex(aVKey);
-
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_KEYDOWN;
-  InitPluginKeyEventLParamFromKeyStatus(pluginEvent.lParam,
-                                        aKeyStatus);
-  // wParam is the virtual key code
-  pluginEvent.wParam = aVKey;
-
-  keyEvent.pluginEvent = static_cast<void*>(&pluginEvent);
-  DispatchEventIgnoreStatus(&keyEvent);
-
-  // If the key being pressed is not a printable character (e.g.
-  // enter, delete, backspace, alt, etc), we will not receive a character
-  // event for this key press, which means that our OnCharacterReceived
-  // function won't get called, and that we will never send a gecko
-  // keypress event for this character.
-  //
-  // If the control key is currently down while this key was pressed,
-  // then Windows will either send us a character event indicating that a
-  // control character has been generated, or it will not send us any
-  // character event (depending on which key has been pressed).
-  //
-  // We want gecko to be aware of every keypress, so we send the
-  // keypress here.
-  //
-  // Note: We use MapVirtualKey to determine what character code we will
-  // send in our NS_KEY_PRESS event. MapVirtualKey does not provide a very
-  // good mapping from virtual key code to character.  It doesn't
-  // take into account any additional keys (shift, caps lock, etc), or
-  // any diacritics that might already have been pressed, and it
-  // ALWAYS gives the upper-case version of latin characters a-z.  Thus,
-  // we only use it if we absolutely have to.  In this case, Windows isn't
-  // going to send us character events, so the only way to come up with a
-  // character value to send in our NS_KEY_PRESS is to use MapVirtualKey.
-  keyEvent.charCode = MapVirtualKey(aVKey, MAPVK_VK_TO_CHAR);
-  keyEvent.isChar = !IsControlCharacter(keyEvent.charCode);
-  if (!keyEvent.isChar
-   || mModifierKeyState.IsControl()) {
-    // We don't want to send another message to our plugin,
-    // so reset keyEvent.pluginEvent
-    keyEvent.pluginEvent = nullptr;
-    keyEvent.message = NS_KEY_PRESS;
-    DispatchEventIgnoreStatus(&keyEvent);
-  }
-}
-
-// This helper function is responsible for sending an appropriate gecko
-// event in response to a keyboard key being released.
-void
-MetroInput::OnKeyUp(uint32_t aVKey,
-                    UI::Core::CorePhysicalKeyStatus const& aKeyStatus)
-{
-  uint32_t mozKey = GetMozKeyCode(aVKey);
-  if (!mozKey) {
-    return;
-  }
-
-  nsKeyEvent keyEvent(true, NS_KEY_UP, mWidget.Get());
-  mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(keyEvent);
-  keyEvent.time = ::GetMessageTime();
-  keyEvent.keyCode = mozKey;
-  keyEvent.mKeyNameIndex = GetDOMKeyNameIndex(aVKey);
-
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_KEYUP;
-  InitPluginKeyEventLParamFromKeyStatus(pluginEvent.lParam,
-                                        aKeyStatus);
-  // wParam is the virtual key code
-  pluginEvent.wParam = aVKey;
-
-  keyEvent.pluginEvent = static_cast<void*>(&pluginEvent);
-  DispatchEventIgnoreStatus(&keyEvent);
 }
 
 /**
@@ -713,11 +380,9 @@ void
 MetroInput::OnPointerNonTouch(UI::Input::IPointerPoint* aPoint) {
   WRL::ComPtr<UI::Input::IPointerPointProperties> props;
   UI::Input::PointerUpdateKind pointerUpdateKind;
-  boolean canBeDoubleTap;
 
   aPoint->get_Properties(props.GetAddressOf());
   props->get_PointerUpdateKind(&pointerUpdateKind);
-  mGestureRecognizer->CanBeDoubleTap(aPoint, &canBeDoubleTap);
 
   nsMouseEvent mouseEvent(true,
                           NS_MOUSE_MOVE,
@@ -725,52 +390,35 @@ MetroInput::OnPointerNonTouch(UI::Input::IPointerPoint* aPoint) {
                           nsMouseEvent::eReal,
                           nsMouseEvent::eNormal);
 
-  NPEvent pluginEvent;
-  pluginEvent.event = WM_MOUSEMOVE;
-
   switch (pointerUpdateKind) {
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonPressed:
       // We don't bother setting mouseEvent.button because it is already
       // set to nsMouseEvent::buttonType::eLeftButton whose value is 0.
       mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-      pluginEvent.event = (canBeDoubleTap
-                        ? WM_LBUTTONDBLCLK
-                        : WM_LBUTTONDOWN);
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonPressed:
       mouseEvent.button = nsMouseEvent::buttonType::eMiddleButton;
       mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-      pluginEvent.event = (canBeDoubleTap
-                        ? WM_MBUTTONDBLCLK
-                        : WM_MBUTTONDOWN);
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonPressed:
       mouseEvent.button = nsMouseEvent::buttonType::eRightButton;
       mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-      pluginEvent.event = (canBeDoubleTap
-                        ? WM_RBUTTONDBLCLK
-                        : WM_RBUTTONDOWN);
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonReleased:
       // We don't bother setting mouseEvent.button because it is already
       // set to nsMouseEvent::buttonType::eLeftButton whose value is 0.
       mouseEvent.message = NS_MOUSE_BUTTON_UP;
-      pluginEvent.event = WM_LBUTTONUP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonReleased:
       mouseEvent.button = nsMouseEvent::buttonType::eMiddleButton;
       mouseEvent.message = NS_MOUSE_BUTTON_UP;
-      pluginEvent.event = WM_MBUTTONUP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonReleased:
       mouseEvent.button = nsMouseEvent::buttonType::eRightButton;
       mouseEvent.message = NS_MOUSE_BUTTON_UP;
-      pluginEvent.event = WM_RBUTTONUP;
       break;
   }
   InitGeckoMouseEventFromPointerPoint(mouseEvent, aPoint);
-
-  mouseEvent.pluginEvent = static_cast<void*>(&pluginEvent);
   DispatchEventIgnoreStatus(&mouseEvent);
   return;
 }
@@ -1438,14 +1086,6 @@ MetroInput::UnregisterInputEvents() {
       edge->remove_Completed(mTokenEdgeCompleted);
     }
   }
-
-  // Unregister ourselves from the AcceleratorKeyActivated event
-  WRL::ComPtr<ICoreAcceleratorKeys> coreAcceleratorKeys;
-  if (SUCCEEDED(mDispatcher.As<ICoreAcceleratorKeys>(&coreAcceleratorKeys))) {
-    coreAcceleratorKeys->remove_AcceleratorKeyActivated(
-                            mTokenAcceleratorKeyActivated);
-  }
-
   // Unregister ourselves from the window events. This is extremely important;
   // once this object is destroyed we don't want Windows to try to send events
   // to it.
@@ -1467,271 +1107,6 @@ MetroInput::UnregisterInputEvents() {
   mGestureRecognizer->remove_RightTapped(mTokenRightTapped);
 }
 
-// Since this is static, it should automatically be initialized
-// to all 0 bytes.
-uint32_t MetroInput::sVirtualKeyMap[255];
-bool MetroInput::sIsVirtualKeyMapInitialized = false;
-
-// References
-//   nsVKList.h - defines NS_VK_*
-//   nsIDOMKeyEvent.idl - defines the values that NS_VK_* are based on
-//   nsDOMKeyNameList.h - defines KeyNameIndex values
-void
-MetroInput::InitializeVirtualKeyMap() {
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Cancel] = NS_VK_CANCEL;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Help] = NS_VK_HELP;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Back] = NS_VK_BACK;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Tab] = NS_VK_TAB;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Clear] = NS_VK_CLEAR;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Enter] = NS_VK_RETURN;
-  // NS_VK_ENTER is never used.
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Shift] = NS_VK_SHIFT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Control] = NS_VK_CONTROL;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Menu] = NS_VK_ALT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Pause] = NS_VK_PAUSE;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_CapitalLock] = NS_VK_CAPS_LOCK;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Kana] = NS_VK_KANA;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Hangul] = NS_VK_HANGUL;
-  // NS_VK_EISU (Japanese Mac keyboard only)
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Junja] = NS_VK_JUNJA;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Final] = NS_VK_FINAL;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Hanja] = NS_VK_HANJA;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Kanji] = NS_VK_KANJI;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Escape] = NS_VK_ESCAPE;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Convert] = NS_VK_CONVERT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NonConvert] = NS_VK_NONCONVERT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Accept] = NS_VK_ACCEPT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_ModeChange] = NS_VK_MODECHANGE;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Space] = NS_VK_SPACE;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_PageUp] = NS_VK_PAGE_UP;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_PageDown] = NS_VK_PAGE_DOWN;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_End] = NS_VK_END;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Home] = NS_VK_HOME;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Left] = NS_VK_LEFT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Up] = NS_VK_UP;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Right] = NS_VK_RIGHT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Down] = NS_VK_DOWN;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Select] = NS_VK_SELECT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Print] = NS_VK_PRINT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Execute] = NS_VK_EXECUTE;
-  sVirtualKeyMap[VK_SNAPSHOT] = NS_VK_PRINTSCREEN;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Insert] = NS_VK_INSERT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Delete] = NS_VK_DELETE;
-
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number0] = NS_VK_0;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number1] = NS_VK_1;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number2] = NS_VK_2;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number3] = NS_VK_3;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number4] = NS_VK_4;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number5] = NS_VK_5;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number6] = NS_VK_6;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number7] = NS_VK_7;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number8] = NS_VK_8;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Number9] = NS_VK_9;
-
-  // NS_VK_COLON
-  sVirtualKeyMap[VK_OEM_1] = NS_VK_SEMICOLON;
-  // NS_VK_LESS_THAN
-  // NS_VK_EQUALS
-  // NS_VK_GREATER_THAN
-  // NS_VK_QUESTION_MARK
-  // NS_VK_AT
-
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_A] = NS_VK_A;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_B] = NS_VK_B;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_C] = NS_VK_C;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_D] = NS_VK_D;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_E] = NS_VK_E;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F] = NS_VK_F;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_G] = NS_VK_G;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_H] = NS_VK_H;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_I] = NS_VK_I;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_J] = NS_VK_J;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_K] = NS_VK_K;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_L] = NS_VK_L;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_M] = NS_VK_M;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_N] = NS_VK_N;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_O] = NS_VK_O;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_P] = NS_VK_P;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Q] = NS_VK_Q;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_R] = NS_VK_R;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_S] = NS_VK_S;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_T] = NS_VK_T;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_U] = NS_VK_U;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_V] = NS_VK_V;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_W] = NS_VK_W;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_X] = NS_VK_X;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Y] = NS_VK_Y;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Z] = NS_VK_Z;
-
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_LeftWindows] = NS_VK_WIN;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_RightWindows] = NS_VK_WIN;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_LeftMenu] = NS_VK_CONTEXT_MENU;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_RightMenu] = NS_VK_CONTEXT_MENU;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Sleep] = NS_VK_SLEEP;
-
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad0] = NS_VK_NUMPAD0;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad1] = NS_VK_NUMPAD1;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad2] = NS_VK_NUMPAD2;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad3] = NS_VK_NUMPAD3;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad4] = NS_VK_NUMPAD4;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad5] = NS_VK_NUMPAD5;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad6] = NS_VK_NUMPAD6;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad7] = NS_VK_NUMPAD7;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad8] = NS_VK_NUMPAD8;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberPad9] = NS_VK_NUMPAD9;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Multiply] = NS_VK_MULTIPLY;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Add] = NS_VK_ADD;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Separator] = NS_VK_SEPARATOR;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Subtract] = NS_VK_SUBTRACT;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Decimal] = NS_VK_DECIMAL;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Divide] = NS_VK_DIVIDE;
-
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F1] = NS_VK_F1;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F2] = NS_VK_F2;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F3] = NS_VK_F3;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F4] = NS_VK_F4;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F5] = NS_VK_F5;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F6] = NS_VK_F6;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F7] = NS_VK_F7;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F8] = NS_VK_F8;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F9] = NS_VK_F9;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F10] = NS_VK_F10;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F11] = NS_VK_F11;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F12] = NS_VK_F12;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F13] = NS_VK_F13;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F14] = NS_VK_F14;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F15] = NS_VK_F15;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F16] = NS_VK_F16;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F17] = NS_VK_F17;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F18] = NS_VK_F18;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F19] = NS_VK_F19;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F20] = NS_VK_F20;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F21] = NS_VK_F21;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F22] = NS_VK_F22;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F23] = NS_VK_F23;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_F24] = NS_VK_F24;
-
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_NumberKeyLock] = NS_VK_NUM_LOCK;
-  sVirtualKeyMap[System::VirtualKey::VirtualKey_Scroll] = NS_VK_SCROLL_LOCK;
-
-  // NS_VK_CIRCUMFLEX
-  // NS_VK_EXCLAMATION
-  // NS_VK_DOUBLE_QUOTE
-  // NS_VK_HASH
-  // NS_VK_DOLLAR
-  // NS_VK_PERCENT
-  // NS_VK_AMPERSAND
-  // NS_VK_UNDERSCORE
-  // NS_VK_OPEN_PAREN
-  // NS_VK_CLOSE_PAREN
-  // NS_VK_ASTERISK
-  sVirtualKeyMap[VK_OEM_PLUS] = NS_VK_PLUS;
-  // NS_VK_PIPE
-  sVirtualKeyMap[VK_OEM_MINUS] = NS_VK_HYPHEN_MINUS;
-
-  // NS_VK_OPEN_CURLY_BRACKET
-  // NS_VK_CLOSE_CURLY_BRACKET
-
-  // NS_VK_TILDE
-
-  sVirtualKeyMap[VK_OEM_COMMA] = NS_VK_COMMA;
-  sVirtualKeyMap[VK_OEM_PERIOD] = NS_VK_PERIOD;
-  sVirtualKeyMap[VK_OEM_2] = NS_VK_SLASH;
-  sVirtualKeyMap[VK_OEM_3] = NS_VK_BACK_QUOTE;
-  sVirtualKeyMap[VK_OEM_4] = NS_VK_OPEN_BRACKET;
-  sVirtualKeyMap[VK_OEM_5] = NS_VK_BACK_SLASH;
-  sVirtualKeyMap[VK_OEM_6] = NS_VK_CLOSE_BRACKET;
-  sVirtualKeyMap[VK_OEM_7] = NS_VK_QUOTE;
-
-  // NS_VK_META
-  // NS_VK_ALTGR
-}
-
-uint32_t
-MetroInput::GetMozKeyCode(uint32_t aKey)
-{
-  return sVirtualKeyMap[aKey];
-}
-
-KeyNameIndex
-MetroInput::GetDOMKeyNameIndex(uint32_t aVirtualKey)
-{
-  switch (aVirtualKey) {
-
-#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
-    case aNativeKey: return aKeyNameIndex;
-
-#include "NativeKeyToDOMKeyName.h"
-
-#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
-
-    // printable keys:
-    case System::VirtualKey::VirtualKey_Number0:
-    case System::VirtualKey::VirtualKey_Number1:
-    case System::VirtualKey::VirtualKey_Number2:
-    case System::VirtualKey::VirtualKey_Number3:
-    case System::VirtualKey::VirtualKey_Number4:
-    case System::VirtualKey::VirtualKey_Number5:
-    case System::VirtualKey::VirtualKey_Number6:
-    case System::VirtualKey::VirtualKey_Number7:
-    case System::VirtualKey::VirtualKey_Number8:
-    case System::VirtualKey::VirtualKey_Number9:
-    case System::VirtualKey::VirtualKey_A:
-    case System::VirtualKey::VirtualKey_B:
-    case System::VirtualKey::VirtualKey_C:
-    case System::VirtualKey::VirtualKey_D:
-    case System::VirtualKey::VirtualKey_E:
-    case System::VirtualKey::VirtualKey_F:
-    case System::VirtualKey::VirtualKey_G:
-    case System::VirtualKey::VirtualKey_H:
-    case System::VirtualKey::VirtualKey_I:
-    case System::VirtualKey::VirtualKey_J:
-    case System::VirtualKey::VirtualKey_K:
-    case System::VirtualKey::VirtualKey_L:
-    case System::VirtualKey::VirtualKey_M:
-    case System::VirtualKey::VirtualKey_N:
-    case System::VirtualKey::VirtualKey_O:
-    case System::VirtualKey::VirtualKey_P:
-    case System::VirtualKey::VirtualKey_Q:
-    case System::VirtualKey::VirtualKey_R:
-    case System::VirtualKey::VirtualKey_S:
-    case System::VirtualKey::VirtualKey_T:
-    case System::VirtualKey::VirtualKey_U:
-    case System::VirtualKey::VirtualKey_V:
-    case System::VirtualKey::VirtualKey_W:
-    case System::VirtualKey::VirtualKey_X:
-    case System::VirtualKey::VirtualKey_Y:
-    case System::VirtualKey::VirtualKey_Z:
-    case VK_NUMPAD0:
-    case VK_NUMPAD1:
-    case VK_NUMPAD2:
-    case VK_NUMPAD3:
-    case VK_NUMPAD4:
-    case VK_NUMPAD5:
-    case VK_NUMPAD6:
-    case VK_NUMPAD7:
-    case VK_NUMPAD8:
-    case VK_NUMPAD9:
-    case VK_OEM_1:
-    case VK_OEM_PLUS:
-    case VK_OEM_COMMA:
-    case VK_OEM_MINUS:
-    case VK_OEM_PERIOD:
-    case VK_OEM_2:
-    case VK_OEM_3:
-    case VK_OEM_4:
-    case VK_OEM_5:
-    case VK_OEM_6:
-    case VK_OEM_7:
-    case VK_OEM_8:
-    case VK_OEM_102:
-      return KEY_NAME_INDEX_PrintableKey;
-
-    default:
-      return KEY_NAME_INDEX_Unidentified;
-  }
-}
 void
 MetroInput::RegisterInputEvents()
 {
@@ -1740,18 +1115,6 @@ MetroInput::RegisterInputEvents()
                "Must have a GestureRecognizer for input events!");
   NS_ASSERTION(mDispatcher,
                "Must have a CoreDispatcher to register for input events!");
-
-  // Register for the AcceleratorKeyActivated event.  This is sent to us
-  // from our CoreDispatcher, but we have to use the ICoreAcceleratorKeys
-  // interface of our CoreDispatcher.
-  WRL::ComPtr<ICoreAcceleratorKeys> coreAcceleratorKeys;
-  mDispatcher.As<ICoreAcceleratorKeys>(&coreAcceleratorKeys);
-  coreAcceleratorKeys->add_AcceleratorKeyActivated(
-      WRL::Callback<AcceleratorKeyActivatedHandler>(
-                                  this,
-                                  &MetroInput::OnAcceleratorKeyActivated).Get(),
-      &mTokenAcceleratorKeyActivated);
-
   // Register for edge swipe
   WRL::ComPtr<UI::Input::IEdgeGestureStatics> edgeStatics;
   Foundation::GetActivationFactory(

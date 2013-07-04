@@ -13,7 +13,7 @@ const { method } = require('../lang/functional');
 const { EventTarget } = require('../event/target');
 const { List, addListItem } = require('../util/list');
 
-const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec, consider using require("tabs") instead';
+const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec, consider using require("sdk/tabs") instead';
 
 // NOTE: On Fennec there is only one window.
 

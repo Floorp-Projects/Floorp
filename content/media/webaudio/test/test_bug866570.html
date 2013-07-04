@@ -9,10 +9,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 AudioContext().foo = null;
 ok(true, "The test should not fatally assert");
-SpecialPowers.clearUserPref("media.webaudio.enabled");
 
 </script>
 </pre>

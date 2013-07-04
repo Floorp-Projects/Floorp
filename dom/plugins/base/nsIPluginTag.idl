@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(00ea1f72-a57a-49bb-ac57-478902d9228b)]
+[scriptable, uuid(0354d96d-3fd3-4365-a0a2-6c807ec1ce95)]
 interface nsIPluginTag : nsISupports
 {
   // enabledState is stored as one of the following as an integer in prefs,
@@ -19,7 +19,12 @@ interface nsIPluginTag : nsISupports
   readonly attribute AUTF8String fullpath;
   readonly attribute AUTF8String version;
   readonly attribute AUTF8String name;
-           attribute boolean blocklisted;
+
+  /**
+   * true only if this plugin is "hardblocked" and cannot be enabled.
+   */
+  readonly attribute boolean blocklisted;
+
   readonly attribute boolean disabled;
   readonly attribute boolean clicktoplay;
            attribute unsigned long enabledState;

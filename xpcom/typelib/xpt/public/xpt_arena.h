@@ -12,6 +12,7 @@
 
 #include "prtypes.h"
 #include <stdlib.h>
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/StandardInteger.h"
 
 
@@ -53,11 +54,8 @@ XPT_NotifyDoneLoading(XPTArena *arena);
 XPT_PUBLIC_API(void)
 XPT_ArenaFree(XPTArena *arena, void* block);
 
-/* A synonym of |nsMallocSizeOfFun|, because we don't #include nscore.h. */
-typedef size_t(*xptMallocSizeOfFun)(const void *p);
-
 XPT_PUBLIC_API(size_t)
-XPT_SizeOfArena(XPTArena *arena, xptMallocSizeOfFun mallocSizeOf);
+XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 
 /* --------------------------------------------------------- */
 

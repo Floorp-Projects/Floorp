@@ -111,7 +111,7 @@ public:
    * { x = 0, y = 0, width = surface.width, height = surface.height }, however
    * there is no hard requirement for this.
    */
-  void UpdateCompositionBounds(const LayerIntRect& aCompositionBounds);
+  void UpdateCompositionBounds(const ScreenIntRect& aCompositionBounds);
 
   /**
    * We are scrolling a subframe, so disable our machinery until we hit
@@ -178,7 +178,7 @@ public:
   bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
                                       ContainerLayer* aLayer,
                                       ViewTransform* aNewTransform,
-                                      gfx::Point& aScrollOffset);
+                                      ScreenPoint& aScrollOffset);
 
   /**
    * A shadow layer update has arrived. |aViewportFrame| is the new FrameMetrics
@@ -199,12 +199,6 @@ public:
   //
 
   /**
-   * Sets the CSS page rect, and calculates a new page rect based on the zoom
-   * level of the current metrics and the passed in CSS page rect.
-   */
-  void SetPageRect(const CSSRect& aCSSPageRect);
-
-  /**
    * Sets the DPI of the device for use within panning and zooming logic. It is
    * a platform responsibility to set this on initialization of this class and
    * whenever it changes.
@@ -223,27 +217,11 @@ public:
    * checkerboard immediately. This includes a bunch of logic, including
    * algorithms to bias painting in the direction of the velocity.
    */
-  static const gfx::Rect CalculatePendingDisplayPort(
+  static const CSSRect CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
     const gfx::Point& aVelocity,
     const gfx::Point& aAcceleration,
     double aEstimatedPaintDuration);
-
-  /**
-   * Return the scale factor needed to fit the viewport in |aMetrics|
-   * into its composition bounds.
-   */
-  static gfxSize CalculateIntrinsicScale(const FrameMetrics& aMetrics);
-
-  /**
-   * Return the resolution that content should be rendered at given
-   * the configuration in aFrameMetrics: viewport dimensions, zoom
-   * factor, etc.  (The mResolution member of aFrameMetrics is
-   * ignored.)
-   */
-  static gfxSize CalculateResolution(const FrameMetrics& aMetrics);
-
-  static CSSRect CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics);
 
   /**
    * Send an mozbrowserasyncscroll event.
@@ -256,6 +234,13 @@ public:
    * Does the work for ReceiveInputEvent().
    */
   nsEventStatus HandleInputEvent(const InputData& aEvent);
+
+  /**
+   * Sync panning and zooming animation using a fixed frame time.
+   * This will ensure that we animate the APZC correctly with other external
+   * animations to the same timestamp.
+   */
+  static void SetFrameTime(const TimeStamp& aMilliseconds);
 
 protected:
   /**
@@ -339,7 +324,7 @@ protected:
   /**
    * Scrolls the viewport by an X,Y offset.
    */
-  void ScrollBy(const gfx::Point& aOffset);
+  void ScrollBy(const CSSPoint& aOffset);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
@@ -348,7 +333,7 @@ protected:
    *
    * XXX: Fix focus point calculations.
    */
-  void ScaleWithFocus(float aScale, const nsIntPoint& aFocus);
+  void ScaleWithFocus(float aScale, const ScreenPoint& aFocus);
 
   /**
    * Schedules a composite on the compositor thread. Wrapper for
@@ -462,7 +447,7 @@ protected:
    *
    * *** The monitor must be held while calling this.
    */
-  void SetZoomAndResolution(float aScale);
+  void SetZoomAndResolution(const ScreenToScreenScale& aZoom);
 
   /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
@@ -552,7 +537,7 @@ private:
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
-  nsIntPoint mLastZoomFocus;
+  ScreenPoint mLastZoomFocus;
 
   // Stores the state of panning and zooming this frame. This is protected by
   // |mMonitor|; that is, it should be held whenever this is updated.
@@ -568,11 +553,11 @@ private:
   // The last time and offset we fire the mozbrowserasyncscroll event when
   // compositor has sampled the content transform for this frame.
   TimeStamp mLastAsyncScrollTime;
-  gfx::Point mLastAsyncScrollOffset;
+  CSSPoint mLastAsyncScrollOffset;
 
   // The current offset drawn on the screen, it may not be sent since we have
   // throttling policy for mozbrowserasyncscroll event.
-  gfx::Point mCurrentAsyncScrollOffset;
+  CSSPoint mCurrentAsyncScrollOffset;
 
   // The delay task triggered by the throttling mozbrowserasyncscroll event
   // ensures the last mozbrowserasyncscroll event is always been fired.

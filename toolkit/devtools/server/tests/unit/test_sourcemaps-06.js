@@ -59,7 +59,7 @@ function test_source_content()
     file: "abc.js"
   });
 
-  code += "//@ sourceMappingURL=data:text/json;base64," + btoa(map.toString());
+  code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 
   Components.utils.evalInSandbox(code, gDebuggee, "1.8",
                                  "http://example.com/www/js/abc.js", 1);

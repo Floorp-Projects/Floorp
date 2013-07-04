@@ -9,68 +9,31 @@
  * ***** END LICENSE BLOCK ***** */
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-603750-websocket.html";
-const pref_ws = "network.websocket.enabled";
-const pref_block = "network.websocket.override-security-block";
-
-let errors = 0;
-let lastWindowId = 0;
-let oldPref_ws;
-
-let TestObserver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
-  observe: function test_observe(aSubject)
-  {
-    if (!(aSubject instanceof Ci.nsIScriptError)) {
-      return;
-    }
-
-    is(aSubject.category, "Web Socket", "received a Web Socket error");
-    isnot(aSubject.sourceName.indexOf("test-bug-603750-websocket.js"), -1,
-          "sourceName is correct");
-
-    if (++errors == 2) {
-      executeSoon(performTest);
-    }
-    else {
-      lastWindowId = aSubject.outerWindowID;
-    }
-  }
-};
-
-function tabLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, tabLoad, true);
-
-  openConsole(null, function(aHud) {
-    hud = aHud;
-    Services.console.registerListener(TestObserver);
-    content.location = TEST_URI;
-  });
-}
-
-function performTest() {
-  Services.console.unregisterListener(TestObserver);
-  Services.prefs.setBoolPref(pref_ws, oldPref_ws);
-
-  waitForSuccess({
-    name: "websocket error messages displayed",
-    validatorFn: function()
-    {
-      let textContent = hud.outputNode.textContent;
-      return textContent.indexOf("ws://0.0.0.0:81") > -1 &&
-             textContent.indexOf("ws://0.0.0.0:82") > -1;
-    },
-    successFn: finishTest,
-    failureFn: finishTest,
-  });
-}
 
 function test() {
-  oldPref_ws = Services.prefs.getBoolPref(pref_ws);
-
-  Services.prefs.setBoolPref(pref_ws, true);
-
   addTab("data:text/html;charset=utf-8,Web Console test for bug 603750: Web Socket errors");
-  browser.addEventListener("load", tabLoad, true);
+  browser.addEventListener("load", function tabLoad() {
+    browser.removeEventListener("load", tabLoad, true);
+    openConsole(null, (hud) => {
+      content.location = TEST_URI;
+      info("waiting for websocket errors");
+      waitForMessages({
+        webconsole: hud,
+        messages: [
+          {
+            text: "ws://0.0.0.0:81",
+            source: { url: "test-bug-603750-websocket.js" },
+            category: CATEGORY_JS,
+            severity: SEVERITY_ERROR,
+          },
+          {
+            text: "ws://0.0.0.0:82",
+            source: { url: "test-bug-603750-websocket.js" },
+            category: CATEGORY_JS,
+            severity: SEVERITY_ERROR,
+          },
+        ]}).then(finishTest);
+    });
+  }, true);
 }
 

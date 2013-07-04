@@ -56,18 +56,38 @@ function dummyHandler(request, response) {
   return p;
 }
 
+function wrapWithExceptionHandler(f) {
+  function wrapper() {
+    try {
+      f.apply(null, arguments);
+    } catch (ex if typeof(ex) == 'object') {
+      dump("Caught exception: " + ex.message + "\n");
+      dump(ex.stack);
+      do_test_finished();
+    }
+  }
+  return wrapper;
+}
+
+function addWrappedObserver(f, topic) {
+  let wrappedObserver = wrapWithExceptionHandler(f);
+  Services.obs.addObserver(function g(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(g, aTopic);
+    wrappedObserver(aSubject, aTopic, aData);
+  }, topic, false);
+}
+
 function registerPingHandler(handler) {
-  httpserver.registerPathHandler(TelemetryPing.submissionPath(), handler);
+  httpserver.registerPrefixHandler("/submit/telemetry/",
+				   wrapWithExceptionHandler(handler));
 }
 
 function nonexistentServerObserver(aSubject, aTopic, aData) {
-  Services.obs.removeObserver(nonexistentServerObserver, aTopic);
-
   httpserver.start(4444);
 
   // Provide a dummy function so it returns 200 instead of 404 to telemetry.
   registerPingHandler(dummyHandler);
-  Services.obs.addObserver(telemetryObserver, "telemetry-test-xhr-complete", false);
+  addWrappedObserver(telemetryObserver, "telemetry-test-xhr-complete");
   telemetry_ping();
 }
 
@@ -98,7 +118,6 @@ function getSavedHistogramsFile(basename) {
 }
 
 function telemetryObserver(aSubject, aTopic, aData) {
-  Services.obs.removeObserver(telemetryObserver, aTopic);
   registerPingHandler(checkHistogramsSync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
   setupTestData();
@@ -179,8 +198,11 @@ function checkPayloadInfo(payload, reason) {
 
 function checkPayload(request, reason, successfulPings) {
   let payload = decodeRequestPayload(request);
+  // Take off ["","submit","telemetry"].
+  let pathComponents = request.path.split("/").slice(3);
 
   checkPayloadInfo(payload, reason);
+  do_check_eq(reason, pathComponents[1]);
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
@@ -275,7 +297,7 @@ function checkPersistedHistogramsSync(request, response) {
   // saved.
   checkPayload(request, "saved-session", 1);
 
-  Services.obs.addObserver(runAsyncTestObserver, "telemetry-test-xhr-complete", false);
+  addWrappedObserver(runAsyncTestObserver, "telemetry-test-xhr-complete");
 }
 
 function checkHistogramsSync(request, response) {
@@ -284,20 +306,16 @@ function checkHistogramsSync(request, response) {
 }
 
 function runAsyncTestObserver(aSubject, aTopic, aData) {
-  Services.obs.removeObserver(runAsyncTestObserver, aTopic);
   registerPingHandler(checkHistogramsAsync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
 
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(arguments.callee, aTopic);
-
-    Services.obs.addObserver(function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, aTopic);
+  addWrappedObserver(function(aSubject, aTopic, aData) {
+    addWrappedObserver(function(aSubject, aTopic, aData) {
       telemetry_ping();
-    }, "telemetry-test-load-complete", false);
+    }, "telemetry-test-load-complete");
 
     TelemetryPing.testLoadHistograms(histogramsFile, false);
-  }, "telemetry-test-save-complete", false);
+  }, "telemetry-test-save-complete");
   TelemetryPing.saveHistograms(histogramsFile, false);
 }
 
@@ -309,9 +327,9 @@ function checkPersistedHistogramsAsync(request, response) {
   // saved.
   checkPayload(request, "saved-session", 3);
 
-  gFinished = true;
-
   runOldPingFileTest();
+
+  gFinished = true;
 }
 
 function checkHistogramsAsync(request, response) {
@@ -337,55 +355,6 @@ function runOldPingFileTest() {
   histogramsFile.lastModifiedTime = mtime - 8 * 24 * 60 * 60 * 1000; // 8 days.
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
-}
-
-// copied from toolkit/mozapps/extensions/test/xpcshell/head_addons.js
-const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
-
-function createAppInfo(id, name, version, platformVersion) {
-  gAppInfo = {
-    // nsIXULAppInfo
-    vendor: "Mozilla",
-    name: name,
-    ID: id,
-    version: version,
-    appBuildID: "2007010101",
-    platformVersion: platformVersion,
-    platformBuildID: "2007010101",
-
-    // nsIXULRuntime
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    invalidateCachesOnRestart: function invalidateCachesOnRestart() {
-      // Do nothing
-    },
-
-    // nsICrashReporter
-    annotations: {},
-
-    annotateCrashReport: function(key, data) {
-      this.annotations[key] = data;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo,
-                                           Ci.nsIXULRuntime,
-                                           Ci.nsICrashReporter,
-                                           Ci.nsISupports])
-  };
-
-  var XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return gAppInfo.QueryInterface(iid);
-    }
-  };
-  var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                            XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
 
 function dummyTheme(id) {
@@ -501,12 +470,12 @@ function run_test() {
     });
   });
 
-  Telemetry.asyncFetchTelemetryData(function () {
-    actualTest();
-  });
+  Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(actualTest));
 }
 
 function actualTest() {
+  // ensure that test runs to completion
+  do_register_cleanup(function () do_check_true(gFinished));
   // try to make LightweightThemeManager do stuff
   let gInternalManager = Cc["@mozilla.org/addons/integration;1"]
                          .getService(Ci.nsIObserver)
@@ -520,11 +489,9 @@ function actualTest() {
 
   runInvalidJSONTest();
 
-  Services.obs.addObserver(nonexistentServerObserver, "telemetry-test-xhr-complete", false);
+  addWrappedObserver(nonexistentServerObserver, "telemetry-test-xhr-complete");
   telemetry_ping();
   // spin the event loop
   do_test_pending();
-  // ensure that test runs to completion
-  do_register_cleanup(function () do_check_true(gFinished));
   do_test_finished();
 }

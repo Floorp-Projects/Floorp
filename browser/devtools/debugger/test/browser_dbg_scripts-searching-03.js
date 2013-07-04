@@ -67,9 +67,9 @@ function testScriptSearching() {
 }
 
 function firstSearch() {
-  is(gSearchView._container._list.childNodes.length, 0,
+  is(gSearchView.widget._list.childNodes.length, 0,
     "The global search pane shouldn't have any child nodes yet.");
-  is(gSearchView._container._parent.hidden, true,
+  is(gSearchView.widget._parent.hidden, true,
     "The global search pane shouldn't be visible yet.");
   is(gSearchView._splitter.hidden, true,
     "The global search pane splitter shouldn't be visible yet.");
@@ -183,9 +183,9 @@ function firstSearch() {
 }
 
 function secondSearch() {
-  isnot(gSearchView._container._list.childNodes.length, 0,
+  isnot(gSearchView.widget._list.childNodes.length, 0,
     "The global search pane should have some child nodes from the previous search.");
-  is(gSearchView._container._parent.hidden, false,
+  is(gSearchView.widget._parent.hidden, false,
     "The global search pane should be visible from the previous search.");
   is(gSearchView._splitter.hidden, false,
     "The global search pane splitter should be visible from the previous search.");
@@ -289,9 +289,9 @@ function secondSearch() {
 function testClearView() {
   gSearchView.clearView();
 
-  is(gSearchView._container._list.childNodes.length, 0,
+  is(gSearchView.widget._list.childNodes.length, 0,
     "The global search pane shouldn't have any child nodes after clearView().");
-  is(gSearchView._container._parent.hidden, true,
+  is(gSearchView.widget._parent.hidden, true,
     "The global search pane shouldn't be visible after clearView().");
   is(gSearchView._splitter.hidden, true,
     "The global search pane splitter shouldn't be visible after clearView().");

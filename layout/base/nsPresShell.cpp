@@ -18,6 +18,7 @@
 
 /* a presentation of a document, part 2 */
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Likely.h"
@@ -4449,6 +4450,9 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
     mRenderFlags = ChangeFlag(mRenderFlags, true, STATE_IGNORING_VIEWPORT_SCROLLING);
   }
+  if (aFlags & RENDER_DRAWWINDOW_NOT_FLUSHING) {
+    mRenderFlags = ChangeFlag(mRenderFlags, true, STATE_DRAWWINDOW_NOT_FLUSHING);
+  }
   if (aFlags & RENDER_DOCUMENT_RELATIVE) {
     // XXX be smarter about this ... drawWindow might want a rect
     // that's "pretty close" to what our retained layer tree covers.
@@ -5489,8 +5493,6 @@ PresShell::Paint(nsView*        aViewToPaint,
     return;
   }
 
-  nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
-
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
 
@@ -5500,6 +5502,13 @@ PresShell::Paint(nsView*        aViewToPaint,
   LayerManager* layerManager =
     aViewToPaint->GetWidget()->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
+  bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
+
+  uint32_t didPaintFlags = aFlags;
+  if (!shouldInvalidate) {
+    didPaintFlags |= PAINT_COMPOSITE;
+  }
+  nsAutoNotifyDidPaint notifyDidPaint(this, didPaintFlags);
 
   // Whether or not we should set first paint when painting is
   // suppressed is debatable. For now we'll do it because
@@ -5519,9 +5528,6 @@ PresShell::Paint(nsView*        aViewToPaint,
     // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
     // that will cause us to forget to update the real layer manager!
     if (!(aFlags & PAINT_LAYERS)) {
-      if (layerManager->HasShadowManager() && Compositor::GetBackend() != LAYERS_BASIC) {
-        return;
-      }
       layerManager->BeginTransaction();
       if (layerManager->EndEmptyTransaction()) {
         return;
@@ -5556,10 +5562,12 @@ PresShell::Paint(nsView*        aViewToPaint,
                         presContext->DevPixelsToAppUnits(bounds.y),
                         presContext->DevPixelsToAppUnits(bounds.width),
                         presContext->DevPixelsToAppUnits(bounds.height));
-            aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
+            if (shouldInvalidate) {
+              aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
+            }
             presContext->NotifyInvalidation(bounds, 0);
           }
-        } else {
+        } else if (shouldInvalidate) {
           aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
         }
 
@@ -5582,16 +5590,8 @@ PresShell::Paint(nsView*        aViewToPaint,
   }
 
   if (frame) {
-    // Defer invalidates that are triggered during painting, and discard
-    // invalidates of areas that are already being repainted.
-    // The layer system can trigger invalidates during painting
-    // (see FrameLayerBuilder).
-    frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
-
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor, flags);
-
-    frame->EndDeferringInvalidatesForDisplayRoot();
     return;
   }
 
@@ -9448,7 +9448,7 @@ PresShell::GetRootPresShell()
 }
 
 void
-PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+PresShell::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                nsArenaMemoryStats *aArenaObjectsSize,
                                size_t *aPresShellSize,
                                size_t *aStyleSetsSize,
@@ -9467,7 +9467,7 @@ PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
 }
 
 size_t
-PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const
+PresShell::SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const
 {
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) {

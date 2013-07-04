@@ -6,6 +6,10 @@
 
 MODULE = 'gfx2d'
 
+EXPORTS.mozilla += [
+    'GenericRefCounted.h',
+]
+
 EXPORTS.mozilla.gfx += [
     '2D.h',
     'BaseMargin.h',
@@ -20,6 +24,7 @@ EXPORTS.mozilla.gfx += [
     'Point.h',
     'Rect.h',
     'Scale.h',
+    'ScaleFactor.h',
     'Tools.h',
     'Types.h',
     'UserData.h',
@@ -44,6 +49,10 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PathD2D.cpp',
         'ScaledFontDWrite.cpp',
     ]
+    if CONFIG['MOZ_WINSDK_MAXVER'] >= '0x06020000':
+        CPP_SOURCES += [
+            'RadialGradientEffectD2D1.cpp'
+        ]
     if CONFIG['MOZ_ENABLE_SKIA']:
         CPP_SOURCES += [
             'ScaledFontWin.cpp',
@@ -56,11 +65,6 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         'PathSkia.cpp',
         'convolver.cpp',
         'image_operations.cpp',
-    ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
-    CPP_SOURCES += [
-        'ScaledFontFreetype.cpp',
     ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
@@ -86,7 +90,13 @@ CPP_SOURCES += [
     'RecordedEvent.cpp',
     'Scale.cpp',
     'ScaledFontBase.cpp',
+    'ScaledFontCairo.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
 ]
 
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    CMMSRCS += [
+        'QuartzSupport.mm',
+    ]

@@ -1,9 +1,9 @@
 == 166591-dynamic-1.html 166591-dynamic-1-ref.html
-== 336736-1a.html 336736-1-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,30) == 336736-1a.html 336736-1-ref.html
 == 336736-1b.html 336736-1-ref.html
 == 406073-1.html 406073-1-ref.html
 == 407016-2.html 407016-2-ref.html
-== 413027-4.html 413027-4-ref.html
-== 425247-1.html 425247-1-ref.html
-== 425247-2.html 425247-2-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,200) == 413027-4.html 413027-4-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,30) == 425247-1.html 425247-1-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,8,30) == 425247-2.html 425247-2-ref.html
 random == 429849-1.html 429849-1-ref.html # bug 432288

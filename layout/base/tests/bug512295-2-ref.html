@@ -1,4 +1,4 @@
-<!DOCTYPE HTML><html><head>
+<!DOCTYPE HTML><html class="reftest-wait"><head>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
@@ -12,12 +12,16 @@ x
   var p = document.getElementById('p');
   var div = p.parentNode;
   div.focus();
-  var sel = window.getSelection();
-  sel.removeAllRanges();
-  var range = document.createRange();
-  range.setStart(p.firstChild, 0);
-  range.setEnd(p.firstChild, 0);
-  sel.addRange(range);
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
+  onSpellCheck(div, function () {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    var range = document.createRange();
+    range.setStart(p.firstChild, 0);
+    range.setEnd(p.firstChild, 0);
+    sel.addRange(range);
+    document.documentElement.classList.remove("reftest-wait");
+  });
 </script>
 
 </body>

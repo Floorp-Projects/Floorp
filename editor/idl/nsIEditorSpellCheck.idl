@@ -7,8 +7,9 @@
 
 interface nsIEditor;
 interface nsITextServicesFilter;
+interface nsIEditorSpellCheckCallback;
 
-[scriptable, uuid(334946c3-0e93-4aac-b662-e1b56f95d68b)]
+[scriptable, uuid(dd32ef3b-a7d8-43d1-9617-5f2dddbe29eb)]
 interface nsIEditorSpellCheck : nsISupports
 {
 
@@ -30,9 +31,11 @@ interface nsIEditorSpellCheck : nsISupports
    * set means that we only want to check the current selection in the editor,
    * (this controls the behavior of GetNextMisspelledWord). For spellchecking
    * clients with no modal UI (such as inline spellcheckers), this flag doesn't
-   * matter
+   * matter.  Initialization is asynchronous and is not complete until the given
+   * callback is called.
    */
-  void          InitSpellChecker(in nsIEditor editor, in boolean enableSelectionChecking);
+  void          InitSpellChecker(in nsIEditor editor, in boolean enableSelectionChecking,
+                                 [optional] in nsIEditorSpellCheckCallback callback);
 
   /**
    * When interactively spell checking the document, this will return the
@@ -156,8 +159,15 @@ interface nsIEditorSpellCheck : nsISupports
 
   /**
    * Update the dictionary in use to be sure it corresponds to what the editor
-   * needs.
+   * needs.  The update is asynchronous and is not complete until the given
+   * callback is called.
    */
-  void          UpdateCurrentDictionary();
+  void          UpdateCurrentDictionary([optional] in nsIEditorSpellCheckCallback callback);
 
+};
+
+[scriptable, function, uuid(5f0a4bab-8538-4074-89d3-2f0e866a1c0b)]
+interface nsIEditorSpellCheckCallback : nsISupports
+{
+  void editorSpellCheckDone();
 };

@@ -19,7 +19,7 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 #endif
 
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
@@ -1163,7 +1163,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
 
       // 1. Create the schema.
       yield self._connection.executeTransaction(function ensureSchema(conn) {
-        let schema = conn.schemaVersion;
+        let schema = yield conn.getSchemaVersion();
 
         if (schema == 0) {
           self._log.info("Creating database schema.");
@@ -1172,7 +1172,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
             yield self._connection.execute(SQL[k]);
           }
 
-          self._connection.schemaVersion = 1;
+          yield self._connection.setSchemaVersion(1);
           doCheckpoint = true;
         } else if (schema != 1) {
           throw new Error("Unknown database schema: " + schema);

@@ -27,7 +27,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINK_IID)
 
   /**
-   * GetLinkState/SetLinkState/GetHrefURI were moved to nsIContent.
+   * SetLinkState/GetHrefURI were moved to nsIContent.
    * @see nsIContent
    */
 

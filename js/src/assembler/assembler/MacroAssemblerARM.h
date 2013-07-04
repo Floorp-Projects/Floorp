@@ -29,15 +29,15 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MacroAssemblerARM_h
-#define MacroAssemblerARM_h
+#ifndef assembler_assembler_MacroAssemblerARM_h
+#define assembler_assembler_MacroAssemblerARM_h
 
 #include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
-#include "ARMAssembler.h"
-#include "AbstractMacroAssembler.h"
+#include "assembler/assembler/ARMAssembler.h"
+#include "assembler/assembler/AbstractMacroAssembler.h"
 
 namespace JSC {
 
@@ -1029,7 +1029,7 @@ public:
         m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 0);
     }
 
-    void load32(void* address, RegisterID dest)
+    void load32(const void* address, RegisterID dest)
     {
         m_assembler.ldr_un_imm(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
         m_assembler.dtr_u(true, dest, ARMRegisters::S0, 0);
@@ -1542,4 +1542,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER) && CPU(ARM_TRADITIONAL)
 
-#endif // MacroAssemblerARM_h
+#endif /* assembler_assembler_MacroAssemblerARM_h */

@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsvector_h_
-#define jsvector_h_
+#ifndef js_Vector_h
+#define js_Vector_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/TypeTraits.h"
 
-#include "TemplateLib.h"
-#include "Utility.h"
+#include "js/TemplateLib.h"
+#include "js/Utility.h"
 
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
@@ -504,13 +505,13 @@ class Vector : private AllocPolicy
     /*
      * Measure the size of the Vector's heap-allocated storage.
      */
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const;
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     /*
      * Like sizeOfExcludingThis, but also measures the size of the Vector
      * object (which must be heap-allocated) itself.
      */
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const;
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     void swap(Vector &other);
 };
@@ -1059,14 +1060,14 @@ Vector<T,N,AP>::replaceRawBuffer(T *p, size_t aLength)
 
 template <class T, size_t N, class AP>
 inline size_t
-Vector<T,N,AP>::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
+Vector<T,N,AP>::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
 }
 
 template <class T, size_t N, class AP>
 inline size_t
-Vector<T,N,AP>::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
+Vector<T,N,AP>::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
 }
@@ -1104,4 +1105,4 @@ Vector<T,N,AP>::swap(Vector &other)
 #pragma warning(pop)
 #endif
 
-#endif /* jsvector_h_ */
+#endif /* js_Vector_h */

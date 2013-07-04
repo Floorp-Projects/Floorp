@@ -47,7 +47,7 @@ SkPost::~SkPost() {
         delete *part;
 }
 
-bool SkPost::add(SkAnimateMaker& , SkDisplayable* child) {
+bool SkPost::addChild(SkAnimateMaker& , SkDisplayable* child) {
     SkASSERT(child && child->isDataInput());
     SkDataInput* part = (SkDataInput*) child;
     *fParts.append() = part;
@@ -235,7 +235,7 @@ void SkPost::findSinkID() {
     const char* ch = sink.c_str();
     do {
         const char* end = strchr(ch, '.');
-        size_t len = end ? end - ch : strlen(ch);
+        size_t len = end ? (size_t) (end - ch) : strlen(ch);
         SkDisplayable* displayable = NULL;
         if (SK_LITERAL_STR_EQUAL("parent", ch, len)) {
             if (fTargetMaker->fParentMaker)
@@ -296,4 +296,3 @@ bool SkPost::setProperty(int index, SkScriptValue& value) {
     }
     return true;
 }
-

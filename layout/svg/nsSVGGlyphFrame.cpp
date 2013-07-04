@@ -970,7 +970,7 @@ nsSVGGlyphFrame::SetupCairoStroke(gfxContext *aContext,
   }
 
   const nsStyleSVG *style = StyleSVG();
-  nsSVGUtils::SetupCairoStrokeHitGeometry(this, aContext, aOuterObjectPaint);
+  nsSVGUtils::SetupCairoStrokeGeometry(this, aContext, aOuterObjectPaint);
   float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
                                          style->mStrokeOpacity,
                                          aOuterObjectPaint);
@@ -1626,9 +1626,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
   // fonts in SVG to respond to the browser's "TextZoom"
   // (Ctrl++,Ctrl+-)
   nsPresContext *presContext = PresContext();
-  float textZoom = presContext->TextZoom();
-  double size =
-    presContext->AppUnitsToFloatCSSPixels(fontData->mSize) / textZoom;
+  double size = presContext->AppUnitsToFloatCSSPixels(fontData->mSize);
 
   double textRunSize;
   if (mTextRun) {

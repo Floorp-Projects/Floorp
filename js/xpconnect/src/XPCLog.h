@@ -40,16 +40,16 @@
 #define XPC_LOG_CLEAR_INDENT()  XPC_Log_Clear_Indent()
 #define XPC_LOG_FINISH()        XPC_Log_Finish()
 
-JS_BEGIN_EXTERN_C
+extern "C" {
 
 void   XPC_Log_print(const char *fmt, ...);
-bool XPC_Log_Check(int i);
+bool   XPC_Log_Check(int i);
 void   XPC_Log_Indent();
 void   XPC_Log_Outdent();
 void   XPC_Log_Clear_Indent();
 void   XPC_Log_Finish();
 
-JS_END_EXTERN_C
+} // extern "C"
 
 #else
 
@@ -63,59 +63,5 @@ JS_END_EXTERN_C
 #define XPC_LOG_CLEAR_INDENT() ((void)0)
 #define XPC_LOG_FINISH()       ((void)0)
 #endif
-
-
-#ifdef DEBUG_peterv
-#define DEBUG_slimwrappers 1
-#endif
-
-#ifdef DEBUG_slimwrappers
-extern void LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj,
-                                    const char *propname,
-                                    const char *functionName);
-extern void LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj,
-                                     const char *reason);
-
-#define SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, prop)                           \
-    PR_BEGIN_MACRO                                                            \
-        LogSlimWrapperWillMorph(cx, obj, (const char*)prop, __FUNCTION__);    \
-    PR_END_MACRO
-#define SLIM_LOG_WILL_MORPH_FOR_ID(cx, obj, id)                               \
-    PR_BEGIN_MACRO                                                            \
-        JSString* strId = ::JS_ValueToString(cx, id);                         \
-        if (strId) {                                                          \
-          NS_ConvertUTF16toUTF8 name((PRUnichar*)::JS_GetStringChars(strId),  \
-                                     ::JS_GetStringLength(strId));            \
-          LOG_WILL_MORPH_FOR_PROP(cx, obj, name.get());                       \
-        }                                                                     \
-        else                                                                  \
-        {                                                                     \
-          LOG_WILL_MORPH_FOR_PROP(cx, obj, nullptr);                           \
-        }                                                                     \
-    PR_END_MACRO
-#define SLIM_LOG_NOT_CREATED(cx, obj, reason)                                 \
-    PR_BEGIN_MACRO                                                            \
-        LogSlimWrapperNotCreated(cx, obj, reason);                            \
-    PR_END_MACRO
-#define SLIM_LOG(_args)                                                       \
-    PR_BEGIN_MACRO                                                            \
-        printf _args;                                                         \
-    PR_END_MACRO
-#else
-#define SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, prop)                           \
-    PR_BEGIN_MACRO                                                            \
-    PR_END_MACRO
-#define SLIM_LOG_WILL_MORPH_FOR_ID(cx, obj)                                   \
-    PR_BEGIN_MACRO                                                            \
-    PR_END_MACRO
-#define SLIM_LOG_NOT_CREATED(cx, obj, reason)                                 \
-    PR_BEGIN_MACRO                                                            \
-    PR_END_MACRO
-#define SLIM_LOG(_args)                                                       \
-    PR_BEGIN_MACRO                                                            \
-    PR_END_MACRO
-#endif
-#define SLIM_LOG_WILL_MORPH(cx, obj)                                         \
-    SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, nullptr)
 
 #endif /* xpclog_h___ */

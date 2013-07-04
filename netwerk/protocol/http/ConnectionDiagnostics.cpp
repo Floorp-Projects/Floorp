@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpConnection.h"
 #include "SpdySession2.h"
@@ -124,8 +127,8 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
 {
   log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
 
-  log.AppendPrintf("    npncomplete = %d  setupNPNCalled = %d\n",
-                   mNPNComplete, mSetupNPNCalled);
+  log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n",
+                   mNPNComplete, mSetupSSLCalled);
 
   log.AppendPrintf("    spdyVersion = %d  reportedSpdy = %d everspdy = %d\n",
                    mUsingSpdyVersion, mReportedSpdy, mEverUsedSpdy);

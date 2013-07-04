@@ -14,7 +14,6 @@
     'include_internal_video_render': 0,
     'clang_use_chrome_plugins': 0,
     'enable_protobuf': 0,
-    'include_pulse_audio': 0,
     'include_tests': 0,
     'enable_android_opensl': 1,
 # use_system_lib* still seems to be in use in trunk/build

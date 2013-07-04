@@ -265,12 +265,19 @@ public:
     mImpl.construct(t1, t2);
   }
 
-  const InternalType& Value() const
+  const T& Value() const
   {
     return mImpl.ref();
   }
 
+  // Return InternalType here so we can work with it usefully.
   InternalType& Value()
+  {
+    return mImpl.ref();
+  }
+
+  // And an explicit way to get the InternalType even if we're const.
+  const InternalType& InternalValue() const
   {
     return mImpl.ref();
   }
@@ -284,6 +291,7 @@ private:
   Optional_base(const Optional_base& other) MOZ_DELETE;
   const Optional_base &operator=(const Optional_base &other) MOZ_DELETE;
 
+protected:
   Maybe<InternalType> mImpl;
 };
 
@@ -309,9 +317,29 @@ public:
     Optional_base<JS::Handle<T>, JS::Rooted<T> >()
   {}
 
+  Optional(JSContext* cx) :
+    Optional_base<JS::Handle<T>, JS::Rooted<T> >()
+  {
+    this->Construct(cx);
+  }
+
   Optional(JSContext* cx, const T& aValue) :
     Optional_base<JS::Handle<T>, JS::Rooted<T> >(cx, aValue)
   {}
+
+  // Override the const Value() to return the right thing so we're not
+  // returning references to temporaries.
+  JS::Handle<T> Value() const
+  {
+    return this->mImpl.ref();
+  }
+
+  // And we have to override the non-const one too, since we're
+  // shadowing the one on the superclass.
+  JS::Rooted<T>& Value()
+  {
+    return this->mImpl.ref();
+  }
 };
 
 // A specialization of Optional for JSObject* to make sure that when someone
@@ -373,6 +401,51 @@ public:
   }
 };
 
+// A specialization of Optional for NonNull that lets us get a T& from Value()
+template<typename U> class NonNull;
+template<typename T>
+class Optional<NonNull<T> > : public Optional_base<T, NonNull<T> >
+{
+public:
+  // We want our Value to actually return a non-const reference, even
+  // if we're const.  At least for things that are normally pointer
+  // types...
+  T& Value() const
+  {
+    return *this->mImpl.ref().get();
+  }
+
+  // And we have to override the non-const one too, since we're
+  // shadowing the one on the superclass.
+  NonNull<T>& Value()
+  {
+    return this->mImpl.ref();
+  }
+};
+
+// A specialization of Optional for OwningNonNull that lets us get a
+// T& from Value()
+template<typename U> class OwningNonNull;
+template<typename T>
+class Optional<OwningNonNull<T> > : public Optional_base<T, OwningNonNull<T> >
+{
+public:
+  // We want our Value to actually return a non-const reference, even
+  // if we're const.  At least for things that are normally pointer
+  // types...
+  T& Value() const
+  {
+    return *this->mImpl.ref().get();
+  }
+
+  // And we have to override the non-const one too, since we're
+  // shadowing the one on the superclass.
+  OwningNonNull<T>& Value()
+  {
+    return this->mImpl.ref();
+  }
+};
+
 // Specialization for strings.
 // XXXbz we can't pull in FakeDependentString here, because it depends on
 // internal strings.  So we just have to forward-declare it and reimplement its
@@ -420,6 +493,72 @@ private:
 
   bool mPassed;
   const nsAString* mStr;
+};
+
+template<class T>
+class NonNull
+{
+public:
+  NonNull()
+#ifdef DEBUG
+    : inited(false)
+#endif
+  {}
+
+  operator T&() {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
+    return *ptr;
+  }
+
+  operator const T&() const {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
+    return *ptr;
+  }
+
+  void operator=(T* t) {
+    ptr = t;
+    MOZ_ASSERT(ptr);
+#ifdef DEBUG
+    inited = true;
+#endif
+  }
+
+  template<typename U>
+  void operator=(U* t) {
+    ptr = t->ToAStringPtr();
+    MOZ_ASSERT(ptr);
+#ifdef DEBUG
+    inited = true;
+#endif
+  }
+
+  T** Slot() {
+#ifdef DEBUG
+    inited = true;
+#endif
+    return &ptr;
+  }
+
+  T* Ptr() {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
+    return ptr;
+  }
+
+  // Make us work with smart-ptr helpers that expect a get()
+  T* get() const {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr);
+    return ptr;
+  }
+
+protected:
+  T* ptr;
+#ifdef DEBUG
+  bool inited;
+#endif
 };
 
 // Class for representing sequences in arguments.  We use a non-auto array
@@ -562,7 +701,7 @@ public:
   // callers should do it as needed.
   bool SetTimeStamp(JSContext* cx, JSObject* obj);
 
-  bool ToDateObject(JSContext* cx, JS::Value* vp) const;
+  bool ToDateObject(JSContext* cx, JS::MutableHandle<JS::Value> rval) const;
 
 private:
   double mMsecSinceEpoch;

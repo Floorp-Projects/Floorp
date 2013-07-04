@@ -24,9 +24,9 @@ function testSimpleCall() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       let testScope = gDebugger.DebuggerView.Variables.addScope("test");
-      let testVar = testScope.addVar("something");
+      let testVar = testScope.addItem("something");
 
-      let properties = testVar.addProperties({
+      let properties = testVar.addItems({
         "child": {
           "value": {
             "type": "object",
@@ -43,7 +43,7 @@ function testSimpleCall() {
         "The added detail property should be accessible from the variable.");
 
 
-      let properties2 = testVar.get("child").addProperties({
+      let properties2 = testVar.get("child").addItems({
         "grandchild": {
           "value": {
             "type": "object",

@@ -1,29 +1,29 @@
 # JPEG tests 
 
 # Images of various sizes.
-random-if(bug685516) == jpg-size-1x1.jpg   jpg-size-1x1.png
-random-if(bug685516) == jpg-size-2x2.jpg   jpg-size-2x2.png
-random-if(bug685516) == jpg-size-3x3.jpg   jpg-size-3x3.png
-random-if(bug685516) == jpg-size-4x4.jpg   jpg-size-4x4.png
-random-if(bug685516) == jpg-size-5x5.jpg   jpg-size-5x5.png
-random-if(bug685516) == jpg-size-6x6.jpg   jpg-size-6x6.png
-random-if(bug685516) == jpg-size-7x7.jpg   jpg-size-7x7.png
-random-if(bug685516) == jpg-size-8x8.jpg   jpg-size-8x8.png
-random-if(bug685516) == jpg-size-9x9.jpg   jpg-size-9x9.png
-random-if(bug685516) == jpg-size-15x15.jpg jpg-size-15x15.png
-random-if(bug685516) == jpg-size-16x16.jpg jpg-size-16x16.png
-random-if(bug685516) == jpg-size-17x17.jpg jpg-size-17x17.png
-random-if(bug685516) == jpg-size-31x31.jpg jpg-size-31x31.png
-random-if(bug685516) == jpg-size-32x32.jpg jpg-size-32x32.png
-random-if(bug685516) == jpg-size-33x33.jpg jpg-size-33x33.png
+== jpg-size-1x1.jpg   jpg-size-1x1.png
+== jpg-size-2x2.jpg   jpg-size-2x2.png
+== jpg-size-3x3.jpg   jpg-size-3x3.png
+== jpg-size-4x4.jpg   jpg-size-4x4.png
+== jpg-size-5x5.jpg   jpg-size-5x5.png
+== jpg-size-6x6.jpg   jpg-size-6x6.png
+== jpg-size-7x7.jpg   jpg-size-7x7.png
+== jpg-size-8x8.jpg   jpg-size-8x8.png
+== jpg-size-9x9.jpg   jpg-size-9x9.png
+== jpg-size-15x15.jpg jpg-size-15x15.png
+== jpg-size-16x16.jpg jpg-size-16x16.png
+== jpg-size-17x17.jpg jpg-size-17x17.png
+== jpg-size-31x31.jpg jpg-size-31x31.png
+== jpg-size-32x32.jpg jpg-size-32x32.png
+== jpg-size-33x33.jpg jpg-size-33x33.png
 # Progressive encoding
-random-if(bug685516) == jpg-progressive.jpg jpg-progressive.png
+== jpg-progressive.jpg jpg-progressive.png
 # Grayscale colorspace
-random-if(bug685516) == jpg-gray.jpg jpg-gray.png
+== jpg-gray.jpg jpg-gray.png
 # CMYK colorspace
-random-if(bug685516) == jpg-cmyk-1.jpg jpg-cmyk-1.png
-random-if(bug685516) == jpg-cmyk-2.jpg jpg-cmyk-2.png
-random-if(bug685516) == jpg-srgb-icc.jpg jpg-srgb-icc.png
+== jpg-cmyk-1.jpg jpg-cmyk-1.png
+== jpg-cmyk-2.jpg jpg-cmyk-2.png
+== jpg-srgb-icc.jpg jpg-srgb-icc.png
 
 # webcam-simulacrum.mjpg is a hand-edited file containing red.jpg and blue.jpg,
 # concatenated together with the relevant headers for
@@ -47,4 +47,4 @@ random-if(bug685516) == jpg-srgb-icc.jpg jpg-srgb-icc.png
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-random-if(bug685516) HTTP == webcam-simulacrum.mjpg blue.jpg
+HTTP == webcam-simulacrum.mjpg blue.jpg

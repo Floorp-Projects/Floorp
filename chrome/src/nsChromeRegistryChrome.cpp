@@ -13,7 +13,7 @@
 #include <windows.h>
 #elif defined(XP_MACOSX)
 #include <CoreServices/CoreServices.h>
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
 #include <gtk/gtk.h>
 #endif
 

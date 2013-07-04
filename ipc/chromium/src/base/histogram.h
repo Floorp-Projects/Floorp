@@ -41,11 +41,12 @@
 #define BASE_METRICS_HISTOGRAM_H_
 #pragma once
 
+#include "mozilla/MemoryReporting.h"
+
 #include <map>
 #include <string>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest_prod.h"
 #include "base/time.h"
 #include "base/lock.h"
 
@@ -317,10 +318,7 @@ class Histogram {
     const char* description;  // Null means end of a list of pairs.
   };
 
-  // To avoid depending on XPCOM headers, we define our own MallocSizeOf type.
-  typedef size_t (*MallocSizeOf)(const void*);
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   //----------------------------------------------------------------------------
   // Statistic values, developed over the life of the histogram.
@@ -358,7 +356,7 @@ class Histogram {
     bool Serialize(Pickle* pickle) const;
     bool Deserialize(void** iter, const Pickle& pickle);
 
-    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf);
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
    protected:
     // Actual histogram data is stored in buckets, showing the count of values
@@ -378,9 +376,6 @@ class Histogram {
 
    private:
     void Accumulate(Sample value, Count count, size_t index);
-
-    // Allow tests to corrupt our innards for testing purposes.
-    FRIEND_TEST(HistogramTest, CorruptSampleCounts);
 
     // To help identify memory corruption, we reduntantly save the number of
     // samples we've accumulated into all of our buckets.  We can compare this
@@ -533,12 +528,6 @@ class Histogram {
   SampleSet sample_;
 
  private:
-  // Allow tests to corrupt our innards for testing purposes.
-  FRIEND_TEST(HistogramTest, CorruptBucketBounds);
-  FRIEND_TEST(HistogramTest, CorruptSampleCounts);
-  FRIEND_TEST(HistogramTest, Crc32SampleHash);
-  FRIEND_TEST(HistogramTest, Crc32TableTest);
-
   friend class StatisticsRecorder;  // To allow it to delete duplicates.
 
   // Post constructor initialization.

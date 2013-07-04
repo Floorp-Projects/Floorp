@@ -18,13 +18,13 @@ function Prompt(aOptions) {
   this.window = "window" in aOptions ? aOptions.window : null;
   this.msg = { type: "Prompt:Show", async: true };
 
-  if ("title" in aOptions)
+  if ("title" in aOptions && aOptions.title != null)
     this.msg.title = aOptions.title;
 
-  if ("message" in aOptions)
+  if ("message" in aOptions && aOptions.message != null)
     this.msg.text = aOptions.message;
 
-  if ("buttons" in aOptions)
+  if ("buttons" in aOptions && aOptions.buttons != null)
     this.msg.buttons = aOptions.buttons;
 
   let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); 
@@ -48,6 +48,8 @@ Prompt.prototype = {
     obj.id = aOptions.id || (aOptions.type + this[aOptions.type + "_count"]);
     this[aOptions.type + "_count"]++;
 
+    if (!this.msg.inputs)
+      this.msg.inputs = [];
     this.msg.inputs.push(obj);
     return this;
   },
@@ -78,6 +80,22 @@ Prompt.prototype = {
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
       id : aOptions.id
+    });
+  },
+
+  addDatePicker: function(aOptions) {
+    return this._addInput({
+      type: aOptions.type || "date",
+      value: aOptions.value,
+      id: aOptions.id
+    });
+  },
+
+  addLabel: function(aOptions) {
+    return this._addInput({
+      type: "label",
+      label: aOptions.label,
+      id: aOptions.id
     });
   },
 
@@ -112,16 +130,12 @@ Prompt.prototype = {
       this.callback(data);
   },
 
-  _setListItems: function(aItems, aInGroup) {
+  _setListItems: function(aItems) {
     let hasSelected = false;
-    if (!aInGroup)
-      this.msg.listitems = [];
+    this.msg.listitems = [];
 
     aItems.forEach(function(item) {
       let obj = { id: item.id };
-
-      if (aInGroup !== undefined)
-        obj.inGroup = aInGroup;
 
       obj.label = item.label;
 
@@ -136,18 +150,16 @@ Prompt.prototype = {
         this.msg.selected[this.msg.listitems.length] = item.selected;
       }
 
-      if (item.children) {
+      if (item.header)
         obj.isGroup = true;
-      } else if (item.submenu) {
+
+      if (item.menu)
         obj.isParent = true;
-      }
 
-      // Order matters in the java message, so make sure we add the obj
-      // to the list before we add its children
+      if (item.child)
+        obj.inGroup = true;
+
       this.msg.listitems.push(obj);
-
-      if (item.children)
-        this._setListItems(item.children, true);
 
     }, this);
     return this;

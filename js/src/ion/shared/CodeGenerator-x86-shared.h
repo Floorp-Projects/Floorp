@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_codegen_x86_shared_h__
-#define jsion_codegen_x86_shared_h__
+#ifndef ion_shared_CodeGenerator_x86_shared_h
+#define ion_shared_CodeGenerator_x86_shared_h
 
 #include "ion/shared/CodeGenerator-shared.h"
 
@@ -30,8 +30,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
   protected:
     // Label for the common return path.
-    HeapLabel *returnLabel_;
-    HeapLabel *deoptLabel_;
+    NonAssertingLabel returnLabel_;
+    NonAssertingLabel deoptLabel_;
 
     inline Operand ToOperand(const LAllocation &a) {
         if (a.isGeneralReg())
@@ -91,7 +91,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitBitOpI(LBitOpI *ins);
     virtual bool visitShiftI(LShiftI *ins);
     virtual bool visitUrshD(LUrshD *ins);
-    virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
     virtual bool visitCompare(LCompare *comp);
@@ -141,5 +140,4 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorX86Shared>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_codegen_x86_shared_h__
-
+#endif /* ion_shared_CodeGenerator_x86_shared_h */

@@ -17,6 +17,8 @@
 #include "MPAPI.h"
 
 #define MAX_DROPPED_FRAMES 25
+// Try not to spend more than this much time in a single call to DecodeVideoFrame.
+#define MAX_VIDEO_DECODE_SECONDS 3.0
 
 using namespace android;
 
@@ -35,11 +37,36 @@ MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder) :
 MediaOmxReader::~MediaOmxReader()
 {
   ResetDecode();
+  mOmxDecoder.clear();
 }
 
 nsresult MediaOmxReader::Init(MediaDecoderReader* aCloneDonor)
 {
   return NS_OK;
+}
+
+bool MediaOmxReader::IsWaitingMediaResources()
+{
+  if (!mOmxDecoder.get()) {
+    return false;
+  }
+  return mOmxDecoder->IsWaitingMediaResources();
+}
+
+bool MediaOmxReader::IsDormantNeeded()
+{
+  if (!mOmxDecoder.get()) {
+    return false;
+  }
+  return mOmxDecoder->IsDormantNeeded();
+}
+
+void MediaOmxReader::ReleaseMediaResources()
+{
+  ResetDecode();
+  if (mOmxDecoder.get()) {
+    mOmxDecoder->ReleaseMediaResources();
+  }
 }
 
 nsresult MediaOmxReader::ReadMetadata(VideoInfo* aInfo,
@@ -54,6 +81,14 @@ nsresult MediaOmxReader::ReadMetadata(VideoInfo* aInfo,
     if (!mOmxDecoder->Init()) {
       return NS_ERROR_FAILURE;
     }
+  }
+
+  if (!mOmxDecoder->TryLoad()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (IsWaitingMediaResources()) {
+    return NS_OK;
   }
 
   // Set the total duration (the max of the audio and video track).
@@ -112,8 +147,6 @@ nsresult MediaOmxReader::ResetDecode()
   if (container) {
     container->ClearCurrentFrame();
   }
-
-  mOmxDecoder.clear();
   return NS_OK;
 }
 
@@ -130,8 +163,10 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
     aTimeThreshold = mVideoSeekTimeUs;
   }
 
-  // Read next frame
-  while (true) {
+  TimeStamp start = TimeStamp::Now();
+
+  // Read next frame. Don't let this loop run for too long.
+  while ((TimeStamp::Now() - start) < TimeDuration::FromSeconds(MAX_VIDEO_DECODE_SECONDS)) {
     MPAPI::VideoFrame frame;
     frame.mGraphicBuffer = nullptr;
     frame.mShouldSkip = false;
@@ -139,17 +174,23 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
       mVideoQueue.Finish();
       return false;
     }
+    doSeek = false;
+
+    // Ignore empty buffer which stagefright media read will sporadically return
+    if (frame.mSize == 0 && !frame.mGraphicBuffer) {
+      continue;
+    }
 
     parsed++;
     if (frame.mShouldSkip && mSkipCount < MAX_DROPPED_FRAMES) {
       mSkipCount++;
-      return true;
+      continue;
     }
 
     mSkipCount = 0;
 
     mVideoSeekTimeUs = -1;
-    doSeek = aKeyframeSkip = false;
+    aKeyframeSkip = false;
 
     nsIntRect picture = mPicture;
     if (frame.Y.mWidth != mInitialFrame.width ||

@@ -7,8 +7,11 @@
 #define WEBGLUNIFORMLOCATION_H_
 
 #include "WebGLObjectModel.h"
+#include "WebGLUniformInfo.h"
 
 namespace mozilla {
+
+class WebGLProgram;
 
 class WebGLUniformLocation MOZ_FINAL
     : public nsISupports

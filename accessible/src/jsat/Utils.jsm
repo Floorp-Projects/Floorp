@@ -8,6 +8,12 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+const EVENT_STATE_CHANGE = Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE;
+
+const ROLE_CELL = Ci.nsIAccessibleRole.ROLE_CELL;
+const ROLE_COLUMNHEADER = Ci.nsIAccessibleRole.ROLE_COLUMNHEADER;
+const ROLE_ROWHEADER = Ci.nsIAccessibleRole.ROLE_ROWHEADER;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
   'resource://gre/modules/Services.jsm');
@@ -69,6 +75,12 @@ this.Utils = {
     if (!this._OS)
       this._OS = Services.appinfo.OS;
     return this._OS;
+  },
+
+  get widgetToolkit() {
+    if (!this._widgetToolkit)
+      this._widgetToolkit = Services.appinfo.widgetToolkit;
+    return this._widgetToolkit;
   },
 
   get ScriptName() {
@@ -185,15 +197,18 @@ this.Utils = {
   },
 
   getAttributes: function getAttributes(aAccessible) {
-    let attributesEnum = aAccessible.attributes.enumerate();
     let attributes = {};
 
-    // Populate |attributes| object with |aAccessible|'s attribute key-value
-    // pairs.
-    while (attributesEnum.hasMoreElements()) {
-      let attribute = attributesEnum.getNext().QueryInterface(
-        Ci.nsIPropertyElement);
-      attributes[attribute.key] = attribute.value;
+    if (aAccessible && aAccessible.attributes) {
+      let attributesEnum = aAccessible.attributes.enumerate();
+
+      // Populate |attributes| object with |aAccessible|'s attribute key-value
+      // pairs.
+      while (attributesEnum.hasMoreElements()) {
+        let attribute = attributesEnum.getNext().QueryInterface(
+          Ci.nsIPropertyElement);
+        attributes[attribute.key] = attribute.value;
+      }
     }
 
     return attributes;
@@ -262,12 +277,27 @@ this.Logger = {
       this, [this.ERROR].concat(Array.prototype.slice.call(arguments)));
   },
 
-  logException: function logException(aException) {
+  logException: function logException(
+    aException, aErrorMessage = 'An exception has occured') {
     try {
-      let args = [aException.message];
-      args.push.apply(args, aException.stack ? ['\n', aException.stack] :
-        ['(' + aException.fileName + ':' + aException.lineNumber + ')']);
-      this.error.apply(this, args);
+      let stackMessage = '';
+      if (aException.stack) {
+        stackMessage = '  ' + aException.stack.replace(/\n/g, '\n  ');
+      } else if (aException.location) {
+        let frame = aException.location;
+        let stackLines = [];
+        while (frame && frame.lineNumber) {
+          stackLines.push(
+            '  ' + frame.name + '@' + frame.filename + ':' + frame.lineNumber);
+          frame = frame.caller;
+        }
+        stackMessage = stackLines.join('\n');
+      } else {
+        stackMessage = '(' + aException.fileName + ':' + aException.lineNumber + ')';
+      }
+      this.error(aErrorMessage + ':\n ' +
+                 aException.message + '\n' +
+                 stackMessage);
     } catch (x) {
       this.error(x);
     }
@@ -286,7 +316,7 @@ this.Logger = {
 
   eventToString: function eventToString(aEvent) {
     let str = Utils.AccRetrieval.getStringEventType(aEvent.eventType);
-    if (aEvent.eventType == Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE) {
+    if (aEvent.eventType == EVENT_STATE_CHANGE) {
       let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
       let stateStrings = event.isExtraState ?
         Utils.AccRetrieval.getStringStates(0, event.state) :
@@ -344,6 +374,45 @@ PivotContext.prototype = {
     return this._oldAccessible;
   },
 
+  /**
+   * Get a list of |aAccessible|'s ancestry up to the root.
+   * @param  {nsIAccessible} aAccessible.
+   * @return {Array} Ancestry list.
+   */
+  _getAncestry: function _getAncestry(aAccessible) {
+    let ancestry = [];
+    let parent = aAccessible;
+    while (parent && (parent = parent.parent)) {
+      ancestry.push(parent);
+    }
+    return ancestry.reverse();
+  },
+
+  /**
+   * A list of the old accessible's ancestry.
+   */
+  get oldAncestry() {
+    if (!this._oldAncestry) {
+      if (!this._oldAccessible) {
+        this._oldAncestry = [];
+      } else {
+        this._oldAncestry = this._getAncestry(this._oldAccessible);
+        this._oldAncestry.push(this._oldAccessible);
+      }
+    }
+    return this._oldAncestry;
+  },
+
+  /**
+   * A list of the current accessible's ancestry.
+   */
+  get currentAncestry() {
+    if (!this._currentAncestry) {
+      this._currentAncestry = this._getAncestry(this._accessible);
+    }
+    return this._currentAncestry;
+  },
+
   /*
    * This is a list of the accessible's ancestry up to the common ancestor
    * of the accessible and the old accessible. It is useful for giving the
@@ -351,76 +420,141 @@ PivotContext.prototype = {
    */
   get newAncestry() {
     if (!this._newAncestry) {
-      let newLineage = [];
-      let oldLineage = [];
-
-      let parent = this._accessible;
-      while (parent && (parent = parent.parent))
-        newLineage.push(parent);
-
-      parent = this._oldAccessible;
-      while (parent && (parent = parent.parent))
-        oldLineage.push(parent);
-
-      this._newAncestry = [];
-
-      while (true) {
-        let newAncestor = newLineage.pop();
-        let oldAncestor = oldLineage.pop();
-
-        if (newAncestor == undefined)
-          break;
-
-        if (newAncestor != oldAncestor)
-          this._newAncestry.push(newAncestor);
-      }
-
+      this._newAncestry = [currentAncestor for (
+        [index, currentAncestor] of Iterator(this.currentAncestry)) if (
+          currentAncestor !== this.oldAncestry[index])];
     }
-
     return this._newAncestry;
   },
 
   /*
    * Traverse the accessible's subtree in pre or post order.
    * It only includes the accessible's visible chidren.
+   * Note: needSubtree is a function argument that can be used to determine
+   * whether aAccessible's subtree is required.
    */
-  _traverse: function _traverse(aAccessible, preorder) {
-    let list = [];
+  _traverse: function _traverse(aAccessible, aPreorder, aStop) {
+    if (aStop && aStop(aAccessible)) {
+      return;
+    }
     let child = aAccessible.firstChild;
     while (child) {
       let state = {};
       child.getState(state, {});
       if (!(state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE)) {
-        let traversed = _traverse(child, preorder);
-        // Prepend or append a child, based on traverse order.
-        traversed[preorder ? "unshift" : "push"](child);
-        list.push.apply(list, traversed);
+        if (aPreorder) {
+          yield child;
+          [yield node for (node of this._traverse(child, aPreorder, aStop))];
+        } else {
+          [yield node for (node of this._traverse(child, aPreorder, aStop))];
+          yield child;
+        }
       }
       child = child.nextSibling;
     }
-    return list;
   },
 
   /*
-   * This is a flattened list of the accessible's subtree in preorder.
+   * A subtree generator function, used to generate a flattened
+   * list of the accessible's subtree in pre or post order.
    * It only includes the accessible's visible chidren.
+   * @param {boolean} aPreorder A flag for traversal order. If true, traverse
+   * in preorder; if false, traverse in postorder.
+   * @param {function} aStop An optional function, indicating whether subtree
+   * traversal should stop.
    */
-  get subtreePreorder() {
-    if (!this._subtreePreOrder)
-      this._subtreePreOrder = this._traverse(this._accessible, true);
-
-    return this._subtreePreOrder;
+  subtreeGenerator: function subtreeGenerator(aPreorder, aStop) {
+    return this._traverse(this._accessible, aPreorder, aStop);
   },
 
-  /*
-   * This is a flattened list of the accessible's subtree in postorder.
-   * It only includes the accessible's visible chidren.
-   */
-  get subtreePostorder() {
-    if (!this._subtreePostOrder)
-      this._subtreePostOrder = this._traverse(this._accessible, false);
+  getCellInfo: function getCellInfo(aAccessible) {
+    if (!this._cells) {
+      this._cells = new WeakMap();
+    }
 
-    return this._subtreePostOrder;
+    let domNode = aAccessible.DOMNode;
+    if (this._cells.has(domNode)) {
+      return this._cells.get(domNode);
+    }
+
+    let cellInfo = {};
+    let getAccessibleCell = function getAccessibleCell(aAccessible) {
+      if (!aAccessible) {
+        return null;
+      }
+      if ([ROLE_CELL, ROLE_COLUMNHEADER, ROLE_ROWHEADER].indexOf(
+        aAccessible.role) < 0) {
+          return null;
+      }
+      try {
+        return aAccessible.QueryInterface(Ci.nsIAccessibleTableCell);
+      } catch (x) {
+        Logger.logException(x);
+        return null;
+      }
+    };
+    let getHeaders = function getHeaders(aHeaderCells) {
+      let enumerator = aHeaderCells.enumerate();
+      while (enumerator.hasMoreElements()) {
+        yield enumerator.getNext().QueryInterface(Ci.nsIAccessible).name;
+      }
+    };
+
+    cellInfo.current = getAccessibleCell(aAccessible);
+
+    if (!cellInfo.current) {
+      Logger.warning(aAccessible,
+        'does not support nsIAccessibleTableCell interface.');
+      this._cells.set(domNode, null);
+      return null;
+    }
+
+    let table = cellInfo.current.table;
+    if (table.isProbablyForLayout()) {
+      this._cells.set(domNode, null);
+      return null;
+    }
+
+    cellInfo.previous = null;
+    let oldAncestry = this.oldAncestry.reverse();
+    let ancestor = oldAncestry.shift();
+    while (!cellInfo.previous && ancestor) {
+      let cell = getAccessibleCell(ancestor);
+      if (cell && cell.table === table) {
+        cellInfo.previous = cell;
+      }
+      ancestor = oldAncestry.shift();
+    }
+
+    if (cellInfo.previous) {
+      cellInfo.rowChanged = cellInfo.current.rowIndex !==
+        cellInfo.previous.rowIndex;
+      cellInfo.columnChanged = cellInfo.current.columnIndex !==
+        cellInfo.previous.columnIndex;
+    } else {
+      cellInfo.rowChanged = true;
+      cellInfo.columnChanged = true;
+    }
+
+    cellInfo.rowExtent = cellInfo.current.rowExtent;
+    cellInfo.columnExtent = cellInfo.current.columnExtent;
+    cellInfo.columnIndex = cellInfo.current.columnIndex;
+    cellInfo.rowIndex = cellInfo.current.rowIndex;
+
+    cellInfo.columnHeaders = [];
+    if (cellInfo.columnChanged && cellInfo.current.role !==
+      ROLE_COLUMNHEADER) {
+      cellInfo.columnHeaders = [headers for (headers of getHeaders(
+        cellInfo.current.columnHeaderCells))];
+    }
+    cellInfo.rowHeaders = [];
+    if (cellInfo.rowChanged && cellInfo.current.role === ROLE_CELL) {
+      cellInfo.rowHeaders = [headers for (headers of getHeaders(
+        cellInfo.current.rowHeaderCells))];
+    }
+
+    this._cells.set(domNode, cellInfo);
+    return cellInfo;
   },
 
   get bounds() {

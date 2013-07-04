@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_lowering_x86_h__
-#define jsion_ion_lowering_x86_h__
+#ifndef ion_x86_Lowering_x86_h
+#define ion_x86_Lowering_x86_h
 
 #include "ion/shared/Lowering-x86-shared.h"
 
@@ -26,11 +26,12 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
                 LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
     bool useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register reg2);
 
+    inline LDefinition tempToUnbox() {
+        return LDefinition::BogusTemp();
+    }
+
     void lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
-
-    bool lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
-                     MDefinition *rhs);
 
     LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
 
@@ -60,4 +61,4 @@ typedef LIRGeneratorX86 LIRGeneratorSpecific;
 } // namespace js
 } // namespace ion
 
-#endif // jsion_ion_lowering_x86_h__
+#endif /* ion_x86_Lowering_x86_h */

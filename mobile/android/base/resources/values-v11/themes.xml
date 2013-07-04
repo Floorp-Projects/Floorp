@@ -13,7 +13,7 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="doorhangerWidth">fill_parent</item>
+        <item name="arrowPopupWidth">fill_parent</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Holo.Light.Dialog">
@@ -38,6 +38,10 @@
         <item name="android:gridViewStyle">@style/Widget.GridView</item>
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
+        <item name="android:spinnerDropDownItemStyle">@style/Widget.DropDownItem.Spinner</item>
+        <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
+        <item name="menuItemActionViewStyle">@style/Widget.MenuItemActionView</item>
+        <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
         <item name="bookmarkThumbnailViewStyle">@style/Widget.BookmarkThumbnailView</item>
         <item name="topBookmarkItemViewStyle">@style/Widget.TopBookmarkItemView</item>
         <item name="topBookmarksViewStyle">@style/Widget.TopBookmarksView</item>

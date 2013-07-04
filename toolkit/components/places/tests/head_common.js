@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CURRENT_SCHEMA_VERSION = 22;
+const CURRENT_SCHEMA_VERSION = 23;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
@@ -54,9 +54,6 @@ function LOG(aMsg) {
 }
 
 let gTestDir = do_get_cwd();
-
-// Ensure history is enabled.
-Services.prefs.setBoolPref("places.history.enabled", true);
 
 // Initialize profile.
 let gProfD = do_get_profile();

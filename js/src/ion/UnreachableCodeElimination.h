@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_unreachable_code_elimination_h__
-#define jsion_unreachable_code_elimination_h__
+#ifndef ion_UnreachableCodeElimination_h
+#define ion_UnreachableCodeElimination_h
 
-#include "MIR.h"
-#include "MIRGraph.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 namespace js {
 namespace ion {
@@ -49,4 +49,4 @@ class UnreachableCodeElimination
 } /* namespace ion */
 } /* namespace js */
 
-#endif
+#endif /* ion_UnreachableCodeElimination_h */

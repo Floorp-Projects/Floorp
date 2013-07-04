@@ -13,7 +13,7 @@ let EventEmitter = require("devtools/shared/event-emitter");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 
 loader.lazyGetter(this, "MarkupView", () => require("devtools/markupview/markup-view").MarkupView);
-loader.lazyGetter(this, "Selection", () => require ("devtools/inspector/selection").Selection);
+loader.lazyGetter(this, "Selection", () => require("devtools/inspector/selection").Selection);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "Highlighter", () => require("devtools/inspector/highlighter").Highlighter);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/framework/sidebar").ToolSidebar);
@@ -44,6 +44,20 @@ InspectorPanel.prototype = {
    * open is effectively an asynchronous constructor
    */
   open: function InspectorPanel_open() {
+    return this.target.makeRemote().then(() => {
+      return this.target.inspector.getWalker();
+    }).then(walker => {
+      if (this._destroyPromise) {
+        walker.release().then(null, console.error);
+      }
+      this.walker = walker;
+      return this._getDefaultNodeForSelection();
+    }).then(defaultSelection => {
+      return this._deferredOpen(defaultSelection);
+    }).then(null, console.error);
+  },
+
+  _deferredOpen: function(defaultSelection) {
     let deferred = Promise.defer();
 
     this.onNavigatedAway = this.onNavigatedAway.bind(this);
@@ -57,13 +71,13 @@ InspectorPanel.prototype = {
     this.nodemenu.addEventListener("popuphiding", this._resetNodeMenu, true);
 
     // Create an empty selection
-    this._selection = new Selection();
+    this._selection = new Selection(this.walker);
     this.onNewSelection = this.onNewSelection.bind(this);
-    this.selection.on("new-node", this.onNewSelection);
+    this.selection.on("new-node-front", this.onNewSelection);
     this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
-    this.selection.on("before-new-node", this.onBeforeNewSelection);
+    this.selection.on("before-new-node-front", this.onBeforeNewSelection);
     this.onDetached = this.onDetached.bind(this);
-    this.selection.on("detached", this.onDetached);
+    this.selection.on("detached-front", this.onDetached);
 
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
@@ -121,17 +135,13 @@ InspectorPanel.prototype = {
       this.isReady = true;
 
       // All the components are initialized. Let's select a node.
-      if (this.target.isLocalTab) {
-        let root = this.browser.contentDocument.documentElement;
-        this._selection.setNode(root);
-      } else if (this.target.window) {
-        let root = this.target.window.document.documentElement;
-        this._selection.setNode(root);
-      }
+      this._selection.setNodeFront(defaultSelection);
 
       if (this.highlighter) {
         this.highlighter.unlock();
       }
+
+      this.markup.expandNode(this.selection.node);
 
       this.emit("ready");
       deferred.resolve(this);
@@ -141,6 +151,20 @@ InspectorPanel.prototype = {
     this.setupSidebar();
 
     return deferred.promise;
+  },
+
+  /**
+   * Return a promise that will resolve to the default node for selection.
+   */
+  _getDefaultNodeForSelection : function() {
+    // if available set body node as default selected node
+    // else set documentElement
+    return this.walker.querySelector(this.walker.rootNode, "body").then(front => {
+      if (front) {
+        return front;
+      }
+      return this.walker.documentElement(this.walker.rootNode);
+    });
   },
 
   /**
@@ -209,7 +233,7 @@ InspectorPanel.prototype = {
    */
   setupSidebar: function InspectorPanel_setupSidebar() {
     let tabbox = this.panelDoc.querySelector("#inspector-sidebar");
-    this.sidebar = new ToolSidebar(tabbox, this);
+    this.sidebar = new ToolSidebar(tabbox, this, "inspector");
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
@@ -250,30 +274,34 @@ InspectorPanel.prototype = {
    */
   onNavigatedAway: function InspectorPanel_onNavigatedAway(event, payload) {
     let newWindow = payload._navPayload || payload;
-    this.selection.setNode(null);
+    this.walker.release().then(null, console.error);
+    this.walker = null;
+    this.selection.setNodeFront(null);
+    this.selection.setWalker(null);
     this._destroyMarkup();
     this.isDirty = false;
-    let self = this;
 
-    function onDOMReady() {
-      newWindow.removeEventListener("DOMContentLoaded", onDOMReady, true);
-
-      if (self._destroyed) {
+    this.target.inspector.getWalker().then(walker => {
+      if (this._destroyPromise) {
+        walker.release().then(null, console.error);
         return;
       }
 
-      if (!self.selection.node) {
-        self.selection.setNode(newWindow.document.documentElement, "navigateaway");
-      }
-      self._initMarkup();
-      self.setupSearchBox();
-    }
+      this.walker = walker;
+      this.selection.setWalker(walker);
+      this._getDefaultNodeForSelection().then(defaultNode => {
+        if (this._destroyPromise) {
+          return;
+        }
+        this.selection.setNodeFront(defaultNode, "navigateaway");
 
-    if (newWindow.document.readyState == "loading") {
-      newWindow.addEventListener("DOMContentLoaded", onDOMReady, true);
-    } else {
-      onDOMReady();
-    }
+        this._initMarkup();
+        this.once("markuploaded", () => {
+          this.markup.expandNode(this.selection.node);
+          this.setupSearchBox();
+        });
+      });
+    });
   },
 
   /**
@@ -281,6 +309,69 @@ InspectorPanel.prototype = {
    */
   onNewSelection: function InspectorPanel_onNewSelection() {
     this.cancelLayoutChange();
+
+    // Wait for all the known tools to finish updating and then let the
+    // client know.
+    let selection = this.selection.nodeFront;
+    let selfUpdate = this.updating("inspector-panel");
+    Services.tm.mainThread.dispatch(() => {
+      try {
+        selfUpdate(selection);
+      } catch(ex) {
+        console.error(ex);
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  /**
+   * Delay the "inspector-updated" notification while a tool
+   * is updating itself.  Returns a function that must be
+   * invoked when the tool is done updating with the node
+   * that the tool is viewing.
+   */
+  updating: function(name) {
+    if (this._updateProgress && this._updateProgress.node != this.selection.nodeFront) {
+      this.cancelUpdate();
+    }
+
+    if (!this._updateProgress) {
+      // Start an update in progress.
+      var self = this;
+      this._updateProgress = {
+        node: this.selection.nodeFront,
+        outstanding: new Set(),
+        checkDone: function() {
+          if (this !== self._updateProgress) {
+            return;
+          }
+          if (this.node !== self.selection.nodeFront) {
+            self.cancelUpdate();
+            return;
+          }
+          if (this.outstanding.size !== 0) {
+            return;
+          }
+
+          self._updateProgress = null;
+          self.emit("inspector-updated");
+        },
+      }
+    }
+
+    let progress = this._updateProgress;
+    let done = function() {
+      progress.outstanding.delete(done);
+      progress.checkDone();
+    };
+    progress.outstanding.add(done);
+    return done;
+  },
+
+  /**
+   * Cancel notification of inspector updates.
+   */
+  cancelUpdate: function() {
+    this._updateProgress = null;
   },
 
   /**
@@ -300,18 +391,24 @@ InspectorPanel.prototype = {
   onDetached: function InspectorPanel_onDetached(event, parentNode) {
     this.cancelLayoutChange();
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
-    this.selection.setNode(parentNode, "detached");
+    this.selection.setNodeFront(parentNode, "detached");
   },
 
   /**
    * Destroy the inspector.
    */
   destroy: function InspectorPanel__destroy() {
-    if (this._destroyed) {
-      return Promise.resolve(null);
+    if (this._destroyPromise) {
+      return this._destroyPromise;
     }
-    this._destroyed = true;
+    if (this.walker) {
+      this._destroyPromise = this.walker.release().then(null, console.error);
+      delete this.walker;
+    } else {
+      this._destroyPromise = Promise.resolve(null);
+    }
 
+    this.cancelUpdate();
     this.cancelLayoutChange();
 
     if (this.browser) {
@@ -341,9 +438,10 @@ InspectorPanel.prototype = {
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
     this.breadcrumbs.destroy();
     this.searchSuggestions.destroy();
-    this.selection.off("new-node", this.onNewSelection);
+    this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
-    this.selection.off("detached", this.onDetached);
+    this.selection.off("before-new-node-front", this.onBeforeNewSelection);
+    this.selection.off("detached-front", this.onDetached);
     this._destroyMarkup();
     this._selection.destroy();
     this._selection = null;
@@ -357,7 +455,7 @@ InspectorPanel.prototype = {
     this.nodemenu = null;
     this.highlighter = null;
 
-    return Promise.resolve(null);
+    return this._destroyPromise;
   },
 
   /**
@@ -385,7 +483,7 @@ InspectorPanel.prototype = {
       let menu = this.panelDoc.getElementById("node-menu-pseudo-" + name);
 
       if (this.selection.isElementNode()) {
-        let checked = DOMUtils.hasPseudoClassLock(this.selection.node, ":" + name);
+        let checked = this.selection.nodeFront.hasPseudoClassLock(":" + name);
         menu.setAttribute("checked", checked);
         menu.removeAttribute("disabled");
       } else {
@@ -482,34 +580,24 @@ InspectorPanel.prototype = {
    */
   togglePseudoClass: function InspectorPanel_togglePseudoClass(aPseudo) {
     if (this.selection.isElementNode()) {
-      if (DOMUtils.hasPseudoClassLock(this.selection.node, aPseudo)) {
-        this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
-          DOMUtils.removePseudoClassLock(crumb.node, aPseudo);
-        });
-      } else {
-        let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
-        let node = this.selection.node;
-        do {
-          DOMUtils.addPseudoClassLock(node, aPseudo);
-          node = node.parentNode;
-        } while (hierarchical && node.parentNode)
+      let node = this.selection.nodeFront;
+      if (node.hasPseudoClassLock(aPseudo)) {
+        return this.walker.removePseudoClassLock(node, aPseudo, { parents: true });
       }
+
+      let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
+      return this.walker.addPseudoClassLock(node, aPseudo, { parents: hierarchical });
     }
-    this.selection.emit("pseudoclass");
-    this.breadcrumbs.scroll();
   },
 
   /**
    * Clear any pseudo-class locks applied to the current hierarchy.
    */
   clearPseudoClasses: function InspectorPanel_clearPseudoClasses() {
-    this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
-      try {
-        DOMUtils.clearPseudoClassLocks(crumb.node);
-      } catch(e) {
-       // Ignore dead nodes after navigation.
-      }
-    });
+    if (!this.walker) {
+      return;
+    }
+    return this.walker.clearPseudoClassLocks().then(null, console.error);
   },
 
   /**
@@ -517,6 +605,9 @@ InspectorPanel.prototype = {
    */
   toggleHighlighter: function InspectorPanel_toggleHighlighter(event)
   {
+    if (!this.highlighter) {
+      return;
+    }
     if (event.type == "mouseover") {
       this.highlighter.hide();
     }

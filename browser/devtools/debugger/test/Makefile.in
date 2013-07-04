@@ -15,7 +15,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_clean-exit.js \
 	browser_dbg_cmd.js \
 	browser_dbg_cmd_break.js \
-	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs-01.js \
 	browser_dbg_listtabs-02.js \
@@ -54,6 +53,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_reload-preferred-script.js \
 	browser_dbg_pane-collapse.js \
 	browser_dbg_panesize-inner.js \
+	browser_dbg_breadcrumbs-access.js \
 	browser_dbg_stack-01.js \
 	browser_dbg_stack-02.js \
 	browser_dbg_stack-03.js \
@@ -85,6 +85,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_breakpoint-new-script.js \
 	browser_dbg_bug723069_editor-breakpoints.js \
 	browser_dbg_bug723071_editor-breakpoints-pane.js \
+	browser_dbg_bug723071_editor-breakpoints-highlight.js \
+	browser_dbg_bug723071_editor-breakpoints-contextmenu.js \
 	browser_dbg_bug740825_conditional-breakpoints-01.js \
 	browser_dbg_bug740825_conditional-breakpoints-02.js \
 	browser_dbg_bug727429_watch-expressions-01.js \
@@ -92,6 +94,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_bug731394_editor-contextmenu.js \
 	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_bug786070_hide_nonenums.js \
+	browser_dbg_bug868163_highight_on_pause.js \
+	browser_dbg_bug883220_raise_on_pause.js \
 	browser_dbg_displayName.js \
 	browser_dbg_pause-exceptions.js \
 	browser_dbg_multiple-windows.js \
@@ -101,6 +105,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_chrome-debugging.js \
 	browser_dbg_source_maps-01.js \
 	browser_dbg_source_maps-02.js \
+	browser_dbg_step-out.js \
 	head.js \
 	$(NULL)
 
@@ -138,6 +143,7 @@ MOCHITEST_BROWSER_PAGES = \
 	binary_search.map \
 	test-location-changes-bp.js \
 	test-location-changes-bp.html \
+	test-step-out.html \
 	$(NULL)
 
 ifneq (Linux,$(OS_ARCH))

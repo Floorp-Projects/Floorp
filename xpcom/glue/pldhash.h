@@ -7,9 +7,8 @@
 #define pldhash_h___
 /*
  * Double hashing, a la Knuth 6.
- *
- * Try to keep this file in sync with js/src/jsdhash.h.
  */
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Types.h"
 #include "nscore.h"
 
@@ -551,7 +550,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg);
 
 typedef size_t
 (* PLDHashSizeOfEntryExcludingThisFun)(PLDHashEntryHdr *hdr,
-                                       nsMallocSizeOfFun mallocSizeOf,
+                                       mozilla::MallocSizeOf mallocSizeOf,
                                        void *arg);
 
 /**
@@ -563,7 +562,7 @@ typedef size_t
 NS_COM_GLUE size_t
 PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                                 nsMallocSizeOfFun mallocSizeOf,
+                                 mozilla::MallocSizeOf mallocSizeOf,
                                  void *arg = NULL);
 
 /**
@@ -572,7 +571,7 @@ PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
 NS_COM_GLUE size_t
 PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                                 nsMallocSizeOfFun mallocSizeOf,
+                                 mozilla::MallocSizeOf mallocSizeOf,
                                  void *arg = NULL);
 
 #ifdef DEBUG

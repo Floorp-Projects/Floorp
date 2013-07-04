@@ -8,6 +8,10 @@
  *   let val = jni.callStaticIntMethod(cls, method, 3);
  *   // close the jni library when you are done
  *   jni.close();
+ *
+ * Note: the getters in this file are deleted and replaced with static
+ * values once computed, as in, for example
+ * http://code.activestate.com/recipes/577310-using-a-getter-for-a-one-time-calculation-of-a-jav/
  */
 this.EXPORTED_SYMBOLS = ["JNI"];
 
@@ -29,8 +33,8 @@ JNI.prototype = {
       case "D": return ctypes.double;
       case "F": return ctypes.float;
       case "I": return ctypes.int32_t;
-      case "J": return ctypes.long;
-      case "S": return ctypes.short;
+      case "J": return ctypes.int64_t;
+      case "S": return ctypes.int16_t;
       case "V": return ctypes.void_t;
       case "Z": return ctypes.bool;
       default: return this.types.jobject
@@ -81,7 +85,7 @@ JNI.prototype = {
   },
 
   get _getStaticMethodID() {
-    delete this._getStatisMethodID;
+    delete this._getStaticMethodID;
     return this._getStaticMethodID = this.lib.declare("jsjni_GetStaticMethodID",
                                                       ctypes.default_abi,
                                                       this.types.jmethodID,
@@ -120,7 +124,7 @@ JNI.prototype = {
 
   callStaticVoidMethod: function(aClass, aMethod) {
     let args = Array.prototype.slice.apply(arguments, [2]);
-    this._callStaticVoidMethod(aClass, aMethodId.methodId, this.getArgs(aMethod, args));
+    this._callStaticVoidMethod(aClass, aMethod.methodId, this.getArgs(aMethod, args));
     if (this.exceptionCheck())
        throw("Error calling static void method");
   },

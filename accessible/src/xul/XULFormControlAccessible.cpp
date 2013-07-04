@@ -167,23 +167,13 @@ XULButtonAccessible::CacheChildren()
 {
   // In general XUL button has not accessible children. Nevertheless menu
   // buttons can have button (@type="menu-button") and popup accessibles
-  // (@type="menu-button" or @type="menu").
+  // (@type="menu-button", @type="menu" or columnpicker.
 
   // XXX: no children until the button is menu button. Probably it's not
   // totally correct but in general AT wants to have leaf buttons.
-  bool isMenu = mContent->AttrValueIs(kNameSpaceID_None,
-                                       nsGkAtoms::type,
-                                       nsGkAtoms::menu,
-                                       eCaseMatters);
 
-  bool isMenuButton = isMenu ?
-    false :
-    mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                          nsGkAtoms::menuButton, eCaseMatters);
-
-  NS_ENSURE_TRUE_VOID(mDoc);
-  if (!isMenu && !isMenuButton)
-    return;
+  bool isMenuButton = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                            nsGkAtoms::menuButton, eCaseMatters);
 
   Accessible* menupopup = nullptr;
   Accessible* button = nullptr;
@@ -254,7 +244,7 @@ XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen)
   bool isOpen = false;
 
   nsCOMPtr<nsIDOMXULButtonElement> parentButtonElement =
-    do_QueryInterface(mContent->GetParent());
+    do_QueryInterface(mContent->GetFlattenedTreeParent());
 
   if (parentButtonElement) {
     parentButtonElement->GetOpen(&isOpen);
@@ -840,6 +830,10 @@ already_AddRefed<nsFrameSelection>
 XULTextFieldAccessible::FrameSelection()
 {
   nsCOMPtr<nsIContent> inputContent(GetInputField());
+  NS_ASSERTION(inputContent, "No input content");
+  if (!inputContent)
+    return nullptr;
+
   nsIFrame* frame = inputContent->GetPrimaryFrame();
   return frame ? frame->GetFrameSelection() : nullptr;
 }

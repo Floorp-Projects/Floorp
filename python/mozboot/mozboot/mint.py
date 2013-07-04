@@ -21,9 +21,14 @@ class MintBootstrapper(BaseBootstrapper):
             'mercurial',
             'libasound2-dev',
             'libcurl4-openssl-dev',
+            'libgstreamer0.10-dev',
+            'libgstreamer-plugins-base0.10-dev',
             'libnotify-dev',
             'libiw-dev',
             'libxt-dev',
             'mesa-common-dev',
             'uuid',
             'yasm')
+
+    def upgrade_mercurial(self, current):
+        self.apt_install('mercurial')

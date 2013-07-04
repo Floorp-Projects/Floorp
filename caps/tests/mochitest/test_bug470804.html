@@ -23,9 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470804
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                        .getService(nsIScriptSecurityManager);
-var principal = SpecialPowers.getNodePrincipal(document);
+var principal = SpecialPowers.wrap(document).nodePrincipal;
 isnot(principal, undefined, "Should have a principal");
 isnot(principal, null, "Should have a non-null principal");
 is(secMan.isSystemPrincipal(principal), false,

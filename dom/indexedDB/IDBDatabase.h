@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_indexeddb_idbdatabase_h__
 #define mozilla_dom_indexeddb_idbdatabase_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIDocument.h"
@@ -79,7 +80,7 @@ public:
   }
 
   // nsIDOMEventTarget
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   DatabaseInfo* Info() const
   {

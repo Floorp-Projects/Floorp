@@ -6,12 +6,9 @@
 
 /* JS Array interface. */
 
-#ifndef jsarray_h___
-#define jsarray_h___
+#ifndef jsarray_h
+#define jsarray_h
 
-#include "jsatom.h"
-#include "jscntxt.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsobj.h"
 
@@ -44,13 +41,15 @@ js_InitContextBusyArrayTable(JSContext *cx);
 
 namespace js {
 
+class ArrayObject;
+
 /* Create a dense array with no capacity allocated, length set to 0. */
-extern JSObject * JS_FASTCALL
+extern ArrayObject * JS_FASTCALL
 NewDenseEmptyArray(JSContext *cx, JSObject *proto = NULL,
                    NewObjectKind newKind = GenericObject);
 
 /* Create a dense array with length and capacity == 'length', initialized length set to 0. */
-extern JSObject * JS_FASTCALL
+extern ArrayObject * JS_FASTCALL
 NewDenseAllocatedArray(JSContext *cx, uint32_t length, JSObject *proto = NULL,
                        NewObjectKind newKind = GenericObject);
 
@@ -58,16 +57,16 @@ NewDenseAllocatedArray(JSContext *cx, uint32_t length, JSObject *proto = NULL,
  * Create a dense array with a set length, but without allocating space for the
  * contents. This is useful, e.g., when accepting length from the user.
  */
-extern JSObject * JS_FASTCALL
+extern ArrayObject * JS_FASTCALL
 NewDenseUnallocatedArray(JSContext *cx, uint32_t length, JSObject *proto = NULL,
                          NewObjectKind newKind = GenericObject);
 
 /* Create a dense array with a copy of the dense array elements in src. */
-extern JSObject *
+extern ArrayObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t elementOffset, JSObject *proto = NULL);
 
 /* Create a dense array from the given array values, which must be rooted */
-extern JSObject *
+extern ArrayObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, JSObject *proto = NULL,
                     NewObjectKind newKind = GenericObject);
 
@@ -120,7 +119,8 @@ extern JSBool
 array_concat(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-array_concat_dense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject result);
+array_concat_dense(JSContext *cx, Handle<ArrayObject*> arr1, Handle<ArrayObject*> arr2,
+                   Handle<ArrayObject*> result);
 
 extern void
 ArrayShiftMoveElements(JSObject *obj);
@@ -149,4 +149,4 @@ js_NewbornArrayPush(JSContext *cx, js::HandleObject obj, const js::Value &v);
 JSBool
 js_Array(JSContext *cx, unsigned argc, js::Value *vp);
 
-#endif /* jsarray_h___ */
+#endif /* jsarray_h */

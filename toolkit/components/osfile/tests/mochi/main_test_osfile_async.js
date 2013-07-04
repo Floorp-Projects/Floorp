@@ -1,7 +1,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
-Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 
 // The following are used to compare against a well-tested reference
@@ -405,7 +405,7 @@ let test_read_write_all = maketest("read_write_all", function read_write_all(tes
     // Check that writeAtomic fails if there is no tmpPath.
     // FIXME: Remove this as part of bug 793660
     try {
-      yield OS.File.writeAtomic(pathDest, contents, {});
+      yield OS.File.writeAtomic(pathDest, contents, {flush: true});
       test.fail("Without a tmpPath, writeAtomic should have failed");
     } catch (err) {
       test.ok(true, "Without a tmpPath, writeAtomic has failed as expected");

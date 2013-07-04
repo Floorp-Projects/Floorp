@@ -45,8 +45,18 @@ function testOnWindow(options) {
     win.removeEventListener("load", onLoad, false);
     windowsToClose.push(win);
     gWindow = win;
-    executeSoon(TestRunner.next);
+    whenDelayedStartupFinished(win, TestRunner.next);
   }, false);
+}
+
+function whenDelayedStartupFinished(win, callback) {
+  const topic = "browser-delayed-startup-finished";
+  Services.obs.addObserver(function onStartup(subject) {
+    if (win == subject) {
+      Services.obs.removeObserver(onStartup, topic);
+      executeSoon(callback);
+    }
+  }, topic, false);
 }
 
 registerCleanupFunction(function () {

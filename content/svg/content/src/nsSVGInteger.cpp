@@ -10,19 +10,7 @@
 #include "SMILIntegerType.h"
 
 using namespace mozilla;
-
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGInteger::DOMAnimatedInteger, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGInteger::DOMAnimatedInteger)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGInteger::DOMAnimatedInteger)
-
-DOMCI_DATA(SVGAnimatedInteger, nsSVGInteger::DOMAnimatedInteger)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGInteger::DOMAnimatedInteger)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedInteger)
-NS_INTERFACE_MAP_END
+using namespace mozilla::dom;
 
 /* Implementation */
 
@@ -112,15 +100,7 @@ nsSVGInteger::SetAnimValue(int aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateInteger(mAttrEnum);
 }
 
-nsresult
-nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
-                                   nsSVGElement *aSVGElement)
-{
-  *aResult = ToDOMAnimatedInteger(aSVGElement).get();
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGAnimatedInteger>
+already_AddRefed<SVGAnimatedInteger>
 nsSVGInteger::ToDOMAnimatedInteger(nsSVGElement *aSVGElement)
 {
   nsRefPtr<DOMAnimatedInteger> domAnimatedInteger =
@@ -157,7 +137,7 @@ nsSVGInteger::SMILInteger::ValueFromString(const nsAString& aStr,
     return rv;
   }
 
-  nsSMILValue smilVal(&SMILIntegerType::sSingleton);
+  nsSMILValue smilVal(SMILIntegerType::Singleton());
   smilVal.mU.mInt = val;
   aValue = smilVal;
   aPreventCachingOfSandwich = false;
@@ -167,7 +147,7 @@ nsSVGInteger::SMILInteger::ValueFromString(const nsAString& aStr,
 nsSMILValue
 nsSVGInteger::SMILInteger::GetBaseValue() const
 {
-  nsSMILValue val(&SMILIntegerType::sSingleton);
+  nsSMILValue val(SMILIntegerType::Singleton());
   val.mU.mInt = mVal->mBaseVal;
   return val;
 }
@@ -185,9 +165,9 @@ nsSVGInteger::SMILInteger::ClearAnimValue()
 nsresult
 nsSVGInteger::SMILInteger::SetAnimValue(const nsSMILValue& aValue)
 {
-  NS_ASSERTION(aValue.mType == &SMILIntegerType::sSingleton,
+  NS_ASSERTION(aValue.mType == SMILIntegerType::Singleton(),
                "Unexpected type to assign animated value");
-  if (aValue.mType == &SMILIntegerType::sSingleton) {
+  if (aValue.mType == SMILIntegerType::Singleton()) {
     mVal->SetAnimValue(int(aValue.mU.mInt), mSVGElement);
   }
   return NS_OK;

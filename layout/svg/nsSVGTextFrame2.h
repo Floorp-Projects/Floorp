@@ -188,10 +188,9 @@ protected:
   nsSVGTextFrame2(nsStyleContext* aContext)
     : nsSVGTextFrame2Base(aContext),
       mFontSizeScaleFactor(1.0f),
-      mGetCanvasTMForFlag(FOR_OUTERSVG_TM),
-      mPositioningDirty(true),
-      mPositioningMayUsePercentages(false)
+      mGetCanvasTMForFlag(FOR_OUTERSVG_TM)
   {
+    AddStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
   }
 
 public:
@@ -204,8 +203,6 @@ public:
                     nsIFrame*   aParent,
                     nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
-
   NS_IMETHOD AttributeChanged(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               int32_t aModType) MOZ_OVERRIDE;
@@ -214,11 +211,6 @@ public:
   {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
-
-  NS_IMETHOD Reflow(nsPresContext*           aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -282,16 +274,15 @@ public:
 
   /**
    * Schedules mPositions to be recomputed and the covered region to be
-   * updated.  The aFlags argument can take the ePositioningDirtyDueToMutation
-   * value to indicate that glyph metrics need to be recomputed due to
-   * a DOM mutation in the <text> element on one of its descendants.
+   * updated.
    */
-  void NotifyGlyphMetricsChange(uint32_t aFlags = 0);
+  void NotifyGlyphMetricsChange();
 
   /**
-   * Enum for NotifyGlyphMetricsChange's aFlags argument.
+   * Calls ScheduleReflowSVGNonDisplayText if this is a non-display frame,
+   * and nsSVGUtils::ScheduleReflowSVG otherwise.
    */
-  enum { ePositioningDirtyDueToMutation = 1 };
+  void ScheduleReflowSVG();
 
   /**
    * Reflows the anonymous block frame of this non-display nsSVGTextFrame2.
@@ -410,6 +401,7 @@ private:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+    NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   private:
@@ -601,12 +593,6 @@ private:
   MutationObserver mMutationObserver;
 
   /**
-   * The runnable we have dispatched to perform the work of
-   * NotifyGlyphMetricsChange.
-   */
-  nsRefPtr<GlyphMetricsUpdater> mGlyphMetricsUpdater;
-
-  /**
    * Cached canvasTM value.
    */
   nsAutoPtr<gfxMatrix> mCanvasTM;
@@ -663,42 +649,6 @@ private:
    * having a current mMarkedFrame.
    */
   uint32_t mGetCanvasTMForFlag;
-
-  /**
-   * The NS_FRAME_IS_DIRTY and NS_FRAME_HAS_DIRTY_CHILDREN bits indicate
-   * that our anonymous block child needs to be reflowed, and that mPositions
-   * will likely need to be updated as a consequence. These are set, for
-   * example, when the font-family changes. Sometimes we only need to
-   * update mPositions though. For example if the x/y attributes change.
-   * mPositioningDirty is used to indicate this latter "things are dirty" case
-   * to allow us to avoid reflowing the anonymous block when it is not
-   * necessary.
-   */
-  bool mPositioningDirty;
-
-  /**
-   * Whether the values from x/y/dx/dy attributes have any percentage values
-   * that are used in determining the positions of glyphs.  The value will
-   * be true even if a positioning value is overridden by a descendant element's
-   * attribute with a non-percentage length.  For example,
-   * mPositioningMayUsePercentages would be true for:
-   *
-   *   <text x="10%"><tspan x="0">abc</tspan></text>
-   *
-   * Percentage values beyond the number of addressable characters, however, do
-   * not influence mPositioningMayUsePercentages.  For example,
-   * mPositioningMayUsePercentages would be false for:
-   *
-   *   <text x="10 20 30 40%">abc</text>
-   *
-   * mPositioningMayUsePercentages is used to determine whether to recompute
-   * mPositions when the viewport size changes.  So although the first example
-   * above shows that mPositioningMayUsePercentages can be true even if a viewport
-   * size change will not affect mPositions, determining a completley accurate
-   * value for mPositioningMayUsePercentages would require extra work that is
-   * probably not worth it.
-   */
-  bool mPositioningMayUsePercentages;
 };
 
 #endif

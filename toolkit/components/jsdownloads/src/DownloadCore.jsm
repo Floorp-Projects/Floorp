@@ -54,6 +54,8 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
+                                  "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -269,6 +271,14 @@ Download.prototype = {
         yield this._promiseCanceled;
       }
 
+      // Disallow download if parental controls service restricts it.
+      if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
+        let error = new DownloadError(Cr.NS_ERROR_FAILURE, "Download blocked.");
+        error.becauseBlocked = true;
+        error.becauseBlockedByParentalControls = true;
+        throw error;
+      }
+
       try {
         // Execute the actual download through the saver object.
         yield this.saver.execute(DS_setProgressBytes.bind(this));
@@ -440,6 +450,23 @@ DownloadSource.prototype = {
    * should be sent or the download source is not HTTP.
    */
   referrer: null,
+
+  /**
+   * Returns a static representation of the current object state.
+   *
+   * @return A JavaScript object that can be serialized to JSON.
+   */
+  serialize: function DS_serialize()
+  {
+    let serialized = { uri: this.uri.spec };
+    if (this.isPrivate) {
+      serialized.isPrivate = true;
+    }
+    if (this.referrer) {
+      serialized.referrer = this.referrer.spec;
+    }
+    return serialized;
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -456,6 +483,16 @@ DownloadTarget.prototype = {
    * The nsIFile for the download target.
    */
   file: null,
+
+  /**
+   * Returns a static representation of the current object state.
+   *
+   * @return A JavaScript object that can be serialized to JSON.
+   */
+  serialize: function DT_serialize()
+  {
+    return { file: this.file.path };
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -514,6 +551,18 @@ DownloadError.prototype = {
    * Indicates an error occurred while writing to the local target.
    */
   becauseTargetFailed: false,
+
+  /**
+   * Indicates the download failed because it was blocked.  If the reason for
+   * blocking is known, the corresponding property will be also set.
+   */
+  becauseBlocked: false,
+
+  /**
+   * Indicates the download was blocked because downloads are globally
+   * disallowed by the Parental Controls or Family Safety features on Windows.
+   */
+  becauseBlockedByParentalControls: false,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -552,6 +601,16 @@ DownloadSaver.prototype = {
    * Cancels the download.
    */
   cancel: function DS_cancel()
+  {
+    throw new Error("Not implemented.");
+  },
+
+  /**
+   * Returns a static representation of the current object state.
+   *
+   * @return A JavaScript object that can be serialized to JSON.
+   */
+  serialize: function DS_serialize()
   {
     throw new Error("Not implemented.");
   },
@@ -685,6 +744,14 @@ DownloadCopySaver.prototype = {
       this._backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
       this._backgroundFileSaver = null;
     }
+  },
+
+  /**
+   * Implements "DownloadSaver.serialize".
+   */
+  serialize: function DCS_serialize()
+  {
+    return { type: "copy" };
   },
 };
 

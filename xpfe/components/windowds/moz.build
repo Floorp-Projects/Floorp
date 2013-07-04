@@ -16,3 +16,5 @@ CPP_SOURCES += [
     'nsWindowDataSource.cpp',
 ]
 
+LIBRARY_NAME = 'windowds'
+

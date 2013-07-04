@@ -4,15 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_frame_iterator_h__
-#define jsion_frame_iterator_h__
+#ifndef ion_IonFrameIterator_h
+#define ion_IonFrameIterator_h
+
+#ifdef JS_ION
 
 #include "jstypes.h"
-#include "IonCode.h"
-#include "SnapshotReader.h"
+#include "ion/IonCode.h"
+#include "ion/SnapshotReader.h"
 
 class JSFunction;
 class JSScript;
+
+namespace js {
+    class ActivationIterator;
+};
 
 namespace js {
 namespace ion {
@@ -52,7 +58,7 @@ enum FrameType
 
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
-    // IonActivation.
+    // JitActivation.
     IonFrame_Exit,
 
     // An OSR frame is added when performing OSR from within a bailout. It
@@ -65,10 +71,9 @@ class IonCommonFrameLayout;
 class IonJSFrameLayout;
 class IonExitFrameLayout;
 
-class IonActivation;
-class IonActivationIterator;
-
 class BaselineFrame;
+
+class JitActivation;
 
 class IonFrameIterator
 {
@@ -80,7 +85,7 @@ class IonFrameIterator
 
   private:
     mutable const SafepointIndex *cachedSafepointIndex_;
-    const IonActivation *activation_;
+    const JitActivation *activation_;
 
     void dumpBaseline() const;
 
@@ -94,7 +99,7 @@ class IonFrameIterator
         activation_(NULL)
     { }
 
-    IonFrameIterator(const IonActivationIterator &activations);
+    IonFrameIterator(const ActivationIterator &activations);
     IonFrameIterator(IonJSFrameLayout *fp);
 
     // Current frame information.
@@ -201,32 +206,6 @@ class IonFrameIterator
     void dump() const;
 
     inline BaselineFrame *baselineFrame() const;
-};
-
-class IonActivationIterator
-{
-    uint8_t *top_;
-    IonActivation *activation_;
-
-  private:
-    void settle();
-
-  public:
-    IonActivationIterator(JSContext *cx);
-    IonActivationIterator(JSRuntime *rt);
-
-    IonActivationIterator &operator++();
-
-    IonActivation *activation() const {
-        return activation_;
-    }
-    uint8_t *top() const {
-        return top_;
-    }
-    bool more() const;
-
-    // Returns the bottom and top addresses of the current activation.
-    void ionStackRange(uintptr_t *&min, uintptr_t *&end);
 };
 
 class IonJSFrameLayout;
@@ -354,5 +333,6 @@ typedef InlineFrameIteratorMaybeGC<NoGC> InlineFrameIteratorNoGC;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_frames_iterator_h__
+#endif // JS_ION
 
+#endif /* ion_IonFrameIterator_h */

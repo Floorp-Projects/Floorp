@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "mozilla/MemoryReporting.h"
 #include "gfxAlphaRecovery.h"
 #include "gfxImageSurface.h"
 
@@ -197,7 +198,7 @@ gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
 }
 
 size_t
-gfxImageSurface::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+gfxImageSurface::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
     size_t n = gfxASurface::SizeOfExcludingThis(aMallocSizeOf);
     if (mOwnsData) {
@@ -207,7 +208,7 @@ gfxImageSurface::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 }
 
 size_t
-gfxImageSurface::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+gfxImageSurface::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }

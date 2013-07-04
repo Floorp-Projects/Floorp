@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     }
     SECU_RegisterDynamicOids();
 
-    rv = SECU_ReadDERFromFile(&der, inFile, ascii);
+    rv = SECU_ReadDERFromFile(&der, inFile, ascii, PR_FALSE);
     if (rv != SECSuccess) {
 	fprintf(stderr, "%s: SECU_ReadDERFromFile failed\n", progName);
 	exit(1);

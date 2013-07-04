@@ -24,24 +24,6 @@ interface nsIClassInfo;
 interface nsIXPCSecurityManager : nsISupports
 {
     /**
-    * These flags are used when calling nsIXPConnect::SetSecurityManager
-    */
-
-    const uint32_t HOOK_CREATE_WRAPPER  = 1 << 0;
-    const uint32_t HOOK_CREATE_INSTANCE = 1 << 1;
-    const uint32_t HOOK_GET_SERVICE     = 1 << 2;
-    const uint32_t HOOK_CALL_METHOD     = 1 << 3;
-    const uint32_t HOOK_GET_PROPERTY    = 1 << 4;
-    const uint32_t HOOK_SET_PROPERTY    = 1 << 5;
-
-    const uint32_t HOOK_ALL             = HOOK_CREATE_WRAPPER  |
-                                          HOOK_CREATE_INSTANCE |
-                                          HOOK_GET_SERVICE     |
-                                          HOOK_CALL_METHOD     |
-                                          HOOK_GET_PROPERTY    |
-                                          HOOK_SET_PROPERTY    ;
-
-    /**
     * For each of these hooks returning NS_OK means 'let the action continue'.
     * Returning an error code means 'veto the action'. XPConnect will return
     * JS_FALSE to the js engine if the action is vetoed. The implementor of this

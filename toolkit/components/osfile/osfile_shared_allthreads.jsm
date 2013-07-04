@@ -22,7 +22,7 @@
      if (exports.OS.Shared.Type) {
        return; // Avoid double-initialization
      }
-
+     OS.Shared.TEST = false;
      // Import components after having initialized |exports.OS|, to ensure
      // that everybody uses the same definition of |OS|.
      if (typeof Components != "undefined") {

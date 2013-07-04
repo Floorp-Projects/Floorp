@@ -269,6 +269,7 @@ struct THEMELIST {
 
 const THEMELIST knownThemes[] = {
   { L"aero.msstyles", WINTHEME_AERO },
+  { L"aerolite.msstyles", WINTHEME_AERO_LITE },
   { L"luna.msstyles", WINTHEME_LUNA },
   { L"zune.msstyles", WINTHEME_ZUNE },
   { L"royale.msstyles", WINTHEME_ROYALE }
@@ -340,13 +341,16 @@ nsUXThemeData::UpdateNativeThemeInfo()
   if (theme == WINTHEME_UNRECOGNIZED)
     return;
 
-  if (theme == WINTHEME_AERO || theme == WINTHEME_LUNA)
+  if (theme == WINTHEME_AERO || theme == WINTHEME_AERO_LITE || theme == WINTHEME_LUNA)
     sIsDefaultWindowsTheme = true;
   
   if (theme != WINTHEME_LUNA) {
     switch(theme) {
       case WINTHEME_AERO:
         sThemeId = LookAndFeel::eWindowsTheme_Aero;
+        return;
+      case WINTHEME_AERO_LITE:
+        sThemeId = LookAndFeel::eWindowsTheme_AeroLite;
         return;
       case WINTHEME_ZUNE:
         sThemeId = LookAndFeel::eWindowsTheme_Zune;

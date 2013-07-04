@@ -15,6 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=857555
 
   addLoadEvent(function() {
     is(content, $("t").contentWindow, "'content' as iframe name should work");
+    is(sidebar, $("u").contentWindow, "'sidebar' as iframe name should work");
+    is(external, $("v").contentWindow, "'external' as iframe name should work");
     SimpleTest.finish();
   });
   </script>
@@ -24,6 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=857555
 <p id="display"></p>
 <div id="content" style="display: none">
   <iframe name="content" id="t"></iframe>
+  <iframe name="sidebar" id="u"></iframe>
+  <iframe name="external" id="v"></iframe>
 </div>
 <pre id="test">
 </pre>

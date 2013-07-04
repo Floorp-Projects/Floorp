@@ -672,7 +672,7 @@ protected:
   }
 
   /* Functions for transform Parsing */
-  bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue, bool& aIs3D);
+  bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue);
   bool ParseFunction(nsCSSKeyword aFunction, const int32_t aAllowedTypes[],
                      int32_t aVariantMaskAll, uint16_t aMinElems,
                      uint16_t aMaxElems, nsCSSValue &aValue);
@@ -1789,14 +1789,23 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
       if (!mediaType) {
         NS_RUNTIMEABORT("do_GetAtom failed - out of memory?");
       }
-      if (gotNotOrOnly ||
-          (mediaType != nsGkAtoms::_not && mediaType != nsGkAtoms::only))
-        break;
-      gotNotOrOnly = true;
-      if (mediaType == nsGkAtoms::_not)
+      if (!gotNotOrOnly && mediaType == nsGkAtoms::_not) {
+        gotNotOrOnly = true;
         query->SetNegated();
-      else
+      } else if (!gotNotOrOnly && mediaType == nsGkAtoms::only) {
+        gotNotOrOnly = true;
         query->SetHasOnly();
+      } else if (mediaType == nsGkAtoms::_not ||
+                 mediaType == nsGkAtoms::only ||
+                 mediaType == nsGkAtoms::_and ||
+                 mediaType == nsGkAtoms::_or) {
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaReservedMediaType);
+        UngetToken();
+        return false;
+      } else {
+        // valid media type
+        break;
+      }
     }
     query->SetType(mediaType);
   }
@@ -2773,17 +2782,21 @@ CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
 
   UngetToken();
 
+  mScanner->ClearSeenBadToken();
+
   if (mToken.IsSymbol('(') ||
       mToken.mType == eCSSToken_Function ||
       mToken.mType == eCSSToken_URL ||
       mToken.mType == eCSSToken_Bad_URL) {
     return ParseSupportsConditionInParens(aConditionMet) &&
-           ParseSupportsConditionTerms(aConditionMet);
+           ParseSupportsConditionTerms(aConditionMet) &&
+           !mScanner->SeenBadToken();
   }
 
   if (mToken.mType == eCSSToken_Ident &&
       mToken.mIdent.LowerCaseEqualsLiteral("not")) {
-    return ParseSupportsConditionNegation(aConditionMet);
+    return ParseSupportsConditionNegation(aConditionMet) &&
+           !mScanner->SeenBadToken();
   }
 
   REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedStart);
@@ -5160,8 +5173,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
           aValue.SetInheritValue();
           return true;
         }
-        else if (eCSSKeyword__moz_initial == keyword ||
-                 eCSSKeyword_initial == keyword) { // anything that can inherit can also take an initial val.
+        else if (eCSSKeyword_initial == keyword) { // anything that can inherit can also take an initial val.
           aValue.SetInitialValue();
           return true;
         }
@@ -6947,7 +6959,6 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
       nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
       int32_t dummy;
       if (keyword == eCSSKeyword_inherit ||
-          keyword == eCSSKeyword__moz_initial ||
           keyword == eCSSKeyword_initial) {
         return false;
       } else if (keyword == eCSSKeyword_none) {
@@ -8344,7 +8355,6 @@ CSSParserImpl::ParseRect(nsCSSProperty aPropID)
         val.SetInheritValue();
         break;
       case eCSSKeyword_initial:
-      case eCSSKeyword__moz_initial:
         if (!ExpectEndProperty()) {
           return false;
         }
@@ -9055,7 +9065,7 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
     if (keyword == eCSSKeyword_default) {
       return false;
     }
-    if (keyword == eCSSKeyword__moz_initial || keyword == eCSSKeyword_initial) {
+    if (keyword == eCSSKeyword_initial) {
       aValue.SetInitialValue();
       return true;
     }
@@ -9084,7 +9094,6 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
         case eCSSKeyword_inherit:
         case eCSSKeyword_initial:
         case eCSSKeyword_default:
-        case eCSSKeyword__moz_initial:
         case eCSSKeyword__moz_use_system_font:
           return false;
         default:
@@ -9842,8 +9851,7 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
                                         bool aIsPrefixed,
                                         uint16_t &aMinElems,
                                         uint16_t &aMaxElems,
-                                        const int32_t *& aVariantMask,
-                                        bool &aIs3D)
+                                        const int32_t *& aVariantMask)
 {
 /* These types represent the common variant masks that will be used to
    * parse out the individual functions.  The order in the enumeration
@@ -9898,8 +9906,6 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
 
   int32_t variantIndex = eNumVariantMasks;
 
-  aIs3D = false;
-
   switch (aToken) {
   case eCSSKeyword_translatex:
   case eCSSKeyword_translatey:
@@ -9913,17 +9919,14 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     variantIndex = eLengthCalc;
     aMinElems = 1U;
     aMaxElems = 1U;
-    aIs3D = true;
     break;
   case eCSSKeyword_translate3d:
     /* Exactly two lengthds or percents and a number */
     variantIndex = eTwoLengthPercentCalcsOneLengthCalc;
     aMinElems = 3U;
     aMaxElems = 3U;
-    aIs3D = true;
     break;
   case eCSSKeyword_scalez:
-    aIs3D = true;
   case eCSSKeyword_scalex:
   case eCSSKeyword_scaley:
     /* Exactly one scale factor. */
@@ -9936,11 +9939,9 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     variantIndex = eThreeNumbers;
     aMinElems = 3U;
     aMaxElems = 3U;
-    aIs3D = true;
     break;
   case eCSSKeyword_rotatex:
   case eCSSKeyword_rotatey:
-    aIs3D = true;
   case eCSSKeyword_rotate:
   case eCSSKeyword_rotatez:
     /* Exactly one angle. */
@@ -9952,7 +9953,6 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     variantIndex = eThreeNumbersOneAngle;
     aMinElems = 4U;
     aMaxElems = 4U;
-    aIs3D = true;
     break;
   case eCSSKeyword_translate:
     /* One or two lengths or percents. */
@@ -9995,14 +9995,12 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     variantIndex = aIsPrefixed ? eMatrix3dPrefixed : eMatrix3d;
     aMinElems = 16U;
     aMaxElems = 16U;
-    aIs3D = true;
     break;
   case eCSSKeyword_perspective:
     /* Exactly one scale number. */
     variantIndex = ePositiveLength;
     aMinElems = 1U;
     aMaxElems = 1U;
-    aIs3D = true;
     break;
   default:
     /* Oh dear, we didn't match.  Report an error. */
@@ -10029,8 +10027,7 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
  * error if something goes wrong.
  */
 bool
-CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
-                                    nsCSSValue& aValue, bool& aIs3D)
+CSSParserImpl::ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue)
 {
   if (!GetToken(true))
     return false;
@@ -10045,7 +10042,7 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
 
   if (!GetFunctionParseInformation(keyword, aIsPrefixed,
-                                   minElems, maxElems, variantMask, aIs3D))
+                                   minElems, maxElems, variantMask))
     return false;
 
   return ParseFunction(keyword, variantMask, 0, minElems, maxElems, aValue);
@@ -10065,11 +10062,7 @@ bool CSSParserImpl::ParseTransform(bool aIsPrefixed)
   } else {
     nsCSSValueList* cur = value.SetListValue();
     for (;;) {
-      bool is3D;
-      if (!ParseSingleTransform(aIsPrefixed, cur->mValue, is3D)) {
-        return false;
-      }
-      if (is3D && !nsLayoutUtils::Are3DTransformsEnabled()) {
+      if (!ParseSingleTransform(aIsPrefixed, cur->mValue)) {
         return false;
       }
       if (CheckEndProperty()) {
@@ -10111,9 +10104,7 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
       value.SetPairValue(position.mXValue, position.mYValue);
     } else {
       nsCSSValue depth;
-      if (!nsLayoutUtils::Are3DTransformsEnabled() ||
-          // only try parsing if 3-D transforms are enabled
-          !ParseVariant(depth, VARIANT_LENGTH | VARIANT_CALC, nullptr)) {
+      if (!ParseVariant(depth, VARIANT_LENGTH | VARIANT_CALC, nullptr)) {
         depth.SetFloatValue(0.0f, eCSSUnit_Pixel);
       }
       value.SetTripletValue(position.mXValue, position.mYValue, depth);

@@ -44,6 +44,7 @@ var Browser = {
       messageManager.loadFrameScript("chrome://browser/content/Util.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/Content.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/FormHelper.js", true);
+      messageManager.loadFrameScript("chrome://browser/content/library/SelectionPrototype.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/SelectionHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ContextMenuHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/FindHandler.js", true);
@@ -973,8 +974,8 @@ var Browser = {
 
   onAboutPolicyClick: function() {
     FlyoutPanelsUI.hide();
-    BrowserUI.newTab(Services.prefs.getCharPref("app.privacyURL"),
-                     Browser.selectedTab);
+    let linkStr = Services.urlFormatter.formatURLPref("app.privacyURL");
+    BrowserUI.newTab(linkStr, Browser.selectedTab);
   }
 
 };

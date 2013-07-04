@@ -416,6 +416,10 @@ XPCOMGlueLoad(const char *xpcomFile)
         cursor = xpcomDir;
     }
 
+    if (getenv("MOZ_RUN_GTEST")) {
+        strcat(xpcomDir, ".gtest");
+    }
+
     ScopedCloseFile flist;
     flist = TS_tfopen(xpcomDir, READ_TEXTMODE);
     if (!flist) {

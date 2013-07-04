@@ -6,6 +6,7 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Loader.h"
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
@@ -157,7 +158,7 @@ nsLayoutStylesheetCache::Shutdown()
 }
 
 size_t
-nsLayoutStylesheetCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   if (!nsLayoutStylesheetCache::gStyleCache) {
     return 0;
@@ -168,7 +169,7 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 }
 
 size_t
-nsLayoutStylesheetCache::SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const
+nsLayoutStylesheetCache::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
 

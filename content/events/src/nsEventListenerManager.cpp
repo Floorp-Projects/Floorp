@@ -24,6 +24,7 @@
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsView.h"
@@ -99,7 +100,7 @@ MutationBitForEventType(uint32_t aEventType)
   return 0;
 }
 
-uint32_t nsEventListenerManager::sCreatedCount = 0;
+uint32_t nsEventListenerManager::sMainThreadCreatedCount = 0;
 
 nsEventListenerManager::nsEventListenerManager(EventTarget* aTarget) :
   mMayHavePaintEventListener(false),
@@ -115,7 +116,9 @@ nsEventListenerManager::nsEventListenerManager(EventTarget* aTarget) :
 {
   NS_ASSERTION(aTarget, "unexpected null pointer");
 
-  ++sCreatedCount;
+  if (NS_IsMainThread()) {
+    ++sMainThreadCreatedCount;
+  }
 }
 
 nsEventListenerManager::~nsEventListenerManager() 
@@ -731,6 +734,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
   nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
+  JSAutoRequest ar(context->GetNativeContext());
   JS::Rooted<JSObject*> scope(context->GetNativeContext(),
                               global->GetGlobalJSObject());
 
@@ -1167,8 +1171,12 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
       CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls),
                                   true, nullptr);
     }
-    const nsDependentSubstring& eventType =
-      Substring(nsDependentAtomString(ls.mTypeAtom), 2);
+    nsAutoString eventType;
+    if (ls.mAllEvents) {
+      eventType.SetIsVoid(true);
+    } else {
+      eventType.Assign(Substring(nsDependentAtomString(ls.mTypeAtom), 2));
+    }
     // EventListenerInfo is defined in XPCOM, so we have to go ahead
     // and convert to an XPCOM callback here...
     nsRefPtr<nsEventListenerInfo> info =
@@ -1270,7 +1278,7 @@ nsEventListenerManager::GetEventHandlerInternal(nsIAtom *aEventName)
 }
 
 size_t
-nsEventListenerManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsEventListenerManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
   const
 {
   size_t n = aMallocSizeOf(this);

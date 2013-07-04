@@ -49,11 +49,11 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedString> In2();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Scale();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> XChannelSelector();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> YChannelSelector();
+  already_AddRefed<SVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedString> In2();
+  already_AddRefed<SVGAnimatedNumber> Scale();
+  already_AddRefed<SVGAnimatedEnumeration> XChannelSelector();
+  already_AddRefed<SVGAnimatedEnumeration> YChannelSelector();
 
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance* aInstance,

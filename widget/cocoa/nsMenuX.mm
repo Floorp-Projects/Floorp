@@ -412,8 +412,8 @@ void nsMenuX::MenuConstruct()
       do_GetService(nsIXPConnect::GetCID(), &rv);
     if (NS_SUCCEEDED(rv)) {
       nsIDocument* ownerDoc = menuPopup->OwnerDoc();
-      nsIScriptGlobalObject* sgo;
-      if (ownerDoc && (sgo = ownerDoc->GetScriptGlobalObject())) {
+      nsCOMPtr<nsIScriptGlobalObject> sgo;
+      if (ownerDoc && (sgo = do_QueryInterface(ownerDoc->GetWindow()))) {
         nsCOMPtr<nsIScriptContext> scriptContext = sgo->GetContext();
         JSObject* global = sgo->GetGlobalJSObject();
         if (scriptContext && global) {

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _LIBMATH_H
-#define _LIBMATH_H
+#ifndef jslibmath_h
+#define jslibmath_h
 
 #include "mozilla/FloatingPoint.h"
 
@@ -72,5 +72,4 @@ NumberMod(double a, double b) {
 
 }
 
-#endif /* _LIBMATH_H */
-
+#endif /* jslibmath_h */

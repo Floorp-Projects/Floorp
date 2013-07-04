@@ -55,7 +55,8 @@ class TestCrash(unittest.TestCase):
         self.stdouts.append(["this is some output"])
         self.assertFalse(mozcrash.check_for_crashes(self.tempdir,
                                                     'symbols_path',
-                                                    stackwalk_binary=self.stackwalk))
+                                                    stackwalk_binary=self.stackwalk,
+                                                    quiet=True))
 
     def test_simple(self):
         """
@@ -65,7 +66,8 @@ class TestCrash(unittest.TestCase):
         self.stdouts.append(["this is some output"])
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 'symbols_path',
-                                                stackwalk_binary=self.stackwalk))
+                                                stackwalk_binary=self.stackwalk,
+                                                quiet=True))
 
     def test_stackwalk_envvar(self):
         """
@@ -75,7 +77,8 @@ class TestCrash(unittest.TestCase):
         self.stdouts.append(["this is some output"])
         os.environ['MINIDUMP_STACKWALK'] = self.stackwalk
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path'))
+                                                'symbols_path',
+                                                quiet=True))
         del os.environ['MINIDUMP_STACKWALK']
 
     def test_save_path(self):
@@ -89,7 +92,8 @@ class TestCrash(unittest.TestCase):
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 'symbols_path',
                                                 stackwalk_binary=self.stackwalk,
-                                                dump_save_path=save_path))
+                                                dump_save_path=save_path,
+                                                quiet=True))
         self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
 
     def test_save_path_not_present(self):
@@ -102,7 +106,8 @@ class TestCrash(unittest.TestCase):
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 'symbols_path',
                                                 stackwalk_binary=self.stackwalk,
-                                                dump_save_path=save_path))
+                                                dump_save_path=save_path,
+                                                quiet=True))
         self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
 
     def test_save_path_isfile(self):
@@ -117,7 +122,8 @@ class TestCrash(unittest.TestCase):
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 'symbols_path',
                                                 stackwalk_binary=self.stackwalk,
-                                                dump_save_path=save_path))
+                                                dump_save_path=save_path,
+                                                quiet=True))
         self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
 
     def test_save_path_envvar(self):
@@ -131,7 +137,8 @@ class TestCrash(unittest.TestCase):
         os.environ['MINIDUMP_SAVE_PATH'] = save_path
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 'symbols_path',
-                                                stackwalk_binary=self.stackwalk))
+                                                stackwalk_binary=self.stackwalk,
+                                                quiet=True))
         del os.environ['MINIDUMP_SAVE_PATH']
         self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
 
@@ -158,7 +165,8 @@ class TestCrash(unittest.TestCase):
                                         '/symbols','',''))
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
                                                 symbol_url,
-                                                stackwalk_binary=self.stackwalk))
+                                                stackwalk_binary=self.stackwalk,
+                                                quiet=True))
 
 if __name__ == '__main__':
     unittest.main()

@@ -16,11 +16,11 @@ ACCESSFU_FILES := \
   EventManager.jsm \
   jar.mn \
   Makefile.in \
+  OutputGenerator.jsm \
   Presentation.jsm \
   TouchAdapter.jsm \
   TraversalRules.jsm \
   Utils.jsm \
-  UtteranceGenerator.jsm \
   $(NULL)
 
 ACCESSFU_DEST = $(FINAL_TARGET)/modules/accessibility

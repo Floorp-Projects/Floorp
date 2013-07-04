@@ -1,23 +1,21 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=341604
+https://bugzilla.mozilla.org/show_bug.cgi?id=341604
 Implement HTML5 sandbox attribute for IFRAMEs
 -->
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 341604 - navigation</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-	<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script type="application/javascript">
-
-SimpleTest.expectAssertions(1, 2);
-
 /** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs **/
-/** Navigation tests **/
+/** Navigation tests Part 1**/
 
+SimpleTest.expectAssertions(1, 3);
 SimpleTest.waitForExplicitFinish();
 // a postMessage handler that is used by sandboxed iframes without
 // 'allow-same-origin'/other windows to communicate pass/fail back to this main page.
@@ -31,28 +29,66 @@ function receiveMessage(event) {
   // this message is part of if_10's test
   if (event.data.test == 'if_10') {
     doIf10TestPart2();
-    return;
+  } else if (event.data == "test attempted") {
+    testAttempted();
+  } else {
+    ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
   }
-
-  ok_wrapper(event.data.ok, event.data.desc);
 }
 
-var completedTests = 0;
+// Open windows for tests to attempt to navigate later.
+var windowsToClose = new Array();
+windowsToClose.push(window.open("about:blank", "window_to_navigate"));
+windowsToClose.push(window.open("about:blank", "window_to_navigate2"));
+
+var attemptedTests = 0;
 var passedTests = 0;
+var totalTestsToPass = 8;
+var totalTestsToAttempt = 13;
 
-function ok_wrapper(result, desc) {
+function ok_wrapper(result, desc, addToAttempted = true) {
   ok(result, desc);
-
-  completedTests++;
 
   if (result) {
     passedTests++;
   }
 
-  if (completedTests == 6) {
-    is(passedTests, 6, "There are 6 navigation tests that should pass");
+  if (addToAttempted) {
+    testAttempted();
+  }
+}
+
+// Added so that tests that don't register unless they fail,
+// can at least notify that they've attempted to run.
+function testAttempted() {
+  attemptedTests++;
+  if (attemptedTests == totalTestsToAttempt) {
+    // Make sure all tests have had a chance to complete.
+    setTimeout(function() {finish();}, 1000);
+  }
+}
+
+var finishCalled = false;
+
+function finish() {
+  if (!finishCalled) {
+    finishCalled = true;
+    is(passedTests, totalTestsToPass, "There are " + totalTestsToPass + " navigation tests that should pass");
+
+    for (var i = 0; i < windowsToClose.length; i++) {
+      windowsToClose[i].close();
+    }
 
     SimpleTest.finish();
+  }
+}
+
+function checkTestsFinished() {
+  // If our own finish() has not been called, probably failed due to a timeout, so close remaining windows.
+  if (!finishCalled) {
+    for (var i = 0; i < windowsToClose.length; i++) {
+      windowsToClose[i].close();
+    }
   }
 }
 
@@ -78,13 +114,13 @@ function doTest() {
   // and attempts to navigate file_iframe_navigation_start.html contained in if_sibling on this
   // page to file_iframe_sandbox_navigation_fail.html).
 
-  // fails if bad
+  // passes if good, fails if bad
   // 5) When a link is clicked in a sandboxed iframe, the document navigated to is sandboxed
   // the same as the original document and is not same origin with parent document
   // (done by file_iframe_sandbox_d_if6.html which simulates a link click and navigates
   // to file_iframe_sandbox_d_if7.html which attempts to call back into its parent).
 
-  // fails if bad
+  // passes if good, fails if bad
   // 6) An iframe (if_8) has sandbox="allow-same-origin allow-scripts", the sandboxed document
   // (file_iframe_sandbox_d_if_8.html) that it contains accesses its parent (this file) and removes
   // 'allow-same-origin' and then triggers a reload.
@@ -100,7 +136,7 @@ function doTest() {
   // 8) a document in an iframe with sandbox='allow-scripts' should have a different null
   // principal in its original document than a document to which it navigates itself
   // file_iframe_sandbox_d_if_10.html does this, co-ordinating with this page via postMessage
-  
+
   // passes if good
   // 9) a document (file_iframe_sandbox_d_if11.html in an iframe (if_11) with sandbox='allow-scripts'
   // is navigated to file_iframe_sandbox_d_if12.html - when that document loads
@@ -109,21 +145,21 @@ function doTest() {
   // document - this is all contained in file_iframe_sandbox_d_if13.html which is opened in another
   // tab so it has its own isolated session history
   window.open("file_iframe_sandbox_d_if13.html");
-  
+
   // open up the top navigation tests
 
   // fails if bad
   // 10) iframe with sandbox='allow-scripts' can NOT navigate top
   // file_iframe_sandbox_e_if1.html contains file_iframe_sandbox_e_if6.html which
   // attempts to navigate top
-  window.open("file_iframe_sandbox_e_if1.html");
+  windowsToClose.push(window.open("file_iframe_sandbox_e_if1.html"));
 
   // fails if bad
   // 11) iframe with sandbox='allow-scripts' nested inside iframe with
   // 'allow-top-navigation allow-scripts' can NOT navigate top
   // file_iframe_sandbox_e_if2.html contains file_iframe_sandbox_e_if1.html which
   // contains file_iframe_sandbox_e_if6.html which attempts to navigate top
-  window.open("file_iframe_sandbox_e_if2.html");
+  windowsToClose.push(window.open("file_iframe_sandbox_e_if2.html"));
 
   // passes if good
   // 12) iframe with sandbox='allow-top-navigation allow-scripts' can navigate top
@@ -131,7 +167,7 @@ function doTest() {
   window.open("file_iframe_sandbox_e_if3.html");
 
   // passes if good
-  // 131) iframe with sandbox='allow-top-navigation allow-scripts' nested inside an iframe with
+  // 13) iframe with sandbox='allow-top-navigation allow-scripts' nested inside an iframe with
   // 'allow-top-navigation allow-scripts' can navigate top
   // file_iframe_sandbox_e_if4.html contains file_iframe_sandbox_e_if3.html which contains
   // file_iframe_sandbox_e_if5.html which navigates top
@@ -144,7 +180,7 @@ window.modified_if_8 = false;
 
 function reload_if_8() {
   var if_8 = document.getElementById('if_8');
-  if_8.src = 'file_iframe_sandbox_d_if8.html';
+  if_8.src = 'file_iframe_sandbox_d_if8.html?onreload';
 }
 
 function modify_if_8() {
@@ -177,7 +213,7 @@ function modify_if_9() {
   // that's a failed test (allow-scripts was removed
   // the first time).
   if (window.modified_if_9) {
-    ok_wrapper(false, "an sandboxed iframe from which 'allow-scripts' should be removed should not be able to access its parent via a script");
+    ok_wrapper(false, "an sandboxed iframe from which 'allow-scripts' should be removed should not be able to access its parent via a script", false);
 
     // need to return here since we end up in an infinite loop otherwise
     return;
@@ -189,6 +225,7 @@ function modify_if_9() {
   if_9.sandbox = 'allow-same-origin';
 
   sendMouseEvent({type:'click'}, 'a_button2');
+  testAttempted();
 }
 
 var firstPrincipal = "";
@@ -204,8 +241,8 @@ function doIf10TestPart1() {
   var if_10 = document.getElementById('if_10');
   firstPrincipal = SpecialPowers.wrap(if_10).contentDocument.nodePrincipal.origin;
   if_10.src = 'file_iframe_sandbox_d_if10.html';
-
 }
+
 function doIf10TestPart2() {
   var if_10 = document.getElementById('if_10');
   // use SpecialPowers to get the principal of if_10
@@ -214,16 +251,16 @@ function doIf10TestPart2() {
     " allow-same-origin and the first document is navigated to the second");
 }
 </script>
-<body>
+<body onunload="checkTestsFinished()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=341604">Mozilla Bug 341604</a> - Implement HTML5 sandbox attribute for IFRAMEs
 <p id="display"></p>
 <div id="content">
 <iframe sandbox="allow-scripts" id="if_1" src="file_iframe_sandbox_d_if1.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id="if_2" src="file_iframe_sandbox_d_if2.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id="if_3" src="file_iframe_sandbox_d_if3.html" height="10" width="10"></iframe>
-<iframe sandbox="allow_scripts allow-same-origin" id="if_5" src="file_iframe_sandbox_d_if5.html" height="10" width="10"></iframe>
-<iframe id="if_sibling" src="file_iframe_sandbox_navigation_start.html" height="10" width="10"></iframe>
-<iframe sandbox="allow_scripts" id="if_6" src="file_iframe_sandbox_d_if6.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-same-origin" id="if_5" src="file_iframe_sandbox_d_if5.html" height="10" width="10"></iframe>
+<iframe id="if_sibling" name="if_sibling" src="file_iframe_sandbox_navigation_start.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts" id="if_6" src="file_iframe_sandbox_d_if6.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-same-origin allow-scripts" id="if_8" src="file_iframe_sandbox_d_if8.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-same-origin allow-scripts" id="if_9" src="file_iframe_sandbox_d_if9.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id="if_10" src="file_iframe_sandbox_navigation_start.html" onload='doIf10TestPart1()' height="10" width="10"></iframe>

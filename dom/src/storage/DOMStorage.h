@@ -6,6 +6,7 @@
 #ifndef nsDOMStorage_h___
 #define nsDOMStorage_h___
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMStorage.h"
 #include "nsPIDOMStorage.h"
 #include "nsWeakReference.h"
@@ -25,15 +26,15 @@ class DOMStorage MOZ_FINAL : public nsIDOMStorage
   NS_DECL_NSIDOMSTORAGE
 
   // nsPIDOMStorage
-  virtual StorageType GetType() const;
-  virtual DOMStorageManager* GetManager() const { return mManager; }
-  virtual const DOMStorageCache* GetCache() const { return mCache; }
+  virtual StorageType GetType() const MOZ_OVERRIDE;
+  virtual DOMStorageManager* GetManager() const MOZ_OVERRIDE { return mManager; }
+  virtual const DOMStorageCache* GetCache() const MOZ_OVERRIDE { return mCache; }
 
-  virtual nsTArray<nsString>* GetKeys();
-  virtual nsIPrincipal* GetPrincipal();
-  virtual bool PrincipalEquals(nsIPrincipal* aPrincipal);
-  virtual bool CanAccess(nsIPrincipal* aPrincipal);
-  virtual bool IsPrivate() { return mIsPrivate; }
+  virtual nsTArray<nsString>* GetKeys() MOZ_OVERRIDE;
+  virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE;
+  virtual bool PrincipalEquals(nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
+  virtual bool CanAccess(nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
+  virtual bool IsPrivate() MOZ_OVERRIDE { return mIsPrivate; }
 
   DOMStorage(DOMStorageManager* aManager,
              DOMStorageCache* aCache,

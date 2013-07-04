@@ -161,7 +161,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    (void)mCallback->Complete();
+    (void)mCallback->Complete(NS_OK, nullptr);
     return NS_OK;
   }
 private:

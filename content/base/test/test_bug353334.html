@@ -29,12 +29,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=353334
 SimpleTest.waitForExplicitFinish();
 
 function doPrincipalTest(id) {
-  var doc = $(id).contentDocument;
+  var doc = SpecialPowers.wrap($(id).contentDocument);
 
-  isnot(SpecialPowers.getNodePrincipal(doc), undefined, "Should have a principal");
-  isnot(SpecialPowers.getNodePrincipal(doc), null, "Should have a non-null principal");
-  is(SpecialPowers.getNodePrincipal(doc),
-     SpecialPowers.getNodePrincipal(document),
+  isnot(doc.nodePrincipal, undefined, "Should have a principal");
+  isnot(doc.nodePrincipal, null, "Should have a non-null principal");
+  is(doc.nodePrincipal.origin, SpecialPowers.wrap(document).nodePrincipal.origin,
      "Wrong principal for document in node with id='" + id + "'");
 }
 
@@ -44,8 +43,7 @@ function doContentTest(id) {
 }
 
 function checkPrincipal() {
-  is(SpecialPowers.getNodePrincipal(document) instanceof SpecialPowers.Ci.nsIPrincipal,
-     true,
+  ok(SpecialPowers.call_Instanceof(SpecialPowers.wrap(document).nodePrincipal, SpecialPowers.Ci.nsIPrincipal),
      "Should be a principal");
 }
 

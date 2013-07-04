@@ -1,3 +1,5 @@
+#filter substitution
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -101,6 +103,7 @@ nsURLFormatterService.prototype = {
     BUILD_TARGET:     function() this.appInfo.OS + "_" + this.ABI,
     OS_VERSION:       function() this.OSVersion,
     CHANNEL:          function() UpdateChannel.get(),
+    GOOGLE_API_KEY:   function() "@MOZ_GOOGLE_API_KEY@",
     DISTRIBUTION:     function() this.distribution.id,
     DISTRIBUTION_VERSION: function() this.distribution.version
   },

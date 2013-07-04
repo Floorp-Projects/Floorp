@@ -10,13 +10,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= lwbrk_s
 MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY  = 1
 
 
 ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
+else
+ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk3)
 else
 ifeq  ($(MOZ_WIDGET_TOOLKIT),windows)
 else
@@ -26,10 +27,11 @@ CSRCS		= rulebrk.c
 endif
 endif
 endif
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 CXXFLAGS	+= \
 		$(MOZ_PANGO_CFLAGS) \
 		$(NULL)

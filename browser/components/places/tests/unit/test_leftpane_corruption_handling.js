@@ -104,11 +104,15 @@ function run_test() {
   // Create the left pane, and store its current status, it will be used
   // as reference value.
   gLeftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
-  gReferenceJSON = folderToJSON(gLeftPaneFolderId);
 
-  // Kick-off tests.
   do_test_pending();
-  do_timeout(0, run_next_test);
+
+  Task.spawn(function() {
+    gReferenceJSON = yield folderToJSON(gLeftPaneFolderId);
+
+    // Kick-off tests.
+    do_timeout(0, run_next_test);
+  });
 }
 
 function run_next_test() {
@@ -121,11 +125,13 @@ function run_next_test() {
     gLeftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
     PlacesUIUtils.__defineGetter__("allBookmarksFolderId", gAllBookmarksFolderIdGetter);
     // Check the new left pane folder.
-    let leftPaneJSON = folderToJSON(gLeftPaneFolderId);
-    do_check_true(compareJSON(gReferenceJSON, leftPaneJSON));
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(gFolderId), "test");
-    // Go to next test.
-    do_timeout(0, run_next_test);
+    Task.spawn(function() {
+      let leftPaneJSON = yield folderToJSON(gLeftPaneFolderId);
+      do_check_true(compareJSON(gReferenceJSON, leftPaneJSON));
+      do_check_eq(PlacesUtils.bookmarks.getItemTitle(gFolderId), "test");
+      // Go to next test.
+      do_timeout(0, run_next_test);
+    });
   }
   else {
     // All tests finished.
@@ -138,20 +144,23 @@ function run_next_test() {
  * Convert a folder item id to a JSON representation of it and its contents.
  */
 function folderToJSON(aItemId) {
-  let query = PlacesUtils.history.getNewQuery();
-  query.setFolders([aItemId], 1);
-  let options = PlacesUtils.history.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  let writer = {
-    value: "",
-    write: function PU_wrapNode__write(aStr, aLen) {
-      this.value += aStr;
-    }
-  };
-  PlacesUtils.serializeNodeAsJSONToOutputStream(root, writer, false, false);
-  do_check_true(writer.value.length > 0);
-  return writer.value;
+  return Task.spawn(function() {
+    let query = PlacesUtils.history.getNewQuery();
+    query.setFolders([aItemId], 1);
+    let options = PlacesUtils.history.getNewQueryOptions();
+    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+    let root = PlacesUtils.history.executeQuery(query, options).root;
+    let writer = {
+      value: "",
+      write: function PU_wrapNode__write(aStr, aLen) {
+        this.value += aStr;
+      }
+    };
+    yield BookmarkJSONUtils.serializeNodeAsJSONToOutputStream(root, writer,
+                                                              false, false);
+    do_check_true(writer.value.length > 0);
+    throw new Task.Result(writer.value);
+  });
 }
 
 /**

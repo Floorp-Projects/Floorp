@@ -636,6 +636,10 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       nsCOMPtr<nsIWidget> parentWidget;
       if (parentWindow)
         parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+      // NOTE: the logic for this visibility check is duplicated in
+      // nsIDOMWindowUtils::isParentWindowMainWidgetVisible - if we change
+      // how a window is determined "visible" in this context then we should
+      // also adjust that attribute and/or any consumers of it...
       if (parentWidget && !parentWidget->IsVisible())
         return NS_ERROR_NOT_AVAILABLE;
     }

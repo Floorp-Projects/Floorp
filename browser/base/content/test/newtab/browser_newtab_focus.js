@@ -28,6 +28,7 @@ function runTests() {
   yield countFocus(1);
 
   Services.prefs.clearUserPref("accessibility.tabfocus");
+  NewTabUtils.allPages.enabled = true;
 }
 
 /**

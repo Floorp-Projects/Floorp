@@ -9,6 +9,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ANDROID_APK_NAME := FfxCP
+
 JAVAFILES = \
   DirCursor.java \
   ffxcp.java \
@@ -28,7 +30,10 @@ RES_FILES = \
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  FfxCP.apk  \
+  $(ANDROID_APK_NAME).ap_ \
+  $(ANDROID_APK_NAME)-unsigned-unaligned.apk \
+  $(ANDROID_APK_NAME)-unaligned.apk \
+  $(ANDROID_APK_NAME).apk \
   $(NULL)
 
 GARBAGE_DIRS += network-libs
@@ -40,23 +45,22 @@ include $(topsrcdir)/config/rules.mk
 # include Android specific java flags - using these instead of what's in rules.mk
 include $(topsrcdir)/config/android-common.mk
 
-tools:: FfxCP.apk
+tools:: $(ANDROID_APK_NAME).apk
 
 classes.dex: $(JAVAFILES)
 	$(JAVAC) $(JAVAC_FLAGS) -d classes  $(addprefix $(srcdir)/,$(JAVAFILES))
 	$(DX) --dex --output=$@ classes
 
-FfxCP.ap_: $(srcdir)/AndroidManifest.xml
-	$(AAPT) package -f -M $(srcdir)/AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
+$(ANDROID_APK_NAME).ap_: AndroidManifest.xml
+	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -S res -F $@
 
-FfxCP-unsigned-unaligned.apk: FfxCP.ap_ classes.dex
-	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z FfxCP.ap_ -f classes.dex
+$(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
+	cp $< $@
+	$(ZIP) -0 $@ classes.dex
 
-FfxCP-unaligned.apk: FfxCP-unsigned-unaligned.apk
-	cp  FfxCP-unsigned-unaligned.apk $@
-ifdef JARSIGNER
-  $(JARSIGNER) $@
-endif
+$(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
+	cp $< $@
+	$(DEBUG_JARSIGNER) $@
 
-FfxCP.apk: FfxCP-unaligned.apk
-	$(ZIPALIGN) -f -v 4 FfxCP-unaligned.apk $@
+$(ANDROID_APK_NAME).apk: $(ANDROID_APK_NAME)-unaligned.apk
+	$(ZIPALIGN) -f -v 4 $< $@

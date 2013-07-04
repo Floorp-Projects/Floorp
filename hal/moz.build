@@ -19,6 +19,7 @@ EXPORTS.mozilla += [
     'HalWakeLock.h',
 ]
 
+TEST_DIRS += ['tests']
 CPP_SOURCES += [
     'Hal.cpp',
     'HalWakeLock.cpp',
@@ -137,4 +138,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     CPP_SOURCES += [
         'FallbackNetwork.cpp'
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    CMMSRCS += [
+        'CocoaSensor.mm',
+        'smslib.mm',
     ]

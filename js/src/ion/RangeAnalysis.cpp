@@ -11,12 +11,12 @@
 
 #include "vm/NumericConversions.h"
 
-#include "Ion.h"
-#include "IonAnalysis.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "RangeAnalysis.h"
-#include "IonSpewer.h"
+#include "ion/Ion.h"
+#include "ion/IonAnalysis.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/RangeAnalysis.h"
+#include "ion/IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
@@ -84,11 +84,6 @@ using mozilla::IsNegative;
 // usefully used for other forms of bounds check elimination) and remove them
 // after range analysis is performed. The remaining compiler phases do not ever
 // encounter beta nodes.
-
-RangeAnalysis::RangeAnalysis(MIRGraph &graph)
-  : graph_(graph)
-{
-}
 
 static bool
 IsDominatedUse(MBasicBlock *block, MUse *use)
@@ -354,12 +349,21 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
 void
 Range::unionWith(const Range *other)
 {
-   lower_infinite_ |= other->lower_infinite_;
-   upper_infinite_ |= other->upper_infinite_;
-   decimal_ |= other->decimal_;
-   max_exponent_ = Max(max_exponent_, other->max_exponent_);
-   setLower(Min(lower_, other->lower_));
-   setUpper(Max(upper_, other->upper_));
+   bool decimal = decimal_ | other->decimal_;
+   uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
+
+   if (lower_infinite_ || other->lower_infinite_)
+       makeLowerInfinite();
+   else
+       setLower(Min(lower_, other->lower_));
+
+   if (upper_infinite_ || other->upper_infinite_)
+       makeUpperInfinite();
+   else
+       setUpper(Max(upper_, other->upper_));
+
+   decimal_ = decimal;
+   max_exponent_ = max_exponent;
 }
 
 static const Range emptyRange;
@@ -678,8 +682,13 @@ MAbs::computeRange()
 
     Range other(getOperand(0));
 
-    Range *range = new Range(0,
-                             Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper())),
+    int64_t max = 0;
+    if (other.isInt32())
+        max = Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper()));
+    else
+        max = RANGE_INF_MAX;
+
+    Range *range = new Range(0, max,
                              other.isDecimal(),
                              other.exponent());
     setRange(range);
@@ -726,6 +735,11 @@ MMod::computeRange()
         return;
     Range lhs(getOperand(0));
     Range rhs(getOperand(1));
+
+    // Infinite % x is NaN
+    if (lhs.isInfinite())
+        return;
+
     int64_t a = Abs<int64_t>(rhs.lower());
     int64_t b = Abs<int64_t>(rhs.upper());
     if (a == 0 && b == 0)
@@ -744,7 +758,13 @@ void
 MTruncateToInt32::computeRange()
 {
     Range input(getOperand(0));
-    setRange(new Range(input.lower(), input.upper()));
+    int32_t lower = input.lower();
+    int32_t upper = input.upper();
+    if (input.isLowerInfinite() || input.isUpperInfinite()) {
+        lower = JSVAL_INT_MIN;
+        upper = JSVAL_INT_MAX;
+    }
+    setRange(new Range(lower, upper));
 }
 
 void
@@ -754,10 +774,38 @@ MToInt32::computeRange()
     setRange(new Range(input.lower(), input.upper()));
 }
 
+static Range *GetTypedArrayRange(int type)
+{
+    switch (type) {
+      case TypedArrayObject::TYPE_UINT8_CLAMPED:
+      case TypedArrayObject::TYPE_UINT8:  return new Range(0, UINT8_MAX);
+      case TypedArrayObject::TYPE_UINT16: return new Range(0, UINT16_MAX);
+      case TypedArrayObject::TYPE_UINT32: return new Range(0, UINT32_MAX);
+
+      case TypedArrayObject::TYPE_INT8:   return new Range(INT8_MIN, INT8_MAX);
+      case TypedArrayObject::TYPE_INT16:  return new Range(INT16_MIN, INT16_MAX);
+      case TypedArrayObject::TYPE_INT32:  return new Range(INT32_MIN, INT32_MAX);
+
+      case TypedArrayObject::TYPE_FLOAT32:
+      case TypedArrayObject::TYPE_FLOAT64:
+        break;
+    }
+
+  return NULL;
+}
+
+void
+MLoadTypedArrayElement::computeRange()
+{
+    if (Range *range = GetTypedArrayRange(arrayType()))
+        setRange(range);
+}
+
 void
 MLoadTypedArrayElementStatic::computeRange()
 {
-    setRange(new Range(this));
+    if (Range *range = GetTypedArrayRange(TypedArrayObject::type(typedArray_)))
+        setRange(range);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1397,13 +1445,21 @@ MToDouble::isOperandTruncated(size_t index) const
     return type() == MIRType_Int32;
 }
 
-// Ensure that all observables (non-resume point) uses can work with a truncated
+// Ensure that all observables uses can work with a truncated
 // version of the |candidate|'s result.
 static bool
 AllUsesTruncate(MInstruction *candidate)
 {
-    for (MUseDefIterator use(candidate); use; use++) {
-        if (!use.def()->isOperandTruncated(use.index()))
+    for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
+        if (!use->consumer()->isDefinition()) {
+            // We can only skip testing resume points, if all original uses are still present.
+            // Only than testing all uses is enough to guarantee the truncation isn't observerable.
+            if (candidate->isUseRemoved())
+                return false;
+            continue;
+        }
+
+        if (!use->consumer()->toDefinition()->isOperandTruncated(use->index()))
             return false;
     }
 

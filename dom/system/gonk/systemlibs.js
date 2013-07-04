@@ -202,28 +202,60 @@ this.libnetutils = (function () {
     let dns2buf = ctypes.char.array(4096)();
     let serverbuf = ctypes.char.array(4096)();
     let lease = ctypes.int();
-    let c_dhcp_do_request =
-      library.declare("dhcp_do_request", ctypes.default_abi,
-                      ctypes.int,      // return value
-                      ctypes.char.ptr, // ifname
-                      ctypes.char.ptr, // ipaddr
-                      ctypes.char.ptr, // gateway
-                      ctypes.int.ptr,  // prefixlen
-                      ctypes.char.ptr, // dns1
-                      ctypes.char.ptr, // dns2
-                      ctypes.char.ptr, // server
-                      ctypes.int.ptr); // lease
+    let vendorbuf = ctypes.char.array(4096)();
+    let c_dhcp_do_request;
+
+    // also changed for 16
+    if (sdkVersion >= 16) {
+      c_dhcp_do_request =
+        library.declare("dhcp_do_request", ctypes.default_abi,
+                        ctypes.int,       // return value
+                        ctypes.char.ptr,  // ifname
+                        ctypes.char.ptr,  // ipaddr
+                        ctypes.char.ptr,  // gateway
+                        ctypes.int.ptr,   // prefixlen
+                        ctypes.char.ptr,  // dns1
+                        ctypes.char.ptr,  // dns2
+                        ctypes.char.ptr,  // server
+                        ctypes.int.ptr,   // lease
+                        ctypes.char.ptr); // vendorinfo
+    } else {
+      c_dhcp_do_request =
+        library.declare("dhcp_do_request", ctypes.default_abi,
+                        ctypes.int,      // return value
+                        ctypes.char.ptr, // ifname
+                        ctypes.char.ptr, // ipaddr
+                        ctypes.char.ptr, // gateway
+                        ctypes.int.ptr,  // prefixlen
+                        ctypes.char.ptr, // dns1
+                        ctypes.char.ptr, // dns2
+                        ctypes.char.ptr, // server
+                        ctypes.int.ptr); // lease
+    }
 
 
     iface.dhcp_do_request = function dhcp_do_request(ifname) {
-      let ret = c_dhcp_do_request(ifname,
-                                  ipaddrbuf,
-                                  gatewaybuf,
-                                  prefixLen.address(),
-                                  dns1buf,
-                                  dns2buf,
-                                  serverbuf,
-                                  lease.address());
+      let ret;
+      if (sdkVersion >= 16) {
+        ret = c_dhcp_do_request(ifname,
+                                ipaddrbuf,
+                                gatewaybuf,
+                                prefixLen.address(),
+                                dns1buf,
+                                dns2buf,
+                                serverbuf,
+                                lease.address(),
+                                vendorbuf);
+      } else {
+        ret = c_dhcp_do_request(ifname,
+                                ipaddrbuf,
+                                gatewaybuf,
+                                prefixLen.address(),
+                                dns1buf,
+                                dns2buf,
+                                serverbuf,
+                                lease.address());
+      }
 
       if (ret && DEBUG) {
         let error = iface.dhcp_get_errmsg();
@@ -237,7 +269,8 @@ this.libnetutils = (function () {
         dns1_str: dns1buf.readString(),
         dns2_str: dns2buf.readString(),
         server_str: serverbuf.readString(),
-        lease: lease.value | 0
+        lease: lease.value | 0,
+        vendor_str: vendorbuf.readString()
       };
       obj.ipaddr = netHelpers.stringToIP(obj.ipaddr_str);
       obj.mask_str = netHelpers.ipToString(obj.mask);

@@ -195,7 +195,8 @@ InstallXBLField(JSContext* cx,
   MOZ_ASSERT(field);
 
   // This mirrors code in nsXBLProtoImpl::InstallImplementation
-  nsIScriptGlobalObject* global = xblNode->OwnerDoc()->GetScriptGlobalObject();
+  nsCOMPtr<nsIScriptGlobalObject> global =
+    do_QueryInterface(xblNode->OwnerDoc()->GetWindow());
   if (!global) {
     return true;
   }

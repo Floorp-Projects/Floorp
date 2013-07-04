@@ -191,7 +191,9 @@
           if (!referrer)
             document.getAnonymousElementByAttribute(this, "anonid", "showpage-button").setAttribute("disabled", "true");
           let file = Downloads._getLocalFile(this.getAttribute("target"));
-
+          if (!file) {
+            throw new Error("download-done: Couldn't bind item with target: "+this.getAttribute("target"));
+          }
           let mimeService = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
           let mimeType;
           try {

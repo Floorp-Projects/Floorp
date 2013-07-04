@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
 #include "nsHttpRequestHead.h"
@@ -14,6 +17,7 @@
 #include "nsISocketTransport.h"
 #include "nsIServiceManager.h"
 #include "nsISSLSocketControl.h"
+#include "sslt.h"
 #include "nsStringStream.h"
 #include "netCore.h"
 #include "nsNetCID.h"
@@ -61,11 +65,12 @@ nsHttpConnection::nsHttpConnection()
     , mRemainingConnectionUses(0xffffffff)
     , mClassification(nsAHttpTransaction::CLASS_GENERAL)
     , mNPNComplete(false)
-    , mSetupNPNCalled(false)
+    , mSetupSSLCalled(false)
     , mUsingSpdyVersion(0)
     , mPriority(nsISupportsPriority::PRIORITY_NORMAL)
     , mReportedSpdy(false)
     , mEverUsedSpdy(false)
+    , mTransactionCaps(0)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -233,8 +238,6 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
 bool
 nsHttpConnection::EnsureNPNComplete()
 {
-    // NPN is only used by SPDY right now.
-    //
     // If for some reason the components to check on NPN aren't available,
     // this function will just return true to continue on and disable SPDY
 
@@ -302,9 +305,10 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     nsresult rv;
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    LOG(("nsHttpConnection::Activate [this=%x trans=%x caps=%x]\n",
+    LOG(("nsHttpConnection::Activate [this=%p trans=%x caps=%x]\n",
          this, trans, caps));
 
+    mTransactionCaps = caps;
     mPriority = pri;
     if (mTransaction && mUsingSpdyVersion)
         return AddTransaction(trans, pri);
@@ -320,7 +324,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     trans->GetSecurityCallbacks(getter_AddRefs(callbacks));
     SetSecurityCallbacks(callbacks);
 
-    SetupNPN(caps); // only for spdy
+    SetupSSL(caps);
 
     // take ownership of the transaction
     mTransaction = trans;
@@ -357,85 +361,70 @@ failed_activation:
 }
 
 void
-nsHttpConnection::SetupNPN(uint32_t caps)
+nsHttpConnection::SetupSSL(uint32_t caps)
 {
-    if (mSetupNPNCalled)                                /* do only once */
+    LOG(("nsHttpConnection::SetupSSL %p caps=0x%X\n", this, caps));
+
+    if (mSetupSSLCalled) // do only once
         return;
-    mSetupNPNCalled = true;
+    mSetupSSLCalled = true;
 
-    // Setup NPN Negotiation if necessary (only for SPDY)
-    if (!mNPNComplete) {
+    if (mNPNComplete)
+        return;
 
-        mNPNComplete = true;
+    // we flip this back to false if SetNPNList succeeds at the end
+    // of this function
+    mNPNComplete = true;
 
-        if (mConnInfo->UsingSSL()) {
-            LOG(("nsHttpConnection::SetupNPN Setting up "
-                 "Next Protocol Negotiation"));
-            nsCOMPtr<nsISupports> securityInfo;
-            nsresult rv =
-                mSocketTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
-            if (NS_FAILED(rv))
-                return;
+    if (!mConnInfo->UsingSSL())
+        return;
 
-            nsCOMPtr<nsISSLSocketControl> ssl =
-                do_QueryInterface(securityInfo, &rv);
-            if (NS_FAILED(rv))
-                return;
+    LOG(("nsHttpConnection::SetupSSL Setting up "
+         "Next Protocol Negotiation"));
+    nsCOMPtr<nsISupports> securityInfo;
+    nsresult rv =
+        mSocketTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
+    if (NS_FAILED(rv))
+        return;
 
-            nsTArray<nsCString> protocolArray;
+    nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo, &rv);
+    if (NS_FAILED(rv))
+        return;
 
-            // The first protocol is used as the fallback if none of the
-            // protocols supported overlap with the server's list.
-            // In the case of overlap, matching priority is driven by
-            // the order of the server's advertisement.
-            protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
-
-            if (gHttpHandler->IsSpdyEnabled() &&
-                !(caps & NS_HTTP_DISALLOW_SPDY)) {
-                LOG(("nsHttpConnection::SetupNPN Allow SPDY NPN selection"));
-                if (gHttpHandler->SpdyInfo()->ProtocolEnabled(0))
-                    protocolArray.AppendElement(
-                        gHttpHandler->SpdyInfo()->VersionString[0]);
-                if (gHttpHandler->SpdyInfo()->ProtocolEnabled(1))
-                    protocolArray.AppendElement(
-                        gHttpHandler->SpdyInfo()->VersionString[1]);
-            }
-
-            if (NS_SUCCEEDED(ssl->SetNPNList(protocolArray))) {
-                LOG(("nsHttpConnection::Init Setting up SPDY Negotiation OK"));
-                mNPNComplete = false;
-            }
-        }
+    if (caps & NS_HTTP_ALLOW_RSA_FALSESTART) {
+        LOG(("nsHttpConnection::SetupSSL %p "
+             ">= RSA Key Exchange Expected\n", this));
+        ssl->SetKEAExpected(ssl_kea_rsa);
     }
-}
 
-void
-nsHttpConnection::HandleAlternateProtocol(nsHttpResponseHead *responseHead)
-{
-    // Look for the Alternate-Protocol header. Alternate-Protocol is
-    // essentially a way to rediect future transactions from http to
-    // spdy.
-    //
+    if (caps & NS_HTTP_ALLOW_RC4_FALSESTART) {
+        LOG(("nsHttpConnection::SetupSSL %p "
+             ">= RC4 Key Exchange Expected\n", this));
+        ssl->SetSymmetricCipherExpected(ssl_calg_rc4);
+    }
 
-    if (!gHttpHandler->IsSpdyEnabled() || mUsingSpdyVersion)
-        return;
+    nsTArray<nsCString> protocolArray;
 
-    const char *val = responseHead->PeekHeader(nsHttp::Alternate_Protocol);
-    if (!val)
-        return;
+    // The first protocol is used as the fallback if none of the
+    // protocols supported overlap with the server's list.
+    // In the case of overlap, matching priority is driven by
+    // the order of the server's advertisement.
+    protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
 
-    // The spec allows redirections to any port, but due to concerns over
-    // silently redirecting to stealth ports we only allow port 443
-    //
-    // Alternate-Protocol: 5678:somethingelse, 443:npn-spdy/2
+    if (gHttpHandler->IsSpdyEnabled() &&
+        !(caps & NS_HTTP_DISALLOW_SPDY)) {
+        LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
+        if (gHttpHandler->SpdyInfo()->ProtocolEnabled(0))
+            protocolArray.AppendElement(
+                gHttpHandler->SpdyInfo()->VersionString[0]);
+        if (gHttpHandler->SpdyInfo()->ProtocolEnabled(1))
+            protocolArray.AppendElement(
+                gHttpHandler->SpdyInfo()->VersionString[1]);
+    }
 
-    uint8_t alternateProtocolVersion;
-    if (NS_SUCCEEDED(gHttpHandler->SpdyInfo()->
-                     GetAlternateProtocolVersionIndex(val,
-                                                      &alternateProtocolVersion))) {
-         LOG(("Connection %p Transaction %p found Alternate-Protocol "
-             "header %s", this, mTransaction.get(), val));
-        gHttpHandler->ConnMgr()->ReportSpdyAlternateProtocol(this);
+    if (NS_SUCCEEDED(ssl->SetNPNList(protocolArray))) {
+        LOG(("nsHttpConnection::Init Setting up SPDY Negotiation OK"));
+        mNPNComplete = false;
     }
 }
 
@@ -465,7 +454,7 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
 void
 nsHttpConnection::Close(nsresult reason)
 {
-    LOG(("nsHttpConnection::Close [this=%x reason=%x]\n", this, reason));
+    LOG(("nsHttpConnection::Close [this=%p reason=%x]\n", this, reason));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -507,7 +496,7 @@ nsHttpConnection::Close(nsresult reason)
 nsresult
 nsHttpConnection::ProxyStartSSL()
 {
-    LOG(("nsHttpConnection::ProxyStartSSL [this=%x]\n", this));
+    LOG(("nsHttpConnection::ProxyStartSSL [this=%p]\n", this));
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     nsCOMPtr<nsISupports> securityInfo;
@@ -623,7 +612,7 @@ nsHttpConnection::IsAlive()
 
     // SocketTransport::IsAlive can run the SSL state machine, so make sure
     // the NPN options are set before that happens.
-    SetupNPN(0);
+    SetupSSL(mTransactionCaps);
 
     bool alive;
     nsresult rv = mSocketTransport->IsAlive(&alive);
@@ -843,9 +832,6 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
 
     if (!foundKeepAliveMax && mRemainingConnectionUses && !mUsingSpdyVersion)
         --mRemainingConnectionUses;
-
-    if (!mProxyConnectStream)
-        HandleAlternateProtocol(responseHead);
 
     // If we're doing a proxy connect, we need to check whether or not
     // it was successful.  If so, we have to reset the transaction and step-up
@@ -1161,7 +1147,7 @@ nsHttpConnection::EndIdleMonitoring()
 void
 nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpConnection::CloseTransaction[this=%x trans=%x reason=%x]\n",
+    LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%x reason=%x]\n",
         this, trans, reason));
 
     MOZ_ASSERT(trans == mTransaction, "wrong transaction");
@@ -1365,7 +1351,7 @@ nsHttpConnection::OnWriteSegment(char *buf,
 nsresult
 nsHttpConnection::OnSocketReadable()
 {
-    LOG(("nsHttpConnection::OnSocketReadable [this=%x]\n", this));
+    LOG(("nsHttpConnection::OnSocketReadable [this=%p]\n", this));
 
     PRIntervalTime now = PR_IntervalNow();
     PRIntervalTime delta = now - mLastReadTime;
@@ -1473,7 +1459,7 @@ nsHttpConnection::SetupProxyConnect()
 {
     const char *val;
 
-    LOG(("nsHttpConnection::SetupProxyConnect [this=%x]\n", this));
+    LOG(("nsHttpConnection::SetupProxyConnect [this=%p]\n", this));
 
     NS_ENSURE_TRUE(!mProxyConnectStream, NS_ERROR_ALREADY_INITIALIZED);
     MOZ_ASSERT(!mUsingSpdyVersion,

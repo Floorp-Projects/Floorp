@@ -1,13 +1,13 @@
 # Tests related to SVG Animation (using SMIL), focusing on the animateMotion
 # element.
 
-skip-if(B2G) == animateMotion-by-1.svg      lime.svg # bug 773482
-skip-if(B2G) == animateMotion-by-2.svg      lime.svg # bug 773482
+skip-if(B2G) random-if(Android&&AndroidVersion>=15) == animateMotion-by-1.svg      lime.svg # bug 773482
+skip-if(B2G) random-if(Android&&AndroidVersion>=15) == animateMotion-by-2.svg      lime.svg # bug 773482
 skip-if(B2G) == animateMotion-from-to-1.svg lime.svg # bug 773482
 == animateMotion-indefinite-to-1.svg lime.svg
 == animateMotion-indefinite-to-2.svg lime.svg
-skip-if(B2G) == animateMotion-rotate-1a.svg lime.svg # bug 773482
-skip-if(B2G) == animateMotion-rotate-1b.svg lime.svg # bug 773482
+skip-if(B2G) random-if(Android&&AndroidVersion>=15) == animateMotion-rotate-1a.svg lime.svg # bug 773482
+skip-if(B2G) random-if(Android&&AndroidVersion>=15) == animateMotion-rotate-1b.svg lime.svg # bug 773482
 == animateMotion-rotate-2.svg  lime.svg
 == animateMotion-to-overridden-1.svg lime.svg
 == animateMotion-values-linear-1.svg animateMotion-values-linear-1-ref.svg

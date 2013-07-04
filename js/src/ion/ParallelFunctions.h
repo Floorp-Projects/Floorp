@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_parallel_functions_h__
-#define jsion_parallel_functions_h__
+#ifndef ion_ParallelFunctions_h
+#define ion_ParallelFunctions_h
 
 #include "vm/ThreadPool.h"
 #include "vm/ForkJoin.h"
@@ -40,6 +40,13 @@ JSObject* ParPush(ParPushArgs *args);
 // failure or else `array`, which is convenient during code
 // generation.
 JSObject *ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length);
+
+// String related parallel functions. These tend to call existing VM functions
+// that take a ThreadSafeContext.
+ParallelResult ParConcatStrings(ForkJoinSlice *slice, HandleString left, HandleString right,
+                                MutableHandleString out);
+ParallelResult ParIntToString(ForkJoinSlice *slice, int i, MutableHandleString out);
+ParallelResult ParDoubleToString(ForkJoinSlice *slice, double d, MutableHandleString out);
 
 // These parallel operations fail if they would be required to convert
 // to a string etc etc.
@@ -76,4 +83,4 @@ void ParCallToUncompiledScript(JSFunction *func);
 } // namespace ion
 } // namespace js
 
-#endif // jsion_parallel_functions_h__
+#endif /* ion_ParallelFunctions_h */

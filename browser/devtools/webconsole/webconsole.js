@@ -37,6 +37,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
+                                  "resource:///modules/devtools/VariablesViewController.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource:///modules/devtools/shared/event-emitter.js");
 
@@ -118,7 +121,7 @@ const MESSAGE_PREFERENCE_KEYS = [
 //  Error         Warning   Info    Log
   [ "network",    null,         null,   "networkinfo", ],  // Network
   [ "csserror",   "cssparser",  null,   null,          ],  // CSS
-  [ "exception",  "jswarn",     null,   null,          ],  // JS
+  [ "exception",  "jswarn",     null,   "jslog",       ],  // JS
   [ "error",      "warn",       "info", "log",         ],  // Web Developer
   [ null,         null,         null,   null,          ],  // Input
   [ null,         null,         null,   null,          ],  // Output
@@ -178,6 +181,7 @@ const MIN_FONT_SIZE = 10;
 const MAX_LONG_STRING_LENGTH = 200000;
 
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
+const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per target*
@@ -199,6 +203,7 @@ function WebConsoleFrame(aWebConsoleOwner)
   this._outputQueue = [];
   this._pruneCategoriesQueue = {};
   this._networkRequests = {};
+  this.filterPrefs = {};
 
   this._toggleFilter = this._toggleFilter.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
@@ -306,6 +311,13 @@ WebConsoleFrame.prototype = {
   filterPrefs: null,
 
   /**
+   * Prefix used for filter preferences.
+   * @private
+   * @type string
+   */
+  _filterPrefsPrefix: FILTER_PREFS_PREFIX,
+
+  /**
    * The nesting depth of the currently active console group.
    */
   groupDepth: 0,
@@ -343,14 +355,36 @@ WebConsoleFrame.prototype = {
 
   _destroyer: null,
 
+  // Used in tests.
   _saveRequestAndResponseBodies: false,
 
   /**
    * Tells whether to save the bodies of network requests and responses.
    * Disabled by default to save memory.
-   * @type boolean
+   *
+   * @return boolean
+   *         The saveRequestAndResponseBodies pref value.
    */
-  get saveRequestAndResponseBodies() this._saveRequestAndResponseBodies,
+  getSaveRequestAndResponseBodies:
+  function WCF_getSaveRequestAndResponseBodies() {
+    let deferred = Promise.defer();
+    let toGet = [
+      "NetworkMonitor.saveRequestAndResponseBodies"
+    ];
+
+    // Make sure the web console client connection is established first.
+    this.webConsoleClient.getPreferences(toGet, aResponse => {
+      if (!aResponse.error) {
+        this._saveRequestAndResponseBodies = aResponse.preferences[toGet[0]];
+        deferred.resolve(this._saveRequestAndResponseBodies);
+      }
+      else {
+        deferred.reject(aResponse.error);
+      }
+    });
+
+    return deferred.promise;
+  },
 
   /**
    * Setter for saving of network request and response bodies.
@@ -358,17 +392,34 @@ WebConsoleFrame.prototype = {
    * @param boolean aValue
    *        The new value you want to set.
    */
-  set saveRequestAndResponseBodies(aValue) {
+  setSaveRequestAndResponseBodies:
+  function WCF_setSaveRequestAndResponseBodies(aValue) {
+    let deferred = Promise.defer();
     let newValue = !!aValue;
-    let preferences = {
+    let toSet = {
       "NetworkMonitor.saveRequestAndResponseBodies": newValue,
     };
 
-    this.webConsoleClient.setPreferences(preferences, function(aResponse) {
+    // Make sure the web console client connection is established first.
+    this.webConsoleClient.setPreferences(toSet, aResponse => {
       if (!aResponse.error) {
         this._saveRequestAndResponseBodies = newValue;
+        deferred.resolve(aResponse);
       }
-    }.bind(this));
+      else {
+        deferred.reject(aResponse.error);
+      }
+    });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Getter for the persistent logging preference.
+   * @type boolean
+   */
+  get persistLog() {
+    return Services.prefs.getBoolPref(PREF_PERSISTLOG);
   },
 
   /**
@@ -400,7 +451,6 @@ WebConsoleFrame.prototype = {
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
     this.proxy.connect().then(() => { // on success
-      this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
       this._initDefer.resolve(this);
     }, (aReason) => { // on failure
       let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
@@ -453,42 +503,48 @@ WebConsoleFrame.prototype = {
       this.inputNode.style.fontSize = fontSize + "px";
     }
 
+    let updateSaveBodiesPrefUI = (aElement) => {
+      this.getSaveRequestAndResponseBodies().then(aValue => {
+        aElement.setAttribute("checked", aValue);
+        this.emit("save-bodies-ui-toggled");
+      });
+    }
+
+    let reverseSaveBodiesPref = ({ target: aElement }) => {
+      this.getSaveRequestAndResponseBodies().then(aValue => {
+        this.setSaveRequestAndResponseBodies(!aValue);
+        aElement.setAttribute("checked", aValue);
+        this.emit("save-bodies-pref-reversed");
+      });
+    }
+
     let saveBodies = doc.getElementById("saveBodies");
-    saveBodies.addEventListener("command", function() {
-      this.saveRequestAndResponseBodies = !this.saveRequestAndResponseBodies;
-    }.bind(this));
-    saveBodies.setAttribute("checked", this.saveRequestAndResponseBodies);
+    saveBodies.addEventListener("click", reverseSaveBodiesPref);
     saveBodies.disabled = !this.getFilterState("networkinfo") &&
                           !this.getFilterState("network");
 
-    saveBodies.parentNode.addEventListener("popupshowing", function() {
-      saveBodies.setAttribute("checked", this.saveRequestAndResponseBodies);
-      saveBodies.disabled = !this.getFilterState("networkinfo") &&
-                            !this.getFilterState("network");
-    }.bind(this));
-
-    // Remove this part when context menu entry is removed.
     let saveBodiesContextMenu = doc.getElementById("saveBodiesContextMenu");
-    saveBodiesContextMenu.addEventListener("command", function() {
-      this.saveRequestAndResponseBodies = !this.saveRequestAndResponseBodies;
-    }.bind(this));
-    saveBodiesContextMenu.setAttribute("checked",
-                                       this.saveRequestAndResponseBodies);
+    saveBodiesContextMenu.addEventListener("click", reverseSaveBodiesPref);
     saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
                                      !this.getFilterState("network");
 
-    saveBodiesContextMenu.parentNode.addEventListener("popupshowing", function() {
-      saveBodiesContextMenu.setAttribute("checked",
-                                         this.saveRequestAndResponseBodies);
+    saveBodies.parentNode.addEventListener("popupshowing", () => {
+      updateSaveBodiesPrefUI(saveBodies);
+      saveBodies.disabled = !this.getFilterState("networkinfo") &&
+                            !this.getFilterState("network");
+    });
+
+    saveBodiesContextMenu.parentNode.addEventListener("popupshowing", () => {
+      updateSaveBodiesPrefUI(saveBodiesContextMenu);
       saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
                                        !this.getFilterState("network");
-    }.bind(this));
+    });
 
     let clearButton = doc.getElementsByClassName("webconsole-clear-console-button")[0];
-    clearButton.addEventListener("command", function WCF__onClearButton() {
+    clearButton.addEventListener("command", () => {
       this.owner._onClearButton();
       this.jsterm.clearOutput(true);
-    }.bind(this));
+    });
 
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
@@ -501,47 +557,31 @@ WebConsoleFrame.prototype = {
    */
   _initDefaultFilterPrefs: function WCF__initDefaultFilterPrefs()
   {
-    this.filterPrefs = {
-      network: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "network"),
-      networkinfo: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "networkinfo"),
-      csserror: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "csserror"),
-      cssparser: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "cssparser"),
-      exception: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "exception"),
-      jswarn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "jswarn"),
-      error: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "error"),
-      info: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "info"),
-      warn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "warn"),
-      log: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "log"),
-      secerror: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "secerror"),
-      secwarn: Services.prefs.getBoolPref(FILTER_PREFS_PREFIX + "secwarn"),
-    };
+    let prefs = ["network", "networkinfo", "csserror", "cssparser", "exception",
+                 "jswarn", "jslog", "error", "info", "warn", "log", "secerror",
+                 "secwarn"];
+    for (let pref of prefs) {
+      this.filterPrefs[pref] = Services.prefs
+                               .getBoolPref(this._filterPrefsPrefix + pref);
+    }
   },
 
   /**
-   * Sets the click events for all binary toggle filter buttons.
+   * Sets the events for the filter input field.
    * @private
    */
   _setFilterTextBoxEvents: function WCF__setFilterTextBoxEvents()
   {
-    let timer = null;
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let timerEvent = this.adjustVisibilityOnSearchStringChange.bind(this);
 
     let onChange = function _onChange() {
-      let timer;
-
       // To improve responsiveness, we let the user finish typing before we
       // perform the search.
-      if (timer == null) {
-        let timerClass = Cc["@mozilla.org/timer;1"];
-        timer = timerClass.createInstance(Ci.nsITimer);
-      }
-      else {
-        timer.cancel();
-      }
-
+      timer.cancel();
       timer.initWithCallback(timerEvent, SEARCH_DELAY,
                              Ci.nsITimer.TYPE_ONE_SHOT);
-    }.bind(this);
+    };
 
     this.filterBox.addEventListener("command", onChange, false);
     this.filterBox.addEventListener("input", onChange, false);
@@ -578,6 +618,14 @@ WebConsoleFrame.prototype = {
 
       aButton.setAttribute("checked", someChecked);
     }, this);
+
+    if (!this.owner._browserConsole) {
+      // The Browser Console displays nsIConsoleMessages which are messages that
+      // end up in the JS category, but they are not errors or warnings, they
+      // are just log messages. The Web Console does not show such messages.
+      let jslog = this.document.querySelector("menuitem[prefKey=jslog]");
+      jslog.hidden = true;
+    }
   },
 
   /**
@@ -723,7 +771,7 @@ WebConsoleFrame.prototype = {
   {
     this.filterPrefs[aToggleType] = aState;
     this.adjustVisibilityForMessageType(aToggleType, aState);
-    Services.prefs.setBoolPref(FILTER_PREFS_PREFIX + aToggleType, aState);
+    Services.prefs.setBoolPref(this._filterPrefsPrefix + aToggleType, aState);
   },
 
   /**
@@ -1177,14 +1225,34 @@ WebConsoleFrame.prototype = {
       severity = SEVERITY_WARNING;
     }
 
+    let objectActors = new Set();
+
+    // Gather the actor IDs.
+    for (let prop of ["errorMessage", "lineText"]) {
+      let grip = aScriptError[prop];
+      if (WebConsoleUtils.isActorGrip(grip)) {
+        objectActors.add(grip.actor);
+      }
+    }
+
+    let errorMessage = aScriptError.errorMessage;
+    if (errorMessage.type && errorMessage.type == "longString") {
+      errorMessage = errorMessage.initial;
+    }
+
     let node = this.createMessageNode(aCategory, severity,
-                                      aScriptError.errorMessage,
+                                      errorMessage,
                                       aScriptError.sourceName,
                                       aScriptError.lineNumber, null, null,
                                       aScriptError.timeStamp);
     if (aScriptError.private) {
       node.setAttribute("private", true);
     }
+
+    if (objectActors.size > 0) {
+      node._objectActors = objectActors;
+    }
+
     return node;
   },
 
@@ -1210,10 +1278,32 @@ WebConsoleFrame.prototype = {
    */
   handleLogMessage: function WCF_handleLogMessage(aPacket)
   {
-    this.outputMessage(CATEGORY_JS, () => {
-      return this.createMessageNode(CATEGORY_JS, SEVERITY_LOG, aPacket.message,
-                                    null, null, null, null, aPacket.timeStamp);
-    });
+    if (aPacket.message) {
+      this.outputMessage(CATEGORY_JS, this._reportLogMessage, [aPacket]);
+    }
+  },
+
+  /**
+   * Display log messages received from the server.
+   *
+   * @private
+   * @param object aPacket
+   *        The message packet received from the server.
+   * @return nsIDOMElement
+   *         The message element to render for the given log message.
+   */
+  _reportLogMessage: function WCF__reportLogMessage(aPacket)
+  {
+    let msg = aPacket.message;
+    if (msg.type && msg.type == "longString") {
+      msg = msg.initial;
+    }
+    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_LOG, msg, null,
+                                      null, null, null, aPacket.timeStamp);
+    if (WebConsoleUtils.isActorGrip(aPacket.message)) {
+      node._objectActors = new Set([aPacket.message.actor]);
+    }
+    return node;
   },
 
   /**
@@ -1977,6 +2067,22 @@ WebConsoleFrame.prototype = {
         }
       });
     }
+    else if (category == CATEGORY_JS &&
+             methodOrNode == this.reportPageError) {
+      let pageError = args[1];
+      for (let prop of ["errorMessage", "lineText"]) {
+        let grip = pageError[prop];
+        if (WebConsoleUtils.isActorGrip(grip)) {
+          this._releaseObject(grip.actor);
+        }
+      }
+    }
+    else if (category == CATEGORY_JS &&
+             methodOrNode == this._reportLogMessage) {
+      if (WebConsoleUtils.isActorGrip(args[0].message)) {
+        this._releaseObject(args[0].message.actor);
+      }
+    }
   },
 
   /**
@@ -2031,13 +2137,9 @@ WebConsoleFrame.prototype = {
     }
     else if (aNode.classList.contains("webconsole-msg-inspector")) {
       let view = aNode._variablesView;
-      let actors = view ?
-                   this.jsterm._objectActorsInVariablesViews.get(view) :
-                   new Set();
-      for (let actor of actors) {
-        this._releaseObject(actor);
+      if (view) {
+        view.controller.releaseActors();
       }
-      actors.clear();
       aNode._variablesView = null;
     }
 
@@ -2670,6 +2772,35 @@ WebConsoleFrame.prototype = {
   },
 };
 
+
+/**
+ * @see VariablesView.simpleValueEvalMacro
+ */
+function simpleValueEvalMacro(aItem, aCurrentString)
+{
+  return VariablesView.simpleValueEvalMacro(aItem, aCurrentString, "_self");
+};
+
+
+/**
+ * @see VariablesView.overrideValueEvalMacro
+ */
+function overrideValueEvalMacro(aItem, aCurrentString)
+{
+  return VariablesView.overrideValueEvalMacro(aItem, aCurrentString, "_self");
+};
+
+
+/**
+ * @see VariablesView.getterOrSetterEvalMacro
+ */
+function getterOrSetterEvalMacro(aItem, aCurrentString)
+{
+  return VariablesView.getterOrSetterEvalMacro(aItem, aCurrentString, "_self");
+}
+
+
+
 /**
  * Create a JSTerminal (a JavaScript command line). This is attached to an
  * existing HeadsUpDisplay (a Web Console instance). This code is responsible
@@ -2696,10 +2827,9 @@ function JSTerm(aWebConsoleFrame)
   this.historyPlaceHolder = 0;
   this._objectActorsInVariablesViews = new Map();
 
-  this._keyPress = this.keyPress.bind(this);
-  this._inputEventHandler = this.inputEventHandler.bind(this);
-  this._fetchVarProperties = this._fetchVarProperties.bind(this);
-  this._fetchVarLongString = this._fetchVarLongString.bind(this);
+  this._keyPress = this._keyPress.bind(this);
+  this._inputEventHandler = this._inputEventHandler.bind(this);
+  this._focusEventHandler = this._focusEventHandler.bind(this);
   this._onKeypressInVariablesView = this._onKeypressInVariablesView.bind(this);
 
   EventEmitter.decorate(this);
@@ -2754,11 +2884,26 @@ JSTerm.prototype = {
   lastInputValue: "",
 
   /**
+   * Tells if the input node changed since the last focus.
+   *
+   * @private
+   * @type boolean
+   */
+  _inputChanged: false,
+
+  /**
+   * Tells if the autocomplete popup was navigated since the last open.
+   *
+   * @private
+   * @type boolean
+   */
+  _autocompletePopupNavigated: false,
+
+  /**
    * History of code that was executed.
    * @type array
    */
   history: null,
-
   autocompletePopup: null,
   inputNode: null,
   completeNode: null,
@@ -2804,6 +2949,7 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("keypress", this._keyPress, false);
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
+    this.inputNode.addEventListener("focus", this._focusEventHandler, false);
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -2952,8 +3098,6 @@ JSTerm.prototype = {
     // attempt to execute the content of the inputNode
     aExecuteString = aExecuteString || this.inputNode.value;
     if (!aExecuteString) {
-      this.writeOutput(l10n.getStr("executeEmptyInput"), CATEGORY_OUTPUT,
-                       SEVERITY_LOG);
       return;
     }
 
@@ -3130,7 +3274,7 @@ JSTerm.prototype = {
   {
     let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
     let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
-    this.sidebar = new ToolSidebar(tabbox, this);
+    this.sidebar = new ToolSidebar(tabbox, this, "webconsole");
     this.sidebar.show();
   },
 
@@ -3209,7 +3353,27 @@ JSTerm.prototype = {
     view.searchEnabled = !aOptions.hideFilterInput;
     view.lazyEmpty = this._lazyVariablesView;
     view.lazyAppend = this._lazyVariablesView;
-    this._objectActorsInVariablesViews.set(view, new Set());
+
+    VariablesViewController.attach(view, {
+      getGripClient: aGrip => {
+        return new GripClient(this.hud.proxy.client, aGrip);
+      },
+      getLongStringClient: aGrip => {
+        return this.webConsoleClient.longString(aGrip);
+      },
+      releaseActor: aActor => {
+        this.hud._releaseObject(aActor);
+      },
+      simpleValueEvalMacro: simpleValueEvalMacro,
+      overrideValueEvalMacro: overrideValueEvalMacro,
+      getterOrSetterEvalMacro: getterOrSetterEvalMacro,
+    });
+
+    // Relay events from the VariablesView.
+    view.on("fetched", (aEvent, aType, aVar) => {
+      this.emit("variablesview-fetched", aVar);
+    });
+
     return view;
   },
 
@@ -3231,16 +3395,11 @@ JSTerm.prototype = {
     view.createHierarchy();
     view.empty();
 
-    let actors = this._objectActorsInVariablesViews.get(view);
-    for (let actor of actors) {
-      // We need to avoid pruning the object inspection starting point.
-      // That one is pruned when the console message is removed.
-      if (view._consoleLastObjectActor != actor) {
-        this.hud._releaseObject(actor);
-      }
-    }
-
-    actors.clear();
+    // We need to avoid pruning the object inspection starting point.
+    // That one is pruned when the console message is removed.
+    view.controller.releaseActors(aActor => {
+      return view._consoleLastObjectActor != aActor;
+    });
 
     if (aOptions.objectActor) {
       // Make sure eval works in the correct context.
@@ -3258,11 +3417,11 @@ JSTerm.prototype = {
     scope.expanded = true;
     scope.locked = true;
 
-    let container = scope.addVar();
-    container.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
+    let container = scope.addItem();
+    container.evaluationMacro = simpleValueEvalMacro;
 
     if (aOptions.objectActor) {
-      this._fetchVarProperties(container, aOptions.objectActor);
+      view.controller.expand(container, aOptions.objectActor);
       view._consoleLastObjectActor = aOptions.objectActor.actor;
     }
     else if (aOptions.rawObject) {
@@ -3299,80 +3458,6 @@ JSTerm.prototype = {
     };
 
     this.requestEvaluation(aString, evalOptions).then(onEval, onEval);
-  },
-
-  /**
-   * Generates the string evaluated when performing simple value changes in the
-   * variables view.
-   *
-   * @private
-   * @param Variable | Property aItem
-   *        The current variable or property.
-   * @param string aCurrentString
-   *        The trimmed user inputted string.
-   * @return string
-   *         The string to be evaluated.
-   */
-  _variablesViewSimpleValueEvalMacro:
-  function JST__variablesViewSimpleValueEvalMacro(aItem, aCurrentString)
-  {
-    return "_self" + aItem.symbolicName + "=" + aCurrentString;
-  },
-
-
-  /**
-   * Generates the string evaluated when overriding getters and setters with
-   * plain values in the variables view.
-   *
-   * @private
-   * @param Property aItem
-   *        The current getter or setter property.
-   * @param string aCurrentString
-   *        The trimmed user inputted string.
-   * @return string
-   *         The string to be evaluated.
-   */
-  _variablesViewOverrideValueEvalMacro:
-  function JST__variablesViewOverrideValueEvalMacro(aItem, aCurrentString)
-  {
-    let parent = aItem.ownerView;
-    let symbolicName = parent.symbolicName;
-    if (symbolicName.indexOf("_self") != 0) {
-      parent._symbolicName = "_self" + symbolicName;
-    }
-
-    let result = VariablesView.overrideValueEvalMacro.apply(this, arguments);
-
-    parent._symbolicName = symbolicName;
-
-    return result;
-  },
-
-  /**
-   * Generates the string evaluated when performing getters and setters changes
-   * in the variables view.
-   *
-   * @private
-   * @param Property aItem
-   *        The current getter or setter property.
-   * @param string aCurrentString
-   *        The trimmed user inputted string.
-   * @return string
-   *         The string to be evaluated.
-   */
-  _variablesViewGetterOrSetterEvalMacro:
-  function JST__variablesViewGetterOrSetterEvalMacro(aItem, aCurrentString)
-  {
-    let propertyObject = aItem.ownerView;
-    let parentObject = propertyObject.ownerView;
-    let parent = parentObject.symbolicName;
-    parentObject._symbolicName = "_self" + parent;
-
-    let result = VariablesView.getterOrSetterEvalMacro.apply(this, arguments);
-
-    parentObject._symbolicName = parent;
-
-    return result;
   },
 
   /**
@@ -3483,144 +3568,7 @@ JSTerm.prototype = {
     aCallback && aCallback(aResponse);
   },
 
-  /**
-   * Adds properties to a variable in the view. Triggered when a variable is
-   * expanded. It does not expand the variable.
-   *
-   * @param object aVar
-   *        The VariablseView Variable instance where the properties get added.
-   * @param object [aGrip]
-   *        Optional, the object actor grip of the variable. If the grip is not
-   *        provided, then the aVar.value is used as the object actor grip.
-   */
-  _fetchVarProperties: function JST__fetchVarProperties(aVar, aGrip)
-  {
-    // Retrieve the properties only once.
-    if (aVar._fetched) {
-      return;
-    }
-    aVar._fetched = true;
 
-    let grip = aGrip || aVar.value;
-    if (!grip) {
-      throw new Error("No object actor grip was given for the variable.");
-    }
-
-    let view = aVar._variablesView;
-    let actors = this._objectActorsInVariablesViews.get(view);
-
-    function addActorForDescriptor(aGrip) {
-      if (WebConsoleUtils.isActorGrip(aGrip)) {
-        actors.add(aGrip.actor);
-      }
-    }
-
-    let onNewProperty = (aProperty) => {
-      if (aProperty.getter || aProperty.setter) {
-        aProperty.evaluationMacro = this._variablesViewOverrideValueEvalMacro;
-        let getter = aProperty.get("get");
-        let setter = aProperty.get("set");
-        if (getter) {
-          getter.evaluationMacro = this._variablesViewGetterOrSetterEvalMacro;
-        }
-        if (setter) {
-          setter.evaluationMacro = this._variablesViewGetterOrSetterEvalMacro;
-        }
-      }
-      else {
-        aProperty.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
-      }
-
-      let grips = [aProperty.value, aProperty.getter, aProperty.setter];
-      grips.forEach(addActorForDescriptor);
-
-      let inspectable = !VariablesView.isPrimitive({ value: aProperty.value });
-      let longString = WebConsoleUtils.isActorGrip(aProperty.value) &&
-                       aProperty.value.type == "longString";
-      if (inspectable) {
-        aProperty.onexpand = this._fetchVarProperties;
-      }
-      else if (longString) {
-        aProperty.onexpand = this._fetchVarLongString;
-        aProperty.showArrow();
-      }
-    };
-
-    let client = new GripClient(this.hud.proxy.client, grip);
-    client.getPrototypeAndProperties((aResponse) => {
-      let { ownProperties, prototype, safeGetterValues } = aResponse;
-      let sortable = VariablesView.NON_SORTABLE_CLASSES.indexOf(grip.class) == -1;
-
-      // Merge the safe getter values into one object such that we can use it
-      // in VariablesView.
-      for (let name of Object.keys(safeGetterValues)) {
-        if (name in ownProperties) {
-          ownProperties[name].getterValue = safeGetterValues[name].getterValue;
-          ownProperties[name].getterPrototypeLevel = safeGetterValues[name]
-                                                     .getterPrototypeLevel;
-        }
-        else {
-          ownProperties[name] = safeGetterValues[name];
-        }
-      }
-
-      // Add all the variable properties.
-      if (ownProperties) {
-        aVar.addProperties(ownProperties, {
-          sorted: sortable,
-          callback: onNewProperty,
-        });
-      }
-
-      // Add the variable's __proto__.
-      if (prototype && prototype.type != "null") {
-        let proto = aVar.addProperty("__proto__", { value: prototype });
-        onNewProperty(proto);
-      }
-
-      aVar._retrieved = true;
-      view.commitHierarchy();
-      this.emit("variablesview-fetched", aVar);
-    });
-  },
-
-  /**
-   * Fetch the full string for a given variable that displays a long string.
-   *
-   * @param object aVar
-   *        The VariablesView Variable instance where the properties get added.
-   */
-  _fetchVarLongString: function JST__fetchVarLongString(aVar)
-  {
-    if (aVar._fetched) {
-      return;
-    }
-    aVar._fetched = true;
-
-    let grip = aVar.value;
-    if (!grip) {
-      throw new Error("No long string actor grip was given for the variable.");
-    }
-
-    let client = this.webConsoleClient.longString(grip);
-    let toIndex = Math.min(grip.length, MAX_LONG_STRING_LENGTH);
-    client.substring(grip.initial.length, toIndex, (aResponse) => {
-      if (aResponse.error) {
-        Cu.reportError("JST__fetchVarLongString substring failure: " +
-                       aResponse.error + ": " + aResponse.message);
-        return;
-      }
-
-      aVar.onexpand = null;
-      aVar.setGrip(grip.initial + aResponse.substring);
-      aVar.hideArrow();
-      aVar._retrieved = true;
-
-      if (toIndex != grip.length) {
-        this.hud.logWarningAboutStringTooLong();
-      }
-    });
-  },
 
   /**
    * Writes a JS object to the JSTerm outputNode.
@@ -3686,6 +3634,8 @@ JSTerm.prototype = {
   /**
    * Clear the Web Console output.
    *
+   * This method emits the "messages-cleared" notification.
+   *
    * @param boolean aClearStorage
    *        True if you want to clear the console messages storage associated to
    *        this Web Console.
@@ -3708,10 +3658,14 @@ JSTerm.prototype = {
     if (aClearStorage) {
       this.webConsoleClient.clearMessagesCache();
     }
+
+    this.emit("messages-cleared");
   },
 
   /**
    * Remove all of the private messages from the Web Console output.
+   *
+   * This method emits the "private-messages-cleared" notification.
    */
   clearPrivateMessages: function JST_clearPrivateMessages()
   {
@@ -3757,39 +3711,45 @@ JSTerm.prototype = {
     this.lastInputValue = aNewValue;
     this.completeNode.value = "";
     this.resizeInput();
+    this._inputChanged = true;
   },
 
   /**
    * The inputNode "input" and "keyup" event handler.
-   *
-   * @param nsIDOMEvent aEvent
+   * @private
    */
-  inputEventHandler: function JSTF_inputEventHandler(aEvent)
+  _inputEventHandler: function JST__inputEventHandler()
   {
     if (this.lastInputValue != this.inputNode.value) {
       this.resizeInput();
       this.complete(this.COMPLETE_HINT_ONLY);
       this.lastInputValue = this.inputNode.value;
+      this._inputChanged = true;
     }
   },
 
   /**
    * The inputNode "keypress" event handler.
    *
+   * @private
    * @param nsIDOMEvent aEvent
    */
-  keyPress: function JSTF_keyPress(aEvent)
+  _keyPress: function JST__keyPress(aEvent)
   {
+    let inputNode = this.inputNode;
+    let inputUpdated = false;
+
     if (aEvent.ctrlKey) {
-      let inputNode = this.inputNode;
-      let closePopup = false;
       switch (aEvent.charCode) {
         case 97:
           // control-a
+          this.clearCompletion();
+
           if (Services.appinfo.OS == "WINNT") {
-            closePopup = true;
+            // Allow Select All on Windows.
             break;
           }
+
           let lineBeginPos = 0;
           if (this.hasMultilineInput()) {
             // find index of closest newline <= to cursor
@@ -3803,8 +3763,8 @@ JSTerm.prototype = {
           }
           inputNode.setSelectionRange(lineBeginPos, lineBeginPos);
           aEvent.preventDefault();
-          closePopup = true;
           break;
+
         case 101:
           // control-e
           if (Services.appinfo.OS == "WINNT") {
@@ -3823,7 +3783,9 @@ JSTerm.prototype = {
           }
           inputNode.setSelectionRange(lineEndPos, lineEndPos);
           aEvent.preventDefault();
+          this.clearCompletion();
           break;
+
         case 110:
           // Control-N differs from down arrow: it ignores autocomplete state.
           // Note that we preserve the default 'down' navigation within
@@ -3832,9 +3794,14 @@ JSTerm.prototype = {
               this.canCaretGoNext() &&
               this.historyPeruse(HISTORY_FORWARD)) {
             aEvent.preventDefault();
+            // Ctrl-N is also used to focus the Network category button on MacOSX.
+            // The preventDefault() call doesn't prevent the focus from moving
+            // away from the input.
+            inputNode.focus();
           }
-          closePopup = true;
+          this.clearCompletion();
           break;
+
         case 112:
           // Control-P differs from up arrow: it ignores autocomplete state.
           // Note that we preserve the default 'up' navigation within
@@ -3843,16 +3810,15 @@ JSTerm.prototype = {
               this.canCaretGoPrevious() &&
               this.historyPeruse(HISTORY_BACK)) {
             aEvent.preventDefault();
+            // Ctrl-P may also be used to focus some category button on MacOSX.
+            // The preventDefault() call doesn't prevent the focus from moving
+            // away from the input.
+            inputNode.focus();
           }
-          closePopup = true;
+          this.clearCompletion();
           break;
         default:
           break;
-      }
-      if (closePopup) {
-        if (this.autocompletePopup.isOpen) {
-          this.clearCompletion();
-        }
       }
       return;
     }
@@ -3863,9 +3829,7 @@ JSTerm.prototype = {
       return;
     }
 
-    let inputUpdated = false;
-
-    switch(aEvent.keyCode) {
+    switch (aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE:
         if (this.autocompletePopup.isOpen) {
           this.clearCompletion();
@@ -3873,15 +3837,19 @@ JSTerm.prototype = {
         }
         else if (this.sidebar) {
           this._sidebarDestroy();
+          aEvent.preventDefault();
         }
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-        if (this.autocompletePopup.isOpen && this.autocompletePopup.selectedIndex > -1) {
+        if (this._autocompletePopupNavigated &&
+            this.autocompletePopup.isOpen &&
+            this.autocompletePopup.selectedIndex > -1) {
           this.acceptProposedCompletion();
         }
         else {
           this.execute();
+          this._inputChanged = false;
         }
         aEvent.preventDefault();
         break;
@@ -3889,6 +3857,9 @@ JSTerm.prototype = {
       case Ci.nsIDOMKeyEvent.DOM_VK_UP:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_BACKWARD);
+          if (inputUpdated) {
+            this._autocompletePopupNavigated = true;
+          }
         }
         else if (this.canCaretGoPrevious()) {
           inputUpdated = this.historyPeruse(HISTORY_BACK);
@@ -3901,6 +3872,9 @@ JSTerm.prototype = {
       case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_FORWARD);
+          if (inputUpdated) {
+            this._autocompletePopupNavigated = true;
+          }
         }
         else if (this.canCaretGoNext()) {
           inputUpdated = this.historyPeruse(HISTORY_FORWARD);
@@ -3910,6 +3884,33 @@ JSTerm.prototype = {
         }
         break;
 
+      case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
+      case Ci.nsIDOMKeyEvent.DOM_VK_END:
+      case Ci.nsIDOMKeyEvent.DOM_VK_LEFT:
+        if (this.autocompletePopup.isOpen || this.lastCompletion.value) {
+          this.clearCompletion();
+        }
+        break;
+
+      case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT: {
+        let cursorAtTheEnd = this.inputNode.selectionStart ==
+                             this.inputNode.selectionEnd &&
+                             this.inputNode.selectionStart ==
+                             this.inputNode.value.length;
+        let haveSuggestion = this.autocompletePopup.isOpen ||
+                             this.lastCompletion.value;
+        let useCompletion = cursorAtTheEnd || this._autocompletePopupNavigated;
+        if (haveSuggestion && useCompletion &&
+            this.complete(this.COMPLETE_HINT_ONLY) &&
+            this.lastCompletion.value &&
+            this.acceptProposedCompletion()) {
+          aEvent.preventDefault();
+        }
+        if (this.autocompletePopup.isOpen) {
+          this.clearCompletion();
+        }
+        break;
+      }
       case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
         // Generate a completion and accept the first proposed value.
         if (this.complete(this.COMPLETE_HINT_ONLY) &&
@@ -3917,15 +3918,23 @@ JSTerm.prototype = {
             this.acceptProposedCompletion()) {
           aEvent.preventDefault();
         }
-        else {
+        else if (this._inputChanged) {
           this.updateCompleteNode(l10n.getStr("Autocomplete.blank"));
           aEvent.preventDefault();
         }
         break;
-
       default:
         break;
     }
+  },
+
+  /**
+   * The inputNode "focus" event handler.
+   * @private
+   */
+  _focusEventHandler: function JST__focusEventHandler()
+  {
+    this._inputChanged = false;
   },
 
   /**
@@ -4178,9 +4187,11 @@ JSTerm.prototype = {
 
     if (items.length > 1 && !popup.isOpen) {
       popup.openPopup(inputNode);
+      this._autocompletePopupNavigated = false;
     }
     else if (items.length < 2 && popup.isOpen) {
       popup.hidePopup();
+      this._autocompletePopupNavigated = false;
     }
 
     if (items.length == 1) {
@@ -4226,6 +4237,7 @@ JSTerm.prototype = {
     this.updateCompleteNode("");
     if (this.autocompletePopup.isOpen) {
       this.autocompletePopup.hidePopup();
+      this._autocompletePopupNavigated = false;
     }
   },
 
@@ -4289,11 +4301,7 @@ JSTerm.prototype = {
   _sidebarDestroy: function JST__sidebarDestroy()
   {
     if (this._variablesView) {
-      let actors = this._objectActorsInVariablesViews.get(this._variablesView);
-      for (let actor of actors) {
-        this.hud._releaseObject(actor);
-      }
-      actors.clear();
+      this._variablesView.controller.releaseActors();
       this._variablesView = null;
     }
 
@@ -4328,6 +4336,7 @@ JSTerm.prototype = {
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
+    this.inputNode.removeEventListener("focus", this._focusEventHandler, false);
 
     this.hud = null;
   },
@@ -4496,10 +4505,12 @@ CommandController.prototype = {
         let selectedItem = this.owner.outputNode.selectedItem;
         return selectedItem && "url" in selectedItem;
       }
+      case "consoleCmd_clearOutput":
       case "cmd_fontSizeEnlarge":
       case "cmd_fontSizeReduce":
       case "cmd_fontSizeReset":
       case "cmd_selectAll":
+      case "cmd_find":
         return true;
       case "cmd_close":
         return this.owner.owner._browserConsole;
@@ -4518,6 +4529,12 @@ CommandController.prototype = {
         break;
       case "consoleCmd_copyURL":
         this.copyURL();
+        break;
+      case "consoleCmd_clearOutput":
+        this.owner.jsterm.clearOutput(true);
+        break;
+      case "cmd_find":
+        this.owner.filterBox.focus();
         break;
       case "cmd_selectAll":
         this.selectAll();
@@ -4903,6 +4920,10 @@ WebConsoleConnectionProxy.prototype = {
   {
     if (!this.owner) {
       return;
+    }
+
+    if (aEvent == "will-navigate" && !this.owner.persistLog) {
+      this.owner.jsterm.clearOutput();
     }
 
     if (aPacket.url) {

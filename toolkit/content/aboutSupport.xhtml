@@ -30,7 +30,7 @@
     <div id="reset-box" style="visibility: hidden">
       <h3>&resetProfile.title;</h3>
       <p>&resetProfile.description;</p>
-      <button onclick="resetProfileAndRestart()">
+      <button onclick="ResetProfile.openConfirmationDialog(window)">
         &resetProfile.button.label2;
       </button>
     </div>
@@ -81,6 +81,7 @@
             </td>
           </tr>
 
+#ifndef ANDROID
           <tr class="no-copy">
             <th class="column">
               &aboutSupport.appBasicsUpdateHistory;
@@ -92,6 +93,7 @@
               </button>
             </td>
           </tr>
+#endif
 
           <tr>
             <th class="column">

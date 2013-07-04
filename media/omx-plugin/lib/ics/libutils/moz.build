@@ -10,3 +10,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CPP_SOURCES += [
         'libutils.cpp',
     ]
+
+LIBRARY_NAME = 'utils'
+

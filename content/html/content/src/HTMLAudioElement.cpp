@@ -34,12 +34,12 @@ NS_IMPL_ADDREF_INHERITED(HTMLAudioElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLAudioElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLAudioElement)
-NS_HTML_CONTENT_INTERFACE_TABLE4(HTMLAudioElement, nsIDOMHTMLMediaElement,
-                                 nsIDOMHTMLAudioElement, nsITimerCallback,
-                                 nsIAudioChannelAgentCallback)
-NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLAudioElement,
-                                             HTMLMediaElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(HTMLMediaElement)
+  NS_INTERFACE_TABLE_INHERITED4(HTMLAudioElement, nsIDOMHTMLMediaElement,
+                                nsIDOMHTMLAudioElement, nsITimerCallback,
+                                nsIAudioChannelAgentCallback)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
@@ -289,12 +289,7 @@ HTMLAudioElement::UpdateAudioChannelPlayingState()
       // Use a weak ref so the audio channel agent can't leak |this|.
       mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
 
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-      if (domDoc) {
-        bool hidden = false;
-        domDoc->GetHidden(&hidden);
-        mAudioChannelAgent->SetVisibilityState(!hidden);
-      }
+      mAudioChannelAgent->SetVisibilityState(!OwnerDoc()->Hidden());
     }
 
     if (mPlayingThroughTheAudioChannel) {

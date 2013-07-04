@@ -10,10 +10,6 @@ browser[remote="true"] {
   -moz-binding: url("chrome://browser/content/bindings/browser.xml#remote-browser");
 }
 
-#content-navigator {
-  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#content-navigator");
-}
-
 #tabs {
   -moz-binding: url("chrome://browser/content/bindings/tabs.xml#tablist");
 }
@@ -40,6 +36,10 @@ settings {
 
 setting {
   display: none;
+}
+
+autoscroller {
+  -moz-binding: url('chrome://browser/content/bindings/popup.xml#element-popup');
 }
 
 setting[type="bool"] {
@@ -89,7 +89,8 @@ setting[type="menulist"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
 }
 
-#selection-overlay {
+#chrome-selection-overlay,
+#content-selection-overlay {
   -moz-binding: url("chrome://browser/content/bindings/selectionoverlay.xml#selection-binding");
 }
 
@@ -208,18 +209,7 @@ textbox {
   -moz-binding: url("chrome://browser/content/bindings/bindings.xml#textbox");
 }
 
-textbox[multiline="true"] {
-  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#textarea");
-}
-
-textbox[type="timed"] {
-  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#timed-textbox");
-}
-
+/* used in about:config */
 textbox[type="search"] {
   -moz-binding: url("chrome://browser/content/bindings/bindings.xml#search-textbox");
-}
-
-textbox[type="number"] {
-  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#numberbox");
 }

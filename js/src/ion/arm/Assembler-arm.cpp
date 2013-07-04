@@ -6,8 +6,8 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "Assembler-arm.h"
-#include "MacroAssembler-arm.h"
+#include "ion/arm/Assembler-arm.h"
+#include "ion/arm/MacroAssembler-arm.h"
 #include "gc/Marking.h"
 #include "jsutil.h"
 #include "assembler/jit/ExecutableAllocator.h"
@@ -55,7 +55,7 @@ ABIArgGenerator::next(MIRType type)
         floatRegIndex_++;
         break;
       default:
-        JS_NOT_REACHED("Unexpected argument type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
     return current_;
 #else
@@ -87,7 +87,7 @@ ABIArgGenerator::next(MIRType type)
       }
         break;
       default:
-        JS_NOT_REACHED("Unexpected argument type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
     return current_;
 #endif
@@ -730,8 +730,7 @@ Assembler::getCF32Target(Iter *iter)
 
     }
 
-    JS_NOT_REACHED("unsupported branch relocation");
-    return NULL;
+    MOZ_ASSUME_UNREACHABLE("unsupported branch relocation");
 }
 
 uintptr_t
@@ -794,8 +793,7 @@ Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
         uint32_t **ptr = (uint32_t **)&dataInst[offset + 8];
         return *ptr;
     }
-    JS_NOT_REACHED("unsupported relocation");
-    return NULL;
+    MOZ_ASSUME_UNREACHABLE("unsupported relocation");
 }
 
 static IonCode *
@@ -1545,6 +1543,18 @@ Assembler::as_smlal(Register destHI, Register destLO, Register src1, Register sr
     return as_genmul(destHI, destLO, src1, src2, opm_smlal, sc, c);
 }
 
+BufferOffset
+Assembler::as_sdiv(Register rd, Register rn, Register rm, Condition c)
+{
+    return writeInst(0x0710f010 | c | RN(rd) | RM(rm) | rn.code());
+}
+
+BufferOffset
+Assembler::as_udiv(Register rd, Register rn, Register rm, Condition c)
+{
+    return writeInst(0x0730f010 | c | RN(rd) | RM(rm) | rn.code());
+}
+
 // Data transfer instructions: ldr, str, ldrb, strb.
 // Using an int to differentiate between 8 bits and 32 bits is
 // overkill, but meh
@@ -1669,7 +1679,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
         extra_bits1 = 0;
         break;
       default:
-        JS_NOT_REACHED("SAY WHAT?");
+        MOZ_ASSUME_UNREACHABLE("SAY WHAT?");
     }
     return writeInst(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
                      addr.encode() | RT(rt) | mode | c, dest);
@@ -1753,7 +1763,7 @@ Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
     int offset = (char *)constPoolAddr - (char *)loadAddr;
     switch(data.getLoadType()) {
       case PoolHintData::poolBOGUS:
-        JS_NOT_REACHED("bogus load type!");
+        MOZ_ASSUME_UNREACHABLE("bogus load type!");
       case PoolHintData::poolDTR:
         dummy->as_dtr(IsLoad, 32, Offset, data.getReg(),
                       DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)), data.getCond(), instAddr);
@@ -1791,13 +1801,12 @@ Assembler::placeConstantPoolBarrier(int offset)
     // BUG: 700526
     // this is still an active path, however, we do not hit it in the test
     // suite at all.
-    JS_NOT_REACHED("ARMAssembler holdover");
+    MOZ_ASSUME_UNREACHABLE("ARMAssembler holdover");
 #if 0
     offset = (offset - sizeof(ARMWord)) >> 2;
     ASSERT((offset <= BOFFSET_MAX && offset >= BOFFSET_MIN));
     return AL | B | (offset & BRANCH_MASK);
 #endif
-    return -1;
 }
 
 // Control flow stuff:
@@ -1992,22 +2001,21 @@ Assembler::as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
     return as_vfp_float(vd, vn, vm, opv_mul, c);
-    JS_NOT_REACHED("Feature NYI");
+    MOZ_ASSUME_UNREACHABLE("Feature NYI");
 }
 
 BufferOffset
 Assembler::as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
-    JS_NOT_REACHED("Feature NYI");
-    return BufferOffset();
+    MOZ_ASSUME_UNREACHABLE("Feature NYI");
 }
 
 BufferOffset
 Assembler::as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
-    JS_NOT_REACHED("Feature NYI");
+    MOZ_ASSUME_UNREACHABLE("Feature NYI");
     return BufferOffset();
 }
 
@@ -2195,7 +2203,7 @@ Assembler::as_vimm(VFPRegister vd, VFPImm imm, Condition c)
 
     // Don't know how to handle this right now.
     if (!vd.isDouble())
-        JS_NOT_REACHED("non-double immediate");
+        MOZ_ASSUME_UNREACHABLE("non-double immediate");
 
     return writeVFPInst(sz,  c | imm.encode() | VD(vd) | 0x02B00000);
 
@@ -2250,7 +2258,7 @@ Assembler::bind(Label *label, BufferOffset boff)
             else if (branch.is<InstBLImm>())
                 as_bl(dest.diffB<BOffImm>(b), c, b);
             else
-                JS_NOT_REACHED("crazy fixup!");
+                MOZ_ASSUME_UNREACHABLE("crazy fixup!");
             b = next;
         } while (more);
     }
@@ -2308,7 +2316,7 @@ Assembler::retarget(Label *label, Label *target)
             else if (branch.is<InstBLImm>())
                 as_bl(BOffImm(prev), c, labelBranchOffset);
             else
-                JS_NOT_REACHED("crazy fixup!");
+                MOZ_ASSUME_UNREACHABLE("crazy fixup!");
         } else {
             // The target is unbound and unused.  We can just take the head of
             // the list hanging off of label, and dump that into target.
@@ -2791,5 +2799,12 @@ AutoFlushCache::flushAnyway()
     }
     used_ = false;
 }
-
+InstructionIterator::InstructionIterator(Instruction *i_) : i(i_) {
+    const PoolHeader *ph;
+    // If this is a guard, and the next instruction is a header, always work around the pool
+    // If it isn't a guard, then start looking ahead.
+    if (InstIsGuard(i, &ph)) {
+        i = i->next();
+    }
+}
 Assembler *Assembler::dummy = NULL;

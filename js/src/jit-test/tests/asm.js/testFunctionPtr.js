@@ -33,7 +33,7 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f() {return 42} function g() {re
 assertEq(asmLink(asmCompile(USE_ASM + "function f() {return 42} function g() {return 13} function h(i) { i=i|0; return tbl1[i&1]()|0 } var tbl1=[f,g]; var tbl2=[g,g,g,f]; return h"))(1), 13);
 assertEq(asmLink(asmCompile(USE_ASM + "var i=0,j=0; function f() {return i|0} function g() {return j|0} function h(x) { x=x|0; i=5;j=10; return tbl2[x&3]()|0 } var tbl1=[f,g]; var tbl2=[g,g,g,f]; return h"))(3), 5);
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + "var ffi=imp.ffi; function f() {return ffi()|0} function g() {return 13} function h(x) { x=x|0; return tbl2[x&3]()|0 } var tbl2=[g,g,g,f]; return h"), null, {ffi:function(){return 20}})(3), 20);
-assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + "var ffi=imp.ffi; var i=0; function f() {return (~~ffi()+i)|0} function g() {return 13} function h(x) { x=x|0; i=2; return tbl2[x&3]()|0 } var tbl2=[g,g,g,f]; return h"), null, {ffi:function(){return 20}})(3), 22);
+assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + "var ffi=imp.ffi; var i=0; function f() {return ((ffi()|0)+i)|0} function g() {return 13} function h(x) { x=x|0; i=2; return tbl2[x&3]()|0 } var tbl2=[g,g,g,f]; return h"), null, {ffi:function(){return 20}})(3), 22);
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i) {i=i|0; return +((i+1)|0)} function g(d) { d=+d; return +(d+2.5) } function h(i,j) { i=i|0;j=j|0; return +tbl2[i&1](+tbl1[i&1](j)) } var tbl1=[f,f]; var tbl2=[g,g]; return h"))(0,10), 11+2.5);
 
 assertAsmTypeFail(USE_ASM + "function f() {return 42} function g() { return tbl[0]()|0 } var tbl=[f]; return g");

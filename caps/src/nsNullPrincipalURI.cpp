@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNullPrincipalURI.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
@@ -272,14 +275,14 @@ nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
 //// nsISizeOf
 
 size_t
-nsNullPrincipalURI::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsNullPrincipalURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mScheme.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
          mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 size_t
-nsNullPrincipalURI::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+nsNullPrincipalURI::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 

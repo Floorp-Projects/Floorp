@@ -27,6 +27,7 @@
 #include "nsCRT.h"
 #include "nsIObserverService.h"
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
@@ -43,7 +44,7 @@ public:
   nsString mKey;
   nsGlobalNameStruct mGlobalName;
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:
     // - mGlobalName
@@ -825,7 +826,7 @@ nsScriptNameSpaceManager::Observe(nsISupports* aSubject, const char* aTopic,
 void
 nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::DefineInterface aDefineDOMInterface,
-    mozilla::dom::PrefEnabled aPrefEnabled)
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
 {
   nsGlobalNameStruct *s = AddToHash(&mGlobalNames, &aName);
   if (s) {
@@ -833,7 +834,7 @@ nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
       s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
     }
     s->mDefineDOMInterface = aDefineDOMInterface;
-    s->mPrefEnabled = aPrefEnabled;
+    s->mConstructorEnabled = aConstructorEnabled;
   }
 }
 
@@ -841,7 +842,7 @@ void
 nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
     const nsAFlatString& aName,
     mozilla::dom::ConstructNavigatorProperty aNavConstructor,
-    mozilla::dom::PrefEnabled aPrefEnabled)
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
 {
   nsGlobalNameStruct *s = AddToHash(&mNavigatorNames, &aName);
   if (s) {
@@ -849,7 +850,7 @@ nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
       s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
     }
     s->mConstructNavigatorProperty = aNavConstructor;
-    s->mPrefEnabled = aPrefEnabled;
+    s->mConstructorEnabled = aConstructorEnabled;
   }
 }
 
@@ -877,7 +878,7 @@ nsScriptNameSpaceManager::EnumerateGlobalNames(GlobalNameEnumerator aEnumerator,
 }
 
 static size_t
-SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, nsMallocSizeOfFun aMallocSizeOf,
+SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, MallocSizeOf aMallocSizeOf,
                          void *aArg)
 {
     GlobalNameMapEntry* entry = static_cast<GlobalNameMapEntry*>(aHdr);
@@ -885,7 +886,7 @@ SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, nsMallocSizeOfFun aMallocSizeOf,
 }
 
 size_t
-nsScriptNameSpaceManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsScriptNameSpaceManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += PL_DHashTableSizeOfExcludingThis(&mGlobalNames,

@@ -43,6 +43,18 @@ let receivedMessages = [];
 function onLogMessage(aState, aType, aPacket)
 {
   is(aPacket.from, aState.actor, "packet actor");
+  info("received message: " + aPacket.message);
+
+  let found = false;
+  for (let expected of expectedMessages) {
+    if (expected.message == aPacket.message) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    return;
+  }
 
   receivedMessages.push(aPacket);
   if (receivedMessages.length != expectedMessages.length) {

@@ -36,7 +36,6 @@ TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
 LIBS += \
-  $(EXTRA_DSO_LIBS) \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
 
@@ -102,7 +101,7 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
@@ -120,7 +119,7 @@ ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/xulrunner.ico   $(DIST)/branding/app.ico
 	cp $(srcdir)/document.ico  $(DIST)/branding/document.ico
 endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
 	cp $(srcdir)/default32.png   $(DIST)/branding/default32.png
 	cp $(srcdir)/default48.png   $(DIST)/branding/default48.png

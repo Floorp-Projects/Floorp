@@ -35,7 +35,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 GL_PROVIDER = CGL
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 ifdef MOZ_PLATFORM_MAEMO
 GL_PROVIDER = EGL
 else
@@ -70,7 +70,7 @@ endif
 
 # Mac is a special snowflake
 ifeq ($(GL_PROVIDER),CGL)
-CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
+DISABLED_CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
 endif
 
 ifdef MOZ_ANDROID_OMTC
@@ -78,6 +78,8 @@ DEFINES += -DMOZ_ANDROID_OMTC
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 

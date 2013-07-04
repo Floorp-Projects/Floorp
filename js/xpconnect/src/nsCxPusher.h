@@ -16,11 +16,55 @@ class EventTarget;
 
 class nsIScriptContext;
 
+namespace mozilla {
+
+/**
+ * Fundamental cx pushing class. All other cx pushing classes are implemented
+ * in terms of this class.
+ */
+class MOZ_STACK_CLASS AutoCxPusher
+{
+public:
+  AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
+  // XPCShell uses an nsCxPusher, which contains an AutoCxPusher.
+  NS_EXPORT ~AutoCxPusher();
+
+  nsIScriptContext* GetScriptContext() { return mScx; }
+
+private:
+  mozilla::Maybe<JSAutoRequest> mAutoRequest;
+  nsCOMPtr<nsIScriptContext> mScx;
+  bool mScriptIsRunning;
+#ifdef DEBUG
+  JSContext* mPushedContext;
+  unsigned mCompartmentDepthOnEntry;
+#endif
+};
+
+} /* namespace mozilla */
+
+/**
+ * Legacy cx pushing class.
+ *
+ * This class provides a rather wonky interface, with the following quirks:
+ *   * The constructor is a no-op, and callers must explicitly call one of
+ *     the Push() methods.
+ *   * Null must be pushed with PushNull().
+ *   * The cx pusher can be reused multiple times with RePush().
+ *
+ * This class implements this interface in terms of the much simpler
+ * AutoCxPusher class below.
+ */
 class MOZ_STACK_CLASS nsCxPusher
 {
 public:
-  NS_EXPORT nsCxPusher();
-  NS_EXPORT ~nsCxPusher(); // Calls Pop();
+  // This destructor doesn't actually do anything, but it implicitly depends on
+  // the Maybe<AutoCxPusher> destructor, which in turn depends on the
+  // ~AutoCxPusher destructor. If we stick with the default destructor, the
+  // caller needs to be able to link against the AutoCxPusher destructor, which
+  // isn't possible with externally-linked consumers like xpcshell. Hoist this
+  // work into nsCxPusher.cpp and use NS_EXPORT to make it all work right.
+  NS_EXPORT ~nsCxPusher();
 
   // Returns false if something erroneous happened.
   bool Push(mozilla::dom::EventTarget *aCurrentTarget);
@@ -36,19 +80,12 @@ public:
   // Pop() will be a no-op if Push() or PushNull() fail
   NS_EXPORT_(void) Pop();
 
-  nsIScriptContext* GetCurrentScriptContext() { return mScx; }
-private:
-  // Combined code for PushNull() and Push(JSContext*)
-  void DoPush(JSContext* cx);
+  nsIScriptContext* GetCurrentScriptContext() {
+    return mPusher.empty() ? nullptr : mPusher.ref().GetScriptContext();
+  }
 
-  mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  nsCOMPtr<nsIScriptContext> mScx;
-  bool mScriptIsRunning;
-  bool mPushedSomething;
-#ifdef DEBUG
-  JSContext* mPushedContext;
-  unsigned mCompartmentDepthOnEntry;
-#endif
+private:
+  mozilla::Maybe<mozilla::AutoCxPusher> mPusher;
 };
 
 namespace mozilla {
@@ -61,7 +98,7 @@ namespace mozilla {
 class MOZ_STACK_CLASS AutoJSContext {
 public:
   AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-  operator JSContext*();
+  operator JSContext*() const;
 
 protected:
   AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
@@ -73,7 +110,7 @@ private:
   void Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   JSContext* mCx;
-  nsCxPusher mPusher;
+  Maybe<AutoCxPusher> mPusher;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -101,7 +138,7 @@ public:
  * you're doing.
  */
 class MOZ_STACK_CLASS AutoPushJSContext {
-  nsCxPusher mPusher;
+  Maybe<AutoCxPusher> mPusher;
   JSContext* mCx;
 
 public:

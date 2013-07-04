@@ -25,7 +25,7 @@ interface nsIURI;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(24a35de3-40e4-498e-9c1b-2fd0a2d4cae5)]
+[scriptable, uuid(070bfc7f-f8b8-4e84-aa31-a0bfaffa8e8e)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -36,6 +36,8 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long TYPE_PLUGIN   = 2;
   const unsigned long TYPE_DOCUMENT = 3;
   const unsigned long TYPE_NULL     = 4;
+
+  const unsigned long PLUGIN_ACTIVE               = 0xFF;
 
   // The content type is not supported (e.g. plugin not installed)
   const unsigned long PLUGIN_UNSUPPORTED          = 0;
@@ -84,6 +86,13 @@ interface nsIObjectLoadingContent : nsISupports
    * TYPE_NULL will be returned.
    */
   unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
+
+  /**
+   * Returns the base URI of the object as seen by plugins. This differs from
+   * the normal codebase in that it takes <param> tags and plugin-specific
+   * quirks into account.
+   */
+  [noscript] readonly attribute nsIURI baseURI;
 
   /**
    * Returns the plugin instance if it has already been instantiated. This
@@ -155,6 +164,10 @@ interface nsIObjectLoadingContent : nsISupports
    */
   readonly attribute nsIURI srcURI;
 
+  /**
+   * The plugin's current state of fallback content. This property
+   * only makes sense if the plugin is not activated.
+   */
   readonly attribute unsigned long pluginFallbackType;
 
   /**

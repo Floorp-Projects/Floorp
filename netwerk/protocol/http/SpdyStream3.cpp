@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "mozilla/Telemetry.h"
 #include "nsAlgorithm.h"
 #include "nsHttp.h"
@@ -1015,14 +1018,17 @@ SpdyStream3::Uncompress(z_stream *context,
     if (zlib_rv == Z_NEED_DICT) {
       if (triedDictionary) {
         LOG3(("SpdySession3::Uncompress %p Dictionary Error\n", this));
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_ILLEGAL_VALUE;
       }
 
       triedDictionary = true;
       inflateSetDictionary(context, kDictionary, sizeof(kDictionary));
     }
 
-    if (zlib_rv == Z_DATA_ERROR || zlib_rv == Z_MEM_ERROR)
+    if (zlib_rv == Z_DATA_ERROR)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    if (zlib_rv == Z_MEM_ERROR)
       return NS_ERROR_FAILURE;
 
     // zlib's inflate() decreases context->avail_out by the amount it places

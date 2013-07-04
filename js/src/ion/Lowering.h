@@ -4,22 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_lowering_h__
-#define jsion_ion_lowering_h__
+#ifndef ion_Lowering_h
+#define ion_Lowering_h
 
 // This file declares the structures that are used for attaching LIR to a
 // MIRGraph.
 
-#include "IonAllocPolicy.h"
-#include "LIR.h"
-#include "MOpcodes.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/LIR.h"
+#include "ion/MOpcodes.h"
 
 #if defined(JS_CPU_X86)
-# include "x86/Lowering-x86.h"
+# include "ion/x86/Lowering-x86.h"
 #elif defined(JS_CPU_X64)
-# include "x64/Lowering-x64.h"
+# include "ion/x64/Lowering-x64.h"
 #elif defined(JS_CPU_ARM)
-# include "arm/Lowering-arm.h"
+# include "ion/arm/Lowering-arm.h"
 #else
 # error "CPU!"
 #endif
@@ -133,6 +133,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMinMax(MMinMax *ins);
     bool visitAbs(MAbs *ins);
     bool visitSqrt(MSqrt *ins);
+    bool visitAtan2(MAtan2 *ins);
     bool visitPow(MPow *ins);
     bool visitRandom(MRandom *ins);
     bool visitMathFunction(MMathFunction *ins);
@@ -142,6 +143,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitDiv(MDiv *ins);
     bool visitMod(MMod *ins);
     bool visitConcat(MConcat *ins);
+    bool visitParConcat(MParConcat *ins);
     bool visitCharCodeAt(MCharCodeAt *ins);
     bool visitFromCharCode(MFromCharCode *ins);
     bool visitStart(MStart *start);
@@ -230,6 +232,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallInstanceOf(MCallInstanceOf *ins);
     bool visitFunctionBoundary(MFunctionBoundary *ins);
     bool visitIsCallable(MIsCallable *ins);
+    bool visitHaveSameClass(MHaveSameClass *ins);
     bool visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
     bool visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar *ins);
     bool visitAsmJSStoreGlobalVar(MAsmJSStoreGlobalVar *ins);
@@ -247,5 +250,4 @@ class LIRGenerator : public LIRGeneratorSpecific
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_lowering_h__
-
+#endif /* ion_Lowering_h */

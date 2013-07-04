@@ -13,14 +13,13 @@ include $(srcdir)/../objs.mk
 
 EXTRA_DEPS += $(srcdir)/../objs.mk
 
-LIBRARY_NAME	= xpcomglue
 DIST_INSTALL	= 1
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../build \
 	$(NULL)
 
-SDK_HEADERS     = \
+DISABLED_SDK_HEADERS     = \
 	nsXPCOMGlue.h \
 	$(NULL)
 
@@ -34,8 +33,6 @@ FORCE_STATIC_LIB = 1
 STL_FLAGS	=
 
 GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS)
-
-SRCS_IN_OBJDIR	= 1
 
 include $(topsrcdir)/config/rules.mk
 

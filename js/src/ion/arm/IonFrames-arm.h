@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ionframes_arm_h__
-#define jsion_ionframes_arm_h__
+#ifndef ion_arm_IonFrames_arm_h
+#define ion_arm_IonFrames_arm_h
 
 #include "ion/shared/IonFrames-shared.h"
 //#include "ion/arm/Assembler-arm.h"
@@ -154,8 +154,9 @@ class IonExitFooterFrame
     }
 
     // This should only be called for function()->outParam == Type_Handle
-    Value *outVp() {
-        return reinterpret_cast<Value *>(reinterpret_cast<char *>(this) - sizeof(Value));
+    template <typename T>
+    T *outParam() {
+        return reinterpret_cast<T *>(reinterpret_cast<char *>(this) - sizeof(T));
     }
 };
 
@@ -343,13 +344,13 @@ class IonOOLPropertyOpExitFrameLayout
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *obj_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -391,13 +392,13 @@ class IonOOLProxyGetExitFrameLayout
     // The proxy object.
     JSObject *proxy_;
 
-    // Object for JSHandleObject
+    // Object for HandleObject
     JSObject *receiver_;
 
-    // id for JSHandleId
+    // id for HandleId
     jsid id_;
 
-    // space for JSMutableHandleValue result
+    // space for MutableHandleValue result
     // use two uint32_t so compiler doesn't align.
     uint32_t vp0_;
     uint32_t vp1_;
@@ -437,7 +438,7 @@ class IonDOMExitFrameLayout
     IonExitFrameLayout exit_;
     JSObject *thisObj;
 
-    // We need to split the Value in 2 field of 32 bits, otherwise the C++
+    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
@@ -461,6 +462,8 @@ class IonDOMExitFrameLayout
     }
 };
 
+struct IonDOMMethodExitFrameLayoutTraits;
+
 class IonDOMMethodExitFrameLayout
 {
     IonExitFooterFrame footer_;
@@ -468,9 +471,15 @@ class IonDOMMethodExitFrameLayout
     // This must be the last thing pushed, so as to stay common with
     // IonDOMExitFrameLayout.
     JSObject *thisObj_;
+    Value *argv_;
     uintptr_t argc_;
 
-    Value CalleeResult_;
+    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
+    // compiler may add some padding between the fields.
+    uint32_t loCalleeResult_;
+    uint32_t hiCalleeResult_;
+
+    friend struct IonDOMMethodExitFrameLayoutTraits;
 
   public:
     static inline size_t Size() {
@@ -478,12 +487,14 @@ class IonDOMMethodExitFrameLayout
     }
 
     static size_t offsetOfResult() {
-        return offsetof(IonDOMMethodExitFrameLayout, CalleeResult_);
+        return offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_);
     }
+
     inline Value *vp() {
-        JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, CalleeResult_) ==
+        // The code in visitCallDOMNative depends on this static assert holding
+        JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_) ==
                          (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
-        return &CalleeResult_;
+        return reinterpret_cast<Value*>(&loCalleeResult_);
     }
     inline JSObject **thisObjAddress() {
         return &thisObj_;
@@ -491,6 +502,12 @@ class IonDOMMethodExitFrameLayout
     inline uintptr_t argc() {
         return argc_;
     }
+};
+
+struct IonDOMMethodExitFrameLayoutTraits {
+    static const size_t offsetOfArgcFromArgv =
+        offsetof(IonDOMMethodExitFrameLayout, argc_) -
+        offsetof(IonDOMMethodExitFrameLayout, argv_);
 };
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.
@@ -523,4 +540,4 @@ class InvalidationBailoutStack
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ionframes_arm_h
+#endif /* ion_arm_IonFrames_arm_h */

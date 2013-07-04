@@ -6,22 +6,15 @@
 
 /* Definitions for javascript analysis. */
 
-#ifndef jsanalyze_h___
-#define jsanalyze_h___
+#ifndef jsanalyze_h
+#define jsanalyze_h
 
 #include "mozilla/PodOperations.h"
-#include "mozilla/TypeTraits.h"
 
-#include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
-#include "jsopcodeinlines.h"
-
-#include "ds/LifoAlloc.h"
-#include "js/TemplateLib.h"
-#include "vm/ScopeObject.h"
 
 class JSScript;
 
@@ -213,8 +206,7 @@ ReverseCompareOp(JSOp op)
       case JSOP_STRICTNE:
         return op;
       default:
-        JS_NOT_REACHED("unrecognized op");
-        return op;
+        MOZ_ASSUME_UNREACHABLE("unrecognized op");
     }
 }
 
@@ -239,8 +231,7 @@ NegateCompareOp(JSOp op)
       case JSOP_STRICTEQ:
         return JSOP_STRICTNE;
       default:
-        JS_NOT_REACHED("unrecognized op");
-        return op;
+        MOZ_ASSUME_UNREACHABLE("unrecognized op");
     }
 }
 
@@ -302,8 +293,7 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
         return ThisSlot();
 
       default:
-        JS_NOT_REACHED("Bad slot opcode");
-        return 0;
+        MOZ_ASSUME_UNREACHABLE("Bad slot opcode");
     }
 }
 
@@ -729,9 +719,7 @@ class ScriptAnalysis
     bool hasFunctionCalls_:1;
     bool modifiesArguments_:1;
     bool localsAliasStack_:1;
-    bool isJaegerInlineable:1;
     bool isIonInlineable:1;
-    bool isJaegerCompileable:1;
     bool canTrackVars:1;
     bool hasLoops_:1;
 
@@ -769,9 +757,6 @@ class ScriptAnalysis
     bool ionInlineable() const { return isIonInlineable; }
     bool ionInlineable(uint32_t argc) const { return isIonInlineable && argc == script_->function()->nargs; }
     void setIonUninlineable() { isIonInlineable = false; }
-    bool jaegerInlineable() const { return isJaegerInlineable; }
-    bool jaegerInlineable(uint32_t argc) const { return isJaegerInlineable && argc == script_->function()->nargs; }
-    bool jaegerCompileable() { return isJaegerCompileable; }
 
     /* Number of property read opcodes in the script. */
     uint32_t numPropertyReads() const { return numPropertyReads_; }
@@ -826,15 +811,9 @@ class ScriptAnalysis
         return JSOp(*next) == JSOP_POP && !jumpTarget(next);
     }
 
-    const SSAValue &poppedValue(uint32_t offset, uint32_t which) {
-        JS_ASSERT(offset < script_->length);
-        JS_ASSERT(which < GetUseCount(script_, offset) +
-                  (ExtendedUse(script_->code + offset) ? 1 : 0));
-        return getCode(offset).poppedValues[which];
-    }
-    const SSAValue &poppedValue(const jsbytecode *pc, uint32_t which) {
-        return poppedValue(pc - script_->code, which);
-    }
+    inline const SSAValue &poppedValue(uint32_t offset, uint32_t which);
+
+    inline const SSAValue &poppedValue(const jsbytecode *pc, uint32_t which);
 
     const SlotValue *newValues(uint32_t offset) {
         JS_ASSERT(offset < script_->length);
@@ -842,17 +821,8 @@ class ScriptAnalysis
     }
     const SlotValue *newValues(const jsbytecode *pc) { return newValues(pc - script_->code); }
 
-    types::StackTypeSet *pushedTypes(uint32_t offset, uint32_t which = 0) {
-        JS_ASSERT(offset < script_->length);
-        JS_ASSERT(which < GetDefCount(script_, offset) +
-                  (ExtendedDef(script_->code + offset) ? 1 : 0));
-        types::StackTypeSet *array = getCode(offset).pushedTypes;
-        JS_ASSERT(array);
-        return array + which;
-    }
-    types::StackTypeSet *pushedTypes(const jsbytecode *pc, uint32_t which) {
-        return pushedTypes(pc - script_->code, which);
-    }
+    inline types::StackTypeSet *pushedTypes(uint32_t offset, uint32_t which = 0);
+    inline types::StackTypeSet *pushedTypes(const jsbytecode *pc, uint32_t which);
 
     bool hasPushedTypes(const jsbytecode *pc) { return getCode(pc).pushedTypes != NULL; }
 
@@ -885,40 +855,10 @@ class ScriptAnalysis
 
     inline void addPushedType(JSContext *cx, uint32_t offset, uint32_t which, types::Type type);
 
-    types::StackTypeSet *getValueTypes(const SSAValue &v) {
-        switch (v.kind()) {
-          case SSAValue::PUSHED:
-            return pushedTypes(v.pushedOffset(), v.pushedIndex());
-          case SSAValue::VAR:
-            JS_ASSERT(!slotEscapes(v.varSlot()));
-            if (v.varInitial()) {
-                if (v.varSlot() < LocalSlot(script_, 0))
-                    return types::TypeScript::SlotTypes(script_, v.varSlot());
-                return undefinedTypeSet;
-            } else {
-                /*
-                 * Results of intermediate assignments have the same type as
-                 * the first type pushed by the assignment op. Note that this
-                 * may not be the exact same value as was pushed, due to
-                 * post-inc/dec ops.
-                 */
-                return pushedTypes(v.varOffset(), 0);
-            }
-          case SSAValue::PHI:
-            return &v.phiNode()->types;
-          default:
-            /* Cannot compute types for empty SSA values. */
-            JS_NOT_REACHED("Bad SSA value");
-            return NULL;
-        }
-    }
+    inline types::StackTypeSet *getValueTypes(const SSAValue &v);
 
-    types::StackTypeSet *poppedTypes(uint32_t offset, uint32_t which) {
-        return getValueTypes(poppedValue(offset, which));
-    }
-    types::StackTypeSet *poppedTypes(const jsbytecode *pc, uint32_t which) {
-        return getValueTypes(poppedValue(pc, which));
-    }
+    inline types::StackTypeSet *poppedTypes(uint32_t offset, uint32_t which);
+    inline types::StackTypeSet *poppedTypes(const jsbytecode *pc, uint32_t which);
 
     /* Whether an arithmetic operation is operating on integers, with an integer result. */
     bool integerOperation(jsbytecode *pc);
@@ -933,14 +873,7 @@ class ScriptAnalysis
      * Get the use chain for an SSA value. May be invalid for some opcodes in
      * scripts where localsAliasStack(). You have been warned!
      */
-    SSAUseChain *& useChain(const SSAValue &v) {
-        JS_ASSERT(trackUseChain(v));
-        if (v.kind() == SSAValue::PUSHED)
-            return getCode(v.pushedOffset()).pushedUses[v.pushedIndex()];
-        if (v.kind() == SSAValue::VAR)
-            return getCode(v.varOffset()).pushedUses[GetDefCount(script_, v.varOffset())];
-        return v.phiNode()->uses;
-    }
+    inline SSAUseChain *& useChain(const SSAValue &v);
 
     LoopAnalysis *getLoop(uint32_t offset) {
         JS_ASSERT(offset < script_->length);
@@ -948,14 +881,9 @@ class ScriptAnalysis
     }
     LoopAnalysis *getLoop(const jsbytecode *pc) { return getLoop(pc - script_->code); }
 
+
     /* For a JSOP_CALL* op, get the pc of the corresponding JSOP_CALL/NEW/etc. */
-    jsbytecode *getCallPC(jsbytecode *pc)
-    {
-        SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script_->code, 0));
-        JS_ASSERT(uses && uses->popped);
-        JS_ASSERT(js_CodeSpec[script_->code[uses->offset]].format & JOF_INVOKE);
-        return script_->code + uses->offset;
-    }
+    inline jsbytecode *getCallPC(jsbytecode *pc);
 
     /* Accessors for local variable information. */
 
@@ -1128,9 +1056,7 @@ class CrossScriptSSA
         return res;
     }
 
-    types::StackTypeSet *getValueTypes(const CrossSSAValue &cv) {
-        return getFrame(cv.frame).script->analysis()->getValueTypes(cv.v);
-    }
+    inline types::StackTypeSet *getValueTypes(const CrossSSAValue &cv);
 
     bool addInlineFrame(JSScript *script, uint32_t depth, uint32_t parent,
                         jsbytecode *parentpc)
@@ -1167,4 +1093,4 @@ template <> struct IsPod<js::analyze::SSAUseChain>      : TrueType {};
 
 } /* namespace mozilla */
 
-#endif // jsanalyze_h___
+#endif /* jsanalyze_h */

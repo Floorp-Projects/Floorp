@@ -72,34 +72,26 @@ var FeedHandler = {
       // First, let's decide on which feed to subscribe
       let feedIndex = -1;
       if (feeds.length > 1) {
-        // JSON for Prompt
-        let feedResult = {
-          type: "Prompt:Show",
-          multiple: false,
-          selected: [],
-          listitems: []
-        };
+        let p = new Prompt({
+          window: browser.contentWindow,
+        }).setSingleChoiceItems(feeds.map(function(feed) {
+          return { label: feed.title || feed.href }
+        })).show((function(data) {
+          feedIndex = data.button;
+          if (feedIndex == -1)
+            return;
 
-        // Build the list of feeds
-        for (let i = 0; i < feeds.length; i++) {
-          let item = {
-            label: feeds[i].title || feeds[i].href,
-            isGroup: false,
-            inGroup: false,
-            disabled: false,
-            id: i
-          };
-          feedResult.listitems.push(item);
-        }
-        feedIndex = JSON.parse(sendMessageToJava(feedResult)).button;
-      } else {
-        // Only a single feed on the page
-        feedIndex = 0;
+          this.loadFeed(feeds[feedIndex], browser);
+        }).bind(this));
+        return;
       }
 
-      if (feedIndex == -1)
-        return;
-      let feedURL = feeds[feedIndex].href;
+      this.loadFeed(feeds[0], browser);
+    }
+  },
+
+  loadFeed: function fh_loadFeed(aFeed, aBrowser) {
+      let feedURL = aFeed.href;
 
       // Next, we decide on which service to send the feed
       let handlers = this.getContentHandlers(this.TYPE_MAYBE_FEED);
@@ -107,34 +99,21 @@ var FeedHandler = {
         return;
 
       // JSON for Prompt
-      let handlerResult = {
-        type: "Prompt:Show",
-        multiple: false,
-        selected: [],
-        listitems: []
-      };
+      let p = new Prompt({
+        window: aBrowser.contentWindow
+      }).setSingleChoiceItems(handlers.map(function(handler) {
+        return { label: handler.name };
+      })).show(function(data) {
+        if (data.button == -1)
+          return;
 
-      // Build the list of handlers
-      for (let i = 0; i < handlers.length; ++i) {
-        let item = {
-          label: handlers[i].name,
-          isGroup: false,
-          inGroup: false,
-          disabled: false,
-          id: i
-        };
-        handlerResult.listitems.push(item);
-      }
-      let handlerIndex = JSON.parse(sendMessageToJava(handlerResult)).button;
-      if (handlerIndex == -1)
-        return;
+        // Merge the handler URL and the feed URL
+        let readerURL = handlers[data.button].uri;
+        readerURL = readerURL.replace(/%s/gi, encodeURIComponent(feedURL));
 
-      // Merge the handler URL and the feed URL
-      let readerURL = handlers[handlerIndex].uri;
-      readerURL = readerURL.replace(/%s/gi, encodeURIComponent(feedURL));
+        // Open the resultant URL in a new tab
+        BrowserApp.addTab(readerURL, { parentId: BrowserApp.selectedTab.id });
+      });
 
-      // Open the resultant URL in a new tab
-      BrowserApp.addTab(readerURL, { parentId: BrowserApp.selectedTab.id });
-    }
   }
 };

@@ -71,7 +71,7 @@ partial interface HTMLObjectElement {
 };
 
 partial interface HTMLObjectElement {
-  // nsIDOMGetSVGDocument
+  // GetSVGDocument
   Document? getSVGDocument();
 };
 
@@ -175,6 +175,9 @@ interface MozObjectLoadingContent {
    */
   [ChromeOnly]
   readonly attribute URI? srcURI;
+
+  [ChromeOnly]
+  readonly attribute unsigned long defaultFallbackType;
 
   [ChromeOnly]
   readonly attribute unsigned long pluginFallbackType;

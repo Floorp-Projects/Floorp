@@ -201,6 +201,23 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
 }
 
+uint32_t
+AudioDestinationNode::MaxChannelCount() const
+{
+  return Context()->MaxChannelCount();
+}
+
+void
+AudioDestinationNode::SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv)
+{
+  if (aChannelCount > MaxChannelCount()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  AudioNode::SetChannelCount(aChannelCount, aRv);
+}
+
 void
 AudioDestinationNode::DestroyGraph()
 {

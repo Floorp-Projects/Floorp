@@ -17,7 +17,7 @@
  * @See nsIBinaryOutputStream
  */
 
-[scriptable, uuid(7b456cb0-8772-11d3-90cf-0040056a906e)]
+[scriptable, uuid(42084755-fedc-4310-831c-4f43e7b42e20)]
 interface nsIBinaryInputStream : nsIInputStream {
     void setInputStream(in nsIInputStream aInputStream);
     

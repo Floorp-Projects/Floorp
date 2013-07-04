@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Shape_h___
-#define Shape_h___
+#ifndef vm_Shape_h
+#define vm_Shape_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/MemoryReporting.h"
 
 #include "jsobj.h"
 #include "jspropertytree.h"
@@ -96,6 +97,7 @@ namespace js {
 
 class Bindings;
 class Nursery;
+class StaticBlockObject;
 
 /* Limit on the number of slotful properties in an object. */
 static const uint32_t SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
@@ -143,7 +145,7 @@ struct ShapeTable {
      * This counts the ShapeTable object itself (which must be
      * heap-allocated) and its |entries| array.
      */
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + mallocSizeOf(entries);
     }
 
@@ -356,7 +358,7 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
     static inline void writeBarrierPre(BaseShape *shape);
-    static inline void writeBarrierPost(BaseShape *shape, void *addr);
+    static void writeBarrierPost(BaseShape *shape, void *addr) {}
     static inline void readBarrier(BaseShape *shape);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }
@@ -547,7 +549,7 @@ class Shape : public js::gc::Cell
     bool hasTable() const { return base()->hasTable(); }
     ShapeTable &table() const { return base()->table(); }
 
-    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
+    void sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t *propTableSize, size_t *kidsSize) const {
         *propTableSize = hasTable() ? table().sizeOfIncludingThis(mallocSizeOf) : 0;
         *kidsSize = !inDictionary() && kids.isHash()
@@ -830,7 +832,7 @@ class Shape : public js::gc::Cell
     JS::Zone *zone() const { return tenuredZone(); }
 
     static inline void writeBarrierPre(Shape *shape);
-    static inline void writeBarrierPost(Shape *shape, void *addr);
+    static void writeBarrierPost(Shape *shape, void *addr) {}
 
     /*
      * All weak references need a read barrier for incremental GC. This getter
@@ -1135,4 +1137,4 @@ template<> class AnchorPermitted<js::Shape *> { };
 template<> class AnchorPermitted<const js::Shape *> { };
 }
 
-#endif /* Shape_h___ */
+#endif /* vm_Shape_h */

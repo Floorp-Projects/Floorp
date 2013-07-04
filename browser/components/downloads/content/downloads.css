@@ -63,7 +63,7 @@ richlistitem[type="download"]:not([selected]) button {
   display: none;
 }
 
-/*** Visibility of download buttons and indicator controls. ***/
+/*** Visibility of download buttons ***/
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
@@ -76,16 +76,7 @@ richlistitem[type="download"]:not([selected]) button {
                                            .downloadRetry,
 
 .download-state:not(          [state="1"]  /* Finished           */)
-                                           .downloadShow,
-
-#downloads-indicator:-moz-any([progress],
-                              [counter],
-                              [paused])    #downloads-indicator-icon,
-
-#downloads-indicator:not(:-moz-any([progress],
-                                   [counter],
-                                   [paused]))
-                                           #downloads-indicator-progress-area
+                                           .downloadShow
 
 {
   visibility: hidden;
@@ -102,22 +93,4 @@ richlistitem[type="download"]:not([selected]) button {
 #downloadsFooter:not([showingsummary]) > #downloadsSummary
 {
   display: none;
-}
-
-/* Hacks for toolbar full and text modes, until bug 573329 removes them */
-
-toolbar[mode="text"] > #downloads-indicator {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-pack: center;
-}
-
-toolbar[mode="text"] > #downloads-indicator > .toolbarbutton-text {
-  -moz-box-ordinal-group: 1;
-}
-
-toolbar[mode="text"] > #downloads-indicator > .toolbarbutton-icon {
-  display: -moz-box;
-  -moz-box-ordinal-group: 2;
-  visibility: collapse;
 }

@@ -32,7 +32,7 @@ public class testAboutPage extends PixelTest {
         Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
-        selectSettingsItem("General", "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
+        selectSettingsItem("Mozilla", "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
 
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();

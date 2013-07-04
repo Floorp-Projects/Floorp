@@ -103,7 +103,7 @@ nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 
 
 JSBool
-nsXULPDGlobalObject_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
+nsXULPDGlobalObject_resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id)
 {
     JSBool did_resolve = JS_FALSE;
 
@@ -762,9 +762,11 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   // will re-fetch the global and set it up in our language globals array.
   {
     AutoPushJSContext cx(ctxNew->GetNativeContext());
+    JS::CompartmentOptions options;
+    options.setZone(JS::SystemZone);
     JS::Rooted<JSObject*> newGlob(cx,
       JS_NewGlobalObject(cx, &gSharedGlobalClass,
-                         nsJSPrincipals::get(GetPrincipal()), JS::SystemZone));
+                         nsJSPrincipals::get(GetPrincipal()), options));
     if (!newGlob)
         return NS_OK;
 

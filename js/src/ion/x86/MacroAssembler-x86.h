@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_macro_assembler_x86_h__
-#define jsion_macro_assembler_x86_h__
+#ifndef ion_x86_MacroAssembler_x86_h
+#define ion_x86_MacroAssembler_x86_h
 
 #include "ion/shared/MacroAssembler-x86-shared.h"
 #include "ion/IonFrames.h"
@@ -55,6 +55,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
   public:
     using MacroAssemblerX86Shared::Push;
+    using MacroAssemblerX86Shared::Pop;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
 
@@ -97,8 +98,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
                            base.scale(), base.disp() + sizeof(void *));
 
           default:
-            JS_NOT_REACHED("unexpected operand kind");
-            return base; // Silence GCC warning.
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     void moveValue(const Value &val, Register type, Register data) {
@@ -203,6 +203,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void pushValue(const Address &addr) {
         push(tagOf(addr));
         push(payloadOf(addr));
+    }
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
+    void Pop(const ValueOperand &val) {
+        popValue(val);
+        framePushed_ -= sizeof(Value);
     }
     void storePayload(const Value &val, Operand dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
@@ -479,6 +487,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Address &dest) {
         addl(imm, Operand(dest));
     }
+    void addPtr(Imm32 imm, const Operand &dest) {
+        addl(imm, dest);
+    }
     void addPtr(const Address &src, const Register &dest) {
         addl(Operand(src), dest);
     }
@@ -665,7 +676,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             Condition testCond = testMagic(Equal, val);
             j(InvertCondition(testCond), &notmagic);
             // Test magic value
-            branch32(NotEqual, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
+            branch32(Equal, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
             bind(&notmagic);
         } else {
             Condition testCond = testMagic(NotEqual, val);
@@ -782,9 +793,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest);
-    void loadStaticDouble(const double *dp, const FloatRegister &dest) {
-        movsd(dp, dest);
-    }
+    void loadStaticDouble(const double *dp, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
         const uint32_t IndefiniteIntegerValue = 0x80000000;
@@ -981,5 +990,4 @@ typedef MacroAssemblerX86 MacroAssemblerSpecific;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_macro_assembler_x86_h__
-
+#endif /* ion_x86_MacroAssembler_x86_h */

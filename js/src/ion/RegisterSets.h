@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_cpu_registersets_h__
-#define jsion_cpu_registersets_h__
+#ifndef ion_RegisterSets_h
+#define ion_RegisterSets_h
 
-#include "Registers.h"
+#include "ion/Registers.h"
 #include "ion/IonAllocPolicy.h"
 
 namespace js {
@@ -92,7 +92,7 @@ class ValueOperand
     Register payload_;
 
   public:
-    ValueOperand(Register type, Register payload)
+    MOZ_CONSTEXPR ValueOperand(Register type, Register payload)
       : type_(type), payload_(payload)
     { }
 
@@ -117,7 +117,7 @@ class ValueOperand
     Register value_;
 
   public:
-    explicit ValueOperand(Register value)
+    explicit MOZ_CONSTEXPR ValueOperand(Register value)
       : value_(value)
     { }
 
@@ -297,13 +297,13 @@ class TypedRegisterSet
     uint32_t bits_;
 
   public:
-    explicit TypedRegisterSet(uint32_t bits)
+    explicit MOZ_CONSTEXPR TypedRegisterSet(uint32_t bits)
       : bits_(bits)
     { }
 
-    TypedRegisterSet() : bits_(0)
+    MOZ_CONSTEXPR TypedRegisterSet() : bits_(0)
     { }
-    TypedRegisterSet(const TypedRegisterSet<T> &set) : bits_(set.bits_)
+    MOZ_CONSTEXPR TypedRegisterSet(const TypedRegisterSet<T> &set) : bits_(set.bits_)
     { }
 
     static inline TypedRegisterSet All() {
@@ -406,6 +406,11 @@ class TypedRegisterSet
         int ireg = js_bitscan_ctz32(bits_);
         return T::FromCode(ireg);
     }
+    T getLast() const {
+        JS_ASSERT(!empty());
+        int ireg = 31 - js_bitscan_clz32(bits_);
+        return T::FromCode(ireg);
+    }
     T takeAny() {
         JS_ASSERT(!empty());
         T reg = getAny();
@@ -436,6 +441,12 @@ class TypedRegisterSet
     T takeFirst() {
         JS_ASSERT(!empty());
         T reg = getFirst();
+        take(reg);
+        return reg;
+    }
+    T takeLast() {
+        JS_ASSERT(!empty());
+        T reg = getLast();
         take(reg);
         return reg;
     }
@@ -471,7 +482,7 @@ class RegisterSet {
   public:
     RegisterSet()
     { }
-    RegisterSet(const GeneralRegisterSet &gpr, const FloatRegisterSet &fpu)
+    MOZ_CONSTEXPR RegisterSet(const GeneralRegisterSet &gpr, const FloatRegisterSet &fpu)
       : gpr_(gpr),
         fpu_(fpu)
     { }
@@ -579,10 +590,10 @@ class RegisterSet {
         gpr_.clear();
         fpu_.clear();
     }
-    GeneralRegisterSet gprs() const {
+    MOZ_CONSTEXPR GeneralRegisterSet gprs() const {
         return gpr_;
     }
-    FloatRegisterSet fpus() const {
+    MOZ_CONSTEXPR FloatRegisterSet fpus() const {
         return fpu_;
     }
     bool operator ==(const RegisterSet &other) const {
@@ -622,7 +633,9 @@ class RegisterSet {
     }
 };
 
-// iterates backwards, that is, rn to r0
+// iterates in whatever order happens to be convenient.
+// Use TypedRegisterBackwardIterator or TypedRegisterForwardIterator if a
+// specific order is required.
 template <typename T>
 class TypedRegisterIterator
 {
@@ -651,6 +664,36 @@ class TypedRegisterIterator
     }
 };
 
+// iterates backwards, that is, rn to r0
+template <typename T>
+class TypedRegisterBackwardIterator
+{
+    TypedRegisterSet<T> regset_;
+
+  public:
+    TypedRegisterBackwardIterator(TypedRegisterSet<T> regset) : regset_(regset)
+    { }
+    TypedRegisterBackwardIterator(const TypedRegisterBackwardIterator &other)
+      : regset_(other.regset_)
+    { }
+
+    bool more() const {
+        return !regset_.empty();
+    }
+    TypedRegisterBackwardIterator<T> operator ++(int) {
+        TypedRegisterBackwardIterator<T> old(*this);
+        regset_.takeLast();
+        return old;
+    }
+    TypedRegisterBackwardIterator<T>& operator ++() {
+        regset_.takeLast();
+        return *this;
+    }
+    T operator *() const {
+        return regset_.getLast();
+    }
+};
+
 // iterates forwards, that is r0 to rn
 template <typename T>
 class TypedRegisterForwardIterator
@@ -667,7 +710,7 @@ class TypedRegisterForwardIterator
         return !regset_.empty();
     }
     TypedRegisterForwardIterator<T> operator ++(int) {
-        TypedRegisterIterator<T> old(*this);
+        TypedRegisterForwardIterator<T> old(*this);
         regset_.takeFirst();
         return old;
     }
@@ -682,6 +725,8 @@ class TypedRegisterForwardIterator
 
 typedef TypedRegisterIterator<Register> GeneralRegisterIterator;
 typedef TypedRegisterIterator<FloatRegister> FloatRegisterIterator;
+typedef TypedRegisterBackwardIterator<Register> GeneralRegisterBackwardIterator;
+typedef TypedRegisterBackwardIterator<FloatRegister> FloatRegisterBackwardIterator;
 typedef TypedRegisterForwardIterator<Register> GeneralRegisterForwardIterator;
 typedef TypedRegisterForwardIterator<FloatRegister> FloatRegisterForwardIterator;
 
@@ -826,4 +871,4 @@ typedef Vector<AsmJSBoundsCheck, 0, IonAllocPolicy> AsmJSBoundsCheckVector;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_cpu_registersets_h__
+#endif /* ion_RegisterSets_h */

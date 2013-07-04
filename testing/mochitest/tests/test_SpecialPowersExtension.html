@@ -40,14 +40,17 @@ function starttest(){
   // Test a sync call into chrome
   SpecialPowers.setBoolPref('extensions.checkCompatibility', true);
   is(SpecialPowers.getBoolPref('extensions.checkCompatibility'), true, "Check to see if we can set a preference properly");
+  SpecialPowers.clearUserPref('extensions.checkCompatibility');
 
   // Test a int pref
   SpecialPowers.setIntPref('extensions.foobar', 42);
   is(SpecialPowers.getIntPref('extensions.foobar'), 42, "Check int pref");
+  SpecialPowers.clearUserPref('extensions.foobar');
 
   // Test a string pref
   SpecialPowers.setCharPref("extensions.foobaz", "hi there");
   is(SpecialPowers.getCharPref("extensions.foobaz"), "hi there", "Check string pref");
+  SpecialPowers.clearUserPref("extensions.foobaz");
 
   // Test an invalid pref
   var retVal = null;

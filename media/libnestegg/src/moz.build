@@ -6,3 +6,10 @@
 
 MODULE = 'nestegg'
 
+CSRCS += [
+    'halloc.c',
+    'nestegg.c',
+]
+
+LIBRARY_NAME = 'nestegg'
+

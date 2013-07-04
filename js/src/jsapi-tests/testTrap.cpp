@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "tests.h"
+#include "jsapi-tests/tests.h"
 #include "jsdbgapi.h"
 
 static int emptyTrapCallCount = 0;

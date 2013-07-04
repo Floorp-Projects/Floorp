@@ -27,8 +27,8 @@ class AutoResolveRefLayers;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
-  ViewTransform(gfxPoint aTranslation = gfxPoint(),
-                gfxSize aScale = gfxSize(1, 1))
+  ViewTransform(LayerPoint aTranslation = LayerPoint(),
+                LayoutDeviceToScreenScale aScale = LayoutDeviceToScreenScale())
     : mTranslation(aTranslation)
     , mScale(aScale)
   {}
@@ -36,12 +36,20 @@ struct ViewTransform {
   operator gfx3DMatrix() const
   {
     return
-      gfx3DMatrix::ScalingMatrix(mScale.width, mScale.height, 1) *
-      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
+      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0) *
+      gfx3DMatrix::ScalingMatrix(mScale.scale, mScale.scale, 1);
   }
 
-  gfxPoint mTranslation;
-  gfxSize mScale;
+  bool operator==(const ViewTransform& rhs) const {
+    return mTranslation == rhs.mTranslation && mScale == rhs.mScale;
+  }
+
+  bool operator!=(const ViewTransform& rhs) const {
+    return !(*this == rhs);
+  }
+
+  LayerPoint mTranslation;
+  LayoutDeviceToScreenScale mScale;
 };
 
 /**
@@ -115,23 +123,22 @@ private:
                                         bool* aWantNextFrame);
 
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                             float aZoom,
-                             const LayerIntRect& aPageRect,
+                             const CSSToLayerScale& aZoom,
                              const CSSRect& aCssPageRect);
   void SetPageRect(const CSSRect& aCssPageRect);
   void SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                        float aDisplayResolution,
+                        const CSSToLayerScale& aDisplayResolution,
                         bool aLayersUpdated,
                         ScreenPoint& aScrollOffset,
-                        float& aScaleX, float& aScaleY,
+                        CSSToScreenScale& aScale,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
-  void SyncFrameMetrics(const gfx::Point& aScrollOffset,
+  void SyncFrameMetrics(const ScreenPoint& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
-                        const gfx::Rect& aDisplayPort,
-                        float aDisplayResolution,
+                        const CSSRect& aDisplayPort,
+                        const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
@@ -163,7 +170,7 @@ private:
   void DetachRefLayers();
 
   TargetConfig mTargetConfig;
-  LayerIntRect mContentRect;
+  CSSRect mContentRect;
 
   nsRefPtr<LayerManagerComposite> mLayerManager;
   // When this flag is set, the next composition will be the first for a

@@ -238,7 +238,7 @@ public final class GeckoProfile {
     private String readFile(File target) throws IOException {
         FileReader fr = new FileReader(target);
         try {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char[] buf = new char[8192];
             int read = fr.read(buf);
             while (read >= 0) {
@@ -346,7 +346,7 @@ public final class GeckoProfile {
 
     private static String saltProfileName(String name) {
         String allowedChars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuffer salt = new StringBuffer(16);
+        StringBuilder salt = new StringBuilder(16);
         for (int i = 0; i < 8; i++) {
             salt.append(allowedChars.charAt((int)(Math.random() * allowedChars.length())));
         }

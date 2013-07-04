@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef pcscriptcache_h__
-#define pcscriptcache_h__
+#ifndef ion_PcScriptCache_h
+#define ion_PcScriptCache_h
 
 // Defines a fixed-size hash table solely for the purpose of caching ion::GetPcScript().
 // One cache is attached to each JSRuntime; it functions as if cleared on GC.
@@ -60,4 +60,4 @@ struct PcScriptCache
 } // namespace ion
 } // namespace js
 
-#endif // pcscriptcache_h__
+#endif /* ion_PcScriptCache_h */

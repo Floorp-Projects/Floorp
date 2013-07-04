@@ -114,8 +114,12 @@ interface nsIDownloadManager : nsISupports {
    * @param aTempFile The location of a temporary file; i.e. a file in which
    *                  the received data will be stored, but which is not
    *                  equal to the target file. (will be moved to the real
-   *                  target by the caller, when the download is finished)
-   *                  May be null.
+   *                  target by the DownloadManager, when the download is
+   *                  finished). This will be null for all callers except for
+   *                  nsExternalHelperAppHandler. Addons should generally pass
+   *                  null for aTempFile. This will be moved to the real target
+   *                  by the download manager when the download is finished,
+   *                  and the action indicated by aMIMEInfo will be executed.
    *
    * @param aCancelable An object that can be used to abort the download.
    *                    Must not be null.

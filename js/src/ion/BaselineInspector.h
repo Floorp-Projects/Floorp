@@ -4,15 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_baseline_inspector_h__) && defined(JS_ION)
-#define jsion_baseline_inspector_h__
+#ifndef ion_BaselineInspector_h
+#define ion_BaselineInspector_h
+
+#ifdef JS_ION
 
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "BaselineJIT.h"
-#include "BaselineIC.h"
-#include "MIR.h"
+#include "ion/BaselineJIT.h"
+#include "ion/BaselineIC.h"
+#include "ion/MIR.h"
 
 namespace js {
 namespace ion {
@@ -33,7 +35,6 @@ class ICInspector
 
 class SetElemICInspector : public ICInspector
 {
-
   public:
     SetElemICInspector(BaselineInspector *inspector, jsbytecode *pc, ICEntry *icEntry)
       : ICInspector(inspector, pc, icEntry)
@@ -107,10 +108,12 @@ class BaselineInspector
 
     bool hasSeenNonNativeGetElement(jsbytecode *pc);
     bool hasSeenAccessedGetter(jsbytecode *pc);
+    bool hasSeenDoubleResult(jsbytecode *pc);
 };
 
 } // namespace ion
 } // namespace js
 
-#endif
+#endif // JS_ION
 
+#endif /* ion_BaselineInspector_h */

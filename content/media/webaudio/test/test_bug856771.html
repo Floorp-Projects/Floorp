@@ -11,15 +11,12 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
   var context = new AudioContext();
 
   var source = context.createBufferSource();
   source.connect(context.destination);
   ok(true, "Nothing should leak");
 
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });
 

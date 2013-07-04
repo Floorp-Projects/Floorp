@@ -21,7 +21,6 @@ STDCXX_COMPAT =
 
 ifneq (WINNT,$(HOST_OS_ARCH))
 HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
-HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 
 ifndef CROSS_COMPILE
@@ -59,7 +58,6 @@ endif
 
 HEADERS_FILES = \
 	$(DEPTH)/mozilla-config.h \
-	$(srcdir)/nsStaticComponents.h \
 	$(NULL)
 HEADERS_DEST := $(DIST)/include
 HEADERS_TARGET := export

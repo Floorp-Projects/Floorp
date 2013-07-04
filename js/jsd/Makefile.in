@@ -14,7 +14,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= jsd
 IS_COMPONENT = 1
 LIBXUL_LIBRARY = 1
 

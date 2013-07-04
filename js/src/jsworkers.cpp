@@ -8,6 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "prmjtime.h"
+
 #ifdef JS_PARALLEL_COMPILATION
 # include "ion/AsmJS.h"
 # include "ion/IonBuilder.h"
@@ -43,14 +45,14 @@ bool
 js::StartOffThreadAsmJSCompile(JSContext *cx, AsmJSParallelTask *asmData)
 {
     // Threads already initialized by the AsmJS compiler.
-    JS_ASSERT(cx->runtime->workerThreadState);
+    JS_ASSERT(cx->runtime()->workerThreadState);
     JS_ASSERT(asmData->mir);
     JS_ASSERT(asmData->lir == NULL);
 
-    WorkerThreadState &state = *cx->runtime->workerThreadState;
+    WorkerThreadState &state = *cx->runtime()->workerThreadState;
     JS_ASSERT(state.numThreads);
 
-    AutoLockWorkerThreadState lock(cx->runtime);
+    AutoLockWorkerThreadState lock(cx->runtime());
 
     // Don't append this task if another failed.
     if (state.asmJSWorkerFailed())
@@ -66,11 +68,11 @@ js::StartOffThreadAsmJSCompile(JSContext *cx, AsmJSParallelTask *asmData)
 bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     if (!EnsureParallelCompilationInitialized(rt))
         return false;
 
-    WorkerThreadState &state = *cx->runtime->workerThreadState;
+    WorkerThreadState &state = *cx->runtime()->workerThreadState;
     JS_ASSERT(state.numThreads);
 
     AutoLockWorkerThreadState lock(rt);
@@ -346,12 +348,17 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
     do {
         ion::IonContext icx(asmData->mir->compartment, &asmData->mir->temp());
 
+        int64_t before = PRMJ_Now();
+
         if (!OptimizeMIR(asmData->mir))
             break;
 
         asmData->lir = GenerateLIR(asmData->mir);
         if (!asmData->lir)
             break;
+
+        int64_t after = PRMJ_Now();
+        asmData->compileTime = (after - before) / PRMJ_USEC_PER_MSEC;
 
         success = true;
     } while(0);
@@ -437,15 +444,13 @@ WorkerThread::threadLoop()
 bool
 js::StartOffThreadAsmJSCompile(JSContext *cx, AsmJSParallelTask *asmData)
 {
-    JS_NOT_REACHED("Off thread compilation not available in non-THREADSAFE builds");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
 }
 
 bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 {
-    JS_NOT_REACHED("Off thread compilation not available in non-THREADSAFE builds");
-    return false;
+    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
 }
 
 void

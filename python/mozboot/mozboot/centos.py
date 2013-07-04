@@ -27,6 +27,8 @@ class CentOSBootstrapper(BaseBootstrapper):
             'curl-devel',
             'dbus-glib-devel',
             'glibc-static',
+            'gstreamer-devel',
+            'gstreamer-plugins-base-devel',
             'gtk2-devel',
             'libstdc++-static',
             'libXt-devel',
@@ -40,3 +42,7 @@ class CentOSBootstrapper(BaseBootstrapper):
             yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.x86_64.rpm'
 
         self.run_as_root(['rpm', '-ivh', yasm])
+
+    def upgrade_mercurial(self, current):
+        self.yum_update('mercurial')
+

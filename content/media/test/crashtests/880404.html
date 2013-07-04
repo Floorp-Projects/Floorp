@@ -1,0 +1,6 @@
+<script>
+o1 = new window.OfflineAudioContext(2, 32, 44100);
+o12 = o1.createConvolver();
+o12.buffer = function(){var buffer = o1.createBuffer(1, 78, o1.sampleRate);for(var c=0; c<1; c++) {for(var i=0; i<78; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}();
+o1.startRendering();
+</script>

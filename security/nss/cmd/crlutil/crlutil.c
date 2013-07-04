@@ -232,7 +232,7 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 
 
     /* Read in the entire file specified with the -f argument */
-    rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
+    rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "unable to read input file");
 	return (SECFailure);
@@ -291,7 +291,7 @@ SECStatus DumpCRL(PRFileDesc *inFile)
     crlDER.data = NULL;
 
     /* Read in the entire file specified with the -f argument */
-    rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
+    rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "unable to read input file");
 	return (SECFailure);
@@ -386,7 +386,7 @@ CreateModifiedCRLCopy(PLArenaPool *arena, CERTCertDBHandle *certHandle,
     }
     
     if (inFile != NULL) {
-        rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
+        rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "unable to read input file");
             PORT_FreeArena(modArena, PR_FALSE);

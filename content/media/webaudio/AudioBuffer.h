@@ -91,14 +91,9 @@ public:
 
   /**
    * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
+   * Can return null if there is no data.
    */
   ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext);
-
-  // aContents should either come from JS_AllocateArrayBufferContents or
-  // JS_StealArrayBufferContents.
-  bool SetChannelDataFromArrayBufferContents(JSContext* aJSContext,
-                                             uint32_t aChannel,
-                                             void* aContents);
 
   // This replaces the contents of the JS array for the given channel.
   // This function needs to be called on an AudioBuffer which has not been
@@ -116,7 +111,7 @@ protected:
 
   nsRefPtr<AudioContext> mContext;
   // Float32Arrays
-  AutoFallibleTArray<JSObject*,2> mJSChannels;
+  AutoFallibleTArray<JS::Heap<JSObject*>, 2> mJSChannels;
 
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
   // if and only if the mJSChannels are neutered.

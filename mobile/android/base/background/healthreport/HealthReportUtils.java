@@ -13,15 +13,20 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeSet;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONArray;
 import org.mozilla.apache.commons.codec.digest.DigestUtils;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import android.content.ContentUris;
+import android.content.SharedPreferences;
 import android.net.Uri;
 
 public class HealthReportUtils {
+  public static final String LOG_TAG = HealthReportUtils.class.getSimpleName();
+
   public static int getDay(final long time) {
     return (int) Math.floor(time / HealthReportConstants.MILLISECONDS_PER_DAY);
   }
@@ -142,5 +147,32 @@ public class HealthReportUtils {
     }
     JSONObject dest = o.getJSONObject(key);
     dest.put(value, dest.optInt(value, 0) + 1);
+  }
+
+  public static ExtendedJSONObject getObsoleteIds(SharedPreferences sharedPrefs) {
+    String s = sharedPrefs.getString(HealthReportConstants.PREF_OBSOLETE_DOCUMENT_IDS_TO_DELETION_ATTEMPTS_REMAINING, null);
+    if (s == null) {
+      return new ExtendedJSONObject();
+    }
+    try {
+      return ExtendedJSONObject.parseJSONObject(s);
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception getting obsolete ids.", e);
+      return new ExtendedJSONObject();
+    }
+  }
+
+  /**
+   * Write obsolete ids to disk.
+   *
+   * @param sharedPrefs to write to.
+   * @param ids to write.
+   * @return editor.
+   */
+  public static void setObsoleteIds(SharedPreferences sharedPrefs, ExtendedJSONObject ids) {
+    sharedPrefs
+      .edit()
+      .putString(HealthReportConstants.PREF_OBSOLETE_DOCUMENT_IDS_TO_DELETION_ATTEMPTS_REMAINING, ids.toString())
+      .commit();
   }
 }

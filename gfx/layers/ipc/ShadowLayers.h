@@ -324,6 +324,8 @@ public:
   bool HasShadowManager() const { return !!mShadowManager; }
   PLayerTransactionChild* GetShadowManager() const { return mShadowManager; }
 
+  virtual void WindowOverlayChanged() { mWindowOverlayChanged = true; }
+
   /**
    * The following Alloc/Open/Destroy interfaces abstract over the
    * details of working with surfaces that are shared across
@@ -388,8 +390,10 @@ protected:
   PLayerTransactionChild* mShadowManager;
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  // from ISurfaceAllocator
   virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
-                                                  gfxASurface::gfxContentType aContent,
+                                                  uint32_t aFormat,
+                                                  uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle) MOZ_OVERRIDE;
 #endif
 
@@ -442,6 +446,7 @@ private:
 
   bool mIsFirstPaint;
   bool mDrawColoredBorders;
+  bool mWindowOverlayChanged;
 };
 
 class CompositableClient;

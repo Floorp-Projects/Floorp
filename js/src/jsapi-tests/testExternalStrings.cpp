@@ -5,7 +5,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
-#include "tests.h"
+#include "jsapi-tests/tests.h"
 
 #include "jsutil.h"
 

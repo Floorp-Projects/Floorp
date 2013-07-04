@@ -1,4 +1,5 @@
 {
   "id": "test-require",
-  "packages": "packages"
+  "packages": "packages",
+  "ignore-deprecated-path": true
 }

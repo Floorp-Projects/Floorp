@@ -19,8 +19,10 @@ const CONTENT_TYPE_URL = EXAMPLE_URL + "html_content-type-test-page.html";
 const CYRILLIC_URL = EXAMPLE_URL + "html_cyrillic-test-page.html";
 const STATUS_CODES_URL = EXAMPLE_URL + "html_status-codes-test-page.html";
 const POST_DATA_URL = EXAMPLE_URL + "html_post-data-test-page.html";
+const POST_RAW_URL = EXAMPLE_URL + "html_post-raw-test-page.html";
 const JSONP_URL = EXAMPLE_URL + "html_jsonp-test-page.html";
 const JSON_LONG_URL = EXAMPLE_URL + "html_json-long-test-page.html";
+const JSON_MALFORMED_URL = EXAMPLE_URL + "html_json-malformed-test-page.html";
 const SORTING_URL = EXAMPLE_URL + "html_sorting-test-page.html";
 const FILTERING_URL = EXAMPLE_URL + "html_filter-test-page.html";
 const INFINITE_GET_URL = EXAMPLE_URL + "html_infinite-get-page.html";
@@ -189,6 +191,13 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
   info("> Request: " + aRequestItem.attachment.toSource());
 
+  let requestsMenu = aRequestItem.ownerView;
+  let widgetIndex = requestsMenu.indexOfItem(aRequestItem);
+  let visibleIndex = requestsMenu.orderedVisibleItems.indexOf(aRequestItem);
+
+  info("Widget index of item: " + widgetIndex);
+  info("Visible index of item: " + visibleIndex);
+
   let { fuzzyUrl, status, statusText, type, fullMimeType, size, time } = aData;
   let { attachment, target } = aRequestItem
 
@@ -256,5 +265,19 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     info("Tooltip time: " + tooltip);
     ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is incorrect.");
     ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is incorrect.");
+  }
+
+  if (visibleIndex != -1) {
+    if (visibleIndex % 2 == 0) {
+      ok(aRequestItem.target.hasAttribute("even"),
+        "Unexpected 'even' attribute for " + aRequestItem.value);
+      ok(!aRequestItem.target.hasAttribute("odd"),
+        "Unexpected 'odd' attribute for " + aRequestItem.value);
+    } else {
+      ok(!aRequestItem.target.hasAttribute("even"),
+        "Unexpected 'even' attribute for " + aRequestItem.value);
+      ok(aRequestItem.target.hasAttribute("odd"),
+        "Unexpected 'odd' attribute for " + aRequestItem.value);
+    }
   }
 }

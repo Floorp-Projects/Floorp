@@ -3264,10 +3264,10 @@ nsWindow::GetInputContext()
     mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
     // Our qt widget looks like using only one context per process.
     // However, it's better to set the context's pointer.
-#if (QT_VERSION <= QT_VERSION_CHECK(5, 0, 0))
+#if (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
     mInputContext.mNativeIMEContext = qApp->inputContext();
 #else
-    mInputContext.mNativeIMEContext = nullptr;
+    mInputContext.mNativeIMEContext = qApp->inputMethod();
 #endif
     return mInputContext;
 }

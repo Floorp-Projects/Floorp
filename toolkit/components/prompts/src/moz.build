@@ -6,3 +6,12 @@
 
 MODULE = 'prompter'
 
+EXTRA_COMPONENTS += [
+    'nsPrompter.js',
+    'nsPrompter.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'CommonDialog.jsm',
+]
+

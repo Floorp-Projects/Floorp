@@ -2621,6 +2621,16 @@ CSS_PROP_VISIBILITY(
     kPointerEventsKTable,
     offsetof(nsStyleVisibility, mPointerEvents),
     eStyleAnimType_EnumU8)
+CSS_PROP_VISIBILITY(
+    writing-mode,
+    writing_mode,
+    WritingMode,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HK,
+    kWritingModeKTable,
+    offsetof(nsStyleVisibility, mWritingMode),
+    eStyleAnimType_EnumU8)
 CSS_PROP_DISPLAY(
     position,
     position,
@@ -3599,6 +3609,16 @@ CSS_PROP_TABLE(
     -x-span,
     _x_span,
     Span,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
+    "",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_FONT(
+    -x-text-zoom,
+    _x_text_zoom,
+    TextZoom,
     CSS_PROPERTY_PARSE_INACCESSIBLE,
     "",
     0,

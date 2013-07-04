@@ -6,6 +6,7 @@
  * found in the LICENSE file.
  */
 
+#include "SkBitmap.h"
 #include "SkOrderedReadBuffer.h"
 #include "SkStream.h"
 #include "SkTypeface.h"
@@ -20,6 +21,7 @@ SkOrderedReadBuffer::SkOrderedReadBuffer() : INHERITED() {
     fFactoryTDArray = NULL;
     fFactoryArray = NULL;
     fFactoryCount = 0;
+    fBitmapDecoder = NULL;
 }
 
 SkOrderedReadBuffer::SkOrderedReadBuffer(const void* data, size_t size) : INHERITED()  {
@@ -33,6 +35,7 @@ SkOrderedReadBuffer::SkOrderedReadBuffer(const void* data, size_t size) : INHERI
     fFactoryTDArray = NULL;
     fFactoryArray = NULL;
     fFactoryCount = 0;
+    fBitmapDecoder = NULL;
 }
 
 SkOrderedReadBuffer::SkOrderedReadBuffer(SkStream* stream) {
@@ -48,6 +51,7 @@ SkOrderedReadBuffer::SkOrderedReadBuffer(SkStream* stream) {
     fFactoryTDArray = NULL;
     fFactoryArray = NULL;
     fFactoryCount = 0;
+    fBitmapDecoder = NULL;
 }
 
 SkOrderedReadBuffer::~SkOrderedReadBuffer() {
@@ -85,14 +89,14 @@ int32_t SkOrderedReadBuffer::read32() {
 
 char* SkOrderedReadBuffer::readString() {
     const char* string = fReader.readString();
-    const int32_t length = strlen(string);
+    const size_t length = strlen(string);
     char* value = (char*)sk_malloc_throw(length + 1);
     strcpy(value, string);
     return value;
 }
 
 void* SkOrderedReadBuffer::readEncodedString(size_t* length, SkPaint::TextEncoding encoding) {
-    int32_t encodingType = fReader.readInt();
+    SkDEBUGCODE(int32_t encodingType = ) fReader.readInt();
     SkASSERT(encodingType == encoding);
     *length =  fReader.readInt();
     void* data = sk_malloc_throw(*length);
@@ -164,12 +168,31 @@ uint32_t SkOrderedReadBuffer::getArrayCount() {
 }
 
 void SkOrderedReadBuffer::readBitmap(SkBitmap* bitmap) {
-    if (fBitmapStorage) {
-        const uint32_t index = fReader.readU32();
-        *bitmap = *fBitmapStorage->getBitmap(index);
-        fBitmapStorage->releaseRef(index);
+    const size_t length = this->readUInt();
+    if (length > 0) {
+        // Bitmap was encoded.
+        const void* data = this->skip(length);
+        const int width = this->readInt();
+        const int height = this->readInt();
+        if (fBitmapDecoder != NULL && fBitmapDecoder(data, length, bitmap)) {
+            SkASSERT(bitmap->width() == width && bitmap->height() == height);
+        } else {
+            // This bitmap was encoded when written, but we are unable to decode, possibly due to
+            // not having a decoder. Use a placeholder bitmap.
+            SkDebugf("Could not decode bitmap. Resulting bitmap will be red.\n");
+            bitmap->setConfig(SkBitmap::kARGB_8888_Config, width, height);
+            bitmap->allocPixels();
+            bitmap->eraseColor(SK_ColorRED);
+        }
     } else {
-        bitmap->unflatten(*this);
+        if (fBitmapStorage) {
+            const uint32_t index = fReader.readU32();
+            fReader.readU32(); // bitmap generation ID (see SkOrderedWriteBuffer::writeBitmap)
+            *bitmap = *fBitmapStorage->getBitmap(index);
+            fBitmapStorage->releaseRef(index);
+        } else {
+            bitmap->unflatten(*this);
+        }
     }
 }
 

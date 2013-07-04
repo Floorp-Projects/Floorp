@@ -70,7 +70,7 @@ SVGTextPathElement::SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGTextPathElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);
@@ -84,13 +84,13 @@ SVGTextPathElement::StartOffset()
   return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGTextPathElement::Method()
 {
   return mEnumAttributes[METHOD].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGTextPathElement::Spacing()
 {
   return mEnumAttributes[SPACING].ToDOMAnimatedEnum(this);

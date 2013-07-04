@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <AudioUnit/AudioUnit.h>
+#include <CoreAudio/AudioHardware.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
@@ -108,6 +109,58 @@ static char const *
 audiounit_get_backend_id(cubeb * ctx)
 {
   return "audiounit";
+}
+
+
+int
+audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
+{
+  UInt32 size;
+  OSStatus r;
+  AudioDeviceID output_device_id;
+  AudioStreamBasicDescription stream_format;
+  AudioObjectPropertyAddress output_device_address = {
+    kAudioHardwarePropertyDefaultOutputDevice,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+  AudioObjectPropertyAddress stream_format_address = {
+    kAudioDevicePropertyStreamFormat,
+    kAudioDevicePropertyScopeOutput,
+    kAudioObjectPropertyElementMaster
+  };
+
+  assert(ctx && max_channels);
+
+  /* Get the output device. */
+  size = sizeof(output_device_id);
+
+  r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+                                 &output_device_address,
+                                 0,
+                                 0,
+                                 &size,
+                                 &output_device_id);
+
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  size = sizeof(stream_format);
+
+  r = AudioObjectGetPropertyData(output_device_id,
+                                 &stream_format_address,
+                                 0,
+                                 NULL,
+                                 &size,
+                                 &stream_format);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  *max_channels = stream_format.mChannelsPerFrame;
+
+  return CUBEB_OK;
 }
 
 static void
@@ -301,6 +354,7 @@ audiounit_stream_get_position(cubeb_stream * stm, uint64_t * position)
 static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
+  .get_max_channel_count = audiounit_get_max_channel_count,
   .destroy = audiounit_destroy,
   .stream_init = audiounit_stream_init,
   .stream_destroy = audiounit_stream_destroy,

@@ -28,9 +28,8 @@ CPP_SOURCES += [
     'nsClientAuthRemember.cpp',
     'nsCMS.cpp',
     'nsCMSSecureMessage.cpp',
-    'nsCRLInfo.cpp',
-    'nsCRLManager.cpp',
     'nsCrypto.cpp',
+    'nsCryptoHash.cpp',
     'nsDataSignatureVerifier.cpp',
     'nsIdentityChecking.cpp',
     'nsKeygenHandler.cpp',
@@ -67,6 +66,7 @@ CPP_SOURCES += [
     'nsStreamCipher.cpp',
     'nsTLSSocketProvider.cpp',
     'nsUsageArrayHelper.cpp',
+	'PSMContentListener.cpp',
     'PSMRunnable.cpp',
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',
@@ -82,4 +82,6 @@ if CONFIG['MOZ_XUL']:
     CPP_SOURCES += [
         'nsCertTree.cpp',
     ]
+
+LIBRARY_NAME = 'pipnss'
 

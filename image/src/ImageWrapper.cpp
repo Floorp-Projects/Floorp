@@ -5,6 +5,8 @@
 
 #include "ImageWrapper.h"
 
+#include "mozilla/MemoryReporting.h"
+
 using mozilla::layers::LayerManager;
 using mozilla::layers::ImageContainer;
 
@@ -38,13 +40,13 @@ ImageWrapper::SizeOfData()
 }
 
 size_t
-ImageWrapper::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+ImageWrapper::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mInnerImage->HeapSizeOfSourceWithComputedFallback(aMallocSizeOf);
 }
 
 size_t
-ImageWrapper::HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
+ImageWrapper::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mInnerImage->HeapSizeOfDecodedWithComputedFallback(aMallocSizeOf);
 }
@@ -229,6 +231,12 @@ NS_IMETHODIMP
 ImageWrapper::StartDecoding()
 {
   return mInnerImage->StartDecoding();
+}
+
+bool
+ImageWrapper::IsDecoded()
+{
+  return mInnerImage->IsDecoded();
 }
 
 NS_IMETHODIMP

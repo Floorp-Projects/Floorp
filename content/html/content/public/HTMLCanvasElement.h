@@ -21,7 +21,6 @@
 class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
 class nsITimerCallback;
-class nsIPropertyBag;
 
 namespace mozilla {
 
@@ -90,16 +89,8 @@ public:
   }
   already_AddRefed<nsISupports>
   GetContext(JSContext* aCx, const nsAString& aContextId,
-             const Optional<JS::Handle<JS::Value> >& aContextOptions,
-             ErrorResult& aRv)
-  {
-    JS::Value contextOptions = aContextOptions.WasPassed()
-                             ? aContextOptions.Value()
-                             : JS::UndefinedValue();
-    nsCOMPtr<nsISupports> context;
-    aRv = GetContext(aContextId, contextOptions, aCx, getter_AddRefs(context));
-    return context.forget();
-  }
+             JS::Handle<JS::Value> aContextOptions,
+             ErrorResult& aRv);
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  const Optional<JS::Handle<JS::Value> >& aParams,
                  nsAString& aDataURL, ErrorResult& aRv)
@@ -235,7 +226,7 @@ protected:
 
   nsIntSize GetWidthHeight();
 
-  nsresult UpdateContext(nsIPropertyBag *aNewContextOptions = nullptr);
+  nsresult UpdateContext(JSContext* aCx, JS::Handle<JS::Value> options);
   nsresult ExtractData(const nsAString& aType,
                        const nsAString& aOptions,
                        nsIInputStream** aStream,

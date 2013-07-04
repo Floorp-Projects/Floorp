@@ -66,6 +66,12 @@ VARIABLES = {
         This variable contains a list of files to invoke the assembler on.
         """),
 
+    'CMMSRCS': (StrictOrderingOnAppendList, list, [],
+        """Sources to compile with the Objective C/C++ compiler.
+
+        This variable contains a list of objective-C++ sources to compile.
+        """),
+
     'CSRCS': (StrictOrderingOnAppendList, list, [],
         """C code source files.
 
@@ -92,6 +98,60 @@ VARIABLES = {
         delimiters.
         """),
 
+    'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list, [],
+        """Additional component files to distribute.
+
+       This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
+        """),
+
+    'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list, [],
+        """Additional JavaScript files to distribute.
+
+        This variable contains a list of files to copy into
+        $(FINAL_TARGET)/$(JS_MODULES_PATH). JS_MODULES_PATH defaults to
+        "modules" if left undefined.
+        """),
+
+    'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
+        """Javascript XPCOM files.
+
+       This variable contains a list of files to preprocess.  Generated
+       files will be installed in the /components directory of the distribution.
+        """),
+
+    'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
+        """C code source files for GTest unit tests.
+
+        This variable contains a list of C GTEST unit test source files to
+        compile.
+        """),
+
+    'GTEST_CMM_SOURCES': (StrictOrderingOnAppendList, list, [],
+        """Sources for GTest unit tests to compile with the Objective C/C++ compiler.
+
+        This variable contains a list of objective-C++ GTest unit test sources
+        to compile.
+        """),
+
+    'GTEST_CPP_SOURCES': (list, list, [],
+        """C++ source files for GTest unit tests.
+
+        This is a list of C++ GTest unit test sources. Entries must be files
+        that exist. These generally have .cpp, .cc, or .cxx extensions.
+        """),
+
+    'HOST_CPPSRCS': (StrictOrderingOnAppendList, list, [],
+        """C++ source files to compile with the host compiler.
+
+        This variable contains a list of C++ source files to compile.
+        """),
+
+    'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
+        """C source files to compile with the host compiler.
+
+        This variable contains a list of C source files to compile.
+        """),
+
     'PARALLEL_DIRS': (list, list, [],
         """A parallel version of DIRS.
 
@@ -101,10 +161,57 @@ VARIABLES = {
         likely go away.
         """),
 
+    'HOST_LIBRARY_NAME': (unicode, unicode, "",
+        """Name of target library generated when cross compiling.
+        """),
+
+    'JS_MODULES_PATH': (unicode, unicode, "",
+        """Sub-directory of $(FINAL_TARGET) to install EXTRA_JS_MODULES.
+
+        EXTRA_JS_MODULES files are copied to
+        $(FINAL_TARGET)/$(JS_MODULES_PATH). This variable does not
+        need to be defined if the desired destination directory is
+        $(FINAL_TARGET)/modules.
+        """),
+
+    'LIBRARY_NAME': (unicode, unicode, "",
+        """The name of the library generated for a directory.
+
+        Example:
+        In example/components/moz.build,
+        LIBRARY_NAME = 'xpcomsample'
+        would generate example/components/libxpcomsample.so on Linux, or
+        example/components/xpcomsample.lib on Windows.
+        """),
+
+    'LIBS': (StrictOrderingOnAppendList, list, [],
+        """Linker libraries and flags.
+
+        A list of libraries and flags to include when linking.
+        """),
+
+    'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
+        """Elements of the distributed SDK.
+
+        Files on this list will be copied into SDK_LIB_DIR ($DIST/sdk/lib).
+        """),
+
+    'SHARED_LIBRARY_LIBS': (StrictOrderingOnAppendList, list, [],
+        """Libraries linked into a shared library.
+
+        A list of static library paths which should be linked into the current shared library.
+        """),
+
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
         A list of sources, one per program, to compile & link with libs into standalone programs.
+        """),
+
+    'SSRCS': (StrictOrderingOnAppendList, list, [],
+        """Assembly source files.
+
+        This variable contains a list of files to invoke the assembler on.
         """),
 
     'TOOL_DIRS': (list, list, [],

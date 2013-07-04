@@ -4,10 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_arm_h__
-#define jsion_lir_arm_h__
-
-#include "ion/LIR.h"
+#ifndef ion_arm_LIR_arm_h
+#define ion_arm_LIR_arm_h
 
 namespace js {
 namespace ion {
@@ -69,20 +67,6 @@ class LUnboxDouble : public LInstructionHelper<1, 2, 0>
     }
 };
 
-// Constant double.
-class LDouble : public LInstructionHelper<1, 0, 0>
-{
-    double d_;
-  public:
-    LIR_HEADER(Double);
-
-    LDouble(double d) : d_(d)
-    { }
-    double getDouble() const {
-        return d_;
-    }
-};
-
 // Convert a 32-bit unsigned integer to a double.
 class LUInt32ToDouble : public LInstructionHelper<1, 1, 0>
 {
@@ -94,22 +78,41 @@ class LUInt32ToDouble : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// LDivI is presently implemented as a proper C function,
-// so it trashes r0, r1, r2 and r3.  The call also trashes lr, and has the
-// ability to trash ip. The function also takes two arguments (dividend in r0,
-// divisor in r1). The LInstruction gets encoded such that the divisor and
-// dividend are passed in their apropriate registers, and are marked as copy
-// so we can modify them (and the function will).
-// The other thre registers that can be trashed are marked as such. For the time
-// being, the link register is not marked as trashed because we never allocate
-// to the link register.
-class LDivI : public LBinaryMath<2>
+class LDivI : public LBinaryMath<1>
 {
   public:
     LIR_HEADER(DivI);
 
     LDivI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2) {
+          const LDefinition &temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+
+    MDiv *mir() const {
+        return mir_->toDiv();
+    }
+};
+
+// LSoftDivI is a software divide for ARM cores that don't support a hardware
+// divide instruction.
+//
+// It is implemented as a proper C function so it trashes r0, r1, r2 and r3.  The
+// call also trashes lr, and has the ability to trash ip. The function also
+// takes two arguments (dividend in r0, divisor in r1). The LInstruction gets
+// encoded such that the divisor and dividend are passed in their apropriate
+// registers, and are marked as copy so we can modify them (and the function
+// will).  The other thre registers that can be trashed are marked as such. For
+// the time being, the link register is not marked as trashed because we never
+// allocate to the link register.
+class LSoftDivI : public LBinaryMath<2>
+{
+  public:
+    LIR_HEADER(SoftDivI);
+
+    LSoftDivI(const LAllocation &lhs, const LAllocation &rhs,
+              const LDefinition &temp1, const LDefinition &temp2) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
@@ -378,4 +381,4 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_lir_arm_h__
+#endif /* ion_arm_LIR_arm_h */

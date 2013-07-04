@@ -56,7 +56,6 @@ CPP_SOURCES += [
     'ipc_channel_proxy.cc',
     'ipc_logging.cc',
     'ipc_message.cc',
-    'ipc_message_utils.cc',
     'ipc_sync_channel.cc',
     'ipc_sync_message.cc',
     'lazy_instance.cc',
@@ -167,6 +166,22 @@ if os_macosx:
         'mach_message_source_mac.cc',
         'transport_dib_mac.cc',
     ]
+    CMMSRCS += [
+        'base_paths_mac.mm',
+        'chrome_application_mac.mm',
+        'chrome_paths_mac.mm',
+        'file_util_mac.mm',
+        'file_version_info_mac.mm',
+        'mac_util.mm',
+        'mach_ipc_mac.mm',
+        'message_pump_mac.mm',
+        'platform_thread_mac.mm',
+        'platform_util_mac.mm',
+        'process_util_mac.mm',
+        'scoped_nsautorelease_pool.mm',
+        'sys_string_conversions_mac.mm',
+        'worker_pool_mac.mm',
+    ]
 
 if os_linux:
     CPP_SOURCES += [
@@ -177,7 +192,7 @@ if os_linux:
         'process_util_linux.cc',
         'time_posix.cc',
     ]
-    if CONFIG['MOZ_ENABLE_GTK2']:
+    if CONFIG['MOZ_WIDGET_GTK']:
         CPP_SOURCES += [
             'message_pump_glib.cc',
         ]
@@ -193,7 +208,7 @@ if os_bsd:
         'process_util_bsd.cc',
         'time_posix.cc',
     ]
-    if CONFIG['MOZ_ENABLE_GTK2']:
+    if CONFIG['MOZ_WIDGET_GTK']:
         CPP_SOURCES += [
             'message_pump_glib.cc',
         ]

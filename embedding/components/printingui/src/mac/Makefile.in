@@ -10,13 +10,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= printingui_s
 EXPORT_LIBRARY	= ..
 LIBXUL_LIBRARY	= 1
+FAIL_ON_WARNINGS = 1
 
 
-
-CMMSRCS = nsPrintingPromptServiceX.mm
+DISABLED_CMMSRCS = nsPrintingPromptServiceX.mm
 
 LOCAL_INCLUDES	= \
 		$(NULL)

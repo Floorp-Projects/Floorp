@@ -276,6 +276,18 @@ audiotrack_get_backend_id(cubeb * context)
   return "audiotrack";
 }
 
+static int
+audiotrack_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
+{
+  assert(ctx && max_channels);
+
+  /* The android mixer handles up to two channels, see
+  http://androidxref.com/4.2.2_r1/xref/frameworks/av/services/audioflinger/AudioFlinger.h#67 */
+  *max_channels = 2;
+
+  return CUBEB_OK;
+}
+
 void
 audiotrack_destroy(cubeb * context)
 {
@@ -293,7 +305,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
                        cubeb_state_callback state_callback,
                        void * user_ptr)
 {
-  struct cubeb_stream * stm;
+  cubeb_stream * stm;
   int32_t channels;
   int32_t min_frame_count;
 
@@ -415,6 +427,7 @@ audiotrack_stream_get_position(cubeb_stream * stream, uint64_t * position)
 static struct cubeb_ops const audiotrack_ops = {
   .init = audiotrack_init,
   .get_backend_id = audiotrack_get_backend_id,
+  .get_max_channel_count = audiotrack_get_max_channel_count,
   .destroy = audiotrack_destroy,
   .stream_init = audiotrack_stream_init,
   .stream_destroy = audiotrack_stream_destroy,

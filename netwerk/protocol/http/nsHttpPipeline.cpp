@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdlib.h>
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "nsHttp.h"
 #include "nsHttpPipeline.h"
 #include "nsHttpHandler.h"
@@ -91,7 +93,7 @@ nsHttpPipeline::~nsHttpPipeline()
 nsresult
 nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
 {
-    LOG(("nsHttpPipeline::AddTransaction [this=%x trans=%x]\n", this, trans));
+    LOG(("nsHttpPipeline::AddTransaction [this=%p trans=%x]\n", this, trans));
 
     if (mRequestQ.Length() || mResponseQ.Length())
         mUtilizedPipeline = true;
@@ -178,7 +180,7 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
                                    nsHttpResponseHead *responseHead,
                                    bool *reset)
 {
-    LOG(("nsHttpPipeline::OnHeadersAvailable [this=%x]\n", this));
+    LOG(("nsHttpPipeline::OnHeadersAvailable [this=%p]\n", this));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(mConnection, "no connection");
@@ -206,7 +208,7 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 void
 nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpPipeline::CloseTransaction [this=%x trans=%x reason=%x]\n",
+    LOG(("nsHttpPipeline::CloseTransaction [this=%p trans=%x reason=%x]\n",
         this, trans, reason));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
@@ -287,7 +289,7 @@ nsHttpPipeline::DontReuse()
 nsresult
 nsHttpPipeline::PushBack(const char *data, uint32_t length)
 {
-    LOG(("nsHttpPipeline::PushBack [this=%x len=%u]\n", this, length));
+    LOG(("nsHttpPipeline::PushBack [this=%p len=%u]\n", this, length));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(mPushBackLen == 0, "push back buffer already has data!");
@@ -404,7 +406,7 @@ nsHttpPipeline::TakeSubTransactions(
 void
 nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
 {
-    LOG(("nsHttpPipeline::SetConnection [this=%x conn=%x]\n", this, conn));
+    LOG(("nsHttpPipeline::SetConnection [this=%p conn=%x]\n", this, conn));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(!mConnection, "already have a connection");
@@ -415,7 +417,7 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
 nsAHttpConnection *
 nsHttpPipeline::Connection()
 {
-    LOG(("nsHttpPipeline::Connection [this=%x conn=%x]\n", this, mConnection));
+    LOG(("nsHttpPipeline::Connection [this=%p conn=%x]\n", this, mConnection));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     return mConnection;
@@ -444,7 +446,7 @@ void
 nsHttpPipeline::OnTransportStatus(nsITransport* transport,
                                   nsresult status, uint64_t progress)
 {
-    LOG(("nsHttpPipeline::OnStatus [this=%x status=%x progress=%llu]\n",
+    LOG(("nsHttpPipeline::OnStatus [this=%p status=%x progress=%llu]\n",
         this, status, progress));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
@@ -588,7 +590,7 @@ nsHttpPipeline::ReadSegments(nsAHttpSegmentReader *reader,
                              uint32_t count,
                              uint32_t *countRead)
 {
-    LOG(("nsHttpPipeline::ReadSegments [this=%x count=%u]\n", this, count));
+    LOG(("nsHttpPipeline::ReadSegments [this=%p count=%u]\n", this, count));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -636,7 +638,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
                               uint32_t count,
                               uint32_t *countWritten)
 {
-    LOG(("nsHttpPipeline::WriteSegments [this=%x count=%u]\n", this, count));
+    LOG(("nsHttpPipeline::WriteSegments [this=%p count=%u]\n", this, count));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -766,7 +768,7 @@ nsHttpPipeline::CancelPipeline(nsresult originalReason)
 void
 nsHttpPipeline::Close(nsresult reason)
 {
-    LOG(("nsHttpPipeline::Close [this=%x reason=%x]\n", this, reason));
+    LOG(("nsHttpPipeline::Close [this=%p reason=%x]\n", this, reason));
 
     if (mClosed) {
         LOG(("  already closed\n"));

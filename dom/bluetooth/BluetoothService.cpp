@@ -681,7 +681,7 @@ BluetoothService::HandleShutdown()
         }
 
         if (NS_FAILED(timer->Cancel())) {
-          MOZ_NOT_REACHED("Failed to cancel shutdown timer, this will crash!");
+          MOZ_CRASH("Failed to cancel shutdown timer, this will crash!");
         }
       }
       else {
@@ -752,24 +752,11 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BluetoothService::Notify(const BluetoothSignal& aData)
 {
-  /**
-   * We'd like to keep old mechanisms for now and remove them after Bug 873917
-   * is fixed. Basically, three system messages are going to be merged into one
-   * with an extra property named 'method' for distinguishing pairing method.
-   * Please see Bug 853235 for more details.
-   */
   nsString type = NS_LITERAL_STRING("bluetooth-pairing-request");
-  nsAutoString oldType;
 
   AutoSafeJSContext cx;
-  NS_ASSERTION(!::JS_IsExceptionPending(cx),
-               "Shouldn't get here when an exception is pending!");
-
-  JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
-  if (!obj) {
-    NS_WARNING("Failed to new JSObject for system message!");
-    return;
-  }
+  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  NS_ENSURE_TRUE_VOID(obj);
 
   if (!SetJsObject(cx, aData.value(), obj)) {
     NS_WARNING("Failed to set properties of system message!");
@@ -781,15 +768,12 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   if (aData.name().EqualsLiteral("RequestConfirmation")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 4,
       "RequestConfirmation: Wrong length of parameters");
-    oldType.AssignLiteral("bluetooth-requestconfirmation");
   } else if (aData.name().EqualsLiteral("RequestPinCode")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-    oldType.AssignLiteral("bluetooth-requestpincode");
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-    oldType.AssignLiteral("bluetooth-requestpasskey");
   } else if (aData.name().EqualsLiteral("Authorize")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
       "Authorize: Wrong length of parameters");
@@ -815,8 +799,14 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   NS_ENSURE_TRUE_VOID(systemMessenger);
 
   systemMessenger->BroadcastMessage(type, OBJECT_TO_JSVAL(obj));
+}
 
-  if (!oldType.IsEmpty()) {
-    systemMessenger->BroadcastMessage(oldType, OBJECT_TO_JSVAL(obj));
-  }
+void
+BluetoothService::DispatchToCommandThread(nsRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+  MOZ_ASSERT(mBluetoothCommandThread);
+
+  mBluetoothCommandThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }

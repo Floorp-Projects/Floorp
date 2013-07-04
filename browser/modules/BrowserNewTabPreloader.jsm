@@ -12,16 +12,17 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window id='win'/>";
+const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>";
 const NEWTAB_URL = "about:newtab";
 const PREF_BRANCH = "browser.newtab.";
 
 // The interval between swapping in a preload docShell and kicking off the
 // next preload in the background.
-const PRELOADER_INTERVAL_MS = 3000;
+const PRELOADER_INTERVAL_MS = 600;
 // The initial delay before we start preloading our first new tab page. The
 // timer is started after the first 'browser-delayed-startup' has been sent.
 const PRELOADER_INIT_DELAY_MS = 5000;
@@ -261,18 +262,20 @@ let HiddenBrowsers = {
   _collectTabBrowserSizes: function () {
     let sizes = new Map();
 
-    function tabBrowsers() {
+    function tabBrowserBounds() {
       let wins = Services.ww.getWindowEnumerator("navigator:browser");
       while (wins.hasMoreElements()) {
         let win = wins.getNext();
         if (win.gBrowser) {
-          yield win.gBrowser;
+          let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+          yield utils.getBoundsWithoutFlushing(win.gBrowser);
         }
       }
     }
 
     // Collect the sizes of all <tabbrowser>s out there.
-    for (let {boxObject: {width, height}} of tabBrowsers()) {
+    for (let {width, height} of tabBrowserBounds()) {
       if (width > 0 && height > 0) {
         let key = width + "x" + height;
         if (!sizes.has(key)) {
@@ -288,12 +291,12 @@ let HiddenBrowsers = {
 function HiddenBrowser(width, height) {
   this.resize(width, height);
 
-  HostFrame.get(aFrame => {
+  HostFrame.get().then(aFrame => {
     let doc = aFrame.document;
     this._browser = doc.createElementNS(XUL_NS, "browser");
     this._browser.setAttribute("type", "content");
+    this._browser.setAttribute("src", NEWTAB_URL);
     doc.getElementById("win").appendChild(this._browser);
-    this.preload();
   });
 }
 
@@ -331,16 +334,6 @@ HiddenBrowser.prototype = {
 
   observe: function () {
     this._timer = null;
-    this.preload();
-  },
-
-  preload: function () {
-    if (!this._browser) {
-      return;
-    }
-
-    // Make sure the browser has the right size.
-    this.resize(this._width, this._height);
 
     // Start pre-loading the new tab page.
     this._browser.loadURI(NEWTAB_URL);
@@ -368,7 +361,7 @@ HiddenBrowser.prototype = {
 
 let HostFrame = {
   _frame: null,
-  _loading: false,
+  _deferred: null,
 
   get hiddenDOMDocument() {
     return Services.appShell.hiddenDOMWindow.document;
@@ -378,38 +371,46 @@ let HostFrame = {
     return this.hiddenDOMDocument.readyState === "complete";
   },
 
-  get: function (callback) {
-    if (this._frame) {
-      callback(this._frame);
-    } else if (this.isReady && !this._loading) {
-      this._create(callback);
-      this._loading = true;
-    } else {
-      Services.tm.currentThread.dispatch(() => HostFrame.get(callback),
-                                         Ci.nsIThread.DISPATCH_NORMAL);
+  get: function () {
+    if (!this._deferred) {
+      this._deferred = Promise.defer();
+      this._create();
     }
+
+    return this._deferred.promise;
   },
 
   destroy: function () {
-    this._frame = null;
+    if (this._frame) {
+      if (!Cu.isDeadWrapper(this._frame)) {
+        this._frame.removeEventListener("load", this, true);
+        this._frame.remove();
+      }
+
+      this._frame = null;
+      this._deferred = null;
+    }
   },
 
-  _create: function (callback) {
-    let doc = this.hiddenDOMDocument;
-    let iframe = doc.createElementNS(HTML_NS, "iframe");
-    doc.documentElement.appendChild(iframe);
+  handleEvent: function () {
+    let contentWindow = this._frame.contentWindow;
+    if (contentWindow.location.href === XUL_PAGE) {
+      this._frame.removeEventListener("load", this, true);
+      this._deferred.resolve(contentWindow);
+    } else {
+      contentWindow.location = XUL_PAGE;
+    }
+  },
 
-    let frame = iframe.contentWindow;
-    let docShell = frame.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDocShell);
-
-    docShell.createAboutBlankContentViewer(null);
-    frame.location = XUL_PAGE;
-
-    let eventHandler = docShell.chromeEventHandler;
-    eventHandler.addEventListener("DOMContentLoaded", function onLoad() {
-      eventHandler.removeEventListener("DOMContentLoaded", onLoad, false);
-      callback(HostFrame._frame = frame);
-    }, false);
+  _create: function () {
+    if (this.isReady) {
+      let doc = this.hiddenDOMDocument;
+      this._frame = doc.createElementNS(HTML_NS, "iframe");
+      this._frame.addEventListener("load", this, true);
+      doc.documentElement.appendChild(this._frame);
+    } else {
+      let flags = Ci.nsIThread.DISPATCH_NORMAL;
+      Services.tm.currentThread.dispatch(() => this._create(), flags);
+    }
   }
 };

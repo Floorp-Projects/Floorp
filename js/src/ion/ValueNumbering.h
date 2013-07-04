@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_value_numbering_h__
-#define jsion_value_numbering_h__
+#ifndef ion_ValueNumbering_h
+#define ion_ValueNumbering_h
 
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "CompileInfo.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/CompileInfo.h"
 
 namespace js {
 namespace ion {
@@ -136,5 +136,4 @@ class ValueNumberData : public TempObject {
 } // namespace ion
 } // namespace js
 
-#endif // jsion_value_numbering_h__
-
+#endif /* ion_ValueNumbering_h */

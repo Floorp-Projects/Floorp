@@ -56,8 +56,8 @@ bool ots_svg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       NONFATAL_FAILURE("Bad SVG table index range");
     }
 
-    if (last_end_glyph && start_glyph < last_end_glyph) {
-      NONFATAL_FAILURE("SVG table index range is not sorted");
+    if (last_end_glyph && start_glyph <= last_end_glyph) {
+      NONFATAL_FAILURE("SVG table index range overlapping or not sorted");
     }
 
     if (doc_locations.find(doc_offset) != doc_locations.end()) {

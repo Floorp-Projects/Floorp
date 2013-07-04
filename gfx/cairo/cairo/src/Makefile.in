@@ -9,7 +9,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME    = mozcairo
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 
@@ -142,7 +141,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-font.c
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
 endif
 
@@ -187,6 +186,8 @@ CFLAGS += -Wno-conversion
 endif # GNU_CC
 
 DEFINES += -DPACKAGE_VERSION="\"moz\"" -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
+
+DEFINES += -DCAIRO_HAS_PTHREAD -D_GNU_SOURCE
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DCAIRO_WIN32_STATIC_BUILD

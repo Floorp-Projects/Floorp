@@ -152,6 +152,10 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual nsresult
+  SendSinkMessage(const nsAString& aDeviceAddresses,
+                  const nsAString& aMessage) MOZ_OVERRIDE;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();
@@ -180,14 +184,6 @@ private:
   // This method should never be called.
   virtual bool
   IsEnabledInternal() MOZ_OVERRIDE;
-
-  // Should never be called from the child
-  virtual nsresult
-  GetDevicePropertiesInternal(const BluetoothSignal& aSignal) MOZ_OVERRIDE;
-
-  // This method should never be called from the child.
-  virtual nsresult
-  PrepareAdapterInternal() MOZ_OVERRIDE;
 
   bool
   IsSignalRegistered(const nsAString& aNodeName) {

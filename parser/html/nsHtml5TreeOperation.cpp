@@ -32,6 +32,7 @@
 #include "nsEscape.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsIURI.h"
@@ -441,6 +442,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       nsIContent* parent = *(mTwo.node);
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
+      nsCOMPtr<nsIDOMHTMLImageElement> domImageElement = do_QueryInterface(node);
       // NS_ASSERTION(formControl, "Form-associated element did not implement nsIFormControl.");
       // TODO: uncomment the above line when <keygen> (bug 101019) is supported by Gecko
       nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(parent));
@@ -449,7 +451,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       if (formControl &&
           !node->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
         formControl->SetForm(formElement);
+      } else if (domImageElement) {
+        nsRefPtr<dom::HTMLImageElement> imageElement =
+          static_cast<dom::HTMLImageElement*>(domImageElement.get());
+        MOZ_ASSERT(imageElement);
+        imageElement->SetForm(formElement);
       }
+
       return rv;
     }
     case eTreeOpAppendText: {

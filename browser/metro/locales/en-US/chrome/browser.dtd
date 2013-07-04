@@ -10,6 +10,8 @@
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
 
+<!ENTITY appbarErrorConsole.label   "Open error console">
+<!ENTITY appbarJSShell.label        "Open JavaScript shell">
 <!ENTITY appbarFindInPage2.label    "Find in page">
 <!ENTITY appbarViewOnDesktop2.label "View on desktop">
 
@@ -17,9 +19,16 @@
 <!ENTITY startBookmarksHeader.label       "Bookmarks">
 <!ENTITY startHistoryHeader.label         "Recent History">
 <!ENTITY startRemoteTabsHeader.label      "Tabs from Other Devices">
+
 <!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label): shortened version of startRemoteTabsHeader.label.
      Needs to be two words or shorter to fit in narrow vertical space.-->
-<!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs">
+<!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label,
+                        snappedBookmarksHeader.label,
+                        snappedHistoryHeader.lavel )
+      The '>' character is not part of the name, but is an indicator of more content. Please do not localize the '>' -->
+<!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs >">
+<!ENTITY snappedBookmarksHeader.label       "Bookmarks >">
+<!ENTITY snappedHistoryHeader.label         "Recent History >">
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
 <!ENTITY autocompleteSearchesHeader.label "Internet Searches"> 

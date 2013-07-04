@@ -201,6 +201,10 @@ ContentPrefService2.prototype = {
       return;
     }
 
+    // Invalidate the cached value so consumers accessing the cache between now
+    // and when the operation finishes don't get old data.
+    this._cache.remove(group, name);
+
     let stmts = [];
 
     // Create the setting if it doesn't exist.
@@ -294,6 +298,12 @@ ContentPrefService2.prototype = {
     checkNameArg(name);
     checkCallbackArg(callback, false);
 
+    // Invalidate the cached values so consumers accessing the cache between now
+    // and when the operation finishes don't get old data.
+    for (let sgroup in this._cache.matchGroups(group, includeSubdomains)) {
+      this._cache.remove(sgroup, name);
+    }
+
     let stmts = [];
 
     // First get the matching prefs.
@@ -329,7 +339,7 @@ ContentPrefService2.prototype = {
     this._execStmts(stmts, {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
-        prefs.set(grp, name);
+        prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
@@ -338,7 +348,7 @@ ContentPrefService2.prototype = {
           if (context && context.usePrivateBrowsing) {
             for (let [sgroup, ] in
                    this._pbStore.match(group, name, includeSubdomains)) {
-              prefs.set(sgroup, name);
+              prefs.set(sgroup, name, undefined);
               this._pbStore.remove(sgroup, name);
             }
           }
@@ -374,6 +384,12 @@ ContentPrefService2.prototype = {
                                                  context, callback) {
     group = this._parseGroup(group);
     checkCallbackArg(callback, false);
+
+    // Invalidate the cached values so consumers accessing the cache between now
+    // and when the operation finishes don't get old data.
+    for (let sgroup in this._cache.matchGroups(group, includeSubdomains)) {
+      this._cache.removeGroup(sgroup);
+    }
 
     let stmts = [];
 
@@ -419,13 +435,13 @@ ContentPrefService2.prototype = {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
         let name = row.getResultByName("name");
-        prefs.set(grp, name);
+        prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
         if (ok && context && context.usePrivateBrowsing) {
           for (let [sgroup, sname, ] in this._pbStore) {
-            prefs.set(sgroup, sname);
+            prefs.set(sgroup, sname, undefined);
             this._pbStore.remove(sgroup, sname);
           }
         }
@@ -444,6 +460,11 @@ ContentPrefService2.prototype = {
 
   removeAllDomains: function CPS2_removeAllDomains(context, callback) {
     checkCallbackArg(callback, false);
+
+    // Invalidate the cached values so consumers accessing the cache between now
+    // and when the operation finishes don't get old data.
+    this._cache.removeAllGroups();
+
     let stmts = [];
 
     // First get the matching prefs.
@@ -471,15 +492,15 @@ ContentPrefService2.prototype = {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
         let name = row.getResultByName("name");
-        prefs.set(grp, name);
+        prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
         if (ok && context && context.usePrivateBrowsing) {
           for (let [sgroup, sname, ] in this._pbStore) {
-            prefs.set(sgroup, sname);
+            prefs.set(sgroup, sname, undefined);
           }
-          this._pbStore.removeGrouped();
+          this._pbStore.removeAllGroups();
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
@@ -497,6 +518,13 @@ ContentPrefService2.prototype = {
   removeByName: function CPS2_removeByName(name, context, callback) {
     checkNameArg(name);
     checkCallbackArg(callback, false);
+
+    // Invalidate the cached values so consumers accessing the cache between now
+    // and when the operation finishes don't get old data.
+    for (let [group, sname, ] in this._cache) {
+      if (sname == name)
+        this._cache.remove(group, name);
+    }
 
     let stmts = [];
 
@@ -542,14 +570,14 @@ ContentPrefService2.prototype = {
     this._execStmts(stmts, {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
-        prefs.set(grp, name);
+        prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
         if (ok && context && context.usePrivateBrowsing) {
           for (let [sgroup, sname, ] in this._pbStore) {
             if (sname === name) {
-              prefs.set(sgroup, name);
+              prefs.set(sgroup, name, undefined);
               this._pbStore.remove(sgroup, name);
             }
           }

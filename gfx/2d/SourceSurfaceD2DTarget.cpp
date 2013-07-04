@@ -99,6 +99,11 @@ SourceSurfaceD2DTarget::DrawTargetWillChange()
   D3D10_TEXTURE2D_DESC desc;
   mTexture->GetDesc(&desc);
 
+  // Our original texture might implement the keyed mutex flag. We shouldn't
+  // need that here. We actually specifically don't want it since we don't lock
+  // our texture for usage!
+  desc.MiscFlags = 0;
+
   // Get a copy of the surface data so the content at snapshot time was saved.
   Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(mTexture));
   Factory::GetDirect3D10Device()->CopyResource(mTexture, oldTexture);

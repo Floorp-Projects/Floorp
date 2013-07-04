@@ -149,6 +149,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
 function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
   let testIter = Iterator(tests);
   let providersAtStart = Social.providers.length;
+  info("runSocialTests: start test run with " + providersAtStart + " providers");
 
   if (cbPreTest === undefined) {
     cbPreTest = function(cb) {cb()};
@@ -164,6 +165,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
     } catch (err if err instanceof StopIteration) {
       // out of items:
       (cbFinish || defaultFinishChecks)();
+      info("runSocialTests: finish test run with " + Social.providers.length + " providers");
       return;
     }
     // We run on a timeout as the frameworker also makes use of timeouts, so
@@ -174,7 +176,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
         cbPostTest(runNextTest);
       }
       cbPreTest(function() {
-        is(providersAtStart, Social.providers.length, "no new providers left enabled");
+        is(providersAtStart, Social.providers.length, "pre-test: no new providers left enabled");
         info("sub-test " + name + " starting");
         try {
           func.call(tests, cleanupAndRunNextTest);

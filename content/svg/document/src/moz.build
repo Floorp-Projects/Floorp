@@ -14,3 +14,5 @@ CPP_SOURCES += [
     'SVGDocument.cpp',
 ]
 
+LIBRARY_NAME = 'gkconsvgdoc_s'
+

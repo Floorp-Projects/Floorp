@@ -58,6 +58,10 @@
 #define PROGRESS_EXECUTE_SIZE 75.0f
 #define PROGRESS_FINISH_SIZE   5.0f
 
+// Amount of time in ms to wait for the parent process to close
+#define PARENT_WAIT 5000
+#define IMMERSIVE_PARENT_WAIT 15000
+
 #if defined(XP_MACOSX)
 // These functions are defined in launchchild_osx.mm
 void LaunchChild(int argc, char **argv);
@@ -1677,6 +1681,23 @@ PatchIfFile::Finish(int status)
 #include "nsWindowsHelpers.h"
 #include "uachelper.h"
 #include "pathhash.h"
+
+#ifdef MOZ_METRO
+/**
+ * Determines if the update came from an Immersive browser
+ * @return true if the update came from an immersive browser
+ */
+bool
+IsUpdateFromMetro(int argc, NS_tchar **argv)
+{
+  for (int i = 0; i < argc; i++) {
+    if (!wcsicmp(L"-ServerName:DefaultBrowserServer", argv[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
 #endif
 
 static void
@@ -1706,11 +1727,9 @@ LaunchCallbackApp(const NS_tchar *workingDir,
 #if defined(MOZ_METRO)
     // If our callback application is the default metro browser, then
     // launch it now.
-    for (int i = 0; i < argc; i++) {
-      if (!wcsicmp(L"-ServerName:DefaultBrowserServer", argv[i])) {
-        LaunchDefaultMetroBrowser();
-        return;
-      }
+    if (IsUpdateFromMetro(argc, argv)) {
+      LaunchDefaultMetroBrowser();
+      return;
     }
 #endif
     WinLaunchChild(argv[0], argc, argv, NULL);
@@ -2466,9 +2485,15 @@ int NS_main(int argc, NS_tchar **argv)
     // Otherwise, wait for the parent process to exit before starting the
     // update.
     if (parent) {
-      DWORD result = WaitForSingleObject(parent, 5000);
+      bool updateFromMetro = false;
+#ifdef MOZ_METRO
+      updateFromMetro = IsUpdateFromMetro(argc, argv);
+#endif
+      DWORD waitTime = updateFromMetro ?
+                       IMMERSIVE_PARENT_WAIT : PARENT_WAIT;
+      DWORD result = WaitForSingleObject(parent, waitTime);
       CloseHandle(parent);
-      if (result != WAIT_OBJECT_0)
+      if (result != WAIT_OBJECT_0 && !updateFromMetro)
         return 1;
     }
   }
@@ -2895,7 +2920,8 @@ int NS_main(int argc, NS_tchar **argv)
     NS_tchar callbackLongPath[MAXPATHLEN];
     ZeroMemory(callbackLongPath, sizeof(callbackLongPath));
     NS_tchar *targetPath = argv[callbackIndex];
-    NS_tchar buffer[MAXPATHLEN*2];
+    NS_tchar buffer[MAXPATHLEN * 2] = { NS_T('\0') };
+    size_t bufferLeft = MAXPATHLEN * 2;
     if (sReplaceRequest) {
       // In case of replace requests, we should look for the callback file in
       // the destination directory.
@@ -2903,16 +2929,21 @@ int NS_main(int argc, NS_tchar **argv)
       NS_tchar *p = buffer;
       NS_tstrncpy(p, argv[callbackIndex], commonPrefixLength);
       p += commonPrefixLength;
-      NS_tstrcpy(p, gDestinationPath + commonPrefixLength);
-      p += NS_tstrlen(gDestinationPath + commonPrefixLength);
+      bufferLeft -= commonPrefixLength;
+      NS_tstrncpy(p, gDestinationPath + commonPrefixLength, bufferLeft);
+
+      size_t len = NS_tstrlen(gDestinationPath + commonPrefixLength);
+      p += len;
+      bufferLeft -= len;
       *p = NS_T('\\');
       ++p;
+      bufferLeft--;
       *p = NS_T('\0');
       NS_tchar installDir[MAXPATHLEN];
       if (!GetInstallationDir(installDir))
         return 1;
       size_t callbackPrefixLength = PathCommonPrefixW(argv[callbackIndex], installDir, NULL);
-      NS_tstrcpy(p, argv[callbackIndex] + max(callbackPrefixLength, commonPrefixLength));
+      NS_tstrncpy(p, argv[callbackIndex] + max(callbackPrefixLength, commonPrefixLength), bufferLeft);
       targetPath = buffer;
     }
     if (!GetLongPathNameW(targetPath, callbackLongPath,

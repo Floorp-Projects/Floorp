@@ -14,7 +14,11 @@ include protocol PFTPChannel;
 include protocol PWebSocket;
 include protocol PTCPSocket;
 include protocol PRemoteOpenFile;
+include protocol PBlob; //FIXME: bug #792908
+
 include URIParams;
+include InputStreamParams;
+include NeckoChannelParams;
 
 include "SerializedLoadContext.h";
 
@@ -22,7 +26,6 @@ using IPC::SerializedLoadContext;
 
 namespace mozilla {
 namespace net {
-
 
 //-------------------------------------------------------------------
 sync protocol PNecko
@@ -41,9 +44,12 @@ parent:
 
   PCookieService();
   PHttpChannel(nullable PBrowser browser,
-               SerializedLoadContext loadContext);
+               SerializedLoadContext loadContext,
+               HttpChannelCreationArgs args);
   PWyciwygChannel();
-  PFTPChannel(PBrowser browser, SerializedLoadContext loadContext);
+  PFTPChannel(PBrowser browser, SerializedLoadContext loadContext,
+              FTPChannelCreationArgs args);
+
   PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
   PTCPSocket(nsString host, uint16_t port, bool useSSL, nsString binaryType,
              nullable PBrowser browser);

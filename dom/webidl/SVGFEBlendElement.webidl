@@ -10,9 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedEnumeration;
-interface SVGAnimatedString;
-
 interface SVGFEBlendElement : SVGElement {
 
   // Blend Mode Types

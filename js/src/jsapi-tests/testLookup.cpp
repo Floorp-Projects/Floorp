@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "tests.h"
+#include "jsapi-tests/tests.h"
 #include "jsfun.h"  // for js::IsInternalFunctionObject
 
 #include "jsobjinlines.h"
@@ -30,7 +30,7 @@ BEGIN_TEST(testLookup_bug522590)
     CHECK(JS_LookupProperty(cx, xobj, "f", r.address()));
     CHECK(r.isObject());
     JSObject *funobj = &r.toObject();
-    CHECK(funobj->isFunction());
+    CHECK(funobj->is<JSFunction>());
     CHECK(!js::IsInternalFunctionObject(funobj));
 
     return true;
@@ -50,7 +50,7 @@ static JSClass DocumentAllClass = {
 };
 
 JSBool
-document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
                  JS::MutableHandleObject objp)
 {
     // If id is "all", resolve document.all=true.

@@ -3,12 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/browser_toolbar_height"
-        android:minWidth="@dimen/tabs_panel_indicator_width"
-        android:padding="@dimen/browser_toolbar_button_padding"
-        android:background="@drawable/tabs_panel_indicator"
-        android:textAppearance="@style/TextAppearance.Micro"
-        android:textColor="#99FFFFFF"
-        android:textStyle="bold"/>
+<ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="@dimen/tabs_panel_indicator_width"
+             android:layout_height="@dimen/browser_toolbar_height"
+             android:minWidth="@dimen/tabs_panel_indicator_width"
+             android:paddingTop="@dimen/browser_toolbar_button_padding"
+             android:paddingBottom="@dimen/browser_toolbar_button_padding"
+             android:background="@drawable/tabs_panel_indicator"/>

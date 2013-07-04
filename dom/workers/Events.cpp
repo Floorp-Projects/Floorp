@@ -220,7 +220,8 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -236,7 +237,8 @@ private:
   }
 
   static JSBool
-  GetConstant(JSContext* aCx, JSHandleObject aObj, JSHandleId idval, JSMutableHandleValue aVp)
+  GetConstant(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> idval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(idval));
     JS_ASSERT(JSID_TO_INT(idval) >= CAPTURING_PHASE &&
@@ -388,8 +390,7 @@ class MessageEvent : public Event
   static const JSFunctionSpec sFunctions[];
 
 protected:
-  uint64_t* mData;
-  size_t mDataByteCount;
+  JSAutoStructuredCloneBuffer mBuffer;
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
   bool mMainRuntime;
 
@@ -430,7 +431,7 @@ public:
     SetJSPrivateSafeish(obj, priv);
     InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL, NULL,
                            true);
-    aData.steal(&priv->mData, &priv->mDataByteCount);
+    priv->mBuffer.swap(aData);
     priv->mClonedObjects.SwapElements(aClonedObjects);
 
     return obj;
@@ -438,7 +439,7 @@ public:
 
 protected:
   MessageEvent(bool aMainRuntime)
-  : mData(NULL), mDataByteCount(0), mMainRuntime(aMainRuntime)
+  : mMainRuntime(aMainRuntime)
   {
     MOZ_COUNT_CTOR(mozilla::dom::workers::MessageEvent);
   }
@@ -446,7 +447,6 @@ protected:
   virtual ~MessageEvent()
   {
     MOZ_COUNT_DTOR(mozilla::dom::workers::MessageEvent);
-    JS_ASSERT(!mData);
   }
 
   enum SLOT {
@@ -503,17 +503,12 @@ private:
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
     MessageEvent* priv = GetJSPrivateSafeish<MessageEvent>(aObj);
-    if (priv) {
-      JS_freeop(aFop, priv->mData);
-#ifdef DEBUG
-      priv->mData = NULL;
-#endif
-      delete priv;
-    }
+    delete priv;
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -528,12 +523,9 @@ private:
     }
 
     // Deserialize and save the data value if we can.
-    if (slot == SLOT_data && event->mData) {
+    if (slot == SLOT_data && event->mBuffer.data()) {
       JSAutoStructuredCloneBuffer buffer;
-      buffer.adopt(event->mData, event->mDataByteCount);
-
-      event->mData = NULL;
-      event->mDataByteCount = 0;
+      buffer.swap(event->mBuffer);
 
       // Release reference to objects that were AddRef'd for
       // cloning into worker when array goes out of scope.
@@ -723,7 +715,8 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -902,7 +895,8 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
+              JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 

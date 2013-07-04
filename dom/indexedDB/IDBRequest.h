@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_indexeddb_idbrequest_h__
 #define mozilla_dom_indexeddb_idbrequest_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIIDBRequest.h"
@@ -37,11 +38,10 @@ public:
   static
   already_AddRefed<IDBRequest> Create(nsISupports* aSource,
                                       IDBWrapperCache* aOwnerCache,
-                                      IDBTransaction* aTransaction,
-                                      JSContext* aCallingCx);
+                                      IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   nsISupports* Source()
   {
@@ -83,7 +83,7 @@ public:
     return mActorParent;
   }
 
-  void CaptureCaller(JSContext* aCx);
+  void CaptureCaller();
 
   void FillScriptErrorEvent(nsScriptErrorEvent* aEvent) const;
 
@@ -108,7 +108,7 @@ protected:
   nsCOMPtr<nsISupports> mSource;
   nsRefPtr<IDBTransaction> mTransaction;
 
-  jsval mResultVal;
+  JS::Heap<JS::Value> mResultVal;
   nsRefPtr<mozilla::dom::DOMError> mError;
   IndexedDBRequestParentBase* mActorParent;
   nsString mFilename;
@@ -133,13 +133,12 @@ public:
   already_AddRefed<IDBOpenDBRequest>
   Create(IDBFactory* aFactory,
          nsPIDOMWindow* aOwner,
-         JS::Handle<JSObject*> aScriptOwner,
-         JSContext* aCallingCx);
+         JS::Handle<JSObject*> aScriptOwner);
 
   void SetTransaction(IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   DOMError* GetError(ErrorResult& aRv)
   {

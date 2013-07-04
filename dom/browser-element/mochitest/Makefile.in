@@ -24,6 +24,7 @@ MOCHITEST_FILES = \
 		test_browserElement_NoPref.html \
 		test_browserElement_NoWhitelist.html \
 		browserElement_LoadEvents.js \
+		file_browserElement_LoadEvents.html \
 		test_browserElement_inproc_LoadEvents.html \
 		browserElement_DataURI.js \
 		test_browserElement_inproc_DataURI.html \

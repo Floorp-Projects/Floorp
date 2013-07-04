@@ -34,7 +34,7 @@ Cu.import("resource://gre/modules/Metrics.jsm");
 
 #endif
 
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -611,7 +611,7 @@ SessionsProvider.prototype = Object.freeze({
     this._log.debug("The last recorded session was #" + lastRecordedSession);
 
     for (let [index, session] in Iterator(sessions)) {
-      if (index < lastRecordedSession) {
+      if (index <= lastRecordedSession) {
         this._log.warn("Already recorded session " + index + ". Did the last " +
                        "session crash or have an issue saving the prefs file?");
         continue;
@@ -839,13 +839,6 @@ AddonsProvider.prototype = Object.freeze({
       data.counts[type] = (data.counts[type] || 0) + 1;
 
       if (this.FULL_DETAIL_TYPES.indexOf(addon.type) == -1) {
-        continue;
-      }
-
-      let optOutPref = "extensions." + addon.id + ".getAddons.cache.enabled";
-      if (!this._prefs.get(optOutPref, true)) {
-        this._log.debug("Ignoring add-on that's opted out of AMO updates: " +
-                        addon.id);
         continue;
       }
 

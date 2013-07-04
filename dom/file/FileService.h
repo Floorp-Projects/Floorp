@@ -70,16 +70,16 @@ private:
 
   public:
     NS_IMETHOD_(nsrefcnt)
-    AddRef();
+    AddRef() MOZ_OVERRIDE;
 
     NS_IMETHOD_(nsrefcnt)
-    Release();
+    Release() MOZ_OVERRIDE;
 
     inline nsresult
     Enqueue(FileHelper* aFileHelper);
 
     virtual void
-    OnFileHelperComplete(FileHelper* aFileHelper);
+    OnFileHelperComplete(FileHelper* aFileHelper) MOZ_OVERRIDE;
 
   private:
     inline

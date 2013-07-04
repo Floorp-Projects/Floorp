@@ -16,7 +16,7 @@
 
     var login, login2;
 
-    var resolveCallback = {
+    var resolveCallback = SpecialPowers.wrapCallbackObject({
 
       QueryInterface : function (iid) {
         const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
@@ -29,7 +29,7 @@
       onProxyAvailable : function (req, uri, pi, status) {
          init2(SpecialPowers.wrap(pi).host, SpecialPowers.wrap(pi).port);
       }
-    };
+    });
 
     function init1() {
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);

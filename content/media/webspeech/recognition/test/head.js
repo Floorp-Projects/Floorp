@@ -5,14 +5,14 @@ const SPEECH_RECOGNITION_TEST_REQUEST_EVENT_TOPIC = "SpeechRecognitionTest:Reque
 const SPEECH_RECOGNITION_TEST_END_TOPIC = "SpeechRecognitionTest:End";
 
 var errorCodes = {
-  NO_SPEECH : 0,
-  ABORTED : 1,
-  AUDIO_CAPTURE : 2,
-  NETWORK : 3,
-  NOT_ALLOWED : 4,
-  SERVICE_NOT_ALLOWED : 5,
-  BAD_GRAMMAR : 6,
-  LANGUAGE_NOT_SUPPORTED : 7
+  NO_SPEECH : "no-speech",
+  ABORTED : "aborted",
+  AUDIO_CAPTURE : "audio-capture",
+  NETWORK : "network",
+  NOT_ALLOWED : "not-allowed",
+  SERVICE_NOT_ALLOWED : "service-not-allowed",
+  BAD_GRAMMAR : "bad-grammar",
+  LANGUAGE_NOT_SUPPORTED : "language-not-supported"
 };
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");

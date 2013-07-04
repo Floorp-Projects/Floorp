@@ -1,0 +1,168 @@
+From: George Wright <gw@gwright.org.uk>
+Date: Thu, 25 Apr 2013 20:47:06 -0400
+Subject: Bug 848491 - Re-apply bug 687188 - Expand the gradient cache by 2 to store 0/1 colour stop values for clamping.
+
+
+diff --git a/gfx/skia/src/effects/gradients/SkGradientShader.cpp b/gfx/skia/src/effects/gradients/SkGradientShader.cpp
+index 684355d..27a9c46 100644
+--- a/gfx/skia/src/effects/gradients/SkGradientShader.cpp
++++ b/gfx/skia/src/effects/gradients/SkGradientShader.cpp
+@@ -453,15 +453,15 @@ const uint16_t* SkGradientShaderBase::getCache16() const {
+ 
+ const SkPMColor* SkGradientShaderBase::getCache32() const {
+     if (fCache32 == NULL) {
+-        // double the count for dither entries
+-        const int entryCount = kCache32Count * 4;
++        // double the count for dither entries, and have an extra two entries for clamp values
++        const int entryCount = kCache32Count * 4 + 2;
+         const size_t allocSize = sizeof(SkPMColor) * entryCount;
+ 
+         if (NULL == fCache32PixelRef) {
+             fCache32PixelRef = SkNEW_ARGS(SkMallocPixelRef,
+                                           (NULL, allocSize, NULL));
+         }
+-        fCache32 = (SkPMColor*)fCache32PixelRef->getAddr();
++        fCache32 = (SkPMColor*)fCache32PixelRef->getAddr() + 1;
+         if (fColorCount == 2) {
+             Build32bitCache(fCache32, fOrigColors[0], fOrigColors[1],
+                             kCache32Count, fCacheAlpha);
+@@ -484,7 +484,7 @@ const SkPMColor* SkGradientShaderBase::getCache32() const {
+             SkMallocPixelRef* newPR = SkNEW_ARGS(SkMallocPixelRef,
+                                                  (NULL, allocSize, NULL));
+             SkPMColor* linear = fCache32;           // just computed linear data
+-            SkPMColor* mapped = (SkPMColor*)newPR->getAddr();    // storage for mapped data
++            SkPMColor* mapped = (SkPMColor*)newPR->getAddr() + 1;    // storage for mapped data
+             SkUnitMapper* map = fMapper;
+             for (int i = 0; i < kCache32Count; i++) {
+                 int index = map->mapUnit16((i << 8) | i) >> 8;
+@@ -495,9 +495,21 @@ const SkPMColor* SkGradientShaderBase::getCache32() const {
+             }
+             fCache32PixelRef->unref();
+             fCache32PixelRef = newPR;
+-            fCache32 = (SkPMColor*)newPR->getAddr();
++            fCache32 = (SkPMColor*)newPR->getAddr() + 1;
+         }
+     }
++
++    // Write the clamp colours into the first and last entries of fCache32
++    fCache32[kCache32ClampLower] = SkPackARGB32(fCacheAlpha,
++                                                SkColorGetR(fOrigColors[0]),
++                                                SkColorGetG(fOrigColors[0]),
++                                                SkColorGetB(fOrigColors[0]));
++
++    fCache32[kCache32ClampUpper] = SkPackARGB32(fCacheAlpha,
++                                                SkColorGetR(fOrigColors[fColorCount - 1]),
++                                                SkColorGetG(fOrigColors[fColorCount - 1]),
++                                                SkColorGetB(fOrigColors[fColorCount - 1]));
++
+     return fCache32;
+ }
+ 
+diff --git a/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h b/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h
+index 729ce4e..2cb6a9d 100644
+--- a/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h
++++ b/gfx/skia/src/effects/gradients/SkGradientShaderPriv.h
+@@ -86,6 +86,9 @@ public:
+         /// if dithering is disabled.
+         kDitherStride32 = kCache32Count,
+         kDitherStride16 = kCache16Count,
++
++        kCache32ClampLower = -1,
++        kCache32ClampUpper = kCache32Count * 4
+     };
+ 
+ 
+diff --git a/gfx/skia/src/effects/gradients/SkLinearGradient.cpp b/gfx/skia/src/effects/gradients/SkLinearGradient.cpp
+index e0f216c..40ab918 100644
+--- a/gfx/skia/src/effects/gradients/SkLinearGradient.cpp
++++ b/gfx/skia/src/effects/gradients/SkLinearGradient.cpp
+@@ -127,6 +127,17 @@ void shadeSpan_linear_vertical_lerp(TileProc proc, SkFixed dx, SkFixed fx,
+                                     SkPMColor* SK_RESTRICT dstC,
+                                     const SkPMColor* SK_RESTRICT cache,
+                                     int toggle, int count) {
++    if (proc == clamp_tileproc) {
++        // No need to lerp or dither for clamp values
++        if (fx < 0) {
++            sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampLower], count);
++            return;
++        } else if (fx > 0xffff) {
++            sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampUpper], count);
++            return;
++        }
++    }
++
+     // We're a vertical gradient, so no change in a span.
+     // If colors change sharply across the gradient, dithering is
+     // insufficient (it subsamples the color space) and we need to lerp.
+@@ -154,10 +165,7 @@ void shadeSpan_linear_clamp(TileProc proc, SkFixed dx, SkFixed fx,
+     range.init(fx, dx, count, 0, SkGradientShaderBase::kCache32Count - 1);
+ 
+     if ((count = range.fCount0) > 0) {
+-        sk_memset32_dither(dstC,
+-            cache[toggle + range.fV0],
+-            cache[next_dither_toggle(toggle) + range.fV0],
+-            count);
++        sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampLower], count);
+         dstC += count;
+     }
+     if ((count = range.fCount1) > 0) {
+@@ -176,10 +184,7 @@ void shadeSpan_linear_clamp(TileProc proc, SkFixed dx, SkFixed fx,
+         }
+     }
+     if ((count = range.fCount2) > 0) {
+-        sk_memset32_dither(dstC,
+-            cache[toggle + range.fV1],
+-            cache[next_dither_toggle(toggle) + range.fV1],
+-            count);
++        sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampUpper], count);
+     }
+ }
+ 
+diff --git a/gfx/skia/src/effects/gradients/SkTwoPointConicalGradient.cpp b/gfx/skia/src/effects/gradients/SkTwoPointConicalGradient.cpp
+index abd974b..601fff4 100644
+--- a/gfx/skia/src/effects/gradients/SkTwoPointConicalGradient.cpp
++++ b/gfx/skia/src/effects/gradients/SkTwoPointConicalGradient.cpp
+@@ -124,10 +124,14 @@ static void twopoint_clamp(TwoPtRadial* rec, SkPMColor* SK_RESTRICT dstC,
+         if (TwoPtRadial::DontDrawT(t)) {
+             *dstC++ = 0;
+         } else {
+-            SkFixed index = SkClampMax(t, 0xFFFF);
+-            SkASSERT(index <= 0xFFFF);
+-            *dstC++ = cache[toggle +
+-                            (index >> SkGradientShaderBase::kCache32Shift)];
++            if (t < 0) {
++                *dstC++ = cache[SkGradientShaderBase::kCache32ClampLower];
++            } else if (t > 0xFFFF) {
++                *dstC++ = cache[SkGradientShaderBase::kCache32ClampUpper];
++            } else {
++                SkASSERT(t <= 0xFFFF);
++                *dstC++ = cache[t >> SkGradientShaderBase::kCache32Shift];
++            }
+         }
+         toggle = next_dither_toggle(toggle);
+     }
+diff --git a/gfx/skia/src/effects/gradients/SkTwoPointRadialGradient.cpp b/gfx/skia/src/effects/gradients/SkTwoPointRadialGradient.cpp
+index f70b67d..ec2ae75 100644
+--- a/gfx/skia/src/effects/gradients/SkTwoPointRadialGradient.cpp
++++ b/gfx/skia/src/effects/gradients/SkTwoPointRadialGradient.cpp
+@@ -120,9 +120,14 @@ void shadeSpan_twopoint_clamp(SkScalar fx, SkScalar dx,
+     for (; count > 0; --count) {
+         SkFixed t = two_point_radial(b, fx, fy, fSr2D2, foura,
+                                      fOneOverTwoA, posRoot);
+-        SkFixed index = SkClampMax(t, 0xFFFF);
+-        SkASSERT(index <= 0xFFFF);
+-        *dstC++ = cache[index >> SkGradientShaderBase::kCache32Shift];
++        if (t < 0) {
++            *dstC++ = cache[SkGradientShaderBase::kCache32ClampLower];
++        } else if (t > 0xFFFF) {
++            *dstC++ = cache[SkGradientShaderBase::kCache32ClampUpper];
++        } else {
++            SkASSERT(t <= 0xFFFF);
++            *dstC++ = cache[t >> SkGradientShaderBase::kCache32Shift];
++        }
+         fx += dx;
+         fy += dy;
+         b += db;
+-- 
+1.7.11.7
+

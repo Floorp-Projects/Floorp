@@ -23,7 +23,22 @@
 #endif
 
 #ifdef MOZ_WIDGET_GONK
+# include <sys/time.h>
+# include <sys/resource.h> 
+
 # include <binder/ProcessState.h>
+
+# ifdef LOGE_IF
+#  undef LOGE_IF
+# endif
+
+# include <android/log.h>
+# define LOGE_IF(cond, ...) \
+     ( (CONDITION(cond)) \
+     ? ((void)__android_log_print(ANDROID_LOG_ERROR, \
+       "Gecko:MozillaRntimeMain", __VA_ARGS__)) \
+     : (void)0 )
+
 #endif
 
 int
@@ -34,7 +49,17 @@ main(int argc, char* argv[])
     // receive binder calls, though not necessary to send binder calls.
     // ProcessState::Self() also needs to be called once on the main thread to
     // register the main thread with the binder driver.
+
+    // Change thread priority to 0 only during calling ProcessState::self().
+    // The priority is registered to binder driver and used for default Binder
+    // Thread's priority. 
+    // To change the process's priority to small value need's root permission.
+    int curPrio = getpriority(PRIO_PROCESS, 0);
+    int err = setpriority(PRIO_PROCESS, 0, 0);
+    MOZ_ASSERT(!err);
+    LOGE_IF(err, "setpriority failed. Current process needs root permission.");
     android::ProcessState::self()->startThreadPool();
+    setpriority(PRIO_PROCESS, 0, curPrio);
 #endif
 
 #if defined(XP_WIN) && defined(DEBUG_bent)

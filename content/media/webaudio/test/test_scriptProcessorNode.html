@@ -17,8 +17,6 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
   var context = new AudioContext();
   var buffer = null;
 
@@ -110,7 +108,6 @@ addLoadEvent(function() {
         // If we did not experience any delays, the test is done!
         sp.onaudioprocess = null;
 
-        SpecialPowers.clearUserPref("media.webaudio.enabled");
         SimpleTest.finish();
       } else if (firstNonZero != 2048) {
         // In case we just saw a zero buffer this time, wait one more round
@@ -134,7 +131,6 @@ addLoadEvent(function() {
 
           sp.onaudioprocess = null;
 
-          SpecialPowers.clearUserPref("media.webaudio.enabled");
           SimpleTest.finish();
         };
       }

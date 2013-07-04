@@ -332,7 +332,8 @@ this.MigrationUtils = Object.freeze({
     FORMDATA:   Ci.nsIBrowserProfileMigrator.FORMDATA,
     PASSWORDS:  Ci.nsIBrowserProfileMigrator.PASSWORDS,
     BOOKMARKS:  Ci.nsIBrowserProfileMigrator.BOOKMARKS,
-    OTHERDATA:  Ci.nsIBrowserProfileMigrator.OTHERDATA
+    OTHERDATA:  Ci.nsIBrowserProfileMigrator.OTHERDATA,
+    SESSION:    Ci.nsIBrowserProfileMigrator.SESSION,
   },
 
   /**

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_codegen_inl_h__
-#define jsion_codegen_inl_h__
+#ifndef ion_shared_CodeGenerator_shared_inl_h
+#define ion_shared_CodeGenerator_shared_inl_h
 
 namespace js {
 namespace ion {
@@ -17,8 +17,7 @@ ToInt32(const LAllocation *a)
         return a->toConstant()->toInt32();
     if (a->isConstantIndex())
         return a->toConstantIndex()->index();
-    JS_NOT_REACHED("this is not a constant!");
-    return -1;
+    MOZ_ASSUME_UNREACHABLE("this is not a constant!");
 }
 static inline double
 ToDouble(const LAllocation *a)
@@ -43,6 +42,14 @@ static inline Register
 ToRegister(const LDefinition *def)
 {
     return ToRegister(*def->output());
+}
+
+static inline Register
+ToTempUnboxRegister(const LDefinition *def)
+{
+    if (def->isBogusTemp())
+        return InvalidReg;
+    return ToRegister(def);
 }
 
 static inline Register
@@ -152,5 +159,4 @@ CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, RegisterSet ignore)
 } // ion
 } // js
 
-#endif // jsion_codegen_inl_h__
-
+#endif /* ion_shared_CodeGenerator_shared_inl_h */

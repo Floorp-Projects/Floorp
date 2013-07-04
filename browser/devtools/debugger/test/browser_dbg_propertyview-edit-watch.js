@@ -57,9 +57,9 @@ function testFrameEval() {
       is(varT.querySelector(".value").getAttribute("value"), "\"Browser Debugger Watch Expressions Test\"",
         "Should have the right initial value for 't'.");
 
-      is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
+      is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
         "There should be 5 hidden nodes in the watch expressions container");
-      is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+      is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
         "There should be 0 visible nodes in the watch expressions container");
 
       let label = gDebugger.L10N.getStr("watchExpressionsScopeLabel");
@@ -96,7 +96,9 @@ function testFrameEval() {
         "Should have the one close button visible for 'aArg'.");
       is(scope.get("aArg").name, "aArg",
         "Should have the right name for 'aArg'.");
-      is(scope.get("aArg").value, undefined,
+      is(scope.get("aArg").value.type, "undefined",
+        "Should have the right value for 'aArg'.");
+      is(scope.get("aArg").value.class, undefined,
         "Should have the right value for 'aArg'.");
 
       is(scope.get("document.title")._isContentVisible, true,
@@ -330,159 +332,159 @@ function testExprDeletion(aVar, aTest, aCallback, aArgResult,
 }
 
 function test1(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
     "There should be 5 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 5, "There should be 5 evaluations availalble");
 
-  is(gWatch._cache[0].attachment.inputNode.value, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.currentExpression, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.inputNode.value, "aArg",
+  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "aArg",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.currentExpression, "aArg",
+  is(gWatch.getItemAtIndex(2).attachment.currentExpression, "aArg",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(3).attachment.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.currentExpression, "ermahgerd",
+  is(gWatch.getItemAtIndex(3).attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[4].attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(4).attachment.inputNode.value, "this",
     "The fifth textbox input value is not the correct one");
-  is(gWatch._cache[4].attachment.currentExpression, "this",
+  is(gWatch.getItemAtIndex(4).attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one");
 }
 
 function test2(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 5,
     "There should be 5 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 5, "There should be 5 evaluations availalble");
 
-  is(gWatch._cache[0].attachment.inputNode.value, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.currentExpression, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.inputNode.value, "aArg = 44",
+  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "aArg = 44",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.currentExpression, "aArg = 44",
+  is(gWatch.getItemAtIndex(2).attachment.currentExpression, "aArg = 44",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(3).attachment.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.currentExpression, "ermahgerd",
+  is(gWatch.getItemAtIndex(3).attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[4].attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(4).attachment.inputNode.value, "this",
     "The fifth textbox input value is not the correct one");
-  is(gWatch._cache[4].attachment.currentExpression, "this",
+  is(gWatch.getItemAtIndex(4).attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one");
 }
 
 function test3(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 4,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 4,
     "There should be 4 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 4, "There should be 4 evaluations availalble");
 
-  is(gWatch._cache[0].attachment.inputNode.value, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.currentExpression, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.currentExpression, "ermahgerd",
+  is(gWatch.getItemAtIndex(2).attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(3).attachment.inputNode.value, "this",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.currentExpression, "this",
+  is(gWatch.getItemAtIndex(3).attachment.currentExpression, "this",
     "The fourth textbox input value is not the correct one");
 }
 
 function test4(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 3,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 3,
     "There should be 3 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 3, "There should be 3 evaluations availalble");
 
-  is(gWatch._cache[0].attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.currentExpression, "document.title",
+  is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.currentExpression, "ermahgerd",
+  is(gWatch.getItemAtIndex(1).attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "this",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.currentExpression, "this",
+  is(gWatch.getItemAtIndex(2).attachment.currentExpression, "this",
     "The third textbox input value is not the correct one");
 }
 
 function test5(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 2,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 2,
     "There should be 2 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 2, "There should be 2 evaluations availalble");
 
-  is(gWatch._cache[0].attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.currentExpression, "ermahgerd",
+  is(gWatch.getItemAtIndex(0).attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "this",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.currentExpression, "this",
+  is(gWatch.getItemAtIndex(1).attachment.currentExpression, "this",
     "The third textbox input value is not the correct one");
 }
 
 function test6(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 1,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 1,
     "There should be 1 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 1, "There should be 1 evaluation availalble");
 
-  is(gWatch._cache[0].attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.currentExpression, "ermahgerd",
+  is(gWatch.getItemAtIndex(0).attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one");
 }
 
 function test7(scope) {
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
     "There should be 0 hidden nodes in the watch expressions container");
-  is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
+  is(gWatch.widget._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
     "There should be 0 visible nodes in the watch expressions container");
 
   is(scope, undefined, "There should be no watch expressions scope available.");
-  is(gWatch._cache.length, 0, "The watch expressions cache should be empty.");
+  is(gWatch.itemCount, 0, "The watch expressions container should be empty.");
 }
 
 function addWatchExpression(string) {

@@ -99,6 +99,30 @@ add_test(function test_read_icc_ucs2_string() {
 });
 
 /**
+ * Verify GsmPDUHelper#readDiallingNumber
+ */
+add_test(function test_read_dialling_number() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let str = "123456789";
+
+  helper.readHexOctet = function () {
+    return 0x81;
+  };
+
+  helper.readSwappedNibbleBcdString = function (len) {
+    return str.substring(0, len);
+  };
+
+  for (let i = 0; i < str.length; i++) {
+    do_check_eq(str.substring(0, i - 1), // -1 for the TON
+                helper.readDiallingNumber(i));
+  }
+
+  run_next_test();
+});
+
+/**
  * Verify GsmPDUHelper#read8BitUnpackedToString
  */
 add_test(function test_read_8bit_unpacked_to_string() {
@@ -507,9 +531,9 @@ add_test(function test_send_stk_terminal_profile() {
 });
 
 /**
- * Verify RIL.iccGetCardLock("fdn")
+ * Verify RIL.iccGetCardLockState("fdn")
  */
-add_test(function test_icc_get_card_lock_fdn() {
+add_test(function test_icc_get_card_lock_state_fdn() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
   let buf = worker.Buf;
@@ -543,7 +567,7 @@ add_test(function test_icc_get_card_lock_fdn() {
     run_next_test();
   };
 
-  ril.iccGetCardLock({lockType: "fdn"});
+  ril.iccGetCardLockState({lockType: "fdn"});
 });
 
 /**
@@ -2604,3 +2628,52 @@ add_test(function test_unlock_card_lock_corporateLocked() {
   run_next_test();
 });
 
+/**
+ * Verify MCC and MNC parsing
+ */
+add_test(function test_mcc_mnc_parsing() {
+  let worker = newUint8Worker();
+  let record = worker.ICCRecordHelper;
+  let helper = worker.GsmPDUHelper;
+  let ril    = worker.RIL;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  function do_test(mncLengthInEf, imsi, expectedMcc, expectedMnc) {
+    ril.iccInfoPrivate.imsi = imsi;
+
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      let ad = [0x00, 0x00, 0x00];
+      if (mncLengthInEf) {
+        ad.push(mncLengthInEf);
+      }
+
+      // Write data size
+      buf.writeUint32(ad.length * 2);
+
+      // Write data
+      for (let i = 0; i < ad.length; i++) {
+        helper.writeHexOctet(ad[i]);
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(ad.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    record.readAD();
+
+    do_check_eq(ril.iccInfo.mcc, expectedMcc);
+    do_check_eq(ril.iccInfo.mnc, expectedMnc);
+  }
+
+  do_test(undefined, "466923202422409", "466", "92" );
+  do_test(0x03,      "466923202422409", "466", "923");
+  do_test(undefined, "310260542718417", "310", "260");
+  do_test(0x02,      "310260542718417", "310", "26" );
+
+  run_next_test();
+});

@@ -55,8 +55,14 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertEqual(self.marionette.execute_async_script("marionetteScriptFinished()"), None)
 
     def test_execute_js_exception(self):
-        self.assertRaises(JavascriptException,
-            self.marionette.execute_async_script, "foo(bar);")
+        try:
+            self.marionette.execute_async_script("""
+                let a = 1;
+                foo(bar);
+                """)
+            self.assertFalse(True)
+        except JavascriptException, inst:
+            self.assertTrue('foo(bar)' in inst.stacktrace)
 
     def test_execute_async_js_exception(self):
         self.assertRaises(JavascriptException,

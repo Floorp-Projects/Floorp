@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef CheckedArithmetic_h
-#define CheckedArithmetic_h
+#ifndef yarr_CheckedArithmetic_h
+#define yarr_CheckedArithmetic_h
 
 #include "assembler/wtf/Assertions.h"
 
@@ -712,4 +712,4 @@ template <typename U, typename V, typename OverflowHandler> static inline Checke
 using WTF::Checked;
 using WTF::RecordOverflow;
 
-#endif
+#endif /* yarr_CheckedArithmetic_h */

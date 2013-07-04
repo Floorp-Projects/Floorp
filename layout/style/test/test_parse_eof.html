@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test parsing behaviour of backslash just before EOF</title>
+  <link rel="author" title="Cameron McCormack" href="mailto:cam@mcc.id.au">
+  <meta name="flags" content="">
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+
+<style>#a::before { content: "ab\</style>
+<style>#b { background-image: url("ab\</style>
+<style>#c { background-image: url(ab\</style>
+<style>#d { counter-reset: ab\</style>
+
+<style>
+#a-ref::before { content: "ab"; }
+#b-ref { background-image: url("ab"); }
+#c-ref { background-image: url(ab�); }
+#d-ref { counter-reset: ab�; }
+</style>
+
+<div style="display: none">
+  <div id="a"></div>
+  <div id="b"></div>
+  <div id="c"></div>
+  <div id="d"></div>
+
+  <div id="a-ref"></div>
+  <div id="b-ref"></div>
+  <div id="c-ref"></div>
+  <div id="d-ref"></div>
+</div>
+
+<script>
+var a = document.getElementById("a");
+var b = document.getElementById("b");
+var c = document.getElementById("c");
+var d = document.getElementById("d");
+var a_ref = document.getElementById("a-ref");
+var b_ref = document.getElementById("b-ref");
+var c_ref = document.getElementById("c-ref");
+var d_ref = document.getElementById("d-ref");
+
+test(function() {
+  assert_equals(window.getComputedStyle(a, ":before").content,
+                window.getComputedStyle(a_ref, ":before").content);
+}, "test backslash before EOF inside a string");
+
+test(function() {
+  assert_equals(window.getComputedStyle(b, "").backgroundImage,
+                window.getComputedStyle(b_ref, "").backgroundImage);
+}, "test backslash before EOF inside a url(\"\")");
+
+test(function() {
+  assert_equals(window.getComputedStyle(c, "").backgroundImage,
+                window.getComputedStyle(c_ref, "").backgroundImage);
+}, "test backslash before EOF inside a url()");
+
+test(function() {
+  assert_equals(window.getComputedStyle(d, "").counterReset,
+                window.getComputedStyle(d_ref, "").counterReset);
+}, "test backslash before EOF outside a string");
+</script>
+
+</body>
+</html>

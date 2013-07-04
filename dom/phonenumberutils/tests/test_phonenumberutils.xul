@@ -47,5 +47,8 @@ function ParseWithMcc(dial, mcc) {
 CantParseWithMcc("1234", 123);
 ParseWithMcc("4165555555", 302);
 
+is(PhoneNumberUtils.normalize("123abc", true), "123", "NumbersOnly");
+is(PhoneNumberUtils.normalize("123abc", false), "123222", "NumbersOnly");
+
 </script>
 </window>

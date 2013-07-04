@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Lowering-x86.h"
+#include "ion/x86/Lowering-x86.h"
 
 #include "ion/MIR.h"
-#include "Assembler-x86.h"
+#include "ion/x86/Assembler-x86.h"
 #include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;
@@ -126,14 +126,6 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX86::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
-{
-    ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, use(rhs));
-    return defineReuseInput(ins, mir, 0);
-}
-
-bool
 LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
@@ -245,7 +237,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         lir = new LAsmJSStoreHeap(useRegisterAtStart(ins->ptr()),
                                   useRegisterAtStart(ins->value()));
         break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
 
     return add(lir, ins);
@@ -269,7 +261,7 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
         lir = new LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
                                                 useRegisterAtStart(ins->value()));
         break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
 
     return add(lir, ins);

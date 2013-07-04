@@ -14,9 +14,11 @@ var mistakes = [
     "{p} => p",
     "(...x => expr)",
     "1 || a => a",
-    "package => package.name",  // tricky: FutureReservedWord in strict mode code only
-    "arguments => 0",  // names banned in strict mode code
-    "eval => 0",
+    "'use strict' => {}",
+    "package => {'use strict';}",    // tricky: FutureReservedWord in strict mode code only
+    "'use strict'; arguments => 0",  // names banned in strict mode code
+    "'use strict'; eval => 0",
+    "a => {'use strict'; with (a) return x; }",
     "a => yield a",
     "a => { yield a; }",
     "a => { { let x; yield a; } }",
@@ -29,3 +31,8 @@ var mistakes = [
 
 for (var s of mistakes)
     assertThrowsInstanceOf(function () { Function(s); }, SyntaxError);
+
+// Check that the tricky case is not an error in non-strict-mode code.
+var f = package => 0;
+assertEq(f(1), 0);
+

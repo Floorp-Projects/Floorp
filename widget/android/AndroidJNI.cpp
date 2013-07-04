@@ -15,13 +15,13 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sched.h>
 
 #include "nsAppShell.h"
 #include "nsWindow.h"
 #include <android/log.h>
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "nsINetworkLinkService.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
@@ -39,6 +39,8 @@
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsSurfaceTexture.h"
+#include "GeckoProfiler.h"
+
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
@@ -82,60 +84,10 @@ Java_org_mozilla_gecko_GeckoAppShell_setLayerClient(JNIEnv *jenv, jclass, jobjec
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *jenv, jclass jc)
-{
-    if (nsAppShell::gAppShell) {
-        nsAppShell::gAppShell->NotifyObservers(nullptr,
-                                               "memory-pressure",
-                                               NS_LITERAL_STRING("low-memory").get());
-    }
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
 {
     if (nsAppShell::gAppShell)
         nsAppShell::gAppShell->OnResume();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv *jenv, jclass, jstring jObserverKey, jstring jTopic, jstring jData)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    nsJNIString sObserverKey(jObserverKey, jenv);
-    nsJNIString sTopic(jTopic, jenv);
-    nsJNIString sData(jData, jenv);
-
-    nsAppShell::gAppShell->CallObserver(sObserverKey, sTopic, sData);
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    const jchar *observerKey = jenv->GetStringChars(jObserverKey, NULL);
-    nsString sObserverKey(observerKey);
-    sObserverKey.SetLength(jenv->GetStringLength(jObserverKey));
-    jenv->ReleaseStringChars(jObserverKey, observerKey);
-
-    nsAppShell::gAppShell->RemoveObserver(sObserverKey);
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *jenv, jclass, jstring jStatus)
-{
-    if (!nsAppShell::gAppShell)
-        return;
-
-    nsJNIString sStatus(jStatus, jenv);
-
-    nsAppShell::gAppShell->NotifyObservers(nullptr,
-                                           NS_NETWORK_LINK_TOPIC,
-                                           sStatus.get());
 }
 
 NS_EXPORT void JNICALL
@@ -974,6 +926,56 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 {
     // FIXME implement this
     return 0;
+}
+
+NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
+{
+    if (profiler_is_active()) {
+        // Don't proceed if profiler is already running
+        return JNI_FALSE;
+    }
+    // WARNING: we are on the ANR reporter thread at this point and it is
+    // generally unsafe to use the profiler from off the main thread. However,
+    // the risk here is limited because for most users, the profiler is not run
+    // elsewhere. See the discussion in Bug 863777, comment 13
+    const char *NATIVE_STACK_FEATURES[] = {"leaf", "threads", "privacy"};
+    // Buffer one sample and let the profiler wait a long time
+    profiler_start(100, 10000, NATIVE_STACK_FEATURES,
+        sizeof(NATIVE_STACK_FEATURES) / sizeof(char*),
+        NULL, 0);
+    return JNI_TRUE;
+}
+
+NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv* jenv, jclass)
+{
+    if (!profiler_is_active()) {
+        // Maybe profiler support is disabled?
+        return NULL;
+    }
+    char *profile = profiler_get_profile();
+    while (profile && !strlen(profile)) {
+        // no sample yet?
+        sched_yield();
+        profile = profiler_get_profile();
+    }
+    jstring result = NULL;
+    if (profile) {
+        result = jenv->NewStringUTF(profile);
+        free(profile);
+    }
+    return result;
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_ANRReporter_releaseNativeStack(JNIEnv* jenv, jclass)
+{
+    if (!profiler_is_active()) {
+        // Maybe profiler support is disabled?
+        return;
+    }
+    mozilla_sampler_stop();
 }
 
 }

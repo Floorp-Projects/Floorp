@@ -18,3 +18,5 @@ CPP_SOURCES += [
     'SkANP.cpp',
 ]
 
+LIBRARY_NAME = 'skia_npapi'
+

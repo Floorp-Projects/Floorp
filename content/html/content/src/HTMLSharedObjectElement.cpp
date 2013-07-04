@@ -13,7 +13,6 @@
 #include "nsIPluginDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsThreadUtils.h"
-#include "nsIDOMSVGDocument.h"
 #include "nsIScriptError.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
@@ -92,25 +91,21 @@ NS_IMPL_ADDREF_INHERITED(HTMLSharedObjectElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedObjectElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedObjectElement,
-                                                  nsIDOMHTMLAppletElement)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIRequestObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIStreamListener)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIFrameLoaderOwner)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIObjectLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, imgINotificationObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIImageLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, imgIOnloadBlocker)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIInterfaceRequestor)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIChannelEventSink)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(HTMLSharedObjectElement,
-                                                         nsGenericHTMLElement,
-                                                         nsIDOMHTMLAppletElement)
+  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
+                                       nsIDOMHTMLAppletElement)
+  NS_INTERFACE_TABLE_INHERITED8(HTMLSharedObjectElement,
+                                nsIRequestObserver,
+                                nsIStreamListener,
+                                nsIFrameLoaderOwner,
+                                nsIObjectLoadingContent,
+                                imgINotificationObserver,
+                                nsIImageLoadingContent,
+                                imgIOnloadBlocker,
+                                nsIChannelEventSink)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMGetSVGDocument, embed)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedObjectElement)
 
@@ -226,27 +221,7 @@ NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Width, width)
 int32_t
 HTMLSharedObjectElement::TabIndexDefault()
 {
-  return -1; 
-}
-
-NS_IMETHODIMP
-HTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = nullptr;
-
-  if (!IsInDoc()) {
-    return NS_OK;
-  }
-
-  // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
-  nsIDocument *sub_doc = OwnerDoc()->GetSubDocumentFor(this);
-  if (!sub_doc) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(sub_doc, aResult);
+  return -1;
 }
 
 bool

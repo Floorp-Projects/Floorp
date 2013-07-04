@@ -228,6 +228,15 @@ Highlighter.prototype = {
    */
   invalidateSize: function Highlighter_invalidateSize()
   {
+    // The highlighter runs locally while the selection runs remotely,
+    // so we can't quite trust the selection's isConnected to protect us
+    // here, do the check manually.
+    if (!this.selection.node ||
+        !this.selection.node.ownerDocument ||
+        !this.selection.node.ownerDocument.defaultView) {
+      return;
+    }
+
     let canHiglightNode = this.selection.isNode() &&
                           this.selection.isConnected() &&
                           this.selection.isElementNode();

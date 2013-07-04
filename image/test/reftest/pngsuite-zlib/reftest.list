@@ -1,8 +1,8 @@
 # z00n2c08 - color, no interlacing, compression level 0 (none)
-random-if(bug685516) == z00n2c08.png z00n2c08.html
+== z00n2c08.png z00n2c08.html
 # z03n2c08 - color, no interlacing, compression level 3
-random-if(bug685516) == z03n2c08.png z03n2c08.html
+== z03n2c08.png z03n2c08.html
 # z06n2c08 - color, no interlacing, compression level 6 (default)
-random-if(bug685516) == z06n2c08.png z06n2c08.html
+== z06n2c08.png z06n2c08.html
 # z09n2c08 - color, no interlacing, compression level 9 (maximum) 
-random-if(bug685516) == z09n2c08.png z09n2c08.html
+== z09n2c08.png z09n2c08.html

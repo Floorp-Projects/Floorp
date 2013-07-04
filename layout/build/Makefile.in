@@ -39,6 +39,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/html/content/src/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/html/document/src/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/$(LIB_PREFIX)gkconmedia_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/media/encoder/$(LIB_PREFIX)gkconencoder_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/webaudio/$(LIB_PREFIX)gkconwebaudio_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/webaudio/blink/$(LIB_PREFIX)gkconwebaudio_blink_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/webrtc/$(LIB_PREFIX)gkconwebrtc_s.$(LIB_SUFFIX) \
@@ -70,6 +71,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/audiochannel/$(LIB_PREFIX)domaudiochannel_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/future/$(LIB_PREFIX)domfuture_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/notification/$(LIB_PREFIX)jsdomnotification_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/system/$(LIB_PREFIX)domsystem_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/workers/$(LIB_PREFIX)domworkers_s.$(LIB_SUFFIX) \
@@ -86,7 +88,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/mathml/content/src/$(LIB_PREFIX)gkcontentmathml_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter qt gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/unix/$(LIB_PREFIX)domsystemunix_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -99,6 +101,13 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/windows \
+	$(NULL)
+else ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/dom/system/mac/$(LIB_PREFIX)domsystemmac_s.$(LIB_SUFFIX) \
+	$(NULL)
+LOCAL_INCLUDES	+= \
+	-I$(topsrcdir)/dom/system/mac \
 	$(NULL)
 else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
@@ -115,6 +124,7 @@ ifdef MOZ_OMX_DECODER #{
 # include OMX decoder
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/omx/$(LIB_PREFIX)gkconomx_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/media/omx/mediaresourcemanager/$(LIB_PREFIX)mediaresourcemanager.$(LIB_SUFFIX) \
 	$(NULL)
 endif #}
 
@@ -182,6 +192,10 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/mediasource/$(LIB_PREFIX)gkconmediasource_s.$(LIB_SUFFIX) \
+	$(NULL)
+
 ifdef MOZ_DASH
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/content/media/dash/$(LIB_PREFIX)gkcondash_s.$(LIB_SUFFIX) \
@@ -248,8 +262,15 @@ endif
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/js/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_GSTREAMER
 EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
+endif
+endif
+
+ifdef MOZ_GAMEPAD
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/dom/gamepad/$(LIB_PREFIX)domgamepad_s.$(LIB_SUFFIX)
 endif
 
 include $(topsrcdir)/config/config.mk

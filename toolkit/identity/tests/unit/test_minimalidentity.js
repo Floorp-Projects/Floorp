@@ -116,6 +116,54 @@ function test_logout() {
   MinimalIDService.RP.logout(mockedDoc.id, {});
 }
 
+/*
+ * Test that logout() before watch() fails gently
+ */
+
+function test_logoutBeforeWatch() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL);
+  makeObserver("identity-controller-logout", function() {
+    do_throw("How can we logout when watch was not called?");
+  });
+
+  MinimalIDService.RP.logout(mockedDoc.id, {});
+  do_test_finished();
+  run_next_test();
+}
+
+/*
+ * Test that request() before watch() fails gently
+ */
+
+function test_requestBeforeWatch() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL);
+  makeObserver("identity-controller-request", function() {
+    do_throw("How can we request when watch was not called?");
+  });
+
+  MinimalIDService.RP.request(mockedDoc.id, {});
+  do_test_finished();
+  run_next_test();
+}
+
+/*
+ * Test that internal unwatch() before watch() fails gently
+ */
+
+function test_unwatchBeforeWatch() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL);
+
+  MinimalIDService.RP.unwatch(mockedDoc.id, {});
+  do_test_finished();
+  run_next_test();
+}
+
 let TESTS = [
   test_overall,
   test_mock_doc,
@@ -123,7 +171,10 @@ let TESTS = [
   test_request,
   test_request_forceAuthentication,
   test_request_forceIssuer,
-  test_logout
+  test_logout,
+  test_logoutBeforeWatch,
+  test_requestBeforeWatch,
+  test_unwatchBeforeWatch
 ];
 
 TESTS.forEach(add_test);

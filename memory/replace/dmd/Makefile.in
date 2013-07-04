@@ -17,7 +17,7 @@ DEFINES 	+= -DMOZ_NO_MOZALLOC
 
 VPATH 		+= $(topsrcdir)/xpcom/base
 VPATH 		+= $(topsrcdir)/nsprpub/lib/libc/src
-CSRCS 		+= strcpy.c
+DISABLED_CSRCS 		+= strcpy.c
 
 VPATH 		+= $(topsrcdir)/mfbt
 

@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2012 Google Inc.
+ * Copyright 2013 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -14,16 +14,26 @@
 #include "SkDrawFilter.h"
 #include "SkGPipe.h"
 #include "SkPaint.h"
+#include "SkPaintPriv.h"
+#include "SkRRect.h"
 #include "SkShader.h"
 
 enum {
     // Deferred canvas will auto-flush when recording reaches this limit
     kDefaultMaxRecordingStorageBytes = 64*1024*1024,
+    kDeferredCanvasBitmapSizeThreshold = ~0U, // Disables this feature
+};
+
+enum PlaybackMode {
+    kNormal_PlaybackMode,
+    kSilent_PlaybackMode,
 };
 
 namespace {
-bool shouldDrawImmediately(const SkBitmap* bitmap, const SkPaint* paint) {
-    if (bitmap && bitmap->getTexture() && !bitmap->isImmutable()) {
+bool shouldDrawImmediately(const SkBitmap* bitmap, const SkPaint* paint,
+                           size_t bitmapSizeThreshold) {
+    if (bitmap && ((bitmap->getTexture() && !bitmap->isImmutable()) ||
+        (bitmap->getSize() > bitmapSizeThreshold))) {
         return true;
     }
     if (paint) {
@@ -45,101 +55,6 @@ bool shouldDrawImmediately(const SkBitmap* bitmap, const SkPaint* paint) {
 }
 }
 
-class AutoImmediateDrawIfNeeded {
-public:
-    AutoImmediateDrawIfNeeded(SkDeferredCanvas& canvas, const SkBitmap* bitmap,
-                              const SkPaint* paint) {
-        this->init(canvas, bitmap, paint);
-    }
-
-    AutoImmediateDrawIfNeeded(SkDeferredCanvas& canvas, const SkPaint* paint) {
-        this->init(canvas, NULL, paint);
-    }
-
-    ~AutoImmediateDrawIfNeeded() {
-        if (fCanvas) {
-            fCanvas->setDeferredDrawing(true);
-        }
-    }
-private:
-    void init(SkDeferredCanvas& canvas, const SkBitmap* bitmap, const SkPaint* paint)
-    {
-        if (canvas.isDeferredDrawing() && shouldDrawImmediately(bitmap, paint)) {
-            canvas.setDeferredDrawing(false);
-            fCanvas = &canvas;
-        } else {
-            fCanvas = NULL;
-        }
-    }
-
-    SkDeferredCanvas* fCanvas;
-};
-
-namespace {
-
-bool isPaintOpaque(const SkPaint* paint,
-                   const SkBitmap* bmpReplacesShader = NULL) {
-    // TODO: SkXfermode should have a virtual isOpaque method, which would
-    // make it possible to test modes that do not have a Coeff representation.
-
-    if (!paint) {
-        return bmpReplacesShader ? bmpReplacesShader->isOpaque() : true;
-    }
-
-    SkXfermode::Coeff srcCoeff, dstCoeff;
-    if (SkXfermode::AsCoeff(paint->getXfermode(), &srcCoeff, &dstCoeff)){
-        switch (dstCoeff) {
-        case SkXfermode::kZero_Coeff:
-            return true;
-        case SkXfermode::kISA_Coeff:
-            if (paint->getAlpha() != 255) {
-                break;
-            }
-            if (bmpReplacesShader) {
-                if (!bmpReplacesShader->isOpaque()) {
-                    break;
-                }
-            } else if (paint->getShader() && !paint->getShader()->isOpaque()) {
-                break;
-            }
-            if (paint->getColorFilter() &&
-                ((paint->getColorFilter()->getFlags() &
-                SkColorFilter::kAlphaUnchanged_Flag) == 0)) {
-                break;
-            }
-            return true;
-        case SkXfermode::kSA_Coeff:
-            if (paint->getAlpha() != 0) {
-                break;
-            }
-            if (paint->getColorFilter() &&
-                ((paint->getColorFilter()->getFlags() &
-                SkColorFilter::kAlphaUnchanged_Flag) == 0)) {
-                break;
-            }
-            return true;
-        case SkXfermode::kSC_Coeff:
-            if (paint->getColor() != 0) { // all components must be 0
-                break;
-            }
-            if (bmpReplacesShader || paint->getShader()) {
-                break;
-            }
-            if (paint->getColorFilter() && (
-                (paint->getColorFilter()->getFlags() &
-                SkColorFilter::kAlphaUnchanged_Flag) == 0)) {
-                break;
-            }
-            return true;
-        default:
-            break;
-        }
-    }
-    return false;
-}
-
-} // unnamed namespace
-
 //-----------------------------------------------------------------------------
 // DeferredPipeController
 //-----------------------------------------------------------------------------
@@ -151,9 +66,8 @@ public:
     virtual ~DeferredPipeController();
     virtual void* requestBlock(size_t minRequest, size_t* actual) SK_OVERRIDE;
     virtual void notifyWritten(size_t bytes) SK_OVERRIDE;
-    void playback();
-    void reset();
-    bool hasRecorded() const { return fAllocator.blockCount() != 0; }
+    void playback(bool silent);
+    bool hasPendingCommands() const { return fAllocator.blockCount() != 0; }
     size_t storageAllocatedForRecording() const { return fAllocator.totalCapacity(); }
 private:
     enum {
@@ -202,15 +116,16 @@ void DeferredPipeController::notifyWritten(size_t bytes) {
     fBytesWritten += bytes;
 }
 
-void DeferredPipeController::playback() {
-
+void DeferredPipeController::playback(bool silent) {
+    uint32_t flags = silent ? SkGPipeReader::kSilent_PlaybackFlag : 0;
     for (int currentBlock = 0; currentBlock < fBlockList.count(); currentBlock++ ) {
-        fReader.playback(fBlockList[currentBlock].fBlock, fBlockList[currentBlock].fSize);
+        fReader.playback(fBlockList[currentBlock].fBlock, fBlockList[currentBlock].fSize,
+                         flags);
     }
     fBlockList.reset();
 
     if (fBlock) {
-        fReader.playback(fBlock, fBytesWritten);
+        fReader.playback(fBlock, fBytesWritten, flags);
         fBlock = NULL;
     }
 
@@ -218,16 +133,9 @@ void DeferredPipeController::playback() {
     fAllocator.reset();
 }
 
-void DeferredPipeController::reset() {
-    fBlockList.reset();
-    fBlock = NULL;
-    fAllocator.reset();
-}
-
 //-----------------------------------------------------------------------------
 // DeferredDevice
 //-----------------------------------------------------------------------------
-
 class DeferredDevice : public SkDevice {
 public:
     DeferredDevice(SkDevice* immediateDevice,
@@ -239,10 +147,13 @@ public:
     SkCanvas* immediateCanvas() const {return fImmediateCanvas;}
     SkDevice* immediateDevice() const {return fImmediateDevice;}
     bool isFreshFrame();
+    bool hasPendingCommands();
     size_t storageAllocatedForRecording() const;
     size_t freeMemoryIfPossible(size_t bytesToFree);
-    void flushPending();
-    void contentsCleared();
+    size_t getBitmapSizeThreshold() const;
+    void setBitmapSizeThreshold(size_t sizeThreshold);
+    void flushPendingCommands(PlaybackMode);
+    void skipPendingCommands();
     void setMaxRecordingStorage(size_t);
     void recordedDrawCommand();
 
@@ -269,9 +180,6 @@ protected:
     virtual bool filterTextFlags(const SkPaint& paint, TextFlags*)
         SK_OVERRIDE
         {return false;}
-    virtual void setMatrixClip(const SkMatrix&, const SkRegion&,
-                                const SkClipStack&) SK_OVERRIDE
-        {}
 
     // None of the following drawing methods should ever get called on the
     // deferred device
@@ -328,7 +236,6 @@ protected:
 private:
     virtual void flush();
 
-    void endRecording();
     void beginRecording();
 
     DeferredPipeController fPipeController;
@@ -340,15 +247,19 @@ private:
     bool fFreshFrame;
     size_t fMaxRecordingStorageBytes;
     size_t fPreviousStorageAllocated;
+    size_t fBitmapSizeThreshold;
 };
 
 DeferredDevice::DeferredDevice(
     SkDevice* immediateDevice, SkDeferredCanvas::NotificationClient* notificationClient) :
-    SkDevice(SkBitmap::kNo_Config, immediateDevice->width(),
-             immediateDevice->height(), immediateDevice->isOpaque())
+    SkDevice(SkBitmap::kNo_Config,
+             immediateDevice->width(), immediateDevice->height(),
+             immediateDevice->isOpaque(),
+             immediateDevice->getDeviceProperties())
     , fRecordingCanvas(NULL)
     , fFreshFrame(true)
-    , fPreviousStorageAllocated(0){
+    , fPreviousStorageAllocated(0)
+    , fBitmapSizeThreshold(kDeferredCanvasBitmapSizeThreshold){
 
     fMaxRecordingStorageBytes = kDefaultMaxRecordingStorageBytes;
     fNotificationClient = notificationClient;
@@ -359,19 +270,13 @@ DeferredDevice::DeferredDevice(
 }
 
 DeferredDevice::~DeferredDevice() {
-    this->flushPending();
+    this->flushPendingCommands(kSilent_PlaybackMode);
     SkSafeUnref(fImmediateCanvas);
 }
 
 void DeferredDevice::setMaxRecordingStorage(size_t maxStorage) {
     fMaxRecordingStorageBytes = maxStorage;
     this->recordingCanvas(); // Accessing the recording canvas applies the new limit.
-}
-
-void DeferredDevice::endRecording() {
-    fPipeWriter.endRecording();
-    fPipeController.reset();
-    fRecordingCanvas = NULL;
 }
 
 void DeferredDevice::beginRecording() {
@@ -385,39 +290,12 @@ void DeferredDevice::setNotificationClient(
     fNotificationClient = notificationClient;
 }
 
-void DeferredDevice::contentsCleared() {
-    if (!fRecordingCanvas->isDrawingToLayer()) {
+void DeferredDevice::skipPendingCommands() {
+    if (!fRecordingCanvas->isDrawingToLayer() && fPipeController.hasPendingCommands()) {
         fFreshFrame = true;
-
-        // TODO: find a way to transfer the state stack and layers
-        // to the new recording canvas.  For now, purging only works
-        // with an empty stack.  A save count of 1 means an empty stack.
-        SkASSERT(fRecordingCanvas->getSaveCount() >= 1);
-        if (fRecordingCanvas->getSaveCount() == 1) {
-
-            // Save state that is trashed by the purge
-            SkDrawFilter* drawFilter = fRecordingCanvas->getDrawFilter();
-            SkSafeRef(drawFilter); // So that it survives the purge
-            SkMatrix matrix = fRecordingCanvas->getTotalMatrix();
-            SkRegion clipRegion = fRecordingCanvas->getTotalClip();
-
-            // beginRecording creates a new recording canvas and discards the
-            // old one, hence purging deferred draw ops.
-            this->endRecording();
-            this->beginRecording();
-            fPreviousStorageAllocated = storageAllocatedForRecording();
-
-            // Restore pre-purge state
-            if (!clipRegion.isEmpty()) {
-                fRecordingCanvas->clipRegion(clipRegion,
-                    SkRegion::kReplace_Op);
-            }
-            if (!matrix.isIdentity()) {
-                fRecordingCanvas->setMatrix(matrix);
-            }
-            if (drawFilter) {
-                fRecordingCanvas->setDrawFilter(drawFilter)->unref();
-            }
+        flushPendingCommands(kSilent_PlaybackMode);
+        if (fNotificationClient) {
+            fNotificationClient->skippedPendingDrawCommands();
         }
     }
 }
@@ -428,23 +306,27 @@ bool DeferredDevice::isFreshFrame() {
     return ret;
 }
 
-void DeferredDevice::flushPending() {
-    if (!fPipeController.hasRecorded()) {
+bool DeferredDevice::hasPendingCommands() {
+    return fPipeController.hasPendingCommands();
+}
+
+void DeferredDevice::flushPendingCommands(PlaybackMode playbackMode) {
+    if (!fPipeController.hasPendingCommands()) {
         return;
     }
-    if (fNotificationClient) {
+    if (playbackMode == kNormal_PlaybackMode && fNotificationClient) {
         fNotificationClient->prepareForDraw();
     }
     fPipeWriter.flushRecording(true);
-    fPipeController.playback();
-    if (fNotificationClient) {
+    fPipeController.playback(kSilent_PlaybackMode == playbackMode);
+    if (playbackMode == kNormal_PlaybackMode && fNotificationClient) {
         fNotificationClient->flushedDrawCommands();
     }
     fPreviousStorageAllocated = storageAllocatedForRecording();
 }
 
 void DeferredDevice::flush() {
-    this->flushPending();
+    this->flushPendingCommands(kNormal_PlaybackMode);
     fImmediateCanvas->flush();
 }
 
@@ -452,6 +334,14 @@ size_t DeferredDevice::freeMemoryIfPossible(size_t bytesToFree) {
     size_t val = fPipeWriter.freeMemoryIfPossible(bytesToFree);
     fPreviousStorageAllocated = storageAllocatedForRecording();
     return val;
+}
+
+size_t DeferredDevice::getBitmapSizeThreshold() const {
+    return fBitmapSizeThreshold;
+}
+
+void DeferredDevice::setBitmapSizeThreshold(size_t sizeThreshold) {
+    fBitmapSizeThreshold = sizeThreshold;
 }
 
 size_t DeferredDevice::storageAllocatedForRecording() const {
@@ -467,7 +357,7 @@ void DeferredDevice::recordedDrawCommand() {
         size_t tryFree = storageAllocated - fMaxRecordingStorageBytes;
         if (this->freeMemoryIfPossible(tryFree) < tryFree) {
             // Flush is necessary to free more space.
-            this->flushPending();
+            this->flushPendingCommands(kNormal_PlaybackMode);
             // Free as much as possible to avoid oscillating around fMaxRecordingStorageBytes
             // which could cause a high flushing frequency.
             this->freeMemoryIfPossible(~0U);
@@ -499,7 +389,7 @@ int DeferredDevice::height() const {
 }
 
 SkGpuRenderTarget* DeferredDevice::accessRenderTarget() {
-    this->flushPending();
+    this->flushPendingCommands(kNormal_PlaybackMode);
     return fImmediateDevice->accessRenderTarget();
 }
 
@@ -508,22 +398,22 @@ void DeferredDevice::writePixels(const SkBitmap& bitmap,
 
     if (x <= 0 && y <= 0 && (x + bitmap.width()) >= width() &&
         (y + bitmap.height()) >= height()) {
-        this->contentsCleared();
+        this->skipPendingCommands();
     }
 
     if (SkBitmap::kARGB_8888_Config == bitmap.config() &&
         SkCanvas::kNative_Premul_Config8888 != config8888 &&
         kPMColorAlias != config8888) {
         //Special case config: no deferral
-        this->flushPending();
+        this->flushPendingCommands(kNormal_PlaybackMode);
         fImmediateDevice->writePixels(bitmap, x, y, config8888);
         return;
     }
 
     SkPaint paint;
     paint.setXfermodeMode(SkXfermode::kSrc_Mode);
-    if (shouldDrawImmediately(&bitmap, NULL)) {
-        this->flushPending();
+    if (shouldDrawImmediately(&bitmap, NULL, getBitmapSizeThreshold())) {
+        this->flushPendingCommands(kNormal_PlaybackMode);
         fImmediateCanvas->drawSprite(bitmap, x, y, &paint);
     } else {
         this->recordingCanvas()->drawSprite(bitmap, x, y, &paint);
@@ -533,7 +423,7 @@ void DeferredDevice::writePixels(const SkBitmap& bitmap,
 }
 
 const SkBitmap& DeferredDevice::onAccessBitmap(SkBitmap*) {
-    this->flushPending();
+    this->flushPendingCommands(kNormal_PlaybackMode);
     return fImmediateDevice->accessBitmap(false);
 }
 
@@ -552,11 +442,42 @@ SkDevice* DeferredDevice::onCreateCompatibleDevice(
 
 bool DeferredDevice::onReadPixels(
     const SkBitmap& bitmap, int x, int y, SkCanvas::Config8888 config8888) {
-    this->flushPending();
+    this->flushPendingCommands(kNormal_PlaybackMode);
     return fImmediateCanvas->readPixels(const_cast<SkBitmap*>(&bitmap),
                                                    x, y, config8888);
 }
 
+class AutoImmediateDrawIfNeeded {
+public:
+    AutoImmediateDrawIfNeeded(SkDeferredCanvas& canvas, const SkBitmap* bitmap,
+                              const SkPaint* paint) {
+        this->init(canvas, bitmap, paint);
+    }
+
+    AutoImmediateDrawIfNeeded(SkDeferredCanvas& canvas, const SkPaint* paint) {
+        this->init(canvas, NULL, paint);
+    }
+
+    ~AutoImmediateDrawIfNeeded() {
+        if (fCanvas) {
+            fCanvas->setDeferredDrawing(true);
+        }
+    }
+private:
+    void init(SkDeferredCanvas& canvas, const SkBitmap* bitmap, const SkPaint* paint)
+    {
+        DeferredDevice* device = static_cast<DeferredDevice*>(canvas.getDevice());
+        if (canvas.isDeferredDrawing() && (NULL != device) &&
+            shouldDrawImmediately(bitmap, paint, device->getBitmapSizeThreshold())) {
+            canvas.setDeferredDrawing(false);
+            fCanvas = &canvas;
+        } else {
+            fCanvas = NULL;
+        }
+    }
+
+    SkDeferredCanvas* fCanvas;
+};
 
 SkDeferredCanvas::SkDeferredCanvas() {
     this->init();
@@ -582,6 +503,12 @@ size_t SkDeferredCanvas::storageAllocatedForRecording() const {
 
 size_t SkDeferredCanvas::freeMemoryIfPossible(size_t bytesToFree) {
     return this->getDeferredDevice()->freeMemoryIfPossible(bytesToFree);
+}
+
+void SkDeferredCanvas::setBitmapSizeThreshold(size_t sizeThreshold) {
+    DeferredDevice* deferredDevice = this->getDeferredDevice();
+    SkASSERT(deferredDevice);
+    deferredDevice->setBitmapSizeThreshold(sizeThreshold);
 }
 
 void SkDeferredCanvas::recordedDrawCommand() {
@@ -614,7 +541,7 @@ void SkDeferredCanvas::setDeferredDrawing(bool val) {
     if (val != fDeferredDrawing) {
         if (fDeferredDrawing) {
             // Going live.
-            this->getDeferredDevice()->flushPending();
+            this->getDeferredDevice()->flushPendingCommands(kNormal_PlaybackMode);
         }
         fDeferredDrawing = val;
     }
@@ -626,6 +553,16 @@ bool SkDeferredCanvas::isDeferredDrawing() const {
 
 bool SkDeferredCanvas::isFreshFrame() const {
     return this->getDeferredDevice()->isFreshFrame();
+}
+
+bool SkDeferredCanvas::hasPendingCommands() const {
+    return this->getDeferredDevice()->hasPendingCommands();
+}
+
+void SkDeferredCanvas::silentFlush() {
+    if (fDeferredDrawing) {
+        this->getDeferredDevice()->flushPendingCommands(kSilent_PlaybackMode);
+    }
 }
 
 SkDeferredCanvas::~SkDeferredCanvas() {
@@ -681,25 +618,8 @@ bool SkDeferredCanvas::isFullFrame(const SkRect* rect,
         }
     }
 
-    switch (canvas->getClipType()) {
-        case SkCanvas::kRect_ClipType :
-            {
-                SkIRect bounds;
-                canvas->getClipDeviceBounds(&bounds);
-                if (bounds.fLeft > 0 || bounds.fTop > 0 ||
-                    bounds.fRight < canvasSize.fWidth ||
-                    bounds.fBottom < canvasSize.fHeight)
-                    return false;
-            }
-            break;
-        case SkCanvas::kComplex_ClipType :
-            return false; // conservative
-        case SkCanvas::kEmpty_ClipType:
-        default:
-            break;
-    };
-
-    return true;
+    return this->getClipStack()->quickContains(SkRect::MakeXYWH(0, 0,
+        SkIntToScalar(canvasSize.fWidth), SkIntToScalar(canvasSize.fHeight)));
 }
 
 int SkDeferredCanvas::save(SaveFlags flags) {
@@ -780,6 +700,15 @@ bool SkDeferredCanvas::clipRect(const SkRect& rect,
     return val;
 }
 
+bool SkDeferredCanvas::clipRRect(const SkRRect& rrect,
+                                 SkRegion::Op op,
+                                 bool doAntiAlias) {
+    this->drawingCanvas()->clipRRect(rrect, op, doAntiAlias);
+    bool val = this->INHERITED::clipRRect(rrect, op, doAntiAlias);
+    this->recordedDrawCommand();
+    return val;
+}
+
 bool SkDeferredCanvas::clipPath(const SkPath& path,
                                 SkRegion::Op op,
                                 bool doAntiAlias) {
@@ -800,7 +729,7 @@ bool SkDeferredCanvas::clipRegion(const SkRegion& deviceRgn,
 void SkDeferredCanvas::clear(SkColor color) {
     // purge pending commands
     if (fDeferredDrawing) {
-        this->getDeferredDevice()->contentsCleared();
+        this->getDeferredDevice()->skipPendingCommands();
     }
 
     this->drawingCanvas()->clear(color);
@@ -810,7 +739,7 @@ void SkDeferredCanvas::clear(SkColor color) {
 void SkDeferredCanvas::drawPaint(const SkPaint& paint) {
     if (fDeferredDrawing && this->isFullFrame(NULL, &paint) &&
         isPaintOpaque(&paint)) {
-        this->getDeferredDevice()->contentsCleared();
+        this->getDeferredDevice()->skipPendingCommands();
     }
     AutoImmediateDrawIfNeeded autoDraw(*this, &paint);
     this->drawingCanvas()->drawPaint(paint);
@@ -824,15 +753,33 @@ void SkDeferredCanvas::drawPoints(PointMode mode, size_t count,
     this->recordedDrawCommand();
 }
 
+void SkDeferredCanvas::drawOval(const SkRect& rect, const SkPaint& paint) {
+    AutoImmediateDrawIfNeeded autoDraw(*this, &paint);
+    this->drawingCanvas()->drawOval(rect, paint);
+    this->recordedDrawCommand();
+}
+
 void SkDeferredCanvas::drawRect(const SkRect& rect, const SkPaint& paint) {
     if (fDeferredDrawing && this->isFullFrame(&rect, &paint) &&
         isPaintOpaque(&paint)) {
-        this->getDeferredDevice()->contentsCleared();
+        this->getDeferredDevice()->skipPendingCommands();
     }
 
     AutoImmediateDrawIfNeeded autoDraw(*this, &paint);
     this->drawingCanvas()->drawRect(rect, paint);
     this->recordedDrawCommand();
+}
+
+void SkDeferredCanvas::drawRRect(const SkRRect& rrect, const SkPaint& paint) {
+    if (rrect.isRect()) {
+        this->SkDeferredCanvas::drawRect(rrect.getBounds(), paint);
+    } else if (rrect.isOval()) {
+        this->SkDeferredCanvas::drawOval(rrect.getBounds(), paint);
+    } else {
+        AutoImmediateDrawIfNeeded autoDraw(*this, &paint);
+        this->drawingCanvas()->drawRRect(rrect, paint);
+        this->recordedDrawCommand();
+    }
 }
 
 void SkDeferredCanvas::drawPath(const SkPath& path, const SkPaint& paint) {
@@ -848,7 +795,7 @@ void SkDeferredCanvas::drawBitmap(const SkBitmap& bitmap, SkScalar left,
     if (fDeferredDrawing &&
         this->isFullFrame(&bitmapRect, paint) &&
         isPaintOpaque(paint, &bitmap)) {
-        this->getDeferredDevice()->contentsCleared();
+        this->getDeferredDevice()->skipPendingCommands();
     }
 
     AutoImmediateDrawIfNeeded autoDraw(*this, &bitmap, paint);
@@ -856,18 +803,18 @@ void SkDeferredCanvas::drawBitmap(const SkBitmap& bitmap, SkScalar left,
     this->recordedDrawCommand();
 }
 
-void SkDeferredCanvas::drawBitmapRect(const SkBitmap& bitmap,
-                                      const SkIRect* src,
-                                      const SkRect& dst,
-                                      const SkPaint* paint) {
+void SkDeferredCanvas::drawBitmapRectToRect(const SkBitmap& bitmap,
+                                            const SkRect* src,
+                                            const SkRect& dst,
+                                            const SkPaint* paint) {
     if (fDeferredDrawing &&
         this->isFullFrame(&dst, paint) &&
         isPaintOpaque(paint, &bitmap)) {
-        this->getDeferredDevice()->contentsCleared();
+        this->getDeferredDevice()->skipPendingCommands();
     }
 
     AutoImmediateDrawIfNeeded autoDraw(*this, &bitmap, paint);
-    this->drawingCanvas()->drawBitmapRect(bitmap, src, dst, paint);
+    this->drawingCanvas()->drawBitmapRectToRect(bitmap, src, dst, paint);
     this->recordedDrawCommand();
 }
 
@@ -902,7 +849,7 @@ void SkDeferredCanvas::drawSprite(const SkBitmap& bitmap, int left, int top,
     if (fDeferredDrawing &&
         this->isFullFrame(&bitmapRect, paint) &&
         isPaintOpaque(paint, &bitmap)) {
-        this->getDeferredDevice()->contentsCleared();
+        this->getDeferredDevice()->skipPendingCommands();
     }
 
     AutoImmediateDrawIfNeeded autoDraw(*this, &bitmap, paint);

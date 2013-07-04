@@ -74,7 +74,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
       mm->ReceiveMessage(mTabChild->mOwner, mMessage, false, &data,
-                         JS::NullPtr(), nullptr, nullptr);
+                         JS::NullPtr(), nullptr);
     }
     return NS_OK;
   }
@@ -118,7 +118,6 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
 
 nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 {
-  NS_ASSERTION(!mCx, "Couldn't release JSContext?!?");
 }
 
 /* [notxpcom] boolean markForCC (); */
@@ -141,23 +140,14 @@ nsInProcessTabChildGlobal::Init()
                    "Couldn't initialize nsInProcessTabChildGlobal");
   mMessageManager = new nsFrameMessageManager(this,
                                               nullptr,
-                                              mCx,
                                               mozilla::dom::ipc::MM_CHILD);
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
-                                                nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  nsFrameScriptExecutor::Unlink(tmp);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsInProcessTabChildGlobal,
-                                                  nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
-  nsFrameScriptExecutor::Traverse(tmp, cb);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(nsInProcessTabChildGlobal,
+                                     nsDOMEventTargetHelper,
+                                     mMessageManager,
+                                     mGlobal)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsInProcessTabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)
@@ -248,9 +238,7 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
 
   if (!mLoadingScript) {
     nsContentUtils::ReleaseWrapper(static_cast<EventTarget*>(this), this);
-    if (mCx) {
-      DestroyCx();
-    }
+    mGlobal = nullptr;
   } else {
     mDelayedDisconnect = true;
   }

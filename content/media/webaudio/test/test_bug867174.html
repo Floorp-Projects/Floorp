@@ -9,14 +9,13 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var ctx = new AudioContext();
 
   var source = ctx.createBufferSource();
   var buffer = ctx.createBuffer(2, 2048, 8000);
-  source.playbackRate.setTargetValueAtTime(0, 2, 3);
+  source.playbackRate.setTargetAtTime(0, 2, 3);
   var sp = ctx.createScriptProcessor();
   source.connect(sp);
   sp.connect(ctx.destination);
@@ -28,7 +27,6 @@ addLoadEvent(function() {
 
     ok(true, "We did not crash.");
     sp.onaudioprocess = null;
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   };
 });

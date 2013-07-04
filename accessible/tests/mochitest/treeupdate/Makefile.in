@@ -30,6 +30,7 @@ MOCHITEST_A11Y_FILES =\
 	test_optgroup.html \
 		test_recreation.html \
 		test_select.html \
+		test_bug852150.xhtml \
 		test_textleaf.html \
 		test_visibility.html \
 		test_whitespace.html \

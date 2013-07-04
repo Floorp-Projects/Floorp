@@ -24,7 +24,7 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval onerror;
 };
 
-[scriptable, builtinclass, uuid(060df968-fd71-47ca-91a8-6b64dadceb2c)]
+[scriptable, builtinclass, uuid(df58d5d6-4b02-4e4c-9b29-adbff06c6206)]
 interface nsIDOMRequestService : nsISupports
 {
   nsIDOMDOMRequest createRequest(in nsIDOMWindow window);
@@ -38,6 +38,7 @@ interface nsIDOMRequestService : nsISupports
 
   void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
   void fireError(in nsIDOMDOMRequest request, in DOMString error);
+  void fireDetailedError(in nsIDOMDOMRequest request, in nsISupports error);
   void fireSuccessAsync(in nsIDOMDOMRequest request, in jsval result);
   void fireErrorAsync(in nsIDOMDOMRequest request, in DOMString error);
   void fireDone(in nsIDOMDOMCursor cursor);

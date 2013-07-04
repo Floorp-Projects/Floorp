@@ -24,6 +24,7 @@ INSTALLER_FILES = \
 	nsis/uninstaller.nsi \
 	nsis/stub.nsi \
 	nsis/shared.nsh \
+	stub.tag \
 	$(NULL)
 
 ifdef MOZ_MAINTENANCE_SERVICE

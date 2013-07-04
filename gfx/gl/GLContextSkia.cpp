@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "skia/GrGLInterface.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/ThreadLocal.h"
+#include "mozilla/DebugOnly.h"
 
 /* SkPostConfig.h includes windows.h, which includes windef.h
  * which redefines min/max. We don't want that. */
@@ -15,272 +18,280 @@
 #include "GLContext.h"
 
 using mozilla::gl::GLContext;
+using mozilla::gfx::DrawTarget;
 
-static GLContext* sGLContext;
+static mozilla::ThreadLocal<GLContext*> sGLContext;
 
 extern "C" {
 
-void EnsureGLContext(const GrGLInterface* interface)
+void EnsureGLContext(const GrGLInterface* i)
 {
-    sGLContext = (GLContext*)(interface->fCallbackData);
-    sGLContext->MakeCurrent();
+    const DrawTarget* drawTarget = reinterpret_cast<const DrawTarget*>(i->fCallbackData);
+    GLContext* gl = static_cast<GLContext*>(drawTarget->GetGLContext());
+    gl->MakeCurrent();
+
+    if (!sGLContext.initialized()) {
+      mozilla::DebugOnly<bool> success = sGLContext.init();
+      MOZ_ASSERT(success);
+    }
+    sGLContext.set(gl);
 }
 
 // Core GL functions required by Ganesh
 
 GrGLvoid glActiveTexture_mozilla(GrGLenum texture)
 {
-    return sGLContext->fActiveTexture(texture);
+    return sGLContext.get()->fActiveTexture(texture);
 }
 
 GrGLvoid glAttachShader_mozilla(GrGLuint program, GrGLuint shader)
 {
-    return sGLContext->fAttachShader(program, shader);
+    return sGLContext.get()->fAttachShader(program, shader);
 }
 
 GrGLvoid glBindAttribLocation_mozilla(GrGLuint program, GrGLuint index, const GLchar* name)
 {
-    return sGLContext->fBindAttribLocation(program, index, name);
+    return sGLContext.get()->fBindAttribLocation(program, index, name);
 }
 
 GrGLvoid glBindBuffer_mozilla(GrGLenum target, GrGLuint buffer)
 {
-    return sGLContext->fBindBuffer(target, buffer);
+    return sGLContext.get()->fBindBuffer(target, buffer);
 }
 
 GrGLvoid glBindFramebuffer_mozilla(GrGLenum target, GrGLuint framebuffer)
 {
-    return sGLContext->fBindFramebuffer(target, framebuffer);
+    return sGLContext.get()->fBindFramebuffer(target, framebuffer);
 }
 
 GrGLvoid glBindRenderbuffer_mozilla(GrGLenum target, GrGLuint renderbuffer)
 {
-    return sGLContext->fBindRenderbuffer(target, renderbuffer);
+    return sGLContext.get()->fBindRenderbuffer(target, renderbuffer);
 }
 
 GrGLvoid glBindTexture_mozilla(GrGLenum target, GrGLuint texture)
 {
-    return sGLContext->fBindTexture(target, texture);
+    return sGLContext.get()->fBindTexture(target, texture);
 }
 
 GrGLvoid glBlendColor_mozilla(GrGLclampf red, GrGLclampf green, GrGLclampf blue, GrGLclampf alpha)
 {
-    return sGLContext->fBlendColor(red, green, blue, alpha);
+    return sGLContext.get()->fBlendColor(red, green, blue, alpha);
 }
 
 GrGLvoid glBlendFunc_mozilla(GrGLenum sfactor, GrGLenum dfactor)
 {
-    return sGLContext->fBlendFunc(sfactor, dfactor);
+    return sGLContext.get()->fBlendFunc(sfactor, dfactor);
 }
 
 GrGLvoid glBufferData_mozilla(GrGLenum target, GrGLsizeiptr size, const void* data, GrGLenum usage)
 {
-    return sGLContext->fBufferData(target, size, data, usage);
+    return sGLContext.get()->fBufferData(target, size, data, usage);
 }
 
 GrGLvoid glBufferSubData_mozilla(GrGLenum target, GrGLintptr offset, GrGLsizeiptr size, const void* data)
 {
-    return sGLContext->fBufferSubData(target, offset, size, data);
+    return sGLContext.get()->fBufferSubData(target, offset, size, data);
 }
 
 GrGLenum glCheckFramebufferStatus_mozilla(GrGLenum target)
 {
-    return sGLContext->fCheckFramebufferStatus(target);
+    return sGLContext.get()->fCheckFramebufferStatus(target);
 }
 
 GrGLvoid glClear_mozilla(GrGLbitfield mask)
 {
-    return sGLContext->fClear(mask);
+    return sGLContext.get()->fClear(mask);
 }
 
 GrGLvoid glClearColor_mozilla(GrGLclampf red, GrGLclampf green, GrGLclampf blue, GrGLclampf alpha)
 {
-    return sGLContext->fClearColor(red, green, blue, alpha);
+    return sGLContext.get()->fClearColor(red, green, blue, alpha);
 }
 
 GrGLvoid glClearStencil_mozilla(GrGLint s)
 {
-    return sGLContext->fClearStencil(s);
+    return sGLContext.get()->fClearStencil(s);
 }
 
 GrGLvoid glColorMask_mozilla(GrGLboolean red, GrGLboolean green, GrGLboolean blue, GrGLboolean alpha)
 {
-    return sGLContext->fColorMask(red, green, blue, alpha);
+    return sGLContext.get()->fColorMask(red, green, blue, alpha);
 }
 
 GrGLvoid glCompileShader_mozilla(GrGLuint shader)
 {
-    return sGLContext->fCompileShader(shader);
+    return sGLContext.get()->fCompileShader(shader);
 }
 
 GrGLuint glCreateProgram_mozilla(void)
 {
-    return sGLContext->fCreateProgram();
+    return sGLContext.get()->fCreateProgram();
 }
 
 GrGLuint glCreateShader_mozilla(GrGLenum type)
 {
-    return sGLContext->fCreateShader(type);
+    return sGLContext.get()->fCreateShader(type);
 }
 
 GrGLvoid glCullFace_mozilla(GrGLenum mode)
 {
-    return sGLContext->fCullFace(mode);
+    return sGLContext.get()->fCullFace(mode);
 }
 
 GrGLvoid glDeleteBuffers_mozilla(GrGLsizei n, const GrGLuint* buffers)
 {
-    return sGLContext->fDeleteBuffers(n, const_cast<GrGLuint*>(buffers));
+    return sGLContext.get()->fDeleteBuffers(n, const_cast<GrGLuint*>(buffers));
 }
 
 GrGLvoid glDeleteFramebuffers_mozilla(GrGLsizei n, const GrGLuint* framebuffers)
 {
-    return sGLContext->fDeleteFramebuffers(n, const_cast<GrGLuint*>(framebuffers));
+    return sGLContext.get()->fDeleteFramebuffers(n, const_cast<GrGLuint*>(framebuffers));
 }
 
 GrGLvoid glDeleteProgram_mozilla(GrGLuint program)
 {
-    return sGLContext->fDeleteProgram(program);
+    return sGLContext.get()->fDeleteProgram(program);
 }
 
 GrGLvoid glDeleteRenderbuffers_mozilla(GrGLsizei n, const GrGLuint* renderbuffers)
 {
-    return sGLContext->fDeleteRenderbuffers(n, const_cast<GrGLuint*>(renderbuffers));
+    return sGLContext.get()->fDeleteRenderbuffers(n, const_cast<GrGLuint*>(renderbuffers));
 }
 
 GrGLvoid glDeleteShader_mozilla(GrGLuint shader)
 {
-    return sGLContext->fDeleteShader(shader);
+    return sGLContext.get()->fDeleteShader(shader);
 }
 
 GrGLvoid glDeleteTextures_mozilla(GrGLsizei n, const GrGLuint* textures)
 {
-    return sGLContext->fDeleteTextures(n, const_cast<GrGLuint*>(textures));
+    return sGLContext.get()->fDeleteTextures(n, const_cast<GrGLuint*>(textures));
 }
 
 GrGLvoid glDepthMask_mozilla(GrGLboolean flag)
 {
-    return sGLContext->fDepthMask(flag);
+    return sGLContext.get()->fDepthMask(flag);
 }
 
 GrGLvoid glDisable_mozilla(GrGLenum cap)
 {
-    return sGLContext->fDisable(cap);
+    return sGLContext.get()->fDisable(cap);
 }
 
 GrGLvoid glDisableVertexAttribArray_mozilla(GrGLuint index)
 {
-    return sGLContext->fDisableVertexAttribArray(index);
+    return sGLContext.get()->fDisableVertexAttribArray(index);
 }
 
 GrGLvoid glDrawArrays_mozilla(GrGLenum mode, GrGLint first, GrGLsizei count)
 {
-    return sGLContext->fDrawArrays(mode, first, count);
+    return sGLContext.get()->fDrawArrays(mode, first, count);
 }
 
 GrGLvoid glDrawElements_mozilla(GrGLenum mode, GrGLsizei count, GrGLenum type, const void* indices)
 {
-    return sGLContext->fDrawElements(mode, count, type, indices);
+    return sGLContext.get()->fDrawElements(mode, count, type, indices);
 }
 
 GrGLvoid glEnable_mozilla(GrGLenum cap)
 {
-    return sGLContext->fEnable(cap);
+    return sGLContext.get()->fEnable(cap);
 }
 
 GrGLvoid glEnableVertexAttribArray_mozilla(GrGLuint index)
 {
-    return sGLContext->fEnableVertexAttribArray(index);
+    return sGLContext.get()->fEnableVertexAttribArray(index);
 }
 
 GrGLvoid glFinish_mozilla()
 {
-    return sGLContext->fFinish();
+    return sGLContext.get()->fFinish();
 }
 
 GrGLvoid glFlush_mozilla()
 {
-    return sGLContext->fFlush();
+    return sGLContext.get()->fFlush();
 }
 
 GrGLvoid glFramebufferRenderbuffer_mozilla(GrGLenum target, GrGLenum attachment, GrGLenum renderbuffertarget, GrGLuint renderbuffer)
 {
-    return sGLContext->fFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+    return sGLContext.get()->fFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 }
 
 GrGLvoid glFramebufferTexture2D_mozilla(GrGLenum target, GrGLenum attachment, GrGLenum textarget, GrGLuint texture, GrGLint level)
 {
-    return sGLContext->fFramebufferTexture2D(target, attachment, textarget, texture, level);
+    return sGLContext.get()->fFramebufferTexture2D(target, attachment, textarget, texture, level);
 }
 
 GrGLvoid glFrontFace_mozilla(GrGLenum mode)
 {
-    return sGLContext->fFrontFace(mode);
+    return sGLContext.get()->fFrontFace(mode);
 }
 
 GrGLvoid glGenBuffers_mozilla(GrGLsizei n, GrGLuint* buffers)
 {
-    return sGLContext->fGenBuffers(n, buffers);
+    return sGLContext.get()->fGenBuffers(n, buffers);
 }
 
 GrGLvoid glGenFramebuffers_mozilla(GrGLsizei n, GrGLuint* framebuffers)
 {
-    return sGLContext->fGenFramebuffers(n, framebuffers);
+    return sGLContext.get()->fGenFramebuffers(n, framebuffers);
 }
 
 GrGLvoid glGenRenderbuffers_mozilla(GrGLsizei n, GrGLuint* renderbuffers)
 {
-    return sGLContext->fGenRenderbuffers(n, renderbuffers);
+    return sGLContext.get()->fGenRenderbuffers(n, renderbuffers);
 }
 
 GrGLvoid glGenTextures_mozilla(GrGLsizei n, GrGLuint* textures)
 {
-    return sGLContext->fGenTextures(n, textures);
+    return sGLContext.get()->fGenTextures(n, textures);
 }
 
 GrGLvoid glGetBufferParameteriv_mozilla(GrGLenum target, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetBufferParameteriv(target, pname, params);
+    return sGLContext.get()->fGetBufferParameteriv(target, pname, params);
 }
 
 GrGLvoid glGetFramebufferAttachmentParameteriv_mozilla(GrGLenum target, GrGLenum attachment, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
+    return sGLContext.get()->fGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
 }
 
 GrGLenum glGetError_mozilla()
 {
-    return sGLContext->fGetError();
+    return sGLContext.get()->fGetError();
 }
 
 GrGLvoid glGetIntegerv_mozilla(GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetIntegerv(pname, params);
+    return sGLContext.get()->fGetIntegerv(pname, params);
 }
 
 GrGLvoid glGetProgramInfoLog_mozilla(GrGLuint program, GrGLsizei bufsize, GrGLsizei* length, char* infolog)
 {
-    return sGLContext->fGetProgramInfoLog(program, bufsize, length, infolog);
+    return sGLContext.get()->fGetProgramInfoLog(program, bufsize, length, infolog);
 }
 
 GrGLvoid glGetProgramiv_mozilla(GrGLuint program, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetProgramiv(program, pname, params);
+    return sGLContext.get()->fGetProgramiv(program, pname, params);
 }
 
 GrGLvoid glGetRenderbufferParameteriv_mozilla(GrGLenum target, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetRenderbufferParameteriv(target, pname, params);
+    return sGLContext.get()->fGetRenderbufferParameteriv(target, pname, params);
 }
 
 GrGLvoid glGetShaderInfoLog_mozilla(GrGLuint shader, GrGLsizei bufsize, GrGLsizei* length, char* infolog)
 {
-    return sGLContext->fGetShaderInfoLog(shader, bufsize, length, infolog);
+    return sGLContext.get()->fGetShaderInfoLog(shader, bufsize, length, infolog);
 }
 
 GrGLvoid glGetShaderiv_mozilla(GrGLuint shader, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetShaderiv(shader, pname, params);
+    return sGLContext.get()->fGetShaderiv(shader, pname, params);
 }
 
 const GLubyte* glGetString_mozilla(GrGLenum name)
@@ -290,7 +301,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
     // on the GL implementation and change them to match what GLContext actually exposes.
 
     if (name == LOCAL_GL_VERSION) {
-        if (sGLContext->IsGLES2()) {
+        if (sGLContext.get()->IsGLES2()) {
             return reinterpret_cast<const GLubyte*>("OpenGL ES 2.0");
         } else {
             return reinterpret_cast<const GLubyte*>("2.0");
@@ -302,15 +313,15 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         static char extensionsString[120];
 
         if (!extensionsStringBuilt) {
-            if (sGLContext->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
+            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
                 strcpy(extensionsString, "GL_EXT_texture_format_BGRA8888 ");
             }
 
-            if (sGLContext->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
+            if (sGLContext.get()->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
                 strcat(extensionsString, "GL_OES_packed_depth_stencil ");
             }
 
-            if (sGLContext->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) {
+            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) {
                 strcat(extensionsString, "GL_EXT_packed_depth_stencil ");
             }
 
@@ -320,90 +331,90 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         return reinterpret_cast<const GLubyte*>(extensionsString);
 
     } else if (name == LOCAL_GL_SHADING_LANGUAGE_VERSION) {
-        if (sGLContext->IsGLES2()) {
+        if (sGLContext.get()->IsGLES2()) {
             return reinterpret_cast<const GLubyte*>("OpenGL ES GLSL ES 1.0");
         } else {
             return reinterpret_cast<const GLubyte*>("1.10");
         }
     }
 
-    return sGLContext->fGetString(name);
+    return sGLContext.get()->fGetString(name);
 }
 
 GrGLint glGetUniformLocation_mozilla(GrGLuint program, const char* name)
 {
-    return sGLContext->fGetUniformLocation(program, name);
+    return sGLContext.get()->fGetUniformLocation(program, name);
 }
 
 GrGLvoid glLineWidth_mozilla(GrGLfloat width)
 {
-    return sGLContext->fLineWidth(width);
+    return sGLContext.get()->fLineWidth(width);
 }
 
 GrGLvoid glLinkProgram_mozilla(GrGLuint program)
 {
-    return sGLContext->fLinkProgram(program);
+    return sGLContext.get()->fLinkProgram(program);
 }
 
 GrGLvoid glPixelStorei_mozilla(GrGLenum pname, GrGLint param)
 {
-    return sGLContext->fPixelStorei(pname, param);
+    return sGLContext.get()->fPixelStorei(pname, param);
 }
 
 GrGLvoid glReadPixels_mozilla(GrGLint x, GrGLint y, GrGLsizei width, GrGLsizei height,
                               GrGLenum format, GrGLenum type, void* pixels)
 {
-    return sGLContext->fReadPixels(x, y, width, height,
+    return sGLContext.get()->fReadPixels(x, y, width, height,
                                    format, type, pixels);
 }
 
 GrGLvoid glRenderbufferStorage_mozilla(GrGLenum target, GrGLenum internalformat, GrGLsizei width, GrGLsizei height)
 {
-    return sGLContext->fRenderbufferStorage(target, internalformat, width, height);
+    return sGLContext.get()->fRenderbufferStorage(target, internalformat, width, height);
 }
 
 GrGLvoid glScissor_mozilla(GrGLint x, GrGLint y, GrGLsizei width, GrGLsizei height)
 {
-    return sGLContext->fScissor(x, y, width, height);
+    return sGLContext.get()->fScissor(x, y, width, height);
 }
 
 GrGLvoid glShaderSource_mozilla(GrGLuint shader, GrGLsizei count, const char** str, const GrGLint* length)
 {
-    return sGLContext->fShaderSource(shader, count, str, length);
+    return sGLContext.get()->fShaderSource(shader, count, str, length);
 }
 
 GrGLvoid glStencilFunc_mozilla(GrGLenum func, GrGLint ref, GrGLuint mask)
 {
-    return sGLContext->fStencilFunc(func, ref, mask);
+    return sGLContext.get()->fStencilFunc(func, ref, mask);
 }
 
 GrGLvoid glStencilMask_mozilla(GrGLuint mask)
 {
-    return sGLContext->fStencilMask(mask);
+    return sGLContext.get()->fStencilMask(mask);
 }
 
 GrGLvoid glStencilOp_mozilla(GrGLenum fail, GrGLenum zfail, GrGLenum zpass)
 {
-    return sGLContext->fStencilOp(fail, zfail, zpass);
+    return sGLContext.get()->fStencilOp(fail, zfail, zpass);
 }
 
 GrGLvoid glTexImage2D_mozilla(GrGLenum target, GrGLint level, GrGLint internalformat,
                               GrGLsizei width, GrGLsizei height, GrGLint border,
                               GrGLenum format, GrGLenum type, const void* pixels)
 {
-    return sGLContext->fTexImage2D(target, level, internalformat,
+    return sGLContext.get()->fTexImage2D(target, level, internalformat,
                                    width, height, border,
                                    format, type, pixels);
 }
 
 GrGLvoid glTexParameteri_mozilla(GrGLenum target, GrGLenum pname, GrGLint param)
 {
-    return sGLContext->fTexParameteri(target, pname, param);
+    return sGLContext.get()->fTexParameteri(target, pname, param);
 }
 
 GrGLvoid glTexParameteriv_mozilla(GrGLenum target, GrGLenum pname, const GrGLint* params)
 {
-    return sGLContext->fTexParameteriv(target, pname, const_cast<GrGLint*>(params));
+    return sGLContext.get()->fTexParameteriv(target, pname, const_cast<GrGLint*>(params));
 }
 
 GrGLvoid glTexSubImage2D_mozilla(GrGLenum target, GrGLint level,
@@ -411,7 +422,7 @@ GrGLvoid glTexSubImage2D_mozilla(GrGLenum target, GrGLint level,
                                  GrGLsizei width, GrGLsizei height,
                                  GrGLenum format, GrGLenum type, const void* pixels)
 {
-    return sGLContext->fTexSubImage2D(target, level,
+    return sGLContext.get()->fTexSubImage2D(target, level,
                                       xoffset, yoffset,
                                       width, height,
                                       format, type, pixels);
@@ -419,207 +430,207 @@ GrGLvoid glTexSubImage2D_mozilla(GrGLenum target, GrGLint level,
 
 GrGLvoid glUniform1f_mozilla(GrGLint location, GrGLfloat v)
 {
-    return sGLContext->fUniform1f(location, v);
+    return sGLContext.get()->fUniform1f(location, v);
 }
 
 GrGLvoid glUniform1i_mozilla(GrGLint location, GrGLint v)
 {
-    return sGLContext->fUniform1i(location, v);
+    return sGLContext.get()->fUniform1i(location, v);
 }
 
 GrGLvoid glUniform1fv_mozilla(GrGLint location, GrGLsizei count, const GrGLfloat* v)
 {
-    return sGLContext->fUniform1fv(location, count, v);
+    return sGLContext.get()->fUniform1fv(location, count, v);
 }
 
 GrGLvoid glUniform1iv_mozilla(GrGLint location, GrGLsizei count, const GrGLint* v)
 {
-    return sGLContext->fUniform1iv(location, count, v);
+    return sGLContext.get()->fUniform1iv(location, count, v);
 }
 
 GrGLvoid glUniform2f_mozilla(GrGLint location, GrGLfloat v0, GrGLfloat v1)
 {
-    return sGLContext->fUniform2f(location, v0, v1);
+    return sGLContext.get()->fUniform2f(location, v0, v1);
 }
 
 GrGLvoid glUniform2i_mozilla(GrGLint location, GrGLint v0, GrGLint v1)
 {
-    return sGLContext->fUniform2i(location, v0, v1);
+    return sGLContext.get()->fUniform2i(location, v0, v1);
 }
 
 GrGLvoid glUniform2fv_mozilla(GrGLint location, GrGLsizei count, const GrGLfloat* v)
 {
-    return sGLContext->fUniform2fv(location, count, v);
+    return sGLContext.get()->fUniform2fv(location, count, v);
 }
 
 GrGLvoid glUniform2iv_mozilla(GrGLint location, GrGLsizei count, const GrGLint* v)
 {
-    return sGLContext->fUniform2iv(location, count, v);
+    return sGLContext.get()->fUniform2iv(location, count, v);
 }
 
 GrGLvoid glUniform3f_mozilla(GrGLint location, GrGLfloat v0, GrGLfloat v1, GrGLfloat v2)
 {
-    return sGLContext->fUniform3f(location, v0, v1, v2);
+    return sGLContext.get()->fUniform3f(location, v0, v1, v2);
 }
 
 GrGLvoid glUniform3i_mozilla(GrGLint location, GrGLint v0, GrGLint v1, GrGLint v2)
 {
-    return sGLContext->fUniform3i(location, v0, v1, v2);
+    return sGLContext.get()->fUniform3i(location, v0, v1, v2);
 }
 
 GrGLvoid glUniform3fv_mozilla(GrGLint location, GrGLsizei count, const GrGLfloat* v)
 {
-    return sGLContext->fUniform3fv(location, count, v);
+    return sGLContext.get()->fUniform3fv(location, count, v);
 }
 
 GrGLvoid glUniform3iv_mozilla(GrGLint location, GrGLsizei count, const GrGLint* v)
 {
-    return sGLContext->fUniform3iv(location, count, v);
+    return sGLContext.get()->fUniform3iv(location, count, v);
 }
 
 GrGLvoid glUniform4f_mozilla(GrGLint location, GrGLfloat v0, GrGLfloat v1, GrGLfloat v2, GrGLfloat v3)
 {
-    return sGLContext->fUniform4f(location, v0, v1, v2, v3);
+    return sGLContext.get()->fUniform4f(location, v0, v1, v2, v3);
 }
 
 GrGLvoid glUniform4i_mozilla(GrGLint location, GrGLint v0, GrGLint v1, GrGLint v2, GrGLint v3)
 {
-    return sGLContext->fUniform4i(location, v0, v1, v2, v3);
+    return sGLContext.get()->fUniform4i(location, v0, v1, v2, v3);
 }
 
 GrGLvoid glUniform4fv_mozilla(GrGLint location, GrGLsizei count, const GrGLfloat* v)
 {
-    return sGLContext->fUniform4fv(location, count, v);
+    return sGLContext.get()->fUniform4fv(location, count, v);
 }
 
 GrGLvoid glUniform4iv_mozilla(GrGLint location, GrGLsizei count, const GrGLint* v)
 {
-    return sGLContext->fUniform4iv(location, count, v);
+    return sGLContext.get()->fUniform4iv(location, count, v);
 }
 
 GrGLvoid glUniformMatrix2fv_mozilla(GrGLint location, GrGLsizei count, GrGLboolean transpose, const GrGLfloat* value)
 {
-    return sGLContext->fUniformMatrix2fv(location, count, transpose, value);
+    return sGLContext.get()->fUniformMatrix2fv(location, count, transpose, value);
 }
 
 GrGLvoid glUniformMatrix3fv_mozilla(GrGLint location, GrGLsizei count, GrGLboolean transpose, const GrGLfloat* value)
 {
-    return sGLContext->fUniformMatrix3fv(location, count, transpose, value);
+    return sGLContext.get()->fUniformMatrix3fv(location, count, transpose, value);
 }
 
 GrGLvoid glUniformMatrix4fv_mozilla(GrGLint location, GrGLsizei count, GrGLboolean transpose, const GrGLfloat* value)
 {
-    return sGLContext->fUniformMatrix4fv(location, count, transpose, value);
+    return sGLContext.get()->fUniformMatrix4fv(location, count, transpose, value);
 }
 
 GrGLvoid glUseProgram_mozilla(GrGLuint program)
 {
-    return sGLContext->fUseProgram(program);
+    return sGLContext.get()->fUseProgram(program);
 }
 
 GrGLvoid glVertexAttrib4fv_mozilla(GrGLuint index, const GrGLfloat* values)
 {
-    return sGLContext->fVertexAttrib4fv(index, values);
+    return sGLContext.get()->fVertexAttrib4fv(index, values);
 }
 
 GrGLvoid glVertexAttribPointer_mozilla(GrGLuint index, GrGLint size, GrGLenum type, GrGLboolean normalized, GrGLsizei stride, const void* ptr)
 {
-    return sGLContext->fVertexAttribPointer(index, size, type, normalized, stride, ptr);
+    return sGLContext.get()->fVertexAttribPointer(index, size, type, normalized, stride, ptr);
 }
 
 GrGLvoid glViewport_mozilla(GrGLint x, GrGLint y, GrGLsizei width, GrGLsizei height)
 {
-    return sGLContext->fViewport(x, y, width, height);
+    return sGLContext.get()->fViewport(x, y, width, height);
 }
 
 // Required if the bindings are GLES2 or desktop OpenGL 2.0
 
 GrGLvoid glStencilFuncSeparate_mozilla(GrGLenum frontfunc, GrGLenum backfunc, GrGLint ref, GrGLuint mask)
 {
-    return sGLContext->fStencilFuncSeparate(frontfunc, backfunc, ref, mask);
+    return sGLContext.get()->fStencilFuncSeparate(frontfunc, backfunc, ref, mask);
 }
 
 GrGLvoid glStencilMaskSeparate_mozilla(GrGLenum face, GrGLuint mask)
 {
-    return sGLContext->fStencilMaskSeparate(face, mask);
+    return sGLContext.get()->fStencilMaskSeparate(face, mask);
 }
 
 GrGLvoid glStencilOpSeparate_mozilla(GrGLenum face, GrGLenum sfail, GrGLenum dpfail, GrGLenum dppass)
 {
-    return sGLContext->fStencilOpSeparate(face, sfail, dpfail, dppass);
+    return sGLContext.get()->fStencilOpSeparate(face, sfail, dpfail, dppass);
 }
 
 // Not in GLES2
 
 GrGLvoid glGetTexLevelParameteriv_mozilla(GrGLenum target, GrGLint level, GrGLenum pname, GrGLint *params)
 {
-    return sGLContext->fGetTexLevelParameteriv(target, level, pname, params);
+    return sGLContext.get()->fGetTexLevelParameteriv(target, level, pname, params);
 }
 
 GrGLvoid glDrawBuffer_mozilla(GrGLenum mode)
 {
-    return sGLContext->fDrawBuffer(mode);
+    return sGLContext.get()->fDrawBuffer(mode);
 }
 
 GrGLvoid glReadBuffer_mozilla(GrGLenum mode)
 {
-    return sGLContext->fReadBuffer(mode);
+    return sGLContext.get()->fReadBuffer(mode);
 }
 
 // Desktop OpenGL version >= 1.5
 
 GrGLvoid glGenQueries_mozilla(GrGLsizei n, GrGLuint* ids)
 {
-    return sGLContext->fGenQueries(n, ids);
+    return sGLContext.get()->fGenQueries(n, ids);
 }
 
 GrGLvoid glDeleteQueries_mozilla(GrGLsizei n, const GrGLuint* ids)
 {
-    return sGLContext->fDeleteQueries(n, const_cast<GrGLuint*>(ids));
+    return sGLContext.get()->fDeleteQueries(n, const_cast<GrGLuint*>(ids));
 }
 
 GrGLvoid glBeginQuery_mozilla(GrGLenum target, GrGLuint id)
 {
-    return sGLContext->fBeginQuery(target, id);
+    return sGLContext.get()->fBeginQuery(target, id);
 }
 
 GrGLvoid glEndQuery_mozilla(GrGLenum target)
 {
-    return sGLContext->fEndQuery(target);
+    return sGLContext.get()->fEndQuery(target);
 }
 
 GrGLvoid glGetQueryiv_mozilla(GrGLenum target, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetQueryiv(target, pname, params);
+    return sGLContext.get()->fGetQueryiv(target, pname, params);
 }
 
 GrGLvoid glGetQueryObjectiv_mozilla(GrGLuint id, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext->fGetQueryObjectiv(id, pname, params);
+    return sGLContext.get()->fGetQueryObjectiv(id, pname, params);
 }
 
 GrGLvoid glGetQueryObjectuiv_mozilla(GrGLuint id, GrGLenum pname, GrGLuint* params)
 {
-    return sGLContext->fGetQueryObjectuiv(id, pname, params);
+    return sGLContext.get()->fGetQueryObjectuiv(id, pname, params);
 }
 
 // Desktop OpenGL version >= 2.0
 
 GrGLvoid glDrawBuffers_mozilla(GrGLsizei n, const GrGLenum* bufs)
 {
-    return sGLContext->fDrawBuffers(n, const_cast<GrGLenum*>(bufs));
+    return sGLContext.get()->fDrawBuffers(n, const_cast<GrGLenum*>(bufs));
 }
 
 // GLContext supports glMapBuffer on everything (GL_OES_mapbuffer)
 
 GrGLvoid* glMapBuffer_mozilla(GrGLenum target, GrGLenum access)
 {
-    return sGLContext->fMapBuffer(target, access);
+    return sGLContext.get()->fMapBuffer(target, access);
 }
 
 GrGLboolean glUnmapBuffer_mozilla(GrGLenum target)
 {
-    return sGLContext->fUnmapBuffer(target);
+    return sGLContext.get()->fUnmapBuffer(target);
 }
 
 // GLContext supports glCompressedTexImage2D (GL_ARB_texture_compression)
@@ -628,7 +639,7 @@ GrGLvoid glCompressedTexImage2D_mozilla(GrGLenum target, GrGLint level, GrGLenum
                                         GrGLsizei width, GrGLsizei height, GrGLint border,
                                         GrGLsizei imageSize, const GrGLvoid* pixels)
 {
-    return sGLContext->fCompressedTexImage2D(target, level, internalformat,
+    return sGLContext.get()->fCompressedTexImage2D(target, level, internalformat,
                                              width, height, border,
                                              imageSize, pixels);
 }
@@ -638,7 +649,7 @@ GrGLvoid glCompressedTexImage2D_mozilla(GrGLenum target, GrGLint level, GrGLenum
 GrGLvoid glRenderbufferStorageMultisample_mozilla(GrGLenum target, GrGLsizei samples, GrGLenum internalformat,
                                                   GrGLsizei width, GrGLsizei height)
 {
-    return sGLContext->fRenderbufferStorageMultisample(target, samples, internalformat,
+    return sGLContext.get()->fRenderbufferStorageMultisample(target, samples, internalformat,
                                                        width, height);
 }
 
@@ -647,7 +658,7 @@ GrGLvoid glBlitFramebuffer_mozilla(GrGLint srcX0, GrGLint srcY0,
                                    GrGLint dstX0, GrGLint dstY0,
                                    GrGLint dstX1, GrGLint dstY1,
                                    GrGLbitfield mask, GrGLenum filter) {
-    return sGLContext->fBlitFramebuffer(srcX0, srcY0,
+    return sGLContext.get()->fBlitFramebuffer(srcX0, srcY0,
                                         srcX1, srcY1,
                                         dstX0, dstY0,
                                         dstX1, dstY1,
@@ -656,146 +667,143 @@ GrGLvoid glBlitFramebuffer_mozilla(GrGLint srcX0, GrGLint srcY0,
 
 } // extern "C"
 
-GrGLInterface* CreateGrInterfaceFromGLContext(GLContext* context)
+GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 {
-    sGLContext = context;
-
-    GrGLInterface* interface = new GrGLInterface();
-    interface->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(context);
-    interface->fCallback = EnsureGLContext;
+    GrGLInterface* i = new GrGLInterface();
+    i->fCallback = EnsureGLContext;
+    i->fCallbackData = 0; // must be later initialized to be a valid DrawTargetSkia* pointer
 
     // Core GL functions required by Ganesh
-    interface->fActiveTexture = glActiveTexture_mozilla;
-    interface->fAttachShader = glAttachShader_mozilla;
-    interface->fBindAttribLocation = glBindAttribLocation_mozilla;
-    interface->fBindBuffer = glBindBuffer_mozilla;
-    interface->fBindFramebuffer = glBindFramebuffer_mozilla;
-    interface->fBindRenderbuffer = glBindRenderbuffer_mozilla;
-    interface->fBindTexture = glBindTexture_mozilla;
-    interface->fBlendFunc = glBlendFunc_mozilla;
-    interface->fBlendColor = glBlendColor_mozilla;
-    interface->fBufferData = glBufferData_mozilla;
-    interface->fBufferSubData = glBufferSubData_mozilla;
-    interface->fCheckFramebufferStatus = glCheckFramebufferStatus_mozilla;
-    interface->fClear = glClear_mozilla;
-    interface->fClearColor = glClearColor_mozilla;
-    interface->fClearStencil = glClearStencil_mozilla;
-    interface->fColorMask = glColorMask_mozilla;
-    interface->fCompileShader = glCompileShader_mozilla;
-    interface->fCreateProgram = glCreateProgram_mozilla;
-    interface->fCreateShader = glCreateShader_mozilla;
-    interface->fCullFace = glCullFace_mozilla;
-    interface->fDeleteBuffers = glDeleteBuffers_mozilla;
-    interface->fDeleteFramebuffers = glDeleteFramebuffers_mozilla;
-    interface->fDeleteProgram = glDeleteProgram_mozilla;
-    interface->fDeleteRenderbuffers = glDeleteRenderbuffers_mozilla;
-    interface->fDeleteShader = glDeleteShader_mozilla;
-    interface->fDeleteTextures = glDeleteTextures_mozilla;
-    interface->fDepthMask = glDepthMask_mozilla;
-    interface->fDisable = glDisable_mozilla;
-    interface->fDisableVertexAttribArray = glDisableVertexAttribArray_mozilla;
-    interface->fDrawArrays = glDrawArrays_mozilla;
-    interface->fDrawElements = glDrawElements_mozilla;
-    interface->fEnable = glEnable_mozilla;
-    interface->fEnableVertexAttribArray = glEnableVertexAttribArray_mozilla;
-    interface->fFinish = glFinish_mozilla;
-    interface->fFlush = glFlush_mozilla;
-    interface->fFramebufferRenderbuffer = glFramebufferRenderbuffer_mozilla;
-    interface->fFramebufferTexture2D = glFramebufferTexture2D_mozilla;
-    interface->fFrontFace = glFrontFace_mozilla;
-    interface->fGenBuffers = glGenBuffers_mozilla;
-    interface->fGenFramebuffers = glGenFramebuffers_mozilla;
-    interface->fGenRenderbuffers = glGenRenderbuffers_mozilla;
-    interface->fGetFramebufferAttachmentParameteriv = glGetFramebufferAttachmentParameteriv_mozilla;
-    interface->fGenTextures = glGenTextures_mozilla;
-    interface->fGetBufferParameteriv = glGetBufferParameteriv_mozilla;
-    interface->fGetError = glGetError_mozilla;
-    interface->fGetIntegerv = glGetIntegerv_mozilla;
-    interface->fGetProgramInfoLog = glGetProgramInfoLog_mozilla;
-    interface->fGetProgramiv = glGetProgramiv_mozilla;
-    interface->fGetRenderbufferParameteriv = glGetRenderbufferParameteriv_mozilla;
-    interface->fGetShaderInfoLog = glGetShaderInfoLog_mozilla;
-    interface->fGetShaderiv = glGetShaderiv_mozilla;
-    interface->fGetString = glGetString_mozilla;
-    interface->fGetUniformLocation = glGetUniformLocation_mozilla;
-    interface->fLineWidth = glLineWidth_mozilla;
-    interface->fLinkProgram = glLinkProgram_mozilla;
-    interface->fPixelStorei = glPixelStorei_mozilla;
-    interface->fReadPixels = glReadPixels_mozilla;
-    interface->fRenderbufferStorage = glRenderbufferStorage_mozilla;
-    interface->fScissor = glScissor_mozilla;
-    interface->fShaderSource = glShaderSource_mozilla;
-    interface->fStencilFunc = glStencilFunc_mozilla;
-    interface->fStencilMask = glStencilMask_mozilla;
-    interface->fStencilOp = glStencilOp_mozilla;
-    interface->fTexImage2D = glTexImage2D_mozilla;
-    interface->fTexParameteri = glTexParameteri_mozilla;
-    interface->fTexParameteriv = glTexParameteriv_mozilla;
-    interface->fTexSubImage2D = glTexSubImage2D_mozilla;
-    interface->fUniform1f = glUniform1f_mozilla;
-    interface->fUniform1i = glUniform1i_mozilla;
-    interface->fUniform1fv = glUniform1fv_mozilla;
-    interface->fUniform1iv = glUniform1iv_mozilla;
-    interface->fUniform2f = glUniform2f_mozilla;
-    interface->fUniform2i = glUniform2i_mozilla;
-    interface->fUniform2fv = glUniform2fv_mozilla;
-    interface->fUniform2iv = glUniform2iv_mozilla;
-    interface->fUniform3f = glUniform3f_mozilla;
-    interface->fUniform3i = glUniform3i_mozilla;
-    interface->fUniform3fv = glUniform3fv_mozilla;
-    interface->fUniform3iv = glUniform3iv_mozilla;
-    interface->fUniform4f = glUniform4f_mozilla;
-    interface->fUniform4i = glUniform4i_mozilla;
-    interface->fUniform4fv = glUniform4fv_mozilla;
-    interface->fUniform4iv = glUniform4iv_mozilla;
-    interface->fUniformMatrix2fv = glUniformMatrix2fv_mozilla;
-    interface->fUniformMatrix3fv = glUniformMatrix3fv_mozilla;
-    interface->fUniformMatrix4fv = glUniformMatrix4fv_mozilla;
-    interface->fUseProgram = glUseProgram_mozilla;
-    interface->fVertexAttrib4fv = glVertexAttrib4fv_mozilla;
-    interface->fVertexAttribPointer = glVertexAttribPointer_mozilla;
-    interface->fViewport = glViewport_mozilla;
+    i->fActiveTexture = glActiveTexture_mozilla;
+    i->fAttachShader = glAttachShader_mozilla;
+    i->fBindAttribLocation = glBindAttribLocation_mozilla;
+    i->fBindBuffer = glBindBuffer_mozilla;
+    i->fBindFramebuffer = glBindFramebuffer_mozilla;
+    i->fBindRenderbuffer = glBindRenderbuffer_mozilla;
+    i->fBindTexture = glBindTexture_mozilla;
+    i->fBlendFunc = glBlendFunc_mozilla;
+    i->fBlendColor = glBlendColor_mozilla;
+    i->fBufferData = glBufferData_mozilla;
+    i->fBufferSubData = glBufferSubData_mozilla;
+    i->fCheckFramebufferStatus = glCheckFramebufferStatus_mozilla;
+    i->fClear = glClear_mozilla;
+    i->fClearColor = glClearColor_mozilla;
+    i->fClearStencil = glClearStencil_mozilla;
+    i->fColorMask = glColorMask_mozilla;
+    i->fCompileShader = glCompileShader_mozilla;
+    i->fCreateProgram = glCreateProgram_mozilla;
+    i->fCreateShader = glCreateShader_mozilla;
+    i->fCullFace = glCullFace_mozilla;
+    i->fDeleteBuffers = glDeleteBuffers_mozilla;
+    i->fDeleteFramebuffers = glDeleteFramebuffers_mozilla;
+    i->fDeleteProgram = glDeleteProgram_mozilla;
+    i->fDeleteRenderbuffers = glDeleteRenderbuffers_mozilla;
+    i->fDeleteShader = glDeleteShader_mozilla;
+    i->fDeleteTextures = glDeleteTextures_mozilla;
+    i->fDepthMask = glDepthMask_mozilla;
+    i->fDisable = glDisable_mozilla;
+    i->fDisableVertexAttribArray = glDisableVertexAttribArray_mozilla;
+    i->fDrawArrays = glDrawArrays_mozilla;
+    i->fDrawElements = glDrawElements_mozilla;
+    i->fEnable = glEnable_mozilla;
+    i->fEnableVertexAttribArray = glEnableVertexAttribArray_mozilla;
+    i->fFinish = glFinish_mozilla;
+    i->fFlush = glFlush_mozilla;
+    i->fFramebufferRenderbuffer = glFramebufferRenderbuffer_mozilla;
+    i->fFramebufferTexture2D = glFramebufferTexture2D_mozilla;
+    i->fFrontFace = glFrontFace_mozilla;
+    i->fGenBuffers = glGenBuffers_mozilla;
+    i->fGenFramebuffers = glGenFramebuffers_mozilla;
+    i->fGenRenderbuffers = glGenRenderbuffers_mozilla;
+    i->fGetFramebufferAttachmentParameteriv = glGetFramebufferAttachmentParameteriv_mozilla;
+    i->fGenTextures = glGenTextures_mozilla;
+    i->fGetBufferParameteriv = glGetBufferParameteriv_mozilla;
+    i->fGetError = glGetError_mozilla;
+    i->fGetIntegerv = glGetIntegerv_mozilla;
+    i->fGetProgramInfoLog = glGetProgramInfoLog_mozilla;
+    i->fGetProgramiv = glGetProgramiv_mozilla;
+    i->fGetRenderbufferParameteriv = glGetRenderbufferParameteriv_mozilla;
+    i->fGetShaderInfoLog = glGetShaderInfoLog_mozilla;
+    i->fGetShaderiv = glGetShaderiv_mozilla;
+    i->fGetString = glGetString_mozilla;
+    i->fGetUniformLocation = glGetUniformLocation_mozilla;
+    i->fLineWidth = glLineWidth_mozilla;
+    i->fLinkProgram = glLinkProgram_mozilla;
+    i->fPixelStorei = glPixelStorei_mozilla;
+    i->fReadPixels = glReadPixels_mozilla;
+    i->fRenderbufferStorage = glRenderbufferStorage_mozilla;
+    i->fScissor = glScissor_mozilla;
+    i->fShaderSource = glShaderSource_mozilla;
+    i->fStencilFunc = glStencilFunc_mozilla;
+    i->fStencilMask = glStencilMask_mozilla;
+    i->fStencilOp = glStencilOp_mozilla;
+    i->fTexImage2D = glTexImage2D_mozilla;
+    i->fTexParameteri = glTexParameteri_mozilla;
+    i->fTexParameteriv = glTexParameteriv_mozilla;
+    i->fTexSubImage2D = glTexSubImage2D_mozilla;
+    i->fUniform1f = glUniform1f_mozilla;
+    i->fUniform1i = glUniform1i_mozilla;
+    i->fUniform1fv = glUniform1fv_mozilla;
+    i->fUniform1iv = glUniform1iv_mozilla;
+    i->fUniform2f = glUniform2f_mozilla;
+    i->fUniform2i = glUniform2i_mozilla;
+    i->fUniform2fv = glUniform2fv_mozilla;
+    i->fUniform2iv = glUniform2iv_mozilla;
+    i->fUniform3f = glUniform3f_mozilla;
+    i->fUniform3i = glUniform3i_mozilla;
+    i->fUniform3fv = glUniform3fv_mozilla;
+    i->fUniform3iv = glUniform3iv_mozilla;
+    i->fUniform4f = glUniform4f_mozilla;
+    i->fUniform4i = glUniform4i_mozilla;
+    i->fUniform4fv = glUniform4fv_mozilla;
+    i->fUniform4iv = glUniform4iv_mozilla;
+    i->fUniformMatrix2fv = glUniformMatrix2fv_mozilla;
+    i->fUniformMatrix3fv = glUniformMatrix3fv_mozilla;
+    i->fUniformMatrix4fv = glUniformMatrix4fv_mozilla;
+    i->fUseProgram = glUseProgram_mozilla;
+    i->fVertexAttrib4fv = glVertexAttrib4fv_mozilla;
+    i->fVertexAttribPointer = glVertexAttribPointer_mozilla;
+    i->fViewport = glViewport_mozilla;
 
     // Required for either desktop OpenGL 2.0 or OpenGL ES 2.0
-    interface->fStencilFuncSeparate = glStencilFuncSeparate_mozilla;
-    interface->fStencilMaskSeparate = glStencilMaskSeparate_mozilla;
-    interface->fStencilOpSeparate = glStencilOpSeparate_mozilla;
+    i->fStencilFuncSeparate = glStencilFuncSeparate_mozilla;
+    i->fStencilMaskSeparate = glStencilMaskSeparate_mozilla;
+    i->fStencilOpSeparate = glStencilOpSeparate_mozilla;
 
     // GLContext supports glMapBuffer
-    interface->fMapBuffer = glMapBuffer_mozilla;
-    interface->fUnmapBuffer = glUnmapBuffer_mozilla;
+    i->fMapBuffer = glMapBuffer_mozilla;
+    i->fUnmapBuffer = glUnmapBuffer_mozilla;
 
     // GLContext supports glRenderbufferStorageMultisample/glBlitFramebuffer
-    interface->fRenderbufferStorageMultisample = glRenderbufferStorageMultisample_mozilla;
-    interface->fBlitFramebuffer = glBlitFramebuffer_mozilla;
+    i->fRenderbufferStorageMultisample = glRenderbufferStorageMultisample_mozilla;
+    i->fBlitFramebuffer = glBlitFramebuffer_mozilla;
 
     // GLContext supports glCompressedTexImage2D
-    interface->fCompressedTexImage2D = glCompressedTexImage2D_mozilla;
+    i->fCompressedTexImage2D = glCompressedTexImage2D_mozilla;
 
     // Desktop GL 
-    interface->fGetTexLevelParameteriv = glGetTexLevelParameteriv_mozilla;
-    interface->fDrawBuffer = glDrawBuffer_mozilla;
-    interface->fReadBuffer = glReadBuffer_mozilla;
+    i->fGetTexLevelParameteriv = glGetTexLevelParameteriv_mozilla;
+    i->fDrawBuffer = glDrawBuffer_mozilla;
+    i->fReadBuffer = glReadBuffer_mozilla;
 
     // Desktop OpenGL > 1.5
-    interface->fGenQueries = glGenQueries_mozilla;
-    interface->fDeleteQueries = glDeleteQueries_mozilla;
-    interface->fBeginQuery = glBeginQuery_mozilla;
-    interface->fEndQuery = glEndQuery_mozilla;
-    interface->fGetQueryiv = glGetQueryiv_mozilla;
-    interface->fGetQueryObjectiv = glGetQueryObjectiv_mozilla;
-    interface->fGetQueryObjectuiv = glGetQueryObjectuiv_mozilla;
+    i->fGenQueries = glGenQueries_mozilla;
+    i->fDeleteQueries = glDeleteQueries_mozilla;
+    i->fBeginQuery = glBeginQuery_mozilla;
+    i->fEndQuery = glEndQuery_mozilla;
+    i->fGetQueryiv = glGetQueryiv_mozilla;
+    i->fGetQueryObjectiv = glGetQueryObjectiv_mozilla;
+    i->fGetQueryObjectuiv = glGetQueryObjectuiv_mozilla;
 
     // Desktop OpenGL > 2.0
-    interface->fDrawBuffers = glDrawBuffers_mozilla;
+    i->fDrawBuffers = glDrawBuffers_mozilla;
 
     // We support both desktop GL and GLES2
     if (context->IsGLES2()) {
-        interface->fBindingsExported = kES2_GrGLBinding;
+        i->fBindingsExported = kES2_GrGLBinding;
     } else {
-        interface->fBindingsExported = kDesktop_GrGLBinding;
+        i->fBindingsExported = kDesktop_GrGLBinding;
     }
 
-    return interface;
+    return i;
 }
-

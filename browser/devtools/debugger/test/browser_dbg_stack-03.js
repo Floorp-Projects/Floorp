@@ -26,7 +26,7 @@ function testRecurse() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.StackFrames._container._list;
+      let frames = gDebugger.DebuggerView.StackFrames.widget._list;
       let pageSize = gDebugger.gCallStackPageSize;
       let recurseLimit = gDebuggee.gRecurseLimit;
       let childNodes = frames.childNodes;

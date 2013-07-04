@@ -5,6 +5,8 @@
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
+const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
+
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
   'resource://gre/modules/accessibility/Utils.jsm');
@@ -16,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Utils',
   'resource://gre/modules/accessibility/Utils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'EventManager',
   'resource://gre/modules/accessibility/EventManager.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'ObjectWrapper',
+  'resource://gre/modules/ObjectWrapper.jsm');
 
 Logger.debug('content-script.js');
 
@@ -91,14 +95,14 @@ function virtualCursorControl(aMessage) {
       sendAsyncMessage('AccessFu:VirtualCursor', aMessage.json);
     }
   } catch (x) {
-    Logger.error(x);
+    Logger.logException(x, 'Failed to move virtual cursor');
   }
 }
 
 function forwardMessage(aVirtualCursor, aMessage) {
   try {
     let acc = aVirtualCursor.position;
-    if (acc && acc.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME) {
+    if (acc && acc.role == ROLE_INTERNAL_FRAME) {
       let mm = Utils.getMessageManager(acc.DOMNode);
       mm.addMessageListener(aMessage.name, virtualCursorControl);
       aMessage.json.origin = 'parent';
@@ -170,6 +174,58 @@ function activateContextMenu(aMessage) {
     sendContextMenuCoordinates(vc.position);
 }
 
+function moveCaret(aMessage) {
+  const MOVEMENT_GRANULARITY_CHARACTER = 1;
+  const MOVEMENT_GRANULARITY_WORD = 2;
+  const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+
+  let direction = aMessage.json.direction;
+  let granularity = aMessage.json.granularity;
+  let accessible = Utils.getVirtualCursor(content.document).position;
+  let accText = accessible.QueryInterface(Ci.nsIAccessibleText);
+  let oldOffset = accText.caretOffset;
+  let text = accText.getText(0, accText.characterCount);
+
+  let start = {}, end = {};
+  if (direction === 'Previous' && !aMessage.json.atStart) {
+    switch (granularity) {
+      case MOVEMENT_GRANULARITY_CHARACTER:
+        accText.caretOffset--;
+        break;
+      case MOVEMENT_GRANULARITY_WORD:
+        accText.getTextBeforeOffset(accText.caretOffset,
+                                    Ci.nsIAccessibleText.BOUNDARY_WORD_START, start, end);
+        accText.caretOffset = end.value === accText.caretOffset ? start.value : end.value;
+        break;
+      case MOVEMENT_GRANULARITY_PARAGRAPH:
+        let startOfParagraph = text.lastIndexOf('\n', accText.caretOffset - 1);
+        accText.caretOffset = startOfParagraph !== -1 ? startOfParagraph : 0;
+        break;
+    }
+  } else if (direction === 'Next' && !aMessage.json.atEnd) {
+    switch (granularity) {
+      case MOVEMENT_GRANULARITY_CHARACTER:
+        accText.caretOffset++;
+        break;
+      case MOVEMENT_GRANULARITY_WORD:
+        accText.getTextAtOffset(accText.caretOffset,
+                                Ci.nsIAccessibleText.BOUNDARY_WORD_END, start, end);
+        accText.caretOffset = end.value;
+        break;
+      case MOVEMENT_GRANULARITY_PARAGRAPH:
+        accText.caretOffset = text.indexOf('\n', accText.caretOffset + 1);
+        break;
+    }
+  }
+
+  let newOffset = accText.caretOffset;
+  if (oldOffset !== newOffset) {
+    let msg = Presentation.textSelectionChanged(text, newOffset, newOffset,
+                                                oldOffset, oldOffset);
+    sendAsyncMessage('AccessFu:Present', msg);
+  }
+}
+
 function scroll(aMessage) {
   let vc = Utils.getVirtualCursor(content.document);
 
@@ -181,6 +237,21 @@ function scroll(aMessage) {
     let acc = vc.position;
     while (acc) {
       let elem = acc.DOMNode;
+
+      // This is inspired by IndieUI events. Once they are
+      // implemented, it should be easy to transition to them.
+      // https://dvcs.w3.org/hg/IndieUI/raw-file/tip/src/indie-ui-events.html#scrollrequest
+      let uiactions = elem.getAttribute ? elem.getAttribute('uiactions') : '';
+      if (uiactions && uiactions.split(' ').indexOf('scroll') >= 0) {
+        let evt = elem.ownerDocument.createEvent('CustomEvent');
+        let details = horiz ? { deltaX: page * elem.clientWidth } :
+          { deltaY: page * elem.clientHeight };
+        evt.initCustomEvent(
+          'scrollrequest', true, true,
+          ObjectWrapper.wrap(details, elem.ownerDocument.defaultView));
+        if (!elem.dispatchEvent(evt))
+          return;
+      }
 
       // We will do window scrolling next.
       if (elem == content.document)
@@ -199,25 +270,6 @@ function scroll(aMessage) {
           let s = content.getComputedStyle(elem);
           if (s.overflowX == 'scroll' || s.overflowX == 'auto') {
             elem.scrollLeft += page * elem.clientWidth;
-            return true;
-          }
-        }
-
-        let controllers = acc.
-          getRelationByType(
-            Ci.nsIAccessibleRelation.RELATION_CONTROLLED_BY);
-        for (let i = 0; controllers.targetsCount > i; i++) {
-          let controller = controllers.getTarget(i);
-          // If the section has a controlling slider, it should be considered
-          // the page-turner.
-          if (controller.role == Ci.nsIAccessibleRole.ROLE_SLIDER) {
-            // Sliders are controlled with ctrl+right/left. I just decided :)
-            let evt = content.document.createEvent('KeyboardEvent');
-            evt.initKeyEvent(
-              'keypress', true, true, null,
-              true, false, false, false,
-              (page > 0) ? evt.DOM_VK_RIGHT : evt.DOM_VK_LEFT, 0);
-            controller.DOMNode.dispatchEvent(evt);
             return true;
           }
         }
@@ -264,6 +316,7 @@ addMessageListener(
     addMessageListener('AccessFu:Activate', activateCurrent);
     addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
+    addMessageListener('AccessFu:MoveCaret', moveCaret);
 
     if (!eventManager) {
       eventManager = new EventManager(this);
@@ -280,6 +333,7 @@ addMessageListener(
     removeMessageListener('AccessFu:Activate', activateCurrent);
     removeMessageListener('AccessFu:ContextMenu', activateContextMenu);
     removeMessageListener('AccessFu:Scroll', scroll);
+    removeMessageListener('AccessFu:MoveCaret', moveCaret);
 
     eventManager.stop();
   });

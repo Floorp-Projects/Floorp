@@ -69,7 +69,13 @@ private:
                       nsACString& aResponseStr)
   {
     mResponseCode = aResponseCode;
+#ifdef ANDROID_VERSION >= 17
+    // There's a sequence number here that we don't care about
+    // We expect it to be 0. See VolumeCommand::SetCmd
+    mResponseStr = Substring(aResponseStr, 2);
+#else
     mResponseStr = aResponseStr;
+#endif
     if (mResponseCode >= ResponseCode::CommandOkay) {
       // This is a final response.
       mPending = false;
@@ -120,7 +126,13 @@ public:
 
   void SetCmd(const nsACString& aCommand)
   {
-    mCmd = aCommand;
+    mCmd.Truncate();
+#ifdef ANDROID_VERSION >= 17
+    // JB requires a sequence number at the beginning of messages.
+    // It doesn't matter what we use, so we use 0.
+    mCmd = "0 ";
+#endif
+    mCmd.Append(aCommand);
     // Add a null character. We want this to be included in the length since
     // vold uses it to determine the end of the command.
     mCmd.Append('\0');

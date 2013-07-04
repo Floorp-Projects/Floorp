@@ -25,7 +25,6 @@
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
-#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -229,8 +228,8 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
             if (!keyStr)
                 return false;
 
-            InvokeArgsGuard args;
-            if (!cx->stack.pushInvokeArgs(cx, 1, &args))
+            InvokeArgs args(cx);
+            if (!args.init(1))
                 return false;
 
             args.setCallee(toJSON);
@@ -251,8 +250,8 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
         }
 
-        InvokeArgsGuard args;
-        if (!cx->stack.pushInvokeArgs(cx, 2, &args))
+        InvokeArgs args(cx);
+        if (!args.init(2))
             return false;
 
         args.setCallee(ObjectValue(*scx->replacer));
@@ -279,9 +278,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
             vp.set(StringValue(str));
         } else if (ObjectClassIs(obj, ESClass_Boolean, cx)) {
-            if (!BooleanGetPrimitiveValue(cx, obj, vp.address()))
-                return false;
-            JS_ASSERT(vp.get().isBoolean());
+            vp.setBoolean(BooleanGetPrimitiveValue(obj, cx));
         }
     }
 
@@ -526,8 +523,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
              StringBuffer &sb)
 {
     RootedObject replacer(cx, replacer_);
-    RootedValue spaceRoot(cx, space_);
-    Value &space = spaceRoot.get();
+    RootedValue space(cx, space_);
 
     /* Step 4. */
     AutoIdVector propertyList(cx);
@@ -566,7 +562,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             /* Step 4b(ii). */
             uint32_t len;
             JS_ALWAYS_TRUE(GetLengthProperty(cx, replacer, &len));
-            if (replacer->isArray() && !replacer->isIndexed())
+            if (replacer->is<ArrayObject>() && !replacer->isIndexed())
                 len = Min(len, replacer->getDenseInitializedLength());
 
             // Cap the initial size to a moderately small value.  This avoids
@@ -707,9 +703,9 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
         /* 'val' must have been produced by the JSON parser, so not a proxy. */
         JS_ASSERT(!obj->isProxy());
-        if (obj->isArray()) {
+        if (obj->is<ArrayObject>()) {
             /* Step 2a(ii). */
-            uint32_t length = obj->getArrayLength();
+            uint32_t length = obj->as<ArrayObject>().length();
 
             /* Step 2a(i), 2a(iii-iv). */
             RootedId id(cx);
@@ -774,8 +770,8 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
     if (!key)
         return false;
 
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, 2, &args))
+    InvokeArgs args(cx);
+    if (!args.init(2))
         return false;
 
     args.setCallee(reviver);
@@ -834,7 +830,9 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    JSString *str = (argc >= 1) ? ToString<CanGC>(cx, args[0]) : cx->names().undefined;
+    JSString *str = (args.length() >= 1)
+                    ? ToString<CanGC>(cx, args.handleAt(0))
+                    : cx->names().undefined;
     if (!str)
         return false;
 
@@ -891,7 +889,7 @@ static const JSFunctionSpec json_static_methods[] = {
 JSObject *
 js_InitJSONClass(JSContext *cx, HandleObject obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     /*
      * JSON requires that Boolean.prototype.valueOf be created and stashed in a

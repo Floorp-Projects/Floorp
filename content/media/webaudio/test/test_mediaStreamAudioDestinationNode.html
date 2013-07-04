@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaStreamAudioDestinationNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<audio id="audioelem"></audio>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var context = new AudioContext();
+  var buffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  var source = context.createBufferSource();
+  source.buffer = buffer;
+
+  var dest = context.createMediaStreamDestination();
+  source.connect(dest);
+
+  var elem = document.getElementById('audioelem');
+  elem.mozSrcObject = dest.stream;
+  elem.onloadedmetadata = function() {
+    ok(true, "got metadata event");
+    setTimeout(function() {
+      is(elem.played.length, 1, "should have a played interval");
+      is(elem.played.start(0), 0, "should have played immediately");
+      isnot(elem.played.end(0), 0, "should have played for a non-zero interval");
+      SimpleTest.finish();
+    }, 2000);
+  };
+
+  source.start(0);
+  elem.play();
+});
+</script>

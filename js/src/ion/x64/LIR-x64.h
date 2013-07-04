@@ -4,10 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_x64_h__
-#define jsion_lir_x64_h__
-
-#include "ion/LIR.h"
+#ifndef ion_x64_LIR_x64_h
+#define ion_x64_LIR_x64_h
 
 namespace js {
 namespace ion {
@@ -98,5 +96,4 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
 } // namespace ion
 } // namespace js
 
-#endif // jsion_lir_x64_h__
-
+#endif /* ion_x64_LIR_x64_h */

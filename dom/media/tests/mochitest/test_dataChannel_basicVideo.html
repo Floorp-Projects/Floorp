@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "796889",
+    title: "Basic data channel video connection"
+  });
+
+  var test;
+  runTest(function () {
+    test = new DataChannelTest();
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    test.run();
+  }, true);
+
+</script>
+</pre>
+</body>
+</html>

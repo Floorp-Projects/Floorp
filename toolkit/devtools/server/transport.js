@@ -7,62 +7,6 @@
 "use strict";
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-/* Turn the error e into a string, without fail. */
-function safeErrorString(aError) {
-  try {
-    var s = aError.toString();
-    if (typeof s === "string")
-      return s;
-  } catch (ee) { }
-
-  return "<failed trying to find error description>";
-}
-
-/**
- * Given a handler function that may throw, return an infallible handler
- * function that calls the fallible handler, and logs any exceptions it
- * throws.
- *
- * @param aHandler function
- *      A handler function, which may throw.
- * @param aName string
- *      A name for aHandler, for use in error messages. If omitted, we use
- *      aHandler.name.
- *
- * (SpiderMonkey does generate good names for anonymous functions, but we
- * don't have a way to get at them from JavaScript at the moment.)
- */
-function makeInfallible(aHandler, aName) {
-  if (!aName)
-    aName = aHandler.name;
-
-  return function (/* arguments */) {
-    try {
-      return aHandler.apply(this, arguments);
-    } catch (ex) {
-      let msg = "Handler function ";
-      if (aName) {
-        msg += aName + " ";
-      }
-      msg += "threw an exception: " + safeErrorString(ex);
-      if (ex.stack) {
-        msg += "\nCall stack:\n" + ex.stack;
-      }
-
-      dump(msg + "\n");
-
-      if (Cu.reportError) {
-        /*
-         * Note that the xpcshell test harness registers an observer for
-         * console messages, so when we're running tests, this will cause
-         * the test to quit.
-         */
-        Cu.reportError(msg);
-      }
-    }
-  }
-}
-
 /**
  * An adapter that handles data transfers between the debugger client and
  * server. It can work with both nsIPipe and nsIServerSocket transports so
@@ -148,7 +92,14 @@ DebuggerTransport.prototype = {
 
   onOutputStreamReady:
   makeInfallible(function DT_onOutputStreamReady(aStream) {
-    let written = aStream.write(this._outgoing, this._outgoing.length);
+    let written = 0;
+    try {
+      written = aStream.write(this._outgoing, this._outgoing.length);
+    } catch(e if e.result == Components.results.NS_BASE_STREAM_CLOSED) {
+      dumpn("Connection closed.");
+      this.close();
+      return;
+    }
     this._outgoing = this._outgoing.slice(written);
     this._flushOutgoing();
   }, "DebuggerTransport.prototype.onOutputStreamReady"),
@@ -275,13 +226,17 @@ LocalDebuggerTransport.prototype = {
     }
     this._deepFreeze(aPacket);
     let other = this.other;
-    Services.tm.currentThread.dispatch(makeInfallible(function() {
-      // Avoid the cost of JSON.stringify() when logging is disabled.
-      if (wantLogging) {
-        dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));
-      }
-      other.hooks.onPacket(aPacket);
-    }, "LocalDebuggerTransport instance's this.other.hooks.onPacket"), 0);
+    if (other) {
+      Services.tm.currentThread.dispatch(makeInfallible(function() {
+        // Avoid the cost of JSON.stringify() when logging is disabled.
+        if (wantLogging) {
+          dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));
+        }
+        if (other.hooks) {
+          other.hooks.onPacket(aPacket);
+        }
+      }, "LocalDebuggerTransport instance's this.other.hooks.onPacket"), 0);
+    }
   },
 
   /**

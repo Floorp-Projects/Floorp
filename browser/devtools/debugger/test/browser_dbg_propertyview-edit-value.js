@@ -53,8 +53,8 @@ function testFrameEval() {
           testModification(aVar, function(aVar) {
             resumeAndFinish();
           }, "document.title", '"Debugger Function Call Parameter Test"');
-        }, "b", "[object Object]");
-      }, "{ a: 1 }", "[object Object]");
+        }, "b", "Object");
+      }, "{ a: 1 }", "Object");
     }}, 0);
   }, false);
 

@@ -10,6 +10,15 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+CameraPreviewMediaStream::CameraPreviewMediaStream(DOMMediaStream* aWrapper)
+  : MediaStream(aWrapper)
+  , mMutex("mozilla::camera::CameraPreviewMediaStream")
+  , mFrameCallback(nullptr)
+{
+  SetGraphImpl(MediaStreamGraph::GetInstance());
+  mIsConsumed = false;
+}
+
 void
 CameraPreviewMediaStream::AddAudioOutput(void* aKey)
 {

@@ -1,5 +1,13 @@
+/*
+ * Copyright 2013 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
 #include "SkArithmeticMode.h"
 #include "SkColorPriv.h"
+#include "SkString.h"
 #include "SkUnPreMultiply.h"
 
 class SkArithmeticMode_scalar : public SkXfermode {
@@ -12,12 +20,15 @@ public:
     }
 
     virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count,
-                        const SkAlpha aa[]) SK_OVERRIDE;
+                        const SkAlpha aa[]) const SK_OVERRIDE;
 
+    SK_DEVELOPER_TO_STRING()
     SK_DECLARE_UNFLATTENABLE_OBJECT()
 
 private:
     SkScalar fK[4];
+
+    typedef SkXfermode INHERITED;
 };
 
 static int pinToByte(int value) {
@@ -48,7 +59,7 @@ static bool needsUnpremul(int alpha) {
 }
 
 void SkArithmeticMode_scalar::xfer32(SkPMColor dst[], const SkPMColor src[],
-                                     int count, const SkAlpha aaCoverage[]) {
+                                 int count, const SkAlpha aaCoverage[]) const {
     SkScalar k1 = fK[0] / 255;
     SkScalar k2 = fK[1];
     SkScalar k3 = fK[2];
@@ -119,6 +130,17 @@ void SkArithmeticMode_scalar::xfer32(SkPMColor dst[], const SkPMColor src[],
     }
 }
 
+#ifdef SK_DEVELOPER
+void SkArithmeticMode_scalar::toString(SkString* str) const {
+    str->append("SkArithmeticMode_scalar: ");
+    for (int i = 0; i < 4; ++i) {
+        str->appendScalar(fK[i]);
+        if (i < 3) {
+            str->append(" ");
+        }
+    }
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -169,4 +191,3 @@ SkXfermode* SkArithmeticMode::Create(SkScalar k1, SkScalar k2,
     }
     return SkNEW_ARGS(SkArithmeticMode_scalar, (k1, k2, k3, k4));
 }
-

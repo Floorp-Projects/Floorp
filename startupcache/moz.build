@@ -24,3 +24,5 @@ CPP_SOURCES += [
     'StartupCacheUtils.cpp',
 ]
 
+LIBRARY_NAME = 'startupcache'
+

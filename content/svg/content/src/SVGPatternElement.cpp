@@ -80,13 +80,13 @@ SVGPatternElement::PreserveAspectRatio()
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGPatternElement::PatternUnits()
 {
   return mEnumAttributes[PATTERNUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+already_AddRefed<SVGAnimatedEnumeration>
 SVGPatternElement::PatternContentUnits()
 {
   return mEnumAttributes[PATTERNCONTENTUNITS].ToDOMAnimatedEnum(this);
@@ -125,7 +125,7 @@ SVGPatternElement::Height()
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGPatternElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

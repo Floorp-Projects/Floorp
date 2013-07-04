@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLImageElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for HTMLImageElement attributes reflection **/
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "alt",
+})
+
+reflectURL({
+  element: document.createElement("img"),
+  attribute: "src",
+})
+
+todo("srcset" in document.createElement("img"), "Should implement srcset")
+
+// TODO: Bug 880997 - Make crossOrigin a limited enumerated attribute.
+reflectString({
+  element: document.createElement("img"),
+  attribute: "crossOrigin",
+  otherValues: [
+    "", "anonymous", "ANONYMOUS", "  aNOnYmous    ",
+    "use-credentials", "USE-CREDENTIALS", "   UsE-CreDEntIALS      ",
+    "foobar", "FOOBAR", "  fOoBaR  "
+  ]
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "useMap",
+})
+
+reflectBoolean({
+  element: document.createElement("img"),
+  attribute: "isMap",
+})
+
+ok("width" in document.createElement("img"), "img.width is present")
+ok("height" in document.createElement("img"), "img.height is present")
+ok("naturalWidth" in document.createElement("img"), "img.naturalWidth is present")
+ok("naturalHeight" in document.createElement("img"), "img.naturalHeight is present")
+ok("complete" in document.createElement("img"), "img.complete is present")
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "name",
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "align",
+})
+
+reflectUnsignedInt({
+  element: document.createElement("img"),
+  attribute: "hspace",
+})
+
+reflectUnsignedInt({
+  element: document.createElement("img"),
+  attribute: "vspace",
+})
+
+reflectURL({
+  element: document.createElement("img"),
+  attribute: "longDesc",
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "border",
+  extendedAttributes: { TreatNullAs: "EmptyString" },
+})
+
+// TODO: Bug 881000 - Consider reflecting lowsrc as a URL.
+reflectString({
+  element: document.createElement("img"),
+  attribute: "lowsrc",
+})
+
+ok("x" in document.createElement("img"), "img.x is present")
+ok("y" in document.createElement("img"), "img.y is present")
+
+</script>
+</pre>
+</body>
+</html>

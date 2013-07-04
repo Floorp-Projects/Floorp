@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_nursery_h___
-#define jsgc_nursery_h___
+#ifndef gc_Nursery_h
+#define gc_Nursery_h
 
 #ifdef JSGC_GENERATIONAL
 
@@ -48,9 +48,11 @@ class Nursery
     {}
     ~Nursery();
 
-    bool enable();
+    bool init();
+
+    void enable();
     void disable();
-    bool isEnabled() const { return bool(start()); }
+    bool isEnabled() const { return numActiveChunks_ != 0; }
 
     template <typename T>
     JS_ALWAYS_INLINE bool isInside(const T *p) const {
@@ -237,4 +239,4 @@ class Nursery
 } /* namespace js */
 
 #endif /* JSGC_GENERATIONAL */
-#endif /* jsgc_nursery_h___ */
+#endif /* gc_Nursery_h */

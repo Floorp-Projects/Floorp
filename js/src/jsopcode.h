@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsopcode_h___
-#define jsopcode_h___
+#ifndef jsopcode_h
+#define jsopcode_h
 
 /*
  * JS bytecode definitions.
@@ -215,8 +215,8 @@ struct JSCodeSpec {
 };
 
 extern const JSCodeSpec js_CodeSpec[];
-extern unsigned            js_NumCodeSpecs;
-extern const char       *js_CodeName[];
+extern const unsigned   js_NumCodeSpecs;
+extern const char       * const js_CodeName[];
 extern const char       js_EscapeMap[];
 
 /* Silence unreferenced formal parameter warnings */
@@ -232,20 +232,6 @@ extern const char       js_EscapeMap[];
  */
 extern JSString *
 js_QuoteString(JSContext *cx, JSString *str, jschar quote);
-
-#define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(js_CodeSpec[*(pc)].format & JOF_ATOM);                      \
-        (atom) = (script)->getAtom(GET_UINT32_INDEX((pc) + (pcoff)));         \
-    JS_END_MACRO
-
-#define GET_NAME_FROM_BYTECODE(script, pc, pcoff, name)                       \
-    JS_BEGIN_MACRO                                                            \
-        JSAtom *atom_;                                                        \
-        GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom_);                     \
-        JS_ASSERT(js_CodeSpec[*(pc)].format & (JOF_NAME | JOF_PROP));         \
-        (name) = atom_->asPropertyName();                                     \
-    JS_END_MACRO
 
 namespace js {
 
@@ -529,8 +515,7 @@ GetBytecodeInteger(jsbytecode *pc)
       case JSOP_INT8:   return GET_INT8(pc);
       case JSOP_INT32:  return GET_INT32(pc);
       default:
-        JS_NOT_REACHED("Bad op");
-        return 0;
+        MOZ_ASSUME_UNREACHABLE("Bad op");
     }
 }
 
@@ -652,7 +637,7 @@ class PCCounts
 
     static const char *countName(JSOp op, size_t which);
 
-    double *rawCounts() { return counts; }
+    double *rawCounts() const { return counts; }
 
     double& get(size_t which) {
         JS_ASSERT(which < capacity);
@@ -700,4 +685,4 @@ DumpIonScriptCounts(js::Sprinter *sp, ion::IonScriptCounts *ionCounts);
 
 #endif
 
-#endif /* jsopcode_h___ */
+#endif /* jsopcode_h */

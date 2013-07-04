@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
     "resource://gre/modules/commonjs/sdk/core/promise.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ViewHelpers",
+XPCOMUtils.defineLazyModuleGetter(this, "Heritage",
     "resource:///modules/devtools/ViewHelpers.jsm");
 
 let Telemetry = devtools.require("devtools/shared/telemetry");
@@ -42,6 +42,9 @@ const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 const BROWSER_CONSOLE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
+
+// The preference prefix for all of the Browser Console filters.
+const BROWSER_CONSOLE_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
 
 this.EXPORTED_SYMBOLS = ["HUDService"];
 
@@ -205,6 +208,8 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
   if (element.getAttribute("windowtype") != "navigator:browser") {
     this.browserWindow = HUDService.currentContext();
   }
+
+  this.ui = new this.iframeWindow.WebConsoleFrame(this);
 }
 
 WebConsole.prototype = {
@@ -213,6 +218,7 @@ WebConsole.prototype = {
   browserWindow: null,
   hudId: null,
   target: null,
+  ui: null,
   _browserConsole: false,
   _destroyer: null,
 
@@ -252,7 +258,6 @@ WebConsole.prototype = {
    */
   init: function WC_init()
   {
-    this.ui = new this.iframeWindow.WebConsoleFrame(this);
     return this.ui.init().then(() => this);
   },
 
@@ -525,7 +530,7 @@ function BrowserConsole()
   this._telemetry = new Telemetry();
 }
 
-ViewHelpers.create({ constructor: BrowserConsole, proto: WebConsole.prototype },
+BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
 {
   _browserConsole: true,
   _bc_init: null,
@@ -544,6 +549,8 @@ ViewHelpers.create({ constructor: BrowserConsole, proto: WebConsole.prototype },
     if (this._bc_init) {
       return this._bc_init;
     }
+
+    this.ui._filterPrefsPrefix = BROWSER_CONSOLE_FILTER_PREFS_PREFIX;
 
     let window = this.iframeWindow;
 

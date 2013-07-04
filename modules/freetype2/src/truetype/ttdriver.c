@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2012 by                                                 */
+/*  Copyright 1996-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,6 +29,8 @@
 
 #include FT_SERVICE_TRUETYPE_ENGINE_H
 #include FT_SERVICE_TRUETYPE_GLYF_H
+#include FT_SERVICE_PROPERTIES_H
+#include FT_TRUETYPE_DRIVER_H
 
 #include "ttdriver.h"
 #include "ttgload.h"
@@ -50,6 +52,73 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_ttdriver
+
+
+  /*
+   *  PROPERTY SERVICE
+   *
+   */
+  static FT_Error
+  tt_property_set( FT_Module    module,         /* TT_Driver */
+                   const char*  property_name,
+                   const void*  value )
+  {
+    FT_Error   error  = FT_Err_Ok;
+    TT_Driver  driver = (TT_Driver)module;
+
+
+    if ( !ft_strcmp( property_name, "interpreter-version" ) )
+    {
+      FT_UInt*  interpreter_version = (FT_UInt*)value;
+
+
+#ifndef TT_CONFIG_OPTION_SUBPIXEL_HINTING
+      if ( *interpreter_version != TT_INTERPRETER_VERSION_35 )
+        error = FT_ERR( Unimplemented_Feature );
+      else
+#endif
+        driver->interpreter_version = *interpreter_version;
+
+      return error;
+    }
+
+    FT_TRACE0(( "tt_property_set: missing property `%s'\n",
+                property_name ));
+    return FT_THROW( Missing_Property );
+  }
+
+
+  static FT_Error
+  tt_property_get( FT_Module    module,         /* TT_Driver */
+                   const char*  property_name,
+                   const void*  value )
+  {
+    FT_Error   error  = FT_Err_Ok;
+    TT_Driver  driver = (TT_Driver)module;
+
+    FT_UInt  interpreter_version = driver->interpreter_version;
+
+
+    if ( !ft_strcmp( property_name, "interpreter-version" ) )
+    {
+      FT_UInt*  val = (FT_UInt*)value;
+
+
+      *val = interpreter_version;
+
+      return error;
+    }
+
+    FT_TRACE0(( "tt_property_get: missing property `%s'\n",
+                property_name ));
+    return FT_THROW( Missing_Property );
+  }
+
+
+  FT_DEFINE_SERVICE_PROPERTIESREC(
+    tt_service_properties,
+    (FT_Properties_SetFunc)tt_property_set,
+    (FT_Properties_GetFunc)tt_property_get )
 
 
   /*************************************************************************/
@@ -163,7 +232,7 @@
       }
     }
 
-    return TT_Err_Ok;
+    return FT_Err_Ok;
   }
 
   /*************************************************************************/
@@ -187,7 +256,7 @@
   {
     TT_Face   ttface = (TT_Face)size->face;
     TT_Size   ttsize = (TT_Size)size;
-    FT_Error  error  = TT_Err_Ok;
+    FT_Error  error  = FT_Err_Ok;
 
 
     ttsize->strike_index = strike_index;
@@ -221,7 +290,7 @@
                    FT_Size_Request  req )
   {
     TT_Size   ttsize = (TT_Size)size;
-    FT_Error  error  = TT_Err_Ok;
+    FT_Error  error  = FT_Err_Ok;
 
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
@@ -294,13 +363,13 @@
 
 
     if ( !slot )
-      return TT_Err_Invalid_Slot_Handle;
+      return FT_THROW( Invalid_Slot_Handle );
 
     if ( !size )
-      return TT_Err_Invalid_Size_Handle;
+      return FT_THROW( Invalid_Size_Handle );
 
     if ( !face )
-      return TT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     if ( glyph_index >= (FT_UInt)face->num_glyphs &&
@@ -308,7 +377,7 @@
 #else
     if ( glyph_index >= (FT_UInt)face->num_glyphs )
 #endif
-      return TT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( load_flags & FT_LOAD_NO_HINTING )
     {
@@ -353,13 +422,13 @@
   /*************************************************************************/
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICE_MULTIMASTERSREC(tt_service_gx_multi_masters,
+  FT_DEFINE_SERVICE_MULTIMASTERSREC(
+    tt_service_gx_multi_masters,
     (FT_Get_MM_Func)        NULL,
     (FT_Set_MM_Design_Func) NULL,
     (FT_Set_MM_Blend_Func)  TT_Set_MM_Blend,
     (FT_Get_MM_Var_Func)    TT_Get_MM_Var,
-    (FT_Set_Var_Design_Func)TT_Set_Var_Design
-  )
+    (FT_Set_Var_Design_Func)TT_Set_Var_Design )
 #endif
 
   static const FT_Service_TrueTypeEngineRec  tt_service_truetype_engine =
@@ -379,24 +448,27 @@
 #endif /* TT_USE_BYTECODE_INTERPRETER */
   };
 
-  FT_DEFINE_SERVICE_TTGLYFREC(tt_service_truetype_glyf,
-    (TT_Glyf_GetLocationFunc)tt_face_get_location
-  )
+  FT_DEFINE_SERVICE_TTGLYFREC(
+    tt_service_truetype_glyf,
+    (TT_Glyf_GetLocationFunc)tt_face_get_location )
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC4(tt_services,
+  FT_DEFINE_SERVICEDESCREC5(
+    tt_services,
     FT_SERVICE_ID_XF86_NAME,       FT_XF86_FORMAT_TRUETYPE,
-    FT_SERVICE_ID_MULTI_MASTERS,   &FT_TT_SERVICE_GX_MULTI_MASTERS_GET,
+    FT_SERVICE_ID_MULTI_MASTERS,   &TT_SERVICE_GX_MULTI_MASTERS_GET,
     FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,         &FT_TT_SERVICE_TRUETYPE_GLYF_GET
-  )
+    FT_SERVICE_ID_TT_GLYF,         &TT_SERVICE_TRUETYPE_GLYF_GET,
+    FT_SERVICE_ID_PROPERTIES,      &TT_SERVICE_PROPERTIES_GET )
 #else
-  FT_DEFINE_SERVICEDESCREC3(tt_services,
+  FT_DEFINE_SERVICEDESCREC4(
+    tt_services,
     FT_SERVICE_ID_XF86_NAME,       FT_XF86_FORMAT_TRUETYPE,
     FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,         &FT_TT_SERVICE_TRUETYPE_GLYF_GET
-  )
+    FT_SERVICE_ID_TT_GLYF,         &TT_SERVICE_TRUETYPE_GLYF_GET,
+    FT_SERVICE_ID_PROPERTIES,      &TT_SERVICE_PROPERTIES_GET )
 #endif
+
 
   FT_CALLBACK_DEF( FT_Module_Interface )
   tt_get_interface( FT_Module    driver,    /* TT_Driver */
@@ -408,7 +480,7 @@
     SFNT_Service         sfnt;
 
 
-    /* FT_TT_SERVICES_GET derefers `library' in PIC mode */
+    /* TT_SERVICES_GET derefers `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;
@@ -417,7 +489,7 @@
       return NULL;
 #endif
 
-    result = ft_service_list_lookup( FT_TT_SERVICES_GET, tt_interface );
+    result = ft_service_list_lookup( TT_SERVICES_GET, tt_interface );
     if ( result != NULL )
       return result;
 
@@ -445,18 +517,19 @@
   /* The FT_DriverInterface structure is defined in ftdriver.h. */
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
-#define TT_HINTER_FLAG   FT_MODULE_DRIVER_HAS_HINTER
+#define TT_HINTER_FLAG  FT_MODULE_DRIVER_HAS_HINTER
 #else
-#define TT_HINTER_FLAG   0
+#define TT_HINTER_FLAG  0
 #endif
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-#define TT_SIZE_SELECT    tt_size_select
+#define TT_SIZE_SELECT  tt_size_select
 #else
-#define TT_SIZE_SELECT    0
+#define TT_SIZE_SELECT  0
 #endif
 
-  FT_DEFINE_DRIVER( tt_driver_class,
+  FT_DEFINE_DRIVER(
+    tt_driver_class,
 
       FT_MODULE_FONT_DRIVER     |
       FT_MODULE_DRIVER_SCALABLE |
@@ -484,9 +557,6 @@
     tt_size_done,
     tt_slot_init,
     0,                       /* FT_Slot_DoneFunc */
-
-    ft_stub_set_char_sizes,  /* FT_CONFIG_OPTION_OLD_INTERNALS */
-    ft_stub_set_pixel_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
     tt_glyph_load,
 

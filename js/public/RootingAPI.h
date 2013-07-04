@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgc_root_h__
-#define jsgc_root_h__
+#ifndef js_RootingAPI_h
+#define js_RootingAPI_h
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
@@ -102,7 +102,7 @@ class Module;
 class ScriptSourceObject;
 
 template <typename T>
-struct RootMethods {};
+struct GCMethods {};
 
 template <typename T>
 class RootedBase {};
@@ -170,25 +170,44 @@ struct JS_PUBLIC_API(NullPtr)
 };
 
 /*
- * Encapsulated pointer class for use on the heap.
+ * An encapsulated pointer class for heap based GC thing pointers.
  *
- * Implements post barriers for heap-based GC thing pointers outside the engine.
+ * This implements post-barriers for GC thing pointers stored on the heap. It is
+ * designed to be used for all heap-based GC thing pointers outside the JS
+ * engine.
+ *
+ * The template parameter T must be a JS GC thing pointer, masked pointer or
+ * possible pointer, such as a JS::Value or jsid.
+ *
+ * The class must be used to declare data members of heap classes only.
+ * Stack-based GC thing pointers should used Rooted<T>.
+ *
+ * Write barriers are implemented by overloading the assingment operator.
+ * Assiging to a Heap<T> triggers the appropriate calls into the GC to notify it
+ * of the change.
  */
 template <typename T>
 class Heap : public js::HeapBase<T>
 {
   public:
-    Heap() { set(js::RootMethods<T>::initial()); }
-    explicit Heap(T p) { set(p); }
-    explicit Heap(const Heap<T> &p) { set(p.ptr); }
+    Heap() {
+        MOZ_STATIC_ASSERT(sizeof(T) == sizeof(Heap<T>),
+                          "Heap<T> must be binary compatible with T.");
+        init(js::GCMethods<T>::initial());
+    }
+    explicit Heap(T p) { init(p); }
+    explicit Heap(const Heap<T> &p) { init(p.ptr); }
 
     ~Heap() {
-        if (js::RootMethods<T>::needsPostBarrier(ptr))
+        if (js::GCMethods<T>::needsPostBarrier(ptr))
             relocate();
     }
 
-    bool operator!=(const T &other) { return *ptr != other; }
-    bool operator==(const T &other) { return *ptr == other; }
+    bool operator==(const Heap<T> &other) { return ptr == other.ptr; }
+    bool operator!=(const Heap<T> &other) { return ptr != other.ptr; }
+
+    bool operator==(const T &other) const { return ptr == other; }
+    bool operator!=(const T &other) const { return ptr != other; }
 
     operator T() const { return ptr; }
     T operator->() const { return ptr; }
@@ -203,11 +222,11 @@ class Heap : public js::HeapBase<T>
     }
 
     void set(T newPtr) {
-        JS_ASSERT(!js::RootMethods<T>::poisoned(newPtr));
-        if (js::RootMethods<T>::needsPostBarrier(newPtr)) {
+        JS_ASSERT(!js::GCMethods<T>::poisoned(newPtr));
+        if (js::GCMethods<T>::needsPostBarrier(newPtr)) {
             ptr = newPtr;
             post();
-        } else if (js::RootMethods<T>::needsPostBarrier(ptr)) {
+        } else if (js::GCMethods<T>::needsPostBarrier(ptr)) {
             relocate();  /* Called before overwriting ptr. */
             ptr = newPtr;
         } else {
@@ -216,16 +235,23 @@ class Heap : public js::HeapBase<T>
     }
 
   private:
+    void init(T newPtr) {
+        JS_ASSERT(!js::GCMethods<T>::poisoned(newPtr));
+        ptr = newPtr;
+        if (js::GCMethods<T>::needsPostBarrier(ptr))
+            post();
+    }
+
     void post() {
 #ifdef JSGC_GENERATIONAL
-        JS_ASSERT(js::RootMethods<T>::needsPostBarrier(ptr));
-        js::RootMethods<T>::postBarrier(&ptr);
+        JS_ASSERT(js::GCMethods<T>::needsPostBarrier(ptr));
+        js::GCMethods<T>::postBarrier(&ptr);
 #endif
     }
 
     void relocate() {
 #ifdef JSGC_GENERATIONAL
-        js::RootMethods<T>::relocate(&ptr);
+        js::GCMethods<T>::relocate(&ptr);
 #endif
     }
 
@@ -251,6 +277,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     Handle(Handle<S> handle,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
     {
+        MOZ_STATIC_ASSERT(sizeof(Handle<T>) == sizeof(T *),
+                          "Handle must be binary compatible with T*.");
         ptr = reinterpret_cast<const T *>(handle.address());
     }
 
@@ -314,8 +342,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     operator const T&() const { return get(); }
     T operator->() const { return get(); }
 
-    bool operator!=(const T &other) { return *ptr != other; }
-    bool operator==(const T &other) { return *ptr == other; }
+    bool operator!=(const T &other) const { return *ptr != other; }
+    bool operator==(const T &other) const { return *ptr == other; }
 
   private:
     Handle() {}
@@ -350,7 +378,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
     inline MutableHandle(Rooted<T> *root);
 
     void set(T v) {
-        JS_ASSERT(!js::RootMethods<T>::poisoned(v));
+        JS_ASSERT(!js::GCMethods<T>::poisoned(v));
         *ptr = v;
     }
 
@@ -468,7 +496,7 @@ struct RootKind<T *>
 };
 
 template <typename T>
-struct RootMethods<T *>
+struct GCMethods<T *>
 {
     static T *initial() { return NULL; }
     static ThingRootKind kind() { return RootKind<T *>::rootKind(); }
@@ -483,6 +511,12 @@ struct RootMethods<T *>
     }
 #endif
 };
+
+#if defined(DEBUG) && defined(JS_THREADSAFE)
+/* This helper allows us to assert that Rooted<T> is scoped within a request. */
+extern JS_PUBLIC_API(bool)
+IsInRequest(JSContext *cx);
+#endif
 
 } /* namespace js */
 
@@ -500,15 +534,19 @@ template <typename T>
 class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 {
     void init(JSContext *cxArg) {
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+        MOZ_ASSERT(cxArg);
+#ifdef JS_THREADSAFE
+        MOZ_ASSERT(js::IsInRequest(cxArg));
+#endif
+#ifdef JSGC_TRACK_EXACT_ROOTS
         js::ContextFriendFields *cx = js::ContextFriendFields::get(cxArg);
         commonInit(cx->thingGCRooters);
 #endif
     }
 
-    void init(js::PerThreadData *ptArg) {
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        js::PerThreadDataFriendFields *pt = js::PerThreadDataFriendFields::get(ptArg);
+    void init(js::PerThreadDataFriendFields *pt) {
+        MOZ_ASSERT(pt);
+#ifdef JSGC_TRACK_EXACT_ROOTS
         commonInit(pt->thingGCRooters);
 #endif
     }
@@ -516,7 +554,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
   public:
     Rooted(JSContext *cx
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(js::RootMethods<T>::initial())
+      : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(cx);
@@ -532,10 +570,10 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 
     Rooted(js::PerThreadData *pt
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(js::RootMethods<T>::initial())
+      : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
+        init(js::PerThreadDataFriendFields::get(pt));
     }
 
     Rooted(js::PerThreadData *pt, T initial
@@ -543,17 +581,33 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(initial)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
+        init(js::PerThreadDataFriendFields::get(pt));
+    }
+
+    Rooted(JSRuntime *rt
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(js::GCMethods<T>::initial())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(js::PerThreadDataFriendFields::getMainThread(rt));
+    }
+
+    Rooted(JSRuntime *rt, T initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(js::PerThreadDataFriendFields::getMainThread(rt));
     }
 
     ~Rooted() {
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+#ifdef JSGC_TRACK_EXACT_ROOTS
         JS_ASSERT(*stack == reinterpret_cast<Rooted<void*>*>(this));
         *stack = prev;
 #endif
     }
 
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+#ifdef JSGC_TRACK_EXACT_ROOTS
     Rooted<T> *previous() { return prev; }
 #endif
 
@@ -569,7 +623,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     const T &get() const { return ptr; }
 
     T &operator=(T value) {
-        JS_ASSERT(!js::RootMethods<T>::poisoned(value));
+        JS_ASSERT(!js::GCMethods<T>::poisoned(value));
         ptr = value;
         return ptr;
     }
@@ -579,28 +633,39 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         return ptr;
     }
 
-    bool operator!=(const T &other) { return ptr != other; }
-    bool operator==(const T &other) { return ptr == other; }
+    void set(T value) {
+        JS_ASSERT(!js::GCMethods<T>::poisoned(value));
+        ptr = value;
+    }
+
+    bool operator!=(const T &other) const { return ptr != other; }
+    bool operator==(const T &other) const { return ptr == other; }
 
   private:
     void commonInit(Rooted<void*> **thingGCRooters) {
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        js::ThingRootKind kind = js::RootMethods<T>::kind();
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+        scanned = false;
+#endif
+#ifdef JSGC_TRACK_EXACT_ROOTS
+        js::ThingRootKind kind = js::GCMethods<T>::kind();
         this->stack = &thingGCRooters[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
 
-        JS_ASSERT(!js::RootMethods<T>::poisoned(ptr));
+        JS_ASSERT(!js::GCMethods<T>::poisoned(ptr));
 #endif
     }
 
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+#ifdef JSGC_TRACK_EXACT_ROOTS
     Rooted<void*> **stack, *prev;
 #endif
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     /* Has the rooting analysis ever scanned this Rooted's stack location? */
     friend void JS::CheckStackRoots(JSContext*);
+#endif
+
+#ifdef JSGC_ROOT_ANALYSIS
     bool scanned;
 #endif
 
@@ -715,7 +780,7 @@ class FakeRooted : public RootedBase<T>
   public:
     FakeRooted(JSContext *cx
                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(RootMethods<T>::initial())
+      : ptr(GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -735,13 +800,13 @@ class FakeRooted : public RootedBase<T>
     const T &get() const { return ptr; }
 
     T &operator=(T value) {
-        JS_ASSERT(!RootMethods<T>::poisoned(value));
+        JS_ASSERT(!GCMethods<T>::poisoned(value));
         ptr = value;
         return ptr;
     }
 
-    bool operator!=(const T &other) { return ptr != other; }
-    bool operator==(const T &other) { return ptr == other; }
+    bool operator!=(const T &other) const { return ptr != other; }
+    bool operator==(const T &other) const { return ptr == other; }
 
   private:
     T ptr;
@@ -765,7 +830,7 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
     }
 
     void set(T v) {
-        JS_ASSERT(!js::RootMethods<T>::poisoned(v));
+        JS_ASSERT(!js::GCMethods<T>::poisoned(v));
         *ptr = v;
     }
 
@@ -826,13 +891,11 @@ template <typename T> class MaybeRooted<T, NoGC>
     typedef FakeMutableHandle<T> MutableHandleType;
 
     static inline JS::Handle<T> toHandle(HandleType v) {
-        JS_NOT_REACHED("Bad conversion");
-        return JS::Handle<T>::fromMarkedLocation(NULL);
+        MOZ_ASSUME_UNREACHABLE("Bad conversion");
     }
 
     static inline JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
-        JS_NOT_REACHED("Bad conversion");
-        return JS::MutableHandle<T>::fromMarkedLocation(NULL);
+        MOZ_ASSUME_UNREACHABLE("Bad conversion");
     }
 };
 
@@ -860,6 +923,8 @@ template <typename T>
 inline
 MutableHandle<T>::MutableHandle(Rooted<T> *root)
 {
+    MOZ_STATIC_ASSERT(sizeof(MutableHandle<T>) == sizeof(T *),
+                      "MutableHandle must be binary compatible with T*.");
     ptr = root->address();
 }
 
@@ -896,4 +961,4 @@ class CompilerRootNode
 
 }  /* namespace js */
 
-#endif  /* jsgc_root_h___ */
+#endif  /* js_RootingAPI_h */

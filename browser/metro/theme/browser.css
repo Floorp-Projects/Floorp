@@ -5,9 +5,8 @@
 %filter substitution
 %include defines.inc
 
-%define forward_transition_length 150ms
-%define forward_width 22px
-%define forward_spacing 12px
+%define forward_transition_length 200ms
+%define forward_spacing 50px
 
 /* Progress meter ------------------------------------------------- */
 
@@ -52,7 +51,7 @@
   position: fixed;
 }
 
-#tray[visible][expanded]:not([viewstate="snapped"]) {
+#tray[expanded]:not([viewstate="snapped"]) {
   transform: none;
 }
 
@@ -123,7 +122,7 @@
     opacity: 0;
     transform: scale(0, 0);
   }
-  
+
   100% {
     opacity: 1;
     transform: scale(1, 1);
@@ -169,7 +168,7 @@ documenttab[closing] > .documenttab-container {
   font-size: @metro_font_normal@;
   width: @thumbnail_width@;
   padding: 4px @metro_spacing_snormal@ 8px;
-  
+
   background: #000;
   opacity: 0.95;
   color: #fff;
@@ -201,23 +200,6 @@ documenttab[selected] .documenttab-selection {
   display: none;
 }
 
-#page,
-.selection-overlay {
-  -moz-stack-sizing: ignore;
-}
-
-.selection-overlay {
-  pointer-events: none;  
-}
-
-.selection-overlay:-moz-focusring {
-  outline: 0 !important;
-}
-
-.selection-overlay-hidden {
-  display: none;
-}
-
 #tabs-controls {
   margin-top: @metro_spacing_small@;
   -moz-box-align: start;
@@ -230,57 +212,90 @@ documenttab[selected] .documenttab-selection {
 }
 
 #newtab-button {
-  list-style-image: url("images/newtab-default.png");
+  list-style-image: url(chrome://browser/skin/images/newtab-default.png);
+}
+
+/* Selection overlay and monocles ----------------------------------------------- */
+
+#page,
+.selection-overlay {
+  -moz-stack-sizing: ignore;
+}
+
+.selection-overlay {
+  pointer-events: none;
+}
+
+.selection-overlay:-moz-focusring {
+  outline: 0 !important;
+}
+
+.selection-overlay-hidden {
+  display: none;
+}
+
+.selectionhandle {
+  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
+  border: 0px solid gray;
+  padding: 0px;
+  margin-top: -30px;
+  margin-left: -18px;
+  pointer-events: auto;
 }
 
 /* Toolbar ------------------------------------------------------------------ */
 
 #toolbar {
-  background-color: @panel_dark_color@;
-  background-image: @panel_dark_background@;
+  background-color: @panel_light_color@;
 }
 
 #toolbar > #back-button {
-  list-style-image: url(chrome://browser/skin/images/back.png);
-  -moz-image-region: rect(0 96px 48px 48px);
+  list-style-image: url(chrome://browser/skin/images/appbar-back.png);
   position: relative;
   z-index: 1;
-  -moz-margin-end: -@forward_spacing@;
-  min-height: 48px;
-  max-height: 48px;
+  transition: opacity @forward_transition_length@ ease-out;
 }
 
 #toolbar > #back-button[disabled] {
   visibility: visible;
-  -moz-image-region: rect(0 48px 48px 0);
+  opacity: 0.5;
 }
 
-#forward-button {
-  list-style-image: url(chrome://browser/skin/images/forward.png);
-  -moz-image-region: rect(1px 22px 25px 0); /* width: 22px; height: 24px; */
-  -moz-border-end: @metro_border_thick@ solid @urlbar_border_color@;
-  margin: -1.5px 0;
-  padding: 0;
-  -moz-padding-start: calc(@metro_spacing_snormal@ + @forward_spacing@);
-  -moz-padding-end: @forward_spacing@;
-  transition: -moz-margin-start @forward_transition_length@ ease-out,
+#toolbar > #forward-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-forward.png);
+  transition: margin @forward_transition_length@ ease-out,
+              visibility @forward_transition_length@ ease-out,
               opacity @forward_transition_length@ ease-out;
 }
 
-#forward-button[disabled] {
-  -moz-margin-start: calc(-@forward_width@ - @forward_spacing@ * 2);
+#toolbar > #forward-button[disabled] {
+  -moz-margin-start: -@forward_spacing@;
+  visibility: hidden;
   opacity: 0;
   pointer-events: none;
+}
+
+@media (min-resolution: 130dpi) {
+  #toolbar > #back-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-back@1.4x.png);
+  }
+
+  #toolbar > #forward-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-forward@1.4x.png);
+  }
 }
 
 /* URL bar */
 #urlbar-container {
   border: @metro_border_thick@ solid @urlbar_border_color@;
-  margin: 0;
-  -moz-margin-end: @toolbar_horizontal_spacing@;
+  margin: 0 @toolbar_horizontal_spacing@;
   padding: 0;
   background-color: @field_background_color@;
   overflow: hidden;
+}
+
+#urlbar-container[mode="edit"] {
+  border-color: @metro_orange@;
 }
 
 /* Identity widget */
@@ -308,18 +323,29 @@ documenttab[selected] .documenttab-selection {
   padding: 0 !important;
 }
 
+#urlbar-edit > hbox > .textbox-input-box > .textbox-input::-moz-selection {
+  color: white;
+  background-color: @metro_orange@;
+}
+
+#urlbar-edit > hbox > .textbox-input-box > .textbox-input:invalid {
+  /* Hide error glow around the address bar that shows by default
+   * when URLs are made invalid by trmming. */
+  box-shadow: none !important;
+}
+
 /* Combined stop-reload button */
-#tool-reload {
-  list-style-image: url("chrome://browser/skin/images/reload.png");
+#reload-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-reload.png);
 }
 
-#tool-stop {
-  list-style-image: url("chrome://browser/skin/images/stop-hdpi.png");
+#stop-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-stop.png);
 }
 
-#toolbar[mode="loading"] > #tool-reload,
-#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop,
-#toolbar[viewstate="snapped"] > #tool-stop ~ toolbarbutton {
+#toolbar[mode="loading"] > #urlbar-container > #reload-button,
+#toolbar:-moz-any([mode="edit"], [mode="view"]) > #urlbar-container > #stop-button,
+#toolbar[viewstate="snapped"] > #urlbar-container ~ toolbarbutton {
   visibility: collapse;
 }
 
@@ -331,8 +357,7 @@ appbar {
   bottom: 0;
   width: 100%;
   transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@,
-              bottom @metro_animation_duration@ @metro_animation_easing@;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
 
@@ -362,18 +387,94 @@ appbar[visible] {
   transform: none;
 }
 
-appbar > toolbar > toolbarbutton {
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
-  -moz-image-region: rect(0px, 200px, 40px, 160px); /* Gear icon is default. */
+#stack[keyboardVisible] > appbar {
+  /* Slow the bottom up transition since it's impossible to match the system's
+     soft keyboard movement. */
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
 }
-appbar > toolbar > toolbarbutton:hover {
-  -moz-image-region: rect(40px, 200px, 80px, 160px);
+
+#toolbar > .appbar-primary {
+  -moz-image-region: rect(0 40px 40px 0);
 }
-appbar > toolbar > toolbarbutton:active {
-  -moz-image-region: rect(80px, 200px, 120px, 160px);
+
+#toolbar > .appbar-primary:not([checked]):hover:not(:active) {
+  -moz-image-region: rect(0 80px 40px 40px);
+}
+
+#toolbar > .appbar-primary[checked] {
+  -moz-image-region: rect(0 120px 40px 80px);
+}
+
+#toolbar > .appbar-primary[checked]:hover:not(:active) {
+  -moz-image-region: rect(0 160px 40px 120px);
+}
+
+#toolbar > .appbar-primary:active {
+  -moz-image-region: rect(0 120px 40px 80px);
+}
+
+@media (min-resolution: 130dpi) {
+  #toolbar > .appbar-primary > .toolbarbutton-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  #toolbar > .appbar-primary {
+    -moz-image-region: rect(0 56px 56px 0);
+  }
+
+  #toolbar > .appbar-primary:not([checked]):hover:not(:active) {
+    -moz-image-region: rect(0 112px 56px 56px);
+  }
+
+  #toolbar > .appbar-primary[checked] {
+    -moz-image-region: rect(0 224px 56px 168px);
+  }
+
+  #toolbar > .appbar-primary[checked]:hover:not(:active) {
+    -moz-image-region: rect(0 224px 56px 168px);
+  }
+
+  #toolbar > .appbar-primary:active {
+    -moz-image-region: rect(0 168px 56px 112px);
+  }
+}
+
+/* Page-Specific */
+
+#pin-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-pin.png);
+}
+
+#star-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-star.png);
+}
+
+#menu-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-menu.png);
+}
+
+@media (min-resolution: 130dpi) {
+  #pin-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-pin@1.4x.png);
+  }
+
+  #star-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-star@1.4x.png);
+  }
+
+  #menu-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-menu@1.4x.png);
+  }
 }
 
 /* Application-Specific */
+
+#download-button, #contextualactions-tray > toolbarbutton {
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
+}
+
 #download-button {
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
 }
@@ -382,42 +483,6 @@ appbar > toolbar > toolbarbutton:active {
 }
 #download-button:active {
   -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
-}
-
-#plugin-button {
-  -moz-image-region: rect(0px, 80px, 40px, 40px) !important;
-}
-#plugin-button:hover {
-  -moz-image-region: rect(40px, 80px, 80px, 40px) !important;
-}
-#plugin-button:active {
-  -moz-image-region: rect(80px, 80px, 120px, 40px) !important;
-}
-
-/* Page-Specific */
-
-#pin-button {
-  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
-}
-#pin-button:hover {
-  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
-}
-#pin-button:active {
-  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
-}
-#pin-button[checked] {
-  -moz-image-region: rect(0px, 280px, 40px, 240px) !important;
-}
-
-#star-button {
-  -moz-image-region: rect(0px, 360px, 40px, 320px) !important;
-}
-#star-button:hover {
-  -moz-image-region: rect(40px, 360px, 80px, 320px) !important;
-}
-#star-button:active,
-#star-button[checked] {
-  -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
 }
 
 #contextualactions-tray {
@@ -662,8 +727,10 @@ setting[type="radio"] > vbox {
   display: -moz-box;
 }
 
-#start-scrollbox {
-  overflow: hidden;
+#start-scrollbox[input="precise"] {
+  overflow-x: scroll;
+  /* Move scrollbar above toolbar, discount padding added by .meta in #start-container */
+  margin-bottom: calc(@toolbar_height@ - @metro_spacing_normal@);
 }
 
 /* if autocomplete is set, hide both start pages,
@@ -673,13 +740,15 @@ setting[type="radio"] > vbox {
   visibility: collapse;
 }
 
-/*tile content should be on same line in snapped view */
-#snapped-topsites-grid > richgriditem > .richgrid-item-content {
-  -moz-box-orient: horizontal;
+/* startUI sections, grids */
+#start-container .meta-section {
+  /* allot space for at least a single column */
+  min-width: @grid_double_column_width@;
 }
 
-[viewstate="snapped"] .canSnapTiles .richgrid-item-desc {
- -moz-margin-start: 8px;
+#start-topsites {
+  /* allot space for 3 tile columns for the topsites grid */
+  min-width: calc(3 * @grid_double_column_width@);
 }
 
 /* if snapped, hide the fullscreen awesome screen, if viewstate is anything
@@ -702,8 +771,8 @@ setting[type="radio"] > vbox {
 
 #start-container[viewstate="snapped"] .meta-section {
   margin: 0px;
+  min-width: @grid_double_column_width@;
 }
-
 
 /* Browser Content Areas ----------------------------------------------------- */
 
@@ -745,16 +814,23 @@ setting[type="radio"] > vbox {
   -moz-appearance: none;
   margin: 0;
   -moz-margin-end: 40px;
-  list-style-image: url(chrome://browser/skin/images/back.png);
-  -moz-image-region: rect(0 48px 48px 0);
+  list-style-image: url(chrome://browser/skin/images/appbar-back.png);
+  -moz-image-region: rect(0 40px 40px 0);
   padding: 0;
-  min-height: 48px;
-  max-height: 48px;
+  min-height: 40px;
+  max-height: 40px;
   -moz-box-pack: center;
 }
 
+@media (min-resolution: 130dpi) {
+  #panel-close-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-back@1.4x.png);
+    width: 40px;
+  }
+}
+
 #panel-close-button[disabled] {
-  -moz-image-region: rect(0 96px 48px 48px);
+  opacity: .5;
 }
 
 #panel-view-switcher {
@@ -853,6 +929,7 @@ setting[type="radio"] > vbox {
   border-radius: 50%;
   box-shadow: 0 0 0 1px hsla(0,0%,0%,.04),
               0 0 9px 0 hsla(0,0%,0%,.1);
+  transition-property: left, right, transform, background-position, background-color, background-size, border-color, visibility, box-shadow, top;
   transition-duration: 550ms;
   transition-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1);
 }
@@ -925,6 +1002,12 @@ setting[type="radio"] > vbox {
   transform: translateX(-40px) scale(1.2);
 }
 
+#overlay-back[mousedrag],
+#overlay-plus[mousedrag] {
+  transition-property: left, right, transform, background-position, background-color, background-size, border-color, visibility, box-shadow;
+}
+
+
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
   font-size: @font_small@ !important;
@@ -989,15 +1072,33 @@ setting[type="radio"] > vbox {
   min-width: @scroller_minimum@;
 }
 
-/* Text selection handles */
+#browsers[input="imprecise"] browser {
+  overflow: hidden;
+}
 
-#selectionhandle-mark1,
-#selectionhandle-mark2,
-#selectionhandle-mark3 {
-  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
-  border: 0px solid gray;
-  padding: 0px;
-  margin-top: -30px;
-  margin-left: -18px;
-  pointer-events: auto;
+/* :::::: autoscroll popup ::::: */
+
+.autoscroller {
+  height: 28px;
+  width: 28px;
+  border: none;
+  margin: -14px;
+  padding: 0;
+  background-image: url("chrome://browser/skin/images/autoscroll.png");
+  background-color: transparent;
+  position: fixed;
+  visibility: hidden;
+  background-repeat: no-repeat;
+  background-origin: padding-box;
+  background-clip: padding-box;
+  background-position: right top;
+  -moz-appearance: none;
+}
+
+.autoscroller[scrolldir="NS"] {
+  background-position: right center;
+}
+
+.autoscroller[scrolldir="EW"] {
+  background-position: right bottom;
 }

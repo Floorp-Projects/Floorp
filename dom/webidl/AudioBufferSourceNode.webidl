@@ -16,7 +16,6 @@ interface AudioBufferSourceNode : AudioNode {
     attribute AudioBuffer? buffer;
 
     readonly attribute AudioParam playbackRate;
-    readonly attribute AudioParam gain;
 
     attribute boolean loop;
     attribute double loopStart;
@@ -39,12 +38,12 @@ interface AudioBufferSourceNode : AudioNode {
 [PrefControlled]
 partial interface AudioBufferSourceNode {
     // Same as start()
-    [Throws]
+    [Throws,Pref="media.webaudio.legacy.AudioBufferSourceNode"]
     void noteOn(double when);
-    [Throws]
+    [Throws,Pref="media.webaudio.legacy.AudioBufferSourceNode"]
     void noteGrainOn(double when, double grainOffset, double grainDuration);
     
-    [Throws]
+    [Throws,Pref="media.webaudio.legacy.AudioBufferSourceNode"]
     // Same as stop()
     void noteOff(double when);
 };

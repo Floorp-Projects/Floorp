@@ -1826,43 +1826,32 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     int copyOK;
     DWORD dwVersion = GetVersion();
     DWORD dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
-    DWORD dwCopyFlags = 0;
+    DWORD dwCopyFlags = COPY_FILE_ALLOW_DECRYPTED_DESTINATION;
     if (dwMajorVersion > 5) {
         bool path1Remote, path2Remote;
         if (!IsRemoteFilePath(filePath.get(), path1Remote) || 
             !IsRemoteFilePath(destPath.get(), path2Remote) ||
             path1Remote || path2Remote) {
-            dwCopyFlags = COPY_FILE_NO_BUFFERING;
+            dwCopyFlags |= COPY_FILE_NO_BUFFERING;
         }
     }
     
     if (!move)
+    {
         copyOK = ::CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
-    else {
-        DWORD status;
-        if (FileEncryptionStatusW(filePath.get(), &status)
-            && status == FILE_IS_ENCRYPTED)
+    }
+    else
+    {
+        copyOK = ::MoveFileExW(filePath.get(), destPath.get(), MOVEFILE_REPLACE_EXISTING);
+
+        // Check if copying the source file to a different volume,
+        // as this could be an SMBV2 mapped drive.
+        if (!copyOK && GetLastError() == ERROR_NOT_SAME_DEVICE)
         {
-            dwCopyFlags |= COPY_FILE_ALLOW_DECRYPTED_DESTINATION;
             copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
 
             if (copyOK)
                 DeleteFileW(filePath.get());
-        }
-        else
-        {
-            copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
-                                   MOVEFILE_REPLACE_EXISTING);
-            
-            // Check if copying the source file to a different volume,
-            // as this could be an SMBV2 mapped drive.
-            if (!copyOK && GetLastError() == ERROR_NOT_SAME_DEVICE)
-            {
-                copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
-            
-                if (copyOK)
-                    DeleteFile(filePath.get());
-            }
         }
     }
 

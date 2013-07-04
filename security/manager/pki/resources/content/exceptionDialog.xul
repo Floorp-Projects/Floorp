@@ -31,7 +31,7 @@
   
   <hbox>
     <vbox>
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
       <image src="moz-icon://stock/gtk-dialog-warning?size=dialog"/>
 #else
       <image src="chrome://global/skin/icons/warning-large.png"/>

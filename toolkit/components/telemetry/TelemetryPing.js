@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 #endif
 Cu.import("resource://gre/modules/ctypes.jsm");
+Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -585,7 +586,7 @@ TelemetryPing.prototype = {
 
   assemblePing: function assemblePing(payloadObj, reason) {
     let slug = this._uuid;
-    return { slug: slug, reason: reason, payload: JSON.stringify(payloadObj) };
+    return { slug: slug, reason: reason, payload: payloadObj };
   },
 
   getSessionPayloadAndSlug: function getSessionPayloadAndSlug(reason) {
@@ -674,12 +675,22 @@ TelemetryPing.prototype = {
     }
   },
 
-  submissionPath: function submissionPath() {
-    return "/submit/telemetry/" + this._uuid;
+  submissionPath: function submissionPath(ping) {
+    let slug;
+    if (!ping) {
+      slug = this._uuid;
+    } else {
+      let info = ping.payload.info;
+      let pathComponents = [ping.slug, info.reason, info.appName,
+                            info.appVersion, info.appUpdateChannel,
+                            info.appBuildID];
+      slug = pathComponents.join("/");
+    }
+    return "/submit/telemetry/" + slug;
   },
 
   doPing: function doPing(server, ping, onSuccess, onError) {
-    let url = server + this.submissionPath();
+    let url = server + this.submissionPath(ping);
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
     request.mozBackgroundRequest = true;
@@ -701,7 +712,7 @@ TelemetryPing.prototype = {
     request.setRequestHeader("Content-Encoding", "gzip");
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
-    payloadStream.data = this.gzipCompressString(ping.payload);
+    payloadStream.data = this.gzipCompressString(JSON.stringify(ping.payload));
     request.send(payloadStream);
   },
 
@@ -751,6 +762,10 @@ TelemetryPing.prototype = {
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
   setup: function setup() {
+    // Initialize some probes that are kept in their own modules
+    this._thirdPartyCookies = new ThirdPartyCookieProbe();
+    this._thirdPartyCookies.init();
+
     // Record old value and update build ID preference if this is the first
     // run with a new build ID.
     let previousBuildID = undefined;
@@ -824,6 +839,10 @@ TelemetryPing.prototype = {
       let string = NetUtil.readInputStreamToString(stream, stream.available(), { charset: "UTF-8" });
       stream.close();
       let ping = JSON.parse(string);
+      // The ping's payload used to be stringified JSON.  Deal with that.
+      if (typeof(ping.payload) == "string") {
+        ping.payload = JSON.parse(ping.payload);
+      }
       this._pingLoadsCompleted++;
       this._pendingPings.push(ping);
       if (this._doLoadSaveNotifications &&
@@ -988,7 +1007,7 @@ TelemetryPing.prototype = {
    * Remove observers to avoid leaks
    */
   uninstall: function uninstall() {
-    this.detachObservers()
+    this.detachObservers();
     if (this._hasWindowRestoredObserver) {
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       this._hasWindowRestoredObserver = false;

@@ -78,10 +78,6 @@ GDBINIT_FILES := $(topsrcdir)/.gdbinit
 GDBINIT_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += GDBINIT
 
-PYTHON_UNIT_TESTS := \
-  tests/test.py \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/

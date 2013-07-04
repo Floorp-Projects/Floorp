@@ -6,6 +6,7 @@
 #ifndef nsBaseHashtable_h__
 #define nsBaseHashtable_h__
 
+#include "mozilla/MemoryReporting.h"
 #include "nsTHashtable.h"
 #include "prlock.h"
 #include "nsDebug.h"
@@ -240,7 +241,7 @@ public:
   typedef size_t
     (* SizeOfEntryExcludingThisFun)(KeyType           aKey,
                                     const DataType    &aData,
-                                    nsMallocSizeOfFun mallocSizeOf,
+                                    mozilla::MallocSizeOf mallocSizeOf,
                                     void*             userArg);
 
   /**
@@ -256,7 +257,7 @@ public:
    * @return   the summed size of the entries, the table, and the table's storage
    */
   size_t SizeOfIncludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nullptr)
+                             mozilla::MallocSizeOf mallocSizeOf, void *userArg = nullptr)
   {
     return mallocSizeOf(this) + this->SizeOfExcludingThis(sizeOfEntryExcludingThis,
                                                           mallocSizeOf, userArg);
@@ -275,7 +276,7 @@ public:
    * @return    the summed size of all the entries
    */
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nullptr) const
+                             mozilla::MallocSizeOf mallocSizeOf, void *userArg = nullptr) const
   {
     if (!IsInitialized()) {
       return 0;
@@ -323,7 +324,7 @@ protected:
   };
   
   static size_t s_SizeOfStub(PLDHashEntryHdr *entry,
-                             nsMallocSizeOfFun mallocSizeOf,
+                             mozilla::MallocSizeOf mallocSizeOf,
                              void *arg);
 };
 
@@ -457,7 +458,7 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::s_EnumStub
 template<class KeyClass,class DataType,class UserDataType>
 size_t
 nsBaseHashtable<KeyClass,DataType,UserDataType>::s_SizeOfStub
-  (PLDHashEntryHdr *hdr, nsMallocSizeOfFun mallocSizeOf, void *arg)
+  (PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *arg)
 {
   EntryType* ent = static_cast<EntryType*>(hdr);
   s_SizeOfArgs* eargs = static_cast<s_SizeOfArgs*>(arg);

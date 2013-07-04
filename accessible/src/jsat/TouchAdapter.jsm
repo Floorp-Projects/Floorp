@@ -54,15 +54,7 @@ this.TouchAdapter = {
 
     let target = Utils.win;
 
-    if (Utils.MozBuildApp == 'b2g') {
-      this.glass = Utils.win.document.
-        createElementNS('http://www.w3.org/1999/xhtml', 'div');
-      this.glass.id = 'accessfu-glass';
-      Utils.win.document.documentElement.appendChild(this.glass);
-      target = this.glass;
-    }
-
-    for each (let eventType in this.eventsOfInterest) {
+    for (let eventType in this.eventsOfInterest) {
       target.addEventListener(eventType, this, true, true);
     }
 
@@ -73,27 +65,56 @@ this.TouchAdapter = {
 
     let target = Utils.win;
 
-    if (Utils.MozBuildApp == 'b2g') {
-      target = this.glass;
-      this.glass.parentNode.removeChild(this.glass);
-    }
-
-    for each (let eventType in this.eventsOfInterest) {
+    for (let eventType in this.eventsOfInterest) {
       target.removeEventListener(eventType, this, true, true);
     }
   },
 
+  /*
+   * A mapping of events we should be intercepting. Entries with a value of
+   * |true| are used for compiling high-level gesture events. Entries with
+   * a value of |false| are cancelled and do not propogate to content.
+   */
   get eventsOfInterest() {
     delete this.eventsOfInterest;
 
-    if ('ontouchstart' in Utils.win) {
-      this.eventsOfInterest = ['touchstart', 'touchmove', 'touchend'];
-      if (Utils.MozBuildApp == 'mobile/android') {
-        this.eventsOfInterest.push.apply(
-          this.eventsOfInterest, ['mouseenter', 'mousemove', 'mouseleave']);
-      }
-    } else {
-      this.eventsOfInterest = ['mousedown', 'mousemove', 'mouseup', 'click'];
+    switch (Utils.widgetToolkit) {
+      case 'gonk':
+        this.eventsOfInterest = {
+          'touchstart' : true,
+          'touchmove' : true,
+          'touchend' : true,
+          'mousedown' : false,
+          'mousemove' : false,
+          'mouseup': false,
+          'click': false };
+        break;
+
+      case 'android':
+        this.eventsOfInterest = {
+          'touchstart' : true,
+          'touchmove' : true,
+          'touchend' : true,
+          'mousemove' : true,
+          'mouseenter' : true,
+          'mouseleave' : true,
+          'mousedown' : false,
+          'mouseup': false,
+          'click': false };
+        break;
+
+      default:
+        this.eventsOfInterest = {
+          'mousemove' : true,
+          'mousedown' : true,
+          'mouseup': true,
+          'click': false };
+        if ('ontouchstart' in Utils.win) {
+          for (let eventType of ['touchstart', 'touchmove', 'touchend']) {
+            this.eventsOfInterest[eventType] = true;
+          }
+        }
+        break;
     }
 
     return this.eventsOfInterest;
@@ -107,6 +128,12 @@ this.TouchAdapter = {
     }
 
     if (aEvent.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN) {
+      return;
+    }
+
+    if (!this.eventsOfInterest[aEvent.type]) {
+      aEvent.preventDefault();
+      aEvent.stopImmediatePropagation();
       return;
     }
 

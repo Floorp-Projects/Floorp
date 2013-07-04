@@ -1334,13 +1334,13 @@ nsSVGUtils::GetFirstNonAAncestorFrame(nsIFrame* aStartFrame)
 gfxMatrix
 nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
 {
+  if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+    aFrame = aFrame->GetParent();
+  }
+
   if (aFrame->StyleSVGReset()->mVectorEffect ==
       NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
  
-    if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
-      aFrame = aFrame->GetParent();
-    }
-
     nsIContent *content = aFrame->GetContent();
     NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
 
@@ -1635,8 +1635,9 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextObjectPaint *aObjectPaint)
 }
 
 void
-nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
-                                     gfxTextObjectPaint *aObjectPaint)
+nsSVGUtils::SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
+                                         gfxContext *aContext,
+                                         gfxTextObjectPaint *aObjectPaint)
 {
   float width = GetStrokeWidth(aFrame, aObjectPaint);
   if (width <= 0)
@@ -1732,22 +1733,18 @@ GetStrokeDashData(nsIFrame* aFrame,
     *aDashOffset = aObjectPaint->GetStrokeDashOffset();
   } else {
     *aDashOffset = nsSVGUtils::CoordToFloat(presContext,
-                                           ctx,
-                                           style->mStrokeDashoffset);
+                                            ctx,
+                                            style->mStrokeDashoffset);
   }
   
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
-    content = content->GetParent();
-  }
-
   return (totalLength > 0.0);
 }
 
 void
-nsSVGUtils::SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext* aContext,
-                                        gfxTextObjectPaint *aObjectPaint)
+nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
+                                     gfxTextObjectPaint *aObjectPaint)
 {
-  SetupCairoStrokeGeometry(aFrame, aContext, aObjectPaint);
+  SetupCairoStrokeBBoxGeometry(aFrame, aContext, aObjectPaint);
 
   AutoFallibleTArray<gfxFloat, 10> dashes;
   gfxFloat dashOffset;
@@ -1822,7 +1819,7 @@ nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
   if (!HasStroke(aFrame, aObjectPaint)) {
     return false;
   }
-  SetupCairoStrokeHitGeometry(aFrame, aContext, aObjectPaint);
+  SetupCairoStrokeGeometry(aFrame, aContext, aObjectPaint);
 
   return SetupCairoStrokePaint(aFrame, aContext, aObjectPaint);
 }

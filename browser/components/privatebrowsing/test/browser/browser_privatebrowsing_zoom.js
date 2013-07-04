@@ -25,29 +25,28 @@ function test() {
           let mozillaZoom = aWindow.ZoomManager.zoom;
 
           // change the zoom on the mozilla page
-          aWindow.FullZoom.enlarge(function () {
-            // make sure the zoom level has been changed
-            isnot(aWindow.ZoomManager.zoom, mozillaZoom, "Zoom level can be changed");
-            mozillaZoom = aWindow.ZoomManager.zoom;
+          aWindow.FullZoom.enlarge();
+          // make sure the zoom level has been changed
+          isnot(aWindow.ZoomManager.zoom, mozillaZoom, "Zoom level can be changed");
+          mozillaZoom = aWindow.ZoomManager.zoom;
 
-            // switch to about: tab
-            aWindow.gBrowser.selectedTab = tabAbout;
+          // switch to about: tab
+          aWindow.gBrowser.selectedTab = tabAbout;
 
-            // switch back to mozilla tab
-            aWindow.gBrowser.selectedTab = tabMozilla;
+          // switch back to mozilla tab
+          aWindow.gBrowser.selectedTab = tabMozilla;
 
-            // make sure the zoom level has not changed
-            is(aWindow.ZoomManager.zoom, mozillaZoom,
-              "Entering private browsing should not reset the zoom on a tab");
+          // make sure the zoom level has not changed
+          is(aWindow.ZoomManager.zoom, mozillaZoom,
+            "Entering private browsing should not reset the zoom on a tab");
 
-            // cleanup
-            aWindow.FullZoom.reset(function () {
-              aWindow.gBrowser.removeTab(tabMozilla);
-              aWindow.gBrowser.removeTab(tabAbout);
-              aWindow.close();
-              aCallback();
-            });
-          });
+          // cleanup
+          aWindow.FullZoom.reset();
+          aWindow.gBrowser.removeTab(tabMozilla);
+          aWindow.gBrowser.removeTab(tabAbout);
+          aWindow.close();
+          aCallback();
+
         }, true);
         mozillaBrowser.contentWindow.location = "about:mozilla";
       }, true);

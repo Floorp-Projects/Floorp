@@ -23,6 +23,8 @@ char*
 PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
 
 void HandshakeCallback(PRFileDesc *fd, void *client_data);
+SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
+                                PRBool *canFalseStart);
 
 SECStatus RegisterMyOCSPAIAInfoCallback();
 SECStatus UnregisterMyOCSPAIAInfoCallback();

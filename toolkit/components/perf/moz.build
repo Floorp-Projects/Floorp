@@ -10,3 +10,8 @@ CPP_SOURCES += [
     'PerfMeasurement.cpp',
 ]
 
+LIBRARY_NAME = 'jsperf'
+
+EXTRA_JS_MODULES += [
+    'PerfMeasurement.jsm',
+]

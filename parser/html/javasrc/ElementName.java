@@ -468,7 +468,7 @@ public final class ElementName
     public static final ElementName EXP = new ElementName("exp", "exp", TreeBuilder.OTHER);
     public static final ElementName GCD = new ElementName("gcd", "gcd", TreeBuilder.OTHER);
     public static final ElementName GEQ = new ElementName("geq", "geq", TreeBuilder.OTHER);
-    public static final ElementName IMG = new ElementName("img", "img", TreeBuilder.EMBED_OR_IMG | SPECIAL);
+    public static final ElementName IMG = new ElementName("img", "img", TreeBuilder.IMG | SPECIAL);
     public static final ElementName INS = new ElementName("ins", "ins", TreeBuilder.OTHER);
     public static final ElementName INT = new ElementName("int", "int", TreeBuilder.OTHER);
     public static final ElementName KBD = new ElementName("kbd", "kbd", TreeBuilder.OTHER);
@@ -559,7 +559,7 @@ public final class ElementName
     public static final ElementName ASIDE = new ElementName("aside", "aside", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
     public static final ElementName AUDIO = new ElementName("audio", "audio", TreeBuilder.OTHER);
     public static final ElementName APPLY = new ElementName("apply", "apply", TreeBuilder.OTHER);
-    public static final ElementName EMBED = new ElementName("embed", "embed", TreeBuilder.EMBED_OR_IMG | SPECIAL);
+    public static final ElementName EMBED = new ElementName("embed", "embed", TreeBuilder.EMBED | SPECIAL);
     public static final ElementName FRAME = new ElementName("frame", "frame", TreeBuilder.FRAME | SPECIAL);
     public static final ElementName FALSE = new ElementName("false", "false", TreeBuilder.OTHER);
     public static final ElementName FLOOR = new ElementName("floor", "floor", TreeBuilder.OTHER);

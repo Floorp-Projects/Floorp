@@ -4,6 +4,48 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+/* Developer toolbar */
+
+#developer-toolbar {
+  padding: 0;
+  min-height: 32px;
+  background-image: url(devtools/background-noise-toolbar.png), linear-gradient(#303840, #2d3640);
+  border-top: 1px solid #060a0d;
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(206,37%,4%,.1) inset;
+}
+
+.developer-toolbar-button {
+  -moz-appearance: none;
+  border: none;
+  background: transparent;
+  margin: 0;
+  padding: 0 10px;
+  width: 32px;
+}
+
+.developer-toolbar-button > image {
+  margin: auto 10px;
+}
+
+#developer-toolbar-toolbox-button {
+  list-style-image: url("chrome://browser/skin/devtools/toggle-tools.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#developer-toolbar-toolbox-button:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#developer-toolbar-toolbox-button:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+#developer-toolbar-toolbox-button[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+/* GCLI */
+
 html|*#gcli-tooltip-frame,
 html|*#gcli-output-frame {
   padding: 0;
@@ -16,32 +58,39 @@ html|*#gcli-output-frame {
   border-width: 0;
   background-color: transparent;
   -moz-appearance: none;
-  margin-bottom: -2px;
 }
 
 .gclitoolbar-input-node,
-.gclitoolbar-complete-node,
-.gclitoolbar-prompt {
+.gclitoolbar-complete-node {
   margin: 0;
-  -moz-margin-end: 5px;
   -moz-box-align: center;
   padding-top: 0;
   padding-bottom: 0;
-  padding-right: 4px;
-  border: 1px solid transparent;
-  border-radius: 3px;
+  padding-right: 8px;
   text-shadow: none;
+  box-shadow: none;
+  border-width: 0;
+  background-color: transparent;
 }
 
 .gclitoolbar-input-node {
-  padding-left: 20px;
-  background-color: transparent;
   -moz-appearance: none;
-  border-color: hsl(210,24%,10%);
   color: hsl(210,30%,85%);
-  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
-  box-shadow: inset 0 1px 0 hsla(211,68%,6%,.05),
-              0 0 0 1px hsla(210,40%,83%,.1);
+  padding-left: 20px;
+  background-color: #242b33;
+  background-repeat: no-repeat;
+  background-position: 4px center;
+  box-shadow: 0 1px 1px hsla(206,37%,4%,.2) inset,
+              1px 0 0 hsla(206,37%,4%,.2) inset,
+              -1px 0 0 hsla(206,37%,4%,.2) inset;
+  line-height: 32px;
+  outline-style: none;
+  background-image: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 16, 16, 0);
+}
+
+.gclitoolbar-input-node[focused="true"] {
+  background-image: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 32, 16, 16);
+  background-color: #232e38;
 }
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
@@ -54,18 +103,10 @@ html|*#gcli-output-frame {
   padding-left: 21px;
   background-color: transparent;
   color: transparent;
+  z-index: 100;
+  pointer-events: none;
 }
 
-.gclitoolbar-prompt {
-  padding-left: 4px;
-  padding-bottom: 2px;
-  font-size: 150%;
-  font-weight: bold;
-  color: hsl(210,30%,85%);
-  background-color: hsl(210,24%,16%);
-}
-
-.gclitoolbar-prompt-label,
 .gcli-in-incomplete,
 .gcli-in-error,
 .gcli-in-ontab,

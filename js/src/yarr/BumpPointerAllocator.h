@@ -27,10 +27,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef BumpPointerAllocator_h
-#define BumpPointerAllocator_h
+#ifndef yarr_BumpPointerAllocator_h
+#define yarr_BumpPointerAllocator_h
 
-#include "PageAllocation.h"
+#include "yarr/PageAllocation.h"
 
 namespace WTF {
 
@@ -274,4 +274,4 @@ private:
 
 using WTF::BumpPointerAllocator;
 
-#endif // BumpPointerAllocator_h
+#endif /* yarr_BumpPointerAllocator_h */

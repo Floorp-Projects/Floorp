@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'minidump_generator.cc',
 ]
 
+LIBRARY_NAME = 'exception_handler_s'
+

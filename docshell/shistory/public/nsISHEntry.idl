@@ -29,7 +29,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(6443FD72-A50F-4B8B-BB82-BB1FA04CB15D)]
+[scriptable, uuid(162EA0EB-E577-4B9A-AF9D-A94E8350B029)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -237,6 +237,20 @@ interface nsISHEntry : nsIHistoryEntry
      * it's preceeded by a call to adoptBFCacheEntry(aEntry).
      */
     boolean sharesDocumentWith(in nsISHEntry aEntry);
+
+    /**
+     * True if this SHEntry corresponds to a document created by a srcdoc iframe.
+     * Set when a value is assigned to  srcdocData.
+     */
+    readonly attribute boolean isSrcdocEntry;
+
+    /**
+     * Contents of the srcdoc attribute in a srcdoc iframe to be loaded instead
+     * of the URI.  Similar to a Data URI, this information is needed to
+     * recreate the document at a later stage.
+     * Setting this sets isSrcdocEntry to true
+     */
+    attribute AString srcdocData;
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]

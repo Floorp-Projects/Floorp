@@ -9,14 +9,13 @@
 #include "jscompartment.h"
 #include "jsnum.h"
 
-#include "CodeGenerator-arm.h"
+#include "ion/arm/CodeGenerator-arm.h"
 #include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonFrames.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/MoveEmitter.h"
 #include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Shape.h"
 
@@ -29,8 +28,7 @@ using namespace js::ion;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
-  : CodeGeneratorShared(gen, graph, masm),
-    deoptLabel_(NULL)
+  : CodeGeneratorShared(gen, graph, masm)
 {
 }
 
@@ -47,17 +45,13 @@ CodeGeneratorARM::generatePrologue()
         masm.checkStackAlignment();
     }
 
-    // Allocate returnLabel_ on the heap, so we don't run its destructor and
-    // assert-not-bound in debug mode on compilation failure.
-    returnLabel_ = new HeapLabel();
-
     return true;
 }
 
 bool
 CodeGeneratorARM::generateEpilogue()
 {
-    masm.bind(returnLabel_); 
+    masm.bind(&returnLabel_); 
     if (gen->compilingAsmJS()) {
         // Pop the stack we allocated at the start of the function.
         masm.freeStack(frameDepth_);
@@ -153,9 +147,9 @@ CodeGeneratorARM::generateOutOfLineCode()
     if (!CodeGeneratorShared::generateOutOfLineCode())
         return false;
 
-    if (deoptLabel_) {
+    if (deoptLabel_.used()) {
         // All non-table-based bailouts will go here.
-        masm.bind(deoptLabel_);
+        masm.bind(&deoptLabel_);
 
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
@@ -216,7 +210,7 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
       case SequentialExecution:
         break;
       default:
-        JS_NOT_REACHED("No such execution mode");
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     if (!encode(snapshot))
@@ -265,12 +259,10 @@ CodeGeneratorARM::bailout(LSnapshot *snapshot)
 bool
 CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout *ool)
 {
-    if (!deoptLabel_)
-        deoptLabel_ = new HeapLabel();
     masm.ma_mov(Imm32(ool->snapshot()->snapshotOffset()), ScratchRegister);
     masm.ma_push(ScratchRegister);
     masm.ma_push(ScratchRegister);
-    masm.ma_b(deoptLabel_);
+    masm.ma_b(&deoptLabel_);
     return true;
 }
 
@@ -491,21 +483,10 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
     return true;
 }
 
-extern "C" {
-    extern int __aeabi_idivmod(int,int);
-    extern int __aeabi_uidivmod(int,int);
-}
-
 bool
-CodeGeneratorARM::visitDivI(LDivI *ins)
+CodeGeneratorARM::divICommon(MDiv *mir, Register lhs, Register rhs, Register output,
+                             LSnapshot *snapshot, Label &done)
 {
-    // Extract the registers from this instruction
-    Register lhs = ToRegister(ins->lhs());
-    Register rhs = ToRegister(ins->rhs());
-    MDiv *mir = ins->mir();
-
-    Label done;
-
     if (mir->canBeNegativeOverflow()) {
         // Handle INT32_MIN / -1;
         // The integer division will give INT32_MIN, but we want -(double)INT32_MIN.
@@ -515,12 +496,12 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
             // (-INT32_MIN)|0 = INT32_MIN
             Label skip;
             masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(INT32_MIN), r0);
+            masm.ma_mov(Imm32(INT32_MIN), output);
             masm.ma_b(&done);
             masm.bind(&skip);
         } else {
             JS_ASSERT(mir->fallible());
-            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            if (!bailoutIf(Assembler::Equal, snapshot))
                 return false;
         }
     }
@@ -545,15 +526,67 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
             // Infinity|0 == 0 and -0|0 == 0
             Label skip;
             masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(0), r0);
+            masm.ma_mov(Imm32(0), output);
             masm.ma_b(&done);
             masm.bind(&skip);
         } else {
             JS_ASSERT(mir->fallible());
-            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            if (!bailoutIf(Assembler::Equal, snapshot))
                 return false;
         }
     }
+
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitDivI(LDivI *ins)
+{
+    // Extract the registers from this instruction
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register temp = ToRegister(ins->getTemp(0));
+    Register output = ToRegister(ins->output());
+    MDiv *mir = ins->mir();
+
+    Label done;
+    if (!divICommon(mir, lhs, rhs, output, ins->snapshot(), done))
+        return false;
+
+    if (mir->isTruncated()) {
+        masm.ma_sdiv(lhs, rhs, output);
+    } else {
+        masm.ma_sdiv(lhs, rhs, ScratchRegister);
+        masm.ma_mul(ScratchRegister, rhs, temp);
+        masm.ma_cmp(lhs, temp);
+        if (!bailoutIf(Assembler::NotEqual, ins->snapshot()))
+            return false;
+        masm.ma_mov(ScratchRegister, output);
+    }
+
+    masm.bind(&done);
+
+    return true;
+}
+
+extern "C" {
+    extern int __aeabi_idivmod(int,int);
+    extern int __aeabi_uidivmod(int,int);
+}
+
+bool
+CodeGeneratorARM::visitSoftDivI(LSoftDivI *ins)
+{
+    // Extract the registers from this instruction
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+    MDiv *mir = ins->mir();
+
+    Label done;
+    if (!divICommon(mir, lhs, rhs, output, ins->snapshot(), done))
+        return false;
+
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
@@ -763,7 +796,7 @@ CodeGeneratorARM::visitBitOpI(LBitOpI *ins)
             masm.ma_and(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
         break;
       default:
-        JS_NOT_REACHED("unexpected binary opcode");
+        MOZ_ASSUME_UNREACHABLE("unexpected binary opcode");
     }
 
     return true;
@@ -805,7 +838,7 @@ CodeGeneratorARM::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            JS_NOT_REACHED("Unexpected shift op");
+            MOZ_ASSUME_UNREACHABLE("Unexpected shift op");
         }
     } else {
         // The shift amounts should be AND'ed into the 0-31 range since arm
@@ -830,7 +863,7 @@ CodeGeneratorARM::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            JS_NOT_REACHED("Unexpected shift op");
+            MOZ_ASSUME_UNREACHABLE("Unexpected shift op");
         }
     }
 
@@ -902,43 +935,6 @@ CodeGeneratorARM::toMoveOperand(const LAllocation *a) const
         offset -= AlignmentMidPrologue;
 
     return MoveOperand(StackPointer, offset);
-}
-
-bool
-CodeGeneratorARM::visitMoveGroup(LMoveGroup *group)
-{
-    if (!group->numMoves())
-        return true;
-
-    MoveResolver &resolver = masm.moveResolver();
-
-    for (size_t i = 0; i < group->numMoves(); i++) {
-        const LMove &move = group->getMove(i);
-
-        const LAllocation *from = move.from();
-        const LAllocation *to = move.to();
-
-        // No bogus moves.
-        JS_ASSERT(*from != *to);
-        JS_ASSERT(!from->isConstant());
-        JS_ASSERT(from->isDouble() == to->isDouble());
-
-        MoveResolver::Move::Kind kind = from->isDouble()
-                                        ? MoveResolver::Move::DOUBLE
-                                        : MoveResolver::Move::GENERAL;
-
-        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
-            return false;
-    }
-
-    if (!resolver.resolve())
-        return false;
-
-    MoveEmitter emitter(masm);
-    emitter.emit(resolver);
-    emitter.finish();
-
-    return true;
 }
 
 class js::ion::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorARM>
@@ -1066,8 +1062,7 @@ CodeGeneratorARM::visitMathD(LMathD *math)
         masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
         break;
       default:
-        JS_NOT_REACHED("unexpected opcode");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
     }
     return true;
 }
@@ -1700,15 +1695,13 @@ getBase(U *mir)
 bool
 CodeGeneratorARM::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
-    JS_NOT_REACHED("NYI");
-    return true;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
 CodeGeneratorARM::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
 {
-    JS_NOT_REACHED("NYI");
-    return true;
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
@@ -1730,7 +1723,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         isFloat = true;
         size = 32;
         break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
     Register index = ToRegister(ins->ptr());
     BufferOffset bo = masm.ma_BoundsCheck(index);
@@ -1770,7 +1763,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         isFloat = true;
         size = 32;
         break;
-      default: JS_NOT_REACHED("unexpected array type");
+      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
     Register index = ToRegister(ins->ptr());
 

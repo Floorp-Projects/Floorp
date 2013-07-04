@@ -4068,6 +4068,49 @@ Version 1.5.15rc01 [March 21, 2013]
   No changes.
 
 Version 1.5.15 [March 28, 2013]
+  No changes.
+
+Version 1.5.16beta01 [April 25, 2013]
+  Corrected a misplaced closing bracket in contrib/libtests/pngvalid.c
+    (Flavio Medeiros).
+  Revised stack marking in arm/filter_neon.S and configure.ac.
+  Ensure that NEON filter stuff is completely disabled when switched 'off'.
+    Previously the ARM NEON specific files were still built if the option
+    was switched 'off' as opposed to being explicitly disabled.
+  Avoid a compiler warning about unused png_ptr in translate_gamma_flags()
+
+Version 1.5.16beta02 [April 26, 2013]
+  Revise pngtest.c to skip tests of unsupported features.
+  Regenerated configure files.
+
+Version 1.5.16beta03 [April 26, 2013]
+  Test for 'arm*' not just 'arm' in the host_cpu configure variable.
+
+Version 1.5.16beta04 [May 1, 2013]
+  Expanded manual paragraph about writing private chunks, particularly
+    the need to call png_set_keep_unknown_chunks() when writing them.
+
+Version 1.5.16beta05 [May 9, 2013]
+  Updated contrib/pngminus/pnm2png.c (Paul Stewart):
+    Check for EOF
+    Ignore "#" delimited comments in input file to pnm2png.c.
+    Fixed whitespace handling
+    Added a call to png_set_packing()
+    Initialize dimension values so if sscanf fails at least we have known
+      invalid values.
+
+Version 1.5.16beta06 [May 12, 2013]
+  Allow contrib/pnminus/pnm2png.c to compile without WRITE_INVERT and WRITE_PACK
+    supported (writes error message that it can't read P1 or P4 PBM files).
+  Revised contrib/pngminim/*/makefile to separate CPPFLAGS and CFLAGS, and
+    to generate pnglibconf.h with the right zlib header files.
+  Ported contrib/pngminus/pnm2png.c changes back from libpng-1.6.3beta06,
+    to use unsigned long, not png_uint_32 arguments to sscanf().
+
+Version 1.5.16rc01 [May 16, 2013]
+  No changes.
+
+Version 1.5.16 [May 23, 2013]
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

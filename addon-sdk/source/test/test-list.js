@@ -21,6 +21,12 @@ exports.testList = function(test) {
     test.assertEqual(++count, 1, 'count is correct');
   }
 
+  count = 0;
+  for (let ele of list) {
+    test.assertEqual(ele, 1, 'ele is correct');
+    test.assertEqual(++count, 1, 'count is correct');
+  }
+
   removeListItem(list, 1);
   test.assertEqual(list.length, 0, 'remove worked');
 };
@@ -34,9 +40,16 @@ exports.testImplementsList = function(test) {
   });
   let list2 = List2();
   let count = 0;
+
   for each (let ele in list2) {
     test.assertEqual(ele, count++, 'ele is correct');
   }
+
+  count = 0;
+  for (let ele of list2) {
+    test.assertEqual(ele, count++, 'ele is correct');
+  }
+
   addListItem(list2, 3);
   test.assertEqual(list2.length, 4, '3 was added');
   test.assertEqual(list2[list2.length-1], 3, '3 was added');

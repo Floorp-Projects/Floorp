@@ -31,7 +31,6 @@
 #include "nsNSSDialogHelper.h"
 #include "nsIWindowWatcher.h"
 #include "nsIX509CertValidity.h"
-#include "nsICRLInfo.h"
 
 #include "nsEmbedCID.h"
 #include "nsIPromptService.h"
@@ -137,27 +136,6 @@ nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
     rv = block->GetString(2, _password);
   }
   return rv;
-}
-
-NS_IMETHODIMP 
-nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIPKIParamBlock> block =
-           do_CreateInstance(NS_PKIPARAMBLOCK_CONTRACTID,&rv);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  rv = block->SetISupportAtIndex(1, crl);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = nsNSSDialogHelper::openDialog(nullptr,
-                             "chrome://pippki/content/crlImportDialog.xul",
-                             block,
-                             false);
-  return NS_OK;
 }
 
 NS_IMETHODIMP 

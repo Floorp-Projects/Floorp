@@ -592,6 +592,7 @@
   ERROR(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN,                FAILURE(51)),
   ERROR(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN,           FAILURE(52)),
   ERROR(NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL,   FAILURE(53)),
+  ERROR(NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,         FAILURE(54)),
   /* any new errors here should have an associated entry added in xpc.msg */
 
   ERROR(NS_SUCCESS_I_DID_SOMETHING,      SUCCESS(1)),
@@ -599,13 +600,6 @@
    * filename begins with chrome://global/) shoudl return this from their
    * scriptable helper's PreCreate hook. */
   ERROR(NS_SUCCESS_CHROME_ACCESS_ONLY,   SUCCESS(2)),
-  /* Classes that want slim wrappers should return
-   * NS_SUCCESS_ALLOW_SLIM_WRAPPERS from their scriptable helper's PreCreate
-   * hook. They must also force a parent for their wrapper (from the PreCreate
-   * hook), they must implement nsWrapperCache and their scriptable helper must
-   * implement nsXPCClassInfo and must return DONT_ASK_INSTANCE_FOR_SCRIPTABLE
-   * in the flags. */
-  ERROR(NS_SUCCESS_ALLOW_SLIM_WRAPPERS,  SUCCESS(3)),
 #undef MODULE
 
 

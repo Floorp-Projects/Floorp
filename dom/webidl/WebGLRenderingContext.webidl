@@ -32,7 +32,10 @@ typedef unrestricted float GLfloat;
 typedef unrestricted float GLclampf;  
 
 dictionary WebGLContextAttributes {
-    boolean alpha = true;
+    // boolean alpha = true;
+    // We deviate from the spec here.
+    // If alpha isn't specified, we rely on a pref ("webgl.default-no-alpha")
+    boolean alpha;
     boolean depth = true;
     boolean stencil = false;
     boolean antialias = true;
@@ -59,6 +62,9 @@ interface WebGLTexture {
 };
 
 interface WebGLUniformLocation {
+};
+
+interface WebGLVertexArray {
 };
 
 interface WebGLActiveInfo {
@@ -832,4 +838,61 @@ interface WebGLExtensionStandardDerivatives {
 [NoInterfaceObject]
 interface WebGLExtensionTextureFloat
 {
+};
+
+[NoInterfaceObject]
+interface WebGLExtensionDrawBuffers {
+    const GLenum COLOR_ATTACHMENT0_WEBGL     = 0x8CE0;
+    const GLenum COLOR_ATTACHMENT1_WEBGL     = 0x8CE1;
+    const GLenum COLOR_ATTACHMENT2_WEBGL     = 0x8CE2;
+    const GLenum COLOR_ATTACHMENT3_WEBGL     = 0x8CE3;
+    const GLenum COLOR_ATTACHMENT4_WEBGL     = 0x8CE4;
+    const GLenum COLOR_ATTACHMENT5_WEBGL     = 0x8CE5;
+    const GLenum COLOR_ATTACHMENT6_WEBGL     = 0x8CE6;
+    const GLenum COLOR_ATTACHMENT7_WEBGL     = 0x8CE7;
+    const GLenum COLOR_ATTACHMENT8_WEBGL     = 0x8CE8;
+    const GLenum COLOR_ATTACHMENT9_WEBGL     = 0x8CE9;
+    const GLenum COLOR_ATTACHMENT10_WEBGL    = 0x8CEA;
+    const GLenum COLOR_ATTACHMENT11_WEBGL    = 0x8CEB;
+    const GLenum COLOR_ATTACHMENT12_WEBGL    = 0x8CEC;
+    const GLenum COLOR_ATTACHMENT13_WEBGL    = 0x8CED;
+    const GLenum COLOR_ATTACHMENT14_WEBGL    = 0x8CEE;
+    const GLenum COLOR_ATTACHMENT15_WEBGL    = 0x8CEF;
+
+    const GLenum DRAW_BUFFER0_WEBGL          = 0x8825;
+    const GLenum DRAW_BUFFER1_WEBGL          = 0x8826;
+    const GLenum DRAW_BUFFER2_WEBGL          = 0x8827;
+    const GLenum DRAW_BUFFER3_WEBGL          = 0x8828;
+    const GLenum DRAW_BUFFER4_WEBGL          = 0x8829;
+    const GLenum DRAW_BUFFER5_WEBGL          = 0x882A;
+    const GLenum DRAW_BUFFER6_WEBGL          = 0x882B;
+    const GLenum DRAW_BUFFER7_WEBGL          = 0x882C;
+    const GLenum DRAW_BUFFER8_WEBGL          = 0x882D;
+    const GLenum DRAW_BUFFER9_WEBGL          = 0x882E;
+    const GLenum DRAW_BUFFER10_WEBGL         = 0x882F;
+    const GLenum DRAW_BUFFER11_WEBGL         = 0x8830;
+    const GLenum DRAW_BUFFER12_WEBGL         = 0x8831;
+    const GLenum DRAW_BUFFER13_WEBGL         = 0x8832;
+    const GLenum DRAW_BUFFER14_WEBGL         = 0x8833;
+    const GLenum DRAW_BUFFER15_WEBGL         = 0x8834;
+
+    const GLenum MAX_COLOR_ATTACHMENTS_WEBGL = 0x8CDF;
+    const GLenum MAX_DRAW_BUFFERS_WEBGL      = 0x8824;
+
+    void drawBuffersWEBGL(sequence<GLenum> buffers);
+};
+
+[NoInterfaceObject]
+interface WebGLExtensionTextureFloatLinear
+{
+};
+
+[NoInterfaceObject]
+interface WebGLExtensionVertexArray {
+    const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
+
+    WebGLVertexArray? createVertexArrayOES();
+    void deleteVertexArrayOES(WebGLVertexArray? arrayObject);
+    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArray? arrayObject);
+    void bindVertexArrayOES(WebGLVertexArray? arrayObject);
 };
