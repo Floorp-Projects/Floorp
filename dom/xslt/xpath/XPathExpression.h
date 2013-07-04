@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXPathExpression_h__
-#define nsXPathExpression_h__
+#ifndef mozilla_dom_XPathExpression_h
+#define mozilla_dom_XPathExpression_h
 
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMNSXPathExpression.h"
@@ -17,19 +17,22 @@
 class Expr;
 class txXPathNode;
 
+namespace mozilla {
+namespace dom {
+
 /**
  * A class for evaluating an XPath expression string
  */
-class nsXPathExpression MOZ_FINAL : public nsIDOMXPathExpression,
-                                    public nsIDOMNSXPathExpression
+class XPathExpression MOZ_FINAL : public nsIDOMXPathExpression,
+                                  public nsIDOMNSXPathExpression
 {
 public:
-    nsXPathExpression(nsAutoPtr<Expr>&& aExpression, txResultRecycler* aRecycler,
-                      nsIDOMDocument *aDocument);
+    XPathExpression(nsAutoPtr<Expr>&& aExpression, txResultRecycler* aRecycler,
+                    nsIDOMDocument *aDocument);
 
     // nsISupports interface
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPathExpression,
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(XPathExpression,
                                              nsIDOMXPathExpression)
 
     // nsIDOMXPathExpression interface
@@ -75,4 +78,7 @@ private:
     };
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_XPathExpression_h */
