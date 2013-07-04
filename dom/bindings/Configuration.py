@@ -362,8 +362,8 @@ class Descriptor(DescriptorProvider):
                                 self.interface.identifier.name)
             self.nativeOwnership = "worker"
         else:
-            self.nativeOwnership = desc.get('nativeOwnership', 'nsisupports')
-            if not self.nativeOwnership in ['owned', 'refcounted', 'nsisupports']:
+            self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
+            if not self.nativeOwnership in ['owned', 'refcounted']:
                 raise TypeError("Descriptor for %s has unrecognized value (%s) "
                                 "for nativeOwnership" %
                                 (self.interface.identifier.name, self.nativeOwnership))
