@@ -530,8 +530,10 @@ var FullScreen = {
           el.setAttribute("inFullscreen", true);
         }
         else {
-          el.setAttribute("context", el.getAttribute("saved-context"));
-          el.removeAttribute("saved-context");
+          if (el.hasAttribute("saved-context")) {
+            el.setAttribute("context", el.getAttribute("saved-context"));
+            el.removeAttribute("saved-context");
+          }
           el.removeAttribute("inFullscreen");
         }
       } else {
