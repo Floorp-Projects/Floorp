@@ -9,7 +9,6 @@
 
 #include "AudioNode.h"
 #include "AudioBuffer.h"
-#include "PlayingRefChanged.h"
 
 namespace mozilla {
 namespace dom {
@@ -40,10 +39,7 @@ public:
   void SetNormalize(bool aNormal);
 
 private:
-  friend class PlayingRefChanged<ConvolverNode>;
-
   nsRefPtr<AudioBuffer> mBuffer;
-  SelfReference<ConvolverNode> mPlayingRef;
   bool mNormalize;
 };
 
