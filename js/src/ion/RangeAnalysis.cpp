@@ -9,6 +9,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "jsanalyze.h"
+
 #include "vm/NumericConversions.h"
 
 #include "ion/Ion.h"

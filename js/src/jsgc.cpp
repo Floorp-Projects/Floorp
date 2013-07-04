@@ -5055,6 +5055,12 @@ AutoSuppressGC::AutoSuppressGC(JSCompartment *comp)
     suppressGC_++;
 }
 
+bool
+js::UninlinedIsInsideNursery(JSRuntime *rt, const void *thing)
+{
+    return IsInsideNursery(rt, thing);
+}
+
 #ifdef DEBUG
 AutoDisableProxyCheck::AutoDisableProxyCheck(JSRuntime *rt
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)

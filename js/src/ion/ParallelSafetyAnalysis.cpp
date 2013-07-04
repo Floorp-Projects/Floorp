@@ -13,8 +13,9 @@
 #include "ion/IonSpewer.h"
 #include "ion/UnreachableCodeElimination.h"
 #include "ion/IonAnalysis.h"
-
 #include "vm/Stack.h"
+
+#include "jsinferinlines.h"
 
 using namespace js;
 using namespace ion;
