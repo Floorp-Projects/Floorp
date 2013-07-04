@@ -1163,12 +1163,8 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                             mAsyncScrollTimeout);
   }
 
-  // Scales on the root layer, on what's currently painted.
-  const gfx3DMatrix& currentTransform = aLayer->GetTransform();
-  CSSToLayerScale rootScale = frame.mDevPixelsPerCSSPixel
-      / LayerToLayoutDeviceScale(currentTransform.GetXScale(), currentTransform.GetYScale());
-
-  LayerPoint translation = (scrollOffset * rootScale) - metricsScrollOffset;
+  CSSToLayerScale paintedScale = frame.mDevPixelsPerCSSPixel * frame.mResolution;
+  LayerPoint translation = (scrollOffset * paintedScale) - metricsScrollOffset;
   *aNewTransform = ViewTransform(-translation, localScale / frame.mDevPixelsPerCSSPixel);
   aScrollOffset = scrollOffset * localScale;
 

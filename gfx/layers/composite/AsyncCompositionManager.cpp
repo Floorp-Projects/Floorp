@@ -353,6 +353,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
     const FrameMetrics& metrics = container->GetFrameMetrics();
+    // XXX We use rootTransform instead of metrics.mResolution here because on
+    // Fennec the resolution is set on the root layer rather than the scrollable layer.
+    // The SyncFrameMetrics call and the paintScale variable are used on Fennec only
+    // so it doesn't affect any other platforms. See bug 732971.
     CSSToLayerScale paintScale = metrics.mDevPixelsPerCSSPixel
       / LayerToLayoutDeviceScale(rootTransform.GetXScale(), rootTransform.GetYScale());
     CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
@@ -396,7 +400,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 }
 
 void
-AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform)
+AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDeviceToLayerScale& aResolution)
 {
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
   ContainerLayer* container = aLayer->AsContainerLayer();
@@ -408,8 +412,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx3DMatrix treeTransform;
 
-  CSSToLayerScale geckoZoom = metrics.mDevPixelsPerCSSPixel /
-    LayerToLayoutDeviceScale(aRootTransform.GetXScale(), aRootTransform.GetYScale());
+  CSSToLayerScale geckoZoom = metrics.mDevPixelsPerCSSPixel * aResolution;
 
   LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.mScrollOffset * geckoZoom);
 
@@ -520,8 +523,6 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
   // transforms.
   bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
 
-  const gfx3DMatrix& rootTransform = root->GetTransform();
-
   // FIXME/bug 775437: unify this interface with the ~native-fennec
   // derived code
   //
@@ -543,7 +544,18 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 
     for (uint32_t i = 0; i < scrollableLayers.Length(); i++) {
       if (scrollableLayers[i]) {
-        TransformScrollableLayer(scrollableLayers[i], rootTransform);
+#ifdef MOZ_WIDGET_ANDROID
+        // XXX We use rootTransform instead of the resolution on the individual layer's
+        // FrameMetrics on Fennec because the resolution is set on the root layer rather
+        // than the scrollable layer. See bug 732971. On non-Fennec we do the right thing.
+        const gfx3DMatrix& rootTransform = root->GetTransform();
+        LayoutDeviceToLayerScale resolution(1.0 / rootTransform.GetXScale(),
+                                            1.0 / rootTransform.GetYScale());
+#else
+        LayoutDeviceToLayerScale resolution =
+            scrollableLayers[i]->AsContainerLayer()->GetFrameMetrics().mResolution;
+#endif
+        TransformScrollableLayer(scrollableLayers[i], resolution);
       }
     }
   }
