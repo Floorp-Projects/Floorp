@@ -351,14 +351,10 @@ NS_IMPL_RELEASE_INHERITED(XULDocument, XMLDocument)
 
 // QueryInterface implementation for XULDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULDocument)
-    NS_DOCUMENT_INTERFACE_TABLE_BEGIN(XULDocument)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsIXULDocument)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsIDOMXULDocument)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsIStreamLoaderObserver)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsICSSLoaderObserver)
-    NS_OFFSET_AND_INTERFACE_TABLE_END
-    NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(XMLDocument)
+    NS_INTERFACE_TABLE_INHERITED4(XULDocument, nsIXULDocument,
+                                  nsIDOMXULDocument, nsIStreamLoaderObserver,
+                                  nsICSSLoaderObserver)
+NS_INTERFACE_TABLE_TAIL_INHERITING(XMLDocument)
 
 
 //----------------------------------------------------------------------
@@ -1212,13 +1208,6 @@ XULDocument::ResolveForwardReferences()
     }
 
     mForwardReferences.Clear();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-XULDocument::GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner)
-{
-    NS_IF_ADDREF(*aGlobalOwner = mMasterPrototype);
     return NS_OK;
 }
 
@@ -3542,7 +3531,8 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                             EmptyString(), this, stringStr);
         if (NS_SUCCEEDED(rv)) {
             rv = scriptProto->Compile(stringStr.get(), stringStr.Length(),
-                                      uri, 1, this, mCurrentPrototype);
+                                      uri, 1, this,
+                                      mCurrentPrototype->GetScriptGlobalObject());
         }
 
         aStatus = rv;

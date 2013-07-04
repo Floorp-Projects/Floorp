@@ -163,7 +163,6 @@ function test() {
       is(tabpanel.querySelector("#request-params-box")
         .hasAttribute("hidden"), false,
         "The request params box should not be hidden.");
-
       is(tabpanel.querySelector("#request-post-data-textarea-box")
         .hasAttribute("hidden"), true,
         "The request post data textarea box should be hidden.");
@@ -179,14 +178,15 @@ function test() {
       is(tab.getAttribute("selected"), "true",
         "The response tab in the network details pane should be selected.");
 
+      is(tabpanel.querySelector("#response-content-info-header")
+        .hasAttribute("hidden"), true,
+        "The response info header should be hidden.");
       is(tabpanel.querySelector("#response-content-json-box")
         .hasAttribute("hidden"), true,
         "The response content json box should be hidden.");
-
       is(tabpanel.querySelector("#response-content-textarea-box")
         .hasAttribute("hidden"), false,
         "The response content textarea box should not be hidden.");
-
       is(tabpanel.querySelector("#response-content-image-box")
         .hasAttribute("hidden"), true,
         "The response content image box should be hidden.");

@@ -6,12 +6,11 @@
 
 interface nsIInterfaceRequestor;
 interface nsIX509Cert;
-interface nsICRLInfo;
 
 /**
  * Functions that implement user interface dialogs to manage certificates.
  */
-[scriptable, uuid(a03ca940-09be-11d5-ac5d-000064657374)]
+[scriptable, uuid(da871dab-f69e-4173-ab26-99fcd47b0e85)]
 interface nsICertificateDialogs : nsISupports
 {
   /**
@@ -80,16 +79,6 @@ interface nsICertificateDialogs : nsISupports
    */
   void viewCert(in nsIInterfaceRequestor ctx, 
                 in nsIX509Cert cert);
-
-  /**
-   *  UI shown after a Certificate Revocation List (CRL) has been
-   *  successfully imported.
-   *
-   *  @param ctx A user interface context.
-   *  @param crl Information describing the CRL that was imported.
-   */
-  void crlImportStatusDialog(in nsIInterfaceRequestor ctx, 
-                             in nsICRLInfo crl);
 };
 
 %{C++

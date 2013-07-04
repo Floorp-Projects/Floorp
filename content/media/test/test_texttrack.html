@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=833386
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Test for Bug 833386 - TextTrackList</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "seek.webm";
+
+    isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
+
+    var trackList = video.textTracks;
+    is(trackList.length, 0, "Length should be 0.");
+
+    ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
+    video.addTextTrack("subtitles", "label", "en-CA");
+    is(trackList.length, 1, "Length should be 1.");
+
+    var textTrack = video.textTracks[0];
+    is(textTrack.label, "label", "Label should be set to label.");
+    is(textTrack.language, "en-CA", "Language should be en-CA.");
+    is(textTrack.kind, "subtitles", "Default kind should be subtitles.");
+    is(textTrack.mode, "hidden", "Default mode should be hidden.");
+
+    // Mode should not allow a bogus value.
+    textTrack.mode = 'bogus';
+    is(textTrack.mode, 'hidden', "Mode should be not allow a bogus value.");
+
+    // Should allow all these values for mode.
+    checkMode("showing", "Mode should allow \"showing\"");
+    checkMode("disabled", "Mode should allow \"disabled\"");
+    checkMode("hidden", "Mode should allow \"hidden\"");
+
+    // All below are read-only properties and so should not allow setting.
+    textTrack.label = "French subtitles";
+    is(textTrack.label, "label", "Label is read-only so should still be \"label\".");
+
+    textTrack.language = "en";
+    is(textTrack.language, "en-CA", "Language is read-only so should still be \"en-CA\".");
+
+    textTrack.kind = "captions";
+    is(textTrack.kind, "subtitles", "Kind is read-only so should still be \"subtitles\"");
+
+    function checkMode(value, message) {
+      textTrack.mode = value;
+      is(textTrack.mode, value, message);
+    }
+
+    SimpleTest.finish();
+  }
+);
+</script>
+</pre>
+</body>
+</html>

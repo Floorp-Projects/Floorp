@@ -82,6 +82,10 @@
     "n_buckets": 50,
     "description": "Time spent on one ContentUnbinder (ms)"
   },
+  "CYCLE_COLLECTOR_OOM": {
+    "kind": "flag",
+    "description": "Set if the cycle collector ran out of memory at some point"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "kind": "exponential",
     "high": "10000",
@@ -838,6 +842,12 @@
     "n_buckets": 200,
     "extended_statistics_ok": true,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
+  },
+  "SSL_TIME_UNTIL_HANDSHAKE_FINISHED": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 200,
+    "description": "ms of SSL wait time for full handshake including TCP and proxy tunneling"
   },
   "SSL_BYTES_BEFORE_CERT_CALLBACK": {
     "kind": "exponential",
@@ -2235,6 +2245,10 @@
     "kind": "boolean",
     "description": "Updater: Whether or not updates are enabled"
   },
+  "UPDATER_UPDATES_METRO_ENABLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not Metro updates are enabled"
+  },
   "UPDATER_UPDATES_AUTOMATIC": {
     "kind": "boolean",
     "description": "Updater: Whether or not updates are automatic"
@@ -3312,6 +3326,58 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
   },
+  "COOKIES_3RDPARTY_NUM_SITES_ACCEPTED": {
+    "kind": "linear",
+    "low": "5",
+    "high": "145",
+    "n_buckets": "30",
+    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been accepted. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h."
+  },
+  "COOKIES_3RDPARTY_NUM_SITES_BLOCKED": {
+    "kind": "linear",
+    "low": "5",
+    "high": "145",
+    "n_buckets": "30",
+    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been rejected. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h."
+  },
+  "COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED": {
+    "kind": "linear",
+    "low": "10",
+    "high": "500",
+    "n_buckets": "50",
+    "description": "The total number of distinct attempts by third-party sites to place cookies which have been accepted.  Measures are normalized per 24h."
+  },
+  "COOKIES_3RDPARTY_NUM_ATTEMPTS_BLOCKED": {
+    "kind": "linear",
+    "low": "10",
+    "high": "500",
+    "n_buckets": "50",
+    "description": "The total number of distinct attempts by third-party sites to place cookies which have been rejected.  Measures are normalized per 24h."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_BLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'blackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_BLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'blackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_UNBLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'ublackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_UNBLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'unblackbox' request to go round trip."
+  },
   "DEVTOOLS_OPTIONS_OPENED_BOOLEAN": {
     "kind": "boolean",
     "description": "How many times has the devtool's Options panel been opened?"
@@ -3573,5 +3639,10 @@
   "BROWSER_IS_USER_DEFAULT": {
     "kind": "boolean",
     "description": "The result of the startup default desktop browser check."
+  },
+  "MIXED_CONTENT_PAGE_LOAD": {
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
   }
 }

@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "Zip.h"
 #include "Elfxx.h"
+#include "Mappable.h"
 
 /**
  * dlfcn.h replacement functions
@@ -30,10 +31,6 @@ extern "C" {
   } Dl_info;
 #endif
   int __wrap_dladdr(void *addr, Dl_info *info);
-
-  sighandler_t __wrap_signal(int signum, sighandler_t handler);
-  int __wrap_sigaction(int signum, const struct sigaction *act,
-                       struct sigaction *oldact);
 
   struct dl_phdr_info {
     Elf::Addr dlpi_addr;
@@ -79,9 +76,6 @@ template <> inline RefCounted<LibHandle, AtomicRefCount>::~RefCounted()
 
 } /* namespace detail */
 } /* namespace mozilla */
-
-/* Forward declaration */
-class Mappable;
 
 /**
  * Abstract class for loaded libraries. Libraries may be loaded through the
@@ -204,7 +198,7 @@ private:
   char *path;
 
   /* Mappable object keeping the result of GetMappable() */
-  mutable Mappable *mappable;
+  mutable mozilla::RefPtr<Mappable> mappable;
 };
 
 /**
@@ -292,19 +286,21 @@ private:
  * The ElfLoader registers its own SIGSEGV handler to handle segmentation
  * faults within the address space of the loaded libraries. It however
  * allows a handler to be set for faults in other places, and redispatches
- * to the handler set through signal() or sigaction(). We assume no system
- * library loaded with system dlopen is going to call signal or sigaction
- * for SIGSEGV.
+ * to the handler set through signal() or sigaction().
  */
 class SEGVHandler
 {
+public:
+  bool hasRegisteredHandler() {
+    return registeredHandler;
+  }
+
 protected:
   SEGVHandler();
   ~SEGVHandler();
 
 private:
-  friend sighandler_t __wrap_signal(int signum, sighandler_t handler);
-  friend int __wrap_sigaction(int signum, const struct sigaction *act,
+  static int __wrap_sigaction(int signum, const struct sigaction *act,
                               struct sigaction *oldact);
 
   /**
@@ -333,6 +329,8 @@ private:
    * not set or not big enough.
    */
   MappedPtr stackPtr;
+
+  bool registeredHandler;
 };
 
 /**
@@ -549,7 +547,7 @@ private:
       {
         if (other.item == NULL)
           return item ? true : false;
-        MOZ_NOT_REACHED("DebuggerHelper::iterator::operator< called with something else than DebuggerHelper::end()");
+        MOZ_CRASH("DebuggerHelper::iterator::operator< called with something else than DebuggerHelper::end()");
       }
     protected:
       friend class DebuggerHelper;

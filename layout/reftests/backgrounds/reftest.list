@@ -1,91 +1,91 @@
 include gradient/reftest.list
 include vector/reftest.list
 
-skip-if(B2G) random-if(bug685516) == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
-skip-if(B2G) random-if(bug685516) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
-random-if(bug685516) == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
-random-if(bug685516) == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
-random-if(bug685516) == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
+skip-if(B2G) == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
+skip-if(B2G) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
+== layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
+== layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
+== layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
 fuzzy-if(Android,9,600000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
 fails-if(Android) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
 fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
 != viewport-translucent-color-ref.html about:blank
-random-if(bug685516) == iframe-translucent-color-1.html iframe-translucent-color-ref.html
-random-if(bug685516) == translucent-color-1.html translucent-color-ref.html
-random-if(bug685516) == translucent-color-2.html translucent-color-ref.html
-random-if(bug685516) == translucent-color-3.html translucent-color-ref.html
+== iframe-translucent-color-1.html iframe-translucent-color-ref.html
+== translucent-color-1.html translucent-color-ref.html
+== translucent-color-2.html translucent-color-ref.html
+== translucent-color-3.html translucent-color-ref.html
 != translucent-color-ref.html about:blank
 skip-if(B2G) == root-element-display-none-1.html root-element-display-none-ref.html
-random-if(bug685516) == continuous-inline-1a.html continuous-inline-1ab-ref.html
-random-if(bug685516) == continuous-inline-1b.html continuous-inline-1ab-ref.html
-random-if(bug685516) == continuous-inline-1c.html continuous-inline-1cd-ref.html
-random-if(bug685516) == continuous-inline-1d.html continuous-inline-1cd-ref.html
-random-if(bug685516) == continuous-inline-2a.html continuous-inline-2-ref.html
-random-if(bug685516) == continuous-inline-2b.html continuous-inline-2-ref.html
-random-if(bug685516) == continuous-inline-3.html continuous-inline-3-ref.html
-skip-if(B2G) random-if(bug685516) == continuous-inline-4a.html continuous-inline-4-ref.html
-skip-if(B2G) random-if(bug685516) == continuous-inline-4b.html continuous-inline-4-ref.html
-random-if(bug685516) == continuous-inline-5a.html continuous-inline-5-ref.html
-random-if(bug685516) == continuous-inline-5b.html continuous-inline-5-ref.html
-random-if(bug685516) == background-redraw-237766.html background-redraw-237766-ref.html
+== continuous-inline-1a.html continuous-inline-1ab-ref.html
+== continuous-inline-1b.html continuous-inline-1ab-ref.html
+== continuous-inline-1c.html continuous-inline-1cd-ref.html
+== continuous-inline-1d.html continuous-inline-1cd-ref.html
+== continuous-inline-2a.html continuous-inline-2-ref.html
+== continuous-inline-2b.html continuous-inline-2-ref.html
+== continuous-inline-3.html continuous-inline-3-ref.html
+skip-if(B2G) == continuous-inline-4a.html continuous-inline-4-ref.html
+skip-if(B2G) == continuous-inline-4b.html continuous-inline-4-ref.html
+== continuous-inline-5a.html continuous-inline-5-ref.html
+== continuous-inline-5b.html continuous-inline-5-ref.html
+== background-redraw-237766.html background-redraw-237766-ref.html
 
-random-if(bug685516) == background-clip-1.html background-clip-1-ref.html
-random-if(bug685516) == background-clip-2.html background-clip-2-ref.html
+== background-clip-1.html background-clip-1-ref.html
+== background-clip-2.html background-clip-2-ref.html
 
-skip-if(B2G) random-if(bug685516) == background-position-1a.html background-position-1-ref.html
-random-if(bug685516) == background-position-1b.html background-position-1-ref.html
-random-if(bug685516) == background-position-1c.html background-position-1-ref.html
-random-if(bug685516) == background-position-2a.html background-position-2-ref.html
-random-if(bug685516) == background-position-2b.html background-position-2-ref.html
-random-if(bug685516) == background-position-3a.html background-position-3-ref.html
-random-if(bug685516) == background-position-3b.html background-position-3-ref.html
-random-if(bug685516) == background-position-4a.html background-position-4-ref.html
-random-if(bug685516) == background-position-4b.html background-position-4-ref.html
-random-if(bug685516) == background-position-4c.html background-position-4-ref.html
-random-if(bug685516) == background-position-5.html background-position-5-ref.html
-random-if(bug685516) == background-position-6.html background-position-6-ref.html
-random-if(bug685516) == background-position-7.html background-position-7-ref.html
-random-if(bug685516) == background-position-8.html background-position-8-ref.html
+skip-if(B2G) == background-position-1a.html background-position-1-ref.html
+== background-position-1b.html background-position-1-ref.html
+== background-position-1c.html background-position-1-ref.html
+== background-position-2a.html background-position-2-ref.html
+== background-position-2b.html background-position-2-ref.html
+== background-position-3a.html background-position-3-ref.html
+== background-position-3b.html background-position-3-ref.html
+== background-position-4a.html background-position-4-ref.html
+== background-position-4b.html background-position-4-ref.html
+== background-position-4c.html background-position-4-ref.html
+== background-position-5.html background-position-5-ref.html
+== background-position-6.html background-position-6-ref.html
+== background-position-7.html background-position-7-ref.html
+== background-position-8.html background-position-8-ref.html
 
-random-if(bug685516) == background-size-auto-auto.html background-size-auto-ref.html
-random-if(bug685516) == background-size-auto.html background-size-auto-ref.html
-random-if(bug685516) == background-size-contain.html background-size-contain-ref.html
-random-if(bug685516) == background-size-cover.html background-size-cover-ref.html
-random-if(bug685516) == background-size-auto-length.html background-size-auto-length-ref.html
-random-if(bug685516) == background-size-length-auto.html background-size-auto-length-ref.html
-random-if(bug685516) == background-size-length.html background-size-auto-length-ref.html
-random-if(bug685516) == background-size-auto-percent.html background-size-auto-length-ref.html
-random-if(bug685516) == background-size-percent-auto.html background-size-auto-length-ref.html
-random-if(bug685516) == background-size-percent.html background-size-auto-length-ref.html
-random-if(bug685516) == background-size-length-percent.html background-size-length-percent-ref.html
-random-if(bug685516) == background-size-percent-length.html background-size-length-percent-ref.html
-random-if(bug685516) == background-size-percent-percent.html background-size-percent-percent-ref.html
-random-if(bug685516) == background-size-length-length.html background-size-length-length-ref.html
-skip-if(B2G) random-if(bug685516) == background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html # bug 773482
+== background-size-auto-auto.html background-size-auto-ref.html
+== background-size-auto.html background-size-auto-ref.html
+== background-size-contain.html background-size-contain-ref.html
+== background-size-cover.html background-size-cover-ref.html
+== background-size-auto-length.html background-size-auto-length-ref.html
+== background-size-length-auto.html background-size-auto-length-ref.html
+== background-size-length.html background-size-auto-length-ref.html
+== background-size-auto-percent.html background-size-auto-length-ref.html
+== background-size-percent-auto.html background-size-auto-length-ref.html
+== background-size-percent.html background-size-auto-length-ref.html
+== background-size-length-percent.html background-size-length-percent-ref.html
+== background-size-percent-length.html background-size-length-percent-ref.html
+== background-size-percent-percent.html background-size-percent-percent-ref.html
+== background-size-length-length.html background-size-length-length-ref.html
+skip-if(B2G) == background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html # bug 773482
 
-random-if(bug685516) == background-size-body-percent-percent.html background-size-body-percent-percent-ref.html
-random-if(bug685516) == background-size-body-percent-percent-no-repeat.html background-size-body-percent-percent-ref.html
-random-if(bug685516) == background-size-body-percent-percent-not-fixed.html background-size-body-percent-percent-ref.html
-random-if(bug685516) == background-size-body-cover.html background-size-body-cover-ref.html
-random-if(bug685516) == background-size-body-cover-no-repeat.html background-size-body-cover-ref.html
-fails-if(smallScreen&&Android) random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-cover-ref.html
-random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-single-not-fixed.html
+== background-size-body-percent-percent.html background-size-body-percent-percent-ref.html
+== background-size-body-percent-percent-no-repeat.html background-size-body-percent-percent-ref.html
+== background-size-body-percent-percent-not-fixed.html background-size-body-percent-percent-ref.html
+== background-size-body-cover.html background-size-body-cover-ref.html
+== background-size-body-cover-no-repeat.html background-size-body-cover-ref.html
+fails-if(smallScreen&&Android) != background-size-body-cover-not-fixed.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-single-not-fixed.html
 
 # relies on reftest window having greater height than width
-random-if(bug685516) == background-size-body-contain.html background-size-body-cover-ref.html
-fails-if(smallScreen&&Android) random-if(bug685516) != background-size-body-contain-no-repeat.html background-size-body-cover-ref.html
-random-if(bug685516) != background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
-random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
+== background-size-body-contain.html background-size-body-cover-ref.html
+fails-if(smallScreen&&Android) != background-size-body-contain-no-repeat.html background-size-body-cover-ref.html
+!= background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
 
-random-if(bug685516) != background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
+!= background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
 
-random-if(bug685516) == background-size-zoom-no-repeat.html background-size-zoom-no-repeat-ref.html
+== background-size-zoom-no-repeat.html background-size-zoom-no-repeat-ref.html
 
-random-if(bug685516) == background-size-contain-clip-padding.html background-size-contain-clip-padding-ref.html
-random-if(bug685516) == background-size-contain-clip-border.html background-size-contain-clip-border-ref.html
-random-if(bug685516) == background-size-contain-position-fifty-fifty.html background-size-contain-position-fifty-fifty-ref.html
-random-if(bug685516) == background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
-random-if(bug685516) == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
+== background-size-contain-clip-padding.html background-size-contain-clip-padding-ref.html
+== background-size-contain-clip-border.html background-size-contain-clip-border-ref.html
+== background-size-contain-position-fifty-fifty.html background-size-contain-position-fifty-fifty-ref.html
+== background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
+== background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
 
 skip-if(B2G) == background-layers-1a.html background-layers-1-ref.html # bug 773482
 == background-layers-1b.html background-layers-1-ref.html
@@ -104,16 +104,16 @@ skip-if(B2G) == background-layers-1a.html background-layers-1-ref.html # bug 773
 != background-size-cover-continuous.html background-size-cover-bounding-box.html
 != background-size-cover-each-box.html background-size-cover-bounding-box.html
 
-random-if(bug685516) == background-size-monster-ch.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-cm.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-em.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-ex.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-inches.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-mm.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-pc.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-pt.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-px.html background-size-monster-ref.html
-random-if(bug685516) == background-size-monster-rem.html background-size-monster-ref.html
+== background-size-monster-ch.html background-size-monster-ref.html
+== background-size-monster-cm.html background-size-monster-ref.html
+== background-size-monster-em.html background-size-monster-ref.html
+== background-size-monster-ex.html background-size-monster-ref.html
+== background-size-monster-inches.html background-size-monster-ref.html
+== background-size-monster-mm.html background-size-monster-ref.html
+== background-size-monster-pc.html background-size-monster-ref.html
+== background-size-monster-pt.html background-size-monster-ref.html
+== background-size-monster-px.html background-size-monster-ref.html
+== background-size-monster-rem.html background-size-monster-ref.html
 
 # There seems to be a pixel-snapping problem here, where the repeated background
 # image isn't being snapped at its boundaries.  Note that the boundaries within
@@ -125,19 +125,19 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
 
-random-if(bug685516||B2G) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+random-if(B2G) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
 
-random-if(bug685516) HTTP == root-background-1.html root-background-ref.html
-random-if(bug685516) HTTP != root-background-1.html about:blank
+HTTP == root-background-1.html root-background-ref.html
+HTTP != root-background-1.html about:blank
 
-random-if(bug685516||B2G) == really-big-background.html really-big-background-ref.html
-random-if(bug685516) == body-background.html body-background-ref.html
-random-if(bug685516) == table-background.html table-background-ref.html
-random-if(bug685516) == table-background-print.html table-background-print-ref.html
-random-if(bug685516) != div-background.html div-background-ref.html
+random-if(B2G) == really-big-background.html really-big-background-ref.html
+== body-background.html body-background-ref.html
+== table-background.html table-background-ref.html
+== table-background-print.html table-background-print-ref.html
+!= div-background.html div-background-ref.html
 
-random-if(bug685516) == background-repeat-1-ref.html background-repeat-1.html
+== background-repeat-1-ref.html background-repeat-1.html
 
-random-if(bug685516) == multi-background-clip-content-border.html multi-background-clip-content-border-ref.html
+== multi-background-clip-content-border.html multi-background-clip-content-border-ref.html
 
 HTTP == background-referrer.html background-referrer-ref.html

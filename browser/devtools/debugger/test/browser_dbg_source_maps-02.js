@@ -80,6 +80,7 @@ function testToggleGeneratedSource() {
   gDebugger.DebuggerView.Options._showOriginalSourceItem.setAttribute("checked",
                                                                       "false");
   gDebugger.DebuggerView.Options._toggleShowOriginalSource();
+  gDebugger.DebuggerView.Options._onPopupHidden();
 }
 
 function testSetBreakpoint() {
@@ -102,7 +103,7 @@ function testHitBreakpoint() {
 
     activeThread.addOneTimeListener("framesadded", function (aEvent, aPacket) {
       // Make sure that we have JavaScript stack frames.
-      let frames = gDebugger.DebuggerView.StackFrames._container._list;
+      let frames = gDebugger.DebuggerView.StackFrames.widget._list;
       let childNodes = frames.childNodes;
 
       is(frames.querySelectorAll(".dbg-stackframe").length, 1,
@@ -141,7 +142,7 @@ function testToggleOnPause() {
        "The debugger's editor should have the JS source displayed.");
 
     // Make sure that we have coffee script stack frames.
-    let frames = gDebugger.DebuggerView.StackFrames._container._list;
+    let frames = gDebugger.DebuggerView.StackFrames.widget._list;
     let childNodes = frames.childNodes;
 
     is(frames.querySelectorAll(".dbg-stackframe").length, 1,
@@ -157,6 +158,7 @@ function testToggleOnPause() {
   gDebugger.DebuggerView.Options._showOriginalSourceItem.setAttribute("checked",
                                                                       "true");
   gDebugger.DebuggerView.Options._toggleShowOriginalSource();
+  gDebugger.DebuggerView.Options._onPopupHidden();
 }
 
 function resumeAndFinish()

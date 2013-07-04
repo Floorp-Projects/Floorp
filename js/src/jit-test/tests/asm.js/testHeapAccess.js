@@ -1,5 +1,8 @@
 load(libdir + "asm.js");
 
+assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { i32[0>>2] = 4.0; return i32[0>>2]|0; } return f');
+assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { f32[0>>2] = 4; return +f32[0>>2]; } return f');
+
 assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { var x=0,y=0; return i8[x+y]|0 } return f');
 assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { var x=0,y=0; return u8[x+y]|0 } return f');
 
@@ -94,6 +97,16 @@ assertEq(f(0, 1.3), 1.3);
 assertEq(f(4088, 2.5), 2.5);
 assertEq(f(4096, 3.8), NaN);
 
+var i32 = new Int32Array(4096);
+i32[0] = 42;
+asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { i32[1] = i32[0] }; return f'), this, null, i32.buffer)();
+assertEq(i32[1], 42);
+
+var f64 = new Float64Array(4096);
+f64[0] = 42;
+asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { f64[1] = f64[0] }; return f'), this, null, f64.buffer)();
+assertEq(f64[1], 42);
+
 var i32 = new Int32Array(4096/4);
 i32[0] = 13;
 i32[1] = 0xfffeeee;
@@ -151,3 +164,6 @@ assertEq(new Int32Array(BUF_64KB)[12], 11);
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return u32[12]|0 } return f'), this, null, BUF_64KB)(), 11);
 new Float64Array(BUF_64KB)[0] = 3.5;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return +-f64[0] } return f'), this, null, BUF_64KB)(), -3.5);
+
+// Bug 882012
+assertEq(asmLink(asmCompile('stdlib', 'foreign', 'heap', USE_ASM + "var id=foreign.id;var doubles=new stdlib.Float64Array(heap);function g(){doubles[0]=+id(2.0);return +doubles[0];}return g"), this, {id: function(x){return x;}}, BUF_64KB)(), 2.0);

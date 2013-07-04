@@ -31,7 +31,7 @@
 #include "mozilla/Services.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/Attributes.h"
 #include "nsEventDispatcher.h"
 #include "TextComposition.h"
@@ -487,7 +487,7 @@ nsIMEStateManager::SetIMEState(const IMEState &aState,
           willSubmit = true;
         // is this an html form and does it only have a single text input element?
         } else if (formElement && formElement->Tag() == nsGkAtoms::form && formElement->IsHTML() &&
-                   static_cast<nsHTMLFormElement*>(formElement)->HasSingleTextControl()) {
+                   static_cast<dom::HTMLFormElement*>(formElement)->HasSingleTextControl()) {
           willSubmit = true;
         }
       }
@@ -587,10 +587,9 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       case REQUEST_TO_CANCEL_COMPOSITION:
         return composition ? aWidget->NotifyIME(aNotification) : NS_OK;
       default:
-        MOZ_NOT_REACHED("Unsupported notification");
-        return NS_ERROR_INVALID_ARG;
+        MOZ_CRASH("Unsupported notification");
     }
-    MOZ_NOT_REACHED(
+    MOZ_CRASH(
       "Failed to handle the notification for non-synthesized composition");
   }
 
@@ -1049,8 +1048,7 @@ nsIMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
     case widget::IMEState::DISABLED:
       return false;
     default:
-      MOZ_NOT_REACHED("Unknown IME enable state");
-      return false;
+      MOZ_CRASH("Unknown IME enable state");
   }
 }
 

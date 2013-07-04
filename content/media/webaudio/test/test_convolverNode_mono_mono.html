@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="webaudio.js"></script>
+<script type="text/javascript" src="layouttest-glue.js"></script>
+<script type="text/javascript" src="blink/audio-testing.js"></script>
+<script type="text/javascript" src="blink/convolution-testing.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+<div id="description"></div>
+<div id="console"></div>
+
+<script>
+description("Tests ConvolverNode processing a mono channel with mono impulse response.");
+SimpleTest.waitForExplicitFinish();
+
+// To test the convolver, we convolve two square pulses together to
+// produce a triangular pulse.  To verify the result is correct we
+// check several parts of the result.  First, we make sure the initial
+// part of the result is zero (due to the latency in the convolver).
+// Next, the triangular pulse should match the theoretical result to
+// within some roundoff.  After the triangular pulse, the result
+// should be exactly zero, but round-off prevents that.  We make sure
+// the part after the pulse is sufficiently close to zero.  Finally,
+// the result should be exactly zero because the inputs are exactly
+// zero.
+function runTest() {
+    if (window.testRunner) {
+        testRunner.dumpAsText();
+        testRunner.waitUntilDone();
+    }
+
+    window.jsTestIsAsync = true;
+
+    // Create offline audio context.
+    var context = new OfflineAudioContext(2, sampleRate * renderLengthSeconds, sampleRate);
+
+    var squarePulse = createSquarePulseBuffer(context, pulseLengthFrames);
+    var trianglePulse = createTrianglePulseBuffer(context, 2 * pulseLengthFrames);
+
+    var bufferSource = context.createBufferSource();
+    bufferSource.buffer = squarePulse;
+
+    var convolver = context.createConvolver();
+    convolver.normalize = false;
+    convolver.buffer = squarePulse;
+
+    bufferSource.connect(convolver);
+    convolver.connect(context.destination);
+
+    bufferSource.start(0);
+
+    context.oncomplete = checkConvolvedResult(trianglePulse);
+    context.startRendering();
+}
+
+function finishJSTest() {
+  SimpleTest.finish();
+}
+
+runTest();
+successfullyParsed = true;
+
+</script>
+
+<script src="../fast/js/resources/js-test-post.js"></script>
+</body>
+</html>

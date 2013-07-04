@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Parser_inl_h__
-#define Parser_inl_h__
+#ifndef frontend_Parser_inl
+#define frontend_Parser_inl
 
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 
 #include "frontend/SharedContext-inl.h"
@@ -104,10 +105,7 @@ CheckStrictBinding(JSContext *cx, ParseHandler *handler, ParseContext<ParseHandl
     if (!pc->sc->needStrictChecks())
         return true;
 
-    if (name == cx->names().eval ||
-        name == cx->names().arguments ||
-        FindKeyword(name->charsZ(), name->length()))
-    {
+    if (name == cx->names().eval || name == cx->names().arguments || IsKeyword(name)) {
         JSAutoByteString bytes;
         if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
@@ -120,5 +118,4 @@ CheckStrictBinding(JSContext *cx, ParseHandler *handler, ParseContext<ParseHandl
 } // namespace frontend
 } // namespace js
 
-#endif // Parser_inl_h__
-
+#endif /* frontend_Parser_inl */

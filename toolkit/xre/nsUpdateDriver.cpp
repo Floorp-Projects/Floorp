@@ -1034,8 +1034,6 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
   int argc;
   char **argv;
 
-  NS_ENSURE_ARG_POINTER(aUpdate);
-
   nsAutoCString binPath;
   nsXREDirProvider* dirProvider = nsXREDirProvider::GetSingleton();
   if (dirProvider) { // Normal code path
@@ -1132,6 +1130,8 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
   mInfo.mAppVersion = appVersion;
 
 #if defined(MOZ_WIDGET_GONK)
+  NS_ENSURE_ARG_POINTER(aUpdate);
+
   bool isOSUpdate;
   if (NS_SUCCEEDED(aUpdate->GetIsOSUpdate(&isOSUpdate)) &&
       isOSUpdate) {
@@ -1214,7 +1214,7 @@ nsUpdateProcessor::UpdateDone()
 
   nsCOMPtr<nsIUpdateManager> um =
     do_GetService("@mozilla.org/updates/update-manager;1");
-  if (um) {
+  if (um && mUpdate) {
     um->RefreshUpdateStatus(mUpdate);
   }
 

@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= breakpad_sps_common_s
-
 LOCAL_INCLUDES 	= -I$(srcdir)/../.. -I$(srcdir)/..
 
 # need static lib

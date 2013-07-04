@@ -20,13 +20,13 @@ browserElementTestHelpers.addPermission();
 browserElementTestHelpers.enableProcessPriorityManager();
 
 // Give our origin permission to open browsers, and remove it when the test is complete.
-var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+var principal = SpecialPowers.wrap(document).nodePrincipal;
 SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
                                                appId: principal.appId,
                                                isInBrowserElement: true });
 
 addEventListener('unload', function() {
-  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+  var principal = SpecialPowers.wrap(document).nodePrincipal;
   SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
                                               appId: principal.appId,
                                               isInBrowserElement: true });

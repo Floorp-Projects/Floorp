@@ -31,6 +31,8 @@ let AboutReader = function(doc, win) {
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
   Services.obs.addObserver(this, "Reader:Add", false);
   Services.obs.addObserver(this, "Reader:Remove", false);
+  Services.obs.addObserver(this, "Reader:ListCountReturn", false);
+  Services.obs.addObserver(this, "Reader:ListCountUpdated", false);
 
   this._article = null;
 
@@ -120,6 +122,11 @@ let AboutReader = function(doc, win) {
   this._isReadingListItem = (queryArgs.readingList == "1");
   this._updateToggleButton();
 
+  // Track status of reader toolbar list button
+  this._readingListCount = 0;
+  this._updateListButton();
+  this._requestReadingListCount();
+
   let url = queryArgs.url;
   let tabId = queryArgs.tabId;
   if (tabId) {
@@ -202,6 +209,16 @@ AboutReader.prototype = {
         }
         break;
       }
+
+      case "Reader:ListCountReturn":
+      case "Reader:ListCountUpdated":  {
+        let count = parseInt(aData);
+        if (this._readingListCount != count) {
+          this._readingListCount = count;
+          this._updateListButton();
+        }
+        break;
+      }
     }
   },
 
@@ -238,6 +255,8 @@ AboutReader.prototype = {
       case "unload":
         Services.obs.removeObserver(this, "Reader:Add");
         Services.obs.removeObserver(this, "Reader:Remove");
+        Services.obs.removeObserver(this, "Reader:ListCountReturn");
+        Services.obs.removeObserver(this, "Reader:ListCountUpdated");
         break;
     }
   },
@@ -250,6 +269,20 @@ AboutReader.prototype = {
     } else {
       classes.remove("on");
     }
+  },
+
+  _updateListButton: function Reader_updateListButton() {
+    let classes = this._doc.getElementById("list-button").classList;
+
+    if (this._readingListCount > 0) {
+      classes.add("on");
+    } else {
+      classes.remove("on");
+    }
+  },
+
+  _requestReadingListCount: function Reader_requestReadingListCount() {
+    gChromeWin.sendMessageToJava({ type: "Reader:ListCountRequest" });
   },
 
   _onReaderToggle: function Reader_onToggle() {
@@ -291,7 +324,7 @@ AboutReader.prototype = {
   },
 
   _onList: function Reader_onList() {
-    if (!this._article)
+    if (!this._article || this._readingListCount == 0)
       return;
 
     gChromeWin.sendMessageToJava({ type: "Reader:GoToReadingList" });
@@ -320,13 +353,46 @@ AboutReader.prototype = {
     Services.prefs.setIntPref("reader.font_size", this._fontSize);
   },
 
-  _handleDeviceLight: function Reader_handleDeviceLight(luxValue) {
+  _handleDeviceLight: function Reader_handleDeviceLight(newLux) {
+    // Desired size of the this._luxValues array.
+    let luxValuesSize = 10;
+    // Add new lux value at the front of the array.
+    this._luxValues.unshift(newLux);
+    // Add new lux value to this._totalLux for averaging later.
+    this._totalLux += newLux;
+
+    // Don't update when length of array is less than luxValuesSize except when it is 1.
+    if (this._luxValues.length < luxValuesSize) {
+      // Use the first lux value to set the color scheme until our array equals luxValuesSize.
+      if (this._luxValues.length == 1) {
+        this._updateColorScheme(newLux);
+      }
+      return;
+    }
+    // Holds the average of the lux values collected in this._luxValues.
+    let averageLuxValue = this._totalLux/luxValuesSize;
+
+    this._updateColorScheme(averageLuxValue);
+    // Pop the oldest value off the array.
+    let oldLux = this._luxValues.pop();
+    // Subtract oldLux since it has been discarded from the array.
+    this._totalLux -= oldLux;
+  },
+
+  _updateColorScheme: function Reader_updateColorScheme(luxValue) {
+    // Upper bound value for "dark" color scheme beyond which it changes to "light".
+    let upperBoundDark = 50;
+    // Lower bound value for "light" color scheme beyond which it changes to "dark".
+    let lowerBoundLight = 10;
+    // Threshold for color scheme change.
+    let colorChangeThreshold = 20;
+
     // Ignore changes that are within a certain threshold of previous lux values.
-    if ((this._colorScheme === "dark" && luxValue < 50) ||
-        (this._colorScheme === "light" && luxValue > 25))
+    if ((this._colorScheme === "dark" && luxValue < upperBoundDark) ||
+        (this._colorScheme === "light" && luxValue > lowerBoundLight))
       return;
 
-    if (luxValue < 30)
+    if (luxValue < colorChangeThreshold)
       this._setColorScheme("dark");
     else
       this._setColorScheme("light");
@@ -350,9 +416,13 @@ AboutReader.prototype = {
   _setColorSchemePref: function Reader_setColorSchemePref(colorSchemePref) {
     if (colorSchemePref === "auto") {
       this._win.addEventListener("devicelight", this, false);
+      this._luxValues = [];
+      this._totalLux = 0;
     } else {
       this._win.removeEventListener("devicelight", this, false);
       this._setColorScheme(colorSchemePref);
+      delete this._luxValues;
+      delete this._totalLux;
     }
 
     Services.prefs.setCharPref("reader.color_scheme", colorSchemePref);

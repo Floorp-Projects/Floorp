@@ -22,7 +22,8 @@ if (typeof findReferences == "function") {
         try {
             return o;
         } finally {
-            rvalueCorrect = referencesVia(null, 'rval', o);
+            rvalueCorrect = referencesVia(null, 'rval', o) ||
+                            referencesVia(null, 'baseline-rval', o);
         }
     }
     rvalueCorrect = false;

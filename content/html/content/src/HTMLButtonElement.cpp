@@ -29,7 +29,7 @@
 #include "nsPresState.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
-#include "nsHTMLFormElement.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozAutoDocUpdate.h"
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
@@ -84,12 +84,12 @@ NS_IMPL_RELEASE_INHERITED(HTMLButtonElement, Element)
 
 // QueryInterface implementation for HTMLButtonElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLButtonElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLButtonElement,
-                                   nsIDOMHTMLButtonElement,
-                                   nsIConstraintValidation)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLButtonElement,
-                                               nsGenericHTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED2(HTMLButtonElement,
+                                nsIDOMHTMLButtonElement,
+                                nsIConstraintValidation)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 // nsIConstraintValidation
 NS_IMPL_NSICONSTRAINTVALIDATION(HTMLButtonElement)
@@ -371,7 +371,7 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // TODO: removing this code and have the submit event sent by the form
           // see bug 592124.
           // Hold a strong ref while dispatching
-          nsRefPtr<nsHTMLFormElement> form(mForm);
+          nsRefPtr<HTMLFormElement> form(mForm);
           presShell->HandleDOMEventWithTarget(mForm, &event, &status);
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }

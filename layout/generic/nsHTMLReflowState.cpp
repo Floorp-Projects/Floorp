@@ -432,14 +432,12 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
     // Create our font inflation data if we don't have it already, and
     // give it our current width information.
-
-    // Avoid running this at the box-to-block interface
-    // (where we shouldn't be inflating anyway, and where
-    // reflow state construction is probably to construct a
-    // dummy parent reflow state anyway).
-    bool dirty = !mFlags.mDummyParentReflowState &&
-                 nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
-
+    bool dirty = nsFontInflationData::UpdateFontInflationDataWidthFor(*this) &&
+                 // Avoid running this at the box-to-block interface
+                 // (where we shouldn't be inflating anyway, and where
+                 // reflow state construction is probably to construct a
+                 // dummy parent reflow state anyway).
+                 !mFlags.mDummyParentReflowState;
 
     if (dirty || (!frame->GetParent() && isHResize)) {
       // When font size inflation is enabled, a change in either:

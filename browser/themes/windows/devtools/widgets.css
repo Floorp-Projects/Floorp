@@ -479,25 +479,25 @@
 }
 
 .variable-or-property:not(:focus) > .title > .token-boolean {
-  color: #777;
+  color: #10c;
 }
 
 .variable-or-property:not(:focus) > .title > .token-number {
-  color: #c40a16;
+  color: #c00;
 }
 
 .variable-or-property:not(:focus) > .title > .token-string {
-  color: #1c00cf;
+  color: #282;
 }
 
 .variable-or-property:not(:focus) > .title > .token-other {
   color: #333;
 }
 
-/* Non enumerable, configurable and writable variables and properties */
+/* Custom configurable/enumerable/writable or frozen/sealed/extensible
+ * variables and properties */
 
-.variable-or-property[proto] > .title > .name,
-.variable-or-property[non-enumerable]:not([self]):not([exception]) > .title > .name {
+.variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]) > .title > .name {
   opacity: 0.5;
 }
 
@@ -505,17 +505,11 @@
   border-bottom: 1px dashed #99f;
 }
 
-.variable-or-property[non-configurable][non-writable] > .title > .name {
+.variable-or-property[non-writable] > .title > .name {
   border-bottom: 1px dashed #f99;
 }
 
-.variable-or-property[safe-getter] > .title > .name {
-  border-bottom: 1px dashed #8b0;
-}
-
-.variable-or-property[non-writable] > .title:after {
-  content: " ";
-  display: inline-block;
+.variable-or-property-non-writable-icon {
   background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
   width: 16px;
   height: 16px;
@@ -523,10 +517,28 @@
 }
 
 @media (min-resolution: 2dppx) {
-  .variable-or-property[non-writable] > .title:after {
+  .variable-or-property-non-writable-icon {
     background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
     background-size: 32px;
   }
+}
+
+.variable-or-property-frozen-label,
+.variable-or-property-sealed-label,
+.variable-or-property-non-extensible-label {
+  -moz-padding-end: 4px;
+}
+
+.variable-or-property:not(:focus) > .title > .variable-or-property-frozen-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-sealed-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-non-extensible-label {
+  color: #666;
+}
+
+/* Special variables and properties */
+
+.variable-or-property[safe-getter] > .title > .name {
+  border-bottom: 1px dashed #8b0;
 }
 
 .variable-or-property[exception]:not(:focus) > .title > .name {
@@ -534,19 +546,9 @@
   text-shadow: 0 0 8px #fcc;
 }
 
-.variable-or-property[non-extensible]:not([non-writable]) > .title:after {
-  content: "N";
-  display: inline-block;
-}
-
-.variable-or-property[sealed]:not([non-writable]) > .title:after {
-  content: "S";
-  display: inline-block;
-}
-
-.variable-or-property[frozen]:not([non-writable]) > .title:after {
-  content: "F";
-  display: inline-block;
+.variable-or-property[return]:not(:focus) > .title > .name {
+  color: #0a0;
+  text-shadow: 0 0 8px #cfc;
 }
 
 /* Variables and properties tooltips */
@@ -557,33 +559,35 @@
 
 .variable-or-property[non-enumerable] > tooltip > label[value=enumerable],
 .variable-or-property[non-configurable] > tooltip > label[value=configurable],
-.variable-or-property[non-writable] > tooltip > label[value=writable] {
+.variable-or-property[non-writable] > tooltip > label[value=writable],
+.variable-or-property[non-extensible] > tooltip > label[value=extensible] {
+  color: #800;
   text-decoration: line-through;
 }
 
-.variable-or-property:not([safe-getter]) > tooltip > label[value=native-getter],
-.variable-or-property:not([non-extensible]) > tooltip > label[value=non-extensible],
-.variable-or-property:not([frozen]) > tooltip > label[value=frozen],
-.variable-or-property:not([sealed]) > tooltip > label[value=sealed] {
-  display: none;
+.variable-or-property[safe-getter] > tooltip > label[value=WebIDL] {
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #000;
+  color: #080;
 }
 
 /* Variables and properties editing */
 
 .variables-view-delete {
-  list-style-image: url("chrome://browser/skin/devtools/toolbarbutton-close.png");
-  -moz-image-region: rect(0,32px,16px,16px);
-  opacity: 0;
+  list-style-image: url("chrome://browser/skin/devtools/vview-delete.png");
+  -moz-image-region: rect(0,16px,16px,0);
 }
 
 .variables-view-delete:hover {
-  opacity: 1;
+  -moz-image-region: rect(0,32px,16px,16px);
 }
 
-*:hover > .title > .variables-view-delete:not(:hover),
-*:focus > .title > .variables-view-delete:not(:hover) {
-  opacity: 0.5;
-  transition: opacity 0.2s ease-in-out;
+.variables-view-delete:active {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+*:not(:hover) .variables-view-delete {
+  display: none;
 }
 
 .variables-view-delete > .toolbarbutton-text {
@@ -591,7 +595,7 @@
 }
 
 .variables-view-edit {
-  background: url("chrome://browser/skin/tabview/edit-light.png") center no-repeat;
+  background: url("chrome://browser/skin/devtools/vview-edit.png") center no-repeat;
   width: 20px;
   height: 16px;
   cursor: pointer;

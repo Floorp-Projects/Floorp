@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_file_filerequest_h__
 #define mozilla_dom_file_filerequest_h__
 
+#include "mozilla/Attributes.h"
 #include "FileCommon.h"
 
 #include "DOMRequest.h"
@@ -27,7 +28,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   void
   OnProgress(uint64_t aProgress, uint64_t aProgressMax)

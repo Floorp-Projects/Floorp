@@ -503,12 +503,28 @@ void MediaDecoderStateMachine::DecodeThreadRun()
 
     while (mState != DECODER_STATE_SHUTDOWN &&
            mState != DECODER_STATE_COMPLETED &&
+           mState != DECODER_STATE_DORMANT &&
            !mStopDecodeThread)
     {
       if (mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) {
         DecodeLoop();
       } else if (mState == DECODER_STATE_SEEKING) {
         DecodeSeek();
+      } else if (mState == DECODER_STATE_DECODING_METADATA) {
+        if (NS_FAILED(DecodeMetadata())) {
+          NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
+                       "Should be in shutdown state if metadata loading fails.");
+          LOG(PR_LOG_DEBUG, ("Decode metadata failed, shutting down decode thread"));
+        }
+      } else if (mState == DECODER_STATE_WAIT_FOR_RESOURCES) {
+        mDecoder->GetReentrantMonitor().Wait();
+
+        if (!mReader->IsWaitingMediaResources()) {
+          // change state to DECODER_STATE_WAIT_FOR_RESOURCES
+          StartDecodeMetadata();
+        }
+      } else if (mState == DECODER_STATE_DORMANT) {
+        mDecoder->GetReentrantMonitor().Wait();
       }
     }
 
@@ -953,6 +969,7 @@ void MediaDecoderStateMachine::DecodeLoop()
 
   if (!mStopDecodeThread &&
       mState != DECODER_STATE_SHUTDOWN &&
+      mState != DECODER_STATE_DORMANT &&
       mState != DECODER_STATE_SEEKING)
   {
     mState = DECODER_STATE_COMPLETED;
@@ -1457,6 +1474,33 @@ void MediaDecoderStateMachine::SetMediaSeekable(bool aMediaSeekable)
   mMediaSeekable = aMediaSeekable;
 }
 
+bool MediaDecoderStateMachine::IsDormantNeeded()
+{
+  return mReader->IsDormantNeeded();
+}
+
+void MediaDecoderStateMachine::SetDormant(bool aDormant)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+
+  if (!mReader) {
+    return;
+  }
+
+  if (aDormant) {
+    ScheduleStateMachine();
+    mState = DECODER_STATE_DORMANT;
+    mDecoder->GetReentrantMonitor().NotifyAll();
+  } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
+    ScheduleStateMachine();
+    mStartTime = 0;
+    mCurrentFrameTime = 0;
+    mState = DECODER_STATE_DECODING_METADATA;
+    mDecoder->GetReentrantMonitor().NotifyAll();
+  }
+}
+
 void MediaDecoderStateMachine::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -1482,6 +1526,22 @@ void MediaDecoderStateMachine::StartDecoding()
   }
   mState = DECODER_STATE_DECODING;
   ScheduleStateMachine();
+}
+
+void MediaDecoderStateMachine::StartWaitForResources()
+{
+  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+               "Should be on state machine or decode thread.");
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mState = DECODER_STATE_WAIT_FOR_RESOURCES;
+}
+
+void MediaDecoderStateMachine::StartDecodeMetadata()
+{
+  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+               "Should be on state machine or decode thread.");
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mState = DECODER_STATE_DECODING_METADATA;
 }
 
 void MediaDecoderStateMachine::Play()
@@ -1815,6 +1875,12 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     res = mReader->ReadMetadata(&info, &tags);
   }
+  if (NS_SUCCEEDED(res) && (mState == DECODER_STATE_DECODING_METADATA) && (mReader->IsWaitingMediaResources())) {
+    // change state to DECODER_STATE_WAIT_FOR_RESOURCES
+    StartWaitForResources();
+    return NS_OK;
+  }
+
   mInfo = info;
 
   if (NS_FAILED(res) || (!info.mHasVideo && !info.mHasAudio)) {
@@ -1978,7 +2044,7 @@ void MediaDecoderStateMachine::DecodeSeek()
     }
   }
   mDecoder->StartProgressUpdates();
-  if (mState == DECODER_STATE_SHUTDOWN)
+  if (mState == DECODER_STATE_DORMANT || mState == DECODER_STATE_SHUTDOWN)
     return;
 
   // Try to decode another frame to detect if we're at the end...
@@ -2081,6 +2147,10 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // Now that those threads are stopped, there's no possibility of
       // mPendingWakeDecoder being needed again. Revoke it.
       mPendingWakeDecoder = nullptr;
+      {
+        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+        mReader->ReleaseMediaResources();
+      }
       NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
                    "How did we escape from the shutdown state?");
       // We must daisy-chain these events to destroy the decoder. We must
@@ -2097,6 +2167,26 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // dispatch an event to the main thread to release the decoder and
       // state machine.
       NS_DispatchToCurrentThread(new nsDispatchDisposeEvent(mDecoder, this));
+      return NS_OK;
+    }
+
+    case DECODER_STATE_DORMANT: {
+      if (IsPlaying()) {
+        StopPlayback();
+      }
+      StopAudioThread();
+      StopDecodeThread();
+      // Now that those threads are stopped, there's no possibility of
+      // mPendingWakeDecoder being needed again. Revoke it.
+      mPendingWakeDecoder = nullptr;
+      {
+        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+        mReader->ReleaseMediaResources();
+      }
+      return NS_OK;
+    }
+
+    case DECODER_STATE_WAIT_FOR_RESOURCES: {
       return NS_OK;
     }
 
@@ -2376,11 +2466,13 @@ void MediaDecoderStateMachine::AdvanceFrame()
     while (mRealTime || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->mEndTime;
       currentFrame = frame;
-      LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld", mDecoder.get(), frame->mTime));
 #ifdef PR_LOGGING
-      if (droppedFrames++) {
-        LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld (%d so far)",
-              mDecoder.get(), frame->mTime, droppedFrames - 1));
+      if (!PR_GetEnv("MOZ_QUIET")) {
+        LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld", mDecoder.get(), frame->mTime));
+        if (droppedFrames++) {
+          LOG(PR_LOG_DEBUG, ("%p Decoder discarding video frame %lld (%d so far)",
+            mDecoder.get(), frame->mTime, droppedFrames - 1));
+        }
       }
 #endif
       mReader->VideoQueue().PopFront();
@@ -2443,8 +2535,12 @@ void MediaDecoderStateMachine::AdvanceFrame()
       ScheduleStateMachine();
       return;
     }
-    mDecoder->GetFrameStatistics().NotifyPresentedFrame();
+    MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
+    frameStats.NotifyPresentedFrame();
     remainingTime = currentFrame->mEndTime - clock_time;
+    int64_t frameDuration = currentFrame->mEndTime - currentFrame->mTime;
+    double displayError = fabs(double(frameDuration - remainingTime) / USECS_PER_S);
+    frameStats.NotifyPlaybackJitter(displayError);
     currentFrame = nullptr;
   }
 
@@ -2530,21 +2626,16 @@ void MediaDecoderStateMachine::UpdateReadyState() {
   }
   mLastFrameStatus = nextFrameStatus;
 
+  /* This is a bit tricky. MediaDecoder::UpdateReadyStateForData will run on
+   * the main thread and re-evaluate GetNextFrameStatus there, passing it to
+   * HTMLMediaElement::UpdateReadyStateForData. It doesn't use the value of
+   * GetNextFrameStatus we computed here, because what we're computing here
+   * could be stale by the time MediaDecoder::UpdateReadyStateForData runs.
+   * We only compute GetNextFrameStatus here to avoid posting runnables to the main
+   * thread unnecessarily.
+   */
   nsCOMPtr<nsIRunnable> event;
-  switch (nextFrameStatus) {
-    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING:
-      event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameUnavailableBuffering);
-      break;
-    case MediaDecoderOwner::NEXT_FRAME_AVAILABLE:
-      event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameAvailable);
-      break;
-    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE:
-      event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameUnavailable);
-      break;
-    default:
-      PR_NOT_REACHED("unhandled frame state");
-  }
-
+  event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::UpdateReadyStateForData);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 

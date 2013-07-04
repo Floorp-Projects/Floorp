@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FramePropertyTable.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "prlog.h"
 
 namespace mozilla {
@@ -228,7 +231,7 @@ FramePropertyTable::DeleteAll()
 }
 
 size_t
-FramePropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+FramePropertyTable::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mEntries.SizeOfExcludingThis(SizeOfPropertyTableEntryExcludingThis,
                                       aMallocSizeOf);
@@ -236,7 +239,7 @@ FramePropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 
 /* static */ size_t
 FramePropertyTable::SizeOfPropertyTableEntryExcludingThis(Entry* aEntry,
-                      nsMallocSizeOfFun aMallocSizeOf, void *)
+                      mozilla::MallocSizeOf aMallocSizeOf, void *)
 {
   return aEntry->mProp.SizeOfExcludingThis(aMallocSizeOf);
 }

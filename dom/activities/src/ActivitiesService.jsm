@@ -178,6 +178,11 @@ let Activities = {
     }, this);
     ppmm = null;
 
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+
     Services.obs.removeObserver(this, "xpcom-shutdown");
   },
 

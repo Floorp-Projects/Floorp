@@ -98,7 +98,7 @@ SVGScriptElement::SetCrossOrigin(const nsAString & aOrigin, ErrorResult& rv)
   rv = SetAttr(kNameSpaceID_None, nsGkAtoms::crossorigin, aOrigin, true);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGScriptElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

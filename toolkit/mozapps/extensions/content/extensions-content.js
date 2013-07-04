@@ -23,7 +23,7 @@ var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
 
 function createInstallTrigger(window) {
   let chromeObject = {
-    window: window,
+    principal: window.document.nodePrincipal,
     url: window.document.documentURIObject,
 
     __exposedProps__: {
@@ -149,9 +149,8 @@ function createInstallTrigger(window) {
     checkLoadURIFromScript: function createInstallTrigger_checkLoadURIFromScript(aUri) {
       var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
                    getService(Ci.nsIScriptSecurityManager);
-      var principal = this.window.document.nodePrincipal;
       try {
-        secman.checkLoadURIWithPrincipal(principal, aUri,
+        secman.checkLoadURIWithPrincipal(this.principal, aUri,
           Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         return true;
       }

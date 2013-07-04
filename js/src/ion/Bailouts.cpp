@@ -4,19 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsanalyze.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "Bailouts.h"
-#include "SnapshotReader.h"
-#include "Ion.h"
-#include "IonCompartment.h"
-#include "IonSpewer.h"
 #include "jsinfer.h"
-#include "jsanalyze.h"
-#include "jsinferinlines.h"
+
+#include "ion/Bailouts.h"
+#include "ion/SnapshotReader.h"
+#include "ion/Ion.h"
+#include "ion/IonCompartment.h"
+#include "ion/IonSpewer.h"
 #include "vm/Interpreter.h"
-#include "IonFrames-inl.h"
-#include "BaselineJIT.h"
+#include "ion/BaselineJIT.h"
+
+#include "jsinferinlines.h"
+
+#include "ion/IonFrames-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -69,9 +73,9 @@ ion::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     JSContext *cx = GetIonContext()->cx;
     // We don't have an exit frame.
     cx->mainThread().ionTop = NULL;
-    IonActivationIterator ionActivations(cx);
-    IonBailoutIterator iter(ionActivations, sp);
-    IonActivation *activation = ionActivations.activation();
+    JitActivationIterator jitActivations(cx->runtime());
+    IonBailoutIterator iter(jitActivations, sp);
+    JitActivation *activation = jitActivations.activation()->asJit();
 
     IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
@@ -100,9 +104,9 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
 
     // We don't have an exit frame.
     cx->mainThread().ionTop = NULL;
-    IonActivationIterator ionActivations(cx);
-    IonBailoutIterator iter(ionActivations, sp);
-    IonActivation *activation = ionActivations.activation();
+    JitActivationIterator jitActivations(cx->runtime());
+    IonBailoutIterator iter(jitActivations, sp);
+    JitActivation *activation = jitActivations.activation()->asJit();
 
     IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", iter.snapshotOffset());
 
@@ -133,7 +137,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    iter.ionScript()->decref(cx->runtime->defaultFreeOp());
+    iter.ionScript()->decref(cx->runtime()->defaultFreeOp());
 
     return retval;
 }

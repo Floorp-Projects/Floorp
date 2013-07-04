@@ -26,11 +26,11 @@ DEFINES += \
 	-DPRE_RELEASE_SUFFIX="$(PRE_RELEASE_SUFFIX)" \
 	$(NULL)
 
-ifneq (,$(filter windows gtk2 cocoa, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows gtk2 gtk3 cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
 
-ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows cocoa gtk2 gtk3, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
 endif
 
@@ -38,6 +38,6 @@ ifneq (,$(filter windows cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DCAN_DRAW_IN_TITLEBAR=1
 endif
 
-ifneq (,$(filter windows gtk2, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows gtk2 gtk3, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DMENUBAR_CAN_AUTOHIDE=1
 endif

@@ -367,6 +367,7 @@ WebappsApplication.prototype = {
     this.initHelper(aWindow, ["Webapps:OfflineCache",
                               "Webapps:CheckForUpdate:Return:OK",
                               "Webapps:CheckForUpdate:Return:KO",
+                              "Webapps:Launch:Return:OK",
                               "Webapps:Launch:Return:KO",
                               "Webapps:PackageEvent",
                               "Webapps:ClearBrowserData:Return"]);
@@ -518,6 +519,9 @@ WebappsApplication.prototype = {
       case "Webapps:Launch:Return:KO":
         Services.DOMRequest.fireError(req, "APP_INSTALL_PENDING");
         break;
+      case "Webapps:Launch:Return:OK":
+        Services.DOMRequest.fireSuccess(req);
+        break;
       case "Webapps:CheckForUpdate:Return:KO":
         Services.DOMRequest.fireError(req, msg.error);
         break;
@@ -565,6 +569,7 @@ WebappsApplication.prototype = {
           if (this.installState == "installed") {
             this._downloadError = null;
             this.downloading = false;
+            this.downloadAvailable = false;
             this._fireEvent("downloadsuccess", this._ondownloadsuccess);
             this._fireEvent("downloadapplied", this._ondownloadapplied);
           } else {

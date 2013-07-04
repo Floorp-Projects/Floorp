@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_move_group_resolver_h__
-#define jsion_move_group_resolver_h__
+#ifndef ion_MoveResolver_h
+#define ion_MoveResolver_h
 
-#include "Registers.h"
-#include "InlineList.h"
-#include "IonAllocPolicy.h"
+#include "ion/Registers.h"
+#include "ion/InlineList.h"
+#include "ion/IonAllocPolicy.h"
 
 namespace js {
 namespace ion {
@@ -25,6 +25,7 @@ class MoveResolver
             REG,
             FLOAT_REG,
             ADDRESS,
+            FLOAT_ADDRESS,
             EFFECTIVE_ADDRESS
         };
 
@@ -35,7 +36,8 @@ class MoveResolver
       public:
         enum AddressKind {
             MEMORY = ADDRESS,
-            EFFECTIVE = EFFECTIVE_ADDRESS
+            EFFECTIVE = EFFECTIVE_ADDRESS,
+            FLOAT = FLOAT_ADDRESS
         };
 
         MoveOperand()
@@ -61,10 +63,13 @@ class MoveResolver
             return kind_ == REG;
         }
         bool isDouble() const {
-            return kind_ == FLOAT_REG;
+            return kind_ == FLOAT_REG || kind_ == FLOAT_ADDRESS;
         }
         bool isMemory() const {
             return kind_ == ADDRESS;
+        }
+        bool isFloatAddress() const {
+            return kind_ == FLOAT_ADDRESS;
         }
         bool isEffectiveAddress() const {
             return kind_ == EFFECTIVE_ADDRESS;
@@ -78,7 +83,7 @@ class MoveResolver
             return FloatRegister::FromCode(code_);
         }
         Register base() const {
-            JS_ASSERT(isMemory() || isEffectiveAddress());
+            JS_ASSERT(isMemory() || isEffectiveAddress() || isFloatAddress());
             return Register::FromCode(code_);
         }
         int32_t disp() const {
@@ -93,6 +98,9 @@ class MoveResolver
             if (isMemory() || isEffectiveAddress())
                 return disp_ == other.disp_;
             return true;
+        }
+        bool operator !=(const MoveOperand &other) const {
+            return !operator==(other);
         }
     };
 
@@ -208,5 +216,4 @@ class MoveResolver
 } // namespace ion
 } // namespace js
 
-#endif // jsion_move_group_resolver_h__
-
+#endif /* ion_MoveResolver_h */

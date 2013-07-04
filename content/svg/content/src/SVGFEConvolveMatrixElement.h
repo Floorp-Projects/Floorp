@@ -58,18 +58,18 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> OrderX();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> OrderY();
+  already_AddRefed<SVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedInteger> OrderX();
+  already_AddRefed<SVGAnimatedInteger> OrderY();
   already_AddRefed<DOMSVGAnimatedNumberList> KernelMatrix();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> TargetX();
-  already_AddRefed<nsIDOMSVGAnimatedInteger> TargetY();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> EdgeMode();
+  already_AddRefed<SVGAnimatedInteger> TargetX();
+  already_AddRefed<SVGAnimatedInteger> TargetY();
+  already_AddRefed<SVGAnimatedEnumeration> EdgeMode();
   already_AddRefed<SVGAnimatedBoolean> PreserveAlpha();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Divisor();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Bias();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthX();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthY();
+  already_AddRefed<SVGAnimatedNumber> Divisor();
+  already_AddRefed<SVGAnimatedNumber> Bias();
+  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthX();
+  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthY();
 
 protected:
   virtual bool OperatesOnPremultipledAlpha(int32_t) MOZ_OVERRIDE {

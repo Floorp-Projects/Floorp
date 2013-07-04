@@ -9,6 +9,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 
 class nsIIDNService;
 class nsIMemoryReporter;
@@ -110,7 +111,7 @@ public:
   nsEffectiveTLDService() { }
   nsresult Init();
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
   nsresult GetBaseDomainInternal(nsCString &aHostname, int32_t aAdditionalParts, nsACString &aBaseDomain);

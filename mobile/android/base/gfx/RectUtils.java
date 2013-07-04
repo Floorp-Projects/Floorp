@@ -31,7 +31,7 @@ public final class RectUtils {
     }
 
     public static String toJSON(RectF rect) {
-        StringBuffer sb = new StringBuffer(256);
+        StringBuilder sb = new StringBuilder(256);
         sb.append("{ \"left\": ").append(rect.left)
           .append(", \"top\": ").append(rect.top)
           .append(", \"right\": ").append(rect.right)
@@ -72,6 +72,15 @@ public final class RectUtils {
         return new RectF(x, y,
                          x + (rect.width() * scale),
                          y + (rect.height() * scale));
+    }
+
+    public static RectF scaleAndRound(RectF rect, float scale) {
+        float left = rect.left * scale;
+        float top = rect.top * scale;
+        return new RectF(Math.round(left),
+                         Math.round(top),
+                         Math.round(left + (rect.width() * scale)),
+                         Math.round(top + (rect.height() * scale)));
     }
 
     /** Returns the nearest integer rect of the given rect. */

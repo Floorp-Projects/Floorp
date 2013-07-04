@@ -6,8 +6,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
-<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://browser/content/downloads/indicator.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/indicator.css"?>
 
 <!DOCTYPE overlay [
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >

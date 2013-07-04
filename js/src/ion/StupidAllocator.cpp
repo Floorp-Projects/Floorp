@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StupidAllocator.h"
+#include "ion/StupidAllocator.h"
 
 using namespace js;
 using namespace js::ion;
@@ -36,8 +36,7 @@ StupidAllocator::registerIndex(AnyRegister reg)
         if (reg == registers[i].reg)
             return i;
     }
-    JS_NOT_REACHED("Bad register");
-    return UINT32_MAX;
+    MOZ_ASSUME_UNREACHABLE("Bad register");
 }
 
 bool
@@ -46,10 +45,8 @@ StupidAllocator::init()
     if (!RegisterAllocator::init())
         return false;
 
-    if (!virtualRegisters.reserve(graph.numVirtualRegisters()))
+    if (!virtualRegisters.appendN((LDefinition *)NULL, graph.numVirtualRegisters()))
         return false;
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++)
-        virtualRegisters.infallibleAppend((LDefinition *)NULL);
 
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         LBlock *block = graph.getBlock(i);

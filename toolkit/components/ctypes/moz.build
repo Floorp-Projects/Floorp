@@ -12,3 +12,8 @@ CPP_SOURCES += [
     'ctypes.cpp',
 ]
 
+LIBRARY_NAME = 'jsctypes'
+
+EXTRA_JS_MODULES += [
+    'ctypes.jsm',
+]

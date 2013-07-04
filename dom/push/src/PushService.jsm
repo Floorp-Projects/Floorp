@@ -19,7 +19,9 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource://gre/modules/AlarmService.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
+                                  "resource://gre/modules/AlarmService.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushService"];
 
@@ -285,33 +287,40 @@ const STATE_READY = 3;
 this.PushService = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "final-ui-startup":
-        Services.obs.removeObserver(this, "final-ui-startup");
-        this.init();
-        break;
-      case "profile-change-teardown":
-        Services.obs.removeObserver(this, "profile-change-teardown");
-        this._shutdown();
-        break;
-      case "network-active-changed":
+      /*
+       * We need to call uninit() on shutdown to clean up things that modules aren't very good
+       * at automatically cleaning up, so we don't get shutdown leaks on browser shutdown.
+       */
+      case "xpcom-shutdown":
+        this.uninit();
+      case "network-active-changed":         /* On B2G. */
+      case "network:offline-status-changed": /* On desktop. */
+        // In case of network-active-changed, always disconnect existing
+        // connections. In case of offline-status changing from offline to
+        // online, it is likely that these statements will be no-ops.
         if (this._udpServer) {
           this._udpServer.close();
         }
 
         this._shutdownWS();
 
-        // Check to see if we need to do anything.
-        this._db.getAllChannelIDs(function(channelIDs) {
-          if (channelIDs.length > 0) {
-            this._beginWSSetup();
-          }
-        }.bind(this));
+        // Try to connect if network-active-changed or the offline-status
+        // changed to online.
+        if (aTopic === "network-active-changed" || aData === "online") {
+          this._startListeningIfChannelsPresent();
+        }
         break;
       case "nsPref:changed":
         if (aData == "services.push.serverURL") {
           debug("services.push.serverURL changed! websocket. new value " +
                 prefs.get("serverURL"));
           this._shutdownWS();
+        } else if (aData == "services.push.connection.enabled") {
+          if (prefs.get("connection.enabled")) {
+            this._startListeningIfChannelsPresent();
+          } else {
+            this._shutdownWS();
+          }
         }
         break;
       case "timer-callback":
@@ -355,7 +364,7 @@ this.PushService = {
             // just for it
             if (this._ws) {
               debug("Had a connection, so telling the server");
-              this._request("unregister", {channelID: records[i].channelID});
+              this._sendRequest("unregister", {channelID: records[i].channelID});
             }
           }
         }.bind(this), function() {
@@ -406,21 +415,6 @@ this.PushService = {
     if (!prefs.get("enabled"))
         return null;
 
-    Services.obs.addObserver(this, "profile-change-teardown", false);
-    Services.obs.addObserver(this, "webapps-uninstall", false);
-
-    // This observer is notified only on B2G by
-    // dom/system/gonk/NetworkManager.js.
-    //
-    // The "active network" is based on priority - i.e. Wi-Fi has higher
-    // priority than data. The PushService should just use the preferred
-    // network, and not care about all interface changes.
-    // network-active-changed is not fired when the network goes offline, but
-    // socket connections time out. The check for Services.io.offline in
-    // _beginWSSetup() prevents unnecessary retries.  When the network comes
-    // back online, network-active-changed is fired.
-    Services.obs.addObserver(this, "network-active-changed", false);
-
     this._db = new PushDB(this);
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
@@ -436,22 +430,38 @@ this.PushService = {
 
     this._udpPort = prefs.get("udp.port");
 
-    this._db.getAllChannelIDs(
-      function(channelIDs) {
-        if (channelIDs.length > 0) {
-          debug("Found registered channelIDs. Starting WebSocket");
-          this._beginWSSetup();
-        }
-      }.bind(this),
+    this._startListeningIfChannelsPresent();
 
-      function(error) {
-        debug("db error " + error);
-      }
-    );
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "webapps-uninstall", false);
+
+    // On B2G the NetworkManager interface fires a network-active-changed
+    // event.
+    //
+    // The "active network" is based on priority - i.e. Wi-Fi has higher
+    // priority than data. The PushService should just use the preferred
+    // network, and not care about all interface changes.
+    // network-active-changed is not fired when the network goes offline, but
+    // socket connections time out. The check for Services.io.offline in
+    // _beginWSSetup() prevents unnecessary retries.  When the network comes
+    // back online, network-active-changed is fired.
+    //
+    // On non-B2G platforms, the offline-status-changed event is used to know
+    // when to (dis)connect. It may not fire if the underlying OS changes
+    // networks; in such a case we rely on timeout.
+    //
+    // On B2G both events fire, one after the other, when the network goes
+    // online, so we explicitly check for the presence of NetworkManager and
+    // don't add an observer for offline-status-changed on B2G.
+    Services.obs.addObserver(this, this._getNetworkStateChangeEventName(), false);
 
     // This is only used for testing. Different tests require connecting to
     // slightly different URLs.
     prefs.observe("serverURL", this);
+    // Used to monitor if the user wishes to disable Push.
+    prefs.observe("connection.enabled", this);
+
+    this._started = true;
   },
 
   _shutdownWS: function() {
@@ -470,11 +480,17 @@ this.PushService = {
     this._stopAlarm();
   },
 
-  _shutdown: function() {
-    debug("_shutdown()");
+  uninit: function() {
+    if (!this._started)
+      return;
 
-    Services.obs.removeObserver(this, "network-active-changed");
+    debug("uninit()");
+
+    prefs.ignore("connection.enabled", this);
+    prefs.ignore("serverURL", this);
+    Services.obs.removeObserver(this, this._getNetworkStateChangeEventName());
     Services.obs.removeObserver(this, "webapps-uninstall", false);
+    Services.obs.removeObserver(this, "xpcom-shutdown", false);
 
     if (this._db) {
       this._db.close();
@@ -495,8 +511,9 @@ this.PushService = {
     // try to reconnect. Stop the timer.
     this._stopAlarm();
 
-    if (this._requestTimeoutTimer)
+    if (this._requestTimeoutTimer) {
       this._requestTimeoutTimer.cancel();
+    }
 
     debug("shutdown complete!");
   },
@@ -537,6 +554,11 @@ this.PushService = {
     if (this._currentState != STATE_SHUT_DOWN) {
       debug("_beginWSSetup: Not in shutdown state! Current state " +
             this._currentState);
+      return;
+    }
+
+    if (!prefs.get("connection.enabled")) {
+      debug("_beginWSSetup: connection.enabled is not set to true. Aborting.");
       return;
     }
 
@@ -582,6 +604,15 @@ this.PushService = {
     this._ws.protocol = "push-notification";
     this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
     this._currentState = STATE_WAITING_FOR_WS_START;
+  },
+
+  _startListeningIfChannelsPresent: function() {
+    // Check to see if we need to do anything.
+    this._db.getAllChannelIDs(function(channelIDs) {
+      if (channelIDs.length > 0) {
+        this._beginWSSetup();
+      }
+    }.bind(this));
   },
 
   /** |delay| should be in milliseconds. */
@@ -1151,6 +1182,12 @@ this.PushService = {
     }
 
     this._db.getByPushEndpoint(aPageRecord.pushEndpoint, function(record) {
+      // If the endpoint didn't exist, let's just fail.
+      if (record === undefined) {
+        fail("NotFoundError");
+        return;
+      }
+
       // Non-owner tried to unregister, say success, but don't do anything.
       if (record.manifestURL !== aPageRecord.manifestURL) {
         aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
@@ -1419,7 +1456,15 @@ this.PushService = {
       mnc: 0,
       ip: undefined
     };
+  },
+
+  // utility function used to add/remove observers in init() and shutdown()
+  _getNetworkStateChangeEventName: function() {
+    try {
+      Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
+      return "network-active-changed";
+    } catch (e) {
+      return "network:offline-status-changed";
+    }
   }
 }
-
-PushService.init();

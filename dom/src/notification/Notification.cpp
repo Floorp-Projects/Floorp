@@ -254,7 +254,7 @@ NotificationTask::Run()
   case eClose:
     return mNotification->CloseInternal();
   default:
-    MOZ_NOT_REACHED("Unexpected action for NotificationTask.");
+    MOZ_CRASH("Unexpected action for NotificationTask.");
   }
 }
 
@@ -382,7 +382,7 @@ Notification::RequestPermission(const GlobalObject& aGlobal,
 
   NotificationPermissionCallback* permissionCallback = nullptr;
   if (aCallback.WasPassed()) {
-    permissionCallback = aCallback.Value().get();
+    permissionCallback = &aCallback.Value();
   }
   nsCOMPtr<nsIRunnable> request =
     new NotificationPermissionRequest(principal, window, permissionCallback);

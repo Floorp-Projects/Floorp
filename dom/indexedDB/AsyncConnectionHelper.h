@@ -41,7 +41,7 @@ public:
   virtual nsresult GetResultCode() = 0;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) = 0;
+                                    JS::MutableHandle<JS::Value> aVal) = 0;
 
   IDBRequest* GetRequest() const
   {
@@ -61,7 +61,7 @@ protected:
    */
   nsresult WrapNative(JSContext* aCx,
                       nsISupports* aNative,
-                      jsval* aResult);
+                      JS::MutableHandle<JS::Value> aResult);
 
   /**
    * Gives the subclass a chance to release any objects that must be released
@@ -201,7 +201,7 @@ protected:
    * accesses the result property of the request.
    */
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   /**
    * Gives the subclass a chance to release any objects that must be released
@@ -216,7 +216,7 @@ protected:
   static nsresult ConvertToArrayAndCleanup(
                                 JSContext* aCx,
                                 nsTArray<StructuredCloneReadInfo>& aReadInfos,
-                                jsval* aResult);
+                                JS::MutableHandle<JS::Value> aResult);
 
   /**
    * This should only be called by AutoSetCurrentTransaction.

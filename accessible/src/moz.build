@@ -6,7 +6,7 @@
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
-if toolkit == 'gtk2':
+if CONFIG['MOZ_ENABLE_GTK']:
     DIRS += ['atk']
 elif toolkit == 'windows':
     DIRS += ['windows']

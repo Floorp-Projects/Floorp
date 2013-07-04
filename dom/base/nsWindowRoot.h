@@ -14,6 +14,7 @@ class nsIDOMEvent;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMEventTarget.h"
 #include "nsEventListenerManager.h"
 #include "nsPIWindowRoot.h"
@@ -36,20 +37,20 @@ public:
 
   // nsPIWindowRoot
 
-  virtual nsPIDOMWindow* GetWindow();
+  virtual nsPIDOMWindow* GetWindow() MOZ_OVERRIDE;
 
-  virtual nsresult GetControllers(nsIControllers** aResult);
+  virtual nsresult GetControllers(nsIControllers** aResult) MOZ_OVERRIDE;
   virtual nsresult GetControllerForCommand(const char * aCommand,
-                                           nsIController** _retval);
+                                           nsIController** _retval) MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* GetPopupNode();
-  virtual void SetPopupNode(nsIDOMNode* aNode);
+  virtual nsIDOMNode* GetPopupNode() MOZ_OVERRIDE;
+  virtual void SetPopupNode(nsIDOMNode* aNode) MOZ_OVERRIDE;
 
-  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget)
+  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) MOZ_OVERRIDE
   {
     mParent = aTarget;
   }
-  virtual mozilla::dom::EventTarget* GetParentTarget() { return mParent; }
+  virtual mozilla::dom::EventTarget* GetParentTarget() MOZ_OVERRIDE { return mParent; }
   virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsWindowRoot,

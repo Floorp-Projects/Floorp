@@ -302,6 +302,11 @@ class MochiRemote(Mochitest):
         if options.utilityPath == None:
             print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
             sys.exit(1)
+        # httpd-path is specified by standard makefile targets and may be specified
+        # on the command line to select a particular version of httpd.js. If not
+        # specified, try to select the one from hostutils.zip, as required in bug 882932.
+        if not options.httpdPath:
+            options.httpdPath = os.path.join(options.utilityPath, "components")
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
         if localAutomation.elf_arm(xpcshell_path):
@@ -468,11 +473,13 @@ class MochiRemote(Mochitest):
             # pullFile will fail -- continue silently.
             pass
 
-    def printDeviceInfo(self):
+    def printDeviceInfo(self, printLogcat=False):
         try:
-            logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
-            print ''.join(logcat)
-            print self._dm.getInfo()
+            if printLogcat:
+                logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
+                print ''.join(logcat)
+            print "Device info: %s" % self._dm.getInfo()
+            print "Test root: %s" % self._dm.getDeviceRoot()
         except devicemanager.DMError:
             print "WARNING: Error getting device information"
 
@@ -547,7 +554,7 @@ def main():
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
 
-    print dm.getInfo()
+    mochitest.printDeviceInfo()
 
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
@@ -633,7 +640,7 @@ def main():
                     print "ERROR: runTests() exited with code %s" % result
                 log_result = mochitest.addLogData()
                 if result != 0 or log_result != 0:
-                    mochitest.printDeviceInfo()
+                    mochitest.printDeviceInfo(printLogcat=True)
                     mochitest.printScreenshot()
                 # Ensure earlier failures aren't overwritten by success on this run
                 if retVal is None or retVal == 0:
@@ -686,7 +693,7 @@ def main():
                 pass
             retVal = 1
 
-    mochitest.printDeviceInfo()
+    mochitest.printDeviceInfo(printLogcat=True)
 
     sys.exit(retVal)
 

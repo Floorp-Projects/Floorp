@@ -174,7 +174,7 @@ PrintParameterUsage()
     fputs(
 "-V [min]:[max] restricts the set of enabled SSL/TLS protocol versions.\n"
 "   All versions are enabled by default.\n"
-"   Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1\n"
+"   Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1 tls1.2\n"
 "   Example: \"-V ssl3:\" enables SSL 3 and newer.\n"
 "-B bypasses the PKCS11 layer for SSL encryption and MACing\n"
 "-q checks for bypassability\n"
@@ -1028,7 +1028,7 @@ reload_crl(PRFileDesc *crlFile)
         return SECFailure;
     }
 
-    rv = SECU_ReadDERFromFile(crlDer, crlFile, PR_FALSE);
+    rv = SECU_ReadDERFromFile(crlDer, crlFile, PR_FALSE, PR_FALSE);
     if (rv != SECSuccess) {
         errWarn("Unable to read input file.");
         PORT_Free(crlDer);

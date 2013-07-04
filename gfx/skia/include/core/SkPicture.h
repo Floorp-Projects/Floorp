@@ -10,9 +10,10 @@
 #ifndef SkPicture_DEFINED
 #define SkPicture_DEFINED
 
+#include "SkBitmap.h"
 #include "SkRefCnt.h"
 
-class SkBitmap;
+class SkBBoxHierarchy;
 class SkCanvas;
 class SkPicturePlayback;
 class SkPictureRecord;
@@ -37,11 +38,37 @@ public:
         this call, those elements will not appear in this picture.
     */
     SkPicture(const SkPicture& src);
+
     /**
-     *  Recreate a picture that was serialized into a stream. If an error occurs
-     *  the picture will be "empty" : width and height == 0
+     *  Recreate a picture that was serialized into a stream.
+     *  On failure, silently creates an empty picture.
+     *  @param SkStream Serialized picture data.
      */
     explicit SkPicture(SkStream*);
+
+    /**
+     *  Function signature defining a function that sets up an SkBitmap from encoded data. On
+     *  success, the SkBitmap should have its Config, width, height, rowBytes and pixelref set.
+     *  If the installed pixelref has decoded the data into pixels, then the src buffer need not be
+     *  copied. If the pixelref defers the actual decode until its lockPixels() is called, then it
+     *  must make a copy of the src buffer.
+     *  @param src Encoded data.
+     *  @param length Size of the encoded data, in bytes.
+     *  @param dst SkBitmap to install the pixel ref on.
+     *  @param bool Whether or not a pixel ref was successfully installed.
+     */
+    typedef bool (*InstallPixelRefProc)(const void* src, size_t length, SkBitmap* dst);
+
+    /**
+     *  Recreate a picture that was serialized into a stream.
+     *  @param SkStream Serialized picture data.
+     *  @param success Output parameter. If non-NULL, will be set to true if the picture was
+     *                 deserialized successfully and false otherwise.
+     *  @param proc Function pointer for installing pixelrefs on SkBitmaps representing the
+     *              encoded bitmap data from the stream.
+     */
+    SkPicture(SkStream*, bool* success, InstallPixelRefProc proc);
+
     virtual ~SkPicture();
 
     /**
@@ -112,11 +139,6 @@ public:
     */
     void endRecording();
 
-    /** Returns true if any draw commands have been recorded since the last
-        call to beginRecording.
-    */
-    bool hasRecorded() const;
-
     /** Replays the drawing commands on the specified canvas. This internally
         calls endRecording() if that has not already been called.
         @param surface the canvas receiving the drawing commands.
@@ -137,18 +159,56 @@ public:
     */
     int height() const { return fHeight; }
 
-    void serialize(SkWStream*) const;
+    /**
+     *  Function to encode an SkBitmap to an SkWStream. A function with this
+     *  signature can be passed to serialize() and SkOrderedWriteBuffer. The
+     *  function should return true if it succeeds. Otherwise it should return
+     *  false so that SkOrderedWriteBuffer can switch to another method of
+     *  storing SkBitmaps.
+     */
+    typedef bool (*EncodeBitmap)(SkWStream*, const SkBitmap&);
 
+    /**
+     *  Serialize to a stream. If non NULL, encoder will be used to encode
+     *  any bitmaps in the picture.
+     */
+    void serialize(SkWStream*, EncodeBitmap encoder = NULL) const;
+
+#ifdef SK_BUILD_FOR_ANDROID
     /** Signals that the caller is prematurely done replaying the drawing
         commands. This can be called from a canvas virtual while the picture
         is drawing. Has no effect if the picture is not drawing.
+        @deprecated preserving for legacy purposes
     */
     void abortPlayback();
+#endif
+
+protected:
+    // V2 : adds SkPixelRef's generation ID.
+    // V3 : PictInfo tag at beginning, and EOF tag at the end
+    // V4 : move SkPictInfo to be the header
+    // V5 : don't read/write FunctionPtr on cross-process (we can detect that)
+    // V6 : added serialization of SkPath's bounds (and packed its flags tighter)
+    // V7 : changed drawBitmapRect(IRect) to drawBitmapRectToRect(Rect)
+    // V8 : Add an option for encoding bitmaps
+    // V9 : Allow the reader and writer of an SKP disagree on whether to support
+    //      SK_SUPPORT_HINTING_SCALE_FACTOR
+    // V10: add drawRRect, drawOval, clipRRect
+    static const uint32_t PICTURE_VERSION = 10;
+
+    // fPlayback, fRecord, fWidth & fHeight are protected to allow derived classes to
+    // install their own SkPicturePlayback-derived players,SkPictureRecord-derived
+    // recorders and set the picture size
+    SkPicturePlayback* fPlayback;
+    SkPictureRecord* fRecord;
+    int fWidth, fHeight;
+
+    // For testing. Derived classes may instantiate an alternate
+    // SkBBoxHierarchy implementation
+    virtual SkBBoxHierarchy* createBBoxHierarchy() const;
 
 private:
-    int fWidth, fHeight;
-    SkPictureRecord* fRecord;
-    SkPicturePlayback* fPlayback;
+    void initFromStream(SkStream*, bool* success, InstallPixelRefProc);
 
     friend class SkFlatPicture;
     friend class SkPicturePlayback;

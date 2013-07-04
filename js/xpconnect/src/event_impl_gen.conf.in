@@ -34,7 +34,7 @@ simple_events = [
     'CallEvent',
     'CFStateChangeEvent',
     'DataErrorEvent',
-    'ICCCardLockErrorEvent',
+    'IccCardLockErrorEvent',
     'MozWifiStatusChangeEvent',
     'MozWifiConnectionInfoEvent',
     'MozCellBroadcastEvent',
@@ -57,7 +57,6 @@ simple_events = [
 #endif
 #ifdef MOZ_WEBSPEECH
     'SpeechRecognitionEvent',
-    'SpeechRecognitionError',
 #endif
   ]
 
@@ -75,3 +74,12 @@ exclude_automatic_type_include = [
     'mozIDOMApplication',
     'nsIDOMBlob'
   ]
+
+""" Map xpidl interface names to implementation classes. The third column is the canonical interface. """
+xpidl_to_native = [
+    ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
+    ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
+    ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
+    ['nsIDOMGamepad', 'Gamepad', 'nsIDOMGamepad']
+  ]
+

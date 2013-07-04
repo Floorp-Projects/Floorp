@@ -9,6 +9,9 @@
 #define __GTK_XTBIN_H__
 
 #include <gtk/gtk.h>
+#if (MOZ_WIDGET_GTK == 3)
+#include <gtk/gtkx.h>
+#endif
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>

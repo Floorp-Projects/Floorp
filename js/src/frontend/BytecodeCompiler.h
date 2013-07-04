@@ -4,12 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BytecodeCompiler_h__
-#define BytecodeCompiler_h__
+#ifndef frontend_BytecodeCompiler_h
+#define frontend_BytecodeCompiler_h
 
-#include "frontend/Parser.h"
+#include "jsapi.h"
+
+class JSLinearString;
 
 namespace js {
+
+class AutoNameVector;
+class LazyScript;
+struct SourceCompressionToken;
+
 namespace frontend {
 
 JSScript *
@@ -27,7 +34,27 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
                     const AutoNameVector &formals, const jschar *chars, size_t length,
                     bool isAsmJSRecompile = false);
 
+/*
+ * True if str consists of an IdentifierStart character, followed by one or
+ * more IdentifierPart characters, i.e. it matches the IdentifierName production
+ * in the language spec.
+ *
+ * This returns true even if str is a keyword like "if".
+ *
+ * Defined in TokenStream.cpp.
+ */
+bool
+IsIdentifier(JSLinearString *str);
+
+/* True if str is a keyword. Defined in TokenStream.cpp. */
+bool
+IsKeyword(JSLinearString *str);
+
+/* GC marking. Defined in Parser.cpp. */
+void
+MarkParser(JSTracer *trc, AutoGCRooter *parser);
+
 } /* namespace frontend */
 } /* namespace js */
 
-#endif /* BytecodeCompiler_h__ */
+#endif /* frontend_BytecodeCompiler_h */

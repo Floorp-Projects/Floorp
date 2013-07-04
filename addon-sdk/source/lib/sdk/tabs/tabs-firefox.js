@@ -12,22 +12,27 @@ const { isPrivateBrowsingSupported } = require('sdk/self');
 
 const supportPrivateTabs = isPrivateBrowsingSupported && isWindowPBSupported;
 
+function newTabWindow(options) {
+  // `tabs` option is under review and may be removed.
+  return windows.open({
+    tabs: [ options ],
+    isPrivate: options.isPrivate
+  });
+}
+
 Object.defineProperties(tabs, {
   open: { value: function open(options) {
     if (options.inNewWindow) {
-        // `tabs` option is under review and may be removed.
-        windows.open({
-          tabs: [ options ],
-          isPrivate: options.isPrivate
-        });
+        newTabWindow(options);
         return undefined;
     }
     // Open in active window if new window was not required.
 
     let activeWindow = windows.activeWindow;
     let privateState = !!options.isPrivate;
+
     // if the active window is in the state that we need then use it
-    if (!supportPrivateTabs || privateState === isPrivate(activeWindow)) {
+    if (activeWindow && (!supportPrivateTabs || privateState === isPrivate(activeWindow))) {
       activeWindow.tabs.open(options);
     }
     else {
@@ -38,10 +43,7 @@ Object.defineProperties(tabs, {
       }
       // open a window in the state that we need
       else {
-        windows.open({
-          tabs: [ options ],
-          isPrivate: options.isPrivate
-        });
+        newTabWindow(options);
       }
     }
 

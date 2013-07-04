@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ParallelFunctions.h"
-#include "IonSpewer.h"
+#include "ion/ParallelFunctions.h"
 
+#include "ion/IonSpewer.h"
 #include "vm/Interpreter.h"
 
 #include "jscompartmentinlines.h"
-
+#include "jsstrinlines.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -36,8 +36,7 @@ ion::ParNewGCThing(gc::AllocKind allocKind)
 {
     ForkJoinSlice *slice = ForkJoinSlice::Current();
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
-    void *t = slice->allocator->parallelNewGCThing(allocKind, thingSize);
-    return static_cast<JSObject *>(t);
+    return gc::NewGCThing<JSObject, NoGC>(slice, allocKind, thingSize, gc::DefaultHeap);
 }
 
 // Check that the object was created by the current thread
@@ -46,8 +45,8 @@ bool
 ion::ParWriteGuard(ForkJoinSlice *slice, JSObject *object)
 {
     JS_ASSERT(ForkJoinSlice::Current() == slice);
-    return !IsInsideNursery(object->runtime(), object) &&
-           slice->allocator->arenas.containsArena(slice->runtime(), object->arenaHeader());
+    return !IsInsideNursery(slice->runtime(), object) &&
+           slice->allocator()->arenas.containsArena(slice->runtime(), object->arenaHeader());
 }
 
 #ifdef DEBUG
@@ -179,8 +178,7 @@ ion::ParPush(ParPushArgs *args)
     // slow path anyhow as it reallocates the elements vector.
     ForkJoinSlice *slice = js::ForkJoinSlice::Current();
     JSObject::EnsureDenseResult res =
-        args->object->parExtendDenseElements(slice->allocator,
-                                             &args->value, 1);
+        args->object->parExtendDenseElements(slice, &args->value, 1);
     if (res != JSObject::ED_OK)
         return NULL;
     return args->object;
@@ -190,10 +188,41 @@ JSObject *
 ion::ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length)
 {
     JSObject::EnsureDenseResult res =
-        array->parExtendDenseElements(slice->allocator, NULL, length);
+        array->parExtendDenseElements(slice, NULL, length);
     if (res != JSObject::ED_OK)
         return NULL;
     return array;
+}
+
+ParallelResult
+ion::ParConcatStrings(ForkJoinSlice *slice, HandleString left, HandleString right,
+                      MutableHandleString out)
+{
+    JSString *str = ConcatStrings<NoGC>(slice, left, right);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
+}
+
+ParallelResult
+ion::ParIntToString(ForkJoinSlice *slice, int i, MutableHandleString out)
+{
+    JSFlatString *str = Int32ToString<NoGC>(slice, i);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
+}
+
+ParallelResult
+ion::ParDoubleToString(ForkJoinSlice *slice, double d, MutableHandleString out)
+{
+    JSString *str = js_NumberToString<NoGC>(slice, d);
+    if (!str)
+        return TP_RETRY_SEQUENTIALLY;
+    out.set(str);
+    return TP_SUCCESS;
 }
 
 #define PAR_RELATIONAL_OP(OP, EXPECTED)                                         \
@@ -425,23 +454,25 @@ ion::PropagateParallelAbort(JSScript *outermostScript,
 void
 ion::ParCallToUncompiledScript(JSFunction *func)
 {
-    static const int max_bound_function_unrolling = 5;
-
     JS_ASSERT(InParallelSection());
 
 #ifdef DEBUG
+    static const int max_bound_function_unrolling = 5;
+
     if (func->hasScript()) {
         JSScript *script = func->nonLazyScript();
         Spew(SpewBailouts, "Call to uncompiled script: %p:%s:%d",
              script, script->filename(), script->lineno);
+    } else if (func->isInterpretedLazy()) {
+        Spew(SpewBailouts, "Call to uncompiled lazy script");
     } else if (func->isBoundFunction()) {
         int depth = 0;
-        JSFunction *target = func->getBoundFunctionTarget()->toFunction();
+        JSFunction *target = &func->getBoundFunctionTarget()->as<JSFunction>();
         while (depth < max_bound_function_unrolling) {
             if (target->hasScript())
                 break;
             if (target->isBoundFunction())
-                target = target->getBoundFunctionTarget()->toFunction();
+                target = &target->getBoundFunctionTarget()->as<JSFunction>();
             depth--;
         }
         if (target->hasScript()) {
@@ -452,7 +483,8 @@ ion::ParCallToUncompiledScript(JSFunction *func)
             Spew(SpewBailouts, "Call to bound function (excessive depth: %d)", depth);
         }
     } else {
-        JS_NOT_REACHED("ParCall'ed functions must have scripts or be ES6 bound functions.");
+        JS_ASSERT(func->isNative());
+        Spew(SpewBailouts, "Call to native function");
     }
 #endif
 }
@@ -466,15 +498,13 @@ ion::InitRestParameter(ForkJoinSlice *slice, uint32_t length, Value *rest,
     // before this point. We can do the allocation here like in the sequential
     // path, but duplicating the initGCThing logic is too tedious.
     JS_ASSERT(res);
-    JS_ASSERT(res->isArray());
+    JS_ASSERT(res->is<ArrayObject>());
     JS_ASSERT(!res->getDenseInitializedLength());
     JS_ASSERT(res->type() == templateObj->type());
-    // See note in visitRest in ParallelArrayAnalysis.
     JS_ASSERT(res->type()->unknownProperties());
 
     if (length) {
-        JSObject::EnsureDenseResult edr =
-            res->parExtendDenseElements(slice->allocator, rest, length);
+        JSObject::EnsureDenseResult edr = res->parExtendDenseElements(slice, rest, length);
         if (edr != JSObject::ED_OK)
             return TP_FATAL;
     }

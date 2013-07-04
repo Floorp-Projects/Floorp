@@ -31,6 +31,9 @@ function benchmark(label, w, m, seq, par) {
   }
 
   if (mode(PAR)) {
+    print("Warming up parallel runs");
+    warmup(w, par);
+
     print("Measuring parallel runs");
     var [parTimes, parResult] = measureN(m, par);
   }

@@ -49,17 +49,27 @@ function clearAllDatabases(callback) {
     comp.classes["@mozilla.org/dom/quota/manager;1"]
         .getService(comp.interfaces.nsIQuotaManager);
 
-  let uri = SpecialPowers.getDocumentURIObject(document);
+  let uri = SpecialPowers.wrap(document).documentURIObject;
 
-  quotaManager.clearStoragesForURI(uri);
-  quotaManager.getUsageForURI(uri, function(uri, usage, fileUsage) {
+  // We need to pass a JS callback to getUsageForURI. However, that callback
+  // takes an XPCOM URI object, which will cause us to throw when we wrap it
+  // for the content compartment. So we need to define the function in a
+  // privileged scope, which we do using a sandbox.
+  var sysPrin = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
+  var sb = new SpecialPowers.Cu.Sandbox(sysPrin);
+  sb.ok = ok;
+  sb.runCallback = runCallback;
+  var cb = SpecialPowers.Cu.evalInSandbox((function(uri, usage, fileUsage) {
     if (usage) {
       ok(false,
          "getUsageForURI returned non-zero usage after clearing all " +
          "storages!");
     }
     runCallback();
-  });
+  }).toSource(), sb);
+
+  quotaManager.clearStoragesForURI(uri);
+  quotaManager.getUsageForURI(uri, cb);
 }
 
 if (!window.runTest) {

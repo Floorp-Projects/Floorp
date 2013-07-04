@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _SHARKCTL_H
-#define _SHARKCTL_H
+#ifndef devtools_sharkctl_h
+#define devtools_sharkctl_h
 
 #ifdef __APPLE__
 
@@ -19,6 +19,6 @@ void Stop();
 
 }
 
-#endif
+#endif /* __APPLE__ */
 
-#endif
+#endif /* devtools_sharkctl_h */

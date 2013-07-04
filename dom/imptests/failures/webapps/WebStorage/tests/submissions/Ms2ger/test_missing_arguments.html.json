@@ -8,6 +8,5 @@
   "Should throw TypeError for function \"function () { sessionStorage.getItem(); }\".": true,
   "Should throw TypeError for function \"function () { sessionStorage.setItem(); }\".": true,
   "Should throw TypeError for function \"function () { sessionStorage.setItem(\"a\"); }\".": true,
-  "Should throw TypeError for function \"function () { sessionStorage.removeItem(); }\".": true,
-  "Should throw TypeError for function \"function () { new StorageEvent(); }\".": true
+  "Should throw TypeError for function \"function () { sessionStorage.removeItem(); }\".": true
 }

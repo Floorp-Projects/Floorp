@@ -69,13 +69,13 @@ CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 void
-TraceCallbackFunc::Trace(JS::Value* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const
 {
-  mCallback(JSVAL_TO_TRACEABLE(*p), name, closure);
+  mCallback(JSVAL_TO_TRACEABLE(p->get()), name, closure);
 }
 
 void
-TraceCallbackFunc::Trace(jsid* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<jsid>* p, const char* name, void* closure) const
 {
   void *thing = JSID_TO_GCTHING(*p);
   if (thing) {
@@ -84,19 +84,19 @@ TraceCallbackFunc::Trace(jsid* p, const char* name, void* closure) const
 }
 
 void
-TraceCallbackFunc::Trace(JSObject** p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSObject*>* p, const char* name, void* closure) const
 {
   mCallback(*p, name, closure);
 }
 
 void
-TraceCallbackFunc::Trace(JSString** p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSString*>* p, const char* name, void* closure) const
 {
   mCallback(*p, name, closure);
 }
 
 void
-TraceCallbackFunc::Trace(JSScript** p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSScript*>* p, const char* name, void* closure) const
 {
-   mCallback(*p, name, closure);
+  mCallback(p->get(), name, closure);
 }

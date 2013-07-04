@@ -9,14 +9,12 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
-#include "nsIDOMGetSVGDocument.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLIFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement
                                   , public nsIDOMHTMLIFrameElement
-                                  , public nsIDOMGetSVGDocument
 {
 public:
   HTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -40,9 +38,6 @@ public:
   // nsIDOMHTMLIFrameElement
   NS_DECL_NSIDOMHTMLIFRAMEELEMENT
 
-  // nsIDOMGetSVGDocument
-  NS_DECL_NSIDOMGETSVGDOCUMENT
-
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -54,9 +49,19 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, bool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           bool aNotify) MOZ_OVERRIDE;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify) MOZ_OVERRIDE;
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                             bool aNotify) MOZ_OVERRIDE;
 
   uint32_t GetSandboxFlags();
 
@@ -65,6 +70,14 @@ public:
   void SetSrc(const nsAString& aSrc, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
+  }
+  void GetSrcdoc(DOMString& aSrcdoc)
+  {
+    GetHTMLAttr(nsGkAtoms::srcdoc, aSrcdoc);
+  }
+  void SetSrcdoc(const nsAString& aSrcdoc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::srcdoc, aSrcdoc, aError);
   }
   void GetName(DOMString& aName)
   {

@@ -130,6 +130,17 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     // about:what you ask?
     nsCOMPtr<nsIAboutModule> aboutMod;
     nsresult rv = NS_GetAboutModule(uri, getter_AddRefs(aboutMod));
+
+    nsAutoCString path;
+    nsresult rv2 = NS_GetAboutModuleName(uri, path);
+    if (NS_SUCCEEDED(rv2) && path.EqualsLiteral("srcdoc")) {
+        // about:srcdoc is meant to be unresolvable, yet is included in the 
+        // about lookup tables so that it can pass security checks when used in
+        // a srcdoc iframe.  To ensure that it stays unresolvable, we pretend
+        // that it doesn't exist.
+      rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+    }
+
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         rv = aboutMod->NewChannel(uri, result);

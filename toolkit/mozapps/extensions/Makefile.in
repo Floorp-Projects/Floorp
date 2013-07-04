@@ -25,12 +25,7 @@ else ifdef MOZ_DEBUG
 DEFINES += -DMOZ_EM_DEBUG=1
 endif
 
-EXTRA_PP_COMPONENTS = \
-  nsBlocklistService.js \
-  extensions.manifest \
-  $(NULL)
-
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   addonManager.js \
   amContentHandler.js \
   amWebInstallListener.js \
@@ -40,17 +35,6 @@ EXTRA_PP_JS_MODULES = \
   AddonManager.jsm \
   XPIProvider.jsm \
   XPIProviderUtils.js \
-  $(NULL)
-
-EXTRA_JS_MODULES = \
-  AddonLogging.jsm \
-  AddonRepository.jsm \
-  AddonUpdateChecker.jsm \
-  ChromeManifestParser.jsm \
-  LightweightThemeImageOptimizer.jsm \
-  LightweightThemeManager.jsm \
-  PluginProvider.jsm \
-  SpellCheckDictionaryBootstrap.js \
   $(NULL)
 
 EXTRA_DSO_LDOPTS = \

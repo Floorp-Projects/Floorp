@@ -28,17 +28,13 @@ NS_IMPL_ADDREF_INHERITED(HTMLSharedListElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedListElement, Element)
 
 // QueryInterface implementation for nsHTMLSharedListElement
-NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedListElement,
-                                                  nsIDOMHTMLOListElement)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(HTMLSharedListElement,
-                                                         nsGenericHTMLElement,
-                                                         nsIDOMHTMLOListElement)
+NS_INTERFACE_MAP_BEGIN(HTMLSharedListElement)
+  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
+                                       nsIDOMHTMLOListElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLOListElement, ol)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDListElement, dl)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLUListElement, ul)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_ELEMENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)

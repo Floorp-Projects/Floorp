@@ -621,12 +621,14 @@ let _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
   "@mozilla.org/suite/sessionstore;1" :
   "@mozilla.org/browser/sessionstore;1";
 
-[["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
+[
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["Session", _sessionCID, "nsISessionStore"]
 ].forEach(function([name, contract, iface]) {
   XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);
 });
+
+XPCOMUtils.defineLazyModuleGetter(Svc, "FormHistory", "resource://gre/modules/FormHistory.jsm");
 
 Svc.__defineGetter__("Crypto", function() {
   let cryptoSvc;

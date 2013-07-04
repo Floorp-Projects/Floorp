@@ -58,7 +58,12 @@ tasks.push(function testGettingIMEI() {
 
   request.onsuccess = function onsuccess(event) {
     ok(true, "request success");
-    is(event.target.result, "000000000000000", "Emulator IMEI");
+    is(typeof event.target.result, "object", "typeof result object");
+    ok(event.target.result instanceof Object, "result instanceof Object");
+    is(event.target.result.statusMessage, "000000000000000", "Emulator IMEI");
+    is(event.target.result.serviceCode, "scImei", "Service code IMEI");
+    is(event.target.result.additionalInformation, undefined,
+       "No additional information");
     tasks.next();
   }
   request.onerror = function onerror() {

@@ -19,13 +19,32 @@ namespace js {
 
 typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
 
+// The inheritance hierarchy for the various classes relating to typed arrays
+// is as follows.
+//
+// - JSObject
+//   - ArrayBufferObject
+//   - ArrayBufferViewObject
+//     - DataViewObject
+//     - TypedArrayObject
+//       - TypedArrayObjectTemplate
+//         - Int8ArrayObject
+//         - Uint8ArrayObject
+//         - ...
+//
+// Note that |TypedArrayObjectTemplate| is just an implementation detail that
+// makes implementing its various subclasses easier.
+
+class ArrayBufferViewObject;
+
 /*
  * ArrayBufferObject
  *
- * This class holds the underlying raw buffer that the various ArrayBufferView
- * subclasses (DataView and the TypedArrays) access. It can be created
- * explicitly and passed to an ArrayBufferView subclass, or can be created
- * implicitly by constructing a TypedArray with a size.
+ * This class holds the underlying raw buffer that the various
+ * ArrayBufferViewObject subclasses (DataViewObject and the TypedArrays)
+ * access. It can be created explicitly and passed to an ArrayBufferViewObject
+ * subclass, or can be created implicitly by constructing a TypedArrayObject
+ * with a size.
  */
 class ArrayBufferObject : public JSObject
 {
@@ -33,6 +52,8 @@ class ArrayBufferObject : public JSObject
     static bool fun_slice_impl(JSContext *cx, CallArgs args);
 
   public:
+    static Class class_;
+
     static Class protoClass;
     static const JSFunctionSpec jsfuncs[];
 
@@ -138,10 +159,21 @@ class ArrayBufferObject : public JSObject
     static bool stealContents(JSContext *cx, JSObject *obj, void **contents,
                               uint8_t **data);
 
-    static inline void setElementsHeader(js::ObjectElements *header, uint32_t bytes);
-    static inline uint32_t getElementsHeaderInitializedLength(const js::ObjectElements *header);
+    static void setElementsHeader(js::ObjectElements *header, uint32_t bytes) {
+        header->flags = 0;
+        header->initializedLength = bytes;
 
-    void addView(JSObject *view);
+        // NB: one or both of these fields is clobbered by GetViewList to store the
+        // 'views' link. Set them to 0 to effectively initialize 'views' to NULL.
+        header->length = 0;
+        header->capacity = 0;
+    }
+
+    static uint32_t headerInitializedLength(const js::ObjectElements *header) {
+        return header->initializedLength;
+    }
+
+    void addView(ArrayBufferViewObject *view);
 
     bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
     void changeContents(JSContext *cx, ObjectElements *newHeader);
@@ -152,61 +184,93 @@ class ArrayBufferObject : public JSObject
      */
     bool uninlineData(JSContext *cx);
 
-    inline uint32_t byteLength() const;
+    uint32_t byteLength() const {
+        return getElementsHeader()->initializedLength;
+    }
 
-    inline uint8_t * dataPointer() const;
+    inline uint8_t * dataPointer() const {
+        return (uint8_t *) elements;
+    }
 
-   /*
+    /*
      * Check if the arrayBuffer contains any data. This will return false for
      * ArrayBuffer.prototype and neutered ArrayBuffers.
      */
-    inline bool hasData() const;
+    bool hasData() const {
+        return getClass() == &class_;
+    }
 
-    inline bool isAsmJSArrayBuffer() const;
+    bool isAsmJSArrayBuffer() const {
+        return getElementsHeader()->isAsmJSArrayBuffer();
+    }
     static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
     static void neuterAsmJSArrayBuffer(ArrayBufferObject &buffer);
     static void releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj);
 };
 
 /*
- * BufferView
+ * ArrayBufferViewObject
  *
- * Common definitions shared by all ArrayBufferViews. (The name ArrayBufferView
- * is currently being used for a namespace in jsfriendapi.h.)
+ * Common definitions shared by all ArrayBufferViews.
  */
 
-struct BufferView {
-    /* Offset of view in underlying ArrayBuffer */
+class ArrayBufferViewObject : public JSObject
+{
+  protected:
+    /* Offset of view in underlying ArrayBufferObject */
     static const size_t BYTEOFFSET_SLOT  = 0;
 
     /* Byte length of view */
     static const size_t BYTELENGTH_SLOT  = 1;
 
-    /* Underlying ArrayBuffer */
+    /* Underlying ArrayBufferObject */
     static const size_t BUFFER_SLOT      = 2;
 
-    /* ArrayBuffers point to a linked list of views, chained through this slot */
+    /* ArrayBufferObjects point to a linked list of views, chained through this slot */
     static const size_t NEXT_VIEW_SLOT   = 3;
 
     /*
-     * When ArrayBuffers are traced during GC, they construct a linked list of
-     * ArrayBuffers with more than one view, chained through this slot of the
-     * first view of each ArrayBuffer
+     * When ArrayBufferObjects are traced during GC, they construct a linked
+     * list of ArrayBufferObjects with more than one view, chained through this
+     * slot of the first view of each ArrayBufferObject.
      */
     static const size_t NEXT_BUFFER_SLOT = 4;
 
     static const size_t NUM_SLOTS        = 5;
+
+  public:
+    JSObject *bufferObject() const {
+        return &getFixedSlot(BUFFER_SLOT).toObject();
+    }
+
+    ArrayBufferObject *bufferLink() {
+        return static_cast<ArrayBufferObject*>(getFixedSlot(NEXT_BUFFER_SLOT).toPrivate());
+    }
+
+    inline void setBufferLink(ArrayBufferObject *buffer);
+
+    ArrayBufferViewObject *nextView() const {
+        return static_cast<ArrayBufferViewObject*>(getFixedSlot(NEXT_VIEW_SLOT).toPrivate());
+    }
+
+    inline void setNextView(ArrayBufferViewObject *view);
+
+    void prependToViews(HeapPtr<ArrayBufferViewObject> *views);
+
+    static void trace(JSTracer *trc, JSObject *obj);
 };
 
 /*
- * TypedArray
+ * TypedArrayObject
  *
  * The non-templated base class for the specific typed implementations.
  * This class holds all the member variables that are used by
  * the subclasses.
  */
 
-struct TypedArray : public BufferView {
+class TypedArrayObject : public ArrayBufferViewObject
+{
+  public:
     enum {
         TYPE_INT8 = 0,
         TYPE_UINT8,
@@ -230,9 +294,9 @@ struct TypedArray : public BufferView {
      * Typed array properties stored in slots, beyond those shared by all
      * ArrayBufferViews.
      */
-    static const size_t LENGTH_SLOT     = BufferView::NUM_SLOTS;
-    static const size_t TYPE_SLOT       = BufferView::NUM_SLOTS + 1;
-    static const size_t RESERVED_SLOTS  = BufferView::NUM_SLOTS + 2;
+    static const size_t LENGTH_SLOT     = ArrayBufferViewObject::NUM_SLOTS;
+    static const size_t TYPE_SLOT       = ArrayBufferViewObject::NUM_SLOTS + 1;
+    static const size_t RESERVED_SLOTS  = ArrayBufferViewObject::NUM_SLOTS + 2;
     static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
     static Class classes[TYPE_MAX];
@@ -299,15 +363,15 @@ struct TypedArray : public BufferView {
 inline bool
 IsTypedArrayClass(const Class *clasp)
 {
-    return &TypedArray::classes[0] <= clasp &&
-           clasp < &TypedArray::classes[TypedArray::TYPE_MAX];
+    return &TypedArrayObject::classes[0] <= clasp &&
+           clasp < &TypedArrayObject::classes[TypedArrayObject::TYPE_MAX];
 }
 
 inline bool
 IsTypedArrayProtoClass(const Class *clasp)
 {
-    return &TypedArray::protoClasses[0] <= clasp &&
-           clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
+    return &TypedArrayObject::protoClasses[0] <= clasp &&
+           clasp < &TypedArrayObject::protoClasses[TypedArrayObject::TYPE_MAX];
 }
 
 bool
@@ -335,18 +399,20 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
         return 3;
       default:;
     }
-    JS_NOT_REACHED("Unexpected array type");
-    return 0;
+    MOZ_ASSUME_UNREACHABLE("Unexpected array type");
 }
 
-class DataViewObject : public JSObject, public BufferView
+class DataViewObject : public ArrayBufferViewObject
 {
-public:
+    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS;
+    static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
 
-private:
+  private:
     static Class protoClass;
 
-    static inline bool is(const Value &v);
+    static bool is(const Value &v) {
+        return v.isObject() && v.toObject().hasClass(&class_);
+    }
 
     template<Value ValueGetter(DataViewObject &view)>
     static bool
@@ -361,12 +427,43 @@ private:
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
-    static const size_t RESERVED_SLOTS = BufferView::NUM_SLOTS;
-    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
+    static Class class_;
 
-    static inline Value bufferValue(DataViewObject &view);
-    static inline Value byteOffsetValue(DataViewObject &view);
-    static inline Value byteLengthValue(DataViewObject &view);
+    uint32_t byteOffset() const {
+        int32_t offset = getReservedSlot(BYTEOFFSET_SLOT).toInt32();
+        JS_ASSERT(offset >= 0);
+        return static_cast<uint32_t>(offset);
+    }
+
+    uint32_t byteLength() const {
+        int32_t length = getReservedSlot(BYTELENGTH_SLOT).toInt32();
+        JS_ASSERT(length >= 0);
+        return static_cast<uint32_t>(length);
+    }
+
+    static Value byteOffsetValue(DataViewObject &view) {
+        return Int32Value(view.byteOffset());
+    }
+
+    static Value byteLengthValue(DataViewObject &view) {
+        return Int32Value(view.byteLength());
+    }
+
+    bool hasBuffer() const {
+        return getReservedSlot(BUFFER_SLOT).isObject();
+    }
+
+    ArrayBufferObject &arrayBuffer() const {
+        return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
+    }
+
+    static Value bufferValue(DataViewObject &view) {
+        return view.hasBuffer() ? ObjectValue(view.arrayBuffer()) : UndefinedValue();
+    }
+
+    void *dataPointer() const {
+        return getPrivate();
+    }
 
     static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);
@@ -425,11 +522,6 @@ private:
     static bool setFloat64Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
 
-    inline uint32_t byteLength();
-    inline uint32_t byteOffset();
-    inline ArrayBufferObject & arrayBuffer();
-    inline void *dataPointer();
-    inline bool hasBuffer() const;
     static JSObject *initClass(JSContext *cx);
     static bool getDataPointer(JSContext *cx, Handle<DataViewObject*> obj,
                                CallArgs args, size_t typeSize, uint8_t **data);
@@ -443,9 +535,20 @@ private:
     static const JSFunctionSpec jsfuncs[];
 };
 
-bool
-IsDataView(JSObject *obj);
-
 } // namespace js
+
+template <>
+inline bool
+JSObject::is<js::TypedArrayObject>() const
+{
+    return js::IsTypedArrayClass(getClass());
+}
+
+template <>
+inline bool
+JSObject::is<js::ArrayBufferViewObject>() const
+{
+    return is<js::DataViewObject>() || is<js::TypedArrayObject>();
+}
 
 #endif /* jstypedarray_h */

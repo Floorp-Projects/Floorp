@@ -9,10 +9,14 @@ interface nsIVariant;
 /*
  * This interface is intended only for use in tests.
  */
-[scriptable, uuid(7edf77a2-6b3e-4bbb-9100-4452d425feaa)]
+[scriptable, uuid(b6ed093c-6ea0-4141-a8eb-f99645162651)]
 interface nsIGamepadServiceTest : nsISupports
 {
-  unsigned long addGamepad(in string id, in unsigned long numButtons,
+  const unsigned long NO_MAPPING = 0;
+  const unsigned long STANDARD_MAPPING = 1;
+
+  unsigned long addGamepad(in string id, in unsigned long mapping,
+                           in unsigned long numButtons,
 			   in unsigned long numAxes);
   void removeGamepad(in unsigned long index);
   void newButtonEvent(in unsigned long index, in unsigned long button,

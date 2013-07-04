@@ -21,10 +21,11 @@ Browser context menu tests.
 /** Test for Login Manager: multiple login autocomplete. **/
 
 SpecialPowers.Cu.import("resource://gre/modules/InlineSpellChecker.jsm", window);
+SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
 
 const Ci = SpecialPowers.Ci;
 
-function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
+function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
     // Context menu should be closed before we open it again.
     is(SpecialPowers.wrap(contextMenu).state, "closed", "checking if popup is closed");
 
@@ -39,8 +40,9 @@ function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
       var eventDetails = { type : "contextmenu", button : 2, shiftKey : shiftkey };
       synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
     }
-    if (shouldWaitForFocus)
-      SimpleTest.executeSoon(actuallyOpenContextMenuFor);
+
+    if (waitForSpellCheck)
+      onSpellCheck(element, actuallyOpenContextMenuFor);
     else
       actuallyOpenContextMenuFor();
 }
@@ -608,7 +610,7 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         contextMenu.ownerDocument.getElementById("spell-undo-add-to-dictionary").doCommand(); // Undo add to dictionary
         closeContextMenu();
-        openContextMenuFor(contenteditable);
+        openContextMenuFor(contenteditable, false, true);
         break;
 
     case 18:
@@ -633,7 +635,7 @@ function runTest(testNum) {
                          ].concat(inspectItems));
 
         closeContextMenu();
-        openContextMenuFor(inputspell); // Invoke context menu for next test.
+        openContextMenuFor(inputspell, false, true); // Invoke context menu for next test.
         break;
 
     case 19:
@@ -710,10 +712,10 @@ function runTest(testNum) {
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openDomFullScreen = function() {
             subwindow.removeEventListener("mozfullscreenchange", openDomFullScreen, false);
-            SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
             openContextMenuFor(dom_full_screen, true); // Invoke context menu for next test.
         }
         subwindow.addEventListener("mozfullscreenchange", openDomFullScreen, false);
+        SpecialPowers.setBoolPref("full-screen-api.approval-required", false);
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         full_screen_element.mozRequestFullScreen();
         break;
@@ -739,11 +741,11 @@ function runTest(testNum) {
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openPagemenu = function() {
             subwindow.removeEventListener("mozfullscreenchange", openPagemenu, false);
+            SpecialPowers.clearUserPref("full-screen-api.approval-required");
             SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
             openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
         }
         subwindow.addEventListener("mozfullscreenchange", openPagemenu, false);
-        SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         subwindow.document.mozCancelFullScreen();
         break;
 
@@ -937,6 +939,22 @@ function runTest(testNum) {
             tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;
           }
         }
+        openContextMenuFor(longdesc);
+        return;
+
+    case 30:
+        // Context menu for an image with longdesc
+        checkContextMenu(["context-viewimage",            true,
+                          "context-copyimage-contents",   true,
+                          "context-copyimage",            true,
+                          "---",                          null,
+                          "context-saveimage",            true,
+                          "context-sendimage",            true,
+                          "context-setDesktopBackground", true,
+                          "context-viewimageinfo",        true,
+                          "context-viewimagedesc",        true
+                         ].concat(inspectItems));
+        closeContextMenu();
 
         // finish test
         subwindow.close();
@@ -966,7 +984,7 @@ var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
     inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
     selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password,
-    plugin;
+    plugin, longdesc;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -1015,6 +1033,7 @@ function startTest() {
     select_inputtext = subwindow.document.getElementById("test-select-input-text");
     select_inputtext_password = subwindow.document.getElementById("test-select-input-text-type-password");
     plugin = subwindow.document.getElementById("test-plugin");
+    longdesc = subwindow.document.getElementById("test-longdesc");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);

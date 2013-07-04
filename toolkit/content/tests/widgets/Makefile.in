@@ -11,11 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-_CHROME_FILES = \
-		popup_shared.js \
-		tree_shared.js \
-		$(NULL)
-
 MOCHITEST_FILES =	\
 		test_contextmenu_nested.xul \
 		tree_shared.js \
@@ -38,7 +33,6 @@ MOCHITEST_FILES =	\
 		videocontrols_direction-2d.html \
 		videocontrols_direction-2e.html \
 		videocontrols_direction_test.js \
-		use_large_cache.js \
 		$(topsrcdir)/content/media/test/audio.wav \
 		$(topsrcdir)/content/media/test/seek_with_sound.ogg \
 		videomask.css \
@@ -48,6 +42,7 @@ MOCHITEST_CHROME_FILES = \
 		tree_shared.js \
 		test_tree_column_reorder.xul \
 		test_editor_currentURI.xul \
+		test_popupreflows.xul \
 		$(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -62,8 +57,4 @@ MOCHITEST_FILES += \
 		$(NULL)
 endif
 
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/../chrome
-
 include $(topsrcdir)/config/rules.mk
-

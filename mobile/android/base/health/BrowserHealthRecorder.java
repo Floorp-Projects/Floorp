@@ -9,9 +9,11 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.ContentProviderClient;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.PrefsHelper;
@@ -28,6 +30,7 @@ import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -36,6 +39,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * BrowserHealthRecorder is the browser's interface to the Firefox Health
@@ -52,7 +56,7 @@ import java.util.Scanner;
  *
  * Use it to record events: {@link #recordSearch(String, String)}.
  *
- * Shut it down when you're done being a browser: {@link #close(EventDispatcher)}.
+ * Shut it down when you're done being a browser: {@link #close()}.
  */
 public class BrowserHealthRecorder implements GeckoEventListener {
     private static final String LOG_TAG = "GeckoHealthRec";
@@ -78,11 +82,139 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
     protected volatile State state = State.NOT_INITIALIZED;
 
+    private final AtomicBoolean orphanChecked = new AtomicBoolean(false);
     private volatile int env = -1;
+
+    private ContentProviderClient client;
     private volatile HealthReportDatabaseStorage storage;
     private final ProfileInformationCache profileCache;
-    private ContentProviderClient client;
     private final EventDispatcher dispatcher;
+
+    public static class SessionInformation {
+        private static final String LOG_TAG = "GeckoSessInfo";
+
+        public static final String PREFS_SESSION_START = "sessionStart";
+
+        public final long wallStartTime;    // System wall clock.
+        public final long realStartTime;    // Realtime clock.
+
+        private final boolean wasOOM;
+        private final boolean wasStopped;
+
+        private volatile long timedGeckoStartup = -1;
+        private volatile long timedJavaStartup = -1;
+
+        // Current sessions don't (right now) care about wasOOM/wasStopped.
+        // Eventually we might want to lift that logic out of GeckoApp.
+        public SessionInformation(long wallTime, long realTime) {
+            this(wallTime, realTime, false, false);
+        }
+
+        // Previous sessions do...
+        public SessionInformation(long wallTime, long realTime, boolean wasOOM, boolean wasStopped) {
+            this.wallStartTime = wallTime;
+            this.realStartTime = realTime;
+            this.wasOOM = wasOOM;
+            this.wasStopped = wasStopped;
+        }
+
+        /**
+         * Initialize a new SessionInformation instance from the supplied prefs object.
+         *
+         * This includes retrieving OOM/crash data, as well as timings.
+         *
+         * If no wallStartTime was found, that implies that the previous
+         * session was correctly recorded, and an object with a zero
+         * wallStartTime is returned.
+         */
+        public static SessionInformation fromSharedPrefs(SharedPreferences prefs) {
+            boolean wasOOM = prefs.getBoolean(GeckoApp.PREFS_OOM_EXCEPTION, false);
+            boolean wasStopped = prefs.getBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
+            long wallStartTime = prefs.getLong(PREFS_SESSION_START, 0L);
+            long realStartTime = 0L;
+            Log.d(LOG_TAG, "Building SessionInformation from prefs: " +
+                           wallStartTime + ", " + realStartTime + ", " +
+                           wasStopped + ", " + wasOOM);
+            return new SessionInformation(wallStartTime, realStartTime, wasOOM, wasStopped);
+        }
+
+        public boolean wasKilled() {
+            return wasOOM || !wasStopped;
+        }
+
+        /**
+         * Record the beginning of this session to SharedPreferences by
+         * recording our start time. If a session was already recorded, it is
+         * overwritten (there can only be one running session at a time). Does
+         * not commit the editor.
+         */
+        public void recordBegin(SharedPreferences.Editor editor) {
+            Log.d(LOG_TAG, "Recording start of session: " + this.wallStartTime);
+            editor.putLong(PREFS_SESSION_START, this.wallStartTime);
+        }
+
+        /**
+         * Record the completion of this session to SharedPreferences by
+         * deleting our start time. Does not commit the editor.
+         */
+        public void recordCompletion(SharedPreferences.Editor editor) {
+            Log.d(LOG_TAG, "Recording session done: " + this.wallStartTime);
+            editor.remove(PREFS_SESSION_START);
+        }
+
+        /**
+         * Return the JSON that we'll put in the DB for this session.
+         */
+        public JSONObject getCompletionJSON(String reason, long realEndTime) throws JSONException {
+            long durationSecs = (realEndTime - this.realStartTime) / 1000;
+            JSONObject out = new JSONObject();
+            out.put("r", reason);
+            out.put("d", durationSecs);
+            if (this.timedGeckoStartup > 0) {
+                out.put("sg", this.timedGeckoStartup);
+            }
+            if (this.timedJavaStartup > 0) {
+                out.put("sj", this.timedJavaStartup);
+            }
+            return out;
+        }
+
+        public JSONObject getCrashedJSON() throws JSONException {
+            JSONObject out = new JSONObject();
+            // We use ints here instead of booleans, because we're packing
+            // stuff into JSON, and saving bytes in the DB is a worthwhile
+            // goal.
+            out.put("oom", this.wasOOM ? 1 : 0);
+            out.put("stopped", this.wasStopped ? 1 : 0);
+            out.put("r", "A");
+            return out;
+        }
+    }
+
+    // We track previousSession to avoid order-of-initialization confusion. We
+    // accept it in the constructor, and process it after init.
+    private final SessionInformation previousSession;
+    private volatile SessionInformation session = null;
+    public SessionInformation getCurrentSession() {
+        return this.session;
+    }
+
+    public void setCurrentSession(SessionInformation session) {
+        this.session = session;
+    }
+
+    public void recordGeckoStartupTime(long duration) {
+        if (this.session == null) {
+            return;
+        }
+        this.session.timedGeckoStartup = duration;
+    }
+    public void recordJavaStartupTime(long duration) {
+        if (this.session == null) {
+            return;
+        }
+        this.session.timedJavaStartup = duration;
+    }
 
     /**
      * Persist the opaque identifier for the current Firefox Health Report environment.
@@ -95,9 +227,11 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     /**
      * This constructor does IO. Run it on a background thread.
      */
-    public BrowserHealthRecorder(final Context context, final String profilePath, final EventDispatcher dispatcher) {
+    public BrowserHealthRecorder(final Context context, final String profilePath, final EventDispatcher dispatcher, SessionInformation previousSession) {
         Log.d(LOG_TAG, "Initializing. Dispatcher is " + dispatcher);
         this.dispatcher = dispatcher;
+        this.previousSession = previousSession;
+
         this.client = EnvironmentBuilder.getContentProviderClient(context);
         if (this.client == null) {
             throw new IllegalStateException("Could not fetch Health Report content provider.");
@@ -105,7 +239,12 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
         this.storage = EnvironmentBuilder.getStorage(this.client, profilePath);
         if (this.storage == null) {
-            throw new IllegalStateException("No storage in health recorder!");
+            // Stick around even if we don't have storage: eventually we'll
+            // want to report total failures of FHR storage itself, and this
+            // way callers don't need to worry about whether their health
+            // recorder didn't initialize.
+            this.client.release();
+            this.client = null;
         }
 
         this.profileCache = new ProfileInformationCache(profilePath);
@@ -114,8 +253,6 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         } catch (Exception e) {
             Log.e(LOG_TAG, "Exception initializing.", e);
         }
-
-        // TODO: record session start and end?
     }
 
     /**
@@ -202,6 +339,10 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
         if (this.env != -1) {
             return this.env;
+        }
+        if (this.storage == null) {
+            // Oh well.
+            return -1;
         }
         return this.env = EnvironmentBuilder.registerCurrentEnvironment(this.storage,
                                                                         this.profileCache);
@@ -336,6 +477,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                     // Belt and braces.
                     if (storage == null) {
                         Log.w(LOG_TAG, "Storage is null during init; shutting down?");
+                        if (state == State.INITIALIZING) {
+                            state = State.INITIALIZATION_FAILED;
+                        }
                         return;
                     }
 
@@ -353,6 +497,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                         dispatcher.registerEventListener(EVENT_PREF_CHANGE, self);
 
                         // Initialize each provider here.
+                        initializeSessionsProvider();
                         initializeSearchProvider();
 
                         Log.d(LOG_TAG, "Ensuring environment.");
@@ -365,7 +510,11 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                         state = State.INITIALIZATION_FAILED;
                         storage.abortInitialization();
                         Log.e(LOG_TAG, "Initialization failed.", e);
+                        return;
                     }
+
+                    // Now do whatever we do after we start up.
+                    checkForOrphanSessions();
                 }
             }
         });
@@ -383,7 +532,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
         // If we can restore state from last time, great.
         if (this.profileCache.restoreUnlessInitialized()) {
-            Log.i(LOG_TAG, "Successfully restored state. Initializing storage.");
+            Log.d(LOG_TAG, "Successfully restored state. Initializing storage.");
             initializeStorage();
             return;
         }
@@ -415,7 +564,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                                  PREF_BLOCKLIST_ENABLED
                              },
                              handler);
-        Log.d(LOG_TAG, "Done initializing profile cache. Beginning storage init.");
+        Log.d(LOG_TAG, "Requested prefs.");
     }
 
     @Override
@@ -425,7 +574,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                 Log.d(LOG_TAG, "Got all add-ons.");
                 try {
                     JSONObject addons = message.getJSONObject("json");
-                    Log.d(LOG_TAG, "Persisting " + addons.length() + " add-ons.");
+                    Log.i(LOG_TAG, "Persisting " + addons.length() + " add-ons.");
                     profileCache.setJSONForAddons(addons);
                     profileCache.completeInitialization();
                 } catch (java.io.IOException e) {
@@ -628,9 +777,17 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         final int day = storage.getDay();
         final int env = this.env;
         final String key = getEngineKey(engine);
+        final BrowserHealthRecorder self = this;
+
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
+                final HealthReportDatabaseStorage storage = self.storage;
+                if (storage == null) {
+                    Log.d(LOG_TAG, "No storage: not recording search. Shutting down?");
+                    return;
+                }
+
                 Log.d(LOG_TAG, "Recording search: " + key + ", " + location +
                                " (" + day + ", " + env + ").");
                 final int searchField = storage.getField(MEASUREMENT_NAME_SEARCH_COUNTS,
@@ -640,6 +797,160 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                 storage.recordDailyDiscrete(env, day, searchField, key);
             }
         });
+    }
+
+    /*
+     * Sessions.
+     *
+     * We record session beginnings in SharedPreferences, because it's cheaper
+     * to do that than to either write to then update the DB (which requires
+     * keeping a row identifier to update, as well as two writes) or to record
+     * two events (which doubles storage space and requires rollup logic).
+     *
+     * The pattern is:
+     *
+     * 1. On startup, determine whether an orphan session exists by looking for
+     *    a saved timestamp in prefs. If it does, then record the orphan in FHR
+     *    storage.
+     * 2. Record in prefs that a new session has begun. Track the timestamp (so
+     *    we know to which day the session belongs).
+     * 3. As startup timings become available, accumulate them in memory.
+     * 4. On clean shutdown, read the values from here, write them to the DB, and
+     *    delete the sentinel time from SharedPreferences.
+     * 5. On a dirty shutdown, the in-memory session will not be written to the
+     *    DB, and the current session will be orphaned.
+     *
+     * Sessions are begun in onResume (and thus implicitly onStart) and ended
+     * in onPause.
+     *
+     * Session objects are stored as discrete JSON.
+     *
+     *   "org.mozilla.appSessions": {
+     *     _v: 4,
+     *     "normal": [
+     *       {"r":"P", "d": 123},
+     *     ],
+     *     "abnormal": [
+     *       {"r":"A", "oom": true, "stopped": false}
+     *     ]
+     *   }
+     *
+     * "r": reason. Values are "P" (activity paused), "A" (abnormal termination)
+     * "d": duration. Value in seconds.
+     * "sg": Gecko startup time. Present if this is a clean launch. This
+     *       corresponds to the telemetry timer FENNEC_STARTUP_TIME_GECKOREADY.
+     * "sj": Java activity init time. Present if this is a clean launch. This
+     *       corresponds to the telemetry timer FENNEC_STARTUP_TIME_JAVAUI,
+     *       and includes initialization tasks beyond initial
+     *       onWindowFocusChanged.
+     *
+     * Abnormal terminations will be missing a duration and will feature these keys:
+     *
+     * "oom": was the session killed by an OOM exception?
+     * "stopped": was the session stopped gently?
+     */
+
+    public static final String MEASUREMENT_NAME_SESSIONS = "org.mozilla.appSessions";
+    public static final int MEASUREMENT_VERSION_SESSIONS = 4;
+
+    private void initializeSessionsProvider() {
+        this.storage.ensureMeasurementInitialized(
+            MEASUREMENT_NAME_SESSIONS,
+            MEASUREMENT_VERSION_SESSIONS,
+            new MeasurementFields() {
+                @Override
+                public Iterable<FieldSpec> getFields() {
+                    ArrayList<FieldSpec> out = new ArrayList<FieldSpec>(2);
+                    out.add(new FieldSpec("normal", Field.TYPE_JSON_DISCRETE));
+                    out.add(new FieldSpec("abnormal", Field.TYPE_JSON_DISCRETE));
+                    return out;
+                }
+        });
+    }
+
+    /**
+     * Logic shared between crashed and normal sessions.
+     */
+    private void recordSessionEntry(String field, SessionInformation session, JSONObject value) {
+        try {
+            final int sessionField = storage.getField(MEASUREMENT_NAME_SESSIONS,
+                                                      MEASUREMENT_VERSION_SESSIONS,
+                                                      field)
+                                            .getID();
+            final int day = storage.getDay(session.wallStartTime);
+            storage.recordDailyDiscrete(env, day, sessionField, value);
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Unable to record session completion.", e);
+        }
+    }
+
+    public void checkForOrphanSessions() {
+        if (!this.orphanChecked.compareAndSet(false, true)) {
+            Log.w(LOG_TAG, "Attempting to check for orphan sessions more than once.");
+            return;
+        }
+
+        Log.d(LOG_TAG, "Checking for orphan session.");
+        if (this.previousSession == null) {
+            return;
+        }
+        if (this.previousSession.wallStartTime == 0) {
+            return;
+        }
+
+        if (state != State.INITIALIZED) {
+            // Something has gone awry.
+            Log.e(LOG_TAG, "Attempted to record bad session end without initialized recorder.");
+            return;
+        }
+
+        try {
+            recordSessionEntry("abnormal", this.previousSession, this.previousSession.getCrashedJSON());
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Unable to generate session JSON.", e);
+
+            // Future: record this exception in FHR's own error submitter.
+        }
+    }
+
+    /**
+     * Record that the current session ended. Does not commit the provided editor.
+     */
+    public void recordSessionEnd(String reason, SharedPreferences.Editor editor) {
+        Log.d(LOG_TAG, "Recording session end: " + reason);
+        if (state != State.INITIALIZED) {
+            // Something has gone awry.
+            Log.e(LOG_TAG, "Attempted to record session end without initialized recorder.");
+            return;
+        }
+
+        final SessionInformation session = this.session;
+        this.session = null;        // So it can't be double-recorded.
+
+        if (session == null) {
+            Log.w(LOG_TAG, "Unable to record session end: no session. Already ended?");
+            return;
+        }
+
+        if (session.wallStartTime <= 0) {
+            Log.e(LOG_TAG, "Session start " + session.wallStartTime + " isn't valid! Can't record end.");
+            return;
+        }
+
+        long realEndTime = android.os.SystemClock.elapsedRealtime();
+        try {
+            JSONObject json = session.getCompletionJSON(reason, realEndTime);
+            recordSessionEntry("normal", session, json);
+        } catch (JSONException e) {
+            Log.w(LOG_TAG, "Unable to generate session JSON.", e);
+
+            // Continue so we don't hit it next time.
+            // Future: record this exception in FHR's own error submitter.
+        }
+
+        // Track the end of this session in shared prefs, so it doesn't get
+        // double-counted on next run.
+        session.recordCompletion(editor);
     }
 }
 

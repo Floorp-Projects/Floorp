@@ -1,0 +1,14 @@
+        <!-- We have two services.  BroadcastService responds to
+             external events and starts the regular Service, which
+             does the actual background work, in a uniform manner.  We
+             don't export either of these services, since they are
+             only started by receivers internal to the Fennec package.
+          -->
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.background.healthreport.upload.HealthReportBroadcastService" >
+        </service>
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.background.healthreport.upload.HealthReportUploadService" >
+        </service>

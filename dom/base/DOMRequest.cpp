@@ -95,7 +95,7 @@ DOMRequest::GetReadyState(nsAString& aReadyState)
       aReadyState.AssignLiteral("done");
       break;
     default:
-      MOZ_NOT_REACHED("Unrecognized readyState.");
+      MOZ_CRASH("Unrecognized readyState.");
   }
 
   return NS_OK;
@@ -153,6 +153,20 @@ DOMRequest::FireError(nsresult aError)
 
   mDone = true;
   mError = new DOMError(GetOwner(), aError);
+
+  FireEvent(NS_LITERAL_STRING("error"), true, true);
+}
+
+void
+DOMRequest::FireDetailedError(nsISupports* aError)
+{
+  NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
+  NS_ASSERTION(!mError, "mError shouldn't have been set!");
+  NS_ASSERTION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
+  NS_ASSERTION(aError, "No detailed error provided");
+
+  mDone = true;
+  mError = aError;
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
 }
@@ -235,6 +249,16 @@ DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
 {
   NS_ENSURE_STATE(aRequest);
   static_cast<DOMRequest*>(aRequest)->FireError(aError);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
+                                     nsISupports* aError)
+{
+  NS_ENSURE_STATE(aRequest);
+  static_cast<DOMRequest*>(aRequest)->FireDetailedError(aError);
 
   return NS_OK;
 }

@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.background;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import org.mozilla.gecko.background.common.log.Logger;
 
 import android.app.AlarmManager;
@@ -76,5 +79,39 @@ public abstract class BackgroundService extends IntentService {
   protected void cancelAlarm(PendingIntent pendingIntent) {
     final AlarmManager alarm = getAlarmManager();
     alarm.cancel(pendingIntent);
+  }
+
+  /**
+   * To avoid tight coupling to Fennec, we use reflection to find
+   * <code>GeckoPreferences</code>, invoking the same code path that
+   * <code>GeckoApp</code> uses on startup to send the <i>other</i>
+   * notification to which we listen.
+   *
+   * Invoke this to handle one of the system intents to which we listen to
+   * launch our service without the browser being opened.
+   *
+   * All of this is neatly wrapped in <code>try…catch</code>, so this code
+   * will run safely without a Firefox build installed.
+   */
+  protected static void reflectContextToFennec(Context context, String className, String methodName) {
+    // Ask the browser to tell us the current state of the preference.
+    try {
+      Class<?> geckoPreferences = Class.forName(className);
+      Method broadcastSnippetsPref = geckoPreferences.getMethod(methodName, Context.class);
+      broadcastSnippetsPref.invoke(null, context);
+      return;
+    } catch (ClassNotFoundException e) {
+      Logger.error(LOG_TAG, "Class " + className + " not found!");
+      return;
+    } catch (NoSuchMethodException e) {
+      Logger.error(LOG_TAG, "Method " + className + "/" + methodName + " not found!");
+      return;
+    } catch (IllegalArgumentException e) {
+      Logger.error(LOG_TAG, "Got exception invoking " + methodName + ".");
+    } catch (IllegalAccessException e) {
+      Logger.error(LOG_TAG, "Got exception invoking " + methodName + ".");
+    } catch (InvocationTargetException e) {
+      Logger.error(LOG_TAG, "Got exception invoking " + methodName + ".");
+    }
   }
 }

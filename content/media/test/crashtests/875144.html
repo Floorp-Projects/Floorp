@@ -36,7 +36,7 @@ o11[i] = Math.sin(i * 127);
 }
 return o10;
 }(); } catch(e) { Logger.error(Logger.comment(e)); }
-try { o3.noteOff(-1) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.stop(-1) } catch(e) { Logger.error(Logger.comment(e)); }
 /* [Exception... "An attempt was made to use an object that is not, or is no longer, usable"  code: "11" nsresult: "0x8053000b (InvalidStateError)"  location: "file:///Users/cdiehl/dev/projects/peach/Peach/Utilities/JS/undefined.js Line: 602"] */
 try { o3.channelCountMode = 'explicit'; } catch(e) { Logger.error(Logger.comment(e)); }
 try { o12 = o1.createBiquadFilter(); } catch(e) { Logger.error(Logger.comment(e)); }

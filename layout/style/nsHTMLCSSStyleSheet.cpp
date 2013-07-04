@@ -8,6 +8,7 @@
  */
 
 #include "nsHTMLCSSStyleSheet.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsPresContext.h"
@@ -39,12 +40,8 @@ ClearAttrCache(const nsAString& aKey, MiscContainer*& aValue, void*)
 
 } // anonymous namespace
 
-nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet(nsIURI* aURL, nsIDocument* aDocument)
-  : mURL(aURL)
-  , mDocument(aDocument) // not refcounted!
+nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
 {
-  MOZ_ASSERT(aURL);
-  MOZ_ASSERT(aDocument);
   mCachedStyleAttrs.Init();
 }
 
@@ -55,9 +52,7 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
   mCachedStyleAttrs.Enumerate(ClearAttrCache, nullptr);
 }
 
-NS_IMPL_ISUPPORTS2(nsHTMLCSSStyleSheet,
-                   nsIStyleSheet,
-                   nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS1(nsHTMLCSSStyleSheet, nsIStyleRuleProcessor)
 
 /* virtual */ void
 nsHTMLCSSStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
@@ -139,13 +134,13 @@ nsHTMLCSSStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext)
 }
 
 /* virtual */ size_t
-nsHTMLCSSStyleSheet::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsHTMLCSSStyleSheet::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return 0;
 }
 
 /* virtual */ size_t
-nsHTMLCSSStyleSheet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsHTMLCSSStyleSheet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
@@ -175,98 +170,3 @@ nsHTMLCSSStyleSheet::LookupStyleAttr(const nsAString& aSerialized)
 {
   return mCachedStyleAttrs.Get(aSerialized);
 }
-
-void
-nsHTMLCSSStyleSheet::Reset(nsIURI* aURL)
-{
-  mURL = aURL;
-}
-
-/* virtual */ nsIURI*
-nsHTMLCSSStyleSheet::GetSheetURI() const
-{
-  return mURL;
-}
-
-/* virtual */ nsIURI*
-nsHTMLCSSStyleSheet::GetBaseURI() const
-{
-  return mURL;
-}
-
-/* virtual */ void
-nsHTMLCSSStyleSheet::GetTitle(nsString& aTitle) const
-{
-  aTitle.AssignLiteral("Internal HTML/CSS Style Sheet");
-}
-
-/* virtual */ void
-nsHTMLCSSStyleSheet::GetType(nsString& aType) const
-{
-  aType.AssignLiteral("text/html");
-}
-
-/* virtual */ bool
-nsHTMLCSSStyleSheet::HasRules() const
-{
-  // Say we always have rules, since we don't know.
-  return true;
-}
-
-/* virtual */ bool
-nsHTMLCSSStyleSheet::IsApplicable() const
-{
-  return true;
-}
-
-/* virtual */ void
-nsHTMLCSSStyleSheet::SetEnabled(bool aEnabled)
-{ // these can't be disabled
-}
-
-/* virtual */ bool
-nsHTMLCSSStyleSheet::IsComplete() const
-{
-  return true;
-}
-
-/* virtual */ void
-nsHTMLCSSStyleSheet::SetComplete()
-{
-}
-
-// style sheet owner info
-/* virtual */ nsIStyleSheet*
-nsHTMLCSSStyleSheet::GetParentSheet() const
-{
-  return nullptr;
-}
-
-/* virtual */ nsIDocument*
-nsHTMLCSSStyleSheet::GetOwningDocument() const
-{
-  return mDocument;
-}
-
-/* virtual */ void
-nsHTMLCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
-{
-  mDocument = aDocument;
-}
-
-#ifdef DEBUG
-/* virtual */ void
-nsHTMLCSSStyleSheet::List(FILE* out, int32_t aIndent) const
-{
-  // Indent
-  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  fputs("HTML CSS Style Sheet: ", out);
-  nsAutoCString urlSpec;
-  mURL->GetSpec(urlSpec);
-  if (!urlSpec.IsEmpty()) {
-    fputs(urlSpec.get(), out);
-  }
-  fputs("\n", out);
-}
-#endif

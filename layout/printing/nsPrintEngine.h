@@ -127,6 +127,7 @@ public:
   void CheckForChildFrameSets(nsPrintObject* aPO);
 
   void CalcNumPrintablePages(int32_t& aNumPages);
+  void PromoteReflowsToReframeRoot();
   void ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify);
   nsresult CleanupOnFailure(nsresult aResult, bool aIsPrinting);
   // If FinishPrintPreview() fails, caller may need to reset the state of the

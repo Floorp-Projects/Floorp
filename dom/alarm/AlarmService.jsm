@@ -331,16 +331,23 @@ this.AlarmService = {
   },
 
   _getAlarmTime: function _getAlarmTime(aAlarm) {
-    let alarmTime = (new Date(aAlarm.date)).getTime();
+    // Avoid casting a Date object to a Date again to
+    // preserve milliseconds. See bug 810973.
+    let alarmTime;
+    if (aAlarm.date instanceof Date) {
+      alarmTime = aAlarm.date.getTime();
+    } else {
+      alarmTime = (new Date(aAlarm.date)).getTime();
+    }
 
     // For an alarm specified with "ignoreTimezone", it must be fired respect
     // to the user's timezone.  Supposing an alarm was set at 7:00pm at Tokyo,
     // it must be gone off at 7:00pm respect to Paris' local time when the user
     // is located at Paris.  We can adjust the alarm UTC time by calculating
     // the difference of the orginal timezone and the current timezone.
-    if (aAlarm.ignoreTimezone)
+    if (aAlarm.ignoreTimezone) {
        alarmTime += (this._currentTimezoneOffset - aAlarm.timezoneOffset) * 60000;
-
+    }
     return alarmTime;
   },
 
@@ -393,14 +400,12 @@ this.AlarmService = {
       return;
     }
 
-    aNewAlarm['timezoneOffset'] = this._currentTimezoneOffset;
-    let aNewAlarmTime = this._getAlarmTime(aNewAlarm);
-    if (aNewAlarmTime <= Date.now()) {
-      debug("Adding a alarm that has past time.");
-      this._debugCurrentAlarm();
-      aErrorCb("InvalidStateError");
+    if (!aNewAlarm.date) {
+      aErrorCb("alarm.date is null");
       return;
     }
+
+    aNewAlarm['timezoneOffset'] = this._currentTimezoneOffset;
 
     this._db.add(
       aNewAlarm,
@@ -424,6 +429,7 @@ this.AlarmService = {
         // If the new alarm is earlier than the current alarm, swap them and
         // push the previous alarm back to queue.
         let alarmQueue = this._alarmQueue;
+        let aNewAlarmTime = this._getAlarmTime(aNewAlarm);
         let currentAlarmTime = this._getAlarmTime(this._currentAlarm);
         if (aNewAlarmTime < currentAlarmTime) {
           alarmQueue.unshift(this._currentAlarm);
@@ -509,7 +515,17 @@ this.AlarmService = {
       case "webapps-clear-data":
         let params =
           aSubject.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
+        if (!params) {
+          debug("Error! Fail to remove alarms for an uninstalled app.");
+          return;
+        }
+
         let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        if (!manifestURL) {
+          debug("Error! Fail to remove alarms for an uninstalled app.");
+          return;
+        }
+
         this._db.getAll(
           manifestURL,
           function getAllSuccessCb(aAlarms) {

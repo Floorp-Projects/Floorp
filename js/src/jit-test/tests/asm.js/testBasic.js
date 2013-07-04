@@ -9,6 +9,7 @@ assertAsmTypeFail(USE_ASM + 'function f() 0; return 0');
 assertAsmTypeFail(USE_ASM + 'function f(){} return g');
 assertAsmTypeFail(USE_ASM + 'function f() 0; return f');
 assertAsmTypeFail('"use strict";' + USE_ASM + 'function f() {} return f');
+assertAsmTypeFail(USE_ASM + '"use strict"; function f() {} return f');
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(){} return f'))(), undefined);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(){;} return f'))(), undefined);
 assertAsmTypeFail(USE_ASM + 'function f(i,j){;} return f');
@@ -17,10 +18,12 @@ assertAsmTypeFail(USE_ASM + 'function f(x){} return f');
 assertAsmTypeFail(USE_ASM + 'function f(){return; return 1} return f');
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(x){x=x|0} return f'))(42), undefined);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(x){x=x|0; return x|0} return f'))(42), 42);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f(x){x=x|0; return x|0;;;} return f'))(42), 42);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(x,y){x=x|0;y=y|0; return (x+y)|0} return f'))(44, -2), 42);
 assertAsmTypeFail('a', USE_ASM + 'function a(){} return a');
 assertAsmTypeFail('a','b','c', USE_ASM + 'var c');
 assertAsmTypeFail('a','b','c', USE_ASM + 'var c=0');
+assertAsmTypeFail(USE_ASM + 'c=0;return {}');
 assertAsmTypeFail('x','x', USE_ASM + 'function a(){} return a');
 assertAsmTypeFail('x','y','x', USE_ASM + 'function a(){} return a');
 assertEq(asmLink(asmCompile('x', USE_ASM + 'function a(){} return a'))(), undefined);
@@ -32,6 +35,7 @@ assertEq(asmLink(asmCompile('x', USE_ASM + 'function f(){} return f'), 1)(), und
 assertEq(asmLink(asmCompile('x','y', USE_ASM + 'function f(){} return f'), 1, 2)(), undefined);
 
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(i) {i=i|0} return f'))(42), undefined);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() {var i=0;; var j=1;} return f'))(), undefined); // bug 877965 second part
 assertAsmTypeFail(USE_ASM + 'function f(i) {i=i|0;var i} return f');
 assertAsmTypeFail(USE_ASM + 'function f(i) {i=i|0;var i=0} return f');
 

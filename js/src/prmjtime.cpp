@@ -40,7 +40,7 @@
 #endif
 
 #ifdef JS_THREADSAFE
-#include <prinit.h>
+#include "prinit.h"
 #endif
 
 #endif

@@ -25,8 +25,9 @@ enum PaintFlats {
     kShader_PaintFlat,
     kImageFilter_PaintFlat,
     kXfermode_PaintFlat,
+    kAnnotation_PaintFlat,
 
-    kLast_PaintFlat = kXfermode_PaintFlat
+    kLast_PaintFlat = kAnnotation_PaintFlat
 };
 #define kCount_PaintFlats   (kLast_PaintFlat + 1)
 
@@ -37,13 +38,15 @@ enum DrawOps {
     kClipPath_DrawOp,
     kClipRegion_DrawOp,
     kClipRect_DrawOp,
+    kClipRRect_DrawOp,
     kConcat_DrawOp,
     kDrawBitmap_DrawOp,
     kDrawBitmapMatrix_DrawOp,
     kDrawBitmapNine_DrawOp,
-    kDrawBitmapRect_DrawOp,
+    kDrawBitmapRectToRect_DrawOp,
     kDrawClear_DrawOp,
     kDrawData_DrawOp,
+    kDrawOval_DrawOp,
     kDrawPaint_DrawOp,
     kDrawPath_DrawOp,
     kDrawPicture_DrawOp,
@@ -51,6 +54,7 @@ enum DrawOps {
     kDrawPosText_DrawOp,
     kDrawPosTextH_DrawOp,
     kDrawRect_DrawOp,
+    kDrawRRect_DrawOp,
     kDrawSprite_DrawOp,
     kDrawText_DrawOp,
     kDrawTextOnPath_DrawOp,

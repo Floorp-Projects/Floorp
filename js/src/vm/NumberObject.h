@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NumberObject_h___
-#define NumberObject_h___
+#ifndef vm_NumberObject_h
+#define vm_NumberObject_h
 
 #include "jsnum.h"
 
@@ -18,6 +18,8 @@ class NumberObject : public JSObject
 
   public:
     static const unsigned RESERVED_SLOTS = 1;
+
+    static Class class_;
 
     /*
      * Creates a new Number object boxing the given number.  The object's
@@ -41,4 +43,4 @@ class NumberObject : public JSObject
 
 } // namespace js
 
-#endif /* NumberObject_h__ */
+#endif /* vm_NumberObject_h */

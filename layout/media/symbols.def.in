@@ -57,9 +57,13 @@ ogg_page_granulepos
 ogg_page_serialno
 ogg_stream_check
 ogg_stream_clear
+ogg_stream_eos
+ogg_stream_flush
 ogg_stream_init
+ogg_stream_packetin
 ogg_stream_packetout
 ogg_stream_pagein
+ogg_stream_pageout
 ogg_stream_reset
 ogg_sync_buffer
 ogg_sync_clear
@@ -110,6 +114,7 @@ speex_resampler_strerror
 #ifdef MOZ_CUBEB
 cubeb_destroy
 cubeb_init
+cubeb_get_max_channel_count
 cubeb_stream_destroy
 cubeb_stream_get_position
 cubeb_stream_init
@@ -575,9 +580,11 @@ hb_unicode_funcs_set_eastasian_width_func
 hb_unicode_funcs_set_general_category_func
 hb_unicode_funcs_set_mirroring_func
 hb_unicode_funcs_set_script_func
-webvtt_string_text
 webvtt_create_parser
 webvtt_delete_parser
+webvtt_finish_parsing
 webvtt_parse_chunk
 webvtt_ref_node
 webvtt_release_node
+webvtt_strerror
+webvtt_string_text

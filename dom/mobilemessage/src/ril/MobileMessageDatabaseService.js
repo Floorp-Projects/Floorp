@@ -20,6 +20,9 @@ const RIL_GETTHREADSCURSOR_CID =
   Components.ID("{95ee7c3e-d6f2-4ec4-ade5-0c453c036d35}");
 
 const DEBUG = false;
+const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
+
+
 const DB_NAME = "sms";
 const DB_VERSION = 11;
 const MESSAGE_STORE_NAME = "sms";
@@ -31,6 +34,7 @@ const DELIVERY_SENDING = "sending";
 const DELIVERY_SENT = "sent";
 const DELIVERY_RECEIVED = "received";
 const DELIVERY_NOT_DOWNLOADED = "not-downloaded";
+const DELIVERY_ERROR = "error";
 
 const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
 const DELIVERY_STATUS_SUCCESS = "success";
@@ -105,6 +109,7 @@ function MobileMessageDatabaseService() {
       }
     };
   });
+  this.updatePendingTransactionToError();
 }
 MobileMessageDatabaseService.prototype = {
 
@@ -276,6 +281,79 @@ MobileMessageDatabaseService.prototype = {
         }
       }
       callback(null, txn, stores);
+    });
+  },
+
+  /**
+   * Sometimes user might reboot or remove battery while sending/receiving
+   * message. This is function set the status of message records to error.
+   */
+  updatePendingTransactionToError: function updatePendingTransactionToError() {
+    this.newTxn(READ_WRITE, function (error, txn, messageStore) {
+      if (DEBUG) {
+        txn.onerror = function onerror(event) {
+          debug("updatePendingTransactionToError fail, event = " + event);
+        };
+      }
+
+      let deliveryIndex = messageStore.index("delivery");
+
+      // Set all 'delivery: sending' records to 'delivery: error' and 'deliveryStatus:
+      // error'.
+      let keyRange = IDBKeyRange.bound([DELIVERY_SENDING, 0], [DELIVERY_SENDING, ""]);
+      let cursorRequestSending = deliveryIndex.openCursor(keyRange);
+      cursorRequestSending.onsuccess = function(event) {
+        let messageCursor = event.target.result;
+        if (!messageCursor) {
+          return;
+        }
+
+        let messageRecord = messageCursor.value;
+
+        // Set delivery to error.
+        messageRecord.delivery = DELIVERY_ERROR;
+        messageRecord.deliveryIndex = [DELIVERY_ERROR, messageRecord.timestamp];
+
+        if (messageRecord.type == "sms") {
+          messageRecord.deliveryStatus = DELIVERY_STATUS_ERROR;
+        } else {
+          // Set delivery status to error.
+          for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
+            messageRecord.deliveryStatus[i] = DELIVERY_STATUS_ERROR;
+          }
+        }
+
+        messageCursor.update(messageRecord);
+        messageCursor.continue();
+      };
+
+      // Set all 'delivery: not-downloaded' and 'deliveryStatus: pending'
+      // records to 'delivery: not-downloaded' and 'deliveryStatus: error'.
+      keyRange = IDBKeyRange.bound([DELIVERY_NOT_DOWNLOADED, 0], [DELIVERY_NOT_DOWNLOADED, ""]);
+      let cursorRequestNotDownloaded = deliveryIndex.openCursor(keyRange);
+      cursorRequestNotDownloaded.onsuccess = function(event) {
+        let messageCursor = event.target.result;
+        if (!messageCursor) {
+          return;
+        }
+
+        let messageRecord = messageCursor.value;
+
+        // We have no "not-downloaded" SMS messages.
+        if (messageRecord.type == "sms") {
+          messageCursor.continue();
+          return;
+        }
+
+        // Set delivery status to error.
+        if (messageRecord.deliveryStatus.length == 1 &&
+            messageRecord.deliveryStatus[0] == DELIVERY_STATUS_PENDING) {
+          messageRecord.deliveryStatus = [DELIVERY_STATUS_ERROR];
+        }
+
+        messageCursor.update(messageRecord);
+        messageCursor.continue();
+      };
     });
   },
 
@@ -747,7 +825,10 @@ MobileMessageDatabaseService.prototype = {
     // and local(0987654321) types. The "nationalNumber" parsed from
     // phonenumberutils will be "987654321" in this case.
 
-    let request = aParticipantStore.index("addresses").get(aAddress);
+    // Normalize address before searching for participant record.
+    let normalizedAddress = PhoneNumberUtils.normalize(aAddress, false);
+
+    let request = aParticipantStore.index("addresses").get(normalizedAddress);
     request.onsuccess = (function (event) {
       let participantRecord = event.target.result;
       // 1) First try matching through "addresses" index of participant store.
@@ -761,8 +842,8 @@ MobileMessageDatabaseService.prototype = {
         return;
       }
 
-      // Only parse aAddress if it's already an international number.
-      let parsedAddress = PhoneNumberUtils.parseWithMCC(aAddress, null);
+      // Only parse normalizedAddress if it's already an international number.
+      let parsedAddress = PhoneNumberUtils.parseWithMCC(normalizedAddress, null);
       // 2) Traverse throught all participants and check all alias addresses.
       aParticipantStore.openCursor().onsuccess = (function (event) {
         let cursor = event.target.result;
@@ -773,7 +854,7 @@ MobileMessageDatabaseService.prototype = {
             return;
           }
 
-          let participantRecord = { addresses: [aAddress] };
+          let participantRecord = { addresses: [normalizedAddress] };
           let addRequest = aParticipantStore.add(participantRecord);
           addRequest.onsuccess = function (event) {
             participantRecord.id = event.target.result;
@@ -804,7 +885,7 @@ MobileMessageDatabaseService.prototype = {
             let parsedStoredAddress =
               PhoneNumberUtils.parseWithMCC(storedAddress, null);
             if (parsedStoredAddress
-                && aAddress.endsWith(parsedStoredAddress.nationalNumber)) {
+                && normalizedAddress.endsWith(parsedStoredAddress.nationalNumber)) {
               match = true;
             }
           }
@@ -817,7 +898,7 @@ MobileMessageDatabaseService.prototype = {
           if (aCreate) {
             // In a READ-WRITE transaction, append one more possible address for
             // this participant record.
-            participantRecord.addresses.push(aAddress);
+            participantRecord.addresses.push(normalizedAddress);
             cursor.update(participantRecord);
           }
           if (DEBUG) {
@@ -1025,18 +1106,6 @@ MobileMessageDatabaseService.prototype = {
     return aMessageRecord.id;
   },
 
-  getRilIccInfoMsisdn: function getRilIccInfoMsisdn() {
-    let iccInfo = this.mRIL.rilContext.iccInfo;
-    let number = iccInfo ? iccInfo.msisdn : null;
-
-    // Workaround an xpconnect issue with undefined string objects.
-    // See bug 808220
-    if (number === undefined || number === "undefined") {
-      return null;
-    }
-    return number;
-  },
-
   /**
    * nsIRilMobileMessageDatabaseService API
    */
@@ -1055,16 +1124,13 @@ MobileMessageDatabaseService.prototype = {
       }
       return;
     }
-    let self = this.getRilIccInfoMsisdn();
     let threadParticipants = [aMessage.sender];
-    if (aMessage.type == "sms") {
-      // TODO Bug 853384 - for some SIMs we cannot retrieve the vaild
-      // phone number, thus setting the SMS' receiver to be null.
-      aMessage.receiver = self;
-    } else if (aMessage.type == "mms") {
+    if (aMessage.type == "mms" && !DISABLE_MMS_GROUPING_FOR_RECEIVING) {
       let receivers = aMessage.receivers;
-      // We need to add the receivers (excluding our own) into the participants
-      // of a thread. Some cases we might encounter here:
+      // If we don't want to disable the MMS grouping for receiving, we need to
+      // add the receivers (excluding the user's own number) to the participants
+      // for creating the thread. Some cases might be investigated as below:
+      //
       // 1. receivers.length == 0
       //    This usually happens when receiving an MMS notification indication
       //    which doesn't carry any receivers.
@@ -1073,18 +1139,25 @@ MobileMessageDatabaseService.prototype = {
       //    add it into participants because we know that number is our own.
       // 3. receivers.length >= 2
       //    If the receivers contain multiple phone numbers, we need to add all
-      //    of them but not our own into participants.
+      //    of them but not the user's own number into participants.
       if (receivers.length >= 2) {
-        // TODO Bug 853384 - for some SIM cards, the phone number might not be
-        // available, so we cannot correcly exclude our own from the receivers,
-        // thus wrongly building the thread index.
+        let isSuccess = false;
         let slicedReceivers = receivers.slice();
-        if (self) {
-          let found = slicedReceivers.indexOf(self);
+        if (aMessage.msisdn) {
+          let found = slicedReceivers.indexOf(aMessage.msisdn);
           if (found !== -1) {
+            isSuccess = true;
             slicedReceivers.splice(found, 1);
           }
         }
+
+        if (!isSuccess) {
+          // For some SIMs we cannot retrieve the vaild MSISDN (i.e. the user's
+          // own phone number), so we cannot correcly exclude the user's own
+          // number from the receivers, thus wrongly building the thread index.
+          if (DEBUG) debug("Error! Cannot strip out user's own phone number!");
+        }
+
         threadParticipants = threadParticipants.concat(slicedReceivers);
       }
     }
@@ -1145,9 +1218,6 @@ MobileMessageDatabaseService.prototype = {
       }
     }
 
-    // TODO Bug 853384 - for some SIMs we cannot retrieve the vaild
-    // phone number, thus setting the message's sender to be null.
-    aMessage.sender = this.getRilIccInfoMsisdn();
     let timestamp = aMessage.timestamp;
 
     // Adding needed indexes and extra attributes for internal use.
@@ -1404,6 +1474,7 @@ MobileMessageDatabaseService.prototype = {
           threadRecord.lastMessageId = nextMsg.id;
           threadRecord.lastTimestamp = nextMsg.timestamp;
           threadRecord.subject = nextMsg.body;
+          threadRecord.lastMessageType = nextMsg.type;
           if (DEBUG) {
             debug("Updating mru entry: " +
                   JSON.stringify(threadRecord));
@@ -1466,7 +1537,11 @@ MobileMessageDatabaseService.prototype = {
                                                messageRecord.threadId,
                                                messageId,
                                                messageRecord.read);
-              };
+
+              Services.obs.notifyObservers(null,
+                                           "mobile-message-deleted",
+                                           JSON.stringify({ id: messageId }));
+            };
           } else if (DEBUG) {
             debug("Message id " + messageId + " does not exist");
           }
@@ -2249,10 +2324,6 @@ GetThreadsCursor.prototype = {
     this.collector.squeeze(this.notify.bind(this));
   }
 }
-
-XPCOMUtils.defineLazyServiceGetter(MobileMessageDatabaseService.prototype, "mRIL",
-                                   "@mozilla.org/ril;1",
-                                   "nsIRadioInterfaceLayer");
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MobileMessageDatabaseService]);
 

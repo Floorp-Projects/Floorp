@@ -162,7 +162,6 @@
                 command="sp-cmd-close"/>
     </menupopup>
   </menu>
-
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup"
@@ -182,7 +181,6 @@
       <menuitem id="se-menu-gotoLine"/>
     </menupopup>
   </menu>
-
   <menu id="sp-execute-menu" label="&executeMenu.label;"
         accesskey="&executeMenu.accesskey;">
     <menupopup id="sp-menu_executepopup">
@@ -252,6 +250,36 @@
   </menu>
 </menubar>
 
+<toolbar id="sp-toolbar"
+         class="devtools-toolbar">
+  <toolbarbutton id="sp-toolbar-open"
+                 class="devtools-toolbarbutton"
+                 label="&openFileCmd.label;"
+                 command="sp-cmd-openFile"/>
+  <toolbarbutton id="sp-toolbar-save"
+                 class="devtools-toolbarbutton"
+                 label="&saveFileCmd.label;"
+                 command="sp-cmd-save"/>
+  <toolbarbutton id="sp-toolbar-saveAs"
+                 class="devtools-toolbarbutton"
+                 label="&saveFileAsCmd.label;"
+                 command="sp-cmd-saveas"/>
+  <toolbarspacer/>
+  <toolbarbutton id="sp-toolbar-run"
+                 class="devtools-toolbarbutton"
+                 label="&run.label;"
+                 command="sp-cmd-run"/>
+  <toolbarbutton id="sp-toolbar-inspect"
+                 class="devtools-toolbarbutton"
+                 label="&inspect.label;"
+                 command="sp-cmd-inspect"/>
+  <toolbarbutton id="sp-toolbar-display"
+                 class="devtools-toolbarbutton"
+                 label="&display.label;"
+                 command="sp-cmd-display"/>
+</toolbar>
+
+
 <popupset id="scratchpad-popups">
   <menupopup id="scratchpad-text-popup"
              onpopupshowing="goUpdateSourceEditorMenuItems()">
@@ -288,10 +316,10 @@
 <notificationbox id="scratchpad-notificationbox" flex="1">
   <hbox flex="1">
     <vbox id="scratchpad-editor" flex="1"/>
-    <splitter class="devtools-side-splitter"
-              collapse="after"
-              state="collapsed"/>
-    <tabbox id="scratchpad-sidebar" class="devtools-sidebar-tabs" width="300">
+    <splitter class="devtools-side-splitter"/>
+    <tabbox id="scratchpad-sidebar" class="devtools-sidebar-tabs"
+                                    width="300"
+                                    hidden="true">
       <tabs/>
       <tabpanels flex="1"/>
     </tabbox>

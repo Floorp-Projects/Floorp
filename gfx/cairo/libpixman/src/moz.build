@@ -11,3 +11,18 @@ EXPORTS += [
     'pixman.h',
 ]
 
+# Apple's arm assembler doesn't support the same syntax as
+# the standard GNU assembler, so use the C fallback paths for now.
+# This may be fixable if clang's ARM/iOS assembler improves into a
+# viable solution in the future.
+if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
+    if CONFIG['HAVE_ARM_NEON']:
+        SSRCS += [
+            'pixman-arm-neon-asm-bilinear.S',
+            'pixman-arm-neon-asm.S',
+        ]
+    if CONFIG['HAVE_ARM_SIMD']:
+        SSRCS += [
+            'pixman-arm-simd-asm-scaled.S',
+            'pixman-arm-simd-asm.S',
+        ]

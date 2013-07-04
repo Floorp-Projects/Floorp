@@ -24,8 +24,8 @@ LOCAL_INCLUDES += \
 		-I$(topsrcdir)/netwerk/base/src \
 		$(NULL)
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-CXXFLAGS          += $(MOZ_GTK2_CFLAGS)
+ifdef MOZ_ENABLE_GTK
+CXXFLAGS          += $(TK_CFLAGS)
 endif
 
 LOCAL_INCLUDES += \

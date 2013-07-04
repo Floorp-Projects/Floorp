@@ -64,7 +64,7 @@ gTests.push({
     gTextArea.selectionStart = gTextArea.selectionEnd = 0;
 
     let promise = waitForEvent(document, "popupshown");
-    sendContextMenuClickToElement(gWindow, gFrame, 195, 80);
+    sendContextMenuClickToElement(gWindow, gFrame, 220, 80);
     yield promise;
 
     checkContextUIMenuItemVisibility(["context-select",
@@ -97,7 +97,7 @@ gTests.push({
     gTextArea.selectionStart = gTextArea.selectionEnd = 0;
 
     let promise = waitForEvent(document, "popupshown");
-    sendContextMenuClickToElement(gWindow, gFrame, 195, 80);
+    sendContextMenuClickToElement(gWindow, gFrame, 220, 80);
     yield promise;
 
     checkContextUIMenuItemVisibility(["context-select",
@@ -178,7 +178,7 @@ gTests.push({
     yield scrollPromise;
 
     let promise = waitForEvent(document, "popupshown");
-    sendContextMenuClickToElement(gWindow, gFrame, 195, 80);
+    sendContextMenuClickToElement(gWindow, gFrame, 220, 80);
     yield promise;
 
     checkContextUIMenuItemVisibility(["context-select",
@@ -251,6 +251,9 @@ function test() {
     todo(false, "browser_selection_tests need landscape mode to run.");
     return;
   }
+
+  // XXX need this until bugs 886624 and 859742 are fully resolved
+  setDevPixelEqualToPx();
 
   requestLongerTimeout(3);
   runTests();

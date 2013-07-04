@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef pcscriptcache_inl_h__
-#define pcscriptcache_inl_h__
+#ifndef ion_PcScriptCache_inl_h
+#define ion_PcScriptCache_inl_h
 
-#include "PcScriptCache.h"
+#include "ion/PcScriptCache.h"
 
 namespace js {
 namespace ion {
@@ -36,4 +36,4 @@ PcScriptCache::get(JSRuntime *rt, uint32_t hash, uint8_t *addr,
 } // namespace ion
 } // namespace js
 
-#endif // pcscriptcache_inl_h__
+#endif /* ion_PcScriptCache_inl_h */

@@ -52,9 +52,21 @@
                                          style="@style/FindBar"
                                          android:visibility="gone"/>
 
-        <include layout="@layout/browser_toolbar"
-                 android:layout_width="fill_parent"
-                 android:layout_height="@dimen/browser_toolbar_height"/>
+        <RelativeLayout android:id="@+id/camera_layout"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentBottom="true">
+        </RelativeLayout>
+
+        <org.mozilla.gecko.BrowserToolbar android:id="@+id/browser_toolbar"
+                style="@style/BrowserToolbar"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/browser_toolbar_height"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:clickable="true"
+                android:focusable="true"/>
 
         <FrameLayout android:id="@+id/search_container"
                      android:layout_width="fill_parent"
@@ -64,5 +76,19 @@
                      android:visibility="invisible"/>
 
     </view>
+
+    <LinearLayout android:id="@+id/toast"
+                  style="@style/Toast">
+
+        <TextView android:id="@+id/toast_message"
+                  style="@style/ToastMessage" />
+
+        <ImageView android:id="@+id/toast_divider"
+                   style="@style/ToastDivider" />
+
+        <Button android:id="@+id/toast_button"
+                style="@style/ToastButton" />
+
+    </LinearLayout>
 
 </RelativeLayout>

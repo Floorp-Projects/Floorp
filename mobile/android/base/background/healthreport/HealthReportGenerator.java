@@ -112,7 +112,7 @@ public class HealthReportGenerator {
     JSONObject days = new JSONObject();
     Cursor cursor = storage.getRawEventsSince(since);
     try {
-      if (!cursor.moveToNext()) {
+      if (!cursor.moveToFirst()) {
         return days;
       }
 
@@ -186,6 +186,22 @@ public class HealthReportGenerator {
     return days;
   }
 
+  /**
+   * Return the {@link JSONObject} parsed from the provided index of the given
+   * cursor, or {@link JSONObject#NULL} if either SQL <code>NULL</code> or
+   * string <code>"null"</code> is present at that index.
+   */
+  private static Object getJSONAtIndex(Cursor cursor, int index) throws JSONException {
+    if (cursor.isNull(index)) {
+      return JSONObject.NULL;
+    }
+    final String value = cursor.getString(index);
+    if ("null".equals(value)) {
+      return JSONObject.NULL;
+    }
+    return new JSONObject(value);
+  }
+
   protected static void recordMeasurementFromCursor(final Field field,
                                              JSONObject measurement,
                                              Cursor cursor)
@@ -205,6 +221,10 @@ public class HealthReportGenerator {
         HealthReportUtils.append(measurement, field.fieldName, cursor.getString(3));
         return;
       }
+      if (field.isJSONField()) {
+        HealthReportUtils.append(measurement, field.fieldName, getJSONAtIndex(cursor, 3));
+        return;
+      }
       if (field.isIntegerField()) {
         HealthReportUtils.append(measurement, field.fieldName, cursor.getLong(3));
         return;
@@ -215,6 +235,10 @@ public class HealthReportGenerator {
     // Non-discrete -- must be LAST or COUNTER, so just accumulate the value.
     if (field.isStringField()) {
       measurement.put(field.fieldName, cursor.getString(3));
+      return;
+    }
+    if (field.isJSONField()) {
+      measurement.put(field.fieldName, getJSONAtIndex(cursor, 3));
       return;
     }
     measurement.put(field.fieldName, cursor.getLong(3));
@@ -403,7 +427,16 @@ public class HealthReportGenerator {
 
   /**
    * Compute the *tree* difference set between the two objects. If the two
-   * objects are identical, returns null.
+   * objects are identical, returns <code>null</code>. If <code>from</code> is
+   * <code>null</code>, returns <code>to</code>. If <code>to</code> is
+   * <code>null</code>, behaves as if <code>to</code> were an empty object.
+   *
+   * (Note that this method does not check for {@link JSONObject#NULL}, because
+   * by definition it can't be provided as input to this method.)
+   *
+   * This behavior is intended to simplify life for callers: a missing object
+   * can be viewed as (and behaves as) an empty map, to a useful extent, rather
+   * than throwing an exception.
    *
    * @param from
    *          a JSONObject.
@@ -421,8 +454,12 @@ public class HealthReportGenerator {
   public static JSONObject diff(JSONObject from,
                                 JSONObject to,
                                 boolean includeNull) throws JSONException {
-    if (from == null || from == JSONObject.NULL) {
+    if (from == null) {
       return to;
+    }
+
+    if (to == null) {
+      return diff(from, new JSONObject(), includeNull);
     }
 
     JSONObject out = new JSONObject();

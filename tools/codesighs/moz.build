@@ -18,3 +18,8 @@ else:
     CSRCS += [
         'nm2tsv.c',
     ]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    "%s%s" % (x[0:-2], bin_suffix) for x in CSRCS
+]

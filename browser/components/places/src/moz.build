@@ -8,3 +8,12 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/browser/components',
 ]
 
+EXTRA_COMPONENTS += [
+    'BrowserPlaces.manifest',
+    'PlacesProtocolHandler.js',
+]
+
+EXTRA_JS_MODULES += [
+    'PlacesUIUtils.jsm',
+]
+

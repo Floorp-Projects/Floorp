@@ -54,6 +54,7 @@ FontInspector.prototype = {
    */
   onNewNode: function FI_onNewNode() {
     if (this.isActive() &&
+        this.inspector.selection.isLocal() &&
         this.inspector.selection.isConnected() &&
         this.inspector.selection.isElementNode() &&
         this.inspector.selection.reason != "highlighter") {

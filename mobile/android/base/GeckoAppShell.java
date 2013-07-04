@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
-import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -70,6 +69,7 @@ import android.view.ContextThemeWrapper;
 import android.view.HapticFeedbackConstants;
 import android.view.Surface;
 import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
@@ -102,7 +102,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.concurrent.SynchronousQueue;
 
 public class GeckoAppShell
 {
@@ -173,10 +172,12 @@ public class GeckoAppShell
     //    public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void setLayerClient(GeckoLayerClient client);
     public static native void onResume();
-    public static native void onLowMemory();
-    public static native void callObserver(String observerKey, String topic, String data);
-    public static native void removeObserver(String observerKey);
-    public static native void onChangeNetworkLinkStatus(String status);
+    public static void callObserver(String observerKey, String topic, String data) {
+        sendEventToGecko(GeckoEvent.createCallObserverEvent(observerKey, topic, data));
+    }
+    public static void removeObserver(String observerKey) {
+        sendEventToGecko(GeckoEvent.createRemoveObserverEvent(observerKey));
+    }
     public static native Message getNextMessageFromQueue(MessageQueue queue);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
 
@@ -194,6 +195,14 @@ public class GeckoAppShell
                 try {
                     Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
                                   + thread.getId() + " (\"" + thread.getName() + "\")", e);
+
+                    Thread mainThread = ThreadUtils.getUiThread();
+                    if (mainThread != null && thread != mainThread) {
+                        Log.e(LOGTAG, "Main thread stack:");
+                        for (StackTraceElement ste : mainThread.getStackTrace()) {
+                            Log.e(LOGTAG, ste.toString());
+                        }
+                    }
 
                     if (e instanceof OutOfMemoryError) {
                         SharedPreferences prefs =
@@ -287,12 +296,8 @@ public class GeckoAppShell
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
-        // Tell Gecko where the target byte buffer is for rendering
-        if (getGeckoInterface() != null)
-           sLayerView  = getGeckoInterface().getLayerView();
         if (sLayerView != null)
             GeckoAppShell.setLayerClient(sLayerView.getLayerClient());
-
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;
@@ -391,7 +396,7 @@ public class GeckoAppShell
             sWaitingForEventAck = true;
             while (true) {
                 try {
-                    sEventAckLock.wait(100);
+                    sEventAckLock.wait(1000);
                 } catch (InterruptedException ie) {
                 }
                 if (!sWaitingForEventAck) {
@@ -400,11 +405,6 @@ public class GeckoAppShell
                 }
                 long waited = SystemClock.uptimeMillis() - time;
                 Log.d(LOGTAG, "Gecko event sync taking too long: " + waited + "ms");
-                if (isUiThread && waited >= 4000) {
-                    Log.w(LOGTAG, "Gecko event sync took too long, aborting!", new Exception());
-                    sWaitingForEventAck = false;
-                    break;
-                }
             }
         }
     }
@@ -633,26 +633,26 @@ public class GeckoAppShell
         gRestartScheduled = true;
     }
 
-    public static File preInstallWebApp(String aTitle, String aURI, String aUniqueURI) {
-        int index = WebAppAllocator.getInstance(getContext()).findAndAllocateIndex(aUniqueURI, aTitle, (String) null);
+    public static File preInstallWebApp(String aTitle, String aURI, String aOrigin) {
+        int index = WebAppAllocator.getInstance(getContext()).findAndAllocateIndex(aOrigin, aTitle, (String) null);
         GeckoProfile profile = GeckoProfile.get(getContext(), "webapp" + index);
         return profile.getDir();
     }
 
-    public static void postInstallWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
+    public static void postInstallWebApp(String aTitle, String aURI, String aOrigin, String aIconURL, String aOriginalOrigin) {
     	WebAppAllocator allocator = WebAppAllocator.getInstance(getContext());
-		int index = allocator.getIndexForApp(aUniqueURI);
+		int index = allocator.getIndexForApp(aOriginalOrigin);
     	assert index != -1 && aIconURL != null;
-    	allocator.updateAppAllocation(aUniqueURI, index, BitmapUtils.getBitmapFromDataURI(aIconURL));
-    	createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
+    	allocator.updateAppAllocation(aOrigin, index, BitmapUtils.getBitmapFromDataURI(aIconURL));
+    	createShortcut(aTitle, aURI, aOrigin, aIconURL, "webapp");
     }
 
-    public static Intent getWebAppIntent(String aURI, String aUniqueURI, String aTitle, Bitmap aIcon) {
+    public static Intent getWebAppIntent(String aURI, String aOrigin, String aTitle, Bitmap aIcon) {
         int index;
         if (aIcon != null && !TextUtils.isEmpty(aTitle))
-            index = WebAppAllocator.getInstance(getContext()).findAndAllocateIndex(aUniqueURI, aTitle, aIcon);
+            index = WebAppAllocator.getInstance(getContext()).findAndAllocateIndex(aOrigin, aTitle, aIcon);
         else
-            index = WebAppAllocator.getInstance(getContext()).getIndexForApp(aUniqueURI);
+            index = WebAppAllocator.getInstance(getContext()).getIndexForApp(aOrigin);
 
         if (index == -1)
             return null;
@@ -820,11 +820,6 @@ public class GeckoAppShell
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-            Rect iconBounds = new Rect(0, 0, size, size);
-            canvas.drawBitmap(aSource, null, iconBounds, null);
-            return bitmap;
-        }
 
         // draw a base color
         Paint paint = new Paint();
@@ -832,6 +827,11 @@ public class GeckoAppShell
             // If we aren't drawing a favicon, just use an orange color.
             paint.setColor(Color.HSVToColor(DEFAULT_LAUNCHER_ICON_HSV));
             canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
+        } else if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP) || aSource.getWidth() >= insetSize || aSource.getHeight() >= insetSize) {
+            // otherwise, if this is a webapp or if the icons is lare enough, just draw it
+            Rect iconBounds = new Rect(0, 0, size, size);
+            canvas.drawBitmap(aSource, null, iconBounds, null);
+            return bitmap;
         } else {
             // otherwise use the dominant color from the icon + a layer of transparent white to lighten it somewhat
             int color = BitmapUtils.getDominantColor(aSource);
@@ -852,13 +852,6 @@ public class GeckoAppShell
         // by default, we scale the icon to this size
         int sWidth = insetSize / 2;
         int sHeight = sWidth;
-
-        if (aSource.getWidth() > insetSize || aSource.getHeight() > insetSize) {
-            // however, if the icon is larger than our minimum, we allow it to be drawn slightly larger
-            // (but not necessarily at its full resolution)
-            sWidth = Math.min(size / 3, aSource.getWidth() / 2);
-            sHeight = Math.min(size / 3, aSource.getHeight() / 2);
-        }
 
         int halfSize = size / 2;
         canvas.drawBitmap(aSource,
@@ -1105,6 +1098,38 @@ public class GeckoAppShell
     }
 
     /**
+     * Given a URI, a MIME type, and a title,
+     * produce a share intent which can be used to query all activities
+     * than can open the specified URI.
+     *
+     * @param context a <code>Context</code> instance.
+     * @param targetURI the string spec of the URI to open.
+     * @param mimeType an optional MIME type string.
+     * @param title the title to use in <code>ACTION_SEND</code> intents.
+     * @return an <code>Intent</code>, or <code>null</code> if none could be
+     *         produced.
+     */
+    static Intent getShareIntent(final Context context,
+                                 final String targetURI,
+                                 final String mimeType,
+                                 final String title) {
+        Intent shareIntent = getIntentForActionString(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+
+        // Note that EXTRA_TITLE is intended to be used for share dialog
+        // titles. Common usage (e.g., Pocket) suggests that it's sometimes
+        // interpreted as an alternate to EXTRA_SUBJECT, so we include it.
+        shareIntent.putExtra(Intent.EXTRA_TITLE, title);
+
+        if (mimeType != null && mimeType.length() > 0) {
+            shareIntent.setType(mimeType);
+        }
+
+        return shareIntent;
+    }
+
+    /**
      * Given a URI, a MIME type, an Android intent "action", and a title,
      * produce an intent which can be used to start an activity to open
      * the specified URI.
@@ -1125,19 +1150,7 @@ public class GeckoAppShell
                                    final String title) {
 
         if (action.equalsIgnoreCase(Intent.ACTION_SEND)) {
-            Intent shareIntent = getIntentForActionString(action);
-            shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
-
-            // Note that EXTRA_TITLE is intended to be used for share dialog
-            // titles. Common usage (e.g., Pocket) suggests that it's sometimes
-            // interpreted as an alternate to EXTRA_SUBJECT, so we include it.
-            shareIntent.putExtra(Intent.EXTRA_TITLE, title);
-
-            if (mimeType != null && mimeType.length() > 0) {
-                shareIntent.setType(mimeType);
-            }
-
+            Intent shareIntent = getShareIntent(context, targetURI, mimeType, title);
             return Intent.createChooser(shareIntent,
                                         context.getResources().getString(R.string.share_title)); 
         }
@@ -1213,85 +1226,6 @@ public class GeckoAppShell
         intent.setData(pruned);
 
         return intent;
-    }
-
-    /* On some devices, access to the clipboard service needs to happen
-     * on a thread with a looper, so this function requires a looper is
-     * present on the thread. */
-    private static String getClipboardTextImpl() {
-        Context context = getContext();
-        if (android.os.Build.VERSION.SDK_INT >= 11) {
-            android.content.ClipboardManager cm = (android.content.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm.hasPrimaryClip()) {
-                ClipData clip = cm.getPrimaryClip();
-                if (clip != null) {
-                    ClipData.Item item = clip.getItemAt(0);
-                    return item.coerceToText(context).toString();
-                }
-            }
-        } else {
-            android.text.ClipboardManager cm = (android.text.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm.hasText()) {
-                return cm.getText().toString();
-            }
-        }
-        return null;
-    }
-
-    private static SynchronousQueue<String> sClipboardQueue = new SynchronousQueue<String>();
-
-    static String getClipboardText() {
-        // If we're on the UI thread or the background thread, we have a looper on the thread
-        // and can just call this directly. For any other threads, post the call to the
-        // background thread.
-
-        if (ThreadUtils.isOnUiThread() || ThreadUtils.isOnBackgroundThread()) {
-            return getClipboardTextImpl();
-        }
-
-        ThreadUtils.postToBackgroundThread(new Runnable() { 
-            @Override
-            public void run() {
-                String text = getClipboardTextImpl();
-                try {
-                    sClipboardQueue.put(text != null ? text : "");
-                } catch (InterruptedException ie) {}
-            }
-        });
-        try {
-            return sClipboardQueue.take();
-        } catch (InterruptedException ie) {
-            return "";
-        }
-    }
-
-    static void setClipboardText(String copiedText) {
-        // Copy an empty string instead of null to avoid clipboard crashes.
-        // AndroidBridge::EmptyClipboard() passes null to clear the clipboard's current contents.
-        final String text = (copiedText != null) ? copiedText : "";
-
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                Context context = getContext();
-                if (android.os.Build.VERSION.SDK_INT >= 11) {
-                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData clip = ClipData.newPlainText("Text", text);
-                    try {
-                        cm.setPrimaryClip(clip);
-                    } catch (NullPointerException e) {
-                        // Bug 776223: This is a Samsung clipboard bug. setPrimaryClip() can throw
-                        // a NullPointerException if Samsung's /data/clipboard directory is full.
-                        // Fortunately, the text is still successfully copied to the clipboard.
-                    }
-                } else {
-                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setText(text);
-                }
-            }
-        });
     }
 
     public static void setNotificationClient(NotificationClient client) {
@@ -2021,9 +1955,14 @@ public class GeckoAppShell
         sContextGetter = cg;
     }
 
+    public interface AppStateListener {
+        public void onPause();
+        public void onResume();
+        public void onConfigurationChanged();
+    }
+
     public interface GeckoInterface {
         public GeckoProfile getProfile();
-        public LayerView getLayerView();
         public PromptService getPromptService();
         public Activity getActivity();
         public String getDefaultUAString();
@@ -2035,7 +1974,9 @@ public class GeckoAppShell
         public void removePluginView(final View view, final boolean isFullScreen);
         public void enableCameraView();
         public void disableCameraView();
-        public SurfaceView getCameraView();
+        public void addAppStateListener(AppStateListener listener);
+        public void removeAppStateListener(AppStateListener listener);
+        public View getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
         public FormAssistPopup getFormAssistPopup();
         public boolean areTabsShown();
@@ -2124,12 +2065,18 @@ public class GeckoAppShell
             }
 
             try {
-                if (getGeckoInterface() != null)
-                    sCamera.setPreviewDisplay(getGeckoInterface().getCameraView().getHolder());
+                if (getGeckoInterface() != null) {
+                    View cameraView = getGeckoInterface().getCameraView();
+                    if (cameraView instanceof SurfaceView) {
+                        sCamera.setPreviewDisplay(((SurfaceView)cameraView).getHolder());
+                    } else if (cameraView instanceof TextureView) {
+                        sCamera.setPreviewTexture(((TextureView)cameraView).getSurfaceTexture());
+                    }
+                }
             } catch(IOException e) {
-                Log.w(LOGTAG, "Error setPreviewDisplay:", e);
+                Log.w(LOGTAG, "Error setPreviewXXX:", e);
             } catch(RuntimeException e) {
-                Log.w(LOGTAG, "Error setPreviewDisplay:", e);
+                Log.w(LOGTAG, "Error setPreviewXXX:", e);
             }
 
             sCamera.setParameters(params);

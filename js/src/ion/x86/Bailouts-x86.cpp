@@ -65,7 +65,7 @@ class BailoutStack
 # pragma pack(pop)
 #endif
 
-IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
                                        BailoutStack *bailout)
   : IonFrameIterator(activations),
     machine_(bailout->machine())
@@ -84,7 +84,7 @@ IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
     }
 
     // Compute the snapshot offset from the bailout ID.
-    IonActivation *activation = activations.activation();
+    JitActivation *activation = activations.activation()->asJit();
     JSCompartment *jsCompartment = activation->compartment();
     IonCompartment *ionCompartment = jsCompartment->ionCompartment();
     IonCode *code = ionCompartment->getBailoutTable(bailout->frameClass());
@@ -101,7 +101,7 @@ IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
     snapshotOffset_ = topIonScript_->bailoutToSnapshot(bailoutId);
 }
 
-IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
                                        InvalidationBailoutStack *bailout)
   : IonFrameIterator(activations),
     machine_(bailout->machine())

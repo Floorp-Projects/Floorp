@@ -13,7 +13,7 @@ using namespace js;
 void *
 TempAllocPolicy::onOutOfMemory(void *p, size_t nbytes)
 {
-    return cx_->runtime->onOutOfMemory(p, nbytes, cx_);
+    return cx_->runtime()->onOutOfMemory(p, nbytes, cx_);
 }
 
 void

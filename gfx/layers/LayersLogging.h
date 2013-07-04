@@ -16,6 +16,7 @@
 #include "gfxColor.h"
 #include "gfx3DMatrix.h"
 #include "nsRegion.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace layers {
@@ -47,15 +48,28 @@ AppendToString(nsACString& s, const nsIntPoint& p,
 template<class T>
 nsACString&
 AppendToString(nsACString& s, const mozilla::gfx::PointTyped<T>& p,
-               const char* pfx="", const char* sfx="");
+               const char* pfx="", const char* sfx="")
+{
+  s += pfx;
+  s += nsPrintfCString("(x=%f, y=%f)", p.x, p.y);
+  return s += sfx;
+}
 
 nsACString&
 AppendToString(nsACString& s, const nsIntRect& r,
                const char* pfx="", const char* sfx="");
 
+template<class T>
 nsACString&
-AppendToString(nsACString& s, const mozilla::gfx::Rect& r,
-               const char* pfx="", const char* sfx="");
+AppendToString(nsACString& s, const mozilla::gfx::RectTyped<T>& r,
+               const char* pfx="", const char* sfx="")
+{
+  s += pfx;
+  s.AppendPrintf(
+    "(x=%f, y=%f, w=%f, h=%f)",
+    r.x, r.y, r.width, r.height);
+  return s += sfx;
+}
 
 nsACString&
 AppendToString(nsACString& s, const nsIntRegion& r,

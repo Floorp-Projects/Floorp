@@ -13,19 +13,20 @@ const CoC = Components.classes;
 const CoI = Components.interfaces;
 const CoR = Components.results;
 
-const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XMLNS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_APP_UPDATE_BACKGROUNDERRORS   = "app.update.backgroundErrors";
-const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
-const PREF_APP_UPDATE_CERT_ERRORS        = "app.update.cert.errors";
-const PREF_APP_UPDATE_ENABLED            = "app.update.enabled";
-const PREF_APP_UPDATE_LOG                = "app.update.log";
-const PREF_APP_UPDATE_MANUAL_URL         = "app.update.url.manual";
-const PREF_APP_UPDATE_NEVER_BRANCH       = "app.update.never.";
-const PREF_APP_UPDATE_TEST_LOOP          = "app.update.test.loop";
-const PREF_PLUGINS_UPDATEURL             = "plugins.update.url";
+const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
+const PREF_APP_UPDATE_BILLBOARD_TEST_URL  = "app.update.billboard.test_url";
+const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
+const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
+const PREF_APP_UPDATE_LOG                 = "app.update.log";
+const PREF_APP_UPDATE_MANUAL_URL          = "app.update.url.manual";
+const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
+const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
+const PREF_APP_UPDATE_TEST_LOOP           = "app.update.test.loop";
+const PREF_PLUGINS_UPDATEURL              = "plugins.update.url";
 
-const PREF_EM_HOTFIX_ID                  = "extensions.hotfix.id";
+const PREF_EM_HOTFIX_ID                   = "extensions.hotfix.id";
 
 const UPDATE_TEST_LOOP_INTERVAL     = 2000;
 
@@ -382,6 +383,11 @@ var gUpdates = {
           return;
         }
 
+        if (this.update.unsupported) {
+          aCallback("unsupported");
+          return;
+        }
+
         var p = this.update.selectedPatch;
         if (p) {
           var state = p.state;
@@ -594,6 +600,11 @@ var gCheckingPage = {
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
       Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
 
+    // The preference will be set back to true if the system is still
+    // unsupported.
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED))
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED);
+
     this._checker = CoC["@mozilla.org/updates/update-checker;1"].
                     createInstance(CoI.nsIUpdateChecker);
     this._checker.checkForUpdates(this.updateListener, true);
@@ -621,6 +632,11 @@ var gCheckingPage = {
       gUpdates.setUpdate(aus.selectUpdate(updates, updates.length));
       if (gUpdates.update) {
         LOG("gCheckingPage", "onCheckComplete - update found");
+        if (gUpdates.update.unsupported) {
+          gUpdates.wiz.goTo("unsupported");
+          return;
+        }
+
         if (!aus.canApplyUpdates) {
           // Prevent multiple notifications for the same update when the user is
           // unable to apply updates.
@@ -862,6 +878,23 @@ var gManualUpdatePage = {
     var manualUpdateLinkLabel = document.getElementById("manualUpdateLinkLabel");
     manualUpdateLinkLabel.value = manualURL;
     manualUpdateLinkLabel.setAttribute("url", manualURL);
+
+    gUpdates.setButtons(null, null, "okButton", true);
+    gUpdates.wiz.getButton("finish").focus();
+  }
+};
+
+/**
+ * The "System Unsupported" page. Provides the user with information about their
+ * system no longer being supported and an url for more information.
+ */
+var gUnsupportedPage = {
+  onPageShow: function() {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED, true);
+    if (gUpdates.update.detailsURL) {
+      let unsupportedLinkLabel = document.getElementById("unsupportedLinkLabel");
+      unsupportedLinkLabel.setAttribute("url", gUpdates.update.detailsURL);
+    }
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();

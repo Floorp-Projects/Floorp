@@ -34,9 +34,9 @@
 #define INCL_DOS
 #include <os2.h>
 
-#include "wtf/Assertions.h"
+#include "assembler/wtf/Assertions.h"
 
-#include "OSAllocator.h"
+#include "yarr/OSAllocator.h"
 
 namespace WTF {
 

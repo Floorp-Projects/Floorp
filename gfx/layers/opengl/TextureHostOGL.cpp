@@ -115,8 +115,7 @@ FormatFromShaderType(ShaderProgramType aShaderType)
     case BGRXLayerProgramType:
       return FORMAT_B8G8R8X8;
     default:
-      MOZ_NOT_REACHED("Unsupported texture shader type");
-      return FORMAT_UNKNOWN;
+      MOZ_CRASH("Unsupported texture shader type");
   }
 }
 
@@ -407,7 +406,9 @@ SurfaceStreamHostOGL::Lock()
   gfxImageSurface* toUpload = nullptr;
   switch (sharedSurf->Type()) {
     case SharedSurfaceType::GLTextureShare: {
-      mTextureHandle = SharedSurface_GLTexture::Cast(sharedSurf)->Texture();
+      SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
+      glTexSurf->SetConsumerGL(mGL);
+      mTextureHandle = glTexSurf->Texture();
       MOZ_ASSERT(mTextureHandle);
       mShaderProgram = sharedSurf->HasAlpha() ? RGBALayerProgramType
                                               : RGBXLayerProgramType;
@@ -433,8 +434,7 @@ SurfaceStreamHostOGL::Lock()
       break;
     }
     default:
-      MOZ_NOT_REACHED("Invalid SharedSurface type.");
-      return false;
+      MOZ_CRASH("Invalid SharedSurface type.");
   }
 
   if (toUpload) {
@@ -638,13 +638,16 @@ TiledTextureHostOGL::Lock()
 
 #ifdef MOZ_WIDGET_GONK
 static gfx::SurfaceFormat
-SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat)
+SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
+                                   bool swapRB = false)
 {
   switch (aFormat) {
+  case android::PIXEL_FORMAT_BGRA_8888:
+    return swapRB ? FORMAT_R8G8B8A8 : FORMAT_B8G8R8A8;
   case android::PIXEL_FORMAT_RGBA_8888:
-    return FORMAT_B8G8R8A8;
+    return swapRB ? FORMAT_B8G8R8A8 : FORMAT_R8G8B8A8;
   case android::PIXEL_FORMAT_RGBX_8888:
-    return FORMAT_B8G8R8X8;
+    return swapRB ? FORMAT_B8G8R8X8 : FORMAT_R8G8B8X8;
   case android::PIXEL_FORMAT_RGB_565:
     return FORMAT_R5G6B5;
   case android::PIXEL_FORMAT_A_8:
@@ -700,28 +703,30 @@ TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
   }
 }
 
+GrallocTextureHostOGL::GrallocTextureHostOGL()
+: mCompositor(nullptr)
+, mTextureTarget(0)
+, mEGLImage(0)
+, mIsRBSwapped(false)
+{
+}
+
 void GrallocTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
-  if (mGL && !glCompositor) {
+  if (mCompositor && !glCompositor) {
     DeleteTextures();
   }
-  mGL = glCompositor ? glCompositor->gl() : nullptr;
+  mCompositor = glCompositor;
 }
 
 void
 GrallocTextureHostOGL::DeleteTextures()
 {
-  if (mGLTexture || mEGLImage) {
-    mGL->MakeCurrent();
-    if (mGLTexture) {
-      mGL->fDeleteTextures(1, &mGLTexture);
-      mGLTexture = 0;
-    }
-    if (mEGLImage) {
-      mGL->DestroyEGLImage(mEGLImage);
-      mEGLImage = 0;
-    }
+  if (mEGLImage) {
+    gl()->MakeCurrent();
+    gl()->DestroyEGLImage(mEGLImage);
+    mEGLImage = 0;
   }
 }
 
@@ -756,7 +761,10 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
 
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
   mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
-  mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
+  mIsRBSwapped = desc.isRBSwapped();
+  mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
+                                               mIsRBSwapped);
+
   mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
 
   DeleteTextures();
@@ -767,20 +775,43 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
   RegisterTextureHostAtGrallocBufferActor(this, aImage);
 }
 
+gl::GLContext*
+GrallocTextureHostOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
 void GrallocTextureHostOGL::BindTexture(GLenum aTextureUnit)
 {
-  MOZ_ASSERT(mGLTexture);
+  /*
+   * The job of this function is to ensure that the texture is tied to the
+   * android::GraphicBuffer, so that texturing will source the GraphicBuffer.
+   *
+   * To this effect we create an EGLImage wrapping this GraphicBuffer,
+   * using CreateEGLImageForNativeBuffer, and then we tie this EGLImage to our
+   * texture using fEGLImageTargetTexture2D.
+   *
+   * We try to avoid re-creating the EGLImage everytime, by keeping it around
+   * as the mEGLImage member of this class.
+   */
+  MOZ_ASSERT(gl());
+  gl()->MakeCurrent();
 
-  mGL->MakeCurrent();
-  mGL->fActiveTexture(aTextureUnit);
-  mGL->fBindTexture(mTextureTarget, mGLTexture);
-  mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
+  GLuint tex = mCompositor->GetTemporaryTexture(aTextureUnit);
+
+  gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(mTextureTarget, tex);
+  if (!mEGLImage) {
+    mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+  }
+  gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
 bool
 GrallocTextureHostOGL::IsValid() const
 {
-  return !!mGL && !!mGraphicBuffer.get();
+  return !!gl() && !!mGraphicBuffer.get();
 }
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
@@ -798,65 +829,14 @@ GrallocTextureHostOGL::~GrallocTextureHostOGL()
 bool
 GrallocTextureHostOGL::Lock()
 {
-  if (!IsValid()) {
-    return false;
-  }
-  /*
-   * The job of this function is to ensure that the texture is tied to the
-   * android::GraphicBuffer, so that texturing will source the GraphicBuffer.
-   *
-   * To this effect we create an EGLImage wrapping this GraphicBuffer,
-   * using CreateEGLImageForNativeBuffer, and then we tie this EGLImage to our
-   * texture using fEGLImageTargetTexture2D.
-   *
-   * We try to avoid re-creating the EGLImage everytime, by keeping it around
-   * as the mEGLImage member of this class.
-   */
-  MOZ_ASSERT(mGraphicBuffer.get());
-
-  mGL->MakeCurrent();
-
-  if (!mGLTexture) {
-    mGL->fGenTextures(1, &mGLTexture);
-  }
-  mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
-  mGL->fBindTexture(mTextureTarget, mGLTexture);
-  if (!mEGLImage) {
-    mEGLImage = mGL->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
-  }
-  mGL->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
-  return true;
+  // Lock/Unlock is done internally when binding the gralloc buffer to a gl texture
+  return IsValid();
 }
 
 void
 GrallocTextureHostOGL::Unlock()
 {
-  /*
-   * The job of this function is to ensure that we release any read lock placed on
-   * our android::GraphicBuffer by any drawing code that sourced it via this TextureHost.
-   *
-   * Indeed, as soon as we draw with a texture that's tied to a android::GraphicBuffer,
-   * the GL may place read locks on it. We must ensure that we release them early enough,
-   * i.e. before the next time that we will try to acquire a write lock on the same buffer,
-   * because read and write locks on gralloc buffers are mutually exclusive.
-   */
-  if (mGL->Renderer() == GLContext::RendererAdrenoTM205) {
-    /* XXX This is working around a driver bug exhibited on at least the
-     * Geeksphone Peak, where retargeting to a different EGL image is very
-     * slow. See Bug 869696.
-     */
-    if (mGLTexture) {
-      mGL->MakeCurrent();
-      mGL->fDeleteTextures(1, &mGLTexture);
-      mGLTexture = 0;
-    }
-    return;
-  }
-
-  mGL->MakeCurrent();
-  mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
-  mGL->fBindTexture(mTextureTarget, mGLTexture);
-  mGL->fEGLImageTargetTexture2D(mTextureTarget, mGL->GetNullEGLImage());
+  // Lock/Unlock is done internally when binding the gralloc buffer to a gl texture
 }
 
 gfx::SurfaceFormat
@@ -877,7 +857,34 @@ GrallocTextureHostOGL::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* 
   RegisterTextureHostAtGrallocBufferActor(this, *mBuffer);
 }
 
-#endif
+LayerRenderState
+GrallocTextureHostOGL::GetRenderState()
+{
+  if (mBuffer && IsSurfaceDescriptorValid(*mBuffer)) {
+
+    uint32_t flags = mFlags & NeedsYFlip ? LAYER_RENDER_STATE_Y_FLIPPED : 0;
+
+    /*
+     * The 32 bit format of gralloc buffer is created as RGBA8888 or RGBX888 by default.
+     * For software rendering (non-GL rendering), the content is drawn with BGRA
+     * or BGRX. Therefore, we need to pass the RBSwapped flag for HW composer to swap format.
+     *
+     * For GL rendering content, the content format is RGBA or RGBX which is the same as
+     * the pixel format of gralloc buffer and no need for the RBSwapped flag.
+     */
+
+    if (mIsRBSwapped) {
+      flags |= LAYER_RENDER_STATE_FORMAT_RB_SWAP;
+    }
+
+    return LayerRenderState(mGraphicBuffer.get(),
+                            mBuffer->get_SurfaceDescriptorGralloc().size(),
+                            flags);
+  }
+
+  return LayerRenderState();
+}
+#endif // MOZ_WIDGET_GONK
 
 already_AddRefed<gfxImageSurface>
 TextureImageTextureHostOGL::GetAsSurface() {
@@ -932,10 +939,20 @@ TiledTextureHostOGL::GetAsSurface() {
 #ifdef MOZ_WIDGET_GONK
 already_AddRefed<gfxImageSurface>
 GrallocTextureHostOGL::GetAsSurface() {
-  nsRefPtr<gfxImageSurface> surf = IsValid() && mGLTexture ?
-    mGL->GetTexImage(mGLTexture,
-                     false,
-                     GetShaderProgram())
+  gl()->MakeCurrent();
+
+  GLuint tex = mCompositor->GetTemporaryTexture(LOCAL_GL_TEXTURE0);
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(mTextureTarget, tex);
+  if (!mEGLImage) {
+    mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+  }
+  gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
+
+  nsRefPtr<gfxImageSurface> surf = IsValid() ?
+    gl()->GetTexImage(tex,
+                      false,
+                      GetShaderProgram())
     : nullptr;
   return surf.forget();
 }

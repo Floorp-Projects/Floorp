@@ -23,8 +23,7 @@ function allAppShellDOMWindows(aWindowType)
 }
 
 /**
- * Return true if the top-level window |aWindow| is a "navigator:browser"
- * window.
+ * Retrieve the window type of the top-level window |aWindow|.
  */
 function appShellDOMWindowType(aWindow) {
   /* This is what nsIWindowMediator's enumerator checks. */
@@ -378,17 +377,7 @@ BrowserTabList.prototype._listenToMediatorIf = function(aShouldListen) {
 BrowserTabList.prototype.onWindowTitleChange = () => { };
 
 BrowserTabList.prototype.onOpenWindow = makeInfallible(function(aWindow) {
-  /*
-   * You can hardly do anything at all with a XUL window at this point; it
-   * doesn't even have its document yet. Wait until its document has
-   * loaded, and then see what we've got. This also avoids
-   * nsIWindowMediator enumeration from within listeners (bug 873589).
-   */
-  aWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindow);
-  aWindow.addEventListener("load", makeInfallible(handleLoad.bind(this)), false);
-
-  function handleLoad(aEvent) {
+  let handleLoad = makeInfallible(() => {
     /* We don't want any further load events from this window. */
     aWindow.removeEventListener("load", handleLoad, false);
 
@@ -408,7 +397,18 @@ BrowserTabList.prototype.onOpenWindow = makeInfallible(function(aWindow) {
     // document's initial tab, so we must notify our client of the new tab
     // this will have.
     this._notifyListChanged();
-  }
+  });
+
+  /*
+   * You can hardly do anything at all with a XUL window at this point; it
+   * doesn't even have its document yet. Wait until its document has
+   * loaded, and then see what we've got. This also avoids
+   * nsIWindowMediator enumeration from within listeners (bug 873589).
+   */
+  aWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindow);
+
+  aWindow.addEventListener("load", handleLoad, false);
 }, "BrowserTabList.prototype.onOpenWindow");
 
 BrowserTabList.prototype.onCloseWindow = makeInfallible(function(aWindow) {

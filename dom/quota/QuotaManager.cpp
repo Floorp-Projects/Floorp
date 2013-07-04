@@ -240,6 +240,20 @@ public:
   bool mInMozBrowserOnly;
 };
 
+#ifdef DEBUG
+void
+AssertIsOnIOThread()
+{
+  QuotaManager* quotaManager = QuotaManager::Get();
+  NS_ASSERTION(quotaManager, "Must have a manager here!");
+
+  bool correctThread;
+  NS_ASSERTION(NS_SUCCEEDED(quotaManager->IOThread()->
+                            IsOnCurrentThread(&correctThread)) && correctThread,
+               "Running on the wrong thread!");
+}
+#endif
+
 END_QUOTA_NAMESPACE
 
 namespace {
@@ -826,14 +840,7 @@ QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
                                         bool aTrackQuota,
                                         nsIFile** aDirectory)
 {
-#ifdef DEBUG
-  {
-    bool correctThread;
-    NS_ASSERTION(NS_SUCCEEDED(mIOThread->IsOnCurrentThread(&correctThread)) &&
-                 correctThread,
-                 "Running on the wrong thread!");
-  }
-#endif
+  AssertIsOnIOThread();
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = GetDirectoryForOrigin(aOrigin, getter_AddRefs(directory));
@@ -900,6 +907,12 @@ QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
       continue;
     }
 
+#ifdef XP_MACOSX
+    if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+      continue;
+    }
+#endif
+
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -948,21 +961,19 @@ QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
 }
 
 void
-QuotaManager::UninitializeOriginsByPattern(const nsACString& aPattern)
+QuotaManager::OriginClearCompleted(const nsACString& aPattern)
 {
-#ifdef DEBUG
-  {
-    bool correctThread;
-    NS_ASSERTION(NS_SUCCEEDED(mIOThread->IsOnCurrentThread(&correctThread)) &&
-                 correctThread,
-                 "Running on the wrong thread!");
-  }
-#endif
+  AssertIsOnIOThread();
 
-  for (int32_t i = mInitializedOrigins.Length() - 1; i >= 0; i--) {
+  int32_t i;
+  for (i = mInitializedOrigins.Length() - 1; i >= 0; i--) {
     if (PatternMatchesOrigin(aPattern, mInitializedOrigins[i])) {
       mInitializedOrigins.RemoveElementAt(i);
     }
+  }
+
+  for (i = 0; i < Client::TYPE_MAX; i++) {
+    mClients[i]->OnOriginClearCompleted(aPattern);
   }
 }
 
@@ -1228,6 +1239,17 @@ QuotaManager::Observe(nsISupports* aSubject,
         }
       }
 
+      // Give clients a chance to cleanup IO thread only objects.
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
+      if (!runnable) {
+        NS_WARNING("Failed to create runnable!");
+      }
+
+      if (NS_FAILED(mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+        NS_WARNING("Failed to dispatch runnable!");
+      }
+
       // Make sure to join with our IO thread.
       if (NS_FAILED(mIOThread->Shutdown())) {
         NS_WARNING("Failed to shutdown IO thread!");
@@ -1249,10 +1271,6 @@ QuotaManager::Observe(nsISupports* aSubject,
       if (NS_FAILED(mShutdownTimer->Cancel())) {
         NS_WARNING("Failed to cancel shutdown timer!");
       }
-    }
-
-    for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
-      mClients[index]->OnShutdownCompleted();
     }
 
     return NS_OK;
@@ -1820,7 +1838,7 @@ OriginClearRunnable::InvalidateOpenedStorages(
 void
 OriginClearRunnable::DeleteFiles(QuotaManager* aQuotaManager)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(aQuotaManager, "Don't pass me null!");
 
   nsresult rv;
@@ -1878,7 +1896,7 @@ OriginClearRunnable::DeleteFiles(QuotaManager* aQuotaManager)
 
   aQuotaManager->RemoveQuotaForPattern(mOriginOrPattern);
 
-  aQuotaManager->UninitializeOriginsByPattern(mOriginOrPattern);
+  aQuotaManager->OriginClearCompleted(mOriginOrPattern);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(OriginClearRunnable, nsIRunnable)
@@ -1913,7 +1931,7 @@ OriginClearRunnable::Run()
     }
 
     case IO: {
-      NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+      AssertIsOnIOThread();
 
       AdvanceState();
 
@@ -1930,10 +1948,6 @@ OriginClearRunnable::Run()
 
     case Complete: {
       NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-      for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
-        quotaManager->mClients[index]->OnOriginClearCompleted(mOriginOrPattern);
-      }
 
       // Tell the QuotaManager that we're done.
       quotaManager->AllowNextSynchronizedOp(mOriginOrPattern, nullptr);
@@ -2009,7 +2023,7 @@ AsyncUsageRunnable::RunInternal()
     }
 
     case IO: {
-      NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+      AssertIsOnIOThread();
 
       AdvanceState();
 
@@ -2054,6 +2068,12 @@ AsyncUsageRunnable::RunInternal()
           if (leafName.EqualsLiteral(METADATA_FILE_NAME)) {
             continue;
           }
+
+#ifdef XP_MACOSX
+          if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+            continue;
+          }
+#endif
 
           if (!initialized) {
             bool isDirectory;

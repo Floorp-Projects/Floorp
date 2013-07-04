@@ -16,7 +16,7 @@ SK_DEFINE_INST_COUNT(SkRasterizer)
 
 bool SkRasterizer::rasterize(const SkPath& fillPath, const SkMatrix& matrix,
                              const SkIRect* clipBounds, SkMaskFilter* filter,
-                             SkMask* mask, SkMask::CreateMode mode) {
+                             SkMask* mask, SkMask::CreateMode mode) const {
     SkIRect storage;
 
     if (clipBounds && filter && SkMask::kJustRenderImage_CreateMode != mode) {
@@ -41,11 +41,10 @@ bool SkRasterizer::rasterize(const SkPath& fillPath, const SkMatrix& matrix,
 */
 bool SkRasterizer::onRasterize(const SkPath& fillPath, const SkMatrix& matrix,
                              const SkIRect* clipBounds,
-                             SkMask* mask, SkMask::CreateMode mode) {
+                             SkMask* mask, SkMask::CreateMode mode) const {
     SkPath  devPath;
 
     fillPath.transform(matrix, &devPath);
     return SkDraw::DrawToMask(devPath, clipBounds, NULL, NULL, mask, mode,
                               SkPaint::kFill_Style);
 }
-

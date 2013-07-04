@@ -163,7 +163,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int IFRAME = 47;
 
-    final static int EMBED_OR_IMG = 48;
+    final static int EMBED = 48;
 
     final static int AREA_OR_WBR = 49;
 
@@ -202,6 +202,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     final static int MENUITEM = 66;
 
     final static int TEMPLATE = 67;
+
+    final static int IMG = 68;
 
     // start insertion modes
 
@@ -445,6 +447,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     protected int charBufferLen = 0;
 
     private boolean quirks = false;
+
+    private boolean isSrcdocDocument = false;
 
     // [NOCPP[
 
@@ -1593,7 +1597,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR:
                         case DD_OR_DT:
                         case UL_OR_OL_OR_DL:
-                        case EMBED_OR_IMG:
+                        case EMBED:
+                        case IMG:
                         case H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
                         case HEAD:
                         case HR:
@@ -1977,7 +1982,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case TABLE:
                         case AREA_OR_WBR:
                         case BR:
-                        case EMBED_OR_IMG:
+                        case EMBED:
+                        case IMG:
                         case INPUT:
                         case KEYGEN:
                         case HR:
@@ -2208,7 +2214,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 attributes = null; // CPP
                                 break starttagloop;
                             case BR:
-                            case EMBED_OR_IMG:
+                            case EMBED:
                             case AREA_OR_WBR:
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE_OR_TRACK
@@ -2232,6 +2238,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 errImage();
                                 elementName = ElementName.IMG;
                                 continue starttagloop;
+                            case IMG:
                             case KEYGEN:
                             case INPUT:
                                 reconstructTheActiveFormattingElements();
@@ -3682,7 +3689,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case AREA_OR_WBR:
                         // CPPONLY: case MENUITEM:
                         case PARAM_OR_SOURCE_OR_TRACK:
-                        case EMBED_OR_IMG:
+                        case EMBED:
+                        case IMG:
                         case IMAGE:
                         case INPUT:
                         case KEYGEN: // XXX??
@@ -4152,6 +4160,21 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void documentModeInternal(DocumentMode m, String publicIdentifier,
             String systemIdentifier, boolean html4SpecificAdditionalErrorChecks)
             throws SAXException {
+
+        if (isSrcdocDocument) {
+            // Srcdoc documents are always rendered in standards mode.
+            quirks = false;
+            if (documentModeHandler != null) {
+                documentModeHandler.documentMode(
+                        DocumentMode.STANDARDS_MODE
+                        // [NOCPP[
+                        , null, null, false
+                // ]NOCPP]
+                );
+            }
+            return;
+        }
+
         quirks = (m == DocumentMode.QUIRKS_MODE);
         if (documentModeHandler != null) {
             documentModeHandler.documentMode(
@@ -5525,6 +5548,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         this.scriptingEnabled = scriptingEnabled;
     }
 
+    public void setIsSrcdocDocument(boolean isSrcdocDocument) {
+        this.isSrcdocDocument = isSrcdocDocument;
+    }
+
     // [NOCPP[
 
     /**
@@ -5945,11 +5972,15 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errAlmostStandardsDoctype() throws SAXException {
-        err("Almost standards mode doctype. Expected \u201C<!DOCTYPE html>\u201D.");
+        if (!isSrcdocDocument) {
+            err("Almost standards mode doctype. Expected \u201C<!DOCTYPE html>\u201D.");
+        }
     }
 
     private void errQuirkyDoctype() throws SAXException {
-        err("Quirky doctype. Expected \u201C<!DOCTYPE html>\u201D.");
+        if (!isSrcdocDocument) {
+            err("Quirky doctype. Expected \u201C<!DOCTYPE html>\u201D.");
+        }
     }
 
     private void errNonSpaceInTrailer() throws SAXException {
@@ -5984,7 +6015,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errStartTagWithoutDoctype() throws SAXException {
-        err("Start tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
+        if (!isSrcdocDocument) {
+            err("Start tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
+        }
     }
 
     private void errNoSelectInTableScope() throws SAXException {
@@ -6063,7 +6096,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errEndTagSeenWithoutDoctype() throws SAXException {
-        err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
+        if (!isSrcdocDocument) {
+            err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
+        }
     }
 
     private void errEndTagAfterBody() throws SAXException {

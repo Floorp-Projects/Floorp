@@ -60,6 +60,11 @@ public class GeckoScreenOrientationListener {
                 mDefaultOrientation = orientationFromStringArray(value);
                 unlockScreenOrientation();
             }
+
+            @Override
+            public boolean isObserver() {
+                return true;
+            }
         });
 
         mDefaultOrientation = DEFAULT_ORIENTATION;

@@ -46,3 +46,5 @@ CPP_SOURCES += [
     'nsWebBrowserContentPolicy.cpp',
 ]
 
+LIBRARY_NAME = 'nsWebBrowser_s'
+

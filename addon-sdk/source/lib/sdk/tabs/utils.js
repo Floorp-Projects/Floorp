@@ -133,13 +133,21 @@ exports.isTabOpen = isTabOpen;
 function closeTab(tab) {
   let gBrowser = getTabBrowserForTab(tab);
   // normal case?
-  if (gBrowser)
+  if (gBrowser) {
+    // Bug 699450: the tab may already have been detached
+    if (!tab.parentNode)
+      return;
     return gBrowser.removeTab(tab);
+  }
 
   let window = getWindowHoldingTab(tab);
   // fennec?
-  if (window && window.BrowserApp)
+  if (window && window.BrowserApp) {
+    // Bug 699450: the tab may already have been detached
+    if (!tab.browser)
+      return;
     return window.BrowserApp.closeTab(tab);
+  }
   return null;
 }
 exports.closeTab = closeTab;
@@ -205,14 +213,20 @@ exports.getAllTabContentWindows = getAllTabContentWindows;
 function getTabForContentWindow(window) {
   // Retrieve the topmost frame container. It can be either <xul:browser>,
   // <xul:iframe/> or <html:iframe/>. But in our case, it should be xul:browser.
-  let browser = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .QueryInterface(Ci.nsIDocShell)
-                   .chromeEventHandler;
+  let browser;
+  try {
+    browser = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShell)
+                    .chromeEventHandler;
+  } catch(e) {
+    // Bug 699450: The tab may already have been detached so that `window` is
+    // in a almost destroyed state and can't be queryinterfaced anymore.
+  }
 
   // Is null for toplevel documents
   if (!browser) {
-    return false;
+    return null;
   }
 
   // Retrieve the owner window, should be browser.xul one

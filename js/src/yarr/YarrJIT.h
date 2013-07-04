@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef YarrJIT_h
-#define YarrJIT_h
+#ifndef yarr_YarrJIT_h
+#define yarr_YarrJIT_h
 
 #include "assembler/wtf/Platform.h"
 
@@ -34,9 +34,9 @@
 
 #include "assembler/assembler/MacroAssembler.h"
 
-#include "MatchResult.h"
-#include "Yarr.h"
-#include "YarrPattern.h"
+#include "yarr/MatchResult.h"
+#include "yarr/Yarr.h"
+#include "yarr/YarrPattern.h"
 
 #if WTF_CPU_X86 && !WTF_COMPILER_MSVC && !WTF_COMPILER_SUNCC
 #define YARR_CALL __attribute__ ((regparm (3)))
@@ -196,4 +196,4 @@ void jitCompile(YarrPattern&, YarrCharSize, JSGlobalData*, YarrCodeBlock& jitObj
 
 #endif
 
-#endif // YarrJIT_h
+#endif /* yarr_YarrJIT_h */

@@ -1,4 +1,254 @@
 
+CHANGES BETWEEN 2.4.12 and 2.5
+
+  I. IMPORTANT BUG FIXES
+
+    - The cache manager function `FTC_Manager_Reset'  didn't flush the
+      cache.
+
+
+  II. IMPORTANT CHANGES
+
+    - Behdad Esfahbod  (on behalf  of Google) contributed  support for
+      color embedded bitmaps (eg. color emoji).
+
+      A  new  load  flag,  FT_LOAD_COLOR, makes  FreeType  load  color
+      embedded-bitmaps, following this draft specification
+
+        https://color-emoji.googlecode.com/git/specification/v1.html
+
+      which defines two new SFNT  tables, `CBDT' and `CBLC' (named and
+      modeled  after  `EBDT'  and `EBLC',  respectively).   The  color
+      bitmaps  are  stored in  the  new  FT_PIXEL_MODE_BGRA format  to
+      represent BGRA  pre-multiplied sRGB  images.  If PNG  support is
+      available,  PNG color  images as  defined in  the same  proposed
+      specification are supported also.
+
+      Note that  color bitmaps  are converted  to grayscale  if client
+      didn't ask for color.
+
+    - As  announced in  the  previous release,  the  old FreeType  CFF
+      engine  is now  disabled by  default.  It  can be  conditionally
+      compiled     by     defining     the     configuration     macro
+      CFF_CONFIG_OPTION_OLD_ENGINE.
+
+    - As announced in the previous release,  all code related to macro
+      FT_CONFIG_OPTION_OLD_INTERNALS  has been removed,  thus becoming
+      obsolete.
+
+
+  III. MISCELLANEOUS
+
+    - The  property API  (`FT_Property_Get' and  `FT_Property_Set') is
+      now declared as stable.
+
+      The  exception,   however,  are  the   experimental  auto-hinter
+      properties `glyph-to-script-map' and `fallback-script' which are
+      subject to change in a forthcoming release.
+
+    - `ftview' has been updated to  support color embedded bitmaps; it
+      can be toggled on and off  with key `c'.  The small cache toggle
+      is now key `K'.
+
+    - It  is now  possible  to  control the  version  of the  TrueType
+      hinting engine  using the new `interpreter-version'  property of
+      the  `truetype' module:  Versions 35  and 38  (the default)  are
+      supported,  which  roughly  corresponds to  disable  and  enable
+      subpixel hinting support, respectively.
+
+      In  both  `ftview'  and  `ftdiff',  switching  between  the  two
+      versions  can be  done  with  key `H'.   In  the `ftbench'  demo
+      program, command line option `-H'  has been extended to activate
+      the non-default interpreter version.
+
+    - The `ttdebug' program has been further improved.  In particular,
+      it accepts a new command line  option `-H' to select the hinting
+      engine.
+
+    - Another round of TrueType subpixel hinting fixes.
+
+    - The `apinames' tool can now create an import file for NetWare.
+
+    - 64bit compilation of the new CFF engine was buggy.
+
+    - Some fixes to improve robustness in memory-tight situations.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.4.11 and 2.4.12
+
+    - We have another CFF parsing and hinting engine!  Written by Dave
+      Arnold <darnold@adobe.com>,  this work  has been  contributed by
+      Adobe in  collaboration with Google.   It is vastly  superior to
+      the old CFF engine, and it  will replace it in the next release.
+      Right  now,  it  is  still  off by  default,  and  you  have  to
+      explicitly select it using  the new `hinting-engine' property of
+      the cff driver:
+
+        ...
+        #include FT_MODULE_H
+        #include FT_CFF_DRIVER_H
+
+        FT_Library  library;
+        int         engine = FT_CFF_HINTING_ADOBE;
+
+
+        ...
+        FT_Property_Set( library, "cff", "hinting-engine", &engine );
+
+      The code has  a (mature) beta status; we encourage  all users to
+      test it and report any problems.
+
+      In case you want to activate the new CFF engine unconditionally,
+      apply this patch:
+
+--- snip ---
+diff --git a/src/cff/cffobjs.c b/src/cff/cffobjs.c
+index ebcf189..3f2ce6b 100644
+--- a/src/cff/cffobjs.c
++++ b/src/cff/cffobjs.c
+@@ -1056,7 +1056,7 @@
+
+
+     /* set default property values */
+-    driver->hinting_engine    = FT_CFF_HINTING_FREETYPE;
++    driver->hinting_engine    = FT_CFF_HINTING_ADOBE;
+     driver->no_stem_darkening = FALSE;
+
+     return FT_Err_Ok;
+--- snip ---
+
+    - The  macro FT_CONFIG_OPTION_OLD_INTERNALS  is no  longer set  by
+      default.  In  the next  release, we  will completely  remove the
+      associated code.   Please update your  programs in case  you are
+      still using this macro.
+
+
+  II. MISCELLANEOUS
+
+    - The  (top-level)  `configure'  script   now  respects  the  MAKE
+      environment variable to specify a `make' binary.   For backwards
+      compatibility, GNUMAKE still overrides MAKE, though.
+
+    - The `ftview'  and `ftdiff'  demo programs have  been redesigned,
+      showing  more options  permanently  on the  screen, among  other
+      minor improvements.
+
+    - Using the `H'  key, it is now possible to  select the CFF engine
+      in both `ftview' and `ftdiff'.
+
+    - The new command line option `-H' for `ftbench' selects the Adobe
+      CFF engine.
+
+    - It is  now possible  to directly select  the LCD  rendering mode
+      with the keys `A'-`F' in  `ftview'.  The key mapping for cycling
+      through LCD modes  has been changed from `K' and  `L' to `k' and
+      `l', and  toggling custom LCD  filtering is no longer  mapped to
+      key `F' but to key `L'.
+
+    - In `ftdiff',  key `x' toggles  between layout modes:  Either use
+      the  advance width  (this is  new and  now the  default) or  the
+      bounding box information to determine line breaks.
+
+    - For all demo  tools, the new command line option  `-v' shows the
+      version.
+
+    - For the demo tools with a GUI, the new command line options `-w'
+      and `-h' select  the width and the height of  the output window,
+      respectively.
+
+    - The `ttdebug' program was broken and has been reactivated.  Note
+      that this program is not compiled by default.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.4.10 and 2.4.11
+
+  I. IMPORTANT BUG FIXES
+
+    - Some vulnerabilities in the  BDF implementation have been fixed.
+      Users of this font format should upgrade.
+
+
+  II. IMPORTANT CHANGES
+
+    - Subpixel  hinting support  has been  contributed by  Infinality,
+      based on Greg Hitchcock's whitepaper at
+
+        http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx
+
+      Originally, it was a separate patch available from
+
+        http://www.infinality.net/blog/
+
+      and which has been integrated.
+
+      Note that  ClearType support is not  completely implemented!  In
+      particular,  full support  for the  options `compatible_widths',
+      `symmetrical_smoothing,  and  `bgr'  (via the  GETINFO  bytecode
+      instruction) is missing.
+
+      Activation of  subpixel hinting  support can be  controlled with
+      the `TT_CONFIG_OPTION_SUBPIXEL_HINTING' configuration option; it
+      is switched off by default.  This feature is still experimental;
+      we welcome test reports!
+
+    - Support for OpenType collections (OTC) has been added.
+
+    - Pure CFF fonts within an SFNT wrapper are now supported.
+
+
+  III. MISCELLANEOUS
+
+    - Minor rendering improvements to the auto-hinter.
+
+    - `FT_GlyphSlot_Oblique' now uses a shear angle of 12°.
+
+    - Experimental support  to handle `property modules',  for example
+      to control the  behaviour of the auto-hinter.   The API consists
+      of two new functions, `FT_Property_Set' and `FT_Property_Get'.
+
+      The code is  still subject to change and should  not be used for
+      production.
+
+    - The `ftdiff' demo program now supports UTF-8 encoded input files
+      for option `-f'.
+
+    - Using keys `r' and `R', you can now adjust the stroker radius in
+      the `ftview' demo program.
+
+    - Other, minor fixes and improvements.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.4.9 and 2.4.10
+
+  I. IMPORTANT BUG FIXES
+
+    - Incremental glyph loading as needed by ghostscript was broken.
+
+
+  II. MISCELLANEOUS
+
+    - A new  function `FT_Outline_EmboldenXY',  contributed by  Alexei
+      Podtelezhnikov.
+
+    - In the `ftview' demo program, key `e' has been replaced with `x'
+      and `y' to  embolden in  the horizontal and  vertical direction,
+      respectively.
+
+    - The glyph  spacing computation  in `FT_GlyphSlot_Embolden'  (and
+      similar code in `ftview') has been improved.
+
+    - Minor  improvements to  the TrueType  bytecode  interpreter  and
+      glyph loader, the auto-hinter, and the B/W rasterizer.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.4.8 and 2.4.9
 
   I. IMPORTANT BUG FIXES
@@ -22,7 +272,7 @@ CHANGES BETWEEN 2.4.8 and 2.4.9
     - The  demo  programs  no  longer  recognize  and  handle  default
       suffixes; you now have to always specify the complete font name.
 
-    - Better rendering and LCD mode cycling added to ftview.
+    - Better rendering and LCD mode cycling added to `ftview'.
 
 
 ======================================================================
@@ -209,7 +459,7 @@ CHANGES BETWEEN 2.4.1 and 2.4.2
       The  two  new   functions  increment  the  respective   counter.
       `FT_Done_Library' and `FT_Done_Face' then only destroy a library
       or face if the counter is 1, otherwise they simply decrement the
-      counter. 
+      counter.
 
 
 ======================================================================
@@ -2401,7 +2651,7 @@ CHANGES BETWEEN 2.0.3 and 2.0.2
       number.  see <freetype/fterrors.h> for details.
 
     - A   new  public   header   file  has   been  introduced,   named
-      FT_TRIGONOMETRY_H     (include/freetype/fttrig.h),     providing
+      FT_TRIGONOMETRY_H    (include/freetype/fttrigon.h),    providing
       trigonometric functions to  compute sines, cosines, arctangents,
       etc. with 16.16 fixed precision.  The implementation is based on
       the CORDIC  algorithm and is very fast  while being sufficiently
@@ -3629,7 +3879,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000-2012 by
+Copyright 2000-2013 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

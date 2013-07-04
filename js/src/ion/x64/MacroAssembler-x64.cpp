@@ -4,14 +4,67 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MacroAssembler-x64.h"
+#include "ion/x64/MacroAssembler-x64.h"
+#include "ion/BaselineFrame.h"
 #include "ion/MoveEmitter.h"
 #include "ion/IonFrames.h"
+#include "mozilla/Casting.h"
 
 #include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;
+
+void
+MacroAssemblerX64::loadConstantDouble(double d, const FloatRegister &dest)
+{
+    if (maybeInlineDouble(d, dest))
+        return;
+
+    if (!doubleMap_.initialized()) {
+        enoughMemory_ &= doubleMap_.init();
+        if (!enoughMemory_)
+            return;
+    }
+    size_t doubleIndex;
+    if (DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d)) {
+        doubleIndex = p->value;
+    } else {
+        doubleIndex = doubles_.length();
+        enoughMemory_ &= doubles_.append(Double(d));
+        enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
+        if (!enoughMemory_)
+            return;
+    }
+    Double &dbl = doubles_[doubleIndex];
+    JS_ASSERT(!dbl.uses.bound());
+
+    // The constants will be stored in a pool appended to the text (see
+    // finish()), so they will always be a fixed distance from the
+    // instructions which reference them. This allows the instructions to use
+    // PC-relative addressing. Use "jump" label support code, because we need
+    // the same PC-relative address patching that jumps use.
+    JmpSrc j = masm.movsd_ripr(dest.code());
+    JmpSrc prev = JmpSrc(dbl.uses.use(j.offset()));
+    masm.setNextJump(j, prev);
+}
+
+void
+MacroAssemblerX64::finish()
+{
+    JS_STATIC_ASSERT(CodeAlignment >= sizeof(double));
+
+    if (!doubles_.empty())
+        masm.align(sizeof(double));
+
+    for (size_t i = 0; i < doubles_.length(); i++) {
+        Double &dbl = doubles_[i];
+        bind(&dbl.uses);
+        masm.doubleConstant(dbl.value);
+    }
+
+    MacroAssemblerX86Shared::finish();
+}
 
 void
 MacroAssemblerX64::setupABICall(uint32_t args)
@@ -189,16 +242,16 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     passABIArg(rax);
     callWithABI(handler);
 
-    Label catch_;
     Label entryFrame;
+    Label catch_;
+    Label finally;
     Label return_;
 
-    branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
-             Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
-    branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
-             Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-    branch32(Assembler::Equal, Address(esp, offsetof(ResumeFromException, kind)),
-             Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, kind)), rax);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
 
     breakpoint(); // Invalid kind.
 
@@ -215,6 +268,21 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
     movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
     movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    jmp(Operand(rax));
+
+    // If we found a finally block, this must be a baseline frame. Push
+    // two values expected by JSOP_RETSUB: BooleanValue(true) and the
+    // exception.
+    bind(&finally);
+    ValueOperand exception = ValueOperand(rcx);
+    loadValue(Operand(esp, offsetof(ResumeFromException, exception)), exception);
+
+    movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
+    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+
+    pushValue(BooleanValue(true));
+    pushValue(exception);
     jmp(Operand(rax));
 
     // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.

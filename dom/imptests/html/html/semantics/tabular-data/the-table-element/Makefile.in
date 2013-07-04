@@ -10,6 +10,7 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
+  test_createTBody.html \
   test_insertRow-method-01.html \
   test_insertRow-method-02.html \
   test_table-insertRow.html \

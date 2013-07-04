@@ -17,6 +17,7 @@
 #include "SkRect.h"
 #include "SkRefCnt.h"
 #include "SkStream.h"
+#include "SkTDArray.h"
 #include "SkTScopedPtr.h"
 
 class SkPDFArray;
@@ -29,10 +30,12 @@ class SkPDFGraphicState;
 class SkPDFObject;
 class SkPDFShader;
 class SkPDFStream;
+template <typename T> class SK_API SkTSet;
 
 // Private classes.
 struct ContentEntry;
 struct GraphicStateEntry;
+struct NamedDestination;
 
 /** \class SkPDFDevice
 
@@ -80,6 +83,9 @@ public:
     virtual void drawPath(const SkDraw&, const SkPath& origpath,
                           const SkPaint& paint, const SkMatrix* prePathMatrix,
                           bool pathIsMutable) SK_OVERRIDE;
+    virtual void drawBitmapRect(const SkDraw& draw, const SkBitmap& bitmap,
+                                const SkRect* src, const SkRect& dst,
+                                const SkPaint& paint) SK_OVERRIDE;
     virtual void drawBitmap(const SkDraw&, const SkBitmap& bitmap,
                             const SkIRect* srcRectOrNull,
                             const SkMatrix& matrix, const SkPaint&) SK_OVERRIDE;
@@ -127,25 +133,39 @@ public:
     SK_API SkPDFDict* getResourceDict();
 
     /** Get the list of resources (PDF objects) used on this page.
-     *  @param resourceList A list to append the resources to.
+     *  This method will add to newResourceObjects any objects that this method
+     *  depends on, but not already in knownResourceObjects. This might operate
+     *  recursively so if this object depends on another object and that object
+     *  depends on two more, all three objects will be added.
+     *
+     *  @param knownResourceObjects  The set of resources to be ignored.
+     *  @param newResourceObjects  The set to append dependant resources to.
      *  @param recursive    If recursive is true, get the resources of the
      *                      device's resources recursively. (Useful for adding
      *                      objects to the catalog.)
      */
-    SK_API void getResources(SkTDArray<SkPDFObject*>* resourceList,
+    SK_API void getResources(const SkTSet<SkPDFObject*>& knownResourceObjects,
+                             SkTSet<SkPDFObject*>* newResourceObjects,
                              bool recursive) const;
 
     /** Get the fonts used on this device.
      */
     SK_API const SkTDArray<SkPDFFont*>& getFontResources() const;
 
-    /** Returns the media box for this device.
+    /** Add our named destinations to the supplied dictionary.
+     *  @param dict  Dictionary to add destinations to.
+     *  @param page  The PDF object representing the page for this device.
      */
-    SK_API SkRefPtr<SkPDFArray> getMediaBox() const;
+    void appendDestinations(SkPDFDict* dict, SkPDFObject* page);
 
-    /** Get the annotations from this page.
+    /** Returns a copy of the media box for this device. The caller is required
+     *  to unref() this when it is finished.
      */
-    SK_API SkRefPtr<SkPDFArray> getAnnotations() const;
+    SK_API SkPDFArray* copyMediaBox() const;
+
+    /** Get the annotations from this page, or NULL if there are none.
+     */
+    SK_API SkPDFArray* getAnnotations() const { return fAnnotations; }
 
     /** Returns a SkStream with the page contents.  The caller is responsible
         for a reference to the returned value.
@@ -185,8 +205,9 @@ private:
     SkMatrix fInitialTransform;
     SkClipStack fExistingClipStack;
     SkRegion fExistingClipRegion;
-    SkRefPtr<SkPDFArray> fAnnotations;
-    SkRefPtr<SkPDFDict> fResourceDict;
+    SkPDFArray* fAnnotations;
+    SkPDFDict* fResourceDict;
+    SkTDArray<NamedDestination*> fNamedDestinations;
 
     SkTDArray<SkPDFGraphicState*> fGraphicStateResources;
     SkTDArray<SkPDFObject*> fXObjectResources;
@@ -220,7 +241,7 @@ private:
 
     void init();
     void cleanUp(bool clearFontUsage);
-    void createFormXObjectFromDevice(SkRefPtr<SkPDFFormXObject>* xobject);
+    SkPDFFormXObject* createFormXObjectFromDevice();
 
     // Clear the passed clip from all existing content entries.
     void clearClipFromContent(const SkClipStack* clipStack,
@@ -239,7 +260,7 @@ private:
                                     const SkMatrix& matrix,
                                     const SkPaint& paint,
                                     bool hasText,
-                                    SkRefPtr<SkPDFFormXObject>* dst);
+                                    SkPDFFormXObject** dst);
     void finishContentEntry(SkXfermode::Mode xfermode,
                             SkPDFFormXObject* dst);
     bool isContentEmpty();
@@ -269,8 +290,17 @@ private:
      */
     void copyContentEntriesToData(ContentEntry* entry, SkWStream* data) const;
 
-    bool handleAnnotations(const SkRect& r, const SkMatrix& matrix,
-                           const SkPaint& paint);
+    bool handleRectAnnotation(const SkRect& r, const SkMatrix& matrix,
+                              const SkPaint& paint);
+    bool handlePointAnnotation(const SkPoint* points, size_t count,
+                               const SkMatrix& matrix, const SkPaint& paint);
+    SkPDFDict* createLinkAnnotation(const SkRect& r, const SkMatrix& matrix);
+    void handleLinkToURL(SkData* urlData, const SkRect& r,
+                         const SkMatrix& matrix);
+    void handleLinkToNamedDest(SkData* nameData, const SkRect& r,
+                               const SkMatrix& matrix);
+    void defineNamedDestination(SkData* nameData, const SkPoint& point,
+                                const SkMatrix& matrix);
 
     typedef SkDevice INHERITED;
 };

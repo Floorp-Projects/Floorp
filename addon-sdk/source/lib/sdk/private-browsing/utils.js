@@ -80,8 +80,9 @@ let setMode = defer(function setMode(value) {
 });
 exports.setMode = deprecateFunction(
   setMode,
-  'require("private-browsing").activate and require("private-browsing").deactivate ' +
-  'is deprecated.'
+  'require("sdk/private-browsing").activate and ' +
+  'require("sdk/private-browsing").deactivate ' +
+  'are deprecated.'
 );
 
 let getMode = function getMode(chromeWin) {

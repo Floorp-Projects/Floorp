@@ -4,16 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_baseline_ic_h__) && defined(JS_ION)
-#define jsion_baseline_ic_h__
+#ifndef ion_BaselineIC_h
+#define ion_BaselineIC_h
+
+#ifdef JS_ION
 
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "BaselineJIT.h"
-#include "BaselineRegisters.h"
+#include "ion/BaselineJIT.h"
+#include "ion/BaselineRegisters.h"
 
 #include "gc/Heap.h"
 
@@ -365,9 +367,9 @@ class ICEntry
     _(GetProp_NativePrototype)  \
     _(GetProp_CallScripted)     \
     _(GetProp_CallNative)       \
-    _(GetProp_CallListBaseNative)\
-    _(GetProp_CallListBaseWithGenerationNative)\
-    _(GetProp_ListBaseShadowed) \
+    _(GetProp_CallDOMProxyNative)\
+    _(GetProp_CallDOMProxyWithGenerationNative)\
+    _(GetProp_DOMProxyShadowed) \
     _(GetProp_ArgumentsLength)  \
                                 \
     _(SetProp_Fallback)         \
@@ -390,7 +392,10 @@ class ICEntry
     _(TypeOf_Fallback)          \
     _(TypeOf_Typed)             \
                                 \
-    _(Rest_Fallback)
+    _(Rest_Fallback)            \
+                                \
+    _(RetSub_Fallback)          \
+    _(RetSub_Resume)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -539,8 +544,7 @@ class ICStub
             IC_STUB_KIND_LIST(DEF_KIND_STR)
 #undef DEF_KIND_STR
           default:
-            JS_NOT_REACHED("Invalid kind.");
-            return "INVALID_KIND";
+            MOZ_ASSUME_UNREACHABLE("Invalid kind.");
         }
     }
 
@@ -733,11 +737,12 @@ class ICStub
           case UseCount_Fallback:
           case GetProp_CallScripted:
           case GetProp_CallNative:
-          case GetProp_CallListBaseNative:
-          case GetProp_CallListBaseWithGenerationNative:
-          case GetProp_ListBaseShadowed:
+          case GetProp_CallDOMProxyNative:
+          case GetProp_CallDOMProxyWithGenerationNative:
+          case GetProp_DOMProxyShadowed:
           case SetProp_CallScripted:
           case SetProp_CallNative:
+          case RetSub_Fallback:
             return true;
           default:
             return false;
@@ -923,7 +928,7 @@ class ICUpdatedStub : public ICStub
   public:
     bool initUpdatingChain(JSContext *cx, ICStubSpace *space);
 
-    bool addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj, jsid id,
+    bool addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj, HandleId id,
                                HandleValue val);
 
     void addOptimizedUpdateStub(ICStub *stub) {
@@ -1040,7 +1045,7 @@ class ICStubCompiler
             regs.take(R1);
             break;
           default:
-            JS_NOT_REACHED("Invalid numInputs");
+            MOZ_ASSUME_UNREACHABLE("Invalid numInputs");
         }
 
         return regs;
@@ -2373,7 +2378,10 @@ class ICBinaryArith_Fallback : public ICFallbackStub
     friend class ICStubSpace;
 
     ICBinaryArith_Fallback(IonCode *stubCode)
-      : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
+      : ICFallbackStub(BinaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
@@ -2382,6 +2390,13 @@ class ICBinaryArith_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICBinaryArith_Fallback>(code);
+    }
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
@@ -2403,14 +2418,20 @@ class ICBinaryArith_Int32 : public ICStub
 {
     friend class ICStubSpace;
 
-    ICBinaryArith_Int32(IonCode *stubCode)
-      : ICStub(BinaryArith_Int32, stubCode) {}
+    ICBinaryArith_Int32(IonCode *stubCode, bool allowDouble)
+      : ICStub(BinaryArith_Int32, stubCode)
+    {
+        extra_ = allowDouble;
+    }
 
   public:
-    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code) {
+    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code, bool allowDouble) {
         if (!code)
             return NULL;
-        return space->allocate<ICBinaryArith_Int32>(code);
+        return space->allocate<ICBinaryArith_Int32>(code, allowDouble);
+    }
+    bool allowDouble() const {
+        return extra_;
     }
 
     // Compiler for this stub kind.
@@ -2433,7 +2454,7 @@ class ICBinaryArith_Int32 : public ICStub
             op_(op), allowDouble_(allowDouble) {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICBinaryArith_Int32::New(space, getStubCode());
+            return ICBinaryArith_Int32::New(space, getStubCode(), allowDouble_);
         }
     };
 };
@@ -2655,7 +2676,10 @@ class ICUnaryArith_Fallback : public ICFallbackStub
     friend class ICStubSpace;
 
     ICUnaryArith_Fallback(IonCode *stubCode)
-      : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
+      : ICFallbackStub(UnaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
@@ -2664,6 +2688,13 @@ class ICUnaryArith_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICUnaryArith_Fallback>(code);
+    }
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
@@ -2717,7 +2748,7 @@ class ICUnaryArith_Double : public ICStub
     friend class ICStubSpace;
 
     ICUnaryArith_Double(IonCode *stubCode)
-      : ICStub(UnaryArith_Int32, stubCode)
+      : ICStub(UnaryArith_Double, stubCode)
     {}
 
   public:
@@ -2733,7 +2764,7 @@ class ICUnaryArith_Double : public ICStub
 
       public:
         Compiler(JSContext *cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
@@ -4192,11 +4223,11 @@ class ICGetProp_CallNative : public ICGetPropCallGetter
     };
 };
 
-class ICGetPropCallListBaseNativeStub : public ICMonitoredStub
+class ICGetPropCallDOMProxyNativeStub : public ICMonitoredStub
 {
   friend class ICStubSpace;
   protected:
-    // Shape of the ListBase proxy
+    // Shape of the DOMProxy
     HeapPtrShape shape_;
 
     // Proxy handler to check against.
@@ -4215,7 +4246,7 @@ class ICGetPropCallListBaseNativeStub : public ICMonitoredStub
     // PC offset of call
     uint32_t pcOffset_;
 
-    ICGetPropCallListBaseNativeStub(ICStub::Kind kind, IonCode *stubCode,
+    ICGetPropCallDOMProxyNativeStub(ICStub::Kind kind, IonCode *stubCode,
                                     ICStub *firstMonitorStub, HandleShape shape,
                                     BaseProxyHandler *proxyHandler, HandleShape expandoShape,
                                     HandleObject holder, HandleShape holderShape,
@@ -4242,42 +4273,42 @@ class ICGetPropCallListBaseNativeStub : public ICMonitoredStub
     }
 
     static size_t offsetOfShape() {
-        return offsetof(ICGetPropCallListBaseNativeStub, shape_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, shape_);
     }
     static size_t offsetOfProxyHandler() {
-        return offsetof(ICGetPropCallListBaseNativeStub, proxyHandler_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, proxyHandler_);
     }
     static size_t offsetOfExpandoShape() {
-        return offsetof(ICGetPropCallListBaseNativeStub, expandoShape_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, expandoShape_);
     }
     static size_t offsetOfHolder() {
-        return offsetof(ICGetPropCallListBaseNativeStub, holder_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, holder_);
     }
     static size_t offsetOfHolderShape() {
-        return offsetof(ICGetPropCallListBaseNativeStub, holderShape_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, holderShape_);
     }
     static size_t offsetOfGetter() {
-        return offsetof(ICGetPropCallListBaseNativeStub, getter_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, getter_);
     }
     static size_t offsetOfPCOffset() {
-        return offsetof(ICGetPropCallListBaseNativeStub, pcOffset_);
+        return offsetof(ICGetPropCallDOMProxyNativeStub, pcOffset_);
     }
 };
 
-class ICGetProp_CallListBaseNative : public ICGetPropCallListBaseNativeStub
+class ICGetProp_CallDOMProxyNative : public ICGetPropCallDOMProxyNativeStub
 {
     friend class ICStubSpace;
-    ICGetProp_CallListBaseNative(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+    ICGetProp_CallDOMProxyNative(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
                                  BaseProxyHandler *proxyHandler, HandleShape expandoShape,
                                  HandleObject holder, HandleShape holderShape,
                                  HandleFunction getter, uint32_t pcOffset)
-      : ICGetPropCallListBaseNativeStub(ICStub::GetProp_CallListBaseNative, stubCode,
+      : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyNative, stubCode,
                                         firstMonitorStub, shape, proxyHandler, expandoShape,
                                         holder, holderShape, getter, pcOffset)
     {}
 
   public:
-    static inline ICGetProp_CallListBaseNative *New(
+    static inline ICGetProp_CallDOMProxyNative *New(
             ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
             HandleShape shape, BaseProxyHandler *proxyHandler,
             HandleShape expandoShape, HandleObject holder, HandleShape holderShape,
@@ -4285,26 +4316,26 @@ class ICGetProp_CallListBaseNative : public ICGetPropCallListBaseNativeStub
     {
         if (!code)
             return NULL;
-        return space->allocate<ICGetProp_CallListBaseNative>(code, firstMonitorStub, shape,
+        return space->allocate<ICGetProp_CallDOMProxyNative>(code, firstMonitorStub, shape,
                                                    proxyHandler, expandoShape, holder,
                                                    holderShape, getter, pcOffset);
     }
 };
 
-class ICGetProp_CallListBaseWithGenerationNative : public ICGetPropCallListBaseNativeStub
+class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyNativeStub
 {
   protected:
     ExpandoAndGeneration *expandoAndGeneration_;
     uint32_t generation_;
 
   public:
-    ICGetProp_CallListBaseWithGenerationNative(IonCode *stubCode, ICStub *firstMonitorStub,
+    ICGetProp_CallDOMProxyWithGenerationNative(IonCode *stubCode, ICStub *firstMonitorStub,
                                                HandleShape shape, BaseProxyHandler *proxyHandler,
                                                ExpandoAndGeneration *expandoAndGeneration,
                                                uint32_t generation, HandleShape expandoShape,
                                                HandleObject holder, HandleShape holderShape,
                                                HandleFunction getter, uint32_t pcOffset)
-      : ICGetPropCallListBaseNativeStub(ICStub::GetProp_CallListBaseWithGenerationNative,
+      : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyWithGenerationNative,
                                         stubCode, firstMonitorStub, shape, proxyHandler,
                                         expandoShape, holder, holderShape, getter, pcOffset),
         expandoAndGeneration_(expandoAndGeneration),
@@ -4312,7 +4343,7 @@ class ICGetProp_CallListBaseWithGenerationNative : public ICGetPropCallListBaseN
     {
     }
 
-    static inline ICGetProp_CallListBaseWithGenerationNative *New(
+    static inline ICGetProp_CallDOMProxyWithGenerationNative *New(
             ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
             HandleShape shape, BaseProxyHandler *proxyHandler,
             ExpandoAndGeneration *expandoAndGeneration, uint32_t generation,
@@ -4321,7 +4352,7 @@ class ICGetProp_CallListBaseWithGenerationNative : public ICGetPropCallListBaseN
     {
         if (!code)
             return NULL;
-        return space->allocate<ICGetProp_CallListBaseWithGenerationNative>(code, firstMonitorStub,
+        return space->allocate<ICGetProp_CallDOMProxyWithGenerationNative>(code, firstMonitorStub,
                                                    shape, proxyHandler, expandoAndGeneration,
                                                    generation, expandoShape, holder, holderShape,
                                                    getter, pcOffset);
@@ -4339,14 +4370,14 @@ class ICGetProp_CallListBaseWithGenerationNative : public ICGetPropCallListBaseN
     }
 
     static size_t offsetOfInternalStruct() {
-        return offsetof(ICGetProp_CallListBaseWithGenerationNative, expandoAndGeneration_);
+        return offsetof(ICGetProp_CallDOMProxyWithGenerationNative, expandoAndGeneration_);
     }
     static size_t offsetOfGeneration() {
-        return offsetof(ICGetProp_CallListBaseWithGenerationNative, generation_);
+        return offsetof(ICGetProp_CallDOMProxyWithGenerationNative, generation_);
     }
 };
 
-class ICGetPropCallListBaseNativeCompiler : public ICStubCompiler {
+class ICGetPropCallDOMProxyNativeCompiler : public ICStubCompiler {
     ICStub *firstMonitorStub_;
     RootedObject obj_;
     RootedObject holder_;
@@ -4358,7 +4389,7 @@ class ICGetPropCallListBaseNativeCompiler : public ICStubCompiler {
     bool generateStubCode(MacroAssembler &masm);
 
   public:
-    ICGetPropCallListBaseNativeCompiler(JSContext *cx, ICStub::Kind kind,
+    ICGetPropCallDOMProxyNativeCompiler(JSContext *cx, ICStub::Kind kind,
                                         ICStub *firstMonitorStub, HandleObject obj,
                                         HandleObject holder, HandleFunction getter,
                                         uint32_t pcOffset);
@@ -4366,7 +4397,7 @@ class ICGetPropCallListBaseNativeCompiler : public ICStubCompiler {
     ICStub *getStub(ICStubSpace *space);
 };
 
-class ICGetProp_ListBaseShadowed : public ICMonitoredStub
+class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
 {
   friend class ICStubSpace;
   protected:
@@ -4375,19 +4406,19 @@ class ICGetProp_ListBaseShadowed : public ICMonitoredStub
     HeapPtrPropertyName name_;
     uint32_t pcOffset_;
 
-    ICGetProp_ListBaseShadowed(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+    ICGetProp_DOMProxyShadowed(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
                                BaseProxyHandler *proxyHandler, HandlePropertyName name,
                                uint32_t pcOffset);
 
   public:
-    static inline ICGetProp_ListBaseShadowed *New(ICStubSpace *space, IonCode *code,
+    static inline ICGetProp_DOMProxyShadowed *New(ICStubSpace *space, IonCode *code,
                                                   ICStub *firstMonitorStub, HandleShape shape,
                                                   BaseProxyHandler *proxyHandler,
                                                   HandlePropertyName name, uint32_t pcOffset)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICGetProp_ListBaseShadowed>(code, firstMonitorStub, shape,
+        return space->allocate<ICGetProp_DOMProxyShadowed>(code, firstMonitorStub, shape,
                                                            proxyHandler, name, pcOffset);
     }
 
@@ -4399,16 +4430,16 @@ class ICGetProp_ListBaseShadowed : public ICMonitoredStub
     }
 
     static size_t offsetOfShape() {
-        return offsetof(ICGetProp_ListBaseShadowed, shape_);
+        return offsetof(ICGetProp_DOMProxyShadowed, shape_);
     }
     static size_t offsetOfProxyHandler() {
-        return offsetof(ICGetProp_ListBaseShadowed, proxyHandler_);
+        return offsetof(ICGetProp_DOMProxyShadowed, proxyHandler_);
     }
     static size_t offsetOfName() {
-        return offsetof(ICGetProp_ListBaseShadowed, name_);
+        return offsetof(ICGetProp_DOMProxyShadowed, name_);
     }
     static size_t offsetOfPCOffset() {
-        return offsetof(ICGetProp_ListBaseShadowed, pcOffset_);
+        return offsetof(ICGetProp_DOMProxyShadowed, pcOffset_);
     }
 
     class Compiler : public ICStubCompiler {
@@ -5519,7 +5550,92 @@ class ICRest_Fallback : public ICFallbackStub
     };
 };
 
+// Stub for JSOP_RETSUB ("returning" from a |finally| block).
+class ICRetSub_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICRetSub_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::RetSub_Fallback, stubCode)
+    { }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICRetSub_Fallback *New(ICStubSpace *space, IonCode *code) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICRetSub_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::RetSub_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICRetSub_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Optimized JSOP_RETSUB stub. Every stub maps a single pc offset to its
+// native code address.
+class ICRetSub_Resume : public ICStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    uint32_t pcOffset_;
+    uint8_t *addr_;
+
+    ICRetSub_Resume(IonCode *stubCode, uint32_t pcOffset, uint8_t *addr)
+      : ICStub(ICStub::RetSub_Resume, stubCode),
+        pcOffset_(pcOffset),
+        addr_(addr)
+    { }
+
+  public:
+    static ICRetSub_Resume *New(ICStubSpace *space, IonCode *code, uint32_t pcOffset,
+                                uint8_t *addr) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICRetSub_Resume>(code, pcOffset, addr);
+    }
+
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICRetSub_Resume, pcOffset_);
+    }
+    static size_t offsetOfAddr() {
+        return offsetof(ICRetSub_Resume, addr_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        uint32_t pcOffset_;
+        uint8_t *addr_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, uint32_t pcOffset, uint8_t *addr)
+          : ICStubCompiler(cx, ICStub::RetSub_Resume),
+            pcOffset_(pcOffset),
+            addr_(addr)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICRetSub_Resume::New(space, getStubCode(), pcOffset_, addr_);
+        }
+    };
+};
+
 } // namespace ion
 } // namespace js
 
-#endif
+#endif // JS_ION
+
+#endif /* ion_BaselineIC_h */

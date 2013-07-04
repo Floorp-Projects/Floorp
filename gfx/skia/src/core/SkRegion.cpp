@@ -89,7 +89,7 @@ SkRegion::~SkRegion() {
 }
 
 void SkRegion::freeRuns() {
-    if (fRunHead->isComplex()) {
+    if (this->isComplex()) {
         SkASSERT(fRunHead->fRefCnt >= 1);
         if (sk_atomic_dec(&fRunHead->fRefCnt) == 1) {
             //SkASSERT(gRgnAllocCounter > 0);
@@ -152,7 +152,7 @@ bool SkRegion::setRegion(const SkRegion& src) {
 
         fBounds = src.fBounds;
         fRunHead = src.fRunHead;
-        if (fRunHead->isComplex()) {
+        if (this->isComplex()) {
             sk_atomic_inc(&fRunHead->fRefCnt);
         }
     }
@@ -277,7 +277,7 @@ bool SkRegion::setRuns(RunType runs[], int count) {
 
     //  if we get here, we need to become a complex region
 
-    if (!fRunHead->isComplex() || fRunHead->fRunCount != count) {
+    if (!this->isComplex() || fRunHead->fRunCount != count) {
         this->freeRuns();
         this->allocateRuns(count);
     }
@@ -313,8 +313,8 @@ bool SkRegion::contains(int32_t x, int32_t y) const {
     if (this->isRect()) {
         return true;
     }
-
     SkASSERT(this->isComplex());
+
     const RunType* runs = fRunHead->findScanline(y);
 
     // Skip the Bottom and IntervalCount
@@ -336,6 +336,10 @@ bool SkRegion::contains(int32_t x, int32_t y) const {
         runs += 2;
     }
     return false;
+}
+
+static SkRegion::RunType scanline_bottom(const SkRegion::RunType runs[]) {
+    return runs[0];
 }
 
 static const SkRegion::RunType* scanline_next(const SkRegion::RunType runs[]) {
@@ -367,16 +371,18 @@ bool SkRegion::contains(const SkIRect& r) const {
     if (this->isRect()) {
         return true;
     }
-
     SkASSERT(this->isComplex());
-    const RunType* scanline = fRunHead->findScanline(r.fTop);
 
-    do {
+    const RunType* scanline = fRunHead->findScanline(r.fTop);
+    for (;;) {
         if (!scanline_contains(scanline, r.fLeft, r.fRight)) {
             return false;
         }
+        if (r.fBottom <= scanline_bottom(scanline)) {
+            break;
+        }
         scanline = scanline_next(scanline);
-    } while (r.fBottom >= scanline[0]);
+    }
     return true;
 }
 
@@ -450,14 +456,18 @@ bool SkRegion::intersects(const SkIRect& r) const {
     if (this->isRect()) {
         return true;
     }
+    SkASSERT(this->isComplex());
 
     const RunType* scanline = fRunHead->findScanline(sect.fTop);
-    do {
+    for (;;) {
         if (scanline_intersects(scanline, sect.fLeft, sect.fRight)) {
             return true;
         }
+        if (sect.fBottom <= scanline_bottom(scanline)) {
+            break;
+        }
         scanline = scanline_next(scanline);
-    } while (sect.fBottom >= scanline[0]);
+    }
     return false;
 }
 
@@ -508,7 +518,7 @@ bool SkRegion::operator==(const SkRegion& b) const {
         return true;
     }
     // now we insist that both are complex (but different ptrs)
-    if (!ah->isComplex() || !bh->isComplex()) {
+    if (!this->isComplex() || !b.isComplex()) {
         return false;
     }
     return  ah->fRunCount == bh->fRunCount &&
@@ -838,7 +848,6 @@ static int operate(const SkRegion::RunType a_runs[],
 
     RgnOper oper(SkMin32(a_top, b_top), dst, op);
 
-    bool firstInterval = true;
     int prevBot = SkRegion::kRunTypeSentinel; // so we fail the first test
 
     while (a_bot < SkRegion::kRunTypeSentinel ||
@@ -885,7 +894,6 @@ static int operate(const SkRegion::RunType a_runs[],
             oper.addSpan(top, gSentinel, gSentinel);
         }
         oper.addSpan(bot, run0, run1);
-        firstInterval = false;
 
         if (quickExit && !oper.isEmpty()) {
             return QUICK_EXIT_TRUE_COUNT;
@@ -1010,6 +1018,12 @@ bool SkRegion::Oper(const SkRegion& rgnaOrig, const SkRegion& rgnbOrig, Op op,
         }
         if (a_rect & b_rect) {
             return setRectCheck(result, bounds);
+        }
+        if (a_rect && rgna->fBounds.contains(rgnb->fBounds)) {
+            return setRegionCheck(result, *rgnb);
+        }
+        if (b_rect && rgnb->fBounds.contains(rgna->fBounds)) {
+            return setRegionCheck(result, *rgna);
         }
         break;
 
@@ -1159,7 +1173,7 @@ static const SkRegion::RunType* skip_intervals_slow(const SkRegion::RunType runs
     return runs;
 }
 
-static void compute_bounds(const SkRegion::RunType runs[], int count,
+static void compute_bounds(const SkRegion::RunType runs[],
                            SkIRect* bounds, int* ySpanCountPtr,
                            int* intervalCountPtr) {
     assert_sentinel(runs[0], false);    // top
@@ -1219,13 +1233,12 @@ void SkRegion::validate() const {
             SkASSERT(fRunHead->fRunCount > kRectRegionRuns);
 
             const RunType* run = fRunHead->readonly_runs();
-            const RunType* stop = run + fRunHead->fRunCount;
 
             // check that our bounds match our runs
             {
                 SkIRect bounds;
                 int ySpanCount, intervalCount;
-                compute_bounds(run, stop - run, &bounds, &ySpanCount, &intervalCount);
+                compute_bounds(run, &bounds, &ySpanCount, &intervalCount);
 
                 SkASSERT(bounds == fBounds);
                 SkASSERT(ySpanCount > 0);

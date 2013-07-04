@@ -12,7 +12,6 @@ Cu.import('resource://gre/modules/DOMFMRadioParent.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
-Cu.import('resource://gre/modules/PushService.jsm');
 Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
 Cu.import('resource://gre/modules/Payment.jsm');
@@ -380,8 +379,27 @@ var shell = {
       case evt.DOM_VK_F1: // headset button
         type = 'headset-button';
         break;
-      default:                      // Anything else is a real key
-        return;  // Don't filter it at all; let it propagate to Gaia
+    }
+
+    let mediaKeys = {
+      'MediaNextTrack': 'media-next-track-button',
+      'MediaPreviousTrack': 'media-previous-track-button',
+      'MediaPause': 'media-pause-button',
+      'MediaPlay': 'media-play-button',
+      'MediaPlayPause': 'media-play-pause-button',
+      'MediaStop': 'media-stop-button',
+      'MediaRewind': 'media-rewind-button',
+      'FastFwd': 'media-fast-forward-button'
+    };
+
+    let isMediaKey = false;
+    if (mediaKeys[evt.key]) {
+      isMediaKey = true;
+      type = mediaKeys[evt.key];
+    }
+
+    if (!type) {
+      return;
     }
 
     // If we didn't return, then the key event represents a hardware key
@@ -406,6 +424,12 @@ var shell = {
     if (evt.keyCode == evt.DOM_VK_F1 && type !== this.lastHardwareButtonEventType) {
       this.lastHardwareButtonEventType = type;
       gSystemMessenger.broadcastMessage('headset-button', type);
+      return;
+    }
+
+    if (isMediaKey) {
+      this.lastHardwareButtonEventType = type;
+      gSystemMessenger.broadcastMessage('media-button', type);
       return;
     }
 
@@ -457,9 +481,6 @@ var shell = {
         this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
 
         this.reportCrash(true);
-
-        let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
-        chromeWindow.browserDOMWindow = new nsBrowserAccess();
 
         Cu.import('resource://gre/modules/Webapps.jsm');
         DOMApplicationRegistry.allAppsLaunchable = true;
@@ -581,37 +602,6 @@ var shell = {
         sender.sendAsyncMessage(activity.response, { success: false });
       }
     }
-  }
-};
-
-function nsBrowserAccess() {
-}
-
-nsBrowserAccess.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
-
-  openURI: function openURI(uri, opener, where, context) {
-    // TODO This should be replaced by an 'open-browser-window' intent
-    let content = shell.contentBrowser.contentWindow;
-    let contentWindow = content.wrappedJSObject;
-    if (!('getApplicationManager' in contentWindow))
-      return null;
-
-    let applicationManager = contentWindow.getApplicationManager();
-    if (!applicationManager)
-      return null;
-
-    let url = uri ? uri.spec : 'about:blank';
-    let window = applicationManager.launch(url, where);
-    return window.contentWindow;
-  },
-
-  openURIInFrame: function openURIInFrame(uri, opener, where, context) {
-    throw new Error('Not Implemented');
-  },
-
-  isTabContentWindow: function isTabContentWindow(contentWindow) {
-    return contentWindow == window;
   }
 };
 

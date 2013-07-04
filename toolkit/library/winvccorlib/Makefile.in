@@ -7,11 +7,15 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME	= dummyvccorlib
+# When we're linking GTest we recurse into this directory but don't need
+# to generate this library
+ifndef LINK_GTEST
 
 include $(DEPTH)/config/autoconf.mk
 
 FORCE_SHARED_LIB=1
+
+endif
 
 include $(topsrcdir)/config/rules.mk
 

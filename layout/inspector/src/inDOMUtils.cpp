@@ -22,10 +22,12 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsIMutableArray.h"
 #include "nsBindingManager.h"
+#include "ChildIterator.h"
 #include "nsComputedDOMStyle.h"
 #include "nsEventStateManager.h"
 #include "nsIAtom.h"
 #include "nsRange.h"
+#include "nsContentList.h"
 #include "mozilla/dom/Element.h"
 #include "nsCSSStyleSheet.h"
 #include "nsRuleWalker.h"
@@ -434,7 +436,8 @@ inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
   triple.mG = NS_GET_G(color);
   triple.mB = NS_GET_B(color);
 
-  if (!triple.ToObject(aCx, JS::NullPtr(), aValue)) {
+  if (!triple.ToObject(aCx, JS::NullPtr(),
+                       JS::MutableHandle<JS::Value>::fromMarkedLocation(aValue))) {
     return NS_ERROR_FAILURE;
   }
 

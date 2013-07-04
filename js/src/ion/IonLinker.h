@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_linker_h__
-#define jsion_linker_h__
+#ifndef ion_IonLinker_h
+#define ion_IonLinker_h
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -58,6 +58,10 @@ class Linker
             return fail(cx);
         code->copyFrom(masm);
         masm.link(code);
+#ifdef JSGC_GENERATIONAL
+        if (masm.embedsNurseryPointers())
+            cx->runtime()->gcStoreBuffer.putWholeCell(code);
+#endif
         return code;
     }
 
@@ -69,12 +73,11 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, JSC::CodeKind kind) {
-        return newCode(cx, cx->compartment->ionCompartment(), kind);
+        return newCode(cx, cx->compartment()->ionCompartment(), kind);
     }
 };
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_linker_h__
-
+#endif /* ion_IonLinker_h */

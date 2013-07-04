@@ -31,6 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
                                   "resource://testing-common/httpd.js");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -44,6 +46,10 @@ const ServerSocket = Components.Constructor(
                                 "@mozilla.org/network/server-socket;1",
                                 "nsIServerSocket",
                                 "init");
+const BinaryOutputStream = Components.Constructor(
+                                      "@mozilla.org/binaryoutputstream;1",
+                                      "nsIBinaryOutputStream",
+                                      "setOutputStream")
 
 const HTTP_SERVER_PORT = 4444;
 const HTTP_BASE = "http://localhost:" + HTTP_SERVER_PORT;
@@ -64,14 +70,30 @@ const TEST_INTERRUPTIBLE_PATH = "/interruptible.txt";
 const TEST_INTERRUPTIBLE_URI = NetUtil.newURI(HTTP_BASE +
                                               TEST_INTERRUPTIBLE_PATH);
 
+const TEST_INTERRUPTIBLE_GZIP_PATH = "/interruptible_gzip.txt";
+const TEST_INTERRUPTIBLE_GZIP_URI = NetUtil.newURI(HTTP_BASE +
+                                                   TEST_INTERRUPTIBLE_GZIP_PATH);
+
 const TEST_TARGET_FILE_NAME = "test-download.txt";
+const TEST_STORE_FILE_NAME = "test-downloads.json";
+
 const TEST_DATA_SHORT = "This test string is downloaded.";
+// Generate using gzipCompressString in TelemetryPing.js.
+const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
+ 31,139,8,0,0,0,0,0,0,3,11,201,200,44,86,40,73,45,46,81,40,46,41,202,204
+];
+const TEST_DATA_SHORT_GZIP_ENCODED_SECOND = [
+  75,87,0,114,83,242,203,243,114,242,19,83,82,83,244,0,151,222,109,43,31,0,0,0
+];
+const TEST_DATA_SHORT_GZIP_ENCODED =
+  TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(TEST_DATA_SHORT_GZIP_ENCODED_SECOND);
 
 /**
  * All the tests are implemented with add_task, this starts them automatically.
  */
 function run_test()
 {
+  do_get_profile();
   run_next_test();
 }
 
@@ -165,6 +187,32 @@ function promiseSimpleDownload(aSourceURI) {
 }
 
 /**
+ * Returns a new public DownloadList object.
+ *
+ * @return {Promise}
+ * @resolves The newly created DownloadList object.
+ * @rejects JavaScript exception.
+ */
+function promiseNewDownloadList() {
+  // Force the creation of a new public download list.
+  Downloads._promisePublicDownloadList = null;
+  return Downloads.getPublicDownloadList();
+}
+
+/**
+ * Returns a new private DownloadList object.
+ *
+ * @return {Promise}
+ * @resolves The newly created DownloadList object.
+ * @rejects JavaScript exception.
+ */
+function promiseNewPrivateDownloadList() {
+  // Force the creation of a new public download list.
+  Downloads._privateDownloadList = null;
+  return Downloads.getPrivateDownloadList();
+}
+
+/**
  * Ensures that the given file contents are equal to the given string.
  *
  * @param aFile
@@ -192,6 +240,39 @@ function promiseVerifyContents(aFile, aExpectedContents)
     }
     deferred.resolve();
   });
+  return deferred.promise;
+}
+
+/**
+ * Adds entry for download.
+ *
+ * @param aSourceURI
+ *        The nsIURI for the download source, or null to use TEST_SOURCE_URI.
+ *
+ * @return {Promise}
+ * @rejects JavaScript exception.
+ */
+function promiseAddDownloadToHistory(aSourceURI) {
+  let deferred = Promise.defer();
+  PlacesUtils.asyncHistory.updatePlaces(
+    {
+      uri: aSourceURI || TEST_SOURCE_URI,
+      visits: [{
+        transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+        visitDate:  Date.now()
+      }]
+    },
+    {
+      handleError: function handleError(aResultCode, aPlaceInfo) {
+        let ex = new Components.Exception("Unexpected error in adding visits.",
+                                          aResultCode);
+        deferred.reject(ex);
+      },
+      handleResult: function () {},
+      handleCompletion: function handleCompletion() {
+        deferred.resolve();
+      }
+    });
   return deferred.promise;
 }
 
@@ -351,4 +432,25 @@ add_task(function test_common_initialize()
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
     }, function secondPart(aRequest, aResponse) { });
+
+
+  registerInterruptibleHandler(TEST_INTERRUPTIBLE_GZIP_PATH,
+    function firstPart(aRequest, aResponse) {
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.setHeader("Content-Encoding", "gzip", false);
+      aResponse.setHeader("Content-Length", "" + TEST_DATA_SHORT_GZIP_ENCODED.length);
+
+      let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
+      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_FIRST,
+                         TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length);
+    }, function secondPart(aRequest, aResponse) {
+      let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
+      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_SECOND,
+                         TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length);
+    });
+
+  // Disable integration with the host application requiring profile access.
+  DownloadIntegration.dontLoad = true;
+  // Disable the parental controls checking.
+  DownloadIntegration.dontCheckParentalControls = true;
 });

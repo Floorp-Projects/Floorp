@@ -96,7 +96,7 @@ GetDatabaseFilename(const nsAString& aName,
 nsresult
 CreateFileTables(mozIStorageConnection* aDBConn)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "CreateFileTables");
@@ -158,7 +158,7 @@ CreateFileTables(mozIStorageConnection* aDBConn)
 nsresult
 CreateTables(mozIStorageConnection* aDBConn)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(aDBConn, "Passing a null database connection!");
 
@@ -275,7 +275,7 @@ CreateTables(mozIStorageConnection* aDBConn)
 nsresult
 UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom4To5");
@@ -364,7 +364,7 @@ UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
 nsresult
 UpgradeSchemaFrom5To6(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom5To6");
@@ -722,7 +722,7 @@ UpgradeSchemaFrom5To6(mozIStorageConnection* aConnection)
 nsresult
 UpgradeSchemaFrom6To7(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom6To7");
@@ -781,7 +781,7 @@ UpgradeSchemaFrom6To7(mozIStorageConnection* aConnection)
 nsresult
 UpgradeSchemaFrom7To8(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom7To8");
@@ -905,7 +905,7 @@ NS_IMPL_ISUPPORTS1(CompressDataBlobsFunction, mozIStorageFunction)
 nsresult
 UpgradeSchemaFrom8To9_0(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom8To9_0");
@@ -946,7 +946,7 @@ UpgradeSchemaFrom8To9_0(mozIStorageConnection* aConnection)
 nsresult
 UpgradeSchemaFrom9_0To10_0(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom9_0To10_0");
@@ -973,7 +973,7 @@ UpgradeSchemaFrom9_0To10_0(mozIStorageConnection* aConnection)
 nsresult
 UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom10_0To11_0");
@@ -1163,7 +1163,7 @@ NS_IMPL_ISUPPORTS1(EncodeKeysFunction, mozIStorageFunction)
 nsresult
 UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom11_0To12_0");
@@ -1380,7 +1380,7 @@ nsresult
 UpgradeSchemaFrom12_0To13_0(mozIStorageConnection* aConnection,
                             bool* aVacuumNeeded)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom12_0To13_0");
@@ -1444,7 +1444,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    jsval* aVal) MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual nsresult
   OnExclusiveAccessAcquired() MOZ_OVERRIDE;
@@ -1479,8 +1479,7 @@ protected:
                                             const ResponseValue& aResponseValue)
                                             MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
+    MOZ_CRASH("Should never get here!");
   }
 
   uint64_t RequestedVersion() const
@@ -1515,7 +1514,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsresult GetSuccessResult(JSContext* aCx,
-                            jsval* aVal);
+                            JS::MutableHandle<JS::Value> aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -1559,8 +1558,7 @@ protected:
                                             const ResponseValue& aResponseValue)
                                             MOZ_OVERRIDE
   {
-    MOZ_NOT_REACHED("Should never get here!");
-    return NS_ERROR_UNEXPECTED;
+    MOZ_CRASH("Should never get here!");
   }
 
 private:
@@ -1717,15 +1715,7 @@ OpenDatabaseHelper::RunImmediately()
 nsresult
 OpenDatabaseHelper::DoDatabaseWork()
 {
-#ifdef DEBUG
-  {
-    bool correctThread;
-    NS_ASSERTION(NS_SUCCEEDED(QuotaManager::Get()->IOThread()->
-                              IsOnCurrentThread(&correctThread)) &&
-                 correctThread,
-                 "Running on the wrong thread!");
-  }
-#endif
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "OpenDatabaseHelper::DoDatabaseWork");
@@ -1871,7 +1861,7 @@ OpenDatabaseHelper::CreateDatabaseConnection(
                                         const nsACString& aOrigin,
                                         mozIStorageConnection** aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "OpenDatabaseHelper::CreateDatabaseConnection");
@@ -2172,11 +2162,6 @@ OpenDatabaseHelper::Run()
 
         DatabaseInfo::Remove(mDatabaseId);
 
-        IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-        NS_ASSERTION(mgr, "This should never fail!");
-
-        mgr->InvalidateFileManager(mASCIIOrigin, mName);
-
         mState = eFiringEvents;
         break;
       }
@@ -2336,7 +2321,7 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
 nsresult
 OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
-                                     jsval* aVal)
+                                     JS::MutableHandle<JS::Value> aVal)
 {
   // Be careful not to load the database twice.
   if (!mDatabase) {
@@ -2484,7 +2469,7 @@ SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 nsresult
 SetVersionHelper::GetSuccessResult(JSContext* aCx,
-                                   jsval* aVal)
+                                   JS::MutableHandle<JS::Value> aVal)
 {
   DatabaseInfo* info = mDatabase->Info();
   info->version = mRequestedVersion;
@@ -2579,7 +2564,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(DeleteDatabaseHelper, AsyncConnectionHelper);
 nsresult
 DeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(!aConnection, "How did we get a connection here?");
 
@@ -2683,11 +2668,16 @@ DeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
   }
 
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+  NS_ASSERTION(mgr, "This should never fail!");
+
+  mgr->InvalidateFileManager(mASCIIOrigin, mName);
+
   return NS_OK;
 }
 
 nsresult
-DeleteDatabaseHelper::GetSuccessResult(JSContext* aCx, jsval* aVal)
+DeleteDatabaseHelper::GetSuccessResult(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
 {
   return NS_OK;
 }

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BacktrackingAllocator.h"
+#include "ion/BacktrackingAllocator.h"
 
 using namespace js;
 using namespace js::ion;
@@ -1151,7 +1151,7 @@ BacktrackingAllocator::populateSafepoints()
                     break;
 #endif
                   default:
-                    JS_NOT_REACHED("Bad register type");
+                    MOZ_ASSUME_UNREACHABLE("Bad register type");
                 }
             }
         }
@@ -1439,7 +1439,7 @@ BacktrackingAllocator::computeSpillWeight(const LiveInterval *interval)
 
           default:
             // Note: RECOVERED_INPUT will not appear in UsePositionIterator.
-            JS_NOT_REACHED("Bad use");
+            MOZ_ASSUME_UNREACHABLE("Bad use");
         }
     }
 

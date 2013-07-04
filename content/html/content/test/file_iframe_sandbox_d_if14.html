@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 838692</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="text/javascript">
+  var test20Context = "Test 20: Navigate another window (not opened by us): ";
+
+  function doTest() {
+    // Try to navigate auxiliary browsing context (window) not opened by us.
+    // We should not be able to do this as we are sandboxed.
+    sendMouseEvent({type:'click'}, 'navigate_window');
+    window.parent.postMessage("test attempted", "*");
+
+    // Try to navigate auxiliary browsing context (window) not opened by us, using window.open().
+    // We should not be able to do this as we are sandboxed.
+    try {
+      window.open("file_iframe_sandbox_window_navigation_fail.html?" + escape(test20Context), "window_to_navigate2");
+      window.parent.postMessage("test attempted", "*");
+    } catch(error) {
+      window.parent.postMessage({ok: true, desc: test20Context + "as expected, error thrown during window.open(..., \"window_to_navigate2\")"}, "*");
+    }
+  }
+</script>
+
+<body onload="doTest()">
+  I am sandboxed but with "allow-scripts allow-same-origin allow-top-navigation".
+
+  <a href="file_iframe_sandbox_window_navigation_fail.html?Test 14: Navigate another window (not opened by us):%20" target="window_to_navigate" id="navigate_window">navigate window</a>
+</body>
+</html>

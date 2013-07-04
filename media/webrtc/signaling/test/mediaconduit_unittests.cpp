@@ -13,7 +13,6 @@ using namespace std;
 #include "mozilla/Scoped.h"
 #include <MediaConduitInterface.h>
 #include "nsIEventTarget.h"
-#include "nsStaticComponents.h"
 #include "FakeMediaStreamsImpl.h"
 
 #define GTEST_HAS_RTTI 0
@@ -574,8 +573,8 @@ class TransportConduitTest : public ::testing::Test
     ASSERT_EQ(mozilla::kMediaConduitNoError, err);
 
     //configure send and recv codecs on theconduit
-    mozilla::VideoCodecConfig cinst1(120, "VP8", 640, 480);
-    mozilla::VideoCodecConfig cinst2(124, "I420", 640, 480);
+    mozilla::VideoCodecConfig cinst1(120, "VP8");
+    mozilla::VideoCodecConfig cinst2(124, "I420");
 
 
     std::vector<mozilla::VideoCodecConfig* > rcvCodecList;
@@ -638,8 +637,8 @@ class TransportConduitTest : public ::testing::Test
     cerr << "    1. Same Codec (VP8) Repeated Twice " << endl;
     cerr << "   *************************************************" << endl;
 
-    mozilla::VideoCodecConfig cinst1(120, "VP8", 640, 480);
-    mozilla::VideoCodecConfig cinst2(120, "VP8", 640, 480);
+    mozilla::VideoCodecConfig cinst1(120, "VP8");
+    mozilla::VideoCodecConfig cinst2(120, "VP8");
     rcvCodecList.push_back(&cinst1);
     rcvCodecList.push_back(&cinst2);
     err = mVideoSession->ConfigureRecvMediaCodecs(rcvCodecList);
@@ -655,8 +654,8 @@ class TransportConduitTest : public ::testing::Test
     cerr << "   Setting payload 1 with name: I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676" << endl;
     cerr << "   Setting payload 2 with name of zero length" << endl;
 
-    mozilla::VideoCodecConfig cinst3(124, "I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676", 352, 288);
-    mozilla::VideoCodecConfig cinst4(124, "", 352, 288);
+    mozilla::VideoCodecConfig cinst3(124, "I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676");
+    mozilla::VideoCodecConfig cinst4(124, "");
 
     rcvCodecList.push_back(&cinst3);
     rcvCodecList.push_back(&cinst4);

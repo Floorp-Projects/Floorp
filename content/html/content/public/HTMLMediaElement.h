@@ -44,11 +44,13 @@ class MediaDecoder;
 }
 
 class nsITimer;
+class nsRange;
 
 namespace mozilla {
 namespace dom {
 
 class MediaError;
+class MediaSource;
 
 class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIObserver,
@@ -866,6 +868,9 @@ protected:
   // Holds a reference to the MediaStreamListener attached to mSrcStream.
   nsRefPtr<StreamListener> mSrcStreamListener;
 
+  // Holds a reference to the MediaSource supplying data for playback.
+  nsRefPtr<MediaSource> mMediaSource;
+
   // Holds a reference to the first channel we open to the media resource.
   // Once the decoder is created, control over the channel passes to the
   // decoder, and we null out this reference. We must store this in case
@@ -882,7 +887,7 @@ protected:
 
   // Points to the child source elements, used to iterate through the children
   // when selecting a resource to load.
-  nsCOMPtr<nsIDOMRange> mSourcePointer;
+  nsRefPtr<nsRange> mSourcePointer;
 
   // Points to the document whose load we're blocking. This is the document
   // we're bound to when loading starts.
@@ -1117,6 +1122,9 @@ protected:
 
   // Is this media element playing?
   bool mPlayingThroughTheAudioChannel;
+
+  // Has this element been in a document?
+  bool mWasInDocument;
 
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;

@@ -8,3 +8,5 @@ CPP_SOURCES += [
     'crashinjectdll.cpp',
 ]
 
+LIBRARY_NAME = 'crashinjectdll'
+

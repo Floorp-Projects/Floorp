@@ -38,7 +38,7 @@ MOCHITEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
 		can_play_type_webm.js \
-   can_play_type_dash.js \
+		can_play_type_dash.js \
 		can_play_type_mpeg.js \
 		cancellable_request.sjs \
 		dynamic_redirect.sjs \
@@ -72,6 +72,7 @@ MOCHITEST_FILES = \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
+		test_bug654550.html \
 		test_bug686942.html \
 		test_can_play_type.html \
 		test_can_play_type_mpeg.html \
@@ -114,10 +115,8 @@ MOCHITEST_FILES = \
 		test_source_write.html \
 		test_source_null.html \
 		test_standalone.html \
-		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
-		use_large_cache.js \
 		test_audiowrite.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
@@ -136,8 +135,13 @@ MOCHITEST_FILES = \
 		test_streams_autoplay.html \
 		test_streams_gc.html \
 		test_streams_tracks.html \
+		test_paused_after_removed.html \
 		$(filter disabled-for-intermittent-failures--bug-608634, test_error_in_video_document.html) \
+		test_texttrack.html \
+		test_texttrackcue.html \
 		test_timeupdate_small_files.html \
+		test_unseekable.html \
+		test_webvtt_disabled.html \
 		$(NULL)
 
 # Disabled on Windows for frequent intermittent failures
@@ -187,6 +191,7 @@ MOCHITEST_FILES += \
 		audio-gaps.ogg \
 		badtags.ogg \
 		beta-phrasebook.ogg \
+		big-buck-bunny-unseekable.mp4 \
 		bogus.ogv \
 		bug495129.ogv \
 		bug495794.ogg \
@@ -230,6 +235,7 @@ MOCHITEST_FILES += \
 		variable-preskip.opus \
 		dirac.ogg \
 		multiple-bos.ogg \
+		no-cues.webm \
 		owl.mp3 \
 		split.webm \
 		seek.ogv \
@@ -254,6 +260,7 @@ MOCHITEST_FILES += \
 		detodos.opus \
 		notags.mp3 \
 		id3tags.mp3 \
+		basic.vtt \
 		$(NULL)
 
 # Wave sample files

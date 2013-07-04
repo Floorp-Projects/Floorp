@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_jsonspewer_h__
-#define js_ion_jsonspewer_h__
+#ifndef ion_JSONSpewer_h
+#define ion_JSONSpewer_h
 
 #include <stdio.h>
 
@@ -76,5 +76,4 @@ class JSONSpewer
 } // namespace ion
 } // namespace js
 
-#endif // js_ion_jsonspewer_h__
-
+#endif /* ion_JSONSpewer_h */

@@ -26,6 +26,7 @@
 #include "nsINestedURI.h"
 #include "nsCharsetSource.h"
 #include "nsIWyciwygChannel.h"
+#include "nsIInputStreamChannel.h"
 
 #include "mozilla/dom/EncodingUtils.h"
 
@@ -872,6 +873,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   bool scriptingEnabled = mMode == LOAD_AS_DATA ?
                                    false : mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
+  mTreeBuilder->setIsSrcdocDocument(IsSrcdocDocument());
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
   mTreeBuilder->SetPreventScriptExecution(!((mMode == NORMAL) &&
                                             scriptingEnabled));
@@ -1608,4 +1610,21 @@ nsHtml5StreamParser::MarkAsBroken()
   if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
     NS_WARNING("failed to dispatch executor flush event");
   }
+}
+
+bool
+nsHtml5StreamParser::IsSrcdocDocument()
+{
+  nsresult rv;
+
+  bool isSrcdoc = false;
+  nsCOMPtr<nsIChannel> channel;
+  rv = GetChannel(getter_AddRefs(channel));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIInputStreamChannel> isr = do_QueryInterface(channel);
+    if (isr) {
+      isr->GetIsSrcdocChannel(&isSrcdoc);
+    }
+  }
+  return isSrcdoc;
 }

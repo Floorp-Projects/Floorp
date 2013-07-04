@@ -28,15 +28,15 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MacroAssemblerARMv7_h
-#define MacroAssemblerARMv7_h
+#ifndef assembler_assembler_MacroAssemblerARMv7_h
+#define assembler_assembler_MacroAssemblerARMv7_h
 
 #include "assembler/wtf/Platform.h"
 
 #if ENABLE(ASSEMBLER)
 
-#include "ARMv7Assembler.h"
-#include "AbstractMacroAssembler.h"
+#include "assembler/assembler/ARMv7Assembler.h"
+#include "assembler/assembler/AbstractMacroAssembler.h"
 
 namespace JSC {
 
@@ -433,7 +433,7 @@ public:
         load32(setupArmAddress(address), dest);
     }
 
-    void load32(void* address, RegisterID dest)
+    void load32(const void* address, RegisterID dest)
     {
         move(ImmPtr(address), addressTempRegister);
         m_assembler.ldr(dest, addressTempRegister, ARMThumbImmediate::makeUInt16(0));
@@ -1220,4 +1220,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // MacroAssemblerARMv7_h
+#endif /* assembler_assembler_MacroAssemblerARMv7_h */

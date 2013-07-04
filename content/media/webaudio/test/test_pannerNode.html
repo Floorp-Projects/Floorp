@@ -15,8 +15,6 @@ function near(a, b, msg) {
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
   var context = new AudioContext();
   var buffer = context.createBuffer(1, 2048, context.sampleRate);
   for (var i = 0; i < 2048; ++i) {
@@ -68,7 +66,6 @@ addLoadEvent(function() {
     source.disconnect();
     panner.disconnect();
 
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
   });
 });

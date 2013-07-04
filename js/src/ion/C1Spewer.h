@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef DEBUG
+#ifndef ion_C1Spewer_h
+#define ion_C1Spewer_h
 
-#ifndef jsion_c1spewer_h__
-#define jsion_c1spewer_h__
+#ifdef DEBUG
 
 #include "jsscript.h"
 
@@ -50,7 +50,6 @@ class C1Spewer
 } // namespace ion
 } // namespace js
 
-#endif // jsion_c1spewer_h__
-
 #endif /* DEBUG */
 
+#endif /* ion_C1Spewer_h */

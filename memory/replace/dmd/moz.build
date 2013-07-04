@@ -16,3 +16,6 @@ CPP_SOURCES += [
     'nsStackWalk.cpp',
 ]
 
+CSRCS += [
+    'strcpy.c',
+]

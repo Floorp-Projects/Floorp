@@ -244,6 +244,23 @@ function runTest5() {
     '<input contenteditable="true" style="display: table; page-break-before: left; width: 10000px;">';
   printpreview();
   exitprintpreview();
+
+  setTimeout(runTest6, 0);
+}
+
+// Crash test for bug 878037
+function runTest6() {
+  window.frames[0].document.body.innerHTML =
+    '<style> li { list-style-image: url("animated.gif"); } </style>' +
+    '<li>Firefox will crash if you try and print this page</li>';
+
+  setTimeout(runTest6end, 500);
+}
+
+function runTest6end() {
+  printpreview();
+  exitprintpreview();
+
   finish();
 }
 

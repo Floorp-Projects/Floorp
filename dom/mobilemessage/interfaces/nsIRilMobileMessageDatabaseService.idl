@@ -36,11 +36,13 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *
    *   - If |type| == "sms", we also need:
    *     - |messageClass| DOMString: the message class of received message
+   *     - |receiver| DOMString: the phone number of receiver
    *
    *   - If |type| == "mms", we also need:
    *     - |delivery| DOMString: the delivery state of received message
    *     - |deliveryStatus| DOMString Array: the delivery status of received message
    *     - |receivers| DOMString Array: the phone numbers of receivers
+   *     - |msisdn| DOMString: [optional] my own phone number.
    *     - |transactionId| DOMString: the transaction ID from MMS pdu header.
    *
    * Note: |deliveryStatus| should only contain single string to specify
@@ -52,6 +54,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
   /**
    * |aMessage| Object: should contain the following properties for internal use:
    *   - |type| DOMString: "sms" or "mms"
+   *   - |sender| DOMString: the phone number of sender
    *   - |timestamp| Number: the timestamp of sending message
    *   - |deliveryStatusRequested| Bool: true when the delivery report is requested.
    *

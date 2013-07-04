@@ -292,6 +292,7 @@ nsPluginHost::nsPluginHost()
     mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    obsService->AddObserver(this, "blocklist-updated", false);
 #ifdef MOZ_WIDGET_ANDROID
     obsService->AddObserver(this, "application-foreground", false);
     obsService->AddObserver(this, "application-background", false);
@@ -1043,68 +1044,55 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   return rv;
 }
 
-nsresult
-nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
+bool
+nsPluginHost::PluginExistsForType(const char* aMimeType)
 {
-  nsPluginTag *plugin = FindPluginForType(aMimeType, true);
-  if (plugin)
-    return NS_OK;
+  nsPluginTag *plugin = FindPluginForType(aMimeType, false);
+  return nullptr != plugin;
+}
 
-  // Pass false as the second arg so we can return NS_ERROR_PLUGIN_DISABLED
-  // for disabled plug-ins.
-  plugin = FindPluginForType(aMimeType, false);
-  if (!plugin)
-    return NS_ERROR_FAILURE;
-
-  if (!plugin->IsActive()) {
-    if (plugin->IsBlocklisted())
-      return NS_ERROR_PLUGIN_BLOCKLISTED;
-    else
-      return NS_ERROR_PLUGIN_DISABLED;
+NS_IMETHODIMP
+nsPluginHost::GetPluginTagForType(const nsACString& aMimeType,
+                                  nsIPluginTag** aResult)
+{
+  nsPluginTag* plugin = FindPluginForType(aMimeType.Data(), true);
+  if (!plugin) {
+    plugin = FindPluginForType(aMimeType.Data(), false);
   }
-
+  if (!plugin) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  NS_ADDREF(*aResult = plugin);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPluginHost::IsPluginClickToPlayForType(const nsACString &aMimeType, bool *aResult)
+nsPluginHost::GetStateForType(const nsACString &aMimeType, uint32_t* aResult)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType.Data(), true);
+  if (!plugin) {
+    plugin = FindPluginForType(aMimeType.Data(), false);
+  }
   if (!plugin) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
-  nsresult rv = GetBlocklistStateForType(aMimeType.Data(), &blocklistState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if ((mPluginsClickToPlay && plugin->IsClicktoplay()) ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
-    *aResult = true;
-  }
-  else {
-    *aResult = false;
-  }
-
-  return NS_OK;
+  return plugin->GetEnabledState(aResult);
 }
 
-nsresult
+NS_IMETHODIMP
 nsPluginHost::GetBlocklistStateForType(const char *aMimeType, uint32_t *aState)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType, true);
-  if (plugin) {
-    nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
-    if (blocklist) {
-      // The EmptyString()s are so we use the currently running application
-      // and toolkit versions
-      return blocklist->GetPluginBlocklistState(plugin, EmptyString(),
-                                                EmptyString(), aState);
-    }
+  if (!plugin) {
+    plugin = FindPluginForType(aMimeType, false);
+  }
+  if (!plugin) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  *aState = plugin->GetBlocklistState();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1115,6 +1103,9 @@ nsPluginHost::GetPermissionStringForType(const nsACString &aMimeType, nsACString
   nsresult rv = GetBlocklistStateForType(aMimeType.Data(), &blocklistState);
   NS_ENSURE_SUCCESS(rv, rv);
   nsPluginTag *tag = FindPluginForType(aMimeType.Data(), true);
+  if (!tag) {
+    tag = FindPluginForType(aMimeType.Data(), false);
+  }
   if (!tag) {
     return NS_ERROR_FAILURE;
   }
@@ -1187,12 +1178,7 @@ public:
 
   NS_METHOD GetFilename(nsAString& aFilename)
   {
-    if (Preferences::GetBool("plugin.expose_full_path", false)) {
-      CopyUTF8toUTF16(mPluginTag.mFullPath, aFilename);
-    } else {
-      CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
-    }
-
+    CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
     return NS_OK;
   }
 
@@ -1959,31 +1945,17 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
 
       pluginTag->mLibrary = library;
       pluginTag->mLastModifiedTime = fileModTime;
+      uint32_t state = pluginTag->GetBlocklistState();
 
-      nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
-      if (blocklist) {
-        uint32_t state;
-        rv = blocklist->GetPluginBlocklistState(pluginTag, EmptyString(),
-                                                EmptyString(), &state);
-
-        if (NS_SUCCEEDED(rv)) {
-          // If the blocklist says so, block the plugin.
-          // If the blocklist says it is risky and we have never seen this
-          // plugin before, then disable it.
-          // If the blocklist says this is an outdated plugin, warn about
-          // outdated plugins.
-          // If the blocklist says the plugin is one of the click-to-play
-          // states, set the click-to-play flag.
-          if (state == nsIBlocklistService::STATE_BLOCKED) {
-             pluginTag->SetBlocklisted(true);
-          }
-          if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
-             pluginTag->SetEnabledState(nsIPluginTag::STATE_DISABLED);
-          }
-          if (state == nsIBlocklistService::STATE_OUTDATED && !seenBefore) {
-             warnOutdated = true;
-          }
-        }
+      // If the blocklist says it is risky and we have never seen this
+      // plugin before, then disable it.
+      // If the blocklist says this is an outdated plugin, warn about
+      // outdated plugins.
+      if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
+        pluginTag->SetEnabledState(nsIPluginTag::STATE_DISABLED);
+      }
+      if (state == nsIBlocklistService::STATE_OUTDATED && !seenBefore) {
+        warnOutdated = true;
       }
 
       // Plugin unloading is tag-based. If we created a new tag and loaded
@@ -3180,12 +3152,12 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
                                     const char *aTopic,
                                     const PRUnichar *someData)
 {
-  if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
+  if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
     OnShutdown();
     UnloadPlugins();
     sInst->Release();
   }
-  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+  if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
     mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
     mPluginsClickToPlay = Preferences::GetBool("plugins.click_to_play", false);
     // Unload or load plugins as needed
@@ -3195,19 +3167,26 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
       LoadPlugins();
     }
   }
+  if (!strcmp("blocklist-updated", aTopic)) {
+    nsPluginTag* plugin = mPlugins;
+    while (plugin) {
+      plugin->InvalidateBlocklistState();
+      plugin = plugin->mNext;
+    }
+  }
 #ifdef MOZ_WIDGET_ANDROID
-  if (!nsCRT::strcmp("application-background", aTopic)) {
+  if (!strcmp("application-background", aTopic)) {
     for(uint32_t i = 0; i < mInstances.Length(); i++) {
       mInstances[i]->NotifyForeground(false);
     }
   }
-  if (!nsCRT::strcmp("application-foreground", aTopic)) {
+  if (!strcmp("application-foreground", aTopic)) {
     for(uint32_t i = 0; i < mInstances.Length(); i++) {
       if (mInstances[i]->IsOnScreen())
         mInstances[i]->NotifyForeground(true);
     }
   }
-  if (!nsCRT::strcmp("memory-pressure", aTopic)) {
+  if (!strcmp("memory-pressure", aTopic)) {
     for(uint32_t i = 0; i < mInstances.Length(); i++) {
       mInstances[i]->MemoryPressure();
     }

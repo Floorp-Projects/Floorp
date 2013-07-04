@@ -40,27 +40,29 @@ function startInspectorTests(toolbox)
   let p = doc.querySelector("p");
 
   inspector.selection.setNode(p);
+  inspector.once("inspector-updated", () => {
+    testHighlighter(p);
+    testMarkupView(p);
+    testBreadcrumbs(p);
 
-  testHighlighter(p);
-  testMarkupView(p);
-  testBreadcrumbs(p);
+    let span = doc.querySelector("span");
+    span.scrollIntoView();
 
-  let span = doc.querySelector("span");
-  span.scrollIntoView();
+    inspector.selection.setNode(span);
+    inspector.once("inspector-updated", () => {
+      testHighlighter(span);
+      testMarkupView(span);
+      testBreadcrumbs(span);
 
-  inspector.selection.setNode(span);
-
-  testHighlighter(span);
-  testMarkupView(span);
-  testBreadcrumbs(span);
-
-  toolbox.once("destroyed", function() {
-    ok("true", "'destroyed' notification received.");
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
-    executeSoon(runContextMenuTest);
+      toolbox.once("destroyed", function() {
+        ok("true", "'destroyed' notification received.");
+        let target = TargetFactory.forTab(gBrowser.selectedTab);
+        ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
+        executeSoon(runContextMenuTest);
+      });
+      toolbox.destroy();
+    });
   });
-  toolbox.destroy();
 }
 
 
@@ -79,7 +81,7 @@ function testMarkupView(node)
 function testBreadcrumbs(node)
 {
   let b = getActiveInspector().breadcrumbs;
-  let expectedText = b.prettyPrintNodeAsText(node);
+  let expectedText = b.prettyPrintNodeAsText(getNodeFront(node));
   let button = b.container.querySelector("button[checked=true]");
   ok(button, "A crumbs is checked=true");
   is(button.getAttribute("tooltiptext"), expectedText, "Crumb refers to the right node");

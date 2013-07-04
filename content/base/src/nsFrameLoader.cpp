@@ -49,7 +49,6 @@
 #include "nsEventDispatcher.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
-#include "nsIDocShellHistory.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXULWindow.h"
 #include "nsIEditor.h"
@@ -299,7 +298,7 @@ nsFrameLoader::Create(Element* aOwner, bool aNetworkCreated)
 {
   NS_ENSURE_TRUE(aOwner, nullptr);
   nsIDocument* doc = aOwner->OwnerDoc();
-  NS_ENSURE_TRUE(!doc->GetDisplayDocument() &&
+  NS_ENSURE_TRUE(!doc->IsResourceDoc() &&
                  ((!doc->IsLoadedAsData() && aOwner->GetCurrentDoc()) ||
                    doc->IsStaticDocument()),
                  nullptr);
@@ -313,12 +312,28 @@ nsFrameLoader::LoadFrame()
   NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
 
   nsAutoString src;
-  GetURL(src);
 
-  src.Trim(" \t\n\r");
+  bool isSrcdoc = mOwnerContent->IsHTML(nsGkAtoms::iframe) &&
+                  mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc);
+  if (isSrcdoc) {
+    src.AssignLiteral("about:srcdoc");
+  }
+  else {
+    GetURL(src);
 
-  if (src.IsEmpty()) {
-    src.AssignLiteral("about:blank");
+    src.Trim(" \t\n\r");
+
+    if (src.IsEmpty()) {
+      // If the frame is a XUL element and has the attribute 'nodefaultsrc=true'
+      // then we will not use 'about:blank' as fallback but return early without
+      // starting a load if no 'src' attribute is given (or it's empty).
+      if (mOwnerContent->IsXUL() &&
+          mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::nodefaultsrc,
+                                     nsGkAtoms::_true, eCaseMatters)) {
+        return NS_OK;
+      }
+      src.AssignLiteral("about:blank");
+    }
   }
 
   nsIDocument* doc = mOwnerContent->OwnerDoc();
@@ -464,8 +479,23 @@ nsFrameLoader::ReallyStartLoadingInternal()
   loadInfo->SetOwner(mOwnerContent->NodePrincipal());
 
   nsCOMPtr<nsIURI> referrer;
-  rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
-  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString srcdoc;
+  bool isSrcdoc = mOwnerContent->IsHTML(nsGkAtoms::iframe) &&
+                  mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::srcdoc,
+                                         srcdoc);
+
+  if (isSrcdoc) {
+    nsAutoString referrerStr;
+    mOwnerContent->OwnerDoc()->GetReferrer(referrerStr);
+    rv = NS_NewURI(getter_AddRefs(referrer), referrerStr);
+
+    loadInfo->SetSrcdocData(srcdoc);
+  }
+  else {
+    rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   loadInfo->SetReferrer(referrer);
 
@@ -1234,19 +1264,13 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     mMessageManager->GetParentManager() : nullptr;
   nsFrameMessageManager* otherParentManager = aOther->mMessageManager ?
     aOther->mMessageManager->GetParentManager() : nullptr;
-  JSContext* thisCx =
-    mMessageManager ? mMessageManager->GetJSContext() : nullptr;
-  JSContext* otherCx = 
-    aOther->mMessageManager ? aOther->mMessageManager->GetJSContext() : nullptr;
   if (mMessageManager) {
     mMessageManager->RemoveFromParent();
-    mMessageManager->SetJSContext(otherCx);
     mMessageManager->SetParentManager(otherParentManager);
     mMessageManager->SetCallback(aOther, false);
   }
   if (aOther->mMessageManager) {
     aOther->mMessageManager->RemoveFromParent();
-    aOther->mMessageManager->SetJSContext(thisCx);
     aOther->mMessageManager->SetParentManager(ourParentManager);
     aOther->mMessageManager->SetCallback(this, false);
   }
@@ -1328,9 +1352,8 @@ nsFrameLoader::Destroy()
 
   // Seems like this is a dynamic frame removal.
   if (dynamicSubframeRemoval) {
-    nsCOMPtr<nsIDocShellHistory> dhistory = do_QueryInterface(mDocShell);
-    if (dhistory) {
-      dhistory->RemoveFromSessionHistory();
+    if (mDocShell) {
+      mDocShell->RemoveFromSessionHistory();
     }
   }
 
@@ -1537,9 +1560,8 @@ nsFrameLoader::MaybeCreateDocShell()
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   if (!mNetworkCreated) {
-    nsCOMPtr<nsIDocShellHistory> history = do_QueryInterface(mDocShell);
-    if (history) {
-      history->SetCreatedDynamically(true);
+    if (mDocShell) {
+      mDocShell->SetCreatedDynamically(true);
     }
   }
 
@@ -1786,12 +1808,12 @@ nsFrameLoader::GetWindowDimensions(nsRect& aRect)
     return NS_ERROR_FAILURE;
   }
 
-  if (doc->GetDisplayDocument()) {
+  if (doc->IsResourceDoc()) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+    do_GetInterface(doc->GetWindow());
 
   if (!parentAsWebNav) {
     return NS_ERROR_FAILURE;
@@ -1961,13 +1983,13 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  if (doc->GetDisplayDocument()) {
+  if (doc->IsResourceDoc()) {
     // Don't allow subframe loads in external reference documents
     return false;
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+    do_GetInterface(doc->GetWindow());
 
   if (!parentAsWebNav) {
     return false;
@@ -2196,8 +2218,7 @@ public:
     nsInProcessTabChildGlobal* tabChild =
       static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
     if (tabChild && tabChild->GetInnerManager()) {
-      nsFrameScriptCx cx(static_cast<EventTarget*>(tabChild), tabChild);
-
+      nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(tabChild->GetGlobal());
       StructuredCloneData data;
       data.mData = mData.data();
       data.mDataLength = mData.nbytes();
@@ -2205,7 +2226,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
       mm->ReceiveMessage(static_cast<EventTarget*>(tabChild), mMessage,
-                         false, &data, JS::NullPtr(), nullptr, nullptr);
+                         false, &data, JS::NullPtr(), nullptr);
     }
     return NS_OK;
   }
@@ -2361,12 +2382,10 @@ nsFrameLoader::EnsureMessageManager()
   if (ShouldUseRemoteProcess()) {
     mMessageManager = new nsFrameMessageManager(mRemoteBrowserShown ? this : nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                cx,
                                                 MM_CHROME);
   } else {
     mMessageManager = new nsFrameMessageManager(nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                cx,
                                                 MM_CHROME);
 
     mChildMessageManager =

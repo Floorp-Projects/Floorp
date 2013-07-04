@@ -4,13 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsprf.h"
 
-#include "js/HashTable.h"
-#include "gc/GCInternals.h"
+#include "vm/Debugger.h"
 
 #ifdef JS_ION
 #include "ion/BaselineJIT.h"
@@ -18,7 +15,6 @@
 #include "ion/Ion.h"
 #endif
 
-#include "jsobjinlines.h"
 #include "jsgcinlines.h"
 
 using namespace js;
@@ -143,7 +139,41 @@ Zone::sweep(FreeOp *fop, bool releaseTypes)
         types.sweep(fop, releaseTypes);
     }
 
+    if (!rt->debuggerList.isEmpty())
+        sweepBreakpoints(fop);
+
     active = false;
+}
+
+void
+Zone::sweepBreakpoints(FreeOp *fop)
+{
+    /*
+     * Sweep all compartments in a zone at the same time, since there is no way
+     * to iterate over the scripts belonging to a single compartment in a zone.
+     */
+
+    gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
+
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (!script->hasAnyBreakpointsOrStepMode())
+            continue;
+        bool scriptGone = IsScriptAboutToBeFinalized(&script);
+        JS_ASSERT(script == i.get<JSScript>());
+        for (unsigned i = 0; i < script->length; i++) {
+            BreakpointSite *site = script->getBreakpointSite(script->code + i);
+            if (!site)
+                continue;
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
+                if (scriptGone || IsObjectAboutToBeFinalized(&bp->debugger->toJSObjectRef()))
+                    bp->destroy(fop);
+            }
+        }
+    }
 }
 
 void

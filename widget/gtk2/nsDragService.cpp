@@ -718,6 +718,10 @@ nsDragService::GetData(nsITransferable * aTransferable,
                 if ( strcmp(flavorStr, kFileMime) == 0 ) {
                     gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
                     GetTargetDragData(gdkFlavor);
+                    if (!mTargetDragData) {
+                        gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
+                        GetTargetDragData(gdkFlavor);
+                    }
                     if (mTargetDragData) {
                         const char* text = static_cast<char*>(mTargetDragData);
                         PRUnichar* convertedText = nullptr;
@@ -997,7 +1001,8 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
         if (!*_retval && 
             name &&
             (strcmp(name, gTextUriListType) == 0) &&
-            (strcmp(aDataFlavor, kURLMime) == 0)) {
+            (strcmp(aDataFlavor, kURLMime) == 0 ||
+             strcmp(aDataFlavor, kFileMime) == 0)) {
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("good! ( it's text/uri-list and \
                    we're checking against text/x-moz-url )\n"));

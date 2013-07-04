@@ -9,8 +9,6 @@
 #include "Logging.h"
 #include "Elfxx.h"
 
-class Mappable;
-
 /**
  * Library Handle class for ELF libraries we don't let the system linker
  * handle.
@@ -144,7 +142,7 @@ private:
       void (*func)(void);
     } f;
     f.ptr = ptr;
-    debug("%s: Calling function @%p", GetPath(), ptr);
+    DEBUG_LOG("%s: Calling function @%p", GetPath(), ptr);
     f.func();
   }
 
@@ -157,7 +155,7 @@ private:
   }
 
   /* Appropriated Mappable */
-  Mappable *mappable;
+  mozilla::RefPtr<Mappable> mappable;
 
   /* Base address where the library is loaded */
   MappedPtr base;

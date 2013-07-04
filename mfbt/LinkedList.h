@@ -107,12 +107,10 @@ class LinkedListElement
     LinkedListElement* prev;
     const bool isSentinel;
 
-    LinkedListElement* thisDuringConstruction() { return this; }
-
   public:
     LinkedListElement()
-      : next(thisDuringConstruction()),
-        prev(thisDuringConstruction()),
+      : next(MOZ_THIS_IN_INITIALIZER_LIST()),
+        prev(MOZ_THIS_IN_INITIALIZER_LIST()),
         isSentinel(false)
     { }
 
@@ -201,8 +199,8 @@ class LinkedListElement
     };
 
     LinkedListElement(NodeKind nodeKind)
-      : next(thisDuringConstruction()),
-        prev(thisDuringConstruction()),
+      : next(MOZ_THIS_IN_INITIALIZER_LIST()),
+        prev(MOZ_THIS_IN_INITIALIZER_LIST()),
         isSentinel(nodeKind == NODE_KIND_SENTINEL)
     { }
 
@@ -415,7 +413,7 @@ class LinkedList
         if (elem == t)
           return;
       }
-      MOZ_NOT_REACHED("element wasn't found in this list!");
+      MOZ_CRASH("element wasn't found in this list!");
 #endif
     }
 

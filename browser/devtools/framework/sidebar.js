@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const {Cu} = require("chrome");
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 var Promise = require("sdk/core/promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/shared/telemetry");
@@ -18,16 +22,23 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  *  <tabbox> node;
  * @param {ToolPanel} panel
  *  Related ToolPanel instance;
+ * @param {String} uid
+ *  Unique ID
  * @param {Boolean} showTabstripe
  *  Show the tabs.
  */
-function ToolSidebar(tabbox, panel, showTabstripe=true)
+function ToolSidebar(tabbox, panel, uid, showTabstripe=true)
 {
   EventEmitter.decorate(this);
 
   this._tabbox = tabbox;
+  this._uid = uid;
   this._panelDoc = this._tabbox.ownerDocument;
   this._toolPanel = panel;
+
+  try {
+    this._width = Services.prefs.getIntPref("devtools.toolsidebar-width." + this._uid);
+  } catch(e) {}
 
   this._telemetry = new Telemetry();
 
@@ -137,6 +148,11 @@ ToolSidebar.prototype = {
    */
   handleEvent: function ToolSidebar_eventHandler(event) {
     if (event.type == "select") {
+      if (this._currentTool == this.getCurrentTabID()) {
+        // Tool hasn't changed.
+        return;
+      }
+
       let previousTool = this._currentTool;
       this._currentTool = this.getCurrentTabID();
       if (previousTool) {
@@ -165,6 +181,9 @@ ToolSidebar.prototype = {
    * Show the sidebar.
    */
   show: function ToolSidebar_show() {
+    if (this._width) {
+      this._tabbox.width = this._width;
+    }
     this._tabbox.removeAttribute("hidden");
   },
 
@@ -172,6 +191,7 @@ ToolSidebar.prototype = {
    * Show the sidebar.
    */
   hide: function ToolSidebar_hide() {
+    Services.prefs.setIntPref("devtools.toolsidebar-width." + this._uid, this._tabbox.width);
     this._tabbox.setAttribute("hidden", "true");
   },
 
@@ -195,6 +215,8 @@ ToolSidebar.prototype = {
       return Promise.resolve(null);
     }
     this._destroyed = true;
+
+    Services.prefs.setIntPref("devtools.toolsidebar-width." + this._uid, this._tabbox.width);
 
     this._tabbox.tabpanels.removeEventListener("select", this, true);
 

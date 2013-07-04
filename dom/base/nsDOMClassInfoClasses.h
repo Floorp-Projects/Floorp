@@ -16,19 +16,9 @@ DOMCI_CLASS(DOMConstructor)
 
 // Core classes
 DOMCI_CLASS(DOMException)
-DOMCI_CLASS(Element)
 
-// Event classes
-DOMCI_CLASS(Event)
-#define MOZ_GENERATED_EVENT_LIST
-#define MOZ_GENERATED_EVENT(_event_interface) DOMCI_CLASS(_event_interface)
-#include "GeneratedEvents.h"
-#undef MOZ_GENERATED_EVENT_LIST
 DOMCI_CLASS(DeviceAcceleration)
 DOMCI_CLASS(DeviceRotationRate)
-
-// HTML element classes
-DOMCI_CLASS(HTMLFormElement)
 
 // CSS classes
 DOMCI_CLASS(CSSStyleRule)
@@ -84,10 +74,6 @@ DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
 // other SVG classes
-DOMCI_CLASS(SVGAnimatedEnumeration)
-DOMCI_CLASS(SVGAnimatedInteger)
-DOMCI_CLASS(SVGAnimatedNumber)
-DOMCI_CLASS(SVGAnimatedString)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
 
@@ -113,9 +99,6 @@ DOMCI_CLASS(File)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
-
-// Geolocation
-DOMCI_CLASS(GeoPositionCoords)
 
 DOMCI_CLASS(MozPowerManager)
 DOMCI_CLASS(MozWakeLock)
@@ -145,7 +128,6 @@ DOMCI_CLASS(ContentFrameMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
-DOMCI_CLASS(IDBFileHandle)
 DOMCI_CLASS(IDBRequest)
 DOMCI_CLASS(IDBDatabase)
 DOMCI_CLASS(IDBObjectStore)
@@ -182,7 +164,6 @@ DOMCI_CLASS(BluetoothAdapter)
 DOMCI_CLASS(BluetoothDevice)
 #endif
 
-DOMCI_CLASS(CameraManager)
 DOMCI_CLASS(CameraControl)
 DOMCI_CLASS(CameraCapabilities)
 
@@ -192,10 +173,3 @@ DOMCI_CLASS(AsyncScrollEventDetail)
 DOMCI_CLASS(LockedFile)
 
 DOMCI_CLASS(CSSFontFeatureValuesRule)
-
-#ifdef MOZ_TIME_MANAGER
-DOMCI_CLASS(MozTimeManager)
-#endif
-
-#ifdef MOZ_WEBRTC
-#endif

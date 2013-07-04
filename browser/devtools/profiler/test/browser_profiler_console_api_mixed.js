@@ -18,15 +18,14 @@ function test() {
 
 function runTests(toolbox) {
   let panel = toolbox.getPanel("jsprofiler");
-  let getTitle = (uid) =>
-    panel.document.querySelector("li#profile-" + uid + " > h1").textContent;
+  let record = gPanel.controls.record;
 
-  panel.profiles.get(1).once("started", () => {
-    is(getTitle(1), "Profile 1 *", "Profile 1 has a start next to it.");
+  panel.once("started", () => {
+    is(getSidebarItem(1, panel).attachment.state, PROFILE_RUNNING);
 
     openConsole(gTab, (hud) => {
-      panel.profiles.get(1).once("stopped", () => {
-        is(getTitle(1), "Profile 1", "Profile 1 doesn't have a star next to it.");
+      panel.once("stopped", () => {
+        is(getSidebarItem(1, panel).attachment.state, PROFILE_COMPLETED);
         tearDown(gTab, () => gTab = gPanel = null);
       });
 
@@ -34,5 +33,5 @@ function runTests(toolbox) {
     });
   });
 
-  sendFromProfile(1, "start");
+  record.click();
 }

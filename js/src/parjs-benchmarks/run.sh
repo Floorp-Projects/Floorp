@@ -22,6 +22,6 @@ D="$(dirname $0)"
 S="$1"
 shift
 for T in "$@"; do
-    echo "$S" -e "'"'var libdir="'$D'/"; var MODE="'$MODE'";'"'" "$T"
-    "$S" -e 'var libdir="'$D'/"; var MODE="'$MODE'";' "$T"
+    echo "$S" --ion-parallel-compile=on -e "'"'var libdir="'$D'/"; var MODE="'$MODE'";'"'" "$T"
+    "$S" --ion-parallel-compile=on -e 'var libdir="'$D'/"; var MODE="'$MODE'";' "$T"
 done

@@ -293,6 +293,36 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
                  'Source should be relative the host of the source root.');
   };
 
+  exports['test github issue #64'] = function (assert, util) {
+    var map = new SourceMapConsumer({
+      "version": 3,
+      "file": "foo.js",
+      "sourceRoot": "http://example.com/",
+      "sources": ["/a"],
+      "names": [],
+      "mappings": "AACA",
+      "sourcesContent": ["foo"]
+    });
+
+    assert.equal(map.sourceContentFor("a"), "foo");
+    assert.equal(map.sourceContentFor("/a"), "foo");
+  };
+
+  exports['test bug 885597'] = function (assert, util) {
+    var map = new SourceMapConsumer({
+      "version": 3,
+      "file": "foo.js",
+      "sourceRoot": "file:///Users/AlGore/Invented/The/Internet/",
+      "sources": ["/a"],
+      "names": [],
+      "mappings": "AACA",
+      "sourcesContent": ["foo"]
+    });
+
+    var s = map.sources[0];
+    assert.equal(map.sourceContentFor(s), "foo");
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-consumer', do_throw);

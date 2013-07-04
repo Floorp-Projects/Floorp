@@ -78,16 +78,6 @@ void fail(const char* msg, ...)
   ++gFailCount;
 }
 
-/**
- * Prints the given string prepending "TEST-PASS | " for the benefit of
- * the test harness and with "\n" at the end, to be used at the end of a
- * successful test function.
- */
-void passed(const char* test)
-{
-  printf("TEST-PASS | %s\n", test);
-}
-
 int NS_main(int argc, NS_tchar **argv)
 {
   printf("Running TestAUSReadStrings tests\n");

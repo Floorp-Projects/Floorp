@@ -20,12 +20,10 @@ XPIDL_SOURCES += [
     'nsIDOMNSEditableElement.idl',
     'nsIDOMNode.idl',
     'nsIDOMNodeList.idl',
-    'nsIDOMNodeSelector.idl',
     'nsIDOMProcessingInstruction.idl',
     'nsIDOMText.idl',
     'nsIDOMUserDataHandler.idl',
     'nsIDOMXMLDocument.idl',
-    'nsIDocumentRegister.idl',
     'nsIInlineEventHandlers.idl',
 ]
 

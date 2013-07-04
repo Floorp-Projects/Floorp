@@ -10,6 +10,7 @@
 #ifndef nsDOMAttributeMap_h
 #define nsDOMAttributeMap_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
@@ -181,7 +182,7 @@ public:
     // No supported names we want to show up in iteration.
   }
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   nsCOMPtr<Element> mContent;

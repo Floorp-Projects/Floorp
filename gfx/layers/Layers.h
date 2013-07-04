@@ -466,6 +466,21 @@ public:
    */
   virtual void SetIsFirstPaint() {}
 
+  /**
+   * Make sure that the previous transaction has been entirely
+   * completed.
+   *
+   * Note: This may sychronously wait on a remote compositor
+   * to complete rendering.
+   */
+  virtual void FlushRendering() { }
+
+  /**
+   * Checks if we need to invalidate the OS widget to trigger
+   * painting when updating this layer manager.
+   */
+  virtual bool NeedsWidgetInvalidation() { return true; }
+
   // We always declare the following logging symbols, because it's
   // extremely tricky to conditionally declare them.  However, for
   // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial
@@ -640,12 +655,7 @@ public:
      * transaction where there is no possibility of redrawing the content, so the
      * implementation should be ready for that.
      */
-    CONTENT_MAY_CHANGE_TRANSFORM = 0x08,
-    /**
-     * This indicates that the content does not want to be snapped to pixel
-     * boundaries, so the layers code should not do transform snapping.
-     */
-    CONTENT_DISABLE_TRANSFORM_SNAPPING = 0x10
+    CONTENT_MAY_CHANGE_TRANSFORM = 0x08
   };
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1768,13 +1778,13 @@ class RefLayer : public ContainerLayer {
 
 private:
   virtual void InsertAfter(Layer* aChild, Layer* aAfter)
-  { MOZ_NOT_REACHED("no"); }
+  { MOZ_CRASH(); }
 
   virtual void RemoveChild(Layer* aChild)
-  { MOZ_NOT_REACHED("no"); }
+  { MOZ_CRASH(); }
 
   virtual void RepositionChild(Layer* aChild, Layer* aAfter)
-  { MOZ_NOT_REACHED("no"); }
+  { MOZ_CRASH(); }
 
   using ContainerLayer::SetFrameMetrics;
 

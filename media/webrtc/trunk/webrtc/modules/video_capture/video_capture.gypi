@@ -48,7 +48,7 @@
           ],
         }, {  # include_internal_video_capture == 1
           'conditions': [
-            ['OS=="linux"', {
+            ['include_v4l2_video_capture==1', {
               'include_dirs': [
                 'linux',
               ],
@@ -157,7 +157,7 @@
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS=="mac" or OS=="linux"', {
+            ['OS!="win" and OS!="android"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -165,11 +165,15 @@
                 '-lpthread -lm',
               ],
             }],
+            ['include_v4l2_video_capture==1', {
+              'libraries': [
+                '-lXext',
+                '-lX11',
+              ],
+            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
-                '-lXext',
-                '-lX11',
               ],
             }],
             ['OS=="mac"', {

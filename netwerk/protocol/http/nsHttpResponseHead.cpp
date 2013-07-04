@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdlib.h>
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "nsHttpResponseHead.h"
 #include "nsPrintfCString.h"
 #include "prprf.h"
@@ -98,7 +100,7 @@ nsresult
 nsHttpResponseHead::Parse(char *block)
 {
 
-    LOG(("nsHttpResponseHead::Parse [this=%x]\n", this));
+    LOG(("nsHttpResponseHead::Parse [this=%p]\n", this));
 
     // this command works on a buffer as prepared by Flatten, as such it is
     // not very forgiving ;-)
@@ -223,7 +225,7 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
     *result = 0;
 
     if (NS_FAILED(GetDateValue(&dateValue))) {
-        LOG(("nsHttpResponseHead::ComputeCurrentAge [this=%x] "
+        LOG(("nsHttpResponseHead::ComputeCurrentAge [this=%p] "
              "Date response header not set!\n", this));
         // Assume we have a fast connection and that our clock
         // is in sync with the server.
@@ -409,7 +411,7 @@ nsHttpResponseHead::ExpiresInPast() const
 nsresult
 nsHttpResponseHead::UpdateHeaders(const nsHttpHeaderArray &headers)
 {
-    LOG(("nsHttpResponseHead::UpdateHeaders [this=%x]\n", this));
+    LOG(("nsHttpResponseHead::UpdateHeaders [this=%p]\n", this));
 
     uint32_t i, count = headers.Count();
     for (i=0; i<count; ++i) {
@@ -509,14 +511,22 @@ nsHttpResponseHead::GetMaxAgeValue(uint32_t *result) const
     if (!val)
         return NS_ERROR_NOT_AVAILABLE;
 
-    const char *p = PL_strcasestr(val, "max-age=");
+    const char *p = nsHttp::FindToken(val, "max-age", HTTP_HEADER_VALUE_SEPS "=");
     if (!p)
         return NS_ERROR_NOT_AVAILABLE;
+    p += 7;
+    while (*p == ' ' || *p == '\t')
+        ++p;
+    if (*p != '=')
+        return NS_ERROR_NOT_AVAILABLE;
+    ++p;
+    while (*p == ' ' || *p == '\t')
+        ++p;
 
-    int maxAgeValue = atoi(p + 8);
+    int maxAgeValue = atoi(p);
     if (maxAgeValue < 0)
         maxAgeValue = 0;
-    *result = uint32_t(maxAgeValue);
+    *result = static_cast<uint32_t>(maxAgeValue);
     return NS_OK;
 }
 

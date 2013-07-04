@@ -21,20 +21,7 @@ this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
 
 /**
  * A simple side menu, with the ability of grouping menu items.
- *
- * You can use this widget alone, but it works great with a MenuContainer!
- * In that case, you should never need to access the methods in the
- * SideMenuWidget directly, use the wrapper MenuContainer instance instead.
- *
- * @see ViewHelpers.jsm
- *
- * function MyView() {
- *   this.node = new SideMenuWidget(document.querySelector(".my-node"));
- * }
- * ViewHelpers.create({ constructor: MyView, proto: MenuContainer.prototype }, {
- *   myMethod: function() {},
- *   ...
- * });
+ * This widget should be used in tandem with the WidgetMethods in ViewHelpers.jsm
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
@@ -77,14 +64,6 @@ SideMenuWidget.prototype = {
    * Specifies if groups in this container should be sorted alphabetically.
    */
   sortedGroups: true,
-
-  /**
-   * Specifies if when an item is selected in this container (via the
-   * selectedItem setter), that respective item should be focused as well.
-   * You can enable this flag, for example, to maintain a certain node
-   * selected but visually indicate a different selection in this container.
-   */
-  preventFocusOnSelection: false,
 
   /**
    * Specifies if this container should try to keep the selected item visible.
@@ -141,9 +120,6 @@ SideMenuWidget.prototype = {
 
     if (this.maintainSelectionVisible) {
       this.ensureSelectionIsVisible({ withGroup: true, delayed: true });
-    }
-    if (this._orderedMenuElementsArray.length == 1) {
-      this._list.focus();
     }
     if (maintainScrollAtBottom) {
       this._list.scrollTop = this._list.scrollHeight;
@@ -226,7 +202,6 @@ SideMenuWidget.prototype = {
         node.classList.add("selected");
         node.parentNode.classList.add("selected");
         this._selectedItem = node;
-        !this.preventFocusOnSelection && node.focus();
       } else {
         node.classList.remove("selected");
         node.parentNode.classList.remove("selected");

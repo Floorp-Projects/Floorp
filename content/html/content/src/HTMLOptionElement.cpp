@@ -32,27 +32,7 @@
  * Implementation of &lt;option&gt;
  */
 
-nsGenericHTMLElement*
-NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                        mozilla::dom::FromParser aFromParser)
-{
-  /*
-   * HTMLOptionElement's will be created without a nsINodeInfo passed in
-   * if someone says "var opt = new Option();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
-   */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
-  if (!nodeInfo) {
-    nsCOMPtr<nsIDocument> doc = nsContentUtils::GetDocumentFromCaller();
-    NS_ENSURE_TRUE(doc, nullptr);
-
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
-                                                   kNameSpaceID_XHTML,
-                                                   nsIDOMNode::ELEMENT_NODE);
-  }
-
-  return new mozilla::dom::HTMLOptionElement(nodeInfo.forget());
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Option)
 
 namespace mozilla {
 namespace dom {
@@ -82,11 +62,11 @@ NS_IMPL_RELEASE_INHERITED(HTMLOptionElement, Element)
 
 // QueryInterface implementation for HTMLOptionElement
 NS_INTERFACE_TABLE_HEAD(HTMLOptionElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLOptionElement,
-                                   nsIDOMHTMLOptionElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOptionElement,
-                                               nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLOptionElement,
+                                nsIDOMHTMLOptionElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
@@ -99,7 +79,7 @@ HTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-nsHTMLFormElement*
+mozilla::dom::HTMLFormElement*
 HTMLOptionElement::GetForm()
 {
   HTMLSelectElement* selectControl = GetSelect();

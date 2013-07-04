@@ -6,12 +6,12 @@
  */
 
 #include "SkStippleMaskFilter.h"
-
+#include "SkString.h"
 
 bool SkStippleMaskFilter::filterMask(SkMask* dst,
                                      const SkMask& src,
                                      const SkMatrix& matrix,
-                                     SkIPoint* margin) {
+                                     SkIPoint* margin) const {
 
     if (src.fFormat != SkMask::kA8_Format) {
         return false;
@@ -45,4 +45,8 @@ bool SkStippleMaskFilter::filterMask(SkMask* dst,
     return true;
 }
 
-SK_DEFINE_FLATTENABLE_REGISTRAR(SkStippleMaskFilter)
+#ifdef SK_DEVELOPER
+void SkStippleMaskFilter::toString(SkString* str) const {
+    str->append("SkStippleMaskFilter: ()");
+}
+#endif

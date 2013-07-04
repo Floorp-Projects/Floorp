@@ -42,8 +42,8 @@ public:
   virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> MaskUnits();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> MaskContentUnits();
+  already_AddRefed<SVGAnimatedEnumeration> MaskUnits();
+  already_AddRefed<SVGAnimatedEnumeration> MaskContentUnits();
   already_AddRefed<SVGAnimatedLength> X();
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();

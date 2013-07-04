@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MoveEmitter-arm.h"
+#include "ion/arm/MoveEmitter-arm.h"
 
 using namespace js;
 using namespace js::ion;
@@ -190,7 +190,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             masm.ma_str(from.reg(), toOperand(to, false));
             break;
           default:
-            JS_NOT_REACHED("strange move!");
+            MOZ_ASSUME_UNREACHABLE("strange move!");
         }
     } else if (to.isGeneralReg()) {
         JS_ASSERT(from.isMemory() || from.isEffectiveAddress());

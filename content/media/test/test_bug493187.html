@@ -8,7 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493187
   <title>Bug 493187 - enter HAVE_FUTURE_DATA when seeking within buffered data even if new data isn't arriving</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <script type="text/javascript" src="use_large_cache.js"></script>
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
@@ -62,8 +61,11 @@ function startTest(test, token) {
   document.body.appendChild(v);
 }
 
-manager.runTests(gSeekTests, startTest);
-
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
+function beginTest() {
+  manager.runTests(gSeekTests, startTest);
+}
 </script>
 </pre>
 </body>

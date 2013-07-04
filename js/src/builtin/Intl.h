@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Intl_h___
-#define Intl_h___
+#ifndef builtin_Intl_h
+#define builtin_Intl_h
+
+#include "jsapi.h"
 
 #include "js/RootingAPI.h"
 
@@ -184,4 +186,4 @@ intl_FormatDateTime(JSContext *cx, unsigned argc, Value *vp);
 
 } // namespace js
 
-#endif /* Intl_h___ */
+#endif /* builtin_Intl_h */

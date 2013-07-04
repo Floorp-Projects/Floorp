@@ -7,7 +7,7 @@
 }
 
 #rightBox {
-  background-image: url("chrome://branding/content/about-wordmark.png");
+  background-image: url("chrome://branding/content/about-wordmark.svg");
   background-repeat: no-repeat;
   /* padding-top creates room for the wordmark */
   padding-top: 38px;

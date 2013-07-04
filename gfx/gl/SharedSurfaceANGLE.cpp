@@ -232,14 +232,18 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl, ID3D10Device1* d3d,
     // Ok, we have a valid PBuffer with ShareHandle.
     // Let's attach it to D3D.
     hr = d3d->OpenSharedResource(shareHandle,
-                                         __uuidof(ID3D10Texture2D),
-                                         getter_AddRefs(texture));
-    if (FAILED(hr))
+                                 __uuidof(ID3D10Texture2D),
+                                 getter_AddRefs(texture));
+    if (FAILED(hr)) {
+        NS_ERROR("Failed to open shared resource!");
         goto CleanUpIfFailed;
+    }
 
     hr = d3d->CreateShaderResourceView(texture, nullptr, getter_AddRefs(srv));
-    if (FAILED(hr))
+    if (FAILED(hr)) {
+        NS_ERROR("Failed to create SRV!");
         goto CleanUpIfFailed;
+    }
 
     failed = false;
 
@@ -247,7 +251,6 @@ CleanUpIfFailed:
     if (failed) {
         NS_WARNING("CleanUpIfFailed");
         egl->fDestroySurface(egl->Display(), pbuffer);
-        MOZ_CRASH();
         return nullptr;
     }
 

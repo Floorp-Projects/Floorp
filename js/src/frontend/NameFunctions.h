@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NameFunctions_h__
-#define NameFunctions_h__
+#ifndef frontend_NameFunctions_h
+#define frontend_NameFunctions_h
 
 struct JSContext;
 
 namespace js {
 namespace frontend {
 
-struct ParseNode;
+class ParseNode;
 
 bool
 NameFunctions(JSContext *cx, ParseNode *pn);
@@ -20,4 +20,4 @@ NameFunctions(JSContext *cx, ParseNode *pn);
 } /* namespace frontend */
 } /* namespace js */
 
-#endif /* NameFunctions_h__ */
+#endif /* frontend_NameFunctions_h */

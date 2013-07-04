@@ -44,7 +44,7 @@ public:
   LayerManagerComposite* layer_manager() const { return mLayerManager; }
 
   uint64_t GetId() const { return mId; }
-  ContainerLayer* GetRoot() const { return mRoot; }
+  Layer* GetRoot() const { return mRoot; }
 
   // ISurfaceAllocator
   virtual bool AllocShmem(size_t aSize,
@@ -82,7 +82,8 @@ protected:
                                 gfx3DMatrix* aTransform) MOZ_OVERRIDE;
 
   virtual PGrallocBufferParent*
-  AllocPGrallocBuffer(const gfxIntSize& aSize, const gfxContentType& aContent,
+  AllocPGrallocBuffer(const gfxIntSize& aSize,
+                      const uint32_t& aFormat, const uint32_t& aUsage,
                       MaybeMagicGrallocBufferHandle* aOutHandle) MOZ_OVERRIDE;
   virtual bool
   DeallocPGrallocBuffer(PGrallocBufferParent* actor) MOZ_OVERRIDE;
@@ -100,7 +101,7 @@ private:
   ShadowLayersManager* mShadowLayersManager;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
-  nsRefPtr<ContainerLayer> mRoot;
+  nsRefPtr<Layer> mRoot;
   // When this is nonzero, it refers to a layer tree owned by the
   // compositor thread.  It is always true that
   //   mId != 0 => mRoot == null

@@ -9,6 +9,7 @@
 
 #include "nsCSSRules.h"
 #include "nsCSSValue.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/css/ImportRule.h"
 #include "mozilla/css/NameSpaceRule.h"
 
@@ -117,7 +118,7 @@ Rule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 
 size_t
 Rule::SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,
-                                         nsMallocSizeOfFun aMallocSizeOf,
+                                         MallocSizeOf aMallocSizeOf,
                                          void* aData)
 {
   return aElement->SizeOfIncludingThis(aMallocSizeOf);
@@ -328,7 +329,7 @@ CharsetRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 /* virtual */ size_t
-CharsetRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+CharsetRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 
@@ -504,7 +505,7 @@ ImportRule::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
 }
 
 /* virtual */ size_t
-ImportRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+ImportRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 
@@ -766,7 +767,7 @@ GroupRule::DeleteRule(uint32_t aIndex)
 }
 
 /* virtual */ size_t
-GroupRule::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return mRules.SizeOfExcludingThis(Rule::SizeOfCOMArrayElementIncludingThis,
                                     aMallocSizeOf);
@@ -970,7 +971,7 @@ MediaRule::UseForPresentation(nsPresContext* aPresContext,
 }
 
 /* virtual */ size_t
-MediaRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+MediaRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += GroupRule::SizeOfExcludingThis(aMallocSizeOf);
@@ -1200,7 +1201,7 @@ DocumentRule::URL::~URL()
 }
 
 /* virtual */ size_t
-DocumentRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+DocumentRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += GroupRule::SizeOfExcludingThis(aMallocSizeOf);
@@ -1361,7 +1362,7 @@ NameSpaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 /* virtual */ size_t
-NameSpaceRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+NameSpaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 
@@ -1901,7 +1902,7 @@ nsCSSFontFaceRule::GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue)
 }
 
 /* virtual */ size_t
-nsCSSFontFaceRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsCSSFontFaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 
@@ -2155,7 +2156,7 @@ nsCSSFontFeatureValuesRule::AddValueList(int32_t aVariantAlternate,
 
 size_t
 nsCSSFontFeatureValuesRule::SizeOfIncludingThis(
-  nsMallocSizeOfFun aMallocSizeOf) const
+  MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }
@@ -2261,7 +2262,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSKeyframeRule)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSKeyframeRule)
   if (tmp->mDOMDeclaration) {
     tmp->mDOMDeclaration->DropReference();
-    ImplCycleCollectionUnlink(tmp->mDOMDeclaration);
+    tmp->mDOMDeclaration = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSKeyframeRule)
@@ -2424,7 +2425,7 @@ nsCSSKeyframeRule::ChangeDeclaration(css::Declaration* aDeclaration)
 }
 
 /* virtual */ size_t
-nsCSSKeyframeRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsCSSKeyframeRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 
@@ -2639,7 +2640,7 @@ nsCSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
 }
 
 /* virtual */ size_t
-nsCSSKeyframesRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsCSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += GroupRule::SizeOfExcludingThis(aMallocSizeOf);
@@ -2744,13 +2745,23 @@ nsCSSPageRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF(nsCSSPageRule)
-NS_IMPL_RELEASE(nsCSSPageRule)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSPageRule)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSPageRule)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSPageRule)
+  if (tmp->mDOMDeclaration) {
+    tmp->mDOMDeclaration->DropReference();
+    tmp->mDOMDeclaration = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSPageRule)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMDeclaration)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(CSSPageRule, nsCSSPageRule)
 
 // QueryInterface implementation for nsCSSPageRule
-NS_INTERFACE_MAP_BEGIN(nsCSSPageRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
@@ -2860,7 +2871,7 @@ nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
 }
 
 /* virtual */ size_t
-nsCSSPageRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsCSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }
@@ -2995,7 +3006,7 @@ CSSSupportsRule::SetConditionText(const nsAString& aConditionText)
 }
 
 /* virtual */ size_t
-CSSSupportsRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += css::GroupRule::SizeOfExcludingThis(aMallocSizeOf);

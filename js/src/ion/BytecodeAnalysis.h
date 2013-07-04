@@ -4,17 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_bytecodeanalysis_h__
-#define jsion_bytecodeanalysis_h__
+#ifndef ion_BytecodeAnalysis_h
+#define ion_BytecodeAnalysis_h
 
 #include "jscntxt.h"
 
-#include "IonAllocPolicy.h"
+#include "ion/IonAllocPolicy.h"
 #include "js/Vector.h"
 
 namespace js {
 namespace ion {
-
 
 // Basic information about bytecodes in the script.  Used to help baseline compilation.
 struct BytecodeInfo
@@ -60,4 +59,4 @@ class BytecodeAnalysis
 } // namespace ion
 } // namespace js
 
-#endif // jsion_bytecodeanalysis_h__
+#endif /* ion_BytecodeAnalysis_h */

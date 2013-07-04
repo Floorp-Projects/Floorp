@@ -172,7 +172,7 @@ nsInputStreamPump::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsInputStreamPump::Cancel(nsresult status)
 {
-    LOG(("nsInputStreamPump::Cancel [this=%x status=%x]\n",
+    LOG(("nsInputStreamPump::Cancel [this=%p status=%x]\n",
         this, status));
 
     if (NS_FAILED(mStatus)) {
@@ -199,7 +199,7 @@ nsInputStreamPump::Cancel(nsresult status)
 NS_IMETHODIMP
 nsInputStreamPump::Suspend()
 {
-    LOG(("nsInputStreamPump::Suspend [this=%x]\n", this));
+    LOG(("nsInputStreamPump::Suspend [this=%p]\n", this));
     NS_ENSURE_TRUE(mState != STATE_IDLE, NS_ERROR_UNEXPECTED);
     ++mSuspendCount;
     return NS_OK;
@@ -208,7 +208,7 @@ nsInputStreamPump::Suspend()
 NS_IMETHODIMP
 nsInputStreamPump::Resume()
 {
-    LOG(("nsInputStreamPump::Resume [this=%x]\n", this));
+    LOG(("nsInputStreamPump::Resume [this=%p]\n", this));
     NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
     NS_ENSURE_TRUE(mState != STATE_IDLE, NS_ERROR_UNEXPECTED);
 
@@ -351,7 +351,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 NS_IMETHODIMP
 nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 {
-    LOG(("nsInputStreamPump::OnInputStreamReady [this=%x]\n", this));
+    LOG(("nsInputStreamPump::OnInputStreamReady [this=%p]\n", this));
 
     PROFILER_LABEL("Input", "nsInputStreamPump::OnInputStreamReady");
     // this function has been called from a PLEvent, so we can safely call
@@ -401,7 +401,7 @@ uint32_t
 nsInputStreamPump::OnStateStart()
 {
     PROFILER_LABEL("nsInputStreamPump", "OnStateStart");
-    LOG(("  OnStateStart [this=%x]\n", this));
+    LOG(("  OnStateStart [this=%p]\n", this));
 
     nsresult rv;
 
@@ -429,7 +429,7 @@ uint32_t
 nsInputStreamPump::OnStateTransfer()
 {
     PROFILER_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
-    LOG(("  OnStateTransfer [this=%x]\n", this));
+    LOG(("  OnStateTransfer [this=%p]\n", this));
 
     // if canceled, go directly to STATE_STOP...
     if (NS_FAILED(mStatus))
@@ -537,7 +537,7 @@ uint32_t
 nsInputStreamPump::OnStateStop()
 {
     PROFILER_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
-    LOG(("  OnStateStop [this=%x status=%x]\n", this, mStatus));
+    LOG(("  OnStateStop [this=%p status=%x]\n", this, mStatus));
 
     // if an error occurred, we must be sure to pass the error onto the async
     // stream.  in some cases, this is redundant, but since close is idempotent,

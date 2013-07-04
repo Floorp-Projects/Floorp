@@ -241,6 +241,10 @@ public abstract class Environment {
   }
 
   public void setJSONForAddons(String json) throws Exception {
+    if (json == null || "null".equals(json)) {
+      addons = null;
+      return;
+    }
     addons = new JSONObject(json);
   }
 

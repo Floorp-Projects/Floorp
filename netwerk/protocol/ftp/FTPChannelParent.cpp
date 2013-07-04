@@ -60,11 +60,35 @@ NS_IMPL_ISUPPORTS4(FTPChannelParent,
 // FTPChannelParent::PFTPChannelParent
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// FTPChannelParent methods
+//-----------------------------------------------------------------------------
+
 bool
-FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
-                                const uint64_t& aStartPos,
-                                const nsCString& aEntityID,
-                                const OptionalInputStreamParams& aUploadStream)
+FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs)
+{
+  switch (aArgs.type()) {
+  case FTPChannelCreationArgs::TFTPChannelOpenArgs:
+  {
+    const FTPChannelOpenArgs& a = aArgs.get_FTPChannelOpenArgs();
+    return DoAsyncOpen(a.uri(), a.startPos(), a.entityID(), a.uploadStream());
+  }
+  case FTPChannelCreationArgs::TFTPChannelConnectArgs:
+  {
+    const FTPChannelConnectArgs& cArgs = aArgs.get_FTPChannelConnectArgs();
+    return ConnectChannel(cArgs.channelId());
+  }
+  default:
+    NS_NOTREACHED("unknown open type");
+    return false;
+  }
+}
+
+bool
+FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
+                              const uint64_t& aStartPos,
+                              const nsCString& aEntityID,
+                              const OptionalInputStreamParams& aUploadStream)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri)
@@ -73,7 +97,7 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
 #ifdef DEBUG
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
-  LOG(("FTPChannelParent RecvAsyncOpen [this=%x uri=%s]\n",
+  LOG(("FTPChannelParent DoAsyncOpen [this=%p uri=%s]\n",
        this, uriSpec.get()));
 #endif
 
@@ -117,7 +141,7 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
 }
 
 bool
-FTPChannelParent::RecvConnectChannel(const uint32_t& channelId)
+FTPChannelParent::ConnectChannel(const uint32_t& channelId)
 {
   nsresult rv;
 
@@ -164,7 +188,7 @@ FTPChannelParent::RecvResume()
 NS_IMETHODIMP
 FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  LOG(("FTPChannelParent::OnStartRequest [this=%x]\n", this));
+  LOG(("FTPChannelParent::OnStartRequest [this=%p]\n", this));
 
   nsFtpChannel* chan = static_cast<nsFtpChannel*>(aRequest);
   int64_t contentLength;
@@ -192,7 +216,7 @@ FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
                                 nsISupports* aContext,
                                 nsresult aStatusCode)
 {
-  LOG(("FTPChannelParent::OnStopRequest: [this=%x status=%ul]\n",
+  LOG(("FTPChannelParent::OnStopRequest: [this=%p status=%ul]\n",
        this, aStatusCode));
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode)) {
@@ -213,7 +237,7 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
                                   uint64_t aOffset,
                                   uint32_t aCount)
 {
-  LOG(("FTPChannelParent::OnDataAvailable [this=%x]\n", this));
+  LOG(("FTPChannelParent::OnDataAvailable [this=%p]\n", this));
   
   nsCString data;
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);

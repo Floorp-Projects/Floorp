@@ -116,6 +116,7 @@ using namespace mozilla::system;
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "nsIMEStateManager.h"
 #include "nsDocument.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 
 extern void NS_ShutdownEventTargetChainItemRecyclePool();
 
@@ -272,6 +273,8 @@ nsLayoutStatics::Initialize()
 
   InitializeDateCacheCleaner();
 
+  HTMLVideoElement::Init();
+
   return NS_OK;
 }
 
@@ -380,7 +383,6 @@ nsLayoutStatics::Shutdown()
   nsLayoutUtils::Shutdown();
 
   nsHyphenationManager::Shutdown();
-  nsEditorSpellCheck::ShutDown();
   nsDOMMutationObserver::Shutdown();
 
   AudioChannelService::Shutdown();

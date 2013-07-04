@@ -309,7 +309,7 @@ void SkPushButtonWidget::onDraw(SkCanvas* canvas)
     }
 }
 
-SkView::Click* SkPushButtonWidget::onFindClickHandler(SkScalar x, SkScalar y)
+SkView::Click* SkPushButtonWidget::onFindClickHandler(SkScalar x, SkScalar y, unsigned modi)
 {
     this->acceptFocus();
     return new Click(this);
@@ -558,4 +558,3 @@ void SkBitmapView::onInflate(const SkDOM& dom, const SkDOM::Node* node)
 }
 
 #endif
-

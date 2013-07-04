@@ -45,13 +45,6 @@ TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
   return mNativeContext == aWidget->GetInputContext().mNativeIMEContext;
 }
 
-bool
-TextComposition::MatchesEventTarget(nsPresContext* aPresContext,
-                                    nsINode* aNode) const
-{
-  return mPresContext == aPresContext && mNode == aNode;
-}
-
 void
 TextComposition::DispatchEvent(nsGUIEvent* aEvent,
                                nsEventStatus* aStatus,
@@ -147,8 +140,7 @@ TextComposition::CompositionEventDispatcher::Run()
       break;
     }
     default:
-      MOZ_NOT_REACHED("Unsupported event");
-      break;
+      MOZ_CRASH("Unsupported event");
   }
   return NS_OK;
 }
@@ -195,13 +187,6 @@ TextComposition*
 TextCompositionArray::GetCompositionFor(nsIWidget* aWidget)
 {
   index_type i = IndexOf(aWidget);
-  return i != NoIndex ? &ElementAt(i) : nullptr;
-}
-
-TextComposition*
-TextCompositionArray::GetCompositionFor(nsPresContext* aPresContext)
-{
-  index_type i = IndexOf(aPresContext);
   return i != NoIndex ? &ElementAt(i) : nullptr;
 }
 

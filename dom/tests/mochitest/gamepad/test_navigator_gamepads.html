@@ -1,0 +1,91 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test gamepad</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var testNum = 0;
+var tests = [
+  check_first_gamepad,
+  check_second_gamepad,
+  check_gamepad_hole,
+  check_no_gamepads,
+];
+
+function run_next_test(event) {
+  SpecialPowers.executeSoon(function() { tests[testNum++](event); });
+}
+
+// gamepads should be empty first
+is(navigator.getGamepads().length, 0, "should be zero gamepads exposed");
+
+function connecthandler(e) {
+ run_next_test(e);
+}
+
+function disconnecthandler(e) {
+  run_next_test(e);
+}
+window.addEventListener("gamepadconnected", connecthandler);
+window.addEventListener("gamepaddisconnected", disconnecthandler);
+// Add a gamepad
+var index1 = GamepadService.addGamepad("test gamepad 1", // id
+                                       SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+                                       4, // buttons
+                                       2);// axes
+var index2;
+
+// Press a button to make the gamepad visible to the page.
+GamepadService.newButtonEvent(index1, 0, true);
+
+function check_first_gamepad(e) {
+  // First gamepad gets added.
+  is(e.gamepad.id, "test gamepad 1", "correct gamepad name");
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 1, "should have one gamepad exposed");
+  is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
+  // Add a second gamepad, should automatically show up.
+  index2 = GamepadService.addGamepad("test gamepad 2", // id
+                                     SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+                                     4, // buttons
+                                     2);// axes
+}
+
+function check_second_gamepad(e) {
+  // Second gamepad gets added.
+  is(e.gamepad.id, "test gamepad 2", "correct gamepad name");
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 2, "should have two gamepads exposed");
+  is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
+  // Now remove the first one.
+  GamepadService.removeGamepad(index1);
+}
+
+function check_gamepad_hole(e) {
+  // First gamepad gets removed.
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 2, "gamepads should have two entries");
+  is(gamepads[index1], null, "should be a hole in the gamepad list");
+  isnot(gamepads[index2], null, "second gamepad should exist");
+  // Now remove the second one.
+  GamepadService.removeGamepad(index2);
+}
+
+function check_no_gamepads(e) {
+  // Second gamepad gets removed.
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 0, "gamepads should be empty");
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>
+

@@ -2434,9 +2434,9 @@ CheckForLastRunCrash()
 #endif
   nsCOMPtr<nsIFile> lastMinidumpFile;
   CreateFileFromPath(lastMinidump.get(),
-                      getter_AddRefs(lastMinidumpFile));
+                     getter_AddRefs(lastMinidumpFile));
 
-  if (NS_FAILED(lastMinidumpFile->Exists(&exists)) || !exists) {
+  if (!lastMinidumpFile || NS_FAILED(lastMinidumpFile->Exists(&exists)) || !exists) {
     return false;
   }
 

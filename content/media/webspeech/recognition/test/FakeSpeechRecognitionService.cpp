@@ -74,7 +74,7 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_ERROR")) {
     mRecognition->DispatchError(SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-                                nsIDOMSpeechRecognitionError::NETWORK, // TODO different codes?
+                                SpeechRecognitionErrorCode::Network, // TODO different codes?
                                 NS_LITERAL_STRING("RECOGNITIONSERVICE_ERROR test event"));
 
   } else if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_FINAL_RESULT")) {

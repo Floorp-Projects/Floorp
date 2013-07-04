@@ -12,24 +12,9 @@ include $(DEPTH)/config/autoconf.mk
 FAIL_ON_WARNINGS := 1
 
 MODULE_NAME = identity
-LIBRARY_NAME = identity
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 IS_COMPONENT = 1
 EXPORT_LIBRARY = 1
-
-EXTRA_JS_MODULES = \
-	IdentityUtils.jsm \
-	Identity.jsm \
-	IdentityProvider.jsm \
-	IdentityStore.jsm \
-	jwcrypto.jsm \
-	LogUtils.jsm \
-	MinimalIdentity.jsm \
-	RelyingParty.jsm \
-	Sandbox.jsm \
-	$(NULL)
-
-JS_MODULES_PATH = $(FINAL_TARGET)/modules/identity
 
 include $(topsrcdir)/config/rules.mk

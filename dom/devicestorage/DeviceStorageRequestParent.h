@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_devicestorage_DeviceStorageRequestParent_h
 #define mozilla_dom_devicestorage_DeviceStorageRequestParent_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -50,7 +51,7 @@ private:
     virtual ~CancelableRunnable() {
     }
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() MOZ_OVERRIDE {
       nsresult rv = NS_OK;
       if (!mCanceled) {
         rv = CancelableRun();

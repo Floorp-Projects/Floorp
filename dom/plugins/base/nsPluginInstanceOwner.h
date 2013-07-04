@@ -7,6 +7,7 @@
 #ifndef nsPluginInstanceOwner_h_
 #define nsPluginInstanceOwner_h_
 
+#include "mozilla/Attributes.h"
 #include "npapi.h"
 #include "nsCOMPtr.h"
 #include "nsIPluginInstanceOwner.h"
@@ -60,19 +61,19 @@ public:
   
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget,
                     nsIInputStream *aPostStream, 
-                    void *aHeadersData, uint32_t aHeadersDataLen);
+                    void *aHeadersData, uint32_t aHeadersDataLen) MOZ_OVERRIDE;
   
-  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
+  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg) MOZ_OVERRIDE;
   
-  NPError    ShowNativeContextMenu(NPMenu* menu, void* event);
+  NPError    ShowNativeContextMenu(NPMenu* menu, void* event) MOZ_OVERRIDE;
   
   NPBool     ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
-                          double *destX, double *destY, NPCoordinateSpace destSpace);
+                          double *destX, double *destY, NPCoordinateSpace destSpace) MOZ_OVERRIDE;
   
   virtual NPError InitAsyncSurface(NPSize *size, NPImageFormat format,
-                                   void *initData, NPAsyncSurface *surface);
-  virtual NPError FinalizeAsyncSurface(NPAsyncSurface *surface);
-  virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
+                                   void *initData, NPAsyncSurface *surface) MOZ_OVERRIDE;
+  virtual NPError FinalizeAsyncSurface(NPAsyncSurface *surface) MOZ_OVERRIDE;
+  virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) MOZ_OVERRIDE;
 
   //nsIPluginTagInfo interface
   NS_DECL_NSIPLUGINTAGINFO

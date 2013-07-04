@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = urlclassifier_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
@@ -21,19 +20,9 @@ LOCAL_INCLUDES = \
   $(SQLITE_CFLAGS) \
   $(NULL)
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsUrlClassifierHashCompleter.js \
   nsURLClassifier.manifest \
-  $(NULL)
-
-# Same as JS components that are run through the pre-processor.
-EXTRA_PP_COMPONENTS = \
-  nsUrlClassifierLib.js \
-  nsUrlClassifierListManager.js \
-  $(NULL)
-
-EXTRA_JS_MODULES = \
-  SafeBrowsing.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

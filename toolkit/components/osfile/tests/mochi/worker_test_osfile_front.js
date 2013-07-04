@@ -31,6 +31,7 @@ self.onmessage = function onmessage_start(msg) {
     test_info();
     test_path();
     test_exists_file();
+    test_remove_file();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -818,4 +819,24 @@ function test_exists_file()
   ok(!OS.File.exists(dir_name) + ".tmp", "test_exists_file: directory does not exist");
 
   info("test_exists_file: complete");
+}
+
+/**
+ * Test the file |remove| method.
+ */
+function test_remove_file()
+{
+  let absent_file_name = "test_osfile_front_absent.tmp";
+
+  // Check that removing absent files is handled correctly
+  let exn = should_throw(function() {
+    OS.File.remove(absent_file_name, {ignoreAbsent: false});
+  });
+  ok(!!exn, "test_remove_file: throws if there is no such file");
+
+  exn = should_throw(function() {
+    OS.File.remove(absent_file_name, {ignoreAbsent: true});
+    OS.File.remove(absent_file_name);
+  });
+  ok(!exn, "test_remove_file: ignoreAbsent works");
 }

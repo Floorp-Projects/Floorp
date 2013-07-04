@@ -10,7 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = accessibility_xpcom_s
 LIBXUL_LIBRARY = 1
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -25,7 +24,7 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../generic \
   $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_ENABLE_GTK
 LOCAL_INCLUDES += \
   -I$(srcdir)/../atk \
   $(NULL)

@@ -88,6 +88,7 @@ SocialUI = {
           this._updateMenuItems();
 
           SocialFlyout.unload();
+          SocialChatBar.closeWindows();
           SocialChatBar.update();
           SocialShare.update();
           SocialSidebar.update();
@@ -112,7 +113,7 @@ SocialUI = {
           break;
         case "social:profile-changed":
           if (this._matchesCurrentProvider(data)) {
-            SocialToolbar.updateProfile();
+            SocialToolbar.updateProvider();
             SocialMark.update();
             SocialChatBar.update();
           }
@@ -324,7 +325,10 @@ SocialUI = {
   get _chromeless() {
     // Is this a popup window that doesn't want chrome shown?
     let docElem = document.documentElement;
-    let chromeless = docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
+    // extrachrome is not restored during session restore, so we need
+    // to check for the toolbar as well.
+    let chromeless = docElem.getAttribute("chromehidden").contains("extrachrome") ||
+                     docElem.getAttribute('chromehidden').contains("toolbar");
     // This property is "fixed" for a window, so avoid doing the check above
     // multiple times...
     delete this._chromeless;
@@ -343,6 +347,14 @@ SocialUI = {
 
 SocialChatBar = {
   init: function() {
+  },
+  closeWindows: function() {
+    // close all windows of type Social:Chat
+    let windows = Services.wm.getEnumerator("Social:Chat");
+    while (windows.hasMoreElements()) {
+      let win = windows.getNext();
+      win.close();
+    }
   },
   get chatbar() {
     return document.getElementById("pinnedchats");
@@ -668,43 +680,6 @@ SocialShare = {
 
     if (!aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https')))
       return false;
-
-    // The share button and context menus are disabled if the current tab has
-    // defined no-store. However, a share from other content is still possible
-    // (eg. via mozSocial or future use of web activities).  If the URI is not
-    // the current tab URI, we cannot validate the no-store header on the URI.
-    if (aURI != gBrowser.currentURI)
-      return true;
-
-    // we want to ensure this is a successful load and that the page is locally
-    // cacheable since that is a common mechanism for sensitive pages to avoid
-    // storing sensitive data in cache.
-    let channel = gBrowser.docShell.currentDocumentChannel;
-    let httpChannel;
-    try {
-      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
-    } catch (e) {
-      /* Not an HTTP channel. */
-      Cu.reportError("cannot share without httpChannel");
-      return false;
-    }
-
-    // Continue only if we have a 2xx status code.
-    try {
-      if (!httpChannel.requestSucceeded)
-        return false;
-    } catch (e) {
-      // Can't get response information from the httpChannel
-      // because mResponseHead is not available.
-      return false;
-    }
-
-    // Cache-Control: no-store.
-    if (httpChannel.isNoStoreResponse()) {
-      Cu.reportError("cannot share cache-control: no-share");
-      return false;
-    }
-
     return true;
   },
 
@@ -1038,7 +1013,7 @@ SocialToolbar = {
       if (tbi) {
         // SocialMark is the last button allways
         let next = SocialMark.button.previousSibling;
-        while (next != tbi.firstChild) {
+        while (next != this.button) {
           tbi.removeChild(next);
           next = SocialMark.button.previousSibling;
         }
@@ -1073,7 +1048,6 @@ SocialToolbar = {
     userDetailsBroadcaster.setAttribute("label", loggedInStatusValue);
   },
 
-  // XXX doesn't this need to be called for profile changes, given its use of provider.profile?
   updateButton: function SocialToolbar_updateButton() {
     this._updateButtonHiddenState();
     let panel = document.getElementById("social-notification-panel");

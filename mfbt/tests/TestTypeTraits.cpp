@@ -8,8 +8,11 @@
 
 using mozilla::IsBaseOf;
 using mozilla::IsConvertible;
+using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
+using mozilla::MakeSigned;
+using mozilla::MakeUnsigned;
 
 MOZ_STATIC_ASSERT(!IsSigned<bool>::value, "bool shouldn't be signed");
 MOZ_STATIC_ASSERT(IsUnsigned<bool>::value, "bool should be unsigned");
@@ -149,6 +152,57 @@ TestIsConvertible()
   //MOZ_ASSERT((!IsConvertible<C, A>::value),
   //           "C doesn't convert to A (private inheritance)");
 }
+
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<const unsigned char>::Type, const signed char>::value),
+                  "const unsigned char won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<volatile unsigned short>::Type, volatile signed short>::value),
+                  "volatile unsigned short won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<const volatile unsigned int>::Type, const volatile signed int>::value),
+                  "const volatile unsigned int won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<unsigned long>::Type, signed long>::value),
+                  "unsigned long won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<const signed char>::Type, const signed char>::value),
+                  "const signed char won't signify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<volatile signed short>::Type, volatile signed short>::value),
+                  "volatile signed short won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<const volatile signed int>::Type, const volatile signed int>::value),
+                  "const volatile signed int won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<signed long>::Type, signed long>::value),
+                  "signed long won't signify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<char>::Type, signed char>::value),
+                  "char won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<volatile char>::Type, volatile signed char>::value),
+                  "volatile char won't signify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeSigned<const char>::Type, const signed char>::value),
+                  "const char won't signify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const signed char>::Type, const unsigned char>::value),
+                  "const signed char won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<volatile signed short>::Type, volatile unsigned short>::value),
+                  "volatile signed short won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const volatile signed int>::Type, const volatile unsigned int>::value),
+                  "const volatile signed int won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<signed long>::Type, unsigned long>::value),
+                  "signed long won't unsignify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const unsigned char>::Type, const unsigned char>::value),
+                  "const unsigned char won't unsignify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<volatile unsigned short>::Type, volatile unsigned short>::value),
+                  "volatile unsigned short won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const volatile unsigned int>::Type, const volatile unsigned int>::value),
+                  "const volatile unsigned int won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<unsigned long>::Type, unsigned long>::value),
+                  "signed long won't unsignify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<char>::Type, unsigned char>::value),
+                  "char won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<volatile char>::Type, volatile unsigned char>::value),
+                  "volatile char won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const char>::Type, const unsigned char>::value),
+                  "const char won't unsignify correctly");
 
 int
 main()

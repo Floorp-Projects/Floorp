@@ -5,3 +5,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['tests']
+
+EXTRA_JS_MODULES += [
+    'DeferredTask.jsm',
+    'Deprecated.jsm',
+    'Dict.jsm',
+    'FileUtils.jsm',
+    'Geometry.jsm',
+    'InlineSpellChecker.jsm',
+    'NewTabUtils.jsm',
+    'PageMenu.jsm',
+    'PopupNotifications.jsm',
+    'Preferences.jsm',
+    'PrivateBrowsingUtils.jsm',
+    'Promise.jsm',
+    'PropertyListUtils.jsm',
+    'RemoteWebProgress.jsm',
+    'Sqlite.jsm',
+    'Task.jsm',
+    'TelemetryTimestamps.jsm',
+    'Timer.jsm',
+    'debug.js',
+]
+

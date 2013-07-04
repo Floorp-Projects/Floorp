@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "tests.h"
+#include "jsapi-tests/tests.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -63,7 +63,7 @@ BEGIN_TEST(testIndexToString)
         CHECK(str);
 
         if (!js::StaticStrings::hasUint(u))
-            CHECK(cx->compartment->dtoaCache.lookup(10, u) == str);
+            CHECK(cx->compartment()->dtoaCache.lookup(10, u) == str);
 
         JSBool match = JS_FALSE;
         CHECK(JS_StringEqualsAscii(cx, str, tests[i].expected, &match));

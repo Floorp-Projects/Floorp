@@ -409,7 +409,7 @@ bool Histogram::HasValidRangeChecksum() const {
   return CalculateRangeChecksum() == range_checksum_;
 }
 
-size_t Histogram::SizeOfIncludingThis(size_t (*aMallocSizeOf)(const void*))
+size_t Histogram::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += aMallocSizeOf(this);
@@ -420,7 +420,7 @@ size_t Histogram::SizeOfIncludingThis(size_t (*aMallocSizeOf)(const void*))
   return n;
 }
 
-size_t Histogram::SampleSet::SizeOfExcludingThis(size_t (*aMallocSizeOf)(const void*))
+size_t Histogram::SampleSet::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   // We're not allowed to do deep dives into STL data structures.  This
   // is as close as we can get to measuring this array.

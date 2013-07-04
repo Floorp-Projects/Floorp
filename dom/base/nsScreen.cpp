@@ -198,7 +198,7 @@ nsScreen::GetMozOrientation(nsString& aOrientation)
     break;
   case eScreenOrientation_None:
   default:
-    MOZ_NOT_REACHED("Unacceptable mOrientation value");
+    MOZ_CRASH("Unacceptable mOrientation value");
   }
 }
 
@@ -224,9 +224,7 @@ nsScreen::GetLockOrientationPermission() const
     return LOCK_ALLOWED;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  owner->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = owner->GetDoc();
   if (!doc || doc->Hidden()) {
     return LOCK_DENIED;
   }
@@ -238,10 +236,7 @@ nsScreen::GetLockOrientationPermission() const
   }
 
   // Other content must be full-screen in order to lock orientation.
-  bool fullscreen;
-  domDoc->GetMozFullScreen(&fullscreen);
-
-  return fullscreen ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
+  return doc->MozFullScreen() ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
 }
 
 NS_IMETHODIMP
@@ -376,8 +371,7 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
 
   // This is only for compilers that don't understand that the previous switch
   // will always return.
-  MOZ_NOT_REACHED("unexpected lock orientation permission value");
-  return false;
+  MOZ_CRASH("unexpected lock orientation permission value");
 }
 
 void
@@ -413,15 +407,15 @@ nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
 #endif
 
   nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetCurrentTarget();
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(target);
-  MOZ_ASSERT(target && doc);
+  MOZ_ASSERT(target);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);
+  MOZ_ASSERT(doc);
 
   // We have to make sure that the event we got is the event sent when
   // fullscreen is disabled because we could get one when fullscreen
   // got enabled if the lock call is done at the same moment.
-  bool fullscreen;
-  doc->GetMozFullScreen(&fullscreen);
-  if (fullscreen) {
+  if (doc->MozFullScreen()) {
     return NS_OK;
   }
 

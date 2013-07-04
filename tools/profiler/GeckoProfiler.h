@@ -95,7 +95,8 @@ static inline void profiler_shutdown() {};
 //       best to sample at this interval. The profiler visualization
 //       should represent the actual sampling accuracy.
 static inline void profiler_start(int aProfileEntries, int aInterval,
-                              const char** aFeatures, uint32_t aFeatureCount) {}
+                              const char** aFeatures, uint32_t aFeatureCount,
+                              const char** aThreadNameFilters, uint32_t aFilterCount) {}
 
 // Stop the profiler and discard the profile. Call 'profiler_save' before this
 // to retrieve the profile.
@@ -143,6 +144,8 @@ static inline void profiler_unregister_thread() {}
 static inline void profiler_js_operation_callback() {}
 
 static inline double profiler_time() { return 0; }
+
+static inline bool profiler_in_privacy_mode() { return false; }
 
 #else
 

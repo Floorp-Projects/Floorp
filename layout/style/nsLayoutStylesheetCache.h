@@ -9,6 +9,7 @@
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 
 class nsIFile;
 class nsCSSStyleSheet;
@@ -38,7 +39,7 @@ class nsLayoutStylesheetCache MOZ_FINAL
 
   static void Shutdown();
 
-  static size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  static size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
   nsLayoutStylesheetCache();
@@ -50,7 +51,7 @@ private:
   static void LoadSheet(nsIURI* aURI, nsRefPtr<nsCSSStyleSheet> &aSheet,
                         bool aEnableUnsafeRules);
 
-  size_t SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static nsLayoutStylesheetCache* gStyleCache;
   static mozilla::css::Loader* gCSSLoader;

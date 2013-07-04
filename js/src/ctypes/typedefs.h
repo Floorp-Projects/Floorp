@@ -15,6 +15,9 @@
  * which sizeof(ctype) and templated type conversions will be derived), and
  * 'ffitype' is the ffi_type to use. (Special types, such as 'void' and the
  * pointer, array, and struct types are handled separately.)
+ *
+ * This header lacks a #ifndef wrapper because it is deliberately #included
+ * multiple times in ctypes/CTypes.h.
  */
 
 // If we're not breaking the types out, combine them together under one

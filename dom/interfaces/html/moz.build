@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLByteRanges.idl',
     'nsIDOMHTMLCanvasElement.idl',
     'nsIDOMHTMLCollection.idl',
-    'nsIDOMHTMLCommandElement.idl',
     'nsIDOMHTMLDListElement.idl',
     'nsIDOMHTMLDataListElement.idl',
     'nsIDOMHTMLDirectoryElement.idl',

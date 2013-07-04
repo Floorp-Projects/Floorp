@@ -4,24 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_lir_h__
-#define jsion_lir_h__
+#ifndef ion_LIR_h
+#define ion_LIR_h
 
 // This file declares the core data structures for LIR: storage allocations for
 // inputs and outputs, as well as the interface instructions must conform to.
 
 #include "jscntxt.h"
-#include "IonAllocPolicy.h"
-#include "InlineList.h"
-#include "FixedArityList.h"
-#include "LOpcodes.h"
-#include "Registers.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "shared/Assembler-shared.h"
-#include "Safepoints.h"
-#include "Bailouts.h"
-#include "VMFunctions.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/InlineList.h"
+#include "ion/FixedArityList.h"
+#include "ion/LOpcodes.h"
+#include "ion/Registers.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/shared/Assembler-shared.h"
+#include "ion/Safepoints.h"
+#include "ion/Bailouts.h"
+#include "ion/VMFunctions.h"
 
 namespace js {
 namespace ion {
@@ -550,8 +550,7 @@ class LDefinition
           case MIRType_ForkJoinSlice:
             return LDefinition::GENERAL;
           default:
-            JS_NOT_REACHED("unexpected type");
-            return LDefinition::GENERAL;
+            MOZ_ASSUME_UNREACHABLE("unexpected type");
         }
     }
 };
@@ -635,6 +634,12 @@ class LInstruction
     virtual LDefinition *getTemp(size_t index) = 0;
     virtual void setTemp(size_t index, const LDefinition &a) = 0;
 
+    // Returns the number of successors of this instruction, if it is a control
+    // transfer instruction, or zero otherwise.
+    virtual size_t numSuccessors() const = 0;
+    virtual MBasicBlock *getSuccessor(size_t i) const = 0;
+    virtual void setSuccessor(size_t i, MBasicBlock *successor) = 0;
+
     virtual bool isCall() const {
         return false;
     }
@@ -711,7 +716,7 @@ class LInstructionVisitor
     {}
 
   public:
-#define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("NYI: " #op); return false; }
+#define VISIT_INS(op) virtual bool visit##op(L##op *) { MOZ_ASSUME_UNREACHABLE("NYI: " #op); }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };
@@ -753,6 +758,9 @@ class LBlock : public TempObject
     }
     void removePhi(size_t index) {
         phis_.erase(&phis_[index]);
+    }
+    void clearPhis() {
+        phis_.clear();
     }
     MBasicBlock *mir() const {
         return block_;
@@ -827,6 +835,17 @@ class LInstructionHelper : public LInstruction
     }
     void setTemp(size_t index, const LDefinition &a) {
         temps_[index] = a;
+    }
+
+    size_t numSuccessors() const {
+        return 0;
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_ASSERT(false);
+        return NULL;
+    }
+    void setSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(false);
     }
 
     // Default accessors, assuming a single input and output, respectively.
@@ -1363,6 +1382,7 @@ class LIRGraph
     LInstruction *getSafepoint(size_t i) const {
         return safepoints_[i];
     }
+    void removeBlock(size_t i);
 };
 
 LAllocation::LAllocation(const AnyRegister &reg)
@@ -1409,21 +1429,20 @@ LAllocation::toRegister() const
     }
 #endif
 
-#include "LIR-Common.h"
+#include "ion/LIR-Common.h"
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
 # if defined(JS_CPU_X86)
-#  include "x86/LIR-x86.h"
+#  include "ion/x86/LIR-x86.h"
 # elif defined(JS_CPU_X64)
-#  include "x64/LIR-x64.h"
+#  include "ion/x64/LIR-x64.h"
 # endif
-# include "shared/LIR-x86-shared.h"
+# include "ion/shared/LIR-x86-shared.h"
 #elif defined(JS_CPU_ARM)
-# include "arm/LIR-arm.h"
+# include "ion/arm/LIR-arm.h"
 #endif
 
 #undef LIR_HEADER
 
-#include "LIR-inl.h"
+#include "ion/LIR-inl.h"
 
-#endif // jsion_lir_h__
-
+#endif /* ion_LIR_h */

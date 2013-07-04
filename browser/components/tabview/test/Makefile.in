@@ -9,9 +9,8 @@ VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES := \
                  browser_tabview_alltabs.js \
                  browser_tabview_apptabs.js \
                  browser_tabview_bug580412.js \
@@ -169,5 +168,4 @@ _BROWSER_FILES = \
 # browser_tabview_bug673729.js disabled for intermittent failures (bug 749980)
 # browser_tabview_bug696602.js disabled for intermittent failures (bug 736425)
 
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -67,3 +67,13 @@ CPP_SOURCES += [
     'nsExceptionHandler.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'Darwin':
+    CMMSRCS += [
+        'mac_utils.mm',
+    ]
+
+EXTRA_JS_MODULES += [
+    'CrashSubmit.jsm',
+    'KeyValueParser.jsm',
+]
+

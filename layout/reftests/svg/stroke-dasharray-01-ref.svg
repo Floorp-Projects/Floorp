@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Reference for a stroke with a dasharray whose gaps add up to 0 still painting</title>
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=885585 -->
+
+  <g fill="none" stroke="black" stroke-width="2">
+    <path d="M 100,100 v 100"/>
+    <path d="M 110,100 h 100"/>
+  </g>
+</svg>

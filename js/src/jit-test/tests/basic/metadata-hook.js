@@ -6,14 +6,17 @@ assertEq(getObjectMetadata(x).y, 0);
 incallback = false;
 count = 0;
 
-setObjectMetadataCallback(function(obj) {
+function callback(obj) {
     if (incallback)
-      return null;
+	return null;
     incallback = true;
     var res = {count:++count, location:Error().stack};
     incallback = false;
     return res;
-  });
+}
+callback({});
+
+setObjectMetadataCallback(callback);
 
 function Foo() {
   this.x = 0;

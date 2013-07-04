@@ -27,13 +27,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef PageBlock_h
-#define PageBlock_h
+#ifndef yarr_PageBlock_h
+#define yarr_PageBlock_h
 
 #include "mozilla/StandardInteger.h"
 
-#include <stdlib.h>
-#include "assembler/wtf/Platform.h"
+#include <stddef.h>
 
 namespace WTF {
 
@@ -89,4 +88,4 @@ using WTF::isPageAligned;
 using WTF::isPageAligned;
 using WTF::isPowerOfTwo;
 
-#endif // PageBlock_h
+#endif /* yarr_PageBlock_h */

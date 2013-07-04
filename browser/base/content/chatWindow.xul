@@ -1,0 +1,107 @@
+#filter substitution
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+#include browser-doctype.inc
+
+<window id="chat-window"
+        windowtype="Social:Chat"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        onload="gChatWindow.onLoad();"
+        onunload="gChatWindow.onUnload();"
+        macanimationtype="document"
+        fullscreenbutton="true"
+# width and height are also used in socialchat.xml: chatbar dragend handler
+        width="400px"
+        height="420px"
+        persist="screenX screenY width height sizemode">
+
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://browser/content/nsContextMenu.js"/>
+
+#include global-scripts.inc
+
+<script type="application/javascript">
+
+var gChatWindow = {
+  // cargo-culted from browser.js for nonBrowserStartup, but we're slightly
+  // different what what we need to leave enabled
+  onLoad: function() {
+    // Disable inappropriate commands / submenus
+    var disabledItems = ['Browser:SavePage',
+                         'Browser:SendLink', 'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain',
+                         'viewToolbarsMenu', 'viewSidebarMenuMenu',
+                         'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu',
+                         'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
+                         'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
+
+    for (let disabledItem of disabledItems) {
+      document.getElementById(disabledItem).setAttribute("disabled", "true");
+    }
+
+    // initialise the offline listener
+    BrowserOffline.init();
+  },
+
+  onUnload: function() {
+    BrowserOffline.uninit();
+  }
+}
+
+// define a popupnotifications handler for this window.  we don't use
+// an iconbox here, and only support the browser frame for chat.
+XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
+  try {
+    return new tmp.PopupNotifications(document.getElementById("chatter").content,
+                                      document.getElementById("notification-popup"),
+                                      null);
+  } catch (ex) {
+    console.error(ex);
+    return null;
+  }
+});
+
+</script>
+
+#include browser-sets.inc
+
+#include browser-menubar.inc
+
+  <popupset id="mainPopupSet">
+    <tooltip id="aHTMLTooltip" page="true"/>
+    <menupopup id="contentAreaContextMenu" pagemenu="start"
+               onpopupshowing="if (event.target != this)
+                                 return true;
+                               gContextMenu = new nsContextMenu(this, event.shiftKey);
+                               if (gContextMenu.shouldDisplay)
+                                 document.popupNode = this.triggerNode;
+                               return gContextMenu.shouldDisplay;"
+               onpopuphiding="if (event.target != this)
+                                return;
+                              gContextMenu.hiding();
+                              gContextMenu = null;">
+#include browser-context.inc
+    </menupopup>
+
+#include popup-notifications.inc
+
+  </popupset>
+
+  <commandset id="editMenuCommands"/>
+  <chatbox id="chatter" flex="1"/>
+</window>

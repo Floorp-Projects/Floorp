@@ -107,8 +107,7 @@ GLXLibrary::EnsureInitialized(LibType libType)
 #endif
             break;
         default:
-            MOZ_NOT_REACHED("Invalid GLX library type.");
-            return false;
+            MOZ_CRASH("Invalid GLX library type.");
         }
 
         ScopedGfxFeatureReporter reporter(libGLfilename, forceFeatureReport);
@@ -1387,7 +1386,7 @@ DONE_CREATING_PIXMAP:
                                                   display,
                                                   glxpixmap,
                                                   cfgs[chosenIndex],
-                                                  false,
+                                                  true,
                                                   libToUse,
                                                   xsurface);
     }

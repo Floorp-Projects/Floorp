@@ -47,10 +47,10 @@ FileComponent.prototype =
     do_check_true(f3.name == "xpcshell.ini", "Should be the right file");
     do_check_true(f4.name == "xpcshell.ini", "Should be the right file");
 
-    do_check_true(f1.type = "text/plain", "Should be the right type");
-    do_check_true(f2.type = "text/plain", "Should be the right type");
-    do_check_true(f3.type = "text/plain", "Should be the right type");
-    do_check_true(f4.type = "text/plain", "Should be the right type");
+    do_check_true(f1.type == "", "Should be the right type");
+    do_check_true(f2.type == "", "Should be the right type");
+    do_check_true(f3.type == "", "Should be the right type");
+    do_check_true(f4.type == "", "Should be the right type");
 
     var threw = false;
     try {

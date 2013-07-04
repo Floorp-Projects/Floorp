@@ -1,0 +1,107 @@
+# Tests for cross-axis alignment (align-self / align-items properties)
+== flexbox-align-self-baseline-horiz-1.xhtml  flexbox-align-self-baseline-horiz-1-ref.xhtml
+
+== flexbox-align-self-horiz-1-block.xhtml  flexbox-align-self-horiz-1-ref.xhtml
+== flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
+== flexbox-align-self-horiz-2.xhtml  flexbox-align-self-horiz-2-ref.xhtml
+== flexbox-align-self-horiz-3.xhtml  flexbox-align-self-horiz-3-ref.xhtml
+== flexbox-align-self-horiz-4.xhtml  flexbox-align-self-horiz-4-ref.xhtml
+== flexbox-align-self-horiz-5.xhtml  flexbox-align-self-horiz-5-ref.xhtml
+== flexbox-align-self-vert-1.xhtml  flexbox-align-self-vert-1-ref.xhtml
+== flexbox-align-self-vert-2.xhtml  flexbox-align-self-vert-2-ref.xhtml
+== flexbox-align-self-vert-3.xhtml  flexbox-align-self-vert-3-ref.xhtml
+== flexbox-align-self-vert-4.xhtml  flexbox-align-self-vert-4-ref.xhtml
+fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-self-vert-rtl-1-ref.xhtml
+== flexbox-align-self-vert-rtl-2.xhtml  flexbox-align-self-vert-rtl-2-ref.xhtml
+== flexbox-align-self-vert-rtl-3.xhtml  flexbox-align-self-vert-rtl-3-ref.xhtml
+== flexbox-align-self-vert-rtl-4.xhtml  flexbox-align-self-vert-rtl-4-ref.xhtml
+
+# Tests for computing the baseline of a flex container
+== flexbox-baseline-align-self-baseline-horiz-1.html flexbox-baseline-align-self-baseline-horiz-1-ref.html
+== flexbox-baseline-align-self-baseline-vert-1.html flexbox-baseline-align-self-baseline-vert-1-ref.html
+== flexbox-baseline-empty-1a.html flexbox-baseline-empty-1-ref.html
+== flexbox-baseline-empty-1b.html flexbox-baseline-empty-1-ref.html
+== flexbox-baseline-multi-item-horiz-1.html flexbox-baseline-multi-item-horiz-1-ref.html
+== flexbox-baseline-multi-item-vert-1.html flexbox-baseline-multi-item-vert-1-ref.html
+== flexbox-baseline-single-item-1a.html flexbox-baseline-single-item-1-ref.html
+== flexbox-baseline-single-item-1b.html flexbox-baseline-single-item-1-ref.html
+
+# Basic tests with with blocks as flex items
+== flexbox-basic-block-horiz-1.xhtml flexbox-basic-block-horiz-1-ref.xhtml
+== flexbox-basic-block-vert-1.xhtml flexbox-basic-block-vert-1-ref.xhtml
+
+# Tests for basic handling of <canvas>/<img>/etc as a flex item
+== flexbox-basic-canvas-horiz-1.xhtml   flexbox-basic-canvas-horiz-1-ref.xhtml
+== flexbox-basic-canvas-vert-1.xhtml    flexbox-basic-canvas-vert-1-ref.xhtml
+== flexbox-basic-fieldset-horiz-1.xhtml flexbox-basic-fieldset-horiz-1-ref.xhtml
+== flexbox-basic-fieldset-vert-1.xhtml  flexbox-basic-fieldset-vert-1-ref.xhtml
+== flexbox-basic-iframe-horiz-1.xhtml   flexbox-basic-iframe-horiz-1-ref.xhtml
+== flexbox-basic-iframe-vert-1.xhtml    flexbox-basic-iframe-vert-1-ref.xhtml
+== flexbox-basic-img-horiz-1.xhtml      flexbox-basic-img-horiz-1-ref.xhtml
+== flexbox-basic-img-vert-1.xhtml       flexbox-basic-img-vert-1-ref.xhtml
+== flexbox-basic-textarea-horiz-1.xhtml flexbox-basic-textarea-horiz-1-ref.xhtml
+== flexbox-basic-textarea-vert-1.xhtml  flexbox-basic-textarea-vert-1-ref.xhtml
+== flexbox-basic-video-horiz-1.xhtml    flexbox-basic-video-horiz-1-ref.xhtml
+== flexbox-basic-video-vert-1.xhtml     flexbox-basic-video-vert-1-ref.xhtml
+
+# Tests for flex items as (pseudo) stacking contexts
+== flexbox-items-as-stacking-contexts-1.xhtml flexbox-items-as-stacking-contexts-1-ref.xhtml
+== flexbox-items-as-stacking-contexts-2.html flexbox-items-as-stacking-contexts-2-ref.html
+== flexbox-items-as-stacking-contexts-3.html flexbox-items-as-stacking-contexts-3-ref.html
+
+# Tests for main-axis alignment (jusify-content property)
+== flexbox-justify-content-horiz-1.xhtml flexbox-justify-content-horiz-1-ref.xhtml
+== flexbox-justify-content-horiz-2.xhtml flexbox-justify-content-horiz-2-ref.xhtml
+== flexbox-justify-content-horiz-3.xhtml flexbox-justify-content-horiz-3-ref.xhtml
+== flexbox-justify-content-horiz-4.xhtml flexbox-justify-content-horiz-4-ref.xhtml
+== flexbox-justify-content-horiz-5.xhtml flexbox-justify-content-horiz-5-ref.xhtml
+== flexbox-justify-content-vert-1.xhtml flexbox-justify-content-vert-1-ref.xhtml
+== flexbox-justify-content-vert-2.xhtml flexbox-justify-content-vert-2-ref.xhtml
+== flexbox-justify-content-vert-3.xhtml flexbox-justify-content-vert-3-ref.xhtml
+== flexbox-justify-content-vert-4.xhtml flexbox-justify-content-vert-4-ref.xhtml
+== flexbox-justify-content-vert-5.xhtml flexbox-justify-content-vert-5-ref.xhtml
+
+# Tests for flexbox with margin, border, and/or padding on flex items
+== flexbox-margin-auto-horiz-1.xhtml     flexbox-margin-auto-horiz-1-ref.xhtml
+== flexbox-margin-auto-horiz-2.xhtml     flexbox-margin-auto-horiz-2-ref.xhtml
+== flexbox-mbp-horiz-1.xhtml             flexbox-mbp-horiz-1-ref.xhtml
+== flexbox-mbp-horiz-1-reverse.xhtml     flexbox-mbp-horiz-1-reverse-ref.xhtml
+== flexbox-mbp-horiz-1-rtl.xhtml         flexbox-mbp-horiz-1-reverse-ref.xhtml
+== flexbox-mbp-horiz-1-rtl-reverse.xhtml flexbox-mbp-horiz-1-ref.xhtml
+== flexbox-mbp-horiz-2a.xhtml            flexbox-mbp-horiz-2-ref.xhtml
+== flexbox-mbp-horiz-2b.xhtml            flexbox-mbp-horiz-2-ref.xhtml
+== flexbox-mbp-horiz-3.xhtml             flexbox-mbp-horiz-3-ref.xhtml
+== flexbox-mbp-horiz-3-reverse.xhtml     flexbox-mbp-horiz-3-reverse-ref.xhtml
+== flexbox-mbp-horiz-4.xhtml             flexbox-mbp-horiz-4-ref.xhtml
+
+# Tests for flex containers with the "overflow" property set
+== flexbox-overflow-horiz-1.html flexbox-overflow-horiz-1-ref.html
+== flexbox-overflow-horiz-2.html flexbox-overflow-horiz-2-ref.html
+== flexbox-overflow-horiz-3.html flexbox-overflow-horiz-3-ref.html
+== flexbox-overflow-vert-1.html flexbox-overflow-vert-1-ref.html
+== flexbox-overflow-vert-2.html flexbox-overflow-vert-2-ref.html
+== flexbox-overflow-vert-3.html flexbox-overflow-vert-3-ref.html
+
+# Tests for the order in which we paint flex items
+== flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
+== flexbox-paint-ordering-2.xhtml flexbox-paint-ordering-2-ref.xhtml
+
+# Tests for sizing of flex containers, e.g. under min/max size constraints
+== flexbox-sizing-horiz-1.xhtml flexbox-sizing-horiz-1-ref.xhtml
+== flexbox-sizing-horiz-2.xhtml flexbox-sizing-horiz-2-ref.xhtml
+== flexbox-sizing-vert-1.xhtml  flexbox-sizing-vert-1-ref.xhtml
+== flexbox-sizing-vert-2.xhtml  flexbox-sizing-vert-2-ref.xhtml
+
+# Tests for table-fixup on flex items
+== flexbox-table-fixup-1a.xhtml flexbox-table-fixup-1-ref.xhtml
+== flexbox-table-fixup-1b.xhtml flexbox-table-fixup-1-ref.xhtml
+
+# Tests for handling of whitespace within anonymous flex items.
+== flexbox-whitespace-handling-1a.xhtml flexbox-whitespace-handling-1-ref.xhtml
+== flexbox-whitespace-handling-1b.xhtml flexbox-whitespace-handling-1-ref.xhtml
+== flexbox-whitespace-handling-2.xhtml  flexbox-whitespace-handling-2-ref.xhtml
+
+# Tests for flex containers with pseudo-elements
+== flexbox-with-pseudo-elements-1.html flexbox-with-pseudo-elements-1-ref.html
+== flexbox-with-pseudo-elements-2.html flexbox-with-pseudo-elements-2-ref.html
+== flexbox-with-pseudo-elements-3.html flexbox-with-pseudo-elements-3-ref.html

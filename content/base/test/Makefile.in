@@ -631,6 +631,11 @@ MOCHITEST_FILES_C= \
 		test_bug869000.html \
 		test_bug869002.html \
 		test_bug876282.html \
+		test_CSP_bug885433.html \
+		file_CSP_bug885433_allows.html \
+		file_CSP_bug885433_allows.html^headers^ \
+		file_CSP_bug885433_blocks.html \
+		file_CSP_bug885433_blocks.html^headers^ \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec
@@ -649,7 +654,7 @@ MOCHITEST_CHROME_FILES =	\
 		$(NULL)
 
 # This test fails on the Mac for some reason
-ifneq (,$(filter gtk2 windows,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2 gtk3 windows,$(MOZ_WIDGET_TOOLKIT)))
 MOCHITEST_FILES_C += \
 		test_copyimage.html \
 		$(NULL)

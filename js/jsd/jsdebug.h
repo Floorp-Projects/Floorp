@@ -11,25 +11,13 @@
 #ifndef jsdebug_h___
 #define jsdebug_h___
 
-/* Get jstypes.h included first. After that we can use PR macros for doing
-*  this extern "C" stuff!
-*/
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#include "jstypes.h"
-#ifdef __cplusplus
-}
-#endif
-
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #ifdef LIVEWIRE
 #include "lwdbgapi.h"
 #endif
 
-JS_BEGIN_EXTERN_C
+extern "C" {
 
 /*
  * The linkage of JSD API functions differs depending on whether the file is
@@ -150,12 +138,6 @@ JSD_GetMajorVersion(void);
 */
 extern JSD_PUBLIC_API(unsigned)
 JSD_GetMinorVersion(void);
-
-/*
-* Returns a 'dumb' JSContext that can be used for utility purposes as needed
-*/
-extern JSD_PUBLIC_API(JSContext*)
-JSD_GetDefaultJSContext(JSDContext* jsdc);
 
 /*
 * Returns the default JSD global associated with a given JSDContext.
@@ -1565,6 +1547,6 @@ JSDLW_ProcessedToRawLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
 #endif
 /***************************************************************************/
 
-JS_END_EXTERN_C
+} // extern "C"
 
 #endif /* jsdebug_h___ */

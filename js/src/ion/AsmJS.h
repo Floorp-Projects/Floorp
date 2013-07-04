@@ -4,16 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(jsion_asmjs_h__)
-#define jsion_asmjs_h__
+#ifndef ion_AsmJS_h
+#define ion_AsmJS_h
 
 #ifdef XP_MACOSX
 # include <pthread.h>
 # include <mach/mach.h>
-#endif
-
-#if defined(JS_ION)
-# define JS_ASMJS
 #endif
 
 namespace js {
@@ -21,7 +17,7 @@ namespace js {
 class ScriptSource;
 class SPSProfiler;
 class AsmJSModule;
-namespace frontend { struct TokenStream; struct ParseNode; }
+namespace frontend { class TokenStream; class ParseNode; }
 namespace ion { class MIRGenerator; class LIRGraph; }
 
 // Called after parsing a function 'fn' which contains the "use asm" directive.
@@ -79,6 +75,7 @@ class AsmJSActivation
     AsmJSActivation(JSContext *cx, const AsmJSModule &module);
     ~AsmJSActivation();
 
+    JSContext *cx() { return cx_; }
     const AsmJSModule &module() const { return module_; }
 
     // Read by JIT code:
@@ -91,6 +88,9 @@ class AsmJSActivation
     // Set from SIGSEGV handler:
     void setResumePC(void *pc) { resumePC_ = pc; }
 };
+
+// The assumed page size; dynamically checked in CompileAsmJS.
+const size_t AsmJSPageSize = 4096;
 
 // The asm.js spec requires that the ArrayBuffer's byteLength be a multiple of 4096.
 static const size_t AsmJSAllocationGranularity = 4096;
@@ -122,6 +122,17 @@ class AsmJSMachExceptionHandler
 };
 #endif
 
+struct DependentAsmJSModuleExit
+{
+    const AsmJSModule *module;
+    size_t exitIndex;
+
+    DependentAsmJSModuleExit(const AsmJSModule *module, size_t exitIndex)
+      : module(module),
+        exitIndex(exitIndex)
+    { }
+};
+
 // Struct type for passing parallel compilation data between the main thread
 // and compilation workers.
 struct AsmJSParallelTask
@@ -131,10 +142,11 @@ struct AsmJSParallelTask
     uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
     ion::MIRGenerator *mir; // Passed from main thread to worker.
     ion::LIRGraph *lir;     // Passed from worker to main thread.
+    unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
       : lifo(defaultChunkSize),
-        funcNum(0), mir(NULL), lir(NULL)
+        funcNum(0), mir(NULL), lir(NULL), compileTime(0)
     { }
 
     void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
@@ -146,11 +158,11 @@ struct AsmJSParallelTask
 
 // Returns true if the given native is the one that is used to implement asm.js
 // module functions.
-#ifdef JS_ASMJS
-bool
+#ifdef JS_ION
+extern bool
 IsAsmJSModuleNative(js::Native native);
 #else
-static inline bool
+inline bool
 IsAsmJSModuleNative(js::Native native)
 {
     return false;
@@ -176,4 +188,4 @@ IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp);
 
 } // namespace js
 
-#endif // jsion_asmjs_h__
+#endif /* ion_AsmJS_h */

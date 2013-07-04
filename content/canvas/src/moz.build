@@ -40,11 +40,14 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionCompressedTextureS3TC.cpp',
         'WebGLExtensionDebugRendererInfo.cpp',
         'WebGLExtensionDepthTexture.cpp',
+        'WebGLExtensionDrawBuffers.cpp',
         'WebGLExtensionElementIndexUint.cpp',
         'WebGLExtensionLoseContext.cpp',
         'WebGLExtensionStandardDerivatives.cpp',
         'WebGLExtensionTextureFilterAnisotropic.cpp',
         'WebGLExtensionTextureFloat.cpp',
+        'WebGLExtensionTextureFloatLinear.cpp',
+        'WebGLExtensionVertexArray.cpp',
         'WebGLFramebuffer.cpp',
         'WebGLObjectModel.cpp',
         'WebGLProgram.cpp',
@@ -54,6 +57,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLTexelConversions.cpp',
         'WebGLTexture.cpp',
         'WebGLUniformLocation.cpp',
+        'WebGLVertexArray.cpp',
     ]
 else:
     CPP_SOURCES += [

@@ -16,17 +16,16 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 11;
+const DB_VERSION = 12;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
 const REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
 
-function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearDispatcher) {
+function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearDispatcher, aFailureCb) {
   let nextIndex = 0;
 
   let sendChunk;
@@ -67,6 +66,8 @@ function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearD
               }
             }
           }
+        }, null, function(errorMsg) {
+          aFailureCb(errorMsg);
         });
       } catch (e) {
         aClearDispatcher();
@@ -326,8 +327,18 @@ ContactDB.prototype = {
           }
         };
       } else if (currVersion == 9) {
+        // no-op, see https://bugzilla.mozilla.org/show_bug.cgi?id=883770#c16
+      } else if (currVersion == 10) {
+        if (DEBUG) debug("Adding object store for database revision");
+        db.createObjectStore(REVISION_STORE).put(0, REVISION_KEY);
+      } else if (currVersion == 11) {
         if (DEBUG) debug("Add a telMatch index with national and international numbers");
-        objectStore.createIndex("telMatch", "search.parsedTel", {multiEntry: true});
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        if (!objectStore.indexNames.contains("telMatch")) {
+          objectStore.createIndex("telMatch", "search.parsedTel", {multiEntry: true});
+        }
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
           if (cursor) {
@@ -350,13 +361,10 @@ ContactDB.prototype = {
             cursor.continue();
           }
         };
-      } else if (currVersion == 10) {
-        if (DEBUG) debug("Adding object store for database revision");
-        db.createObjectStore(REVISION_STORE).put(0, REVISION_KEY);
       }
 
       // Increment the DB revision on future schema changes as well
-      if (currVersion > 10) {
+      if (currVersion > 11) {
         this.incrementRevision(aTransaction);
       }
     }
@@ -436,7 +444,8 @@ ContactDB.prototype = {
       impp:            [],
       anniversary:     null,
       sex:             null,
-      genderIdentity:  null
+      genderIdentity:  null,
+      key:             [],
     };
 
     contact.search = {
@@ -446,7 +455,7 @@ ContactDB.prototype = {
       category:        [],
       tel:             [],
       exactTel:        [],
-      parsedTel:       []
+      parsedTel:       [],
     };
 
     for (let field in aContact.properties) {
@@ -480,7 +489,11 @@ ContactDB.prototype = {
                   matchSearch[parsedNumber.nationalNumber] = 1;
                   matchSearch[parsedNumber.internationalNumber] = 1;
                   matchSearch[PhoneNumberUtils.normalize(parsedNumber.nationalFormat)] = 1;
-                  matchSearch[PhoneNumberUtils.normalize(parsedNumber.internationalFormat)] = 1
+                  matchSearch[PhoneNumberUtils.normalize(parsedNumber.internationalFormat)] = 1;
+
+                  if (this.substringMatching && normalized.length > this.substringMatching) {
+                    matchSearch[normalized.slice(-this.substringMatching)] = 1;
+                  }
                 }
 
                 // containsSearch holds incremental search values for:
@@ -548,7 +561,7 @@ ContactDB.prototype = {
     record.updated = new Date();
   },
 
-  removeObjectFromCache: function CDB_removeObjectFromCache(aObjectId, aCallback) {
+  removeObjectFromCache: function CDB_removeObjectFromCache(aObjectId, aCallback, aFailureCb) {
     if (DEBUG) debug("removeObjectFromCache: " + aObjectId);
     if (!aObjectId) {
       if (DEBUG) debug("No object ID passed");
@@ -571,16 +584,19 @@ ContactDB.prototype = {
           aCallback();
         }
       }.bind(this);
-    }.bind(this));
+    }.bind(this), null,
+    function(errorMsg) {
+      aFailureCb(errorMsg);
+    });
   },
 
   // Invalidate the entire cache. It will be incrementally regenerated on demand
   // See getCacheForQuery
-  invalidateCache: function CDB_invalidateCache() {
+  invalidateCache: function CDB_invalidateCache(aErrorCb) {
     if (DEBUG) debug("invalidate cache");
     this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function (txn, store) {
       store.clear();
-    });
+    }, aErrorCb);
   },
 
   incrementRevision: function CDB_incrementRevision(txn) {
@@ -616,7 +632,7 @@ ContactDB.prototype = {
             store.put(contact);
           }
         }
-        this.invalidateCache();
+        this.invalidateCache(errorCb);
       }.bind(this);
 
       this.incrementRevision(txn);
@@ -632,7 +648,7 @@ ContactDB.prototype = {
         };
         this.incrementRevision(txn);
       }.bind(this), null, aErrorCb);
-    }.bind(this));
+    }.bind(this), aErrorCb);
   },
 
   clear: function clear(aSuccessCb, aErrorCb) {
@@ -654,7 +670,7 @@ ContactDB.prototype = {
         // save contact ids in cache
         this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function(txn, store) {
           store.put(contactsArray.map(function(el) el.id), aQuery);
-        });
+        }, null, aFailureCb);
 
         // send full contacts
         aSuccessCb(contactsArray, true);
@@ -666,7 +682,7 @@ ContactDB.prototype = {
     JSON.parse(aQuery));
   },
 
-  getCacheForQuery: function CDB_getCacheForQuery(aQuery, aSuccessCb) {
+  getCacheForQuery: function CDB_getCacheForQuery(aQuery, aSuccessCb, aFailureCb) {
     if (DEBUG) debug("getCacheForQuery");
     // Here we try to get the cached results for query `aQuery'. If they don't
     // exist, it means the cache was invalidated and needs to be recreated, so
@@ -682,10 +698,10 @@ ContactDB.prototype = {
           this.createCacheForQuery(aQuery, aSuccessCb);
         }
       }.bind(this);
-      req.onerror = function() {
-
+      req.onerror = function(e) {
+        aFailureCb(e.target.errorMessage);
       };
-    }.bind(this));
+    }.bind(this), null, aFailureCb);
   },
 
   sendNow: function CDB_sendNow(aCursorId) {
@@ -713,13 +729,14 @@ ContactDB.prototype = {
         let newTxnFn = this.newTxn.bind(this);
         let clearDispatcherFn = this.clearDispatcher.bind(this, aCursorId);
         this._dispatcher[aCursorId] = new ContactDispatcher(aCachedResults, aFullContacts,
-                                                            aSuccessCb, newTxnFn, clearDispatcherFn);
+                                                            aSuccessCb, newTxnFn,
+                                                            clearDispatcherFn, aFailureCb);
         this._dispatcher[aCursorId].sendNow();
       } else { // no contacts
         if (DEBUG) debug("query returned no contacts");
         aSuccessCb(null);
       }
-    }.bind(this));
+    }.bind(this), aFailureCb);
   },
 
   getRevision: function CDB_getRevision(aSuccessCb) {
@@ -871,19 +888,35 @@ ContactDB.prototype = {
         let index = store.index("telMatch");
         let normalized = PhoneNumberUtils.normalize(options.filterValue,
                                                     /*numbersOnly*/ true);
+
+        // Some countries need special handling for number matching. Bug 877302
+        if (this.substringMatching && normalized.length > this.substringMatching) {
+          normalized = normalized.slice(-this.substringMatching);
+        }
         request = index.mozGetAll(normalized, limit);
       } else {
         // XXX: "contains" should be handled separately, this is "startsWith"
         if (options.filterOp === 'contains' && key !== 'tel') {
-          console.warn("ContactDB: 'contains' only works for 'tel'. " +
-                       "Falling back to 'startsWith'.");
+          dump("ContactDB: 'contains' only works for 'tel'. Falling back " +
+               "to 'startsWith'.\n");
         }
         // not case sensitive
-        let tmp = options.filterValue.toString().toLowerCase();
+        let lowerCase = options.filterValue.toString().toLowerCase();
         if (key === "tel") {
-          tmp = PhoneNumberUtils.normalize(tmp, /*numbersOnly*/ true);
+          let origLength = lowerCase.length;
+          let tmp = PhoneNumberUtils.normalize(lowerCase, /*numbersOnly*/ true);
+          if (tmp.length != origLength) {
+            let NON_SEARCHABLE_CHARS = /[^#+\*\d\s()-]/;
+            // e.g. number "123". find with "(123)" but not with "123a"
+            if (tmp === "" || NON_SEARCHABLE_CHARS.test(lowerCase)) {
+              if (DEBUG) debug("Call continue!");
+              continue;
+            }
+            lowerCase = tmp;
+          }
         }
-        let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
+        if (DEBUG) debug("lowerCase: " + lowerCase);
+        let range = this._global.IDBKeyRange.bound(lowerCase, lowerCase + "\uFFFF");
         let index = store.index(key + "LowerCase");
         request = index.mozGetAll(range, limit);
       }
@@ -914,7 +947,12 @@ ContactDB.prototype = {
     }.bind(this);
   },
 
+  // Enable special phone number substring matching. Does not update existing DB entries.
+  enableSubstringMatching: function enableSubstringMatching(aDigits) {
+    this.substringMatching = aDigits;
+  },
+
   init: function init(aGlobal) {
-      this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME, REVISION_STORE], aGlobal);
+    this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME, REVISION_STORE], aGlobal);
   }
 };

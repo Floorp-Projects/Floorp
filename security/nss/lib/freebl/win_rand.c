@@ -367,40 +367,6 @@ void RNG_FileForRNG(const char *filename)
 
 
 /*
- * CryptoAPI requires Windows NT 4.0 or Windows 95 OSR2 and later.
- * Until we drop support for Windows 95, we need to emulate some
- * definitions and declarations in <wincrypt.h> and look up the
- * functions in advapi32.dll at run time.
- */
-
-#ifndef WIN64
-typedef unsigned long HCRYPTPROV;
-#endif
-
-#define CRYPT_VERIFYCONTEXT 0xF0000000
-
-#define PROV_RSA_FULL 1
-
-typedef BOOL
-(WINAPI *CryptAcquireContextAFn)(
-    HCRYPTPROV *phProv,
-    LPCSTR pszContainer,
-    LPCSTR pszProvider,
-    DWORD dwProvType,
-    DWORD dwFlags);
-
-typedef BOOL
-(WINAPI *CryptReleaseContextFn)(
-    HCRYPTPROV hProv,
-    DWORD dwFlags);
-
-typedef BOOL
-(WINAPI *CryptGenRandomFn)(
-    HCRYPTPROV hProv,
-    DWORD dwLen,
-    BYTE *pbBuffer);
-
-/*
  * Windows XP and Windows Server 2003 and later have RtlGenRandom,
  * which must be looked up by the name SystemFunction036.
  */
@@ -413,50 +379,19 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 {
     HMODULE hModule;
     RtlGenRandomFn pRtlGenRandom;
-    CryptAcquireContextAFn pCryptAcquireContextA;
-    CryptReleaseContextFn pCryptReleaseContext;
-    CryptGenRandomFn pCryptGenRandom;
-    HCRYPTPROV hCryptProv;
     size_t bytes = 0;
 
     usedWindowsPRNG = PR_FALSE;
     hModule = LoadLibrary("advapi32.dll");
     if (hModule == NULL) {
-	return rng_systemFromNoise(dest,maxLen);
+	return bytes;
     }
     pRtlGenRandom = (RtlGenRandomFn)
 	GetProcAddress(hModule, "SystemFunction036");
-    if (pRtlGenRandom) {
-	if (pRtlGenRandom(dest, maxLen)) {
-	    bytes = maxLen;
-	    usedWindowsPRNG = PR_TRUE;
-	} else {
-	    bytes = rng_systemFromNoise(dest,maxLen);
-	}
-	goto done;
+    if (pRtlGenRandom && pRtlGenRandom(dest, maxLen)) {
+	bytes = maxLen;
+	usedWindowsPRNG = PR_TRUE;
     }
-    pCryptAcquireContextA = (CryptAcquireContextAFn)
-	GetProcAddress(hModule, "CryptAcquireContextA");
-    pCryptReleaseContext = (CryptReleaseContextFn)
-	GetProcAddress(hModule, "CryptReleaseContext");
-    pCryptGenRandom = (CryptGenRandomFn)
-	GetProcAddress(hModule, "CryptGenRandom");
-    if (!pCryptAcquireContextA || !pCryptReleaseContext || !pCryptGenRandom) {
-	bytes = rng_systemFromNoise(dest,maxLen);
-	goto done;
-    }
-    if (pCryptAcquireContextA(&hCryptProv, NULL, NULL,
-	PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-	if (pCryptGenRandom(hCryptProv, maxLen, dest)) {
-	    bytes = maxLen;
-	    usedWindowsPRNG = PR_TRUE;
-	}
-	pCryptReleaseContext(hCryptProv, 0);
-    }
-    if (bytes == 0) {
-	bytes = rng_systemFromNoise(dest,maxLen);
-    }
-done:
     FreeLibrary(hModule);
     return bytes;
 }

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <title>Debugger Step Out Return Value Test</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+  </head>
+  <body>
+    <button id="return">return</button>
+    <button id="throw">throw</button>
+  </body>
+  <script type="text/javascript">
+    window.addEventListener("load", function() {
+      function normal(aArg) {
+        debugger;
+        var r = 10;
+        return r;
+      }
+      function error(aArg) {
+        function inner(aArg) {
+          debugger;
+          var r = 10;
+          throw "boom";
+          return r;
+        }
+        try {
+          inner(aArg);
+        } catch (e) {}
+      }
+      var button = document.getElementById("return");
+      button.addEventListener("click", normal, false);
+      button = document.getElementById("throw");
+      button.addEventListener("click", error, false);
+    });
+  </script>
+</html>

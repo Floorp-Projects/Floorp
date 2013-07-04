@@ -10,6 +10,8 @@
 // These declarations are not within jsapi.h because they are highly likely to
 // change in the future. Depend on them at your own risk.
 
+#include "mozilla/MemoryReporting.h"
+
 #include <string.h>
 
 #include "jsalloc.h"
@@ -135,7 +137,7 @@ struct RuntimeSizes
     size_t dtoa;
     size_t temporary;
     size_t regexpData;
-    size_t stack;
+    size_t interpreterStack;
     size_t gcMarker;
     size_t mathCache;
     size_t scriptData;
@@ -363,7 +365,7 @@ struct CompartmentStats
 
 struct RuntimeStats
 {
-    RuntimeStats(JSMallocSizeOfFun mallocSizeOf)
+    RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
       : runtime(),
         gcHeapChunkTotal(0),
         gcHeapDecommittedArenas(0),
@@ -420,7 +422,7 @@ struct RuntimeStats
 
     ZoneStats *currZoneStats;
 
-    JSMallocSizeOfFun mallocSizeOf_;
+    mozilla::MallocSizeOf mallocSizeOf_;
 
     virtual void initExtraCompartmentStats(JSCompartment *c, CompartmentStats *cstats) = 0;
     virtual void initExtraZoneStats(JS::Zone *zone, ZoneStats *zstats) = 0;
@@ -457,4 +459,4 @@ PeakSizeOfTemporary(const JSRuntime *rt);
 
 } // namespace JS
 
-#endif // js_MemoryMetrics_h
+#endif /* js_MemoryMetrics_h */

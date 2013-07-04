@@ -17,7 +17,12 @@ class SVGIntegerPairSMILType : public nsISMILType
 {
 public:
   // Singleton for nsSMILValue objects to hold onto.
-  static SVGIntegerPairSMILType sSingleton;
+  static SVGIntegerPairSMILType*
+  Singleton()
+  {
+    static SVGIntegerPairSMILType sSingleton;
+    return &sSingleton;
+  }
 
 protected:
   // nsISMILType Methods

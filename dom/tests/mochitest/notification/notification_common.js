@@ -41,6 +41,7 @@ var mockAlertsService = {
     return this.QueryInterface(aIID);
   }
 };
+mockAlertsService = SpecialPowers.wrapCallbackObject(mockAlertsService);
 
 function setup_notifications(allowPrompt, forceClick, callback) {
   SpecialPowers.pushPrefEnv({'set': [["notification.prompt.testing", true],

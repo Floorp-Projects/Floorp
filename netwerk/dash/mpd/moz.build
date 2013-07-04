@@ -18,3 +18,5 @@ CPP_SOURCES += [
     'nsDASHWebMODParser.cpp',
 ]
 
+LIBRARY_NAME = 'nkdashmpd_s'
+

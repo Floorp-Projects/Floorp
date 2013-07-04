@@ -35,7 +35,9 @@ interface TestJSImplInterface {
   void passByte(byte arg);
   byte receiveByte();
   void passOptionalByte(optional byte arg);
+  void passOptionalUndefinedMissingByte([TreatUndefinedAs=Missing] optional byte arg);
   void passOptionalByteWithDefault(optional byte arg = 0);
+  void passOptionalUndefinedMissingByteWithDefault([TreatUndefinedAs=Missing] optional byte arg = 0);
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
   void passVariadicByte(byte... arg);
@@ -250,6 +252,7 @@ interface TestJSImplInterface {
   void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
 
   sequence<DOMString> receiveStringSequence();
+  sequence<ByteString> receiveByteStringSequence();
   // Callback interface problem.  See bug 843261.
   //void passStringSequence(sequence<DOMString> arg);
   sequence<any> receiveAnySequence();
@@ -285,14 +288,23 @@ interface TestJSImplInterface {
   //void passFloat64Array(Float64Array arg);
   //Uint8Array receiveUint8Array();
 
-  // String types
+  // DOMString types
   void passString(DOMString arg);
   void passNullableString(DOMString? arg);
   void passOptionalString(optional DOMString arg);
+  void passOptionalUndefinedMissingString([TreatUndefinedAs=Missing] optional DOMString arg);
   void passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
+  void passOptionalUndefinedMissingStringWithDefaultValue([TreatUndefinedAs=Missing] optional DOMString arg = "abc");
   void passOptionalNullableString(optional DOMString? arg);
   void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
   void passVariadicString(DOMString... arg);
+
+  // ByteString types
+  void passByteString(ByteString arg);
+  void passNullableByteString(ByteString? arg);
+  void passOptionalByteString(optional ByteString arg);
+  void passOptionalNullableByteString(optional ByteString? arg);
+  void passVariadicByteString(ByteString... arg);
 
   // Enumerated types
   void passEnum(MyTestEnum arg);
@@ -458,6 +470,11 @@ interface TestJSImplInterface {
   [Throws] attribute boolean throwingAttr;
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
+  // legacycaller short(unsigned long arg1, TestInterface arg2);
+  void passArgsWithDefaults(optional long arg1,
+                            optional TestInterface? arg2 = null,
+                            optional Dict arg3, optional double arg4 = 5.0,
+                            optional float arg5);
 
   // If you add things here, add them to TestCodeGen as well
 };

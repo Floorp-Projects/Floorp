@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MacroAssemblerMIPS_h
-#define MacroAssemblerMIPS_h
+#ifndef assembler_assembler_MacroAssemblerMIPS_h
+#define assembler_assembler_MacroAssemblerMIPS_h
 
 #if ENABLE(ASSEMBLER) && CPU(MIPS)
 
-#include "AbstractMacroAssembler.h"
-#include "MIPSAssembler.h"
+#include "assembler/assembler/AbstractMacroAssembler.h"
+#include "assembler/assembler/MIPSAssembler.h"
 
 namespace JSC {
 
@@ -861,7 +861,7 @@ public:
         }
     }
 
-    void load32(void* address, RegisterID dest)
+    void load32(const void* address, RegisterID dest)
     {
         /*
             li  addrTemp, address
@@ -2787,4 +2787,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER) && CPU(MIPS)
 
-#endif // MacroAssemblerMIPS_h
+#endif /* assembler_assembler_MacroAssemblerMIPS_h */

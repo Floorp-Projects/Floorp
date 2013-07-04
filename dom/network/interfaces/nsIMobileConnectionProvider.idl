@@ -11,7 +11,7 @@ interface nsIDOMMozMobileCFInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
-[scriptable, uuid(d919e279-b0e4-4bc0-8464-f5b37aa41484)]
+[scriptable, uuid(d09099b0-a25a-11e2-9e96-0800200c9a66)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
@@ -21,8 +21,6 @@ interface nsIMobileConnectionListener : nsISupports
   void notifyUssdReceived(in DOMString message,
                           in boolean sessionEnded);
   void notifyDataError(in DOMString message);
-  void notifyIccCardLockError(in DOMString lockType,
-                              in unsigned long retryCount);
   void notifyCFStateChange(in boolean success,
                            in unsigned short action,
                            in unsigned short reason,
@@ -35,7 +33,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(0abc25f7-372e-4398-8b49-ae8fcdb575d3)]
+[scriptable, uuid(b9605230-a25a-11e2-9e96-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -56,10 +54,6 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest getNetworks(in nsIDOMWindow window);
   nsIDOMDOMRequest selectNetwork(in nsIDOMWindow window, in nsIDOMMozMobileNetworkInfo network);
   nsIDOMDOMRequest selectNetworkAutomatically(in nsIDOMWindow window);
-
-  nsIDOMDOMRequest getCardLock(in nsIDOMWindow window, in DOMString lockType);
-  nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
-  nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
 
   nsIDOMDOMRequest sendMMI(in nsIDOMWindow window, in DOMString mmi);
   nsIDOMDOMRequest cancelMMI(in nsIDOMWindow window);

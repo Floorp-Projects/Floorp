@@ -140,6 +140,30 @@ interface nsISearchEngine : nsISupports
 
 };
 
+[scriptable, uuid(9fc39136-f08b-46d3-b232-96f4b7b0e235)]
+interface nsISearchInstallCallback : nsISupports
+{
+  const unsigned long ERROR_UNKNOWN_FAILURE = 0x1;
+  const unsigned long ERROR_DUPLICATE_ENGINE = 0x2;
+
+  /**
+   * Called to indicate that the engine addition process succeeded.
+   *
+   * @param engine
+   *        The nsISearchEngine object that was added (will not be null).
+   */
+  void onSuccess(in nsISearchEngine engine);
+
+  /**
+   * Called to indicate that the engine addition process failed.
+   *
+   * @param errorCode
+   *        One of the ERROR_* values described above indicating the cause of
+   *        the failure.
+   */
+  void onError(in unsigned long errorCode);
+};
+
 /**
  * Callback for asynchronous initialization of nsIBrowserSearchService
  */
@@ -186,8 +210,7 @@ interface nsIBrowserSearchService : nsISupports
    * Adds a new search engine from the file at the supplied URI, optionally
    * asking the user for confirmation first.  If a confirmation dialog is
    * shown, it will offer the option to begin using the newly added engine
-   * right away; if no confirmation dialog is shown, the new engine will be
-   * used right away automatically.
+   * right away.
    *
    * @param engineURL
    *        The URL to the search engine's description file.
@@ -207,11 +230,16 @@ interface nsIBrowserSearchService : nsISupports
    *        value is false, the engine will be added to the list upon successful
    *        load, but it will not be selected as the current engine.
    *
+   * @param callback
+   *        A nsISearchInstallCallback that will be notified when the
+   *        addition is complete, or if the addition fails. It will not be
+   *        called if addEngine throws an exception.
+   *
    * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
    *         file cannot be successfully loaded.
    */
   void addEngine(in AString engineURL, in long dataType, in AString iconURL,
-                 in boolean confirm);
+                 in boolean confirm, [optional] in nsISearchInstallCallback callback);
 
   /**
    * Adds a new search engine, without asking the user for confirmation and

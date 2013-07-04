@@ -115,7 +115,6 @@
  "content/media/test/test_playback.html": "",
  "content/media/test/test_seekLies.html": "TIMED_OUT",
  "content/media/test/test_seekable2.html": "",
- "content/media/test/test_too_many_elements.html": "bug 775227",
  "content/media/test/test_wave_data_s16.html": "TIMED_OUT",
  "content/media/test/test_wave_data_u8.html": "TIMED_OUT",
  "content/media/webaudio/test/test_currentTime.html": "bug 868116",

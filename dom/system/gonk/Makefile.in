@@ -47,13 +47,6 @@ EXTRA_COMPONENTS = \
   NetworkInterfaceListService.js \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  net_worker.js \
-  ril_consts.js \
-  ril_worker.js \
-  systemlibs.js \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

@@ -3,12 +3,60 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
-/** This patch tests the Sections present in the Settings Menu and the 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.HashMap;
+
+/** This patch tests the Sections present in the Settings Menu and the
  *  default values for them
  */
 public class testSettingsMenuItems extends PixelTest {
     int midWidth;
     int midHeight;
+    String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox|Firefox Beta)";
+
+    // The following String[][] (arrays) match the menu hierarchy for each section.
+    // Each String[] (array) represents the menu items/choices in the following order:
+    //
+    //     itemTitle { defaultValue [options] }
+    //
+    // where defaultValue is optional, and there can be multiple options.
+    //
+    // This test assumes menu items are in order (scrolling down for off-screen items).
+    String[][] OPTIONS_CUSTOMIZE = {
+         { "Import from Android", "", "Bookmarks", "History", "Import" },
+         { "Show search suggestions" },
+         { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
+     };
+
+    String[][] OPTIONS_DISPLAY = {
+        { "Text size" },
+        { "Double tap to reflow text" },
+        { "Title bar", "Show page title", "Show page title", "Show page address" },
+        { "Character encoding", "Don't show menu", "Show menu", "Don't show menu" },
+        { "Plugins", "Tap to play", "Enabled", "Tap to play", "Disabled" },
+    };
+
+    String[][] OPTIONS_PRIVACY = {
+        { "Tracking", "Do not tell sites anything about my tracking preferences", "Tell sites that I do not want to be tracked", "Tell sites that I want to be tracked", "Do not tell sites anything about my tracking preferences" },
+        { "Cookies", "Enabled", "Enabled, excluding 3rd party", "Disabled" },
+        { "Remember passwords" },
+        { "Use master password" },
+        { "Clear private data", "", "Browsing & download history", "Downloaded files", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
+    };
+
+    String[][] OPTIONS_MOZILLA = {
+        { "About " + BRAND_NAME },
+        { "FAQs" },
+        { "Give feedback" },
+        { "Show product announcements" },
+        { "Data choices" },
+        { "Telemetry", "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make " + BRAND_NAME + " better" },
+        { "Crash Reporter", BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" },
+        { "Mozilla location services", "Help improve geolocation services for the Open Web by letting " + BRAND_NAME + " collect and send anonymous cellular tower data" },
+        { BRAND_NAME + " Health Report", "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
+        { "View my Health Report" },
+    };
 
     @Override
     protected int getTestType() {
@@ -20,22 +68,23 @@ public class testSettingsMenuItems extends PixelTest {
         midWidth = mDriver.getGeckoWidth()/2;
         midHeight = mDriver.getGeckoHeight()/2;
 
-        // In this First Section I've declared the strings that contain the Menu sections
-
-        // The first string contains menu sections that do not have multiple option
-        String menuItems [] = { "General", "About", "Sync", "Content", "Pinch to reflow text", "Privacy & Security", "Tell sites not to track me", "Remember passwords", "Use master password", "Show search suggestions", "Show product announcements", "Import & Export"};
-        // This string contains every menu section that have multiple selection options followed by the option that is selected by default
-        String defaultSectionsValues [] = { "Automatic updates", "Only over Wi-Fi", "Character encoding", "Don't show menu","Plugins", "Tap to play", "Text size", "Tiny", "Cookies", "Enable"};
-
-        // This string contains multiple selection options and every option available for each of them
-        String multipleSectionsOptions[][] = {
-            { "Automatic updates", "Enable", "Only over Wi-Fi", "Disable"},
-            { "Character encoding", "Show menu", "Don't show menu"},
-            { "Plugins", "Enable", "Tap to play", "Disable"},
-            { "Cookies", "Enable", "Enabled, excluding 3rd party", "Disable"},
-            { "Clear private data", "Browsing & download history", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site preferences"},
-            { "Import from Android",  "Bookmarks", "History"}
-        };
+        /*
+         * This settingsMenuItems Map provides the Settings hierarchy to test.
+         *
+         * The keys are the top-level settings categories, and the values are the
+         * array of menu items contained within each category.
+         *
+         * Each menu item is itself an array as follows:
+         *  - item title
+         *  - default string value of item (optional)
+         *  - string values of options that are displayed once clicked (optional).
+         */
+        Map<String, String[][]> settingsMenuItems = new HashMap<String, String[][]>();
+        // Add items for each category.
+        settingsMenuItems.put("Customize", OPTIONS_CUSTOMIZE);
+        settingsMenuItems.put("Display", OPTIONS_DISPLAY);
+        settingsMenuItems.put("Privacy", OPTIONS_PRIVACY);
+        settingsMenuItems.put("Mozilla", OPTIONS_MOZILLA);
 
         selectMenuItem("Settings");
 
@@ -46,44 +95,93 @@ public class testSettingsMenuItems extends PixelTest {
         waitForText("Enter Search"); // Waiting for page title to appear to be sure that is fully loaded before opening the menu
 
         selectMenuItem("Settings");
-        checkMenuSections(menuItems);
-        mSolo.scrollUp(); // Scrolling up the page to have in view the top sections
-        mSolo.scrollUp(); // Repeat scroll up because the top sections were not reached
+        checkForSync(mDevice);
 
-        checkMenuSections(defaultSectionsValues);
-        mSolo.scrollUp(); // Scrolling up the page to have in view the top sections again
-
-        checkMenuSubSections(multipleSectionsOptions);
+        checkMenuHierarchy(settingsMenuItems);
     }
 
-    public void checkMenuSections(String menuItems []) {
-        for (String item:menuItems) {
-            mAsserter.ok(mSolo.waitForText(item), "Waiting for  " + item + "  option", "The " + item + "  option is present");
+
+    /**
+     * Check for Sync in settings.
+     *
+     * Sync location is a top level menu item on phones, but is under "Customize" on tablets.
+     *
+     */
+    public void checkForSync(Device device) {
+        if (device.type.equals("tablet")) {
+            // Select "Customize" from settings.
+            String customizeString = "^Customize$";
+            waitForEnabledText(customizeString);
+            mSolo.clickOnText(customizeString);
         }
+        mAsserter.ok(mSolo.waitForText("Sync"), "Waiting for Sync option", "The Sync option is present");
     }
-    // This verifies the multiple option sections sub menus
-    public void checkMenuSubSections(String multipleSectionsOptions [][]) {
-        int i,j = 0;
-        for (i = 0; i <= multipleSectionsOptions [j].length; i++) {
-            String item = multipleSectionsOptions [i][j];
-            mAsserter.ok(mSolo.waitForText(item), "Waiting for  " + item + "  option", "The " + item + "  option is present");
-            mSolo.clickOnText(item);
-            for (j = 1; j < multipleSectionsOptions [i].length; j++)   {
-                String subMenu = multipleSectionsOptions [i][j];
-                mAsserter.ok(mSolo.waitForText(subMenu), "Waiting for  " + subMenu + "  option", "The " + subMenu + "  option is present");
 
-                // When reaching the specified sub menu section, for phone devices you have to scroll down the list in order to check all the options
-                if (subMenu.equals("Offline website data")) {
-                    Device mDevice = new Device();
-                    if (mDevice.type.equals("phone")) {
-                        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
-                        meh.dragSync(midWidth, midHeight+100, midWidth, midHeight-100);
-                    }
+    public void checkMenuHierarchy(Map<String, String[][]> settingsMap) {
+        // Check the items within each category.
+        for (Entry<String, String[][]> e : settingsMap.entrySet()) {
+            String section = "^" + e.getKey() + "$";
+            String[][] sectionItems = e.getValue();
+
+            waitForEnabledText(section);
+            mSolo.clickOnText(section);
+
+            // Check each item of the section.
+            for (String[] item : sectionItems) {
+                int itemLen = item.length;
+
+                // Each item must at least have a title.
+                mAsserter.ok(item.length > 0, "Section-item", "Each item must at least have a title");
+
+                // Check item title.
+                String itemTitle = "^" + item[0] + "$";
+                if (!waitForText(itemTitle)) {
+                    // If we don't see the item, scroll down once in case it's off-screen.
+                    scrollDown();
+                }
+                mAsserter.ok(mSolo.waitForText(itemTitle), "Waiting for settings item " + itemTitle + " in section " + section,
+                             "The " + itemTitle + " option is present in section " + section);
+                // Check item default, if it exists.
+                if (itemLen > 1) {
+                    String itemDefault = "^" + item[1] + "$";
+                    mAsserter.ok(mSolo.waitForText(itemDefault), "Waiting for settings item default " + itemDefault
+                                 + " in section " + section,
+                                 "The " + itemDefault + " default is present in section " + section);
+                }
+                // Check item choices, if they exist.
+                if (itemLen > 2) {
+                  waitForEnabledText(itemTitle);
+                  mSolo.clickOnText(itemTitle);
+                  for (int i = 2; i < itemLen; i++) {
+                      String itemChoice = "^" + item[i] + "$";
+                      if (!waitForText(itemChoice)) {
+                          // If we don't see the item, scroll down once in case it's off-screen.
+                          scrollDown();
+                      }
+                      mAsserter.ok(mSolo.waitForText(itemChoice), "Waiting for settings item choice " + itemChoice
+                                   + " in section " + section,
+                                   "The " + itemChoice + " choice is present in section " + section);
+                  }
+                  // Leave submenu after checking.
+                  waitForText("^Cancel$");
+                  mSolo.clickOnText("^Cancel$");
                 }
             }
-            waitForText("^Cancel$");
-            mSolo.clickOnText("^Cancel$");
-            j = 0;
+            // Navigate back a screen if on a phone.
+            if (mDevice.type.equals("phone")) {
+                // Click back to return to previous menu. Tablets shouldn't do this because they use headers and fragments.
+                mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            }
         }
+    }
+
+    /**
+     * Hacky way to scroll down.
+     *
+     * solo.scroll* does not work in dialogs.
+     */
+    private void scrollDown() {
+        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+        meh.dragSync(midWidth, midHeight+100, midWidth, midHeight-100);
     }
 }

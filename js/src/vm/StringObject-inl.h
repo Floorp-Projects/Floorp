@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef StringObject_inl_h___
-#define StringObject_inl_h___
+#ifndef vm_StringObject_inl_h
+#define vm_StringObject_inl_h
 
-#include "StringObject.h"
+#include "vm/StringObject.h"
+
+#include "jsobjinlines.h"
 
 namespace js {
 
@@ -41,10 +43,10 @@ StringObject::init(JSContext *cx, HandleString str)
 inline StringObject *
 StringObject::create(JSContext *cx, HandleString str, NewObjectKind newKind)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &StringClass, newKind);
+    JSObject *obj = NewBuiltinClassInstance(cx, &class_, newKind);
     if (!obj)
         return NULL;
-    Rooted<StringObject*> strobj(cx, &obj->asString());
+    Rooted<StringObject*> strobj(cx, &obj->as<StringObject>());
     if (!strobj->init(cx, str))
         return NULL;
     return strobj;
@@ -52,4 +54,4 @@ StringObject::create(JSContext *cx, HandleString str, NewObjectKind newKind)
 
 } // namespace js
 
-#endif /* StringObject_inl_h__ */
+#endif /* vm_StringObject_inl_h */

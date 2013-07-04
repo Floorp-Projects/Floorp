@@ -10,19 +10,25 @@
 #include "GrStencilAndCoverPathRenderer.h"
 #include "GrAAHairLinePathRenderer.h"
 #include "GrAAConvexPathRenderer.h"
-#include "GrSoftwarePathRenderer.h"
+#if GR_STROKE_PATH_RENDERING
+#include "../../experimental/StrokePathRenderer/GrStrokePathRenderer.h"
+#endif
+#if GR_ANDROID_PATH_RENDERING
+#include "../../experimental/AndroidPathRenderer/GrAndroidPathRenderer.h"
+#endif
 
-void GrPathRenderer::AddPathRenderers(GrContext* ctx,
-                                      GrPathRendererChain::UsageFlags flags,
-                                      GrPathRendererChain* chain) {
+void GrPathRenderer::AddPathRenderers(GrContext* ctx, GrPathRendererChain* chain) {
+#if GR_STROKE_PATH_RENDERING
+    chain->addPathRenderer(SkNEW(GrStrokePathRenderer))->unref();
+#endif
+#if GR_ANDROID_PATH_RENDERING
+    chain->addPathRenderer(SkNEW(GrAndroidPathRenderer))->unref();
+#endif
     if (GrPathRenderer* pr = GrStencilAndCoverPathRenderer::Create(ctx)) {
         chain->addPathRenderer(pr)->unref();
     }
-    if (!(GrPathRendererChain::kNonAAOnly_UsageFlag & flags)) {
-
-        if (GrPathRenderer* pr = GrAAHairLinePathRenderer::Create(ctx)) {
-            chain->addPathRenderer(pr)->unref();
-        }
-        chain->addPathRenderer(SkNEW(GrAAConvexPathRenderer))->unref();
+    if (GrPathRenderer* pr = GrAAHairLinePathRenderer::Create(ctx)) {
+        chain->addPathRenderer(pr)->unref();
     }
+    chain->addPathRenderer(SkNEW(GrAAConvexPathRenderer))->unref();
 }

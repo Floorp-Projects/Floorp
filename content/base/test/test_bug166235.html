@@ -63,9 +63,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
     transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
-    var data = SpecialPowers.wrap({});
+    var data = SpecialPowers.createBlankObject();
     transferable.getTransferData(mime, data, {}) ;
-    return data;
+    return SpecialPowers.wrap(data);
   }
   function testClipboardValue(mime, expected, test) {
     var data = getClipboardData(mime);

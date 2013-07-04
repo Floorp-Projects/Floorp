@@ -8,3 +8,14 @@ TEST_DIRS += ['tests']
 
 MODULE = 'contentprefs'
 
+EXTRA_COMPONENTS += [
+    'nsContentPrefService.js',
+    'nsContentPrefService.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'ContentPrefInstance.jsm',
+    'ContentPrefService2.jsm',
+    'ContentPrefStore.jsm',
+]
+

@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=879319
+-->
+<head>
+  <title>Test for Bug 879319</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=879319">Mozilla Bug 879319</a>
+
+<p id="msg"></p>
+
+<form id="form">
+  <img id="img0" name="bar0" />
+</form>
+<input id="input0" name="foo0" form="form" />
+<input id="input1" name="foo1" form="form" />
+<input id="input2" name="foo2" form="form" />
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 879319 **/
+
+var input0 = document.getElementById("input0");
+ok(input0, "input0 exists");
+
+var form = document.getElementById("form");
+ok(form, "form exists");
+is(form.foo0, input0, "Form.foo0 should exist");
+
+ok("foo0" in form.elements, "foo0 in form.elements");
+is(input0.form, form, "input0.form is form");
+
+input0.setAttribute("name", "tmp0");
+ok("tmp0" in form.elements, "tmp0 is in form.elements");
+ok(!("foo0" in form.elements), "foo0 is not in form.elements");
+is(form.tmp0, input0, "Form.tmp0 == input0");
+is(form.foo0, input0, "Form.foo0 is still here");
+
+input0.setAttribute("name", "tmp1");
+ok("tmp1" in form.elements, "tmp1 is in form.elements");
+ok(!("tmp0" in form.elements), "tmp0 is not in form.elements");
+ok(!("foo0" in form.elements), "foo0 is not in form.elements");
+is(form.tmp0, input0, "Form.tmp0 == input0");
+is(form.tmp1, input0, "Form.tmp1 == input0");
+is(form.foo0, input0, "Form.foo0 is still here");
+
+input0.setAttribute("form", "");
+ok(!("foo0" in form.elements), "foo0 is not in form.elements");
+is(form.foo0, undefined, "Form.foo0 should not still be here");
+is(form.tmp0, undefined, "Form.tmp0 should not still be here");
+is(form.tmp1, undefined, "Form.tmp1 should not still be here");
+
+var input1 = document.getElementById("input1");
+ok(input1, "input1 exists");
+is(form.foo1, input1, "Form.foo1 should exist");
+
+ok("foo1" in form.elements, "foo1 in form.elements");
+is(input1.form, form, "input1.form is form");
+
+input1.setAttribute("name", "foo0");
+ok("foo0" in form.elements, "foo0 is in form.elements");
+is(form.foo0, input1, "Form.foo0 should be input1");
+is(form.foo1, input1, "Form.foo1 should be input1");
+
+var input2 = document.getElementById("input2");
+ok(input2, "input2 exists");
+is(form.foo2, input2, "Form.foo2 should exist");
+input2.parentNode.removeChild(input2);
+ok(!("foo2" in form.elements), "foo2 is not in form.elements");
+is(form.foo2, undefined, "Form.foo2 should not longer be there");
+
+var img0 = document.getElementById("img0");
+ok(img0, "img0 exists");
+is(form.bar0, img0, "Form.bar0 should exist");
+
+img0.setAttribute("name", "old_bar0");
+is(form.old_bar0, img0, "Form.bar0 is still here");
+is(form.bar0, img0, "Form.bar0 is still here");
+
+img0.parentNode.removeChild(img0);
+is(form.bar0, undefined, "Form.bar0 should not be here");
+
+</script>
+</pre>
+</body>
+</html>

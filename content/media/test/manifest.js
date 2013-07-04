@@ -16,6 +16,13 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Used by test_bug654550.html, for videoStats preference
+var gVideoTests = [
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
+  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+  { name:"bogus.duh", type:"bogus/duh" }
+];
+
 // Used by test_progress to ensure we get the correct progress information
 // during resource download.
 var gProgressTests = [
@@ -314,6 +321,27 @@ var gSeekTests = [
   { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
+
+function IsWindows8OrLater() {
+  var re = /Windows NT (\d.\d)/;
+  var winver = navigator.userAgent.match(re);
+  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.2;
+}
+
+// These are files that are non seekable, due to problems with the media,
+// for example broken or missing indexes.
+var gUnseekableTests = [
+  { name:"no-cues.webm", type:"video/webm" },
+  { name:"bogus.duh", type:"bogus/duh"}
+];
+// Unfortunately big-buck-bunny-unseekable.mp4 is doesn't play on Windows 7, so
+// only include it in the unseekable tests if we're on later versions of Windows.
+if (navigator.userAgent.indexOf("Windows") == -1 ||
+    IsWindows8OrLater()) {
+  gUnseekableTests = gUnseekableTests.concat([
+    { name:"big-buck-bunny-unseekable.mp4", type:"video/mp4" }
+  ]);
+}
 
 // These are files suitable for using with a "new Audio" constructor.
 var gAudioTests = [
@@ -655,19 +683,25 @@ function mediaTestCleanup() {
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;
+  var oldGStreamer = undefined;
   var oldOpus = undefined;
-  try {
-    oldDefault = branch.getIntPref("preload.default");
-    oldAuto    = branch.getIntPref("preload.auto");
-    oldOpus    = branch.getBoolPref("opus.enabled");
-  } catch(ex) { }
+
+  try { oldGStreamer = branch.getBoolPref("gstreamer.enabled"); } catch(ex) { }
+  try { oldDefault   = branch.getIntPref("preload.default"); } catch(ex) { }
+  try { oldAuto      = branch.getIntPref("preload.auto"); } catch(ex) { }
+  try { oldOpus      = branch.getBoolPref("opus.enabled"); } catch(ex) { }
+
   branch.setIntPref("preload.default", 2); // preload_metadata
   branch.setIntPref("preload.auto", 3); // preload_enough
   // test opus playback iff the pref exists
   if (oldOpus !== undefined)
     branch.setBoolPref("opus.enabled", true);
+  if (oldGStreamer !== undefined)
+    branch.setBoolPref("gstreamer.enabled", true);
 
   window.addEventListener("unload", function() {
+    if (oldGStreamer !== undefined)
+      branch.setBoolPref("gstreamer.enabled", oldGStreamer);
     branch.setIntPref("preload.default", oldDefault);
     branch.setIntPref("preload.auto", oldAuto);
     if (oldOpus !== undefined)

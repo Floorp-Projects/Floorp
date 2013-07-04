@@ -34,7 +34,7 @@
 
 #include <map>
 
-#if defined(MOZ_WIDGET_GTK)
+#if (MOZ_WIDGET_GTK == 2)
 #include "gtk2xtbin.h"
 #endif
 
@@ -383,7 +383,7 @@ private:
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
-#if defined(MOZ_WIDGET_GTK)
+#if (MOZ_WIDGET_GTK == 2)
     bool mXEmbed;
     XtClient mXtClient;
 #endif

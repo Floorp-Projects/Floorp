@@ -8,6 +8,7 @@
 #include "plstr.h"
 #include "plbase64.h"
 
+#include "mozilla/Services.h"
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -18,6 +19,7 @@
 #include "nsITokenPasswordDialogs.h"
 
 #include "nsISecretDecoderRing.h"
+#include "nsCRT.h"
 #include "nsSDR.h"
 #include "nsNSSComponent.h"
 #include "nsNSSShutDown.h"

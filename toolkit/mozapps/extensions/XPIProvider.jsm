@@ -25,6 +25,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "ChromeRegistry",
+                                   "@mozilla.org/chrome/chrome-registry;1",
+                                   "nsIChromeRegistry");
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "ResProtocolHandler",
+                                   "@mozilla.org/network/protocol;1?name=resource",
+                                   "nsIResProtocolHandler");
+
+const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
+                                       "initWithPath");
+
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_INSTALL_CACHE              = "extensions.installCache";
 const PREF_BOOTSTRAP_ADDONS           = "extensions.bootstrappedAddons";
@@ -1508,6 +1520,123 @@ var XPIProvider = {
   unpackedAddons: 0,
 
   /**
+   * Adds or updates a URI mapping for an Addon.id.
+   *
+   * Mappings should not be removed at any point. This is so that the mappings
+   * will be still valid after an add-on gets disabled or uninstalled, as
+   * consumers may still have URIs of (leaked) resources they want to map.
+   */
+  _addURIMapping: function XPI__addURIMapping(aID, aFile) {
+    try {
+      // Always use our own mechanics instead of nsIIOService.newFileURI, so
+      // that we can be sure to map things as we want them mapped.
+      let uri = this._resolveURIToFile(getURIForResourceInFile(aFile, "."));
+      if (!uri) {
+        throw new Error("Cannot resolve");
+      }
+      this._ensureURIMappings();
+      this._uriMappings[aID] = uri.spec;
+    }
+    catch (ex) {
+      WARN("Failed to add URI mapping", ex);
+    }
+  },
+
+  /**
+   * Ensures that the URI to Addon mappings are available.
+   *
+   * The function will add mappings for all non-bootstrapped but enabled
+   * add-ons.
+   * Bootstrapped add-on mappings will be added directly when the bootstrap
+   * scope get loaded. (See XPIProvider._addURIMapping() and callers)
+   */
+  _ensureURIMappings: function XPI__ensureURIMappings() {
+    if (this._uriMappings) {
+      return;
+    }
+    // XXX Convert to Map(), once it gets stable with stable iterators
+    this._uriMappings = Object.create(null);
+
+    // XXX Convert to Set(), once it gets stable with stable iterators
+    let enabled = Object.create(null);
+    for (let a of this.enabledAddons.split(",")) {
+      a = decodeURIComponent(a.split(":")[0]);
+      enabled[a] = null;
+    }
+
+    let cache = JSON.parse(Prefs.getCharPref(PREF_INSTALL_CACHE, "[]"));
+    for (let loc of cache) {
+      for (let [id, val] in Iterator(loc.addons)) {
+        if (!(id in enabled)) {
+          continue;
+        }
+        let file = new nsIFile(val.descriptor);
+        let spec = Services.io.newFileURI(file).spec;
+        this._uriMappings[id] = spec;
+      }
+    }
+  },
+
+  /**
+   * Resolve a URI back to physical file.
+   *
+   * Of course, this works only for URIs pointing to local resources.
+   *
+   * @param  aURI
+   *         URI to resolve
+   * @return
+   *         resolved nsIFileURL
+   */
+  _resolveURIToFile: function XPI__resolveURIToFile(aURI) {
+    switch (aURI.scheme) {
+      case "jar":
+      case "file":
+        if (aURI instanceof Ci.nsIJARURI) {
+          return this._resolveURIToFile(aURI.JARFile);
+        }
+        return aURI;
+
+      case "chrome":
+        aURI = ChromeRegistry.convertChromeURL(aURI);
+        return this._resolveURIToFile(aURI);
+
+      case "resource":
+        aURI = Services.io.newURI(ResProtocolHandler.resolveURI(aURI), null,
+                                  null);
+        return this._resolveURIToFile(aURI);
+
+      case "view-source":
+        aURI = Services.io.newURI(aURI.path, null, null);
+        return this._resolveURIToFile(aURI);
+
+      case "about":
+        if (aURI.spec == "about:blank") {
+          // Do not attempt to map about:blank
+          return null;
+        }
+
+        let chan;
+        try {
+          chan = Services.io.newChannelFromURI(aURI);
+        }
+        catch (ex) {
+          return null;
+        }
+        // Avoid looping
+        if (chan.URI.equals(aURI)) {
+          return null;
+        }
+        // We want to clone the channel URI to avoid accidentially keeping
+        // unnecessary references to the channel or implementation details
+        // around.
+        return this._resolveURIToFile(chan.URI.clone());
+
+      default:
+        return null;
+    }
+  },
+
+  /**
    * Starts the XPI provider initializes the install locations and prefs.
    *
    * @param  aAppChanged
@@ -1731,6 +1860,9 @@ var XPIProvider = {
 
     // This is needed to allow xpcshell tests to simulate a restart
     this.extensionsActive = false;
+
+    // Remove URI mappings again
+    delete this._uriMappings;
 
     if (gLazyObjectsLoaded) {
       XPIDatabase.shutdown(function shutdownCallback() {
@@ -3359,6 +3491,34 @@ var XPIProvider = {
   },
 
   /**
+   * Synchronously map a URI to the corresponding Addon ID.
+   *
+   * Mappable URIs are limited to in-application resources belonging to the
+   * add-on, such as Javascript compartments, XUL windows, XBL bindings, etc.
+   * but do not include URIs from meta data, such as the add-on homepage.
+   *
+   * @param  aURI
+   *         nsIURI to map or null
+   * @return string containing the Addon ID
+   * @see    AddonManager.mapURIToAddonID
+   * @see    amIAddonManager.mapURIToAddonID
+   */
+  mapURIToAddonID: function XPI_mapURIToAddonID(aURI) {
+    this._ensureURIMappings();
+    let resolved = this._resolveURIToFile(aURI);
+    if (!resolved) {
+      return null;
+    }
+    resolved = resolved.spec;
+    for (let [id, spec] in Iterator(this._uriMappings)) {
+      if (resolved.startsWith(spec)) {
+        return id;
+      }
+    }
+    return null;
+  },
+
+  /**
    * Called when a new add-on has been enabled when only one add-on of that type
    * can be enabled.
    *
@@ -3721,6 +3881,9 @@ var XPIProvider = {
 
     let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                  createInstance(Ci.mozIJSSubScriptLoader);
+
+    // Add a mapping for XPIProvider.mapURIToAddonID
+    this._addURIMapping(aId, aFile);
 
     try {
       // Copy the reason values from the global object into the bootstrap scope.

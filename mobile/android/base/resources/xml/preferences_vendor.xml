@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                  android:title="@string/pref_category_vendor"
+                  android:enabled="false">
+
+    <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
+                                      url="about:" />
+
+    <org.mozilla.gecko.LinkPreference android:title="@string/pref_vendor_faqs"
+                                      url="https://support.mozilla.org/kb/firefox-android-faq"/>
+
+    <org.mozilla.gecko.LinkPreference android:title="@string/pref_vendor_feedback"
+                                      url="about:feedback" />
+
+    <CheckBoxPreference android:key="android.not_a_preference.privacy.announcements.enabled"
+                        android:title="@string/pref_show_product_announcements"
+                        android:defaultValue="true"
+                        android:persistent="true" />
+
+    <PreferenceCategory android:key="android.not_a_preference.datareporting.preferences"
+                        android:title="@string/pref_category_datareporting">
+
+        <CheckBoxPreference android:key="datareporting.telemetry.enabled"
+                            android:title="@string/datareporting_telemetry_title"
+                            android:summary="@string/datareporting_telemetry_summary" />
+
+        <CheckBoxPreference android:key="datareporting.crashreporter.submitEnabled"
+                            android:title="@string/datareporting_crashreporter_title_short"
+                            android:summary="@string/datareporting_crashreporter_summary"
+                            android:defaultValue="false" />
+
+        <CheckBoxPreference android:key="app.geo.reportdata"
+                            android:title="@string/datareporting_wifi_title"
+                            android:summary="@string/datareporting_wifi_summary" />
+
+        <CheckBoxPreference android:key="android.not_a_preference.healthreport.uploadEnabled"
+                            android:title="@string/datareporting_fhr_title"
+                            android:summary="@string/datareporting_fhr_summary2"
+                            android:defaultValue="true" />
+
+        <org.mozilla.gecko.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"
+                                                    android:title="@string/datareporting_abouthr_title"
+                                                    url="about:healthreport" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

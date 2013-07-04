@@ -15,14 +15,14 @@ add_test(function test_networkStatsAvailable_ok() {
   NetworkStatsService.networkStatsAvailable(function (success, msg) {
     do_check_eq(success, true);
     run_next_test();
-  }, true, Ci.nsINetworkInterface.NETWORK_TYPE_WIFI, 1234, 4321, new Date());
+  }, Ci.nsINetworkInterface.NETWORK_TYPE_WIFI, true, 1234, 4321, new Date());
 });
 
 add_test(function test_networkStatsAvailable_failure() {
   NetworkStatsService.networkStatsAvailable(function (success, msg) {
     do_check_eq(success, false);
     run_next_test();
-  }, false, Ci.nsINetworkInterface.NETWORK_TYPE_WIFI, 1234, 4321, new Date());
+  }, Ci.nsINetworkInterface.NETWORK_TYPE_WIFI, false, 1234, 4321, new Date());
 });
 
 add_test(function test_update_invalidConnection() {
@@ -77,24 +77,31 @@ add_test(function test_updateStats_failure() {
 });
 
 add_test(function test_queue() {
+  // Fill connections with fake network interfaces (wlan0 and rmnet0)
+  // to enable netd async requests
+  NetworkStatsService._connectionTypes[Ci.nsINetworkInterface.NETWORK_TYPE_WIFI]
+                     .network.name = 'wlan0';
+  NetworkStatsService._connectionTypes[Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE]
+                     .network.name = 'rmnet0';
+
   NetworkStatsService.updateStats(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI);
   NetworkStatsService.updateStats(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
   do_check_eq(NetworkStatsService.updateQueue.length, 2);
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks.length, 1);
 
-  NetworkStatsService.updateStats(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI, function(success, msg){
-    do_check_eq(NetworkStatsService.updateQueue.length, 1);
-  });
+  var callback = function(success, msg) {
+    return;
+  };
 
-  NetworkStatsService.updateStats(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, function(success, msg){
-    do_check_eq(NetworkStatsService.updateQueue.length, 0);
-    run_next_test();
-  });
+  NetworkStatsService.updateStats(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI, callback);
+  NetworkStatsService.updateStats(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, callback);
 
   do_check_eq(NetworkStatsService.updateQueue.length, 2);
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks.length, 2);
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks[0], null);
   do_check_neq(NetworkStatsService.updateQueue[0].callbacks[1], null);
+
+  run_next_test();
 });
 
 function run_test() {

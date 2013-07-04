@@ -4,16 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_range_analysis_h__
-#define jsion_range_analysis_h__
+#ifndef ion_RangeAnalysis_h
+#define ion_RangeAnalysis_h
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "wtf/Platform.h"
-#include "MIR.h"
-#include "CompileInfo.h"
-#include "IonAnalysis.h"
+#include "ion/MIR.h"
+#include "ion/CompileInfo.h"
+#include "ion/IonAnalysis.h"
 
 namespace js {
 namespace ion {
@@ -78,7 +77,8 @@ class RangeAnalysis
     MIRGraph &graph_;
 
   public:
-    RangeAnalysis(MIRGraph &graph);
+    MOZ_CONSTEXPR RangeAnalysis(MIRGraph &graph) :
+        graph_(graph) {}
     bool addBetaNobes();
     bool analyze();
     bool removeBetaNobes();
@@ -368,5 +368,4 @@ class Range : public TempObject {
 } // namespace ion
 } // namespace js
 
-#endif // jsion_range_analysis_h__
-
+#endif /* ion_RangeAnalysis_h */

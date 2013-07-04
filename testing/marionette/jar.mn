@@ -4,11 +4,11 @@
 
 marionette.jar:
 % content marionette %content/
-  content/marionette-actors.js      (marionette-actors.js)
+  content/marionette-server.js      (marionette-server.js)
   content/marionette-listener.js    (marionette-listener.js)
   content/marionette-elements.js    (marionette-elements.js)
   content/marionette-sendkeys.js    (marionette-sendkeys.js)
-  content/marionette-log-obj.js     (marionette-log-obj.js)
+  content/marionette-common.js      (marionette-common.js)
   content/marionette-simpletest.js  (marionette-simpletest.js)
   content/EventUtils.js  (EventUtils.js)
   content/ChromeUtils.js  (ChromeUtils.js)

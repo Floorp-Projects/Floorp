@@ -70,7 +70,7 @@ private:
   nsAutoArrayPtr<float> mFrameBuffer;
   uint32_t mFrameBufferLength;
   float mTime;
-  JSObject* mCachedArray;
+  JS::Heap<JSObject*> mCachedArray;
   bool mAllowAudioData;
 };
 

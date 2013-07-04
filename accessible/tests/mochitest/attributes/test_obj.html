@@ -22,7 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
     function doTest()
     {
       // aria
-      testAttrs("atomic", {"atomic" : "true"}, true);
+      testAttrs("atomic", {"atomic" : "true", "container-atomic" : "true"}, true);
+      testAttrs(getNode("atomic").firstChild, {"container-atomic" : "true"}, true);
+      testAbsentAttrs("atomic_false", {"atomic" : "false", "container-atomic" : "false"});
+      testAbsentAttrs(getNode("atomic_false").firstChild, {"container-atomic" : "false"});
+
       testAttrs("autocomplete", {"autocomplete" : "true"}, true);
       testAttrs("checkbox", {"checkable" : "true"}, true); 
       testAttrs("checkedCheckbox", {"checkable" : "true"}, true); 
@@ -174,7 +178,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   </pre>
 
   <!-- aria -->
-  <div id="atomic" aria-atomic="true"></div>
+  <div id="atomic" aria-atomic="true">live region</div>
+  <div id="atomic_false" aria-atomic="false">live region</div>
   <div id="autocomplete" role="textbox" aria-autocomplete="true"></div>
   <div id="checkbox" role="checkbox"></div>
   <div id="checkedCheckbox" role="checkbox" aria-checked="true"></div>

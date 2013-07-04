@@ -23,17 +23,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ExecutableAllocator_h
-#define ExecutableAllocator_h
+#ifndef assembler_jit_ExecutableAllocator_h
+#define assembler_jit_ExecutableAllocator_h
 
 #include <stddef.h> // for ptrdiff_t
 #include <limits>
 
 #include "jsalloc.h"
-#include "jsapi.h"
-#include "jsprvtd.h"
 
-#include "assembler/wtf/Assertions.h"
+#include "assembler/wtf/Platform.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 
@@ -164,7 +162,7 @@ private:
           case ASMJS_CODE:    m_asmJSCodeBytes    += n;        break;
           case REGEXP_CODE:   m_regexpCodeBytes   += n;        break;
           case OTHER_CODE:    m_otherCodeBytes    += n;        break;
-          default:            JS_NOT_REACHED("bad code kind"); break;
+          default:            MOZ_ASSUME_UNREACHABLE("bad code kind");
         }
         return result;
     }
@@ -507,5 +505,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER)
 
-#endif // !defined(ExecutableAllocator)
-
+#endif /* assembler_jit_ExecutableAllocator_h */

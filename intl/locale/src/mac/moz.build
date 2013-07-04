@@ -12,3 +12,5 @@ CPP_SOURCES += [
     'nsMacCharset.cpp',
 ]
 
+LIBRARY_NAME = 'platlocale_s'
+

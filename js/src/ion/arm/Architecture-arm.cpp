@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define HWCAP_ARMv7 (1 << 31)
-#include <mozilla/StandardInteger.h>
+#include "mozilla/StandardInteger.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -122,6 +122,11 @@ bool has32DP()
 bool useConvReg()
 {
     return has32DP();
+}
+
+bool hasIDIV()
+{
+    return js::ion::getFlags() & HWCAP_IDIVA;
 }
 
 } // namespace ion

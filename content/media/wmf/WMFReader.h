@@ -74,6 +74,11 @@ private:
   // Attempt to initialize DXVA. Returns true on success.
   bool InitializeDXVA();  
 
+  // Notifies the MediaDecoder of the number of bytes we have consumed
+  // since last time we called this. We call this once per call to
+  // DecodeVideoFrame() and/or DecodeAudioData().
+  void NotifyBytesConsumed();
+
   RefPtr<IMFSourceReader> mSourceReader;
   RefPtr<WMFByteStream> mByteStream;
   RefPtr<WMFSourceReaderCallback> mSourceReaderCallback;
@@ -104,13 +109,14 @@ private:
 
   bool mHasAudio;
   bool mHasVideo;
-  bool mCanSeek;
   bool mUseHwAccel;
 
   // We can't call WMFDecoder::IsMP3Supported() on non-main threads, since it
   // checks a pref, so we cache its value in mIsMP3Enabled and use that on
   // the decode thread.
   const bool mIsMP3Enabled;
+
+  bool mCOMInitialized;
 };
 
 } // namespace mozilla

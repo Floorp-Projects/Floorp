@@ -10,8 +10,6 @@
 interface DummyInterface {
   readonly attribute OnErrorEventHandlerNonNull onErrorEventHandler;
   FilePropertyBag fileBag();
-  CFStateChangeEventDict cfstateChangeEvent();
-  USSDReceivedEventDict ussdReceivedEvent();
   InspectorRGBTriple rgbTriple();
   Function getFunction();
   void funcSocketsDict(optional SocketsDict arg);

@@ -49,7 +49,7 @@ class BailoutStack
 # pragma pack(pop)
 #endif
 
-IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
                                        BailoutStack *bailout)
   : IonFrameIterator(activations),
     machine_(bailout->machineState())
@@ -64,7 +64,7 @@ IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
     snapshotOffset_ = bailout->snapshotOffset();
 }
 
-IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
                                        InvalidationBailoutStack *bailout)
   : IonFrameIterator(activations),
     machine_(bailout->machine())

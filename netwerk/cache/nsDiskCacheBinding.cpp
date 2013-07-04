@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MemoryReporting.h"
 #include "nsCache.h"
 #include <limits.h>
 
@@ -372,7 +373,7 @@ nsDiskCacheBindery::ActiveBindings()
 
 struct AccumulatorArg {
     size_t mUsage;
-    nsMallocSizeOfFun mMallocSizeOf;
+    mozilla::MallocSizeOf mMallocSizeOf;
 };
 
 PLDHashOperator
@@ -408,7 +409,7 @@ AccumulateHeapUsage(PLDHashTable *table, PLDHashEntryHdr *hdr, uint32_t number,
  * SizeOfExcludingThis: return the amount of heap memory (bytes) being used by the bindery
  */
 size_t
-nsDiskCacheBindery::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
+nsDiskCacheBindery::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     if (!initialized) return 0;

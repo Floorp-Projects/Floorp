@@ -26,16 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MIPSAssembler_h
-#define MIPSAssembler_h
+#ifndef assembler_assembler_MIPSAssembler_h
+#define assembler_assembler_MIPSAssembler_h
 
 #if ENABLE(ASSEMBLER) && CPU(MIPS)
 
-#include "AssemblerBuffer.h"
+#include "assembler/assembler/AssemblerBuffer.h"
 #include "assembler/wtf/Assertions.h"
 #include "assembler/wtf/SegmentedVector.h"
 
-#include "methodjit/Logging.h"
 #define IPFX  "        %s"
 #define ISPFX "        "
 #ifdef JS_METHODJIT_SPEW
@@ -1070,4 +1069,4 @@ private:
 
 #endif // ENABLE(ASSEMBLER) && CPU(MIPS)
 
-#endif // MIPSAssembler_h
+#endif /* assembler_assembler_MIPSAssembler_h */

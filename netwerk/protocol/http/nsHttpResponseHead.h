@@ -28,6 +28,8 @@ public:
     const nsHttpHeaderArray & Headers()   const { return mHeaders; }
     nsHttpHeaderArray    &Headers()             { return mHeaders; }
     nsHttpVersion         Version()       const { return mVersion; }
+// X11's Xlib.h #defines 'Status' to 'int' on some systems!
+#undef Status
     uint16_t              Status()        const { return mStatus; }
     const nsAFlatCString &StatusText()    const { return mStatusText; }
     int64_t               ContentLength() const { return mContentLength; }
@@ -119,10 +121,10 @@ private:
     nsHttpHeaderArray mHeaders;
     nsHttpVersion     mVersion;
     uint16_t          mStatus;
-    mozilla::net::InfallableCopyCString mStatusText;
+    nsCString         mStatusText;
     int64_t           mContentLength;
-    mozilla::net::InfallableCopyCString mContentType;
-    mozilla::net::InfallableCopyCString mContentCharset;
+    nsCString         mContentType;
+    nsCString         mContentCharset;
     bool              mCacheControlNoStore;
     bool              mCacheControlNoCache;
     bool              mPragmaNoCache;

@@ -11,7 +11,7 @@
 // Public methods
 
 nsSMILValue::nsSMILValue(const nsISMILType* aType)
-  : mType(&nsSMILNullType::sSingleton)
+  : mType(nsSMILNullType::Singleton())
 {
   if (!aType) {
     NS_ERROR("Trying to construct nsSMILValue with null mType pointer");
@@ -22,7 +22,7 @@ nsSMILValue::nsSMILValue(const nsISMILType* aType)
 }
 
 nsSMILValue::nsSMILValue(const nsSMILValue& aVal)
-  : mType(&nsSMILNullType::sSingleton)
+  : mType(nsSMILNullType::Singleton())
 {
   InitAndCheckPostcondition(aVal.mType);
   mType->Assign(*this, aVal);
@@ -62,7 +62,7 @@ nsSMILValue::Swap(nsSMILValue& aOther)
 
   // |tmp| is about to die -- we need to clear its mType, so that its
   // destructor doesn't muck with the data we just transferred out of it.
-  tmp.mType = &nsSMILNullType::sSingleton;
+  tmp.mType = nsSMILNullType::Singleton();
 }
 
 nsresult

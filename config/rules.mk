@@ -16,6 +16,12 @@ endif
 # responsibility between Makefile.in and mozbuild files.
 _MOZBUILD_EXTERNAL_VARIABLES := \
   DIRS \
+  EXTRA_PP_COMPONENTS \
+  GTEST_CMMSRCS \
+  GTEST_CPPSRCS \
+  GTEST_CSRCS \
+  HOST_CSRCS \
+  HOST_LIBRARY_NAME \
   MODULE \
   PARALLEL_DIRS \
   TEST_DIRS \
@@ -110,10 +116,6 @@ endif # ifndef .PYMAKE
 
 _VPATH_SRCS = $(abspath $<)
 
-ifdef EXTRA_DSO_LIBS
-EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
-endif
-
 ################################################################################
 # Testing frameworks support
 ################################################################################
@@ -163,9 +165,15 @@ ifdef CPP_UNIT_TESTS
 # through TestHarness.h, by modifying the list of includes and the libs against
 # which stuff links.
 CPPSRCS += $(CPP_UNIT_TESTS)
-SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+CPP_UNIT_TEST_BINS := $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS += $(CPP_UNIT_TEST_BINS)
 INCLUDES += -I$(DIST)/include/testing
 LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) $(MOZ_JS_LIBS) $(if $(JS_SHARED_LIBRARY),,$(MOZ_ZLIB_LIBS))
+
+ifndef MOZ_PROFILE_GENERATE
+libs:: $(CPP_UNIT_TEST_BINS) $(call mkdir_deps,$(DIST)/cppunittests)
+	$(NSINSTALL) $(CPP_UNIT_TEST_BINS) $(DIST)/cppunittests
+endif
 
 check::
 	@$(PYTHON) $(topsrcdir)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS))
@@ -419,15 +427,20 @@ ifdef MOZ_UPDATE_XTERM
 UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2) ;
 endif
 
-define SUBMAKE # $(call SUBMAKE,target,directory)
+# Static directories are largely independent of our build system. But, they
+# could share the same build mechanism (like moz.build files). We need to
+# prevent leaking of our backend state to these independent build systems. This
+# is why MOZBUILD_BACKEND_CHECKED isn't exported to make invocations for static
+# directories.
+define SUBMAKE # $(call SUBMAKE,target,directory,static)
 +@$(UPDATE_TITLE)
-+$(MAKE) $(if $(2),-C $(2)) $(1)
++$(if $(3), MOZBUILD_BACKEND_CHECKED=,) $(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
 
 define TIER_DIR_SUBMAKE
 @echo "BUILDSTATUS TIERDIR_START $(2)"
-$(call SUBMAKE,$(1),$(2))
+$(call SUBMAKE,$(1),$(2),$(3))
 @echo "BUILDSTATUS TIERDIR_FINISH $(2)"
 
 endef # Ths empty line is important.
@@ -442,11 +455,6 @@ endif
 ifneq (,$(strip $(PARALLEL_DIRS)))
 LOOP_OVER_PARALLEL_DIRS = \
   $(foreach dir,$(PARALLEL_DIRS),$(call SUBMAKE,$@,$(dir)))
-endif
-
-ifneq (,$(strip $(STATIC_DIRS)))
-LOOP_OVER_STATIC_DIRS = \
-  $(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,$@,$(dir)))
 endif
 
 ifneq (,$(strip $(TOOL_DIRS)))
@@ -674,7 +682,7 @@ else
 
 default all::
 ifneq (,$(strip $(STATIC_DIRS)))
-	$(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,,$(dir)))
+	$(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,,$(dir),1))
 endif
 	$(MAKE) export
 	$(MAKE) libs
@@ -718,7 +726,7 @@ endif
 	@echo "BUILDSTATUS DIRS $$($$@_dirs)"
 ifneq (,$(tier_$(1)_staticdirs))
 	@echo "BUILDSTATUS SUBTIER_START $(1) static"
-	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,,$$(dir)))
+	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,,$$(dir),1))
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) static"
 endif
 ifneq (,$(tier_$(1)_dirs))
@@ -1183,22 +1191,13 @@ else
 endif
 endif
 
-# need 3 separate lines for OS/2
-%:: %.pl
-	$(RM) $@
-	cp $< $@
-	chmod +x $@
-
-%:: %.sh
-	$(RM) $@
-	cp $< $@
-	chmod +x $@
-
 # Cancel these implicit rules
 #
 %: %,v
 
 %: RCS/%,v
+
+%: RCS/%
 
 %: s.%
 
@@ -1491,21 +1490,23 @@ libs:: $(call mkdir_deps,$(FINAL_TARGET))
 endif
 
 ################################################################################
-# Copy each element of EXTRA_JS_MODULES to JS_MODULES_PATH, or
-# $(FINAL_TARGET)/modules if that isn't defined.
-JS_MODULES_PATH ?= $(FINAL_TARGET)/modules
+# Copy each element of EXTRA_JS_MODULES to
+# $(FINAL_TARGET)/$(JS_MODULES_PATH). JS_MODULES_PATH defaults to "modules"
+# if it is undefined.
+JS_MODULES_PATH ?= modules
+FINAL_JS_MODULES_PATH := $(FINAL_TARGET)/$(JS_MODULES_PATH)
 
 ifdef EXTRA_JS_MODULES
 ifndef NO_DIST_INSTALL
 EXTRA_JS_MODULES_FILES := $(EXTRA_JS_MODULES)
-EXTRA_JS_MODULES_DEST := $(JS_MODULES_PATH)
+EXTRA_JS_MODULES_DEST := $(FINAL_JS_MODULES_PATH)
 INSTALL_TARGETS += EXTRA_JS_MODULES
 endif
 endif
 
 ifdef EXTRA_PP_JS_MODULES
 ifndef NO_DIST_INSTALL
-EXTRA_PP_JS_MODULES_PATH := $(JS_MODULES_PATH)
+EXTRA_PP_JS_MODULES_PATH := $(FINAL_JS_MODULES_PATH)
 PP_TARGETS += EXTRA_PP_JS_MODULES
 endif
 endif

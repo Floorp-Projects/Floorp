@@ -9,11 +9,12 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 
+#include "jsanalyzeinlines.h"
 #include "jsinferinlines.h"
+#include "jsopcodeinlines.h"
 
 using namespace js;
 using namespace js::analyze;
@@ -64,8 +65,6 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     code->jumpTarget = true;
 
     if (offset < *currentOffset) {
-        /* Scripts containing loops are never inlined. */
-        isJaegerInlineable = false;
         hasLoops_ = true;
 
         if (code->analyzed) {
@@ -100,7 +99,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
 void
 ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeAnalysis);
+    JS_ASSERT(cx->compartment()->activeAnalysis);
     JS_ASSERT(!ranBytecode());
     LifoAlloc &alloc = cx->analysisLifoAlloc();
 
@@ -146,18 +145,14 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
      * If the script is in debug mode, JS_SetFrameReturnValue can be called at
      * any safe point.
      */
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         usesReturnValue_ = true;
 
     bool heavyweight = script_->function() && script_->function()->isHeavyweight();
 
-    isJaegerCompileable = true;
-
-    isJaegerInlineable = isIonInlineable = true;
-    if (heavyweight || cx->compartment->debugMode())
-        isJaegerInlineable = isIonInlineable = false;
-    if (script_->argumentsHasVarBinding())
-        isJaegerInlineable = false;
+    isIonInlineable = true;
+    if (heavyweight || cx->compartment()->debugMode())
+        isIonInlineable = false;
 
     modifiesArguments_ = false;
     if (heavyweight)
@@ -246,7 +241,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         if (script_->hasBreakpointsAt(pc)) {
             code->safePoint = true;
             canTrackVars = false;
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
         }
 
         unsigned stackDepth = code->stackDepth;
@@ -271,7 +266,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETRVAL:
           case JSOP_POPV:
             usesReturnValue_ = true;
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             break;
 
           case JSOP_NAME:
@@ -284,7 +279,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETALIASEDVAR:
           case JSOP_LAMBDA:
             usesScopeChain_ = true;
-            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_DEFFUN:
@@ -293,24 +287,24 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETCONST:
             usesScopeChain_ = true; // Requires access to VarObj via ScopeChain.
             canTrackVars = false;
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             break;
 
           case JSOP_EVAL:
             canTrackVars = false;
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             break;
 
           case JSOP_ENTERWITH:
-            isJaegerCompileable = canTrackVars = false;
-            isJaegerInlineable = isIonInlineable = false;
+            canTrackVars = false;
+            isIonInlineable = false;
             break;
 
           case JSOP_ENTERLET0:
           case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:
           case JSOP_LEAVEBLOCK:
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             break;
 
           case JSOP_THIS:
@@ -324,7 +318,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           case JSOP_TABLESWITCH: {
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
@@ -355,7 +349,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -407,7 +401,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_SETARG:
             modifiesArguments_ = true;
-            isJaegerInlineable = false;
             break;
 
           case JSOP_GETPROP:
@@ -418,20 +411,17 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             numPropertyReads_++;
             break;
 
-          /* Additional opcodes which can be compiled but which can't be inlined. */
-          case JSOP_ARGUMENTS:
-          case JSOP_FUNAPPLY:
-          case JSOP_CALLEE:
-            isJaegerInlineable = false;
-            break;
           case JSOP_THROW:
           case JSOP_EXCEPTION:
           case JSOP_DEBUGGER:
-          case JSOP_FUNCALL:
-            isIonInlineable = isJaegerInlineable = false;
+            isIonInlineable = false;
             break;
 
           /* Additional opcodes which can be both compiled both normally and inline. */
+          case JSOP_ARGUMENTS:
+          case JSOP_FUNCALL:
+          case JSOP_FUNAPPLY:
+          case JSOP_CALLEE:
           case JSOP_NOP:
           case JSOP_UNDEFINED:
           case JSOP_GOTO:
@@ -528,8 +518,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           default:
-            isJaegerCompileable = false;
-            isJaegerInlineable = isIonInlineable = false;
+            isIonInlineable = false;
             break;
         }
 
@@ -598,7 +587,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 void
 ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeAnalysis && !ranLifetimes() && !failed());
+    JS_ASSERT(cx->compartment()->activeAnalysis && !ranLifetimes() && !failed());
 
     if (!ranBytecode()) {
         analyzeBytecode(cx);
@@ -1087,7 +1076,7 @@ ScriptAnalysis::ensureVariable(LifetimeVariable &var, unsigned until)
 void
 ScriptAnalysis::analyzeSSA(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeAnalysis && !ranSSA() && !failed());
+    JS_ASSERT(cx->compartment()->activeAnalysis && !ranSSA() && !failed());
 
     if (!ranLifetimes()) {
         analyzeLifetimes(cx);
@@ -1773,7 +1762,7 @@ ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v)
             return false;
     }
     if (!seen.append(v)) {
-        cx->compartment->types.setPendingNukeTypes(cx);
+        cx->compartment()->types.setPendingNukeTypes(cx);
         return true;
     }
 
@@ -1836,7 +1825,7 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
      * Always construct arguments objects when in debug mode and for generator
      * scripts (generators can be suspended when speculation fails).
      */
-    if (cx->compartment->debugMode() || script_->isGenerator)
+    if (cx->compartment()->debugMode() || script_->isGenerator)
         return true;
 
     /*
@@ -2033,7 +2022,7 @@ SSAValue::print() const
         break;
 
       default:
-        JS_NOT_REACHED("Bad kind");
+        MOZ_ASSUME_UNREACHABLE("Bad kind");
     }
 }
 

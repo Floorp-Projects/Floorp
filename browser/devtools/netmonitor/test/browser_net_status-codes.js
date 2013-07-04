@@ -144,7 +144,6 @@ function test() {
         is(tabpanel.querySelector("#request-params-box")
           .hasAttribute("hidden"), false,
           "The request params box should not be hidden.");
-
         is(tabpanel.querySelector("#request-post-data-textarea-box")
           .hasAttribute("hidden"), true,
           "The request post data textarea box should be hidden.");

@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_cpu_registers_h__
-#define jsion_cpu_registers_h__
+#ifndef ion_Registers_h
+#define ion_Registers_h
 
 #include "jsutil.h"
-#include "IonTypes.h"
+#include "ion/IonTypes.h"
 #if defined(JS_CPU_X86)
-# include "x86/Architecture-x86.h"
+# include "ion/x86/Architecture-x86.h"
 #elif defined(JS_CPU_X64)
-# include "x64/Architecture-x64.h"
+# include "ion/x64/Architecture-x64.h"
 #elif defined(JS_CPU_ARM)
-# include "arm/Architecture-arm.h"
+# include "ion/arm/Architecture-arm.h"
 #endif
-#include "FixedArityList.h"
+#include "ion/FixedArityList.h"
 
 // ARM defines the RegisterID within Architecture-arm.h
 #if !defined(JS_CPU_ARM) && defined(JS_METHODJIT)
@@ -121,5 +121,4 @@ class MachineState
 } // namespace ion
 } // namespace js
 
-#endif // jsion_cpu_registers_h__
-
+#endif /* ion_Registers_h */

@@ -1,9 +1,9 @@
 [
 {
-"size": 78190771,
-"digest": "57c69c5f55722f197ca6a5bd7d366d3562df474da8d98a6df753830c8234c269c1a174e518168b801e39290db081ef192a8fa24fcc5133039b1ad489dfe45f48",
+"size": 80729933,
+"digest": "ccd13527c0ba3979f4030eae713e6529e916a701b9b16a371256d92618e914fb0fd2ba70547efca0e93d02010c89eeb7c222d40a9b6f26fab80911386cdfecc7",
 "algorithm": "sha512",
-"filename": "android-ndk-r8e-x86-gcc4.6.tar.bz2"
+"filename": "android-ndk.tar.bz2"
 },
 {
 "size": 147088338,
@@ -12,8 +12,8 @@
 "filename": "android-sdk-16.tar.bz2"
 },
 {
-"size": 273,
-"digest": "3db7c58c2002e96e6c0c34468f3349ca7de17c7473e07edec054ee3083ae39e6ead0e2a8f9177c1ce5891539073280e1afda1a6518f78e999dddc5d3f02a1e18",
+"size": 221,
+"digest": "7a7e9edf3aaa2cd5f7d923a82a65ae0bb4d13082736ebe52f06a7fc133c5a0dcb304d516a7859c542dcab598afb8bd6a2d2233ce481497f5c8f76709074920ad",
 "algorithm": "sha512",
 "filename": "setup.sh"
 }

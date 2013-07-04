@@ -12,6 +12,7 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/MemoryReporting.h"
 
 using namespace mozilla;
 
@@ -248,7 +249,7 @@ nsMappedAttributes::IndexOfAttr(nsIAtom* aLocalName) const
 }
 
 size_t
-nsMappedAttributes::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsMappedAttributes::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   NS_ASSERTION(mAttrCount == mBufferSize,
                "mBufferSize and mAttrCount are expected to be the same.");

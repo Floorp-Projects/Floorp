@@ -111,6 +111,8 @@ MOCHITEST_BROWSER_RESOURCES = \
   plugin_test.html \
   redirect.sjs \
   releaseNotes.xhtml \
+  blockNoPlugins.xml \
+  blockPluginHard.xml \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = $(foreach s,MAIN SECONDARY RESOURCES,MOCHITEST_BROWSER_$(s))
@@ -127,6 +129,6 @@ libs::
 		$(EXIT_ON_ERROR) \
 		for dir in $(ADDONSRC)/*; do \
 			base=`basename $$dir` ; \
-			(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
+			(cd $$dir && zip -q $(TESTXPI)/$$base.xpi *) \
 		done \
 	fi

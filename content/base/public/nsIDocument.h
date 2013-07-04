@@ -13,6 +13,7 @@
 #include "nsCompatibility.h"             // for member
 #include "nsCOMPtr.h"                    // for member
 #include "nsGkAtoms.h"                   // for static class members
+#include "nsIChannel.h"                  // for member
 #include "nsIDocumentEncoder.h"          // for member (in nsCOMPtr)
 #include "nsIDocumentObserver.h"         // for typedef (nsUpdateType)
 #include "nsIFrameRequestCallback.h"     // for member (in nsCOMPtr)
@@ -114,8 +115,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x308f8444, 0x7679, 0x445a, \
- { 0xa6, 0xcc, 0xb9, 0x5c, 0x61, 0xff, 0xe2, 0x66 } }
+{ 0x62cca591, 0xa030, 0x4117, \
+ { 0x9b, 0x80, 0xdc, 0xd3, 0x66, 0xbb, 0xb5, 0x9 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -255,10 +256,14 @@ public:
   /**
    * Return the base URI for relative URIs in the document (the document uri
    * unless it's overridden by SetBaseURI, HTML <base> tags, etc.).  The
-   * returned URI could be null if there is no document URI.
+   * returned URI could be null if there is no document URI.  If the document
+   * is a srcdoc document, return the parent document's base URL.
    */
   nsIURI* GetDocBaseURI() const
   {
+    if (mIsSrcdocDocument && mParentDocument) {
+      return mParentDocument->GetDocBaseURI();
+    }
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
   virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE
@@ -628,6 +633,28 @@ public:
     return true;
   }
 
+  /**
+   * Return whether the document was created by a srcdoc iframe.
+   */
+  bool IsSrcdocDocument() const {
+    return mIsSrcdocDocument;
+  }
+
+  /**
+   * Sets whether the document was created by a srcdoc iframe.
+   */
+  void SetIsSrcdocDocument(bool aIsSrcdocDocument) {
+    mIsSrcdocDocument = aIsSrcdocDocument;
+  }
+
+  /*
+   * Gets the srcdoc string from within the channel (assuming both exist).
+   * Returns a void string if this isn't a srcdoc document or if
+   * the channel has not been set.
+   */
+  nsresult GetSrcdocData(nsAString& aSrcdocData);
+
+
 protected:
   virtual Element *GetRootElementInternal() const = 0;
 
@@ -766,15 +793,10 @@ public:
    * Get this document's inline style sheet.  May return null if there
    * isn't one
    */
-  virtual nsHTMLCSSStyleSheet* GetInlineStyleSheet() const = 0;
+  nsHTMLCSSStyleSheet* GetInlineStyleSheet() const {
+    return mStyleAttrStyleSheet;
+  }
 
-  /**
-   * Get/set the object from which a document can get a script context
-   * and scope. This is the context within which all scripts (during
-   * document creation and during event handling) will run. Note that
-   * this is the *inner* window object.
-   */
-  virtual nsIScriptGlobalObject* GetScriptGlobalObject() const = 0;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
 
   /**
@@ -1320,18 +1342,6 @@ public:
   }
 
   /**
-   * See GetXBLChildNodesFor on nsBindingManager
-   */
-  virtual nsresult GetXBLChildNodesFor(nsIContent* aContent,
-                                       nsIDOMNodeList** aResult) = 0;
-
-  /**
-   * See GetContentListFor on nsBindingManager
-   */
-  virtual nsresult GetContentListFor(nsIContent* aContent,
-                                     nsIDOMNodeList** aResult) = 0;
-
-  /**
    * See GetAnonymousElementByAttribute on nsIDOMDocumentXBL.
    */
   virtual Element*
@@ -1473,8 +1483,7 @@ public:
   {
     NS_PRECONDITION(!GetShell() &&
                     !nsCOMPtr<nsISupports>(GetContainer()) &&
-                    !GetWindow() &&
-                    !GetScriptGlobalObject(),
+                    !GetWindow(),
                     "Shouldn't set mDisplayDocument on documents that already "
                     "have a presentation or a docshell or a window");
     NS_PRECONDITION(aDisplayDocument != this, "Should be different document");
@@ -2178,6 +2187,7 @@ protected:
   nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsRefPtr<mozilla::css::ImageLoader> mStyleImageLoader;
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
+  nsRefPtr<nsHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
   // which this is the owner document. (They might not be in the document.)
@@ -2313,6 +2323,9 @@ protected:
   // Whether style sheet change events will be dispatched for this document
   bool mStyleSheetChangeEventsEnabled;
 
+  // Whether the document was created by a srcdoc iframe.
+  bool mIsSrcdocDocument;
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
@@ -2332,6 +2345,9 @@ protected:
   uint32_t mSandboxFlags;
 
   nsCString mContentLanguage;
+
+  // The channel that got passed to nsDocument::StartDocumentLoad(), if any.
+  nsCOMPtr<nsIChannel> mChannel;
 private:
   nsCString mContentType;
 protected:

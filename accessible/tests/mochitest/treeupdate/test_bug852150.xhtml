@@ -1,0 +1,59 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Canvas subdom mutation</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script>
+  <![CDATA[
+    function doTest()
+    {
+      var the_displayNone = getNode("the_displaynone");
+      var the_table = getNode("the_table");
+      var the_row = getNode("the_row");
+      ok(isAccessible(the_table), "table should be accessible");
+      the_displayNone.appendChild(the_table);
+      ok(!isAccessible(the_table), "table in display none tree shouldn't be accessible");
+
+      setTimeout(function() {
+        document.body.removeChild(the_row);
+        // make sure no accessibles have stuck around.
+        ok(!isAccessible(the_row), "row shouldn't be accessible");
+        ok(!isAccessible(the_table), "table shouldn't be accessible");
+        ok(!isAccessible(the_displayNone), "display none things shouldn't be accessible");
+        SimpleTest.finish();
+      }, 0);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="test accessible removal when reframe root isn't accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=852150">
+    Mozilla Bug 852150
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="the_displaynone" style="display: none;"></div>
+  <table id="the_table"></table>
+  <tr id="the_row"></tr>
+</body>
+</html>

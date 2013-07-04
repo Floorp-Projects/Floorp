@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ion_stupidallocator_h__
-#define js_ion_stupidallocator_h__
+#ifndef ion_StupidAllocator_h
+#define ion_StupidAllocator_h
 
-#include "RegisterAllocator.h"
+#include "ion/RegisterAllocator.h"
 
 // Simple register allocator that only carries registers within basic blocks.
 
@@ -80,4 +80,4 @@ class StupidAllocator : public RegisterAllocator
 } // namespace ion
 } // namespace js
 
-#endif
+#endif /* ion_StupidAllocator_h */

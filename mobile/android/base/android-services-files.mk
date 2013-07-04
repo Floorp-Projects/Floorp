@@ -46,6 +46,13 @@ SYNC_JAVA_FILES := \
   background/healthreport/HealthReportStorage.java \
   background/healthreport/HealthReportUtils.java \
   background/healthreport/ProfileInformationCache.java \
+  background/healthreport/upload/AndroidSubmissionClient.java \
+  background/healthreport/upload/HealthReportBroadcastReceiver.java \
+  background/healthreport/upload/HealthReportBroadcastService.java \
+  background/healthreport/upload/HealthReportUploadService.java \
+  background/healthreport/upload/HealthReportUploadStartReceiver.java \
+  background/healthreport/upload/SubmissionClient.java \
+  background/healthreport/upload/SubmissionPolicy.java \
   sync/AlreadySyncingException.java \
   sync/CollectionKeys.java \
   sync/CommandProcessor.java \
@@ -190,6 +197,7 @@ SYNC_JAVA_FILES := \
   sync/repositories/domain/HistoryRecordFactory.java \
   sync/repositories/domain/PasswordRecord.java \
   sync/repositories/domain/Record.java \
+  sync/repositories/domain/RecordParseException.java \
   sync/repositories/domain/TabsRecord.java \
   sync/repositories/domain/VersionConstants.java \
   sync/repositories/FetchFailedException.java \

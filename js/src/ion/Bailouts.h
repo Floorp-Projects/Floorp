@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_bailouts_h__
-#define jsion_bailouts_h__
+#ifndef ion_Bailouts_h
+#define ion_Bailouts_h
 
 #include "jstypes.h"
 #include "vm/Stack.h"
-#include "IonFrameIterator.h"
-#include "IonFrames.h"
+#include "ion/IonFrameIterator.h"
+#include "ion/IonFrames.h"
 
 namespace js {
 namespace ion {
@@ -122,8 +122,8 @@ class IonBailoutIterator : public IonFrameIterator
     IonScript *topIonScript_;
 
   public:
-    IonBailoutIterator(const IonActivationIterator &activations, BailoutStack *sp);
-    IonBailoutIterator(const IonActivationIterator &activations, InvalidationBailoutStack *sp);
+    IonBailoutIterator(const JitActivationIterator &activations, BailoutStack *sp);
+    IonBailoutIterator(const JitActivationIterator &activations, InvalidationBailoutStack *sp);
 
     SnapshotOffset snapshotOffset() const {
         JS_ASSERT(topIonScript_);
@@ -163,5 +163,4 @@ bool CheckFrequentBailouts(JSContext *cx, JSScript *script);
 } // namespace ion
 } // namespace js
 
-#endif // jsion_bailouts_h__
-
+#endif /* ion_Bailouts_h */

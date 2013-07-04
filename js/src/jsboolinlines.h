@@ -4,31 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsboolinlines_h___
-#define jsboolinlines_h___
+#ifndef jsboolinlines_h
+#define jsboolinlines_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 
 #include "js/RootingAPI.h"
 
-#include "jsobjinlines.h"
-
 #include "vm/BooleanObject-inl.h"
 
 namespace js {
 
-bool BooleanGetPrimitiveValueSlow(JSContext *, HandleObject, Value *);
+bool
+BooleanGetPrimitiveValueSlow(HandleObject, JSContext *);
 
 inline bool
-BooleanGetPrimitiveValue(JSContext *cx, HandleObject obj, Value *vp)
+BooleanGetPrimitiveValue(HandleObject obj, JSContext *cx)
 {
-    if (obj->isBoolean()) {
-        *vp = BooleanValue(obj->asBoolean().unbox());
-        return true;
-    }
+    if (obj->is<BooleanObject>())
+        return obj->as<BooleanObject>().unbox();
 
-    return BooleanGetPrimitiveValueSlow(cx, obj, vp);
+    return BooleanGetPrimitiveValueSlow(obj, cx);
 }
 
 inline bool
@@ -42,4 +39,4 @@ EmulatesUndefined(JSObject *obj)
 
 } /* namespace js */
 
-#endif /* jsboolinlines_h___ */
+#endif /* jsboolinlines_h */

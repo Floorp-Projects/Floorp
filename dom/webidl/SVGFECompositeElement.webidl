@@ -10,10 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedEnumeration;
-interface SVGAnimatedNumber;
-interface SVGAnimatedString;
-
 interface SVGFECompositeElement : SVGElement {
 
   // Composite Operators

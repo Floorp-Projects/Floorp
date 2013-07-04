@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "tests.h"
+#include "jsapi-tests/tests.h"
 #include "jsdbgapi.h"
 #include "jscntxt.h"
 
@@ -239,7 +239,7 @@ END_TEST(testDebugger_newScriptHook)
 
 BEGIN_TEST(testDebugger_singleStepThrow)
     {
-        CHECK(JS_SetDebugModeForCompartment(cx, cx->compartment, true));
+        CHECK(JS_SetDebugModeForCompartment(cx, cx->compartment(), true));
         CHECK(JS_SetInterrupt(rt, onStep, NULL));
 
         CHECK(JS_DefineFunction(cx, global, "setStepMode", setStepMode, 0, 0));

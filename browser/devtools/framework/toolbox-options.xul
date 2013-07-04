@@ -18,6 +18,9 @@
         <vbox id="default-tools-box" class="options-groupbox" tabindex="0"/>
         <label value="&options.selectAdditionalTools.label;"/>
         <vbox id="additional-tools-box" class="options-groupbox"/>
+        <label id="tools-not-supported-label"
+               class="options-citation-label"
+               value="&options.toolNotSupported.label;"/>
       </vbox>
       <vbox class="options-vertical-pane" flex="1">
         <label value="&options.selectDevToolsTheme.label;"/>
@@ -28,14 +31,41 @@
           <radio value="light" label="&options.lightTheme.label;"/>
           <radio value="dark" label="&options.darkTheme.label;"/>
         </radiogroup>
-        <label value="&options.context.label;"/>
+        <label value="&options.webconsole.label;"/>
+        <vbox id="webconsole-options" class="options-groupbox">
+          <checkbox label="&options.enablePersistentLogging.label;"
+                    tooltiptext="&options.enablePersistentLogging.tooltip;"
+                    data-pref="devtools.webconsole.persistlog"/>
+        </vbox>
+        <label value="&options.context.advancedSettings;"/>
         <vbox id="context-options" class="options-groupbox">
-          <checkbox label="&options.enableChrome.label;"
-                    tooltiptext="&options.enableChrome.tooltip;"
-                    data-pref="devtools.chrome.enabled"/>
-          <checkbox label="&options.enableRemote.label;"
-                    tooltiptext="&options.enableRemote.tooltip;"
-                    data-pref="devtools.debugger.remote-enabled"/>
+          <hbox>
+            <checkbox id="devtools-disable-javascript"
+                      label="&options.disableJavaScript.label2;"
+                      tooltiptext="&options.disableJavaScript.tooltip;"/>
+            <label class="options-citation-label"
+                   value="(&options.context.triggersPageRefresh2;)"/>
+          </hbox>
+          <hbox class="hidden-labels-box">
+            <checkbox label="&options.enableChrome.label3;"
+                      tooltiptext="&options.enableChrome.tooltip;"
+                      data-pref="devtools.chrome.enabled"/>
+            <label class="options-citation-label"
+                   value="&options.context.requiresRestart2;"/>
+            <label class="text-link"
+                   onclick="restart()"
+                   value="&options.restartButton.label;"/>
+          </hbox>
+          <hbox class="hidden-labels-box">
+            <checkbox label="&options.enableRemote.label3;"
+                      tooltiptext="&options.enableRemote.tooltip;"
+                      data-pref="devtools.debugger.remote-enabled"/>
+            <label class="options-citation-label"
+                   value="&options.context.requiresRestart2;"/>
+            <label class="text-link"
+                   onclick="restart()"
+                   value="&options.restartButton.label;"/>
+          </hbox>
         </vbox>
       </vbox>
     </hbox>

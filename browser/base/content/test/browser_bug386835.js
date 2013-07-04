@@ -27,7 +27,7 @@ function secondPageLoaded() {
 
     // Now have three tabs, two with the test page, one blank. Tab 1 is selected
     // Zoom tab 1
-    yield FullZoomHelper.enlarge();
+    FullZoom.enlarge();
     gLevel = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
 
     ok(gLevel > 1, "New zoom for tab 1 should be greater than 1");
@@ -79,11 +79,11 @@ function finishTest() {
     ok(!finishTestStarted, "finishTest called more than once");
     finishTestStarted = true;
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
-    yield FullZoomHelper.reset();
+    FullZoom.reset();
     gBrowser.removeTab(gTab1);
-    yield FullZoomHelper.reset();
+    FullZoom.reset();
     gBrowser.removeTab(gTab2);
-    yield FullZoomHelper.reset();
+    FullZoom.reset();
     gBrowser.removeTab(gTab3);
   }).then(finish, FullZoomHelper.failAndContinue(finish));
 }

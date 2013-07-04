@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg">
   <title>Test that the paint-order property works</title>
-  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX -->
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=828805 -->
 
   <g fill="gold" stroke="black" stroke-width="8">
     <circle cx="50" cy="50" r="20"/>

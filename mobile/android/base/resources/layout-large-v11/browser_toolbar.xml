@@ -3,27 +3,23 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.BrowserToolbarLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:gecko="http://schemas.android.com/apk/res-auto"
-              android:id="@+id/browser_toolbar"
-              style="@style/BrowserToolbar"
-              android:clickable="true"
-              android:focusable="true">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/url_bar_bg"
                                                 android:layout_width="fill_parent"
                                                 android:layout_height="fill_parent"
                                                 android:background="@drawable/url_bar_bg"/>
 
-    <Gecko.ShapedButton android:id="@+id/tabs"
-                        style="@style/UrlBar.ImageButton"
-                        android:layout_width="84dip"
-                        android:layout_alignParentLeft="true"
-                        gecko:curveTowards="left"
-                        android:background="@drawable/shaped_button"
-                        android:gravity="center_vertical"
-                        android:paddingLeft="6dip"
-                        android:paddingRight="38dip"/>
+    <org.mozilla.gecko.ShapedButton android:id="@+id/tabs"
+                                    style="@style/UrlBar.ImageButton"
+                                    android:layout_width="84dip"
+                                    android:layout_alignParentLeft="true"
+                                    gecko:curveTowards="left"
+                                    android:background="@drawable/shaped_button"
+                                    android:gravity="center_vertical"
+                                    android:paddingLeft="6dip"
+                                    android:paddingRight="38dip"/>
 
     <!-- The TextSwitcher should be shifted 28dp on the right, to avoid
          the curve. On a 56dp space, centering 24dp image will leave
@@ -132,19 +128,19 @@
                      android:contentDescription="@string/site_security"
                      android:visibility="gone"/>
 
-        <Gecko.TextView android:id="@+id/url_bar_title"
-                        style="@style/UrlBar.Button"
-                        android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1.0"
-                        android:singleLine="true"
-                        android:paddingRight="8dp"
-                        android:textColor="@color/url_bar_title"
-                        android:textColorHint="@color/url_bar_title_hint"
-                        android:gravity="center_vertical|left"
-                        android:hint="@string/url_bar_default_text"
-                        android:layout_gravity="center_vertical"
-                        gecko:autoUpdateTheme="false"/>
+        <org.mozilla.gecko.GeckoTextView android:id="@+id/awesome_bar_title"
+                                         style="@style/UrlBar.Button"
+                                         android:layout_width="fill_parent"
+                                         android:layout_height="fill_parent"
+                                         android:layout_weight="1.0"
+                                         android:singleLine="true"
+                                         android:paddingRight="8dp"
+                                         android:textColor="@color/url_bar_title"
+                                         android:textColorHint="@color/url_bar_title_hint"
+                                         android:gravity="center_vertical|left"
+                                         android:hint="@string/url_bar_default_text"
+                                         android:layout_gravity="center_vertical"
+                                         gecko:autoUpdateTheme="false"/>
 
         <ImageButton android:id="@+id/reader"
                      style="@style/UrlBar.ImageButton.Icon"
@@ -168,21 +164,21 @@
                   android:layout_toLeftOf="@id/menu"
                   android:layout_alignWithParentIfMissing="true"/>
 
-    <Gecko.ImageButton android:id="@+id/menu"
-                       style="@style/UrlBar.ImageButton"
-                       android:layout_width="56dip"
-                       android:layout_alignParentRight="true"
-                       android:contentDescription="@string/menu"
-                       android:background="@drawable/action_bar_button"
-                       android:visibility="gone"/>
+    <org.mozilla.gecko.GeckoImageButton android:id="@+id/menu"
+                                        style="@style/UrlBar.ImageButton"
+                                        android:layout_width="56dip"
+                                        android:layout_alignParentRight="true"
+                                        android:contentDescription="@string/menu"
+                                        android:background="@drawable/action_bar_button"
+                                        android:visibility="gone"/>
 
-    <Gecko.ImageView android:id="@+id/menu_icon"
-                     style="@style/UrlBar.ImageButton"
-                     android:layout_alignLeft="@id/menu"
-                     android:layout_alignRight="@id/menu"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu_level"
-                     android:visibility="gone"/>
+    <org.mozilla.gecko.GeckoImageView android:id="@+id/menu_icon"
+                                      style="@style/UrlBar.ImageButton"
+                                      android:layout_alignLeft="@id/menu"
+                                      android:layout_alignRight="@id/menu"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/menu_level"
+                                      android:visibility="gone"/>
 
     <ImageView android:id="@+id/shadow"
                android:layout_width="fill_parent"
@@ -192,4 +188,4 @@
                android:contentDescription="@null"
                android:visibility="gone"/>
 
-</org.mozilla.gecko.BrowserToolbarLayout>
+</merge>

@@ -93,3 +93,6 @@ else:
     CPP_SOURCES += [
         'ossource_posix.cpp'
     ]
+
+LIBRARY_NAME = 'libGLESv2'
+

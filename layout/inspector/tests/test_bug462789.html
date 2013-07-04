@@ -62,7 +62,7 @@ function do_test() {
 
   try {
     var res = utils.getBindingURLs(docElement);
-    is(SpecialPowers.unwrap(res) instanceof SpecialPowers.Ci["nsIArray"], true, "getBindingURLs result type");
+    ok(SpecialPowers.call_Instanceof(res, SpecialPowers.Ci["nsIArray"]), "getBindingURLs result type");
     is(res.length, 0, "getBindingURLs array length");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }

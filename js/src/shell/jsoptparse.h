@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsoptparse_h__
-#define jsoptparse_h__
+#ifndef shell_jsoptparse_h
+#define shell_jsoptparse_h
 
 #include <stdio.h>
 
@@ -211,12 +211,18 @@ class OptionParser
     size_t      helpWidth;
     size_t      nextArgument;
 
+    // If '--' is passed, all remaining arguments should be interpreted as the
+    // argument at index 'restArgument'. Defaults to the next unassigned
+    // argument.
+    int         restArgument;
+
     static const char prognameMeta[];
 
     Option *findOption(char shortflag);
     const Option *findOption(char shortflag) const;
     Option *findOption(const char *longflag);
     const Option *findOption(const char *longflag) const;
+    int findArgumentIndex(const char *name) const;
     Option *findArgument(const char *name);
     const Option *findArgument(const char *name) const;
 
@@ -228,7 +234,8 @@ class OptionParser
   public:
     explicit OptionParser(const char *usage)
       : helpOption('h', "help", "Display help information"),
-        usage(usage), ver(NULL), descr(NULL), descrWidth(80), helpWidth(80), nextArgument(0)
+        usage(usage), ver(NULL), descr(NULL), descrWidth(80), helpWidth(80),
+        nextArgument(0), restArgument(-1)
     {}
 
     ~OptionParser();
@@ -244,6 +251,7 @@ class OptionParser
     void setDescription(const char *description) { descr = description; }
     void setHelpOption(char shortflag, const char *longflag, const char *help);
     void setArgTerminatesOptions(const char *name, bool enabled);
+    void setArgCapturesRest(const char *name);
 
     /* Arguments: no further arguments may be added after a variadic argument. */
 
@@ -283,4 +291,4 @@ class OptionParser
 } /* namespace cli */
 } /* namespace js */
 
-#endif /* jsoptparse_h__ */
+#endif /* shell_jsoptparse_h */

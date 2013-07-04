@@ -45,3 +45,5 @@ CPP_SOURCES += [
     'vorg.cc',
 ]
 
+LIBRARY_NAME = 'mozots'
+

@@ -20,7 +20,7 @@
 #include "libdisplay/GonkDisplay.h"
 #include "Framebuffer.h"
 #include "HwcComposer2D.h"
-#include "LayerManagerOGL.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/StaticPtr.h"
@@ -53,7 +53,10 @@ enum {
     // Draw a solid color rectangle
     // The color should be set on the transform member of the hwc_layer_t struct
     // The expected format is a 32 bit ABGR with 8 bits per component
-    HWC_COLOR_FILL = 0x8
+    HWC_COLOR_FILL = 0x8,
+    // Swap the RB pixels of gralloc buffer, like RGBA<->BGRA or RGBX<->BGRX
+    // The flag will be set inside LayerRenderState
+    HWC_FORMAT_RB_SWAP = 0x40
 };
 
 namespace mozilla {
@@ -302,7 +305,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     float opacity = aLayer->GetEffectiveOpacity();
     if (opacity < 1) {
-        LOGD("Layer has planar semitransparency which is unsupported");
+        LOGD("%s Layer has planar semitransparency which is unsupported", aLayer->Name());
         return false;
     }
 
@@ -312,7 +315,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
                            aClip,
                            &clip))
     {
-        LOGD("Clip rect is empty. Skip layer");
+        LOGD("%s Clip rect is empty. Skip layer", aLayer->Name());
         return true;
     }
 
@@ -340,24 +343,21 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return true;
     }
 
-    LayerOGL* layerGL = static_cast<LayerOGL*>(aLayer->ImplData());
-    LayerRenderState state = layerGL->GetRenderState();
+    LayerRenderState state = aLayer->GetRenderState();
     nsIntSize surfaceSize;
 
-    if (state.mSurface &&
-        state.mSurface->type() == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
-        surfaceSize = state.mSurface->get_SurfaceDescriptorGralloc().size();
-    }
-    else {
+    if (state.mSurface.get()) {
+        surfaceSize = state.mSize;
+    } else {
         if (aLayer->AsColorLayer() && mColorFill) {
             fillColor = true;
         } else {
-            LOGD("Layer doesn't have a gralloc buffer");
+            LOGD("%s Layer doesn't have a gralloc buffer", aLayer->Name());
             return false;
         }
     }
     if (state.BufferRotated()) {
-        LOGD("Layer has a rotated buffer");
+        LOGD("%s Layer has a rotated buffer", aLayer->Name());
         return false;
     }
 
@@ -372,8 +372,6 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         }
     }
 
-    sp<GraphicBuffer> buffer = fillColor ? nullptr : GrallocBufferActor::GetFrom(*state.mSurface);
-
     nsIntRect visibleRect = visibleRegion.GetBounds();
 
     nsIntRect bufferRect;
@@ -382,10 +380,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     } else {
         if(state.mHasOwnOffset) {
             bufferRect = nsIntRect(state.mOffset.x, state.mOffset.y,
-                surfaceSize.width, surfaceSize.height);
+                                   state.mSize.width, state.mSize.height);
         } else {
-            bufferRect = nsIntRect(visibleRect.x, visibleRect.y,
-                surfaceSize.width, surfaceSize.height);
+            //Since the buffer doesn't have its own offset, assign the whole
+            //surface size as its buffer bounds
+            bufferRect = nsIntRect(0, 0, state.mSize.width, state.mSize.height);
         }
     }
 
@@ -401,7 +400,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return true;
     }
 
-    buffer_handle_t handle = fillColor ? nullptr : buffer->getNativeBuffer()->handle;
+    buffer_handle_t handle = fillColor ? nullptr : state.mSurface->getNativeBuffer()->handle;
     hwcLayer.handle = handle;
 
     hwcLayer.flags = 0;
@@ -410,6 +409,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     hwcLayer.compositionType = HWC_USE_COPYBIT;
 
     if (!fillColor) {
+        if (state.FormatRBSwapped()) {
+            hwcLayer.flags |= HWC_FORMAT_RB_SWAP;
+        }
+
         gfxMatrix rotation = transform * aGLWorldTransform;
         // Compute fuzzy equal like PreservesAxisAlignedRectangles()
         if (fabs(rotation.xx) < 1e-6) {

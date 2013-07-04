@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_mirgraph_h__
-#define jsion_mirgraph_h__
+#ifndef ion_MIRGraph_h
+#define ion_MIRGraph_h
 
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
-#include "IonAllocPolicy.h"
-#include "MIRGenerator.h"
-#include "FixedList.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/MIRGenerator.h"
+#include "ion/FixedList.h"
 
 namespace js {
 namespace ion {
@@ -175,7 +175,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Replaces an edge for a given block with a new block. This is
     // used for critical edge splitting and also for inserting
-    // bailouts during ParallelArrayAnalysis.
+    // bailouts during ParallelSafetyAnalysis.
     //
     // Note: If successorWithPhis is set, you must not be replacing it.
     void replacePredecessor(MBasicBlock *old, MBasicBlock *split);
@@ -285,6 +285,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MResumePointIterator resumePointsEnd() const {
         return resumePoints_.end();
     }
+    bool resumePointsEmpty() const {
+        return resumePoints_.empty();
+    }
     MInstructionIterator begin() {
         return instructions_.begin();
     }
@@ -308,9 +311,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool isLoopHeader() const {
         return kind_ == LOOP_HEADER;
     }
-    MBasicBlock *backedge() const {
+    bool hasUniqueBackedge() const {
         JS_ASSERT(isLoopHeader());
-        JS_ASSERT(numPredecessors() == 1 || numPredecessors() == 2);
+        JS_ASSERT(numPredecessors() >= 2);
+        return numPredecessors() == 2;
+    }
+    MBasicBlock *backedge() const {
+        JS_ASSERT(hasUniqueBackedge());
         return getPredecessor(numPredecessors() - 1);
     }
     MBasicBlock *loopHeaderOfBackedge() const {
@@ -325,7 +332,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         if (!numSuccessors())
             return false;
         MBasicBlock *lastSuccessor = getSuccessor(numSuccessors() - 1);
-        return lastSuccessor->isLoopHeader() && lastSuccessor->backedge() == this;
+        return lastSuccessor->isLoopHeader() &&
+               lastSuccessor->hasUniqueBackedge() &&
+               lastSuccessor->backedge() == this;
     }
     bool isSplitEdge() const {
         return kind_ == SPLIT_EDGE;
@@ -373,6 +382,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     MBasicBlock *getImmediatelyDominatedBlock(size_t i) const {
         return immediatelyDominated_[i];
+    }
+
+    MBasicBlock **immediatelyDominatedBlocksBegin() {
+        return immediatelyDominated_.begin();
+    }
+
+    MBasicBlock **immediatelyDominatedBlocksEnd() {
+        return immediatelyDominated_.end();
     }
 
     size_t numDominated() const {
@@ -451,6 +468,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     void dumpStack(FILE *fp);
 
+    void dump(FILE *fp);
+
     // Track bailouts by storing the current pc in MIR instruction added at this
     // cycle. This is also used for tracking calls when profiling.
     void updateTrackedPc(jsbytecode *pc) {
@@ -491,6 +510,17 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock *loopHeader_;
 
     jsbytecode *trackedPc_;
+
+#if defined (JS_ION_PERF)
+    unsigned lineno_;
+    unsigned columnIndex_;
+
+  public:
+    void setLineno(unsigned l) { lineno_ = l; }
+    unsigned lineno() const { return lineno_; }
+    void setColumnIndex(unsigned c) { columnIndex_ = c; }
+    unsigned columnIndex() const { return columnIndex_; }
+#endif
 };
 
 typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
@@ -583,10 +613,7 @@ class MIRGraph
         return blocks_.end();
     }
     void removeBlocksAfter(MBasicBlock *block);
-    void removeBlock(MBasicBlock *block) {
-        blocks_.remove(block);
-        numBlocks_--;
-    }
+    void removeBlock(MBasicBlock *block);
     void moveBlockToEnd(MBasicBlock *block) {
         JS_ASSERT(block->id());
         blocks_.remove(block);
@@ -652,6 +679,8 @@ class MIRGraph
     // lazilly insert an MParSlice instruction in the entry block and
     // return the definition.
     MDefinition *parSlice();
+
+    void dump(FILE *fp);
 };
 
 class MDefinitionIterator
@@ -716,5 +745,4 @@ class MDefinitionIterator
 } // namespace ion
 } // namespace js
 
-#endif // jsion_mirgraph_h__
-
+#endif /* ion_MIRGraph_h */

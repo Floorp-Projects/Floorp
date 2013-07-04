@@ -363,7 +363,7 @@ IDBKeyRange::GetLower(JSContext* aCx,
       mRooted = true;
     }
 
-    nsresult rv = Lower().ToJSVal(aCx, &mCachedLowerVal);
+    nsresult rv = Lower().ToJSVal(aCx, mCachedLowerVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mHaveCachedLowerVal = true;
@@ -385,7 +385,7 @@ IDBKeyRange::GetUpper(JSContext* aCx,
       mRooted = true;
     }
 
-    nsresult rv = Upper().ToJSVal(aCx, &mCachedUpperVal);
+    nsresult rv = Upper().ToJSVal(aCx, mCachedUpperVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mHaveCachedUpperVal = true;

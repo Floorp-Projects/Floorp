@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH            = ../../..
+DEPTH            = @DEPTH@
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
@@ -11,9 +11,7 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES = \
+MOCHITEST_FILES = \
   test_permission_basics.html \
   test_alarms.html \
   test_idle.html \
@@ -30,19 +28,19 @@ _TEST_FILES = \
   $(NULL)
 
 # disabled until bug 859593 is fixed
-#_TEST_FILES += \
+#MOCHITEST_FILES += \
 #  test_camera.html \
 #  $(NULL)
 
 ifdef MOZ_B2G
-_TEST_FILES += \
+MOCHITEST_FILES += \
   test_keyboard.html \
   test_wifi-manage.html \
   $(NULL)
 endif
 
 ifdef MOZ_B2G_RIL
-_TEST_FILES += \
+MOCHITEST_FILES += \
   test_cellbroadcast.html \
   test_mobileconnection.html \
   test_networkstats-manage.html \
@@ -52,31 +50,27 @@ _TEST_FILES += \
 endif
 
 ifdef MOZ_B2G_FM
-_TEST_FILES += \
+MOCHITEST_FILES += \
   test_fmradio.html \
   $(NULL)
 endif
 
 ifdef MOZ_B2G_BT
-_TEST_FILES += \
+MOCHITEST_FILES += \
   test_bluetooth.html \
   $(NULL)
 endif
 
 ifdef MOZ_WEBSMS_BACKEND
-_TEST_FILES += \
+MOCHITEST_FILES += \
   test_sms.html \
   $(NULL)
 endif
 
 ifdef MOZ_TIME_MANAGER
-_TEST_FILES += \
+MOCHITEST_FILES += \
   test_time.html \
   $(NULL)
 endif
 
-_CHROME_TEST_FILES = \
-  $(NULL)
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

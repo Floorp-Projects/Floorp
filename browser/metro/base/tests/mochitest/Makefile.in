@@ -32,12 +32,8 @@ BROWSER_TESTS = \
   browser_topsites.js \
   browser_form_auto_complete.js \
   browser_form_auto_complete.html \
+  browser_crashprompt.js \
   $(NULL)
-
-# disabled due to timeouts and lack of plugin support.
-#  browser_plugin_input.html \
-#  browser_plugin_input_mouse.js \
-#  browser_plugin_input_keyboard.js \
 
 ifndef MOZ_DEBUG
 BROWSER_TESTS += \
@@ -53,6 +49,7 @@ BROWSER_TESTS += \
   browser_selection_frame_textarea.html \
   browser_selection_frame_inputs.js \
   browser_selection_frame_inputs.html \
+  browser_selection_urlbar.js \
   $(NULL)
 endif
 

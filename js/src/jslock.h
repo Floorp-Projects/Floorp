@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jslock_h__
-#define jslock_h__
+#ifndef jslock_h
+#define jslock_h
 
 #include "jsapi.h"
 
@@ -40,4 +40,4 @@ typedef struct PRLock PRLock;
 
 #endif /* JS_THREADSAFE */
 
-#endif /* jslock_h___ */
+#endif /* jslock_h */

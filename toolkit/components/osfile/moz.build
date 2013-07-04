@@ -8,3 +8,5 @@ TEST_DIRS += ['tests']
 
 MODULE = 'osfile'
 
+LIBRARY_NAME = 'osfile_s'
+

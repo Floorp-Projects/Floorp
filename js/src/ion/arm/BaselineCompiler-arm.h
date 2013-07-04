@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_baselinecompiler_arm_h__
-#define jsion_baselinecompiler_arm_h__
+#ifndef ion_arm_BaselineCompiler_arm_h
+#define ion_arm_BaselineCompiler_arm_h
 
 #include "ion/shared/BaselineCompiler-shared.h"
 
@@ -23,4 +23,4 @@ typedef BaselineCompilerARM BaselineCompilerSpecific;
 } // namespace ion
 } // namespace js
 
-#endif // jsion_baselinecompiler_arm_h__
+#endif /* ion_arm_BaselineCompiler_arm_h */

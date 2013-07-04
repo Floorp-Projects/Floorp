@@ -96,7 +96,7 @@ public:
   void NotifyInputEvent(const nsInputEvent& aEvent,
                         nsInputEvent* aOutEvent);
 
-  void NotifyDimensionsChanged(int width, int height);
+  void NotifyDimensionsChanged(ScreenIntSize size);
 
   void ZoomToRect(const gfxRect& aRect);
 
@@ -122,7 +122,7 @@ private:
 
   LayerTransactionParent* GetShadowLayers() const;
   uint64_t GetLayerTreeId() const;
-  ContainerLayer* GetRootLayer() const;
+  Layer* GetRootLayer() const;
 
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's

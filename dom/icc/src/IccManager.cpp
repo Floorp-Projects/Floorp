@@ -4,6 +4,8 @@
 
 #include "mozilla/Services.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIDOMIccCardLockErrorEvent.h"
+#include "GeneratedEvents.h"
 #include "IccManager.h"
 #include "SimToolKit.h"
 #include "StkCommandEvent.h"
@@ -128,6 +130,36 @@ IccManager::SendStkEventDownload(const JS::Value& aEvent)
 }
 
 NS_IMETHODIMP
+IccManager::GetCardLock(const nsAString& aLockType, nsIDOMDOMRequest** aDomRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCardLockState(GetOwner(), aLockType, aDomRequest);
+}
+
+NS_IMETHODIMP
+IccManager::SetCardLock(const JS::Value& aInfo, nsIDOMDOMRequest** aDomRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCardLock(GetOwner(), aInfo, aDomRequest);
+}
+
+NS_IMETHODIMP
+IccManager::UnlockCardLock(const JS::Value& aInfo, nsIDOMDOMRequest** aDomRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->UnlockCardLock(GetOwner(), aInfo, aDomRequest);
+}
+
+NS_IMETHODIMP
 IccManager::IccOpenChannel(const nsAString& aAid, nsIDOMDOMRequest** aRequest)
 {
   if (!mProvider) {
@@ -182,6 +214,7 @@ IccManager::UpdateContact(const nsAString& aContactType,
 
 NS_IMPL_EVENT_HANDLER(IccManager, stkcommand)
 NS_IMPL_EVENT_HANDLER(IccManager, stksessionend)
+NS_IMPL_EVENT_HANDLER(IccManager, icccardlockerror)
 
 // nsIIccListener
 
@@ -198,4 +231,19 @@ NS_IMETHODIMP
 IccManager::NotifyStkSessionEnd()
 {
   return DispatchTrustedEvent(NS_LITERAL_STRING("stksessionend"));
+}
+
+NS_IMETHODIMP
+IccManager::NotifyIccCardLockError(const nsAString& aLockType, uint32_t aRetryCount)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMIccCardLockErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMIccCardLockErrorEvent> ce = do_QueryInterface(event);
+  nsresult rv =
+    ce->InitIccCardLockErrorEvent(NS_LITERAL_STRING("icccardlockerror"),
+                                  false, false, aLockType, aRetryCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(ce);
 }

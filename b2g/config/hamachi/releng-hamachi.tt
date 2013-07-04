@@ -1,0 +1,14 @@
+[
+{
+"size": 85358580,
+"digest": "e26e3501b4119724f94d5d3edcdfefde00faceddab3114c9c3b118fec11118d6f2293ea3c25426ec5ba7c7e0fe14d8349dbb8fa940e2f04ea83e26694d933696",
+"algorithm": "sha512",
+"filename": "backup-hamachi.tar.xz"
+},
+{
+"size": 1570553,
+"digest": "ea03de74df73b05e939c314cd15c54aac7b5488a407b7cc4f5f263f3049a1f69642c567dd35c43d0bc3f0d599d0385a26ab2dd947a6b18f9044e4918b382eea7",
+"algorithm": "sha512",
+"filename": "Adreno200-AU_LINUX_ANDROID_ICS_CHOCO_CS.04.00.03.06.001.zip"
+}
+]

@@ -200,10 +200,10 @@ protected:
   // Specify whether this frame is opaque as an optimization.
   // For animated images, specify the disposal, blend method and timeout for
   // this frame.
-  void PostFrameStop(RasterImage::FrameAlpha aFrameAlpha = RasterImage::kFrameHasAlpha,
-                     RasterImage::FrameDisposalMethod aDisposalMethod = RasterImage::kDisposeKeep,
+  void PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha = FrameBlender::kFrameHasAlpha,
+                     FrameBlender::FrameDisposalMethod aDisposalMethod = FrameBlender::kDisposeKeep,
                      int32_t aTimeout = 0,
-                     RasterImage::FrameBlendMethod aBlendMethod = RasterImage::kBlendOver);
+                     FrameBlender::FrameBlendMethod aBlendMethod = FrameBlender::kBlendOver);
 
   // Called by the decoders when they have a region to invalidate. We may not
   // actually pass these invalidations on right away.

@@ -9,6 +9,7 @@
 <?xml-stylesheet href="chrome://browser/skin/forms.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
@@ -112,12 +113,7 @@
     <command id="cmd_delete" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" oncommand="CommandUpdater.doCommand(this.id);"/>
 
-    <!-- forms navigation -->
-    <command id="cmd_formPrevious" oncommand="FormHelperUI.goToPrevious();"/>
-    <command id="cmd_formNext" oncommand="FormHelperUI.goToNext();"/>
-    <command id="cmd_formClose" oncommand="FormHelperUI.hide();"/>
-
-    <!-- find navigation -->
+    <!-- find -->
     <command id="cmd_findPrevious" oncommand="FindHelperUI.goToPrevious();"/>
     <command id="cmd_findNext" oncommand="FindHelperUI.goToNext();"/>
     <command id="cmd_findClose" oncommand="FindHelperUI.hide();"/>
@@ -180,7 +176,7 @@
   <stack id="stack" flex="1">
     <!-- Page Area -->
     <vbox id="page">
-      <vbox id="tray" class="tray-toolbar" visible="true" observes="bcast_windowState" >
+      <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
         <!-- Tabs -->
         <hbox id="tabs-container" observes="bcast_windowState">
           <box id="tabs" flex="1"
@@ -196,43 +192,41 @@
         <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
           <!-- portrait/landscape/filled view -->
           <hbox id="start" class="start-page" flex="1" observes="bcast_windowState">
-            <scrollbox id="start-scrollbox" orient="horizontal" flex="1">
-            <vbox id="start-topsites" class="meta-section">
-              <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-              <richgrid id="start-topsites-grid" rows="3" columns="3" seltype="multiple" flex="1"/>
-            </vbox>
-            <vbox id="start-bookmarks" class="meta-section">
-              <label class="meta-section-title" value="&startBookmarksHeader.label;"
-                onclick="PanelUI.show('bookmarks-container');"/>
-              <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
-            </vbox>
-            <vbox id="start-history" class="meta-section">
-              <label class="meta-section-title" value="&startHistoryHeader.label;"
-                onclick="PanelUI.show('history-container');"/>
-              <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
-            </vbox>
-            <vbox id="start-remotetabs" class="meta-section">
-              <label class="meta-section-title" value="&startRemoteTabsHeader.label;"
-                onclick="PanelUI.show('remotetabs-container');"/>
-              <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
-            </vbox>
+            <scrollbox id="start-scrollbox" orient="horizontal" observes="bcast_preciseInput" flex="1">
+              <vbox id="start-topsites" class="meta-section">
+                <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
+                <richgrid id="start-topsites-grid" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
+              </vbox>
+              <vbox id="start-bookmarks" class="meta-section">
+                <label class="meta-section-title" value="&startBookmarksHeader.label;"/>
+                <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
+              </vbox>
+              <vbox id="start-history" class="meta-section">
+                <label class="meta-section-title" value="&startHistoryHeader.label;"/>
+                <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
+              </vbox>
+              <vbox id="start-remotetabs" class="meta-section">
+                <label class="meta-section-title" value="&startRemoteTabsHeader.label;"/>
+                <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
+              </vbox>
             </scrollbox>
           </hbox>
+
           <!-- snapped view -->
-          <vbox id="snapped-start" class="start-page" observes="bcast_windowState">
+          <hbox id="snapped-start" class="start-page" flex="1" observes="bcast_windowState">
             <scrollbox id="snapped-scrollbox" orient="vertical" flex="1">
               <vbox id="snapped-topsites">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
                 <richgrid id="snapped-topsites-grid" class="canSnapTiles" rows="8" columns="1" flex="1"/>
               </vbox>
-              <label class="meta-section-title" value="&startBookmarksHeader.label;"
+              <label class="meta-section-title" value="&snappedBookmarksHeader.label;"
                 onclick="PanelUI.show('bookmarks-container');"/>
-              <label class="meta-section-title" value="&startHistoryHeader.label;"
+              <label class="meta-section-title" value="&snappedHistoryHeader.label;"
                 onclick="PanelUI.show('history-container');" inputProcessing="true"/>
               <label id="snappedRemoteTabsLabel" class="meta-section-title" value="&snappedRemoteTabsHeader.label;"
                 onclick="PanelUI.show('remotetabs-container');" inputProcessing="true"/>
             </scrollbox>
-          </vbox>
+          </hbox>
           <!-- Autocompletion interface -->
           <box id="start-autocomplete" observes="bcast_windowState"/>
         </hbox>
@@ -240,16 +234,75 @@
 
       <!-- Content viewport -->
       <stack id="content-viewport">
-        <deck id="browsers" flex="1"/>
+        <deck id="browsers" flex="1" observes="bcast_preciseInput"/>
         <box id="vertical-scroller" class="scroller" orient="vertical" end="0" top="0"/>
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
+
+        <!-- Content touch selection overlay -->
+        <!-- onclick addresses dom bug 835175 -->
+        <box onclick="false" class="selection-overlay-hidden" id="content-selection-overlay"/>
       </stack>
     </vbox>
 
+    <html:div id="overlay-back" class="overlay-button"
+              observes="cmd_back"></html:div>
+    <html:div id="overlay-plus" class="overlay-button"
+              observes="cmd_back"></html:div>
+
     <!-- popup for content navigator helper -->
-    <vbox id="content-navigator">
+    <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
       <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-    </vbox>
+      <button class="content-navigator-item previous-button" command="cmd_findPrevious"/>
+      <button class="content-navigator-item next-button" command="cmd_findNext"/>
+      <spacer flex="1"/>
+      <button class="content-navigator-item close-button" command="cmd_findClose"/>
+    </appbar>
+
+    <!-- Navbar -->
+    <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
+      <hbox id="progress-container" layer="true">
+        <hbox id="progress-control" />
+      </hbox>
+
+      <!-- Main Toolbar -->
+      <toolbar id="toolbar" observes="bcast_windowState" flex="1">
+        <observes element="bcast_windowState" attribute="*"/>
+        <observes element="bcast_urlbarState" attribute="*"/>
+
+        <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
+        <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
+
+        <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
+          <hbox id="urlbar" flex="1">
+            <box id="identity-box" role="button">
+              <hbox id="identity-box-inner" align="center" mousethrough="always">
+                <image id="identity-icon"/>
+              </hbox>
+            </box>
+
+            <textbox id="urlbar-edit"
+                     type="url"
+                     class="uri-element"
+                     autocompletesearch="history"
+                     autocompletepopup="start-autocomplete"
+                     completeselectedindex="true"
+                     placeholder="&urlbar.emptytext;"
+                     flex="1"
+                     ontextentered="BrowserUI.handleUrlbarEnter(param);"
+                     onkeydown="BrowserUI.navEditKeyPress();"
+                     onblur="BrowserUI._urlbarBlurred();"/>
+          </hbox>
+
+          <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+          <toolbarbutton id="stop-button" command="cmd_stop"/>
+        </hbox>
+
+        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
+        <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
+        <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
+        <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
+       </toolbar>
+    </appbar>
 
     <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
       <hbox id="panel-header">
@@ -260,7 +313,6 @@
             <menuitem label="&bookmarksHeader.label;" value="bookmarks-container" id="menuitem-bookmarks"/>
             <menuitem label="&startHistoryHeader.label;" value="history-container" id="menuitem-history"/>
             <menuitem label="&startRemoteTabsHeader.label;" value="remotetabs-container" id="menuitem-remotetabs"/>
-            <menuitem label="&downloadsHeader.label;" value="downloads-container" id="menuitem-downloads"/>
             <menuitem label="&consoleHeader.label;" value="console-container" id="menuitem-console"/>
           </menupopup>
         </menulist>
@@ -303,57 +355,6 @@
       </deck>
     </vbox>
 
-    <!-- Navbar -->
-    <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
-      <hbox id="progress-container" layer="true">
-        <hbox id="progress-control" />
-      </hbox>
-
-      <!-- Main Toolbar -->
-      <toolbar id="toolbar" observes="bcast_windowState" flex="1">
-        <observes element="bcast_windowState" attribute="*"/>
-        <observes element="bcast_urlbarState" attribute="*"/>
-
-        <toolbarbutton id="back-button" command="cmd_back"/>
-
-        <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-          <toolbarbutton id="forward-button" command="cmd_forward"/>
-          <hbox id="urlbar" flex="1">
-            <box id="identity-box" role="button">
-              <hbox id="identity-box-inner" align="center" mousethrough="always">
-                <image id="identity-icon"/>
-              </hbox>
-            </box>
-
-            <textbox id="urlbar-edit"
-                     type="url"
-                     class="uri-element"
-                     autocompletesearch="history"
-                     autocompletepopup="start-autocomplete"
-                     completeselectedindex="true"
-                     placeholder="&urlbar.emptytext;"
-                     flex="1"
-                     ontextentered="BrowserUI.handleUrlbarEnter(param);"
-                     onkeydown="BrowserUI.navEditKeyPress();"
-                     onclick="BrowserUI._urlbarClicked(event);"
-                     onblur="BrowserUI._urlbarBlurred();"/>
-          </hbox>
-        </hbox>
-
-        <toolbarbutton id="tool-reload" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-        <toolbarbutton id="tool-stop" command="cmd_stop"/>
-
-        <!-- developer buttons -->
-        <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
-        <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
-
-        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
-        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
-        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)"/>
-      </toolbar>
-    </appbar>
-
     <!-- Context button bar -->
     <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" flex="1">
@@ -365,14 +366,7 @@
       </toolbar>
     </appbar>
 
-    <!-- Selection overlay - this should be below any content that can have selectable text -->
-    <!-- onclick addresses dom bug 835175, str in bug 832957 -->
-    <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
-
-    <html:div id="overlay-back" class="overlay-button"
-              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
-    <html:div id="overlay-plus" class="overlay-button"
-              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
+    <autoscroller class="autoscroller" id="autoscrollerid"/>
 
     <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
       <label id="about-product-label" value="&aboutHeader.product.label;"/>
@@ -507,7 +501,7 @@
       </settings>
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
       <settings id="prefs-reporting" label="&optionsHeader.reporting.title;">
-        <setting pref="app.reportCrashes" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
+        <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
@@ -531,7 +525,7 @@
           <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.setup.pair2;</description>
-              <description class="link" flex="1" onclick="Sync.openTutorial();">&sync.setup.tutorial;</description>
+              <description class="text-link" flex="1" onclick="Sync.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox flex="1" pack="center" align="start">
                 <description id="syncsetup-code1" class="syncsetup-code">....</description>
@@ -539,7 +533,7 @@
                 <description id="syncsetup-code3" class="syncsetup-code">....</description>
               </vbox>
               <separator/>
-              <description class="link" flex="1" onclick="Sync.openManual();">&sync.fallback;</description>
+              <description class="text-link" flex="1" onclick="Sync.openManual();">&sync.fallback;</description>
               <separator flex="1"/>
             </scrollbox>
             <hbox class="prompt-buttons">
@@ -588,7 +582,7 @@
           <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
             <vbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.pair.description;</description>
-              <description class="link" flex="1" onclick="SyncPairDevice.close(); Sync.openTutorial();">&sync.setup.tutorial;</description>
+              <description class="text-link" flex="1" onclick="SyncPairDevice.close(); Sync.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox align="center" flex="1">
                 <textbox id="syncpair-code1" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
@@ -605,6 +599,10 @@
       </dialog>
     </box>
 #endif
+
+    <!-- Chrome touch selection overlay -->
+    <!-- onclick addresses dom bug 835175 -->
+    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
 
     <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
       <!-- onclick is dom bug 835175 -->
@@ -693,11 +691,20 @@
           </richlistitem>
 
           <!-- App bar: 'more' button context menu -->
+          <!-- developer buttons - shown in metrodesktop mode only -->
+          <richlistitem id="context-error-console" type="open-error-console" onclick="ContextCommands.errorConsole();">
+            <label value="&appbarErrorConsole.label;"/>
+          </richlistitem>
+          <richlistitem id="context-jsshell" type="open-jsshell" onclick="ContextCommands.jsShell();">
+            <label value="&appbarJSShell.label;"/>
+          </richlistitem>
+
+          <!-- standard buttons -->
           <richlistitem id="context-findinpage" type="find-in-page" onclick="ContextCommands.findInPage();">
-          <label value="&appbarFindInPage2.label;"/>
+            <label value="&appbarFindInPage2.label;"/>
           </richlistitem>
           <richlistitem id="context-viewondesktop" type="view-on-desktop" onclick="ContextCommands.viewOnDesktop();">
-          <label value="&appbarViewOnDesktop2.label;"/>
+            <label value="&appbarViewOnDesktop2.label;"/>
           </richlistitem>
         </richlistbox>
       </vbox>

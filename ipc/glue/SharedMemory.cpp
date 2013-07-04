@@ -10,16 +10,17 @@
 #include "nsString.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/Atomics.h"
 
 namespace mozilla {
 namespace ipc {
 
-static int64_t gShmemAllocated;
-static int64_t gShmemMapped;
-static int64_t GetShmemAllocated() { return gShmemAllocated; }
-static int64_t GetShmemMapped() { return gShmemMapped; }
+static Atomic<size_t> gShmemAllocated;
+static Atomic<size_t> gShmemMapped;
+static size_t GetShmemAllocated() { return gShmemAllocated; }
+static size_t GetShmemMapped() { return gShmemMapped; }
 
-NS_MEMORY_REPORTER_IMPLEMENT(ShmemAllocated,
+NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(ShmemAllocated,
   "shmem-allocated",
   KIND_OTHER,
   UNITS_BYTES,
@@ -27,7 +28,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(ShmemAllocated,
   "Memory shared with other processes that is accessible (but not "
   "necessarily mapped).")
 
-NS_MEMORY_REPORTER_IMPLEMENT(ShmemMapped,
+NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(ShmemMapped,
   "shmem-mapped",
   KIND_OTHER,
   UNITS_BYTES,
@@ -38,13 +39,10 @@ SharedMemory::SharedMemory()
   : mAllocSize(0)
   , mMappedSize(0)
 {
-  // NB: SharedMemory is main-thread-only at the moment, but that may
-  // change soon
-  static bool registered;
-  if (!registered) {
+  static Atomic<uint32_t> registered;
+  if (registered.compareExchange(0, 1)) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(ShmemAllocated));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(ShmemMapped));
-    registered = true;
   }
 }
 
@@ -73,7 +71,7 @@ SharedMemory::Mapped(size_t aNBytes)
 void
 SharedMemory::Unmapped()
 {
-  NS_ABORT_IF_FALSE(gShmemMapped >= int64_t(mMappedSize),
+  NS_ABORT_IF_FALSE(gShmemMapped >= mMappedSize,
                     "Can't unmap more than mapped");
   gShmemMapped -= mMappedSize;
   mMappedSize = 0;
@@ -82,7 +80,7 @@ SharedMemory::Unmapped()
 /*static*/ void
 SharedMemory::Destroyed()
 {
-  NS_ABORT_IF_FALSE(gShmemAllocated >= int64_t(mAllocSize),
+  NS_ABORT_IF_FALSE(gShmemAllocated >= mAllocSize,
                     "Can't destroy more than allocated");
   gShmemAllocated -= mAllocSize;
   mAllocSize = 0;

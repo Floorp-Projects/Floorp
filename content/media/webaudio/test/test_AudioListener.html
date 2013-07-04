@@ -11,7 +11,6 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var context = new AudioContext();
   ok("listener" in context, "AudioContext.listener should exist");
   ok(Math.abs(context.listener.dopplerFactor - 1.0) < 1e-4, "Correct default doppler factor");
@@ -27,7 +26,6 @@ addLoadEvent(function() {
     setOrientation(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
     setVelocity(0.5, 1.0, 1.5);
   }
-  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });
 

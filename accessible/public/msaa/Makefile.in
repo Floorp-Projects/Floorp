@@ -7,7 +7,6 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME	= AccessibleMarshal
 DEFFILE = $(win_srcdir)/AccessibleMarshal.def
 
 include $(DEPTH)/config/autoconf.mk
@@ -17,8 +16,6 @@ DEFINES += -DREGISTER_PROXY_DLL
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 
 FORCE_SHARED_LIB = 1
-
-SRCS_IN_OBJDIR	= 1
 
 CSRCS	= \
 	dlldata.c \

@@ -12,7 +12,7 @@
 #include "nsWindowsShellService.h"
 #elif defined(XP_MACOSX)
 #include "nsMacShellService.h"
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
 #include "nsGNOMEShellService.h"
 #endif
 
@@ -36,7 +36,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(DirectoryProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
 #elif defined(XP_MACOSX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacShellService)
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 #endif
 
@@ -49,7 +49,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFeedSniffer)
 NS_DEFINE_NAMED_CID(NS_BROWSERDIRECTORYPROVIDER_CID);
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_FEEDSNIFFER_CID);
@@ -64,7 +64,7 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_BROWSERDIRECTORYPROVIDER_CID, false, NULL, DirectoryProviderConstructor },
 #if defined(XP_WIN)
     { &kNS_SHELLSERVICE_CID, false, NULL, nsWindowsShellServiceConstructor },
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
     { &kNS_SHELLSERVICE_CID, false, NULL, nsGNOMEShellServiceConstructor },
 #endif
     { &kNS_FEEDSNIFFER_CID, false, NULL, nsFeedSnifferConstructor },
@@ -81,7 +81,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_BROWSERDIRECTORYPROVIDER_CONTRACTID, &kNS_BROWSERDIRECTORYPROVIDER_CID },
 #if defined(XP_WIN)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
 #endif
     { NS_FEEDSNIFFER_CONTRACTID, &kNS_FEEDSNIFFER_CID },
@@ -95,6 +95,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "rights", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "robots", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "sessionrestore", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
+    { NS_ABOUT_MODULE_CONTRACTID_PREFIX "welcomeback", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #ifdef MOZ_SERVICES_SYNC
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "sync-tabs", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "sync-progress", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
@@ -129,4 +130,3 @@ static const mozilla::Module kBrowserModule = {
 };
 
 NSMODULE_DEFN(nsBrowserCompsModule) = &kBrowserModule;
-

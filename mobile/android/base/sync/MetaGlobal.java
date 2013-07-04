@@ -93,6 +93,9 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
   }
 
   public void setFromRecord(CryptoRecord record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
+    if (record == null) {
+      throw new IllegalArgumentException("Cannot set meta/global from null record");
+    }
     Logger.debug(LOG_TAG, "meta/global is " + record.payload.toJSONString());
     this.storageVersion = (Long) record.payload.get("storageVersion");
     this.syncID = (String) record.payload.get("syncID");

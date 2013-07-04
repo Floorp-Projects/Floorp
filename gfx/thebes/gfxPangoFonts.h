@@ -50,12 +50,6 @@ public:
                                       const uint8_t *aFontData,
                                       uint32_t aLength);
 
-    // Interfaces used internally
-    // (but public so that they can be accessed from non-member functions):
-
-    // A language guessed from the gfxFontStyle
-    PangoLanguage *GetPangoLanguage() { return mPangoLanguage; }
-
 private:
     // @param aLang [in] language to use for pref fonts and system default font
     //        selection, or NULL for the language guessed from the gfxFontStyle.

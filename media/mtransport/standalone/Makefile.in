@@ -12,13 +12,10 @@ include $(srcdir)/../objs.mk
 
 EXTRA_DEPS += $(srcdir)/../objs.mk
 
-LIBRARY_NAME = mtransport_s
 FORCE_STATIC_LIB= 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
-
-SRCS_IN_OBJDIR	= 1
 
 # Make a copy into the local directory for dual compilation
 export:: $(MTRANSPORT_CPPSRCS)

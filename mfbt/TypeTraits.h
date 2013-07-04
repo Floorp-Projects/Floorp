@@ -213,7 +213,8 @@ struct IsSignedHelper<T, false>
 } // namespace detail
 
 /**
- * IsSigned determines whether a type is a signed arithmetic type.
+ * IsSigned determines whether a type is a signed arithmetic type.  |char| is
+ * considered a signed type if it has the same representation as |signed char|.
  *
  * Don't use this if the type might be user-defined!  You might or might not get
  * a compile error, depending.
@@ -456,6 +457,160 @@ struct RemoveCV
 
 /* 20.9.7.3 Sign modifications [meta.trans.sign] */
 
+template<bool B, typename T = void>
+struct EnableIf;
+
+template<bool Condition, typename A, typename B>
+struct Conditional;
+
+namespace detail {
+
+template<bool MakeConst, typename T>
+struct WithC : Conditional<MakeConst, const T, T>
+{};
+
+template<bool MakeVolatile, typename T>
+struct WithV : Conditional<MakeVolatile, volatile T, T>
+{};
+
+
+template<bool MakeConst, bool MakeVolatile, typename T>
+struct WithCV : WithC<MakeConst, typename WithV<MakeVolatile, T>::Type>
+{};
+
+template<typename T>
+struct CorrespondingSigned;
+
+template<>
+struct CorrespondingSigned<char> { typedef signed char Type; };
+template<>
+struct CorrespondingSigned<unsigned char> { typedef signed char Type; };
+template<>
+struct CorrespondingSigned<unsigned short> { typedef short Type; };
+template<>
+struct CorrespondingSigned<unsigned int> { typedef int Type; };
+template<>
+struct CorrespondingSigned<unsigned long> { typedef long Type; };
+template<>
+struct CorrespondingSigned<unsigned long long> { typedef long long Type; };
+
+template<typename T,
+         typename CVRemoved = typename RemoveCV<T>::Type,
+         bool IsSignedIntegerType = IsSigned<CVRemoved>::value &&
+                                    !IsSame<char, CVRemoved>::value>
+struct MakeSigned;
+
+template<typename T, typename CVRemoved>
+struct MakeSigned<T, CVRemoved, true>
+{
+    typedef T Type;
+};
+
+template<typename T, typename CVRemoved>
+struct MakeSigned<T, CVRemoved, false>
+  : WithCV<IsConst<T>::value, IsVolatile<T>::value,
+           typename CorrespondingSigned<CVRemoved>::Type>
+{};
+
+} // namespace detail
+
+/**
+ * MakeSigned produces the corresponding signed integer type for a given
+ * integral type T, with the const/volatile qualifiers of T.  T must be a
+ * possibly-const/volatile-qualified integral type that isn't bool.
+ *
+ * If T is already a signed integer type (not including char!), then T is
+ * produced.
+ *
+ * Otherwise, if T is an unsigned integer type, the signed variety of T, with
+ * T's const/volatile qualifiers, is produced.
+ *
+ * Otherwise, the integral type of the same size as T, with the lowest rank,
+ * with T's const/volatile qualifiers, is produced.  (This basically only acts
+ * to produce signed char when T = char.)
+ *
+ * mozilla::MakeSigned<unsigned long>::Type is signed long;
+ * mozilla::MakeSigned<volatile int>::Type is volatile int;
+ * mozilla::MakeSigned<const unsigned short>::Type is const signed short;
+ * mozilla::MakeSigned<const char>::Type is const signed char;
+ * mozilla::MakeSigned<bool> is an error;
+ * mozilla::MakeSigned<void*> is an error.
+ */
+template<typename T>
+struct MakeSigned
+  : EnableIf<IsIntegral<T>::value && !IsSame<bool, typename RemoveCV<T>::Type>::value,
+             typename detail::MakeSigned<T>
+            >::Type
+{};
+
+namespace detail {
+
+template<typename T>
+struct CorrespondingUnsigned;
+
+template<>
+struct CorrespondingUnsigned<char> { typedef unsigned char Type; };
+template<>
+struct CorrespondingUnsigned<signed char> { typedef unsigned char Type; };
+template<>
+struct CorrespondingUnsigned<short> { typedef unsigned short Type; };
+template<>
+struct CorrespondingUnsigned<int> { typedef unsigned int Type; };
+template<>
+struct CorrespondingUnsigned<long> { typedef unsigned long Type; };
+template<>
+struct CorrespondingUnsigned<long long> { typedef unsigned long long Type; };
+
+
+template<typename T,
+         typename CVRemoved = typename RemoveCV<T>::Type,
+         bool IsUnsignedIntegerType = IsUnsigned<CVRemoved>::value &&
+                                      !IsSame<char, CVRemoved>::value>
+struct MakeUnsigned;
+
+template<typename T, typename CVRemoved>
+struct MakeUnsigned<T, CVRemoved, true>
+{
+    typedef T Type;
+};
+
+template<typename T, typename CVRemoved>
+struct MakeUnsigned<T, CVRemoved, false>
+  : WithCV<IsConst<T>::value, IsVolatile<T>::value,
+           typename CorrespondingUnsigned<CVRemoved>::Type>
+{};
+
+} // namespace detail
+
+/**
+ * MakeUnsigned produces the corresponding unsigned integer type for a given
+ * integral type T, with the const/volatile qualifiers of T.  T must be a
+ * possibly-const/volatile-qualified integral type that isn't bool.
+ *
+ * If T is already an unsigned integer type (not including char!), then T is
+ * produced.
+ *
+ * Otherwise, if T is an signed integer type, the unsigned variety of T, with
+ * T's const/volatile qualifiers, is produced.
+ *
+ * Otherwise, the unsigned integral type of the same size as T, with the lowest
+ * rank, with T's const/volatile qualifiers, is produced.  (This basically only
+ * acts to produce unsigned char when T = char.)
+ *
+ * mozilla::MakeUnsigned<signed long>::Type is unsigned long;
+ * mozilla::MakeUnsigned<volatile unsigned int>::Type is volatile unsigned int;
+ * mozilla::MakeUnsigned<const signed short>::Type is const unsigned short;
+ * mozilla::MakeUnsigned<const char>::Type is const unsigned char;
+ * mozilla::MakeUnsigned<bool> is an error;
+ * mozilla::MakeUnsigned<void*> is an error.
+ */
+template<typename T>
+struct MakeUnsigned
+  : EnableIf<IsIntegral<T>::value && !IsSame<bool, typename RemoveCV<T>::Type>::value,
+             typename detail::MakeUnsigned<T>
+            >::Type
+{};
+
 /* 20.9.7.4 Array modifications [meta.trans.arr] */
 
 /* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
@@ -480,7 +635,7 @@ struct RemoveCV
  *      ...
  *   };
  */
-template<bool B, typename T = void>
+template<bool B, typename T>
 struct EnableIf
 {};
 

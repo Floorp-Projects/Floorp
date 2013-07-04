@@ -13,3 +13,5 @@ EXPORTS.opus += [
     'include/opus_types.h',
 ]
 
+LIBRARY_NAME = 'opus'
+

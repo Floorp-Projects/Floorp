@@ -42,12 +42,10 @@ SVGPathElement::SVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPathElement)
 
-already_AddRefed<nsIDOMSVGAnimatedNumber>
+already_AddRefed<SVGAnimatedNumber>
 SVGPathElement::PathLength()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> number;
-  mPathLength.ToDOMAnimatedNumber(getter_AddRefs(number), this);
-  return number.forget();
+  return mPathLength.ToDOMAnimatedNumber(this);
 }
 
 float

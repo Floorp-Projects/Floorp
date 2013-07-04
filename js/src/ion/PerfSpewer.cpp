@@ -9,13 +9,13 @@
 # include <unistd.h>
 #endif
 
-#include "PerfSpewer.h"
-#include "IonSpewer.h"
-#include "LIR.h"
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "LinearScan.h"
-#include "RangeAnalysis.h"
+#include "ion/PerfSpewer.h"
+#include "ion/IonSpewer.h"
+#include "ion/LIR.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/LinearScan.h"
+#include "ion/RangeAnalysis.h"
 
 using namespace js;
 using namespace js::ion;
@@ -24,29 +24,34 @@ using namespace js::ion;
 #define PERF_MODE_FUNC  2
 #define PERF_MODE_BLOCK 3
 
-static bool PerfChecked = false;
-
 #ifdef JS_ION_PERF
 static uint32_t PerfMode = 0;
 
+static bool PerfChecked = false;
+
 void
 js::ion::CheckPerf() {
-    const char *env = getenv("IONPERF");
-    if (env == NULL) {
-        PerfMode = PERF_MODE_NONE;
-    } else if (!strcmp(env, "none")) {
-        PerfMode = PERF_MODE_NONE;
-    } else if (!strcmp(env, "block")) {
-        PerfMode = PERF_MODE_BLOCK;
-    } else if (!strcmp(env, "func")) {
-        PerfMode = PERF_MODE_FUNC;
-    } else {
-        fprintf(stderr, "Use IONPERF=func to record at basic block granularity\n");
-        fprintf(stderr, "Use IONPERF=block to record at basic block granularity\n");
-        fprintf(stderr, "\n");
-        fprintf(stderr, "Be advised that using IONPERF will cause all scripts\n");
-        fprintf(stderr, "to be leaked.\n");
-        exit(0);
+    if (!PerfChecked) {
+        const char *env = getenv("IONPERF");
+        if (env == NULL) {
+            PerfMode = PERF_MODE_NONE;
+            fprintf(stderr, "Warning: JIT perf reporting requires IONPERF set to \"block\" or \"func\". ");
+            fprintf(stderr, "Perf mapping will be deactivated.\n");
+        } else if (!strcmp(env, "none")) {
+            PerfMode = PERF_MODE_NONE;
+        } else if (!strcmp(env, "block")) {
+            PerfMode = PERF_MODE_BLOCK;
+        } else if (!strcmp(env, "func")) {
+            PerfMode = PERF_MODE_FUNC;
+        } else {
+            fprintf(stderr, "Use IONPERF=func to record at function granularity\n");
+            fprintf(stderr, "Use IONPERF=block to record at basic block granularity\n");
+            fprintf(stderr, "\n");
+            fprintf(stderr, "Be advised that using IONPERF will cause all scripts\n");
+            fprintf(stderr, "to be leaked.\n");
+            exit(0);
+        }
+        PerfChecked = true;
     }
 }
 
@@ -120,6 +125,9 @@ PerfSpewer::startBasicBlock(MBasicBlock *blk,
 bool
 PerfSpewer::endBasicBlock(MacroAssembler &masm)
 {
+    if (!PerfBlockEnabled() || !fp_)
+        return true;
+
     masm.bind(&basicBlocks_[basicBlocks_.length() - 1].end);
     return true;
 }
@@ -135,13 +143,16 @@ PerfSpewer::writeProfile(JSScript *script,
     uint32_t thisFunctionIndex = nextFunctionIndex++;
 
     if (PerfFuncEnabled()) {
-        fprintf(fp_,
-                "%lx %lx %s:%d: Func%02d\n",
-                reinterpret_cast<uintptr_t>(code->raw()),
-                (unsigned long) code->instructionsSize(),
-                script->filename(),
-                script->lineno,
-                thisFunctionIndex);
+        unsigned long size = (unsigned long) code->instructionsSize();
+        if (size > 0) {
+            fprintf(fp_,
+                    "%lx %lx %s:%d: Func%02d\n",
+                    reinterpret_cast<uintptr_t>(code->raw()),
+                    size,
+                    script->filename(),
+                    script->lineno,
+                    thisFunctionIndex);
+        }
     } else if (PerfBlockEnabled()) {
         uintptr_t funcStart = uintptr_t(code->raw());
         uintptr_t funcEnd = funcStart + code->instructionsSize();
@@ -163,11 +174,15 @@ PerfSpewer::writeProfile(JSScript *script,
             }
             cur = blockEnd;
 
-            fprintf(fp_,
-                    "%lx %lx %s:%d:%d: Func%02d-Block%d\n",
-                    blockStart, blockEnd - blockStart,
-                    r.filename, r.lineNumber, r.columnNumber,
-                    thisFunctionIndex, r.id);
+            unsigned long size = blockEnd - blockStart;
+
+            if (size > 0) {
+                fprintf(fp_,
+                        "%lx %lx %s:%d:%d: Func%02d-Block%d\n",
+                        blockStart, size,
+                        r.filename, r.lineNumber, r.columnNumber,
+                        thisFunctionIndex, r.id);
+            }
         }
 
         // Any stuff after the basic blocks is presumably OOL code,
@@ -182,3 +197,97 @@ PerfSpewer::writeProfile(JSScript *script,
         }
     }
 }
+
+#if defined(JS_ION_PERF)
+void
+AsmJSPerfSpewer::writeFunctionMap(unsigned long base, unsigned long size, const char *filename, unsigned lineno, unsigned colIndex, const char *funcName)
+{
+    if (!fp_ || !PerfFuncEnabled() || size == 0U)
+        return;
+
+    fprintf(fp_,
+            "%lx %lx %s:%d:%d: Function %s\n",
+            base, size,
+            filename, lineno, colIndex, funcName);
+}
+
+bool
+AsmJSPerfSpewer::startBasicBlock(MBasicBlock *blk, MacroAssembler &masm)
+{
+    if (!PerfBlockEnabled() || !fp_)
+        return true;
+
+    Record r("", blk->lineno(), blk->columnIndex(), blk->id()); // filename is retrieved later
+    masm.bind(&r.start);
+    return basicBlocks_.append(r);
+}
+
+void
+AsmJSPerfSpewer::noteBlocksOffsets(MacroAssembler &masm)
+{
+    if (!PerfBlockEnabled() || !fp_)
+        return;
+
+    for (uint32_t i = 0; i < basicBlocks_.length(); i++) {
+        Record &r = basicBlocks_[i];
+        r.startOffset = masm.actualOffset(r.start.offset());
+        r.endOffset = masm.actualOffset(r.end.offset());
+    }
+}
+
+void
+AsmJSPerfSpewer::writeBlocksMap(unsigned long baseAddress, unsigned long funcStartOffset, unsigned long funcSize,
+                                const char *filename, const char *funcName, const BasicBlocksVector &basicBlocks)
+{
+    if (!fp_ || !PerfBlockEnabled() || basicBlocks.length() == 0)
+        return;
+
+    // function begins with the prologue, which is located before the first basic block
+    unsigned long prologueSize = basicBlocks[0].startOffset - funcStartOffset;
+
+    unsigned long cur = baseAddress + funcStartOffset + prologueSize;
+    unsigned long funcEnd = baseAddress + funcStartOffset + funcSize - prologueSize;
+
+    for (uint32_t i = 0; i < basicBlocks.length(); i++) {
+        const Record &r = basicBlocks[i];
+
+        unsigned long blockStart = baseAddress + (unsigned long) r.startOffset;
+        unsigned long blockEnd = baseAddress + (unsigned long) r.endOffset;
+
+        if (i == basicBlocks.length() - 1) {
+            // for the last block, manually add the ret instruction
+            blockEnd += 1u;
+        }
+
+        JS_ASSERT(cur <= blockStart);
+        if (cur < blockStart) {
+            fprintf(fp_,
+                    "%lx %lx %s: Function %s - unknown block\n",
+                    cur, blockStart - cur,
+                    filename,
+                    funcName);
+        }
+        cur = blockEnd;
+
+        unsigned long size = blockEnd - blockStart;
+        if (size > 0) {
+            fprintf(fp_,
+                    "%lx %lx %s:%d:%d: Function %s - Block %d\n",
+                    blockStart, size,
+                    filename, r.lineNumber, r.columnNumber,
+                    funcName, r.id);
+        }
+    }
+
+    // Any stuff after the basic blocks is presumably OOL code,
+    // which I do not currently categorize.
+    JS_ASSERT(cur <= funcEnd);
+    if (cur < funcEnd) {
+        fprintf(fp_,
+                "%lx %lx %s: Function %s - OOL\n",
+                cur, funcEnd - cur,
+                filename,
+                funcName);
+    }
+}
+#endif // defined (JS_ION_PERF)

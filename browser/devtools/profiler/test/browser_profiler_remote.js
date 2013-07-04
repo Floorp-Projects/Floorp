@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/devtools/dbg-client.jsm", temp);
 let DebuggerClient = temp.DebuggerClient;
 let debuggerSocketConnect = temp.debuggerSocketConnect;
 
-Cu.import("resource:///modules/devtools/ProfilerController.jsm", temp);
+Cu.import("resource:///modules/devtools/profiler/controller.js", temp);
 let ProfilerController = temp.ProfilerController;
 
 function test() {

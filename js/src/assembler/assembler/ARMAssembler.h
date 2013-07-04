@@ -28,8 +28,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ARMAssembler_h
-#define ARMAssembler_h
+#ifndef assembler_assembler_ARMAssembler_h
+#define assembler_assembler_ARMAssembler_h
 
 #include "assembler/wtf/Platform.h"
 
@@ -38,7 +38,7 @@
 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
-#include "AssemblerBufferWithConstantPool.h"
+#include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "assembler/wtf/Assertions.h"
 
 // TODO: We don't print the condition code in our spew lines. Doing this
@@ -1203,7 +1203,7 @@ namespace JSC {
         {
             ASSERT(reg <= 16);
             ASSERT(reg >= 0);
-            static char const * names[] = {
+            static char const * const names[] = {
                 "r0", "r1", "r2", "r3",
                 "r4", "r5", "r6", "r7",
                 "r8", "r9", "r10", "r11",
@@ -1216,7 +1216,7 @@ namespace JSC {
         {
             ASSERT(reg <= 31);
             ASSERT(reg >= 0);
-            static char const * names[] = {
+            static char const * const names[] = {
                  "d0",   "d1",   "d2",   "d3",
                  "d4",   "d5",   "d6",   "d7",
                  "d8",   "d9",  "d10",  "d11",
@@ -1232,7 +1232,7 @@ namespace JSC {
         {
             ASSERT(reg <= 31);
             ASSERT(reg >= 0);
-            static char const * names[] = {
+            static char const * const names[] = {
                  "s0",   "s1",   "s2",   "s3",
                  "s4",   "s5",   "s6",   "s7",
                  "s8",   "s9",  "s10",  "s11",
@@ -1251,7 +1251,7 @@ namespace JSC {
             ASSERT((cc & 0x0fffffff) == 0);
 
             uint32_t    ccIndex = cc >> 28;
-            static char const * names[] = {
+            static char const * const names[] = {
                 "eq", "ne",
                 "cs", "cc",
                 "mi", "pl",
@@ -1549,7 +1549,7 @@ namespace JSC {
                             dblToFloat ? SD(dest) : DD(dest),
                             dblToFloat ? DM(src) : SM(src), 0);
             } else {
-                JS_NOT_REACHED("Other conversions did not seem useful on 2011/08/04");
+                MOZ_ASSUME_UNREACHABLE("Other conversions did not seem useful on 2011/08/04");
             }
         }
 
@@ -1705,4 +1705,4 @@ namespace JSC {
 
 #endif // ENABLE(ASSEMBLER) && CPU(ARM_TRADITIONAL)
 
-#endif // ARMAssembler_h
+#endif /* assembler_assembler_ARMAssembler_h */

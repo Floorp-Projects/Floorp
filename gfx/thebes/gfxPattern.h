@@ -41,6 +41,7 @@ public:
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix GetMatrix() const;
+    gfxMatrix GetInverseMatrix() const;
 
     /* Get an Azure Pattern for the current Cairo pattern. aPattern transform
      * specifies the transform that was set on the DrawTarget when the pattern
@@ -135,7 +136,7 @@ protected:
     mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     mozilla::gfx::Matrix mTransform;
     mozilla::RefPtr<mozilla::gfx::GradientStops> mStops;
-    mozilla::gfx::ExtendMode mExtend;
+    GraphicsExtend mExtend;
     mozilla::gfx::Filter mFilter;
 };
 

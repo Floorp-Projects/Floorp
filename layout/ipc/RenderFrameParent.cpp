@@ -22,6 +22,7 @@
 #include "nsFrameLoader.h"
 #include "nsIObserver.h"
 #include "nsSubDocumentFrame.h"
+#include "nsView.h"
 #include "nsViewportFrame.h"
 #include "RenderFrameParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
@@ -47,8 +48,8 @@ struct ViewTransform {
   operator gfx3DMatrix() const
   {
     return
-      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1) *
-      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
+      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0) *
+      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1);
   }
 
   nsIntPoint mTranslation;
@@ -166,10 +167,7 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
   nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntPoint scrollOffset =
     aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel);
-  // metricsScrollOffset is in layer coordinates.
-  gfxPoint metricsScrollOffset = aMetrics->GetScrollOffsetInLayerPixels();
-  nsIntPoint roundedMetricsScrollOffset =
-    nsIntPoint(NS_lround(metricsScrollOffset.x), NS_lround(metricsScrollOffset.y));
+  LayerIntPoint metricsScrollOffset = RoundedToInt(aMetrics->GetScrollOffsetInLayerPixels());
 
   if (aRootFrameLoader->AsyncScrollEnabled() && !aMetrics->mDisplayPort.IsEmpty()) {
     // Only use asynchronous scrolling if it is enabled and there is a
@@ -177,8 +175,8 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
     // synchronously scrolled for identifying a scroll area before it is
     // being actively scrolled.
     nsIntPoint scrollCompensation(
-      (scrollOffset.x / aTempScaleX - roundedMetricsScrollOffset.x) * aConfig.mXScale,
-      (scrollOffset.y / aTempScaleY - roundedMetricsScrollOffset.y) * aConfig.mYScale);
+      (scrollOffset.x / aTempScaleX - metricsScrollOffset.x),
+      (scrollOffset.y / aTempScaleY - metricsScrollOffset.y));
 
     return ViewTransform(-scrollCompensation, aConfig.mXScale, aConfig.mYScale);
   } else {
@@ -225,12 +223,9 @@ BuildListForLayer(Layer* aLayer,
     // Calculate rect for this layer based on aTransform.
     nsRect bounds;
     {
+      bounds = CSSRect::ToAppUnits(metrics->mViewport);
       nscoord auPerDevPixel = aSubdocFrame->PresContext()->AppUnitsPerDevPixel();
-      gfx::Rect viewport = metrics->mViewport;
-      bounds = nsIntRect(viewport.x, viewport.y,
-                         viewport.width, viewport.height).ToAppUnits(auPerDevPixel);
       ApplyTransform(bounds, tmpTransform, auPerDevPixel);
-
     }
 
     aShadowTree.AppendToTop(
@@ -299,8 +294,8 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
     // Alter the shadow transform of fixed position layers in the situation
     // that the view transform's scroll position doesn't match the actual
     // scroll position, due to asynchronous layer scrolling.
-    float offsetX = layerTransform.mTranslation.x / layerTransform.mXScale;
-    float offsetY = layerTransform.mTranslation.y / layerTransform.mYScale;
+    float offsetX = layerTransform.mTranslation.x;
+    float offsetY = layerTransform.mTranslation.y;
     ReverseTranslate(shadowTransform, gfxPoint(offsetX, offsetY));
     const nsIntRect* clipRect = shadow->GetShadowClipRect();
     if (clipRect) {
@@ -373,7 +368,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   if (metrics.IsScrollable()) {
     nscoord auPerDevPixel = aFrameLoader->GetPrimaryFrameOfOwningContent()
                                         ->PresContext()->AppUnitsPerDevPixel();
-    nscoord auPerCSSPixel = auPerDevPixel * metrics.mDevPixelsPerCSSPixel;
+    nscoord auPerCSSPixel = auPerDevPixel * metrics.mDevPixelsPerCSSPixel.scale;
     nsContentView* view = FindViewForId(oldContentViews, scrollId);
     if (view) {
       // View already exists. Be sure to propagate scales for any values
@@ -411,12 +406,15 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
       view->mParentScaleY = aAccConfigYScale;
     }
 
+    // I don't know what units mViewportSize is in, hence use ToUnknownRect
+    // here to mark the current frontier in type info propagation
+    gfx::Rect viewport = metrics.mViewport.ToUnknownRect();
     view->mViewportSize = nsSize(
-      NSIntPixelsToAppUnits(metrics.mViewport.width, auPerDevPixel) * aXScale,
-      NSIntPixelsToAppUnits(metrics.mViewport.height, auPerDevPixel) * aYScale);
+      NSIntPixelsToAppUnits(viewport.width, auPerDevPixel) * aXScale,
+      NSIntPixelsToAppUnits(viewport.height, auPerDevPixel) * aYScale);
     view->mContentSize = nsSize(
-      NSIntPixelsToAppUnits(metrics.mContentRect.width, auPerDevPixel) * aXScale,
-      NSIntPixelsToAppUnits(metrics.mContentRect.height, auPerDevPixel) * aYScale);
+      NSFloatPixelsToAppUnits(metrics.mScrollableRect.width, auPerCSSPixel) * aXScale,
+      NSFloatPixelsToAppUnits(metrics.mScrollableRect.height, auPerCSSPixel) * aYScale);
 
     newContentViews[scrollId] = view;
   }
@@ -430,7 +428,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
 
 static void
 BuildBackgroundPatternFor(ContainerLayer* aContainer,
-                          ContainerLayer* aShadowRoot,
+                          Layer* aShadowRoot,
                           const ViewConfig& aConfig,
                           const gfxRGBA& aColor,
                           LayerManager* aManager,
@@ -499,7 +497,7 @@ public:
                         aFrameMetrics));
   }
 
-  virtual void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -516,7 +514,7 @@ public:
     }
   }
 
-  virtual void HandleSingleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -533,7 +531,7 @@ public:
     }
   }
 
-  virtual void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -552,8 +550,8 @@ public:
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
-  virtual void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect,
-                                       const gfx::Size& aContentSize) MOZ_OVERRIDE
+  virtual void SendAsyncScrollDOMEvent(const CSSRect& aContentRect,
+                                       const CSSSize& aContentSize) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       mUILoop->PostTask(
@@ -735,7 +733,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     mContainer->SetInheritedScale(1.0f, 1.0f);
   }
 
-  ContainerLayer* shadowRoot = GetRootLayer();
+  Layer* shadowRoot = GetRootLayer();
   if (!shadowRoot) {
     mContainer = nullptr;
     return nullptr;
@@ -789,12 +787,11 @@ RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent,
 }
 
 void
-RenderFrameParent::NotifyDimensionsChanged(int width, int height)
+RenderFrameParent::NotifyDimensionsChanged(ScreenIntSize size)
 {
   if (mPanZoomController) {
-    // I don't know what units width/height are in, hence FromUnknownRect
     mPanZoomController->UpdateCompositionBounds(
-      LayerIntRect::FromUnknownRect(gfx::IntRect(0, 0, width, height)));
+      ScreenIntRect(ScreenIntPoint(), size));
   }
 }
 
@@ -933,7 +930,7 @@ RenderFrameParent::GetLayerTreeId() const
   return mLayersId;
 }
 
-ContainerLayer*
+Layer*
 RenderFrameParent::GetRootLayer() const
 {
   LayerTransactionParent* shadowLayers = GetShadowLayers();
@@ -954,10 +951,10 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsRect bounds = aFrame->EnsureInnerView()->GetBounds() + offset;
   clipState.ClipContentDescendants(bounds);
 
-  ContainerLayer* container = GetRootLayer();
+  Layer* container = GetRootLayer();
   if (aBuilder->IsForEventDelivery() && container) {
     ViewTransform offset =
-      ViewTransform(GetContentRectLayerOffset(aFrame, aBuilder), 1, 1);
+      ViewTransform(GetContentRectLayerOffset(aFrame, aBuilder));
     BuildListForLayer(container, mFrameLoader, offset,
                       aBuilder, *aLists.Content(), aFrame);
   } else {

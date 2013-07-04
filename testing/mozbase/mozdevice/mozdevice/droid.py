@@ -104,18 +104,24 @@ class DroidADB(DeviceManagerADB, DroidMixin):
 
     def getTopActivity(self):
         package = None
-        data = self.shellCheckOutput(["dumpsys", "window", "input"])
-        # "dumpsys window input" produces many lines of input. The top/foreground
+        data = self.shellCheckOutput(["dumpsys", "window", "windows"])
+        # "dumpsys window windows" produces many lines of input. The top/foreground
         # activity is indicated by something like:
         #   mFocusedApp=AppWindowToken{483e6db0 token=HistoryRecord{484dcad8 com.mozilla.SUTAgentAndroid/.SUTAgentAndroid}}
+        # or, on other devices:
+        #   FocusedApplication: name='AppWindowToken{41a65340 token=ActivityRecord{418fbd68 org.mozilla.fennec_mozdev/.App}}', dispatchingTimeout=5000.000ms
         # Extract this line, ending in the forward slash:
         m = re.search('mFocusedApp(.+)/', data)
+        if not m:
+            m = re.search('FocusedApplication(.+)/', data)
         if m:
             line = m.group(0)
             # Extract package name: string of non-whitespace ending in forward slash
             m = re.search('(\S+)/$', line)
             if m:
                 package = m.group(1)
+        if not package:
+            raise DMError("unable to find focused app")
         return package
 
 class DroidSUT(DeviceManagerSUT, DroidMixin):

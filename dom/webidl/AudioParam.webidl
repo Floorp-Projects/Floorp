@@ -46,7 +46,7 @@ interface AudioParam {
 [PrefControlled]
 partial interface AudioParam {
     // Same as setTargetAtTime()
-    [Throws]
+    [Throws,Pref="media.webaudio.legacy.AudioParam"]
     void setTargetValueAtTime(float target, double startTime, double timeConstant);
 };
 

@@ -39,14 +39,14 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedNumber> X();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Y();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> Z();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> PointsAtX();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> PointsAtY();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> PointsAtZ();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> SpecularExponent();
-  already_AddRefed<nsIDOMSVGAnimatedNumber> LimitingConeAngle();
+  already_AddRefed<SVGAnimatedNumber> X();
+  already_AddRefed<SVGAnimatedNumber> Y();
+  already_AddRefed<SVGAnimatedNumber> Z();
+  already_AddRefed<SVGAnimatedNumber> PointsAtX();
+  already_AddRefed<SVGAnimatedNumber> PointsAtY();
+  already_AddRefed<SVGAnimatedNumber> PointsAtZ();
+  already_AddRefed<SVGAnimatedNumber> SpecularExponent();
+  already_AddRefed<SVGAnimatedNumber> LimitingConeAngle();
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;

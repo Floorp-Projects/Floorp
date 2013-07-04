@@ -9,17 +9,13 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   crypto-SDR.js \
   nsLoginInfo.js \
   nsLoginManager.js \
   nsLoginManagerPrompter.js \
   passwordmgr.manifest \
   storage-Legacy.js \
-  $(NULL)
-
-EXTRA_PP_COMPONENTS = \
-  storage-mozStorage.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

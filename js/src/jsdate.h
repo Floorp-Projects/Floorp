@@ -8,15 +8,13 @@
  * JS Date class interface.
  */
 
-#ifndef jsdate_h___
-#define jsdate_h___
-
-#include "mozilla/FloatingPoint.h"
-
-#include <math.h>
+#ifndef jsdate_h
+#define jsdate_h
 
 #include "jsapi.h"
 #include "jstypes.h"
+
+#include "js/Date.h"
 
 extern "C" {
 class JSObject;
@@ -70,4 +68,4 @@ js_DateGetSeconds(JSObject *obj);
 JSBool
 js_Date(JSContext *cx, unsigned argc, js::Value *vp);
 
-#endif /* jsdate_h___ */
+#endif /* jsdate_h */

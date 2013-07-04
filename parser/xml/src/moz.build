@@ -18,3 +18,5 @@ CPP_SOURCES += [
     'nsSAXXMLReader.cpp',
 ]
 
+LIBRARY_NAME = 'saxp'
+

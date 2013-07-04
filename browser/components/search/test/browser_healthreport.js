@@ -66,7 +66,7 @@ function test() {
         }
 
         EventUtils.synthesizeKey("VK_RETURN", {});
-        executeSoon(afterSearch);
+        executeSoon(() => executeSoon(afterSearch));
       });
     });
   }

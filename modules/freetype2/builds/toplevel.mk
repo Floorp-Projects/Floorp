@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001, 2003, 2006, 2008, 2009, 2010 by
+# Copyright 1996-2001, 2003, 2006, 2008-2010, 2012 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -201,6 +201,7 @@ dist:
 	currdir=`pwd` ; \
 	for f in `find . -wholename '*/.git' -prune \
 	                 -o -name .gitignore \
+	                 -o -name .mailmap \
 	                 -o -type d \
 	                 -o -print` ; do \
 	  ln -s $$currdir/$$f tmp/$$f ; \

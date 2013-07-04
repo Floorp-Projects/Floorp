@@ -4,8 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_macro_assembler_h__
-#define jsion_macro_assembler_h__
+#ifndef ion_IonMacroAssembler_h
+#define ion_IonMacroAssembler_h
+
+#ifdef JS_ION
+
+#include "jstypedarray.h"
+#include "jscompartment.h"
 
 #if defined(JS_CPU_X86)
 # include "ion/x86/MacroAssembler-x86.h"
@@ -14,15 +19,12 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
+#include "ion/AsmJS.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonInstrumentation.h"
 #include "ion/ParallelFunctions.h"
-
+#include "ion/VMFunctions.h"
 #include "vm/ForkJoin.h"
-
-#include "jstypedarray.h"
-#include "jscompartment.h"
-
 #include "vm/Shape.h"
 
 namespace js {
@@ -57,6 +59,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     mozilla::Maybe<IonContext> ionContext_;
     mozilla::Maybe<AutoIonContextAlloc> alloc_;
     bool enoughMemory_;
+    bool embedsNurseryPointers_;
 
   private:
     // This field is used to manage profiling instrumentation output. If
@@ -72,6 +75,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // instrumentation from being emitted.
     MacroAssembler()
       : enoughMemory_(true),
+        embedsNurseryPointers_(false),
         sps_(NULL)
     {
         JSContext *cx = GetIonContext()->cx;
@@ -93,6 +97,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
     MacroAssembler(JSContext *cx)
       : enoughMemory_(true),
+        embedsNurseryPointers_(false),
         sps_(NULL)
     {
         constructRoot(cx);
@@ -130,6 +135,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     bool oom() const {
         return !enoughMemory_ || MacroAssemblerSpecific::oom();
+    }
+
+    bool embedsNurseryPointers() const {
+        return embedsNurseryPointers_;
     }
 
     // Emits a test of a value against all types in a TypeSet. A scratch
@@ -180,7 +189,7 @@ class MacroAssembler : public MacroAssemblerSpecific
           case MIRType_Object:      return testObject(cond, val);
           case MIRType_Double:      return testDouble(cond, val);
           default:
-            JS_NOT_REACHED("Bad MIRType");
+            MOZ_ASSUME_UNREACHABLE("Bad MIRType");
         }
     }
 
@@ -214,9 +223,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         movePtr(ImmWord(GetIonContext()->runtime), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionJSContext)), dest);
     }
-    void loadIonActivation(const Register &dest) {
+    void loadJitActivation(const Register &dest) {
         movePtr(ImmWord(GetIonContext()->runtime), dest);
-        loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionActivation)), dest);
+        size_t offset = offsetof(JSRuntime, mainThread) + PerThreadData::offsetOfActivation();
+        loadPtr(Address(dest, offset), dest);
     }
 
     template<typename T>
@@ -349,6 +359,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     using MacroAssemblerSpecific::Push;
+    using MacroAssemblerSpecific::Pop;
 
     void Push(jsid id, Register scratchReg) {
         if (JSID_IS_GCTHING(id)) {
@@ -413,6 +424,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         pushValue(addr);
         framePushed_ += sizeof(Value);
     }
+
+    void PushEmptyRooted(VMFunction::RootType rootType);
+    void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand &valueReg);
 
     void adjustStack(int amount) {
         if (amount > 0)
@@ -497,6 +511,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&done);
     }
 
+    void branchNurseryPtr(Condition cond, const Address &ptr1, const ImmMaybeNurseryPtr &ptr2,
+                          Label *label);
+    void moveNurseryPtr(const ImmMaybeNurseryPtr &ptr, const Register &reg);
+
     void canonicalizeDouble(FloatRegister reg) {
         Label notNaN;
         branchDouble(DoubleOrdered, reg, reg, &notNaN);
@@ -514,38 +532,36 @@ class MacroAssembler : public MacroAssemblerSpecific
     template<typename S, typename T>
     void storeToTypedIntArray(int arrayType, const S &value, const T &dest) {
         switch (arrayType) {
-          case TypedArray::TYPE_INT8:
-          case TypedArray::TYPE_UINT8:
-          case TypedArray::TYPE_UINT8_CLAMPED:
+          case TypedArrayObject::TYPE_INT8:
+          case TypedArrayObject::TYPE_UINT8:
+          case TypedArrayObject::TYPE_UINT8_CLAMPED:
             store8(value, dest);
             break;
-          case TypedArray::TYPE_INT16:
-          case TypedArray::TYPE_UINT16:
+          case TypedArrayObject::TYPE_INT16:
+          case TypedArrayObject::TYPE_UINT16:
             store16(value, dest);
             break;
-          case TypedArray::TYPE_INT32:
-          case TypedArray::TYPE_UINT32:
+          case TypedArrayObject::TYPE_INT32:
+          case TypedArrayObject::TYPE_UINT32:
             store32(value, dest);
             break;
           default:
-            JS_NOT_REACHED("Invalid typed array type");
-            break;
+            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
         }
     }
 
     template<typename S, typename T>
     void storeToTypedFloatArray(int arrayType, const S &value, const T &dest) {
         switch (arrayType) {
-          case TypedArray::TYPE_FLOAT32:
+          case TypedArrayObject::TYPE_FLOAT32:
             convertDoubleToFloat(value, ScratchFloatReg);
             storeFloat(ScratchFloatReg, dest);
             break;
-          case TypedArray::TYPE_FLOAT64:
+          case TypedArrayObject::TYPE_FLOAT64:
             storeDouble(value, dest);
             break;
           default:
-            JS_NOT_REACHED("Invalid typed array type");
-            break;
+            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
         }
     }
 
@@ -586,8 +602,24 @@ class MacroAssembler : public MacroAssemblerSpecific
                        const Register &threadContextReg,
                        const Register &tempReg1,
                        const Register &tempReg2,
+                       gc::AllocKind allocKind,
+                       Label *fail);
+    void parNewGCThing(const Register &result,
+                       const Register &threadContextReg,
+                       const Register &tempReg1,
+                       const Register &tempReg2,
                        JSObject *templateObject,
                        Label *fail);
+    void parNewGCString(const Register &result,
+                        const Register &threadContextReg,
+                        const Register &tempReg1,
+                        const Register &tempReg2,
+                        Label *fail);
+    void parNewGCShortString(const Register &result,
+                             const Register &threadContextReg,
+                             const Register &tempReg1,
+                             const Register &tempReg2,
+                             Label *fail);
     void initGCThing(const Register &obj, JSObject *templateObject);
 
     // Compares two strings for equality based on the JSOP.
@@ -889,6 +921,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp);
 
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
+    void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);
+    void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail);
 };
 
 static inline Assembler::DoubleCondition
@@ -910,8 +944,7 @@ JSOpToDoubleCondition(JSOp op)
       case JSOP_GE:
         return Assembler::DoubleGreaterThanOrEqual;
       default:
-        JS_NOT_REACHED("Unexpected comparison operation");
-        return Assembler::DoubleEqual;
+        MOZ_ASSUME_UNREACHABLE("Unexpected comparison operation");
     }
 }
 
@@ -938,8 +971,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::GreaterThanOrEqual;
           default:
-            JS_NOT_REACHED("Unrecognized comparison operation");
-            return Assembler::Equal;
+            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
         }
     } else {
         switch (op) {
@@ -958,15 +990,13 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::AboveOrEqual;
           default:
-            JS_NOT_REACHED("Unrecognized comparison operation");
-            return Assembler::Equal;
+            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
         }
     }
 }
 
 typedef Vector<MIRType, 8> MIRTypeVector;
 
-#ifdef JS_ASMJS
 class ABIArgIter
 {
     ABIArgGenerator gen_;
@@ -986,9 +1016,10 @@ class ABIArgIter
     MIRType mirType() const { JS_ASSERT(!done()); return types_[i_]; }
     uint32_t stackBytesConsumedSoFar() const { return gen_.stackBytesConsumedSoFar(); }
 };
-#endif
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_macro_assembler_h__
+#endif // JS_ION
+
+#endif /* ion_IonMacroAssembler_h */

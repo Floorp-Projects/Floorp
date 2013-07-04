@@ -9,7 +9,6 @@
 #include "nsIDOMUSSDReceivedEvent.h"
 #include "nsIDOMDataErrorEvent.h"
 #include "nsIDOMCFStateChangeEvent.h"
-#include "nsIDOMICCCardLockErrorEvent.h"
 #include "GeneratedEvents.h"
 #include "mozilla/Preferences.h"
 #include "nsIPermissionManager.h"
@@ -74,7 +73,6 @@ NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 NS_IMPL_EVENT_HANDLER(MobileConnection, dataerror)
-NS_IMPL_EVENT_HANDLER(MobileConnection, icccardlockerror)
 NS_IMPL_EVENT_HANDLER(MobileConnection, cfstatechange)
 
 MobileConnection::MobileConnection()
@@ -279,58 +277,8 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** request)
 }
 
 NS_IMETHODIMP
-MobileConnection::GetCardLock(const nsAString& aLockType, nsIDOMDOMRequest** aDomRequest)
-{
-  *aDomRequest = nullptr;
-
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  if (!mProvider) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mProvider->GetCardLock(GetOwner(), aLockType, aDomRequest);
-}
-
-NS_IMETHODIMP
-MobileConnection::UnlockCardLock(const JS::Value& aInfo,
-                                 nsIDOMDOMRequest** aDomRequest)
-{
-  *aDomRequest = nullptr;
-
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  if (!mProvider) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mProvider->UnlockCardLock(GetOwner(), aInfo, aDomRequest);
-}
-
-NS_IMETHODIMP
-MobileConnection::SetCardLock(const JS::Value& aInfo,
-                              nsIDOMDOMRequest** aDomRequest)
-{
-  *aDomRequest = nullptr;
-
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  if (!mProvider) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mProvider->SetCardLock(GetOwner(), aInfo, aDomRequest);
-}
-
-NS_IMETHODIMP
 MobileConnection::SendMMI(const nsAString& aMMIString,
-                          nsIDOMDOMRequest** request)
+                          nsIDOMDOMRequest** aRequest)
 {
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
@@ -340,11 +288,11 @@ MobileConnection::SendMMI(const nsAString& aMMIString,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SendMMI(GetOwner(), aMMIString, request);
+  return mProvider->SendMMI(GetOwner(), aMMIString, aRequest);
 }
 
 NS_IMETHODIMP
-MobileConnection::CancelMMI(nsIDOMDOMRequest** request)
+MobileConnection::CancelMMI(nsIDOMDOMRequest** aRequest)
 {
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
@@ -354,7 +302,7 @@ MobileConnection::CancelMMI(nsIDOMDOMRequest** request)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->CancelMMI(GetOwner(), request);
+  return mProvider->CancelMMI(GetOwner(), aRequest);
 }
 
 NS_IMETHODIMP
@@ -533,26 +481,6 @@ MobileConnection::NotifyDataError(const nsAString& aMessage)
   nsCOMPtr<nsIDOMDataErrorEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitDataErrorEvent(NS_LITERAL_STRING("dataerror"),
                                        false, false, aMessage);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return DispatchTrustedEvent(ce);
-}
-
-NS_IMETHODIMP
-MobileConnection::NotifyIccCardLockError(const nsAString& aLockType,
-                                         uint32_t aRetryCount)
-{
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMICCCardLockErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
-
-  nsCOMPtr<nsIDOMICCCardLockErrorEvent> ce = do_QueryInterface(event);
-  nsresult rv =
-    ce->InitICCCardLockErrorEvent(NS_LITERAL_STRING("icccardlockerror"),
-                                  false, false, aLockType, aRetryCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchTrustedEvent(ce);

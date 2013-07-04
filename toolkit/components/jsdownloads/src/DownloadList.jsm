@@ -25,8 +25,12 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadList
@@ -34,10 +38,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 /**
  * Represents a collection of Download objects that can be viewed and managed by
  * the user interface, and persisted across sessions.
+ *
+ * @param aIsPublic
+ *        The boolean indicates it's a public download list or not.
  */
-function DownloadList() {
+function DownloadList(aIsPublic) {
   this._downloads = [];
   this._views = new Set();
+  // Only need to remove history entries for public downloads as no history
+  // entries are added for private downloads.
+  if (aIsPublic) {
+    PlacesUtils.history.addObserver(this, false);
+  }
 }
 
 DownloadList.prototype = {
@@ -179,4 +191,61 @@ DownloadList.prototype = {
   {
     this._views.delete(aView);
   },
+
+  /**
+   * Removes downloads from the list based on the given test function.
+   *
+   * @param aTestFn
+   *        The test function.
+   */
+  _removeWhere: function DL__removeWhere(aTestFn) {
+    Task.spawn(function() {
+      let list = yield this.getAll();
+      for (let download of list) {
+        // Remove downloads that have been canceled, even if the cancellation
+        // operation hasn't completed yet so we don't check "stopped" here.
+        if ((download.succeeded || download.canceled || download.error) &&
+            aTestFn(download)) {
+          this.remove(download);
+        }
+      }
+    }.bind(this)).then(null, Cu.reportError);
+  },
+
+  /**
+   * Removes downloads within the given period of time.
+   *
+   * @param aStartTime
+   *        The start time date object.
+   * @param aEndTime
+   *        The end time date object.
+   */
+  removeByTimeframe: function DL_removeByTimeframe(aStartTime, aEndTime) {
+    this._removeWhere(download => download.startTime >= aStartTime &&
+                                  download.startTime <= aEndTime);
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// nsISupports
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// nsINavHistoryObserver
+
+  onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {
+    this._removeWhere(download => aURI.equals(download.source.uri));
+  },
+
+  onClearHistory: function DL_onClearHistory() {
+    this._removeWhere(() => true);
+  },
+
+  onTitleChanged: function () {},
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onVisit: function () {},
+  onPageChanged: function () {},
+  onDeleteVisits: function () {},
 };
+

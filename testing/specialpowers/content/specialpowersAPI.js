@@ -58,6 +58,10 @@ function unwrapIfWrapped(x) {
   return isWrapper(x) ? unwrapPrivileged(x) : x;
 };
 
+function wrapIfUnwrapped(x) {
+  return isWrapper(x) ? x : wrapPrivileged(x);
+}
+
 function isXrayWrapper(x) {
   return Cu.isXrayWrapper(x);
 }
@@ -395,6 +399,24 @@ SPConsoleListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener])
 };
 
+function wrapCallback(cb) {
+  return function SpecialPowersCallbackWrapper() {
+    args = Array.prototype.map.call(arguments, wrapIfUnwrapped);
+    return cb.apply(this, args);
+  }
+}
+
+function wrapCallbackObject(obj) {
+  wrapper = { __exposedProps__: ExposedPropsWaiver };
+  for (var i in obj) {
+    if (typeof obj[i] == 'function')
+      wrapper[i] = wrapCallback(obj[i]);
+    else
+      wrapper[i] = obj[i];
+  }
+  return wrapper;
+}
+
 SpecialPowersAPI.prototype = {
 
   /*
@@ -425,9 +447,39 @@ SpecialPowersAPI.prototype = {
    *    properties. This is explained in a comment in the wrapper code above,
    *    and shouldn't be a problem.
    */
-  wrap: function(obj) { return isWrapper(obj) ? obj : wrapPrivileged(obj); },
+  wrap: wrapIfUnwrapped,
   unwrap: unwrapIfWrapped,
   isWrapper: isWrapper,
+
+  /*
+   * When content needs to pass a callback or a callback object to an API
+   * accessed over SpecialPowers, that API may sometimes receive arguments for
+   * whom it is forbidden to create a wrapper in content scopes. As such, we
+   * need a layer to wrap the values in SpecialPowers wrappers before they ever
+   * reach content.
+   */
+  wrapCallback: wrapCallback,
+  wrapCallbackObject: wrapCallbackObject,
+
+  /*
+   * Create blank privileged objects to use as out-params for privileged functions.
+   */
+  createBlankObject: function () {
+    var obj = new Object;
+    obj.__exposedProps__ = ExposedPropsWaiver;
+    return obj;
+  },
+
+  /*
+   * Because SpecialPowers wrappers don't preserve identity, comparing with ==
+   * can be hazardous. Sometimes we can just unwrap to compare, but sometimes
+   * wrapping the underlying object into a content scope is forbidden. This
+   * function strips any wrappers if they exist and compare the underlying
+   * values.
+   */
+  compare: function(a, b) {
+    return unwrapIfWrapped(a) === unwrapIfWrapped(b);
+  },
 
   get MockFilePicker() {
     return MockFilePicker
@@ -853,6 +905,8 @@ SpecialPowersAPI.prototype = {
   },
 
   addObserver: function(obs, notification, weak) {
+    if (typeof obs == 'object' && obs.observe.name != 'SpecialPowersCallbackWrapper')
+      obs.observe = wrapCallback(obs.observe);
     var obsvc = Cc['@mozilla.org/observer-service;1']
                    .getService(Ci.nsIObserverService);
     obsvc.addObserver(obs, notification, weak);
@@ -1058,14 +1112,17 @@ SpecialPowersAPI.prototype = {
     return this.wrap(Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest));
   },
 
-  snapshotWindow: function (win, withCaret, rect, bgcolor) {
+  snapshotWindowWithOptions: function (win, rect, bgcolor, options) {
     var el = this.window.get().document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    if (arguments.length < 3) {
+    if (rect === undefined) {
       rect = { top: win.scrollY, left: win.scrollX,
                width: win.innerWidth, height: win.innerHeight };
     }
-    if (arguments.length < 4) {
+    if (bgcolor === undefined) {
       bgcolor = "rgb(255,255,255)";
+    }
+    if (options === undefined) {
+      options = { };
     }
 
     el.width = rect.width;
@@ -1073,18 +1130,24 @@ SpecialPowersAPI.prototype = {
     var ctx = el.getContext("2d");
     var flags = 0;
 
+    for (var option in options) {
+      flags |= options[option] && ctx[option];
+    }
+
     ctx.drawWindow(win,
                    rect.left, rect.top, rect.width, rect.height,
                    bgcolor,
-                   withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
+                   flags);
     return el;
   },
 
+  snapshotWindow: function (win, withCaret, rect, bgcolor) {
+    return this.snapshotWindowWithOptions(win, rect, bgcolor,
+                                          { DRAWWINDOW_DRAW_CARET: withCaret });
+  },
+
   snapshotRect: function (win, rect, bgcolor) {
-    // Splice in our "do not want caret" bit
-    args = Array.slice(arguments);
-    args.splice(1, 0, false);
-    return this.snapshotWindow.apply(this, args);
+    return this.snapshotWindowWithOptions(win, rect, bgcolor);
   },
 
   gc: function() {
@@ -1188,7 +1251,8 @@ SpecialPowersAPI.prototype = {
     var serv = Cc["@mozilla.org/dom/dom-request-service;1"].
       getService(Ci.nsIDOMRequestService);
     var res = { __exposedProps__: {} };
-    var props = ["createRequest", "createCursor", "fireError", "fireSuccess", "fireDone"];
+    var props = ["createRequest", "createCursor", "fireError", "fireSuccess",
+                 "fireDone", "fireDetailedError"];
     for (i in props) {
       let prop = props[i];
       res[prop] = function() { return serv[prop].apply(serv, arguments) };
@@ -1213,18 +1277,6 @@ SpecialPowersAPI.prototype = {
     Components.classes["@mozilla.org/categorymanager;1"].
       getService(Components.interfaces.nsICategoryManager).
       addCategoryEntry(category, entry, value, persists, replace);
-  },
-
-  getNodePrincipal: function(aNode) {
-      return aNode.nodePrincipal;
-  },
-
-  getNodeBaseURIObject: function(aNode) {
-      return aNode.baseURIObject;
-  },
-
-  getDocumentURIObject: function(aDocument) {
-      return aDocument.documentURIObject;
   },
 
   copyString: function(str, doc) {

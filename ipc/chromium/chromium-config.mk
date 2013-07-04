@@ -14,10 +14,6 @@ CHROMIUM_CONFIG_INCLUDED = 1
 
 EXTRA_DEPS += $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-DEFINES += \
-  -DEXCLUDE_SKIA_DEPENDENCIES \
-  $(NULL)
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/ipc/chromium/src \
   -I$(topsrcdir)/ipc/glue \

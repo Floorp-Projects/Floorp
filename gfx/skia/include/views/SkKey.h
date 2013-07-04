@@ -52,5 +52,11 @@ enum SkKey {
     kSkKeyCount
 };
 
-#endif
+enum SkModifierKeys {
+    kShift_SkModifierKey    = 1 << 0,
+    kControl_SkModifierKey  = 1 << 1,
+    kOption_SkModifierKey   = 1 << 2,   // same as ALT
+    kCommand_SkModifierKey  = 1 << 3,
+};
 
+#endif

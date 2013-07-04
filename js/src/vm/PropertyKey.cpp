@@ -6,15 +6,15 @@
 
 /* PropertyKey implementation details. */
 
-#include "mozilla/Assertions.h"
-
 #include "js/PropertyKey.h"
+
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "vm/String.h"
 
-#include "jsinferinlines.h"
 #include "jsatominlines.h"
+
+#include "vm/String-inl.h"
 
 using namespace js;
 

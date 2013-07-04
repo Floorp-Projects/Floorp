@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdlib.h>
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "nsHttp.h"
 #include "nsHttpDigestAuth.h"
 #include "nsIHttpAuthenticableChannel.h"
@@ -17,7 +19,6 @@
 #include "nsEscape.h"
 #include "nsNetCID.h"
 #include "plbase64.h"
-#include "plstr.h"
 #include "prprf.h"
 #include "nsCRT.h"
 

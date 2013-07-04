@@ -386,6 +386,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Identity UI */
+#identity-popup-content-box:not(.chromeUI) > #identity-popup-brandName,
+#identity-popup-content-box:not(.chromeUI) > #identity-popup-chromeLabel,
+#identity-popup-content-box.chromeUI > .identity-popup-label:not(#identity-popup-brandName):not(#identity-popup-chromeLabel),
+#identity-popup-content-box.chromeUI > .identity-popup-description,
+#identity-popup.chromeUI > #identity-popup-button-container,
 #identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-content-host ,
@@ -506,8 +511,8 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#click-to-play-plugins-notification");
 }
 
-popupnotification-centeritem {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#center-item");
+.plugin-popupnotification-centeritem {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#plugin-popupnotification-center-item");
 }
 
 /* override hidden="true" for the status bar compatibility shim
@@ -598,8 +603,7 @@ html|*#gcli-output-frame,
 }
 
 .gclitoolbar-input-node,
-.gclitoolbar-complete-node,
-.gclitoolbar-prompt {
+.gclitoolbar-complete-node {
   direction: ltr;
 }
 
@@ -661,6 +665,12 @@ chatbar {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbar");
   height: 0;
   max-height: 0;
+}
+
+/** See bug 872317 for why the following rule is necessary. */
+
+#downloads-indicator {
+  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-toolbarbutton");
 }
 
 /* full screen chat window support */

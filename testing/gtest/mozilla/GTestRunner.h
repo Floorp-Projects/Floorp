@@ -5,6 +5,6 @@
 
 namespace mozilla {
 
-int RunGTest();
+extern int (*RunGTest)();
 
 }

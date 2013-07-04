@@ -13,15 +13,14 @@ function test() {
     openConsole(null, function(hud) {
       content.location.reload();
 
-      waitForSuccess({
-        name: "network message displayed",
-        validatorFn: function()
-        {
-          return hud.outputNode.querySelector(".webconsole-msg-network");
-        },
-        successFn: performTest,
-        failureFn: finishTest,
-      });
+      waitForMessages({
+        webconsole: hud,
+        messages: [{
+          text: "test-console.html",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_LOG,
+        }],
+      }).then(performTest);
     });
   }, true);
 }

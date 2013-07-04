@@ -59,7 +59,7 @@ public final class GeckoLoader {
                 return;
             }
 
-            StringBuffer pluginSearchPath = new StringBuffer();
+            StringBuilder pluginSearchPath = new StringBuilder();
             for (int i = 0; i < pluginDirs.length; i++) {
                 pluginSearchPath.append(pluginDirs[i]);
                 pluginSearchPath.append(":");
@@ -203,13 +203,6 @@ public final class GeckoLoader {
         if (linkerCache == null) {
             linkerCache = cacheFile.getPath();
             putenv("MOZ_LINKER_CACHE=" + linkerCache);
-        }
-
-        // Disable on-demand decompression of the linker on devices where it
-        // is known to cause crashes.
-        if ("samsung".equals(android.os.Build.MANUFACTURER) &&
-            "GT-I9505".equals(android.os.Build.MODEL)) {
-            putenv("MOZ_LINKER_ONDEMAND=0");
         }
 
 #ifdef MOZ_LINKER_EXTRACT

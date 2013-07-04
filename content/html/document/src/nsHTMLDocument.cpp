@@ -201,30 +201,52 @@ nsHTMLDocument::nsHTMLDocument()
   SetIsDOMBinding();
 }
 
+nsHTMLDocument::~nsHTMLDocument()
+{
+  mAll = nullptr;
+}
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_10(nsHTMLDocument, nsDocument,
-                                      mImages,
-                                      mApplets,
-                                      mEmbeds,
-                                      mLinks,
-                                      mAnchors,
-                                      mScripts,
-                                      mForms,
-                                      mFormControls,
-                                      mWyciwygChannel,
-                                      mMidasCommandManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
+  NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration()),
+               "Shouldn't traverse nsHTMLDocument!");
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImages)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeds)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLinks)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchors)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScripts)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForms)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFormControls)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWyciwygChannel)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMidasCommandManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
+  tmp->mAll = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mImages)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeds)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLinks)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchors)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mForms)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFormControls)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWyciwygChannel)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMidasCommandManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAll)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
 // QueryInterface implementation for nsHTMLDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
-  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsHTMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIHTMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMHTMLDocument)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(nsDocument)
+  NS_INTERFACE_TABLE_INHERITED2(nsHTMLDocument, nsIHTMLDocument,
+                                nsIDOMHTMLDocument)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsDocument)
 
 JSObject*
 nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
@@ -2272,39 +2294,6 @@ nsHTMLDocument::ResolveName(const nsAString& aName, nsWrapperCache **aCache)
   return nullptr;
 }
 
-already_AddRefed<nsISupports>
-nsHTMLDocument::ResolveName(const nsAString& aName,
-                            nsIContent *aForm,
-                            nsWrapperCache **aCache)
-{
-  nsISupports* result = ResolveName(aName, aCache);
-  if (!result) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIContent> node = do_QueryInterface(result);
-  if (!node) {
-    // We create a nsFormContentList which will filter out the elements in the
-    // list that don't belong to aForm.
-    nsRefPtr<nsBaseContentList> list =
-      new nsFormContentList(aForm, *static_cast<nsBaseContentList*>(result));
-    if (list->Length() > 1) {
-      *aCache = list;
-      return list.forget();
-    }
-
-    // After the nsFormContentList is done filtering there's either nothing or
-    // one element in the list. Return that element, or null if there's no
-    // element in the list.
-    node = list->Item(0);
-  } else if (!nsContentUtils::BelongsInForm(aForm, node)) {
-    node = nullptr;
-  }
-
-  *aCache = node;
-  return node.forget();
-}
-
 JSObject*
 nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
                             ErrorResult& rv)
@@ -2313,11 +2302,6 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   nsISupports* supp = ResolveName(aName, &cache);
   if (!supp) {
     aFound = false;
-    if (GetCompatibilityMode() == eCompatibility_NavQuirks &&
-        aName.EqualsLiteral("all")) {
-      JS::Rooted<JSObject*> obj(cx, GetWrapper());
-      rv = nsHTMLDocumentSH::TryResolveAll(cx, this, obj);
-    }
     return nullptr;
   }
 
@@ -2327,7 +2311,7 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
     JSAutoCompartment ac(cx, wrapper);
     // XXXbz Should we call the (slightly misnamed, really) WrapNativeParent
     // here?
-    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, val.address())) {
+    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, &val)) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }
@@ -2700,6 +2684,29 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID,
   *aCache = cont = docAllList->Item(0, true);
 
   return cont;
+}
+
+JSObject*
+nsHTMLDocument::GetAll(JSContext* aCx, ErrorResult& aRv)
+{
+  if (!mAll) {
+    JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
+    JSAutoCompartment ac(aCx, wrapper);
+    mAll = JS_NewObject(aCx, &sHTMLDocumentAllClass, nullptr,
+                        JS_GetGlobalForObject(aCx, wrapper));
+    if (!mAll) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+
+    // Make the JSObject hold a reference to this.
+    JS_SetPrivate(mAll, static_cast<nsINode*>(this));
+    NS_ADDREF_THIS();
+
+    PreserveWrapper(static_cast<nsINode*>(this));
+  }
+
+  return mAll;
 }
 
 static void

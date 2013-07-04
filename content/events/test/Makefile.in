@@ -103,7 +103,16 @@ MOCHITEST_FILES = \
 		test_addEventListenerExtraArg.html \
 		test_focus_disabled.html \
 		test_bug847597.html \
+		test_bug855741.html \
 		$(NULL)
+
+ifeq (,$(filter gonk,$(MOZ_WIDGET_TOOLKIT)))
+# THESE TESTS (BELOW) DO NOT RUN ON B2G
+MOCHITEST_FILES += \
+		test_bug864040.html \
+		$(NULL)
+# THESE TESTS (ABOVE) DO NOT RUN ON B2G
+endif
 
 MOCHITEST_CHROME_FILES = \
 		test_bug336682_2.xul \

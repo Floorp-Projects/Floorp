@@ -6,10 +6,12 @@
 #include "DrawTargetSkia.h"
 #include "SourceSurfaceSkia.h"
 #include "ScaledFontBase.h"
+#include "ScaledFontCairo.h"
 #include "skia/SkDevice.h"
 
 #ifdef USE_SKIA_GPU
 #include "skia/SkGpuDevice.h"
+#include "skia/GrGLInterface.h"
 #endif
 
 #include "skia/SkTypeface.h"
@@ -85,14 +87,7 @@ DrawTargetSkia::DrawTargetSkia()
 
 DrawTargetSkia::~DrawTargetSkia()
 {
-  if (mSnapshots.size()) {
-    for (std::vector<SourceSurfaceSkia*>::iterator iter = mSnapshots.begin();
-         iter != mSnapshots.end(); iter++) {
-      (*iter)->DrawTargetDestroyed();
-    }
-    // All snapshots will now have copied data.
-    mSnapshots.clear();
-  }
+  MOZ_ASSERT(mSnapshots.size() == 0);
 }
 
 TemporaryRef<SourceSurface>
@@ -274,22 +269,43 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   MarkChanged();
 
+  IntRect sourceIntRect;
+  bool integerAligned = aSource.ToIntRect(&sourceIntRect);
+
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
 
-  SkMatrix matrix;
-  matrix.setRectToRect(sourceRect, destRect, SkMatrix::kFill_ScaleToFit);
-  
+  Rect boundingSource = aSource;
+  boundingSource.RoundOut();
+
+  SkRect sourceBoundingRect = RectToSkRect(boundingSource);
+  SkIRect sourceBoundingIRect = RectToSkIRect(boundingSource);
+
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
-  SkShader *shader = SkShader::CreateBitmapShader(bitmap, SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
-  shader->setLocalMatrix(matrix);
-  SkSafeUnref(paint.mPaint.setShader(shader));
   if (aSurfOptions.mFilter != FILTER_LINEAR) {
     paint.mPaint.setFilterBitmap(false);
   }
-  mCanvas->drawRect(destRect, paint.mPaint);
+
+  if (!integerAligned) {
+    // We need to inflate our destRect by the same amount we inflated sourceRect
+    // by when we rounded up to the nearest integer size to ensure we interpolate
+    // the edge pixels properly, but clip to the true destination rect first so
+    // we don't draw outside our designated area.
+    mCanvas->save();
+    mCanvas->clipRect(destRect);
+
+    SkMatrix rectTransform;
+    rectTransform.setRectToRect(sourceRect, sourceBoundingRect, SkMatrix::kFill_ScaleToFit);
+    rectTransform.mapRect(&destRect);
+  }
+
+  mCanvas->drawBitmapRect(bitmap, &sourceBoundingIRect, destRect, &paint.mPaint);
+
+  if (!integerAligned) {
+    mCanvas->restore();
+  }
 }
 
 void
@@ -446,7 +462,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
                            const GlyphBuffer &aBuffer,
                            const Pattern &aPattern,
                            const DrawOptions &aOptions,
-                           const GlyphRenderingOptions*)
+                           const GlyphRenderingOptions *aRenderingOptions)
 {
   if (aFont->GetType() != FONT_MAC &&
       aFont->GetType() != FONT_SKIA &&
@@ -462,7 +478,30 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   paint.mPaint.setTypeface(skiaFont->GetSkTypeface());
   paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
   paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-  
+
+  if (aRenderingOptions && aRenderingOptions->GetType() == FONT_CAIRO) {
+    switch (static_cast<const GlyphRenderingOptionsCairo*>(aRenderingOptions)->GetHinting()) {
+      case FONT_HINTING_NONE:
+        paint.mPaint.setHinting(SkPaint::kNo_Hinting);
+        break;
+      case FONT_HINTING_LIGHT:
+        paint.mPaint.setHinting(SkPaint::kSlight_Hinting);
+        break;
+      case FONT_HINTING_NORMAL:
+        paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
+        break;
+      case FONT_HINTING_FULL:
+        paint.mPaint.setHinting(SkPaint::kFull_Hinting);
+        break;
+    }
+
+    if (static_cast<const GlyphRenderingOptionsCairo*>(aRenderingOptions)->GetAutoHinting()) {
+      paint.mPaint.setAutohinted(true);
+    }
+  } else {
+    paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
+  }
+
   std::vector<uint16_t> indices;
   std::vector<SkPoint> offsets;
   indices.resize(aBuffer.mNumGlyphs);
@@ -602,24 +641,36 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 
 #ifdef USE_SKIA_GPU
 void
-DrawTargetSkia::InitWithFBO(unsigned int aFBOID, GrContext* aGrContext, const IntSize &aSize, SurfaceFormat aFormat)
+DrawTargetSkia::InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                                  GrGLInterface* aGrGLInterface,
+                                                  const IntSize &aSize,
+                                                  SurfaceFormat aFormat)
 {
-  GrPlatformRenderTargetDesc targetDescriptor;
-
-  targetDescriptor.fWidth = aSize.width;
-  targetDescriptor.fHeight = aSize.height;
-  targetDescriptor.fConfig = GfxFormatToGrConfig(aFormat);
-  targetDescriptor.fSampleCnt = 0;
-  targetDescriptor.fRenderTargetHandle = aFBOID;
-
-  SkAutoTUnref<GrRenderTarget> target(aGrContext->createPlatformRenderTarget(targetDescriptor));
-
-  SkAutoTUnref<SkDevice> device(new SkGpuDevice(aGrContext, target.get()));
-  SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
+  mGLContext = aGLContext;
   mSize = aSize;
-
-  mCanvas = canvas.get();
   mFormat = aFormat;
+
+  mGrGLInterface = aGrGLInterface;
+  mGrGLInterface->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(this);
+
+  GrBackendContext backendContext = reinterpret_cast<GrBackendContext>(aGrGLInterface);
+  SkAutoTUnref<GrContext> gr(GrContext::Create(kOpenGL_GrBackend, backendContext));
+  mGrContext = gr.get();
+
+
+  GrBackendRenderTargetDesc targetDescriptor;
+
+  targetDescriptor.fWidth = mSize.width;
+  targetDescriptor.fHeight = mSize.height;
+  targetDescriptor.fConfig = GfxFormatToGrConfig(mFormat);
+  targetDescriptor.fOrigin = kBottomLeft_GrSurfaceOrigin;
+  targetDescriptor.fSampleCnt = 0;
+  targetDescriptor.fRenderTargetHandle = 0; // GLContext always exposes the right framebuffer as id 0
+
+  SkAutoTUnref<GrRenderTarget> target(mGrContext->wrapBackendRenderTarget(targetDescriptor));
+  SkAutoTUnref<SkDevice> device(new SkGpuDevice(mGrContext.get(), target.get()));
+  SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
+  mCanvas = canvas.get();
 }
 #endif
 

@@ -1570,6 +1570,13 @@ const int32_t nsCSSProps::kWordWrapKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kWritingModeKTable[] = {
+  eCSSKeyword_horizontal_tb, NS_STYLE_WRITING_MODE_HORIZONTAL_TB,
+  eCSSKeyword_vertical_lr, NS_STYLE_WRITING_MODE_VERTICAL_LR,
+  eCSSKeyword_vertical_rl, NS_STYLE_WRITING_MODE_VERTICAL_RL,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const int32_t nsCSSProps::kHyphensKTable[] = {
   eCSSKeyword_none, NS_STYLE_HYPHENS_NONE,
   eCSSKeyword_manual, NS_STYLE_HYPHENS_MANUAL,

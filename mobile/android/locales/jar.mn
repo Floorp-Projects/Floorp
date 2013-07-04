@@ -61,6 +61,8 @@ relativesrcdir toolkit/locales:
 relativesrcdir dom/locales:
   locale/@AB_CD@/browser/overrides/charsetTitles.properties    (%chrome/charsetTitles.properties)
   locale/@AB_CD@/browser/overrides/global.dtd                  (%chrome/global.dtd)
+  locale/@AB_CD@/browser/overrides/AccessFu.properties         (%chrome/accessibility/AccessFu.properties)
 
 % override chrome://global/locale/charsetTitles.properties chrome://browser/locale/overrides/charsetTitles.properties
 % override chrome://global/locale/global.dtd chrome://browser/locale/overrides/global.dtd
+% override chrome://global/locale/AccessFu.properties chrome://browser/locale/overrides/AccessFu.properties

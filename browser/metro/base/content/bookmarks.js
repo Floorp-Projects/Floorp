@@ -206,9 +206,7 @@ BookmarksView.prototype = {
   },
 
   clearBookmarks: function bv_clearBookmarks() {
-    while (this._set.itemCount > 0)
-      this._set.removeItemAt(0, true);
-    this._set.arrangeItems();
+    this._set.clearAll();
   },
 
   addBookmark: function bv_addBookmark(aBookmarkId, aPos) {

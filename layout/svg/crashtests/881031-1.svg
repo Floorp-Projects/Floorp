@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+
+function boom()
+{
+    var svgText = document.getElementById("t");
+    svgText.firstChild.data = "C";
+    svgText.appendChild(document.createTextNode("D"));
+    document.caretPositionFromPoint(0, 0);
+}
+window.addEventListener("load", boom, false);
+
+</script>
+<text id="t">A</text>
+</svg>

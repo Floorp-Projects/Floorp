@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the PeriodicWave interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var ac = new AudioContext();
+  var real = new Float32Array(4096);
+  var imag = new Float32Array(4096);
+  var table = ac.createPeriodicWave(real, imag);
+  expectException(function() {
+    ac.createPeriodicWave(new Float32Array(512), imag);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    ac.createPeriodicWave(new Float32Array(0), new Float32Array(0));
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    ac.createPeriodicWave(new Float32Array(4097), new Float32Array(4097));
+  }, DOMException.NOT_SUPPORTED_ERR);
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

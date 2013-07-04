@@ -10,6 +10,10 @@
 #include "GLContext.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceStream.h"
+#ifdef MOZ_WIDGET_GONK
+#include "SharedSurfaceGralloc.h"
+#include "nsXULAppAPI.h"
+#endif
 
 using namespace mozilla::gfx;
 
@@ -27,7 +31,20 @@ GLScreenBuffer::Create(GLContext* gl,
         return nullptr;
     }
 
-    SurfaceFactory_GL* factory = new SurfaceFactory_Basic(gl, caps);
+    SurfaceFactory_GL* factory = nullptr;
+
+#ifdef MOZ_WIDGET_GONK
+    /* On B2G, we want a Gralloc factory, and we want one right at the start */
+    if (!factory &&
+        XRE_GetProcessType() != GeckoProcessType_Default)
+    {
+        factory = new SurfaceFactory_Gralloc(gl, caps);
+    }
+#endif
+
+    if (!factory)
+        factory = new SurfaceFactory_Basic(gl, caps);
+
     SurfaceStream* stream = SurfaceStream::CreateForType(
         SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
                                           caps.preserve),
@@ -78,10 +95,7 @@ GLScreenBuffer::BindAsFramebuffer(GLContext* const gl, GLenum target) const
         break;
 
     default:
-        // In case we got a bad target.
-        MOZ_NOT_REACHED("Bad `target` for BindFramebuffer.");
-        gl->raw_fBindFramebuffer(target, 0);
-        break;
+        MOZ_CRASH("Bad `target` for BindFramebuffer.");
     }
 }
 
@@ -368,18 +382,14 @@ GLScreenBuffer::Swap(const gfxIntSize& size)
 {
     SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
     if (!nextSurf) {
-        SurfaceFactory_GL* basicFactory =
-            new SurfaceFactory_Basic(mGL, mFactory->Caps());
-        nextSurf = mStream->SwapProducer(basicFactory, size);
-        if (!nextSurf) {
-            delete basicFactory;
-            return false;
-        }
+        SurfaceFactory_Basic basicFactory(mGL, mFactory->Caps());
+        nextSurf = mStream->SwapProducer(&basicFactory, size);
+        if (!nextSurf)
+          return false;
 
-        // Swap out the apparently defective old factory.
-        delete mFactory;
-        mFactory = basicFactory;
+        NS_WARNING("SwapProd failed for sophisticated Factory type, fell back to Basic.");
     }
+    MOZ_ASSERT(nextSurf);
 
     Attach(nextSurf, size);
 
@@ -564,8 +574,7 @@ ReadBuffer::Create(GLContext* gl,
         colorRB = surf->Renderbuffer();
         break;
     default:
-        MOZ_NOT_REACHED("Unknown attachment type?");
-        return nullptr;
+        MOZ_CRASH("Unknown attachment type?");
     }
     MOZ_ASSERT(colorTex || colorRB);
 
@@ -614,8 +623,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
             colorRB = surf->Renderbuffer();
             break;
         default:
-            MOZ_NOT_REACHED("Unknown attachment type?");
-            return;
+            MOZ_CRASH("Unknown attachment type?");
         }
 
         mGL->AttachBuffersToFB(colorTex, colorRB, 0, 0, mFB);

@@ -1,10 +1,8 @@
         <service
-		        android:exported="false"
-		        android:name="org.mozilla.gecko.background.announcements.AnnouncementsService" >
+            android:exported="false"
+            android:name="org.mozilla.gecko.background.announcements.AnnouncementsService" >
         </service>
         <service
-		        android:exported="false"
-		        android:name="org.mozilla.gecko.background.announcements.AnnouncementsBroadcastService" >
+            android:exported="false"
+            android:name="org.mozilla.gecko.background.announcements.AnnouncementsBroadcastService" >
         </service>
-
-        <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE" />

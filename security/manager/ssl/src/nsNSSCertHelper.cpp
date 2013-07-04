@@ -10,12 +10,14 @@
 #include "nsCOMPtr.h"
 #include "nsNSSCertificate.h"
 #include "secder.h"
+#include "nsComponentManagerUtils.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSASN1Object.h"
 #include "nsNSSComponent.h"
 #include "nsNSSCertTrust.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsServiceManagerUtils.h"
 #include <algorithm>
 
 using namespace mozilla;

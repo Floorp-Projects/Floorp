@@ -243,7 +243,12 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
   if (hitTestFlags & SVG_HIT_TEST_FILL)
     isHit = tmpCtx->PointInFill(userSpacePoint);
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
-    nsSVGUtils::SetupCairoStrokeHitGeometry(this, tmpCtx);
+    nsSVGUtils::SetupCairoStrokeGeometry(this, tmpCtx);
+    // tmpCtx's matrix may have transformed by SetupCairoStrokeGeometry
+    // if there is a non-scaling stroke. We need to transform userSpacePoint
+    // so that everything is using the same co-ordinate system.
+    userSpacePoint =
+      nsSVGUtils::GetStrokeTransform(this).Invert().Transform(userSpacePoint);
     isHit = tmpCtx->PointInStroke(userSpacePoint);
   }
 
@@ -426,7 +431,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       // though, because if pathExtents is empty, its position will not have
       // been set. Happily we can use tmpCtx->GetUserStrokeExtent() to find
       // the center point of the extents even though it gets the extents wrong.
-      nsSVGUtils::SetupCairoStrokeGeometry(this, tmpCtx);
+      nsSVGUtils::SetupCairoStrokeBBoxGeometry(this, tmpCtx);
       pathExtents.MoveTo(tmpCtx->GetUserStrokeExtent().Center());
       pathExtents.SizeTo(0, 0);
     }

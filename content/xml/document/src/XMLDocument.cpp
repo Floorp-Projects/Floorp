@@ -50,7 +50,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIHTMLDocument.h"
-#include "mozilla/dom/Element.h" // DOMCI_NODE_DATA
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
 
 using namespace mozilla;
@@ -234,17 +234,7 @@ XMLDocument::~XMLDocument()
 }
 
 // QueryInterface implementation for XMLDocument
-NS_INTERFACE_TABLE_HEAD(XMLDocument)
-  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(XMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(XMLDocument, nsIDOMXMLDocument)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(nsDocument)
-
-
-NS_IMPL_ADDREF_INHERITED(XMLDocument, nsDocument)
-NS_IMPL_RELEASE_INHERITED(XMLDocument, nsDocument)
-
+NS_IMPL_ISUPPORTS_INHERITED1(XMLDocument, nsDocument, nsIDOMXMLDocument)
 
 nsresult
 XMLDocument::Init()

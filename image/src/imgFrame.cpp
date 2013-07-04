@@ -19,6 +19,7 @@ static bool gDisableOptimize = false;
 #include "cairo.h"
 #include "GeckoProfiler.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
 
 #if defined(XP_WIN)
 
@@ -549,6 +550,14 @@ void imgFrame::GetImageData(uint8_t **aData, uint32_t *length) const
   *length = GetImageDataLength();
 }
 
+uint8_t* imgFrame::GetImageData() const
+{
+  uint8_t *data;
+  uint32_t length;
+  GetImageData(&data, &length);
+  return data;
+}
+
 bool imgFrame::GetIsPaletted() const
 {
   return mPalettedImageData != nullptr;
@@ -570,6 +579,14 @@ void imgFrame::GetPaletteData(uint32_t **aPalette, uint32_t *length) const
     *aPalette = (uint32_t *) mPalettedImageData;
     *length = PaletteDataLength();
   }
+}
+
+uint32_t* imgFrame::GetPaletteData() const
+{
+  uint32_t* data;
+  uint32_t length;
+  GetPaletteData(&data, &length);
+  return data;
 }
 
 nsresult imgFrame::LockImageData()
@@ -785,7 +802,7 @@ void imgFrame::SetCompositingFailed(bool val)
 // |aMallocSizeOf|.  If that fails (because the platform doesn't support it) or
 // it's non-heap memory, we fall back to computing the size analytically.
 size_t
-imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation, nsMallocSizeOfFun aMallocSizeOf) const
+imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation, mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // aMallocSizeOf is only used if aLocation==MEMORY_IN_PROCESS_HEAP.  It
   // should be NULL otherwise.

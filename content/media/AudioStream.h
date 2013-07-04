@@ -105,6 +105,9 @@ public:
   // you may receive an implementation which forwards to a compositing process.
   static AudioStream* AllocateStream();
 
+  // Returns the maximum number of channels supported by the audio hardware.
+  static int MaxNumberOfChannels();
+
   // Initialize the audio stream. aNumChannels is the number of audio
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).

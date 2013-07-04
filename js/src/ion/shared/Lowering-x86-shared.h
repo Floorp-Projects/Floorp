@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_lowering_x86_shared_h__
-#define jsion_ion_lowering_x86_shared_h__
+#ifndef ion_shared_Lowering_x86_shared_h
+#define ion_shared_Lowering_x86_shared_h
 
 #include "ion/shared/Lowering-shared.h"
 
@@ -32,6 +32,8 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
     bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
+    bool lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
+                     MDefinition *rhs);
     bool visitConstant(MConstant *ins);
     bool visitAsmJSNeg(MAsmJSNeg *ins);
     bool visitAsmJSUDiv(MAsmJSUDiv *ins);
@@ -47,4 +49,4 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_lowering_x86_shared_h__
+#endif /* ion_shared_Lowering_x86_shared_h */

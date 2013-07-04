@@ -29,10 +29,10 @@ function test() {
       let requestItem = RequestsMenu.getItemAtIndex(0);
       let target = requestItem.target;
 
-      is(typeof requestItem.attachment.id, "string",
-        "The attached id is incorrect.");
-      isnot(requestItem.attachment.id, "",
-        "The attached id should not be empty.");
+      is(typeof requestItem.value, "string",
+        "The attached request id is incorrect.");
+      isnot(requestItem.value, "",
+        "The attached request id should not be empty.");
 
       is(typeof requestItem.attachment.startedDeltaMillis, "number",
         "The attached startedDeltaMillis is incorrect.");

@@ -18,7 +18,7 @@ public:
     void*   getHWND() const { return fHWND; }
 
     virtual bool onDispatchClick(int x, int y, Click::State state,
-                                 void* owner);
+                                 void* owner, unsigned modi);
     enum SkBackEndTypes {
         kNone_BackEndType,
 #if SK_SUPPORT_GPU
@@ -26,8 +26,13 @@ public:
 #endif
     };
 
+    struct AttachmentInfo {
+        int fSampleCount;
+        int fStencilBits;
+    };
+
     void    detach();
-    bool    attach(SkBackEndTypes attachType, int msaaSampleCount);
+    bool    attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo*);
     void    present();
 
 protected:

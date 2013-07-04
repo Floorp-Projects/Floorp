@@ -5,7 +5,7 @@
 /*    Auto-fitter dummy routines to be used if no hinting should be        */
 /*    performed (body).                                                    */
 /*                                                                         */
-/*  Copyright 2003-2005, 2011 by                                           */
+/*  Copyright 2003-2005, 2011, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -28,7 +28,7 @@
   {
     af_glyph_hints_rescale( hints,
                             metrics );
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -39,13 +39,14 @@
     FT_UNUSED( hints );
     FT_UNUSED( outline );
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
   AF_DEFINE_SCRIPT_CLASS( af_dummy_script_class,
-    AF_SCRIPT_NONE,
+    AF_SCRIPT_DUMMY,
     NULL,
+    0,
 
     sizeof ( AF_ScriptMetricsRec ),
 

@@ -66,17 +66,22 @@ class TerminalLoggingHandler(logging.Handler):
     def emit(self, record):
         msg = self.format(record)
 
-        if self.footer:
-            self.footer.clear()
+        self.acquire()
 
-        self.fh.write(msg)
-        self.fh.write('\n')
+        try:
+            if self.footer:
+                self.footer.clear()
 
-        if self.footer:
-            self.footer.draw()
+            self.fh.write(msg)
+            self.fh.write('\n')
 
-        # If we don't flush, the footer may not get drawn.
-        self.flush()
+            if self.footer:
+                self.footer.draw()
+
+            # If we don't flush, the footer may not get drawn.
+            self.fh.flush()
+        finally:
+            self.release()
 
 
 class BuildProgressFooter(object):
@@ -203,12 +208,12 @@ class BuildOutputManager(LoggingMixin):
         self.t = terminal
         self.footer = BuildProgressFooter(terminal, monitor)
 
-        handler = TerminalLoggingHandler()
-        handler.setFormatter(log_manager.terminal_formatter)
-        handler.footer = self.footer
+        self.handler = TerminalLoggingHandler()
+        self.handler.setFormatter(log_manager.terminal_formatter)
+        self.handler.footer = self.footer
 
-        old = log_manager.replace_terminal_handler(handler)
-        handler.level = old.level
+        old = log_manager.replace_terminal_handler(self.handler)
+        self.handler.level = old.level
 
     def __enter__(self):
         return self
@@ -243,7 +248,14 @@ class BuildOutputManager(LoggingMixin):
         if relevant:
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
         elif state_changed:
-            self.refresh()
+            have_handler = hasattr(self, 'handler')
+            if have_handler:
+                self.handler.acquire()
+            try:
+                self.refresh()
+            finally:
+                if have_handler:
+                    self.handler.release()
 
 
 @CommandProvider
@@ -464,12 +476,18 @@ class GTestCommands(MachCommandBase):
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
     def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser):
+
+        # We lazy build gtest because it's slow to link
+        self._run_make(directory="testing/gtest", target='gtest', ensure_exit_code=True)
+
         app_path = self.get_binary_path('app')
 
         # Use GTest environment variable to control test execution
         # For details see:
         # https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_Test_Programs:_Advanced_Options
         gtest_env = {b'GTEST_FILTER': gtest_filter}
+
+        gtest_env[b"MOZ_RUN_GTEST"] = b"True"
 
         if shuffle:
             gtest_env[b"GTEST_SHUFFLE"] = b"True"

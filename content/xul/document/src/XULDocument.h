@@ -126,7 +126,6 @@ public:
     virtual void GetElementsForID(const nsAString& aID,
                                   nsCOMArray<nsIContent>& aElements) MOZ_OVERRIDE;
 
-    NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner) MOZ_OVERRIDE;
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) MOZ_OVERRIDE;
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) MOZ_OVERRIDE;
     NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent,

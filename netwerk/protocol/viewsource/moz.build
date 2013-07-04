@@ -21,3 +21,5 @@ CPP_SOURCES += [
     'nsViewSourceHandler.cpp',
 ]
 
+LIBRARY_NAME = 'nkviewsource_s'
+

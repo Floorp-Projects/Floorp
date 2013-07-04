@@ -5,3 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['tests']
+
+EXTRA_JS_MODULES += [
+    'PhoneNumber.jsm',
+    'PhoneNumberMetaData.jsm',
+    'mcc_iso3166_table.jsm',
+]
+

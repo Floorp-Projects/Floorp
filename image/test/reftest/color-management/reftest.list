@@ -1,7 +1,7 @@
 # Colormangement
 
 # test for bug 489133, test for bug 460520
-random-if(bug685516) == invalid-chrm.png invalid-chrm-ref.png
-random-if(bug685516) == invalid-whitepoint.png invalid-chrm-ref.png
+== invalid-chrm.png invalid-chrm-ref.png
+== invalid-whitepoint.png invalid-chrm-ref.png
 # test for bug 488955
-random-if(bug685516) == trc-type.html trc-type-ref.html
+== trc-type.html trc-type-ref.html

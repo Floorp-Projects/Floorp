@@ -90,6 +90,14 @@ void WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLeng
 /**
  * Pointwise multiply-add operation. aScale == 1.0f should be optimized.
  */
+void AudioBufferAddWithScale(const float* aInput,
+                             float aScale,
+                             float* aOutput,
+                             uint32_t aSize);
+
+/**
+ * Pointwise multiply-add operation. aScale == 1.0f should be optimized.
+ */
 void AudioBlockAddChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                    float aScale,
                                    float aOutput[WEBAUDIO_BLOCK_SIZE]);
@@ -111,11 +119,27 @@ void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                     float aOutput[WEBAUDIO_BLOCK_SIZE]);
 
 /**
+ * Vector complex multiplication on arbitrary sized buffers.
+ */
+void BufferComplexMultiply(const float* aInput,
+                           const float* aScale,
+                           float* aOutput,
+                           uint32_t aSize);
+
+/**
  * In place gain. aScale == 1.0f should be optimized.
  */
-void AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
-                            uint32_t aChannelCount,
-                            float aScale);
+void AudioBufferInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
+                             uint32_t aChannelCount,
+                             float aScale);
+
+/**
+ * In place gain. aScale == 1.0f should be optimized.
+ */
+void AudioBufferInPlaceScale(float* aBlock,
+                             uint32_t aChannelCount,
+                             float aScale,
+                             uint32_t aSize);
 
 /**
  * Upmix a mono input to a stereo output, scaling the two output channels by two
@@ -138,6 +162,12 @@ AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                             float aGainL, float aGainR, bool aIsOnTheLeft,
                             float aOutputL[WEBAUDIO_BLOCK_SIZE],
                             float aOutputR[WEBAUDIO_BLOCK_SIZE]);
+
+/**
+ * Return the sum of squares of all of the samples in the input.
+ */
+float
+AudioBufferSumOfSquares(const float* aInput, uint32_t aLength);
 
 /**
  * All methods of this class and its subclasses are called on the

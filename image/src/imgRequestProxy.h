@@ -104,7 +104,7 @@ public:
   // imgRequest::RemoveProxy
   void ClearAnimationConsumers();
 
-  nsresult Clone(imgINotificationObserver* aObserver, imgRequestProxy** aClone);
+  virtual nsresult Clone(imgINotificationObserver* aObserver, imgRequestProxy** aClone);
   nsresult GetStaticRequest(imgRequestProxy** aReturn);
 
 protected:
@@ -231,8 +231,10 @@ public:
 
   NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal) MOZ_OVERRIDE;
 
-  NS_IMETHOD Clone(imgINotificationObserver* aObserver,
-                   imgIRequest** aClone) MOZ_OVERRIDE;
+  using imgRequestProxy::Clone;
+
+  virtual nsresult Clone(imgINotificationObserver* aObserver,
+                         imgRequestProxy** aClone) MOZ_OVERRIDE;
 
 protected:
   friend imgRequestProxy* NewStaticProxy(imgRequestProxy*);

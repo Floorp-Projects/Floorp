@@ -27,6 +27,7 @@ MOZGLUE_PP_JAVA_FILES := \
 UTIL_JAVA_FILES := \
   util/ActivityResultHandler.java \
   util/ActivityResultHandlerMap.java \
+  util/Clipboard.java \
   util/EventDispatcher.java \
   util/FloatUtils.java \
   util/GamepadUtils.java \
@@ -37,6 +38,7 @@ UTIL_JAVA_FILES := \
   util/HardwareUtils.java \
   util/INIParser.java \
   util/INISection.java \
+  util/JSONUtils.java \
   util/StringUtils.java \
   util/ThreadUtils.java \
   util/UiAsyncTask.java \
@@ -46,6 +48,7 @@ FENNEC_JAVA_FILES = \
   ANRReporter.java \
   ActivityHandlerHelper.java \
   AlertNotification.java \
+  AlignRightLinkPreference.java \
   AllCapsTextView.java \
   AndroidImport.java \
   AndroidImportPreference.java \
@@ -61,7 +64,6 @@ FENNEC_JAVA_FILES = \
   BrowserApp.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
-  BrowserToolbarLayout.java \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
   CanvasDelegate.java \
@@ -76,6 +78,7 @@ FENNEC_JAVA_FILES = \
   Distribution.java \
   DoorHanger.java \
   DoorHangerPopup.java \
+  EditBookmarkDialog.java \
   Favicons.java \
   FilePickerResultHandler.java \
   FilePickerResultHandlerSync.java \
@@ -103,7 +106,6 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GeckoJavaSampler.java \
   GlobalHistory.java \
-  GeckoViewsFactory.java \
   GeckoView.java \
   health/BrowserHealthRecorder.java \
   health/BrowserHealthReporter.java \
@@ -117,6 +119,7 @@ FENNEC_JAVA_FILES = \
   MultiChoicePreference.java \
   NotificationClient.java \
   NotificationHandler.java \
+  NotificationHelper.java \
   NotificationService.java \
   NSSBridge.java \
   OrderedBroadcastHelper.java \
@@ -136,6 +139,7 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   RobocopAPI.java \
   ServiceNotificationClient.java \
+  ScrollAnimator.java \
   SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
@@ -161,6 +165,9 @@ FENNEC_JAVA_FILES = \
   WebAppAllocator.java \
   WebAppImpl.java \
   ZoomConstraints.java \
+  braille/com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java \
+  braille/com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java \
+  braille/com/googlecode/eyesfree/braille/selfbraille/WriteData.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
   db/FormHistoryProvider.java \
@@ -235,17 +242,22 @@ FENNEC_JAVA_FILES = \
   menu/GeckoMenuItem.java \
   menu/GeckoSubMenu.java \
   menu/MenuItemActionBar.java \
+  menu/MenuItemActionView.java \
   menu/MenuItemDefault.java \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
+  widget/ActivityChooserModel.java \
   widget/AddonsSection.java \
+  widget/ButtonToast.java \
+  widget/ArrowPopup.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
   widget/GeckoPopupMenu.java \
+  widget/GeckoActionProvider.java \
   widget/IconTabWidget.java \
   widget/LastTabsSection.java \
   widget/LinkTextView.java \
@@ -260,6 +272,11 @@ FENNEC_JAVA_FILES = \
   UpdateService.java \
   GeckoUpdateReceiver.java \
   ReferrerReceiver.java \
+  $(NULL)
+
+WEBSOCKETS_JAVA_FILES := \
+  websockets/HybiParser.java \
+  websockets/WebSocketClient.java \
   $(NULL)
 
 ifdef MOZ_WEBRTC
@@ -360,6 +377,7 @@ DEFINES += \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
   -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
   -DMOZ_UPDATE_CHANNEL=$(MOZ_UPDATE_CHANNEL) \
+  -DOMNIJAR_NAME=$(OMNIJAR_NAME) \
   -DOS_TARGET=$(OS_TARGET) \
   -DTARGET_XPCOM_ABI=$(TARGET_XPCOM_ABI) \
   -DUA_BUILDID=$(UA_BUILDID) \
@@ -434,13 +452,13 @@ endif
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/abouthome_content.xml \
+  res/layout/arrow_popup.xml \
   res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
   res/layout/bookmark_edit.xml \
   res/layout/bookmark_folder_row.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
-  res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
   res/layout/doorhanger_button.xml \
   res/layout/find_in_page_content.xml \
@@ -453,15 +471,17 @@ RES_LAYOUT = \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
   res/layout/menu_action_bar.xml \
+  res/layout/menu_item_action_view.xml \
   res/layout/menu_popup.xml \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/preference_rightalign_icon.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
-  res/layout/site_identity_popup.xml \
+  res/layout/site_identity.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/search_engine_row.xml \
@@ -562,15 +582,16 @@ RES_VALUES_V16 = \
   $(NULL)
 
 RES_XML = \
-  res/xml/preferences_datareporting.xml \
+  res/xml/preferences_customize.xml \
+  res/xml/preferences_display.xml \
+  res/xml/preferences_privacy.xml \
+  res/xml/preferences_vendor.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
 RES_XML_V11 = \
   res/xml-v11/preference_headers.xml \
-  res/xml-v11/preferences_general.xml \
-  res/xml-v11/preferences_content.xml \
-  res/xml-v11/preferences_privacy.xml \
+  res/xml-v11/preferences_customize_tablet.xml \
   res/xml-v11/preferences.xml \
   $(NULL)
 
@@ -599,6 +620,10 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/alert_addon.png \
   res/drawable-mdpi/alert_app.png \
   res/drawable-mdpi/alert_download.png \
+  res/drawable-mdpi/alert_camera.png \
+  res/drawable-mdpi/alert_mic.png \
+  res/drawable-mdpi/alert_mic_camera.png \
+  res/drawable-mdpi/arrow_popup_bg.9.png \
   res/drawable-mdpi/autocomplete_list_bg.9.png \
   res/drawable-mdpi/bookmark_folder_closed.png \
   res/drawable-mdpi/bookmark_folder_opened.png \
@@ -649,7 +674,10 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/url_bar_entry_default_pb.9.png \
   res/drawable-mdpi/url_bar_entry_pressed.9.png \
   res/drawable-mdpi/url_bar_entry_pressed_pb.9.png \
-  res/drawable-mdpi/doorhanger_popup_bg.9.png \
+  res/drawable-mdpi/toast.9.png \
+  res/drawable-mdpi/toast_button_focused.9.png \
+  res/drawable-mdpi/toast_button_pressed.9.png \
+  res/drawable-mdpi/toast_divider.9.png \
   res/drawable-mdpi/find_close.png \
   res/drawable-mdpi/find_next.png \
   res/drawable-mdpi/find_prev.png \
@@ -664,6 +692,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/menu_item_check.png \
   res/drawable-mdpi/menu_item_more.png \
   res/drawable-mdpi/menu_item_uncheck.png \
+  res/drawable-mdpi/site_security_blocked_mixed_content.png \
+  res/drawable-mdpi/site_security_loaded_mixed_content.png \
   res/drawable-mdpi/site_security_identified.png \
   res/drawable-mdpi/site_security_verified.png \
   res/drawable-mdpi/tabs_normal.png \
@@ -713,6 +743,10 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_download.png \
   res/drawable-hdpi/bookmark_folder_closed.png \
   res/drawable-hdpi/bookmark_folder_opened.png \
+  res/drawable-hdpi/alert_camera.png \
+  res/drawable-hdpi/alert_mic.png \
+  res/drawable-hdpi/alert_mic_camera.png \
+  res/drawable-hdpi/arrow_popup_bg.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_menu_addons_filler.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
@@ -747,7 +781,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/url_bar_entry_default_pb.9.png \
   res/drawable-hdpi/url_bar_entry_pressed.9.png \
   res/drawable-hdpi/url_bar_entry_pressed_pb.9.png \
-  res/drawable-hdpi/doorhanger_popup_bg.9.png \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
   res/drawable-hdpi/find_prev.png \
@@ -762,6 +795,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_item_check.png \
   res/drawable-hdpi/menu_item_more.png \
   res/drawable-hdpi/menu_item_uncheck.png \
+  res/drawable-hdpi/site_security_blocked_mixed_content.png \
+  res/drawable-hdpi/site_security_loaded_mixed_content.png \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/tabs_normal.png \
@@ -804,6 +839,10 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_download.png \
   res/drawable-xhdpi/bookmark_folder_closed.png \
   res/drawable-xhdpi/bookmark_folder_opened.png \
+  res/drawable-xhdpi/alert_camera.png \
+  res/drawable-xhdpi/alert_mic.png \
+  res/drawable-xhdpi/alert_mic_camera.png \
+  res/drawable-xhdpi/arrow_popup_bg.9.png \
   res/drawable-xhdpi/ic_addons_empty.png \
   res/drawable-xhdpi/ic_menu_addons_filler.png \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
@@ -830,7 +869,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_count.png \
   res/drawable-xhdpi/tabs_count_foreground.png \
-  res/drawable-xhdpi/doorhanger_popup_bg.9.png \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
   res/drawable-xhdpi/find_prev.png \
@@ -852,6 +890,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
   res/drawable-xhdpi/tab_indicator_selected.9.png \
   res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
+  res/drawable-xhdpi/site_security_blocked_mixed_content.png \
+  res/drawable-xhdpi/site_security_loaded_mixed_content.png \
   res/drawable-xhdpi/site_security_identified.png \
   res/drawable-xhdpi/site_security_verified.png \
   res/drawable-xhdpi/tabs_normal.png \
@@ -869,6 +909,9 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/alert_addon.png \
   res/drawable-mdpi-v11/alert_app.png \
   res/drawable-mdpi-v11/alert_download.png \
+  res/drawable-mdpi-v11/alert_camera.png \
+  res/drawable-mdpi-v11/alert_mic.png \
+  res/drawable-mdpi-v11/alert_mic_camera.png \
   res/drawable-mdpi-v11/firefox_settings_alert.png \
   res/drawable-mdpi-v11/ic_menu_addons.png \
   res/drawable-mdpi-v11/ic_menu_apps.png \
@@ -895,6 +938,9 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/alert_addon.png \
   res/drawable-hdpi-v11/alert_app.png \
   res/drawable-hdpi-v11/alert_download.png \
+  res/drawable-hdpi-v11/alert_camera.png \
+  res/drawable-hdpi-v11/alert_mic.png \
+  res/drawable-hdpi-v11/alert_mic_camera.png \
   res/drawable-hdpi-v11/firefox_settings_alert.png \
   res/drawable-hdpi-v11/ic_menu_addons.png \
   res/drawable-hdpi-v11/ic_menu_apps.png \
@@ -921,6 +967,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/alert_addon.png \
   res/drawable-xhdpi-v11/alert_app.png \
   res/drawable-xhdpi-v11/alert_download.png \
+  res/drawable-xhdpi-v11/alert_camera.png \
+  res/drawable-xhdpi-v11/alert_mic.png \
+  res/drawable-xhdpi-v11/alert_mic_camera.png \
   res/drawable-xhdpi-v11/firefox_settings_alert.png \
   res/drawable-xhdpi-v11/ic_menu_addons.png \
   res/drawable-xhdpi-v11/ic_menu_apps.png \
@@ -944,21 +993,21 @@ RES_DRAWABLE_XHDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
-  res/drawable-large-mdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-large-mdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
   res/drawable-large-mdpi-v11/menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
-  res/drawable-large-hdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-large-hdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
   res/drawable-large-hdpi-v11/menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
-  res/drawable-large-xhdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-large-xhdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
   res/drawable-large-xhdpi-v11/menu.png \
@@ -983,7 +1032,6 @@ RES_COLOR = \
   res/color/abouthome_section_more_text.xml \
   res/color/abouthome_section_subtitle.xml \
   res/color/abouthome_section_title.xml \
-  res/color/menu_item_title.xml \
   res/color/primary_text.xml \
   res/color/primary_text_inverse.xml \
   res/color/secondary_text.xml \
@@ -1028,6 +1076,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/url_bar_nav_button.xml                 \
   mobile/android/base/resources/drawable/url_bar_right_edge.xml                 \
   mobile/android/base/resources/drawable/bookmark_folder.xml                    \
+  mobile/android/base/resources/drawable/divider_vertical.xml                   \
   mobile/android/base/resources/drawable/favicon_bg.xml                         \
   mobile/android/base/resources/drawable/handle_end_level.xml                   \
   mobile/android/base/resources/drawable/handle_start_level.xml                 \
@@ -1048,6 +1097,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/textbox_bg.xml                         \
+  mobile/android/base/resources/drawable/toast_button.xml                       \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
@@ -1093,9 +1143,10 @@ RES_DIRS= \
 
 ALL_JARS = \
   jars/gecko-browser.jar \
+  jars/gecko-mozglue.jar \
   jars/gecko-util.jar \
   jars/sync-thirdparty.jar \
-  jars/gecko-mozglue.jar \
+  jars/websockets.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC
@@ -1116,10 +1167,10 @@ classes.dex: $(ALL_JARS)
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
-jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar jars/websockets.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	@echo "JAR gecko-browser.jar"
 	$(NSINSTALL) -D classes/gecko-browser
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar:jars/websockets.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(JAR) cMf jars/gecko-browser.jar -C classes/gecko-browser .
 
 jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_PP_JAVA_FILES) jars
@@ -1140,6 +1191,12 @@ jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) 
 	$(JAVAC) $(JAVAC_FLAGS) -d classes/sync-thirdparty $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
 	$(JAR) cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
 
+jars/websockets.jar: $(addprefix $(srcdir)/, $(WEBSOCKETS_JAVA_FILES)) jars
+	@echo "JAR websockets.jar"
+	$(NSINSTALL) -D classes/websockets
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-serial -d classes/websockets $(addprefix $(srcdir)/,$(WEBSOCKETS_JAVA_FILES))
+	$(JAR) cMf jars/websockets.jar -C classes/websockets .
+
 ifdef MOZ_WEBRTC
 jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar
 	@echo "JAR webrtc.jar"
@@ -1156,6 +1213,7 @@ CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
     org.mozilla.gecko.GeckoJavaSampler \
     org.mozilla.gecko.gfx.NativePanZoomController \
+    org.mozilla.gecko.ANRReporter \
     $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND

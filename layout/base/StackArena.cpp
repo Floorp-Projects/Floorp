@@ -4,6 +4,8 @@
 
 #include "StackArena.h"
 
+#include "mozilla/MemoryReporting.h"
+
 namespace mozilla {
 
 #define STACK_ARENA_MARK_INCREMENT 50
@@ -67,7 +69,7 @@ StackArena::~StackArena()
 } 
 
 size_t
-StackArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+StackArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   StackBlock *block = mBlocks;

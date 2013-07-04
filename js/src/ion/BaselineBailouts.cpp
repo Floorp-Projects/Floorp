@@ -4,15 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BaselineCompiler.h"
-#include "BaselineIC.h"
-#include "BaselineJIT.h"
-#include "CompileInfo.h"
-#include "IonSpewer.h"
-#include "IonFrames-inl.h"
+#include "ion/BaselineCompiler.h"
+#include "ion/BaselineIC.h"
+#include "ion/BaselineJIT.h"
+#include "ion/CompileInfo.h"
+#include "ion/IonSpewer.h"
+#include "ion/IonFrames-inl.h"
 
 #include "vm/Stack-inl.h"
 
+#include "jsfuninlines.h"
 #include "jsopcodeinlines.h"
 
 using namespace js;
@@ -445,7 +446,8 @@ static bool
 InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 HandleFunction fun, HandleScript script, IonScript *ionScript,
                 SnapshotIterator &iter, bool invalidate, BaselineStackBuilder &builder,
-                MutableHandleFunction nextCallee, jsbytecode **callPC)
+                AutoValueVector &startFrameFormals, MutableHandleFunction nextCallee,
+                jsbytecode **callPC)
 {
     uint32_t exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(script, fun));
 
@@ -503,7 +505,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // If SPS Profiler is enabled, mark the frame as having pushed an SPS entry.
     // This may be wrong for the last frame of ArgumentCheck bailout, but
     // that will be fixed later.
-    if (cx->runtime->spsProfiler.enabled() && ionScript->hasSPSInstrumentation()) {
+    if (cx->runtime()->spsProfiler.enabled() && ionScript->hasSPSInstrumentation()) {
         IonSpew(IonSpew_BaselineBailouts, "      Setting SPS flag on frame!");
         flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
     }
@@ -560,7 +562,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             v = iter.read();
             JS_ASSERT(v.isObject() || v.isUndefined());
             if (v.isObject())
-                argsObj = &v.toObject().asArguments();
+                argsObj = &v.toObject().as<ArgumentsObject>();
         }
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
@@ -592,12 +594,27 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         IonSpew(IonSpew_BaselineBailouts, "      frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fun->nargs, script->nfixed);
 
+        if (!callerPC) {
+            // This is the first frame. Store the formals in a Vector until we
+            // are done. Due to UCE and phi elimination, we could store an
+            // UndefinedValue() here for formals we think are unused, but
+            // locals may still reference the original argument slot
+            // (MParameter/LArgument) and expect the original Value.
+            JS_ASSERT(startFrameFormals.empty());
+            if (!startFrameFormals.resize(fun->nargs))
+                return false;
+        }
+
         for (uint32_t i = 0; i < fun->nargs; i++) {
             Value arg = iter.read();
             IonSpew(IonSpew_BaselineBailouts, "      arg %d = %016llx",
                         (int) i, *((uint64_t *) &arg));
-            size_t argOffset = builder.framePushed() + IonJSFrameLayout::offsetOfActualArg(i);
-            *builder.valuePointerAtStackOffset(argOffset) = arg;
+            if (callerPC) {
+                size_t argOffset = builder.framePushed() + IonJSFrameLayout::offsetOfActualArg(i);
+                *builder.valuePointerAtStackOffset(argOffset) = arg;
+            } else {
+                startFrameFormals[i] = arg;
+            }
         }
     }
 
@@ -615,11 +632,11 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         // If coming from an invalidation bailout, and this is the topmost
         // value, and a value override has been specified, don't read from the
         // iterator. Otherwise, we risk using a garbage value.
-        if (!iter.moreFrames() && i == exprStackSlots - 1 && cx->runtime->hasIonReturnOverride()) {
+        if (!iter.moreFrames() && i == exprStackSlots - 1 && cx->runtime()->hasIonReturnOverride()) {
             JS_ASSERT(invalidate);
             iter.skip();
             IonSpew(IonSpew_BaselineBailouts, "      [Return Override]");
-            v = cx->runtime->takeIonReturnOverride();
+            v = cx->runtime()->takeIonReturnOverride();
         } else {
             v = iter.read();
         }
@@ -653,14 +670,23 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     bool isCall = js_CodeSpec[op].format & JOF_INVOKE;
     BaselineScript *baselineScript = script->baselineScript();
 
-    // For fun.apply({}, arguments) the reconstructStackDepth will be atleast 4,
-    // but it could be that we inlined the funapply. In that case exprStackSlots,
-    // will have the real arguments in the slots and not always be equal.
 #ifdef DEBUG
     uint32_t expectedDepth = js_ReconstructStackDepth(cx, script,
                                                       resumeAfter ? GetNextPc(pc) : pc);
-    JS_ASSERT_IF(op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter,
-                 exprStackSlots == expectedDepth);
+    if (op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter) {
+        if (op == JSOP_FUNCALL) {
+            // For fun.call(this, ...); the reconstructStackDepth will
+            // include the this. When inlining that is not included.
+            // So the exprStackSlots will be one less.
+            JS_ASSERT(expectedDepth - exprStackSlots <= 1);
+        } else {
+            // For fun.apply({}, arguments) the reconstructStackDepth will
+            // have stackdepth 4, but it could be that we inlined the
+            // funapply. In that case exprStackSlots, will have the real
+            // arguments in the slots and not be 4.
+            JS_ASSERT(exprStackSlots == expectedDepth);
+        }
+    }
 
     IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
@@ -793,16 +819,16 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 //          Ion would already have pushed an SPS entry for this frame.
                 //          The pc for this entry would be set to NULL.
                 //          Make sure it's set to script->pc.
-                if (cx->runtime->spsProfiler.enabled()) {
+                if (cx->runtime()->spsProfiler.enabled()) {
                     if (caller && bailoutKind == Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts, "      Setting PCidx on innermost "
                                 "inlined frame's parent's SPS entry (%s:%d) (pcIdx=%d)!",
                                 caller->filename(), caller->lineno, callerPC - caller->code);
-                        cx->runtime->spsProfiler.updatePC(caller, callerPC);
+                        cx->runtime()->spsProfiler.updatePC(caller, callerPC);
                     } else if (bailoutKind != Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts,
                                 "      Popping SPS entry for innermost inlined frame's SPS entry");
-                        cx->runtime->spsProfiler.exit(cx, script, fun);
+                        cx->runtime()->spsProfiler.exit(cx, script, fun);
                     }
                 }
             } else {
@@ -873,6 +899,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     unsigned actualArgc = GET_ARGC(pc);
     if (op == JSOP_FUNAPPLY)
         actualArgc = blFrame->numActualArgs();
+    if (op == JSOP_FUNCALL) {
+        JS_ASSERT(actualArgc > 0);
+        actualArgc--;
+    }
 
     JS_ASSERT(actualArgc + 2 <= exprStackSlots);
     for (unsigned i = 0; i < actualArgc + 1; i++) {
@@ -900,8 +930,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     Value callee = *builder.valuePointerAtStackOffset(calleeOffset);
     IonSpew(IonSpew_BaselineBailouts, "      CalleeStackSlot=%d", (int) calleeStackSlot);
     IonSpew(IonSpew_BaselineBailouts, "      Callee = %016llx", *((uint64_t *) &callee));
-    JS_ASSERT(callee.isObject() && callee.toObject().isFunction());
-    JSFunction *calleeFun = callee.toObject().toFunction();
+    JS_ASSERT(callee.isObject() && callee.toObject().is<JSFunction>());
+    JSFunction *calleeFun = &callee.toObject().as<JSFunction>();
     if (!builder.writePtr(CalleeToToken(calleeFun), "CalleeToken"))
         return false;
     nextCallee.set(calleeFun);
@@ -911,7 +941,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         return false;
 
     // Push return address into ICCall_Scripted stub, immediately after the call.
-    void *baselineCallReturnAddr = cx->compartment->ionCompartment()->baselineCallReturnAddr();
+    void *baselineCallReturnAddr = cx->compartment()->ionCompartment()->baselineCallReturnAddr();
     JS_ASSERT(baselineCallReturnAddr);
     if (!builder.writePtr(baselineCallReturnAddr, "ReturnAddr"))
         return false;
@@ -990,7 +1020,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Push return address into the ArgumentsRectifier code, immediately after the ioncode
     // call.
-    void *rectReturnAddr = cx->compartment->ionCompartment()->getArgumentsRectifierReturnAddr();
+    void *rectReturnAddr = cx->compartment()->ionCompartment()->getArgumentsRectifierReturnAddr();
     JS_ASSERT(rectReturnAddr);
     if (!builder.writePtr(rectReturnAddr, "ReturnAddr"))
         return false;
@@ -999,7 +1029,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 }
 
 uint32_t
-ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIterator &iter,
+ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterator &iter,
                           bool invalidate, BaselineBailoutInfo **bailoutInfo)
 {
     JS_ASSERT(bailoutInfo != NULL);
@@ -1060,7 +1090,7 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
     RootedFunction callee(cx, iter.maybeCallee());
     if (callee) {
         IonSpew(IonSpew_BaselineBailouts, "  Callee function (%s:%u)",
-                callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno);
+                callee->existingScript()->filename(), callee->existingScript()->lineno);
     } else {
         IonSpew(IonSpew_BaselineBailouts, "  No callee!");
     }
@@ -1078,12 +1108,14 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
     jsbytecode *callerPC = NULL;
     RootedFunction fun(cx, callee);
     RootedScript scr(cx, iter.script());
+    AutoValueVector startFrameFormals(cx);
     while (true) {
         IonSpew(IonSpew_BaselineBailouts, "    FrameNo %d", frameNo);
         jsbytecode *callPC = NULL;
         RootedFunction nextCallee(cx, NULL);
         if (!InitFromBailout(cx, caller, callerPC, fun, scr, iter.ionScript(),
-                             snapIter, invalidate, builder, &nextCallee, &callPC))
+                             snapIter, invalidate, builder, startFrameFormals,
+                             &nextCallee, &callPC))
         {
             return BAILOUT_RETURN_FATAL_ERROR;
         }
@@ -1098,13 +1130,19 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
         caller = scr;
         callerPC = callPC;
         fun = nextCallee;
-        scr = fun->nonLazyScript();
+        scr = fun->existingScript();
         snapIter.nextFrame();
 
         frameNo++;
     }
     IonSpew(IonSpew_BaselineBailouts, "  Done restoring frames");
     BailoutKind bailoutKind = snapIter.bailoutKind();
+
+    if (!startFrameFormals.empty()) {
+        // Set the first frame's formals, see the comment in InitFromBailout.
+        Value *argv = builder.startFrame()->argv() + 1; // +1 to skip |this|.
+        mozilla::PodCopy(argv, startFrameFormals.begin(), startFrameFormals.length());
+    }
 
     // Take the reconstructed baseline stack so it doesn't get freed when builder destructs.
     BaselineBailoutInfo *info = builder.takeBuffer();
@@ -1191,7 +1229,7 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     // Check that we can get the current script's PC.
 #ifdef DEBUG
     jsbytecode *pc;
-    cx->stack.currentScript(&pc);
+    cx->currentScript(&pc);
     IonSpew(IonSpew_BaselineBailouts, "  Got pc=%p", pc);
 #endif
 
@@ -1214,7 +1252,10 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     // that script->needsArgsObj() implies frame->hasArgsObj().
     RootedScript innerScript(cx, NULL);
     RootedScript outerScript(cx, NULL);
-    IonFrameIterator iter(cx);
+
+    JS_ASSERT(cx->currentlyRunningInJit());
+    IonFrameIterator iter(cx->mainThread().ionTop);
+
     uint32_t frameno = 0;
     while (frameno < numFrames) {
         JS_ASSERT(!iter.isOptimizedJS());
@@ -1287,7 +1328,7 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
             return false;
         break;
       default:
-        JS_NOT_REACHED("Unknown bailout kind!");
+        MOZ_ASSUME_UNREACHABLE("Unknown bailout kind!");
     }
 
     if (!CheckFrequentBailouts(cx, outerScript))

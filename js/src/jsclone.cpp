@@ -67,16 +67,16 @@ enum StructuredDataType {
     SCTAG_TRANSFER_MAP,
     SCTAG_TYPED_ARRAY_OBJECT,
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
-    SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_INT8,
-    SCTAG_TYPED_ARRAY_V1_UINT8 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_UINT8,
-    SCTAG_TYPED_ARRAY_V1_INT16 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_INT16,
-    SCTAG_TYPED_ARRAY_V1_UINT16 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_UINT16,
-    SCTAG_TYPED_ARRAY_V1_INT32 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_INT32,
-    SCTAG_TYPED_ARRAY_V1_UINT32 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_UINT32,
-    SCTAG_TYPED_ARRAY_V1_FLOAT32 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_FLOAT32,
-    SCTAG_TYPED_ARRAY_V1_FLOAT64 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_FLOAT64,
-    SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_UINT8_CLAMPED,
-    SCTAG_TYPED_ARRAY_V1_MAX = SCTAG_TYPED_ARRAY_V1_MIN + TypedArray::TYPE_MAX - 1,
+    SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_INT8,
+    SCTAG_TYPED_ARRAY_V1_UINT8 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_UINT8,
+    SCTAG_TYPED_ARRAY_V1_INT16 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_INT16,
+    SCTAG_TYPED_ARRAY_V1_UINT16 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_UINT16,
+    SCTAG_TYPED_ARRAY_V1_INT32 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_INT32,
+    SCTAG_TYPED_ARRAY_V1_UINT32 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_UINT32,
+    SCTAG_TYPED_ARRAY_V1_FLOAT32 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_FLOAT32,
+    SCTAG_TYPED_ARRAY_V1_FLOAT64 = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_FLOAT64,
+    SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_UINT8_CLAMPED,
+    SCTAG_TYPED_ARRAY_V1_MAX = SCTAG_TYPED_ARRAY_V1_MIN + TypedArrayObject::TYPE_MAX - 1,
     SCTAG_END_OF_BUILTIN_TYPES
 };
 
@@ -94,7 +94,7 @@ js_GetSCOffset(JSStructuredCloneWriter* writer)
 
 JS_STATIC_ASSERT(SCTAG_END_OF_BUILTIN_TYPES <= JS_SCTAG_USER_MIN);
 JS_STATIC_ASSERT(JS_SCTAG_USER_MIN <= JS_SCTAG_USER_MAX);
-JS_STATIC_ASSERT(TypedArray::TYPE_INT8 == 0);
+JS_STATIC_ASSERT(TypedArrayObject::TYPE_INT8 == 0);
 
 bool
 js::WriteStructuredClone(JSContext *cx, HandleValue v, uint64_t **bufp, size_t *nbytesp,
@@ -485,7 +485,7 @@ JSStructuredCloneWriter::parseTransferable()
             JS_ReportError(context(), "Permission denied to access object");
             return false;
         }
-        if (!tObj->isArrayBuffer()) {
+        if (!tObj->is<ArrayBufferObject>()) {
             reportErrorTransferable();
             return false;
         }
@@ -584,29 +584,29 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 bool
 JSStructuredCloneWriter::writeTypedArray(HandleObject arr)
 {
-    if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, TypedArray::length(arr)))
+    if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, TypedArrayObject::length(arr)))
         return false;
-    uint64_t type = TypedArray::type(arr);
+    uint64_t type = TypedArrayObject::type(arr);
     if (!out.write(type))
         return false;
 
     // Write out the ArrayBuffer tag and contents
-    if (!startWrite(TypedArray::bufferValue(arr)))
+    if (!startWrite(TypedArrayObject::bufferValue(arr)))
         return false;
 
-    return out.write(TypedArray::byteOffset(arr));
+    return out.write(TypedArrayObject::byteOffset(arr));
 }
 
 bool
-JSStructuredCloneWriter::writeArrayBuffer(JSHandleObject obj)
+JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
            out.writeBytes(buffer.dataPointer(), buffer.byteLength());
 }
 
 bool
-JSStructuredCloneWriter::startObject(JSHandleObject obj, bool *backref)
+JSStructuredCloneWriter::startObject(HandleObject obj, bool *backref)
 {
     /* Handle cycles in the object graph. */
     CloneMemory::AddPtr p = memory.lookupForAdd(obj);
@@ -625,7 +625,7 @@ JSStructuredCloneWriter::startObject(JSHandleObject obj, bool *backref)
 }
 
 bool
-JSStructuredCloneWriter::traverseObject(JSHandleObject obj)
+JSStructuredCloneWriter::traverseObject(HandleObject obj)
 {
     /*
      * Get enumerable property ids and put them in reverse order so that they
@@ -644,7 +644,7 @@ JSStructuredCloneWriter::traverseObject(JSHandleObject obj)
     checkStack();
 
     /* Write the header for obj. */
-    return out.writePair(obj->isArray() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+    return out.writePair(obj->is<ArrayObject>() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
 }
 
 bool
@@ -681,26 +681,26 @@ JSStructuredCloneWriter::startWrite(const Value &v)
         if (backref)
             return true;
 
-        if (obj->isRegExp()) {
-            RegExpObject &reobj = obj->asRegExp();
+        if (obj->is<RegExpObject>()) {
+            RegExpObject &reobj = obj->as<RegExpObject>();
             return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
                    writeString(SCTAG_STRING, reobj.getSource());
-        } else if (obj->isDate()) {
+        } else if (obj->is<DateObject>()) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
         } else if (obj->isTypedArray()) {
             return writeTypedArray(obj);
-        } else if (obj->isArrayBuffer() && obj->asArrayBuffer().hasData()) {
+        } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
             return writeArrayBuffer(obj);
-        } else if (obj->isObject() || obj->isArray()) {
+        } else if (obj->isObject() || obj->is<ArrayObject>()) {
             return traverseObject(obj);
-        } else if (obj->isBoolean()) {
-            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->asBoolean().unbox());
-        } else if (obj->isNumber()) {
+        } else if (obj->is<BooleanObject>()) {
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->as<BooleanObject>().unbox());
+        } else if (obj->is<NumberObject>()) {
             return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
-                   out.writeDouble(obj->asNumber().unbox());
-        } else if (obj->isString()) {
-            return writeString(SCTAG_STRING_OBJECT, obj->asString().unbox());
+                   out.writeDouble(obj->as<NumberObject>().unbox());
+        } else if (obj->is<StringObject>()) {
+            return writeString(SCTAG_STRING_OBJECT, obj->as<StringObject>().unbox());
         }
 
         if (callbacks && callbacks->write)
@@ -868,7 +868,7 @@ bool
 JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Value *vp,
                                         bool v1Read)
 {
-    if (arrayType > TypedArray::TYPE_UINT8_CLAMPED) {
+    if (arrayType > TypedArrayObject::TYPE_UINT8_CLAMPED) {
         JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unhandled typed array element type");
         return false;
@@ -899,36 +899,35 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
     RootedObject obj(context(), NULL);
 
     switch (arrayType) {
-      case TypedArray::TYPE_INT8:
+      case TypedArrayObject::TYPE_INT8:
         obj = JS_NewInt8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_UINT8:
+      case TypedArrayObject::TYPE_UINT8:
         obj = JS_NewUint8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_INT16:
+      case TypedArrayObject::TYPE_INT16:
         obj = JS_NewInt16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_UINT16:
+      case TypedArrayObject::TYPE_UINT16:
         obj = JS_NewUint16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_INT32:
+      case TypedArrayObject::TYPE_INT32:
         obj = JS_NewInt32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_UINT32:
+      case TypedArrayObject::TYPE_UINT32:
         obj = JS_NewUint32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_FLOAT32:
+      case TypedArrayObject::TYPE_FLOAT32:
         obj = JS_NewFloat32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_FLOAT64:
+      case TypedArrayObject::TYPE_FLOAT64:
         obj = JS_NewFloat64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case TypedArray::TYPE_UINT8_CLAMPED:
+      case TypedArrayObject::TYPE_UINT8_CLAMPED:
         obj = JS_NewUint8ClampedArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
       default:
-        JS_NOT_REACHED("unknown TypedArray type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
     }
 
     if (!obj)
@@ -947,7 +946,7 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, Value *vp)
     if (!obj)
         return false;
     vp->setObject(*obj);
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     JS_ASSERT(buffer.byteLength() == nbytes);
     return in.readArray(buffer.dataPointer(), nbytes);
 }
@@ -956,22 +955,21 @@ static size_t
 bytesPerTypedArrayElement(uint32_t arrayType)
 {
     switch (arrayType) {
-      case TypedArray::TYPE_INT8:
-      case TypedArray::TYPE_UINT8:
-      case TypedArray::TYPE_UINT8_CLAMPED:
+      case TypedArrayObject::TYPE_INT8:
+      case TypedArrayObject::TYPE_UINT8:
+      case TypedArrayObject::TYPE_UINT8_CLAMPED:
         return sizeof(uint8_t);
-      case TypedArray::TYPE_INT16:
-      case TypedArray::TYPE_UINT16:
+      case TypedArrayObject::TYPE_INT16:
+      case TypedArrayObject::TYPE_UINT16:
         return sizeof(uint16_t);
-      case TypedArray::TYPE_INT32:
-      case TypedArray::TYPE_UINT32:
-      case TypedArray::TYPE_FLOAT32:
+      case TypedArrayObject::TYPE_INT32:
+      case TypedArrayObject::TYPE_UINT32:
+      case TypedArrayObject::TYPE_FLOAT32:
         return sizeof(uint32_t);
-      case TypedArray::TYPE_FLOAT64:
+      case TypedArrayObject::TYPE_FLOAT64:
         return sizeof(uint64_t);
       default:
-        JS_NOT_REACHED("unknown TypedArray type");
-        return 0;
+        MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
     }
 }
 
@@ -982,33 +980,32 @@ bytesPerTypedArrayElement(uint32_t arrayType)
 bool
 JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, Value *vp)
 {
-    JS_ASSERT(arrayType <= TypedArray::TYPE_UINT8_CLAMPED);
+    JS_ASSERT(arrayType <= TypedArrayObject::TYPE_UINT8_CLAMPED);
 
     uint32_t nbytes = nelems * bytesPerTypedArrayElement(arrayType);
     JSObject *obj = ArrayBufferObject::create(context(), nbytes);
     if (!obj)
         return false;
     vp->setObject(*obj);
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
     JS_ASSERT(buffer.byteLength() == nbytes);
 
     switch (arrayType) {
-      case TypedArray::TYPE_INT8:
-      case TypedArray::TYPE_UINT8:
-      case TypedArray::TYPE_UINT8_CLAMPED:
+      case TypedArrayObject::TYPE_INT8:
+      case TypedArrayObject::TYPE_UINT8:
+      case TypedArrayObject::TYPE_UINT8_CLAMPED:
         return in.readArray((uint8_t*) buffer.dataPointer(), nelems);
-      case TypedArray::TYPE_INT16:
-      case TypedArray::TYPE_UINT16:
+      case TypedArrayObject::TYPE_INT16:
+      case TypedArrayObject::TYPE_UINT16:
         return in.readArray((uint16_t*) buffer.dataPointer(), nelems);
-      case TypedArray::TYPE_INT32:
-      case TypedArray::TYPE_UINT32:
-      case TypedArray::TYPE_FLOAT32:
+      case TypedArrayObject::TYPE_INT32:
+      case TypedArrayObject::TYPE_UINT32:
+      case TypedArrayObject::TYPE_FLOAT32:
         return in.readArray((uint32_t*) buffer.dataPointer(), nelems);
-      case TypedArray::TYPE_FLOAT64:
+      case TypedArrayObject::TYPE_FLOAT64:
         return in.readArray((uint64_t*) buffer.dataPointer(), nelems);
       default:
-        JS_NOT_REACHED("unknown TypedArray type");
-        return false;
+        MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
     }
 }
 

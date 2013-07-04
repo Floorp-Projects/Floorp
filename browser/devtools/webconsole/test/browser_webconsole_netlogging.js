@@ -85,16 +85,11 @@ function testPageLoad()
 function testPageLoadBody()
 {
   // Turn on logging of request bodies and check again.
-  hud.ui.saveRequestAndResponseBodies = true;
+  hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
+    ok(hud.ui._saveRequestAndResponseBodies,
+      "The saveRequestAndResponseBodies property was successfully set.");
 
-  waitForSuccess({
-    name: "saveRequestAndResponseBodies update",
-    validatorFn: function()
-    {
-      return hud.ui.saveRequestAndResponseBodies;
-    },
-    successFn: testPageLoadBodyAfterSettingUpdate,
-    failureFn: finishTest,
+    testPageLoadBodyAfterSettingUpdate();
   });
 }
 

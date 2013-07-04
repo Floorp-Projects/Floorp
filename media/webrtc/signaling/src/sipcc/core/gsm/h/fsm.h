@@ -13,6 +13,7 @@
 #include "sll_lite.h"
 #include "sessionConstants.h"
 #include "ccsdp.h"
+#include "fsmdef_states.h"
 
 /* TODO: BLASBERG
  * fsm.h only needs the following from ccsip_core.h
@@ -64,39 +65,6 @@ typedef enum {
     FSMDEF_CALL_TYPE_FORWARD = CC_CALL_TYPE_FORWARDED,
     FSMDEF_CALL_TYPE_MAX
 } fsmdef_call_types_t;
-
-typedef enum {
-    FSMDEF_S_MIN = -1,
-
-    FSMDEF_S_IDLE,
-
-    /* SIP States */
-    FSMDEF_S_COLLECT_INFO,
-    FSMDEF_S_CALL_SENT,
-    FSMDEF_S_OUTGOING_PROCEEDING,
-    FSMDEF_S_KPML_COLLECT_INFO,
-    FSMDEF_S_OUTGOING_ALERTING,
-    FSMDEF_S_INCOMING_ALERTING,
-    FSMDEF_S_CONNECTING,
-    FSMDEF_S_JOINING,
-    FSMDEF_S_CONNECTED,
-    FSMDEF_S_CONNECTED_MEDIA_PEND,
-    FSMDEF_S_RELEASING,
-    FSMDEF_S_HOLD_PENDING,
-    FSMDEF_S_HOLDING,
-    FSMDEF_S_RESUME_PENDING,
-    FSMDEF_S_PRESERVED,
-
-    /* WebRTC States */
-    FSMDEF_S_STABLE,
-    FSMDEF_S_HAVE_LOCAL_OFFER,
-    FSMDEF_S_HAVE_REMOTE_OFFER,
-    FSMDEF_S_HAVE_REMOTE_PRANSWER,
-    FSMDEF_S_HAVE_LOCAL_PRANSWER,
-    FSMDEF_S_CLOSED,
-
-    FSMDEF_S_MAX
-} fsmdef_states_t;
 
 typedef enum {
     FSMDEF_MRTONE_NO_ACTION = 0,

@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAnimationManager.h"
+
+#include "mozilla/MemoryReporting.h"
+
 #include "nsPresContext.h"
 #include "nsRuleProcessorData.h"
 #include "nsStyleSet.h"
@@ -12,6 +15,7 @@
 #include "nsSMILKeySpline.h"
 #include "nsEventDispatcher.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsLayoutUtils.h"
 #include <math.h>
 
 using namespace mozilla;
@@ -354,7 +358,7 @@ ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
 bool
 ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
 {
-  nsIFrame* frame = mElement->GetPrimaryFrame();
+  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
   if (!frame) {
     return false;
   }
@@ -471,6 +475,7 @@ nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aET)
   aET->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh(),
                           mPendingEvents,
                           false);
+  CheckNeedsRefresh();
 }
 
 /* virtual */ void
@@ -518,7 +523,7 @@ nsAnimationManager::RulesMatching(XULTreeRuleProcessorData* aData)
 #endif
 
 /* virtual */ size_t
-nsAnimationManager::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsAnimationManager::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return CommonAnimationManager::SizeOfExcludingThis(aMallocSizeOf);
 
@@ -529,7 +534,7 @@ nsAnimationManager::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 }
 
 /* virtual */ size_t
-nsAnimationManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+nsAnimationManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
@@ -634,6 +639,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mNeedsRefreshes = true;
 
     ea->EnsureStyleRuleFor(refreshTime, mPendingEvents, false);
+    CheckNeedsRefresh();
     // We don't actually dispatch the mPendingEvents now.  We'll either
     // dispatch them the next time we get a refresh driver notification
     // or the next time somebody calls
@@ -1003,6 +1009,39 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 }
 
 void
+nsAnimationManager::AddElementData(CommonElementAnimationData* aData)
+{
+  if (!mObservingRefreshDriver) {
+    NS_ASSERTION(static_cast<ElementAnimations*>(aData)->mNeedsRefreshes,
+                 "Added data which doesn't need refreshing?");
+    // We need to observe the refresh driver.
+    mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+    mObservingRefreshDriver = true;
+  }
+
+  PR_INSERT_BEFORE(aData, &mElementData);
+}
+
+void
+nsAnimationManager::CheckNeedsRefresh()
+{
+  for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
+       l = PR_NEXT_LINK(l)) {
+    if (static_cast<ElementAnimations*>(l)->mNeedsRefreshes) {
+      if (!mObservingRefreshDriver) {
+        mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+        mObservingRefreshDriver = true;
+      }
+      return;
+    }
+  }
+  if (mObservingRefreshDriver) {
+    mObservingRefreshDriver = false;
+    mPresContext->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
+  }
+}
+
+void
 nsAnimationManager::FlushAnimations(FlushFlags aFlags)
 {
   // FIXME: check that there's at least one style rule that's not
@@ -1020,6 +1059,7 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
     ea->EnsureStyleRuleFor(now, mPendingEvents, canThrottleTick);
+    CheckNeedsRefresh();
     if (oldStyleRule != ea->mStyleRule) {
       ea->PostRestyleForAnimation(mPresContext);
     } else {

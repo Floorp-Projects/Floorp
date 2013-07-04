@@ -13,7 +13,7 @@ interface nsIASN1Object;
 /**
  * This represents a X.509 certificate.
  */
-[scriptable, uuid(f0980f60-ee3d-11d4-998b-00b0d02354a0)]
+[scriptable, uuid(45b24b0a-6189-4b05-af0b-8d4d66d57c59)]
 interface nsIX509Cert : nsISupports {
 
   /**
@@ -155,6 +155,8 @@ interface nsIX509Cert : nsISupports {
   
   /**
    *  Constants that describe the certified usages of a certificate.
+   *
+   *  Deprecated and unused
    */
   const unsigned long CERT_USAGE_SSLClient = 0;
   const unsigned long CERT_USAGE_SSLServer = 1;
@@ -203,13 +205,6 @@ interface nsIX509Cert : nsISupports {
    *  @param purposes The string listing the usages.
    */
   void getUsagesString(in boolean localOnly, out uint32_t verified, out AString usages);
-
-  /**
-   *  Verify the certificate for a particular usage.
-   *
-   *  @return The certificate verification result, see constants.
-   */
-   unsigned long verifyForUsage(in unsigned long usage);
 
   /**
    *  This is the attribute which describes the ASN1 layout

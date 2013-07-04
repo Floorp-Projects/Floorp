@@ -19,6 +19,6 @@ interface nsIDOMUSSDReceivedEvent : nsIDOMEvent
 
 dictionary USSDReceivedEventInit : EventInit
 {
-  DOMString message;
+  DOMString? message;
   boolean sessionEnded;
 };

@@ -29,10 +29,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
                                   "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadList",
                                   "resource://gre/modules/DownloadList.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
-                                  "resource://gre/modules/DownloadStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
                                   "resource://gre/modules/DownloadUIHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -109,22 +111,39 @@ this.Downloads = {
    * reference to a Download object using the createDownload function.
    *
    * @param aSource
-   *        The nsIURI for the download source, or alternative DownloadSource.
+   *        The nsIURI or string containing the URI spec for the download
+   *        source, or alternative DownloadSource.
    * @param aTarget
-   *        The nsIFile for the download target, or alternative DownloadTarget.
+   *        The nsIFile or string containing the file path, or alternative
+   *        DownloadTarget.
+   * @param aOptions
+   *        The object contains different additional options or null.
+   *        {  isPrivate: Indicates whether the download originated from a
+   *                      private window.
+   *        }
    *
    * @return {Promise}
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  simpleDownload: function D_simpleDownload(aSource, aTarget) {
+  simpleDownload: function D_simpleDownload(aSource, aTarget, aOptions) {
     // Wrap the arguments into simple objects resembling DownloadSource and
     // DownloadTarget, if they are not objects of that type already.
     if (aSource instanceof Ci.nsIURI) {
       aSource = { uri: aSource };
+    } else if (typeof aSource == "string" ||
+               (typeof aSource == "object" && "charAt" in aSource)) {
+      aSource = { uri: NetUtil.newURI(aSource) };
+    }
+
+    if (aSource && aOptions && ("isPrivate" in aOptions)) {
+      aSource.isPrivate = aOptions.isPrivate;
     }
     if (aTarget instanceof Ci.nsIFile) {
       aTarget = { file: aTarget };
+    } else if (typeof aTarget == "string" ||
+               (typeof aTarget == "object" && "charAt" in aTarget)) {
+      aTarget = { file: new FileUtils.File(aTarget) };
     }
 
     // Create and start the actual download.
@@ -152,12 +171,27 @@ this.Downloads = {
    */
   getPublicDownloadList: function D_getPublicDownloadList()
   {
-    if (!this._publicDownloadList) {
-      this._publicDownloadList = new DownloadList();
+    if (!this._promisePublicDownloadList) {
+      this._promisePublicDownloadList = Task.spawn(
+        function task_D_getPublicDownloadList() {
+          let list = new DownloadList(true);
+          try {
+            yield DownloadIntegration.loadPersistent(list);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+          throw new Task.Result(list);
+        });
     }
-    return Promise.resolve(this._publicDownloadList);
+    return this._promisePublicDownloadList;
   },
-  _publicDownloadList: null,
+
+  /**
+   * This promise is resolved with a reference to a DownloadList object that
+   * represents persistent downloads.  This property is null before the list of
+   * downloads is requested for the first time.
+   */
+  _promisePublicDownloadList: null,
 
   /**
    * Retrieves the DownloadList object for downloads that were started from
@@ -172,7 +206,7 @@ this.Downloads = {
   getPrivateDownloadList: function D_getPrivateDownloadList()
   {
     if (!this._privateDownloadList) {
-      this._privateDownloadList = new DownloadList();
+      this._privateDownloadList = new DownloadList(false);
     }
     return Promise.resolve(this._privateDownloadList);
   },

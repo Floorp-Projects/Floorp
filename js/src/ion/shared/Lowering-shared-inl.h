@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsion_ion_lowering_inl_h__
-#define jsion_ion_lowering_inl_h__
+#ifndef ion_shared_Lowering_shared_inl_h
+#define ion_shared_Lowering_shared_inl_h
 
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
@@ -406,6 +406,8 @@ VirtualRegisterOfPayload(MDefinition *mir)
         if (!inner->isConstant() && inner->type() != MIRType_Double)
             return inner->virtualRegister();
     }
+    if (mir->isTypeBarrier())
+        return VirtualRegisterOfPayload(mir->getOperand(0));
     return mir->virtualRegister() + VREG_DATA_OFFSET;
 }
 
@@ -455,5 +457,4 @@ LIRGeneratorShared::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_lowering_inl_h__
-
+#endif /* ion_shared_Lowering_shared_inl_h */

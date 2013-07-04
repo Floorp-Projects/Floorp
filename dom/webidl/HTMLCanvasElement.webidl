@@ -24,7 +24,7 @@ interface HTMLCanvasElement : HTMLElement {
            attribute unsigned long height;
 
   [Throws]
-  nsISupports? getContext(DOMString contextId, optional any contextOptions);
+  nsISupports? getContext(DOMString contextId, optional any contextOptions = null);
 
   [Throws]
   DOMString toDataURL(optional DOMString type = "",
