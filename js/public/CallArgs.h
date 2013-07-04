@@ -98,6 +98,11 @@ extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
 
 namespace detail {
 
+#ifdef DEBUG
+extern JS_PUBLIC_API(void)
+CheckIsValidConstructible(Value v);
+#endif
+
 enum UsedRval { IncludeUsedRval, NoUsedRval };
 
 template<UsedRval WantUsedRval>
@@ -169,6 +174,14 @@ class MOZ_STACK_CLASS CallReceiverBase : public UsedRvalBase<
             return thisv();
 
         return JS_ComputeThis(cx, base());
+    }
+
+    bool isConstructing() const {
+#ifdef DEBUG
+        if (this->usedRval_)
+            CheckIsValidConstructible(calleev());
+#endif
+        return argv_[-1].isMagic();
     }
 
     /*
