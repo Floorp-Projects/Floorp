@@ -41,8 +41,6 @@ pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.
 // Mobile will use faster, less durable mode.
 pref("toolkit.storage.synchronous", 0);
 
-// Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
-pref("browser.viewport.scaleRatio", -1);
 pref("browser.viewport.desktopWidth", 980);
 // The default fallback zoom level to render pages at. Set to -1 to fit page; otherwise
 // the value is divided by 1000 and clamped to hard-coded min/max scale values.
