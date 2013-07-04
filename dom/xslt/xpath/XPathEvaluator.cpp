@@ -9,7 +9,7 @@
 #include "nsIAtom.h"
 #include "nsXPathExpression.h"
 #include "nsXPathNSResolver.h"
-#include "nsXPathResult.h"
+#include "XPathResult.h"
 #include "nsContentCID.h"
 #include "txExpr.h"
 #include "txExprParser.h"
