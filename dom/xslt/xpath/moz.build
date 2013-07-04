@@ -6,12 +6,12 @@
 
 EXPORTS.mozilla.dom += [
     'XPathEvaluator.h',
+    'XPathResult.h',
 ]
 
 UNIFIED_SOURCES += [
     'nsXPathExpression.cpp',
     'nsXPathNSResolver.cpp',
-    'nsXPathResult.cpp',
     'txBooleanExpr.cpp',
     'txBooleanResult.cpp',
     'txCoreFunctionCall.cpp',
@@ -47,6 +47,7 @@ UNIFIED_SOURCES += [
     'txXPathOptimizer.cpp',
     'txXPCOMExtensionFunction.cpp',
     'XPathEvaluator.cpp',
+    'XPathResult.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
