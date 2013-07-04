@@ -11,10 +11,11 @@
 #include "nsIDOMCharacterData.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
-#include "nsXPathResult.h"
+#include "XPathResult.h"
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 
+using namespace mozilla::dom;
 using mozilla::Move;
 
 NS_IMPL_CYCLE_COLLECTION(nsXPathExpression, mDocument)
@@ -140,7 +141,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     nsCOMPtr<nsIXPathResult> xpathResult = do_QueryInterface(aInResult);
     if (!xpathResult) {
         // Either no aInResult or not one of ours.
-        xpathResult = new nsXPathResult();
+        xpathResult = new XPathResult();
         NS_ENSURE_TRUE(xpathResult, NS_ERROR_OUT_OF_MEMORY);
     }
     rv = xpathResult->SetExprResult(exprResult, resultType, context);
