@@ -23,6 +23,7 @@
 #endif
 
 class nsContentList;
+class nsDocument;
 class nsGlobalWindow;
 class nsIDOMWindow;
 class nsIForm;
