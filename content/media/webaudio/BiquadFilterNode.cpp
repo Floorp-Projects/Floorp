@@ -183,14 +183,10 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
   , mType(BiquadFilterType::Lowpass)
-  , mFrequency(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                              SendFrequencyToStream, 350.f))
-  , mDetune(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                           SendDetuneToStream, 0.f))
-  , mQ(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                      SendQToStream, 1.f))
-  , mGain(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                         SendGainToStream, 0.f))
+  , mFrequency(new AudioParam(this, SendFrequencyToStream, 350.f))
+  , mDetune(new AudioParam(this, SendDetuneToStream, 0.f))
+  , mQ(new AudioParam(this, SendQToStream, 1.f))
+  , mGain(new AudioParam(this, SendGainToStream, 0.f))
 {
   BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
