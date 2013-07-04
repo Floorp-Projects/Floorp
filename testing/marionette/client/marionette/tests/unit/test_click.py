@@ -4,22 +4,23 @@
 
 import time
 from marionette_test import MarionetteTestCase
+from by import By
 
 
 class TestClick(MarionetteTestCase):
     def test_click(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        link = self.marionette.find_element("id", "mozLink")
+        link = self.marionette.find_element(By.ID, "mozLink")
         link.click()
         self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
 
     def testClickingALinkMadeUpOfNumbersIsHandledCorrectly(self):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
-        self.marionette.find_element("link text", "333333").click()
+        self.marionette.find_element(By.LINK_TEXT, "333333").click()
         count = 0
-        while len(self.marionette.find_elements("id", "username")) == 0:
+        while len(self.marionette.find_elements(By.ID, "username")) == 0:
             count += 1
             time.sleep(1)
             if count == 30:
@@ -48,7 +49,7 @@ class TestClickChrome(MarionetteTestCase):
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "testBox")
+        box = self.marionette.find_element(By.ID, "testBox")
         self.assertFalse(self.marionette.execute_script("return arguments[0].checked;", [box]))
         box.click()
         self.assertTrue(self.marionette.execute_script("return arguments[0].checked;", [box]))
