@@ -10,3 +10,6 @@
 # Test of the blending/compositing operator that only APNG supports.
 == delay-test.html?over.png no-delay-test.html?grey.png
 != delay-test.html?source.png no-delay-test.html?grey.png
+
+# Test of subframe updates
+== delay-test.html?clear2.gif no-delay-test.html?clear2-results.gif
