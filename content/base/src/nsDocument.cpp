@@ -218,6 +218,7 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
+#include "mozilla/dom/XPathResult.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDocumentActivity.h"
 #include "nsIStructuredCloneContainer.h"
@@ -12104,13 +12105,14 @@ nsIDocument::CreateNSResolver(nsINode* aNodeResolver,
   return XPathEvaluator()->CreateNSResolver(aNodeResolver, rv);
 }
 
-already_AddRefed<nsISupports>
-nsIDocument::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
-                      nsIDOMXPathNSResolver* aResolver, uint16_t aType,
-                      nsISupports* aResult, ErrorResult& rv)
+already_AddRefed<XPathResult>
+nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
+                      nsINode* aContextNode, nsIDOMXPathNSResolver* aResolver,
+                      uint16_t aType, JS::Handle<JSObject*> aResult,
+                      ErrorResult& rv)
 {
-  return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,
-                                    aResult, rv);
+  return XPathEvaluator()->Evaluate(aCx, aExpression, aContextNode, aResolver,
+                                    aType, aResult, rv);
 }
 
 NS_IMETHODIMP
