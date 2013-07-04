@@ -189,7 +189,7 @@ function onRadioClick(aPartId)
   var id = radioGroup.selectedItem.id;
   var permission = id.split('#')[1];
   if (permission == UNKNOWN) {
-    permissionManager.remove(gPermURI, aPartId);
+    permissionManager.remove(gPermURI.host, aPartId);
   } else {
     permissionManager.add(gPermURI, aPartId, permission);
   }
