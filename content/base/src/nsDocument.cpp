@@ -102,7 +102,6 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
-#include "nsIXPathEvaluatorInternal.h"
 #include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
 
@@ -1586,8 +1585,7 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
-  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
-      aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator))) {
     if (!mXPathEvaluatorTearoff) {
       nsresult rv;
       mXPathEvaluatorTearoff =

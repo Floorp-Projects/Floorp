@@ -7,13 +7,11 @@
 #define mozilla_dom_XPathEvaluator_h
 
 #include "nsIDOMXPathEvaluator.h"
-#include "nsIXPathEvaluatorInternal.h"
 #include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "txResultRecycler.h"
 #include "nsAgg.h"
-#include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
@@ -27,8 +25,7 @@ class GlobalObject;
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator,
-                                 public nsIXPathEvaluatorInternal
+class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator
 {
 public:
     XPathEvaluator(nsISupports *aOuter);
@@ -40,15 +37,6 @@ public:
 
     // nsIDOMXPathEvaluator interface
     NS_DECL_NSIDOMXPATHEVALUATOR
-
-    // nsIXPathEvaluatorInternal interface
-    NS_IMETHOD SetDocument(nsIDOMDocument* aDocument) MOZ_OVERRIDE;
-    NS_IMETHOD CreateExpression(const nsAString &aExpression, 
-                                nsIDOMXPathNSResolver *aResolver,
-                                nsTArray<nsString> *aNamespaceURIs,
-                                nsTArray<nsCString> *aContractIDs,
-                                nsCOMArray<nsISupports> *aState,
-                                nsIDOMXPathExpression **aResult) MOZ_OVERRIDE;
 
     // WebIDL API
     JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
@@ -65,13 +53,6 @@ public:
                  nsIDOMXPathNSResolver* aResolver, uint16_t aType,
                  nsISupports* aResult, ErrorResult& rv);
 private:
-    nsresult CreateExpression(const nsAString & aExpression,
-                              nsIDOMXPathNSResolver *aResolver,
-                              nsTArray<int32_t> *aNamespaceIDs,
-                              nsTArray<nsCString> *aContractIDs,
-                              nsCOMArray<nsISupports> *aState,
-                              nsIDOMXPathExpression **aResult);
-
     nsWeakPtr mDocument;
     nsRefPtr<txResultRecycler> mRecycler;
 };
