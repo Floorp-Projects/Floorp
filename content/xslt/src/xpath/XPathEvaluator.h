@@ -10,12 +10,12 @@
 #include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
-#include "txResultRecycler.h"
-#include "nsAgg.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "nsIDocument.h"
 
 class nsINode;
+class txResultRecycler;
 
 namespace mozilla {
 namespace dom {
@@ -28,18 +28,20 @@ class GlobalObject;
 class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator
 {
 public:
-    XPathEvaluator(nsISupports *aOuter);
+    XPathEvaluator(nsIDocument* aDocument = nullptr);
 
-    nsresult Init();
-
-    // nsISupports interface (support aggregation)
-    NS_DECL_AGGREGATED
+    NS_DECL_ISUPPORTS
 
     // nsIDOMXPathEvaluator interface
     NS_DECL_NSIDOMXPATHEVALUATOR
 
     // WebIDL API
     JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
+    already_AddRefed<nsIDocument> GetParentObject()
+    {
+        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+        return doc.forget();
+    }
     static already_AddRefed<XPathEvaluator>
         Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
     already_AddRefed<nsIDOMXPathExpression>
