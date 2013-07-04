@@ -365,7 +365,7 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args.handleAt(0), &id))
         return false;
 
-    RootedObject descObj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject descObj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!descObj)
         return false;
 
@@ -702,7 +702,7 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &ObjectClass, proto, &args.callee().global()));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &JSObject::class_, proto, &args.callee().global()));
     if (!obj)
         return false;
 

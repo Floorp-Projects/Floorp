@@ -634,7 +634,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
     }
 
     /* Step 9. */
-    RootedObject wrapper(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject wrapper(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!wrapper)
         return false;
 
@@ -758,7 +758,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 static bool
 Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!obj)
         return false;
 
