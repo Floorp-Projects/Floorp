@@ -358,6 +358,49 @@ this.AccessFu = {
 };
 
 var Output = {
+  brailleState: {
+    startOffset: 0,
+    endOffset: 0,
+    text: '',
+
+    init: function init(aOutput) {
+      if (aOutput && 'output' in aOutput) {
+        this.startOffset = aOutput.startOffset;
+        this.endOffset = aOutput.endOffset;
+        // We need to append a space at the end so that the routing key corresponding
+        // to the end of the output (i.e. the space) can be hit to move the caret there.
+        this.text = aOutput.output + ' ';
+        return this.text;
+      }
+    },
+
+    update: function update(aText) {
+      let newBraille = [];
+      let braille = {};
+
+      let prefix = this.text.substring(0, this.startOffset).trim();
+      if (prefix) {
+        prefix += ' ';
+        newBraille.push(prefix);
+      }
+
+      let newText = aText;
+      newBraille.push(newText);
+
+      let suffix = this.text.substring(this.endOffset).trim();
+      if (suffix) {
+        suffix = ' ' + suffix;
+        newBraille.push(suffix);
+      }
+
+      braille.startOffset = prefix.length;
+      braille.output = newBraille.join('');
+      braille.endOffset = braille.output.length - suffix.length;
+
+      return braille;
+    }
+  },
+
   start: function start() {
     Cu.import('resource://gre/modules/Geometry.jsm');
   },
@@ -458,6 +501,8 @@ var Output = {
   },
 
   Android: function Android(aDetails, aBrowser) {
+    const ANDROID_VIEW_TEXT_CHANGED = 0x10;
+
     if (!this._bridge)
       this._bridge = Cc['@mozilla.org/android/bridge;1'].getService(Ci.nsIAndroidBridge);
 
@@ -465,13 +510,14 @@ var Output = {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
         androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
-      if (androidEvent.brailleText && 'output' in androidEvent.brailleText) {
-        this.brailleStartOffset = androidEvent.brailleText.startOffset;
-        this.brailleEndOffset = androidEvent.brailleText.endOffset;
-        // We need to append a space at the end so that the routing key corresponding
-        // to the end of the output (i.e. the space) can be hit to move the caret there.
-        androidEvent.brailleText = androidEvent.brailleText.output + ' ';
+      if (androidEvent.eventType === ANDROID_VIEW_TEXT_CHANGED) {
+        androidEvent.brailleText = this.brailleState.update(androidEvent.text);
       }
+      let (output = this.brailleState.init(androidEvent.brailleText)) {
+        if (typeof output === 'string') {
+          androidEvent.brailleText = output;
+        }
+      };
       this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
@@ -694,7 +740,8 @@ var Input = {
   activateCurrent: function activateCurrent(aData) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     let offset = aData && typeof aData.keyIndex === 'number' ?
-                 aData.keyIndex - Output.brailleStartOffset : -1;
+                 aData.keyIndex - Output.brailleState.startOffset : -1;
+
     mm.sendAsyncMessage('AccessFu:Activate', {offset: offset});
   },
 
