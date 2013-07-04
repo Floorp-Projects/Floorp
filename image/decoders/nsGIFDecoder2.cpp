@@ -177,10 +177,11 @@ void nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
   }
 
   // Our first full frame is automatically created by the image decoding
-  // infrastructure. Just use it as long as we're not creating a subframe.
-  else if (mGIFStruct.x_offset != 0 || mGIFStruct.y_offset != 0 ||
-           int32_t(mGIFStruct.width) != mImageMetadata.GetWidth() ||
-           int32_t(mGIFStruct.height) != mImageMetadata.GetHeight()) {
+  // infrastructure. Just use it as long as it matches up.
+  else if (!GetCurrentFrame()->GetRect().IsEqualEdges(nsIntRect(mGIFStruct.x_offset,
+                                                                mGIFStruct.y_offset,
+                                                                mGIFStruct.width,
+                                                                mGIFStruct.height))) {
     // Regardless of depth of input, image is decoded into 24bit RGB
     NeedNewFrame(mGIFStruct.images_decoded, mGIFStruct.x_offset,
                  mGIFStruct.y_offset, mGIFStruct.width, mGIFStruct.height,
