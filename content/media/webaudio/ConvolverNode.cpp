@@ -26,10 +26,12 @@ NS_IMPL_RELEASE_INHERITED(ConvolverNode, AudioNode)
 
 class ConvolverNodeEngine : public AudioNodeEngine
 {
+  typedef PlayingRefChangeHandler<ConvolverNode> PlayingRefChanged;
 public:
   ConvolverNodeEngine(AudioNode* aNode, bool aNormalize)
     : AudioNodeEngine(aNode)
     , mBufferLength(0)
+    , mLeftOverData(INT32_MIN)
     , mSampleRate(0.0f)
     , mUseBackgroundThreads(!aNode->Context()->IsOffline())
     , mNormalize(aNormalize)
@@ -51,6 +53,7 @@ public:
       mBuffer = nullptr;
       mSampleRate = 0.0f;
       mBufferLength = aParam;
+      mLeftOverData = INT32_MIN;
       break;
     case SAMPLE_RATE:
       mSampleRate = aParam;
@@ -92,6 +95,7 @@ public:
     if (!mBuffer || !mBufferLength || !mSampleRate) {
       mReverb = nullptr;
       mSeenInput = false;
+      mLeftOverData = INT32_MIN;
       return;
     }
 
@@ -120,15 +124,33 @@ public:
     if (aInput.IsNull()) {
       AllocateAudioBlock(1, &input);
       WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
-    } else if (aInput.mVolume != 1.0f) {
-      // Pre-multiply the input's volume
-      uint32_t numChannels = aInput.mChannelData.Length();
-      AllocateAudioBlock(numChannels, &input);
-      for (uint32_t i = 0; i < numChannels; ++i) {
-        const float* src = static_cast<const float*>(aInput.mChannelData[i]);
-        float* dest = static_cast<float*>(const_cast<void*>(input.mChannelData[i]));
-        AudioBlockAddChannelWithScale(src, aInput.mVolume, dest);
+
+      mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
+      if (mLeftOverData <= 0) {
+        mLeftOverData = 0;
+        nsRefPtr<PlayingRefChanged> refchanged =
+          new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
+        NS_DispatchToMainThread(refchanged);
       }
+    } else {
+      if (aInput.mVolume != 1.0f) {
+        // Pre-multiply the input's volume
+        uint32_t numChannels = aInput.mChannelData.Length();
+        AllocateAudioBlock(numChannels, &input);
+        for (uint32_t i = 0; i < numChannels; ++i) {
+          const float* src = static_cast<const float*>(aInput.mChannelData[i]);
+          float* dest = static_cast<float*>(const_cast<void*>(input.mChannelData[i]));
+          AudioBlockAddChannelWithScale(src, aInput.mVolume, dest);
+        }
+      }
+
+      if (mLeftOverData <= 0) {
+        nsRefPtr<PlayingRefChanged> refchanged =
+          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
+        NS_DispatchToMainThread(refchanged);
+      }
+      mLeftOverData = mBufferLength + WEBAUDIO_BLOCK_SIZE;
+      MOZ_ASSERT(mLeftOverData > 0);
     }
     AllocateAudioBlock(2, aOutput);
 
@@ -139,6 +161,7 @@ private:
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   nsAutoPtr<WebCore::Reverb> mReverb;
   int32_t mBufferLength;
+  int32_t mLeftOverData;
   float mSampleRate;
   bool mUseBackgroundThreads;
   bool mNormalize;
