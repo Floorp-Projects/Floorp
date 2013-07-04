@@ -24,9 +24,6 @@ interface AudioContext : EventTarget {
     [Creator, Throws]
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
 
-    [Creator, Throws]
-    AudioBuffer? createBuffer(ArrayBuffer buffer, boolean mixToMono);
-
     void decodeAudioData(ArrayBuffer audioData,
                          DecodeSuccessCallback successCallback,
                          optional DecodeErrorCallback errorCallback);
@@ -77,10 +74,13 @@ interface AudioContext : EventTarget {
  */
 [PrefControlled]
 partial interface AudioContext {
+    [Creator, Throws]
+    AudioBuffer? createBuffer(ArrayBuffer buffer, boolean mixToMono);
+
     // Same as createGain()
     [Creator,Pref="media.webaudio.legacy.AudioContext"]
     GainNode createGainNode();
-    
+
     // Same as createDelay()
     [Creator, Throws, Pref="media.webaudio.legacy.AudioContext"]
     DelayNode createDelayNode(optional double maxDelayTime = 1);
