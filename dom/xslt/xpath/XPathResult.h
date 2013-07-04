@@ -6,16 +6,20 @@
 #ifndef mozilla_dom_XPathResult_h
 #define mozilla_dom_XPathResult_h
 
-#include "txExprResult.h"
-#include "nsIDOMXPathResult.h"
 #include "nsStubMutationObserver.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsWeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "nsString.h"
+#include "nsWrapperCache.h"
+#include "nsINode.h"
 
 class nsIDocument;
+class txAExprResult;
 
 // {662f2c9a-c7cd-4cab-9349-e733df5a838c}
 #define NS_IXPATHRESULT_IID \
@@ -40,21 +44,106 @@ namespace dom {
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathResult MOZ_FINAL : public nsIDOMXPathResult,
+class XPathResult MOZ_FINAL : public nsIXPathResult,
                               public nsStubMutationObserver,
-                              public nsIXPathResult
+                              public nsWrapperCache
 {
 public:
-    XPathResult();
+    XPathResult(nsINode* aParent);
     XPathResult(const XPathResult &aResult);
     ~XPathResult();
 
+    enum {
+        ANY_TYPE = 0U,
+        NUMBER_TYPE = 1U,
+        STRING_TYPE = 2U,
+        BOOLEAN_TYPE = 3U,
+        UNORDERED_NODE_ITERATOR_TYPE = 4U,
+        ORDERED_NODE_ITERATOR_TYPE = 5U,
+        UNORDERED_NODE_SNAPSHOT_TYPE = 6U,
+        ORDERED_NODE_SNAPSHOT_TYPE = 7U,
+        ANY_UNORDERED_NODE_TYPE = 8U,
+        FIRST_ORDERED_NODE_TYPE = 9U
+    };
+
     // nsISupports interface
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(XPathResult, nsIDOMXPathResult)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(XPathResult,
+                                                           nsIXPathResult)
 
-    // nsIDOMXPathResult interface
-    NS_DECL_NSIDOMXPATHRESULT
+    static XPathResult* FromSupports(nsISupports* aSupports)
+    {
+        return static_cast<XPathResult*>(static_cast<nsIXPathResult*>(aSupports));
+    }
+
+    virtual JSObject* WrapObject(JSContext* aCx);
+    nsINode* GetParentObject() const
+    {
+        return mParent;
+    }
+    uint16_t ResultType() const
+    {
+        return mResultType;
+    }
+    double GetNumberValue(ErrorResult& aRv) const
+    {
+        if (mResultType != NUMBER_TYPE) {
+            aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+            return 0;
+        }
+
+        return mNumberResult;
+    }
+    void GetStringValue(nsAString &aStringValue, ErrorResult& aRv) const
+    {
+        if (mResultType != STRING_TYPE) {
+            aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+            return;
+        }
+
+        aStringValue = mStringResult;
+    }
+    bool GetBooleanValue(ErrorResult& aRv) const
+    {
+        if (mResultType != BOOLEAN_TYPE) {
+            aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+            return false;
+        }
+
+        return mBooleanResult;
+    }
+    nsINode* GetSingleNodeValue(ErrorResult& aRv) const
+    {
+        if (!isNode()) {
+            aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+            return nullptr;
+       }
+
+        return mResultNodes.SafeObjectAt(0);
+    }
+    bool InvalidIteratorState() const
+    {
+        return isIterator() && mInvalidIteratorState;
+    }
+    uint32_t GetSnapshotLength(ErrorResult& aRv) const
+    {
+        if (!isSnapshot()) {
+            aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+            return 0;
+        }
+
+        return (uint32_t)mResultNodes.Count();
+    }
+    nsINode* IterateNext(ErrorResult& aRv);
+    nsINode* SnapshotItem(uint32_t aIndex, ErrorResult& aRv) const
+    {
+        if (!isSnapshot()) {
+            aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+            return nullptr;
+        }
+
+        return mResultNodes.SafeObjectAt(aIndex);
+    }
 
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -64,7 +153,6 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-    // nsIXPathResult interface
     nsresult SetExprResult(txAExprResult *aExprResult, uint16_t aResultType,
                            nsINode* aContextNode) MOZ_OVERRIDE;
     nsresult GetExprResult(txAExprResult **aExprResult) MOZ_OVERRIDE;
@@ -101,12 +189,13 @@ private:
 
     void Invalidate(const nsIContent* aChangeRoot);
 
+    nsCOMPtr<nsINode> mParent;
     nsRefPtr<txAExprResult> mResult;
-    nsCOMArray<nsIDOMNode> mResultNodes;
+    nsCOMArray<nsINode> mResultNodes;
     nsCOMPtr<nsIDocument> mDocument;
+    nsWeakPtr mContextNode;
     uint32_t mCurrentPos;
     uint16_t mResultType;
-    nsWeakPtr mContextNode;
     bool mInvalidIteratorState;
     bool mBooleanResult;
     double mNumberResult;

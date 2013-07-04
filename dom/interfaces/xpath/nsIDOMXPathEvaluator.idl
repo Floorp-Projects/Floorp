@@ -10,7 +10,6 @@
 #include "domstubs.idl"
 
 interface nsIDOMXPathNSResolver;
-interface nsIDOMXPathResult;
 interface nsIDOMXPathExpression;
 interface XPathException;
 
