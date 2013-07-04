@@ -49,15 +49,14 @@ class nsXMLQuery MOZ_FINAL : public nsISupports
     nsXMLBindingSet* GetBindingSet() { return mRequiredBindings; }
 
     // add a required binding for the query
-    nsresult
+    void
     AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
     {
         if (!mRequiredBindings) {
             mRequiredBindings = new nsXMLBindingSet();
-            NS_ENSURE_TRUE(mRequiredBindings, NS_ERROR_OUT_OF_MEMORY);
         }
 
-        return mRequiredBindings->AddBinding(aVar, aExpr);
+        mRequiredBindings->AddBinding(aVar, aExpr);
     }
 
     nsXMLQuery(nsXULTemplateQueryProcessorXML* aProcessor,
@@ -145,7 +144,7 @@ public:
     // resolving namespaces
     nsresult
     CreateExpression(const nsAString& aExpr,
-                     nsIDOMNode* aNode,
+                     nsINode* aNode,
                      nsIDOMXPathExpression** aCompiledExpr);
 
 private:
