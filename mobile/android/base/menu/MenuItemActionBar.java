@@ -39,7 +39,6 @@ public class MenuItemActionBar extends ImageButton
         setIcon(item.getIcon());
         setTitle(item.getTitle());
         setEnabled(item.isEnabled());
-        setId(item.getItemId());
     }
 
     private void setIcon(Drawable icon) {
