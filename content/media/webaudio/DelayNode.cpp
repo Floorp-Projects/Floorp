@@ -25,42 +25,7 @@ NS_IMPL_RELEASE_INHERITED(DelayNode, AudioNode)
 
 class DelayNodeEngine : public AudioNodeEngine
 {
-  class PlayingRefChanged : public nsRunnable
-  {
-  public:
-    enum ChangeType { ADDREF, RELEASE };
-    PlayingRefChanged(AudioNodeStream* aStream, ChangeType aChange)
-      : mStream(aStream)
-      , mChange(aChange)
-    {
-    }
-
-    NS_IMETHOD Run()
-    {
-      nsRefPtr<DelayNode> node;
-      {
-        // No need to keep holding the lock for the whole duration of this
-        // function, since we're holding a strong reference to it, so if
-        // we can obtain the reference, we will hold the node alive in
-        // this function.
-        MutexAutoLock lock(mStream->Engine()->NodeMutex());
-        node = static_cast<DelayNode*>(mStream->Engine()->Node());
-      }
-      if (node) {
-        if (mChange == ADDREF) {
-          node->mPlayingRef.Take(node);
-        } else if (mChange == RELEASE) {
-          node->mPlayingRef.Drop(node);
-        }
-      }
-      return NS_OK;
-    }
-
-  private:
-    nsRefPtr<AudioNodeStream> mStream;
-    ChangeType mChange;
-  };
-
+  typedef PlayingRefChanged<DelayNode> PlayingRefChanged;
 public:
   DelayNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
