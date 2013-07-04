@@ -187,18 +187,12 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
               2,
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
-  , mThreshold(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                              SendThresholdToStream, -24.f))
-  , mKnee(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                         SendKneeToStream, 30.f))
-  , mRatio(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                          SendRatioToStream, 12.f))
-  , mReduction(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                              Callback, 0.f))
-  , mAttack(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                           SendAttackToStream, 0.003f))
-  , mRelease(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                            SendReleaseToStream, 0.25f))
+  , mThreshold(new AudioParam(this, SendThresholdToStream, -24.f))
+  , mKnee(new AudioParam(this, SendKneeToStream, 30.f))
+  , mRatio(new AudioParam(this, SendRatioToStream, 12.f))
+  , mReduction(new AudioParam(this, Callback, 0.f))
+  , mAttack(new AudioParam(this, SendAttackToStream, 0.003f))
+  , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f))
 {
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
