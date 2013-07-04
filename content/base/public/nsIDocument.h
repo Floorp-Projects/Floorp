@@ -122,6 +122,7 @@ class TouchList;
 class TreeWalker;
 class UndoManager;
 class XPathEvaluator;
+class XPathResult;
 template<typename> class OwningNonNull;
 template<typename> class Sequence;
 
@@ -2274,10 +2275,10 @@ public:
                      mozilla::ErrorResult& rv);
   already_AddRefed<nsIDOMXPathNSResolver>
     CreateNSResolver(nsINode* aNodeResolver, mozilla::ErrorResult& rv);
-  already_AddRefed<nsISupports>
-    Evaluate(const nsAString& aExpression, nsINode* aContextNode,
+  already_AddRefed<mozilla::dom::XPathResult>
+    Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode* aContextNode,
              nsIDOMXPathNSResolver* aResolver, uint16_t aType,
-             nsISupports* aResult, mozilla::ErrorResult& rv);
+             JS::Handle<JSObject*> aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode
   already_AddRefed<mozilla::dom::Touch>
     CreateTouch(nsIDOMWindow* aView, mozilla::dom::EventTarget* aTarget,
