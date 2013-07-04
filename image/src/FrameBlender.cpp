@@ -424,7 +424,7 @@ FrameBlender::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect, const
   }
 
   uint32_t bytesPerRow = aFrameRect.width * 4;
-  for (int row = toClear.y; row < toClear.height; ++row) {
+  for (int row = toClear.y; row < toClear.y + toClear.height; ++row) {
     memset(aFrameData + toClear.x * 4 + row * bytesPerRow, 0, toClear.width * 4);
   }
 }
