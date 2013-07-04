@@ -2898,7 +2898,7 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
 
     // If we're making a new object with a class prototype (that is, an object
     // that derives its class from its prototype instead of being
-    // ObjectClass'd) from self-hosted code, we need a different init
+    // JSObject::class_'d) from self-hosted code, we need a different init
     // function.
     if (lir->mir()->templateObjectIsClassPrototype()) {
         if (!callVM(NewInitObjectWithClassPrototypeInfo, lir))

@@ -6289,7 +6289,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
     uint32_t oldSlots = obj->numDynamicSlots();
 
     if (op == JSOP_INITPROP && name != cx->names().proto) {
-        JS_ASSERT(obj->isObject());
+        JS_ASSERT(obj->is<JSObject>());
         if (!DefineNativeProperty(cx, obj, id, rhs, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0))
             return false;
     } else if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {

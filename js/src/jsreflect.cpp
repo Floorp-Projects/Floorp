@@ -313,7 +313,7 @@ class NodeBuilder
     }
 
     bool newObject(MutableHandleObject dst) {
-        RootedObject nobj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+        RootedObject nobj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
         if (!nobj)
             return false;
 
@@ -620,7 +620,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, MutableHandleObject dst)
     JS_ASSERT(type > AST_ERROR && type < AST_LIMIT);
 
     RootedValue tv(cx);
-    RootedObject node(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject node(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -3080,7 +3080,7 @@ JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
-    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &ObjectClass, NULL, obj, SingletonObject));
+    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &JSObject::class_, NULL, obj, SingletonObject));
     if (!Reflect)
         return NULL;
 

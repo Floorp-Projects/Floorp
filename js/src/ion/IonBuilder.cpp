@@ -4446,7 +4446,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
 
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
-    types::TypeObject *type = cx->getNewType(&ObjectClass, proto.get(), target);
+    types::TypeObject *type = cx->getNewType(&JSObject::class_, proto.get(), target);
     if (!type)
         return NULL;
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(type)))
@@ -5238,7 +5238,7 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
         templateObject = CopyInitializerObject(cx, baseObj, newKind);
     } else {
         gc::AllocKind allocKind = GuessObjectGCKind(0);
-        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
+        templateObject = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     }
 
     if (!templateObject)
