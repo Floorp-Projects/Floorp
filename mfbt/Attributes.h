@@ -117,18 +117,11 @@
  * The MOZ_CONSTEXPR specifier declares that a C++11 compiler can evaluate a
  * function at compile time. A constexpr function cannot examine any values
  * except its arguments and can have no side effects except its return value.
- * The MOZ_CONSTEXPR_VAR specifier tells a C++11 compiler that a variable's
- * value may be computed at compile time.  It should be prefered to just
- * marking variables as MOZ_CONSTEXPR because if the compiler does not support
- * constexpr it will fall back to making the variable const, and some compilers
- * do not accept variables being marked both const and constexpr.
  */
 #ifdef MOZ_HAVE_CXX11_CONSTEXPR
 #  define MOZ_CONSTEXPR         constexpr
-#  define MOZ_CONSTEXPR_VAR     constexpr
 #else
 #  define MOZ_CONSTEXPR         /* no support */
-#  define MOZ_CONSTEXPR_VAR     const
 #endif
 
 /*
@@ -410,6 +403,20 @@
 # define MOZ_STACK_CLASS /* nothing */
 # define MOZ_NONHEAP_CLASS /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
+
+/*
+ * MOZ_THIS_IN_INITIALIZER_LIST is used to avoid a warning when we know that
+ * it's safe to use 'this' in an initializer list.
+ */
+#ifdef _MSC_VER
+#  define MOZ_THIS_IN_INITIALIZER_LIST() \
+     __pragma(warning(push)) \
+     __pragma(warning(disable:4355)) \
+     this \
+     __pragma(warning(pop))
+#else
+#  define MOZ_THIS_IN_INITIALIZER_LIST() this
+#endif
 
 #endif /* __cplusplus */
 
