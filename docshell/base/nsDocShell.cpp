@@ -2306,6 +2306,19 @@ NS_IMETHODIMP nsDocShell::GetAllowMedia(bool * aAllowMedia)
 NS_IMETHODIMP nsDocShell::SetAllowMedia(bool aAllowMedia)
 {
     mAllowMedia = aAllowMedia;
+
+    // Mute or unmute audio contexts attached to the inner window.
+    if (mScriptGlobal) {
+        nsPIDOMWindow* innerWin = mScriptGlobal->GetCurrentInnerWindow();
+        if (innerWin) {
+            if (aAllowMedia) {
+                innerWin->UnmuteAudioContexts();
+            } else {
+                innerWin->MuteAudioContexts();
+            }
+        }
+    }
+
     return NS_OK;
 }
 
