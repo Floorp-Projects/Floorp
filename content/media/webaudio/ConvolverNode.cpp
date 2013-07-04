@@ -26,12 +26,10 @@ NS_IMPL_RELEASE_INHERITED(ConvolverNode, AudioNode)
 
 class ConvolverNodeEngine : public AudioNodeEngine
 {
-  typedef PlayingRefChanged<ConvolverNode> PlayingRefChanged;
 public:
   ConvolverNodeEngine(AudioNode* aNode, bool aNormalize)
     : AudioNodeEngine(aNode)
     , mBufferLength(0)
-    , mLeftOverData(INT32_MIN)
     , mSampleRate(0.0f)
     , mUseBackgroundThreads(!aNode->Context()->IsOffline())
     , mNormalize(aNormalize)
@@ -53,7 +51,6 @@ public:
       mBuffer = nullptr;
       mSampleRate = 0.0f;
       mBufferLength = aParam;
-      mLeftOverData = INT32_MIN;
       break;
     case SAMPLE_RATE:
       mSampleRate = aParam;
@@ -95,7 +92,6 @@ public:
     if (!mBuffer || !mBufferLength || !mSampleRate) {
       mReverb = nullptr;
       mSeenInput = false;
-      mLeftOverData = INT32_MIN;
       return;
     }
 
@@ -140,32 +136,12 @@ public:
     AllocateAudioBlock(numChannels, aOutput);
 
     mReverb->process(&input, aOutput, WEBAUDIO_BLOCK_SIZE);
-
-    if (!aInput.IsNull()) {
-      if (mLeftOverData == INT32_MIN) {
-        // Start counting the left over data
-        mLeftOverData = mBufferLength + WEBAUDIO_BLOCK_SIZE;
-        MOZ_ASSERT(mLeftOverData > 0);
-
-        nsRefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-        NS_DispatchToMainThread(refchanged);
-      } else {
-        mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
-      }
-      if (mLeftOverData <= 0) {
-        nsRefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-        NS_DispatchToMainThread(refchanged);
-      }
-    }
   }
 
 private:
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   nsAutoPtr<WebCore::Reverb> mReverb;
   int32_t mBufferLength;
-  int32_t mLeftOverData;
   float mSampleRate;
   bool mUseBackgroundThreads;
   bool mNormalize;
