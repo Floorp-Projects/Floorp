@@ -225,7 +225,7 @@ public final class GeckoLoader {
             sSQLiteLibsLoaded = true;
         }
 
-        loadMozGlue(context);
+        loadMozGlue();
         // the extract libs parameter is being removed in bug 732069
         loadLibsSetup(context);
         loadSQLiteLibsNative(apkName, false);
@@ -239,12 +239,12 @@ public final class GeckoLoader {
             sNSSLibsLoaded = true;
         }
 
-        loadMozGlue(context);
+        loadMozGlue();
         loadLibsSetup(context);
         loadNSSLibsNative(apkName, false);
     }
 
-    public static void loadMozGlue(Context context) {
+    public static void loadMozGlue() {
         synchronized (sLibLoadingLock) {
             if (sMozGlueLoaded) {
                 return;
