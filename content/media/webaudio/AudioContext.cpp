@@ -536,5 +536,19 @@ AudioContext::StartRendering()
   mDestination->StartRendering();
 }
 
+void
+AudioContext::Mute() const
+{
+  MOZ_ASSERT(!mIsOffline);
+  mDestination->Mute();
+}
+
+void
+AudioContext::Unmute() const
+{
+  MOZ_ASSERT(!mIsOffline);
+  mDestination->Unmute();
+}
+
 }
 }
