@@ -3448,14 +3448,10 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // the resolved paragraph level of the first frame on the line, not the block
   // frame, because the block frame could be split by hard line breaks into
   // multiple paragraphs with different base direction
-  uint8_t direction;
-  if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    FramePropertyTable *propTable = aState.mPresContext->PropertyTable();
-    direction =  NS_PTR_TO_INT32(propTable->Get(aLine->mFirstChild,
-                                                BaseLevelProperty())) & 1;
-  } else {
-    direction = StyleVisibility()->mDirection;
-  }
+  uint8_t direction =
+    (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) ?
+      nsBidiPresUtils::GetFrameBaseLevel(aLine->mFirstChild) & 1 :
+      StyleVisibility()->mDirection;
 
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
