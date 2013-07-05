@@ -75,10 +75,6 @@ public final class Distribution {
                     File distDir = new File("/system/" + context.getPackageName() + "/distribution");
                     if (distDir.exists()) {
                         distributionSet = true;
-
-                        // Store the path to the distribution directory, to be used in getBookmarks.
-                        String pathKeyName = context.getPackageName() + ".distribution_path";
-                        settings.edit().putString(pathKeyName, distDir.getPath()).commit();
                     }
                 }
 
