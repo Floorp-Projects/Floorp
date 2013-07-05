@@ -580,7 +580,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     nsPoint curOrigin = legend->GetPosition();
 
     // only if the origin changed
-    if ((curOrigin.x != mLegendRect.x) || (curOrigin.y != mLegendRect.y)) {
+    if ((curOrigin.x != actualLegendRect.x) || (curOrigin.y != actualLegendRect.y)) {
       legend->SetPosition(nsPoint(actualLegendRect.x , actualLegendRect.y));
       nsContainerFrame::PositionFrameView(legend);
 
