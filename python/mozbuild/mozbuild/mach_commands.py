@@ -127,7 +127,7 @@ class BuildProgressFooter(object):
         current_encountered = False
         for tier in self._monitor.tiers:
             if tier == self._monitor.current_tier:
-                parts.extend([('yellow', tier), ' '])
+                parts.extend([('underline_yellow', tier), ' '])
                 current_encountered = True
             elif not current_encountered:
                 parts.extend([('green', tier), ' '])
@@ -138,7 +138,7 @@ class BuildProgressFooter(object):
         parts.extend([('bold', 'SUBTIER'), ':', ' '])
         for subtier in self._monitor.subtiers:
             if subtier == self._monitor.current_subtier:
-                parts.extend([('yellow', subtier), ' '])
+                parts.extend([('underline_yellow', subtier), ' '])
                 current_encountered = True
             elif not current_encountered:
                 parts.extend([('green', subtier), ' '])
