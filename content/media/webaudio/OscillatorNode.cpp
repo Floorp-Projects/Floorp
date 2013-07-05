@@ -13,8 +13,22 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(OscillatorNode, AudioNode,
-                                     mPeriodicWave, mFrequency, mDetune)
+NS_IMPL_CYCLE_COLLECTION_CLASS(OscillatorNode)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(OscillatorNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPeriodicWave)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrequency)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDetune)
+  if (tmp->Context()) {
+    tmp->Context()->UnregisterOscillatorNode(tmp);
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode);
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(OscillatorNode, AudioNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPeriodicWave)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrequency)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDetune)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(OscillatorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
@@ -287,6 +301,13 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+}
+
+OscillatorNode::~OscillatorNode()
+{
+  if (Context()) {
+    Context()->UnregisterOscillatorNode(this);
+  }
 }
 
 JSObject*
