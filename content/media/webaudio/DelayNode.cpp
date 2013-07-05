@@ -121,7 +121,10 @@ public:
     } else if (mLeftOverData != INT32_MIN) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
       if (mLeftOverData <= 0) {
-        mLeftOverData = INT32_MIN;
+        // Continue spamming the main thread with messages until we are destroyed.
+        // This isn't great, but it ensures a message will get through even if
+        // some are ignored by DelayNode::AcceptPlayingRefRelease
+        mLeftOverData = 0;
         playedBackAllLeftOvers = true;
 
         nsRefPtr<PlayingRefChanged> refchanged =
@@ -244,6 +247,7 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
               2,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
+  , mMediaStreamGraphUpdateIndexAtLastInputConnection(0)
   , mDelay(new AudioParam(this, SendDelayToStream, 0.0f))
 {
   DelayNodeEngine* engine = new DelayNodeEngine(this, aContext->Destination());

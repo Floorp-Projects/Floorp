@@ -1539,6 +1539,12 @@ MediaStream::FinishOnGraphThread()
   GraphImpl()->FinishStream(this);
 }
 
+int64_t
+MediaStream::GetProcessingGraphUpdateIndex()
+{
+  return GraphImpl()->GetProcessingGraphUpdateIndex();
+}
+
 StreamBuffer::Track*
 MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
 {
