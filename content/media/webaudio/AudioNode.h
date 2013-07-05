@@ -216,6 +216,8 @@ public:
 
   void RemoveOutputParam(AudioParam* aParam);
 
+  virtual void NotifyInputConnected() {}
+
 private:
   friend class AudioBufferSourceNode;
   // This could possibly delete 'this'.
