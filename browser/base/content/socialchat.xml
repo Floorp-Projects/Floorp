@@ -620,7 +620,7 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.type == "resize") {
+          if (aEvent.type == "resize" && aEvent.eventPhase == aEvent.AT_TARGET) {
             this.resize();
           }
         ]]></body>
