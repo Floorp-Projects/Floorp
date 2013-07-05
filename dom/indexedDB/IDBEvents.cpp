@@ -57,7 +57,7 @@ mozilla::dom::indexedDB::CreateGenericEvent(mozilla::dom::EventTarget* aOwner,
 }
 
 // static
-already_AddRefed<IDBVersionChangeEvent>
+already_AddRefed<nsDOMEvent>
 IDBVersionChangeEvent::CreateInternal(mozilla::dom::EventTarget* aOwner,
                                       const nsAString& aType,
                                       uint64_t aOldVersion,
