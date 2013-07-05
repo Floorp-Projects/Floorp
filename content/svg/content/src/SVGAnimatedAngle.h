@@ -17,12 +17,11 @@ namespace dom {
 
 class SVGAngle;
 
-class SVGAnimatedAngle MOZ_FINAL : public nsISupports,
-                                   public nsWrapperCache
+class SVGAnimatedAngle MOZ_FINAL : public nsWrapperCache
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGAnimatedAngle)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedAngle)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedAngle)
 
   SVGAnimatedAngle(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement)
