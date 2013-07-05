@@ -65,9 +65,12 @@
 #include "nsManifestLineReader.h"
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
+#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
 #include "mozilla/FileUtils.h"
+#include "nsNetUtil.h"
 
 #include <new>     // for placement new
 
@@ -1912,6 +1915,32 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation)
 
   rv = cr->CheckForNewChrome();
   return rv;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::GetManifestLocations(nsIArray **aLocations)
+{
+  NS_ENSURE_ARG_POINTER(aLocations);
+  *aLocations = nullptr;
+
+  if (!sModuleLocations)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIMutableArray> locations = nsArray::Create();
+  nsresult rv;
+  for (uint32_t i = 0; i < sModuleLocations->Length(); ++i) {
+    ComponentLocation& l = sModuleLocations->ElementAt(i);
+    FileLocation loc = l.location;
+    nsCString uriString;
+    loc.GetURIString(uriString);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    if (NS_SUCCEEDED(rv))
+      locations->AppendElement(uri, false);
+  }
+
+  locations.forget(aLocations);
+  return NS_OK;
 }
 
 EXPORT_XPCOM_API(nsresult)
