@@ -413,10 +413,9 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /*
- * UnsafeSetElement(arr0, idx0, elem0, ..., arrN, idxN, elemN): For
- * each set of (arr, idx, elem) arguments that are passed, performs
- * the assignment |arr[idx] = elem|. |arr| must be either a dense array
- * or a typed array.
+ * UnsafePutElements(arr0, idx0, elem0, ..., arrN, idxN, elemN): For each set of
+ * (arr, idx, elem) arguments that are passed, performs the assignment
+ * |arr[idx] = elem|. |arr| must be either a dense array or a typed array.
  *
  * If |arr| is a dense array, the index must be an int32 less than the
  * initialized length of |arr|. Use |%EnsureDenseResultArrayElements|
@@ -426,7 +425,7 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
  * length of |arr|.
  */
 JSBool
-js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
+js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -605,7 +604,7 @@ const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
 
-    JS_FN("UnsafeSetElement",        intrinsic_UnsafeSetElement,        3,0),
+    JS_FN("UnsafePutElements",               intrinsic_UnsafePutElements,               3,0),
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
 
