@@ -89,8 +89,7 @@ function todoAssertAreaPlacements(areaId, expectedPlacements) {
 }
 
 function getAreaWidgetIds(areaId) {
-  let widgetAry = CustomizableUI.getWidgetsInArea(areaId);
-  return widgetAry.map(x => x.id);
+  return CustomizableUI.getWidgetIdsInArea(areaId);
 }
 
 function simulateItemDrag(toDrag, target) {
