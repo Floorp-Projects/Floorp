@@ -2031,7 +2031,7 @@ OverflowableToolbar.prototype = {
   init: function() {
     this._target = this._toolbar.customizationTarget;
     let doc = this._toolbar.ownerDocument;
-    this._list = doc.getElementById("widget-overflow-list");
+    this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
     this._toolbar.customizationTarget.addEventListener("overflow", this);
 
     let window = doc.defaultView;

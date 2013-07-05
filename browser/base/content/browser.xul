@@ -528,6 +528,7 @@
              defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button"
              customizationtarget="nav-bar-customizationtarget"
              overflowbutton="nav-bar-overflow-button"
+             overflowtarget="widget-overflow-list"
              context="toolbar-context-menu">
 
       <hbox id="nav-bar-customizationtarget" class="customization-target" flex="1">
