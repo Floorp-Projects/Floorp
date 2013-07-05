@@ -121,11 +121,17 @@ function test() {
     widthBeforeClose = content.innerWidth;
     heightBeforeClose = content.innerHeight;
 
-    mgr.once("off", function() {executeSoon(restart)});
+    info("XXX BUG 851296: instance.closing: " + !!instance.closing);
+
+    mgr.once("off", function() {
+      info("XXX BUG 851296: 'off' received.");
+      executeSoon(restart);
+    });
     EventUtils.synthesizeKey("VK_ESCAPE", {});
   }
 
   function restart() {
+    info("XXX BUG 851296: restarting.");
     mgr.once("on", function() {executeSoon(onUIOpen2)});
     synthesizeKeyFromKeyTag("key_responsiveUI");
   }

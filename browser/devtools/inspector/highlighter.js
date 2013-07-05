@@ -95,6 +95,7 @@ Highlighter.prototype = {
 
   _init: function Highlighter__init()
   {
+    this.toggleLockState = this.toggleLockState.bind(this);
     this.unlockAndFocus = this.unlockAndFocus.bind(this);
     this.updateInfobar = this.updateInfobar.bind(this);
     this.highlight = this.highlight.bind(this);
@@ -319,6 +320,19 @@ Highlighter.prototype = {
   },
 
   /**
+   * Toggle between locked and unlocked
+   */
+  toggleLockState: function() {
+    if (this.locked) {
+      this.startNode = this.selection.node;
+      this.unlockAndFocus();
+    } else {
+      this.selection.setNode(this.startNode);
+      this.lock();
+    }
+  },
+
+  /**
    * Focus the browser before unlocking.
    */
   unlockAndFocus: function Highlighter_unlockAndFocus() {
@@ -417,7 +431,7 @@ Highlighter.prototype = {
     this.inspectButton.className = "highlighter-nodeinfobar-button highlighter-nodeinfobar-inspectbutton"
     let toolbarInspectButton = this.inspector.panelDoc.getElementById("inspector-inspect-toolbutton");
     this.inspectButton.setAttribute("tooltiptext", toolbarInspectButton.getAttribute("tooltiptext"));
-    this.inspectButton.addEventListener("command", this.unlockAndFocus);
+    this.inspectButton.addEventListener("command", this.toggleLockState);
 
     let nodemenu = this.chromeDoc.createElement("toolbarbutton");
     nodemenu.setAttribute("type", "menu");

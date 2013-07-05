@@ -57,8 +57,29 @@ function setupHighlighterTests()
   ok(h1, "we have the header");
 
   let i = getActiveInspector();
+  i.selection.setNode(div);
   i.highlighter.unlockAndFocus();
   i.highlighter.outline.setAttribute("disable-transitions", "true");
+
+  executeSoon(function() {
+    i.selection.once("new-node", performToggleComparisons);
+    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+  });
+}
+
+function performToggleComparisons(evt)
+{
+  let i = getActiveInspector();
+
+  i.highlighter.toggleLockState();
+  ok(i.highlighter.locked, "highlighter locks");
+  is(i.selection.node, div);
+  i.highlighter.toggleLockState();
+  ok(!i.highlighter.locked, "highlighter unlocks");
+
+  i.highlighter.toggleLockState();
+  ok(i.highlighter.locked, "highlighter locks if selection is unchanged");
+  i.highlighter.toggleLockState();
 
   executeSoon(function() {
     i.selection.once("new-node", performTestComparisons);
