@@ -37,7 +37,7 @@ class IonBuilder : public MIRGenerator
         // Normal write like a[b] = c.
         SetElem_Normal,
 
-        // Write due to UnsafeSetElement:
+        // Write due to UnsafePutElements:
         // - assumed to be in bounds,
         // - not checked for data races
         SetElem_Unsafe,
@@ -485,7 +485,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineRegExpTest(CallInfo &callInfo);
 
     // Array intrinsics.
-    InliningStatus inlineUnsafeSetElement(CallInfo &callInfo);
+    InliningStatus inlineUnsafePutElements(CallInfo &callInfo);
     bool inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base);
     bool inlineUnsafeSetTypedArrayElement(CallInfo &callInfo, uint32_t base, int arrayType);
     InliningStatus inlineNewDenseArray(CallInfo &callInfo);

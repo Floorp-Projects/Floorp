@@ -1418,8 +1418,8 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
                 }
             }
 
-            if (native == intrinsic_UnsafeSetElement) {
-                // UnsafeSetElement(arr0, idx0, elem0, ..., arrN, idxN, elemN)
+            if (native == intrinsic_UnsafePutElements) {
+                // UnsafePutElements(arr0, idx0, elem0, ..., arrN, idxN, elemN)
                 // is (basically) equivalent to arri[idxi] = elemi for i = 0...N
                 JS_ASSERT((callsite->argumentCount % 3) == 0);
                 for (size_t i = 0; i < callsite->argumentCount; i += 3) {
