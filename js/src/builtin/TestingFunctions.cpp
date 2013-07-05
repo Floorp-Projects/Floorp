@@ -240,7 +240,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.get(0) == BooleanValue(true))
-        cx->runtime()->gcStoreBuffer.setOverflowed();
+        cx->runtime()->gcStoreBuffer.setAboutToOverflow();
 
     MinorGC(cx->runtime(), gcreason::API);
 #endif
@@ -993,9 +993,9 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  GC via schedulegc."),
 
     JS_FN_HELP("minorgc", ::MinorGC, 0, 0,
-"minorgc([overflow])",
-"  Run a minor collector on the Nursery. When overflow is true, marks the\n"
-"  store buffer as overflowed before collecting."),
+"minorgc([aboutToOverflow])",
+"  Run a minor collector on the Nursery. When aboutToOverflow is true, marks\n"
+"  the store buffer as about-to-overflow before collecting."),
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
