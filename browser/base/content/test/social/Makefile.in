@@ -27,6 +27,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_social_mozSocial_API.js \
                  browser_social_isVisible.js \
                  browser_social_chatwindow.js \
+                 browser_social_chatwindow_resize.js \
                  browser_social_chatwindowfocus.js \
                  browser_social_multiprovider.js \
                  browser_social_errorPage.js \
