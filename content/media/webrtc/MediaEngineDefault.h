@@ -55,6 +55,10 @@ public:
                           StreamTime aDesiredTime,
                           TrackTicks &aLastEndTime) {}
 
+  virtual bool IsFake() {
+    return true;
+  }
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
@@ -96,6 +100,10 @@ public:
                           TrackID aId,
                           StreamTime aDesiredTime,
                           TrackTicks &aLastEndTime) {}
+
+  virtual bool IsFake() {
+    return true;
+  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
