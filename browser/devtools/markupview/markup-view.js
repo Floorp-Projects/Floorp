@@ -312,11 +312,13 @@ MarkupView.prototype = {
     } else {
       var container = new RootContainer(this, aNode);
       this._elt.appendChild(container.elt);
+
+      if (this._rootNode) {
+        this._rootNode.removeEventListener("load", this, true);
+      }
+
       this._rootNode = aNode;
-      aNode.addEventListener("load", function MP_watch_contentLoaded(aEvent) {
-        // Fake a childList mutation here.
-        this._mutationObserver([{target: aEvent.target, type: "childList"}]);
-      }.bind(this), true);
+      aNode.addEventListener("load", this, true);
     }
 
     this._containers.set(aNode, container);
@@ -332,6 +334,11 @@ MarkupView.prototype = {
       this.importNode(parent, true);
     }
     return container;
+  },
+
+  handleEvent: function MT_handleEvent(aEvent) {
+    // Fake a childList mutation here.
+    this._mutationObserver([{target: aEvent.target, type: "childList"}]);
   },
 
   /**
@@ -648,7 +655,7 @@ MarkupView.prototype = {
     this._frame.contentWindow.removeEventListener("underflow", this._boundResizePreview, true);
     delete this._boundUpdatePreview;
 
-    this._frame.contentWindow.removeEventListener("keydown", this._boundKeyDown, true);
+    this._frame.contentWindow.removeEventListener("keydown", this._boundKeyDown, false);
     delete this._boundKeyDown;
 
     this._inspector.selection.off("new-node", this._boundOnNewSelection);
@@ -659,6 +666,11 @@ MarkupView.prototype = {
     delete this._containers;
     this._observer.disconnect();
     delete this._observer;
+
+    if (this._rootNode) {
+      this._rootNode.removeEventListener("load", this, true);
+      delete this._rootNode;
+    }
   },
 
   /**

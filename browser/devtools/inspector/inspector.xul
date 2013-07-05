@@ -72,7 +72,7 @@
           tooltiptext="&inspector.selectButton.tooltip;"
           class="devtools-toolbarbutton"
           hidden="true"
-          oncommand="inspector.highlighter.unlockAndFocus()"/>
+          oncommand="inspector.highlighter.toggleLockState()"/>
         <arrowscrollbox id="inspector-breadcrumbs"
           class="breadcrumbs-widget-container"
           flex="1" orient="horizontal"
