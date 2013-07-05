@@ -7,7 +7,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
-  "resource:///modules/AboutHomeUtils.jsm");
+  "resource:///modules/AboutHome.jsm");
 
 let gRightsVersion = Services.prefs.getIntPref("browser.rights.version");
 
@@ -106,14 +106,17 @@ let gTests = [
     let doc = gBrowser.contentDocument;
     let engineName = doc.documentElement.getAttribute("searchEngineName");
 
-    // We rely on the listener in browser.js being installed and fired before
-    // this one. If this ever changes, we should add an executeSoon() or similar.
     doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
       is(e.detail, engineName, "Detail is search engine name");
 
-      getNumberOfSearches(engineName).then(num => {
-        is(num, numSearchesBefore + 1, "One more search recorded.");
-        deferred.resolve();
+      // We use executeSoon() to ensure that this code runs after the
+      // count has been updated in browser.js, since it uses the same
+      // event.
+      executeSoon(function () {
+        getNumberOfSearches(engineName).then(num => {
+          is(num, numSearchesBefore + 1, "One more search recorded.");
+          deferred.resolve();
+        });
       });
     }, true, true);
 
@@ -275,19 +278,35 @@ let gTests = [
       if (engine.name != "POST Search")
         return;
 
-      Services.search.defaultEngine = engine;
-
-      registerCleanupFunction(function() {
-        Services.search.removeEngine(engine);
-        Services.search.defaultEngine = currEngine;
-      });
-
-
       // Ready to execute the tests!
       let needle = "Search for something awesome.";
       let document = gBrowser.selectedTab.linkedBrowser.contentDocument;
       let searchText = document.getElementById("searchText");
 
+      // We're about to change the search engine. Once the change has
+      // propagated to the about:home content, we want to perform a search.
+      let mutationObserver = new MutationObserver(function (mutations) {
+        for (let mutation of mutations) {
+          if (mutation.attributeName == "searchEngineURL") {
+            searchText.value = needle;
+            searchText.focus();
+            EventUtils.synthesizeKey("VK_RETURN", {});
+          }
+        }
+      });
+      mutationObserver.observe(document.documentElement, { attributes: true });
+
+      // Change the search engine, triggering the observer above.
+      Services.search.defaultEngine = engine;
+
+      registerCleanupFunction(function() {
+        mutationObserver.disconnect();
+        Services.search.removeEngine(engine);
+        Services.search.defaultEngine = currEngine;
+      });
+
+
+      // When the search results load, check them for correctness.
       waitForLoad(function() {
         let loadedText = gBrowser.contentDocument.body.textContent;
         ok(loadedText, "search page loaded");
@@ -295,10 +314,6 @@ let gTests = [
            "Search text should arrive correctly");
         deferred.resolve();
       });
-
-      searchText.value = needle;
-      searchText.focus();
-      EventUtils.synthesizeKey("VK_RETURN", {});
     };
     Services.obs.addObserver(searchObserver, "browser-search-engine-modified", false);
     registerCleanupFunction(function () {
