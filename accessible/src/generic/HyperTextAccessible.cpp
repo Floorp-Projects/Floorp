@@ -1087,6 +1087,18 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_START: {
+      // Empty last line doesn't have own frame (a previous line contains '\n'
+      // character instead) thus we can't operate on last line separately
+      // from previous line.
+      if (offset == CharacterCount()) {
+        nsAutoString lastChar;
+        GetText(offset -1, -1, lastChar);
+        if (lastChar.EqualsLiteral("\n")) {
+          *aStartOffset = *aEndOffset = offset;
+          return NS_OK;
+        }
+      }
+
       // Home key, arrow down and if not on last line then home key.
       *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectLine);

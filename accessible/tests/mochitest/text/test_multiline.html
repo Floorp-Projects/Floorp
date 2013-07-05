@@ -186,12 +186,7 @@
       testTextAtOffset(9, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
       testTextAtOffset(13, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
       testTextAtOffset(18, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
-      testTextAtOffset(19, BOUNDARY_LINE_START, "", 19, 19,
-                       "div", kTodo, kTodo, kOk,
-                       "divbr", kTodo, kTodo, kOk,
-                       "editable", kTodo, kTodo, kOk,
-                       "editablebr", kTodo, kTodo, kOk,
-                       "textarea", kTodo, kTodo, kOk);
+      testTextAtOffset(19, BOUNDARY_LINE_START, "", 19, 19, IDs);
 
       // BOUNDARY_LINE_END
       testTextAtOffset(0, BOUNDARY_LINE_END, "oneword", 0, 7,
