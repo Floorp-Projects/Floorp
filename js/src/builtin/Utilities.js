@@ -14,7 +14,7 @@
          MakeConstructible: false, DecompileArg: false,
          RuntimeDefaultLocale: false,
          ParallelDo: false, ParallelSlices: false, NewDenseArray: false,
-         UnsafeSetElement: false, ShouldForceSequential: false,
+         UnsafePutElements: false, ShouldForceSequential: false,
          ParallelTestsShouldPass: false,
          Dump: false,
          callFunction: false,
