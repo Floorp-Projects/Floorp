@@ -142,12 +142,13 @@ def main(argv):
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
         flags = [
-                      ['--ion-eager'], # implies --baseline-eager
-                      ['--baseline-eager'],
-                      ['--baseline-eager', '--no-ti', '--no-fpu'],
-                      ['--no-baseline', '--no-ion'],
-                      ['--no-baseline', '--no-ion', '--no-ti'],
-                    ]
+            [], # no flags, normal baseline and ion
+            ['--ion-eager'], # implies --baseline-eager
+            ['--baseline-eager'],
+            ['--baseline-eager', '--no-ti', '--no-fpu'],
+            ['--no-baseline', '--no-ion'],
+            ['--no-baseline', '--no-ion', '--no-ti'],
+        ]
         for test in test_list:
             for variant in flags:
                 new_test = test.copy()

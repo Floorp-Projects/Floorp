@@ -6401,12 +6401,13 @@ function formatURL(aFormat, aIsPref) {
  */
 var gIdentityHandler = {
   // Mode strings used to control CSS display
-  IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
-  IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
-  IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
-  IDENTITY_MODE_MIXED_CONTENT    : "unknownIdentity mixedContent",  // SSL with unauthenticated content
-  IDENTITY_MODE_MIXED_ACTIVE_CONTENT    : "unknownIdentity mixedContent mixedActiveContent",  // SSL with unauthenticated content
-  IDENTITY_MODE_CHROMEUI         : "chromeUI",         // Part of the product's UI
+  IDENTITY_MODE_IDENTIFIED                             : "verifiedIdentity", // High-quality identity information
+  IDENTITY_MODE_DOMAIN_VERIFIED                        : "verifiedDomain",   // Minimal SSL CA-signed domain verification
+  IDENTITY_MODE_UNKNOWN                                : "unknownIdentity",  // No trusted identity information
+  IDENTITY_MODE_MIXED_DISPLAY_LOADED                   : "unknownIdentity mixedContent mixedDisplayContent",  // SSL with unauthenticated display content
+  IDENTITY_MODE_MIXED_ACTIVE_LOADED                    : "unknownIdentity mixedContent mixedActiveContent",  // SSL with unauthenticated active (and perhaps also display) content
+  IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED    : "unknownIdentity mixedContent",  // SSL with unauthenticated display content; unauthenticated active content is blocked.
+  IDENTITY_MODE_CHROMEUI                               : "chromeUI",         // Part of the product's UI
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
@@ -6418,15 +6419,17 @@ var gIdentityHandler = {
     delete this._encryptionLabel;
     this._encryptionLabel = {};
     this._encryptionLabel[this.IDENTITY_MODE_DOMAIN_VERIFIED] =
-      gNavigatorBundle.getString("identity.encrypted");
+      gNavigatorBundle.getString("identity.encrypted2");
     this._encryptionLabel[this.IDENTITY_MODE_IDENTIFIED] =
-      gNavigatorBundle.getString("identity.encrypted");
+      gNavigatorBundle.getString("identity.encrypted2");
     this._encryptionLabel[this.IDENTITY_MODE_UNKNOWN] =
       gNavigatorBundle.getString("identity.unencrypted");
-    this._encryptionLabel[this.IDENTITY_MODE_MIXED_CONTENT] =
-      gNavigatorBundle.getString("identity.mixed_content");
-    this._encryptionLabel[this.IDENTITY_MODE_MIXED_ACTIVE_CONTENT] =
-      gNavigatorBundle.getString("identity.mixed_content");
+    this._encryptionLabel[this.IDENTITY_MODE_MIXED_DISPLAY_LOADED] =
+      gNavigatorBundle.getString("identity.mixed_display_loaded");
+    this._encryptionLabel[this.IDENTITY_MODE_MIXED_ACTIVE_LOADED] =
+      gNavigatorBundle.getString("identity.mixed_active_loaded");
+    this._encryptionLabel[this.IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED] =
+      gNavigatorBundle.getString("identity.mixed_display_loaded_active_blocked");
     return this._encryptionLabel;
   },
   get _identityPopup () {
@@ -6586,9 +6589,12 @@ var gIdentityHandler = {
     } else if (state & nsIWebProgressListener.STATE_IS_BROKEN) {
       if ((state & nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) &&
           gPrefService.getBoolPref("security.mixed_content.block_active_content")) {
-        this.setMode(this.IDENTITY_MODE_MIXED_ACTIVE_CONTENT);
+        this.setMode(this.IDENTITY_MODE_MIXED_ACTIVE_LOADED);
+      } else if ((state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) &&
+                gPrefService.getBoolPref("security.mixed_content.block_active_content")) {
+        this.setMode(this.IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED);
       } else {
-        this.setMode(this.IDENTITY_MODE_MIXED_CONTENT);
+        this.setMode(this.IDENTITY_MODE_MIXED_DISPLAY_LOADED);
       }
     } else {
       this.setMode(this.IDENTITY_MODE_UNKNOWN);

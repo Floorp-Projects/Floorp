@@ -242,6 +242,17 @@ public:
    */
   static void SetFrameTime(const TimeStamp& aMilliseconds);
 
+  /**
+   * Transform and intersect aPoint with the layer tree returning the appropriate
+   * AsyncPanZoomController for this point.
+   * aRelativePointOut Return the point transformed into the layer coordinates
+   * relative to the scroll origin for this layer.
+   */
+  static void GetAPZCAtPoint(const ContainerLayer& aLayerTree,
+                             const ScreenIntPoint& aPoint,
+                             AsyncPanZoomController** aApzcOut,
+                             LayerIntPoint* aRelativePointOut);
+
 protected:
   /**
    * Helper method for touches beginning. Sets everything up for panning and any

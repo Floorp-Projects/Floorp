@@ -14,6 +14,7 @@
 
 #include "jsdbgapi.h"
 #include "jsinfer.h"
+#include "jsobj.h"
 #include "jsopcode.h"
 
 #include "gc/Barrier.h"

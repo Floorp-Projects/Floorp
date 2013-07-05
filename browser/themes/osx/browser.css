@@ -3064,6 +3064,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
               0 0 3px 2px -moz-mac-focusring;
 }
 
+#social-notification-icon > .toolbarbutton-icon {
+  height: 16px;
+}
+
 .default-notification-icon,
 #default-notification-icon {
   list-style-image: url(chrome://global/skin/icons/information-16.png);

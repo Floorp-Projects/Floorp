@@ -105,7 +105,8 @@ public final class ThumbnailHelper {
         mWidth &= ~0x1; // Ensure the width is always an even number (bug 776906)
         mHeight = Math.round(mWidth * THUMBNAIL_ASPECT_RATIO);
 
-        int capacity = mWidth * mHeight * 2; // Multiply by 2 for 16bpp
+        int pixelSize = (GeckoAppShell.getScreenDepth() == 24) ? 4 : 2;
+        int capacity = mWidth * mHeight * pixelSize;
         if (mBuffer == null || mBuffer.capacity() != capacity) {
             if (mBuffer != null) {
                 mBuffer = DirectBufferAllocator.free(mBuffer);
@@ -182,7 +183,23 @@ public final class ThumbnailHelper {
     private void processThumbnailData(Tab tab, ByteBuffer data) {
         Bitmap b = tab.getThumbnailBitmap(mWidth, mHeight);
         data.position(0);
-        b.copyPixelsFromBuffer(data);
+        if (b.getConfig() == Bitmap.Config.RGB_565) {
+            b.copyPixelsFromBuffer(data);
+        } else {
+            // Unfortunately, Gecko's 32-bit format is BGRA and Android's is
+            // ARGB, so we need to manually swizzle.
+            for (int y = 0; y < mHeight; y++) {
+                for (int x = 0; x < mWidth; x++) {
+                    int index = (y * mWidth + x) * 4;
+                    int bgra = data.getInt(index);
+                    int argb = ((bgra << 24) & 0xFF000000)
+                             | ((bgra << 8) & 0x00FF0000)
+                             | ((bgra >> 8) & 0x0000FF00)
+                             | ((bgra >> 24) & 0x000000FF);
+                    b.setPixel(x, y, argb);
+                }
+            }
+        }
         setTabThumbnail(tab, b, null);
     }
 

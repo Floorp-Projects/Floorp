@@ -2694,6 +2694,8 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                       mSize.height - framerect.YMost(),
                       framerect.x);
 
+  frame->ApplyDirtToSurfaces();
+
   frame->Draw(aContext, aFilter, userSpaceToImageSpace, aFill, padding, subimage,
               aFlags);
 }

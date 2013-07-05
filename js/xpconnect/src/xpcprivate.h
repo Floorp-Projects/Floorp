@@ -169,6 +169,7 @@
 
 #include "SandboxPrivate.h"
 #include "BackstagePass.h"
+#include "nsCxPusher.h"
 
 #ifdef XP_WIN
 // Nasty MS defines
@@ -1023,17 +1024,6 @@ private:
 //
 // Note that most accessors are inlined.
 
-// This is a dumb little thing to ensure that the XPCCallContext destructor
-// calls JS_DestroyContext after the JSAutoRequest is destroyed (if at all).
-// This will go away in a few days when bug 860085 removes this machinery.
-class AutoJSContextDestroyer
-{
-    JSContext *mCx;
-  public:
-    AutoJSContextDestroyer(JSContext *aCx) : mCx(aCx) {}
-    ~AutoJSContextDestroyer() { JS_DestroyContext(mCx); }
-};
-
 class MOZ_STACK_CLASS XPCCallContext : public nsAXPCNativeCallContext
 {
 public:
@@ -1097,8 +1087,6 @@ public:
     inline uint16_t                     GetMethodIndex() const ;
     inline void                         SetMethodIndex(uint16_t index) ;
 
-    inline void     SetDestroyJSContextInDestructor();
-
     inline jsid GetResolveName() const;
     inline jsid SetResolveName(JS::HandleId name);
 
@@ -1147,16 +1135,13 @@ inline void CHECK_STATE(int s) const {NS_ASSERTION(mState >= s, "bad state");}
 #endif
 
 private:
-    mozilla::Maybe<AutoJSContextDestroyer>   mCxDestroyer;
-
-    JSAutoRequest                   mAr;
+    mozilla::AutoPushJSContext      mPusher;
     State                           mState;
 
-    nsXPConnect*                    mXPC;
+    nsRefPtr<nsXPConnect>           mXPC;
 
     XPCContext*                     mXPCContext;
     JSContext*                      mJSContext;
-    JSBool                          mContextPopRequired;
 
     XPCContext::LangType            mCallerLanguage;
 
@@ -3225,6 +3210,18 @@ struct XPCJSContextInfo {
     bool savedFrameChain;
 };
 
+namespace xpc {
+
+// These functions are used in a few places where a callback model makes it
+// impossible to push a JSContext using one of our stack-scoped classes. We
+// depend on those stack-scoped classes to maintain nsIScriptContext
+// invariants, so these functions may only be used of the context is not
+// associated with an nsJSContext/nsIScriptContext.
+bool PushJSContextNoScriptContext(JSContext *aCx);
+void PopJSContextNoScriptContext();
+
+} /* namespace xpc */
+
 class XPCJSContextStack
 {
 public:
@@ -3245,8 +3242,6 @@ public:
         return mStack.IsEmpty() ? NULL : mStack[mStack.Length() - 1].cx;
     }
 
-    JSContext *Pop();
-    bool Push(JSContext *cx);
     JSContext *GetSafeJSContext();
     bool HasJSContext(JSContext *cx);
 
@@ -3254,6 +3249,15 @@ public:
     { return &mStack; }
 
 private:
+    friend class mozilla::AutoCxPusher;
+    friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);;
+    friend void xpc::PopJSContextNoScriptContext();
+
+    // We make these private so that stack manipulation can only happen
+    // through one of the above friends.
+    JSContext *Pop();
+    bool Push(JSContext *cx);
+
     AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
     JSContext*  mOwnSafeJSContext;
@@ -3869,11 +3873,6 @@ JSObject* NewOutObject(JSContext* cx, JSObject* scope);
 bool IsOutObject(JSContext* cx, JSObject* obj);
 
 nsresult HasInstance(JSContext *cx, JS::HandleObject objArg, const nsID *iid, bool *bp);
-
-// Internal use only.
-bool PushJSContext(JSContext *aCx);
-void PopJSContext();
-bool IsJSContextOnStack(JSContext *aCx);
 
 } // namespace xpc
 

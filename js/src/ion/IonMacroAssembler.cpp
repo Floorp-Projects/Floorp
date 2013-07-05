@@ -22,6 +22,8 @@
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 
+#include "vm/Shape-inl.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -1078,6 +1080,25 @@ MacroAssembler::handleFailure(ExecutionMode executionMode)
     // Doesn't actually emit code, but balances the leave()
     if (sps_)
         sps_->reenter(*this, InvalidReg);
+}
+
+void
+MacroAssembler::pushCalleeToken(Register callee, ExecutionMode mode)
+{
+    // Tag and push a callee, then clear the tag after pushing. This is needed
+    // if we dereference the callee pointer after pushing it as part of a
+    // frame.
+    tagCallee(callee, mode);
+    push(callee);
+    clearCalleeTag(callee, mode);
+}
+
+void
+MacroAssembler::PushCalleeToken(Register callee, ExecutionMode mode)
+{
+    tagCallee(callee, mode);
+    Push(callee);
+    clearCalleeTag(callee, mode);
 }
 
 void

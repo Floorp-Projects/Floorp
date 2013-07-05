@@ -163,6 +163,12 @@ already_AddRefed<AudioBuffer>
 AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
                           bool aMixToMono, ErrorResult& aRv)
 {
+  // Do not accept this method unless the legacy pref has been set.
+  if (!Preferences::GetBool("media.webaudio.legacy.AudioContext")) {
+    aRv.ThrowNotEnoughArgsError();
+    return nullptr;
+  }
+
   // Sniff the content of the media.
   // Failed type sniffing will be handled by SyncDecodeMedia.
   nsAutoCString contentType;
@@ -528,6 +534,20 @@ AudioContext::StartRendering()
   MOZ_ASSERT(mIsOffline, "This should only be called on OfflineAudioContext");
 
   mDestination->StartRendering();
+}
+
+void
+AudioContext::Mute() const
+{
+  MOZ_ASSERT(!mIsOffline);
+  mDestination->Mute();
+}
+
+void
+AudioContext::Unmute() const
+{
+  MOZ_ASSERT(!mIsOffline);
+  mDestination->Unmute();
 }
 
 }

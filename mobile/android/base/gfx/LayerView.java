@@ -8,6 +8,7 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
@@ -119,6 +120,15 @@ public class LayerView extends FrameLayout {
     }
 
     public void geckoConnected() {
+        // See if we want to force 16-bit colour before doing anything
+        PrefsHelper.getPref("gfx.android.rgb16.force", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, boolean force16bit) {
+                if (force16bit) {
+                    GeckoAppShell.setScreenDepthOverride(16);
+                }
+            }
+        });
+
         mLayerClient.notifyGeckoReady();
         addTouchInterceptor(new TouchEventInterceptor() {
             private PointF mInitialTouchPoint = null;
