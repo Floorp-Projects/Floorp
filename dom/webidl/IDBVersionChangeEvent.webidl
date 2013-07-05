@@ -3,14 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * IDBVersionChangeEvent is defined in:
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html
+ * The origin of this IDL file is
+ * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBVersionChangeEvent
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface IDBVersionChangeEvent : Event {
-  readonly attribute unsigned long long  oldVersion;
-  readonly attribute unsigned long long? newVersion;
+dictionary IDBVersionChangeEventInit : EventInit {
+    unsigned long long  oldVersion = 0;
+    unsigned long long? newVersion = null;
 };
+
+[Constructor(DOMString type, optional IDBVersionChangeEventInit eventInitDict)]
+interface IDBVersionChangeEvent : Event {
+    readonly    attribute unsigned long long  oldVersion;
+    readonly    attribute unsigned long long? newVersion;
+};
+
