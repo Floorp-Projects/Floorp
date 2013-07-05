@@ -438,7 +438,7 @@ public:
    * This getter can be used anytime. Ownership is retained by the layer
    * manager.
    */
-  LayerUserData* GetUserData(void* aKey)
+  LayerUserData* GetUserData(void* aKey) const
   {
     return static_cast<LayerUserData*>(mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
   }
@@ -895,22 +895,19 @@ public:
   const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
+  const Layer* GetNextSibling() const { return mNextSibling; }
   Layer* GetPrevSibling() { return mPrevSibling; }
-  virtual Layer* GetFirstChild() { return nullptr; }
-  virtual Layer* GetLastChild() { return nullptr; }
-  const gfx3DMatrix GetTransform();
-  const gfx3DMatrix& GetBaseTransform() { return mTransform; }
-  float GetPostXScale() { return mPostXScale; }
-  float GetPostYScale() { return mPostYScale; }
+  const Layer* GetPrevSibling() const { return mPrevSibling; }
+  virtual Layer* GetFirstChild() const { return nullptr; }
+  virtual Layer* GetLastChild() const { return nullptr; }
+  const gfx3DMatrix GetTransform() const;
+  const gfx3DMatrix& GetBaseTransform() const { return mTransform; }
+  float GetPostXScale() const { return mPostXScale; }
+  float GetPostYScale() const { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
-  Layer* GetMaskLayer() { return mMaskLayer; }
-
-  // These functions allow attaching an AsyncPanZoomController to this layer,
-  // and can be used anytime.
-  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
-  AsyncPanZoomController* GetAsyncPanZoomController();
+  Layer* GetMaskLayer() const { return mMaskLayer; }
 
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
@@ -996,7 +993,7 @@ public:
    * This getter can be used anytime. Ownership is retained by the layer
    * manager.
    */
-  LayerUserData* GetUserData(void* aKey)
+  LayerUserData* GetUserData(void* aKey) const
   {
     return static_cast<LayerUserData*>(mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
   }
@@ -1023,6 +1020,7 @@ public:
    * a ContainerLayer.
    */
   virtual ContainerLayer* AsContainerLayer() { return nullptr; }
+  virtual const ContainerLayer* AsContainerLayer() const { return nullptr; }
 
    /**
     * Dynamic cast to a RefLayer. Returns null if this is not a
@@ -1381,6 +1379,9 @@ protected:
  */
 class ContainerLayer : public Layer {
 public:
+
+  ~ContainerLayer();
+
   /**
    * CONSTRUCTION PHASE ONLY
    * Insert aChild into the child list of this container. aChild must
@@ -1418,6 +1419,12 @@ public:
     }
   }
 
+  // These functions allow attaching an AsyncPanZoomController to this layer,
+  // and can be used anytime.
+  // A container layer has an APZC only-if GetFrameMetrics().IsScrollable()
+  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
+  AsyncPanZoomController* GetAsyncPanZoomController() const;
+
   void SetPreScale(float aXScale, float aYScale)
   {
     if (mPreXScale == aXScale && mPreYScale == aYScale) {
@@ -1449,14 +1456,15 @@ public:
   // These getters can be used anytime.
 
   virtual ContainerLayer* AsContainerLayer() { return this; }
+  virtual const ContainerLayer* AsContainerLayer() const { return this; }
 
-  virtual Layer* GetFirstChild() { return mFirstChild; }
-  virtual Layer* GetLastChild() { return mLastChild; }
-  const FrameMetrics& GetFrameMetrics() { return mFrameMetrics; }
-  float GetPreXScale() { return mPreXScale; }
-  float GetPreYScale() { return mPreYScale; }
-  float GetInheritedXScale() { return mInheritedXScale; }
-  float GetInheritedYScale() { return mInheritedYScale; }
+  virtual Layer* GetFirstChild() const { return mFirstChild; }
+  virtual Layer* GetLastChild() const { return mLastChild; }
+  const FrameMetrics& GetFrameMetrics() const { return mFrameMetrics; }
+  float GetPreXScale() const { return mPreXScale; }
+  float GetPreYScale() const { return mPreYScale; }
+  float GetInheritedXScale() const { return mInheritedXScale; }
+  float GetInheritedYScale() const { return mInheritedYScale; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
@@ -1503,20 +1511,7 @@ protected:
   void DidInsertChild(Layer* aLayer);
   void DidRemoveChild(Layer* aLayer);
 
-  ContainerLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData),
-      mFirstChild(nullptr),
-      mLastChild(nullptr),
-      mPreXScale(1.0f),
-      mPreYScale(1.0f),
-      mInheritedXScale(1.0f),
-      mInheritedYScale(1.0f),
-      mUseIntermediateSurface(false),
-      mSupportsComponentAlphaChildren(false),
-      mMayHaveReadbackChild(false)
-  {
-    mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
-  }
+  ContainerLayer(LayerManager* aManager, void* aImplData);
 
   /**
    * A default implementation of ComputeEffectiveTransforms for use by OpenGL
@@ -1534,6 +1529,7 @@ protected:
   Layer* mFirstChild;
   Layer* mLastChild;
   FrameMetrics mFrameMetrics;
+  nsRefPtr<AsyncPanZoomController> mAPZC;
   float mPreXScale;
   float mPreYScale;
   // The resolution scale inherited from the parent layer. This will already

@@ -769,20 +769,23 @@ LinuxNativeApp.prototype = {
    */
   _translateCategories: function() {
     let translations = {
-      "books-reference": "Education;Literature",
+      "books": "Education;Literature",
       "business": "Finance",
       "education": "Education",
-      "entertainment-sports": "Amusement;Sports",
+      "entertainment": "Amusement",
+      "sports": "Sports",
       "games": "Game",
       "health-fitness": "MedicalSoftware",
       "lifestyle": "Amusement",
       "music": "Audio;Music",
       "news-weather": "News",
-      "photos-media": "AudioVideo",
+      "photo-video": "Video;AudioVideo;Photography",
       "productivity": "Office",
       "shopping": "Amusement",
       "social": "Chat",
       "travel": "Amusement",
+      "reference": "Science;Education;Documentation",
+      "maps-navigation": "Maps",
       "utilities": "Utility"
     };
 

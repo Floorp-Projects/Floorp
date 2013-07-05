@@ -1310,7 +1310,7 @@ private:
     // Set if a node in the node's parent chain has dir=auto.
     NodeAncestorHasDirAuto,
     // Set if the element is in the scope of a scoped style sheet; this flag is
-    // only accurate for elements bounds to a document
+    // only accurate for elements bound to a document
     ElementIsInStyleScope,
     // Set if the element is a scoped style sheet root
     ElementIsScopedStyleRoot,

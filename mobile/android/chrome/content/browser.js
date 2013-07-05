@@ -2800,7 +2800,7 @@ Tab.prototype = {
     if (BrowserApp.selectedTab == this) {
       if (resolution != this._drawZoom) {
         this._drawZoom = resolution;
-        cwu.setResolution(resolution, resolution);
+        cwu.setResolution(resolution / window.devicePixelRatio, resolution / window.devicePixelRatio);
       }
     } else if (!fuzzyEquals(resolution, zoom)) {
       dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
@@ -3080,7 +3080,7 @@ Tab.prototype = {
       if (BrowserApp.selectedTab == this) {
         let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         this._drawZoom = aZoom;
-        cwu.setResolution(aZoom, aZoom);
+        cwu.setResolution(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
       }
     }
   },
@@ -3675,7 +3675,7 @@ Tab.prototype = {
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
 
-    let scaleRatio = aMetadata.scaleRatio;
+    let scaleRatio = window.devicePixelRatio;
 
     if (aMetadata.defaultZoom > 0)
       aMetadata.defaultZoom *= scaleRatio;
@@ -3716,8 +3716,8 @@ Tab.prototype = {
 
     let metadata = this.metadata;
     if (metadata.autoSize) {
-      viewportW = screenW / metadata.scaleRatio;
-      viewportH = screenH / metadata.scaleRatio;
+      viewportW = screenW / window.devicePixelRatio;
+      viewportH = screenH / window.devicePixelRatio;
     } else {
       viewportW = metadata.width;
       viewportH = metadata.height;
@@ -3811,7 +3811,7 @@ Tab.prototype = {
     sendMessageToJava({
       type: "Tab:ViewportMetadata",
       allowZoom: metadata.allowZoom,
-      defaultZoom: metadata.defaultZoom || metadata.scaleRatio,
+      defaultZoom: metadata.defaultZoom || window.devicePixelRatio,
       minZoom: metadata.minZoom || 0,
       maxZoom: metadata.maxZoom || 0,
       isRTL: metadata.isRTL,
@@ -5450,8 +5450,8 @@ var ViewportHandler = {
           break;
 
         let oldScreenWidth = gScreenWidth;
-        gScreenWidth = window.outerWidth;
-        gScreenHeight = window.outerHeight;
+        gScreenWidth = window.outerWidth * window.devicePixelRatio;
+        gScreenHeight = window.outerHeight * window.devicePixelRatio;
         let tabs = BrowserApp.tabs;
         for (let i = 0; i < tabs.length; i++)
           tabs[i].updateViewportSize(oldScreenWidth);
@@ -5551,23 +5551,6 @@ var ViewportHandler = {
     return Math.max(min, Math.min(max, num));
   },
 
-  // The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
-  // This is higher on higher-dpi displays, so pages stay about the same physical size.
-  getScaleRatio: function getScaleRatio() {
-    let prefValue = Services.prefs.getIntPref("browser.viewport.scaleRatio");
-    if (prefValue > 0)
-      return prefValue / 100;
-
-    let dpi = this.displayDPI;
-    if (dpi < 200) // Includes desktop displays, and LDPI and MDPI Android devices
-      return 1;
-    else if (dpi < 300) // Includes Nokia N900, and HDPI Android devices
-      return 1.5;
-
-    // For very high-density displays like the iPhone 4, calculate an integer ratio.
-    return Math.floor(dpi / 150);
-  },
-
   get displayDPI() {
     let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     delete this.displayDPI;
@@ -5603,7 +5586,6 @@ var ViewportHandler = {
  *   autoSize (boolean): Resize the CSS viewport when the window resizes.
  *   allowZoom (boolean): Let the user zoom in or out.
  *   isSpecified (boolean): Whether the page viewport is specified or not.
- *   scaleRatio (float): The device-pixel-to-CSS-px ratio.
  */
 function ViewportMetadata(aMetadata = {}) {
   this.width = ("width" in aMetadata) ? aMetadata.width : 0;
@@ -5614,7 +5596,6 @@ function ViewportMetadata(aMetadata = {}) {
   this.autoSize = ("autoSize" in aMetadata) ? aMetadata.autoSize : false;
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
   this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
-  this.scaleRatio = ViewportHandler.getScaleRatio();
   this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
   Object.seal(this);
 }
@@ -5628,7 +5609,6 @@ ViewportMetadata.prototype = {
   autoSize: null,
   allowZoom: null,
   isSpecified: null,
-  scaleRatio: null,
   isRTL: null,
 };
 

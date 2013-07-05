@@ -1195,6 +1195,18 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
             break;
         }
     }
+
+    /* TODO(ehugg): This block is for forward
+       compatibility with FF24.  Should be in FF23 only.
+       See Bug 886134 */
+#define DATACHANNEL_NEW_TRANSPORT "DTLS/SCTP"
+    if (mca_p->transport == SDP_TRANSPORT_UNSUPPORTED) {
+        if (cpr_strncasecmp(tmp, DATACHANNEL_NEW_TRANSPORT,
+            strlen(DATACHANNEL_NEW_TRANSPORT)) == 0) {
+            mca_p->transport = SDP_TRANSPORT_SCTPDTLS;
+        }
+    }
+
     if (mca_p->transport == SDP_TRANSPORT_UNSUPPORTED) {
         /* If we don't recognize or don't support the transport type,
          * just store the first num as the port.

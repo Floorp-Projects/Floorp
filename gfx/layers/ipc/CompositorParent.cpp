@@ -812,9 +812,10 @@ UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig
 {
   sIndirectLayerTrees[aId].mRoot = aRoot;
   sIndirectLayerTrees[aId].mTargetConfig = aTargetConfig;
-  if (ContainerLayer* root = aRoot->AsContainerLayer()) {
+  ContainerLayer* rootContainer = aRoot->AsContainerLayer();
+  if (rootContainer) {
     if (AsyncPanZoomController* apzc = sIndirectLayerTrees[aId].mController) {
-      apzc->NotifyLayersUpdated(root->GetFrameMetrics(), isFirstPaint);
+      apzc->NotifyLayersUpdated(rootContainer->GetFrameMetrics(), isFirstPaint);
     }
   }
 }

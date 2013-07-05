@@ -1106,10 +1106,10 @@ void
 XPCJSRuntime::CTypesActivityCallback(JSContext *cx, js::CTypesActivityType type)
 {
   if (type == js::CTYPES_CALLBACK_BEGIN) {
-    if (!Get()->GetJSContextStack()->Push(cx))
+    if (!xpc::PushJSContextNoScriptContext(cx))
       MOZ_CRASH();
   } else if (type == js::CTYPES_CALLBACK_END) {
-    Get()->GetJSContextStack()->Pop();
+    xpc::PopJSContextNoScriptContext();
   }
 }
 

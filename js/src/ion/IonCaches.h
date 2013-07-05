@@ -16,6 +16,9 @@ class JSFunction;
 class JSScript;
 
 namespace js {
+
+class TypedArrayObject;
+
 namespace ion {
 
 #define IONCACHE_KIND_LIST(_)                                   \
@@ -667,7 +670,8 @@ class GetElementIC : public RepatchIonCache
 
     bool attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj, const Value &idval, HandlePropertyName name);
     bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
-    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
+    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr,
+                                 const Value &idval);
     bool attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *obj);
 
     static bool

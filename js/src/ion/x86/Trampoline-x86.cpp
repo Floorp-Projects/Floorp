@@ -375,7 +375,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
 
     // Construct IonJSFrameLayout.
     masm.push(edx); // number of actual arguments
-    masm.push(eax); // calleeToken
+    masm.pushCalleeToken(eax, mode);
     masm.push(ebx); // descriptor
 
     // Call the target function.

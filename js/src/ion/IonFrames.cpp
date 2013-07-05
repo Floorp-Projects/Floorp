@@ -753,6 +753,26 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         }
     }
 #endif
+
+#ifdef JSGC_GENERATIONAL
+    if (trc->runtime->isHeapMinorCollecting()) {
+        // Minor GCs may move slots/elements allocated in the nursery. Update
+        // any slots/elements pointers stored in this frame.
+
+        GeneralRegisterSet slotsRegs = safepoint.slotsOrElementsSpills();
+        spill = frame.spillBase();
+        for (GeneralRegisterBackwardIterator iter(safepoint.allSpills()); iter.more(); iter++) {
+            --spill;
+            if (slotsRegs.has(*iter))
+                trc->runtime->gcNursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
+        }
+
+        while (safepoint.getSlotsOrElementsSlot(&slot)) {
+            HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
+            trc->runtime->gcNursery.forwardBufferPointer(slots);
+        }
+    }
+#endif
 }
 
 static void

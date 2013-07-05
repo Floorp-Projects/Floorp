@@ -140,7 +140,7 @@ this.EventManager.prototype = {
     // Don't bother with non-content events in firefox.
     if (Utils.MozBuildApp == 'browser' &&
         aEvent.eventType != EVENT_VIRTUALCURSOR_CHANGED &&
-        aEvent.accessibleDocument != Utils.CurrentContentDoc) {
+        aEvent.accessibleDocument.docType == 'window') {
       return;
     }
 

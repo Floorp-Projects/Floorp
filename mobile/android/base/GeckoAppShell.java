@@ -37,6 +37,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
@@ -134,6 +135,7 @@ public class GeckoAppShell
     static private final boolean LOGGING = false;
 
     static private int sDensityDpi = 0;
+    static private int sScreenDepth = 0;
 
     private static final EventDispatcher sEventDispatcher = new EventDispatcher();
 
@@ -1318,6 +1320,66 @@ public class GeckoAppShell
         }
 
         return sDensityDpi;
+    }
+
+    private static boolean isHighMemoryDevice() {
+        BufferedReader br = null;
+        FileReader fr = null;
+        try {
+            fr = new FileReader("/proc/meminfo");
+            if (fr == null)
+                return false;
+            br = new BufferedReader(fr);
+            String line = br.readLine();
+            while (line != null && !line.startsWith("MemTotal")) {
+                line = br.readLine();
+            }
+            String[] tokens = line.split("\\s+");
+            if (tokens.length >= 2 && Long.parseLong(tokens[1]) >= 786432 /* 768MB in kb*/) {
+                return true;
+            }
+        } catch (Exception ex) {
+        } finally {
+            try {
+                if (fr != null)
+                    fr.close();
+            } catch (IOException ioe) {}
+        }
+        return false;
+    }
+
+    /**
+     * Returns the colour depth of the default screen. This will either be
+     * 24 or 16.
+     */
+    public static synchronized int getScreenDepth() {
+        if (sScreenDepth == 0) {
+            sScreenDepth = 16;
+            if (getGeckoInterface() != null) {
+                switch (getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat()) {
+                    case PixelFormat.RGBA_8888 :
+                    case PixelFormat.RGBX_8888 :
+                    case PixelFormat.RGB_888 :
+                    {
+                        if (isHighMemoryDevice()) {
+                            sScreenDepth = 24;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        return sScreenDepth;
+    }
+
+    public static synchronized void setScreenDepthOverride(int aScreenDepth) {
+        if (sScreenDepth != 0) {
+            Log.e(LOGTAG, "Tried to override screen depth after it's already been set");
+            return;
+        }
+
+        sScreenDepth = aScreenDepth;
     }
 
     public static void setFullScreen(boolean fullscreen) {

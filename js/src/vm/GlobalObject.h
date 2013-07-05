@@ -51,11 +51,11 @@ class Debugger;
  *   whether eval is allowed (per the global's Content Security Policy).
  *
  * The first two ranges are necessary to implement js::FindClassObject,
- * FindClassPrototype, and spec language speaking in terms of "the original
- * Array prototype object", or "as if by the expression new Array()" referring
- * to the original Array constructor.  The third range stores the (writable and
- * even deletable) Object, Array, &c. properties (although a slot won't be used
- * again if its property is deleted and readded).
+ * and spec language speaking in terms of "the original Array prototype
+ * object", or "as if by the expression new Array()" referring to the original
+ * Array constructor. The third range stores the (writable and even deletable)
+ * Object, Array, &c. properties (although a slot won't be used again if its
+ * property is deleted and readded).
  */
 class GlobalObject : public JSObject
 {
