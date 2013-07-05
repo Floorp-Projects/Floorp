@@ -127,6 +127,10 @@ public:
 
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
       if (mLeftOverData <= 0) {
+        // Note: this keeps spamming the main thread with messages as long
+        // as there is nothing to play. This isn't great, but it avoids
+        // problems with some messages being ignored when they're rejected by
+        // ConvolverNode::AcceptPlayingRefRelease.
         mLeftOverData = 0;
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
@@ -173,6 +177,7 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
               2,
               ChannelCountMode::Clamped_max,
               ChannelInterpretation::Speakers)
+  , mMediaStreamGraphUpdateIndexAtLastInputConnection(0)
   , mNormalize(true)
 {
   ConvolverNodeEngine* engine = new ConvolverNodeEngine(this, mNormalize);
