@@ -247,8 +247,13 @@ BluetoothOppManager::Connect(const nsAString& aDeviceAddress,
   }
 
   if (mSocket) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_REACHED_CONNECTION_LIMIT));
+    if (mConnectedDeviceAddress == aDeviceAddress) {
+      DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                             NS_LITERAL_STRING(ERR_ALREADY_CONNECTED));
+    } else {
+      DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                             NS_LITERAL_STRING(ERR_REACHED_CONNECTION_LIMIT));
+    }
     return;
   }
 
