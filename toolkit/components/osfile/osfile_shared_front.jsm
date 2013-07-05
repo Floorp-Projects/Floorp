@@ -358,9 +358,8 @@ AbstractFile.writeAtomic =
 
   if (!options.flush) {
     // Just write, without any renaming trick
-    let dest;
+    let dest = OS.File.open(path, {write: true, truncate: true});
     try {
-      dest = OS.File.open(path, {write: true, truncate: true});
       return dest.write(buffer, options);
     } finally {
       dest.close();

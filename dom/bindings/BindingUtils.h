@@ -84,8 +84,8 @@ Throw(JSContext* cx, nsresult rv)
 template<bool mainThread>
 inline bool
 ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
-                             const char* /* ifaceName */,
-                             const char* /* memberName */)
+                             const char* ifaceName,
+                             const char* memberName)
 {
   if (rv.IsTypeError()) {
     rv.ReportTypeError(cx);
@@ -94,6 +94,9 @@ ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
   if (rv.IsJSException()) {
     rv.ReportJSException(cx);
     return false;
+  }
+  if (rv.IsNotEnoughArgsError()) {
+    rv.ReportNotEnoughArgsError(cx, ifaceName, memberName);
   }
   return Throw<mainThread>(cx, rv.ErrorCode());
 }

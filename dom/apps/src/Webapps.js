@@ -520,7 +520,7 @@ WebappsApplication.prototype = {
         Services.DOMRequest.fireError(req, "APP_INSTALL_PENDING");
         break;
       case "Webapps:Launch:Return:OK":
-        Services.DOMRequest.fireSuccess(req);
+        Services.DOMRequest.fireSuccess(req, null);
         break;
       case "Webapps:CheckForUpdate:Return:KO":
         Services.DOMRequest.fireError(req, msg.error);

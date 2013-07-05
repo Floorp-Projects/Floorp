@@ -434,7 +434,7 @@ Number(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Sample JS_CALLEE before clobbering. */
-    bool isConstructing = IsConstructing(args);
+    bool isConstructing = args.isConstructing();
 
     if (args.length() > 0) {
         if (!ToNumber(cx, args.handleAt(0)))

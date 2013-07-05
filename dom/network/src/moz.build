@@ -39,3 +39,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'NetworkStatsManager.js',
         'NetworkStatsManager.manifest',
     ]
+
+IPDL_SOURCES += [
+    'PTCPSocket.ipdl',
+]

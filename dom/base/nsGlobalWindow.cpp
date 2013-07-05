@@ -3278,6 +3278,27 @@ void
 nsPIDOMWindow::AddAudioContext(AudioContext* aAudioContext)
 {
   mAudioContexts.AppendElement(aAudioContext);
+
+  nsIDocShell* docShell = GetDocShell();
+  if (docShell && !docShell->GetAllowMedia()) {
+    aAudioContext->Mute();
+  }
+}
+
+void
+nsPIDOMWindow::MuteAudioContexts()
+{
+  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
+    mAudioContexts[i]->Mute();
+  }
+}
+
+void
+nsPIDOMWindow::UnmuteAudioContexts()
+{
+  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
+    mAudioContexts[i]->Unmute();
+  }
 }
 
 NS_IMETHODIMP

@@ -1665,10 +1665,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Construct the IonFramePrefix.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
     masm.Push(Imm32(call->numActualArgs()));
-    masm.tagCallee(calleereg, executionMode);
-    masm.Push(calleereg);
-    // Clear the tag after pushing it, as we load nargs below.
-    masm.clearCalleeTag(calleereg, executionMode);
+    masm.PushCalleeToken(calleereg, executionMode);
     masm.Push(Imm32(descriptor));
 
     // Check whether the provided arguments satisfy target argc.
@@ -1806,11 +1803,8 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // Construct the IonFramePrefix.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
-    masm.tagCallee(calleereg, executionMode);
     masm.Push(Imm32(call->numActualArgs()));
-    masm.Push(calleereg);
-    // Clear the tag after pushing it.
-    masm.clearCalleeTag(calleereg, executionMode);
+    masm.PushCalleeToken(calleereg, executionMode);
     masm.Push(Imm32(descriptor));
 
     // Finally call the function in objreg.
@@ -5476,11 +5470,21 @@ CodeGenerator::link()
     if (callTargets.length() > 0)
         ionScript->copyCallTargetEntries(callTargets.begin());
 
-    // The correct state for prebarriers is unknown until the end of compilation,
-    // since a GC can occur during code generation. All barriers are emitted
-    // off-by-default, and are toggled on here if necessary.
-    if (cx->zone()->needsBarrier())
-        ionScript->toggleBarriers(true);
+    switch (executionMode) {
+      case SequentialExecution:
+        // The correct state for prebarriers is unknown until the end of compilation,
+        // since a GC can occur during code generation. All barriers are emitted
+        // off-by-default, and are toggled on here if necessary.
+        if (cx->zone()->needsBarrier())
+            ionScript->toggleBarriers(true);
+        break;
+      case ParallelExecution:
+        // We don't run incremental GC during parallel execution; no need to
+        // turn on barriers.
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
 
     return true;
 }

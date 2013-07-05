@@ -22,9 +22,6 @@ FAIL_ON_WARNINGS = 1
 LIBRARY_NAME = telemetry
 MSVC_ENABLE_PGO := 1
 
-DISABLED_EXTRA_COMPONENTS = \
-  TelemetryPing.manifest \
-  $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/threads
