@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const RIL_MMSSERVICE_CONTRACTID = "@mozilla.org/mms/rilmmsservice;1";
 const RIL_MMSSERVICE_CID = Components.ID("{217ddd76-75db-4210-955d-8806cd8d87f9}");
@@ -1571,7 +1572,11 @@ MmsService.prototype = {
     if (receivers.length != 0) {
       let headersTo = headers["to"] = [];
       for (let i = 0; i < receivers.length; i++) {
-        headersTo.push({"address": receivers[i], "type": "PLMN"});
+        let normalizedAddress = PhoneNumberUtils.normalize(receivers[i], false);
+        if (DEBUG) debug("createSavableFromParams: normalize phone number " +
+                         "from " + receivers[i] + " to " + normalizedAddress);
+
+        headersTo.push({"address": normalizedAddress, "type": "PLMN"});
       }
     }
     if (aParams.subject) {

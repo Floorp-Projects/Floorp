@@ -15,7 +15,7 @@ include $(DEPTH)/config/autoconf.mk
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 VPATH += $(srcdir)/android
 else ifdef MOZ_B2G_RIL
-VPATH += $(srcdir)/ril
+VPATH += $(srcdir)/gonk
 else
 VPATH += $(srcdir)/fallback
 endif
@@ -44,10 +44,10 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 EXTRA_COMPONENTS = \
-  ril/MmsService.js \
-  ril/MmsService.manifest \
-  ril/MobileMessageDatabaseService.js \
-  ril/MobileMessageDatabaseService.manifest \
+  gonk/MmsService.js \
+  gonk/MmsService.manifest \
+  gonk/MobileMessageDatabaseService.js \
+  gonk/MobileMessageDatabaseService.manifest \
   $(NULL)
 endif
 
