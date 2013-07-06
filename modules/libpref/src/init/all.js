@@ -4036,6 +4036,7 @@ pref("layers.acceleration.force-enabled", false);
 pref("layers.acceleration.draw-fps", false);
 
 pref("layers.draw-borders", false);
+pref("layers.frame-counter", false);
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
