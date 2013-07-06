@@ -599,8 +599,9 @@ nsWindow::Create(nsIWidget *aParent,
 
   // Query for command button metric data for rendering the titlebar. We
   // only do this once on the first window.
-  if (!nsUXThemeData::sTitlebarInfoPopulatedThemed ||
-      !nsUXThemeData::sTitlebarInfoPopulatedAero) {
+  if (mWindowType == eWindowType_toplevel &&
+      (!nsUXThemeData::sTitlebarInfoPopulatedThemed ||
+       !nsUXThemeData::sTitlebarInfoPopulatedAero)) {
     nsUXThemeData::UpdateTitlebarInfo(mWnd);
   }
   return NS_OK;
