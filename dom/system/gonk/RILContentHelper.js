@@ -108,7 +108,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:CdmaCallWaiting",
   "RIL:ExitEmergencyCbMode",
   "RIL:SetVoicePrivacyMode",
-  "RIL:GetVoicePrivacyMode"
+  "RIL:GetVoicePrivacyMode",
+  "RIL:ConferenceCallStateChanged"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -1392,6 +1393,31 @@ RILContentHelper.prototype = {
     });
   },
 
+  conferenceCall: function conferenceCall() {
+    cpmm.sendAsyncMessage("RIL:ConferenceCall", {
+      clientId: 0
+    });
+  },
+
+  separateCall: function separateCall(callIndex) {
+    cpmm.sendAsyncMessage("RIL:SeparateCall", {
+      clientId: 0,
+      data: callIndex
+    });
+  },
+
+  holdConference: function holdConference() {
+    cpmm.sendAsyncMessage("RIL:HoldConference", {
+      clientId: 0
+    });
+  },
+
+  resumeConference: function resumeConference() {
+    cpmm.sendAsyncMessage("RIL:ResumeConference", {
+      clientId: 0
+    });
+  },
+
   get microphoneMuted() {
     return cpmm.sendSyncMessage("RIL:GetMicrophoneMuted", {clientId: 0})[0];
   },
@@ -1528,7 +1554,15 @@ RILContentHelper.prototype = {
                            "callStateChanged",
                            [data.callIndex, data.state,
                             data.number, data.isActive,
-                            data.isOutgoing, data.isEmergency]);
+                            data.isOutgoing, data.isEmergency,
+                            data.isConference]);
+        break;
+      }
+      case "RIL:ConferenceCallStateChanged": {
+        let data = msg.json.data;
+        this._deliverEvent("_telephonyListeners",
+                           "conferenceCallStateChanged",
+                           [data]);
         break;
       }
       case "RIL:CallError": {
@@ -1699,7 +1733,7 @@ RILContentHelper.prototype = {
         keepGoing =
           callback.enumerateCallState(call.callIndex, call.state, call.number,
                                       call.isActive, call.isOutgoing,
-                                      call.isEmergency);
+                                      call.isEmergency, call.isConference);
       } catch (e) {
         debug("callback handler for 'enumerateCallState' threw an " +
               " exception: " + e);
