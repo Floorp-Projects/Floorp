@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include "mozilla/StandardInteger.h"
-const PRTime gPreloadListExpirationTime = INT64_C(1383387341169000);
+const PRTime gPreloadListExpirationTime = INT64_C(1383992084722000);
 
 class nsSTSPreload
 {
@@ -27,6 +27,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "blog.cyveillance.com", true },
   { "blog.linode.com", false },
   { "blog.torproject.org", false },
+  { "blueseed.co", false },
   { "bugzilla.mozilla.org", true },
   { "business.medbank.com.mt", true },
   { "carezone.com", false },
@@ -37,7 +38,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "crate.io", true },
   { "crm.onlime.ch", false },
   { "crypto.cat", false },
-  { "csawctf.poly.edu", true },
   { "cyphertite.com", true },
   { "developer.mydigipass.com", false },
   { "dist.torproject.org", false },
@@ -49,6 +49,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "espra.com", true },
   { "factor.cc", false },
   { "forum.linode.com", false },
+  { "forum.quantifiedself.com", true },
   { "gocardless.com", true },
   { "grc.com", false },
   { "howrandom.org", true },
@@ -89,6 +90,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "riseup.net", true },
   { "roundcube.mayfirst.org", false },
   { "sandbox.mydigipass.com", false },
+  { "shodan.io", true },
   { "silentcircle.com", true },
   { "simple.com", false },
   { "stocktrade.de", false },
@@ -100,6 +102,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "webmail.gigahost.dk", false },
   { "webmail.mayfirst.org", false },
   { "webmail.onlime.ch", false },
+  { "whonix.org", true },
   { "wiz.biz", true },
   { "writeapp.me", false },
   { "www.apollo-auto.com", true },
