@@ -49,20 +49,13 @@ var gEditUIVisible = true;
 
 // Smart getter for the findbar.  If you don't wish to force the creation of
 // the findbar, check gFindBarInitialized first.
-var gFindBarInitialized = false;
-XPCOMUtils.defineLazyGetter(window, "gFindBar", function() {
-  let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  let findbar = document.createElementNS(XULNS, "findbar");
-  findbar.id = "FindToolbar";
 
-  let browserBottomBox = document.getElementById("browser-bottombox");
-  browserBottomBox.insertBefore(findbar, browserBottomBox.firstChild);
+this.__defineGetter__("gFindBar", function() {
+  return window.gBrowser.getFindBar();
+});
 
-  // Force a style flush to ensure that our binding is attached.
-  findbar.clientTop;
-  findbar.browser = gBrowser;
-  window.gFindBarInitialized = true;
-  return findbar;
+this.__defineGetter__("gFindBarInitialized", function() {
+  return window.gBrowser.isFindBarInitialized();
 });
 
 XPCOMUtils.defineLazyGetter(this, "gPrefService", function() {
@@ -3960,16 +3953,7 @@ var XULBrowserWindow = {
           else
             elt.removeAttribute("disabled");
         }
-        if (gFindBarInitialized) {
-          if (!gFindBar.hidden && aDisable) {
-            gFindBar.hidden = true;
-            this._findbarTemporarilyHidden = true;
-          } else if (this._findbarTemporarilyHidden && !aDisable) {
-            gFindBar.hidden = false;
-            this._findbarTemporarilyHidden = false;
-          }
-        }
-      }.bind(this);
+      }
 
       var onContentRSChange = function onContentRSChange(e) {
         if (e.target.readyState != "interactive" && e.target.readyState != "complete")
