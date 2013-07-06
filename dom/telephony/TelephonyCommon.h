@@ -33,6 +33,7 @@ enum {
 class CallsList;
 class Telephony;
 class TelephonyCall;
+class TelephonyCallGroup;
 
 END_TELEPHONY_NAMESPACE
 

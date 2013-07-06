@@ -17,12 +17,13 @@ class CallsList MOZ_FINAL : public nsISupports,
                             public nsWrapperCache
 {
   nsRefPtr<Telephony> mTelephony;
+  nsRefPtr<TelephonyCallGroup> mGroup;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallsList)
 
-  CallsList(Telephony* aTelephony);
+  CallsList(Telephony* aTelephony, TelephonyCallGroup* aGroup = nullptr);
 
   nsPIDOMWindow*
   GetParentObject() const;
