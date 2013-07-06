@@ -258,6 +258,41 @@ LayerManagerComposite::RootLayer() const
   return static_cast<LayerComposite*>(mRoot->ImplData());
 }
 
+static uint16_t sFrameCount = 0;
+void
+LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
+{
+  if (!gfxPlatform::DrawFrameCounter()) {
+    return;
+  }
+
+  profiler_set_frame_number(sFrameCount);
+
+  uint16_t frameNumber = sFrameCount;
+  const uint16_t bitWidth = 3;
+  float opacity = 1.0;
+  gfx::Rect clip(0,0, bitWidth*16, bitWidth);
+  for (size_t i = 0; i < 16; i++) {
+
+    gfx::Color bitColor;
+    if ((frameNumber >> i) & 0x1) {
+      bitColor = gfx::Color(0, 0, 0, 1.0);
+    } else {
+      bitColor = gfx::Color(1.0, 1.0, 1.0, 1.0);
+    }
+    EffectChain effects;
+    effects.mPrimaryEffect = new EffectSolidColor(bitColor);
+    mCompositor->DrawQuad(gfx::Rect(bitWidth*i, 0, bitWidth, bitWidth),
+                          clip,
+                          effects,
+                          opacity,
+                          gfx::Matrix4x4(),
+                          gfx::Point());
+  }
+  // We intentionally overflow at 2^16.
+  sFrameCount++;
+}
+
 void
 LayerManagerComposite::Render()
 {
@@ -307,6 +342,9 @@ LayerManagerComposite::Render()
                                                               actualBounds.y,
                                                               actualBounds.width,
                                                               actualBounds.height));
+
+  // Debugging
+  RenderDebugOverlay(actualBounds);
 
   mCompositor->EndFrame();
 }

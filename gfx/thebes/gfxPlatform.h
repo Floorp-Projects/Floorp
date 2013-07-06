@@ -547,6 +547,7 @@ public:
     uint32_t GetOrientationSyncMillis() const;
 
     static bool DrawLayerBorders();
+    static bool DrawFrameCounter();
 
 protected:
     gfxPlatform();

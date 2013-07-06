@@ -334,7 +334,6 @@ private:
   // The index of the texture in this array must correspond to the texture unit.
   nsTArray<GLuint> mTextures;
   static bool sDrawFPS;
-  static bool sFrameCounter;
 };
 
 }
