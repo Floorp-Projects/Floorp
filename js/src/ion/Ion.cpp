@@ -1494,24 +1494,28 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
     return true;
 }
 
+// Longer scripts can only be compiled off thread, as these compilations
+// can be expensive and stall the main thread for too long.
+static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 100000;
+static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2000;
+static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
+
 static MethodStatus
 CheckScriptSize(JSContext *cx, JSScript* script)
 {
     if (!js_IonOptions.limitScriptSize)
         return Method_Compiled;
 
-    // Longer scripts can only be compiled off thread, as these compilations
-    // can be expensive and stall the main thread for too long.
-    static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2000;
-    static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 20000;
-    static const uint32_t MAX_LOCALS_AND_ARGS = 256;
-
     if (script->length > MAX_OFF_THREAD_SCRIPT_SIZE) {
+        // Some scripts are so large we never try to Ion compile them.
         IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
         return Method_CantCompile;
     }
 
-    if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE) {
+    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE ||
+        numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
+    {
         if (OffThreadCompilationEnabled(cx)) {
             // Even if off thread compilation is enabled, there are cases where
             // compilation must still occur on the main thread. Don't compile
@@ -1519,19 +1523,16 @@ CheckScriptSize(JSContext *cx, JSScript* script)
             // occurring with profiling should reflect those without), but do
             // not forbid compilation so that the script may be compiled later.
             if (!OffThreadCompilationAvailable(cx) && !cx->runtime()->profilingScripts) {
-                IonSpew(IonSpew_Abort, "Script too large for main thread, skipping (%u bytes)", script->length);
+                IonSpew(IonSpew_Abort,
+                        "Script too large for main thread, skipping (%u bytes) (%u locals/args)",
+                        script->length, numLocalsAndArgs);
                 return Method_Skipped;
             }
         } else {
-            IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
+            IonSpew(IonSpew_Abort, "Script too large (%u bytes) (%u locals/args)",
+                    script->length, numLocalsAndArgs);
             return Method_CantCompile;
         }
-    }
-
-    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
-    if (numLocalsAndArgs > MAX_LOCALS_AND_ARGS) {
-        IonSpew(IonSpew_Abort, "Too many locals and arguments (%u)", numLocalsAndArgs);
-        return Method_CantCompile;
     }
 
     return Method_Compiled;
@@ -2327,6 +2328,19 @@ ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
     JS_ASSERT(pc == script->code || JSOp(*pc) == JSOP_LOOPENTRY);
 
     uint32_t minUses = js_IonOptions.usesBeforeCompile;
+
+    // If the script is too large to compile on the main thread, we can still
+    // compile it off thread. In these cases, increase the use count threshold
+    // to improve the compilation's type information and hopefully avoid later
+    // recompilation.
+
+    if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE)
+        minUses = minUses * (script->length / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
+
+    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
+        minUses = minUses * (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
+
     if (JSOp(*pc) != JSOP_LOOPENTRY || js_IonOptions.eagerCompilation)
         return minUses;
 
