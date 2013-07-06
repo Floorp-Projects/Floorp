@@ -19,7 +19,6 @@ interface DummyInterface {
   void funcDNSLookupDict(optional DNSLookupDict arg);
   void funcConnStatusDict(optional ConnStatusDict arg);
   void frameRequestCallback(FrameRequestCallback arg);
-  void CameraPictureOptions(optional CameraPictureOptions arg);
   void MmsParameters(optional MmsParameters arg);
   void MmsAttachment(optional MmsAttachment arg);
   void AsyncScrollEventDetail(optional AsyncScrollEventDetail arg);

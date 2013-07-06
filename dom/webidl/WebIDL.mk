@@ -34,6 +34,7 @@ webidl_files = \
   BiquadFilterNode.webidl \
   Blob.webidl \
   BrowserElementDictionaries.webidl \
+  CameraControl.webidl \
   CameraManager.webidl \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
