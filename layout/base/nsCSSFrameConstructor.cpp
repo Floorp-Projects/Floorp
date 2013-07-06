@@ -7653,10 +7653,8 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
           // do the out-of-flow frame and its continuations
           nsIFrame* outOfFlowFrame =
             nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
-          do {
-            DoApplyRenderingChangeToTree(outOfFlowFrame, aFrameManager,
-                                         aChange);
-          } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
+          DoApplyRenderingChangeToTree(outOfFlowFrame, aFrameManager,
+                                       aChange);
         } else if (lists.CurrentID() == nsIFrame::kPopupList) {
           DoApplyRenderingChangeToTree(child, aFrameManager,
                                        aChange);
