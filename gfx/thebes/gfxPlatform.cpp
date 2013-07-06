@@ -101,6 +101,7 @@ static void ShutdownCMS();
 static void MigratePrefs();
 
 static bool sDrawLayerBorders = false;
+static bool sDrawFrameCounter = false;
 
 #include "mozilla/gfx/2D.h"
 using namespace mozilla::gfx;
@@ -405,6 +406,10 @@ gfxPlatform::Init()
 
     mozilla::Preferences::AddBoolVarCache(&sDrawLayerBorders,
                                           "layers.draw-borders",
+                                          false);
+
+    mozilla::Preferences::AddBoolVarCache(&sDrawFrameCounter,
+                                          "layers.frame-counter",
                                           false);
 
     CreateCMSOutputProfile();
@@ -1136,6 +1141,11 @@ gfxPlatform::DrawLayerBorders()
     return sDrawLayerBorders;
 }
 
+bool
+gfxPlatform::DrawFrameCounter()
+{
+    return sDrawFrameCounter;
+}
 
 void
 gfxPlatform::GetLangPrefs(eFontPrefLang aPrefLangs[], uint32_t &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang)
