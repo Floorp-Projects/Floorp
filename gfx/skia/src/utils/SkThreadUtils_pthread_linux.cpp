@@ -13,6 +13,25 @@
 #include "SkThreadUtils_pthread.h"
 
 #include <pthread.h>
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
+
+#if defined(__FreeBSD__) || defined(__NetBSD__)
+#define cpu_set_t cpuset_t
+#endif
+
+#ifndef CPU_COUNT
+static int CPU_COUNT(cpu_set_t *set) {
+    int count = 0;
+    for (int i = 0; i < CPU_SETSIZE; i++) {
+        if (CPU_ISSET(i, set)) {
+            count++;
+	}
+    }
+    return count;
+}
+#endif /* !CPU_COUNT */
 
 static int nth_set_cpu(unsigned int n, cpu_set_t* cpuSet) {
     n %= CPU_COUNT(cpuSet);
