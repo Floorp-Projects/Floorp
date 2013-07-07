@@ -189,10 +189,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     sourceItem.remove(breakpointItem);
-
-    if (this._selectedBreakpoint == breakpointItem) {
-      this._selectedBreakpoint = null;
-    }
   },
 
   /**
@@ -572,6 +568,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let contextMenu = aItem.attachment.popup;
     document.getElementById(contextMenu.commandsetId).remove();
     document.getElementById(contextMenu.menupopupId).remove();
+
+    if (this._selectedBreakpoint == aItem) {
+      this._selectedBreakpoint = null;
+    }
   },
 
   /**
