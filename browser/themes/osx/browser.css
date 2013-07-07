@@ -2135,6 +2135,14 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
   display: none;
 }
 
+/* ----- CONTENT ----- */
+
+.browserContainer > findbar {
+  background: @scopeBarBackground@;
+  border-top: @scopeBarSeparatorBorder@;
+  color: -moz-DialogText;
+  text-shadow: none;
+}
 
 /* ----- THROBBER ----- */
 
