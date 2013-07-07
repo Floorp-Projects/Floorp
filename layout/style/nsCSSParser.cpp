@@ -952,8 +952,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
 
   int32_t ruleCount = mSheet->StyleRuleCount();
   if (0 < ruleCount) {
-    css::Rule* lastRule = nullptr;
-    mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
+    const css::Rule* lastRule = mSheet->GetStyleRuleAt(ruleCount - 1);
     if (lastRule) {
       switch (lastRule->GetType()) {
         case css::Rule::CHARSET_RULE:
@@ -967,7 +966,6 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
           mSection = eCSSSection_General;
           break;
       }
-      NS_RELEASE(lastRule);
     }
   }
   else {
