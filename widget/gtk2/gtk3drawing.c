@@ -1411,6 +1411,7 @@ moz_gtk_vpaned_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+// See gtk_entry_draw() for reference.
 static gint
 moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkWidgetState* state,
@@ -2585,9 +2586,20 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_ENTRY:
-        ensure_entry_widget();
-        w = gEntryWidget;
-        break;
+        {
+            ensure_entry_widget();
+            style = gtk_widget_get_style_context(gEntryWidget);
+
+            gtk_style_context_get_border(style, 0, &border);
+            gtk_style_context_get_padding(style, 0, &padding);
+
+            *left = padding.left + border.left;
+            *right = padding.right + border.right;
+            *top =  padding.top + border.top;
+            *bottom = padding.bottom + border.bottom;
+
+            return MOZ_GTK_SUCCESS;
+        }
     case MOZ_GTK_TREEVIEW:
         ensure_tree_view_widget();
         w = gTreeViewWidget;
