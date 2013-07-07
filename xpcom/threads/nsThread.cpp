@@ -15,6 +15,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
+#include "nsXPCOMPrivate.h"
 
 #define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
                       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
@@ -387,6 +388,10 @@ nsThread::Dispatch(nsIRunnable *event, uint32_t flags)
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, event, flags));
 
   NS_ENSURE_ARG_POINTER(event);
+
+  if (gXPCOMThreadsShutDown && MAIN_THREAD != mIsMainThread) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
 
   if (flags & DISPATCH_SYNC) {
     nsThread *thread = nsThreadManager::get()->GetCurrentThread();
