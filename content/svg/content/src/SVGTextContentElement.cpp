@@ -13,6 +13,22 @@
 namespace mozilla {
 namespace dom {
 
+nsSVGEnumMapping SVGTextContentElement::sLengthAdjustMap[] = {
+  { &nsGkAtoms::spacing, SVG_LENGTHADJUST_SPACING },
+  { &nsGkAtoms::spacingAndGlyphs, SVG_LENGTHADJUST_SPACINGANDGLYPHS },
+  { nullptr, 0 }
+};
+
+nsSVGElement::EnumInfo SVGTextContentElement::sEnumInfo[1] =
+{
+  { &nsGkAtoms::lengthAdjust, sLengthAdjustMap, SVG_LENGTHADJUST_SPACING }
+};
+
+nsSVGElement::LengthInfo SVGTextContentElement::sLengthInfo[1] =
+{
+  { &nsGkAtoms::textLength, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
+};
+
 nsSVGTextContainerFrame*
 SVGTextContentElement::GetTextContainerFrame()
 {
@@ -38,6 +54,40 @@ SVGTextContentElement::FrameIsSVGText()
 {
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   return frame && frame->IsSVGText();
+}
+
+nsSVGElement::EnumAttributesInfo
+SVGTextContentElement::GetEnumInfo()
+{
+  // If we want to start supporting lengthAdjust="" on <textPath> we'll
+  // need to modify SVGTextPathElement::GetEnumInfo to return an
+  // EnumAttributesInfo for it, since GetEnumInfo isn't currently
+  // designed to include attribute information from superclasses.
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            ArrayLength(sEnumInfo));
+}
+
+nsSVGElement::LengthAttributesInfo
+SVGTextContentElement::GetLengthInfo()
+{
+  // If we want to start supporting textLength="" on <textPath> we'll
+  // need to modify SVGTextPathElement::GetEnumInfo to return an
+  // EnumAttributesInfo for it, since GetEnumInfo isn't currently
+  // designed to include attribute information from superclasses.
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              ArrayLength(sLengthInfo));
+}
+
+already_AddRefed<SVGAnimatedLength>
+SVGTextContentElement::TextLength()
+{
+  return mLengthAttributes[TEXTLENGTH].ToDOMAnimatedLength(this);
+}
+
+already_AddRefed<SVGAnimatedEnumeration>
+SVGTextContentElement::LengthAdjust()
+{
+  return mEnumAttributes[LENGTHADJUST].ToDOMAnimatedEnum(this);
 }
 
 //----------------------------------------------------------------------

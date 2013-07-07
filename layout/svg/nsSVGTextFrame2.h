@@ -24,6 +24,7 @@ typedef nsSVGDisplayContainerFrame nsSVGTextFrame2Base;
 
 namespace mozilla {
 
+class CharIterator;
 class TextFrameIterator;
 class TextNodeCorrespondenceRecorder;
 struct TextRenderedRun;
@@ -175,6 +176,7 @@ class nsSVGTextFrame2 : public nsSVGTextFrame2Base
   friend nsIFrame*
   NS_NewSVGTextFrame2(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  friend class mozilla::CharIterator;
   friend class mozilla::GlyphMetricsUpdater;
   friend class mozilla::TextFrameIterator;
   friend class mozilla::TextNodeCorrespondenceRecorder;
@@ -188,6 +190,8 @@ protected:
   nsSVGTextFrame2(nsStyleContext* aContext)
     : nsSVGTextFrame2Base(aContext),
       mFontSizeScaleFactor(1.0f),
+      mLastContextScale(1.0f),
+      mLengthAdjustScaleFactor(1.0f),
       mGetCanvasTMForFlag(FOR_OUTERSVG_TM)
   {
     AddStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
@@ -315,8 +319,10 @@ public:
   /**
    * Updates the mFontSizeScaleFactor value by looking at the range of
    * font-sizes used within the <text>.
+   *
+   * @return Whether mFontSizeScaleFactor changed.
    */
-  void UpdateFontSizeScaleFactor();
+  bool UpdateFontSizeScaleFactor();
 
   double GetFontSizeScaleFactor() const;
 
@@ -467,9 +473,11 @@ private:
    * was not given for that character.  Also fills aDeltas with values based on
    * dx/dy attributes.
    *
+   * @param aRunPerGlyph Whether mPositions should record that a new run begins
+   *   at each glyph.
    * @return True if we recorded any positions.
    */
-  bool ResolvePositions(nsTArray<gfxPoint>& aDeltas);
+  bool ResolvePositions(nsTArray<gfxPoint>& aDeltas, bool aRunPerGlyph);
 
   /**
    * Determines the position, in app units, of each character in the <text> as
@@ -635,6 +643,19 @@ private:
    * nsSVGTextFrame2.cpp is 8..200.)
    */
   float mFontSizeScaleFactor;
+
+  /**
+   * The scale of the context that we last used to compute mFontSizeScaleFactor.
+   * We record this so that we can tell when our scale transform has changed
+   * enough to warrant reflowing the text.
+   */
+  float mLastContextScale;
+
+  /**
+   * The amount that we need to scale each rendered run to account for
+   * lengthAdjust="spacingAndGlyphs".
+   */
+  float mLengthAdjustScaleFactor;
 
   /**
    * The flag to pass to GetCanvasTM from UpdateFontSizeScaleFactor.  This is
