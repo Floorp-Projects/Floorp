@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @font-face {
+      font-family: Linux Libertine;
+      src: url(../../fonts/LinLibertine_Re-4.7.5.woff);
+    }
+  </style>
+  <!-- the unscaled width of the "123" is 66 -->
+  <linearGradient id="g" x1="100" y1="0" x2="232" y2="0" gradientUnits="userSpaceOnUse">
+    <stop stop-color="red"/>
+    <stop offset="0.333333" stop-color="red"/>
+    <stop offset="0.333333" stop-color="yellow"/>
+    <stop offset="0.666666" stop-color="yellow"/>
+    <stop offset="0.666666" stop-color="red"/>
+    <stop offset="1" stop-color="red"/>
+  </linearGradient>
+  <text x="100" y="100" style="font: 50px Linux Libertine; text-rendering: geometricPrecision" textLength="132" lengthAdjust="spacingAndGlyphs" fill="url(#g)">123</text>
+  <text transform="scale(2,1)translate(50,0)" y="100" style="font: 50px Linux Libertine; text-rendering: geometricPrecision; fill: none; stroke: black; stroke-width: 2px">123</text>
+  <rect x="100" y="110" width="132" height="10" fill="url(#g)"/>
+</svg>
