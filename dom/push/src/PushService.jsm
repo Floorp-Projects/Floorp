@@ -1207,7 +1207,7 @@ this.PushService = {
       this._db.delete(record.channelID, function() {
         // Let's be nice to the server and try to inform it, but we don't care
         // about the reply.
-        this._sendRequest("unregister", {channelID: record.channelID});
+        this._send("unregister", {channelID: record.channelID});
         aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
           requestID: aPageRecord.requestID,
           pushEndpoint: aPageRecord.pushEndpoint
