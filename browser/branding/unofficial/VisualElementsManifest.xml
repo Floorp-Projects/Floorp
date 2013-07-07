@@ -5,7 +5,7 @@
       Logo="tileresources\VisualElements_logo.png"
       SmallLogo="tileresources\VisualElements_smalllogo.png"
       ForegroundText="light"
-      BackgroundColor="#001226">
+      BackgroundColor="#0a1833">
     <DefaultTile
         ShortName="@MOZ_APP_DISPLAYNAME@"
         ShowName="allLogos"
