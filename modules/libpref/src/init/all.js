@@ -781,6 +781,9 @@ pref("dom.forms.color", false);
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
 
+// Enable pre-installed applications.
+pref("dom.webapps.useCurrentProfile", false);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
