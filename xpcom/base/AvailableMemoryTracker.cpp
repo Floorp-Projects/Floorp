@@ -15,6 +15,7 @@
 #include "nsIObserverService.h"
 #include "nsIRunnable.h"
 #include "nsISupports.h"
+#include "nsMemoryPressure.h"
 #include "nsPrintfCString.h"
 #include "nsThread.h"
 
@@ -187,7 +188,7 @@ bool MaybeScheduleMemoryPressureEvent()
   sLastLowMemoryNotificationTime = PR_IntervalNow();
 
   LOG("Scheduling memory pressure notification.");
-  ScheduleMemoryPressureEvent();
+  NS_DispatchEventualMemoryPressure(MemPressure_New);
   return true;
 }
 
@@ -212,7 +213,7 @@ void CheckMemAvailable()
       // so don't worry about firing this notification too often.
       LOG("Detected low virtual memory.");
       PR_ATOMIC_INCREMENT(&sNumLowVirtualMemEvents);
-      ScheduleMemoryPressureEvent();
+      NS_DispatchEventualMemoryPressure(MemPressure_New);
     }
     else if (stat.ullAvailPageFile < sLowCommitSpaceThreshold * 1024 * 1024) {
       LOG("Detected low available page file space.");
