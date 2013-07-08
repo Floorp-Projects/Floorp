@@ -10,6 +10,11 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsISyncMessageSender");
 
 function debug(aMsg) {
   //dump("-- ActivityWrapper.js " + Date.now() + " : " + aMsg + "\n");
@@ -35,6 +40,32 @@ ActivityWrapper.prototype = {
     options.wrappedJSObject._name = aMessage.payload.name;
     options.wrappedJSObject._data = ObjectWrapper.wrap(aMessage.payload.data, aWindow);
 
+    // When the activity window is closed, fire an error to notify the activity
+    // caller of the situation.
+    // We don't need to check whether the activity itself already sent
+    // back something since ActivitiesService.jsm takes care of that.
+    let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+    let innerWindowID = util.currentInnerWindowID;
+
+    let observer = {
+      observe: function(aSubject, aTopic, aData) {
+        if (aTopic !== "inner-window-destroyed") {
+          return;
+        }
+
+        let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
+        if (wId == innerWindowID) {
+          debug("Closing activity window " + innerWindowID);
+          Services.obs.removeObserver(observer, "inner-window-destroyed");
+          cpmm.sendAsyncMessage("Activity:PostError",
+                                { id: aMessage.id,
+                                  error: "ActivityCanceled" });
+        }
+      }
+    }
+
+    Services.obs.addObserver(observer, "inner-window-destroyed", false);
     return handler;
   },
 
