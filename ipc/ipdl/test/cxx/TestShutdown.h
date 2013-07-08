@@ -64,13 +64,13 @@ protected:
     }
 
     virtual PTestShutdownSubsubParent*
-    AllocPTestShutdownSubsub(const bool& expectParentDelete) MOZ_OVERRIDE
+    AllocPTestShutdownSubsubParent(const bool& expectParentDelete) MOZ_OVERRIDE
     {
         return new TestShutdownSubsubParent(expectParentDelete);
     }
 
     virtual bool
-    DeallocPTestShutdownSubsub(PTestShutdownSubsubParent* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubsubParent(PTestShutdownSubsubParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         ++mDeletedCount;
@@ -107,13 +107,13 @@ protected:
     virtual bool RecvSync() MOZ_OVERRIDE { return true; }
 
     virtual PTestShutdownSubParent*
-    AllocPTestShutdownSub(const bool& expectCrash) MOZ_OVERRIDE
+    AllocPTestShutdownSubParent(const bool& expectCrash) MOZ_OVERRIDE
     {
         return new TestShutdownSubParent(expectCrash);
     }
 
     virtual bool
-    DeallocPTestShutdownSub(PTestShutdownSubParent* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubParent(PTestShutdownSubParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
@@ -164,13 +164,13 @@ protected:
     virtual bool AnswerStackFrame() MOZ_OVERRIDE;
 
     virtual PTestShutdownSubsubChild*
-    AllocPTestShutdownSubsub(const bool& expectParentDelete) MOZ_OVERRIDE
+    AllocPTestShutdownSubsubChild(const bool& expectParentDelete) MOZ_OVERRIDE
     {
         return new TestShutdownSubsubChild(expectParentDelete);
     }
 
     virtual bool
-    DeallocPTestShutdownSubsub(PTestShutdownSubsubChild* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubsubChild(PTestShutdownSubsubChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
@@ -200,14 +200,14 @@ protected:
     RecvStart();
 
     virtual PTestShutdownSubChild*
-    AllocPTestShutdownSub(
+    AllocPTestShutdownSubChild(
         const bool& expectCrash) MOZ_OVERRIDE
     {
         return new TestShutdownSubChild(expectCrash);
     }
 
     virtual bool
-    DeallocPTestShutdownSub(PTestShutdownSubChild* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubChild(PTestShutdownSubChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
