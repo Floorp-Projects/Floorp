@@ -23,7 +23,6 @@ span[tabindex] {
 }
 
 li.container {
-  position: relative;
   padding: 2px 0 0 2px;
 }
 
@@ -31,8 +30,13 @@ li.container {
   padding-left: 14px;
 }
 
+.codebox > * {
+  vertical-align: middle;
+}
+
 .expander {
-  position: absolute;
+  display: inline-block;
+  margin-left: -14px;
 }
 
 .more-nodes {
