@@ -2744,6 +2744,31 @@ class LConvertElementsToDoubles : public LInstructionHelper<0, 1, 0>
     }
 };
 
+// If |elements| has the CONVERT_DOUBLE_ELEMENTS flag, convert int32 value to
+// double. Else return the original value.
+class LMaybeToDoubleElement : public LInstructionHelper<BOX_PIECES, 2, 1>
+{
+  public:
+    LIR_HEADER(MaybeToDoubleElement)
+
+    LMaybeToDoubleElement(const LAllocation &elements, const LAllocation &value,
+                          const LDefinition &tempFloat) {
+        setOperand(0, elements);
+        setOperand(1, value);
+        setTemp(0, tempFloat);
+    }
+
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+    const LDefinition *tempFloat() {
+        return getTemp(0);
+    }
+};
+
 // Load a dense array's initialized length from an elements vector.
 class LInitializedLength : public LInstructionHelper<1, 1, 0>
 {
