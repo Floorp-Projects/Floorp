@@ -383,7 +383,7 @@ FTPChannelChild::DoOnStopRequest(const nsresult& statusCode)
       mLoadGroup->RemoveRequest(this, nullptr, statusCode);
   }
 
-  // This calls NeckoChild::DeallocPFTPChannel(), which deletes |this| if IPDL
+  // This calls NeckoChild::DeallocPFTPChannelChild(), which deletes |this| if IPDL
   // holds the last reference.  Don't rely on |this| existing after here!
   Send__delete__(this);
 }
