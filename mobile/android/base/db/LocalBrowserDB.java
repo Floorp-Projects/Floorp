@@ -686,25 +686,39 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public Bitmap getFaviconForUrl(ContentResolver cr, String uri) {
-        Cursor c = cr.query(mCombinedUriWithProfile,
-                            new String[] { Combined.FAVICON },
-                            Combined.URL + " = ?",
-                            new String[] { uri },
-                            null);
-
-        if (!c.moveToFirst()) {
-            c.close();
+        final byte[] b = getFaviconBytesForUrl(cr, uri);
+        if (b == null || b.length == 0) {
             return null;
         }
 
-        int faviconIndex = c.getColumnIndexOrThrow(Combined.FAVICON);
-        byte[] b = c.getBlob(faviconIndex);
-        c.close();
-
-        if (b == null || b.length == 0)
-            return null;
-
         return BitmapUtils.decodeByteArray(b);
+    }
+
+    @Override
+    public byte[] getFaviconBytesForUrl(ContentResolver cr, String uri) {
+        Cursor c = null;
+        byte[] b = null;
+
+        try {
+            c = cr.query(mCombinedUriWithProfile,
+                         new String[] { Combined.FAVICON },
+                         Combined.URL + " = ?",
+                         new String[] { uri },
+                         null);
+
+            if (!c.moveToFirst()) {
+                return null;
+            }
+
+            final int faviconIndex = c.getColumnIndexOrThrow(Combined.FAVICON);
+            b = c.getBlob(faviconIndex);
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+
+        return b;
     }
 
     @Override
