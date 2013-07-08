@@ -1095,7 +1095,7 @@ BacktrackingAllocator::populateSafepoints()
     for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
         BacktrackingVirtualRegister *reg = &vregs[i];
 
-        if (!reg->def() || (!IsTraceable(reg) && !IsNunbox(reg)))
+        if (!reg->def() || (!IsTraceable(reg) && !IsSlotsOrElements(reg) && !IsNunbox(reg)))
             continue;
 
         firstSafepoint = findFirstSafepoint(reg->getInterval(0), firstSafepoint);
@@ -1139,6 +1139,9 @@ BacktrackingAllocator::populateSafepoints()
                 switch (reg->type()) {
                   case LDefinition::OBJECT:
                     safepoint->addGcPointer(*a);
+                    break;
+                  case LDefinition::SLOTS:
+                    safepoint->addSlotsOrElementsPointer(*a);
                     break;
 #ifdef JS_NUNBOX32
                   case LDefinition::TYPE:
