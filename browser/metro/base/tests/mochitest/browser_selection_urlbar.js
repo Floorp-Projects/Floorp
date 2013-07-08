@@ -19,9 +19,6 @@ const kCommonPollMs = 100;
 gTests.push({
   desc: "normalize browser",
   run: function test() {
-    InputSourceHelper.isPrecise = false;
-    InputSourceHelper.fireUpdate();
-
     info(chromeRoot + "res/textblock01.html");
     yield addTab(chromeRoot + "res/textblock01.html");
 
@@ -30,6 +27,9 @@ gTests.push({
       });
 
     yield hideContextUI();
+
+    InputSourceHelper.isPrecise = false;
+    InputSourceHelper.fireUpdate();
   },
 });
 
