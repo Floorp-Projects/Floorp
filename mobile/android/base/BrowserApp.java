@@ -1431,6 +1431,13 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
+        // Hide any visible homepager subpages
+        final FragmentManager fm = getSupportFragmentManager();
+        final Fragment subPage = fm.findFragmentByTag(HomePager.SUBPAGE_TAG);
+        if (subPage != null) {
+            fm.beginTransaction().remove(subPage).commitAllowingStateLoss();
+        }
+
         // FIXME: do animation if animate is true
         mHomePager.hide();
 
