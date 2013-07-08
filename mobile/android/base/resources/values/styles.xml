@@ -460,6 +460,12 @@
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
     </style>
 
+    <style name="AboutHome.TextAppearance.Header" parent="TextAppearance.Small">
+        <item name="android:textColor">#ff222222</item>
+    </style>
+
+    <style name="AboutHome.TextAppearance.PageTitle" parent="TextAppearance.Medium" />
+
     <style name="AboutHome.RowItem">
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:focusable">true</item>
@@ -469,6 +475,17 @@
         <item name="android:textAppearance">@style/AboutHome.TextAppearance.Title</item>
         <item name="android:ellipsize">middle</item>
         <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="AboutHome.HeaderItem">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:textAppearance">@style/AboutHome.TextAppearance.Header</item>
+        <item name="android:background">#fff5f7f9</item>
+        <item name="android:focusable">false</item>
+        <item name="android:gravity">center|left</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
     </style>
 
     <style name="AboutHome.LastTabRow" />
@@ -483,6 +500,17 @@
         <item name="android:textSize">12sp</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
+    </style>
+
+    <style name="AboutHome.PageTitle">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
+        <item name="android:background">@color/background_light</item>
+        <item name="android:focusable">false</item>
+        <item name="android:gravity">center|left</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
     </style>
 
     <style name="GeckoDialogTitle">
