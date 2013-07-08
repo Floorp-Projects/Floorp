@@ -61,20 +61,20 @@ void NeckoChild::DestroyNeckoChild()
 }
 
 PHttpChannelChild*
-NeckoChild::AllocPHttpChannel(PBrowserChild* browser,
-                              const SerializedLoadContext& loadContext,
-                              const HttpChannelCreationArgs& aOpenArgs)
+NeckoChild::AllocPHttpChannelChild(PBrowserChild* browser,
+                                   const SerializedLoadContext& loadContext,
+                                   const HttpChannelCreationArgs& aOpenArgs)
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing HttpChildChannel
-  NS_NOTREACHED("AllocPHttpChannel should not be called on child");
+  NS_NOTREACHED("AllocPHttpChannelChild should not be called on child");
   return nullptr;
 }
 
 bool 
-NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
+NeckoChild::DeallocPHttpChannelChild(PHttpChannelChild* channel)
 {
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPHttpChannel called by non-child!");
+  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPHttpChannelChild called by non-child!");
 
   HttpChannelChild* child = static_cast<HttpChannelChild*>(channel);
   child->ReleaseIPDLReference();
@@ -82,37 +82,37 @@ NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
 }
 
 PFTPChannelChild*
-NeckoChild::AllocPFTPChannel(PBrowserChild* aBrowser,
-                             const SerializedLoadContext& aSerialized,
-                             const FTPChannelCreationArgs& aOpenArgs)
+NeckoChild::AllocPFTPChannelChild(PBrowserChild* aBrowser,
+                                  const SerializedLoadContext& aSerialized,
+                                  const FTPChannelCreationArgs& aOpenArgs)
 {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
-  NS_RUNTIMEABORT("AllocPFTPChannel should not be called");
+  NS_RUNTIMEABORT("AllocPFTPChannelChild should not be called");
   return nullptr;
 }
 
 bool
-NeckoChild::DeallocPFTPChannel(PFTPChannelChild* channel)
+NeckoChild::DeallocPFTPChannelChild(PFTPChannelChild* channel)
 {
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPFTPChannel called by non-child!");
+  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPFTPChannelChild called by non-child!");
 
   FTPChannelChild* child = static_cast<FTPChannelChild*>(channel);
   child->ReleaseIPDLReference();
   return true;
 }
 
-PCookieServiceChild* 
-NeckoChild::AllocPCookieService()
+PCookieServiceChild*
+NeckoChild::AllocPCookieServiceChild()
 {
   // We don't allocate here: see nsCookieService::GetSingleton()
-  NS_NOTREACHED("AllocPCookieService should not be called");
+  NS_NOTREACHED("AllocPCookieServiceChild should not be called");
   return nullptr;
 }
 
-bool 
-NeckoChild::DeallocPCookieService(PCookieServiceChild* cs)
+bool
+NeckoChild::DeallocPCookieServiceChild(PCookieServiceChild* cs)
 {
-  NS_ASSERTION(IsNeckoChild(), "DeallocPCookieService called by non-child!");
+  NS_ASSERTION(IsNeckoChild(), "DeallocPCookieServiceChild called by non-child!");
 
   CookieServiceChild *p = static_cast<CookieServiceChild*>(cs);
   p->Release();
@@ -120,7 +120,7 @@ NeckoChild::DeallocPCookieService(PCookieServiceChild* cs)
 }
 
 PWyciwygChannelChild*
-NeckoChild::AllocPWyciwygChannel()
+NeckoChild::AllocPWyciwygChannelChild()
 {
   WyciwygChannelChild *p = new WyciwygChannelChild();
   p->AddIPDLReference();
@@ -128,9 +128,9 @@ NeckoChild::AllocPWyciwygChannel()
 }
 
 bool
-NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
+NeckoChild::DeallocPWyciwygChannelChild(PWyciwygChannelChild* channel)
 {
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPWyciwygChannel called by non-child!");
+  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPWyciwygChannelChild called by non-child!");
 
   WyciwygChannelChild *p = static_cast<WyciwygChannelChild*>(channel);
   p->ReleaseIPDLReference();
@@ -138,15 +138,15 @@ NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
 }
 
 PWebSocketChild*
-NeckoChild::AllocPWebSocket(PBrowserChild* browser,
-                            const SerializedLoadContext& aSerialized)
+NeckoChild::AllocPWebSocketChild(PBrowserChild* browser,
+                                 const SerializedLoadContext& aSerialized)
 {
-  NS_NOTREACHED("AllocPWebSocket should not be called");
+  NS_NOTREACHED("AllocPWebSocketChild should not be called");
   return nullptr;
 }
 
 bool
-NeckoChild::DeallocPWebSocket(PWebSocketChild* child)
+NeckoChild::DeallocPWebSocketChild(PWebSocketChild* child)
 {
   WebSocketChannelChild* p = static_cast<WebSocketChannelChild*>(child);
   p->ReleaseIPDLReference();
@@ -154,18 +154,18 @@ NeckoChild::DeallocPWebSocket(PWebSocketChild* child)
 }
 
 PTCPSocketChild*
-NeckoChild::AllocPTCPSocket(const nsString& aHost,
-                            const uint16_t& aPort,
-                            const bool& useSSL,
-                            const nsString& aBinaryType,
-                            PBrowserChild* aBrowser)
+NeckoChild::AllocPTCPSocketChild(const nsString& aHost,
+                                 const uint16_t& aPort,
+                                 const bool& useSSL,
+                                 const nsString& aBinaryType,
+                                 PBrowserChild* aBrowser)
 {
-  NS_NOTREACHED("AllocPTCPSocket should not be called");
+  NS_NOTREACHED("AllocPTCPSocketChild should not be called");
   return nullptr;
 }
 
 bool
-NeckoChild::DeallocPTCPSocket(PTCPSocketChild* child)
+NeckoChild::DeallocPTCPSocketChild(PTCPSocketChild* child)
 {
   TCPSocketChild* p = static_cast<TCPSocketChild*>(child);
   p->ReleaseIPDLReference();
@@ -173,16 +173,16 @@ NeckoChild::DeallocPTCPSocket(PTCPSocketChild* child)
 }
 
 PRemoteOpenFileChild*
-NeckoChild::AllocPRemoteOpenFile(const URIParams&, PBrowserChild*)
+NeckoChild::AllocPRemoteOpenFileChild(const URIParams&, PBrowserChild*)
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing RemoteOpenFileChild
-  NS_NOTREACHED("AllocPRemoteOpenFile should not be called on child");
+  NS_NOTREACHED("AllocPRemoteOpenFileChild should not be called on child");
   return nullptr;
 }
 
 bool
-NeckoChild::DeallocPRemoteOpenFile(PRemoteOpenFileChild* aChild)
+NeckoChild::DeallocPRemoteOpenFileChild(PRemoteOpenFileChild* aChild)
 {
   RemoteOpenFileChild *p = static_cast<RemoteOpenFileChild*>(aChild);
   p->ReleaseIPDLReference();
