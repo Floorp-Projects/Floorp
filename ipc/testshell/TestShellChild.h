@@ -26,14 +26,14 @@ public:
   RecvExecuteCommand(const nsString& aCommand);
 
   PTestShellCommandChild*
-  AllocPTestShellCommand(const nsString& aCommand);
+  AllocPTestShellCommandChild(const nsString& aCommand);
 
   bool
   RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                    const nsString& aCommand);
 
   bool
-  DeallocPTestShellCommand(PTestShellCommandChild* aCommand);
+  DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand);
 
 private:
   nsAutoPtr<XPCShellEnvironment> mXPCShell;
