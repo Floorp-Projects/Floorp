@@ -32,6 +32,16 @@ public:
       /*optional out*/ SECOidTag* evOidPolicy = nullptr ,
       /*optional out*/ CERTVerifyLog* verifyLog = nullptr);
 
+  SECStatus VerifySSLServerCert(
+                    CERTCertificate* peerCert,
+                    PRTime time,
+       /*optional*/ void* pinarg,
+                    const char* hostname,
+                    bool saveIntermediatesInPermanentDatabase = false,
+   /*optional out*/ insanity::pkix::ScopedCERTCertList* certChainOut = nullptr,
+   /*optional out*/ SECOidTag* evOidPolicy = nullptr);
+
+
   enum implementation_config {
     classic = 0,
 #ifndef NSS_NO_LIBPKIX
