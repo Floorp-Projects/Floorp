@@ -18,6 +18,10 @@ toolbar[customizable="true"] {
 }
 
 %ifdef XP_MACOSX
+#toolbar-menubar {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-stub");
+}
+
 toolbar[customizable="true"]:not([nowindowdrag="true"]) {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
 }
