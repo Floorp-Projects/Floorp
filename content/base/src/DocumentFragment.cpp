@@ -45,6 +45,20 @@ DocumentFragment::GetIDAttributeName() const
   return nullptr;
 }
 
+NS_IMETHODIMP
+DocumentFragment::QuerySelector(const nsAString& aSelector,
+                                nsIDOMElement **aReturn)
+{
+  return nsINode::QuerySelector(aSelector, aReturn);
+}
+
+NS_IMETHODIMP
+DocumentFragment::QuerySelectorAll(const nsAString& aSelector,
+                                   nsIDOMNodeList **aReturn)
+{
+  return nsINode::QuerySelectorAll(aSelector, aReturn);
+}
+
 #ifdef DEBUG
 void
 DocumentFragment::List(FILE* out, int32_t aIndent) const
