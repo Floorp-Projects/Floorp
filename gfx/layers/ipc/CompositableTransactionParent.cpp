@@ -32,7 +32,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositable = compositableParent->GetCompositableHost();
 
-      compositable->EnsureTextureHost(op.textureId(), op.descriptor(),
+      compositable->EnsureDeprecatedTextureHost(op.textureId(), op.descriptor(),
                                       compositableParent->GetCompositableManager(),
                                       op.textureInfo());
 
@@ -46,7 +46,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositable = compositableParent->GetCompositableHost();
 
-      compositable->EnsureTextureHostIncremental(compositableParent->GetCompositableManager(),
+      compositable->EnsureDeprecatedTextureHostIncremental(compositableParent->GetCompositableManager(),
                                                  op.textureInfo(),
                                                  op.bufferRect());
       break;
@@ -88,11 +88,11 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       if (compositable) {
         const SurfaceDescriptor& descriptor = op.image();
-        compositable->EnsureTextureHost(op.textureId(),
+        compositable->EnsureDeprecatedTextureHost(op.textureId(),
                                         descriptor,
                                         compositableParent->GetCompositableManager(),
                                         TextureInfo());
-        MOZ_ASSERT(compositable->GetTextureHost());
+        MOZ_ASSERT(compositable->GetDeprecatedTextureHost());
 
         SurfaceDescriptor newBack;
         bool shouldRecomposite = compositable->Update(descriptor, &newBack);

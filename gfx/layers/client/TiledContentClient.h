@@ -23,38 +23,38 @@ namespace layers {
  * Ideal place to store per tile debug information.
  */
 struct BasicTiledLayerTile {
-  RefPtr<TextureClientTile> mTextureClient;
+  RefPtr<DeprecatedTextureClientTile> mDeprecatedTextureClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
 #endif
 
   // Placeholder
   BasicTiledLayerTile()
-    : mTextureClient(nullptr)
+    : mDeprecatedTextureClient(nullptr)
   {}
 
   BasicTiledLayerTile(const BasicTiledLayerTile& o) {
-    mTextureClient = o.mTextureClient;
+    mDeprecatedTextureClient = o.mDeprecatedTextureClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
     mLastUpdate = o.mLastUpdate;
 #endif
   }
   BasicTiledLayerTile& operator=(const BasicTiledLayerTile& o) {
     if (this == &o) return *this;
-    mTextureClient = o.mTextureClient;
+    mDeprecatedTextureClient = o.mDeprecatedTextureClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
     mLastUpdate = o.mLastUpdate;
 #endif
     return *this;
   }
   bool operator== (const BasicTiledLayerTile& o) const {
-    return mTextureClient == o.mTextureClient;
+    return mDeprecatedTextureClient == o.mDeprecatedTextureClient;
   }
   bool operator!= (const BasicTiledLayerTile& o) const {
-    return mTextureClient != o.mTextureClient;
+    return mDeprecatedTextureClient != o.mDeprecatedTextureClient;
   }
 
-  bool IsPlaceholderTile() { return mTextureClient == nullptr; }
+  bool IsPlaceholderTile() { return mDeprecatedTextureClient == nullptr; }
 
   void ReadUnlock() {
     GetSurface()->ReadUnlock();
@@ -64,7 +64,7 @@ struct BasicTiledLayerTile {
   }
 
   gfxReusableSurfaceWrapper* GetSurface() {
-    return mTextureClient->GetReusableSurfaceWrapper();
+    return mDeprecatedTextureClient->GetReusableSurfaceWrapper();
   }
 };
 

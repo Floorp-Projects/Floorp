@@ -12,68 +12,68 @@ namespace mozilla {
 namespace layers {
 
 // implemented in TextureOGL.cpp
-TemporaryRef<TextureHost> CreateTextureHostOGL(SurfaceDescriptorType aDescriptorType,
-                                               uint32_t aTextureHostFlags,
-                                               uint32_t aTextureFlags);
+TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
+                                                           uint32_t aDeprecatedTextureHostFlags,
+                                                           uint32_t aTextureFlags);
 // implemented in BasicCompositor.cpp
-TemporaryRef<TextureHost> CreateBasicTextureHost(SurfaceDescriptorType aDescriptorType,
-                                                 uint32_t aTextureHostFlags,
-                                                 uint32_t aTextureFlags);
+TemporaryRef<DeprecatedTextureHost> CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                                                             uint32_t aDeprecatedTextureHostFlags,
+                                                             uint32_t aTextureFlags);
 
-TemporaryRef<TextureHost> CreateTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
-                                                uint32_t aTextureHostFlags,
-                                                uint32_t aTextureFlags)
+TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
+                                                            uint32_t aDeprecatedTextureHostFlags,
+                                                            uint32_t aTextureFlags)
 {
   NS_RUNTIMEABORT("not implemented");
   return nullptr;
 }
 
 #ifdef XP_WIN
-TemporaryRef<TextureHost> CreateTextureHostD3D11(SurfaceDescriptorType aDescriptorType,
-                                                 uint32_t aTextureHostFlags,
-                                                 uint32_t aTextureFlags);
+TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D11(SurfaceDescriptorType aDescriptorType,
+                                                             uint32_t aDeprecatedTextureHostFlags,
+                                                             uint32_t aTextureFlags);
 #endif
 
-/* static */ TemporaryRef<TextureHost>
-TextureHost::CreateTextureHost(SurfaceDescriptorType aDescriptorType,
-                               uint32_t aTextureHostFlags,
-                               uint32_t aTextureFlags)
+/* static */ TemporaryRef<DeprecatedTextureHost>
+DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                                           uint32_t aDeprecatedTextureHostFlags,
+                                           uint32_t aTextureFlags)
 {
   switch (Compositor::GetBackend()) {
     case LAYERS_OPENGL:
-      return CreateTextureHostOGL(aDescriptorType,
-                                  aTextureHostFlags,
-                                  aTextureFlags);
+      return CreateDeprecatedTextureHostOGL(aDescriptorType,
+                                        aDeprecatedTextureHostFlags,
+                                        aTextureFlags);
     case LAYERS_D3D9:
-      return CreateTextureHostD3D9(aDescriptorType,
-                                   aTextureHostFlags,
-                                   aTextureFlags);
+      return CreateDeprecatedTextureHostD3D9(aDescriptorType,
+                                         aDeprecatedTextureHostFlags,
+                                         aTextureFlags);
 #ifdef XP_WIN
     case LAYERS_D3D11:
-      return CreateTextureHostD3D11(aDescriptorType,
-                                    aTextureHostFlags,
-                                    aTextureFlags);
+      return CreateDeprecatedTextureHostD3D11(aDescriptorType,
+                                          aDeprecatedTextureHostFlags,
+                                          aTextureFlags);
 #endif
     case LAYERS_BASIC:
-      return CreateBasicTextureHost(aDescriptorType,
-                                    aTextureHostFlags,
-                                    aTextureFlags);
+      return CreateBasicDeprecatedTextureHost(aDescriptorType,
+                                          aDeprecatedTextureHostFlags,
+                                          aTextureFlags);
     default:
       MOZ_CRASH("Couldn't create texture host");
   }
 }
 
 
-TextureHost::TextureHost()
+DeprecatedTextureHost::DeprecatedTextureHost()
   : mFlags(0)
   , mBuffer(nullptr)
   , mFormat(gfx::FORMAT_UNKNOWN)
   , mDeAllocator(nullptr)
 {
-  MOZ_COUNT_CTOR(TextureHost);
+  MOZ_COUNT_CTOR(DeprecatedTextureHost);
 }
 
-TextureHost::~TextureHost()
+DeprecatedTextureHost::~DeprecatedTextureHost()
 {
   if (mBuffer) {
     if (!(mFlags & OwnByClient)) {
@@ -85,21 +85,21 @@ TextureHost::~TextureHost()
     }
     delete mBuffer;
   }
-  MOZ_COUNT_DTOR(TextureHost);
+  MOZ_COUNT_DTOR(DeprecatedTextureHost);
 }
 
 void
-TextureHost::Update(const SurfaceDescriptor& aImage,
-                    nsIntRegion* aRegion,
-                    nsIntPoint* aOffset)
+DeprecatedTextureHost::Update(const SurfaceDescriptor& aImage,
+                          nsIntRegion* aRegion,
+                          nsIntPoint* aOffset)
 {
   UpdateImpl(aImage, aRegion, aOffset);
 }
 
 void
-TextureHost::SwapTextures(const SurfaceDescriptor& aImage,
-                          SurfaceDescriptor* aResult,
-                          nsIntRegion* aRegion)
+DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
+                                SurfaceDescriptor* aResult,
+                                nsIntRegion* aRegion)
 {
   SwapTexturesImpl(aImage, aRegion);
 
@@ -119,7 +119,7 @@ TextureSource::PrintInfo(nsACString& aTo, const char* aPrefix)
 }
 
 void
-TextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
+DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
   aTo += nsPrintfCString("%s (0x%p)", Name(), this);

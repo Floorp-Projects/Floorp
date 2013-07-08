@@ -12,13 +12,13 @@
 namespace mozilla {
 namespace layers {
 
-class TextureClientSharedOGL : public TextureClient
+class DeprecatedTextureClientSharedOGL : public DeprecatedTextureClient
 {
 public:
-  TextureClientSharedOGL(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo);
-  ~TextureClientSharedOGL() { ReleaseResources(); }
+  DeprecatedTextureClientSharedOGL(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo);
+  ~DeprecatedTextureClientSharedOGL() { ReleaseResources(); }
 
-  virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_SHARED_GL; }
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_SHARED_GL; }
   virtual void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType);
   virtual void ReleaseResources();
   virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
@@ -31,26 +31,26 @@ protected:
 };
 
 // Doesn't own the surface descriptor, so we shouldn't delete it
-class TextureClientSharedOGLExternal : public TextureClientSharedOGL
+class DeprecatedTextureClientSharedOGLExternal : public DeprecatedTextureClientSharedOGL
 {
 public:
-  TextureClientSharedOGLExternal(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
-    : TextureClientSharedOGL(aForwarder, aTextureInfo)
+  DeprecatedTextureClientSharedOGLExternal(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
+    : DeprecatedTextureClientSharedOGL(aForwarder, aTextureInfo)
   {}
 
-  virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_SHARED_GL_EXTERNAL; }
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_SHARED_GL_EXTERNAL; }
   virtual void ReleaseResources() {}
 };
 
-class TextureClientStreamOGL : public TextureClient
+class DeprecatedTextureClientStreamOGL : public DeprecatedTextureClient
 {
 public:
-  TextureClientStreamOGL(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
-    : TextureClient(aForwarder, aTextureInfo)
+  DeprecatedTextureClientStreamOGL(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
+    : DeprecatedTextureClient(aForwarder, aTextureInfo)
   {}
-  ~TextureClientStreamOGL() { ReleaseResources(); }
+  ~DeprecatedTextureClientStreamOGL() { ReleaseResources(); }
 
-  virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_STREAM_GL; }
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_STREAM_GL; }
   virtual void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) { }
   virtual void ReleaseResources() { mDescriptor = SurfaceDescriptor(); }
   virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }

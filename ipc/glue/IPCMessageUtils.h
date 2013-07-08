@@ -1149,14 +1149,14 @@ struct ParamTraits<mozilla::layers::TextureInfo>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mCompositableType);
-    WriteParam(aMsg, aParam.mTextureHostFlags);
+    WriteParam(aMsg, aParam.mDeprecatedTextureHostFlags);
     WriteParam(aMsg, aParam.mTextureFlags);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mCompositableType) &&
-           ReadParam(aMsg, aIter, &aResult->mTextureHostFlags) &&
+           ReadParam(aMsg, aIter, &aResult->mDeprecatedTextureHostFlags) &&
            ReadParam(aMsg, aIter, &aResult->mTextureFlags);
   }
 };
