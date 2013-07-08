@@ -5,11 +5,8 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="Widget.TwoLinePageRow.Title">
-        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLinePageRow.Title</item>
+    <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium">
         <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:ellipsize">none</item>
     </style>
 
     <style name="AboutHome.TextAppearance.PageTitle" parent="TextAppearance.Medium">
