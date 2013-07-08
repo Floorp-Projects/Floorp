@@ -1067,7 +1067,12 @@ let SourceUtils = {
       return "";
     }
 
-    let { scheme, hostPort, directory, fileName } = uri;
+    let { scheme, directory, fileName } = uri;
+    let hostPort;
+    // Add-on SDK jar: URLs will cause accessing hostPort to throw.
+    if (scheme != "jar") {
+      hostPort = uri.hostPort;
+    }
     let lastDir = directory.split("/").reverse()[1];
     let group = [];
 
