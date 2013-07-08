@@ -11,7 +11,6 @@
 #include "mozilla/Services.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsMemoryPressure.h"
 #include "nsThreadUtils.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -24,6 +23,37 @@
 using namespace mozilla;
 
 namespace {
+
+class MemoryPressureRunnable : public nsRunnable
+{
+  const char *mTopic;
+  const PRUnichar *mData;
+public:
+  MemoryPressureRunnable(const char *aTopic, const PRUnichar *aData) :
+    mTopic(aTopic), mData(aData)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    LOG("Dispatching low-memory memory-pressure event");
+
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, mTopic, mData);
+    }
+    return NS_OK;
+  }
+};
+
+static void
+Dispatch(const char *aTopic, const PRUnichar *aData)
+{
+  nsRefPtr<MemoryPressureRunnable> memoryPressureRunnable =
+    new MemoryPressureRunnable(aTopic, aData);
+  NS_DispatchToMainThread(memoryPressureRunnable);
+}
 
 /**
  * MemoryPressureWatcher watches sysfs from its own thread to notice when the
@@ -156,8 +186,8 @@ public:
 
       // We use low-memory-no-forward because each process has its own watcher
       // and thus there is no need for the main process to forward this event.
-      rv = NS_DispatchMemoryPressure(MemPressure_New);
-      NS_ENSURE_SUCCESS(rv, rv);
+      Dispatch("memory-pressure",
+               NS_LITERAL_STRING("low-memory-no-forward").get());
 
       // Manually check lowMemFd until we observe that memory pressure is over.
       // We won't fire any more low-memory events until we observe that
@@ -189,8 +219,8 @@ public:
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (memoryPressure) {
-          rv = NS_DispatchMemoryPressure(MemPressure_Ongoing);
-          NS_ENSURE_SUCCESS(rv, rv);
+          Dispatch("memory-pressure",
+                   NS_LITERAL_STRING("low-memory-ongoing-no-forward").get());
           continue;
         }
       } while (false);
