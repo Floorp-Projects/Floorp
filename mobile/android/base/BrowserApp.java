@@ -540,6 +540,11 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            super.onBackPressed();
+            return;
+        }
+
         if (dismissEditingMode()) {
             return;
         }
