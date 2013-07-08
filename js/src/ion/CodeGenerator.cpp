@@ -1178,6 +1178,34 @@ CodeGenerator::visitConvertElementsToDoubles(LConvertElementsToDoubles *lir)
 }
 
 bool
+CodeGenerator::visitMaybeToDoubleElement(LMaybeToDoubleElement *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    Register value = ToRegister(lir->value());
+    ValueOperand out = ToOutValue(lir);
+
+    FloatRegister temp = ToFloatRegister(lir->tempFloat());
+    Label convert, done;
+
+    // If the CONVERT_DOUBLE_ELEMENTS flag is set, convert the int32
+    // value to double. Else, just box it.
+    masm.branchTest32(Assembler::NonZero,
+                      Address(elements, ObjectElements::offsetOfFlags()),
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                      &convert);
+
+    masm.tagValue(JSVAL_TYPE_INT32, value, out);
+    masm.jump(&done);
+
+    masm.bind(&convert);
+    masm.convertInt32ToDouble(value, temp);
+    masm.boxDouble(temp, out);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment *lir)
 {
     Address environment(ToRegister(lir->function()), JSFunction::offsetOfEnvironment());
