@@ -238,14 +238,14 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
 }
 
 PBluetoothRequestParent*
-BluetoothParent::AllocPBluetoothRequest(const Request& aRequest)
+BluetoothParent::AllocPBluetoothRequestParent(const Request& aRequest)
 {
   MOZ_ASSERT(mService);
   return new BluetoothRequestParent(mService);
 }
 
 bool
-BluetoothParent::DeallocPBluetoothRequest(PBluetoothRequestParent* aActor)
+BluetoothParent::DeallocPBluetoothRequestParent(PBluetoothRequestParent* aActor)
 {
   delete aActor;
   return true;

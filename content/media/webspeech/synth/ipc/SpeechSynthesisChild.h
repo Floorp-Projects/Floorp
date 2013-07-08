@@ -31,13 +31,13 @@ protected:
   SpeechSynthesisChild();
   virtual ~SpeechSynthesisChild();
 
-  PSpeechSynthesisRequestChild* AllocPSpeechSynthesisRequest(const nsString& aLang,
-                                                             const nsString& aUri,
-                                                             const nsString& aText,
-                                                             const float& aVolume,
-                                                             const float& aPitch,
-                                                             const float& aRate);
-  bool DeallocPSpeechSynthesisRequest(PSpeechSynthesisRequestChild* aActor);
+  PSpeechSynthesisRequestChild* AllocPSpeechSynthesisRequestChild(const nsString& aLang,
+                                                                  const nsString& aUri,
+                                                                  const nsString& aText,
+                                                                  const float& aVolume,
+                                                                  const float& aPitch,
+                                                                  const float& aRate);
+  bool DeallocPSpeechSynthesisRequestChild(PSpeechSynthesisRequestChild* aActor);
 };
 
 class SpeechSynthesisRequestChild : public PSpeechSynthesisRequestChild
