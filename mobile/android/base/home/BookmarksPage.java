@@ -228,7 +228,7 @@ public class BookmarksPage extends HomeFragment {
 
                     // Load the thumbnails.
                     if (c.getCount() > 0) {
-                        new LoadThumbnailsTask(getActivity()).execute(c);
+                        new LoadThumbnailsTask(getActivity(), mTopBookmarks).execute(c);
                     }
                     break;
                 }
@@ -259,12 +259,14 @@ public class BookmarksPage extends HomeFragment {
     /**
      * An AsyncTask to load the thumbnails from a cursor.
      */
-    private class LoadThumbnailsTask extends UiAsyncTask<Cursor, Void, Map<String, Thumbnail>> {
+    private static class LoadThumbnailsTask extends UiAsyncTask<Cursor, Void, Map<String, Thumbnail>> {
         private final Context mContext;
+        private final TopBookmarksView mView;
 
-        public LoadThumbnailsTask(Context context) {
+        public LoadThumbnailsTask(Context context, TopBookmarksView view) {
             super(ThreadUtils.getBackgroundHandler());
             mContext = context;
+            mView = view;
         }
 
         @Override
@@ -327,7 +329,10 @@ public class BookmarksPage extends HomeFragment {
 
         @Override
         public void onPostExecute(Map<String, Thumbnail> thumbnails) {
-            mTopBookmarks.updateThumbnails(thumbnails);
+            // Check to see if the view is still attached.
+            if (mView.getHandler() != null) {
+                mView.updateThumbnails(thumbnails);
+            }
         }
     }
 }
