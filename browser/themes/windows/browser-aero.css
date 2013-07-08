@@ -43,7 +43,8 @@
 
 @media (-moz-windows-default-theme) {
   #navigator-toolbox > toolbar:not(:-moz-lwtheme),
-  #browser-bottombox:not(:-moz-lwtheme) {
+  #browser-bottombox:not(:-moz-lwtheme),
+  .browserContainer > findbar {
     background-color: @customToolbarColor@;
   }
 
