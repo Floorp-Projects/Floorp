@@ -25,6 +25,8 @@ function setUpAndTearDown() {
   yield waitForCondition(function () {
       return !SelectionHelperUI.isSelectionUIVisible;
     }, kCommonWaitMs, kCommonPollMs);
+  InputSourceHelper.isPrecise = false;
+  InputSourceHelper.fireUpdate();
 }
 
 /*
@@ -49,7 +51,6 @@ gTests.push({
 
     gWindow = Browser.selectedTab.browser.contentWindow;
     gInput = gWindow.document.getElementById("a");
-    InputSourceHelper.isPrecise = false;
   },
 });
 
@@ -72,7 +73,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     yield waitForCondition(function () {
@@ -101,7 +102,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     yield waitForCondition(function () {
@@ -147,7 +148,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     yield waitForCondition(function () {

@@ -28,6 +28,8 @@ function setUpAndTearDown() {
   yield waitForCondition(function () {
       return !SelectionHelperUI.isSelectionUIVisible;
     }, kCommonWaitMs, kCommonPollMs);
+  InputSourceHelper.isPrecise = false;
+  InputSourceHelper.fireUpdate();
 }
 
 gTests.push({
@@ -50,8 +52,6 @@ gTests.push({
     ok(gWindow != null, "gWindow");
     ok(gFrame != null, "gFrame");
     ok(gTextArea != null, "gTextArea");
-
-    InputSourceHelper.isPrecise = false;
   },
 });
 
@@ -74,7 +74,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     yield waitForCondition(function () {
@@ -89,7 +89,7 @@ gTests.push({
 });
 
 gTests.push({
-  desc: "drag selection",
+  desc: "drag selection 1",
   setUp: setUpAndTearDown,
   tearDown: setUpAndTearDown,
   run: function test() {
@@ -107,7 +107,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     yield waitForCondition(function () {
@@ -154,7 +154,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     let string = "";
@@ -166,7 +166,7 @@ gTests.push({
 });
 
 gTests.push({
-  desc: "drag selection",
+  desc: "drag selection 2",
   setUp: setUpAndTearDown,
   tearDown: setUpAndTearDown,
   run: function test() {
@@ -188,7 +188,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     yield waitForCondition(function () {
@@ -235,7 +235,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
 
     let string = "";
