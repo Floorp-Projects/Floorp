@@ -14,8 +14,5 @@ IS_COMPONENT    = 1
 MODULE_NAME     = nsOSXProxyModule
 LIBXUL_LIBRARY  = 1
 
-DISABLED_CMMSRCS = \
-        nsOSXSystemProxySettings.mm \
-        $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -19,9 +19,6 @@ CMSRCS = \
   HTTPMultipartUpload.m \
   $(NULL)
 
-DISABLED_CMMSRCS = \
-  MachIPC.mm \
-  $(NULL)
 
 HOST_CPPSRCS = $(CPPSRCS)
 

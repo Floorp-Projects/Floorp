@@ -47,27 +47,6 @@ DEFINES += -DANDROID -D_POSIX_MONOTONIC_CLOCK=0
 endif # Android
 endif # } OS_POSIX
 
-ifdef OS_MACOSX # {
-
-DISABLED_CMMSRCS += \
-  base_paths_mac.mm \
-  file_util_mac.mm \
-  file_version_info_mac.mm \
-  mac_util.mm \
-  message_pump_mac.mm \
-  platform_thread_mac.mm \
-  process_util_mac.mm \
-  scoped_nsautorelease_pool.mm \
-  sys_string_conversions_mac.mm \
-  worker_pool_mac.mm \
-  chrome_paths_mac.mm \
-  mach_ipc_mac.mm \
-  platform_util_mac.mm \
-  chrome_application_mac.mm \
-  $(NULL)
-
-endif # } OS_MACOSX
-
 # libevent
 
 ifndef MOZ_NATIVE_LIBEVENT # {

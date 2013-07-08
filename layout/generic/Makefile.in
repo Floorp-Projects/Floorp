@@ -16,12 +16,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DISABLED_CMMSRCS		+= \
-		nsPluginUtilsOSX.mm \
-		$(NULL)
-endif
-
 RESOURCES_HTML = \
 		$(srcdir)/folder.png \
 		$(NULL)
