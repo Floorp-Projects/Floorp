@@ -4510,8 +4510,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       false);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // The PostCreate hook for the document will handle defining the
-      // property
+      // nsIDocument::WrapObject will handle defining the property.
       *objp = obj;
 
       // NB: We need to do this for any Xray wrapper.
