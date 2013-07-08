@@ -45,6 +45,7 @@ EXPORTS_mozilla += \
   SHA1.h \
   SplayTree.h \
   StandardInteger.h \
+  TemplateLib.h \
   ThreadLocal.h \
   TypedEnum.h \
   Types.h \

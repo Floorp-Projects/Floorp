@@ -12,6 +12,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/TemplateLib.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,8 +23,6 @@
 #endif
 
 #include "jstypes.h"
-
-#include "js/TemplateLib.h"
 
 /* The public JS engine namespace. */
 namespace JS {}
@@ -354,7 +353,7 @@ template <class T>
 static JS_ALWAYS_INLINE T *
 js_pod_malloc(size_t numElems)
 {
-    if (numElems & js::tl::MulOverflowMask<sizeof(T)>::result)
+    if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
         return NULL;
     return (T *)js_malloc(numElems * sizeof(T));
 }
@@ -363,7 +362,7 @@ template <class T>
 static JS_ALWAYS_INLINE T *
 js_pod_calloc(size_t numElems)
 {
-    if (numElems & js::tl::MulOverflowMask<sizeof(T)>::result)
+    if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
         return NULL;
     return (T *)js_calloc(numElems * sizeof(T));
 }
