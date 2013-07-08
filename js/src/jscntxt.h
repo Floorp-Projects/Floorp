@@ -11,31 +11,17 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/PodOperations.h"
 
 #include <string.h>
-#include <setjmp.h>
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsprvtd.h"
-#include "jsatom.h"
-#include "jsclist.h"
-#include "jsgc.h"
 
-#include "ds/FixedSizeHash.h"
-#include "ds/LifoAlloc.h"
-#include "frontend/ParseMaps.h"
-#include "gc/Nursery.h"
-#include "gc/Statistics.h"
-#include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
-#include "vm/DateTime.h"
 #include "vm/Runtime.h"
-#include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
-#include "vm/ThreadPool.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
