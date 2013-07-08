@@ -224,14 +224,15 @@ function getUpdateTestDir() {
 }
 
 /**
- * Checks if the update has finished and if it has finished performs checks for
- * the test.
+ * Checks if the update has finished, renames the update.log file to make
+ * sure it is not in use, and then calls restoreLogFile to continue the test.
  */
 function checkUpdateFinished() {
   gTimeoutRuns++;
   // Don't proceed until the update.log has been created.
-  let log = getUpdatesDir();
-  log.append("0");
+  let updatesDir = getUpdatesDir();
+  updatesDir.append("0");
+  let log = updatesDir.clone();
   log.append(FILE_UPDATE_LOG);
   if (!log.exists()) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
@@ -253,6 +254,53 @@ function checkUpdateFinished() {
     return;
   }
 
+  // Don't proceed until the update.log file can be renamed to update.log.bak
+  // (bug 889860).
+  try {
+    log.moveTo(updatesDir, FILE_UPDATE_LOG + ".bak");
+  }
+  catch (e) {
+    logTestInfo("unable to rename file " + FILE_UPDATE_LOG + " to " +
+                FILE_UPDATE_LOG + ".bak. Exception: " + e);
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting to be able to " +
+               "rename " + FILE_UPDATE_LOG + " to " + FILE_UPDATE_LOG +
+               ".bak. Path: " + log.path);
+    else
+      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+    return;
+  }
+
+  restoreLogFile();
+}
+
+/**
+ * Checks if the renamed the update.log file can be renamed back to make
+ * sure it is not in use and if so, continues the test.
+ */
+function restoreLogFile() {
+  gTimeoutRuns++;
+  // Don't proceed until the update.log.bak file can be renamed back to
+  // update.log (bug 889860).
+  let updatesDir = getUpdatesDir();
+  updatesDir.append("0");
+  let log = updatesDir.clone();
+  log.append(FILE_UPDATE_LOG + ".bak");
+  try {
+    log.moveTo(updatesDir, FILE_UPDATE_LOG);
+  }
+  catch (e) {
+    logTestInfo("unable to rename file " + FILE_UPDATE_LOG + ".bak back to " +
+                FILE_UPDATE_LOG + ". Exception: " + e);
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting to be able to " +
+               "rename " + FILE_UPDATE_LOG + ".bak back to " + FILE_UPDATE_LOG +
+               ". Path: " + log.path);
+    else
+      do_timeout(CHECK_TIMEOUT_MILLI, restoreLogFile);
+    return;
+  }
+
   // Log the contents of the update.log so it is simpler to diagnose a test
   // failure. For example, on Windows if the application binary is in use the
   // updater will not apply the update.
@@ -264,6 +312,7 @@ function checkUpdateFinished() {
     do_throw("the application can't be in use when running this test");
   }
 
+  let status = readStatusFile();
   do_check_eq(status, STATE_SUCCEEDED);
 
   standardInit();
@@ -290,6 +339,10 @@ function checkUpdateFinished() {
   checkLogRenameFinished();
 }
 
+/**
+ * Checks if the update.log file has been renamed after launch and if so,
+ * continues the test.
+ */
 function checkLogRenameFinished() {
   gTimeoutRuns++;
   // Don't proceed until the update.log has been renamed to last-update.log.
