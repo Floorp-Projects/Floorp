@@ -373,11 +373,11 @@ void* MediaDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR,
-               "Wrong format?");
-  mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
 
-  mResult += vi->GetDataSize();
+  if (v->mImage->GetFormat() == PLANAR_YCBCR) {
+    mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
+    mResult += vi->GetDataSize();
+  }
   return nullptr;
 }
 
