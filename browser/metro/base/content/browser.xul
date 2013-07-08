@@ -446,10 +446,10 @@
           <button label="&sync.setup.remove;" oncommand="Sync.disconnect();" />
         </hbox>
       </vbox>
-      <vbox id="sync-disconnectthrobber" collapsed="true">
+      <vbox id="sync-disconnectpanel">
         <hbox>
           <spacer flex="1" />
-          <cssthrobber id="syncdisconnectthrobber" />
+          <cssthrobber id="sync-disconnectthrobber"/>
           <label>&sync.removethrobber.label;</label>
           <spacer flex="1" />
         </hbox>
@@ -492,8 +492,7 @@
           <deck id="clear-notification" flex="2" selectedIndex="0" align="center">
             <spacer id="clear-notification-empty"/>
             <hbox id="clear-notification-clearing" align="center">
-              <!-- TODO: we need a more metro-y throbber. See bug 852622 -->
-              <image src="chrome://browser/skin/images/throbber.png" />
+              <cssthrobber id="clearprivacythrobber"/>
             </hbox>
             <description id="clear-notification-done">&clearPrivateData.done;</description>
           </deck>
