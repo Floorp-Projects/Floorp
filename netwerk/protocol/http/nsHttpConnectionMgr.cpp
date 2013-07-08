@@ -3321,18 +3321,12 @@ nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
         HttpConnInfo info;
         info.ttl = ent->mActiveConns[i]->TimeToLive();
         info.rtt = ent->mActiveConns[i]->Rtt();
-        if (ent->mActiveConns[i]->UsingSpdy())
-            info.SetHTTP2ProtocolVersion(ent->mActiveConns[i]->GetSpdyVersion());
-        else
-            info.SetHTTP1ProtocolVersion(ent->mActiveConns[i]->GetLastHttpResponseVersion());
-
         data.active.AppendElement(info);
     }
     for (uint32_t i = 0; i < ent->mIdleConns.Length(); i++) {
         HttpConnInfo info;
         info.ttl = ent->mIdleConns[i]->TimeToLive();
         info.rtt = ent->mIdleConns[i]->Rtt();
-        info.SetHTTP1ProtocolVersion(ent->mIdleConns[i]->GetLastHttpResponseVersion());
         data.idle.AppendElement(info);
     }
     data.spdy = ent->mUsingSpdy;

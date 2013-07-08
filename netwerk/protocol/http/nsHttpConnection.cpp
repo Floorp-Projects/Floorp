@@ -71,7 +71,6 @@ nsHttpConnection::nsHttpConnection()
     , mReportedSpdy(false)
     , mEverUsedSpdy(false)
     , mTransactionCaps(0)
-    , mLastHttpResponseVersion(NS_HTTP_VERSION_1_1)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -886,8 +885,6 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             LOG(("HTTP Upgrade Response to %s\n", upgradeResp));
         }
     }
-
-    mLastHttpResponseVersion = responseHead->Version();
 
     return NS_OK;
 }
