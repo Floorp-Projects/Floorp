@@ -128,7 +128,7 @@
                      android:contentDescription="@string/site_security"
                      android:visibility="gone"/>
 
-        <org.mozilla.gecko.GeckoTextView android:id="@+id/awesome_bar_title"
+        <org.mozilla.gecko.GeckoTextView android:id="@+id/url_bar_title"
                                          style="@style/UrlBar.Button"
                                          android:layout_width="fill_parent"
                                          android:layout_height="fill_parent"
