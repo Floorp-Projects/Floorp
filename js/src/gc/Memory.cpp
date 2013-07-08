@@ -6,9 +6,8 @@
 
 #include "gc/Memory.h"
 
-#include "jscntxt.h"
-
 #include "js/HeapAPI.h"
+#include "vm/Runtime.h"
 
 using namespace js;
 using namespace js::gc;
