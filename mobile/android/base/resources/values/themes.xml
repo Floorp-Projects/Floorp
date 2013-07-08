@@ -85,8 +85,8 @@
     </style>
 
     <style name="Gecko.AwesomeBar" parent="GeckoAwesomeBarBase">
-        <item name="android:listViewStyle">@style/Widget.ListView</item>
-        <item name="android:expandableListViewStyle">@style/Widget.ExpandableListView</item>
+        <item name="android:listViewStyle">@style/Widget.ListView.AwesomeBar</item>
+        <item name="android:expandableListViewStyle">@style/Widget.ExpandableListView.AwesomeBar</item>
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>
