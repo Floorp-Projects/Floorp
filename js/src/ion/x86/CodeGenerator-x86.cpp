@@ -674,6 +674,18 @@ ParallelGetPropertyIC::initializeAddCacheState(LInstruction *ins, AddCacheState 
         addState->dispatchScratch = ToRegister(ins->toGetPropertyCacheT()->temp());
 }
 
+void
+ParallelGetElementIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
+{
+    // We don't have a scratch register, but only use the temp if we needed
+    // one, it's BogusTemp otherwise.
+    JS_ASSERT(ins->isGetElementCacheV() || ins->isGetElementCacheT());
+    if (ins->isGetElementCacheV() || ins->toGetElementCacheT()->temp()->isBogusTemp())
+        addState->dispatchScratch = output_.scratchReg().gpr();
+    else
+        addState->dispatchScratch = ToRegister(ins->toGetElementCacheT()->temp());
+}
+
 namespace js {
 namespace ion {
 

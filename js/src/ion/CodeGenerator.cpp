@@ -5810,15 +5810,31 @@ CodeGenerator::visitParallelGetPropertyIC(OutOfLineUpdateCache *ool, ParallelGet
 }
 
 bool
+CodeGenerator::addGetElementCache(LInstruction *ins, Register obj, ConstantOrRegister index,
+                                  TypedOrValueRegister output, bool monitoredResult)
+{
+    switch (gen->info().executionMode()) {
+      case SequentialExecution: {
+        GetElementIC cache(obj, index, output, monitoredResult);
+        return addCache(ins, allocateCache(cache));
+      }
+      case ParallelExecution: {
+        ParallelGetElementIC cache(obj, index, output, monitoredResult);
+        return addCache(ins, allocateCache(cache));
+      }
+      default:
+        MOZ_ASSUME_UNREACHABLE("Bad execution mode");
+    }
+}
+
+bool
 CodeGenerator::visitGetElementCacheV(LGetElementCacheV *ins)
 {
     Register obj = ToRegister(ins->object());
     ConstantOrRegister index = TypedOrValueRegister(ToValue(ins, LGetElementCacheV::Index));
     TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
 
-    GetElementIC cache(obj, index, output, ins->mir()->monitoredResult());
-
-    return addCache(ins, allocateCache(cache));
+    return addGetElementCache(ins, obj, index, output, ins->mir()->monitoredResult());
 }
 
 bool
@@ -5828,9 +5844,7 @@ CodeGenerator::visitGetElementCacheT(LGetElementCacheT *ins)
     ConstantOrRegister index = TypedOrValueRegister(MIRType_Int32, ToAnyRegister(ins->index()));
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
 
-    GetElementIC cache(obj, index, output, ins->mir()->monitoredResult());
-
-    return addCache(ins, allocateCache(cache));
+    return addGetElementCache(ins, obj, index, output, ins->mir()->monitoredResult());
 }
 
 typedef bool (*GetElementICFn)(JSContext *, size_t, HandleObject, HandleValue, MutableHandleValue);
@@ -5903,6 +5917,29 @@ CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic)
     if (!callVM(SetElementIC::UpdateInfo, lir))
         return false;
     restoreLive(lir);
+
+    masm.jump(ool->rejoin());
+    return true;
+}
+
+typedef ParallelResult (*ParallelGetElementICFn)(ForkJoinSlice *, size_t, HandleObject,
+                                                 HandleValue, MutableHandleValue);
+const VMFunction ParallelGetElementIC::UpdateInfo =
+    FunctionInfo<ParallelGetElementICFn>(ParallelGetElementIC::update);
+
+bool
+CodeGenerator::visitParallelGetElementIC(OutOfLineUpdateCache *ool, ParallelGetElementIC *ic)
+{
+    LInstruction *lir = ool->lir();
+    saveLive(lir);
+
+    pushArg(ic->index());
+    pushArg(ic->object());
+    pushArg(Imm32(ool->getCacheIndex()));
+    if (!callVM(ParallelGetElementIC::UpdateInfo, lir))
+        return false;
+    StoreValueTo(ic->output()).generate(this);
+    restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
 
     masm.jump(ool->rejoin());
     return true;
