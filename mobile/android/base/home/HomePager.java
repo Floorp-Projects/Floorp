@@ -22,6 +22,9 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 
 public class HomePager extends ViewPager {
+    // Subpage fragment tag
+    public static final String SUBPAGE_TAG = "home_pager_subpage";
+
     private final Context mContext;
     private volatile boolean mLoaded;
 

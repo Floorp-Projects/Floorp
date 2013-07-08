@@ -43,6 +43,12 @@ public class VisitedPage extends HomeFragment {
     // The view shown by the fragment.
     private ListView mList;
 
+    // Empty message view
+    private View mEmptyMessage;
+
+    // Buttons container
+    private View mButtonsContainer;
+
     // Callbacks used for the search and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
@@ -74,15 +80,14 @@ public class VisitedPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // All list views are styled to look the same with a global activity theme.
-        // If the style of the list changes, inflate it from an XML.
-        mList = new HomeListView(container.getContext());
-        return mList;
+        return inflater.inflate(R.layout.home_visited_page, container, false);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        mList = (HomeListView) view.findViewById(R.id.visited_list);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -98,12 +103,33 @@ public class VisitedPage extends HomeFragment {
         });
 
         registerForContextMenu(mList);
+
+        mEmptyMessage = view.findViewById(R.id.empty_message);
+        mButtonsContainer = view.findViewById(R.id.buttons_container);
+
+        final View historyButton = view.findViewById(R.id.history_button);
+        historyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showHistoryPage();
+            }
+        });
+
+        final View tabsButton = view.findViewById(R.id.tabs_button);
+        tabsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTabsPage();
+            }
+        });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
+        mButtonsContainer = null;
+        mEmptyMessage = null;
     }
 
     @Override
@@ -119,6 +145,16 @@ public class VisitedPage extends HomeFragment {
 
         // Reconnect to the loader only if present
         getLoaderManager().initLoader(FRECENCY_LOADER_ID, null, mCursorLoaderCallbacks);
+    }
+
+    private void showHistoryPage() {
+        final HistoryPage historyPage = HistoryPage.newInstance();
+        showSubPage(historyPage);
+    }
+
+    private void showTabsPage() {
+        final LastTabsPage lastTabsPage = LastTabsPage.newInstance();
+        showSubPage(lastTabsPage);
     }
 
     private static class FrecencyCursorLoader extends SimpleCursorLoader {
@@ -172,6 +208,13 @@ public class VisitedPage extends HomeFragment {
             final int loaderId = loader.getId();
             switch(loaderId) {
             case FRECENCY_LOADER_ID:
+                // Only set empty view once cursor is loaded to avoid
+                // flashing the empty message before loading.
+                mList.setEmptyView(mEmptyMessage);
+
+                final int buttonsVisibility = (c.getCount() == 0 ? View.GONE : View.VISIBLE);
+                mButtonsContainer.setVisibility(buttonsVisibility);
+
                 mAdapter.swapCursor(c);
 
                 FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
