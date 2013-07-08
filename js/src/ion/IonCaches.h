@@ -913,7 +913,9 @@ class ParallelGetPropertyIC : public DispatchIonCache
 
     bool canAttachReadSlot(LockedJSContext &cx, JSObject *obj, MutableHandleObject holder,
                            MutableHandleShape shape);
-    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, bool *attachedStub);
+    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
+                        Shape *shape);
+    bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
 
     static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                                  MutableHandleValue vp);
