@@ -91,6 +91,16 @@
         <item name="android:ellipsize">middle</item>
     </style>
 
+    <style name="Widget.ListView.AwesomeBar">
+        <item name="android:paddingLeft">@dimen/awesomebar_list_padding</item>
+        <item name="android:paddingRight">@dimen/awesomebar_list_padding</item>
+    </style> 
+
+    <style name="Widget.ExpandableListView.AwesomeBar">
+        <item name="android:paddingLeft">@dimen/awesomebar_list_padding</item>
+        <item name="android:paddingRight">@dimen/awesomebar_list_padding</item>
+    </style>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
