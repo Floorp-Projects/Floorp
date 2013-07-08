@@ -17,7 +17,21 @@ using namespace mozilla::gfx;
 
 namespace layers {
 
-class TextureSourceBasic : public TextureHost
+/**
+ * A texture source interface that can be used by the software Compositor.
+ */
+class TextureSourceBasic
+{
+public:
+  virtual ~TextureSourceBasic() {}
+  virtual gfx::SourceSurface* GetSurface() = 0;
+};
+
+/**
+ * Texture source and host implementaion for software compositing.
+ */
+class TextureHostBasic : public TextureHost
+                             , public TextureSourceBasic
 {
 public:
   virtual IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
@@ -31,7 +45,7 @@ public:
     mCompositor = static_cast<BasicCompositor*>(aCompositor);
   }
 
-  virtual const char *Name() { return "TextureSourceBasic"; }
+  virtual const char *Name() { return "TextureHostBasic"; }
 
 protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
@@ -91,7 +105,7 @@ DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, Pl
   aData.mPicSize = aDeserializer.GetYSize();
 }
 
-class YCbCrTextureHostBasic : public TextureSourceBasic
+class YCbCrTextureHostBasic : public TextureHostBasic
 {
 public:
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
@@ -160,7 +174,7 @@ CreateBasicTextureHost(SurfaceDescriptorType aDescriptorType,
   MOZ_ASSERT(aDescriptorType == SurfaceDescriptor::TShmem ||
              aDescriptorType == SurfaceDescriptor::TMemoryImage,
              "We can only support Shmem currently");
-  return new TextureSourceBasic();
+  return new TextureHostBasic();
 }
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
