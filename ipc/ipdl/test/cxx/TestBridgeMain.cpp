@@ -26,8 +26,8 @@ TestBridgeMainParent::Main()
 }
 
 PTestBridgeMainSubParent*
-TestBridgeMainParent::AllocPTestBridgeMainSub(Transport* transport,
-                                              ProcessId otherProcess)
+TestBridgeMainParent::AllocPTestBridgeMainSubParent(Transport* transport,
+                                                    ProcessId otherProcess)
 {
     ProcessHandle h;
     if (!base::OpenProcessHandle(otherProcess, &h)) {
@@ -177,8 +177,8 @@ TestBridgeSubChild::RecvPing()
 }
 
 PTestBridgeMainSubChild*
-TestBridgeSubChild::AllocPTestBridgeMainSub(Transport* transport,
-                                            ProcessId otherProcess)
+TestBridgeSubChild::AllocPTestBridgeMainSubChild(Transport* transport,
+                                                 ProcessId otherProcess)
 {
     ProcessHandle h;
     if (!base::OpenProcessHandle(otherProcess, &h)) {
