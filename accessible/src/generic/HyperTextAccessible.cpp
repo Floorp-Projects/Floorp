@@ -1095,6 +1095,20 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
     }
 
     case BOUNDARY_LINE_END: {
+      // Empty last line doesn't have own frame (a previous line contains '\n'
+      // character instead) thus we can't operate on last line separately
+      // from the previous line.
+      if (offset == CharacterCount()) {
+        nsAutoString lastChar;
+        GetText(offset -1, -1, lastChar);
+        if (lastChar.EqualsLiteral("\n")) {
+          *aStartOffset = offset - 1;
+          *aEndOffset = offset;
+          aText = lastChar;
+          return NS_OK;
+        }
+      }
+
       // In contrast to word end boundary we follow the spec here. End key,
       // then up arrow and if not on first line then end key.
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);
