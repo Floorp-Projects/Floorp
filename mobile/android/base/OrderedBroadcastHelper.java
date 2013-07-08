@@ -73,7 +73,7 @@ public final class OrderedBroadcastHelper
             }
 
             // It's fine if the caller-provided token is missing or null.
-            final Object token = (message.has("token") && !message.isNull("token")) ?
+            final JSONObject token = (message.has("token") && !message.isNull("token")) ?
                 message.getJSONObject("token") : null;
 
             // And a missing or null permission means no permission.
@@ -105,6 +105,12 @@ public final class OrderedBroadcastHelper
             };
 
             Intent intent = new Intent(action);
+            // OrderedBroadcast.jsm adds its callback ID to the caller's token;
+            // this unwraps that wrapping.
+            if (token != null && token.has("data")) {
+                intent.putExtra("token", token.getString("data"));
+            }
+
             mContext.sendOrderedBroadcast(intent,
                                           permission,
                                           resultReceiver,
