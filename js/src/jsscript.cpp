@@ -772,11 +772,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         }
     }
 
-    if (mode == XDR_DECODE) {
-        if (cx->hasOption(JSOPTION_PCCOUNT))
-            (void) script->initScriptCounts(cx);
+    if (mode == XDR_DECODE)
         scriptp.set(script);
-    }
 
     return true;
 }
@@ -1929,13 +1926,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         script->setFunction(funbox->function());
     }
 
-    /*
-     * initScriptCounts updates scriptCountsMap if necessary. The other script
-     * maps in JSCompartment are populated lazily.
-     */
-    if (cx->hasOption(JSOPTION_PCCOUNT))
-        (void) script->initScriptCounts(cx);
-
     for (unsigned i = 0, n = script->bindings.numArgs(); i < n; ++i) {
         if (script->formalIsAliased(i)) {
             script->funHasAnyAliasedFormal = true;
@@ -2444,13 +2434,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     /* Copy over hints. */
     dst->shouldCloneAtCallsite = src->shouldCloneAtCallsite;
     dst->isCallsiteClone = src->isCallsiteClone;
-
-    /*
-     * initScriptCounts updates scriptCountsMap if necessary. The other script
-     * maps in JSCompartment are populated lazily.
-     */
-    if (cx->hasOption(JSOPTION_PCCOUNT))
-        (void) dst->initScriptCounts(cx);
 
     if (nconsts != 0) {
         HeapValue *vector = Rebase<HeapValue>(dst, src, src->consts()->vector);

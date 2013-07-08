@@ -258,8 +258,6 @@ PCCounts::countName(JSOp op, size_t which)
     MOZ_ASSUME_UNREACHABLE("bad op");
 }
 
-#ifdef DEBUG
-
 #ifdef JS_ION
 void
 js::DumpIonScriptCounts(Sprinter *sp, ion::IonScriptCounts *ionCounts)
@@ -284,6 +282,7 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 {
     JS_ASSERT(script->hasScriptCounts);
 
+#ifdef DEBUG
     jsbytecode *pc = script->code;
     while (pc < script->code + script->length) {
         JSOp op = JSOp(*pc);
@@ -312,6 +311,7 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 
         pc = next;
     }
+#endif
 
 #ifdef JS_ION
     ion::IonScriptCounts *ionCounts = script->getIonCounts();
@@ -322,6 +322,8 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
     }
 #endif
 }
+
+#ifdef DEBUG
 
 /*
  * If pc != NULL, include a prefix indicating whether the PC is at the current line.
