@@ -29,7 +29,8 @@ namespace ion {
     _(BindName)                                                 \
     _(Name)                                                     \
     _(CallsiteClone)                                            \
-    _(ParallelGetProperty)
+    _(ParallelGetProperty)                                      \
+    _(ParallelGetElement)
 
 // Forward declarations of Cache kinds.
 #define FORWARD_DECLARE(kind) class kind##IC;
@@ -669,6 +670,11 @@ class GetElementIC : public RepatchIonCache
         hasDenseStub_ = true;
     }
 
+    static bool canAttachGetProp(JSObject *obj, const Value &idval, jsid id);
+    static bool canAttachDenseElement(JSObject *obj, const Value &idval);
+    static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval,
+                                           TypedOrValueRegister output);
+
     bool attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj, const Value &idval, HandlePropertyName name);
     bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
     bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr,
@@ -924,14 +930,68 @@ class ParallelGetPropertyIC : public ParallelIonCache
         return output_;
     }
 
-    bool canAttachReadSlot(LockedJSContext &cx, JSObject *obj, MutableHandleObject holder,
-                           MutableHandleShape shape);
+    static bool canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
+                                  TypedOrValueRegister output, JSObject *obj,
+                                  PropertyName *name, MutableHandleObject holder,
+                                  MutableHandleShape shape);
+
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         Shape *shape);
     bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
 
     static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                                  MutableHandleValue vp);
+};
+
+class ParallelGetElementIC : public ParallelIonCache
+{
+  protected:
+    Register object_;
+    ConstantOrRegister index_;
+    TypedOrValueRegister output_;
+
+    bool monitoredResult_ : 1;
+
+  public:
+    ParallelGetElementIC(Register object, ConstantOrRegister index,
+                         TypedOrValueRegister output, bool monitoredResult)
+      : object_(object),
+        index_(index),
+        output_(output),
+        monitoredResult_(monitoredResult)
+    {
+    }
+
+    CACHE_HEADER(ParallelGetElement)
+
+#ifdef JS_CPU_X86
+    // x86 lacks a general purpose scratch register for dispatch caches and
+    // must be given one manually.
+    void initializeAddCacheState(LInstruction *ins, AddCacheState *addState);
+#endif
+
+    Register object() const {
+        return object_;
+    }
+    ConstantOrRegister index() const {
+        return index_;
+    }
+    TypedOrValueRegister output() const {
+        return output_;
+    }
+    bool monitoredResult() const {
+        return monitoredResult_;
+    }
+
+    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval,
+                        PropertyName *name, JSObject *holder, Shape *shape);
+    bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
+    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr,
+                                 const Value &idval);
+
+    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj, HandleValue idval,
+                                 MutableHandleValue vp);
+
 };
 
 #undef CACHE_HEADER

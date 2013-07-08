@@ -286,3 +286,16 @@ LIRGeneratorX86::newLGetPropertyCacheT(MGetPropertyCache *ins)
         scratch = LDefinition::BogusTemp();
     return new LGetPropertyCacheT(useRegister(ins->object()), scratch);
 }
+
+LGetElementCacheT *
+LIRGeneratorX86::newLGetElementCacheT(MGetElementCache *ins)
+{
+    LDefinition scratch;
+    if (ins->type() == MIRType_Double)
+        scratch = temp();
+    else
+        scratch = LDefinition::BogusTemp();
+    return new LGetElementCacheT(useRegister(ins->object()),
+                                 useRegister(ins->index()),
+                                 scratch);
+}

@@ -61,6 +61,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
                                   MTableSwitch *ins);
     LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
     LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
+    LGetElementCacheT *newLGetElementCacheT(MGetElementCache *ins);
 
   public:
     bool visitConstant(MConstant *ins);

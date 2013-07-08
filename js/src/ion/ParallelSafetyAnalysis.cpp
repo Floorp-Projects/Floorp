@@ -196,7 +196,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(GetPropertyCache)
     SAFE_OP(GetPropertyPolymorphic)
     UNSAFE_OP(SetPropertyPolymorphic)
-    UNSAFE_OP(GetElementCache)
+    SAFE_OP(GetElementCache)
     UNSAFE_OP(SetElementCache)
     UNSAFE_OP(BindNameCache)
     SAFE_OP(GuardShape)

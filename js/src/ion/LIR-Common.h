@@ -3725,14 +3725,16 @@ class LGetElementCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 
     }
 };
 
-class LGetElementCacheT : public LInstructionHelper<1, 2, 0>
+class LGetElementCacheT : public LInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(GetElementCacheT)
 
-    LGetElementCacheT(const LAllocation &object, const LAllocation &index) {
+    LGetElementCacheT(const LAllocation &object, const LAllocation &index,
+                      const LDefinition &temp) {
         setOperand(0, object);
         setOperand(1, index);
+        setTemp(0, temp);
     }
     const LAllocation *object() {
         return getOperand(0);
@@ -3742,6 +3744,9 @@ class LGetElementCacheT : public LInstructionHelper<1, 2, 0>
     }
     const LDefinition *output() {
         return getDef(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
     const MGetElementCache *mir() const {
         return mir_->toGetElementCache();
