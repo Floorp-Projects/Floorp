@@ -125,6 +125,7 @@ public:
                                 const bool& aDumpChildProcesses);
     virtual bool
     RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
+                              const bool& aDumpAllTraces,
                               const bool& aDumpChildProcesses);
 
     virtual PTestShellChild* AllocPTestShellChild();

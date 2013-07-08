@@ -512,12 +512,13 @@ ContentChild::RecvDumpMemoryInfoToTempDir(const nsString& aIdentifier,
 
 bool
 ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
+                                        const bool& aDumpAllTraces,
                                         const bool& aDumpChildProcesses)
 {
     nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
 
-    dumper->DumpGCAndCCLogsToFile(
-        aIdentifier, aDumpChildProcesses);
+    dumper->DumpGCAndCCLogsToFile(aIdentifier, aDumpAllTraces,
+                                  aDumpChildProcesses);
     return true;
 }
 
