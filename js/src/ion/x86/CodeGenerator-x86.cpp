@@ -655,6 +655,14 @@ CodeGeneratorX86::postAsmJSCall(LAsmJSCall *lir)
 }
 
 void
+DispatchIonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
+{
+    // On x86, where there is no general purpose scratch register available,
+    // child cache classes must manually specify a dispatch scratch register.
+    MOZ_ASSUME_UNREACHABLE("x86 needs manual assignment of dispatchScratch");
+}
+
+void
 ParallelGetPropertyIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 {
     // We don't have a scratch register, but only use the temp if we needed
