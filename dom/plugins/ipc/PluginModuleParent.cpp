@@ -756,9 +756,9 @@ PluginModuleParent::NotifyPluginCrashed()
 }
 
 PPluginIdentifierParent*
-PluginModuleParent::AllocPPluginIdentifier(const nsCString& aString,
-                                           const int32_t& aInt,
-                                           const bool& aTemporary)
+PluginModuleParent::AllocPPluginIdentifierParent(const nsCString& aString,
+                                                 const int32_t& aInt,
+                                                 const bool& aTemporary)
 {
     if (aTemporary) {
         NS_ERROR("Plugins don't create temporary identifiers.");
@@ -780,25 +780,25 @@ PluginModuleParent::AllocPPluginIdentifier(const nsCString& aString,
 }
 
 bool
-PluginModuleParent::DeallocPPluginIdentifier(PPluginIdentifierParent* aActor)
+PluginModuleParent::DeallocPPluginIdentifierParent(PPluginIdentifierParent* aActor)
 {
     delete aActor;
     return true;
 }
 
 PPluginInstanceParent*
-PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
-                                         const uint16_t& aMode,
-                                         const InfallibleTArray<nsCString>& aNames,
-                                         const InfallibleTArray<nsCString>& aValues,
-                                         NPError* rv)
+PluginModuleParent::AllocPPluginInstanceParent(const nsCString& aMimeType,
+                                               const uint16_t& aMode,
+                                               const InfallibleTArray<nsCString>& aNames,
+                                               const InfallibleTArray<nsCString>& aValues,
+                                               NPError* rv)
 {
     NS_ERROR("Not reachable!");
     return NULL;
 }
 
 bool
-PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor)
+PluginModuleParent::DeallocPPluginInstanceParent(PPluginInstanceParent* aActor)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     delete aActor;
@@ -1536,8 +1536,8 @@ PluginModuleParent::RecvPluginHideWindow(const uint32_t& aWindowId)
 }
 
 PCrashReporterParent*
-PluginModuleParent::AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                                        uint32_t* processType)
+PluginModuleParent::AllocPCrashReporterParent(mozilla::dom::NativeThreadId* id,
+                                              uint32_t* processType)
 {
 #ifdef MOZ_CRASHREPORTER
     return new CrashReporterParent();
@@ -1547,7 +1547,7 @@ PluginModuleParent::AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
 }
 
 bool
-PluginModuleParent::DeallocPCrashReporter(PCrashReporterParent* actor)
+PluginModuleParent::DeallocPCrashReporterParent(PCrashReporterParent* actor)
 {
     delete actor;
     return true;

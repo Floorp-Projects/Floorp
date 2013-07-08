@@ -670,14 +670,14 @@ PluginModuleChild::QuickExit()
 }
 
 PCrashReporterChild*
-PluginModuleChild::AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                                       uint32_t* processType)
+PluginModuleChild::AllocPCrashReporterChild(mozilla::dom::NativeThreadId* id,
+                                            uint32_t* processType)
 {
     return new CrashReporterChild();
 }
 
 bool
-PluginModuleChild::DeallocPCrashReporter(PCrashReporterChild* actor)
+PluginModuleChild::DeallocPCrashReporterChild(PCrashReporterChild* actor)
 {
     delete actor;
     return true;
@@ -1875,9 +1875,9 @@ PluginModuleChild::AnswerNP_Initialize(const uint32_t& aFlags, NPError* _retval)
 }
 
 PPluginIdentifierChild*
-PluginModuleChild::AllocPPluginIdentifier(const nsCString& aString,
-                                          const int32_t& aInt,
-                                          const bool& aTemporary)
+PluginModuleChild::AllocPPluginIdentifierChild(const nsCString& aString,
+                                               const int32_t& aInt,
+                                               const bool& aTemporary)
 {
     // We cannot call SetPermanent within this function because Manager() isn't
     // set up yet.
@@ -1900,7 +1900,7 @@ PluginModuleChild::RecvPPluginIdentifierConstructor(PPluginIdentifierChild* acto
 }
 
 bool
-PluginModuleChild::DeallocPPluginIdentifier(PPluginIdentifierChild* aActor)
+PluginModuleChild::DeallocPPluginIdentifierChild(PPluginIdentifierChild* aActor)
 {
     delete aActor;
     return true;
@@ -1937,11 +1937,11 @@ PMCGetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
 #endif
 
 PPluginInstanceChild*
-PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
-                                        const uint16_t& aMode,
-                                        const InfallibleTArray<nsCString>& aNames,
-                                        const InfallibleTArray<nsCString>& aValues,
-                                        NPError* rv)
+PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
+                                             const uint16_t& aMode,
+                                             const InfallibleTArray<nsCString>& aNames,
+                                             const InfallibleTArray<nsCString>& aValues,
+                                             NPError* rv)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
@@ -2076,7 +2076,7 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
 }
 
 bool
-PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* aActor)
+PluginModuleChild::DeallocPPluginInstanceChild(PPluginInstanceChild* aActor)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();

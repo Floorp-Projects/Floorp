@@ -41,18 +41,18 @@ SpeechSynthesisChild::RecvSetDefaultVoice(const nsString& aUri,
 }
 
 PSpeechSynthesisRequestChild*
-SpeechSynthesisChild::AllocPSpeechSynthesisRequest(const nsString& aText,
-                                                   const nsString& aLang,
-                                                   const nsString& aUri,
-                                                   const float& aVolume,
-                                                   const float& aRate,
-                                                   const float& aPitch)
+SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(const nsString& aText,
+                                                        const nsString& aLang,
+                                                        const nsString& aUri,
+                                                        const float& aVolume,
+                                                        const float& aRate,
+                                                        const float& aPitch)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
 }
 
 bool
-SpeechSynthesisChild::DeallocPSpeechSynthesisRequest(PSpeechSynthesisRequestChild* aActor)
+SpeechSynthesisChild::DeallocPSpeechSynthesisRequestChild(PSpeechSynthesisRequestChild* aActor)
 {
   delete aActor;
   return true;

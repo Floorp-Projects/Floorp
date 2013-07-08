@@ -71,10 +71,10 @@ protected:
   RecvNotificationsStopped() MOZ_OVERRIDE;
 
   virtual PBluetoothRequestChild*
-  AllocPBluetoothRequest(const Request& aRequest) MOZ_OVERRIDE;
+  AllocPBluetoothRequestChild(const Request& aRequest) MOZ_OVERRIDE;
 
   virtual bool
-  DeallocPBluetoothRequest(PBluetoothRequestChild* aActor) MOZ_OVERRIDE;
+  DeallocPBluetoothRequestChild(PBluetoothRequestChild* aActor) MOZ_OVERRIDE;
 };
 
 /*******************************************************************************
