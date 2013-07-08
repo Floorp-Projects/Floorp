@@ -116,6 +116,7 @@ CPP_SOURCES += [
     'RegExpObject.cpp',
     'RegExpStatics.cpp',
     'RootMarking.cpp',
+    'Runtime.cpp',
     'SPSProfiler.cpp',
     'ScopeObject.cpp',
     'SelfHosting.cpp',
