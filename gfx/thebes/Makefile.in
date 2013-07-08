@@ -52,15 +52,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 DEFINES +=	-DMOZ_USING_ANDROID_JAVA_WIDGETS
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-DISABLED_CMMSRCS = \
-	gfxMacPlatformFontList.mm \
-	$(NULL)
-endif
-
 DEFINES += \
 	-DIMPL_THEBES \
 	-DHB_DONT_DEFINE_STDINT \

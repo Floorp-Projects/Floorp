@@ -38,11 +38,6 @@ HOST_CPPSRCS = \
 endif
 endif
 
-ifeq ($(OS_ARCH),Darwin)
-DISABLED_CMMSRCS += \
-  mac/dump_syms.mm
-endif
-
 DISABLED_CSRCS = \
   convert_UTF.c \
   $(NULL)

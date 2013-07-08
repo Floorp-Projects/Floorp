@@ -17,10 +17,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/toolkit/xre \
   $(NULL)
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DISABLED_CMMSRCS += xpcshellMacUtils.mm
-endif
-
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   ifdef MOZ_APP_PROFILE
     DEFINES += -DMOZ_APP_PROFILE='"$(MOZ_APP_PROFILE)"'
