@@ -3408,8 +3408,6 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
   gfxContext *gfx = aContext->ThebesContext();
   gfxMatrix initialMatrix = gfx->CurrentMatrix();
 
-  AutoCanvasTMForMarker autoCanvasTMFor(this, FOR_PAINTING);
-
   if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
     // If we are in a canvas DrawWindow call that used the
     // DRAWWINDOW_DO_NOT_FLUSH flag, then we may still have out
@@ -3530,8 +3528,6 @@ NS_IMETHODIMP_(nsIFrame*)
 nsSVGTextFrame2::GetFrameForPoint(const nsPoint& aPoint)
 {
   NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
-
-  AutoCanvasTMForMarker autoCanvasTMFor(this, FOR_HIT_TESTING);
 
   if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
     // Text frames inside <clipPath> will never have had ReflowSVG called on
@@ -5073,7 +5069,7 @@ nsSVGTextFrame2::UpdateFontSizeScaleFactor()
   // frame happens to reflow first.
   double contextScale = 1.0;
   if (!(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-    gfxMatrix m(GetCanvasTM(mGetCanvasTMForFlag));
+    gfxMatrix m(GetCanvasTM(FOR_OUTERSVG_TM));
     if (!m.IsSingular()) {
       contextScale = GetContextScale(m);
     }
