@@ -185,6 +185,32 @@ let Util = {
             aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
   },
 
+  isEditableContent: function isEditableContent(aElement) {
+    if (!aElement)
+      return false;
+    if (aElement.isContentEditable || aElement.designMode == "on")
+      return true;
+    return false;
+  },
+
+  isEditable: function isEditable(aElement) {
+    if (!aElement)
+      return false;
+    if (this.isTextInput(aElement) || this.isEditableContent(aElement))
+      return true;
+
+    // If a body element is editable and the body is the child of an
+    // iframe or div we can assume this is an advanced HTML editor
+    if ((aElement instanceof Ci.nsIDOMHTMLIFrameElement ||
+         aElement instanceof Ci.nsIDOMHTMLDivElement) &&
+        aElement.contentDocument &&
+        this.isEditableContent(aElement.contentDocument.body)) {
+      return true;
+    }
+
+    return aElement.ownerDocument && aElement.ownerDocument.designMode == "on";
+  },
+
   isMultilineInput: function isMultilineInput(aElement) {
     return (aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
   },

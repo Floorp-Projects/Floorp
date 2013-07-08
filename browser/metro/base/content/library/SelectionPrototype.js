@@ -243,7 +243,7 @@ SelectionPrototype.prototype = {
     clientPoint.yPos -= halfLineHeight;
 
     // Modify selection based on monocle movement
-    if (this._targetIsEditable) {
+    if (this._targetIsEditable && !Util.isEditableContent(this._targetElement)) {
       this._adjustEditableSelection(aMarker, clientPoint, aEndOfSelection);
     } else {
       this._adjustSelectionAtPoint(aMarker, clientPoint, aEndOfSelection);
@@ -307,8 +307,7 @@ SelectionPrototype.prototype = {
       let cp =
         this._contentWindow.document.caretPositionFromPoint(constrainedPoint.xPos,
                                                             constrainedPoint.yPos);
-      if (!cp || (cp.offsetNode != this._targetElement &&
-          this._contentWindow.document.getBindingParent(cp.offsetNode) != this._targetElement)) {
+      if (!cp || !this._offsetNodeIsValid(cp.offsetNode)) {
         return;
       }
       if (aMarker == "start") {
@@ -317,6 +316,19 @@ SelectionPrototype.prototype = {
         this._targetElement.selectionEnd = cp.offset;
       }
     }
+  },
+
+  /*
+   * Make sure caretPositionFromPoint gave us an offset node that equals our
+   * editable, or in the case of getBindingParent identifies an anonymous
+   * element in chrome content within our target element. (navbar)
+   */
+  _offsetNodeIsValid: function (aNode) {
+    if (aNode == this._targetElement ||
+        this._contentWindow.document.getBindingParent(aNode) == this._targetElement) {
+      return true;
+    }
+    return false;
   },
 
   /*
