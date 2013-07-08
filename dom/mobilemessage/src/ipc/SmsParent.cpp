@@ -345,18 +345,18 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
 }
 
 PSmsRequestParent*
-SmsParent::AllocPSmsRequest(const IPCSmsRequest& aRequest)
+SmsParent::AllocPSmsRequestParent(const IPCSmsRequest& aRequest)
 {
   SmsRequestParent* actor = new SmsRequestParent();
   // Add an extra ref for IPDL. Will be released in
-  // SmsParent::DeallocPSmsRequest().
+  // SmsParent::DeallocPSmsRequestParent().
   actor->AddRef();
 
   return actor;
 }
 
 bool
-SmsParent::DeallocPSmsRequest(PSmsRequestParent* aActor)
+SmsParent::DeallocPSmsRequestParent(PSmsRequestParent* aActor)
 {
   // SmsRequestParent is refcounted, must not be freed manually.
   static_cast<SmsRequestParent*>(aActor)->Release();
@@ -383,18 +383,18 @@ SmsParent::RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActo
 }
 
 PMobileMessageCursorParent*
-SmsParent::AllocPMobileMessageCursor(const IPCMobileMessageCursor& aRequest)
+SmsParent::AllocPMobileMessageCursorParent(const IPCMobileMessageCursor& aRequest)
 {
   MobileMessageCursorParent* actor = new MobileMessageCursorParent();
   // Add an extra ref for IPDL. Will be released in
-  // SmsParent::DeallocPMobileMessageCursor().
+  // SmsParent::DeallocPMobileMessageCursorParent().
   actor->AddRef();
 
   return actor;
 }
 
 bool
-SmsParent::DeallocPMobileMessageCursor(PMobileMessageCursorParent* aActor)
+SmsParent::DeallocPMobileMessageCursorParent(PMobileMessageCursorParent* aActor)
 {
   // MobileMessageCursorParent is refcounted, must not be freed manually.
   static_cast<MobileMessageCursorParent*>(aActor)->Release();

@@ -61,32 +61,32 @@ public:
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     virtual PPluginScriptableObjectParent*
-    AllocPPluginScriptableObject();
+    AllocPPluginScriptableObjectParent();
 
     virtual bool
     RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectParent* aActor) MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPluginScriptableObject(PPluginScriptableObjectParent* aObject);
+    DeallocPPluginScriptableObjectParent(PPluginScriptableObjectParent* aObject);
     virtual PBrowserStreamParent*
-    AllocPBrowserStream(const nsCString& url,
-                        const uint32_t& length,
-                        const uint32_t& lastmodified,
-                        PStreamNotifyParent* notifyData,
-                        const nsCString& headers,
-                        const nsCString& mimeType,
-                        const bool& seekable,
-                        NPError* rv,
-                        uint16_t *stype);
+    AllocPBrowserStreamParent(const nsCString& url,
+                              const uint32_t& length,
+                              const uint32_t& lastmodified,
+                              PStreamNotifyParent* notifyData,
+                              const nsCString& headers,
+                              const nsCString& mimeType,
+                              const bool& seekable,
+                              NPError* rv,
+                              uint16_t *stype);
     virtual bool
-    DeallocPBrowserStream(PBrowserStreamParent* stream);
+    DeallocPBrowserStreamParent(PBrowserStreamParent* stream);
 
     virtual PPluginStreamParent*
-    AllocPPluginStream(const nsCString& mimeType,
-                       const nsCString& target,
-                       NPError* result);
+    AllocPPluginStreamParent(const nsCString& mimeType,
+                             const nsCString& target,
+                             NPError* result);
     virtual bool
-    DeallocPPluginStream(PPluginStreamParent* stream);
+    DeallocPPluginStreamParent(PPluginStreamParent* stream);
 
     virtual bool
     AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
@@ -135,10 +135,10 @@ public:
                       NPError* result);
 
     virtual PStreamNotifyParent*
-    AllocPStreamNotify(const nsCString& url, const nsCString& target,
-                       const bool& post, const nsCString& buffer,
-                       const bool& file,
-                       NPError* result);
+    AllocPStreamNotifyParent(const nsCString& url, const nsCString& target,
+                             const bool& post, const nsCString& buffer,
+                             const bool& file,
+                             NPError* result);
 
     virtual bool
     AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
@@ -149,7 +149,7 @@ public:
                                    NPError* result) MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPStreamNotify(PStreamNotifyParent* notifyData);
+    DeallocPStreamNotifyParent(PStreamNotifyParent* notifyData);
 
     virtual bool
     RecvNPN_InvalidateRect(const NPRect& rect);
@@ -161,12 +161,12 @@ public:
              SurfaceDescriptor* prevSurface);
 
     virtual PPluginSurfaceParent*
-    AllocPPluginSurface(const WindowsSharedMemoryHandle& handle,
-                        const gfxIntSize& size,
-                        const bool& transparent);
+    AllocPPluginSurfaceParent(const WindowsSharedMemoryHandle& handle,
+                              const gfxIntSize& size,
+                              const bool& transparent);
 
     virtual bool
-    DeallocPPluginSurface(PPluginSurfaceParent* s);
+    DeallocPPluginSurfaceParent(PPluginSurfaceParent* s);
 
     virtual bool
     AnswerNPN_PushPopupsEnabledState(const bool& aState);
@@ -295,10 +295,10 @@ private:
     ImageContainer *GetImageContainer();
 
     virtual PPluginBackgroundDestroyerParent*
-    AllocPPluginBackgroundDestroyer() MOZ_OVERRIDE;
+    AllocPPluginBackgroundDestroyerParent() MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerParent* aActor) MOZ_OVERRIDE;
+    DeallocPPluginBackgroundDestroyerParent(PPluginBackgroundDestroyerParent* aActor) MOZ_OVERRIDE;
 
     bool InternalGetValueForNPObject(NPNVariable aVariable,
                                      PPluginScriptableObjectParent** aValue,

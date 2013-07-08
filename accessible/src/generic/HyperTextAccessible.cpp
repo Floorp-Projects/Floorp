@@ -767,21 +767,6 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
       -- hyperTextOffset;
     }
   }
-  else if (aAmount == eSelectEndLine && finalAccessible) { 
-    // If not at very end of hypertext, we may need change the end of line offset by 1, 
-    // to make sure we are in the right place relative to the line ending
-    if (finalAccessible->Role() == roles::WHITESPACE) {  // Landed on <br> hard line break
-      // if aNeedsStart, set end of line exactly 1 character past line break
-      // XXX It would be cleaner if we did not have to have the hard line break check,
-      // and just got the correct results from PeekOffset() for the <br> case -- the returned offset should
-      // come after the new line, as it does in other cases.
-      ++ hyperTextOffset;  // Get past hard line break
-    }
-    // We are now 1 character past the line break
-    if (!aNeedsStart) {
-      -- hyperTextOffset;
-    }
-  }
 
   return hyperTextOffset;
 }
@@ -1110,6 +1095,20 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
     }
 
     case BOUNDARY_LINE_END: {
+      // Empty last line doesn't have own frame (a previous line contains '\n'
+      // character instead) thus we can't operate on last line separately
+      // from the previous line.
+      if (offset == CharacterCount()) {
+        nsAutoString lastChar;
+        GetText(offset -1, -1, lastChar);
+        if (lastChar.EqualsLiteral("\n")) {
+          *aStartOffset = offset - 1;
+          *aEndOffset = offset;
+          aText = lastChar;
+          return NS_OK;
+        }
+      }
+
       // In contrast to word end boundary we follow the spec here. End key,
       // then up arrow and if not on first line then end key.
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);

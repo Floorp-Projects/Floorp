@@ -56,20 +56,6 @@ ThreadSafeContext::allocator()
 
 namespace gc {
 
-/* Capacity for slotsToThingKind */
-const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
-
-extern const AllocKind slotsToThingKind[];
-
-/* Get the best kind to use when making an object with the given slot count. */
-static inline AllocKind
-GetGCObjectKind(size_t numSlots)
-{
-    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
-        return FINALIZE_OBJECT16;
-    return slotsToThingKind[numSlots];
-}
-
 static inline AllocKind
 GetGCObjectKind(Class *clasp)
 {
@@ -79,101 +65,6 @@ GetGCObjectKind(Class *clasp)
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         nslots++;
     return GetGCObjectKind(nslots);
-}
-
-/* As for GetGCObjectKind, but for dense array allocation. */
-static inline AllocKind
-GetGCArrayKind(size_t numSlots)
-{
-    /*
-     * Dense arrays can use their fixed slots to hold their elements array
-     * (less two Values worth of ObjectElements header), but if more than the
-     * maximum number of fixed slots is needed then the fixed slots will be
-     * unused.
-     */
-    JS_STATIC_ASSERT(ObjectElements::VALUES_PER_HEADER == 2);
-    if (numSlots > JSObject::NELEMENTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
-        return FINALIZE_OBJECT2;
-    return slotsToThingKind[numSlots + 2];
-}
-
-static inline AllocKind
-GetGCObjectFixedSlotsKind(size_t numFixedSlots)
-{
-    JS_ASSERT(numFixedSlots < SLOTS_TO_THING_KIND_LIMIT);
-    return slotsToThingKind[numFixedSlots];
-}
-
-static inline AllocKind
-GetBackgroundAllocKind(AllocKind kind)
-{
-    JS_ASSERT(!IsBackgroundFinalized(kind));
-    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
-    return (AllocKind) (kind + 1);
-}
-
-/*
- * Try to get the next larger size for an object, keeping BACKGROUND
- * consistent.
- */
-static inline bool
-TryIncrementAllocKind(AllocKind *kindp)
-{
-    size_t next = size_t(*kindp) + 2;
-    if (next >= size_t(FINALIZE_OBJECT_LIMIT))
-        return false;
-    *kindp = AllocKind(next);
-    return true;
-}
-
-/* Get the number of fixed slots and initial capacity associated with a kind. */
-static inline size_t
-GetGCKindSlots(AllocKind thingKind)
-{
-    /* Using a switch in hopes that thingKind will usually be a compile-time constant. */
-    switch (thingKind) {
-      case FINALIZE_OBJECT0:
-      case FINALIZE_OBJECT0_BACKGROUND:
-        return 0;
-      case FINALIZE_OBJECT2:
-      case FINALIZE_OBJECT2_BACKGROUND:
-        return 2;
-      case FINALIZE_OBJECT4:
-      case FINALIZE_OBJECT4_BACKGROUND:
-        return 4;
-      case FINALIZE_OBJECT8:
-      case FINALIZE_OBJECT8_BACKGROUND:
-        return 8;
-      case FINALIZE_OBJECT12:
-      case FINALIZE_OBJECT12_BACKGROUND:
-        return 12;
-      case FINALIZE_OBJECT16:
-      case FINALIZE_OBJECT16_BACKGROUND:
-        return 16;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Bad object finalize kind");
-    }
-}
-
-static inline size_t
-GetGCKindSlots(AllocKind thingKind, Class *clasp)
-{
-    size_t nslots = GetGCKindSlots(thingKind);
-
-    /* An object's private data uses the space taken by its last fixed slot. */
-    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-        JS_ASSERT(nslots > 0);
-        nslots--;
-    }
-
-    /*
-     * Functions have a larger finalize kind than FINALIZE_OBJECT to reserve
-     * space for the extra fields in JSFunction, but have no fixed slots.
-     */
-    if (clasp == FunctionClassPtr)
-        nslots = 0;
-
-    return nslots;
 }
 
 #ifdef JSGC_GENERATIONAL

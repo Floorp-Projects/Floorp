@@ -846,7 +846,7 @@ RenderFrameParent::RecvDetectScrollableSubframe()
 }
 
 PLayerTransactionParent*
-RenderFrameParent::AllocPLayerTransaction()
+RenderFrameParent::AllocPLayerTransactionParent()
 {
   if (!mFrameLoader || mFrameLoaderDestroyed) {
     return nullptr;
@@ -856,7 +856,7 @@ RenderFrameParent::AllocPLayerTransaction()
 }
 
 bool
-RenderFrameParent::DeallocPLayerTransaction(PLayerTransactionParent* aLayers)
+RenderFrameParent::DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers)
 {
   delete aLayers;
   return true;

@@ -15,12 +15,6 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DISABLED_CMMSRCS = \
-	   QuartzSupport.mm \
-	   $(NULL)
-endif
-
 DEFINES += -DMOZ_GFX -DUSE_CAIRO -DGFX2D_INTERNAL
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3 gonk qt))

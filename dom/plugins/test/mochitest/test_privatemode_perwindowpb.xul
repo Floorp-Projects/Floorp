@@ -26,6 +26,18 @@ function runTests() {
   SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, runTestsCallback);
 }
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      SimpleTest.executeSoon(aCallback);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
 function runTestsCallback() {
   var pluginElement1 = document.getElementById("plugin1");
   var pluginElement2 = document.getElementById("plugin2");
@@ -58,8 +70,7 @@ function runTestsCallback() {
 
   function testOnWindow(aIsPrivate, aCallback) {
     var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+    whenDelayedStartupFinished(win, function () {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href == "about:privatebrowsing") {
           win.gBrowser.loadURI(contentPage);
@@ -70,7 +81,7 @@ function runTestsCallback() {
         SimpleTest.executeSoon(function() { aCallback(win); });
       }, true);
       SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
-    }, true);
+    });
   }
 
   testOnWindow(true, function(aWin) {

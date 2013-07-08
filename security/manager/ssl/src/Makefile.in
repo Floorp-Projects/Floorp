@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-IS_COMPONENT	= 1
-MODULE_NAME	= NSS
 EXPORT_LIBRARY	= 1
 LIBXUL_LIBRARY	= 1
 CSRCS += md4.c

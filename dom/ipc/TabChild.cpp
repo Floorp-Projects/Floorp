@@ -1877,18 +1877,18 @@ TabChild::DispatchWidgetEvent(nsGUIEvent& event)
 }
 
 PDocumentRendererChild*
-TabChild::AllocPDocumentRenderer(const nsRect& documentRect,
-                                 const gfxMatrix& transform,
-                                 const nsString& bgcolor,
-                                 const uint32_t& renderFlags,
-                                 const bool& flushLayout,
-                                 const nsIntSize& renderSize)
+TabChild::AllocPDocumentRendererChild(const nsRect& documentRect,
+                                      const gfxMatrix& transform,
+                                      const nsString& bgcolor,
+                                      const uint32_t& renderFlags,
+                                      const bool& flushLayout,
+                                      const nsIntSize& renderSize)
 {
     return new DocumentRendererChild();
 }
 
 bool
-TabChild::DeallocPDocumentRenderer(PDocumentRendererChild* actor)
+TabChild::DeallocPDocumentRendererChild(PDocumentRendererChild* actor)
 {
     delete actor;
     return true;
@@ -1928,31 +1928,31 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
 }
 
 PContentDialogChild*
-TabChild::AllocPContentDialog(const uint32_t&,
-                              const nsCString&,
-                              const nsCString&,
-                              const InfallibleTArray<int>&,
-                              const InfallibleTArray<nsString>&)
+TabChild::AllocPContentDialogChild(const uint32_t&,
+                                   const nsCString&,
+                                   const nsCString&,
+                                   const InfallibleTArray<int>&,
+                                   const InfallibleTArray<nsString>&)
 {
   return new ContentDialogChild();
 }
 
 bool
-TabChild::DeallocPContentDialog(PContentDialogChild* aDialog)
+TabChild::DeallocPContentDialogChild(PContentDialogChild* aDialog)
 {
   delete aDialog;
   return true;
 }
 
 PContentPermissionRequestChild*
-TabChild::AllocPContentPermissionRequest(const nsCString& aType, const nsCString& aAccess, const IPC::Principal&)
+TabChild::AllocPContentPermissionRequestChild(const nsCString& aType, const nsCString& aAccess, const IPC::Principal&)
 {
   NS_RUNTIMEABORT("unused");
   return nullptr;
 }
 
 bool
-TabChild::DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor)
+TabChild::DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor)
 {
     PCOMContentPermissionRequestChild* child =
         static_cast<PCOMContentPermissionRequestChild*>(actor);
@@ -1977,16 +1977,16 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 }
 
 POfflineCacheUpdateChild*
-TabChild::AllocPOfflineCacheUpdate(const URIParams& manifestURI,
-                                   const URIParams& documentURI,
-                                   const bool& stickDocument)
+TabChild::AllocPOfflineCacheUpdateChild(const URIParams& manifestURI,
+                                        const URIParams& documentURI,
+                                        const bool& stickDocument)
 {
   NS_RUNTIMEABORT("unused");
   return nullptr;
 }
 
 bool
-TabChild::DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* actor)
+TabChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
 {
   OfflineCacheUpdateChild* offlineCacheUpdate = static_cast<OfflineCacheUpdateChild*>(actor);
   delete offlineCacheUpdate;
@@ -2077,7 +2077,7 @@ TabChild::RecvDestroy()
 }
 
 PRenderFrameChild*
-TabChild::AllocPRenderFrame(ScrollingBehavior* aScrolling,
+TabChild::AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
                             TextureFactoryIdentifier* aTextureFactoryIdentifier,
                             uint64_t* aLayersId)
 {
@@ -2085,7 +2085,7 @@ TabChild::AllocPRenderFrame(ScrollingBehavior* aScrolling,
 }
 
 bool
-TabChild::DeallocPRenderFrame(PRenderFrameChild* aFrame)
+TabChild::DeallocPRenderFrameChild(PRenderFrameChild* aFrame)
 {
     delete aFrame;
     return true;
@@ -2295,14 +2295,14 @@ TabChild::GetMessageManager(nsIContentFrameMessageManager** aResult)
 }
 
 PIndexedDBChild*
-TabChild::AllocPIndexedDB(const nsCString& aASCIIOrigin, bool* /* aAllowed */)
+TabChild::AllocPIndexedDBChild(const nsCString& aASCIIOrigin, bool* /* aAllowed */)
 {
   NS_NOTREACHED("Should never get here!");
   return NULL;
 }
 
 bool
-TabChild::DeallocPIndexedDB(PIndexedDBChild* aActor)
+TabChild::DeallocPIndexedDBChild(PIndexedDBChild* aActor)
 {
   delete aActor;
   return true;
