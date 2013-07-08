@@ -1555,15 +1555,15 @@ ContentParent::Observe(nsISupports* aSubject,
 }
 
 PCompositorParent*
-ContentParent::AllocPCompositor(mozilla::ipc::Transport* aTransport,
-                                base::ProcessId aOtherProcess)
+ContentParent::AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
+                                      base::ProcessId aOtherProcess)
 {
     return CompositorParent::Create(aTransport, aOtherProcess);
 }
 
 PImageBridgeParent*
-ContentParent::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
-                                 base::ProcessId aOtherProcess)
+ContentParent::AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
+                                       base::ProcessId aOtherProcess)
 {
     return ImageBridgeParent::Create(aTransport, aOtherProcess);
 }
@@ -1591,7 +1591,7 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
 }
 
 mozilla::jsipc::PJavaScriptParent *
-ContentParent::AllocPJavaScript()
+ContentParent::AllocPJavaScriptParent()
 {
     mozilla::jsipc::JavaScriptParent *parent = new mozilla::jsipc::JavaScriptParent();
     if (!parent->init()) {
@@ -1602,15 +1602,15 @@ ContentParent::AllocPJavaScript()
 }
 
 bool
-ContentParent::DeallocPJavaScript(PJavaScriptParent *parent)
+ContentParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
 {
     static_cast<mozilla::jsipc::JavaScriptParent *>(parent)->destroyFromContent();
     return true;
 }
 
 PBrowserParent*
-ContentParent::AllocPBrowser(const IPCTabContext& aContext,
-                             const uint32_t &aChromeFlags)
+ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
+                                   const uint32_t &aChromeFlags)
 {
     unused << aChromeFlags;
 
@@ -1621,14 +1621,14 @@ ContentParent::AllocPBrowser(const IPCTabContext& aContext,
     // (PopupIPCTabContext lets the child process prove that it has access to
     // the app it's trying to open.)
     if (appBrowser.type() != IPCTabAppBrowserContext::TPopupIPCTabContext) {
-        NS_ERROR("Unexpected IPCTabContext type.  Aborting AllocPBrowser.");
+        NS_ERROR("Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
         return nullptr;
     }
 
     const PopupIPCTabContext& popupContext = appBrowser.get_PopupIPCTabContext();
     TabParent* opener = static_cast<TabParent*>(popupContext.openerParent());
     if (!opener) {
-        NS_ERROR("Got null opener from child; aborting AllocPBrowser.");
+        NS_ERROR("Got null opener from child; aborting AllocPBrowserParent.");
         return nullptr;
     }
 
@@ -1636,19 +1636,19 @@ ContentParent::AllocPBrowser(const IPCTabContext& aContext,
     // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
     // the content to access data it's not supposed to.
     if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
-        NS_ERROR("Child trying to escalate privileges!  Aborting AllocPBrowser.");
+        NS_ERROR("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
         return nullptr;
     }
 
     TabParent* parent = new TabParent(TabContext(aContext));
 
-    // We release this ref in DeallocPBrowser()
+    // We release this ref in DeallocPBrowserParent()
     NS_ADDREF(parent);
     return parent;
 }
 
 bool
-ContentParent::DeallocPBrowser(PBrowserParent* frame)
+ContentParent::DeallocPBrowserParent(PBrowserParent* frame)
 {
     TabParent* parent = static_cast<TabParent*>(frame);
     NS_RELEASE(parent);
@@ -1656,7 +1656,7 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 }
 
 PDeviceStorageRequestParent*
-ContentParent::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
+ContentParent::AllocPDeviceStorageRequestParent(const DeviceStorageParams& aParams)
 {
   nsRefPtr<DeviceStorageRequestParent> result = new DeviceStorageRequestParent(aParams);
   if (!result->EnsureRequiredPermissions(this)) {
@@ -1667,7 +1667,7 @@ ContentParent::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
 }
 
 bool
-ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
+ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* doomed)
 {
   DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
   NS_RELEASE(parent);
@@ -1675,13 +1675,13 @@ ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
 }
 
 PBlobParent*
-ContentParent::AllocPBlob(const BlobConstructorParams& aParams)
+ContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
 {
   return BlobParent::Create(aParams);
 }
 
 bool
-ContentParent::DeallocPBlob(PBlobParent* aActor)
+ContentParent::DeallocPBlobParent(PBlobParent* aActor)
 {
   delete aActor;
   return true;
@@ -1809,8 +1809,8 @@ ContentParent::FriendlyName(nsAString& aName)
 }
 
 PCrashReporterParent*
-ContentParent::AllocPCrashReporter(const NativeThreadId& tid,
-                                   const uint32_t& processType)
+ContentParent::AllocPCrashReporterParent(const NativeThreadId& tid,
+                                         const uint32_t& processType)
 {
 #ifdef MOZ_CRASHREPORTER
   return new CrashReporterParent();
@@ -1829,33 +1829,33 @@ ContentParent::RecvPCrashReporterConstructor(PCrashReporterParent* actor,
 }
 
 bool
-ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
+ContentParent::DeallocPCrashReporterParent(PCrashReporterParent* crashreporter)
 {
   delete crashreporter;
   return true;
 }
 
 hal_sandbox::PHalParent*
-ContentParent::AllocPHal()
+ContentParent::AllocPHalParent()
 {
     return hal_sandbox::CreateHalParent();
 }
 
 bool
-ContentParent::DeallocPHal(hal_sandbox::PHalParent* aHal)
+ContentParent::DeallocPHalParent(hal_sandbox::PHalParent* aHal)
 {
     delete aHal;
     return true;
 }
 
 PIndexedDBParent*
-ContentParent::AllocPIndexedDB()
+ContentParent::AllocPIndexedDBParent()
 {
   return new IndexedDBParent(this);
 }
 
 bool
-ContentParent::DeallocPIndexedDB(PIndexedDBParent* aActor)
+ContentParent::DeallocPIndexedDBParent(PIndexedDBParent* aActor)
 {
   delete aActor;
   return true;
@@ -1885,14 +1885,14 @@ ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
 }
 
 PMemoryReportRequestParent*
-ContentParent::AllocPMemoryReportRequest()
+ContentParent::AllocPMemoryReportRequestParent()
 {
   MemoryReportRequestParent* parent = new MemoryReportRequestParent();
   return parent;
 }
 
 bool
-ContentParent::DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor)
+ContentParent::DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor)
 {
   delete actor;
   return true;
@@ -1929,38 +1929,38 @@ ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& rep
 }
 
 PTestShellParent*
-ContentParent::AllocPTestShell()
+ContentParent::AllocPTestShellParent()
 {
   return new TestShellParent();
 }
 
 bool
-ContentParent::DeallocPTestShell(PTestShellParent* shell)
+ContentParent::DeallocPTestShellParent(PTestShellParent* shell)
 {
   delete shell;
   return true;
 }
- 
-PNeckoParent* 
-ContentParent::AllocPNecko()
+
+PNeckoParent*
+ContentParent::AllocPNeckoParent()
 {
     return new NeckoParent();
 }
 
-bool 
-ContentParent::DeallocPNecko(PNeckoParent* necko)
+bool
+ContentParent::DeallocPNeckoParent(PNeckoParent* necko)
 {
     delete necko;
     return true;
 }
 
 PExternalHelperAppParent*
-ContentParent::AllocPExternalHelperApp(const OptionalURIParams& uri,
-                                       const nsCString& aMimeContentType,
-                                       const nsCString& aContentDisposition,
-                                       const bool& aForceSave,
-                                       const int64_t& aContentLength,
-                                       const OptionalURIParams& aReferrer)
+ContentParent::AllocPExternalHelperAppParent(const OptionalURIParams& uri,
+                                             const nsCString& aMimeContentType,
+                                             const nsCString& aContentDisposition,
+                                             const bool& aForceSave,
+                                             const int64_t& aContentLength,
+                                             const OptionalURIParams& aReferrer)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
@@ -1969,7 +1969,7 @@ ContentParent::AllocPExternalHelperApp(const OptionalURIParams& uri,
 }
 
 bool
-ContentParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
+ContentParent::DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService)
 {
     ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
     parent->Release();
@@ -1977,7 +1977,7 @@ ContentParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
 }
 
 PSmsParent*
-ContentParent::AllocPSms()
+ContentParent::AllocPSmsParent()
 {
     if (!AssertAppProcessPermission(this, "sms")) {
         return nullptr;
@@ -1989,20 +1989,20 @@ ContentParent::AllocPSms()
 }
 
 bool
-ContentParent::DeallocPSms(PSmsParent* aSms)
+ContentParent::DeallocPSmsParent(PSmsParent* aSms)
 {
     static_cast<SmsParent*>(aSms)->Release();
     return true;
 }
 
 PStorageParent*
-ContentParent::AllocPStorage()
+ContentParent::AllocPStorageParent()
 {
     return new DOMStorageDBParent();
 }
 
 bool
-ContentParent::DeallocPStorage(PStorageParent* aActor)
+ContentParent::DeallocPStorageParent(PStorageParent* aActor)
 {
     DOMStorageDBParent* child = static_cast<DOMStorageDBParent*>(aActor);
     child->ReleaseIPDLReference();
@@ -2010,7 +2010,7 @@ ContentParent::DeallocPStorage(PStorageParent* aActor)
 }
 
 PBluetoothParent*
-ContentParent::AllocPBluetooth()
+ContentParent::AllocPBluetoothParent()
 {
 #ifdef MOZ_B2G_BT
     if (!AssertAppProcessPermission(this, "bluetooth")) {
@@ -2023,7 +2023,7 @@ ContentParent::AllocPBluetooth()
 }
 
 bool
-ContentParent::DeallocPBluetooth(PBluetoothParent* aActor)
+ContentParent::DeallocPBluetoothParent(PBluetoothParent* aActor)
 {
 #ifdef MOZ_B2G_BT
     delete aActor;
@@ -2047,7 +2047,7 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
 }
 
 PSpeechSynthesisParent*
-ContentParent::AllocPSpeechSynthesis()
+ContentParent::AllocPSpeechSynthesisParent()
 {
 #ifdef MOZ_WEBSPEECH
     return new mozilla::dom::SpeechSynthesisParent();
@@ -2057,7 +2057,7 @@ ContentParent::AllocPSpeechSynthesis()
 }
 
 bool
-ContentParent::DeallocPSpeechSynthesis(PSpeechSynthesisParent* aActor)
+ContentParent::DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor)
 {
 #ifdef MOZ_WEBSPEECH
     delete aActor;

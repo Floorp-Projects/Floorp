@@ -108,18 +108,6 @@ JSScript::getRegExp(size_t index)
     return (js::RegExpObject *) obj;
 }
 
-inline bool
-JSScript::isEmpty() const
-{
-    if (length > 3)
-        return false;
-
-    jsbytecode *pc = code;
-    if (noScriptRval && JSOp(*pc) == JSOP_FALSE)
-        ++pc;
-    return JSOp(*pc) == JSOP_STOP;
-}
-
 inline js::GlobalObject &
 JSScript::global() const
 {

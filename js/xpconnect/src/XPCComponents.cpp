@@ -3336,15 +3336,14 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
         // Pass on ownership of sbp to |sandbox|.
         JS_SetPrivate(sandbox, sbp.forget().get());
 
-        {
-          JSAutoCompartment ac(cx, sandbox);
-          if (options.wantComponents &&
-              !nsXPCComponents::AttachComponentsObject(cx, GetObjectScope(sandbox)))
-              return NS_ERROR_XPC_UNEXPECTED;
+      bool allowComponents = nsContentUtils::IsSystemPrincipal(principal) ||
+                             nsContentUtils::IsExpandedPrincipal(principal);
+      if (options.wantComponents && allowComponents &&
+          !nsXPCComponents::AttachComponentsObject(cx, GetObjectScope(sandbox)))
+          return NS_ERROR_XPC_UNEXPECTED;
 
-          if (!XPCNativeWrapper::AttachNewConstructorObject(cx, sandbox))
-              return NS_ERROR_XPC_UNEXPECTED;
-        }
+      if (!XPCNativeWrapper::AttachNewConstructorObject(cx, sandbox))
+          return NS_ERROR_XPC_UNEXPECTED;
 
         if (!JS_DefineFunctions(cx, sandbox, SandboxFunctions))
             return NS_ERROR_XPC_UNEXPECTED;

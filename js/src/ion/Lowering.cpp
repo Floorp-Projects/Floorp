@@ -1649,6 +1649,18 @@ LIRGenerator::visitConvertElementsToDoubles(MConvertElementsToDoubles *ins)
 }
 
 bool
+LIRGenerator::visitMaybeToDoubleElement(MMaybeToDoubleElement *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->value()->type() == MIRType_Int32);
+
+    LMaybeToDoubleElement *lir = new LMaybeToDoubleElement(useRegisterAtStart(ins->elements()),
+                                                           useRegisterAtStart(ins->value()),
+                                                           tempFloat());
+    return defineBox(lir, ins);
+}
+
+bool
 LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 {
     switch (ins->type()) {
@@ -2331,8 +2343,7 @@ LIRGenerator::visitGetElementCache(MGetElementCache *ins)
     }
 
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
-    LGetElementCacheT *lir = new LGetElementCacheT(useRegister(ins->object()),
-                                                   useRegister(ins->index()));
+    LGetElementCacheT *lir = newLGetElementCacheT(ins);
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 

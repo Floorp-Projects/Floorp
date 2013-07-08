@@ -25,8 +25,8 @@ public:
   void Destroy();
 
 protected:
-  virtual PLayerTransactionChild* AllocPLayerTransaction() MOZ_OVERRIDE;
-  virtual bool DeallocPLayerTransaction(PLayerTransactionChild* aLayers) MOZ_OVERRIDE;
+  virtual PLayerTransactionChild* AllocPLayerTransactionChild() MOZ_OVERRIDE;
+  virtual bool DeallocPLayerTransactionChild(PLayerTransactionChild* aLayers) MOZ_OVERRIDE;
 };
 
 } // namespace layout
