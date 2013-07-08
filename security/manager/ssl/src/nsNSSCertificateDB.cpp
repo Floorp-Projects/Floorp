@@ -12,6 +12,8 @@
 
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
+#include "NSSCertDBTrustDomain.h"
+#include "insanity/pkixtypes.h"
 #include "nsNSSComponent.h"
 #include "mozilla/Base64.h"
 #include "nsCOMPtr.h"
@@ -696,7 +698,7 @@ nsNSSCertificateDB::ImportServerCertificate(uint8_t * data, uint32_t length,
     rawCerts[i] = &certCollection->rawCerts[i];
   }
 
-  serverNickname = nsNSSCertificate::defaultServerNickname(cert.get());
+  serverNickname = DefaultServerNicknameForCert(cert.get());
   srv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageSSLServer,
              numcerts, rawCerts, nullptr, true, false,
              serverNickname);

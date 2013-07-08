@@ -8,6 +8,7 @@
 
 #include "insanity/pkixtypes.h"
 #include "nsIX509Cert.h"
+#include "NSSCertDBTrustDomain.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertHelper.h"
 #include "nsCRT.h"
@@ -458,7 +459,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
   if (!nsscert)
     return NS_ERROR_FAILURE;
 
-  char* nickname = nsNSSCertificate::defaultServerNickname(nsscert.get());
+  char* nickname = DefaultServerNicknameForCert(nsscert.get());
   if (!aTemporary && nickname && *nickname)
   {
     ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
