@@ -1560,23 +1560,8 @@ GetPropertyIC::reset()
     hasNormalArgumentsLengthStub_ = false;
 }
 
-void
-ParallelGetPropertyIC::reset()
-{
-    DispatchIonCache::reset();
-    if (stubbedShapes_)
-        stubbedShapes_->clear();
-}
-
-void
-ParallelGetPropertyIC::destroy()
-{
-    if (stubbedShapes_)
-        js_delete(stubbedShapes_);
-}
-
 bool
-ParallelGetPropertyIC::initStubbedShapes(JSContext *cx)
+ParallelIonCache::initStubbedShapes(JSContext *cx)
 {
     JS_ASSERT(isAllocated());
     if (!stubbedShapes_) {
@@ -1584,6 +1569,35 @@ ParallelGetPropertyIC::initStubbedShapes(JSContext *cx)
         return stubbedShapes_ && stubbedShapes_->init();
     }
     return true;
+}
+
+bool
+ParallelIonCache::hasOrAddStubbedShape(LockedJSContext &cx, Shape *shape, bool *alreadyStubbed)
+{
+    // Check if we have already stubbed the current object to avoid
+    // attaching a duplicate stub.
+    if (!initStubbedShapes(cx))
+        return false;
+    ShapeSet::AddPtr p = stubbedShapes_->lookupForAdd(shape);
+    if ((*alreadyStubbed = !!p))
+        return true;
+    return stubbedShapes_->add(p, shape);
+}
+
+void
+ParallelIonCache::reset()
+{
+    DispatchIonCache::reset();
+    if (stubbedShapes_)
+        stubbedShapes_->clear();
+}
+
+void
+ParallelIonCache::destroy()
+{
+    DispatchIonCache::destroy();
+    if (stubbedShapes_)
+        js_delete(stubbedShapes_);
 }
 
 bool
@@ -1663,15 +1677,11 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
         LockedJSContext cx(slice);
 
         if (cache.canAttachStub()) {
-            // Check if we have already stubbed the current object to avoid
-            // attaching a duplicate stub.
-            if (!cache.initStubbedShapes(cx))
+            bool alreadyStubbed;
+            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
                 return TP_FATAL;
-            ShapeSet::AddPtr p = cache.stubbedShapes()->lookupForAdd(obj->lastProperty());
-            if (p)
+            if (alreadyStubbed)
                 return TP_SUCCESS;
-            if (!cache.stubbedShapes()->add(p, obj->lastProperty()))
-                return TP_FATAL;
 
             // See note about the stub limit in GetPropertyCache.
             bool attachedStub = false;
