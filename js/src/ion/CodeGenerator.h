@@ -88,6 +88,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreSlotV(LStoreSlotV *store);
     bool visitElements(LElements *lir);
     bool visitConvertElementsToDoubles(LConvertElementsToDoubles *lir);
+    bool visitMaybeToDoubleElement(LMaybeToDoubleElement *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
     bool visitMonitorTypes(LMonitorTypes *lir);
     bool visitPostWriteBarrierO(LPostWriteBarrierO *lir);
