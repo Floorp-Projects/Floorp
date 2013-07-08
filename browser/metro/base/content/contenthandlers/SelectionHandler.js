@@ -224,7 +224,7 @@ var SelectionHandler = {
     }
 
     // This should never happen, but we check to make sure
-    if (!this._targetIsEditable || !Util.isTextInput(this._targetElement)) {
+    if (!this._targetIsEditable) {
       this._onFail("Unexpected, coordiates didn't find a text input element.");
       return;
     }
@@ -402,7 +402,7 @@ var SelectionHandler = {
     this._contentWindow = contentWindow;
     this._contentOffset = offset;
     this._domWinUtils = utils;
-    this._targetIsEditable = this._isTextInput(this._targetElement);
+    this._targetIsEditable = Util.isEditable(this._targetElement);
     return true;
   },
 
@@ -616,12 +616,6 @@ var SelectionHandler = {
       offset: offset,
       utils: utils
     };
-  },
-
-  _isTextInput: function _isTextInput(aElement) {
-    return ((aElement instanceof Ci.nsIDOMHTMLInputElement &&
-             aElement.mozIsTextField(false)) ||
-            aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
   },
 
   _getDocShell: function _getDocShell(aWindow) {
