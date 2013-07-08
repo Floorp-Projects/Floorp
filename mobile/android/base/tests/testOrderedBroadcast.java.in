@@ -30,19 +30,26 @@ public class testOrderedBroadcast extends JavascriptTest {
 
         mAsserter.dumpLog("Registering org.mozilla.gecko.test.receiver broadcast receiver");
 
-        JSONObject o = new JSONObject();
-        o.put("c", "efg");
-        o.put("d", 456);
-        final String data = o.toString();
-
         IntentFilter filter = new IntentFilter();
         filter.addAction("org.mozilla.gecko.test.receiver");
 
         mReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    setResultCode(Activity.RESULT_OK);
-                    setResultData(data);
+                    try {
+                        JSONObject o = new JSONObject();
+                        o.put("c", "efg");
+                        o.put("d", 456);
+                        // Feed the received token back to the sender.
+                        o.put("token", intent.getStringExtra("token"));
+                        String data = o.toString();
+
+                        setResultCode(Activity.RESULT_OK);
+                        setResultData(data);
+                    } catch (JSONException e) {
+                        setResultCode(Activity.RESULT_CANCELED);
+                        setResultData(null);
+                    }
                 }
             };
 
