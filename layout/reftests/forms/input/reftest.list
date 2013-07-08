@@ -6,3 +6,6 @@ include url/reftest.list
 include file/reftest.list
 include radio/reftest.list
 include range/reftest.list
+include text/reftest.list
+include percentage/reftest.list
+include hidden/reftest.list
