@@ -44,7 +44,6 @@ OS_LIBS += $(TK_LIBS)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DISABLED_CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
 endif
 

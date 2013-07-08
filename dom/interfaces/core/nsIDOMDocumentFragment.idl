@@ -14,7 +14,14 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, builtinclass, uuid(33127aed-9d6a-4b0d-95aa-0529f51bcb9c)]
+[scriptable, builtinclass, uuid(75a237af-133e-40f0-8196-2a172867c41a)]
 interface nsIDOMDocumentFragment : nsIDOMNode
 {
+  /**
+   * Return nodes that match a given CSS selector.
+   *
+   * @see <http://dev.w3.org/2006/webapi/selectors-api/>
+   */
+  nsIDOMElement querySelector([Null(Stringify)] in DOMString selectors);
+  nsIDOMNodeList querySelectorAll([Null(Stringify)] in DOMString selectors);
 };

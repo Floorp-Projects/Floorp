@@ -1300,7 +1300,7 @@ RILContentHelper.prototype = {
         this.rilContext.retryCount = data.retryCount;
         if (this.rilContext.cardState != data.cardState) {
           this.rilContext.cardState = data.cardState;
-          this._deliverEvent("_mobileConnectionListeners",
+          this._deliverEvent("_iccListeners",
                              "notifyCardStateChanged",
                              null);
         }

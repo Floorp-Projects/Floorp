@@ -1084,6 +1084,9 @@ public:
   already_AddRefed<nsINodeList> QuerySelectorAll(const nsAString& aSelector,
                                                  mozilla::ErrorResult& aResult);
 
+  nsresult QuerySelector(const nsAString& aSelector, nsIDOMElement **aReturn);
+  nsresult QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn);
+
   /**
    * Associate an object aData to aKey on this node. If aData is null any
    * previously registered object and UserDataHandler associated to aKey on

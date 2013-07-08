@@ -2233,14 +2233,14 @@ PluginInstanceChild::RecvNPP_DidComposite()
 }
 
 PPluginScriptableObjectChild*
-PluginInstanceChild::AllocPPluginScriptableObject()
+PluginInstanceChild::AllocPPluginScriptableObjectChild()
 {
     AssertPluginThread();
     return new PluginScriptableObjectChild(Proxy);
 }
 
 bool
-PluginInstanceChild::DeallocPPluginScriptableObject(
+PluginInstanceChild::DeallocPPluginScriptableObjectChild(
     PPluginScriptableObjectChild* aObject)
 {
     AssertPluginThread();
@@ -2287,15 +2287,15 @@ PluginInstanceChild::AnswerPBrowserStreamConstructor(
 }
 
 PBrowserStreamChild*
-PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
-                                         const uint32_t& length,
-                                         const uint32_t& lastmodified,
-                                         PStreamNotifyChild* notifyData,
-                                         const nsCString& headers,
-                                         const nsCString& mimeType,
-                                         const bool& seekable,
-                                         NPError* rv,
-                                         uint16_t *stype)
+PluginInstanceChild::AllocPBrowserStreamChild(const nsCString& url,
+                                              const uint32_t& length,
+                                              const uint32_t& lastmodified,
+                                              PStreamNotifyChild* notifyData,
+                                              const nsCString& headers,
+                                              const nsCString& mimeType,
+                                              const bool& seekable,
+                                              NPError* rv,
+                                              uint16_t *stype)
 {
     AssertPluginThread();
     return new BrowserStreamChild(this, url, length, lastmodified,
@@ -2304,7 +2304,7 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
 }
 
 bool
-PluginInstanceChild::DeallocPBrowserStream(PBrowserStreamChild* stream)
+PluginInstanceChild::DeallocPBrowserStreamChild(PBrowserStreamChild* stream)
 {
     AssertPluginThread();
     delete stream;
@@ -2312,16 +2312,16 @@ PluginInstanceChild::DeallocPBrowserStream(PBrowserStreamChild* stream)
 }
 
 PPluginStreamChild*
-PluginInstanceChild::AllocPPluginStream(const nsCString& mimeType,
-                                        const nsCString& target,
-                                        NPError* result)
+PluginInstanceChild::AllocPPluginStreamChild(const nsCString& mimeType,
+                                             const nsCString& target,
+                                             NPError* result)
 {
     NS_RUNTIMEABORT("not callable");
     return NULL;
 }
 
 bool
-PluginInstanceChild::DeallocPPluginStream(PPluginStreamChild* stream)
+PluginInstanceChild::DeallocPPluginStreamChild(PPluginStreamChild* stream)
 {
     AssertPluginThread();
     delete stream;
@@ -2329,12 +2329,12 @@ PluginInstanceChild::DeallocPPluginStream(PPluginStreamChild* stream)
 }
 
 PStreamNotifyChild*
-PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
-                                        const nsCString& target,
-                                        const bool& post,
-                                        const nsCString& buffer,
-                                        const bool& file,
-                                        NPError* result)
+PluginInstanceChild::AllocPStreamNotifyChild(const nsCString& url,
+                                             const nsCString& target,
+                                             const bool& post,
+                                             const nsCString& buffer,
+                                             const bool& file,
+                                             NPError* result)
 {
     AssertPluginThread();
     NS_RUNTIMEABORT("not reached");
@@ -2405,7 +2405,7 @@ StreamNotifyChild::NPP_URLNotify(NPReason reason)
 }
 
 bool
-PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData)
+PluginInstanceChild::DeallocPStreamNotifyChild(PStreamNotifyChild* notifyData)
 {
     AssertPluginThread();
 
@@ -3843,7 +3843,7 @@ PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
 }
 
 PPluginBackgroundDestroyerChild*
-PluginInstanceChild::AllocPPluginBackgroundDestroyer()
+PluginInstanceChild::AllocPPluginBackgroundDestroyerChild()
 {
     return new PluginBackgroundDestroyerChild();
 }
@@ -3876,7 +3876,7 @@ PluginInstanceChild::RecvPPluginBackgroundDestroyerConstructor(
 }
 
 bool
-PluginInstanceChild::DeallocPPluginBackgroundDestroyer(
+PluginInstanceChild::DeallocPPluginBackgroundDestroyerChild(
     PPluginBackgroundDestroyerChild* aActor)
 {
     delete aActor;
