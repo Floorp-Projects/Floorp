@@ -18,6 +18,15 @@ function do_check_eq_or_slightly_less(x, y) {
   do_check_true(x >= y - (3 * 8));
 }
 
+function test_base64_roundtrip() {
+  let message = "Attack at dawn!";
+  let encoded = idService.base64UrlEncode(message);
+  let decoded = idService.base64UrlDecode(encoded);
+  do_check_neq(message, encoded);
+  do_check_eq(decoded, message);
+  run_next_test();
+}
+
 function test_dsa() {
   idService.generateKeyPair(ALG_DSA, function (rv, keyPair) {
     log("DSA generateKeyPair finished ", rv);
@@ -61,6 +70,7 @@ function test_rsa() {
   });
 }
 
+add_test(test_base64_roundtrip);
 add_test(test_dsa);
 add_test(test_rsa);
 
