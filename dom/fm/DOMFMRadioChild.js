@@ -42,7 +42,8 @@ DOMFMRadioChild.prototype = {
              }),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMFMRadio,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
+                                         Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsISupportsWeakReference]),
 
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
@@ -72,7 +73,7 @@ DOMFMRadioChild.prototype = {
                       "DOMFMRadio:frequencyChange",
                       "DOMFMRadio:powerStateChange",
                       "DOMFMRadio:antennaChange"];
-    this.initHelper(aWindow, messages);
+    this.initDOMRequestHelper(aWindow, messages);
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);

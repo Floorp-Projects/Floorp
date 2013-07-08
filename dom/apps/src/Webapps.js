@@ -242,7 +242,7 @@ WebappsRegistry.prototype = {
 
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
-    this.initHelper(aWindow, ["Webapps:Install:Return:OK", "Webapps:Install:Return:KO",
+    this.initDOMRequestHelper(aWindow, ["Webapps:Install:Return:OK", "Webapps:Install:Return:KO",
                               "Webapps:GetInstalled:Return:OK",
                               "Webapps:GetSelf:Return:OK",
                               "Webapps:CheckInstalled:Return:OK" ]);
@@ -264,7 +264,8 @@ WebappsRegistry.prototype = {
 
   classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationRegistry,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+                                         Ci.mozIDOMApplicationRegistry,
 #ifdef MOZ_B2G
                                          Ci.mozIDOMApplicationRegistry2,
 #elifdef MOZ_WIDGET_ANDROID
@@ -364,7 +365,7 @@ WebappsApplication.prototype = {
 
     this._downloadError = null;
 
-    this.initHelper(aWindow, ["Webapps:OfflineCache",
+    this.initDOMRequestHelper(aWindow, ["Webapps:OfflineCache",
                               "Webapps:CheckForUpdate:Return:OK",
                               "Webapps:CheckForUpdate:Return:KO",
                               "Webapps:Launch:Return:OK",
@@ -636,7 +637,8 @@ WebappsApplication.prototype = {
 
   classID: Components.ID("{723ed303-7757-4fb0-b261-4f78b1f6bd22}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplication]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplication,
+                                         Ci.nsISupportsWeakReference]),
 
   classInfo: XPCOMUtils.generateCI({classID: Components.ID("{723ed303-7757-4fb0-b261-4f78b1f6bd22}"),
                                     contractID: "@mozilla.org/webapps/application;1",
@@ -649,7 +651,7 @@ WebappsApplication.prototype = {
   * mozIDOMApplicationMgmt object
   */
 function WebappsApplicationMgmt(aWindow) {
-  this.initHelper(aWindow, ["Webapps:GetAll:Return:OK",
+  this.initDOMRequestHelper(aWindow, ["Webapps:GetAll:Return:OK",
                             "Webapps:GetAll:Return:KO",
                             "Webapps:Uninstall:Return:OK",
                             "Webapps:Uninstall:Broadcast:Return:OK",
@@ -787,7 +789,7 @@ WebappsApplicationMgmt.prototype = {
 
   classID: Components.ID("{8c1bca96-266f-493a-8d57-ec7a95098c15}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationMgmt]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationMgmt, Ci.nsISupportsWeakReference]),
 
   classInfo: XPCOMUtils.generateCI({classID: Components.ID("{8c1bca96-266f-493a-8d57-ec7a95098c15}"),
                                     contractID: "@mozilla.org/webapps/application-mgmt;1",
