@@ -1422,63 +1422,6 @@ nsNSSCertificate::SaveSMimeProfile()
     return NS_OK;
 }
 
-
-char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
-{
-  nsNSSShutDownPreventionLock locker;
-  char* nickname = nullptr;
-  int count;
-  bool conflict;
-  char* servername = nullptr;
-
-  servername = CERT_GetCommonName(&cert->subject);
-  if (!servername) {
-    // Certs without common names are strange, but they do exist...
-    // Let's try to use another string for the nickname
-    servername = CERT_GetOrgUnitName(&cert->subject);
-    if (!servername) {
-      servername = CERT_GetOrgName(&cert->subject);
-      if (!servername) {
-        servername = CERT_GetLocalityName(&cert->subject);
-        if (!servername) {
-          servername = CERT_GetStateName(&cert->subject);
-          if (!servername) {
-            servername = CERT_GetCountryName(&cert->subject);
-            if (!servername) {
-              // We tried hard, there is nothing more we can do.
-              // A cert without any names doesn't really make sense.
-              return nullptr;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  count = 1;
-  while (1) {
-    if (count == 1) {
-      nickname = PR_smprintf("%s", servername);
-    }
-    else {
-      nickname = PR_smprintf("%s #%d", servername, count);
-    }
-    if (!nickname) {
-      break;
-    }
-
-    conflict = SEC_CertNicknameConflict(nickname, &cert->derSubject,
-                                        cert->dbhandle);
-    if (!conflict) {
-      break;
-    }
-    PR_Free(nickname);
-    count++;
-  }
-  PR_FREEIF(servername);
-  return nickname;
-}
-
 #ifndef NSS_NO_LIBPKIX
 
 nsresult

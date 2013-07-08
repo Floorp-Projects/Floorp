@@ -10,9 +10,11 @@
 
 #include "insanity/pkixtypes.h"
 #include "ExtendedValidation.h"
+#include "NSSCertDBTrustDomain.h"
 #include "cert.h"
 #include "secerr.h"
 #include "prerror.h"
+#include "sslerr.h"
 
 // ScopedXXX in this file are insanity::pkix::ScopedXXX, not
 // mozilla::ScopedXXX.
@@ -451,6 +453,55 @@ pkix_done:
 
   return rv;
 #endif
+}
+
+SECStatus
+CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
+                                  PRTime time,
+                     /*optional*/ void* pinarg,
+                                  const char* hostname,
+                                  bool saveIntermediatesInPermanentDatabase,
+                 /*optional out*/ insanity::pkix::ScopedCERTCertList* certChainOut,
+                 /*optional out*/ SECOidTag* evOidPolicy)
+{
+  PR_ASSERT(peerCert);
+  // XXX: PR_ASSERT(pinarg)
+  PR_ASSERT(hostname);
+  PR_ASSERT(hostname[0]);
+
+  if (certChainOut) {
+    *certChainOut = nullptr;
+  }
+  if (evOidPolicy) {
+    *evOidPolicy = SEC_OID_UNKNOWN;
+  }
+
+  if (!hostname || !hostname[0]) {
+    PR_SetError(SSL_ERROR_BAD_CERT_DOMAIN, 0);
+    return SECFailure;
+  }
+
+  ScopedCERTCertList validationChain;
+  SECStatus rv = VerifyCert(peerCert, certificateUsageSSLServer, time,
+                            pinarg, 0, &validationChain, evOidPolicy);
+  if (rv != SECSuccess) {
+    return rv;
+  }
+
+  rv = CERT_VerifyCertName(peerCert, hostname);
+  if (rv != SECSuccess) {
+    return rv;
+  }
+
+  if (saveIntermediatesInPermanentDatabase) {
+    SaveIntermediateCerts(validationChain);
+  }
+
+  if (certChainOut) {
+    *certChainOut = validationChain.release();
+  }
+
+  return SECSuccess;
 }
 
 } } // namespace mozilla::psm

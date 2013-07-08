@@ -94,11 +94,13 @@
 
 #include "SSLServerCertVerification.h"
 
-#include "insanity/pkixtypes.h"
+#include <cstring>
 
+#include "insanity/pkixtypes.h"
 #include "CertVerifier.h"
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
+#include "NSSCertDBTrustDomain.h"
 #include "nsIBadCertListener2.h"
 #include "nsICertOverrideService.h"
 #include "nsISiteSecurityService.h"
@@ -654,33 +656,6 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
 {
 }
 
-SECStatus
-PSM_SSL_PKIX_AuthCertificate(CertVerifier& certVerifier,
-                             CERTCertificate* peerCert,
-                             nsIInterfaceRequestor* pinarg,
-                             const char* hostname,
-                             insanity::pkix::ScopedCERTCertList* validationChain,
-                             SECOidTag* evOidPolicy)
-{
-    SECStatus rv = certVerifier.VerifyCert(peerCert, certificateUsageSSLServer,
-                                           PR_Now(), pinarg, 0,
-                                           validationChain, evOidPolicy);
-
-    if (rv == SECSuccess) {
-        // cert is OK. This is the client side of an SSL connection.
-        // Now check the name field in the cert against the desired hostname.
-        // NB: This is our only defense against Man-In-The-Middle (MITM) attacks!
-        if (hostname && hostname[0])
-            rv = CERT_VerifyCertName(peerCert, hostname);
-        else
-            rv = SECFailure;
-        if (rv != SECSuccess)
-            PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
-    }
-
-    return rv;
-}
-
 // This function assumes that we will only use the SPDY connection coalescing
 // feature on connections where we have negotiated SPDY using NPN. If we ever
 // talk SPDY without having negotiated it with SPDY, this code will give wrong
@@ -754,6 +729,9 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
                 CERTCertificate* cert, SECItem* stapledOCSPResponse,
                 uint32_t providerFlags)
 {
+  MOZ_ASSERT(infoObject);
+  MOZ_ASSERT(cert);
+
   SECStatus rv;
   if (stapledOCSPResponse) {
     CERTCertDBHandle* handle = CERT_GetDefaultCertDB();
@@ -802,12 +780,17 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
                           reasonsForNotFetching);
   }
 
+  // We want to avoid storing any intermediate cert information when browsing
+  // in private, transient contexts.
+  bool saveIntermediates =
+    !(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE);
 
   insanity::pkix::ScopedCERTCertList certList;
   SECOidTag evOidPolicy;
-  rv = PSM_SSL_PKIX_AuthCertificate(certVerifier, cert, infoObject,
-                                    infoObject->GetHostNameRaw(),
-                                    &certList, &evOidPolicy);
+  rv = certVerifier.VerifySSLServerCert(cert, PR_Now(), infoObject,
+                                        infoObject->GetHostNameRaw(),
+                                        saveIntermediates, nullptr,
+                                        &evOidPolicy);
 
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.
@@ -825,47 +808,7 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
     }
   }
 
-  if (rv == SECSuccess && certList) {
-    // We want to avoid storing any intermediate cert information when browsing
-    // in private, transient contexts.
-    if (!(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
-      for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
-           !CERT_LIST_END(node, certList);
-           node = CERT_LIST_NEXT(node)) {
-
-        if (node->cert->slot) {
-          // This cert was found on a token, no need to remember it in the temp db.
-          continue;
-        }
-
-        if (node->cert->isperm) {
-          // We don't need to remember certs already stored in perm db.
-          continue;
-        }
-
-        if (node->cert == cert) {
-          // We don't want to remember the server cert,
-          // the code that cares for displaying page info does this already.
-          continue;
-        }
-
-        // We have found a signer cert that we want to remember.
-        char* nickname = nsNSSCertificate::defaultServerNickname(node->cert);
-        if (nickname && *nickname) {
-          // There is a suspicion that there is some thread safety issues
-          // in PK11_importCert and the mutex is a way to serialize until
-          // this issue has been cleared.
-          MutexAutoLock PK11Mutex(*gSSLVerificationPK11Mutex);
-          ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
-          if (slot) {
-            PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE,
-                            nickname, false);
-          }
-        }
-        PR_FREEIF(nickname);
-      }
-    }
-
+  if (rv == SECSuccess) {
     // The connection may get terminated, for example, if the server requires
     // a client cert. Let's provide a minimal SSLStatus
     // to the caller that contains at least the cert and its status.
