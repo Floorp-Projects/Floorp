@@ -22,12 +22,6 @@ MODULE_OPTIMIZE_FLAGS = $(MOZ_OPTIMIZE_FLAGS) -fno-strict-aliasing
 endif
 endif
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DISABLED_CMMSRCS		+= \
-		CocoaFileUtils.mm \
-		$(NULL)
-endif
-
 DISABLED_SDK_HEADERS =  \
 		nsDirectoryServiceDefs.h \
 		nsDirectoryServiceUtils.h \
