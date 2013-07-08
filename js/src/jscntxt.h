@@ -319,7 +319,11 @@ class NewObjectCache
 {
     /* Statically asserted to be equal to sizeof(JSObject_Slots16) */
     static const unsigned MAX_OBJ_SIZE = 4 * sizeof(void*) + 16 * sizeof(Value);
-    static inline void staticAsserts();
+
+    static void staticAsserts() {
+        JS_STATIC_ASSERT(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
+        JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
+    }
 
     struct Entry
     {
@@ -371,8 +375,14 @@ class NewObjectCache
      * on an existing entry.
      */
     inline bool lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry);
-    inline bool lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry);
-    inline bool lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind,
+                             EntryIndex *pentry);
+
+    bool lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind,
+                    EntryIndex *pentry)
+    {
+        return lookup(clasp, type, kind, pentry);
+    }
 
     /*
      * Return a new object from a cache hit produced by a lookup method, or
@@ -383,15 +393,45 @@ class NewObjectCache
 
     /* Fill an entry after a cache miss. */
     void fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj);
-    inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj);
-    inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
+
+    inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global,
+                           gc::AllocKind kind, JSObject *obj);
+
+    void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind,
+                  JSObject *obj)
+    {
+        JS_ASSERT(obj->type() == type);
+        return fill(entry, clasp, type, kind, obj);
+    }
 
     /* Invalidate any entries which might produce an object with shape/proto. */
     void invalidateEntriesForShape(JSContext *cx, HandleShape shape, HandleObject proto);
 
   private:
-    inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
-    inline void fill(EntryIndex entry, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
+    bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry) {
+        uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
+        *pentry = hash % mozilla::ArrayLength(entries);
+
+        Entry *entry = &entries[*pentry];
+
+        /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
+        return (entry->clasp == clasp && entry->key == key);
+    }
+
+    void fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj) {
+        JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
+        Entry *entry = &entries[entry_];
+
+        JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
+
+        entry->clasp = clasp;
+        entry->key = key;
+        entry->kind = kind;
+
+        entry->nbytes = gc::Arena::thingSize(kind);
+        js_memcpy(&entry->templateObject, obj, entry->nbytes);
+    }
+
     static inline void copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind);
 };
 
@@ -1616,6 +1656,7 @@ struct ThreadSafeContext : js::ContextFriendFields,
 
     /* Cut outs for string operations. */
     StaticStrings &staticStrings() { return runtime_->staticStrings; }
+    JSAtomState &names() { return runtime_->atomState; }
 
     /*
      * Allocator used when allocating GCThings on this context. If we are a
@@ -1637,10 +1678,22 @@ struct ThreadSafeContext : js::ContextFriendFields,
     inline Allocator *const allocator();
 
     /* GC support. */
-    inline AllowGC allowGC() const;
+    AllowGC allowGC() const {
+        switch (contextKind_) {
+          case Context_JS:
+            return CanGC;
+          case Context_ForkJoin:
+            return NoGC;
+          default:
+            /* Silence warnings. */
+            MOZ_ASSUME_UNREACHABLE("Bad context kind");
+        }
+    }
 
     template <typename T>
-    inline bool isInsideCurrentZone(T thing) const;
+    bool isInsideCurrentZone(T thing) const {
+        return thing->isInsideZone(zone_);
+    }
 
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime_->onOutOfMemory(p, nbytes, isJSContext() ? asJSContext() : NULL);
@@ -1896,8 +1949,6 @@ struct JSContext : js::ThreadSafeContext,
         throwing = false;
         exception.setUndefined();
     }
-
-    JSAtomState & names() { return runtime()->atomState; }
 
 #ifdef DEBUG
     /*

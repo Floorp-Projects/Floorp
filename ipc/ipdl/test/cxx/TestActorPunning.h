@@ -24,11 +24,11 @@ public:
     void Main();
 
 protected:
-    PTestActorPunningPunnedParent* AllocPTestActorPunningPunned() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningPunned(PTestActorPunningPunnedParent* a) MOZ_OVERRIDE;
+    PTestActorPunningPunnedParent* AllocPTestActorPunningPunnedParent() MOZ_OVERRIDE;
+    bool DeallocPTestActorPunningPunnedParent(PTestActorPunningPunnedParent* a) MOZ_OVERRIDE;
 
-    PTestActorPunningSubParent* AllocPTestActorPunningSub() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningSub(PTestActorPunningSubParent* a) MOZ_OVERRIDE;
+    PTestActorPunningSubParent* AllocPTestActorPunningSubParent() MOZ_OVERRIDE;
+    bool DeallocPTestActorPunningSubParent(PTestActorPunningSubParent* a) MOZ_OVERRIDE;
 
     virtual bool RecvPun(PTestActorPunningSubParent* a, const Bad& bad) MOZ_OVERRIDE;
 
@@ -66,11 +66,11 @@ public:
     virtual ~TestActorPunningChild() {}
 
 protected:
-    PTestActorPunningPunnedChild* AllocPTestActorPunningPunned() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningPunned(PTestActorPunningPunnedChild* a) MOZ_OVERRIDE;
+    PTestActorPunningPunnedChild* AllocPTestActorPunningPunnedChild() MOZ_OVERRIDE;
+    bool DeallocPTestActorPunningPunnedChild(PTestActorPunningPunnedChild* a) MOZ_OVERRIDE;
 
-    PTestActorPunningSubChild* AllocPTestActorPunningSub() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningSub(PTestActorPunningSubChild* a) MOZ_OVERRIDE;
+    PTestActorPunningSubChild* AllocPTestActorPunningSubChild() MOZ_OVERRIDE;
+    bool DeallocPTestActorPunningSubChild(PTestActorPunningSubChild* a) MOZ_OVERRIDE;
 
     virtual bool RecvStart() MOZ_OVERRIDE;
 

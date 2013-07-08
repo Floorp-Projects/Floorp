@@ -15,7 +15,6 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
-DISABLED_CMMSRCS += nsNetworkLinkService.mm
 
 include $(topsrcdir)/config/rules.mk
 

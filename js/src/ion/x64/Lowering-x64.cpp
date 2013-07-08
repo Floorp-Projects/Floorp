@@ -175,6 +175,14 @@ LIRGeneratorX64::newLGetPropertyCacheT(MGetPropertyCache *ins)
     return new LGetPropertyCacheT(useRegister(ins->object()), LDefinition::BogusTemp());
 }
 
+LGetElementCacheT *
+LIRGeneratorX64::newLGetElementCacheT(MGetElementCache *ins)
+{
+    return new LGetElementCacheT(useRegister(ins->object()),
+                                 useRegister(ins->index()),
+                                 LDefinition::BogusTemp());
+}
+
 bool
 LIRGeneratorX64::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {

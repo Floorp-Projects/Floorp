@@ -1962,8 +1962,6 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_BASELINE       JS_BIT(14)      /* Baseline compiler. */
 
-#define JSOPTION_PCCOUNT        JS_BIT(15)      /* Collect per-op execution counts */
-
 #define JSOPTION_TYPE_INFERENCE JS_BIT(16)      /* Perform type inference. */
 #define JSOPTION_STRICT_MODE    JS_BIT(17)      /* Provides a way to force
                                                    strict mode for all code

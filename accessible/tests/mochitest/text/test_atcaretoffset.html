@@ -50,7 +50,7 @@
                          "textarea", kTodo, kTodo, kOk);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                         "textarea", kTodo, kTodo, kOk);
+                         "textarea", kOk, kOk, kOk);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
                              "textarea", kOk, kOk, kOk);
@@ -113,7 +113,7 @@
                          "textarea", kOk, kOk, kOk);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                         "textarea", kTodo, kTodo, kTodo);
+                         "textarea", kOk, kOk, kOk);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
                              "textarea", kTodo, kTodo, kOk);
@@ -169,7 +169,7 @@
                             "textarea", kTodo, kTodo, kTodo);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                            "textarea", kTodo, kOk, kTodo);
+                            "textarea", kOk, kOk, kOk);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
                          "textarea", kOk, kOk, kOk);
@@ -206,7 +206,7 @@
                          "textarea", kOk, kOk, kOk);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                         "textarea", kTodo, kOk, kTodo);
+                         "textarea", kOk, kOk, kOk);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
                              "textarea", kTodo, kOk, kTodo);
