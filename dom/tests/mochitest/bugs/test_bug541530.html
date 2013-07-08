@@ -37,14 +37,27 @@ ok(canDefine, "Should have access to __defineGetter__ and __defineSetter__");
 try {
     this.__defineGetter__('window', function() {});
     ok(false, "should not be able to defineGetter(window)");
-} catch (e) {
-}
+} catch (e) { }
+
+try {
+    this.__defineGetter__('document', function() {});
+    ok(false, "should not be able to defineGetter(document)");
+} catch (e) { }
 
 try {
     this.__defineGetter__.call(window, 'location', function(){});
     ok(false, "should not be able to defineGetter(window.location)");
-} catch (e) {
-}
+} catch (e) { }
+
+try {
+    this.__defineGetter__.call(window, 'document', function(){});
+    ok(false, "should not be able to defineGetter(window.document)");
+} catch (e) { }
+
+try {
+    this.__defineGetter__.call(document, 'location', function(){});
+    ok(false, "should not be able to defineGetter(document.location)");
+} catch (e) { }
 
 try {
     this.__defineGetter__.call(window.location, 'href', function(){});

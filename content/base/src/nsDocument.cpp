@@ -11382,7 +11382,7 @@ nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
                                            (doc_str.get()),
                            doc_str.Length(), JS::ObjectValue(*obj),
                            JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_READONLY | JSPROP_ENUMERATE)) {
+                           JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
     return nullptr;
   }
 
