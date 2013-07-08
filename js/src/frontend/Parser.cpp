@@ -6624,6 +6624,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
+                if (!abortIfSyntaxParser())
+                    return null();
                 tokenStream.ungetToken();
                 if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), NULL, NULL))
                     return null();
