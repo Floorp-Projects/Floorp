@@ -29,11 +29,11 @@ public:
     ActorDestroyReason mWhy;
 
 protected:    
-    virtual PTestSelfManageParent* AllocPTestSelfManage() MOZ_OVERRIDE {
+    virtual PTestSelfManageParent* AllocPTestSelfManageParent() MOZ_OVERRIDE {
         return new TestSelfManageParent();
     }
 
-    virtual bool DeallocPTestSelfManage(PTestSelfManageParent* a) MOZ_OVERRIDE {
+    virtual bool DeallocPTestSelfManageParent(PTestSelfManageParent* a) MOZ_OVERRIDE {
         return true;
     }
 
@@ -59,11 +59,11 @@ public:
     void Main();
 
 protected:    
-    virtual PTestSelfManageParent* AllocPTestSelfManage() MOZ_OVERRIDE {
+    virtual PTestSelfManageParent* AllocPTestSelfManageParent() MOZ_OVERRIDE {
         return new TestSelfManageParent();
     }
 
-    virtual bool DeallocPTestSelfManage(PTestSelfManageParent* a) MOZ_OVERRIDE {
+    virtual bool DeallocPTestSelfManageParent(PTestSelfManageParent* a) MOZ_OVERRIDE {
         return true;
     }
 
@@ -91,11 +91,11 @@ public:
     }
 
 protected:    
-    virtual PTestSelfManageChild* AllocPTestSelfManage() MOZ_OVERRIDE {
+    virtual PTestSelfManageChild* AllocPTestSelfManageChild() MOZ_OVERRIDE {
         return new TestSelfManageChild();
     }
 
-    virtual bool DeallocPTestSelfManage(PTestSelfManageChild* a) MOZ_OVERRIDE {
+    virtual bool DeallocPTestSelfManageChild(PTestSelfManageChild* a) MOZ_OVERRIDE {
         delete a;
         return true;
     }
@@ -117,11 +117,11 @@ public:
     void Main();
 
 protected:    
-    virtual PTestSelfManageChild* AllocPTestSelfManage() MOZ_OVERRIDE {
+    virtual PTestSelfManageChild* AllocPTestSelfManageChild() MOZ_OVERRIDE {
         return new TestSelfManageChild();
     }
 
-    virtual bool DeallocPTestSelfManage(PTestSelfManageChild* a) MOZ_OVERRIDE {
+    virtual bool DeallocPTestSelfManageChild(PTestSelfManageChild* a) MOZ_OVERRIDE {
         delete a;
         return true;
     }

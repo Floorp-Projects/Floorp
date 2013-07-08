@@ -34,10 +34,10 @@ protected:
   }
 
   virtual PTestBadActorSubParent*
-  AllocPTestBadActorSub();
+  AllocPTestBadActorSubParent();
 
   virtual bool
-  DeallocPTestBadActorSub(PTestBadActorSubParent* actor) {
+  DeallocPTestBadActorSubParent(PTestBadActorSubParent* actor) {
     delete actor;
     return true;
   }
@@ -63,10 +63,10 @@ public:
 
 protected:
   virtual PTestBadActorSubChild*
-  AllocPTestBadActorSub();
+  AllocPTestBadActorSubChild();
 
   virtual bool
-  DeallocPTestBadActorSub(PTestBadActorSubChild* actor)
+  DeallocPTestBadActorSubChild(PTestBadActorSubChild* actor)
   {
     delete actor;
     return true;

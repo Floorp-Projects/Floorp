@@ -58,7 +58,7 @@ TestDataStructuresParent::Main()
 }
 
 bool
-TestDataStructuresParent::DeallocPTestDataStructuresSub(PTestDataStructuresSubParent* actor)
+TestDataStructuresParent::DeallocPTestDataStructuresSubParent(PTestDataStructuresSubParent* actor)
 {
     test_assert(Cast(actor).mI == Cast(mKids[0]).mI,
                 "dtor sent to wrong actor");
