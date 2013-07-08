@@ -113,8 +113,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         GeckoAppShell.getGeckoInterface().removeAppStateListener(captureAndroid.mAppStateListener);
 
         captureAndroid.StopCapture();
-        captureAndroid.camera.release();
-        captureAndroid.camera = null;
+        if (captureAndroid.camera != null) {
+            captureAndroid.camera.release();
+            captureAndroid.camera = null;
+        }
         captureAndroid.context = 0;
 
         View cameraView = GeckoAppShell.getGeckoInterface().getCameraView();
@@ -178,8 +180,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             @Override
             public void onPause() {
                 StopCapture();
-                camera.release();
-                camera = null;
+                if (camera != null) {
+                    camera.release();
+                    camera = null;
+                }
             }
             @Override
             public void onResume() {
