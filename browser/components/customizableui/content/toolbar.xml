@@ -146,6 +146,33 @@
     </implementation>
   </binding>
 
+  <binding id="toolbar-menubar-stub">
+    <implementation>
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (this._toolbox)
+            return this._toolbox;
+
+          if (this.parentNode && this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
+        ]]></getter>
+      </property>
+      <property name="currentSet" readonly="true">
+        <getter><![CDATA[
+          return this.getAttribute("defaultset");
+        ]]></getter>
+      </property>
+      <method name="insertItem">
+        <body><![CDATA[
+          return null;
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
   <!-- The toolbar-menubar-autohide and toolbar-drag bindings are almost
        verbatim copies of their toolkit counterparts - they just inherit from
        the customizableui's toolbar binding instead of toolkit's. We're currently

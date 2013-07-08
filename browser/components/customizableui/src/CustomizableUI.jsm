@@ -148,6 +148,7 @@ let CustomizableUIInternal = {
         "social-share-button",
       ]
     });
+#ifndef XP_MACOSX
     this.registerArea(CustomizableUI.AREA_MENUBAR, {
       legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
@@ -155,6 +156,7 @@ let CustomizableUIInternal = {
         "menubar-items",
       ]
     });
+#endif
     this.registerArea(CustomizableUI.AREA_TABSTRIP, {
       legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
