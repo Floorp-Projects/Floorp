@@ -50,6 +50,8 @@ BROWSER_TESTS += \
   browser_selection_frame_inputs.js \
   browser_selection_frame_inputs.html \
   browser_selection_urlbar.js \
+  browser_selection_contenteditable.js \
+  browser_selection_contenteditable.html \
   $(NULL)
 endif
 
