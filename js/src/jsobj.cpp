@@ -4169,31 +4169,36 @@ js::LookupPropertyPure(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
  *
  *  - Any object in the lookup chain has a non-stub resolve hook.
  *  - Any object in the lookup chain is non-native.
- *  - Hashification of a shape tree into a shape table.
  *  - The property has a getter.
  */
 bool
-js::GetPropertyPure(JSObject *obj, jsid id, Value *vp)
+js::GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, jsid id, Value *vp)
 {
     JSObject *obj2;
     Shape *shape;
     if (!LookupPropertyPureInline(obj, id, &obj2, &shape))
         return false;
 
-    /*
-     * If we couldn't find the property, fail if any of the following edge
-     * cases appear.
-     */
     if (!shape) {
-        /* Do we have a non-stub class op hook? */
+        /* Fail if we have a non-stub class op hook? */
         if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
             return false;
+
+        /* Vanilla native object, return undefined. */
         vp->setUndefined();
         return true;
     }
 
     if (IsImplicitDenseElement(shape)) {
         *vp = obj2->getDenseElement(JSID_TO_INT(id));
+        return true;
+    }
+
+    /* Special case 'length' on Array. */
+    if (obj->is<ArrayObject>() &&
+        (JSID_IS_ATOM(id) && tcx->names().length == JSID_TO_ATOM(id)))
+    {
+        vp->setNumber(obj->as<ArrayObject>().length());
         return true;
     }
 

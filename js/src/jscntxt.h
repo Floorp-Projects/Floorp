@@ -1656,6 +1656,7 @@ struct ThreadSafeContext : js::ContextFriendFields,
 
     /* Cut outs for string operations. */
     StaticStrings &staticStrings() { return runtime_->staticStrings; }
+    JSAtomState &names() { return runtime_->atomState; }
 
     /*
      * Allocator used when allocating GCThings on this context. If we are a
@@ -1948,8 +1949,6 @@ struct JSContext : js::ThreadSafeContext,
         throwing = false;
         exception.setUndefined();
     }
-
-    JSAtomState & names() { return runtime()->atomState; }
 
 #ifdef DEBUG
     /*
