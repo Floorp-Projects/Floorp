@@ -119,6 +119,7 @@ public:
     nsresult ResumeSend();
     nsresult ResumeRecv();
     int64_t  MaxBytesRead() {return mMaxBytesRead;}
+    uint8_t GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
     friend class nsHttpConnectionForceRecv;
     nsresult ForceRecv();
@@ -134,6 +135,7 @@ public:
     void EndIdleMonitoring();
 
     bool UsingSpdy() { return !!mUsingSpdyVersion; }
+    uint8_t GetSpdyVersion() { return mUsingSpdyVersion; }
     bool EverUsedSpdy() { return mEverUsedSpdy; }
     PRIntervalTime Rtt() { return mRtt; }
 
@@ -255,6 +257,9 @@ private:
 
     // The capabailities associated with the most recent transaction
     uint32_t                        mTransactionCaps;
+
+    // mLastHttpResponseVersion stores the last response's http version seen.
+    uint8_t                         mLastHttpResponseVersion;
 };
 
 #endif // nsHttpConnection_h__
