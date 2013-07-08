@@ -2465,7 +2465,7 @@ CodeGenerator::maybeCreateScriptCounts()
     // If scripts are being profiled, create a new IonScriptCounts and attach
     // it to the script. This must be done on the main thread.
     JSContext *cx = GetIonContext()->cx;
-    if (!cx)
+    if (!cx || !cx->runtime()->profilingScripts)
         return NULL;
 
     IonScriptCounts *counts = NULL;
@@ -2473,14 +2473,7 @@ CodeGenerator::maybeCreateScriptCounts()
     CompileInfo *outerInfo = &gen->info();
     JSScript *script = outerInfo->script();
 
-    if (cx->runtime()->profilingScripts) {
-        if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
-            return NULL;
-    } else if (!script) {
-        return NULL;
-    }
-
-    if (script && !script->hasScriptCounts)
+    if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
         return NULL;
 
     counts = js_new<IonScriptCounts>();
