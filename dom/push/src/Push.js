@@ -34,7 +34,8 @@ Push.prototype = {
 
   classID : PUSH_CID,
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
+                                          Ci.nsISupportsWeakReference]),
 
   init: function(aWindow) {
     debug("init()");
@@ -58,9 +59,7 @@ Push.prototype = {
     if (perm != Ci.nsIPermissionManager.ALLOW_ACTION)
       return null;
 
-    this.initHelper(aWindow, []);
-
-    this.initMessageListener([
+    this.initDOMRequestHelper(aWindow, [
       "PushService:Register:OK",
       "PushService:Register:KO",
       "PushService:Unregister:OK",
