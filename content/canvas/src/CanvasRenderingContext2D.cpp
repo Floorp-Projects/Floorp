@@ -3345,7 +3345,9 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
                                            FORMAT_B8G8R8A8);
     mgfx::Rect destRect(0, 0, w, h);
     mgfx::Rect sourceRect(0, 0, sw, sh);
-    mTarget->DrawSurface(data, destRect, sourceRect);
+    mTarget->DrawSurface(data, destRect, sourceRect,
+                         DrawSurfaceOptions(mgfx::FILTER_POINT),
+                         DrawOptions(1.0f, OP_SOURCE, AA_NONE));
     mTarget->Flush();
   } else {
     mTarget->SetTransform(matrix);
