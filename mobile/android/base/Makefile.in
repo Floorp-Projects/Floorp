@@ -221,6 +221,7 @@ FENNEC_JAVA_FILES = \
   home/BookmarkFolderView.java \
   home/BookmarkThumbnailView.java \
   home/BrowserSearch.java \
+  home/HistoryPage.java \
   home/HomeFragment.java \
   home/HomeListView.java \
   home/HomePager.java \
@@ -466,6 +467,8 @@ RES_LAYOUT = \
   res/layout/gecko_app.xml \
   res/layout/home_bookmarks_page.xml \
   res/layout/home_item_row.xml \
+  res/layout/home_header_row.xml \
+  res/layout/home_list_with_title.xml \
   res/layout/home_search_item_row.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
