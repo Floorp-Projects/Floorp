@@ -471,6 +471,7 @@ RES_LAYOUT = \
   res/layout/home_header_row.xml \
   res/layout/home_list_with_title.xml \
   res/layout/home_search_item_row.xml \
+  res/layout/home_visited_page.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \

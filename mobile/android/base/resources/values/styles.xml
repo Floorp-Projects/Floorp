@@ -502,6 +502,25 @@
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
     </style>
 
+    <style name="AboutHome.EmptyMessage">
+        <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
+        <item name="android:gravity">center</item>
+        <item name="android:focusable">false</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+    </style>
+
+    <style name="AboutHome.PageButton">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">40dip</item>
+        <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center|left</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+    </style>
+
     <style name="AboutHome.PageTitle">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">32dp</item>

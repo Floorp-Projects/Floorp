@@ -249,6 +249,8 @@
   <string name="abouthome_topsites_pin">&abouthome_topsites_pin;</string>
   <string name="abouthome_topsites_unpin">&abouthome_topsites_unpin;</string>
 
+  <string name="abouthome_visited_empty">&abouthome_visited_empty;</string>
+
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
   <string name="filepicker_image_title">&filepicker_image_title;</string>
