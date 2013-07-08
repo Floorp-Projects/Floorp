@@ -21,6 +21,15 @@
 #define NS_HTTP_VERSION_1_0     10
 #define NS_HTTP_VERSION_1_1     11
 
+namespace mozilla {
+namespace net {
+    enum {
+        SPDY_VERSION_2 = 2,
+        SPDY_VERSION_3 = 3
+    };
+} // namespace mozilla::net
+} // namespace mozilla
+
 typedef uint8_t nsHttpVersion;
 
 //-----------------------------------------------------------------------------
