@@ -31,6 +31,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     LDefinition tempToUnbox();
 
     LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
+    LGetElementCacheT *newLGetElementCacheT(MGetElementCache *ins);
 
   public:
     bool visitBox(MBox *box);
