@@ -62,13 +62,13 @@ private:
   RefPtr<ID3D11RenderTargetView> mRTView;
 };
 
-class TextureClientD3D11 : public TextureClient
+class DeprecatedTextureClientD3D11 : public DeprecatedTextureClient
 {
 public:
-  TextureClientD3D11(CompositableForwarder* aCompositableForwarder, const TextureInfo& aTextureInfo);
-  ~TextureClientD3D11();
+  DeprecatedTextureClientD3D11(CompositableForwarder* aCompositableForwarder, const TextureInfo& aTextureInfo);
+  ~DeprecatedTextureClientD3D11();
 
-  virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_CONTENT; }
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_CONTENT; }
 
   virtual void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
 
@@ -95,12 +95,12 @@ private:
   gfxContentType mContentType;
 };
 
-class TextureHostShmemD3D11 : public TextureHost
+class DeprecatedTextureHostShmemD3D11 : public DeprecatedTextureHost
                             , public TextureSourceD3D11
                             , public TileIterator
 {
 public:
-  TextureHostShmemD3D11()
+  DeprecatedTextureHostShmemD3D11()
     : mDevice(nullptr)
     , mIsTiled(false)
     , mCurrentTile(0)
@@ -128,7 +128,7 @@ public:
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "TextureHostShmemD3D11"; }
+  virtual const char* Name() { return "DeprecatedTextureHostShmemD3D11"; }
 #endif
 
   virtual void BeginTileIteration() MOZ_OVERRIDE {
@@ -162,11 +162,11 @@ private:
   bool mIterating;
 };
 
-class TextureHostDXGID3D11 : public TextureHost
+class DeprecatedTextureHostDXGID3D11 : public DeprecatedTextureHost
                            , public TextureSourceD3D11
 {
 public:
-  TextureHostDXGID3D11()
+  DeprecatedTextureHostDXGID3D11()
     : mDevice(nullptr)
   {
   }
@@ -186,7 +186,7 @@ public:
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "TextureHostDXGID3D11"; }
+  virtual const char* Name() { return "DeprecatedTextureHostDXGID3D11"; }
 #endif
 
 protected:
@@ -202,11 +202,11 @@ private:
   RefPtr<ID3D11Device> mDevice;
 };
 
-class TextureHostYCbCrD3D11 : public TextureHost
+class DeprecatedTextureHostYCbCrD3D11 : public DeprecatedTextureHost
                             , public TextureSourceD3D11
 {
 public:
-  TextureHostYCbCrD3D11()
+  DeprecatedTextureHostYCbCrD3D11()
     : mDevice(nullptr)
   {
     mFormat = gfx::FORMAT_YUV;
@@ -226,7 +226,7 @@ public:
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() MOZ_OVERRIDE { return "TextureImageTextureHostD3D11"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "TextureImageDeprecatedTextureHostD3D11"; }
 #endif
 
 protected:

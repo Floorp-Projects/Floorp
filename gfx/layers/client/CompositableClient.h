@@ -15,7 +15,7 @@ namespace layers {
 
 class CompositableChild;
 class CompositableClient;
-class TextureClient;
+class DeprecatedTextureClient;
 class ImageBridgeChild;
 class ShadowableLayer;
 class CompositableForwarder;
@@ -78,8 +78,8 @@ public:
 
   LayersBackend GetCompositorBackendType() const;
 
-  TemporaryRef<TextureClient>
-  CreateTextureClient(TextureClientType aTextureClientType);
+  TemporaryRef<DeprecatedTextureClient>
+  CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)

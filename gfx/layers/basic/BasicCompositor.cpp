@@ -30,8 +30,8 @@ public:
 /**
  * Texture source and host implementaion for software compositing.
  */
-class TextureHostBasic : public TextureHost
-                             , public TextureSourceBasic
+class DeprecatedTextureHostBasic : public DeprecatedTextureHost
+                                 , public TextureSourceBasic
 {
 public:
   virtual IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
@@ -45,7 +45,7 @@ public:
     mCompositor = static_cast<BasicCompositor*>(aCompositor);
   }
 
-  virtual const char *Name() { return "TextureHostBasic"; }
+  virtual const char *Name() { return "DeprecatedTextureHostBasic"; }
 
 protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
@@ -105,7 +105,7 @@ DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, Pl
   aData.mPicSize = aDeserializer.GetYSize();
 }
 
-class YCbCrTextureHostBasic : public TextureHostBasic
+class YCbCrDeprecatedTextureHostBasic : public DeprecatedTextureHostBasic
 {
 public:
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
@@ -162,19 +162,19 @@ public:
 
 };
 
-TemporaryRef<TextureHost>
-CreateBasicTextureHost(SurfaceDescriptorType aDescriptorType,
-                       uint32_t aTextureHostFlags,
-                       uint32_t aTextureFlags)
+TemporaryRef<DeprecatedTextureHost>
+CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                             uint32_t aTextureHostFlags,
+                             uint32_t aTextureFlags)
 {
   if (aDescriptorType == SurfaceDescriptor::TYCbCrImage) {
-    return new YCbCrTextureHostBasic();
+    return new YCbCrDeprecatedTextureHostBasic();
   }
 
   MOZ_ASSERT(aDescriptorType == SurfaceDescriptor::TShmem ||
              aDescriptorType == SurfaceDescriptor::TMemoryImage,
              "We can only support Shmem currently");
-  return new TextureHostBasic();
+  return new DeprecatedTextureHostBasic();
 }
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)

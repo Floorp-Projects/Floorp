@@ -94,7 +94,7 @@
  * under gfx/layers/. To add a new backend, implement at least the following
  * interfaces:
  * - Compositor (ex. CompositorOGL)
- * - TextureHost (ex. TextureImageTextureHost)
+ * - TextureHost (ex. SharedTextureHostOGL)
  * Depending on the type of data that needs to be serialized, you may need to
  * add specific TextureClient implementations.
  */
