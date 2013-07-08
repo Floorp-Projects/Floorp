@@ -17,6 +17,13 @@ function f(o) {
     function() { return o.foo; });
 }
 
+function g(o) {
+  compareAgainstArray(
+    range(0, minItemsTestingThreshold),
+    "map",
+    function() { return o.length; });
+}
+
 function testICMultiple() {
   var o1 = { foo: 0 };
   var o2 = { foo: 0, bar: '' };
@@ -39,8 +46,15 @@ function testICSameShapeDifferentProto() {
   f(y);
 }
 
+function testICArrayLength() {
+  var o1 = { length: 42 };
+  var o2 = [1,2,3,4];
+  g(o1); g(o2);
+}
+
 if (getBuildConfiguration().parallelJS) {
   testICProto();
   testICMultiple();
   testICSameShapeDifferentProto();
+  testICArrayLength();
 }

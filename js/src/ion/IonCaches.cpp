@@ -1010,6 +1010,49 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     return true;
 }
 
+static bool
+GenerateArrayLength(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                    JSObject *obj, Register object, TypedOrValueRegister output)
+{
+    JS_ASSERT(obj->is<ArrayObject>());
+
+    Label failures;
+
+    // Guard object is a dense array.
+    RootedShape shape(cx, obj->lastProperty());
+    if (!shape)
+        return false;
+    masm.branchTestObjShape(Assembler::NotEqual, object, shape, &failures);
+
+    // Load length.
+    Register outReg;
+    if (output.hasValue()) {
+        outReg = output.valueReg().scratchReg();
+    } else {
+        JS_ASSERT(output.type() == MIRType_Int32);
+        outReg = output.typedReg().gpr();
+    }
+
+    masm.loadPtr(Address(object, JSObject::offsetOfElements()), outReg);
+    masm.load32(Address(outReg, ObjectElements::offsetOfLength()), outReg);
+
+    // The length is an unsigned int, but the value encodes a signed int.
+    JS_ASSERT(object != outReg);
+    masm.branchTest32(Assembler::Signed, outReg, outReg, &failures);
+
+    if (output.hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, outReg, output.valueReg());
+
+    /* Success. */
+    attacher.jumpRejoin(masm);
+
+    /* Failure. */
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    return true;
+}
+
 bool
 GetPropertyIC::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                               HandleShape shape)
@@ -1165,45 +1208,12 @@ GetPropertyIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj,
 bool
 GetPropertyIC::attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
 {
-    JS_ASSERT(obj->is<ArrayObject>());
     JS_ASSERT(!idempotent());
 
-    Label failures;
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
-
-    // Guard object is a dense array.
-    RootedObject globalObj(cx, &script->global());
-    RootedShape shape(cx, obj->lastProperty());
-    if (!shape)
+    if (!GenerateArrayLength(cx, masm, attacher, obj, object(), output()))
         return false;
-    masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);
-
-    // Load length.
-    Register outReg;
-    if (output().hasValue()) {
-        outReg = output().valueReg().scratchReg();
-    } else {
-        JS_ASSERT(output().type() == MIRType_Int32);
-        outReg = output().typedReg().gpr();
-    }
-
-    masm.loadPtr(Address(object(), JSObject::offsetOfElements()), outReg);
-    masm.load32(Address(outReg, ObjectElements::offsetOfLength()), outReg);
-
-    // The length is an unsigned int, but the value encodes a signed int.
-    JS_ASSERT(object() != outReg);
-    masm.branchTest32(Assembler::Signed, outReg, outReg, &failures);
-
-    if (output().hasValue())
-        masm.tagValue(JSVAL_TYPE_INT32, outReg, output().valueReg());
-
-    /* Success. */
-    attacher.jumpRejoin(masm);
-
-    /* Failure. */
-    masm.bind(&failures);
-    attacher.jumpNextStub(masm);
 
     JS_ASSERT(!hasArrayLengthStub_);
     hasArrayLengthStub_ = true;
@@ -1601,26 +1611,26 @@ ParallelGetPropertyIC::canAttachReadSlot(LockedJSContext &cx, JSObject *obj,
 }
 
 bool
-ParallelGetPropertyIC::attachReadSlot(LockedJSContext &cx, IonScript *ion,
-                                      JSObject *obj, bool *attachedStub)
+ParallelGetPropertyIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
+                                      JSObject *holder, Shape *shape)
 {
-    *attachedStub = false;
-
-    RootedShape shape(cx);
-    RootedObject holder(cx);
-    if (!canAttachReadSlot(cx, obj, &holder, &shape))
-        return true;
-
     // Ready to generate the read slot stub.
     DispatchStubPrepender attacher(*this);
     MacroAssembler masm(cx);
     GenerateReadSlot(cx, ion, masm, attacher, obj, name(), holder, shape, object(), output());
 
-    if (!linkAndAttachStub(cx, masm, attacher, ion, "parallel reading"))
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel reading");
+}
+
+bool
+ParallelGetPropertyIC::attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    if (!GenerateArrayLength(cx, masm, attacher, obj, object(), output()))
         return false;
 
-    *attachedStub = true;
-    return true;
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel array length");
 }
 
 ParallelResult
@@ -1639,7 +1649,7 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
 
     // Grab the property early, as the pure path is fast anyways and doesn't
     // need a lock. If we can't do it purely, bail out of parallel execution.
-    if (!GetPropertyPure(obj, NameToId(cache.name()), vp.address()))
+    if (!GetPropertyPure(slice, obj, NameToId(cache.name()), vp.address()))
         return TP_RETRY_SEQUENTIALLY;
 
     // Avoid unnecessary locking if cannot attach stubs.
@@ -1664,9 +1674,23 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
                 return TP_FATAL;
 
             // See note about the stub limit in GetPropertyCache.
-            bool attachedStub;
-            if (!cache.attachReadSlot(cx, ion, obj, &attachedStub))
-                return TP_FATAL;
+            bool attachedStub = false;
+
+            {
+                RootedShape shape(cx);
+                RootedObject holder(cx);
+                if (cache.canAttachReadSlot(cx, obj, &holder, &shape)) {
+                    if (!cache.attachReadSlot(cx, ion, obj, holder, shape))
+                        return TP_FATAL;
+                    attachedStub = true;
+                }
+            }
+
+            if (!attachedStub && obj->is<ArrayObject>() && slice->names().length == cache.name()) {
+                if (!cache.attachArrayLength(cx, ion, obj))
+                    return TP_FATAL;
+                attachedStub = true;
+            }
 
             if (!attachedStub) {
                 // ParallelDo will take care of invalidating all bailed out
