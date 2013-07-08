@@ -8,8 +8,9 @@
 #define builtin_MapObject_h
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsobj.h"
+
+#include "vm/Runtime.h"
 
 namespace js {
 

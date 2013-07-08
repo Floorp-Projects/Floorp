@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsobj.h"
@@ -17,6 +16,7 @@
 
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
+#include "vm/Runtime.h"
 #include "vm/Shape.h"
 
 #include "jsobjinlines.h"

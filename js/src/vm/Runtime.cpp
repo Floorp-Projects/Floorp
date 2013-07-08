@@ -7,41 +7,21 @@
 #include "vm/Runtime.h"
 
 #include <locale.h>
-#include <stdarg.h>
 #include <string.h>
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
-#include "jstypes.h"
-#include "jsprf.h"
 #include "jsatom.h"
-#include "jscompartment.h"
-#include "jsdbgapi.h"
-#include "jsexn.h"
-#include "jsfun.h"
 #include "jsgc.h"
-#include "jsiter.h"
 #include "jsmath.h"
 #include "jsobj.h"
-#include "jsopcode.h"
-#include "jspubtd.h"
 #include "jsscript.h"
-#include "jsstr.h"
-#include "jsworkers.h"
-#ifdef JS_ION
-#include "ion/Ion.h"
-#endif
 
-#include "gc/Marking.h"
-#include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
-#include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 
-#include "jsobjinlines.h"
-
-#include "vm/Stack-inl.h"
+#include "jsgcinlines.h"
 
 using namespace js;
 using namespace js::gc;
