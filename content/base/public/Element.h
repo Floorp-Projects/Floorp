@@ -1615,6 +1615,18 @@ NS_IMETHOD MozRequestPointerLock(void) MOZ_FINAL                              \
 {                                                                             \
   Element::MozRequestPointerLock();                                           \
   return NS_OK;                                                               \
+}                                                                             \
+using nsINode::QuerySelector;                                                 \
+NS_IMETHOD QuerySelector(const nsAString& aSelector,                          \
+                         nsIDOMElement **aReturn) MOZ_FINAL                   \
+{                                                                             \
+  return nsINode::QuerySelector(aSelector, aReturn);                          \
+}                                                                             \
+using nsINode::QuerySelectorAll;                                              \
+NS_IMETHOD QuerySelectorAll(const nsAString& aSelector,                       \
+                            nsIDOMNodeList **aReturn) MOZ_FINAL               \
+{                                                                             \
+  return nsINode::QuerySelectorAll(aSelector, aReturn);                       \
 }
 
 #endif // mozilla_dom_Element_h__

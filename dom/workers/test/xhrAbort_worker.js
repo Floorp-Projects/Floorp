@@ -39,7 +39,8 @@ function runTest() {
 
     var str = event.type + "(" + readyState + ", '" + responseText + "', " +
               status + ", '" + statusText + "'";
-    if (event instanceof ProgressEvent) {
+    if ((("ProgressEvent" in this) && event instanceof ProgressEvent) ||
+        (("WorkerProgressEvent" in this) && event instanceof WorkerProgressEvent)) {
       str += ", progressEvent";
     }
     str += ")";

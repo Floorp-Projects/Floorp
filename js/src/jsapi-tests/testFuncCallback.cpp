@@ -134,7 +134,7 @@ JSContext *createContext()
 {
     JSContext *cx = JSAPITest::createContext();
     if (cx)
-        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_BASELINE | JSOPTION_ION | JSOPTION_PCCOUNT);
+        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_BASELINE | JSOPTION_ION);
     return cx;
 }
 

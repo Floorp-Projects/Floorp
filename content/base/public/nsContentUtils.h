@@ -1311,6 +1311,11 @@ public:
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
 
   /**
+   * Returns true if aPrincipal is an nsExpandedPrincipal.
+   */
+  static bool IsExpandedPrincipal(nsIPrincipal* aPrincipal);
+
+  /**
    * Gets the system principal from the security manager.
    */
   static nsIPrincipal* GetSystemPrincipal();

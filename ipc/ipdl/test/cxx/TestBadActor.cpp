@@ -20,7 +20,7 @@ TestBadActorParent::Main()
 }
 
 PTestBadActorSubParent*
-TestBadActorParent::AllocPTestBadActorSub()
+TestBadActorParent::AllocPTestBadActorSubParent()
 {
   return new TestBadActorSubParent();
 }
@@ -33,7 +33,7 @@ TestBadActorSubParent::RecvPing()
 }
 
 PTestBadActorSubChild*
-TestBadActorChild::AllocPTestBadActorSub()
+TestBadActorChild::AllocPTestBadActorSubChild()
 {
   return new TestBadActorSubChild();
 }

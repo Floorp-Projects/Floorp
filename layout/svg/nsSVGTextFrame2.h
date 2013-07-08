@@ -182,7 +182,6 @@ class nsSVGTextFrame2 : public nsSVGTextFrame2Base
   friend class mozilla::TextNodeCorrespondenceRecorder;
   friend struct mozilla::TextRenderedRun;
   friend class mozilla::TextRenderedRunIterator;
-  friend class AutoCanvasTMForMarker;
   friend class MutationObserver;
   friend class nsDisplaySVGText;
 
@@ -191,8 +190,7 @@ protected:
     : nsSVGTextFrame2Base(aContext),
       mFontSizeScaleFactor(1.0f),
       mLastContextScale(1.0f),
-      mLengthAdjustScaleFactor(1.0f),
-      mGetCanvasTMForFlag(FOR_OUTERSVG_TM)
+      mLengthAdjustScaleFactor(1.0f)
   {
     AddStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
   }
@@ -353,28 +351,6 @@ public:
                                           nsIFrame* aChildFrame);
 
 private:
-  /**
-   * This class exists purely because it would be too messy to pass the "for"
-   * flag for GetCanvasTM through the call chains to the GetCanvasTM() call in
-   * UpdateFontSizeScaleFactor.
-   */
-  class AutoCanvasTMForMarker {
-  public:
-    AutoCanvasTMForMarker(nsSVGTextFrame2* aFrame, uint32_t aFor)
-      : mFrame(aFrame)
-    {
-      mOldFor = mFrame->mGetCanvasTMForFlag;
-      mFrame->mGetCanvasTMForFlag = aFor;
-    }
-    ~AutoCanvasTMForMarker()
-    {
-      mFrame->mGetCanvasTMForFlag = mOldFor;
-    }
-  private:
-    nsSVGTextFrame2* mFrame;
-    uint32_t mOldFor;
-  };
-
   /**
    * Mutation observer used to watch for text positioning attribute changes
    * on descendent text content elements (like <tspan>s).
@@ -656,20 +632,6 @@ private:
    * lengthAdjust="spacingAndGlyphs".
    */
   float mLengthAdjustScaleFactor;
-
-  /**
-   * The flag to pass to GetCanvasTM from UpdateFontSizeScaleFactor.  This is
-   * normally FOR_OUTERSVG_TM, but while painting or hit testing a pattern or
-   * marker, we set it to FOR_PAINTING or FOR_HIT_TESTING appropriately.
-   *
-   * This flag is also used to determine whether in UpdateFontSizeScaleFactor
-   * GetCanvasTM should be called at all.  When the nsSVGTextFrame2 is a
-   * non-display child, and we are not painting or hit testing, there is
-   * no sensible CTM stack to use.  Additionally, when inside a <marker>,
-   * calling GetCanvasTM on the nsSVGMarkerFrame would crash due to not
-   * having a current mMarkedFrame.
-   */
-  uint32_t mGetCanvasTMForFlag;
 };
 
 #endif

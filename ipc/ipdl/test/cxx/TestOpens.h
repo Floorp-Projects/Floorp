@@ -28,7 +28,7 @@ public:
 
 protected:
     virtual PTestOpensOpenedParent*
-    AllocPTestOpensOpened(Transport* transport, ProcessId otherProcess) MOZ_OVERRIDE;
+    AllocPTestOpensOpenedParent(Transport* transport, ProcessId otherProcess) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };
@@ -71,7 +71,7 @@ protected:
     virtual bool RecvStart() MOZ_OVERRIDE;
 
     virtual PTestOpensOpenedChild*
-    AllocPTestOpensOpened(Transport* transport, ProcessId otherProcess) MOZ_OVERRIDE;
+    AllocPTestOpensOpenedChild(Transport* transport, ProcessId otherProcess) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };

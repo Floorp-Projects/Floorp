@@ -28,8 +28,8 @@ public:
 
 protected:
     virtual bool RecvDone() MOZ_OVERRIDE;
-    virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubParent* __a) MOZ_OVERRIDE;
-    virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSub() MOZ_OVERRIDE;
+    virtual bool DeallocPTestManyChildAllocsSubParent(PTestManyChildAllocsSubParent* __a) MOZ_OVERRIDE;
+    virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSubParent() MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
@@ -50,8 +50,8 @@ public:
 
 protected:
     virtual bool RecvGo() MOZ_OVERRIDE;
-    virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubChild* __a) MOZ_OVERRIDE;
-    virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSub() MOZ_OVERRIDE;
+    virtual bool DeallocPTestManyChildAllocsSubChild(PTestManyChildAllocsSubChild* __a) MOZ_OVERRIDE;
+    virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSubChild() MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
