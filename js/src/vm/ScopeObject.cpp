@@ -1598,8 +1598,8 @@ js_IsDebugScopeSlow(JSObject *obj)
 
 DebugScopes::DebugScopes(JSContext *cx)
  : proxiedScopes(cx),
-   missingScopes(cx),
-   liveScopes(cx)
+   missingScopes(cx->runtime()),
+   liveScopes(cx->runtime())
 {}
 
 DebugScopes::~DebugScopes()
