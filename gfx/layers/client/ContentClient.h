@@ -172,7 +172,7 @@ public:
   ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
     : ContentClientRemote(aForwarder)
     , ThebesLayerBuffer(ContainsVisibleBounds)
-    , mTextureClient(nullptr)
+    , mDeprecatedTextureClient(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
     , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
@@ -240,10 +240,10 @@ protected:
                                        const nsIntRegion& aVisibleRegion,
                                        bool aDidSelfCopy);
 
-  // create and configure mTextureClient
-  void BuildTextureClients(ContentType aType,
-                           const nsIntRect& aRect,
-                           uint32_t aFlags);
+  // create and configure mDeprecatedTextureClient
+  void BuildDeprecatedTextureClients(ContentType aType,
+                                     const nsIntRect& aRect,
+                                     uint32_t aFlags);
 
   // Create the front buffer for the ContentClient/Host pair if necessary
   // and notify the compositor that we have created the buffer(s).
@@ -253,11 +253,11 @@ protected:
   // lock it now.
   virtual void LockFrontBuffer() {}
 
-  RefPtr<TextureClient> mTextureClient;
-  RefPtr<TextureClient> mTextureClientOnWhite;
+  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
+  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClientOnWhite;
   // keep a record of texture clients we have created and need to keep
   // around, then unlock when we are done painting
-  nsTArray<RefPtr<TextureClient> > mOldTextures;
+  nsTArray<RefPtr<DeprecatedTextureClient> > mOldTextures;
 
   TextureInfo mTextureInfo;
   bool mIsNewBuffer;
@@ -267,10 +267,10 @@ protected:
 };
 
 /**
- * A double buffered ContentClient. mTextureClient is the back buffer, which
+ * A double buffered ContentClient. mDeprecatedTextureClient is the back buffer, which
  * we draw into. mFrontClient is the front buffer which we may read from, but
  * not write to, when the compositor does not have the 'soft' lock. We can write
- * into mTextureClient at any time.
+ * into mDeprecatedTextureClient at any time.
  *
  * The ContentHost keeps a reference to both corresponding texture hosts, in
  * response to our UpdateTextureRegion message, the compositor swaps its
@@ -300,8 +300,8 @@ private:
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
                              const nsIntRegion& aUpdateRegion);
 
-  RefPtr<TextureClient> mFrontClient;
-  RefPtr<TextureClient> mFrontClientOnWhite;
+  RefPtr<DeprecatedTextureClient> mFrontClient;
+  RefPtr<DeprecatedTextureClient> mFrontClientOnWhite;
   nsIntRegion mFrontUpdatedRegion;
   nsIntRect mFrontBufferRect;
   nsIntPoint mFrontBufferRotation;

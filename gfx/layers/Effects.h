@@ -225,35 +225,35 @@ struct EffectChain
 };
 
 inline TemporaryRef<TexturedEffect>
-CreateTexturedEffect(TextureHost *aTextureHost,
-                     TextureHost *aTextureHostOnWhite,
+CreateTexturedEffect(DeprecatedTextureHost *aDeprecatedTextureHost,
+                     DeprecatedTextureHost *aDeprecatedTextureHostOnWhite,
                      const gfx::Filter& aFilter)
 {
-  if (aTextureHostOnWhite) {
-    MOZ_ASSERT(aTextureHost->GetFormat() == gfx::FORMAT_R8G8B8X8 ||
-               aTextureHost->GetFormat() == gfx::FORMAT_B8G8R8X8);
-    return new EffectComponentAlpha(aTextureHost, aTextureHostOnWhite, aFilter);
+  if (aDeprecatedTextureHostOnWhite) {
+    MOZ_ASSERT(aDeprecatedTextureHost->GetFormat() == gfx::FORMAT_R8G8B8X8 ||
+               aDeprecatedTextureHost->GetFormat() == gfx::FORMAT_B8G8R8X8);
+    return new EffectComponentAlpha(aDeprecatedTextureHost, aDeprecatedTextureHostOnWhite, aFilter);
   }
 
   RefPtr<TexturedEffect> result;
-  switch (aTextureHost->GetFormat()) {
+  switch (aDeprecatedTextureHost->GetFormat()) {
   case gfx::FORMAT_B8G8R8A8:
-    result = new EffectBGRA(aTextureHost, true, aFilter);
+    result = new EffectBGRA(aDeprecatedTextureHost, true, aFilter);
     break;
   case gfx::FORMAT_B8G8R8X8:
-    result = new EffectBGRX(aTextureHost, true, aFilter);
+    result = new EffectBGRX(aDeprecatedTextureHost, true, aFilter);
     break;
   case gfx::FORMAT_R8G8B8X8:
-    result = new EffectRGBX(aTextureHost, true, aFilter);
+    result = new EffectRGBX(aDeprecatedTextureHost, true, aFilter);
     break;
   case gfx::FORMAT_R5G6B5:
-    result = new EffectRGBX(aTextureHost, true, aFilter);
+    result = new EffectRGBX(aDeprecatedTextureHost, true, aFilter);
     break;
   case gfx::FORMAT_R8G8B8A8:
-    result = new EffectRGBA(aTextureHost, true, aFilter);
+    result = new EffectRGBA(aDeprecatedTextureHost, true, aFilter);
     break;
   case gfx::FORMAT_YUV:
-    result = new EffectYCbCr(aTextureHost, aFilter);
+    result = new EffectYCbCr(aDeprecatedTextureHost, aFilter);
     break;
   default:
     MOZ_CRASH("unhandled program type");
@@ -263,10 +263,10 @@ CreateTexturedEffect(TextureHost *aTextureHost,
 }
 
 inline TemporaryRef<TexturedEffect>
-CreateTexturedEffect(TextureHost *aTextureHost,
+CreateTexturedEffect(DeprecatedTextureHost *aDeprecatedTextureHost,
                      const gfx::Filter& aFilter)
 {
-  return CreateTexturedEffect(aTextureHost, nullptr, aFilter);
+  return CreateTexturedEffect(aDeprecatedTextureHost, nullptr, aFilter);
 }
 
 } // namespace layers
