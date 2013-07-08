@@ -195,12 +195,7 @@
       testTextAtOffset(9, BOUNDARY_LINE_END, "\ntwo words", 8, 18, IDs);
       testTextAtOffset(17, BOUNDARY_LINE_END, "\ntwo words", 8, 18, IDs);
       testTextAtOffset(18, BOUNDARY_LINE_END, "\ntwo words", 8, 18, IDs);
-      testTextAtOffset(19, BOUNDARY_LINE_END, "\n", 18, 19,
-                       "div", kTodo, kTodo, kTodo,
-                       "divbr", kTodo, kTodo, kTodo,
-                       "editable", kTodo, kTodo, kTodo,
-                       "editablebr", kTodo, kTodo, kTodo,
-                       "textarea", kTodo, kTodo, kTodo);
+      testTextAtOffset(19, BOUNDARY_LINE_END, "\n", 18, 19, IDs);
 
       SimpleTest.finish();
     }
