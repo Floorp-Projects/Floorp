@@ -28,7 +28,7 @@ interface nsIColorPickerShownCallback : nsISupports
   * @param  color  The new selected color value following the format specifed on
   *                top of this file.
   */
- void update(in ACString color);
+ void update(in AString color);
 
  /**
   * Callback called when the color picker is dismissed.
@@ -39,7 +39,7 @@ interface nsIColorPickerShownCallback : nsISupports
   * @param  color  The new selected color value following the format specifed on
   *                top of this file or the empty string.
   */
-  void done(in ACString color);
+  void done(in AString color);
 };
 
 [scriptable, uuid(3c3bdcce-54b1-4ae2-8647-1a8d4712ef2e)]
@@ -62,7 +62,7 @@ interface nsIColorPicker : nsISupports
   *                          parameter has to follow the format specified on top
   *                          of this file.
   */
-  void init(in nsIDOMWindow parent, in AString title, in ACString initialColor);
+  void init(in nsIDOMWindow parent, in AString title, in AString initialColor);
 
  /**
   * Opens the color dialog asynchrounously.
