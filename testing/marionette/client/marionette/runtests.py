@@ -212,11 +212,10 @@ class MarionetteTestRunner(object):
     def __init__(self, address=None, emulator=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res='480x800', homedir=None,
                  app=None, bin=None, profile=None, autolog=False, revision=None,
-                 es_server=None, rest_server=None, logger=None,
-                 testgroup="marionette", noWindow=False, logcat_dir=None,
-                 xml_output=None, repeat=0, gecko_path=None, testvars=None,
-                 tree=None, type=None, device_serial=None, symbols_path=None,
-                 timeout=None, **kwargs):
+                 logger=None, testgroup="marionette", noWindow=False,
+                 logcat_dir=None, xml_output=None, repeat=0, gecko_path=None,
+                 testvars=None, tree=None, type=None, device_serial=None,
+                 symbols_path=None, timeout=None, es_servers=None, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -229,8 +228,6 @@ class MarionetteTestRunner(object):
         self.autolog = autolog
         self.testgroup = testgroup
         self.revision = revision
-        self.es_server = es_server
-        self.rest_server = rest_server
         self.logger = logger
         self.noWindow = noWindow
         self.httpd = None
@@ -250,6 +247,7 @@ class MarionetteTestRunner(object):
         self._device = None
         self._capabilities = None
         self._appName = None
+        self.es_servers = es_servers
 
         if testvars:
             if not os.path.exists(testvars):
@@ -383,37 +381,39 @@ class MarionetteTestRunner(object):
             if os.access(filename, os.F_OK):
                 logfile = filename
 
-        # This is all autolog stuff.
-        # See: https://wiki.mozilla.org/Auto-tools/Projects/Autolog
-        from mozautolog import RESTfulAutologTestGroup
-        testgroup = RESTfulAutologTestGroup(
-            testgroup = self.testgroup,
-            os = 'android',
-            platform = 'emulator',
-            harness = 'marionette',
-            server = self.es_server,
-            restserver = self.rest_server,
-            machine = socket.gethostname(),
-            logfile = logfile)
+        for es_server in self.es_servers:
 
-        testgroup.set_primary_product(
-            tree = self.tree,
-            buildtype = 'opt',
-            revision = self.revision)
+            # This is all autolog stuff.
+            # See: https://wiki.mozilla.org/Auto-tools/Projects/Autolog
+            from mozautolog import RESTfulAutologTestGroup
+            testgroup = RESTfulAutologTestGroup(
+                testgroup=self.testgroup,
+                os='android',
+                platform='emulator',
+                harness='marionette',
+                server=es_server,
+                restserver=None,
+                machine=socket.gethostname(),
+                logfile=logfile)
 
-        testgroup.add_test_suite(
-            testsuite = 'b2g emulator testsuite',
-            elapsedtime = elapsedtime.seconds,
-            cmdline = '',
-            passed = self.passed,
-            failed = self.failed,
-            todo = self.todo)
+            testgroup.set_primary_product(
+                tree=self.tree,
+                buildtype='opt',
+                revision=self.revision)
 
-        # Add in the test failures.
-        for f in self.failures:
-            testgroup.add_test_failure(test=f[0], text=f[1], status=f[2])
+            testgroup.add_test_suite(
+                testsuite='b2g emulator testsuite',
+                elapsedtime=elapsedtime.seconds,
+                cmdline='',
+                passed=self.passed,
+                failed=self.failed,
+                todo=self.todo)
 
-        testgroup.submit()
+            # Add in the test failures.
+            for f in self.failures:
+                testgroup.add_test_failure(test=f[0], text=f[1], status=f[2])
+
+            testgroup.submit()
 
     def run_tests(self, tests):
         self.reset_test_stats()
@@ -730,6 +730,10 @@ class MarionetteTestOptions(OptionParser):
                         dest='timeout',
                         type=int,
                         help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10000ms for script timeout')
+        self.add_option('--es-server',
+                        dest='es_servers',
+                        action='append',
+                        help='the ElasticSearch server to use for autolog submission')
 
     def verify_usage(self, options, tests):
         if not tests:
@@ -739,6 +743,10 @@ class MarionetteTestOptions(OptionParser):
         if not options.emulator and not options.address and not options.bin:
             print 'must specify --binary, --emulator or --address'
             sys.exit(1)
+
+        if not options.es_servers:
+            options.es_servers = ['elasticsearch-zlb.dev.vlan81.phx.mozilla.com:9200',
+                                  'elasticsearch-zlb.webapp.scl3.mozilla.com:9200']
 
         # default to storing logcat output for emulator runs
         if options.emulator and not options.logcat_dir:
