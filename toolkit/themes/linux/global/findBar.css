@@ -4,14 +4,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.findbar-closebutton {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
 findbar {
+  padding: 4px 8px;
   border-top: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-  padding-bottom: 1px;
   min-width: 1px;
   transition-property: margin-bottom, opacity, visibility;
   transition-duration: 150ms, 150ms, 0s;
@@ -27,53 +23,35 @@ findbar[hidden] {
   transition-delay: 0s, 0s, 150ms;
 }
 
-/* find-next button */
-
-.findbar-find-next > .toolbarbutton-icon {
-  -moz-appearance: button-arrow-next;
+.findbar-closebutton {
+  -moz-margin-start: 4px;
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
-/* find-previous button */
+/* Search field */
 
-.findbar-find-previous > .toolbarbutton-icon {
-  -moz-appearance: button-arrow-previous;
+.findbar-textbox {
+  -moz-appearance: none;
+  border: 1px solid ThreeDShadow;
+  box-shadow: 0 0 1px 0 ThreeDShadow inset;
+  margin: 0;
+  padding: 5px;
+  width: 14em;
 }
 
-/* highlight button */
-
-.findbar-highlight {
-  list-style-image: url("chrome://global/skin/icons/find.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+.findbar-textbox:-moz-locale-dir(ltr) {
+  border-radius: 3px 0 0 3px;
+  border-right-width: 0;
 }
 
-.findbar-highlight[disabled="true"] {
-  -moz-image-region: rect(16px, 16px, 32px, 0px);
+.findbar-textbox:-moz-locale-dir(rtl) {
+  border-radius: 0 3px 3px 0;
+  border-left-width: 0;
 }
 
-.find-status-icon {
-  list-style-image: none;
-  margin-top: 2px;
-  margin-bottom: 0;
-  -moz-margin-start: 12px;
-  -moz-margin-end: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.findbar-find-status {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  -moz-margin-start: 3px !important;
-  -moz-margin-end: 0 !important;
-  padding: 2px !important;
-}
-
-.find-status-icon[status="notfound"] {
-  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
-}
-
-.find-status-icon[status="pending"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+.findbar-textbox[focused="true"] {
+  border-color: Highlight;
+  box-shadow: 0 0 1px 0 Highlight inset;
 }
 
 .findbar-textbox[status="notfound"] {
@@ -86,6 +64,91 @@ findbar[hidden] {
   color: black;
 }
 
-.find-status-icon[status="wrapped"] {
-  list-style-image: url("chrome://global/skin/icons/wrap.png");
+.findbar-textbox.minimal {
+  border-width: 1px;
+  border-radius: 3px;
+}
+
+.findbar-find-previous,
+.findbar-find-next {
+  -moz-margin-start: 0;
+  -moz-appearance: none;
+  background: -moz-linear-gradient(rgba(255,255,255,.9), rgba(255,255,255,.2));
+  border: 1px solid ThreeDShadow;
+  box-shadow: 0 1px #fff inset;
+  list-style-image: url("chrome://global/skin/icons/find-arrows.png");
+  padding: 5px 9px;
+  line-height: 1em;
+}
+
+.findbar-find-previous:focus,
+.findbar-find-next:focus {
+  border-color: Highlight;
+  box-shadow: 0 0 1px 0 Highlight inset;
+}
+
+.findbar-find-previous:not([disabled]):active,
+.findbar-find-next:not([disabled]):active {
+  background: rgba(23,50,76,.2);
+  border: 1px solid ThreeDShadow;
+  box-shadow: 0 1px 2px rgba(10,31,51,.2) inset;
+}
+
+.findbar-find-previous {
+  -moz-image-region: rect(0, 12px, 9px, 0);
+  -moz-border-end-width: 0;
+}
+
+.findbar-find-next {
+  -moz-image-region: rect(0, 24px, 9px, 12px);
+}
+
+.findbar-find-previous > .toolbarbutton-icon,
+.findbar-find-next > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.findbar-find-previous > .toolbarbutton-text,
+.findbar-find-next > .toolbarbutton-text {
+  margin: 0;
+  padding: 0;
+  width: 0;
+}
+
+.findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
+.findbar-find-next[disabled="true"] > .toolbarbutton-icon {
+  opacity: .5;
+}
+
+.findbar-find-next:-moz-locale-dir(ltr) {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+.findbar-find-next:-moz-locale-dir(rtl) {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.findbar-find-previous:focus + .findbar-find-next {
+  -moz-border-start-width: 0;
+}
+
+.findbar-find-previous:focus {
+  -moz-border-end-width: 1px;
+}
+
+.findbar-highlight,
+.findbar-case-sensitive {
+  -moz-margin-start: 5px;
+}
+
+.findbar-find-status {
+  color: GrayText;
+  margin: 0 !important;
+  -moz-margin-start: 12px !important;
+}
+
+.find-status-icon[status="pending"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }

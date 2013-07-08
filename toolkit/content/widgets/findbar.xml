@@ -178,61 +178,51 @@
 
     <content hidden="true">
     <xul:hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
+      <xul:hbox anonid="findbar-textbox-wrapper" align="stretch">
+        <xul:textbox anonid="findbar-textbox"
+                     class="findbar-textbox findbar-find-fast"
+                     xbl:inherits="flash"/>
+        <xul:toolbarbutton anonid="find-previous"
+                           class="findbar-find-previous tabbable"
+                           tooltiptext="&previous.tooltip;"
+                           oncommand="onFindAgainCommand(true);"
+                           disabled="true"
+                           xbl:inherits="accesskey=findpreviousaccesskey"/>
+        <xul:toolbarbutton anonid="find-next"
+                           class="findbar-find-next tabbable"
+                           tooltiptext="&next.tooltip;"
+                           oncommand="onFindAgainCommand(false);"
+                           disabled="true"
+                           xbl:inherits="accesskey=findnextaccesskey"/>
+      </xul:hbox>
+      <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
+      <xul:description anonid="find-status"
+                       control="findbar-textbox"
+                       class="findbar-find-fast findbar-find-status">
+      <!-- Do not use value, first child is used because it provides a11y with text change events -->
+      </xul:description>
+      <xul:spacer flex="1"/>
+      <xul:toolbarbutton anonid="highlight"
+                         class="findbar-highlight tabbable"
+                         label="&highlightAll.label;"
+                         accesskey="&highlightAll.accesskey;"
+                         tooltiptext="&highlightAll.tooltiptext;"
+                         oncommand="toggleHighlight(this.checked);"
+                         type="checkbox"
+                         xbl:inherits="accesskey=highlightaccesskey"/>
+      <xul:toolbarbutton anonid="find-case-sensitive"
+                         class="findbar-case-sensitive tabbable"
+                         label="&caseSensitive.label;"
+                         accesskey="&caseSensitive.accesskey;"
+                         tooltiptext="&caseSensitive.tooltiptext;"
+                         oncommand="_setCaseSensitivity(this.checked);"
+                         type="checkbox"
+                         xbl:inherits="accesskey=matchcaseaccesskey"/>
+      <xul:label anonid="match-case-status" class="findbar-find-fast"/>
       <xul:toolbarbutton anonid="find-closebutton"
                          class="findbar-closebutton"
                          tooltiptext="&findCloseButton.tooltip;"
                          oncommand="close();"/>
-      <xul:label anonid="find-label" class="findbar-find-fast" control="findbar-textbox"/>
-      <xul:textbox class="findbar-textbox findbar-find-fast" anonid="findbar-textbox"
-                   xbl:inherits="flash"/>
-#ifdef MOZ_WIDGET_GTK
-      <xul:toolbarbutton anonid="find-previous"
-                         class="findbar-find-previous tabbable"
-                         label="&previous.label;"
-                         accesskey="&previous.accesskey;"
-                         tooltiptext="&previous.tooltip;"
-                         oncommand="onFindAgainCommand(true);"
-                         disabled="true"
-                         xbl:inherits="accesskey=findpreviousaccesskey"/>
-#endif
-      <xul:toolbarbutton anonid="find-next"
-                         class="findbar-find-next tabbable"
-                         label="&next.label;"
-                         accesskey="&next.accesskey;"
-                         tooltiptext="&next.tooltip;"
-                         oncommand="onFindAgainCommand(false);"
-                         disabled="true"
-                         xbl:inherits="accesskey=findnextaccesskey"/>
-#ifndef MOZ_WIDGET_GTK
-      <xul:toolbarbutton anonid="find-previous"
-                         class="findbar-find-previous tabbable"
-                         label="&previous.label;"
-                         accesskey="&previous.accesskey;"
-                         tooltiptext="&previous.tooltip;"
-                         oncommand="onFindAgainCommand(true);"
-                         disabled="true"
-                         xbl:inherits="accesskey=findpreviousaccesskey"/>
-#endif
-      <xul:toolbarbutton anonid="highlight"
-                         class="findbar-highlight tabbable"
-                         label="&highlight.label;"
-                         accesskey="&highlight.accesskey;"
-                         tooltiptext="&highlight.tooltiptext;"
-                         oncommand="toggleHighlight(this.checked);"
-                         type="checkbox"
-                         disabled="true"
-                         xbl:inherits="accesskey=highlightaccesskey"/>
-      <xul:checkbox anonid="find-case-sensitive"
-                    oncommand="_setCaseSensitivity(this.checked);"
-                    label="&caseSensitiveCheckbox.label;"
-                    accesskey="&caseSensitiveCheckbox.accesskey;"
-                    xbl:inherits="accesskey=matchcaseaccesskey"/>
-      <xul:label anonid="match-case-status" class="findbar-find-fast"/>
-      <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
-      <xul:description anonid="find-status" class="findbar-find-fast findbar-find-status"
-                       control="findbar-textbox">
-      <!-- Do not use value, first child is used because it provides a11y with text change events -->
-      </xul:description>
     </xul:hbox>
     </content>
 
@@ -1131,11 +1121,11 @@
             this._wrappedToBottomStr =
               stringsBundle.GetStringFromName("WrappedToBottom");
             this._normalFindStr =
-              stringsBundle.GetStringFromName("NormalFindLabel");
+              stringsBundle.GetStringFromName("NormalFind");
             this._fastFindStr =
-              stringsBundle.GetStringFromName("FastFindLabel");
+              stringsBundle.GetStringFromName("FastFind");
             this._fastFindLinksStr =
-              stringsBundle.GetStringFromName("FastFindLinksLabel");
+              stringsBundle.GetStringFromName("FastFindLinks");
             this._caseSensitiveStr =
               stringsBundle.GetStringFromName("CaseSensitive");
           }
@@ -1497,8 +1487,7 @@
         <parameter name="aEnable"/>
         <body><![CDATA[
           this.getElement("find-next").disabled =
-            this.getElement("find-previous").disabled =
-            this.getElement("highlight").disabled = !aEnable;
+            this.getElement("find-previous").disabled = !aEnable;
         ]]></body>
       </method>
 
@@ -1508,23 +1497,30 @@
         -->
       <method name="_updateFindUI">
         <body><![CDATA[
-          var showMinimalUI = this._findMode != this.FIND_NORMAL;
+          let showMinimalUI = this._findMode != this.FIND_NORMAL;
 
-          var nodes = this.getElement("findbar-container").childNodes;
-          for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].className.indexOf("findbar-find-fast") != -1)
+          let nodes = this.getElement("findbar-container").childNodes;
+          let wrapper = this.getElement("findbar-textbox-wrapper");
+          for (let node of nodes) {
+            if (node == wrapper)
                continue;
-
-            nodes[i].hidden = showMinimalUI;
+            node.hidden = showMinimalUI;
           }
+          this.getElement("find-next").hidden =
+            this.getElement("find-previous").hidden = showMinimalUI;
           this._updateCaseSensitivity();
 
-          if (this._findMode == this.FIND_TYPEAHEAD)
-            this.getElement("find-label").value = this._fastFindStr;
-          else if (this._findMode == this.FIND_LINKS)
-            this.getElement("find-label").value = this._fastFindLinksStr;
+          if (showMinimalUI)
+            this._findField.classList.add("minimal");
           else
-            this.getElement("find-label").value = this._normalFindStr;
+            this._findField.classList.remove("minimal");
+
+          if (this._findMode == this.FIND_TYPEAHEAD)
+            this._findField.placeholder = this._fastFindStr;
+          else if (this._findMode == this.FIND_LINKS)
+            this._findField.placeholder = this._fastFindLinksStr;
+          else
+            this._findField.placeholder = this._normalFindStr;
         ]]></body>
       </method>
 
