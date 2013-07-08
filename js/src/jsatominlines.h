@@ -41,6 +41,22 @@ AtomToId(JSAtom *atom)
     return JSID_FROM_BITS(size_t(atom));
 }
 
+inline bool
+ValueToIdPure(const Value &v, jsid *id)
+{
+    int32_t i;
+    if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
+        *id = INT_TO_JSID(i);
+        return true;
+    }
+
+    if (!v.isString() || !v.toString()->isAtom())
+        return false;
+
+    *id = AtomToId(&v.toString()->asAtom());
+    return true;
+}
+
 template <AllowGC allowGC>
 inline bool
 ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
@@ -108,12 +124,21 @@ IndexToId(JSContext *cx, uint32_t index, MutableHandleId idp)
 }
 
 inline bool
-IndexToIdNoGC(JSContext *cx, uint32_t index, jsid *idp)
+IndexToIdPure(uint32_t index, jsid *idp)
 {
     if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return true;
     }
+
+    return false;
+}
+
+inline bool
+IndexToIdNoGC(JSContext *cx, uint32_t index, jsid *idp)
+{
+    if (IndexToIdPure(index, idp))
+        return true;
 
     return IndexToIdSlow<NoGC>(cx, index, idp);
 }

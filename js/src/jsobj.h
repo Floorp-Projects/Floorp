@@ -1457,6 +1457,9 @@ CheckAccess(JSContext *cx, JSObject *obj, HandleId id, JSAccessMode mode,
 extern bool
 IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
 
+bool
+GetObjectElementOperationPure(ThreadSafeContext *tcx, JSObject *obj, const Value &prop, Value *vp);
+
 } /* namespace js */
 
 /*

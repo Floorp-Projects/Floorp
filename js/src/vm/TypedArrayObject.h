@@ -364,6 +364,7 @@ class TypedArrayObject : public ArrayBufferViewObject
     }
 
     inline bool isArrayIndex(jsid id, uint32_t *ip = NULL);
+    void copyTypedArrayElement(uint32_t index, MutableHandleValue vp);
 
     void neuter();
 
