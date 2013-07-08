@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(75996de6-6b0f-43e5-ae79-c98fa669da9a)]
+[scriptable, uuid(18de0c13-f82e-4c7e-9a48-b778e00df9ca)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -408,4 +408,12 @@ interface nsIDOMDocument : nsIDOMNode
    * strict mode.  (XML documents are always in strict mode.)
    */
   readonly attribute DOMString compatMode;
+
+  /**
+   * Return nodes that match a given CSS selector.
+   *
+   * @see <http://dev.w3.org/2006/webapi/selectors-api/>
+   */
+  nsIDOMElement querySelector([Null(Stringify)] in DOMString selectors);
+  nsIDOMNodeList querySelectorAll([Null(Stringify)] in DOMString selectors);
 };
