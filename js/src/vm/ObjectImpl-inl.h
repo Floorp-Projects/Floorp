@@ -15,7 +15,6 @@
 
 #include "gc/Heap.h"
 #include "gc/Marking.h"
-#include "js/TemplateLib.h"
 #include "vm/ObjectImpl.h"
 
 #include "gc/Barrier-inl.h"

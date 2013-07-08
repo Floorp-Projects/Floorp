@@ -13,9 +13,9 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/ReentrancyGuard.h"
+#include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
-
-#include "js/TemplateLib.h"
+#include "mozilla/Util.h"
 
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
@@ -227,19 +227,19 @@ class Vector : private AllocPolicy
      */
     template <int M, int Dummy>
     struct ElemSize {
-        static const size_t result = sizeof(T);
+        static const size_t value = sizeof(T);
     };
     template <int Dummy>
     struct ElemSize<0, Dummy> {
-        static const size_t result = 1;
+        static const size_t value = 1;
     };
 
     static const size_t sInlineCapacity =
-        tl::Min<N, sMaxInlineBytes / ElemSize<N, 0>::result>::result;
+        mozilla::tl::Min<N, sMaxInlineBytes / ElemSize<N, 0>::value>::value;
 
     /* Calculate inline buffer size; avoid 0-sized array. */
     static const size_t sInlineBytes =
-        tl::Max<1, sInlineCapacity * ElemSize<N, 0>::result>::result;
+        mozilla::tl::Max<1, sInlineCapacity * ElemSize<N, 0>::value>::value;
 
     /* member data */
 
@@ -648,7 +648,7 @@ Vector<T,N,AP>::growStorageBy(size_t incr)
     if (incr == 1) {
         if (usingInlineStorage()) {
             /* This case occurs in ~70--80% of the calls to this function. */
-            size_t newSize = tl::RoundUpPow2<(sInlineCapacity + 1) * sizeof(T)>::result;
+            size_t newSize = mozilla::tl::RoundUpPow2<(sInlineCapacity + 1) * sizeof(T)>::value;
             newCap = newSize / sizeof(T);
             goto convert;
         }
@@ -667,7 +667,7 @@ Vector<T,N,AP>::growStorageBy(size_t incr)
          * It also ensures that the ((char *)end() - (char *)begin()) does not
          * overflow ptrdiff_t (see Bug 510319).
          */
-        if (mLength & tl::MulOverflowMask<4 * sizeof(T)>::result) {
+        if (mLength & mozilla::tl::MulOverflowMask<4 * sizeof(T)>::value) {
             this->reportAllocOverflow();
             return false;
         }
@@ -687,7 +687,7 @@ Vector<T,N,AP>::growStorageBy(size_t incr)
 
         /* Did mLength+incr overflow?  Will newCap*sizeof(T) overflow? */
         if (newMinCap < mLength ||
-            newMinCap & tl::MulOverflowMask<2 * sizeof(T)>::result)
+            newMinCap & mozilla::tl::MulOverflowMask<2 * sizeof(T)>::value)
         {
             this->reportAllocOverflow();
             return false;

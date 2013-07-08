@@ -12,6 +12,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 
 // This data structure supports stacky LIFO allocation (mark/release and
@@ -31,8 +32,8 @@ JS_ALWAYS_INLINE
 char *
 AlignPtr(void *orig)
 {
-    MOZ_STATIC_ASSERT(tl::FloorLog2<LIFO_ALLOC_ALIGN>::result ==
-                      tl::CeilingLog2<LIFO_ALLOC_ALIGN>::result,
+    MOZ_STATIC_ASSERT(mozilla::tl::FloorLog2<LIFO_ALLOC_ALIGN>::value ==
+                      mozilla::tl::CeilingLog2<LIFO_ALLOC_ALIGN>::value,
                       "LIFO_ALLOC_ALIGN must be a power of two");
 
     char *result = (char *) ((uintptr_t(orig) + (LIFO_ALLOC_ALIGN - 1)) & (~LIFO_ALLOC_ALIGN + 1));

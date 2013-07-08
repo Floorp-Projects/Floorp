@@ -73,7 +73,6 @@ EXPORTS.js += [
     '../public/PropertyKey.h',
     '../public/RequiredDefines.h',
     '../public/RootingAPI.h',
-    '../public/TemplateLib.h',
     '../public/Utility.h',
     '../public/Value.h',
     '../public/Vector.h',
