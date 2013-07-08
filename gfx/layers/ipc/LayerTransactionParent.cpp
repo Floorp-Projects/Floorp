@@ -514,7 +514,7 @@ LayerTransactionParent::RecvClearCachedResources()
 }
 
 PGrallocBufferParent*
-LayerTransactionParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
+LayerTransactionParent::AllocPGrallocBufferParent(const gfxIntSize& aSize,
                                             const uint32_t& aFormat,
                                             const uint32_t& aUsage,
                                             MaybeMagicGrallocBufferHandle* aOutHandle)
@@ -528,7 +528,7 @@ LayerTransactionParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
 }
 
 bool
-LayerTransactionParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
+LayerTransactionParent::DeallocPGrallocBufferParent(PGrallocBufferParent* actor)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   delete actor;
@@ -540,26 +540,26 @@ LayerTransactionParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
 }
 
 PLayerParent*
-LayerTransactionParent::AllocPLayer()
+LayerTransactionParent::AllocPLayerParent()
 {
   return new ShadowLayerParent();
 }
 
 bool
-LayerTransactionParent::DeallocPLayer(PLayerParent* actor)
+LayerTransactionParent::DeallocPLayerParent(PLayerParent* actor)
 {
   delete actor;
   return true;
 }
 
 PCompositableParent*
-LayerTransactionParent::AllocPCompositable(const TextureInfo& aInfo)
+LayerTransactionParent::AllocPCompositableParent(const TextureInfo& aInfo)
 {
   return new CompositableParent(this, aInfo);
 }
 
 bool
-LayerTransactionParent::DeallocPCompositable(PCompositableParent* actor)
+LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* actor)
 {
   delete actor;
   return true;

@@ -4799,7 +4799,7 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
 
         IonSpewNewFunction(&mirGen->graph(), NullPtr());
 
-        IonContext icx(m.cx()->compartment(), &mirGen->temp());
+        IonContext icx(m.cx(), &mirGen->temp());
 
         int64_t before = PRMJ_Now();
 

@@ -6687,9 +6687,13 @@ IonBuilder::jsop_setelem()
         if (ElementAccessIsDenseNative(object, index)) {
             types::StackTypeSet::DoubleConversion conversion =
                 object->resultTypeSet()->convertDoubleElements(cx);
-            if (conversion != types::StackTypeSet::AmbiguousDoubleConversion)
-                return jsop_setelem_dense(conversion, SetElem_Normal,
-                                          object, index, value);
+
+            // If AmbiguousDoubleConversion, only handle int32 values for now.
+            if (conversion != types::StackTypeSet::AmbiguousDoubleConversion ||
+                value->type() == MIRType_Int32)
+            {
+                return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
+            }
         }
     }
 
@@ -6754,19 +6758,35 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
     current->add(idInt32);
     id = idInt32;
 
-    // Ensure the value is a double, if double conversion might be needed.
-    MDefinition *newValue = value;
-    if (conversion == types::StackTypeSet::AlwaysConvertToDoubles ||
-        conversion == types::StackTypeSet::MaybeConvertToDoubles)
-    {
-        MInstruction *valueDouble = MToDouble::New(value);
-        current->add(valueDouble);
-        newValue = valueDouble;
-    }
-
     // Get the elements vector.
     MElements *elements = MElements::New(obj);
     current->add(elements);
+
+    // Ensure the value is a double, if double conversion might be needed.
+    MDefinition *newValue = value;
+    switch (conversion) {
+      case types::StackTypeSet::AlwaysConvertToDoubles:
+      case types::StackTypeSet::MaybeConvertToDoubles: {
+        MInstruction *valueDouble = MToDouble::New(value);
+        current->add(valueDouble);
+        newValue = valueDouble;
+        break;
+      }
+
+      case types::StackTypeSet::AmbiguousDoubleConversion: {
+        JS_ASSERT(value->type() == MIRType_Int32);
+        MInstruction *maybeDouble = MMaybeToDoubleElement::New(elements, value);
+        current->add(maybeDouble);
+        newValue = maybeDouble;
+        break;
+      }
+
+      case types::StackTypeSet::DontConvertToDoubles:
+        break;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unknown double conversion");
+    }
 
     bool writeHole;
     if (safety == SetElem_Normal) {

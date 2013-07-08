@@ -3398,6 +3398,45 @@ DataViewObject::fun_setFloat64(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<is, setFloat64Impl>(cx, args);
 }
 
+void
+TypedArrayObject::copyTypedArrayElement(uint32_t index, MutableHandleValue vp)
+{
+    JS_ASSERT(index < length());
+
+    switch (type()) {
+      case TYPE_INT8:
+        TypedArrayObjectTemplate<int8_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT8:
+        TypedArrayObjectTemplate<uint8_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT8_CLAMPED:
+        TypedArrayObjectTemplate<uint8_clamped>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_INT16:
+        TypedArrayObjectTemplate<int16_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT16:
+        TypedArrayObjectTemplate<uint16_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_INT32:
+        TypedArrayObjectTemplate<int32_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT32:
+        TypedArrayObjectTemplate<uint32_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_FLOAT32:
+        TypedArrayObjectTemplate<float>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_FLOAT64:
+        TypedArrayObjectTemplate<double>::copyIndexToValue(this, index, vp);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unknown TypedArray type");
+        break;
+    }
+}
+
 /***
  *** JS impl
  ***/

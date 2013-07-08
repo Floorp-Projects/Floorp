@@ -856,7 +856,6 @@ JS_DumpBytecode(JSContext *cx, JSScript *scriptArg)
 extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
 {
-#if defined(DEBUG)
     Rooted<JSScript*> script(cx, scriptArg);
     JS_ASSERT(script->hasScriptCounts);
 
@@ -868,7 +867,6 @@ JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
     js_DumpPCCounts(cx, script, &sprinter);
     fputs(sprinter.string(), stdout);
     fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), script->lineno);
-#endif
 }
 
 namespace {
@@ -907,7 +905,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
             JS_DumpPCCounts(cx, script);
     }
 
-#if defined(JS_ION) && defined(DEBUG)
+#if defined(JS_ION)
     for (unsigned thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
         for (CellIter i(cx->zone(), (AllocKind) thingKind); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();

@@ -469,7 +469,7 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
     mKeptAlive = true;
     SendDocumentChannelCleanup();
   } else {
-    // This calls NeckoChild::DeallocPHttpChannel(), which deletes |this| if IPDL
+    // This calls NeckoChild::DeallocPHttpChannelChild(), which deletes |this| if IPDL
     // holds the last reference.  Don't rely on |this| existing after here.
     PHttpChannelChild::Send__delete__(this);
   }

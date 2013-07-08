@@ -81,21 +81,26 @@ class GCAndCCLogDumpRunnable : public nsRunnable
 {
 public:
   GCAndCCLogDumpRunnable(const nsAString& aIdentifier,
+                         bool aDumpAllTraces,
                          bool aDumpChildProcesses)
     : mIdentifier(aIdentifier)
+    , mDumpAllTraces(aDumpAllTraces)
     , mDumpChildProcesses(aDumpChildProcesses)
   {}
 
   NS_IMETHOD Run()
   {
-    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
+    nsCOMPtr<nsIMemoryInfoDumper> dumper =
+      do_GetService("@mozilla.org/memory-info-dumper;1");
+
     dumper->DumpGCAndCCLogsToFile(
-      mIdentifier, mDumpChildProcesses);
+      mIdentifier, mDumpAllTraces, mDumpChildProcesses);
     return NS_OK;
   }
 
 private:
   const nsString mIdentifier;
+  const bool mDumpAllTraces;
   const bool mDumpChildProcesses;
 };
 
@@ -357,6 +362,7 @@ public:
       nsRefPtr<GCAndCCLogDumpRunnable> runnable =
         new GCAndCCLogDumpRunnable(
             /* identifier = */ EmptyString(),
+            /* allTraces = */ true,
             /* dumpChildProcesses = */ true);
       NS_DispatchToMainThread(runnable);
     }
@@ -500,7 +506,8 @@ public:
 
     bool doMemoryReport = inputStr == NS_LITERAL_CSTRING("memory report");
     bool doMMUMemoryReport = inputStr == NS_LITERAL_CSTRING("minimize memory report");
-    bool doGCCCDump = inputStr == NS_LITERAL_CSTRING("gc log");
+    bool doAllTracesGCCCDump = inputStr == NS_LITERAL_CSTRING("gc log");
+    bool doSmallGCCCDump = inputStr == NS_LITERAL_CSTRING("abbreviated gc log");
 
     if (doMemoryReport || doMMUMemoryReport) {
       LOG("FifoWatcher dispatching memory report runnable.");
@@ -509,11 +516,12 @@ public:
                                             doMMUMemoryReport,
                                             /* dumpChildProcesses = */ true);
       NS_DispatchToMainThread(runnable);
-    } else if (doGCCCDump) {
+    } else if (doAllTracesGCCCDump || doSmallGCCCDump) {
       LOG("FifoWatcher dispatching GC/CC log runnable.");
       nsRefPtr<GCAndCCLogDumpRunnable> runnable =
         new GCAndCCLogDumpRunnable(
             /* identifier = */ EmptyString(),
+            doAllTracesGCCCDump,
             /* dumpChildProcesses = */ true);
       NS_DispatchToMainThread(runnable);
     } else {
@@ -561,6 +569,7 @@ EnsureNonEmptyIdentifier(nsAString& aIdentifier)
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
   const nsAString& aIdentifier,
+  bool aDumpAllTraces,
   bool aDumpChildProcesses)
 {
   nsString identifier(aIdentifier);
@@ -571,13 +580,19 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
     ContentParent::GetAll(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
       unused << children[i]->SendDumpGCAndCCLogsToFile(
-          identifier, aDumpChildProcesses);
+        identifier, aDumpAllTraces, aDumpChildProcesses);
     }
   }
 
   nsCOMPtr<nsICycleCollectorListener> logger =
     do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
   logger->SetFilenameIdentifier(identifier);
+
+  if (aDumpAllTraces) {
+    nsCOMPtr<nsICycleCollectorListener> allTracesLogger;
+    logger->AllTraces(getter_AddRefs(allTracesLogger));
+    logger = allTracesLogger;
+  }
 
   nsJSContext::CycleCollectNow(logger);
   return NS_OK;

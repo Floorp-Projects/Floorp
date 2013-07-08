@@ -68,11 +68,6 @@ ifdef MOZ_GL_PROVIDER
 GL_PROVIDER = $(MOZ_GL_PROVIDER)
 endif
 
-# Mac is a special snowflake
-ifeq ($(GL_PROVIDER),CGL)
-DISABLED_CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
-endif
-
 ifdef MOZ_ANDROID_OMTC
 DEFINES += -DMOZ_ANDROID_OMTC
 endif

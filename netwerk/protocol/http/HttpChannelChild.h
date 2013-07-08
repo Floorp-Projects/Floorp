@@ -84,7 +84,7 @@ public:
 
   // IPDL holds a reference while the PHttpChannel protocol is live (starting at
   // AsyncOpen, and ending at either OnStopRequest or any IPDL error, either of
-  // which call NeckoChild::DeallocPHttpChannel()).
+  // which call NeckoChild::DeallocPHttpChannelChild()).
   void AddIPDLReference();
   void ReleaseIPDLReference();
 
