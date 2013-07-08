@@ -388,8 +388,10 @@ var WifiManager = (function() {
     doBooleanCommand("WPS_PBC", "OK", callback);
   }
 
-  function wpsPinCommand(pin, callback) {
-    doStringCommand("WPS_PIN any" + (pin === undefined ? "" : (" " + pin)),
+  function wpsPinCommand(detail, callback) {
+    doStringCommand("WPS_PIN " +
+                    (detail.bssid === undefined ? "any" : detail.bssid) +
+                    (detail.pin === undefined ? "" : (" " + detail.pin)),
                     callback);
   }
 
@@ -1574,29 +1576,29 @@ function getNetworkKey(network)
   var ssid = "",
       encryption = "OPEN";
 
-  if ("capabilities" in network) {
+  if ("security" in network) {
     // manager network object, represents an AP
     // object structure
     // {
     //   .ssid           : SSID of AP
-    //   .capabilities[] : "WPA-PSK" for WPA-PSK
+    //   .security[]     : "WPA-PSK" for WPA-PSK
     //                     "WPA-EAP" for WPA-EAP
     //                     "WEP" for WEP
     //                     "" for OPEN
     //   other keys
     // }
 
-    var capabilities = network.capabilities;
+    var security = network.security;
     ssid = network.ssid;
 
-    for (let j = 0; j < capabilities.length; j++) {
-      if (capabilities[j] === "WPA-PSK") {
+    for (let j = 0; j < security.length; j++) {
+      if (security[j] === "WPA-PSK") {
         encryption = "WPA-PSK";
         break;
-      } else if (capabilities[j] === "WPA-EAP") {
+      } else if (security[j] === "WPA-EAP") {
         encryption = "WPA-EAP";
         break;
-      } else if (capabilities[j] === "WEP") {
+      } else if (security[j] === "WEP") {
         encryption = "WEP";
         break;
       }
@@ -1648,6 +1650,16 @@ function getKeyManagement(flags) {
   return types;
 }
 
+function getCapabilities(flags) {
+  var types = [];
+  if (!flags)
+    return types;
+
+  if (/\[WPS/.test(flags))
+    types.push("WPS");
+  return types;
+}
+
 // These constants shamelessly ripped from WifiManager.java
 // strength is the value returned by scan_results. It is nominally in dB. We
 // transform it into a percentage for clients looking to simply show a
@@ -1670,12 +1682,14 @@ function calculateSignal(strength) {
   return Math.floor(((strength - MIN_RSSI) / (MAX_RSSI - MIN_RSSI)) * 100);
 }
 
-function Network(ssid, capabilities, password) {
+function Network(ssid, security, password, capabilities) {
   this.ssid = ssid;
-  this.capabilities = capabilities;
+  this.security = security;
 
   if (typeof password !== "undefined")
     this.password = password;
+  if (capabilities !== undefined)
+    this.capabilities = capabilities;
   // TODO connected here as well?
 
   this.__exposedProps__ = Network.api;
@@ -1683,6 +1697,7 @@ function Network(ssid, capabilities, password) {
 
 Network.api = {
   ssid: "r",
+  security: "r",
   capabilities: "r",
   known: "r",
 
@@ -1700,7 +1715,8 @@ Network.api = {
 // Note: We never use ScanResult.prototype, so the fact that it's unrelated to
 // Network.prototype is OK.
 function ScanResult(ssid, bssid, flags, signal) {
-  Network.call(this, ssid, getKeyManagement(flags));
+  Network.call(this, ssid, getKeyManagement(flags), undefined,
+               getCapabilities(flags));
   this.bssid = bssid;
   this.signalStrength = signal;
   this.relSignalStrength = calculateSignal(Number(signal));
@@ -1876,11 +1892,9 @@ function WifiWorker() {
   // self.configuredNetworks and prepares it for the DOM.
   netToDOM = function(net) {
     var ssid = dequote(net.ssid);
-    var capabilities = (net.key_mgmt === "NONE" && net.wep_key0)
-                       ? ["WEP"]
-                       : (net.key_mgmt && net.key_mgmt !== "NONE")
-                       ? [net.key_mgmt]
-                       : [];
+    var security = (net.key_mgmt === "NONE" && net.wep_key0) ? ["WEP"] :
+                   (net.key_mgmt && net.key_mgmt !== "NONE") ? [net.key_mgmt] :
+                   [];
     var password;
     if (("psk" in net && net.psk) ||
         ("password" in net && net.password) ||
@@ -1888,7 +1902,7 @@ function WifiWorker() {
       password = "*";
     }
 
-    var pub = new Network(ssid, capabilities, password);
+    var pub = new Network(ssid, security, password);
     if (net.identity)
       pub.identity = dequote(net.identity);
     if (net.netId)
@@ -1909,6 +1923,7 @@ function WifiWorker() {
     delete net.bssid;
     delete net.signalStrength;
     delete net.relSignalStrength;
+    delete net.security;
     delete net.capabilities;
 
     if (!configured)
@@ -2260,17 +2275,17 @@ function WifiWorker() {
               network.password = "*";
             }
           } else if (!self._allowWpaEap &&
-                     (eapIndex = network.capabilities.indexOf("WPA-EAP")) >= 0) {
+                     (eapIndex = network.security.indexOf("WPA-EAP")) >= 0) {
             // Don't offer to connect to WPA-EAP networks unless one has been
             // configured through other means (e.g. it was added directly to
             // wpa_supplicant.conf). Here, we have an unknown WPA-EAP network,
             // so we ignore it entirely if it only supports WPA-EAP, otherwise
             // we take EAP out of the list and offer the rest of the
-            // capabilities.
-            if (network.capabilities.length === 1)
+            // security.
+            if (network.security.length === 1)
               continue;
 
-            network.capabilities.splice(eapIndex, 1);
+            network.security.splice(eapIndex, 1);
           }
 
           self.networksArray.push(network);
@@ -2751,15 +2766,15 @@ WifiWorker.prototype = {
         if (id === "__exposedProps__") {
           continue;
         }
-        if (id === "capabilities") {
+        if (id === "security") {
           result[id] = 0;
-          var capabilities = element[id];
-          for (let j = 0; j < capabilities.length; j++) {
-            if (capabilities[j] === "WPA-PSK") {
+          var security = element[id];
+          for (let j = 0; j < security.length; j++) {
+            if (security[j] === "WPA-PSK") {
               result[id] |= Ci.nsIWifiScanResult.WPA_PSK;
-            } else if (capabilities[j] === "WPA-EAP") {
+            } else if (security[j] === "WPA-EAP") {
               result[id] |= Ci.nsIWifiScanResult.WPA_EAP;
-            } else if (capabilities[j] === "WEP") {
+            } else if (security[j] === "WEP") {
               result[id] |= Ci.nsIWifiScanResult.WEP;
             } else {
              result[id] = 0;
@@ -3090,7 +3105,7 @@ WifiWorker.prototype = {
           self._sendMessage(message, false, "WPS PBC failed", msg);
       });
     } else if (detail.method === "pin") {
-      WifiManager.wpsPin(detail.pin, function(pin) {
+      WifiManager.wpsPin(detail, function(pin) {
         if (pin)
           self._sendMessage(message, true, pin, msg);
         else
