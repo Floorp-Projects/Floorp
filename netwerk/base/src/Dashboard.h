@@ -14,7 +14,6 @@
 #include "nsIThread.h"
 #include "nsSocketTransport2.h"
 #include "mozilla/net/DashboardTypes.h"
-#include "nsHttp.h"
 
 namespace mozilla {
 namespace net {

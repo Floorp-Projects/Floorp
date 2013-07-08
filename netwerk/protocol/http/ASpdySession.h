@@ -67,6 +67,11 @@ public:
   // string was known.
   nsresult GetNPNVersionIndex(const nsACString &npnString, uint8_t *result);
 
+  enum {
+    SPDY_VERSION_2 = 2,
+    SPDY_VERSION_3 = 3
+  };
+
   uint8_t   Version[2];
   nsCString VersionString[2];
 };
