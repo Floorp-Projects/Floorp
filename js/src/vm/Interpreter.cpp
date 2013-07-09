@@ -3707,17 +3707,6 @@ js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, Mutable
 }
 
 bool
-js::GetElementMonitored(JSContext *cx, MutableHandleValue lref, HandleValue rref,
-                        MutableHandleValue vp)
-{
-    if (!GetElement(cx, lref, rref, vp))
-        return false;
-
-    TypeScript::Monitor(cx, vp);
-    return true;
-}
-
-bool
 js::CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res)
 {
     return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);
