@@ -76,6 +76,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         GeckoLoader.loadSQLiteLibs(app, resourcePath);
         GeckoLoader.loadNSSLibs(app, resourcePath);
         GeckoLoader.loadGeckoLibs(app, resourcePath);
+        GeckoJavaSampler.setLibsLoaded();
 
         Locale.setDefault(locale);
 
