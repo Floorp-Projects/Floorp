@@ -10,7 +10,7 @@ const kContextUIDismissEvent = "MozContextUIDismiss";
 const kContextUITabsShowEvent = "MozContextUITabsShow";
 // add more as needed...
 
-// delay for ContextUI's dismissWithDelay
+// delay for ContextUI's dismissTabsWithDelay
 const kHideContextAndTrayDelayMsec = 3000;
 
 // delay when showing the tab bar briefly as a new tab opens
@@ -163,25 +163,24 @@ var ContextUI = {
   peekTabs: function peekTabs() {
     if (this.tabbarVisible) {
       setTimeout(function () {
-        ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
+        ContextUI.dismissTabsWithDelay(kNewTabAnimationDelayMsec);
       }, 0);
     } else {
       BrowserUI.setOnTabAnimationEnd(function () {
-        ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
+        ContextUI.dismissTabsWithDelay(kNewTabAnimationDelayMsec);
       });
       this.displayTabs();
     }
   },
 
-
   /*
-   * Dismiss all context ui after a delay. Fires context ui events.
+   * Dismiss tab bar after a delay. Fires context ui events.
    */
-  dismissWithDelay: function dismissWithDelay(aDelay) {
+  dismissTabsWithDelay: function (aDelay) {
     aDelay = aDelay || kHideContextAndTrayDelayMsec;
     this._clearDelayedTimeout();
     this._hidingId = setTimeout(function () {
-        ContextUI.dismiss();
+        ContextUI.dismissTabs();
       }, aDelay);
   },
 
@@ -317,6 +316,9 @@ var ContextUI = {
         this.dismissTabs();
         break;
       case 'TabSelect':
+        this.dismissTabs();
+        break;
+
       case 'ToolPanelShown':
       case 'ToolPanelHidden':
       case "touchstart":
