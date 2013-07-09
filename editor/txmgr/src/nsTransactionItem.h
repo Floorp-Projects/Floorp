@@ -58,6 +58,7 @@ private:
   virtual nsresult GetNumberOfUndoItems(int32_t *aNumItems);
   virtual nsresult GetNumberOfRedoItems(int32_t *aNumItems);
 
+  void CleanUp();
 protected:
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

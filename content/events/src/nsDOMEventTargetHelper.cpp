@@ -70,7 +70,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventTargetHelper)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsDOMEventTargetHelper,
+                                                   LastRelease())
 
 NS_IMPL_DOMTARGET_DEFAULTS(nsDOMEventTargetHelper)
 
