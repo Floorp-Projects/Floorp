@@ -730,8 +730,9 @@ BrowserTabActor.prototype = {
   },
 
   /**
-   * Handle location changes, by sending a tabNavigated notification to the
-   * client.
+   * Handle location changes, by clearing the previous debuggees and enabling
+   * debugging, which may have been disabled temporarily by the
+   * DebuggerProgressListener.
    */
   onWindowCreated:
   makeInfallible(function BTA_onWindowCreated(evt) {
@@ -745,6 +746,7 @@ BrowserTabActor.prototype = {
         this.threadActor.clearDebuggees();
         if (this.threadActor.dbg) {
           this.threadActor.dbg.enabled = true;
+          this.threadActor.maybePauseOnExceptions();
         }
       }
     }
