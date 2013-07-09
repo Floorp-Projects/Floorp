@@ -56,7 +56,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private String mLogFile;
     protected String mProfile;
     public Device mDevice;
-    private boolean menuSettingsTimedOut = false;
 
     protected void blockForGeckoReady() {
         try {
@@ -435,30 +434,41 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
 
     /** 
-     * Select <item> from Menu > "Settings" > <section>
+     * Select <item> from Menu > "Settings" > <section>.
      */
     public void selectSettingsItem(String section, String item) {
-        String itemName = "^" + item + "$";
-        selectMenuItem("Settings");
-        String sectionName = "^" + section + "$";
-        // Click on section name.
-        waitForEnabledText(sectionName);
-        mSolo.clickOnText(sectionName);
-        // Click on item.
-        waitForEnabledText(itemName);
-        mSolo.clickOnText(itemName);
+        String[] itemPath = { "Settings", section, item };
+        selectMenuItemByPath(itemPath);
+    }
+
+    /**
+     * Traverses the items in listItems in order in the menu.
+     */
+    public void selectMenuItemByPath(String[] listItems) {
+        int listLength = listItems.length;
+        if (listLength > 0) {
+            selectMenuItem(listItems[0]);
+        }
+        if (listLength > 1) {
+            for (int i = 1; i < listLength; i++) {
+                String itemName = "^" + listItems[i] + "$";
+                if (!waitForEnabledText(itemName)) {
+                    mSolo.scrollDown();
+                }
+                mSolo.clickOnText(itemName);
+            }
+        }
     }
 
     public final void selectMenuItem(String menuItemName) {
         // build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        if (!menuSettingsTimedOut && waitForText(itemName)) {
+        if (waitForText(itemName)) {
             mSolo.clickOnText(itemName);
         } else {
-            // Record that we've timed out waiting for "Settings" on the top menu
-            // screen so we can skip the timeout step next time.
-            menuSettingsTimedOut = true;
+            // Older versions of Android have additional settings under "More",
+            // including settings that newer versions have under "Tools."
             if (mSolo.searchText("(^More$|^Tools$)")) {
                 mSolo.clickOnText("(^More$|^Tools$)");
             }

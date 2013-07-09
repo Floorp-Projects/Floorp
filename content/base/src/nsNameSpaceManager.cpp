@@ -18,7 +18,7 @@
 #include "nsDataHashtable.h"
 #include "nsString.h"
 #include "nsINodeInfo.h"
-#include "nsXBLChildrenElement.h"
+#include "mozilla/dom/XBLChildrenElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -205,7 +205,7 @@ NS_NewElement(nsIContent** aResult,
     return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
   if (ns == kNameSpaceID_XBL && aNodeInfo.get()->Equals(nsGkAtoms::children)) {
-    NS_ADDREF(*aResult = new nsXBLChildrenElement(aNodeInfo));
+    NS_ADDREF(*aResult = new XBLChildrenElement(aNodeInfo));
     return NS_OK;
   }
   return NS_NewXMLElement(aResult, aNodeInfo);

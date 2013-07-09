@@ -2,7 +2,6 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import java.util.Arrays;
 
 /** This patch tests the System Pages first by loading system pages from
  *  the awesome bar and then from Firefox menu 
@@ -19,12 +18,16 @@ public class testSystemPages extends PixelTest {
     public void testSystemPages() {
         blockForGeckoReady();
 
-        String urls [] = {  "about:firefox", "about:rights", "about:home", "about:addons", "about:downloads", "about:buildconfig", "about:"};
-        String expectedUrls [] = { "about:apps", "about:downloads", "about:addons", "about:"};
-        String menuItems [] = { "Apps", "Downloads", "Add-ons", "Settings"};
+        String urls [] = { "about:firefox", "about:rights", "about:home", "about:addons", "about:downloads", "about:buildconfig", "about:feedback", "about:healthreport", "about:" };
+        // Pages to be tested from the menu and their expected urls. This if of the form { {{ <path to item> }, { <expected url> }}* }
+        String menuItems [][][] = {{{ "Apps" }, { "about:apps" }},
+                                  {{ "Downloads" }, { "about:downloads" }},
+                                  {{ "Add-ons" }, { "about:addons" }},
+                                  {{ "Settings", "Mozilla", "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)" }, { "about:" }},
+                                  {{ "Settings", "Mozilla", "Give feedback" }, { "about:feedback" }},
+                                  {{ "Settings", "Mozilla", "View my Health Report" }, { "about:healthreport" }}};
 
-        /* This first section loads system pages from the awesome bar
-           and checks that the pages are loaded in the same tab */
+        /* Load system pages from url and check that the pages are loaded in the same tab */
         checkUrl(urls);
 
         /* Verify that the search field is not in the focus by pressing back. That will load the previous
@@ -36,10 +39,12 @@ public class testSystemPages extends PixelTest {
         // may not get a paint on Back...pause briefly to make sure it completes
         mSolo.sleep(AFTER_BACK_SLEEP_MS);
 
+        // We will use the "about:" page as our reference page.
+        loadAndPaint("about:");
         verifyUrl("about:"); // Verify that the previous about: page is loaded, meaning no keyboard was present
 
-        // The second section loads system pages from Firefox menu in different tabs
-        loadFromMenu(menuItems, expectedUrls);
+        // Load system pages by navigating through the UI.
+        loadItemsByLevel(menuItems);
     }
 
     // Load from Url the about: pages,verify the Url and the tabs number
@@ -51,44 +56,42 @@ public class testSystemPages extends PixelTest {
         }
     }
 
-    public void loadFromMenu(String menuItems [], String expectedUrls []) {
+    public void loadItemsByLevel(String[][][] menuItems) {
         Actions.EventExpecter tabEventExpecter;
         Actions.EventExpecter contentEventExpecter;
-        Actions.RepeatedEventExpecter paintExpecter;
+        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         int expectedTabCount = mExpectedTabCount;
-        for (String item:menuItems) {
+        // There's some special casing for about: because it's our starting page.
+        for (String[][] item : menuItems) {
+            String [] pathToItem = item[0];
+            String expectedUrl = item[1][0];
+
             expectedTabCount++;
             mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Press back to dismiss the awesomebar
             mSolo.sleep(AFTER_BACK_SLEEP_MS);
 
-            int i = Arrays.asList(menuItems).indexOf(item);
-            if (!item.equals("Settings")) {
+            // Set up listeners to catch the page load we're about to do
+            tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+            contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+            selectMenuItemByPath(pathToItem);
 
-                // Set up listeners to catch the page load we're about to do
-                tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
-                contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-
-                selectMenuItem(item);
-
-                // Wait for the new tab and page to load
-                tabEventExpecter.blockForEvent();
-                contentEventExpecter.blockForEvent();
-                tabEventExpecter.unregisterListener();
-                contentEventExpecter.unregisterListener();
-
-                verifyTabCount(expectedTabCount);
-                verifyUrl(expectedUrls[i]);
-            } else {
-                // Make sure the about: page was loaded without opening a new tab and verify the page Url
-                paintExpecter = mActions.expectPaint(); // Set up listener to catch the page load
-                selectSettingsItem("Mozilla", "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
+            // Wait for the new tab and page to load
+            if ("about:".equals(expectedUrl)) {
                 waitForPaint(paintExpecter); // Waiting for the page to load
                 paintExpecter.unregisterListener();
-
-                expectedTabCount--; // Decreasing since we don't expect this in a new tab
-                verifyTabCount(expectedTabCount);
-                verifyUrl(expectedUrls[i]); // Since the page is already loaded this should be instantly
+            } else {
+                tabEventExpecter.blockForEvent();
+                contentEventExpecter.blockForEvent();
             }
+            tabEventExpecter.unregisterListener();
+            contentEventExpecter.unregisterListener();
+
+            verifyUrl(expectedUrl);
+            if ("about:".equals(expectedUrl)) {
+                // Decreasing because we do not expect this to be in a different tab.
+                expectedTabCount--;
+            }
+            verifyTabCount(expectedTabCount);
         }
     }
 }

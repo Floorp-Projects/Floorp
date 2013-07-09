@@ -448,8 +448,8 @@ let Sync = {
     });
 
     let settingids = ["device", "connect", "connected", "disconnect", "lastsync", "pairdevice",
-                      "errordescription", "accountinfo", "disconnectwarnpanel", "disconnectthrobber",
-                      "disconnectwarntitle", "description"];
+                      "errordescription", "accountinfo", "disconnectwarnpanel", "disconnectpanel",
+                      "disconnectthrobber", "disconnectwarntitle", "description"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -471,6 +471,7 @@ let Sync = {
     let pairdevice = this._elements.pairdevice;
     let accountinfo = this._elements.accountinfo;
     let description = this._elements.description;
+    let disconnectpanel = this._elements.disconnectpanel;
     let disconnectthrobber = this._elements.disconnectthrobber;
 
     // This gets updated when an error occurs
@@ -481,10 +482,11 @@ let Sync = {
     // If we're in the process of disconnecting we are no longer configured.
     if (this._disconnecting) {
       isConfigured = false;
-      // display the throbber with the appropriate message
-      disconnectthrobber.collapsed = false;
+      disconnectpanel.collapsed = false;
+      disconnectthrobber.enabled = true;
     } else {
-      disconnectthrobber.collapsed = true;
+      disconnectpanel.collapsed = true;
+      disconnectthrobber.enabled = false;
     }
 
     connect.collapsed = isConfigured;

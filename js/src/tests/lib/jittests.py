@@ -500,9 +500,11 @@ def process_test_results(results, num_tests, options):
             doing = 'after %s' % res.test.path
             if not ok:
                 failures.append(res)
-                pb.message("FAIL - %s" % res.test.path)
-            if res.timed_out:
-                timeouts += 1
+                if res.timed_out:
+                    pb.message("TIMEOUT - %s" % res.test.path)
+                    timeouts += 1
+                else:
+                    pb.message("FAIL - %s" % res.test.path)
 
             if options.tinderbox:
                 if ok:

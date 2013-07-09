@@ -465,11 +465,22 @@ Range::or_(const Range *lhs, const Range *rhs)
     int64_t lower = INT32_MIN;
     int64_t upper = INT32_MAX;
 
-    // If the sign bits are the same, the result has the same sign.
-    if (lhs->lower_ >= 0 && rhs->lower_ >= 0)
-        lower = 0;
-    else if (lhs->upper_ < 0 || rhs->upper_ < 0)
-        upper = -1;
+    if (lhs->lower_ >= 0 && rhs->lower_ >= 0) {
+        // Both operands are non-negative, so the result won't be greater than either.
+        lower = Max(lhs->lower_, rhs->lower_);
+        // The result will have leading zeros where both operands have leading zeros.
+        upper = UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
+                                  js_bitscan_clz32(rhs->upper_));
+    } else {
+        // The result will have leading ones where either operand has leading ones.
+        if (lhs->upper_ < 0)
+            lower = Max(lower, (int64_t)(int32_t)~(UINT32_MAX >> js_bitscan_clz32(~lhs->lower_)));
+        if (rhs->upper_ < 0)
+            lower = Max(lower, (int64_t)(int32_t)~(UINT32_MAX >> js_bitscan_clz32(~rhs->lower_)));
+        // If either operand is negative, the result is negative.
+        if (lhs->upper_ < 0 && rhs->upper_ < 0)
+            upper = -1;
+    }
 
     return new Range(lower, upper);
 }
@@ -480,11 +491,31 @@ Range::xor_(const Range *lhs, const Range *rhs)
     int64_t lower = INT32_MIN;
     int64_t upper = INT32_MAX;
 
-    // If the sign bits are identical, the result is non-negative.
-    if (lhs->lower_ >= 0 && rhs->lower_ >= 0)
+    if (lhs->lower_ >= 0 && rhs->lower_ >= 0) {
+        // Both operands are non-negative. The result will be non-negative and
+        // not greater than either.
         lower = 0;
-    else if (lhs->upper_ < 0 && rhs->upper_ < 0)
+        upper = UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
+                                  js_bitscan_clz32(rhs->upper_));
+    } else if (lhs->upper_ < 0 && rhs->upper_ < 0) {
+        // Both operands are negative. The result will be non-negative and
+        // will have leading zeros where both operands have leading ones.
         lower = 0;
+        upper = UINT32_MAX >> Min(js_bitscan_clz32(~lhs->lower_),
+                                  js_bitscan_clz32(~rhs->lower_));
+    } else if (lhs->upper_ < 0 && rhs->lower_ >= 0) {
+        // One operand is negative and the other is non-negative. The result
+        // will have leading ones where the negative operand has leading ones
+        // and the non-negative operand has leading zeros.
+        upper = -1;
+        lower = (int32_t)~(UINT32_MAX >> Min(js_bitscan_clz32(~lhs->lower_),
+                                             js_bitscan_clz32(rhs->upper_)));
+    } else if (lhs->lower_ >= 0 && rhs->upper_ < 0) {
+        // One operand is negative and the other is non-negative. As above.
+        upper = -1;
+        lower = (int32_t)~(UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
+                                             js_bitscan_clz32(~rhs->lower_)));
+    }
 
     return new Range(lower, upper);
 }
@@ -492,16 +523,7 @@ Range::xor_(const Range *lhs, const Range *rhs)
 Range *
 Range::not_(const Range *op)
 {
-    int64_t lower = INT32_MIN;
-    int64_t upper = INT32_MAX;
-
-    // Not inverts all bits, including the sign bit.
-    if (op->lower_ >= 0)
-        upper = -1;
-    else if (op->upper_ < 0)
-        lower = 0;
-
-    return new Range(lower, upper);
+    return new Range(~op->upper_, ~op->lower_);
 }
 
 Range *
@@ -528,12 +550,12 @@ Range::lsh(const Range *lhs, int32_t c)
 
     // If the shift doesn't loose bits or shift bits into the sign bit, we
     // can simply compute the correct range by shifting.
-    if (((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
-        ((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
+    if ((int32_t)((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
+        (int32_t)((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
     {
         return new Range(
-            (int64_t)lhs->lower_ << shift,
-            (int64_t)lhs->upper_ << shift);
+            (uint32_t)lhs->lower_ << shift,
+            (uint32_t)lhs->upper_ << shift);
     }
 
     return new Range(INT32_MIN, INT32_MAX);
@@ -1022,6 +1044,8 @@ RangeAnalysis::markBlocksInLoopBody(MBasicBlock *header, MBasicBlock *current)
 void
 RangeAnalysis::analyzeLoop(MBasicBlock *header)
 {
+    JS_ASSERT(header->hasUniqueBackedge());
+
     // Try to compute an upper bound on the number of times the loop backedge
     // will be taken. Look for tests that dominate the backedge and which have
     // an edge leaving the loop body.
@@ -1075,17 +1099,14 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     // Try to compute symbolic bounds for the phi nodes at the head of this
     // loop, expressed in terms of the iteration bound just computed.
 
-    for (MDefinitionIterator iter(header); iter; iter++) {
-        MDefinition *def = *iter;
-        if (def->isPhi())
-            analyzeLoopPhi(header, iterationBound, def->toPhi());
-    }
+    for (MPhiIterator iter(header->phisBegin()); iter != header->phisEnd(); iter++)
+        analyzeLoopPhi(header, iterationBound, *iter);
 
     // Try to hoist any bounds checks from the loop using symbolic bounds.
 
     Vector<MBoundsCheck *, 0, IonAllocPolicy> hoistedChecks;
 
-    for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
+    for (ReversePostorderIterator iter(graph_.rpoBegin(header)); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
         if (!block->isMarked())
             continue;
@@ -1236,8 +1257,7 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
     // but is required to change at most N and be either nondecreasing or
     // nonincreasing.
 
-    if (phi->numOperands() != 2)
-        return;
+    JS_ASSERT(phi->numOperands() == 2);
 
     MBasicBlock *preLoop = header->loopPredecessor();
     JS_ASSERT(!preLoop->isMarked() && preLoop->successorWithPhis() == header);
