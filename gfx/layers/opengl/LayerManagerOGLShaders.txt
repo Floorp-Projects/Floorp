@@ -384,6 +384,22 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
+@shader sComponentPass<mask:,Mask>1RGBFS
+
+$LAYER_FRAGMENT<mask>$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = alphas * uLayerOpacity * mask;
+}
+@end
+
 @shader sComponentPass<mask:,Mask>2FS
 
 $LAYER_FRAGMENT<mask>$
@@ -400,6 +416,21 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
+@shader sComponentPass<mask:,Mask>2RGBFS
+
+$LAYER_FRAGMENT<mask>$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity * mask;
+}
+@end
 
 
 //

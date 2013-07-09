@@ -755,6 +755,8 @@ public:
         return false;
     }
 
+    virtual GLenum GetPreferredARGB32Format() { return LOCAL_GL_RGBA; }
+
     virtual bool RenewSurface() { return false; }
 
     /**
