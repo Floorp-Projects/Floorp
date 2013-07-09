@@ -542,13 +542,16 @@ class CGHeaders(CGWrapper):
     """
     def __init__(self, descriptors, dictionaries, callbacks,
                  callbackDescriptors,
-                 declareIncludes, defineIncludes, child,
+                 declareIncludes, defineIncludes, prefix, child,
                  config=None, jsImplementedDescriptors=[]):
         """
         Builds a set of includes to cover |descriptors|.
 
         Also includes the files in |declareIncludes| in the header
         file and the files in |defineIncludes| in the .cpp.
+
+        |prefix| contains the basename of the file that we generate include
+        statements for.
         """
 
         # Determine the filenames for which we need headers.
@@ -625,6 +628,12 @@ class CGHeaders(CGWrapper):
             elif unrolled.isFloat() and not unrolled.isUnrestricted():
                 # Restricted floats are tested for finiteness
                 bindingHeaders.add("mozilla/FloatingPoint.h")
+            elif unrolled.isEnum():
+                filename = self.getDeclarationFilename(unrolled.inner)
+                # Do nothing if the enum is defined in the same webidl file
+                # (the binding header doesn't need to include itself).
+                if filename != prefix + ".h":
+                    declareIncludes.add(filename)
 
         callForEachType(descriptors + callbackDescriptors, dictionaries,
                         callbacks, addHeadersForType)
@@ -8484,6 +8493,7 @@ class CGBindingRoot(CGThing):
                             + (['nsCxPusher.h'] if mainDictionaries else [])
                             + (['AccessCheck.h'] if hasChromeOnlyMembers else [])
                             + (['xpcprivate.h'] if isEventTarget else []),
+                         prefix,
                          curr,
                          config,
                          jsImplemented)
@@ -9107,7 +9117,7 @@ class CGExampleRoot(CGThing):
                                 "mozilla/ErrorResult.h" ],
                               [ "%s.h" % interfaceName,
                                 "mozilla/dom/%sBinding.h" % interfaceName,
-                                "nsContentUtils.h" ], self.root);
+                                "nsContentUtils.h" ], "", self.root);
 
         # In the header, #pragma once before everything
         self.root = CGWrapper(self.root, declarePre="#pragma once\n\n")
@@ -9970,7 +9980,8 @@ struct PrototypeIDMap;
                                                             workers=False,
                                                             register=True)]
         defineIncludes.append('nsScriptNameSpaceManager.h')
-        curr = CGHeaders([], [], [], [], [], defineIncludes, curr)
+        curr = CGHeaders([], [], [], [], [], defineIncludes, 'RegisterBindings',
+                         curr)
 
         # Add include guards.
         curr = CGIncludeGuard('RegisterBindings', curr)
@@ -10022,7 +10033,8 @@ struct PrototypeIDMap;
 
         curr = CGList([stack[0], curr], "\n")
 
-        curr = CGHeaders([], [], [], [], includes, implincludes, curr)
+        curr = CGHeaders([], [], [], [], includes, implincludes, 'UnionTypes',
+                         curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionTypes', curr)
@@ -10044,7 +10056,7 @@ struct PrototypeIDMap;
         curr = CGWrapper(curr, post='\n')
 
         headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"])
-        curr = CGHeaders([], [], [], [], headers, [], curr)
+        curr = CGHeaders([], [], [], [], headers, [], 'UnionConversions', curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionConversions', curr)
