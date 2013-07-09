@@ -608,18 +608,28 @@ class IonBuilder : public MIRGenerator
     }
     IonBuilder *callerBuilder_;
 
+    struct LoopHeader {
+        jsbytecode *pc;
+        MBasicBlock *header;
+
+        LoopHeader(jsbytecode *pc, MBasicBlock *header)
+          : pc(pc), header(header)
+        {}
+    };
+
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
     Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
     Vector<ControlFlowInfo, 2, IonAllocPolicy> labels_;
     Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
+    Vector<LoopHeader, 0, IonAllocPolicy> loopHeaders_;
     BaselineInspector *inspector;
 
     size_t inliningDepth_;
 
     // Cutoff to disable compilation if excessive time is spent reanalyzing
     // loop bodies to compute a fixpoint of the types for loop variables.
-    static const size_t MAX_LOOP_RESTARTS = 20;
+    static const size_t MAX_LOOP_RESTARTS = 40;
     size_t numLoopRestarts_;
 
     // True if script->failedBoundsCheck is set for the current script or
