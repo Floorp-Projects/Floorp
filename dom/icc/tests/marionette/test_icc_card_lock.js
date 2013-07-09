@@ -90,10 +90,80 @@ function testPinChangeSuccess() {
   };
 }
 
+/* Read PIN-lock retry count */
+function testPinCardLockRetryCount() {
+  let request = icc.getCardLockRetryCount('pin');
+
+  ok(request instanceof DOMRequest,
+     'request instanceof ' + request.constructor);
+
+  request.onsuccess = function onsuccess() {
+    is(request.result.lockType, 'pin',
+        'lockType is ' + request.result.lockType);
+    ok(request.result.retryCount >= 0,
+        'retryCount is ' + request.result.retryCount);
+    runNextTest();
+  };
+  request.onerror = function onerror() {
+    // The operation is optional any might not be supported for all
+    // all locks. In this case, we generate 'NotSupportedError' for
+    // the valid lock types.
+    is(request.error.name, 'RequestNotSupported',
+        'error name is ' + request.error.name);
+    runNextTest();
+  };
+}
+
+/* Read PUK-lock retry count */
+function testPukCardLockRetryCount() {
+  let request = icc.getCardLockRetryCount('puk');
+
+  ok(request instanceof DOMRequest,
+     'request instanceof ' + request.constructor);
+
+  request.onsuccess = function onsuccess() {
+    is(request.result.lockType, 'puk',
+        'lockType is ' + request.result.lockType);
+    ok(request.result.retryCount >= 0,
+        'retryCount is ' + request.result.retryCount);
+    runNextTest();
+  };
+  request.onerror = function onerror() {
+    // The operation is optional any might not be supported for all
+    // all locks. In this case, we generate 'NotSupportedError' for
+    // the valid lock types.
+    is(request.error.name, 'RequestNotSupported',
+        'error name is ' + request.error.name);
+    runNextTest();
+  };
+}
+
+/* Read lock retry count for an invalid entries  */
+function testInvalidCardLockRetryCount() {
+  let request = icc.getCardLockRetryCount('invalid-lock-type');
+
+  ok(request instanceof DOMRequest,
+     'request instanceof ' + request.constructor);
+
+  request.onsuccess = function onsuccess() {
+    ok(false,
+        'request should never return success for an invalid lock type');
+    runNextTest();
+  };
+  request.onerror = function onerror() {
+    is(request.error.name, 'GenericFailure',
+        'error name is ' + request.error.name);
+    runNextTest();
+  };
+}
+
 let tests = [
   testPinChangeFailed,
   testPinChangeFailedNotification,
   testPinChangeSuccess,
+  testPinCardLockRetryCount,
+  testPukCardLockRetryCount,
+  testInvalidCardLockRetryCount
 ];
 
 function runNextTest() {
