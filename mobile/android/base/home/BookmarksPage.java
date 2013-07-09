@@ -15,8 +15,6 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TopBookmarksView.Thumbnail;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -26,6 +24,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,7 +32,6 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,8 +46,14 @@ public class BookmarksPage extends HomeFragment {
     // Cursor loader ID for grid of bookmarks.
     private static final int TOP_BOOKMARKS_LOADER_ID = 1;
 
+    // Loader ID for thumbnails.
+    private static final int THUMBNAILS_LOADER_ID = 2;
+
     // Key for bookmarks folder id.
     private static final String BOOKMARKS_FOLDER_KEY = "folder_id";
+
+    // Key for thumbnail urls.
+    private static final String THUMBNAILS_URLS_KEY = "urls";
 
     // List of bookmarks.
     private BookmarksListView mList;
@@ -63,8 +67,11 @@ public class BookmarksPage extends HomeFragment {
     // Adapter for grid of bookmarks.
     private TopBookmarksAdapter mTopBookmarksAdapter;
 
-    // Callback for loaders.
+    // Callback for cursor loaders.
     private CursorLoaderCallbacks mLoaderCallbacks;
+
+    // Callback for thumbnail loader.
+    private ThumbnailsLoaderCallbacks mThumbnailsLoaderCallbacks;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -119,6 +126,7 @@ public class BookmarksPage extends HomeFragment {
 
         // Create callbacks before the initial loader is started.
         mLoaderCallbacks = new CursorLoaderCallbacks();
+        mThumbnailsLoaderCallbacks = new ThumbnailsLoaderCallbacks();
 
         // Reconnect to the loader only if present.
         final LoaderManager manager = getLoaderManager();
@@ -227,8 +235,18 @@ public class BookmarksPage extends HomeFragment {
                     mTopBookmarksAdapter.swapCursor(c);
 
                     // Load the thumbnails.
-                    if (c.getCount() > 0) {
-                        new LoadThumbnailsTask(getActivity(), mTopBookmarks).execute(c);
+                    if (c.getCount() > 0 && c.moveToFirst()) {
+                        final ArrayList<String> urls = new ArrayList<String>();
+                        do {
+                            final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+                            urls.add(url);
+                        } while (c.moveToNext());
+
+                        if (urls.size() > 0) {
+                            Bundle bundle = new Bundle();
+                            bundle.putStringArrayList(THUMBNAILS_URLS_KEY, urls);
+                            getLoaderManager().restartLoader(THUMBNAILS_LOADER_ID, bundle, mThumbnailsLoaderCallbacks);
+                        }
                     }
                     break;
                 }
@@ -257,41 +275,28 @@ public class BookmarksPage extends HomeFragment {
     }
 
     /**
-     * An AsyncTask to load the thumbnails from a cursor.
+     * An AsyncTaskLoader to load the thumbnails from a cursor.
      */
-    private static class LoadThumbnailsTask extends UiAsyncTask<Cursor, Void, Map<String, Thumbnail>> {
-        private final Context mContext;
-        private final TopBookmarksView mView;
+    private static class ThumbnailsLoader extends AsyncTaskLoader<Map<String, Thumbnail>> {
+        private Map<String, Thumbnail> mThumbnails;
+        private ArrayList<String> mUrls;
 
-        public LoadThumbnailsTask(Context context, TopBookmarksView view) {
-            super(ThreadUtils.getBackgroundHandler());
-            mContext = context;
-            mView = view;
+        public ThumbnailsLoader(Context context, ArrayList<String> urls) {
+            super(context);
+            mUrls = urls;
         }
 
         @Override
-        protected Map<String, Thumbnail> doInBackground(Cursor... params) {
-            // TopBookmarksAdapter's cursor.
-            final Cursor adapterCursor = params[0];
-            if (adapterCursor == null || !adapterCursor.moveToFirst()) {
-                return null;
-            }
-
-            final List<String> urls = new ArrayList<String>();
-            do {
-                final String url = adapterCursor.getString(adapterCursor.getColumnIndexOrThrow(URLColumns.URL));
-                urls.add(url);
-            } while (adapterCursor.moveToNext());
-
-            if (urls.size() == 0) {
+        public Map<String, Thumbnail> loadInBackground() {
+            if (mUrls == null || mUrls.size() == 0) {
                 return null;
             }
 
             final Map<String, Thumbnail> thumbnails = new HashMap<String, Thumbnail>();
 
             // Query the DB for thumbnails.
-            final ContentResolver cr = mContext.getContentResolver();
-            final Cursor cursor = BrowserDB.getThumbnailsForUrls(cr, urls);
+            final ContentResolver cr = getContext().getContentResolver();
+            final Cursor cursor = BrowserDB.getThumbnailsForUrls(cr, mUrls);
 
             try {
                 if (cursor != null && cursor.moveToFirst()) {
@@ -313,7 +318,7 @@ public class BookmarksPage extends HomeFragment {
             }
 
             // Query the DB for favicons for the urls without thumbnails.
-            for (String url : urls) {
+            for (String url : mUrls) {
                 if (!thumbnails.containsKey(url)) {
                     final Bitmap bitmap = BrowserDB.getFaviconForUrl(cr, url);
                     if (bitmap != null) {
@@ -328,10 +333,71 @@ public class BookmarksPage extends HomeFragment {
         }
 
         @Override
-        public void onPostExecute(Map<String, Thumbnail> thumbnails) {
-            // Check to see if the view is still attached.
-            if (mView.getHandler() != null) {
-                mView.updateThumbnails(thumbnails);
+        public void deliverResult(Map<String, Thumbnail> thumbnails) {
+            if (isReset()) {
+                mThumbnails = null;
+                return;
+            }
+
+            mThumbnails = thumbnails;
+
+            if (isStarted()) {
+                super.deliverResult(thumbnails);
+            }
+        }
+
+        @Override
+        protected void onStartLoading() {
+            if (mThumbnails != null) {
+                deliverResult(mThumbnails);
+            }
+
+            if (takeContentChanged() || mThumbnails == null) {
+                forceLoad();
+            }
+        }
+
+        @Override
+        protected void onStopLoading() {
+            cancelLoad();
+        }
+
+        @Override
+        public void onCanceled(Map<String, Thumbnail> thumbnails) {
+            mThumbnails = null;
+        }
+
+        @Override
+        protected void onReset() {
+            super.onReset();
+
+            // Ensure the loader is stopped.
+            onStopLoading();
+
+            mThumbnails = null;
+        }
+    }
+
+    /**
+     * Loader callbacks for the thumbnails on TopBookmarksView.
+     */
+    private class ThumbnailsLoaderCallbacks implements LoaderCallbacks<Map<String, Thumbnail>> {
+        @Override
+        public Loader<Map<String, Thumbnail>> onCreateLoader(int id, Bundle args) {
+            return new ThumbnailsLoader(getActivity(), args.getStringArrayList(THUMBNAILS_URLS_KEY));
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Map<String, Thumbnail>> loader, Map<String, Thumbnail> thumbnails) {
+            if (mTopBookmarks != null) {
+                mTopBookmarks.updateThumbnails(thumbnails);
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Map<String, Thumbnail>> loader) {
+            if (mTopBookmarks != null) {
+                mTopBookmarks.updateThumbnails(null);
             }
         }
     }
