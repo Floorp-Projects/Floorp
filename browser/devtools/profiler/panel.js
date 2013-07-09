@@ -5,7 +5,12 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { PROFILE_IDLE, PROFILE_RUNNING, PROFILE_COMPLETED } = require("devtools/profiler/consts");
+const {
+  PROFILE_IDLE,
+  PROFILE_RUNNING,
+  PROFILE_COMPLETED,
+  SHOW_PLATFORM_DATA
+} = require("devtools/profiler/consts");
 
 var EventEmitter = require("devtools/shared/event-emitter");
 var Promise      = require("sdk/core/promise");
@@ -15,7 +20,7 @@ var ProfilerController = require("devtools/profiler/controller");
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
-Cu.import("resource://gre/modules/Services.jsm")
+Cu.import("resource://gre/modules/Services.jsm");
 
 /**
  * Profiler panel. It is responsible for creating and managing
@@ -123,6 +128,14 @@ ProfilerPanel.prototype = {
     return this._browserWin = win;
   },
 
+  get showPlatformData() {
+    return Services.prefs.getBoolPref(SHOW_PLATFORM_DATA);
+  },
+
+  set showPlatformData(enabled) {
+    Services.prefs.setBoolPref(SHOW_PLATFORM_DATA, enabled);
+  },
+
   /**
    * Open a debug connection and, on success, switch to the newly created
    * profile.
@@ -139,8 +152,8 @@ ProfilerPanel.prototype = {
         let deferred = Promise.defer();
 
         this.controller = new ProfilerController(this.target);
-        this.sidebar = new Sidebar(this.document.querySelector("#profiles-list"));
 
+        this.sidebar = new Sidebar(this.document.querySelector("#profiles-list"));
         this.sidebar.widget.addEventListener("select", (ev) => {
           if (!ev.detail)
             return;
@@ -223,7 +236,11 @@ ProfilerPanel.prototype = {
 
     let uid = ++this._uid;
     let name = name || this.controller.getProfileName();
-    let profile = new Cleopatra(uid, name, this);
+    let profile = new Cleopatra(this, {
+      uid: uid,
+      name: name,
+      showPlatformData: this.showPlatformData
+    });
 
     this.profiles.set(uid, profile);
     this.sidebar.addProfile(profile);

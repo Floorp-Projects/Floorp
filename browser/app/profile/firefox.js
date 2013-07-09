@@ -1084,6 +1084,9 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 // Enable the Profiler
 pref("devtools.profiler.enabled", true);
 
+// The default Profiler UI settings
+pref("devtools.profiler.ui.show-platform-data", false);
+
 // Enable the Network Monitor
 pref("devtools.netmonitor.enabled", true);
 
