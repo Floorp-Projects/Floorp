@@ -133,7 +133,7 @@ public:
 
   /**
    * Performs a progressive update of a given tiled buffer.
-   * See ComputeProgressiveUpdateRegion above for parameter documentation.
+   * See ComputeProgressiveUpdateRegion below for parameter documentation.
    */
   bool ProgressiveUpdate(nsIntRegion& aValidRegion,
                          nsIntRegion& aInvalidRegion,
@@ -198,10 +198,6 @@ private:
    * current transaction.
    * aRegionToPaint will be filled with the region to update. This may be empty,
    * which indicates that there is no more work to do.
-   * aTransform is the transform required to convert from screen-space to
-   * layer-space.
-   * aScrollOffset is the current scroll offset of the primary scrollable layer.
-   * aResolution is the render resolution of the layer.
    * aIsRepeated should be true if this function has already been called during
    * this transaction.
    *
