@@ -2215,8 +2215,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   nscoord frameMainSize = flexContainerMainSize +
     axisTracker.GetMarginSizeInMainAxis(aReflowState.mComputedBorderPadding);
 
-  nscoord frameCrossSize;
-
   MainAxisPositionTracker mainAxisPosnTracker(this, axisTracker,
                                               aReflowState, items);
 
@@ -2289,7 +2287,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // flex container's inner cross size."
     lineCrossAxisPosnTracker.SetLineCrossSize(contentBoxCrossSize);
   }
-  frameCrossSize = contentBoxCrossSize +
+
+  const nscoord frameCrossSize = contentBoxCrossSize +
     axisTracker.GetMarginSizeInCrossAxis(aReflowState.mComputedBorderPadding);
 
   // Set the flex container's baseline, from its baseline-aligned items.
