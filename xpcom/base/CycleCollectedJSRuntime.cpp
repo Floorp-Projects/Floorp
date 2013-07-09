@@ -292,7 +292,7 @@ public:
   {
     return NS_OK;
   }
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
   {
   }
   static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
