@@ -2076,29 +2076,47 @@ GLContext::UploadImageDataToTexture(unsigned char* aData,
     }
 
     GLenum format;
+    GLenum internalFormat;
     GLenum type;
     int32_t pixelSize = gfxASurface::BytePerPixelFromFormat(aFormat);
     SurfaceFormat surfaceFormat;
+
+    MOZ_ASSERT(GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
+               GetPreferredARGB32Format() == LOCAL_GL_RGBA);
     switch (aFormat) {
         case gfxASurface::ImageFormatARGB32:
-            format = LOCAL_GL_RGBA;
-            type = LOCAL_GL_UNSIGNED_BYTE;
-            surfaceFormat = FORMAT_B8G8R8A8;
+            if (GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
+              format = LOCAL_GL_BGRA;
+              surfaceFormat = FORMAT_R8G8B8A8;
+              type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+            } else {
+              format = LOCAL_GL_RGBA;
+              surfaceFormat = FORMAT_B8G8R8A8;
+              type = LOCAL_GL_UNSIGNED_BYTE;
+            }
+            internalFormat = LOCAL_GL_RGBA;
             break;
         case gfxASurface::ImageFormatRGB24:
-            // Treat RGB24 surfaces as RGBA32 except for the shader
-            // program used.
-            format = LOCAL_GL_RGBA;
-            type = LOCAL_GL_UNSIGNED_BYTE;
-            surfaceFormat = FORMAT_B8G8R8X8;
+            // Treat RGB24 surfaces as RGBA32 except for the surface
+            // format used.
+            if (GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
+              format = LOCAL_GL_BGRA;
+              surfaceFormat = FORMAT_R8G8B8X8;
+              type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+            } else {
+              format = LOCAL_GL_RGBA;
+              surfaceFormat = FORMAT_B8G8R8X8;
+              type = LOCAL_GL_UNSIGNED_BYTE;
+            }
+            internalFormat = LOCAL_GL_RGBA;
             break;
         case gfxASurface::ImageFormatRGB16_565:
-            format = LOCAL_GL_RGB;
+            internalFormat = format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
             surfaceFormat = FORMAT_R5G6B5;
             break;
         case gfxASurface::ImageFormatA8:
-            format = LOCAL_GL_LUMINANCE;
+            internalFormat = format = LOCAL_GL_LUMINANCE;
             type = LOCAL_GL_UNSIGNED_BYTE;
             // We don't have a specific luminance shader
             surfaceFormat = FORMAT_A8;
@@ -2141,7 +2159,7 @@ GLContext::UploadImageDataToTexture(unsigned char* aData,
         } else {
             TexImage2D(aTextureTarget,
                        0,
-                       format,
+                       internalFormat,
                        iterRect->width,
                        iterRect->height,
                        aStride,
