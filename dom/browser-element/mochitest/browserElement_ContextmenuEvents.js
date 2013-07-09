@@ -4,6 +4,9 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
+let audioUrl = '/tests/dom/browser-element/mochitest/audio.ogg';
+let videoUrl = '/tests/dom/browser-element/mochitest/short-video.ogv';
+
 function runTests() {
   createIframe(function onIframeLoaded() {
     checkEmptyContextMenu();
@@ -114,16 +117,67 @@ function checkCallbackWithoutPreventDefault() {
     checkContextMenuCallbackForId(detail, id, function onCallbackFired(label) {
       is(label, null, 'Callback label should be null');
 
-      SimpleTest.finish();
+      checkImageContextMenu();
     });
   }, /* ignorePreventDefault */ true);
 }
 
+function checkImageContextMenu() {
+  sendContextMenuTo('#menu3-trigger', function onContextMenu(detail) {
+    var target = detail.systemTargets[0];
+    is(target.nodeName, 'IMG', 'Reports correct nodeName');
+    is(target.data.uri, 'example.png', 'Reports correct uri');
+
+    checkVideoContextMenu();
+  }, /* ignorePreventDefault */ true);
+}
+
+function checkVideoContextMenu() {
+  sendContextMenuTo('#menu4-trigger', function onContextMenu(detail) {
+    var target = detail.systemTargets[0];
+    is(target.nodeName, 'VIDEO', 'Reports correct nodeName');
+    is(target.data.uri, videoUrl, 'Reports uri correctly in data');
+    is(target.data.hasVideo, true, 'Video data in video tag does "hasVideo"');
+
+    checkAudioContextMenu();
+  }, /* ignorePreventDefault */ true);
+}
+
+function checkAudioContextMenu() {
+  sendContextMenuTo('#menu6-trigger', function onContextMenu(detail) {
+    var target = detail.systemTargets[0];
+    is(target.nodeName, 'AUDIO', 'Reports correct nodeName');
+    is(target.data.uri, audioUrl, 'Reports uri correctly in data');
+
+    checkAudioinVideoContextMenu();
+  }, /* ignorePreventDefault */ true);
+}
+
+function checkAudioinVideoContextMenu() {
+  sendSrcTo('#menu5-trigger', audioUrl, function onSrcSet() {
+    sendContextMenuTo('#menu5-trigger', function onContextMenu(detail) {
+      var target = detail.systemTargets[0];
+      is(target.nodeName, 'VIDEO', 'Reports correct nodeName');
+      is(target.data.uri, audioUrl, 'Reports uri correctly in data');
+      is(target.data.hasVideo, false, 'Audio data in video tag reports no "hasVideo"');
+
+      SimpleTest.finish();
+    }, /* ignorePreventDefault */ true);
+  });
+}
 
 /* Helpers */
 var mm = null;
 var previousContextMenuDetail = null;
 var currentContextMenuDetail = null;
+
+function sendSrcTo(selector, src, callback) {
+  mm.sendAsyncMessage('setsrc', { 'selector': selector, 'src': src });
+  mm.addMessageListener('test:srcset', function onSrcSet(msg) {
+    mm.removeMessageListener('test:srcset', onSrcSet);
+    callback();
+  });
+}
 
 function sendContextMenuTo(selector, callback, ignorePreventDefault) {
   iframe.addEventListener('mozbrowsercontextmenu', function oncontextmenu(e) {
@@ -178,6 +232,10 @@ function createIframe(callback) {
     '</menu>' +
     '<div id="menu1-trigger" contextmenu="menu1"><a id="inner-link" href="foo.html">Menu 1</a></div>' +
     '<a href="bar.html" contextmenu="menu2"><img id="menu2-trigger" src="example.png" /></a>' +
+    '<img id="menu3-trigger" src="example.png" />' +
+    '<video id="menu4-trigger" src="' + videoUrl + '"></video>' +
+    '<video id="menu5-trigger" preload="metadata"></video>' +
+    '<audio id="menu6-trigger" src="' + audioUrl + '"></audio>' +
     '</body></html>';
   document.body.appendChild(iframe);
 
@@ -189,6 +247,15 @@ function createIframe(callback) {
       var evt = document.createEvent('HTMLEvents');
       evt.initEvent('contextmenu', true, true);
       document.querySelector(msg.data.selector).dispatchEvent(evt);
+    });
+
+    addMessageListener('setsrc', function onContextMenu(msg) {
+      var wrappedTarget = content.document.querySelector(msg.data.selector);
+      var target = XPCNativeWrapper.unwrap(wrappedTarget);
+      target.addEventListener('loadedmetadata', function() {
+        sendAsyncMessage('test:srcset');
+      });
+      target.src = msg.data.src;
     });
 
     addMessageListener('browser-element-api:call', function onCallback(msg) {
