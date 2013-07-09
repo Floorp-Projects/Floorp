@@ -331,16 +331,8 @@ class TypedRegisterSet
     static inline TypedRegisterSet NonVolatile() {
         return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::NonVolatileMask);
     }
-    void intersect(TypedRegisterSet other) {
-        bits_ &= ~other.bits_;
-    }
     bool has(T reg) const {
         return !!(bits_ & (1 << reg.code()));
-    }
-    bool hasNextRegister(T reg) const {
-        if (reg.code() == sizeof(bits_)*8)
-            return false;
-        return !!(bits_ & (1 << (reg.code()+1)));
     }
     void addUnchecked(T reg) {
         bits_ |= (1 << reg.code());
@@ -370,7 +362,7 @@ class TypedRegisterSet
     }
     void take(T reg) {
         JS_ASSERT(has(reg));
-        bits_ &= ~(1 << reg.code());
+        takeUnchecked(reg);
     }
     void takeUnchecked(T reg) {
         bits_ &= ~(1 << reg.code());
