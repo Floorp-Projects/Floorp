@@ -4553,7 +4553,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_BEGIN);
             if (JSGCCallback callback = rt->gcCallback)
-                callback(rt, JSGC_BEGIN);
+                callback(rt, JSGC_BEGIN, rt->gcCallbackData);
         }
 
         rt->gcPoke = false;
@@ -4562,7 +4562,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_END);
             if (JSGCCallback callback = rt->gcCallback)
-                callback(rt, JSGC_END);
+                callback(rt, JSGC_END, rt->gcCallbackData);
         }
 
         /* Need to re-schedule all zones for GC. */

@@ -2784,10 +2784,11 @@ JS_MaybeGC(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb)
+JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
     rt->gcCallback = cb;
+    rt->gcCallbackData = data;
 }
 
 JS_PUBLIC_API(void)
