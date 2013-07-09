@@ -164,7 +164,7 @@ CompareRooters(const void *vpA, const void *vpB)
  * over and over, so we need more than a depth-1 memory.
  */
 static bool
-SuppressCheckRoots(Vector<Rooter, 0, SystemAllocPolicy> &rooters)
+SuppressCheckRoots(js::Vector<Rooter, 0, SystemAllocPolicy> &rooters)
 {
     static const unsigned int NumStackMemories = 6;
     static const size_t StackCheckDepth = 10;
@@ -208,7 +208,7 @@ SuppressCheckRoots(Vector<Rooter, 0, SystemAllocPolicy> &rooters)
 }
 
 static void
-GatherRooters(Vector<Rooter, 0, SystemAllocPolicy> &rooters,
+GatherRooters(js::Vector<Rooter, 0, SystemAllocPolicy> &rooters,
               Rooted<void*> **thingGCRooters,
               unsigned thingRootKind)
 {
@@ -255,7 +255,7 @@ JS::CheckStackRoots(JSContext *cx)
     JS_ASSERT(stackMin <= stackEnd);
 
     // Gather up all of the rooters
-    Vector<Rooter, 0, SystemAllocPolicy> rooters;
+    js::Vector<Rooter, 0, SystemAllocPolicy> rooters;
     for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
         for (ContextIter cx(rt); !cx.done(); cx.next()) {
             GatherRooters(rooters, cx->thingGCRooters, i);

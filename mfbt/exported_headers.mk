@@ -51,5 +51,6 @@ EXPORTS_mozilla += \
   Types.h \
   TypeTraits.h \
   Util.h \
+  Vector.h \
   WeakPtr.h \
   $(NULL)
