@@ -332,8 +332,6 @@ private:
 
     gfxGDIFontList();
 
-    void InitializeFontEmbeddingProcs();
-
     nsresult GetFontSubstitutes();
 
     static int CALLBACK EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,

@@ -1157,49 +1157,52 @@ var GestureModule = {
  */
 var InputSourceHelper = {
   isPrecise: false,
-  treatMouseAsTouch: false,
 
   init: function ish_init() {
     // debug feature, make all input imprecise
-    try {
-      this.treatMouseAsTouch = Services.prefs.getBoolPref(kDebugMouseInputPref);
-    } catch (e) {}
-    if (!this.treatMouseAsTouch) {
-      window.addEventListener("mousemove", this, true);
-      window.addEventListener("mousedown", this, true);
+    window.addEventListener("mousemove", this, true);
+    window.addEventListener("mousedown", this, true);
+    window.addEventListener("touchstart", this, true);
+  },
+
+  _precise: function () {
+    if (!this.isPrecise) {
+      this.isPrecise = true;
+      this._fire("MozPrecisePointer");
     }
   },
-  
+
+  _imprecise: function () {
+    if (this.isPrecise) {
+      this.isPrecise = false;
+      this._fire("MozImprecisePointer");
+    }
+  },
+
   handleEvent: function ish_handleEvent(aEvent) {
+    if (aEvent.type == "touchstart") {
+      this._imprecise();
+      return;
+    }
     switch (aEvent.mozInputSource) {
       case Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE:
       case Ci.nsIDOMMouseEvent.MOZ_SOURCE_PEN:
       case Ci.nsIDOMMouseEvent.MOZ_SOURCE_ERASER:
       case Ci.nsIDOMMouseEvent.MOZ_SOURCE_CURSOR:
-        if (!this.isPrecise && !this.treatMouseAsTouch) {
-          this.isPrecise = true;
-          this._fire("MozPrecisePointer");
-        }
+        this._precise();
         break;
 
       case Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH:
-        if (this.isPrecise) {
-          this.isPrecise = false;
-          this._fire("MozImprecisePointer");
-        }
+        this._imprecise();
         break;
     }
   },
   
   fireUpdate: function fireUpdate() {
-    if (this.treatMouseAsTouch) {
-      this._fire("MozImprecisePointer");
+    if (this.isPrecise) {
+      this._fire("MozPrecisePointer");
     } else {
-      if (this.isPrecise) {
-        this._fire("MozPrecisePointer");
-      } else {
-        this._fire("MozImprecisePointer");
-      }
+      this._fire("MozImprecisePointer");
     }
   },
 

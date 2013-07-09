@@ -62,6 +62,10 @@ MOCHITEST_FILES = \
 		test_input_event.html \
 		test_input_number_rounding.html \
 		test_valueAsDate_pref.html \
+		test_input_color_picker_initial.html \
+		test_input_color_picker_update.html \
+		test_input_color_picker_popup.html \
+		test_input_color_input_change_events.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

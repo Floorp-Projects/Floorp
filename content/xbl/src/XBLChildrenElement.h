@@ -12,26 +12,23 @@
 #include "nsBindingManager.h"
 #include "mozilla/dom/nsXMLElement.h"
 
+class nsAnonymousContentList;
+
 namespace mozilla {
 namespace dom {
 
 class ExplicitChildIterator;
 
-}
-}
-
-class nsAnonymousContentList;
-
-class nsXBLChildrenElement : public nsXMLElement
+class XBLChildrenElement : public nsXMLElement
 {
 public:
   friend class mozilla::dom::ExplicitChildIterator;
   friend class nsAnonymousContentList;
-  nsXBLChildrenElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  XBLChildrenElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
   }
-  ~nsXBLChildrenElement();
+  ~XBLChildrenElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -147,6 +144,9 @@ public:
 private:
   nsTArray<nsCOMPtr<nsIAtom> > mIncludes;
 };
+
+} // namespace dom
+} // namespace mozilla
 
 class nsAnonymousContentList : public nsINodeList
 {
