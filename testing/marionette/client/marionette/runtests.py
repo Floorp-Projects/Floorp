@@ -20,7 +20,6 @@ from functools import wraps
 
 from manifestparser import TestManifest
 from mozhttpd import MozHttpd
-from telnetlib import Telnet
 
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase, MarionetteTestCase
@@ -335,11 +334,12 @@ class MarionetteTestRunner(object):
         elif self.address:
             host, port = self.address.split(':')
             try:
-                #establish a telnet connection so we can vertify the data come back
-                tlconnection = Telnet(host, port)
-            except:
-                raise Exception("could not connect to given marionette host/port")
-
+                #establish a socket connection so we can vertify the data come back
+                connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                connection.connect((host,int(port)))
+                connection.close()
+            except Exception, e:
+                raise Exception("Could not connect to given marionette host:port: %s" % e)
             if self.emulator:
                 self.marionette = Marionette.getMarionetteOrExit(
                                              host=host, port=int(port),
