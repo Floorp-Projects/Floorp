@@ -314,7 +314,8 @@ let DebuggerController = {
    * away old scripts and get sources again.
    */
   reconfigureThread: function(aUseSourceMaps) {
-    this.client.reconfigureThread(aUseSourceMaps, (aResponse) => {
+    this.client.reconfigureThread({ useSourceMaps: aUseSourceMaps },
+                                  (aResponse) => {
       if (aResponse.error) {
         let msg = "Couldn't reconfigure thread: " + aResponse.message;
         Cu.reportError(msg);
