@@ -8,7 +8,7 @@
  * JS bytecode generation.
  */
 
-#include "frontend/BytecodeEmitter-inl.h"
+#include "frontend/BytecodeEmitter.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
@@ -1739,6 +1739,12 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext *cx)
             compileAndGoGlobal = &script->global();
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
     }
+}
+
+inline TokenStream *
+BytecodeEmitter::tokenStream()
+{
+    return &parser->tokenStream;
 }
 
 bool
