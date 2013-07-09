@@ -489,11 +489,17 @@ stage-modules: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
 
+CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
+
 stage-cppunittests:
 	$(NSINSTALL) -D $(PKG_STAGE)/cppunittests
+ifdef OBJCOPY
+	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) --strip-unneeded $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
+else
+	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
+endif
 	$(NSINSTALL) $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
-	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
 
 MARIONETTE_DIR=$(PKG_STAGE)/marionette
 stage-marionette: make-stage-dir
