@@ -73,7 +73,6 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-#include "gc/FindSCCs-inl.h"
 #include "vm/String-inl.h"
 #include "vm/Stack-inl.h"
 

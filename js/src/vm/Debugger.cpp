@@ -22,7 +22,6 @@
 #include "jsgcinlines.h"
 #include "jsopcodeinlines.h"
 
-#include "gc/FindSCCs-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
