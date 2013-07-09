@@ -319,18 +319,11 @@ let FullZoomHelper = {
         deferred.resolve();
     }, true);
 
-    // Don't select background tabs.  That way tests can use this method on
-    // background tabs without having them automatically be selected.  Just wait
-    // for the zoom to change on the current tab if it's `tab`.
-    if (tab == gBrowser.selectedTab) {
-      this.selectTabAndWaitForLocationChange(null).then(function () {
-        didZoom = true;
-        if (didLoad)
-          deferred.resolve();
-      });
-    }
-    else
+    this.selectTabAndWaitForLocationChange(null).then(function () {
       didZoom = true;
+      if (didLoad)
+        deferred.resolve();
+    });
 
     tab.linkedBrowser.loadURI(url);
 
