@@ -28,6 +28,8 @@
 namespace js {
 namespace frontend {
 
+// Values of this type are used to index into arrays such as isExprEnding[],
+// so the first value must be zero.
 enum TokenKind {
     TOK_ERROR = 0,                 /* well-known as the only code < EOF */
     TOK_EOF,                       /* end of file */
@@ -617,6 +619,10 @@ class MOZ_STACK_CLASS TokenStream
         return false;
     }
 
+    bool nextTokenEndsExpr() {
+        return isExprEnding[peekToken()];
+    }
+
     class MOZ_STACK_CLASS Position {
       public:
         /*
@@ -910,9 +916,10 @@ class MOZ_STACK_CLASS TokenStream
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    int8_t              oneCharTokens[128];  /* table of one-char tokens */
+    int8_t              oneCharTokens[128];  /* table of one-char tokens, indexed by 7-bit char */
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
+    uint8_t             isExprEnding[TOK_LIMIT]; /* which tokens definitely terminate exprs? */
     ExclusiveContext    *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */

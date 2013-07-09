@@ -5161,10 +5161,32 @@ Parser<ParseHandler>::assignExpr()
 {
     JS_CHECK_RECURSION(context, return null());
 
-    if (tokenStream.matchToken(TOK_YIELD, TSF_OPERAND))
+    // It's very common at this point to have a "detectably simple" expression,
+    // i.e. a name/number/string token followed by one of the following tokens
+    // that obviously isn't part of an expression: , ; : ) ] }
+    //
+    // (In Parsemark this happens 81.4% of the time;  in code with large
+    // numeric arrays, such as some Kraken benchmarks, it happens more often.)
+    //
+    // In such cases, we can avoid the full expression parsing route through
+    // assignExpr(), condExpr1(), orExpr1(), unaryExpr(), memberExpr(), and
+    // primaryExpr().
+
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
+
+    if (tt == TOK_NAME && tokenStream.nextTokenEndsExpr())
+        return identifierName();
+
+    if (tt == TOK_NUMBER && tokenStream.nextTokenEndsExpr())
+        return newNumber(tokenStream.currentToken());
+
+    if (tt == TOK_STRING && tokenStream.nextTokenEndsExpr())
+        return stringLiteral();
+
+    if (tt == TOK_YIELD)
         return returnStatementOrYieldExpression();
-    if (tokenStream.hadError())
-        return null();
+
+    tokenStream.ungetToken();
 
     // Save the tokenizer state in case we find an arrow function and have to
     // rewind.

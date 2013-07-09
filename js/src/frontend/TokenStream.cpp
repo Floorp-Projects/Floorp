@@ -348,6 +348,15 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     maybeStrSpecial[unsigned(LINE_SEPARATOR & 0xff)] = true;
     maybeStrSpecial[unsigned(PARA_SEPARATOR & 0xff)] = true;
     maybeStrSpecial[unsigned(EOF & 0xff)] = true;
+
+    /* See Parser::assignExpr() for an explanation of isExprEnding[]. */
+    memset(isExprEnding, 0, sizeof(isExprEnding));
+    isExprEnding[TOK_COMMA] = 1;
+    isExprEnding[TOK_SEMI]  = 1;
+    isExprEnding[TOK_COLON] = 1;
+    isExprEnding[TOK_RP]    = 1;
+    isExprEnding[TOK_RB]    = 1;
+    isExprEnding[TOK_RC]    = 1;
 }
 
 #ifdef _MSC_VER
