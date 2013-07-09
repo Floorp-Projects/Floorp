@@ -21,33 +21,17 @@ this.AboutHomeUtils = {
   /**
    * Returns an object containing the name and searchURL of the original default
    * search engine.
-   *
-   * @param callback
-   *        Invoked once information is available, gets an object with "name"
-   *        and "searchURL" properties, or null in case of failure.
    */
-  getSearchEngineInfo: function (callback) {
-    if (!callback)
-      throw new Error("Must pass a callback to getSearchEngineInfo");
-
-    Services.search.init(function (status) {
-      if (!Components.isSuccessCode(status)) {
-        callback(null);
-        return;
-      }
-
-      let defaultEngine = Services.search.defaultEngine;
-      let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
-      if (submission.postData) {
-        Components.utils.reportError("Home page does not support POST search engines.");
-        callback(null);
-        return;
-      }
-
-      callback({
-        name: defaultEngine.name,
-        searchURL: submission.uri.spec
-      });
+  get defaultSearchEngine() {
+    let defaultEngine = Services.search.defaultEngine;
+    let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
+    if (submission.postData) {
+      throw new Error("Home page does not support POST search engines.");
+    }
+  
+    return Object.freeze({
+      name: defaultEngine.name,
+      searchURL: submission.uri.spec
     });
   },
 
