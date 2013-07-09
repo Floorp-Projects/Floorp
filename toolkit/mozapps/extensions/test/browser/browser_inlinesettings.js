@@ -250,7 +250,10 @@ add_test(function() {
     EventUtils.synthesizeKey("a", {}, gManagerWindow);
     EventUtils.synthesizeKey("r", {}, gManagerWindow);
     is(input.value, "bar", "Text box should have updated value");
-    is(Services.prefs.getCharPref("extensions.inlinesettings1.string"), "bar", "String pref should have been updated");
+    EventUtils.synthesizeKey("/", {}, gManagerWindow);
+    is(input.value, "bar/", "Text box should have updated value");
+    is(gManagerWindow.document.getBindingParent(gManagerWindow.document.activeElement), input, "Search box should not have focus");
+    is(Services.prefs.getCharPref("extensions.inlinesettings1.string"), "bar/", "String pref should have been updated");
 
     ok(!settings[4].hasAttribute("first-row"), "Not the first row");
     var input = settings[4].firstElementChild;
