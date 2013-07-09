@@ -224,6 +224,7 @@
  "dom/tests/mochitest/sessionstorage/test_sessionStorageHttpHttps.html": "TIMED_OUT",
  "dom/tests/mochitest/webapps/test_bug_779982.html": "Bug 793211",
  "dom/tests/mochitest/whatwg/test_bug500328.html": "TIMED_OUT",
+ "dom/workers/test/test_closeOnGC.html": "bug 881404",
  "dom/workers/test/test_xhr_timeout.html": "bug 798220",
  "editor/composer/test/test_bug389350.html": "",
  "editor/libeditor/base/tests/test_bug408231.html": "",
