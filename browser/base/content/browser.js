@@ -823,7 +823,8 @@ var gBrowserInit = {
     // setup history swipe animation
     gHistorySwipeAnimation.init();
 
-    if (window.opener && !window.opener.closed) {
+    if (window.opener && !window.opener.closed &&
+        PrivateBrowsingUtils.isWindowPrivate(window) == PrivateBrowsingUtils.isWindowPrivate(window.opener)) {
       let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
       // If the opener had a sidebar, open the same sidebar in our window.
       // The opener can be the hidden window too, if we're coming from the state

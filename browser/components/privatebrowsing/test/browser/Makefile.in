@@ -45,6 +45,7 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_popupblocker.js \
 		browser_privatebrowsing_protocolhandler.js \
 		browser_privatebrowsing_protocolhandler_page.html \
+    browser_privatebrowsing_sidebar.js \
 		browser_privatebrowsing_theming.js \
 		browser_privatebrowsing_ui.js \
 		browser_privatebrowsing_urlbarfocus.js \
