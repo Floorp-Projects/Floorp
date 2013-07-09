@@ -26,7 +26,6 @@
 
 #include "ion/IonFrameIterator-inl.h"
 #include "ion/IonFrames-inl.h"
-#include "ion/PcScriptCache-inl.h"
 #include "vm/Probes-inl.h"
 
 namespace js {
