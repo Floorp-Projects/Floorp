@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -39,7 +40,7 @@ public class HomeListView extends ListView
     }
 
     public HomeListView(Context context, AttributeSet attrs) {
-        this(context, attrs, android.R.attr.listViewStyle);
+        this(context, attrs, R.attr.homeListViewStyle);
     }
 
     public HomeListView(Context context, AttributeSet attrs, int defStyle) {

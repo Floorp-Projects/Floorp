@@ -45,6 +45,7 @@
         <item name="bookmarkThumbnailViewStyle">@style/Widget.BookmarkThumbnailView</item>
         <item name="topBookmarkItemViewStyle">@style/Widget.TopBookmarkItemView</item>
         <item name="topBookmarksViewStyle">@style/Widget.TopBookmarksView</item>
+        <item name="homeListViewStyle">@style/Widget.HomeListView</item>
     </style>
 
 </resources>
