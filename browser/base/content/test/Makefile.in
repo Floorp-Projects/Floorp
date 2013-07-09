@@ -183,6 +183,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug822367.js \
                  browser_bug832435.js \
                  browser_bug839103.js \
+                 browser_bug882977.js \
                  browser_canonizeURL.js \
                  browser_clearplugindata_noage.html \
                  browser_clearplugindata.html \
