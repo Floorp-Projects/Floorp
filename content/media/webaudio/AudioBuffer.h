@@ -82,12 +82,6 @@ public:
   JSObject* GetChannelData(JSContext* aJSContext, uint32_t aChannel,
                            ErrorResult& aRv);
 
-  JSObject* GetChannelData(uint32_t aChannel) const {
-    // Doesn't perform bounds checking
-    MOZ_ASSERT(aChannel < mJSChannels.Length());
-    return mJSChannels[aChannel];
-  }
-
   /**
    * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
    * Can return null if there is no data.
