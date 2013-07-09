@@ -119,7 +119,7 @@ const SEVERITY_CLASS_FRAGMENTS = [
 // division of message type into "category" and "severity".
 const MESSAGE_PREFERENCE_KEYS = [
 //  Error         Warning   Info    Log
-  [ "network",    null,         null,   "networkinfo", ],  // Network
+  [ "network",    "netwarn",    null,   "networkinfo", ],  // Network
   [ "csserror",   "cssparser",  null,   null,          ],  // CSS
   [ "exception",  "jswarn",     null,   "jslog",       ],  // JS
   [ "error",      "warn",       "info", "log",         ],  // Web Developer
@@ -559,7 +559,7 @@ WebConsoleFrame.prototype = {
   {
     let prefs = ["network", "networkinfo", "csserror", "cssparser", "exception",
                  "jswarn", "jslog", "error", "info", "warn", "log", "secerror",
-                 "secwarn"];
+                 "secwarn", "netwarn"];
     for (let pref of prefs) {
       this.filterPrefs[pref] = Services.prefs
                                .getBoolPref(this._filterPrefsPrefix + pref);
