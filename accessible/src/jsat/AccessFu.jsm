@@ -509,7 +509,7 @@ var Output = {
     for each (let androidEvent in aDetails) {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
-        androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
+        androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser, true);
       if (androidEvent.eventType === ANDROID_VIEW_TEXT_CHANGED) {
         androidEvent.brailleText = this.brailleState.update(androidEvent.text);
       }
@@ -530,7 +530,7 @@ var Output = {
     Logger.debug('Braille output: ' + aDetails.text);
   },
 
-  _adjustBounds: function(aJsonBounds, aBrowser) {
+  _adjustBounds: function(aJsonBounds, aBrowser, aIncludeZoom) {
     let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                           aJsonBounds.right - aJsonBounds.left,
                           aJsonBounds.bottom - aJsonBounds.top);
@@ -548,8 +548,13 @@ var Output = {
       offset.top += clientRect.top + win.mozInnerScreenY;
     }
 
-    return bounds.scale(scale, scale).translate(offset.left, offset.top).
-      scale(vp.zoom, vp.zoom).expandToIntegers();
+    let newBounds = bounds.scale(scale, scale).translate(offset.left, offset.top);
+
+    if (aIncludeZoom) {
+      newBounds = newBounds.scale(vp.zoom, vp.zoom);
+    }
+
+    return newBounds.expandToIntegers();
   }
 };
 
@@ -579,6 +584,9 @@ var Input = {
         this._handleKeypress(aEvent);
         break;
       case 'mozAccessFuGesture':
+        let vp = Utils.getViewport(Utils.win) || { zoom: 1.0 };
+        aEvent.detail.x *= vp.zoom;
+        aEvent.detail.y *= vp.zoom;
         this._handleGesture(aEvent.detail);
         break;
       }
