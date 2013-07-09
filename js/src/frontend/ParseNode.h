@@ -51,7 +51,19 @@ class UpvarCookie
     uint16_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
 
     // This fails and issues an error message if newLevel is too large.
-    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot);
+    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot) {
+        // This is an unsigned-to-uint16_t conversion, test for too-high
+        // values.  In practice, recursion in Parser and/or BytecodeEmitter
+        // will blow the stack if we nest functions more than a few hundred
+        // deep, so this will never trigger.  Oh well.
+        if (newLevel >= FREE_LEVEL) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
+            return false;
+        }
+        level_ = newLevel;
+        slot_ = newSlot;
+        return true;
+    }
 
     void makeFree() {
         level_ = FREE_LEVEL;
