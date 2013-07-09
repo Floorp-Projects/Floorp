@@ -16,15 +16,25 @@ using namespace mozilla::image;
 namespace mozilla {
 namespace image {
 
-FrameBlender::FrameBlender()
- : mAnim(nullptr)
-{}
+FrameBlender::FrameBlender(FrameSequence* aSequenceToUse /* = nullptr */)
+ : mFrames(aSequenceToUse)
+ , mAnim(nullptr)
+{
+  if (!mFrames) {
+    mFrames = new FrameSequence();
+  }
+}
 
 FrameBlender::~FrameBlender()
 {
-  ClearFrames();
-
   delete mAnim;
+}
+
+already_AddRefed<FrameSequence>
+FrameBlender::GetFrameSequence()
+{
+  nsRefPtr<FrameSequence> seq(mFrames);
+  return seq.forget();
 }
 
 imgFrame*
@@ -32,11 +42,11 @@ FrameBlender::GetFrame(uint32_t framenum) const
 {
   if (!mAnim) {
     NS_ASSERTION(framenum == 0, "Don't ask for a frame > 0 if we're not animated!");
-    return mFrames.GetFrame(0);
+    return mFrames->GetFrame(0);
   }
   if (mAnim->lastCompositedFrameIndex == int32_t(framenum))
     return mAnim->compositingFrame;
-  return mFrames.GetFrame(framenum);
+  return mFrames->GetFrame(framenum);
 }
 
 imgFrame*
@@ -44,16 +54,16 @@ FrameBlender::RawGetFrame(uint32_t framenum) const
 {
   if (!mAnim) {
     NS_ASSERTION(framenum == 0, "Don't ask for a frame > 0 if we're not animated!");
-    return mFrames.GetFrame(0);
+    return mFrames->GetFrame(0);
   }
 
-  return mFrames.GetFrame(framenum);
+  return mFrames->GetFrame(framenum);
 }
 
 uint32_t
 FrameBlender::GetNumFrames() const
 {
-  return mFrames.GetNumFrames();
+  return mFrames->GetNumFrames();
 }
 
 void
@@ -61,20 +71,21 @@ FrameBlender::RemoveFrame(uint32_t framenum)
 {
   NS_ABORT_IF_FALSE(framenum < GetNumFrames(), "Deleting invalid frame!");
 
-  mFrames.RemoveFrame(framenum);
+  mFrames->RemoveFrame(framenum);
 }
 
 void
 FrameBlender::ClearFrames()
 {
-  mFrames.ClearFrames();
+  // Forget our old frame sequence, letting whoever else has it deal with it.
+  mFrames = new FrameSequence();
 }
 
 void
 FrameBlender::InsertFrame(uint32_t framenum, imgFrame* aFrame)
 {
   NS_ABORT_IF_FALSE(framenum <= GetNumFrames(), "Inserting invalid frame!");
-  mFrames.InsertFrame(framenum, aFrame);
+  mFrames->InsertFrame(framenum, aFrame);
   if (GetNumFrames() > 1) {
     EnsureAnimExists();
   }
@@ -91,9 +102,9 @@ FrameBlender::SwapFrame(uint32_t framenum, imgFrame* aFrame)
   if (mAnim && mAnim->lastCompositedFrameIndex == int32_t(framenum)) {
     ret = mAnim->compositingFrame.Forget();
     mAnim->lastCompositedFrameIndex = -1;
-    nsAutoPtr<imgFrame> toDelete(mFrames.SwapFrame(framenum, aFrame));
+    nsAutoPtr<imgFrame> toDelete(mFrames->SwapFrame(framenum, aFrame));
   } else {
-    ret = mFrames.SwapFrame(framenum, aFrame);
+    ret = mFrames->SwapFrame(framenum, aFrame);
   }
 
   return ret;
@@ -124,8 +135,8 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     return false;
   }
 
-  const FrameDataPair& prevFrame = mFrames.GetFrame(aPrevFrameIndex);
-  const FrameDataPair& nextFrame = mFrames.GetFrame(aNextFrameIndex);
+  const FrameDataPair& prevFrame = mFrames->GetFrame(aPrevFrameIndex);
+  const FrameDataPair& nextFrame = mFrames->GetFrame(aNextFrameIndex);
   if (!prevFrame.HasFrameData() || !nextFrame.HasFrameData()) {
     return false;
   }
@@ -541,7 +552,7 @@ size_t
 FrameBlender::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
                                                       MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = mFrames.SizeOfDecodedWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
+  size_t n = mFrames->SizeOfDecodedWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
 
   if (mAnim) {
     if (mAnim->compositingFrame) {
