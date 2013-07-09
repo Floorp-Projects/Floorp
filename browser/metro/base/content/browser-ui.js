@@ -1041,12 +1041,12 @@ var BrowserUI = {
       return;
     }
 
-    if (ContextUI.dismiss()) {
+    if (Browser.selectedTab.isLoading()) {
+      Browser.selectedBrowser.stop();
       return;
     }
 
-    if (Browser.selectedTab.isLoading()) {
-      Browser.selectedBrowser.stop();
+    if (ContextUI.dismiss()) {
       return;
     }
   },
