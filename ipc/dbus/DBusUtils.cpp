@@ -647,5 +647,15 @@ int dbus_returns_uint32(DBusMessage *reply)
   return ret;
 }
 
+void DBusReplyHandler::Callback(DBusMessage* aReply, void* aData)
+{
+  MOZ_ASSERT(aData);
+
+  nsRefPtr<DBusReplyHandler> handler =
+    already_AddRefed<DBusReplyHandler>(static_cast<DBusReplyHandler*>(aData));
+
+  handler->Handle(aReply);
+}
+
 }
 }
