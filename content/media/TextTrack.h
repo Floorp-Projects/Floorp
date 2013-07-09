@@ -59,6 +59,10 @@ public:
   {
     aType = mType;
   }
+  void GetId(nsAString& aId) const
+  {
+    aId = mId;
+  }
 
   TextTrackMode Mode() const
   {
@@ -98,6 +102,7 @@ private:
   nsString mLabel;
   nsString mLanguage;
   nsString mType;
+  nsString mId;
   TextTrackMode mMode;
 
   nsRefPtr<TextTrackCueList> mCueList;
