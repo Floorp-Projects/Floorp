@@ -350,8 +350,11 @@ class InterpreterFrames {
     ~InterpreterFrames();
 
     /* If this js::Interpret frame is running |script|, enable interrupts. */
-    inline void enableInterruptsIfRunning(JSScript *script);
-    inline void enableInterruptsUnconditionally() { enabler.enable(); }
+    void enableInterruptsIfRunning(JSScript *script) {
+        if (regs->fp()->script() == script)
+            enabler.enable();
+    }
+    void enableInterruptsUnconditionally() { enabler.enable(); }
 
     InterpreterFrames *older;
 
@@ -508,6 +511,14 @@ InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, Handl
 bool
 InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleValue idval,
                           HandleValue val);
+
+inline bool
+SetConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName name, HandleValue rval)
+{
+    return JSObject::defineProperty(cx, varobj, name, rval,
+                                    JS_PropertyStub, JS_StrictPropertyStub,
+                                    JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+}
 
 }  /* namespace js */
 
