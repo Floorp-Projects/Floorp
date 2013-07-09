@@ -32,7 +32,8 @@ public:
       mMountPoint(aMountPoint),
       mState(aState),
       mMountGeneration(aMountGeneration),
-      mMountLocked(false)
+      mMountLocked(false),
+      mIsFake(false)
   {
   }
 
@@ -42,7 +43,8 @@ public:
     : mName(aName),
       mState(STATE_INIT),
       mMountGeneration(-1),
-      mMountLocked(true)  // Needs to agree with Volume::Volume
+      mMountLocked(true),  // Needs to agree with Volume::Volume
+      mIsFake(false)
   {
   }
 
@@ -72,11 +74,16 @@ private:
   void UpdateMountLock(const nsAString& aMountLockState);
   void UpdateMountLock(bool aMountLocked);
 
+  bool IsFake() const                 { return mIsFake; }
+  void SetIsFake(bool aIsFake)        { mIsFake = aIsFake; }
+  void SetState(int32_t aState);
+
   nsString mName;
   nsString mMountPoint;
   int32_t  mState;
   int32_t  mMountGeneration;
   bool     mMountLocked;
+  bool     mIsFake;
 };
 
 } // system
