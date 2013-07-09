@@ -38,6 +38,7 @@
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
 #include "gfxPlatform.h"
+#include "mozilla/gfx/2D.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1029,6 +1030,11 @@ BasicLayerManager* nsBaseWidget::CreateBasicLayerManager()
 CompositorChild* nsBaseWidget::GetRemoteRenderer()
 {
   return mCompositorChild;
+}
+
+TemporaryRef<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
+{
+  return nullptr;
 }
 
 //-------------------------------------------------------------------------

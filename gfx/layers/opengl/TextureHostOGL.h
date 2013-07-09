@@ -26,7 +26,7 @@ class CompositorOGL;
 /*
  * TextureHost implementations for the OpenGL backend.
  *
- * Note that it is important to becareful about the ownership model with
+ * Note that it is important to be careful about the ownership model with
  * the OpenGL backend, due to some widget limitation on Linux: before
  * the nsBaseWidget associated with our OpenGL context has been completely
  * deleted, every resource belonging to the OpenGL context MUST have been
