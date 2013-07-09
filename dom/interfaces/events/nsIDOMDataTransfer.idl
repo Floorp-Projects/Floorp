@@ -8,7 +8,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[scriptable, builtinclass, uuid(4ba241dd-a964-4077-bc30-515a657772e4)]
+[scriptable, builtinclass, uuid(c71180e3-298b-4fbb-9ccb-82c822474741)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -71,7 +71,7 @@ interface nsIDOMDataTransfer : nsISupports
    * item, in the same order the data was added. An empty list will be
    * returned if no data was added.
    */
-  readonly attribute nsIDOMDOMStringList types;
+  readonly attribute nsISupports types;
 
   /**
    * Remove the data associated with a given format. If format is empty or not
@@ -153,7 +153,7 @@ interface nsIDOMDataTransfer : nsISupports
    * at the specified index. If the index is not in the range from 0 to
    * itemCount - 1, an empty string list is returned.
    */
-  nsIDOMDOMStringList mozTypesAt(in unsigned long index);
+  nsISupports mozTypesAt(in unsigned long index);
 
   /**
    * Remove the data associated with the given format for an item at the

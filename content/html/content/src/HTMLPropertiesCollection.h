@@ -35,13 +35,14 @@ class PropertyStringList : public DOMStringList
 {
 public:
   PropertyStringList(HTMLPropertiesCollection* aCollection);
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(PropertyStringList)
-  NS_DECL_NSIDOMDOMSTRINGLIST
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PropertyStringList, DOMStringList)
 
   bool ContainsInternal(const nsAString& aString);
 
 protected:
+  virtual void EnsureFresh() MOZ_OVERRIDE;
+
   nsRefPtr<HTMLPropertiesCollection> mCollection;
 };
 
