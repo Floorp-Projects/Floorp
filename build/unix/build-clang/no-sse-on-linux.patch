@@ -1,13 +1,13 @@
 Index: lib/Driver/Tools.cpp
 ===================================================================
---- lib/Driver/Tools.cpp	(revision 167750)
-+++ lib/Driver/Tools.cpp	(working copy)
-@@ -1179,7 +1179,7 @@
-       else if (getToolChain().getArch() == llvm::Triple::x86)
-         // All x86 devices running Android have core2 as their common
-         // denominator. This makes a better choice than pentium4.
--        CPUName = isAndroid ? "core2" : "pentium4";
-+        CPUName = "i686";
-     }
-   }
- 
+--- lib/Driver/Tools.cpp        (revision 181515)
++++ lib/Driver/Tools.cpp        (working copy)
+@@ -1245,7 +1245,7 @@
+   // All x86 devices running Android have core2 as their common
+   // denominator. This makes a better choice than pentium4.
+   if (Triple.getEnvironment() == llvm::Triple::Android)
+-    return "core2";
++    return "686";
+
+   // Fallback to p4.
+   return "pentium4";
