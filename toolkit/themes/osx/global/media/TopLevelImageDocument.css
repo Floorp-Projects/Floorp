@@ -7,7 +7,7 @@
 
   body {
     color: #eee;
-    background: #222 url("chrome://global/skin/media/imagedoc-darknoise.png");
+    background-image: url("chrome://global/skin/media/imagedoc-darknoise.png");
   }
 
   img.decoded {
