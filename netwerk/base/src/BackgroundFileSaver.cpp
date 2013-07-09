@@ -25,9 +25,9 @@ namespace net {
 //// Globals
 
 /**
- * Buffer size for writing to the output file.
+ * Buffer size for writing to the output file or reading from the input file.
  */
-#define BUFFERED_OUTPUT_SIZE (1024 * 32)
+#define BUFFERED_IO_SIZE (1024 * 32)
 
 /**
  * When this upper limit is reached, the original request is suspended.
@@ -82,6 +82,7 @@ BackgroundFileSaver::BackgroundFileSaver()
 , mFinishRequested(false)
 , mComplete(false)
 , mStatus(NS_OK)
+, mAppend(false)
 , mAssignedTarget(nullptr)
 , mAssignedTargetKeepPartial(false)
 , mAsyncCopyContext(nullptr)
@@ -159,6 +160,18 @@ NS_IMETHODIMP
 BackgroundFileSaver::SetObserver(nsIBackgroundFileSaverObserver *aObserver)
 {
   mObserver = aObserver;
+  return NS_OK;
+}
+
+// Called on the control thread.
+NS_IMETHODIMP
+BackgroundFileSaver::EnableAppend()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
+
+  MutexAutoLock lock(mLock);
+  mAppend = true;
+
   return NS_OK;
 }
 
@@ -364,16 +377,17 @@ BackgroundFileSaver::ProcessStateChange()
   nsCOMPtr<nsIFile> target;
   bool targetKeepPartial;
   bool sha256Enabled = false;
+  bool append = false;
   {
     MutexAutoLock lock(mLock);
 
     target = mAssignedTarget;
     targetKeepPartial = mAssignedTargetKeepPartial;
+    sha256Enabled = mSha256Enabled;
+    append = mAppend;
 
     // From now on, another attention event needs to be posted if state changes.
     mWorkerThreadAttentionRequested = false;
-
-    sha256Enabled = mSha256Enabled;
   }
 
   // The target can only be null if it has never been assigned.  In this case,
@@ -382,13 +396,20 @@ BackgroundFileSaver::ProcessStateChange()
     return NS_OK;
   }
 
-  // We will append to the target file only if we already started writing it.
-  bool equalToCurrent = false;
-  int32_t creationIoFlags = PR_CREATE_FILE | PR_TRUNCATE;
-  if (mActualTarget) {
-    creationIoFlags = PR_APPEND;
+  bool isContinuation = !!mActualTarget;
 
-    // Verify whether we have actually been instructed to use a different file.
+  // We will append to the initial target file only if it was requested by the
+  // caller, but we'll always append on subsequent accesses to the target file.
+  int32_t creationIoFlags;
+  if (isContinuation) {
+    creationIoFlags = PR_APPEND;
+  } else {
+    creationIoFlags = (append ? PR_APPEND : PR_TRUNCATE) | PR_CREATE_FILE;
+  }
+
+  // Verify whether we have actually been instructed to use a different file.
+  bool equalToCurrent = false;
+  if (isContinuation) {
     rv = mActualTarget->Equals(target, &equalToCurrent);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!equalToCurrent)
@@ -440,22 +461,71 @@ BackgroundFileSaver::ProcessStateChange()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // The pending rename operation might be the last task before finishing.
-  if (CheckCompletion()) {
-    return NS_OK;
-  }
+  if (isContinuation) {
+    // The pending rename operation might be the last task before finishing. We
+    // may return here only if we have already created the target file.
+    if (CheckCompletion()) {
+      return NS_OK;
+    }
 
-  // Even if the operation did not complete, the pipe input stream may be empty
-  // and may have been closed already.  We detect this case using the Available
-  // property, because it never returns an error if there is more data to be
-  // consumed.  If the pipe input stream is closed, we just exit and wait for
-  // more calls like SetTarget or Finish to be invoked on the control thread.
-  // However, we still truncate the file if we are expected to do that.
-  if (creationIoFlags == PR_APPEND) {
+    // Even if the operation did not complete, the pipe input stream may be
+    // empty and may have been closed already.  We detect this case using the
+    // Available property, because it never returns an error if there is more
+    // data to be consumed.  If the pipe input stream is closed, we just exit
+    // and wait for more calls like SetTarget or Finish to be invoked on the
+    // control thread.  However, we still truncate the file or create the
+    // initial digest context if we are expected to do that.
     uint64_t available;
     rv = mPipeInputStream->Available(&available);
     if (NS_FAILED(rv)) {
       return NS_OK;
+    }
+  }
+
+  // Create the digest context if requested and NSS hasn't been shut down.
+  if (sha256Enabled && !mDigestContext) {
+    nsNSSShutDownPreventionLock lock;
+    if (!isAlreadyShutDown()) {
+      mDigestContext =
+        PK11_CreateDigestContext(static_cast<SECOidTag>(SEC_OID_SHA256));
+      NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
+    }
+  }
+
+  // When we are requested to append to an existing file, we should read the
+  // existing data and ensure we include it as part of the final hash.
+  if (append && !isContinuation) {
+    nsCOMPtr<nsIInputStream> inputStream;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream),
+                                    mActualTarget,
+                                    PR_RDONLY | nsIFile::OS_READAHEAD);
+    if (rv != NS_ERROR_FILE_NOT_FOUND) {
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      char buffer[BUFFERED_IO_SIZE];
+      while (true) {
+        uint32_t count;
+        rv = inputStream->Read(buffer, BUFFERED_IO_SIZE, &count);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (count == 0) {
+          // We reached the end of the file.
+          break;
+        }
+
+        nsNSSShutDownPreventionLock lock;
+        if (isAlreadyShutDown()) {
+          return NS_ERROR_NOT_AVAILABLE;
+        }
+
+        nsresult rv = MapSECStatus(PK11_DigestOp(mDigestContext,
+                                                 uint8_t_ptr_cast(buffer),
+                                                 count));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      rv = inputStream->Close();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -466,24 +536,12 @@ BackgroundFileSaver::ProcessStateChange()
                                    PR_WRONLY | creationIoFlags, 0600);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  outputStream = NS_BufferOutputStream(outputStream, BUFFERED_OUTPUT_SIZE);
+  outputStream = NS_BufferOutputStream(outputStream, BUFFERED_IO_SIZE);
   if (!outputStream) {
     return NS_ERROR_FAILURE;
   }
 
-  // Wrap the output stream in a hashing stream if hashing is enabled and NSS
-  // hasn't been shut down.
-  bool isShutDown = false;
-  if (sha256Enabled && !mDigestContext) {
-    nsNSSShutDownPreventionLock lock;
-    if (!(isShutDown = isAlreadyShutDown())) {
-      mDigestContext =
-        PK11_CreateDigestContext(static_cast<SECOidTag>(SEC_OID_SHA256));
-      NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
-    }
-  }
-  MOZ_ASSERT(!sha256Enabled || mDigestContext || isShutDown,
-             "Hashing enabled but creating digest context didn't work");
+  // Wrap the output stream so that it feeds the digest context if needed.
   if (mDigestContext) {
     // No need to acquire the NSS lock here, DigestOutputStream must acquire it
     // in any case before each asynchronous write. Constructing the
@@ -511,7 +569,7 @@ BackgroundFileSaver::ProcessStateChange()
     }
   }
 
-  // If the operation succeded, we must ensure that we keep this object alive
+  // If the operation succeeded, we must ensure that we keep this object alive
   // for the entire duration of the copy, since only the raw pointer will be
   // provided as the argument of the AsyncCopyCallback function.  We can add the
   // reference now, after NS_AsyncCopy returned, because it always starts
