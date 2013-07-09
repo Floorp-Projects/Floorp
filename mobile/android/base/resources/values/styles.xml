@@ -148,6 +148,10 @@
       <item name="android:gravity">left</item>
     </style>
 
+    <style name="Widget.HomeListView" parent="Widget.ListView">
+        <item name="android:divider">#E7ECF0</item>
+    </style>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
