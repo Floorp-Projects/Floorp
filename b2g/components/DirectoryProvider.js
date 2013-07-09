@@ -61,6 +61,13 @@ DirectoryProvider.prototype = {
       persistent.value = true;
       return file;
     }
+    if (prop == "ProfD") {
+      let file = Cc["@mozilla.org/file/local;1"]
+                  .createInstance(Ci.nsILocalFile);
+      file.initWithPath(LOCAL_DIR+"/tests/profile");
+      persistent.value = true;
+      return file;
+    }
     if (prop == "coreAppsDir") {
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile)
       file.initWithPath("/system/b2g");
