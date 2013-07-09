@@ -550,12 +550,12 @@ Range::lsh(const Range *lhs, int32_t c)
 
     // If the shift doesn't loose bits or shift bits into the sign bit, we
     // can simply compute the correct range by shifting.
-    if (((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
-        ((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
+    if ((int32_t)((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
+        (int32_t)((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
     {
         return new Range(
-            (int64_t)lhs->lower_ << shift,
-            (int64_t)lhs->upper_ << shift);
+            (uint32_t)lhs->lower_ << shift,
+            (uint32_t)lhs->upper_ << shift);
     }
 
     return new Range(INT32_MIN, INT32_MAX);
