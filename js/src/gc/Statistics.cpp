@@ -11,12 +11,12 @@
 
 #include "mozilla/PodOperations.h"
 
-#include "jscntxt.h"
 #include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "prmjtime.h"
 #include "gc/Memory.h"
+#include "vm/Runtime.h"
 
 using namespace js;
 using namespace js::gcstats;
