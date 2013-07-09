@@ -17,12 +17,12 @@ gTests.push({
     let startup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
     PerfTest.declareNumericalResults([
       { value: startup['start'] - startup.process, desc: "start" },
-      { value: startup['main'] - startup.process, desc: "main" },
-      { value: startup['startupCrashDetectionBegin'] - startup.process, desc: "startupCrashDetectionBegin" },
-      { value: startup['firstPaint'] - startup.process, desc: "firstPaint" },
-      { value: startup['sessionRestored'] - startup.process, desc: "sessionRestored" },
-      { value: startup['createTopLevelWindow'] - startup.process, desc: "createTopLevelWindow" },
-      { value: startup['firstLoadURI'] - startup.process, desc: "firstLoadURI" },
+      { value: startup['main'] - startup.process, desc: "main", shareAxis: 0 },
+      { value: startup['startupCrashDetectionBegin'] - startup.process, desc: "startupCrashDetectionBegin", shareAxis: 0 },
+      { value: startup['firstPaint'] - startup.process, desc: "firstPaint", shareAxis: 0 },
+      { value: startup['sessionRestored'] - startup.process, desc: "sessionRestored", shareAxis: 0 },
+      { value: startup['createTopLevelWindow'] - startup.process, desc: "createTopLevelWindow", shareAxis: 0 },
+      { value: startup['firstLoadURI'] - startup.process, desc: "firstLoadURI", shareAxis: 0 },
     ]);
   }
 });
