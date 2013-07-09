@@ -11,6 +11,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "gfxASurface.h"
 #include "imgFrame.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace image {
@@ -141,6 +142,8 @@ class FrameSequence
 public:
 
   ~FrameSequence();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FrameSequence)
 
   /**
    * Get the read-only (frame, data) pair at index aIndex.
