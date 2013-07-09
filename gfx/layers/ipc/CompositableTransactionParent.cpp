@@ -77,7 +77,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         compositable->SetLayer(layer);
       } else {
         // if we reach this branch, it most likely means that async textures
-        // are coming in before we had time to attach the conmpositable to a
+        // are coming in before we had time to attach the compositable to a
         // layer. Don't panic, it is okay in this case. it should not be
         // happening continuously, though.
       }

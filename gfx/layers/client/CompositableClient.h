@@ -24,7 +24,7 @@ class SurfaceDescriptor;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
- * independently of the layer. It is the content side of a ConmpositableClient/
+ * independently of the layer. It is the content side of a CompositableClient/
  * CompositableHost pair.
  *
  * CompositableClient's purpose is to send texture data to the compositor side
