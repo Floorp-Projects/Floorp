@@ -64,8 +64,19 @@ struct GenericParseContext
     // chain (which stops at the top-level or an eval()
     bool parsingWith:1;
 
-    inline GenericParseContext(GenericParseContext *parent, SharedContext *sc);
+    GenericParseContext(GenericParseContext *parent, SharedContext *sc)
+      : parent(parent),
+        sc(sc),
+        funHasReturnExpr(false),
+        funHasReturnVoid(false),
+        parsingForInit(false),
+        parsingWith(parent ? parent->parsingWith : false)
+    {}
 };
+
+template <typename ParseHandler>
+bool
+GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid);
 
 /*
  * The struct ParseContext stores information about the current parsing context,
@@ -217,14 +228,51 @@ struct ParseContext : public GenericParseContext
     // strict before.
     bool            funBecameStrict:1;
 
-    inline ParseContext(Parser<ParseHandler> *prs, GenericParseContext *parent,
-                        SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
-    inline ~ParseContext();
+    ParseContext(Parser<ParseHandler> *prs, GenericParseContext *parent,
+                 SharedContext *sc, unsigned staticLevel, uint32_t bodyid)
+      : GenericParseContext(parent, sc),
+        bodyid(0),           // initialized in init()
+        blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
+        topStmt(NULL),
+        topScopeStmt(NULL),
+        blockChain(prs->context),
+        staticLevel(staticLevel),
+        parenDepth(0),
+        yieldCount(0),
+        blockNode(ParseHandler::null()),
+        decls_(prs->context),
+        args_(prs->context),
+        vars_(prs->context),
+        yieldOffset(0),
+        parserPC(&prs->pc),
+        oldpc(prs->pc),
+        lexdeps(prs->context),
+        funcStmts(NULL),
+        innerFunctions(prs->context),
+        inDeclDestructuring(false),
+        funBecameStrict(false)
+    {
+        prs->pc = this;
+    }
 
-    inline bool init();
+    ~ParseContext() {
+        // |*parserPC| pointed to this object.  Now that this object is about to
+        // die, make |*parserPC| point to this object's parent.
+        JS_ASSERT(*parserPC == this);
+        *parserPC = this->oldpc;
+        js_delete(funcStmts);
+    }
+
+    inline bool init()
+{
+    if (!frontend::GenerateBlockId(this, this->bodyid))
+        return false;
+
+    return decls_.init() && lexdeps.ensureMap(sc->context);
+}
 
     InBlockBool inBlock() const { return InBlockBool(!topStmt || topStmt->type == STMT_BLOCK); }
-    unsigned blockid();
+    unsigned blockid() { return topStmt ? topStmt->blockid : bodyid; }
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at
@@ -233,16 +281,12 @@ struct ParseContext : public GenericParseContext
     //   function f1() { function f2() { } }
     //   if (cond) { function f3() { if (cond) { function f4() { } } } }
     //
-    bool atBodyLevel();
+    bool atBodyLevel() { return !topStmt; }
 
     inline bool useAsmOrInsideUseAsm() const {
         return sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
     }
 };
-
-template <typename ParseHandler>
-bool
-GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid);
 
 template <typename ParseHandler>
 struct BindData;
