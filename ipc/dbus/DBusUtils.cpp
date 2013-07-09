@@ -627,7 +627,6 @@ int dbus_returns_int32(DBusMessage *reply)
     LOG_AND_FREE_DBUS_ERROR_WITH_MSG(&err, reply);
   }
 
-  dbus_message_unref(reply);
   return ret;
 }
 
