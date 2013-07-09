@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(1134f267-7b81-42f2-b64a-6edb91286576)]
+[scriptable, uuid(4b5bd562-bd05-4658-ab0f-f668a9e25fb5)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
@@ -49,6 +49,9 @@ interface nsIVolume : nsISupports
   readonly attribute boolean isMountLocked;
 
   nsIVolumeStat getStats();
+
+  // Whether this is a fake volume.
+  readonly attribute boolean isFake;
 };
 
 %{C++
