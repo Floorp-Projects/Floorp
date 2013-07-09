@@ -2217,10 +2217,9 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   nscoord frameMainSize = flexContainerMainSize +
     axisTracker.GetMarginSizeInMainAxis(aReflowState.mComputedBorderPadding);
 
-  MainAxisPositionTracker mainAxisPosnTracker(this, axisTracker,
-                                              aReflowState, items);
-
-  // First loop: Compute main axis position & cross-axis size of each item
+  // Cross Size Determination - Flexbox spec section 9.4
+  // ===================================================
+  // Calculate the hypothetical cross size of each item:
   for (uint32_t i = 0; i < items.Length(); ++i) {
     FlexItem& curItem = items[i];
 
@@ -2234,8 +2233,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     } else {
       childReflowState.SetComputedHeight(curItem.GetMainSize());
     }
-
-    PositionItemInMainAxis(mainAxisPosnTracker, curItem);
 
     nsresult rv =
       SizeItemInCrossAxis(aPresContext, axisTracker,
@@ -2303,7 +2300,16 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     flexContainerAscent += aReflowState.mComputedBorderPadding.top;
   }
 
-  // Position the items in cross axis, within their line
+  // Main-Axis Alignment - Flexbox spec section 9.5
+  // ==============================================
+  MainAxisPositionTracker mainAxisPosnTracker(this, axisTracker,
+                                              aReflowState, items);
+  for (uint32_t i = 0; i < items.Length(); ++i) {
+    PositionItemInMainAxis(mainAxisPosnTracker, items[i]);
+  }
+
+  // Cross-Axis Alignment - Flexbox spec section 9.6
+  // ===============================================
   for (uint32_t i = 0; i < items.Length(); ++i) {
     PositionItemInCrossAxis(crossAxisPosnTracker.GetPosition(),
                             lineCrossAxisPosnTracker, items[i]);
