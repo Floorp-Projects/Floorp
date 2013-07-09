@@ -54,23 +54,21 @@ public class testJarReader extends BaseTest {
             mAsserter.is(stream, null, "JarReader returned null for a non-existent APK");
         } catch (java.lang.ClassCastException ex) {
             mAsserter.is(false, true, "Error getting OMNIJAR_NAME");
-            return;
         } catch (java.lang.NoSuchFieldException ex) {
             mAsserter.is(false, true, "Error getting field");
-            return;
         } catch (java.lang.ClassNotFoundException ex) {
             mAsserter.is(false, true, "Error getting class");
-            return;
         } catch (java.lang.NoSuchMethodException ex) {
             mAsserter.is(false, true, "Error getting method");
-            return;
         } catch (java.lang.IllegalAccessException ex) {
             mAsserter.is(false, true, "Error calling method");
-            return;
         } catch (java.lang.reflect.InvocationTargetException ex) {
             mAsserter.is(false, true, "Invocation target exception " + ex.getTargetException());
-            return;
         }
+        // This test completes very quickly. If it completes too soon, the
+        // minidumps directory may not be created before the process is
+        // taken down, causing bug 722166.
+        blockForGeckoReady();
     }
 
     private String getData(InputStream stream) {
