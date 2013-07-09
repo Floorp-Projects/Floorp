@@ -1434,7 +1434,7 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        final MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
+        MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -1445,9 +1445,11 @@ abstract public class BrowserApp extends GeckoApp
         });
 
         if (info.icon != null) {
+            final int id = info.id;
             BitmapUtils.getDrawable(this, info.icon, new BitmapUtils.BitmapLoader() {
                 @Override
                 public void onBitmapFound(Drawable d) {
+                    MenuItem item = mMenu.findItem(id);
                     if (d == null) {
                         item.setIcon(R.drawable.ic_menu_addons_filler);
                         return;
