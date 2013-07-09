@@ -99,13 +99,8 @@ class BuildProgressFooter(object):
         self._monitor = monitor
 
     def _clear_lines(self, n):
-        for i in range(n):
-            self._fh.write(self._t.move_x(0))
-            self._fh.write(self._t.clear_eol())
-            self._fh.write(self._t.move_up())
-
-        self._fh.write(self._t.move_down())
-        self._fh.write(self._t.move_x(0))
+        self._fh.write(self._t.move(self._t.height - n, 0))
+        self._fh.write(self._t.clear_eos())
 
     def clear(self):
         """Removes the footer from the current terminal."""
