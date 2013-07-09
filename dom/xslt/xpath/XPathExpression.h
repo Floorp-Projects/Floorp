@@ -8,7 +8,6 @@
 
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMNSXPathExpression.h"
-#include "txIXPathContext.h"
 #include "txResultRecycler.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -47,35 +46,6 @@ private:
     nsAutoPtr<Expr> mExpression;
     nsRefPtr<txResultRecycler> mRecycler;
     nsCOMPtr<nsIDOMDocument> mDocument;
-
-    class EvalContextImpl : public txIEvalContext
-    {
-    public:
-        EvalContextImpl(const txXPathNode& aContextNode,
-                        uint32_t aContextPosition, uint32_t aContextSize,
-                        txResultRecycler* aRecycler)
-            : mContextNode(aContextNode),
-              mContextPosition(aContextPosition),
-              mContextSize(aContextSize),
-              mLastError(NS_OK),
-              mRecycler(aRecycler)
-        {
-        }
-
-        nsresult getError()
-        {
-            return mLastError;
-        }
-
-        TX_DECL_EVAL_CONTEXT;
-
-    private:
-        const txXPathNode& mContextNode;
-        uint32_t mContextPosition;
-        uint32_t mContextSize;
-        nsresult mLastError;
-        nsRefPtr<txResultRecycler> mRecycler;
-    };
 };
 
 } // namespace dom
