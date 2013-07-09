@@ -21,13 +21,15 @@
 
 this.EXPORTED_SYMBOLS = ["OS"];
 
-Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", this);
+let SharedAll = {};
+Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+
+// Boilerplate, to simplify the transition to require()
+let OS = SharedAll.OS;
 
 let LOG = OS.Shared.LOG.bind(OS.Shared, "Controller");
-let isTypedArray = OS.Shared.isTypedArray;
 
-// A simple flag used to control debugging messages.
-let DEBUG = OS.Shared.DEBUG;
+let isTypedArray = OS.Shared.isTypedArray;
 
 // The constructor for file errors.
 let OSError;
@@ -155,23 +157,48 @@ let Scheduler = {
   }
 };
 
-// Update worker's DEBUG flag if it's true.
-if (DEBUG === true) {
-  Scheduler.post("SET_DEBUG", [DEBUG]);
-}
+const PREF_OSFILE_LOG = "toolkit.osfile.log";
+const PREF_OSFILE_LOG_REDIRECT = "toolkit.osfile.log.redirect";
 
-// Define a new getter and setter for OS.Shared.DEBUG to be able to watch
-// for changes to it and update worker's DEBUG accordingly.
-Object.defineProperty(OS.Shared, "DEBUG", {
-    configurable: true,
-    get: function () {
-        return DEBUG;
-    },
-    set: function (newVal) {
-        Scheduler.post("SET_DEBUG", [newVal]);
-        DEBUG = newVal;
-    }
-});
+/**
+ * Safely read a PREF_OSFILE_LOG preference.
+ * Returns a value read or, in case of an error, oldPref or false.
+ *
+ * @param bool oldPref
+ *        An optional value that the DEBUG flag was set to previously.
+ */
+let readDebugPref = function readDebugPref(prefName, oldPref = false) {
+  let pref = oldPref;
+  try {
+    pref = Services.prefs.getBoolPref(prefName);
+  } catch (x) {
+    // In case of an error when reading a pref keep it as is.
+  }
+  // If neither pref nor oldPref were set, default it to false.
+  return pref;
+};
+
+/**
+ * Listen to PREF_OSFILE_LOG changes and update gShouldLog flag
+ * appropriately.
+ */
+Services.prefs.addObserver(PREF_OSFILE_LOG,
+  function prefObserver(aSubject, aTopic, aData) {
+    OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, OS.Shared.DEBUG);
+    Scheduler.post("SET_DEBUG", [OS.Shared.DEBUG]);
+  }, false);
+OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, false);
+
+Services.prefs.addObserver(PREF_OSFILE_LOG_REDIRECT,
+  function prefObserver(aSubject, aTopic, aData) {
+    OS.Shared.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, OS.Shared.TEST);
+  }, false);
+OS.Shared.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
+
+// Update worker's DEBUG flag if it's true.
+if (OS.Shared.DEBUG === true) {
+  Scheduler.post("SET_DEBUG", [true]);
+}
 
 // Observer topics used for monitoring shutdown
 const WEB_WORKERS_SHUTDOWN_TOPIC = "web-workers-shutdown";
