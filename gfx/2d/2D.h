@@ -304,7 +304,7 @@ public:
 
 /*
  * This is the base class for source surfaces. These objects are surfaces
- * which may be used as a source in a SurfacePattern of a DrawSurface call.
+ * which may be used as a source in a SurfacePattern or a DrawSurface call.
  * They cannot be drawn to directly.
  */
 class SourceSurface : public RefCounted<SourceSurface>
