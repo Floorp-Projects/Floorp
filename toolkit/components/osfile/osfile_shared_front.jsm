@@ -14,6 +14,8 @@ if (typeof Components != "undefined") {
 }
 (function(exports) {
 
+exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
+
 let LOG = exports.OS.Shared.LOG.bind(OS.Shared, "Shared front-end");
 
 /**
