@@ -31,7 +31,7 @@ addLoadEvent(function() {
     // The timing at which the audioprocess and ended listeners are called can
     // change, hence the fuzzy equal here.
     var errorRatio = samplesFromSource / (0.5 * context.sampleRate);
-    ok(errorRatio > 0.97 && errorRatio < 1.03,
+    ok(errorRatio > 0.95 && errorRatio < 1.05,
        "Correct number of samples received (expected: " +
        (0.5 * context.sampleRate) + ", actual: " + samplesFromSource + ").");
     SimpleTest.finish();
