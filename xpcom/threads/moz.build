@@ -24,6 +24,7 @@ MODULE = 'xpcom'
 
 EXPORTS += [
     'nsEventQueue.h',
+    'nsMemoryPressure.h',
     'nsProcess.h',
     'nsThread.h',
 ]
@@ -40,6 +41,7 @@ CPP_SOURCES += [
     'TimerThread.cpp',
     'nsEnvironment.cpp',
     'nsEventQueue.cpp',
+    'nsMemoryPressure.cpp',
     'nsProcessCommon.cpp',
     'nsThread.cpp',
     'nsThreadManager.cpp',
