@@ -91,8 +91,13 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
     int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
     uint8_t *data = new uint8_t[stride * aSize.height];
-    memset(data, 0, stride * aSize.height);
-
+#ifdef XP_MACOSX
+    // Workaround a bug in Quartz where drawing an a8 surface to another a8
+    // surface with OPERATOR_SOURCE still requires the destination to be clear.
+    if (format == gfxASurface::ImageFormatA8) {
+      memset(data, 0, stride * aSize.height);
+    }
+#endif
     *aBuffer = MemoryImage((uintptr_t)data, aSize, stride, format);
     return true;
   }
