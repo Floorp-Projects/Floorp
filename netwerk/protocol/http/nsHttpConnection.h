@@ -161,6 +161,11 @@ public:
     void    PrintDiagnostics(nsCString &log);
 
     void    SetTransactionCaps(uint32_t aCaps) { mTransactionCaps = aCaps; }
+
+    // IsExperienced() returns true when the connection has started at least one
+    // non null HTTP transaction of any version.
+    bool    IsExperienced() { return mExperienced; }
+
 private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
@@ -229,6 +234,7 @@ private:
     bool                            mLastTransactionExpectedNoContent;
     bool                            mIdleMonitoring;
     bool                            mProxyConnectInProgress;
+    bool                            mExperienced;
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
