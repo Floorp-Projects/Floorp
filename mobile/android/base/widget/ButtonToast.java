@@ -20,7 +20,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.view.animation.AlphaAnimation;
@@ -28,23 +27,37 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.LinkedList;
+
 import org.mozilla.gecko.R;
 
 public class ButtonToast {
+    private final static String LOGTAG = "GeckoButtonToast";
     private final static int TOAST_DURATION = 5000;
 
-    private View mView;
-    private TextView mMessageView;
-    private Button mButton;
-    private Handler mHideHandler = new Handler();
+    private final View mView;
+    private final TextView mMessageView;
+    private final Button mButton;
+    private final Handler mHideHandler = new Handler();
 
-    private ToastListener mListener;
+    private final ToastListener mListener;
+    private final LinkedList<Toast> mQueue = new LinkedList<Toast>();
+    private Toast mCurrentToast;
 
     // State objects
-    private CharSequence mToken;
-    private CharSequence mButtonMessage;
-    private int mButtonIcon;
-    private CharSequence mMessage;
+    private static class Toast {
+        public final CharSequence token;
+        public final CharSequence buttonMessage;
+        public final int buttonIcon;
+        public final CharSequence message;
+
+        public Toast(CharSequence aMessage, CharSequence aButtonMessage, int aIcon, CharSequence aToken) {
+            message = aMessage;
+            buttonMessage = aButtonMessage;
+            buttonIcon = aIcon;
+            token = aToken;
+        }
+    }
 
     public interface ToastListener {
         void onButtonClicked(CharSequence token);
@@ -59,6 +72,10 @@ public class ButtonToast {
         mButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        Toast t = mCurrentToast;
+                        if (t == null)
+                            return;
+
                         hide(false);
                         mListener.onButtonClicked(mToken);
                     }
@@ -70,13 +87,22 @@ public class ButtonToast {
     public void show(boolean immediate, CharSequence message,
                      CharSequence buttonMessage, int buttonIcon,
                      CharSequence token) {
-        mToken = token;
-        mMessage = message;
-        mButtonMessage = buttonMessage;
-        mMessageView.setText(mMessage);
+        Toast t = new Toast(message, buttonMessage, buttonIcon, token);
+        show(t, immediate);
+    }
 
-        mButton.setText(buttonMessage);
-        mButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, buttonIcon, 0);
+    private void show(Toast t, boolean immediate) {
+        // If we're already showing a toast, add this one to the queue to show later
+        if (mView.getVisibility() == View.VISIBLE) {
+            mQueue.offer(t);
+            return;
+        }
+
+        mCurrentToast = t;
+
+        mMessageView.setText(t.message);
+        mButton.setText(t.buttonMessage);
+        mButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, t.buttonIcon, 0);
 
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
@@ -92,23 +118,24 @@ public class ButtonToast {
     }
 
     public void hide(boolean immediate) {
+        mCurrentToast = null;
         mHideHandler.removeCallbacks(mHideRunnable);
         int duration = immediate ? 0 : mView.getResources().getInteger(android.R.integer.config_longAnimTime);
 
         mView.clearAnimation();
         if (immediate) {
             mView.setVisibility(View.GONE);
-            mMessage = null;
-            mToken = null;
+            showNextInQueue();
         } else {
             AlphaAnimation alpha = new AlphaAnimation(1.0f, 0.0f);
             alpha.setDuration(duration);
             alpha.setFillAfter(true);
             alpha.setAnimationListener(new Animation.AnimationListener () {
+                // If we are showing a toast and go in the background
+                // onAnimationEnd will be called when the app is restored
                 public void onAnimationEnd(Animation animation) {
                     mView.setVisibility(View.GONE);
-                    mMessage = null;
-                    mToken = null;
+                    showNextInQueue();
                 }
                 public void onAnimationRepeat(Animation animation) { }
                 public void onAnimationStart(Animation animation) { }
@@ -118,22 +145,16 @@ public class ButtonToast {
     }
 
     public void onSaveInstanceState(Bundle outState) {
-        outState.putCharSequence("toast_message", mMessage);
-        outState.putCharSequence("toast_button_message", mButtonMessage);
-        outState.putInt("toast_button_drawable", mButtonIcon);
-        outState.putCharSequence("toast_token", mToken);
+        // Add whatever toast we're currently showing to the front of the queue
+        if (mCurrentToast != null) {
+            mQueue.add(0, mCurrentToast);
+        }
     }
 
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            mMessage = savedInstanceState.getCharSequence("toast_message");
-            mButtonMessage = savedInstanceState.getCharSequence("toast_buttonmessage");
-            mButtonIcon = savedInstanceState.getInt("toast_button_drawable");
-            mToken = savedInstanceState.getCharSequence("toast_token");
-
-            if (mToken != null || !TextUtils.isEmpty(mMessage)) {
-                show(true, mMessage, mButtonMessage, mButtonIcon, mToken);
-            }
+    private void showNextInQueue() {
+        Toast t = mQueue.poll();
+        if (t != null) {
+            show(t, false);
         }
     }
 
