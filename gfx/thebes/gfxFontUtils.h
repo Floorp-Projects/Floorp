@@ -800,21 +800,10 @@ public:
                    uint32_t aUnicode, uint32_t aVarSelector = 0);
 
 #ifdef XP_WIN
-
-    // given a TrueType/OpenType data file, produce a EOT-format header
-    // for use with Windows T2Embed API AddFontResource type API's
-    // effectively hide existing fonts with matching names aHeaderLen is
-    // the size of the header buffer on input, the actual size of the
-    // EOT header on output
-    static nsresult
-    MakeEOTHeader(const uint8_t *aFontData, uint32_t aFontDataLength,
-                  FallibleTArray<uint8_t> *aHeader, FontDataOverlay *aOverlay);
-
     // determine whether a font (which has already been sanitized, so is known
     // to be a valid sfnt) is CFF format rather than TrueType
     static bool
-    IsCffFont(const uint8_t* aFontData, bool& hasVertical);
-
+    IsCffFont(const uint8_t* aFontData);
 #endif
 
     // determine the format of font data
