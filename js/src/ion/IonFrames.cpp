@@ -233,6 +233,31 @@ IonFrameIterator::actualArgs() const
     return jsFrame()->argv() + 1;
 }
 
+static inline size_t
+SizeOfFramePrefix(FrameType type)
+{
+    switch (type) {
+      case IonFrame_Entry:
+        return IonEntryFrameLayout::Size();
+      case IonFrame_BaselineJS:
+      case IonFrame_OptimizedJS:
+      case IonFrame_Unwound_OptimizedJS:
+        return IonJSFrameLayout::Size();
+      case IonFrame_BaselineStub:
+        return IonBaselineStubFrameLayout::Size();
+      case IonFrame_Rectifier:
+        return IonRectifierFrameLayout::Size();
+      case IonFrame_Unwound_Rectifier:
+        return IonUnwoundRectifierFrameLayout::Size();
+      case IonFrame_Exit:
+        return IonExitFrameLayout::Size();
+      case IonFrame_Osr:
+        return IonOsrFrameLayout::Size();
+      default:
+        MOZ_ASSUME_UNREACHABLE("unknown frame type");
+    }
+}
+
 uint8_t *
 IonFrameIterator::prevFp() const
 {
