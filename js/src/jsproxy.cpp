@@ -2417,7 +2417,7 @@ js::AppendUnique(JSContext *cx, AutoIdVector &base, AutoIdVector &others)
         if (unique)
             uniqueOthers.append(others[i]);
     }
-    return base.append(uniqueOthers);
+    return base.appendAll(uniqueOthers);
 }
 
 bool

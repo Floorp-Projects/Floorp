@@ -171,7 +171,7 @@ class Vector {
 
     template <size_t M>
     void append(const Vector<T,M> &v) {
-        if (!impl.append(v.impl))
+        if (!impl.appendAll(v.impl))
             MOZ_CRASH();
     }
 
