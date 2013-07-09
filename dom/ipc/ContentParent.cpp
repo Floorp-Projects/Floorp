@@ -2572,5 +2572,37 @@ ContentParent::RecvSystemMessageHandled()
     return true;
 }
 
+bool
+ContentParent::RecvCreateFakeVolume(const nsString& fsName, const nsString& mountPoint)
+{
+#ifdef MOZ_WIDGET_GONK
+  nsresult rv;
+  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
+  if (vs) {
+    vs->CreateFakeVolume(fsName, mountPoint);
+  }
+  return true;
+#else
+  NS_WARNING("ContentParent::RecvCreateFakeVolume shouldn't be called when MOZ_WIDGET_GONK is not defined");
+  return false;
+#endif
+}
+
+bool
+ContentParent::RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState)
+{
+#ifdef MOZ_WIDGET_GONK
+  nsresult rv;
+  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
+  if (vs) {
+    vs->SetFakeVolumeState(fsName, fsState);
+  }
+  return true;
+#else
+  NS_WARNING("ContentParent::RecvSetFakeVolumeState shouldn't be called when MOZ_WIDGET_GONK is not defined");
+  return false;
+#endif
+}
+
 } // namespace dom
 } // namespace mozilla
