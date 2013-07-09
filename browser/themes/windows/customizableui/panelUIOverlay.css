@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%define menuPanelWidth 23em
+
+%include ../../shared/customizableui/panelUIOverlay.inc.css
+
+#PanelUI-contents #zoom-out-btn {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+#PanelUI-contents #zoom-in-btn {
+  padding-left: 12px;
+  padding-right: 12px;
+}
