@@ -299,6 +299,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
         static_cast<ColorLayer*>(layer)->SetColor(
           specific.get_ColorLayerAttributes().color().value());
+        static_cast<ColorLayer*>(layer)->SetBounds(
+          specific.get_ColorLayerAttributes().bounds());
         break;
 
       case Specific::TCanvasLayerAttributes:
