@@ -31,7 +31,6 @@
 #include "mozilla/Telemetry.h"
 
 #include <usp10.h>
-#include <t2embapi.h>
 
 using namespace mozilla;
 
@@ -66,58 +65,26 @@ BuildKeyNameFromFontName(nsAString &aName)
 // Implementation of gfxPlatformFontList for Win32 GDI,
 // using GDI font enumeration APIs to get the list of fonts
 
-typedef LONG
-(WINAPI *TTLoadEmbeddedFontProc)(HANDLE* phFontReference, ULONG ulFlags,
-                                 ULONG* pulPrivStatus, ULONG ulPrivs,
-                                 ULONG* pulStatus,
-                                 READEMBEDPROC lpfnReadFromStream,
-                                 LPVOID lpvReadStream,
-                                 LPWSTR szWinFamilyName, 
-                                 LPSTR szMacFamilyName,
-                                 TTLOADINFO* pTTLoadInfo);
-
-typedef LONG
-(WINAPI *TTDeleteEmbeddedFontProc)(HANDLE hFontReference, ULONG ulFlags,
-                                   ULONG* pulStatus);
-
-
-static TTLoadEmbeddedFontProc TTLoadEmbeddedFontPtr = nullptr;
-static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nullptr;
-
 class WinUserFontData : public gfxUserFontData {
 public:
-    WinUserFontData(HANDLE aFontRef, bool aIsEmbedded)
-        : mFontRef(aFontRef), mIsEmbedded(aIsEmbedded)
+    WinUserFontData(HANDLE aFontRef)
+        : mFontRef(aFontRef)
     { }
 
     virtual ~WinUserFontData()
     {
-        if (mIsEmbedded) {
-            ULONG pulStatus;
-            LONG err;
-            err = TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+        DebugOnly<BOOL> success;
+        success = RemoveFontMemResourceEx(mFontRef);
 #if DEBUG
-            if (err != E_NONE) {
-                char buf[256];
-                sprintf(buf, "error deleting embedded font handle (%p) - TTDeleteEmbeddedFont returned %8.8x", mFontRef, err);
-                NS_ASSERTION(err == E_NONE, buf);
-            }
-#endif
-        } else {
-            DebugOnly<BOOL> success;
-            success = RemoveFontMemResourceEx(mFontRef);
-#if DEBUG
-            if (!success) {
-                char buf[256];
-                sprintf(buf, "error deleting font handle (%p) - RemoveFontMemResourceEx failed", mFontRef);
-                NS_ASSERTION(success, buf);
-            }
-#endif
+        if (!success) {
+            char buf[256];
+            sprintf(buf, "error deleting font handle (%p) - RemoveFontMemResourceEx failed", mFontRef);
+            NS_ASSERTION(success, buf);
         }
+#endif
     }
     
     HANDLE mFontRef;
-    bool mIsEmbedded;
 };
 
 BYTE 
@@ -599,8 +566,6 @@ GDIFontFamily::FindStyleVariations()
 gfxGDIFontList::gfxGDIFontList()
 {
     mFontSubstitutes.Init(50);
-
-    InitializeFontEmbeddingProcs();
 }
 
 static void
@@ -790,104 +755,6 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     return fe;
 }
 
-void gfxGDIFontList::InitializeFontEmbeddingProcs()
-{
-    static HMODULE fontlib = LoadLibraryW(L"t2embed.dll");
-    if (!fontlib)
-        return;
-    TTLoadEmbeddedFontPtr = (TTLoadEmbeddedFontProc)
-        GetProcAddress(fontlib, "TTLoadEmbeddedFont");
-    TTDeleteEmbeddedFontPtr = (TTDeleteEmbeddedFontProc)
-        GetProcAddress(fontlib, "TTDeleteEmbeddedFont");
-}
-
-// used to control stream read by Windows TTLoadEmbeddedFont API
-
-class EOTFontStreamReader {
-public:
-    EOTFontStreamReader(const uint8_t *aFontData, uint32_t aLength, uint8_t *aEOTHeader, 
-                           uint32_t aEOTHeaderLen, FontDataOverlay *aNameOverlay)
-        : mCurrentChunk(0), mChunkOffset(0)
-    {
-        NS_ASSERTION(aFontData, "null font data ptr passed in");
-        NS_ASSERTION(aEOTHeader, "null EOT header ptr passed in");
-        NS_ASSERTION(aNameOverlay, "null name overlay struct passed in");
-
-        if (aNameOverlay->overlaySrc) {
-            mNumChunks = 4;
-            // 0 : EOT header
-            mDataChunks[0].mData = aEOTHeader;
-            mDataChunks[0].mLength = aEOTHeaderLen;
-            // 1 : start of font data to overlayDest
-            mDataChunks[1].mData = aFontData;
-            mDataChunks[1].mLength = aNameOverlay->overlayDest;
-            // 2 : overlay data
-            mDataChunks[2].mData = aFontData + aNameOverlay->overlaySrc;
-            mDataChunks[2].mLength = aNameOverlay->overlaySrcLen;
-            // 3 : rest of font data
-            mDataChunks[3].mData = aFontData + aNameOverlay->overlayDest + aNameOverlay->overlaySrcLen;
-            mDataChunks[3].mLength = aLength - aNameOverlay->overlayDest - aNameOverlay->overlaySrcLen;
-        } else {
-            mNumChunks = 2;
-            // 0 : EOT header
-            mDataChunks[0].mData = aEOTHeader;
-            mDataChunks[0].mLength = aEOTHeaderLen;
-            // 1 : font data
-            mDataChunks[1].mData = aFontData;
-            mDataChunks[1].mLength = aLength;
-        }
-    }
-
-    ~EOTFontStreamReader() 
-    { 
-
-    }
-
-    struct FontDataChunk {
-        const uint8_t *mData;
-        uint32_t       mLength;
-    };
-
-    uint32_t                mNumChunks;
-    FontDataChunk           mDataChunks[4];
-    uint32_t                mCurrentChunk;
-    uint32_t                mChunkOffset;
-
-    unsigned long Read(void *outBuffer, const unsigned long aBytesToRead)
-    {
-        uint32_t bytesLeft = aBytesToRead;  // bytes left in the out buffer
-        uint8_t *out = static_cast<uint8_t*> (outBuffer);
-
-        while (mCurrentChunk < mNumChunks && bytesLeft) {
-            FontDataChunk& currentChunk = mDataChunks[mCurrentChunk];
-            uint32_t bytesToCopy = std::min(bytesLeft, 
-                                          currentChunk.mLength - mChunkOffset);
-            memcpy(out, currentChunk.mData + mChunkOffset, bytesToCopy);
-            bytesLeft -= bytesToCopy;
-            mChunkOffset += bytesToCopy;
-            out += bytesToCopy;
-
-            NS_ASSERTION(mChunkOffset <= currentChunk.mLength, "oops, buffer overrun");
-
-            if (mChunkOffset == currentChunk.mLength) {
-                mCurrentChunk++;
-                mChunkOffset = 0;
-            }
-        }
-
-        return aBytesToRead - bytesLeft;
-    }
-
-    static unsigned long ReadEOTStream(void *aReadStream, void *outBuffer, 
-                                       const unsigned long aBytesToRead) 
-    {
-        EOTFontStreamReader *eotReader = 
-                               static_cast<EOTFontStreamReader*> (aReadStream);
-        return eotReader->Read(outBuffer, aBytesToRead);
-    }        
-        
-};
-
 gfxFontEntry* 
 gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry, 
                                  const uint8_t *aFontData,
@@ -904,95 +771,48 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     };
     FontDataDeleter autoDelete(aFontData);
 
-    bool hasVertical;
-    bool isCFF = gfxFontUtils::IsCffFont(aFontData, hasVertical);
+    bool isCFF = gfxFontUtils::IsCffFont(aFontData);
 
     nsresult rv;
     HANDLE fontRef = nullptr;
-    bool isEmbedded = false;
 
     nsAutoString uniqueName;
     rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
     if (NS_FAILED(rv))
         return nullptr;
 
-    // for TTF fonts, first try using the t2embed library if available
-    if (!isCFF && TTLoadEmbeddedFontPtr && TTDeleteEmbeddedFontPtr) {
-        // TrueType-style glyphs, use EOT library
-        AutoFallibleTArray<uint8_t,2048> eotHeader;
-        uint8_t *buffer;
-        uint32_t eotlen;
+    FallibleTArray<uint8_t> newFontData;
 
-        isEmbedded = true;
-        uint32_t nameLen = std::min<uint32_t>(uniqueName.Length(), LF_FACESIZE - 1);
-        nsAutoString fontName(Substring(uniqueName, 0, nameLen));
+    rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
+
+    if (NS_FAILED(rv))
+        return nullptr;
         
-        FontDataOverlay overlayNameData = {0, 0, 0};
+    DWORD numFonts = 0;
 
-        rv = gfxFontUtils::MakeEOTHeader(aFontData, aLength, &eotHeader, 
-                                         &overlayNameData);
-        if (NS_SUCCEEDED(rv)) {
+    uint8_t *fontData = reinterpret_cast<uint8_t*> (newFontData.Elements());
+    uint32_t fontLength = newFontData.Length();
+    NS_ASSERTION(fontData, "null font data after renaming");
 
-            // load in embedded font data
-            eotlen = eotHeader.Length();
-            buffer = reinterpret_cast<uint8_t*> (eotHeader.Elements());
-            
-            int32_t ret;
-            ULONG privStatus, pulStatus;
-            EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen,
-                                          &overlayNameData);
+    // http://msdn.microsoft.com/en-us/library/ms533942(VS.85).aspx
+    // "A font that is added by AddFontMemResourceEx is always private 
+    //  to the process that made the call and is not enumerable."
+    fontRef = AddFontMemResourceEx(fontData, fontLength, 
+                                    0 /* reserved */, &numFonts);
+    if (!fontRef)
+        return nullptr;
 
-            ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus,
-                                        LICENSE_PREVIEWPRINT, &pulStatus,
-                                        EOTFontStreamReader::ReadEOTStream,
-                                        &eotReader,
-                                        (PRUnichar*)(fontName.get()), 0, 0);
-            if (ret != E_NONE) {
-                fontRef = nullptr;
-                char buf[256];
-                sprintf(buf, "font (%s) not loaded using TTLoadEmbeddedFont - error %8.8x",
-                        NS_ConvertUTF16toUTF8(aProxyEntry->Name()).get(), ret);
-                NS_WARNING(buf);
-            }
-        }
-    }
-
-    // load CFF fonts or fonts that failed with t2embed loader
-    if (fontRef == nullptr) {
-        // Postscript-style glyphs, swizzle name table, load directly
-        FallibleTArray<uint8_t> newFontData;
-
-        isEmbedded = false;
-        rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
-
-        if (NS_FAILED(rv))
-            return nullptr;
-        
-        DWORD numFonts = 0;
-
-        uint8_t *fontData = reinterpret_cast<uint8_t*> (newFontData.Elements());
-        uint32_t fontLength = newFontData.Length();
-        NS_ASSERTION(fontData, "null font data after renaming");
-
-        // http://msdn.microsoft.com/en-us/library/ms533942(VS.85).aspx
-        // "A font that is added by AddFontMemResourceEx is always private 
-        //  to the process that made the call and is not enumerable."
-        fontRef = AddFontMemResourceEx(fontData, fontLength, 
-                                       0 /* reserved */, &numFonts);
-        if (!fontRef)
-            return nullptr;
-
-        // only load fonts with a single face contained in the data
-        // AddFontMemResourceEx generates an additional face name for
-        // vertical text if the font supports vertical writing
-        if (fontRef && numFonts != 1 + !!hasVertical) {
-            RemoveFontMemResourceEx(fontRef);
-            return nullptr;
-        }
+    // only load fonts with a single face contained in the data
+    // AddFontMemResourceEx generates an additional face name for
+    // vertical text if the font supports vertical writing but since
+    // the font is referenced via the name this can be ignored
+    if (fontRef && numFonts > 2) {
+        RemoveFontMemResourceEx(fontRef);
+        return nullptr;
     }
 
     // make a new font entry using the unique name
-    WinUserFontData *winUserFontData = new WinUserFontData(fontRef, isEmbedded);
+    WinUserFontData *winUserFontData = new WinUserFontData(fontRef);
     uint16_t w = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
 
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName, 

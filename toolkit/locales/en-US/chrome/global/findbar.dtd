@@ -5,16 +5,12 @@
 <!-- LOCALIZATION NOTE : FILE This file contains the entities needed to -->
 <!-- LOCALIZATION NOTE : FILE use the Find Bar. --> 
 
-<!-- entities split out from browser.dtd -->
-<!ENTITY next.label "Next">
-<!ENTITY next.accesskey "N">
 <!ENTITY next.tooltip "Find the next occurrence of the phrase">
-<!ENTITY previous.label "Previous">
-<!ENTITY previous.accesskey "P">
 <!ENTITY previous.tooltip "Find the previous occurrence of the phrase">
-<!ENTITY findCloseButton.tooltip "Close Find bar">
-<!ENTITY highlight.label "Highlight all">
-<!ENTITY highlight.accesskey "a">
-<!ENTITY highlight.tooltiptext "Highlight all occurrences of the phrase">
-<!ENTITY caseSensitiveCheckbox.label "Match case">
-<!ENTITY caseSensitiveCheckbox.accesskey "c">
+<!ENTITY findCloseButton.tooltip "Close find bar">
+<!ENTITY highlightAll.label "Highlight All">
+<!ENTITY highlightAll.accesskey "a">
+<!ENTITY highlightAll.tooltiptext "Highlight all occurrences of the phrase">
+<!ENTITY caseSensitive.label "Match Case">
+<!ENTITY caseSensitive.accesskey "c">
+<!ENTITY caseSensitive.tooltiptext "Search with case sensitivity">

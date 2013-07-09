@@ -1436,7 +1436,7 @@ ion::UnsplitEdges(LIRGraph *lir)
         // over-conservative, but we're attempting to keep everything in MIR
         // current as we modify the LIR, so only proceed if the MIR is simple.
         if (mirBlock->numPredecessors() == 0 || mirBlock->numSuccessors() != 1 ||
-            !mirBlock->resumePointsEmpty() || !mirBlock->begin()->isGoto())
+            !mirBlock->begin()->isGoto())
         {
             continue;
         }

@@ -110,6 +110,107 @@ TEST(AsyncPanZoomController, SimpleTransform) {
   EXPECT_EQ(viewTransformOut, ViewTransform());
 }
 
+
+TEST(AsyncPanZoomController, ComplexTransform) {
+  TimeStamp testStartTime = TimeStamp::Now();
+  AsyncPanZoomController::SetFrameTime(testStartTime);
+
+  // This test assumes there is a page that gets rendered to
+  // two layers. In CSS pixels, the first layer is 50x50 and
+  // the second layer is 25x50. The widget scale factor is 3.0
+  // and the presShell resolution is 2.0. Therefore, these layers
+  // end up being 300x300 and 150x300 in layer pixels.
+  //
+  // The second (child) layer has an additional CSS transform that
+  // stretches it by 2.0 on the x-axis. Therefore, after applying
+  // CSS transforms, the two layers are the same size in screen
+  // pixels.
+  //
+  // The screen itself is 24x24 in screen pixels (therefore 4x4 in
+  // CSS pixels). The displayport is 1 extra CSS pixel on all
+  // sides.
+
+  nsRefPtr<MockContentController> mcc = new MockContentController();
+  nsRefPtr<AsyncPanZoomController> apzc = new AsyncPanZoomController(mcc);
+
+  const char* layerTreeSyntax = "c(c)";
+  // LayerID                     0 1
+  nsIntRegion layerVisibleRegion[] = {
+    nsIntRegion(nsIntRect(0, 0, 300, 300)),
+    nsIntRegion(nsIntRect(0, 0, 150, 300)),
+  };
+  gfx3DMatrix transforms[] = {
+    gfx3DMatrix(),
+    gfx3DMatrix(),
+  };
+  transforms[0].ScalePost(0.5f, 0.5f, 1.0f); // this results from the 2.0 resolution on the root layer
+  transforms[1].ScalePost(2.0f, 1.0f, 1.0f); // this is the 2.0 x-axis CSS transform on the child layer
+
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
+
+  FrameMetrics metrics;
+  metrics.mCompositionBounds = ScreenIntRect(0, 0, 24, 24);
+  metrics.mDisplayPort = CSSRect(-1, -1, 6, 6);
+  metrics.mViewport = CSSRect(0, 0, 4, 4);
+  metrics.mScrollOffset = CSSPoint(10, 10);
+  metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
+  metrics.mResolution = LayoutDeviceToLayerScale(2);
+  metrics.mZoom = ScreenToScreenScale(1);
+  metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(3);
+  metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
+
+  FrameMetrics childMetrics = metrics;
+  childMetrics.mScrollId = FrameMetrics::START_SCROLL_ID;
+
+  layers[0]->AsContainerLayer()->SetFrameMetrics(metrics);
+  layers[1]->AsContainerLayer()->SetFrameMetrics(childMetrics);
+
+  ScreenPoint pointOut;
+  ViewTransform viewTransformOut;
+
+  // Both the parent and child layer should behave exactly the same here, because
+  // the CSS transform on the child layer does not affect the SampleContentTransformForFrame code
+
+  // initial transform
+  apzc->NotifyLayersUpdated(metrics, true);
+  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ScreenPoint(60, 60), pointOut);
+
+  apzc->NotifyLayersUpdated(childMetrics, true);
+  apzc->SampleContentTransformForFrame(testStartTime, layers[1]->AsContainerLayer(), &viewTransformOut, pointOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ScreenPoint(60, 60), pointOut);
+
+  // do an async scroll by 5 pixels and check the transform
+  metrics.mScrollOffset += CSSPoint(5, 0);
+  apzc->NotifyLayersUpdated(metrics, true);
+  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ScreenPoint(90, 60), pointOut);
+
+  childMetrics.mScrollOffset += CSSPoint(5, 0);
+  apzc->NotifyLayersUpdated(childMetrics, true);
+  apzc->SampleContentTransformForFrame(testStartTime, layers[1]->AsContainerLayer(), &viewTransformOut, pointOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ScreenPoint(90, 60), pointOut);
+
+  // do an async zoom of 1.5x and check the transform
+  metrics.mZoom.scale *= 1.5f;
+  apzc->NotifyLayersUpdated(metrics, true);
+  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ScreenPoint(135, 90), pointOut);
+
+  childMetrics.mZoom.scale *= 1.5f;
+  apzc->NotifyLayersUpdated(childMetrics, true);
+  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ScreenPoint(135, 90), pointOut);
+}
+
 TEST(AsyncPanZoomController, Pan) {
   TimeStamp testStartTime = TimeStamp::Now();
   AsyncPanZoomController::SetFrameTime(testStartTime);

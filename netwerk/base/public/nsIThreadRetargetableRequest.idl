@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIEventTarget.idl"
+
+/**
+ * nsIThreadRetargetableRequest
+ *
+ * Should be implemented by requests that support retargeting delivery of
+ * OnDataAvailable off the main thread. Note, OnStopRequest will be delivered
+ * back on the main thread.
+ */
+[uuid(27b84c48-5a73-4ba4-a8a4-8b5e649a145e)]
+interface nsIThreadRetargetableRequest : nsISupports
+{
+  /**
+   * Called to retarget delivery of OnDataAvailable to another thread. Should
+   * only be called within the context of OnStartRequest on the main thread.
+   * OnStopRequest will be delivered back on the main thread.
+   *
+   * @param aNewTarget New event target, e.g. thread or threadpool.
+   *
+   * Note: no return value is given. If the retargeting cannot be handled,
+   * normal delivery to the main thread will continue. As such, listeners
+   * should be ready to deal with OnDataAvailable on either the main thread or
+   * the new target thread.
+   */
+  void retargetDeliveryTo(in nsIEventTarget aNewTarget);
+};
+
+
