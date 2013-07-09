@@ -59,7 +59,6 @@ endif
 # browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
 
 # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
-# browser_bug386835.js is disabled for intermittent failures (bug 880226)
 
 MOCHITEST_BROWSER_FILES = \
                  head.js \
@@ -74,6 +73,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug329212.js \
                  browser_bug356571.js \
                  browser_bug380960.js \
+	         browser_bug386835.js \
                  browser_bug405137.js \
                  browser_bug406216.js \
                  browser_bug409481.js \
