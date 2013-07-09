@@ -11,14 +11,15 @@
 namespace mozilla {
 namespace layers {
 
-TaskThrottler::TaskThrottler()
+TaskThrottler::TaskThrottler(const TimeStamp& aTimeStamp)
   : mOutstanding(false)
   , mQueuedTask(nullptr)
+  , mStartTime(aTimeStamp)
 { }
 
 void
 TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
-                        CancelableTask* aTask)
+                        CancelableTask* aTask, const TimeStamp& aTimeStamp)
 {
   aTask->SetBirthPlace(aLocation);
 
@@ -28,22 +29,57 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
     }
     mQueuedTask = aTask;
   } else {
+    mStartTime = aTimeStamp;
     aTask->Run();
     delete aTask;
     mOutstanding = true;
   }
 }
 
-bool
-TaskThrottler::TaskComplete()
+void
+TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
 {
+  if (!mOutstanding) {
+    return;
+  }
+
+  // Remove the oldest sample we have if adding a new sample takes us over our
+  // desired number of samples.
+  if (mDurations.Length() >= mMaxDurations) {
+    mDurations.RemoveElementAt(0);
+  }
+  if (mMaxDurations) {
+    mDurations.AppendElement(aTimeStamp - mStartTime);
+  }
+
   if (mQueuedTask) {
+    mStartTime = aTimeStamp;
     mQueuedTask->Run();
     mQueuedTask = nullptr;
-    return true;
+  } else {
+    mOutstanding = false;
   }
-  mOutstanding = false;
-  return false;
+}
+
+TimeDuration
+TaskThrottler::AverageDuration()
+{
+  if (!mDurations.Length()) {
+    return TimeDuration();
+  }
+
+  TimeDuration durationSum;
+  for (uint32_t i = 0; i < mDurations.Length(); i++) {
+    durationSum += mDurations[i];
+  }
+
+  return durationSum / mDurations.Length();
+}
+
+TimeDuration
+TaskThrottler::TimeSinceLastRequest(const TimeStamp& aTimeStamp)
+{
+  return aTimeStamp - mStartTime;
 }
 
 }
