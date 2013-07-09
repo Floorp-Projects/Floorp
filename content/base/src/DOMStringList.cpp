@@ -3,35 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Implementation of nsIDOMDOMStringList, used by various DOM stuff.
- */
-
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsError.h"
 #include "nsDOMClassInfoID.h"
 #include "nsINode.h"
 
-nsDOMStringList::nsDOMStringList()
+DOMCI_DATA(DOMStringList, mozilla::dom::DOMStringList)
+
+namespace mozilla {
+namespace dom {
+
+DOMStringList::DOMStringList()
 {
 }
 
-nsDOMStringList::~nsDOMStringList()
+DOMStringList::~DOMStringList()
 {
 }
 
-DOMCI_DATA(DOMStringList, nsDOMStringList)
-
-NS_IMPL_ADDREF(nsDOMStringList)
-NS_IMPL_RELEASE(nsDOMStringList)
-NS_INTERFACE_TABLE_HEAD(nsDOMStringList)
-  NS_INTERFACE_TABLE1(nsDOMStringList, nsIDOMDOMStringList)
+NS_IMPL_ADDREF(DOMStringList)
+NS_IMPL_RELEASE(DOMStringList)
+NS_INTERFACE_TABLE_HEAD(DOMStringList)
+  NS_INTERFACE_TABLE1(DOMStringList, nsIDOMDOMStringList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMStringList)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsDOMStringList::Item(uint32_t aIndex, nsAString& aResult)
+DOMStringList::Item(uint32_t aIndex, nsAString& aResult)
 {
   if (aIndex >= mNames.Length()) {
     SetDOMStringToNull(aResult);
@@ -43,7 +42,7 @@ nsDOMStringList::Item(uint32_t aIndex, nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsDOMStringList::GetLength(uint32_t *aLength)
+DOMStringList::GetLength(uint32_t *aLength)
 {
   *aLength = mNames.Length();
 
@@ -51,9 +50,12 @@ nsDOMStringList::GetLength(uint32_t *aLength)
 }
 
 NS_IMETHODIMP
-nsDOMStringList::Contains(const nsAString& aString, bool *aResult)
+DOMStringList::Contains(const nsAString& aString, bool *aResult)
 {
   *aResult = mNames.Contains(aString);
 
   return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla

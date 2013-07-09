@@ -24,7 +24,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMFile.h"
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -2642,7 +2642,7 @@ IDBObjectStore::GetIndexNames(ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+  nsRefPtr<DOMStringList> list(new DOMStringList());
 
   nsAutoTArray<nsString, 10> names;
   uint32_t count = mInfo->indexes.Length();

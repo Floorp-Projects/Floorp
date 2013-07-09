@@ -33,7 +33,7 @@
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "JavaScriptChild.h"
 #include "JavaScriptParent.h"
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsPrintfCString.h"
 #include <algorithm>
 
