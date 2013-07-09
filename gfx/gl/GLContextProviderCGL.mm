@@ -136,7 +136,12 @@ public:
 
         if (mContext) {
             [mContext makeCurrentContext];
-            GLint swapInt = 1;
+            // Use blocking swap only with the default frame rate.
+            // If swapInt is 1, then glSwapBuffers will block and wait for a vblank signal.
+            // While this is fine for the default refresh rate, if the user chooses some
+            // other rate, and specifically if this rate is higher than the screen refresh rate,
+            // then we want a non-blocking glSwapBuffers, which will happen when swapInt==0.
+            GLint swapInt = gfxPlatform::GetPrefLayoutFrameRate() == -1 ? 1 : 0;
             [mContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
         }
         return true;

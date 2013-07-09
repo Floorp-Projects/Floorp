@@ -1836,6 +1836,7 @@ static bool sPrefLayersAccelerationForceEnabled = false;
 static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
+static int  sPrefLayoutFrameRate = -1;
 
 void InitLayersAccelerationPrefs()
 {
@@ -1849,6 +1850,7 @@ void InitLayersAccelerationPrefs()
     sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
+    sPrefLayoutFrameRate = Preferences::GetInt("layout.frame_rate", -1);
 
     sLayersAccelerationPrefsInitialized = true;
   }
@@ -1891,4 +1893,10 @@ bool gfxPlatform::GetPrefLayersPreferD3D9()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersPreferD3D9;
+}
+
+int gfxPlatform::GetPrefLayoutFrameRate()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayoutFrameRate;
 }
