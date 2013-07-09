@@ -8,7 +8,7 @@
 #define HTMLPropertiesCollection_h_
 
 #include "mozilla/Attributes.h"
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
@@ -31,7 +31,7 @@ class HTMLPropertiesCollection;
 class PropertyNodeList;
 class Element;
 
-class PropertyStringList : public nsDOMStringList
+class PropertyStringList : public DOMStringList
 {
 public:
   PropertyStringList(HTMLPropertiesCollection* aCollection);
@@ -86,7 +86,7 @@ public:
     aFound = IsSupportedNamedProperty(aName);
     return aFound ? NamedItem(aName) : nullptr;
   }
-  nsDOMStringList* Names()
+  DOMStringList* Names()
   {
     EnsureFresh();
     return mNames;

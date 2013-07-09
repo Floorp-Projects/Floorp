@@ -6,7 +6,7 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsError.h"
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsIPrefetchService.h"
 #include "nsCPrefetchService.h"
 #include "nsNetUtil.h"
@@ -189,7 +189,7 @@ nsDOMOfflineResourceList::GetMozItems(nsIDOMDOMStringList **aItems)
 
   *aItems = nullptr;
 
-  nsRefPtr<nsDOMStringList> items = new nsDOMStringList();
+  nsRefPtr<DOMStringList> items = new DOMStringList();
 
   // If we are not associated with an application cache, return an
   // empty list.

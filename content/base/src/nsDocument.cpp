@@ -1307,7 +1307,7 @@ nsExternalResourceMap::ExternalResource::~ExternalResource()
 // ==================================================================
 
 // If we ever have an nsIDocumentObserver notification for stylesheet title
-// changes, we could make this inherit from nsDOMStringList instead of
+// changes, we could make this inherit from DOMStringList instead of
 // reimplementing nsIDOMDOMStringList.
 class nsDOMStyleSheetSetList MOZ_FINAL : public nsIDOMDOMStringList
 {
