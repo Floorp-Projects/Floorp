@@ -1435,7 +1435,6 @@ abstract public class GeckoApp
 
         if (!mIsRestoringActivity) {
             sGeckoThread = new GeckoThread(intent, passedUri);
-            ThreadUtils.setGeckoThread(sGeckoThread);
         }
         if (!ACTION_DEBUG.equals(action) &&
             GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
