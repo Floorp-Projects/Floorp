@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIThreadRetargetableStreamListener
+ *
+ * To be used by classes which implement nsIStreamListener and whose
+ * OnDataAvailable callback may be retargeted for delivery off the main thread.
+ */
+[uuid(fb2304b8-f82f-4433-af68-d874a2ebbdc1)]
+interface nsIThreadRetargetableStreamListener : nsISupports
+{
+  /**
+   * Checks this listener and any next listeners it may have to verify that
+   * they can receive OnDataAvailable off the main thread. It is the
+   * responsibility of the implementing class to decide on the criteria to
+   * determine if retargeted delivery of these methods is possible, but it must
+   * check any and all nsIStreamListener objects that might be called in the
+   * listener chain.
+   *
+   * An exception should be thrown if a listener in the chain does not
+   * support retargeted delivery, i.e. if the next listener does not implement
+   * nsIThreadRetargetableStreamListener, or a call to its checkListenerChain()
+   * fails.
+   */
+  void checkListenerChain();
+};
+

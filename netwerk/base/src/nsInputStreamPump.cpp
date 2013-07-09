@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
 #include "nsIOService.h"
 #include "nsInputStreamPump.h"
 #include "nsIServiceManager.h"
@@ -11,10 +12,13 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISeekableStream.h"
 #include "nsITransport.h"
+#include "nsIThreadRetargetableStreamListener.h"
+#include "nsStreamUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
+#include "nsPrintfCString.h"
 #include "GeckoProfiler.h"
 #include <algorithm>
 
@@ -41,6 +45,7 @@ nsInputStreamPump::nsInputStreamPump()
     , mLoadFlags(LOAD_NORMAL)
     , mWaiting(false)
     , mCloseWhenDone(false)
+    , mRetargeting(false)
 {
 #if defined(PR_LOGGING)
     if (!gStreamPumpLog)
@@ -119,14 +124,25 @@ nsresult
 nsInputStreamPump::EnsureWaiting()
 {
     // no need to worry about multiple threads... an input stream pump lives
-    // on only one thread.
-
+    // on only one thread at a time.
+    MOZ_ASSERT(mAsyncStream);
     if (!mWaiting) {
+        // Ensure OnStateStop is called on the main thread.
+        if (mState == STATE_STOP) {
+            nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+            if (mTargetThread != mainThread) {
+                mTargetThread = do_QueryInterface(mainThread);
+            }
+        }
+        MOZ_ASSERT(mTargetThread);
         nsresult rv = mAsyncStream->AsyncWait(this, 0, 0, mTargetThread);
         if (NS_FAILED(rv)) {
             NS_ERROR("AsyncWait failed");
             return rv;
         }
+        // Any retargeting during STATE_START or START_TRANSFER is complete
+        // after the call to AsyncWait; next callback wil be on mTargetThread.
+        mRetargeting = false;
         mWaiting = true;
     }
     return NS_OK;
@@ -139,8 +155,9 @@ nsInputStreamPump::EnsureWaiting()
 // although this class can only be accessed from one thread at a time, we do
 // allow its ownership to move from thread to thread, assuming the consumer
 // understands the limitations of this.
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsInputStreamPump,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsInputStreamPump,
                               nsIRequest,
+                              nsIThreadRetargetableRequest,
                               nsIInputStreamCallback,
                               nsIInputStreamPump)
 
@@ -273,6 +290,8 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
     NS_ENSURE_ARG_POINTER(listener);
+    MOZ_ASSERT(NS_IsMainThread(), "nsInputStreamPump should be read from the "
+                                  "main thread only.");
 
     //
     // OK, we need to use the stream transport service if
@@ -372,6 +391,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             nextState = OnStateTransfer();
             break;
         case STATE_STOP:
+            mRetargeting = false;
             nextState = OnStateStop();
             break;
         default:
@@ -380,15 +400,36 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             return NS_ERROR_UNEXPECTED;
         }
 
-        if (mState == nextState && !mSuspendCount) {
-            NS_ASSERTION(mState == STATE_TRANSFER, "unexpected state");
-            NS_ASSERTION(NS_SUCCEEDED(mStatus), "unexpected status");
+        bool stillTransferring = (mState == STATE_TRANSFER &&
+                                  nextState == STATE_TRANSFER);
+        if (stillTransferring) {
+            NS_ASSERTION(NS_SUCCEEDED(mStatus),
+                         "Should not have failed status for ongoing transfer");
+        } else {
+            NS_ASSERTION(mState != nextState,
+                         "Only OnStateTransfer can be called more than once.");
+        }
+        if (mRetargeting) {
+            NS_ASSERTION(mState != STATE_STOP,
+                         "Retargeting should not happen during OnStateStop.");
+        }
 
+        // Set mRetargeting so EnsureWaiting will be called. It ensures that
+        // OnStateStop is called on the main thread. 
+        if (nextState == STATE_STOP && !NS_IsMainThread()) {
+            mRetargeting = true;
+        }
+
+        // Wait asynchronously if there is still data to transfer, or we're
+        // switching event delivery to another thread.
+        if (!mSuspendCount && (stillTransferring || mRetargeting)) {
+            mState = nextState;
             mWaiting = false;
             mStatus = EnsureWaiting();
             if (NS_SUCCEEDED(mStatus))
                 break;
             
+            // Failure to start asynchronous wait: stop transfer.
             nextState = STATE_STOP;
         }
 
@@ -533,9 +574,37 @@ nsInputStreamPump::OnStateTransfer()
     return STATE_STOP;
 }
 
+nsresult
+nsInputStreamPump::OnStateStopForFailure()
+{
+    MOZ_ASSERT(NS_FAILED(mStatus), "OnStateStopForFailure should be called "
+                                   "in a failed state");
+    MOZ_ASSERT(NS_IsMainThread(), "OnStateStopForFailure should be on the "
+                                  "main thread");
+
+    mState = OnStateStop();
+    return NS_OK;
+}
+
 uint32_t
 nsInputStreamPump::OnStateStop()
 {
+    if (NS_FAILED(mStatus)) {
+        // If EnsureWaiting has failed, it's possible that we could be off main
+        // thread. We may have to dispatch OnStateStop to the main thread
+        // directly. Note: this would result in OnStateStop being called
+        // outside the context of OnInputStreamReady.
+        if (!NS_IsMainThread()) {
+            nsresult rv = NS_DispatchToMainThread(
+                NS_NewRunnableMethod(this, &nsInputStreamPump::OnStateStopForFailure));
+            NS_ENSURE_SUCCESS(rv, STATE_IDLE);
+            return STATE_IDLE;
+        }
+    } else {
+        MOZ_ASSERT(NS_IsMainThread(), "In a success state, OnStateStop should "
+                                      "be on the main thread");
+    }
+
     PROFILER_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
     LOG(("  OnStateStop [this=%p status=%x]\n", this, mStatus));
 
@@ -551,7 +620,6 @@ nsInputStreamPump::OnStateStop()
     mAsyncStream = 0;
     mTargetThread = 0;
     mIsPending = false;
-
     mListener->OnStopRequest(this, mListenerContext, mStatus);
     mListener = 0;
     mListenerContext = 0;
@@ -560,4 +628,44 @@ nsInputStreamPump::OnStateStop()
         mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
     return STATE_IDLE;
+}
+
+//-----------------------------------------------------------------------------
+// nsIThreadRetargetableRequest
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsInputStreamPump::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
+{
+    NS_ENSURE_ARG(aNewTarget);
+    NS_ENSURE_TRUE(mState == STATE_START || mState == STATE_TRANSFER,
+                   NS_ERROR_UNEXPECTED);
+
+    // If canceled, do not retarget. Return with canceled status.
+    if (NS_FAILED(mStatus)) {
+        return mStatus;
+    }
+
+    if (aNewTarget == mTargetThread) {
+        NS_WARNING("Retargeting delivery to same thread");
+        return NS_OK;
+    }
+
+    // Ensure that |mListener| and any subsequent listeners can be retargeted
+    // to another thread.
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+        do_QueryInterface(mListener, &rv);
+    if (NS_SUCCEEDED(rv) && retargetableListener) {
+        rv = retargetableListener->CheckListenerChain();
+        if (NS_SUCCEEDED(rv)) {
+            mTargetThread = aNewTarget;
+            mRetargeting = true;
+        }
+    }
+    LOG(("nsInputStreamPump::RetargetDeliveryTo [this=%x aNewTarget=%p] "
+         "%s listener [%p] rv[%x]",
+         this, aNewTarget, (mTargetThread == aNewTarget ? "success" : "failure"),
+         (nsIStreamListener*)mListener, rv));
+    return rv;
 }
