@@ -1761,12 +1761,10 @@
 
           var initialString = (this.prefillWithSelection && userWantsPrefill) ?
                               this._getInitialSelection() : null;
-          if (initialString) {
+          if (initialString)
             this._findField.value = initialString;
-            this._enableFindButtons(true);
-          }
-          else if (!this._findField.value)
-            this._enableFindButtons(false);
+
+          this._enableFindButtons(!!this._findField.value);
 
           this._findField.select();
           this._findField.focus();
