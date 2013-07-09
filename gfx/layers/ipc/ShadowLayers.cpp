@@ -539,7 +539,7 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
     const MemoryImage& image = aSurface.get_MemoryImage();
     gfxASurface::gfxImageFormat format
       = static_cast<gfxASurface::gfxImageFormat>(image.format());
-    surf = new gfxImageSurface((unsigned char *)image.data(),
+    surf = new gfxImageSurface(GetMemoryImageData(image),
                                image.size(),
                                image.stride(),
                                format);

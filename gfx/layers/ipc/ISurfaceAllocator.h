@@ -52,7 +52,9 @@ enum BufferCapabilities {
 };
 
 class SurfaceDescriptor;
+class MemoryImage;
 
+unsigned char *GetMemoryImageData(const MemoryImage &);
 
 ipc::SharedMemory::SharedMemoryType OptimalShmemType();
 bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
