@@ -1,0 +1,7 @@
+default-preferences pref(dom.forms.color,true)
+
+== input-color-1.html input-color-1-ref.html
+== margin-padding-1.html margin-padding-1-ref.html
+== block-invalidate-1.html block-invalidate-1-ref.html
+== transformations-1.html transformations-1-ref.html
+== custom-style-1.html custom-style-1-ref.html
