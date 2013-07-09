@@ -561,7 +561,7 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
   if (offsetTicks > 0) {
     aStream->SetInt32Parameter(OFFSET, offsetTicks);
   }
-  aStream->SetInt32Parameter(DURATION, NS_lround(endOffset*rate) - offsetTicks);
+  aStream->SetInt32Parameter(DURATION, NS_lround(endOffset*rate));
 }
 
 void
