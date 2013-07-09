@@ -34,34 +34,70 @@ this.SitePermissions = {
    * permission with the given ID.
    */
   getAvailableStates: function (aPermissionID) {
-    return gPermissionObject[aPermissionID].states ||
-           [ SitePermissions.ALLOW, SitePermissions.BLOCK ];
+    if (aPermissionID in gPermissionObject &&
+        gPermissionObject[aPermissionID].states)
+      return gPermissionObject[aPermissionID].states;
+
+    if (this.getDefault(aPermissionID) == this.UNKNOWN)
+      return [ SitePermissions.UNKNOWN, SitePermissions.ALLOW, SitePermissions.BLOCK ];
+
+    return [ SitePermissions.ALLOW, SitePermissions.BLOCK ];
   },
 
-  /* Returns the state of a perticular permission for a given URI.
+  /* Returns the default state of a particular permission.
+   */
+  getDefault: function (aPermissionID) {
+    if (aPermissionID in gPermissionObject &&
+        gPermissionObject[aPermissionID].getDefault)
+      return gPermissionObject[aPermissionID].getDefault();
+
+    return this.UNKNOWN;
+  },
+
+  /* Returns the state of a particular permission for a given URI.
    */
   get: function (aURI, aPermissionID) {
     if (!this.isSupportedURI(aURI))
       return this.UNKNOWN;
 
     let state;
-    if (gPermissionObject[aPermissionID].exactHostMatch)
+    if (aPermissionID in gPermissionObject &&
+        gPermissionObject[aPermissionID].exactHostMatch)
       state = Services.perms.testExactPermission(aURI, aPermissionID);
     else
       state = Services.perms.testPermission(aURI, aPermissionID);
     return state;
   },
 
-  /* Sets the state of a perticular permission for a given URI.
+  /* Sets the state of a particular permission for a given URI.
    */
   set: function (aURI, aPermissionID, aState) {
     if (!this.isSupportedURI(aURI))
       return;
 
+    if (aState == this.UNKNOWN) {
+      this.remove(aURI, aPermissionID);
+      return;
+    }
+
     Services.perms.add(aURI, aPermissionID, aState);
 
-    if (gPermissionObject[aPermissionID].onSet)
-      gPermissionObject[aPermissionID].onSet(aURI, aState);
+    if (aPermissionID in gPermissionObject &&
+        gPermissionObject[aPermissionID].onChange)
+      gPermissionObject[aPermissionID].onChange(aURI, aState);
+  },
+
+  /* Removes the saved state of a particular permission for a given URI.
+   */
+  remove: function (aURI, aPermission) {
+    if (!this.isSupportedURI(aURI))
+      return;
+
+    Services.perms.remove(aURI.host, aPermission);
+
+    if (aPermissionID in gPermissionObject &&
+        gPermissionObject[aPermissionID].onChange)
+      gPermissionObject[aPermissionID].onChange(aURI, this.UNKNOWN);
   },
 
   /* Returns the localized label for the permission with the given ID, to be
@@ -76,6 +112,8 @@ this.SitePermissions = {
    */
   getStateLabel: function (aState) {
     switch (aState) {
+      case this.UNKNOWN:
+        return gStringBundle.GetStringFromName("alwaysAsk");
       case this.ALLOW:
         return gStringBundle.GetStringFromName("allow");
       case this.SESSION:
@@ -97,32 +135,64 @@ let gPermissionObject = {
    *    Allows sub domains to have their own permissions.
    *    Defaults to false.
    *
-   *  - onSet
+   *  - getDefault
+   *    Called to get the permission's default state.
+   *    Defaults to UNKNOWN, indicating that the user will be asked each time
+   *    a page asks for that permissions.
+   *
+   *  - onChange
    *    Called when a permission state changes.
    *
    *  - states
    *    Array of permission states to be exposed to the user.
-   *    Defaults to ALLOW and BLOCK.
+   *    Defaults to ALLOW, BLOCK and the default state (see getDefault).
    */
 
-  "image": {},
+  "image": {
+    getDefault: function () {
+      return Services.prefs.getIntPref("permissions.default.image") == 2 ?
+               SitePermissions.BLOCK : SitePermissions.ALLOW;
+    }
+  },
 
   "cookie": {
-    states: [ SitePermissions.ALLOW, SitePermissions.SESSION, SitePermissions.BLOCK ]
+    states: [ SitePermissions.ALLOW, SitePermissions.SESSION, SitePermissions.BLOCK ],
+    getDefault: function () {
+      if (Services.prefs.getIntPref("network.cookie.cookieBehavior") == 2)
+        return SitePermissions.BLOCK;
+
+      if (Services.prefs.getIntPref("network.cookie.lifetimePolicy") == 2)
+        return SitePermissions.SESSION;
+
+      return SitePermissions.ALLOW;
+    }
   },
 
   "desktop-notification": {},
 
-  "popup": {},
+  "popup": {
+    getDefault: function () {
+      return Services.prefs.getBoolPref("dom.disable_open_during_load") ?
+               SitePermissions.BLOCK : SitePermissions.ALLOW;
+    }
+  },
 
-  "install": {},
+  "install": {
+    getDefault: function () {
+      return Services.prefs.getBoolPref("xpinstall.whitelist.required") ?
+               SitePermissions.BLOCK : SitePermissions.ALLOW;
+    }
+  },
 
   "geo": {
     exactHostMatch: true
   },
 
   "indexedDB": {
-    onSet: function (aURI, aState) {
+    getDefault: function () {
+      return SitePermissions.ALLOW;
+    },
+    onChange: function (aURI, aState) {
       if (aState == SitePermissions.ALLOW || aState == SitePermissions.BLOCK)
         Services.perms.remove(aURI.host, "indexedDB-unlimited");
     }
