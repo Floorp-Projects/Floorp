@@ -34,17 +34,13 @@ public:
   {
     if (IsHidden())
       return;
-    gfxContextAutoSaveRestore contextSR(aContext);
     AutoSetOperator setOperator(aContext, GetOperator());
-
-    aContext->SetColor(mColor);
-
-    nsIntRect bounds = GetBounds();
-    aContext->NewPath();
-    aContext->Rectangle(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
-
-    FillWithMask(aContext, GetEffectiveOpacity(), aMaskLayer);
+    PaintColorTo(mColor, GetEffectiveOpacity(), aContext, aMaskLayer);
   }
+
+  static void PaintColorTo(gfxRGBA aColor, float aOpacity,
+                           gfxContext* aContext,
+                           Layer* aMaskLayer);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -52,6 +48,15 @@ protected:
     return static_cast<BasicLayerManager*>(mManager);
   }
 };
+
+/*static*/ void
+BasicColorLayer::PaintColorTo(gfxRGBA aColor, float aOpacity,
+                              gfxContext* aContext,
+                              Layer* aMaskLayer)
+{
+  aContext->SetColor(aColor);
+  PaintWithMask(aContext, aOpacity, aMaskLayer);
+}
 
 already_AddRefed<ColorLayer>
 BasicLayerManager::CreateColorLayer()

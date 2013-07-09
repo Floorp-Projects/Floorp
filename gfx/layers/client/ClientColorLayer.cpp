@@ -40,7 +40,7 @@ public:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
-    aAttrs = ColorLayerAttributes(GetColor(), GetBounds());
+    aAttrs = ColorLayerAttributes(GetColor());
   }
 
   virtual Layer* AsLayer() { return this; }
