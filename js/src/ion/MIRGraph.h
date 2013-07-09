@@ -609,6 +609,9 @@ class MIRGraph
     ReversePostorderIterator rpoBegin() {
         return blocks_.begin();
     }
+    ReversePostorderIterator rpoBegin(MBasicBlock *at) {
+        return blocks_.begin(at);
+    }
     ReversePostorderIterator rpoEnd() {
         return blocks_.end();
     }
