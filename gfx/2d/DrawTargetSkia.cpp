@@ -659,6 +659,7 @@ DrawTargetSkia::InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLCont
   SkAutoTUnref<GrContext> gr(GrContext::Create(kOpenGL_GrBackend, backendContext));
   mGrContext = gr.get();
 
+  mGrContext->setTextureCacheLimits(128, 1024*1024*16);
 
   GrBackendRenderTargetDesc targetDescriptor;
 
