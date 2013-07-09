@@ -5339,7 +5339,7 @@ nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
   nsIHTMLDocument* doc = GetDocument(obj);
   if (doc) {
-    xpc::DeferredRelease(doc);
+    nsContentUtils::DeferredFinalize(doc);
   }
 }
 

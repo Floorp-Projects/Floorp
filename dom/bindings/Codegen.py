@@ -964,26 +964,22 @@ def DeferredFinalizeSmartPtr(descriptor):
         smartPtr = 'nsRefPtr<%s>'
     return smartPtr % descriptor.nativeType
 
-class CGDeferredFinalizePointers(CGThing):
+class CGAppendDeferredFinalizePointer(CGAbstractStaticMethod):
     def __init__(self, descriptor):
-        CGThing.__init__(self)
-        self.descriptor = descriptor
-
-    def declare(self):
-        return ""
-
-    def define(self):
-        return """nsTArray<%s >* sDeferredFinalizePointers;
-""" % DeferredFinalizeSmartPtr(self.descriptor)
-
-class CGGetDeferredFinalizePointers(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        CGAbstractStaticMethod.__init__(self, descriptor, "GetDeferredFinalizePointers", "void*", [])
+        CGAbstractStaticMethod.__init__(self, descriptor, "AppendDeferredFinalizePointer", "void*", [Argument('void*', 'data'), Argument('void*', 'thing')])
 
     def definition_body(self):
-        return """  nsTArray<%s >* pointers = sDeferredFinalizePointers;
-  sDeferredFinalizePointers = nullptr;
-  return pointers;""" % DeferredFinalizeSmartPtr(self.descriptor)
+        smartPtr = DeferredFinalizeSmartPtr(self.descriptor)
+        return """  nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
+  if (!pointers) {
+    pointers = new nsTArray<%(smartPtr)s >();
+  }
+
+  %(nativeType)s* self = static_cast<%(nativeType)s*>(thing);
+
+  %(smartPtr)s* defer = pointers->AppendElement();
+  Take(*defer, self);
+  return pointers;""" % { 'smartPtr': smartPtr, 'nativeType': self.descriptor.nativeType }
 
 class CGDeferredFinalize(CGAbstractStaticMethod):
     def __init__(self, descriptor):
@@ -1015,29 +1011,12 @@ def finalizeHook(descriptor, hookName, context):
         if descriptor.workers:
             finalize += "self->Release();"
         elif descriptor.nativeOwnership == 'nsisupports':
-            finalize += "xpc::DeferredRelease(reinterpret_cast<nsISupports*>(self));"
+            finalize += "nsContentUtils::DeferredFinalize(reinterpret_cast<nsISupports*>(self));"
         else:
-            smartPtr = DeferredFinalizeSmartPtr(descriptor)
-            finalize += """static bool registered = false;
-if (!registered) {
-  if (!RegisterForDeferredFinalization(GetDeferredFinalizePointers,
-                                       DeferredFinalize)) {
-    %(smartPtr)s dying;
-    Take(dying, self);
-    return;
-  }
-  registered = true;
-}
-if (!sDeferredFinalizePointers) {
-  sDeferredFinalizePointers = new nsAutoTArray<%(smartPtr)s, 16>();
-}
-%(smartPtr)s* defer = sDeferredFinalizePointers->AppendElement();
-if (!defer) {
-  %(smartPtr)s dying;
-  Take(dying, self);
-  return;
-}
-Take(*defer, self);""" % { 'smartPtr': smartPtr }
+            finalize += """nsContentUtils::DeferredFinalize(AppendDeferredFinalizePointer,
+                                 DeferredFinalize,
+                                 self);
+"""
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -7583,8 +7562,7 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':
-                cgThings.append(CGDeferredFinalizePointers(descriptor))
-                cgThings.append(CGGetDeferredFinalizePointers(descriptor))
+                cgThings.append(CGAppendDeferredFinalizePointer(descriptor))
                 cgThings.append(CGDeferredFinalize(descriptor))
 
             if not descriptor.proxy:
