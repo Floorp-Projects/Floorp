@@ -28,16 +28,10 @@ webidl_files = \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
   Blob.webidl \
-  CDATASection.webidl \
-  CSS.webidl \
-  CSSPrimitiveValue.webidl \
-  CSSStyleDeclaration.webidl \
-  CSSStyleSheet.webidl \
-  CSSValue.webidl \
-  CSSValueList.webidl \
   CameraManager.webidl \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
+  CDATASection.webidl \
   ChannelMergerNode.webidl \
   ChannelSplitterNode.webidl \
   CharacterData.webidl \
@@ -50,6 +44,20 @@ webidl_files = \
   CompositionEvent.webidl \
   ConvolverNode.webidl \
   Coordinates.webidl \
+  CSS.webidl \
+  CSSPrimitiveValue.webidl \
+  CSSStyleDeclaration.webidl \
+  CSSStyleSheet.webidl \
+  CSSValue.webidl \
+  CSSValueList.webidl \
+  DataContainerEvent.webidl \
+  DelayNode.webidl \
+  DesktopNotification.webidl \
+  DeviceMotionEvent.webidl \
+  DeviceStorage.webidl \
+  Document.webidl \
+  DocumentFragment.webidl \
+  DocumentType.webidl \
   DOMCursor.webidl \
   DOMError.webidl \
   DOMImplementation.webidl \
@@ -60,14 +68,6 @@ webidl_files = \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
   DOMTransaction.webidl \
-  DataContainerEvent.webidl \
-  DelayNode.webidl \
-  DesktopNotification.webidl \
-  DeviceMotionEvent.webidl \
-  DeviceStorage.webidl \
-  Document.webidl \
-  DocumentFragment.webidl \
-  DocumentType.webidl \
   DragEvent.webidl \
   DummyBinding.webidl \
   DynamicsCompressorNode.webidl \
@@ -94,17 +94,17 @@ webidl_files = \
   HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \
   HTMLAudioElement.webidl \
-  HTMLBRElement.webidl \
   HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
+  HTMLBRElement.webidl \
   HTMLButtonElement.webidl \
   HTMLCanvasElement.webidl \
   HTMLCollection.webidl \
-  HTMLDListElement.webidl \
   HTMLDataElement.webidl \
   HTMLDataListElement.webidl \
   HTMLDirectoryElement.webidl \
   HTMLDivElement.webidl \
+  HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
   HTMLEmbedElement.webidl \
@@ -113,16 +113,16 @@ webidl_files = \
   HTMLFormElement.webidl \
   HTMLFrameElement.webidl \
   HTMLFrameSetElement.webidl \
-  HTMLHRElement.webidl \
   HTMLHeadElement.webidl \
   HTMLHeadingElement.webidl \
+  HTMLHRElement.webidl \
   HTMLHtmlElement.webidl \
   HTMLIFrameElement.webidl \
   HTMLImageElement.webidl \
   HTMLInputElement.webidl \
-  HTMLLIElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLegendElement.webidl \
+  HTMLLIElement.webidl \
   HTMLLinkElement.webidl \
   HTMLMapElement.webidl \
   HTMLMediaElement.webidl \
@@ -131,8 +131,8 @@ webidl_files = \
   HTMLMetaElement.webidl \
   HTMLMeterElement.webidl \
   HTMLModElement.webidl \
-  HTMLOListElement.webidl \
   HTMLObjectElement.webidl \
+  HTMLOListElement.webidl \
   HTMLOptGroupElement.webidl \
   HTMLOptionElement.webidl \
   HTMLOptionsCollection.webidl \
@@ -168,8 +168,8 @@ webidl_files = \
   ImageData.webidl \
   ImageDocument.webidl \
   InspectorUtils.webidl \
-  KeyEvent.webidl \
   KeyboardEvent.webidl \
+  KeyEvent.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
@@ -215,6 +215,8 @@ webidl_files = \
   Position.webidl \
   PositionError.webidl \
   ProcessingInstruction.webidl \
+  Range.webidl \
+  Rect.webidl \
   RGBColor.webidl \
   RTCConfiguration.webidl \
   RTCDataChannelEvent.webidl \
@@ -222,14 +224,16 @@ webidl_files = \
   RTCPeerConnection.webidl \
   RTCPeerConnectionIceEvent.webidl \
   RTCSessionDescription.webidl \
-  Range.webidl \
-  Rect.webidl \
+  Screen.webidl \
+  ScriptProcessorNode.webidl \
+  ScrollAreaEvent.webidl \
+  SimpleGestureEvent.webidl \
+  SourceBuffer.webidl \
+  SourceBufferList.webidl \
+  StyleSheet.webidl \
   SVGAElement.webidl \
   SVGAltGlyphElement.webidl \
   SVGAngle.webidl \
-  SVGAnimateElement.webidl \
-  SVGAnimateMotionElement.webidl \
-  SVGAnimateTransformElement.webidl \
   SVGAnimatedAngle.webidl \
   SVGAnimatedBoolean.webidl \
   SVGAnimatedEnumeration.webidl \
@@ -244,6 +248,9 @@ webidl_files = \
   SVGAnimatedRect.webidl \
   SVGAnimatedString.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGAnimateElement.webidl \
+  SVGAnimateMotionElement.webidl \
+  SVGAnimateTransformElement.webidl \
   SVGAnimationElement.webidl \
   SVGCircleElement.webidl \
   SVGClipPathElement.webidl \
@@ -286,13 +293,13 @@ webidl_files = \
   SVGGraphicsElement.webidl \
   SVGImageElement.webidl \
   SVGLengthList.webidl \
-  SVGLineElement.webidl \
   SVGLinearGradientElement.webidl \
-  SVGMPathElement.webidl \
+  SVGLineElement.webidl \
   SVGMarkerElement.webidl \
   SVGMaskElement.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
+  SVGMPathElement.webidl \
   SVGNumberList.webidl \
   SVGPathElement.webidl \
   SVGPathSeg.webidl \
@@ -306,15 +313,14 @@ webidl_files = \
   SVGRadialGradientElement.webidl \
   SVGRect.webidl \
   SVGRectElement.webidl \
-  SVGSVGElement.webidl \
   SVGScriptElement.webidl \
   SVGSetElement.webidl \
   SVGStopElement.webidl \
   SVGStringList.webidl \
   SVGStyleElement.webidl \
+  SVGSVGElement.webidl \
   SVGSwitchElement.webidl \
   SVGSymbolElement.webidl \
-  SVGTSpanElement.webidl \
   SVGTests.webidl \
   SVGTextContentElement.webidl \
   SVGTextElement.webidl \
@@ -323,19 +329,13 @@ webidl_files = \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformList.webidl \
-  SVGURIReference.webidl \
+  SVGTSpanElement.webidl \
   SVGUnitTypes.webidl \
+  SVGURIReference.webidl \
   SVGUseElement.webidl \
   SVGViewElement.webidl \
   SVGZoomAndPan.webidl \
   SVGZoomEvent.webidl \
-  Screen.webidl \
-  ScriptProcessorNode.webidl \
-  ScrollAreaEvent.webidl \
-  SimpleGestureEvent.webidl \
-  SourceBuffer.webidl \
-  SourceBufferList.webidl \
-  StyleSheet.webidl \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
@@ -351,9 +351,9 @@ webidl_files = \
   TreeColumns.webidl \
   TreeWalker.webidl \
   UIEvent.webidl \
+  UndoManager.webidl \
   URL.webidl \
   URLUtils.webidl \
-  UndoManager.webidl \
   ValidityState.webidl \
   VideoPlaybackQuality.webidl \
   VideoStreamTrack.webidl \
@@ -424,11 +424,11 @@ webidl_files += \
   BlobEvent.webidl \
   CloseEvent.webidl \
   CustomEvent.webidl \
-  DOMTransactionEvent.webidl \
   DeviceLightEvent.webidl \
   DeviceOrientationEvent.webidl \
   DeviceProximityEvent.webidl \
   DeviceStorageChangeEvent.webidl \
+  DOMTransactionEvent.webidl \
   ElementReplaceEvent.webidl \
   HashChangeEvent.webidl \
   MozApplicationEvent.webidl \
@@ -457,8 +457,8 @@ endif
 
 ifdef MOZ_B2G_RIL
 webidl_files += \
-  CFStateChangeEvent.webidl \
   CallEvent.webidl \
+  CFStateChangeEvent.webidl \
   DataErrorEvent.webidl \
   IccCardLockErrorEvent.webidl \
   MozCellBroadcastEvent.webidl \
