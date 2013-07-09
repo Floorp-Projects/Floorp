@@ -14,7 +14,7 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
@@ -676,7 +676,7 @@ IDBTransaction::GetObjectStoreNames(ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+  nsRefPtr<DOMStringList> list(new DOMStringList());
 
   nsAutoTArray<nsString, 10> stackArray;
   nsTArray<nsString>* arrayOfNames;
