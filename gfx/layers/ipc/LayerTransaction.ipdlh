@@ -203,7 +203,7 @@ struct ContainerLayerAttributes {
   float inheritedXScale;
   float inheritedYScale;
 };
-struct ColorLayerAttributes     { LayerColor color; };
+struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };
 struct RefLayerAttributes       { int64_t id; };
 struct ImageLayerAttributes     { GraphicsFilterType filter; gfxIntSize scaleToSize; ScaleMode scaleMode; };
