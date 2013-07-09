@@ -181,6 +181,10 @@ public class TopBookmarksView extends GridView {
      * @param thumbnails A map of urls and their thumbnail bitmaps.
      */
     public void updateThumbnails(Map<String, Thumbnail> thumbnails) {
+        if (thumbnails == null) {
+            return;
+        }
+
         // If there's a layout scheduled on this view, wait for it to happen
         // by storing the thumbnails in a cache. If not, update them right away.
         if (isLayoutRequested()) {
