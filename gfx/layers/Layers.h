@@ -1563,19 +1563,6 @@ public:
     }
   }
 
-  void SetBounds(const nsIntRect& aBounds)
-  {
-    if (!mBounds.IsEqualEdges(aBounds)) {
-      mBounds = aBounds;
-      Mutated();
-    }
-  }
-
-  const nsIntRect& GetBounds()
-  {
-    return mBounds;
-  }
-
   // This getter can be used anytime.
   virtual const gfxRGBA& GetColor() { return mColor; }
 
@@ -1596,7 +1583,6 @@ protected:
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
-  nsIntRect mBounds;
   gfxRGBA mColor;
 };
 

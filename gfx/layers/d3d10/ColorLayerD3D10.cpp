@@ -42,18 +42,21 @@ ColorLayerD3D10::RenderLayer()
 
   ID3D10EffectTechnique *technique = SelectShader(SHADER_SOLID | LoadMaskTexture());
 
-  nsIntRect bounds = GetBounds();
+  nsIntRegionRectIterator iter(mVisibleRegion);
 
-  effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
-    ShaderConstantRectD3D10(
-      (float)bounds.x,
-      (float)bounds.y,
-      (float)bounds.width,
-      (float)bounds.height)
-    );
+  const nsIntRect *iterRect;
+  while ((iterRect = iter.Next())) {
+    effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
+      ShaderConstantRectD3D10(
+        (float)iterRect->x,
+        (float)iterRect->y,
+        (float)iterRect->width,
+        (float)iterRect->height)
+      );
 
-  technique->GetPassByIndex(0)->Apply(0);
-  device()->Draw(4, 0);
+    technique->GetPassByIndex(0)->Apply(0);
+    device()->Draw(4, 0);
+  }
 }
 
 } /* layers */
