@@ -76,9 +76,10 @@ public:                                                                     \
   static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_INNERCLASS *that,       \
                                 void *p,                                    \
                                 nsCycleCollectionTraversalCallback &cb);    \
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p)                       \
+  static NS_METHOD_(void) DeleteCycleCollectableImpl(void* p)               \
   {                                                                         \
-    Downcast(static_cast<nsISupports *>(p))->UnmarkIfPurple();              \
+    NS_CYCLE_COLLECTION_CLASSNAME(_class)::                                 \
+      Downcast(static_cast<nsISupports*>(p))->DeleteCycleCollectable();     \
   }                                                                         \
   static _class* Downcast(nsISupports* s)                                   \
   {                                                                         \
@@ -149,11 +150,10 @@ _class::Internal::AddRef(void)                                              \
     MOZ_ASSERT(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");               \
     NS_CheckThreadSafe(agg->_mOwningThread.GetThread(),                     \
                        #_class " not thread-safe");                         \
-    nsrefcnt count = agg->mRefCnt.incr(this);                               \
+    nsrefcnt count = agg->mRefCnt.incr();                                   \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*agg));                      \
     return count;                                                           \
 }                                                                           \
-                                                                            \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::Release(void)                                             \
 {                                                                           \
@@ -163,12 +163,12 @@ _class::Internal::Release(void)                                             \
                        #_class " not thread-safe");                         \
     nsrefcnt count = agg->mRefCnt.decr(this);                               \
     NS_LOG_RELEASE(this, count, #_class);                                   \
-    if (count == 0) {                                                       \
-        agg->mRefCnt.stabilizeForDeletion();                                \
-        delete agg;                                                         \
-        return 0;                                                           \
-    }                                                                       \
     return count;                                                           \
+}                                                                           \
+NS_IMETHODIMP_(void)                                                        \
+_class::DeleteCycleCollectable(void)                                        \
+{                                                                           \
+  delete this;                                                              \
 }
 
 #define NS_IMPL_AGGREGATED_HELPER(_class)                                   \

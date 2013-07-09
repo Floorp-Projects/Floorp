@@ -56,6 +56,8 @@ void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB)
 
 void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false);
 
+void nsCycleCollector_dispatchDeferredDeletion();
+
 void nsCycleCollector_collect(bool aManuallyTriggered,
                               nsCycleCollectorResults *aResults,
                               nsICycleCollectorListener *aListener);

@@ -43,6 +43,11 @@ public:
 
   NS_IMETHOD RedoTransaction();
 
+  virtual void LastRelease()
+  {
+    mRange = nullptr;
+    EditAggregateTxn::LastRelease();
+  }
 protected:
 
   nsresult CreateTxnsToDeleteBetween(nsINode* aNode,

@@ -1034,6 +1034,7 @@ public:
       Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_CONTENT_UNBIND,
                             uint32_t(PR_Now() - start) / PR_USEC_PER_MSEC);
     }
+    nsCycleCollector_dispatchDeferredDeletion();
     if (this == sContentUnbinder) {
       sContentUnbinder = nullptr;
       if (mNext) {
@@ -1692,8 +1693,8 @@ NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FragmentOrElement)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(FragmentOrElement,
-                                              nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(FragmentOrElement,
+                                                   nsNodeUtils::LastRelease(this))
 
 nsresult
 FragmentOrElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
