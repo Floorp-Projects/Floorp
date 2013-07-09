@@ -7,6 +7,7 @@
 #include "XPathExpression.h"
 #include "txExpr.h"
 #include "txExprResult.h"
+#include "txIXPathContext.h"
 #include "nsError.h"
 #include "nsIDOMCharacterData.h"
 #include "nsDOMClassInfoID.h"
@@ -21,6 +22,35 @@ DOMCI_DATA(XPathExpression, mozilla::dom::XPathExpression)
  
 namespace mozilla {
 namespace dom {
+
+class EvalContextImpl : public txIEvalContext
+{
+public:
+    EvalContextImpl(const txXPathNode& aContextNode,
+                    uint32_t aContextPosition, uint32_t aContextSize,
+                    txResultRecycler* aRecycler)
+        : mContextNode(aContextNode),
+          mContextPosition(aContextPosition),
+          mContextSize(aContextSize),
+          mLastError(NS_OK),
+          mRecycler(aRecycler)
+    {
+    }
+
+    nsresult getError()
+    {
+        return mLastError;
+    }
+
+    TX_DECL_EVAL_CONTEXT;
+
+private:
+    const txXPathNode& mContextNode;
+    uint32_t mContextPosition;
+    uint32_t mContextSize;
+    nsresult mLastError;
+    nsRefPtr<txResultRecycler> mRecycler;
+};
 
 NS_IMPL_CYCLE_COLLECTION(XPathExpression, mDocument)
 
@@ -157,55 +187,54 @@ XPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
  */
 
 nsresult
-XPathExpression::EvalContextImpl::getVariable(int32_t aNamespace,
-                                              nsIAtom* aLName,
-                                              txAExprResult*& aResult)
+EvalContextImpl::getVariable(int32_t aNamespace,
+                             nsIAtom* aLName,
+                             txAExprResult*& aResult)
 {
     aResult = 0;
     return NS_ERROR_INVALID_ARG;
 }
 
 bool
-XPathExpression::EvalContextImpl::isStripSpaceAllowed(const txXPathNode& aNode)
+EvalContextImpl::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     return false;
 }
 
 void*
-XPathExpression::EvalContextImpl::getPrivateContext()
+EvalContextImpl::getPrivateContext()
 {
     // we don't have a private context here.
     return nullptr;
 }
 
 txResultRecycler*
-XPathExpression::EvalContextImpl::recycler()
+EvalContextImpl::recycler()
 {
     return mRecycler;
 }
 
 void
-XPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,
-                                               nsresult aRes)
+EvalContextImpl::receiveError(const nsAString& aMsg, nsresult aRes)
 {
     mLastError = aRes;
     // forward aMsg to console service?
 }
 
 const txXPathNode&
-XPathExpression::EvalContextImpl::getContextNode()
+EvalContextImpl::getContextNode()
 {
     return mContextNode;
 }
 
 uint32_t
-XPathExpression::EvalContextImpl::size()
+EvalContextImpl::size()
 {
     return mContextSize;
 }
 
 uint32_t
-XPathExpression::EvalContextImpl::position()
+EvalContextImpl::position()
 {
     return mContextPosition;
 }
