@@ -281,6 +281,10 @@ public:
     }
   }
 
+  void UpdateFromDrawTarget(const nsIntSize& aNewSize,
+                            const nsIntRegion& aDirtyRegion,
+                            gfx::DrawTarget* aFromDrawTarget);
+
   nsIntRegion GetUpdateRegion() {
     MOZ_ASSERT(mInUpdate, "update region only valid during update");
     return mUpdateRegion;
@@ -290,8 +294,9 @@ public:
             const nsIntPoint& aLocation,
             const gfx3DMatrix& aTransform = gfx3DMatrix());
 
+  static nsIntSize TextureSizeForSize(const nsIntSize& aSize);
+
 protected:
-  nsIntSize TextureSizeForSize(const nsIntSize& aSize);
 
   RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
   GLContext* mGLContext;
@@ -2127,13 +2132,15 @@ nsChildView::UpdateTitlebarImageBuffer()
   nsIntRegion dirtyTitlebarRegion = mDirtyTitlebarRegion;
   mDirtyTitlebarRegion.SetEmpty();
 
-  gfx::IntSize titlebarSize(mTitlebarRect.width, mTitlebarRect.height);
+  nsIntSize texSize = RectTextureImage::TextureSizeForSize(mTitlebarRect.Size());
+  gfx::IntSize titlebarBufferSize(texSize.width, texSize.height);
   if (!mTitlebarImageBuffer ||
-      mTitlebarImageBuffer->GetSize() != titlebarSize) {
+      mTitlebarImageBuffer->GetSize() != titlebarBufferSize) {
     dirtyTitlebarRegion = mTitlebarRect;
 
     mTitlebarImageBuffer =
-      gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS, titlebarSize,
+      gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS,
+                                     titlebarBufferSize,
                                      gfx::FORMAT_B8G8R8A8);
   }
 
@@ -2241,16 +2248,9 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager, const nsIntRect& aRect)
     mTitlebarImage = new RectTextureImage(aManager->gl());
   }
 
-  mTitlebarImage->UpdateIfNeeded(mTitlebarRect.Size(), updatedTitlebarRegion,
-                                 ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
-    RefPtr<gfx::SourceSurface> source = mTitlebarImageBuffer->Snapshot();
-    gfx::Rect rect(0, 0, mTitlebarRect.width, mTitlebarRect.height);
-    gfxUtils::ClipToRegion(drawTarget, updateRegion);
-    drawTarget->DrawSurface(source, rect, rect,
-                            gfx::DrawSurfaceOptions(),
-                            gfx::DrawOptions(1.0, gfx::OP_SOURCE));
-    drawTarget->PopClip();
-  });
+  mTitlebarImage->UpdateFromDrawTarget(mTitlebarRect.Size(),
+                                       updatedTitlebarRegion,
+                                       mTitlebarImageBuffer);
 
   mTitlebarImage->Draw(aManager, mTitlebarRect.TopLeft());
 }
@@ -2531,6 +2531,29 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   }
 
   mInUpdate = false;
+}
+
+void
+RectTextureImage::UpdateFromDrawTarget(const nsIntSize& aNewSize,
+                                       const nsIntRegion& aDirtyRegion,
+                                       gfx::DrawTarget* aFromDrawTarget)
+{
+  mUpdateDrawTarget = aFromDrawTarget;
+  mBufferSize.SizeTo(aFromDrawTarget->GetSize().width, aFromDrawTarget->GetSize().height);
+  RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
+  if (drawTarget) {
+    if (drawTarget != aFromDrawTarget) {
+      RefPtr<gfx::SourceSurface> source = aFromDrawTarget->Snapshot();
+      gfx::Rect rect(0, 0, aFromDrawTarget->GetSize().width, aFromDrawTarget->GetSize().height);
+      gfxUtils::ClipToRegion(drawTarget, GetUpdateRegion());
+      drawTarget->DrawSurface(source, rect, rect,
+                              gfx::DrawSurfaceOptions(),
+                              gfx::DrawOptions(1.0, gfx::OP_SOURCE));
+      drawTarget->PopClip();
+    }
+    EndUpdate();
+  }
+  mUpdateDrawTarget = nullptr;
 }
 
 void
