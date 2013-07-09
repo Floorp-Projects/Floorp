@@ -15,17 +15,20 @@
 #include "nsIProgressEventSink.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIThread.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 
 class nsInputStreamPump MOZ_FINAL : public nsIInputStreamPump
                                   , public nsIInputStreamCallback
+                                  , public nsIThreadRetargetableRequest
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIINPUTSTREAMPUMP
     NS_DECL_NSIINPUTSTREAMCALLBACK
+    NS_DECL_NSITHREADRETARGETABLEREQUEST
 
     nsInputStreamPump(); 
     ~nsInputStreamPump();
@@ -53,6 +56,20 @@ public:
      */
     NS_HIDDEN_(nsresult) PeekStream(PeekSegmentFun callback, void *closure);
 
+    /**
+     * Called on the main thread to clean up member variables. Called directly
+     * from OnStateStop if on the main thread, or dispatching to the main
+     * thread if not. Must be called on the main thread to serialize member
+     * variable deletion with calls to Cancel.
+     */
+    void OnStateStopCleanup();
+
+    /**
+     * Called on the main thread if EnsureWaiting fails, so that we always call
+     * OnStopRequest on main thread.
+     */
+    nsresult OnStateStopForFailure();
+
 protected:
 
     enum {
@@ -71,7 +88,7 @@ protected:
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
     nsCOMPtr<nsIStreamListener>   mListener;
     nsCOMPtr<nsISupports>         mListenerContext;
-    nsCOMPtr<nsIThread>           mTargetThread;
+    nsCOMPtr<nsIEventTarget>      mTargetThread;
     nsCOMPtr<nsIInputStream>      mStream;
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
     uint64_t                      mStreamOffset;
@@ -84,6 +101,7 @@ protected:
     bool                          mIsPending;
     bool                          mWaiting; // true if waiting on async source
     bool                          mCloseWhenDone;
+    bool                          mRetargeting;
 };
 
 #endif // !nsInputStreamChannel_h__

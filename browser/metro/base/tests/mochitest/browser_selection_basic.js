@@ -25,6 +25,8 @@ function setUpAndTearDown() {
   yield waitForCondition(function () {
       return !SelectionHelperUI.isSelectionUIVisible;
     }, kCommonWaitMs, kCommonPollMs);
+  InputSourceHelper.isPrecise = false;
+  InputSourceHelper.fireUpdate();
 }
 
 gTests.push({
@@ -42,7 +44,6 @@ gTests.push({
     yield hideContextUI();
 
     gWindow = Browser.selectedTab.browser.contentWindow;
-    InputSourceHelper.isPrecise = false;
   },
 });
 

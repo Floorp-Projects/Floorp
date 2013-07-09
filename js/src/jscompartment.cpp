@@ -88,7 +88,7 @@ JSCompartment::init(JSContext *cx)
 {
     /*
      * As a hack, we clear our timezone cache every time we create a new
-     * compartment.  This ensures that the cache is always relatively fresh, but
+     * compartment. This ensures that the cache is always relatively fresh, but
      * shouldn't interfere with benchmarks which create tons of date objects
      * (unless they also create tons of iframes, which seems unlikely).
      */

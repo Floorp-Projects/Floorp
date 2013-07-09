@@ -327,9 +327,10 @@ bool LaunchApp(const std::wstring& cmdline,
   if (!createdOK)
     return false;
 
-  gProcessLog.print("==> process %d launched child process %d\n",
+  gProcessLog.print("==> process %d launched child process %d (%S)\n",
                     GetCurrentProcId(),
-                    process_info.dwProcessId);
+                    process_info.dwProcessId,
+                    cmdline.c_str());
 
   // Handles must be closed or they will leak
   CloseHandle(process_info.hThread);

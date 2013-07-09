@@ -15,8 +15,9 @@ dictionary SocketsDict {
 };
 
 dictionary HttpConnInfoDict {
-	sequence<unsigned long> rtt;
-	sequence<unsigned long> ttl;
+  sequence<unsigned long> rtt;
+  sequence<unsigned long> ttl;
+  sequence<DOMString> protocolVersion;
 };
 
 dictionary HttpConnDict {
