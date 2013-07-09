@@ -578,6 +578,12 @@ gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
 }
 
 /*static*/ void
+gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
+{
+  ClipToRegionInternal(aTarget, aRegion, false);
+}
+
+/*static*/ void
 gfxUtils::ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion)
 {
   ClipToRegionInternal(aContext, aRegion, true);
