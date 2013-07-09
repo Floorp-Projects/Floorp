@@ -51,7 +51,6 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 
 ImageClient::ImageClient(CompositableForwarder* aFwd, CompositableType aType)
 : CompositableClient(aFwd)
-, mFilter(gfxPattern::FILTER_GOOD)
 , mType(aType)
 , mLastPaintedImageSerial(0)
 {}
@@ -190,11 +189,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     EnsureDeprecatedTextureClient(TEXTURE_SHMEM);
     MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
 
-    nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
-    pattern->SetFilter(mFilter);
-
     AutoLockShmemClient clientLock(mDeprecatedTextureClient);
-    if (!clientLock.Update(image, aContentFlags, pattern)) {
+    if (!clientLock.Update(image, aContentFlags, surface)) {
       NS_WARNING("failed to update DeprecatedTextureClient");
       return false;
     }
