@@ -10,7 +10,6 @@ interface nsIAccessible;
 interface nsIWeakReference;
 interface nsIPresShell;
 interface nsIDOMWindow;
-interface nsIDOMDOMStringList;
 interface nsIAccessiblePivot;
 
 /**
@@ -48,8 +47,8 @@ interface nsIAccessibleRetrieval : nsISupports
     * @param aStates - accessible states.
     * @param aExtraStates - accessible extra states.
     */
-  nsIDOMDOMStringList getStringStates(in unsigned long aStates,
-                                      in unsigned long aExtraStates);
+  nsISupports getStringStates(in unsigned long aStates,
+                              in unsigned long aExtraStates);
 
   /**
    * Get the type of accessible event as a string.

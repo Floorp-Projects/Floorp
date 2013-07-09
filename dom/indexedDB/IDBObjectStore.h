@@ -285,7 +285,7 @@ public:
   JS::Value
   GetKeyPath(JSContext* aCx, ErrorResult& aRv);
 
-  already_AddRefed<nsIDOMDOMStringList>
+  already_AddRefed<DOMStringList>
   GetIndexNames(ErrorResult& aRv);
 
   IDBTransaction*

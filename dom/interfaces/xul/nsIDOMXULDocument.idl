@@ -10,7 +10,7 @@ interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
 interface nsIBoxObject;
 
-[scriptable, uuid(e057a0ef-4be3-4d60-b45a-6cb9d35d8563)]
+[scriptable, uuid(efdb94fb-642f-4a79-ae20-9a5f7cb7f736)]
 interface nsIDOMXULDocument : nsIDOMDocument
 {
   attribute nsIDOMNode                          popupNode;

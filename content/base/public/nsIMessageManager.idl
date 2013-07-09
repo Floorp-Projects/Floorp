@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDOMStringList;
 interface nsIDOMWindow;
 interface nsIDocShell;
 interface nsIContent;
