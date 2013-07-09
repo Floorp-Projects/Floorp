@@ -2333,6 +2333,11 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
         }
+      } else if (nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoTag)) {
+        newContext = styleSet->ResolvePseudoElementStyle(element,
+                                                         pseudoType,
+                                                         parentContext,
+                                                         aSelf->GetContent()->AsElement());
       } else {
         // Don't expect XUL tree stuff here, since it needs a comparator and
         // all.

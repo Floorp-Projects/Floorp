@@ -1376,6 +1376,7 @@ CssSelector.prototype = {
       pseudos.add("first-letter");
       pseudos.add("first-line");
       pseudos.add("selection");
+      pseudos.add("-moz-color-swatch");
       pseudos.add("-moz-focus-inner");
       pseudos.add("-moz-focus-outer");
       pseudos.add("-moz-list-bullet");
