@@ -2895,25 +2895,7 @@ class MUrsh : public MShiftInstruction
 
     void infer(BaselineInspector *inspector, jsbytecode *pc);
 
-    bool canOverflow() {
-        // solution is only negative when lhs < 0 and rhs & 0x1f == 0
-        MDefinition *lhs = getOperand(0);
-        MDefinition *rhs = getOperand(1);
-
-        if (lhs->isConstant()) {
-            Value lhsv = lhs->toConstant()->value();
-            if (lhsv.isInt32() && lhsv.toInt32() >= 0)
-                return false;
-        }
-
-        if (rhs->isConstant()) {
-            Value rhsv = rhs->toConstant()->value();
-            if (rhsv.isInt32() && rhsv.toInt32() % 32 != 0)
-                return false;
-        }
-
-        return canOverflow_;
-    }
+    bool canOverflow();
 
     bool fallible() {
         return canOverflow();

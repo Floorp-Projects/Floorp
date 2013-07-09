@@ -248,7 +248,7 @@ SystemMessageManager.prototype = {
   // nsIDOMGlobalPropertyInitializer implementation.
   init: function sysMessMgr_init(aWindow) {
     debug("init");
-    this.initHelper(aWindow, ["SystemMessageManager:Message",
+    this.initDOMRequestHelper(aWindow, ["SystemMessageManager:Message",
                               "SystemMessageManager:GetPendingMessages:Return"]);
 
     let principal = aWindow.document.nodePrincipal;
@@ -307,7 +307,8 @@ SystemMessageManager.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMNavigatorSystemMessages,
                                          Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsIObserver]),
+                                         Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   classInfo: XPCOMUtils.generateCI({
     classID: Components.ID("{bc076ea0-609b-4d8f-83d7-5af7cbdc3bb2}"),

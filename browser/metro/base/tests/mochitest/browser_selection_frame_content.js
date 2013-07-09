@@ -25,6 +25,8 @@ function setUpAndTearDown() {
   yield waitForCondition(function () {
       return !SelectionHelperUI.isSelectionUIVisible;
     }, kCommonWaitMs, kCommonPollMs);
+  InputSourceHelper.isPrecise = false;
+  InputSourceHelper.fireUpdate();
 }
 
 gTests.push({
@@ -43,8 +45,6 @@ gTests.push({
 
     gWindow = Browser.selectedTab.browser.contentWindow;
     gFrame = gWindow.document.getElementById("frame1");
-
-    InputSourceHelper.isPrecise = false;
   },
 });
 
@@ -144,7 +144,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
     let popupPromise = waitForEvent(document, "popuphidden");
-    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, gWindow);
+    sendElementTap(gWindow, menuItem);
     yield popupPromise;
     ok(popupPromise && !(popupPromise instanceof Error), "promise error");
 
@@ -185,7 +185,6 @@ gTests.push({
     gFrame.contentDocument.defaultView.scrollBy(0, 200);
     yield scrollPromise;
 
-    InputSourceHelper.isPrecise = false;
     sendContextMenuClick(114, 130);
 
     yield waitForCondition(function () {

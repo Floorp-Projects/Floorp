@@ -362,12 +362,27 @@ class Assembler : public AssemblerX86Shared
     }
 
     CodeOffsetLabel movWithPatch(const ImmWord &word, const Register &dest) {
-        movq(word, dest);
+        masm.movq_i64r(word.value, dest.code());
         return masm.currentOffset();
     }
 
+    // Load an ImmWord value into a register. Note that this instruction will
+    // attempt to optimize its immediate field size. When a full 64-bit
+    // immediate is needed for a relocation, use movWithPatch.
     void movq(ImmWord word, const Register &dest) {
-        masm.movq_i64r(word.value, dest.code());
+        // Load a 64-bit immediate into a register. If the value falls into
+        // certain ranges, we can use specialized instructions which have
+        // smaller encodings.
+        if (word.value <= UINT32_MAX) {
+            // movl has a 32-bit unsigned (effectively) immediate field.
+            masm.movl_i32r((uint32_t)word.value, dest.code());
+        } else if ((intptr_t)word.value >= INT32_MIN && (intptr_t)word.value <= INT32_MAX) {
+            // movq has a 32-bit signed immediate field.
+            masm.movq_i32r((int32_t)(intptr_t)word.value, dest.code());
+        } else {
+            // Otherwise use movabs.
+            masm.movq_i64r(word.value, dest.code());
+        }
     }
     void movq(ImmGCPtr ptr, const Register &dest) {
         masm.movq_i64r(ptr.value, dest.code());
@@ -523,16 +538,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void mov(ImmWord word, const Register &dest) {
-        // If the word value is in [0,UINT32_MAX], we can use the more compact
-        // movl instruction, which has a 32-bit immediate field which it
-        // zero-extends into the 64-bit register.
-        if (word.value <= UINT32_MAX) {
-            uint32_t value32 = static_cast<uint32_t>(word.value);
-            Imm32 imm32(static_cast<int32_t>(value32));
-            movl(imm32, dest);
-        } else {
-            movq(word, dest);
-        }
+        movq(word, dest);
     }
     void mov(const Imm32 &imm32, const Register &dest) {
         movl(imm32, dest);
