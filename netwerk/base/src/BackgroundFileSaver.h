@@ -155,6 +155,12 @@ private:
   nsresult mStatus;
 
   /**
+   * True if we should append data to the initial target file, instead of
+   * overwriting it.
+   */
+  bool mAppend;
+
+  /**
    * Set by the control thread to the target file name that will be used by the
    * worker thread, as soon as it is possible to update mActualTarget and open
    * the file.  This is null if no target was ever assigned to this object.
