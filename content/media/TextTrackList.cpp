@@ -54,6 +54,19 @@ TextTrackList::AddTextTrack(TextTrackKind aKind,
   return track.forget();
 }
 
+TextTrack*
+TextTrackList::GetTrackById(const nsAString& aId)
+{
+  nsAutoString id;
+  for (uint32_t i = 0; i < Length(); i++) {
+    mTextTracks[i]->GetId(id);
+    if (aId.Equals(id)) {
+      return mTextTracks[i];
+    }
+  }
+  return nullptr;
+}
+
 void
 TextTrackList::RemoveTextTrack(const TextTrack& aTrack)
 {
