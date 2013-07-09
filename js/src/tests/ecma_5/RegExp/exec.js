@@ -165,7 +165,7 @@ r = /abc/;
 r.lastIndex = -17;
 res = r.exec("cdefg");
 assertEq(res, null);
-assertEq(r.lastIndex, -17);
+assertEq(r.lastIndex, 0);
 
 r = /abc/g;
 r.lastIndex = -42;
