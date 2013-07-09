@@ -61,7 +61,6 @@ public:
 protected:
   ImageClient(CompositableForwarder* aFwd, CompositableType aType);
 
-  gfxPattern::GraphicsFilter mFilter;
   CompositableType mType;
   int32_t mLastPaintedImageSerial;
   nsIntRect mPictureRect;

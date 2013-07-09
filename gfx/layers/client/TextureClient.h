@@ -278,7 +278,7 @@ class AutoLockShmemClient : public AutoLockDeprecatedTextureClient
 {
 public:
   AutoLockShmemClient(DeprecatedTextureClient* aTexture) : AutoLockDeprecatedTextureClient(aTexture) {}
-  bool Update(Image* aImage, uint32_t aContentFlags, gfxPattern* pat);
+  bool Update(Image* aImage, uint32_t aContentFlags, gfxASurface *aSurface);
 };
 
 }

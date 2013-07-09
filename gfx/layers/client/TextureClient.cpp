@@ -220,22 +220,16 @@ DeprecatedTextureClientTile::LockImageSurface()
 
 bool AutoLockShmemClient::Update(Image* aImage,
                                  uint32_t aContentFlags,
-                                 gfxPattern* pat)
+                                 gfxASurface *aSurface)
 {
-  nsRefPtr<gfxASurface> surface = pat->GetSurface();
   if (!aImage) {
     return false;
   }
 
-  nsRefPtr<gfxPattern> pattern = pat ? pat : new gfxPattern(surface);
-
   gfxIntSize size = aImage->GetSize();
 
-  gfxASurface::gfxContentType contentType = gfxASurface::CONTENT_COLOR_ALPHA;
+  gfxASurface::gfxContentType contentType = aSurface->GetContentType();
   bool isOpaque = (aContentFlags & Layer::CONTENT_OPAQUE);
-  if (surface) {
-    contentType = surface->GetContentType();
-  }
   if (contentType != gfxASurface::CONTENT_ALPHA &&
       isOpaque) {
     contentType = gfxASurface::CONTENT_COLOR;
@@ -253,9 +247,7 @@ bool AutoLockShmemClient::Update(Image* aImage,
   }
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(tmpASurface.get());
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  PaintContext(pat,
-               nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
-               1.0, tmpCtx, nullptr);
+  tmpCtx->DrawSurface(aSurface, gfxSize(size.width, size.height));
 
   return true;
 }
