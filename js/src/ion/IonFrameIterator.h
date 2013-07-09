@@ -110,7 +110,10 @@ class IonFrameIterator
         return current_;
     }
 
-    inline IonCommonFrameLayout *current() const;
+    IonCommonFrameLayout *current() const {
+        return (IonCommonFrameLayout *)current_;
+    }
+
     inline uint8_t *returnAddress() const;
 
     IonJSFrameLayout *jsFrame() const {
@@ -177,7 +180,10 @@ class IonFrameIterator
 
     // Returns the stack space used by the current frame, in bytes. This does
     // not include the size of its fixed header.
-    inline size_t frameSize() const;
+    size_t frameSize() const {
+        JS_ASSERT(type_ != IonFrame_Exit);
+        return frameSize_;
+    }
 
     // Functions used to iterate on frames. When prevType is IonFrame_Entry,
     // the current frame is the last frame.
