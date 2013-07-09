@@ -106,7 +106,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectorUtils.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsDeque.h"
@@ -118,13 +117,10 @@
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 #include "nsIConsoleService.h"
-#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "nsICycleCollectorListener.h"
-#include "nsIXPConnect.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIMemoryReporter.h"
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
@@ -3029,6 +3025,36 @@ cyclecollector::TestJSHolder(void* aHolder)
     return data->mRuntime->TestJSHolder(aHolder);
 }
 #endif
+
+void
+cyclecollector::DeferredFinalize(nsISupports* aSupports)
+{
+    CollectorData *data = sCollectorData.get();
+
+    // We should have started the cycle collector by now, and not completely
+    // shut down.
+    MOZ_ASSERT(data);
+    // And we should have a runtime.
+    MOZ_ASSERT(data->mRuntime);
+
+    data->mRuntime->DeferredFinalize(aSupports);
+}
+
+void
+cyclecollector::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
+                                 DeferredFinalizeFunction aFunc,
+                                 void* aThing)
+{
+    CollectorData *data = sCollectorData.get();
+
+    // We should have started the cycle collector by now, and not completely
+    // shut down.
+    MOZ_ASSERT(data);
+    // And we should have a runtime.
+    MOZ_ASSERT(data->mRuntime);
+
+    data->mRuntime->DeferredFinalize(aAppendFunc, aFunc, aThing);
+}
 
 nsPurpleBufferEntry*
 NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *cp)

@@ -2003,10 +2003,6 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
                           JS::MutableHandle<JSObject*> aObject,
                           ErrorResult& aRv);
 
-bool
-RegisterForDeferredFinalization(DeferredFinalizeStartFunction start,
-                                DeferredFinalizeFunction run);
-
 /**
  * Convert an nsCString to jsval, returning true on success.
  * These functions are intended for ByteString implementations.

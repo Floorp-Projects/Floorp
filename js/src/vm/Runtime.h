@@ -1120,6 +1120,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     JS::GCSliceCallback gcSliceCallback;
     JSFinalizeCallback  gcFinalizeCallback;
 
+    void                *gcCallbackData;
+
     js::AnalysisPurgeCallback analysisPurgeCallback;
     uint64_t            analysisPurgeTriggerBytes;
 

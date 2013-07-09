@@ -196,7 +196,7 @@ static void
 OnWrapperDestroyed();
 
 static void
-DelayedReleaseGCCallback(JSRuntime* rt, JSGCStatus status)
+DelayedReleaseGCCallback(JSGCStatus status)
 {
   if (JSGC_END == status) {
     // Take ownership of sDelayedReleases and null it out now. The
