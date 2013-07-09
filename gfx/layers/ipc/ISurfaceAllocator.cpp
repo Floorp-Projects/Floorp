@@ -14,6 +14,8 @@
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
 #include "nsXULAppAPI.h"
+#include "nsExpirationTracker.h"
+#include "nsContentUtils.h"
 
 #ifdef DEBUG
 #include "prenv.h"
@@ -23,6 +25,195 @@ using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace layers {
+
+// We use MemoryImageData to hold the memory contained in MemoryImage objects. An
+// expiration tracker keeps MemoryImageData objects around for a short period
+// of time to avoid constantly re-allocating memory.
+class MemoryImageData {
+  friend class MemoryImageDataExpirationTracker;
+
+  unsigned char *mData;
+  size_t mSize;
+  nsExpirationState mExpirationState;
+
+  MemoryImageData() :
+    mData(nullptr), mSize(0) { }
+  ~MemoryImageData();
+
+  void Init(size_t aSize) {
+    mData = (unsigned char *)moz_malloc(aSize);
+    mSize = aSize;
+  }
+
+  size_t Size() const {
+    return mSize;
+  }
+
+public:
+  nsExpirationState* GetExpirationState() {
+    return &mExpirationState;
+  }
+
+  unsigned char *Data() const {
+    return mData;
+  }
+  
+  void Clear()
+  {
+    memset(Data(), 0, mSize);
+  }
+
+  static MemoryImageData *Alloc(size_t aSize);
+  static void Destroy(MemoryImageData *);
+};
+
+class MemoryImageDataExpirationTracker MOZ_FINAL :
+  public nsExpirationTracker<MemoryImageData,2>,
+  public nsIObserver {
+  friend class MemoryImageData;
+  friend class DestroyOnMainThread;
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+private:
+
+  // With K = 2, this means that memory images will be released when they are not
+  // used for 1-2 seconds.
+  enum { TIMEOUT_MS = 1000 };
+  MemoryImageDataExpirationTracker()
+    : nsExpirationTracker<MemoryImageData,2>(TIMEOUT_MS)
+  {
+    nsContentUtils::RegisterShutdownObserver(this);
+  }
+
+  ~MemoryImageDataExpirationTracker() {
+    AgeAllGenerations();
+  }
+
+  virtual void NotifyExpired(MemoryImageData *aData) {
+    delete aData;
+  }
+
+  static void AddData(MemoryImageData* aData) {
+    NS_ASSERTION(!aData->GetExpirationState()->IsTracked(), "must not be tracked yet");
+    if (!sExpirationTracker) {
+      sExpirationTracker = new MemoryImageDataExpirationTracker();
+    }
+    sExpirationTracker->AddObject(aData);
+  }
+
+  static void RemoveData(MemoryImageData* aData) {
+    NS_ASSERTION(aData->GetExpirationState()->IsTracked(), "must be tracked");
+    if (!sExpirationTracker)
+      return;
+    if (aData->GetExpirationState()->IsTracked()) {
+      sExpirationTracker->RemoveObject(aData);
+    }
+  }
+
+  static MemoryImageData *GetData(size_t aSize) {
+    // Try to reuse a memory image data object already the tracker.
+    if (NS_IsMainThread() && sExpirationTracker) {
+      Iterator i = Iterator(sExpirationTracker);
+      while (MemoryImageData *data = i.Next()) {
+        if (data->Size() >= aSize && aSize > data->Size()/2) {
+          RemoveData(data);
+          return data;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  // Return a memory image data object to the tracker for reuse until it expires.
+  static void DestroyData(MemoryImageData *aData) {
+    AddData(aData);
+  }
+
+  static void Shutdown()
+  {
+    sExpirationTracker->AgeAllGenerations();
+    sExpirationTracker = nullptr;
+  }
+
+private:
+  static nsRefPtr<MemoryImageDataExpirationTracker> sExpirationTracker;
+  uint32_t sConsumers;
+};
+
+NS_IMPL_ISUPPORTS1(MemoryImageDataExpirationTracker, nsIObserver)
+
+NS_IMETHODIMP
+MemoryImageDataExpirationTracker::Observe(nsISupports *aSubject,
+                                          const char *aTopic,
+                                          const PRUnichar *aData)
+{
+  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    Shutdown();
+
+    nsContentUtils::UnregisterShutdownObserver(this);
+  }
+  return NS_OK;
+}
+
+nsRefPtr<MemoryImageDataExpirationTracker>
+MemoryImageDataExpirationTracker::sExpirationTracker = nullptr;
+
+MemoryImageData::~MemoryImageData()
+{
+  MemoryImageDataExpirationTracker::RemoveData(this);
+}
+
+MemoryImageData *
+MemoryImageData::Alloc(size_t aSize)
+{
+  // The expiration tracker can only be used from the main thread. This matches our usage
+  // pattern since we allocate buffers on the main thread and send them to the compositor
+  // thread.
+  if (NS_IsMainThread()) {
+    if (MemoryImageData *data = MemoryImageDataExpirationTracker::GetData(aSize))
+      return data;
+  }
+  // No luck, allocate a new one.
+  MemoryImageData *data = new MemoryImageData();
+  data->Init(aSize);
+  return data;
+}
+
+class DestroyOnMainThread : public nsRunnable {
+public:
+  DestroyOnMainThread(MemoryImageData *aData)
+    : mData(aData)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    MemoryImageDataExpirationTracker::DestroyData(mData);
+    return NS_OK;
+  }
+private:
+  MemoryImageData *mData;
+};
+
+void
+MemoryImageData::Destroy(MemoryImageData *aData)
+{
+  // The compositor destroys MemoryImageData objects, so send them back to the main thread
+  // instead of stomping on the non-threadsafe expiration tracker.
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(new DestroyOnMainThread(aData));
+    return;
+  }
+  return MemoryImageDataExpirationTracker::DestroyData(aData);
+}
+
+unsigned char *
+GetMemoryImageData(const MemoryImage &aMemoryImage)
+{
+  return ((MemoryImageData *)aMemoryImage.data())->Data();
+}
 
 SharedMemory::SharedMemoryType OptimalShmemType()
 {
@@ -90,12 +281,12 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
     gfxImageFormat format =
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
     int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
-    uint8_t *data = new uint8_t[stride * aSize.height];
+    MemoryImageData *data = MemoryImageData::Alloc(stride * aSize.height);
 #ifdef XP_MACOSX
     // Workaround a bug in Quartz where drawing an a8 surface to another a8
     // surface with OPERATOR_SOURCE still requires the destination to be clear.
     if (format == gfxASurface::ImageFormatA8) {
-      memset(data, 0, stride * aSize.height);
+      data->Clear();
     }
 #endif
     *aBuffer = MemoryImage((uintptr_t)data, aSize, stride, format);
@@ -140,7 +331,7 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
       break;
     case SurfaceDescriptor::TMemoryImage:
-      delete [] (unsigned char *)aSurface->get_MemoryImage().data();
+      MemoryImageData::Destroy(((MemoryImageData *)aSurface->get_MemoryImage().data()));
       break;
     case SurfaceDescriptor::Tnull_t:
     case SurfaceDescriptor::T__None:
