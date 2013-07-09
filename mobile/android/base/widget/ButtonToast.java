@@ -77,7 +77,9 @@ public class ButtonToast {
                             return;
 
                         hide(false);
-                        mListener.onButtonClicked(mToken);
+                        if (mListener != null) {
+                            mListener.onButtonClicked(t.token);
+                        }
                     }
                 });
 
@@ -99,6 +101,7 @@ public class ButtonToast {
         }
 
         mCurrentToast = t;
+        mButton.setEnabled(true);
 
         mMessageView.setText(t.message);
         mButton.setText(t.buttonMessage);
@@ -118,7 +121,13 @@ public class ButtonToast {
     }
 
     public void hide(boolean immediate) {
+        if (mButton.isPressed()) {
+            mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
+            return;
+        }
+
         mCurrentToast = null;
+        mButton.setEnabled(false);
         mHideHandler.removeCallbacks(mHideRunnable);
         int duration = immediate ? 0 : mView.getResources().getInteger(android.R.integer.config_longAnimTime);
 
