@@ -5001,9 +5001,7 @@ class MLoadTypedArrayElementHole
         return getOperand(1);
     }
     AliasSet getAliasSet() const {
-        // Out-of-bounds accesses are handled using a VM call, this may
-        // invoke getters on the prototype chain.
-        return AliasSet::Store(AliasSet::Any);
+        return AliasSet::Load(AliasSet::TypedArrayElement);
     }
 };
 
