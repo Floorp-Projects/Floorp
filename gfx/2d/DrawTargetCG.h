@@ -85,6 +85,7 @@ SetStrokeOptions(CGContextRef cg, const StrokeOptions &aStrokeOptions)
 class DrawTargetCG : public DrawTarget
 {
 public:
+  friend BorrowedCGContext;
   DrawTargetCG();
   virtual ~DrawTargetCG();
 
