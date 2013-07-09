@@ -371,6 +371,10 @@ private:
     void SetProcessNameToAppName();
     bool ProcessUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
 
+    // Update the DOM with the given display port. Finds the element based on
+    // the aFrameMetrics.mScrollId.
+    void SetDisplayPort(const FrameMetrics& aFrameMetrics);
+
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow();
 
