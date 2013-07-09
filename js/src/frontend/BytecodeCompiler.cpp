@@ -17,7 +17,6 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "frontend/Parser-inl.h"
 #include "frontend/SharedContext-inl.h"
 #include "vm/ScopeObject-inl.h"
 
