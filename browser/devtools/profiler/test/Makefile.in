@@ -22,6 +22,7 @@ MOCHITEST_BROWSER_TESTS = \
 		browser_profiler_console_api_mixed.js \
 		browser_profiler_console_api_content.js \
 		browser_profiler_escape.js \
+		browser_profiler_gecko_data.js \
 		head.js \
 		$(NULL)
 

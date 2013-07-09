@@ -37,6 +37,12 @@
                     tooltiptext="&options.enablePersistentLogging.tooltip;"
                     data-pref="devtools.webconsole.persistlog"/>
         </vbox>
+        <label value="&options.profiler.label;"/>
+        <vbox id="profiler-options" class="options-groupbox">
+          <checkbox label="&options.showPlatformData.label;"
+                    tooltiptext="&options.showPlatformData.tooltip;"
+                    data-pref="devtools.profiler.ui.show-platform-data"/>
+        </vbox>
         <label value="&options.context.advancedSettings;"/>
         <vbox id="context-options" class="options-groupbox">
           <hbox>
