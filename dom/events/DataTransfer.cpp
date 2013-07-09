@@ -324,27 +324,32 @@ DataTransfer::GetFiles(nsIDOMFileList** aFileList)
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsIDOMDOMStringList>
+already_AddRefed<DOMStringList>
 DataTransfer::Types()
 {
   nsRefPtr<DOMStringList> types = new DOMStringList();
   if (mItems.Length()) {
+    bool addFile = false;
     const nsTArray<TransferItem>& item = mItems[0];
-    for (uint32_t i = 0; i < item.Length(); i++)
-      types->Add(item[i].mFormat);
+    for (uint32_t i = 0; i < item.Length(); i++) {
+      const nsString& format = item[i].mFormat;
+      types->Add(format);
+      if (!addFile) {
+        addFile = format.EqualsASCII(kFileMime) ||
+                  format.EqualsASCII("application/x-moz-file-promise");
+      }
+    }
 
-    bool filePresent, filePromisePresent;
-    types->Contains(NS_LITERAL_STRING(kFileMime), &filePresent);
-    types->Contains(NS_LITERAL_STRING("application/x-moz-file-promise"), &filePromisePresent);
-    if (filePresent || filePromisePresent)
+    if (addFile) {
       types->Add(NS_LITERAL_STRING("Files"));
+    }
   }
 
   return types.forget();
 }
 
 NS_IMETHODIMP
-DataTransfer::GetTypes(nsIDOMDOMStringList** aTypes)
+DataTransfer::GetTypes(nsISupports** aTypes)
 {
   *aTypes = Types().get();
 
@@ -521,7 +526,7 @@ DataTransfer::GetMozSourceNode(nsIDOMNode** aSourceNode)
   return CallQueryInterface(sourceNode, aSourceNode);
 }
 
-already_AddRefed<nsIDOMDOMStringList>
+already_AddRefed<DOMStringList>
 DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv)
 {
   // Only the first item is valid for clipboard events
@@ -543,7 +548,7 @@ DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv)
 }
 
 NS_IMETHODIMP
-DataTransfer::MozTypesAt(uint32_t aIndex, nsIDOMDOMStringList** aTypes)
+DataTransfer::MozTypesAt(uint32_t aIndex, nsISupports** aTypes)
 {
   ErrorResult rv;
   *aTypes = MozTypesAt(aIndex, rv).get();

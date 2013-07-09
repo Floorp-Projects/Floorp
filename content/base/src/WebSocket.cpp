@@ -36,7 +36,6 @@
 #include "nsNetUtil.h"
 #include "nsILoadGroup.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/DOMStringList.h"
 #include "xpcpublic.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMFile.h"

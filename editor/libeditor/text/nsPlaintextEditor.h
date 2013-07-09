@@ -135,7 +135,7 @@ public:
                         int32_t aDestOffset,
                         bool aDoDeleteSelection);
 
-  virtual nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+  virtual nsresult InsertFromDataTransfer(mozilla::dom::DataTransfer *aDataTransfer,
                                           int32_t aIndex,
                                           nsIDOMDocument *aSourceDoc,
                                           nsIDOMNode *aDestinationNode,

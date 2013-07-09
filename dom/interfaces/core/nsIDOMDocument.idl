@@ -32,7 +32,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(aa4b59de-462a-4f61-abd9-4232fef3dacc)]
+[scriptable, uuid(d24d1118-a527-4d5a-9c4e-fb07dfc2fc27)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -228,7 +228,7 @@ interface nsIDOMDocument : nsIDOMNode
    *
    * @see <http://dev.w3.org/csswg/cssom/#dom-document-styleSheetSets>
    */
-  readonly attribute nsIDOMDOMStringList styleSheetSets;
+  readonly attribute nsISupports styleSheetSets;
 
   /**
    * Calling this method must change the disabled attribute on each StyleSheet

@@ -13,7 +13,7 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(7147c7ea-393e-454f-8de8-e356861bd9a7)]
+[scriptable, uuid(b73be9dd-bcc8-44df-8b01-3389e277427f)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
            attribute DOMString            domain;
