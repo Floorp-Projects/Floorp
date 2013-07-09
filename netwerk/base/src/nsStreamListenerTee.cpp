@@ -103,6 +103,16 @@ nsStreamListenerTee::CheckListenerChain()
     if (retargetableListener) {
         rv = retargetableListener->CheckListenerChain();
     }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (!mObserver) {
+      return rv;
+    }
+    retargetableListener = do_QueryInterface(mObserver, &rv);
+    if (retargetableListener) {
+        rv = retargetableListener->CheckListenerChain();
+    }
     return rv;
 }
 
