@@ -6908,6 +6908,8 @@ var gIdentityHandler = {
     let menulist = document.createElement("menulist");
     let menupopup = document.createElement("menupopup");
     for (let state of SitePermissions.getAvailableStates(aPermission)) {
+      if (state == SitePermissions.UNKNOWN)
+        continue;
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("value", state);
       menuitem.setAttribute("label", SitePermissions.getStateLabel(state));
