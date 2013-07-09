@@ -16,7 +16,7 @@
 
     <style name="Widget.BaseEditText" parent="android:style/Widget.EditText"/>
 
-    <style name="Widget.BaseListLiew" parent="android:style/Widget.ListView"/>
+    <style name="Widget.BaseListView" parent="android:style/Widget.ListView"/>
 
     <style name="Widget.BaseGridView" parent="android:style/Widget.GridView"/>
 
