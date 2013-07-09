@@ -1305,8 +1305,11 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
     // If this host is trying to negotiate a SPDY session right now,
     // don't create any new connections until the result of the
     // negotiation is known.
-    if (!(trans->Caps() & NS_HTTP_DISALLOW_SPDY) && RestrictConnections(ent))
+    if (!(trans->Caps() & NS_HTTP_DISALLOW_SPDY) &&
+        (trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
+        RestrictConnections(ent)) {
         return NS_ERROR_NOT_AVAILABLE;
+    }
 
     // We need to make a new connection. If that is going to exceed the
     // global connection limit then try and free up some room by closing
@@ -1511,6 +1514,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     // 6 - no connection is available - queue it
 
     bool attemptedOptimisticPipeline = !(caps & NS_HTTP_ALLOW_PIPELINING);
+    nsRefPtr<nsHttpConnection> unusedSpdyPersistentConnection;
 
     // step 0
     // look for existing spdy connection - that's always best because it is
@@ -1519,10 +1523,13 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     if (!(caps & NS_HTTP_DISALLOW_SPDY) && gHttpHandler->IsSpdyEnabled()) {
         nsRefPtr<nsHttpConnection> conn = GetSpdyPreferredConn(ent);
         if (conn) {
-            LOG(("   dispatch to spdy: [conn=%x]\n", conn.get()));
-            trans->RemoveDispatchedAsBlocking();  /* just in case */
-            DispatchTransaction(ent, trans, conn);
-            return NS_OK;
+            if ((caps & NS_HTTP_ALLOW_KEEPALIVE) || !conn->IsExperienced()) {
+                LOG(("   dispatch to spdy: [conn=%x]\n", conn.get()));
+                trans->RemoveDispatchedAsBlocking();  /* just in case */
+                DispatchTransaction(ent, trans, conn);
+                return NS_OK;
+            }
+            unusedSpdyPersistentConnection = conn;
         }
     }
 
@@ -1652,6 +1659,13 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     }
 
     // step 6
+    if (unusedSpdyPersistentConnection) {
+        // to avoid deadlocks, we need to throw away this perfectly valid SPDY
+        // connection to make room for a new one that can service a no KEEPALIVE
+        // request
+        unusedSpdyPersistentConnection->DontReuse();
+    }
+
     return NS_ERROR_NOT_AVAILABLE;                /* queue it */
 }
 
