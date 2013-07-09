@@ -20,6 +20,7 @@
 #include "nsDOMString.h"
 #include "nsNameSpaceManager.h"
 #include "nsContentUtils.h"
+#include "txIXPathContext.h"
 #include "mozilla/dom/XPathEvaluatorBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 
