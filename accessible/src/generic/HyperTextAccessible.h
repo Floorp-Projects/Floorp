@@ -264,6 +264,26 @@ protected:
   }
 
   /**
+   * Adjust an offset the caret stays at to get a text by line boundary.
+   */
+  int32_t AdjustCaretOffset(int32_t aOffset)
+  {
+    // It is the same character offset when the caret is visually at the very
+    // end of a line or the start of a new line (soft line break). Getting text
+    // at the line should provide the line with the visual caret, otherwise
+    // screen readers will announce the wrong line as the user presses up or
+    // down arrow and land at the end of a line.
+    if (aOffset > 0) {
+      nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
+      if (frameSelection &&
+          frameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
+        return aOffset - 1;
+      }
+    }
+    return aOffset;
+  }
+
+  /**
    * Return an offset of the found word boundary.
    */
   int32_t FindWordBoundary(int32_t aOffset, nsDirection aDirection,
