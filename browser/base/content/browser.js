@@ -2305,30 +2305,21 @@ function BrowserOnAboutPageLoad(doc) {
     }
     docElt.setAttribute("snippetsVersion", AboutHomeUtils.snippetsVersion);
 
-    // Retrieve the engine to use for about:home initially
     function updateSearchEngine() {
-      AboutHomeUtils.getSearchEngineInfo(function (info) {
-        if (!info)
-          return;
-        docElt.setAttribute("searchEngineName", info.name);
-        docElt.setAttribute("searchEngineURL", info.searchURL);
-      });
+      let engine = AboutHomeUtils.defaultSearchEngine;
+      docElt.setAttribute("searchEngineName", engine.name);
+      docElt.setAttribute("searchEngineURL", engine.searchURL);
     }
     updateSearchEngine();
 
-    // Listen for the event that's triggered when the user changes search engine,
-    // and update about:home to reflect the change.
-    function engineObserver(subject, topic, data) {
-      if (data != "engine-default")
-        return;
-      updateSearchEngine();
-    }
-    Services.obs.addObserver(engineObserver, "browser-search-engine-modified", false);
+    // Listen for the event that's triggered when the user changes search engine.
+    // At this point we simply reload about:home to reflect the change.
+    Services.obs.addObserver(updateSearchEngine, "browser-search-engine-modified", false);
 
     // Remove the observer when the page is reloaded or closed.
     doc.defaultView.addEventListener("pagehide", function removeObserver() {
       doc.defaultView.removeEventListener("pagehide", removeObserver);
-      Services.obs.removeObserver(engineObserver, "browser-search-engine-modified");
+      Services.obs.removeObserver(updateSearchEngine, "browser-search-engine-modified");
     }, false);
 
 #ifdef MOZ_SERVICES_HEALTHREPORT
