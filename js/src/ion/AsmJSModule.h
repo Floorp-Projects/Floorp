@@ -666,7 +666,7 @@ class AsmJSModule
     }
 
     bool addHeapAccesses(const ion::AsmJSHeapAccessVector &accesses) {
-        return heapAccesses_.append(accesses);
+        return heapAccesses_.appendAll(accesses);
     }
     unsigned numHeapAccesses() const {
         return heapAccesses_.length();
@@ -679,7 +679,7 @@ class AsmJSModule
     }
 #if defined(JS_CPU_ARM)
     bool addBoundsChecks(const ion::AsmJSBoundsCheckVector &checks) {
-        return boundsChecks_.append(checks);
+        return boundsChecks_.appendAll(checks);
     }
     void convertBoundsChecksToActualOffset(ion::MacroAssembler &masm) {
         for (unsigned i = 0; i < boundsChecks_.length(); i++)
