@@ -42,7 +42,6 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
-#include "frontend/Parser-inl.h"
 #include "frontend/SharedContext-inl.h"
 
 #include "vm/NumericConversions.h"
