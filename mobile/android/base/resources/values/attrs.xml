@@ -26,6 +26,9 @@
         <!-- Default style for the TopBookmarksView -->
         <attr name="topBookmarksViewStyle" format="reference" />
 
+        <!-- Default style for the HomeListView -->
+        <attr name="homeListViewStyle" format="reference" />
+
     </declare-styleable>
 
     <declare-styleable name="AboutHomeSection">
