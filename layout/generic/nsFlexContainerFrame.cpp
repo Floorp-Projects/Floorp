@@ -2208,13 +2208,13 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // This would produce an array of arrays, or a list of arrays,
   // or something like that. (one list/array per line)
 
-  nscoord flexContainerMainSize =
+  const nscoord contentBoxMainSize =
     ComputeFlexContainerMainSize(aReflowState, axisTracker, items);
 
-  ResolveFlexibleLengths(axisTracker, flexContainerMainSize, items);
+  ResolveFlexibleLengths(axisTracker, contentBoxMainSize, items);
 
   // Our frame's main-size is the content-box size plus border and padding.
-  nscoord frameMainSize = flexContainerMainSize +
+  const nscoord frameMainSize = contentBoxMainSize +
     axisTracker.GetMarginSizeInMainAxis(aReflowState.mComputedBorderPadding);
 
   // Cross Size Determination - Flexbox spec section 9.4
