@@ -779,6 +779,14 @@ void Channel::ChannelImpl::GetClientFileDescriptorMapping(int *src_fd,
   *dest_fd = kClientChannelFd;
 }
 
+void Channel::ChannelImpl::CloseClientFileDescriptor() {
+  if (client_pipe_ != -1) {
+    Singleton<PipeMap>()->Remove(pipe_name_);
+    HANDLE_EINTR(close(client_pipe_));
+    client_pipe_ = -1;
+  }
+}
+
 // Called by libevent when we can read from th pipe without blocking.
 void Channel::ChannelImpl::OnFileCanReadWithoutBlocking(int fd) {
   bool send_server_hello_msg = false;
@@ -942,6 +950,10 @@ void Channel::GetClientFileDescriptorMapping(int *src_fd, int *dest_fd) const {
 
 int Channel::GetServerFileDescriptor() const {
   return channel_impl_->GetServerFileDescriptor();
+}
+
+void Channel::CloseClientFileDescriptor() {
+  channel_impl_->CloseClientFileDescriptor();
 }
 
 }  // namespace IPC
