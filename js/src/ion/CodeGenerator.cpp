@@ -1329,8 +1329,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
         masm.movePtr(ImmGCPtr(&obj->toConstant()->toObject()), objreg);
     } else {
         objreg = ToRegister(obj);
-        if (regs.has(objreg))
-            regs.take(objreg);
+        regs.takeUnchecked(objreg);
     }
 
     Register runtimereg = regs.takeAny();
