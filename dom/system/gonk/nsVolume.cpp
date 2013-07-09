@@ -50,8 +50,7 @@ nsVolume::nsVolume(const Volume* aVolume)
     mMountPoint(NS_ConvertUTF8toUTF16(aVolume->MountPoint())),
     mState(aVolume->State()),
     mMountGeneration(aVolume->MountGeneration()),
-    mMountLocked(aVolume->IsMountLocked()),
-    mIsFake(false)
+    mMountLocked(aVolume->IsMountLocked())
 {
 }
 
@@ -86,13 +85,6 @@ bool nsVolume::Equals(nsIVolume* aVolume)
   if (mMountLocked != volIsMountLocked) {
     return false;
   }
-
-  bool isFake;
-  aVolume->GetIsFake(&isFake);
-  if (mIsFake != isFake) {
-    return false;
-  }
-
   return true;
 }
 
@@ -144,12 +136,6 @@ NS_IMETHODIMP nsVolume::GetStats(nsIVolumeStat **aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolume::GetIsFake(bool *aIsFake)
-{
-  *aIsFake = mIsFake;
-  return NS_OK;
-}
-
 void
 nsVolume::LogState() const
 {
@@ -170,7 +156,6 @@ void nsVolume::Set(nsIVolume* aVolume)
   aVolume->GetName(mName);
   aVolume->GetMountPoint(mMountPoint);
   aVolume->GetState(&mState);
-  aVolume->GetIsFake(&mIsFake);
 
   int32_t volMountGeneration;
   aVolume->GetMountGeneration(&volMountGeneration);
@@ -235,26 +220,6 @@ nsVolume::UpdateMountLock(bool aMountLocked)
      NewRunnableFunction(Volume::UpdateMountLock,
                          NS_LossyConvertUTF16toASCII(Name()),
                          MountGeneration(), aMountLocked));
-}
-
-void
-nsVolume::SetState(int32_t aState)
-{
-  static int32_t sMountGeneration = 0;
-
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsFake());
-
-  if (aState == mState) {
-    return;
-  }
-
-  if (aState == nsIVolume::STATE_MOUNTED) {
-    mMountGeneration = ++sMountGeneration;
-  }
-
-  mState = aState;
 }
 
 } // system
