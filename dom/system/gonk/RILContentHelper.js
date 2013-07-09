@@ -79,6 +79,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:VoicemailInfoChanged",
   "RIL:CallError",
   "RIL:CardLockResult",
+  "RIL:CardLockRetryCount",
   "RIL:USSDReceived",
   "RIL:SendMMI:Return:OK",
   "RIL:SendMMI:Return:KO",
@@ -119,6 +120,17 @@ function MobileIccCardLockResult(options) {
 MobileIccCardLockResult.prototype = {
   __exposedProps__ : {lockType: 'r',
                       enabled: 'r',
+                      retryCount: 'r',
+                      success: 'r'}
+};
+
+function MobileIccCardLockRetryCount(options) {
+  this.lockType = options.lockType;
+  this.retryCount = options.retryCount;
+  this.success = options.success;
+}
+MobileIccCardLockRetryCount.prototype = {
+  __exposedProps__ : {lockType: 'r',
                       retryCount: 'r',
                       success: 'r'}
 };
@@ -646,6 +658,23 @@ RILContentHelper.prototype = {
     cpmm.sendAsyncMessage("RIL:SetCardLock", {
       clientId: 0,
       data: info
+    });
+    return request;
+  },
+
+  getCardLockRetryCount: function getCardLockRetryCount(window, lockType) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+    cpmm.sendAsyncMessage("RIL:GetCardLockRetryCount", {
+      clientId: 0,
+      data: {
+        lockType: lockType,
+        requestId: requestId
+      }
     });
     return request;
   },
@@ -1375,6 +1404,14 @@ RILContentHelper.prototype = {
                                "notifyIccCardLockError",
                                [msg.json.lockType, msg.json.retryCount]);
           }
+          this.fireRequestError(msg.json.requestId, msg.json.errorMsg);
+        }
+        break;
+      case "RIL:CardLockRetryCount":
+        if (msg.json.success) {
+          let result = new MobileIccCardLockRetryCount(msg.json);
+          this.fireRequestSuccess(msg.json.requestId, result);
+        } else {
           this.fireRequestError(msg.json.requestId, msg.json.errorMsg);
         }
         break;
