@@ -20,7 +20,7 @@ NS_IMPL_RELEASE_INHERITED(XBLChildrenElement, Element)
 
 NS_INTERFACE_TABLE_HEAD(XBLChildrenElement)
   NS_INTERFACE_TABLE_INHERITED2(XBLChildrenElement, nsIDOMNode,
-                                                      nsIDOMElement)
+                                                    nsIDOMElement)
   NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_INTERFACE_MAP_END_INHERITING(Element)
 
