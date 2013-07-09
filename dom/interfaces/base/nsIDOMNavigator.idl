@@ -7,21 +7,21 @@
 
 interface nsIIdleObserver;
 
-[scriptable, uuid(b0ccf251-d793-48a1-94aa-cf840fe6639d)]
+[scriptable, uuid(be8930d7-7543-45bd-8ba3-5678450c543a)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString             appCodeName;
   readonly attribute DOMString             appName;
   readonly attribute DOMString             appVersion;
   readonly attribute DOMString             language;
-  readonly attribute nsIDOMMimeTypeArray   mimeTypes;
+  readonly attribute nsISupports           mimeTypes;
   readonly attribute DOMString             platform;
   readonly attribute DOMString             oscpu;
   readonly attribute DOMString             vendor;
   readonly attribute DOMString             vendorSub;
   readonly attribute DOMString             product;
   readonly attribute DOMString             productSub;
-  readonly attribute nsIDOMPluginArray     plugins;
+  readonly attribute nsISupports           plugins;
   readonly attribute DOMString             userAgent;
   readonly attribute boolean               cookieEnabled;
   readonly attribute boolean               onLine;
