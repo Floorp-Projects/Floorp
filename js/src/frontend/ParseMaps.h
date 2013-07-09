@@ -68,7 +68,14 @@ class ParseMapPool
     }
 
     void *allocateFresh();
-    void *allocate();
+    void *allocate() {
+        if (recyclable.empty())
+            return allocateFresh();
+
+        void *map = recyclable.popCopy();
+        asAtomMap(map)->clear();
+        return map;
+    }
 
     /* Arbitrary atom map type, that has keys and values of the same kind. */
     typedef AtomIndexMap AtomMapT;
@@ -90,7 +97,9 @@ class ParseMapPool
 
     /* Fallibly aquire one of the supported map types from the pool. */
     template <typename T>
-    T *acquire();
+    T *acquire() {
+        return reinterpret_cast<T *>(allocate());
+    }
 
     /* Release one of the supported map types back to the pool. */
 
@@ -360,11 +369,20 @@ class DefinitionList
 #endif
 };
 
+typedef AtomDefnMap::Range      AtomDefnRange;
+typedef AtomDefnMap::AddPtr     AtomDefnAddPtr;
+typedef AtomDefnMap::Ptr        AtomDefnPtr;
+typedef AtomIndexMap::AddPtr    AtomIndexAddPtr;
+typedef AtomIndexMap::Ptr       AtomIndexPtr;
+typedef AtomDefnListMap::Ptr    AtomDefnListPtr;
+typedef AtomDefnListMap::AddPtr AtomDefnListAddPtr;
+typedef AtomDefnListMap::Range  AtomDefnListRange;
+
 /*
  * AtomDecls is a map of atoms to (sequences of) Definitions. It is used by
  * ParseContext to store declarations. A declaration associates a name with a
  * Definition.
- * 
+ *
  * Declarations with function scope (such as const, var, and function) are
  * unique in the sense that they override any previous declarations with the
  * same name. For such declarations, we only need to store a single Definition,
@@ -404,13 +422,33 @@ class AtomDecls
     }
 
     /* Return the definition at the head of the chain for |atom|. */
-    inline DefinitionNode lookupFirst(JSAtom *atom) const;
+    DefinitionNode lookupFirst(JSAtom *atom) const {
+        JS_ASSERT(map);
+        AtomDefnListPtr p = map->lookup(atom);
+        if (!p)
+            return ParseHandler::nullDefinition();
+        return p.value().front<ParseHandler>();
+    }
 
     /* Perform a lookup that can iterate over the definitions associated with |atom|. */
-    inline DefinitionList::Range lookupMulti(JSAtom *atom) const;
+    DefinitionList::Range lookupMulti(JSAtom *atom) const {
+        JS_ASSERT(map);
+        if (AtomDefnListPtr p = map->lookup(atom))
+            return p.value().all();
+        return DefinitionList::Range();
+    }
 
     /* Add-or-update a known-unique definition for |atom|. */
-    inline bool addUnique(JSAtom *atom, DefinitionNode defn);
+    bool addUnique(JSAtom *atom, DefinitionNode defn) {
+        JS_ASSERT(map);
+        AtomDefnListAddPtr p = map->lookupForAdd(atom);
+        if (!p)
+            return map->add(p, atom, DefinitionList(ParseHandler::definitionToBits(defn)));
+        JS_ASSERT(!p.value().isMultiple());
+        p.value() = DefinitionList(ParseHandler::definitionToBits(defn));
+        return true;
+    }
+
     bool addShadow(JSAtom *atom, DefinitionNode defn);
 
     /* Updating the definition for an entry that is known to exist is infallible. */
@@ -444,15 +482,6 @@ class AtomDecls
     void dump();
 #endif
 };
-
-typedef AtomDefnMap::Range      AtomDefnRange;
-typedef AtomDefnMap::AddPtr     AtomDefnAddPtr;
-typedef AtomDefnMap::Ptr        AtomDefnPtr;
-typedef AtomIndexMap::AddPtr    AtomIndexAddPtr;
-typedef AtomIndexMap::Ptr       AtomIndexPtr;
-typedef AtomDefnListMap::Ptr    AtomDefnListPtr;
-typedef AtomDefnListMap::AddPtr AtomDefnListAddPtr;
-typedef AtomDefnListMap::Range  AtomDefnListRange;
 
 } /* namespace frontend */
 
