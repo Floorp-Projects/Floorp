@@ -92,7 +92,7 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
       return -1;
     }
     JNINativeMethod nativeFunctions =
-        { "ProvideCameraFrame", "([BIJ)V",
+        { "ProvideCameraFrame", "([BIIJ)V",
           (void*) &VideoCaptureAndroid::ProvideCameraFrame };
     if (env->RegisterNatives(g_javaCmClass, &nativeFunctions, 1) == 0) {
       WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
@@ -251,11 +251,29 @@ void JNICALL VideoCaptureAndroid::ProvideCameraFrame(JNIEnv * env,
                                                      jobject,
                                                      jbyteArray javaCameraFrame,
                                                      jint length,
+                                                     jint rotation,
                                                      jlong context) {
   VideoCaptureAndroid* captureModule =
       reinterpret_cast<VideoCaptureAndroid*>(context);
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture,
                -1, "%s: IncomingFrame %d", __FUNCTION__,length);
+
+  switch (rotation) {
+    case 90:
+      captureModule->SetCaptureRotation(kCameraRotate90);
+      break;
+    case 180:
+      captureModule->SetCaptureRotation(kCameraRotate180);
+      break;
+    case 270:
+      captureModule->SetCaptureRotation(kCameraRotate270);
+      break;
+    case 0:
+    default:
+      captureModule->SetCaptureRotation(kCameraRotate0);
+      break;
+  }
+
   jbyte* cameraFrame= env->GetByteArrayElements(javaCameraFrame,NULL);
   captureModule->IncomingFrame((WebRtc_UWord8*) cameraFrame,
                                length,captureModule->_frameInfo,0);
@@ -451,7 +469,6 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
 
   bool isAttached = false;
   WebRtc_Word32 result = 0;
-  WebRtc_Word32 rotation = 0;
   // get the JNI env for this thread
   JNIEnv *env;
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -498,43 +515,12 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
                  "%s: Failed to find StartCapture id", __FUNCTION__);
   }
 
-  // get the method ID for the Android Java
-  // CaptureClass static GetRotateAmount  method.
-  cid = env->GetMethodID(g_javaCmClass, "GetRotateAmount", "()I");
-  if (cid != NULL) {
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                 "%s: Call GetRotateAmount", __FUNCTION__);
-    rotation = env->CallIntMethod(_javaCaptureObj, cid);
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                 "%s, GetRotateAmount = %d", __FUNCTION__, rotation);
-  }
-  else {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                 "%s: Failed to find GetRotateAmount id", __FUNCTION__);
-  }
-
   // Detach this thread if it was attached
   if (isAttached) {
     if (g_jvm->DetachCurrentThread() < 0) {
       WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioDevice, _id,
                    "%s: Could not detach thread from JVM", __FUNCTION__);
     }
-  }
-
-  switch (rotation) {
-    case 90:
-      SetCaptureRotation(kCameraRotate90);
-      break;
-    case 180:
-      SetCaptureRotation(kCameraRotate180);
-      break;
-    case 270:
-      SetCaptureRotation(kCameraRotate270);
-      break;
-    case 0:
-    default:
-      SetCaptureRotation(kCameraRotate0);
-      break;
   }
 
   if (result == 0) {
@@ -618,65 +604,7 @@ WebRtc_Word32 VideoCaptureAndroid::CaptureSettings(
 WebRtc_Word32 VideoCaptureAndroid::SetCaptureRotation(
     VideoCaptureRotation rotation) {
   CriticalSectionScoped cs(&_apiCs);
-  if (VideoCaptureImpl::SetCaptureRotation(rotation) == 0) {
-    if (!g_jvm)
-      return -1;
-
-    // get the JNI env for this thread
-    JNIEnv *env;
-    bool isAttached = false;
-
-    // get the JNI env for this thread
-    if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-      // try to attach the thread and get the env
-      // Attach this thread to JVM
-      jint res = g_jvm->AttachCurrentThread(&env, NULL);
-      if ((res < 0) || !env) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture,
-                     _id,
-                     "%s: Could not attach thread to JVM (%d, %p)",
-                     __FUNCTION__, res, env);
-        return -1;
-      }
-      isAttached = true;
-    }
-
-    jmethodID cid = env->GetMethodID(g_javaCmClass, "SetPreviewRotation",
-                                     "(I)V");
-    if (cid == NULL) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                   "%s: could not get java SetPreviewRotation ID",
-                   __FUNCTION__);
-      return -1;
-    }
-    jint rotateFrame = 0;
-    switch (rotation) {
-      case kCameraRotate0:
-        rotateFrame = 0;
-        break;
-      case kCameraRotate90:
-        rotateFrame = 90;
-        break;
-      case kCameraRotate180:
-        rotateFrame = 180;
-        break;
-      case kCameraRotate270:
-        rotateFrame = 270;
-        break;
-    }
-    env->CallVoidMethod(_javaCaptureObj, cid, rotateFrame);
-
-    // Detach this thread if it was attached
-    if (isAttached) {
-      if (g_jvm->DetachCurrentThread() < 0) {
-        WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioDevice,
-                     _id, "%s: Could not detach thread from JVM",
-                     __FUNCTION__);
-      }
-    }
-
-  }
-  return 0;
+  return VideoCaptureImpl::SetCaptureRotation(rotation);
 }
 
 }  // namespace videocapturemodule
