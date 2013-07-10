@@ -6,9 +6,14 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(99957506-f21b-4a61-ad64-5b641cf508e2)]
+[scriptable, uuid(44d9ef13-83be-4ab9-a2a1-95d9cbd96acd)]
 interface nsIBidiKeyboard : nsISupports
 {
+  /**
+   * Inspects the installed keyboards and resets the bidi keyboard state
+   */
+  void reset();
+
   /**
    * Determines if the current keyboard language is right-to-left
    * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
