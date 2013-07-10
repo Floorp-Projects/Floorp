@@ -355,6 +355,8 @@ MediaRecorder::NotifyError(nsresult aRv)
 bool MediaRecorder::CheckPrincipal()
 {
   nsCOMPtr<nsIPrincipal> principal = mStream->GetPrincipal();
+  if (!GetOwner())
+    return false;
   nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
   if (!doc || !principal)
     return false;
