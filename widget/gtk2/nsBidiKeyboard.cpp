@@ -19,6 +19,12 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard()
 {
+    Reset();
+}
+
+NS_IMETHODIMP
+nsBidiKeyboard::Reset()
+{
 #if (MOZ_WIDGET_GTK == 2)
     PRLibrary *gtklib = nullptr;
 #if defined(MOZ_X11)
@@ -37,6 +43,7 @@ nsBidiKeyboard::nsBidiKeyboard()
 #else
     mHaveBidiKeyboards = gdk_keymap_have_bidi_layouts(gdk_keymap_get_default());
 #endif
+    return NS_OK;
 }
 
 nsBidiKeyboard::~nsBidiKeyboard()

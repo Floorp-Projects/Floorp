@@ -21,6 +21,8 @@
 #include "nsGUIEvent.h"
 #include "WidgetUtils.h"
 #include "keysym2ucs.h"
+#include "nsIBidiKeyboard.h"
+#include "nsServiceManagerUtils.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gKeymapWrapperLog = nullptr;
@@ -180,6 +182,7 @@ static const KeyPair kSunKeyPairs[] = {
 #define MOZ_MODIFIER_KEYS "MozKeymapWrapper"
 
 KeymapWrapper* KeymapWrapper::sInstance = nullptr;
+nsIBidiKeyboard* sBidiKeyboard = nullptr;
 
 #ifdef PR_LOGGING
 
@@ -511,6 +514,7 @@ KeymapWrapper::InitBySystemSettings()
 
 KeymapWrapper::~KeymapWrapper()
 {
+    NS_IF_RELEASE(sBidiKeyboard);
     PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
         ("KeymapWrapper(%p): Destructor", this));
 }
@@ -542,6 +546,14 @@ KeymapWrapper::OnKeysChanged(GdkKeymap *aGdkKeymap,
     // We cannot reintialize here becasue we don't have GdkWindow which is using
     // the GdkKeymap.  We'll reinitialize it when next GetInstance() is called.
     sInstance->mInitialized = false;
+
+    // Reset the bidi keyboard settings for the new GdkKeymap
+    if (!sBidiKeyboard) {
+        nsresult rv = CallGetService("@mozilla.org/widget/bidikeyboard;1", &sBidiKeyboard);
+    }
+    if (sBidiKeyboard) {
+        sBidiKeyboard->Reset();
+    }
 }
 
 /* static */ guint
