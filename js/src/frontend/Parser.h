@@ -527,7 +527,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 #endif
     }
 
-    bool setAssignmentLhsOps(Node pn, JSOp op);
+    bool setAssignmentLhsOps(Node pn, bool isPlainAssignment);
     bool matchInOrOf(bool *isForOfp);
 
     bool checkFunctionArguments();
@@ -604,11 +604,11 @@ Parser<SyntaxParseHandler>::expr();
 
 template <>
 bool
-Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, JSOp op);
+Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, bool isPlainAssignment);
 
 template <>
 bool
-Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, JSOp op);
+Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, bool isPlainAssignment);
 
 } /* namespace frontend */
 } /* namespace js */
