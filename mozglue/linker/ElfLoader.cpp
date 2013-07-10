@@ -289,6 +289,9 @@ ElfLoader ElfLoader::Singleton;
 TemporaryRef<LibHandle>
 ElfLoader::Load(const char *path, int flags, LibHandle *parent)
 {
+  /* Ensure logging is initialized or refresh if environment changed. */
+  Logging::Init();
+
   RefPtr<LibHandle> handle;
 
   /* Handle dlopen(NULL) directly. */
@@ -313,9 +316,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   }
 
   char *abs_path = NULL;
-#ifdef MOZ_DEBUG_LINKER
   const char *requested_path = path;
-#endif
 
   /* When the path is not absolute and the library is being loaded for
    * another, first try to load the library from the directory containing
@@ -410,6 +411,9 @@ ElfLoader::Register(LibHandle *handle)
 void
 ElfLoader::Forget(LibHandle *handle)
 {
+  /* Ensure logging is initialized or refresh if environment changed. */
+  Logging::Init();
+
   LibHandleList::iterator it = std::find(handles.begin(), handles.end(), handle);
   if (it != handles.end()) {
     DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
@@ -981,3 +985,5 @@ SEGVHandler::__wrap_sigaction(int signum, const struct sigaction *act,
     that.action = *act;
   return 0;
 }
+
+Logging Logging::Singleton;
