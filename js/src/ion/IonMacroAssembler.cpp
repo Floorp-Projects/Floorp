@@ -1183,21 +1183,6 @@ MacroAssembler::printf(const char *output, Register value)
 }
 
 void
-MacroAssembler::copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp)
-{
-    Label copyDone;
-    Label copyLoop;
-    bind(&copyLoop);
-    branchPtr(Assembler::AboveOrEqual, copyFrom, copyEnd, &copyDone);
-    load32(Address(copyFrom, 0), temp);
-    store32(temp, Address(copyTo, 0));
-    addPtr(Imm32(4), copyTo);
-    addPtr(Imm32(4), copyFrom);
-    jump(&copyLoop);
-    bind(&copyDone);
-}
-
-void
 MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scratch, Label *done)
 {
     branchTestInt32(Assembler::NotEqual, address, done);
