@@ -92,7 +92,7 @@ const eventEmitter =  {
    */
   _listeners: function listeners(type) {
     let events = this._events || (this._events = {});
-    return events[type] || (events[type] = []);
+    return (events.hasOwnProperty(type) && events[type]) || (events[type] = []);
   },
 
   /**

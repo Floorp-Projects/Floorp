@@ -160,8 +160,12 @@ var Class = new function() {
                          getDataProperties(prototype));
 
     constructor.attributes = attributes;
-    constructor.prototype = prototype;
-    return freeze(constructor);
+    Object.defineProperty(constructor, 'prototype', {
+      configurable: false,
+      writable: false,
+      value: prototype
+    });
+    return constructor;
   };
 }
 Class.prototype = extend(null, obscure({

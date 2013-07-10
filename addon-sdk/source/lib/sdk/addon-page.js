@@ -37,12 +37,7 @@ WindowTracker({
     // Augmenting the behavior of `hideChromeForLocation` method, as
     // suggested by https://developer.mozilla.org/en-US/docs/Hiding_browser_chrome
     XULBrowserWindow.hideChromeForLocation = function(url) {
-      if (url.indexOf(addonURL) === 0) {
-        let rest = url.substr(addonURL.length);
-        return rest.length === 0 || ['#','?'].indexOf(rest.charAt(0)) > -1
-      }
-
-      return hideChromeForLocation.call(this, url);
+      return isAddonURL(url) || hideChromeForLocation.call(this, url);
     }
   },
 
@@ -52,8 +47,16 @@ WindowTracker({
   }
 });
 
+function isAddonURL(url) {
+  if (url.indexOf(addonURL) === 0) {
+    let rest = url.substr(addonURL.length);
+    return ((rest.length === 0) || (['#','?'].indexOf(rest.charAt(0)) > -1));
+  }
+  return false;
+}
+
 function tabFilter(tab) {
-  return getURI(tab) === addonURL;
+  return isAddonURL(getURI(tab));
 }
 
 function untrackTab(window, tab) {
@@ -62,7 +65,7 @@ function untrackTab(window, tab) {
   let { hideChromeForLocation } = windows(window);
 
   if (hideChromeForLocation) {
-    window.XULBrowserWindow.hideChromeForLocation = hideChromeForLocation;
+    window.XULBrowserWindow.hideChromeForLocation = hideChromeForLocation.bind(window.XULBrowserWindow);
     windows(window).hideChromeForLocation = null;
   }
 
