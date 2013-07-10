@@ -27,7 +27,7 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -39,7 +39,7 @@
       objectStore.add(fileData.file, fileData.key);
     }
 
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "success", "Got correct event type");
 
@@ -50,11 +50,11 @@
 
       request = objectStore.get(fileData.key);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       let result = event.target.result;
       verifyBlob(result, fileData.file, 1);
-      yield;
+      yield undefined;
 
       if (!refResult) {
         refResult = result;
@@ -73,17 +73,17 @@
 
       request = objectStore.add(refResult, 2);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.result, 2, "Got correct key");
 
       request = objectStore.get(2);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       let result = event.target.result;
       verifyBlob(result, refResult, 1);
-      yield;
+      yield undefined;
 
       is(SpecialPowers.getMozFullPath(result),
          SpecialPowers.getMozFullPath(refResult), "The same os file");
@@ -92,7 +92,7 @@
     is(bufferCache.length, 2, "Correct length");
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

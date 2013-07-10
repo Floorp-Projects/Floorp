@@ -20,18 +20,18 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.type, "upgradeneeded", "Got correct event type");
 
     let db = event.target.result;
     db.onerror = errorHandler;
 
-    event = yield;
+    event = yield undefined;
 
     request = db.mozCreateFileHandle("test.bin", "binary");
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let fileHandle = event.target.result;
     fileHandle.onerror = errorHandler;
@@ -43,15 +43,15 @@
     request = lockedFile.write(blob);
     request.addEventListener("error", new ExpectError("UnknownError", true));
     request.onsuccess = unexpectedSuccessHandler;
-    event = yield;
+    event = yield undefined;
 
     lockedFile.oncomplete = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "complete", "Got correct event type");
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

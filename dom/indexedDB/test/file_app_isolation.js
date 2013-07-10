@@ -118,7 +118,7 @@ function runTest() {
 
     document.getElementById('content').appendChild(iframe);
 
-    yield;
+    yield undefined;
   }
 }
 

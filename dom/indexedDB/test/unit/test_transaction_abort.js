@@ -23,7 +23,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onabort = abortListener;
@@ -62,7 +62,7 @@ function testSteps()
 
   // Wait until it's complete!
   transaction.oncomplete = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(transaction.db, db, "Correct database");
   is(transaction.mode, "versionchange", "Correct mode");
@@ -164,18 +164,18 @@ function testSteps()
     ok(true, "RemoveIndex threw");
   }
 
-  yield;
+  yield undefined;
 
   request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   event.target.transaction.onabort = function(event) {
     ok(false, "Shouldn't see an abort event!");
   };
   event.target.transaction.oncomplete = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "complete", "Right kind of event");
 
@@ -184,7 +184,7 @@ function testSteps()
   request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   key = event.target.result;
 
@@ -195,19 +195,19 @@ function testSteps()
 
   event.target.transaction.abort();
 
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "abort", "Right kind of event");
 
   request = db.transaction("foo").objectStore("foo").get(key);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, undefined, "Object was removed");
 
   executeSoon(function() { testGenerator.next(); });
-  yield;
+  yield undefined;
 
   let keys = [];
   let abortEventCount = 0;
@@ -230,7 +230,7 @@ function testSteps()
       }
     };
   }
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "abort", "Got abort event");
   is(keys.length, 5, "Added 5 items in this transaction");
@@ -240,7 +240,7 @@ function testSteps()
     request = db.transaction("foo").objectStore("foo").get(keys[i]);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     is(event.target.result, undefined, "Object was removed by abort");
   }
@@ -260,7 +260,7 @@ function testSteps()
     event.preventDefault();
   }
   transaction.oncomplete = grabEventAndContinueHandler;
-  yield;
+  yield undefined;
 
   // Check when aborting is allowed
   abortEventCount = 0;
@@ -293,7 +293,7 @@ function testSteps()
   // During LOADING from callback
   transaction = db.transaction("foo");
   transaction.objectStore("foo").get(1).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   transaction.objectStore("foo").get(1).onerror = abortErrorHandler;
   expectedAbortEventCount++
   transaction.abort();
@@ -316,7 +316,7 @@ function testSteps()
     transaction.abort();
     continueToNextStep();
   }
-  yield;
+  yield undefined;
 
   // In between callbacks
   transaction = db.transaction("foo");
@@ -333,14 +333,14 @@ function testSteps()
       continueToNextStep();
     });
   };
-  yield;
+  yield undefined;
   
   // During COMMITTING
   transaction = db.transaction("foo", "readwrite");
   transaction.objectStore("foo").put({hello: "world"}, 1).onsuccess = function(event) {
     continueToNextStep();
   };
-  yield;
+  yield undefined;
   try {
     transaction.abort();
     ok(false, "second abort should throw an error");
@@ -349,7 +349,7 @@ function testSteps()
     ok(true, "second abort should throw an error");
   }
   transaction.oncomplete = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   // Since the previous transaction shouldn't have caused any error events,
   // we know that all events should have fired by now.
@@ -369,24 +369,24 @@ function testSteps()
   request2.onsuccess = grabEventAndContinueHandler;
   request2.onerror = grabEventAndContinueHandler;
 
-  event = yield;
+  event = yield undefined;
   is(event.type, "error", "abort() should make all requests fail");
   is(event.target, request1, "abort() should make all requests fail");
   is(event.target.error.name, "AbortError", "abort() should make all requests fail");
   event.preventDefault();
 
-  event = yield;
+  event = yield undefined;
   is(event.type, "error", "abort() should make all requests fail");
   is(event.target, request2, "abort() should make all requests fail");
   is(event.target.error.name, "AbortError", "abort() should make all requests fail");
   event.preventDefault();
 
-  event = yield;
+  event = yield undefined;
   is(event.type, "abort", "transaction should fail");
   is(event.target, transaction, "transaction should fail");
 
   ok(abortFired, "Abort should have fired!");
 
   finishTest();
-  yield;
+  yield undefined;
 }

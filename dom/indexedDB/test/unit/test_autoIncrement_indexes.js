@@ -10,7 +10,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = request.result;
   db.onerror = errorHandler;
@@ -24,12 +24,12 @@ function testSteps()
   let data = { first: "foo", second: "foo", third: "foo" };
 
   objectStore.add(data).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, 1, "Added entry");
   request.onsuccess = grabEventAndContinueHandler;
 
-  event = yield;
+  event = yield undefined;
 
   let objectStore = db.transaction("foo").objectStore("foo");
   let first = objectStore.index("first");
@@ -37,20 +37,20 @@ function testSteps()
   let third = objectStore.index("third");
 
   first.get("foo").onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is (event.target.result.id, 1, "Entry in first");
 
   second.get("foo").onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is (event.target.result.id, 1, "Entry in second");
 
   third.get("foo").onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is (event.target.result.id, 1, "Entry in third");
 
   finishTest();
-  yield;
+  yield undefined;
 }

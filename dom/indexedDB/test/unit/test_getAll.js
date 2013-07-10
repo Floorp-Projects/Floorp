@@ -14,7 +14,7 @@ function testSteps()
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -24,7 +24,7 @@ function testSteps()
   request = objectStore.mozGetAll();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 0, "No elements");
@@ -40,13 +40,13 @@ function testSteps()
       }
     }
   }
-  yield;
-  yield;
+  yield undefined;
+  yield undefined;
 
   request = db.transaction("foo").objectStore("foo").mozGetAll();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, values.length, "Same length");
@@ -58,7 +58,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(null, 5);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 5, "Correct length");
@@ -72,7 +72,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, values.length, "Correct length");
@@ -84,7 +84,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 0);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, values.length, "Correct length");
@@ -96,7 +96,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, null);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, values.length, "Correct length");
@@ -108,7 +108,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, undefined);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, values.length, "Correct length");
@@ -122,7 +122,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 4, "Correct length");
@@ -135,7 +135,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").get(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, false, "Not an array object");
   is(event.target.result, values[3], "Correct value");
@@ -143,7 +143,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 2);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 2, "Correct length");
@@ -157,7 +157,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 50);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 4, "Correct length");
@@ -171,7 +171,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 0);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 4, "Correct length");
@@ -181,7 +181,7 @@ function testSteps()
   request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
   is(event.target.result.length, 2, "Correct length");
@@ -191,5 +191,5 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }

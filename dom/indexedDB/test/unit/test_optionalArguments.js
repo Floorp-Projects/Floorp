@@ -27,7 +27,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   is(event.type, "upgradeneeded", "Got upgradeneeded event");
 
@@ -41,7 +41,7 @@ function testSteps()
     objectStore.add(i);
   }
 
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "success", "Got success event");
 
@@ -110,49 +110,49 @@ function testSteps()
   }
 
   objectStore.get(data[2].ssn).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[2].name, "Correct data");
 
   let keyRange = IDBKeyRange.only(data[2].ssn);
 
   objectStore.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[2].name, "Correct data");
 
   keyRange = IDBKeyRange.lowerBound(data[2].ssn);
 
   objectStore.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[2].name, "Correct data");
 
   keyRange = IDBKeyRange.lowerBound(data[2].ssn, true);
 
   objectStore.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[3].name, "Correct data");
 
   keyRange = IDBKeyRange.upperBound(data[2].ssn);
 
   objectStore.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[0].name, "Correct data");
 
   keyRange = IDBKeyRange.bound(data[2].ssn, data[4].ssn);
 
   objectStore.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[2].name, "Correct data");
 
   keyRange = IDBKeyRange.bound(data[2].ssn, data[4].ssn, true);
 
   objectStore.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.name, data[3].name, "Correct data");
 
@@ -187,41 +187,41 @@ function testSteps()
   }
 
   objectStore.count().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data.length, "Correct count");
 
   objectStore.delete(data[2].ssn).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   ok(event.target.result === undefined, "Correct result");
 
   objectStore.count().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data.length - 1, "Correct count");
 
   keyRange = IDBKeyRange.bound(data[3].ssn, data[5].ssn);
 
   objectStore.delete(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   ok(event.target.result === undefined, "Correct result");
 
   objectStore.count().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data.length - 4, "Correct count");
 
   keyRange = IDBKeyRange.lowerBound(10);
 
   objectStore.delete(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   ok(event.target.result === undefined, "Correct result");
 
   objectStore.count().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, 0, "Correct count");
 
@@ -231,12 +231,12 @@ function testSteps()
     objectStore.add(i);
   }
 
-  yield;
+  yield undefined;
 
   objectStore = db.transaction(osName).objectStore(osName);
 
   objectStore.count().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data.length, "Correct count");
 
@@ -252,7 +252,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, data.length, "Correct count for no arg to openCursor");
 
@@ -268,7 +268,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, data.length, "Correct count for null arg to openCursor");
 
@@ -284,7 +284,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, data.length, "Correct count for undefined arg to openCursor");
 
@@ -300,7 +300,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1, "Correct count for single key arg to openCursor");
 
@@ -316,7 +316,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent single key arg to openCursor");
@@ -334,7 +334,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1, "Correct count for only keyRange arg to openCursor");
 
@@ -351,7 +351,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, data.length - 2,
      "Correct count for lowerBound arg to openCursor");
@@ -369,7 +369,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, data.length - 3,
      "Correct count for lowerBound arg to openCursor");
@@ -387,7 +387,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent lowerBound arg to openCursor");
@@ -405,7 +405,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 2, "Correct count for bound arg to openCursor");
 
@@ -422,7 +422,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1, "Correct count for bound arg to openCursor");
 
@@ -439,7 +439,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0, "Correct count for bound arg to openCursor");
 
@@ -457,7 +457,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for unspecified arg to index.openKeyCursor");
@@ -474,7 +474,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for null arg to index.openKeyCursor");
@@ -491,7 +491,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for undefined arg to index.openKeyCursor");
@@ -508,7 +508,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1, "Correct count for single key arg to index.openKeyCursor");
 
@@ -524,7 +524,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent key arg to index.openKeyCursor");
@@ -542,7 +542,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent keyRange arg to index.openKeyCursor");
@@ -560,7 +560,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1,
      "Correct count for only keyRange arg to index.openKeyCursor");
@@ -578,7 +578,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for lowerBound keyRange arg to index.openKeyCursor");
@@ -596,7 +596,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 1,
      "Correct count for lowerBound keyRange arg to index.openKeyCursor");
@@ -614,7 +614,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for lowerBound keyRange arg to index.openKeyCursor");
@@ -632,7 +632,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1,
      "Correct count for upperBound keyRange arg to index.openKeyCursor");
@@ -650,7 +650,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for upperBound keyRange arg to index.openKeyCursor");
@@ -668,7 +668,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for upperBound keyRange arg to index.openKeyCursor");
@@ -687,7 +687,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 1,
      "Correct count for upperBound keyRange arg to index.openKeyCursor");
@@ -705,7 +705,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for upperBound keyRange arg to index.openKeyCursor");
@@ -723,7 +723,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for upperBound keyRange arg to index.openKeyCursor");
@@ -742,7 +742,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for bound keyRange arg to index.openKeyCursor");
@@ -762,7 +762,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 1,
      "Correct count for bound keyRange arg to index.openKeyCursor");
@@ -782,7 +782,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 2,
      "Correct count for bound keyRange arg to index.openKeyCursor");
@@ -801,7 +801,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for bound keyRange arg to index.openKeyCursor");
@@ -820,7 +820,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for bound keyRange arg to index.openKeyCursor");
@@ -839,7 +839,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 3,
      "Correct count for bound keyRange arg to index.openKeyCursor");
@@ -856,7 +856,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for unspecified arg to index.openCursor");
@@ -873,7 +873,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for null arg to index.openCursor");
@@ -890,7 +890,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for undefined arg to index.openCursor");
@@ -907,7 +907,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1, "Correct count for single key arg to index.openCursor");
 
@@ -923,7 +923,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent key arg to index.openCursor");
@@ -941,7 +941,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent keyRange arg to index.openCursor");
@@ -959,7 +959,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1,
      "Correct count for only keyRange arg to index.openCursor");
@@ -977,7 +977,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for lowerBound keyRange arg to index.openCursor");
@@ -995,7 +995,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 1,
      "Correct count for lowerBound keyRange arg to index.openCursor");
@@ -1013,7 +1013,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for lowerBound keyRange arg to index.openCursor");
@@ -1031,7 +1031,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1,
      "Correct count for upperBound keyRange arg to index.openCursor");
@@ -1049,7 +1049,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for upperBound keyRange arg to index.openCursor");
@@ -1067,7 +1067,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for upperBound keyRange arg to index.openCursor");
@@ -1086,7 +1086,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 1,
      "Correct count for upperBound keyRange arg to index.openCursor");
@@ -1104,7 +1104,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for upperBound keyRange arg to index.openCursor");
@@ -1122,7 +1122,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for upperBound keyRange arg to index.openCursor");
@@ -1141,7 +1141,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for bound keyRange arg to index.openCursor");
@@ -1161,7 +1161,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 1,
      "Correct count for bound keyRange arg to index.openCursor");
@@ -1181,7 +1181,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length - 2,
      "Correct count for bound keyRange arg to index.openCursor");
@@ -1200,7 +1200,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for bound keyRange arg to index.openCursor");
@@ -1219,7 +1219,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for bound keyRange arg to index.openCursor");
@@ -1238,7 +1238,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 3,
      "Correct count for bound keyRange arg to index.openCursor");
@@ -1271,21 +1271,21 @@ function testSteps()
   }
 
   index.get(data[0].weight).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[0].weight, "Got correct result");
 
   keyRange = IDBKeyRange.only(data[0].weight);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[0].weight, "Got correct result");
 
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[0]].weight,
      "Got correct result");
@@ -1293,7 +1293,7 @@ function testSteps()
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight - 1);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[0]].weight,
      "Got correct result");
@@ -1301,7 +1301,7 @@ function testSteps()
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight + 1);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[1]].weight,
      "Got correct result");
@@ -1309,7 +1309,7 @@ function testSteps()
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight, true);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[1]].weight,
      "Got correct result");
@@ -1318,7 +1318,7 @@ function testSteps()
                                data[weightSort[1]].weight);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[0]].weight,
      "Got correct result");
@@ -1327,7 +1327,7 @@ function testSteps()
                                data[weightSort[1]].weight, true);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[1]].weight,
      "Got correct result");
@@ -1336,14 +1336,14 @@ function testSteps()
                                data[weightSort[1]].weight, true, true);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, undefined, "Got correct result");
 
   keyRange = IDBKeyRange.upperBound(data[weightSort[5]].weight);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result.weight, data[weightSort[0]].weight,
      "Got correct result");
@@ -1351,7 +1351,7 @@ function testSteps()
   keyRange = IDBKeyRange.upperBound(data[weightSort[0]].weight, true);
 
   index.get(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, undefined, "Got correct result");
 
@@ -1383,42 +1383,42 @@ function testSteps()
   }
 
   index.getKey(data[0].weight).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[0].ssn, "Got correct result");
 
   keyRange = IDBKeyRange.only(data[0].weight);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[0].ssn, "Got correct result");
 
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[0]].ssn, "Got correct result");
 
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight - 1);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[0]].ssn, "Got correct result");
 
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight + 1);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[1]].ssn, "Got correct result");
 
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight, true);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[1]].ssn, "Got correct result");
 
@@ -1426,7 +1426,7 @@ function testSteps()
                                data[weightSort[1]].weight);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[0]].ssn, "Got correct result");
 
@@ -1434,7 +1434,7 @@ function testSteps()
                                data[weightSort[1]].weight, true);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[1]].ssn, "Got correct result");
 
@@ -1442,21 +1442,21 @@ function testSteps()
                                data[weightSort[1]].weight, true, true);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, undefined, "Got correct result");
 
   keyRange = IDBKeyRange.upperBound(data[weightSort[5]].weight);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, data[weightSort[0]].ssn, "Got correct result");
 
   keyRange = IDBKeyRange.upperBound(data[weightSort[0]].weight, true);
 
   index.getKey(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, undefined, "Got correct result");
 
@@ -1472,7 +1472,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for no arg to index.openKeyCursor");
@@ -1489,7 +1489,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for null arg to index.openKeyCursor");
@@ -1506,7 +1506,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, weightSort.length,
      "Correct count for undefined arg to index.openKeyCursor");
@@ -1523,7 +1523,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1, "Correct count for single key arg to index.openKeyCursor");
 
@@ -1539,7 +1539,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 0,
      "Correct count for non-existent single key arg to index.openKeyCursor");
@@ -1557,20 +1557,20 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(count, 1,
      "Correct count for only keyRange arg to index.openKeyCursor");
 
   objectStore.mozGetAll(data[1].ssn).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, 1, "Got correct length");
   is(event.target.result[0].ssn, data[1].ssn, "Got correct result");
 
   objectStore.mozGetAll(null).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, data.length, "Got correct length");
@@ -1579,7 +1579,7 @@ function testSteps()
   }
 
   objectStore.mozGetAll(undefined).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, data.length, "Got correct length");
@@ -1588,7 +1588,7 @@ function testSteps()
   }
 
   objectStore.mozGetAll().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, data.length, "Got correct length");
@@ -1599,7 +1599,7 @@ function testSteps()
   keyRange = IDBKeyRange.lowerBound(0);
 
   objectStore.mozGetAll(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, data.length, "Got correct length");
@@ -1608,7 +1608,7 @@ function testSteps()
   }
 
   index.mozGetAll().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1618,7 +1618,7 @@ function testSteps()
   }
 
   index.mozGetAll(undefined).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1628,7 +1628,7 @@ function testSteps()
   }
 
   index.mozGetAll(null).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1638,7 +1638,7 @@ function testSteps()
   }
 
   index.mozGetAll(data[weightSort[0]].weight).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, 1, "Got correct length");
@@ -1647,7 +1647,7 @@ function testSteps()
   keyRange = IDBKeyRange.lowerBound(0);
 
   index.mozGetAll(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1657,7 +1657,7 @@ function testSteps()
   }
 
   index.mozGetAllKeys().onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1667,7 +1667,7 @@ function testSteps()
   }
 
   index.mozGetAllKeys(undefined).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1677,7 +1677,7 @@ function testSteps()
   }
 
   index.mozGetAllKeys(null).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1687,7 +1687,7 @@ function testSteps()
   }
 
   index.mozGetAllKeys(data[weightSort[0]].weight).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, 1, "Got correct length");
@@ -1696,7 +1696,7 @@ function testSteps()
   keyRange = IDBKeyRange.lowerBound(0);
 
   index.mozGetAllKeys(keyRange).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, weightSort.length, "Got correct length");
@@ -1706,6 +1706,6 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }
 

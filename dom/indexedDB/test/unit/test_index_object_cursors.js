@@ -27,7 +27,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onerror = errorHandler;
@@ -45,7 +45,7 @@ function testSteps()
                                           indexInfo.options);
     }
   }
-  yield;
+  yield undefined;
 
   ok(true, "Initial setup");
 
@@ -106,7 +106,7 @@ function testSteps()
           keyIndex++
         }
       };
-      yield;
+      yield undefined;
 
       is(keyIndex, 2, "Saw all the items");
 
@@ -129,17 +129,17 @@ function testSteps()
         cursor.continue();
         keyIndex++;
       };
-      yield;
+      yield undefined;
 
       is(keyIndex, 1, "Saw all the items");
 
       db.transaction(objectStoreName, "readwrite")
         .objectStore(objectStoreName).clear()
         .onsuccess = continueToNextStep;
-      yield;
+      yield undefined;
     }
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }

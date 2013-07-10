@@ -18,7 +18,7 @@
       let request = getFileHandle(fileStorage.key, "test.bin");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       let fileHandle = event.target.result;
       fileHandle.onerror = errorHandler;
@@ -26,7 +26,7 @@
       let lockedFile = fileHandle.open("readwrite");
       request = lockedFile.write(testBuffer);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(lockedFile.location, 100000, "Correct location");
 
@@ -36,20 +36,20 @@
 
         request = lockedFile.truncate();
         request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
+        event = yield undefined;
 
         is(lockedFile.location, location, "Correct location");
 
         request = lockedFile.getMetadata({ size: true });
         request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
+        event = yield undefined;
 
         is(event.target.result.size, location, "Correct size");
       }
 
       request = lockedFile.write(testBuffer);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       let location = lockedFile.location;
       for (let i = 0; i < 10; i++) {
@@ -57,20 +57,20 @@
 
         request = lockedFile.truncate(location);
         request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
+        event = yield undefined;
 
         is(lockedFile.location, location, "Correct location");
 
         request = lockedFile.getMetadata({ size: true });
         request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
+        event = yield undefined;
 
         is(event.target.result.size, location, "Correct size");
       }
     }
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

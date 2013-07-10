@@ -63,13 +63,13 @@
         throw "STOP";
       };
 
-      let event = yield;
+      let event = yield undefined;
       is(event.type, "abort",
          "Throwing during an upgradeneeded event should abort the transaction.");
       is(event.target.error.name, "AbortError", "Got AbortError object");
 
       request.onerror = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "error",
          "Throwing during an upgradeneeded event should fire an error.");
@@ -82,7 +82,7 @@
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
       let openrequest = request;
-      let event = yield;
+      let event = yield undefined;
 
       request.onupgradeneeded = unexpectedSuccessHandler;
 
@@ -107,13 +107,13 @@
         throw "foo";
       };
 
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "abort", "Got transaction abort event");
       is(event.target.error.name, "AbortError", "Got AbortError object");
       openrequest.onerror = grabEventAndContinueHandler;
 
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "error", "Got IDBOpenDBRequest error event");
       is(event.target, openrequest, "Right event target");
@@ -127,7 +127,7 @@
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
       let openrequest = request;
-      let event = yield;
+      let event = yield undefined;
 
       request.onupgradeneeded = unexpectedSuccessHandler;
 
@@ -156,20 +156,20 @@
         throw "STOP";
       };
 
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "abort", "Got transaction abort event");
       is(event.target.error.name, "AbortError", "Got AbortError object");
       openrequest.onerror = grabEventAndContinueHandler;
 
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "error", "Got IDBOpenDBRequest error event");
       is(event.target, openrequest, "Right event target");
       is(event.target.error.name, "AbortError", "Right error name");
 
       finishTest();
-      yield;
+      yield undefined;
     }
   </script>
 

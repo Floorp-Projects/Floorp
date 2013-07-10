@@ -21,7 +21,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
-  let event = yield;
+  let event = yield undefined;
   let db = event.target.result;
 
   for (let i = 0; i < objectStoreInfo.length; i++) {
@@ -45,7 +45,7 @@ function testSteps()
   request.onsuccess = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;
 
-  event = yield;
+  event = yield undefined;
 
   let objectStoreNames = []
   for (let i = 0; i < objectStoreInfo.length; i++) {
@@ -78,7 +78,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -110,5 +110,5 @@ function testSteps()
   db.close();
 
   finishTest();
-  yield;
+  yield undefined;
 }

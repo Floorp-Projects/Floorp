@@ -10,7 +10,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onerror = errorHandler;
@@ -18,7 +18,7 @@ function testSteps()
   request.onsuccess = continueToNextStep;
 
   db.createObjectStore("foo");
-  yield;
+  yield undefined;
 
   let trans1 = db.transaction("foo", "readwrite");
   let trans2 = db.transaction("foo", "readwrite");
@@ -32,18 +32,18 @@ function testSteps()
   trans1.oncomplete = grabEventAndContinueHandler;
   trans2.oncomplete = grabEventAndContinueHandler;
 
-  yield;
-  yield;
+  yield undefined;
+  yield undefined;
 
   let trans3 = db.transaction("foo", "readonly");
   let request = trans3.objectStore("foo").get(42);
   request.onsuccess = grabEventAndContinueHandler;
   request.onerror = errorHandler;
 
-  let event = yield;
+  let event = yield undefined;
   is(event.target.result, "2", "Transactions were ordered properly.");
 
   finishTest();
-  yield;
+  yield undefined;
 }
 
