@@ -476,7 +476,16 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
+#ifdef DEBUG
+#ifdef XP_MACOSX
+  // nsCocoaWindow doesn't implement GetParent, so in that case parent will be
+  // null and we'll just have to do without this assertion.
+  nsIWidget* parent = aChild->GetParent();
+  NS_ASSERTION(!parent || parent == this, "Not one of our kids!");
+#else
   NS_ASSERTION(aChild->GetParent() == this, "Not one of our kids!");
+#endif
+#endif
 
   if (mLastChild == aChild) {
     mLastChild = mLastChild->GetPrevSibling();
