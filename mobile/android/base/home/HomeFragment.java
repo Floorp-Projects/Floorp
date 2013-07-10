@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -16,8 +17,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.support.v4.app.Fragment;
@@ -25,11 +24,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 /**
@@ -144,48 +141,7 @@ class HomeFragment extends Fragment {
             }
 
             case R.id.edit_bookmark: {
-                AlertDialog.Builder editPrompt = new AlertDialog.Builder(activity);
-                final View editView = LayoutInflater.from(activity).inflate(R.layout.bookmark_edit, null);
-                editPrompt.setTitle(R.string.bookmark_edit_title);
-                editPrompt.setView(editView);
-
-                final EditText nameText = ((EditText) editView.findViewById(R.id.edit_bookmark_name));
-                final EditText locationText = ((EditText) editView.findViewById(R.id.edit_bookmark_location));
-                final EditText keywordText = ((EditText) editView.findViewById(R.id.edit_bookmark_keyword));
-                nameText.setText(info.title);
-                locationText.setText(info.url);
-                keywordText.setText(info.keyword);
-
-                final int rowId = info.rowId;
-                editPrompt.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
-                            @Override
-                            public Void doInBackground(Void... params) {
-                                String newUrl = locationText.getText().toString().trim();
-                                String newKeyword = keywordText.getText().toString().trim();
-                                BrowserDB.updateBookmark(activity.getContentResolver(), rowId, newUrl, nameText.getText().toString(), newKeyword);
-                                return null;
-                            }
-
-                            @Override
-                            public void onPostExecute(Void result) {
-                                Toast.makeText(activity, R.string.bookmark_updated, Toast.LENGTH_SHORT).show();
-                            }
-                        }).execute();
-                    }
-                });
-
-                editPrompt.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                          // do nothing
-                      }
-                });
-
-                final AlertDialog dialog = editPrompt.create();
-                dialog.show();
+                new EditBookmarkDialog(activity).show(info.url);
                 return true;
             }
 
