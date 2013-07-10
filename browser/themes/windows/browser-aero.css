@@ -156,9 +156,7 @@
 
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar. */
-  #main-window[sizemode=normal] #nav-bar,
-  #main-window[sizemode=normal] #nav-bar[collapsed=true] + toolbar,
-  #main-window[sizemode=normal] #nav-bar[collapsed=true] + #customToolbars + #PersonalToolbar {
+  #main-window[sizemode=normal] #nav-bar {
     border-top: 1px solid @toolbarShadowColor@;
     border-top-left-radius: 2.5px;
     border-top-right-radius: 2.5px;

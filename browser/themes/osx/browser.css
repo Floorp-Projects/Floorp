@@ -86,14 +86,9 @@ toolbarseparator {
 }
 
 #nav-bar {
-  padding-bottom: 4px !important;
-}
-
-#nav-bar,
-#nav-bar[collapsed=true] + toolbar,
-#nav-bar[collapsed=true] + #customToolbars + #PersonalToolbar {
   -moz-appearance: none;
   padding-top: 4px !important;
+  padding-bottom: 4px !important;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
               linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%));
   background-clip: border-box;
@@ -111,9 +106,7 @@ toolbarseparator {
 }
 
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#nav-bar:not(:-moz-lwtheme):-moz-window-inactive,
-#nav-bar[collapsed=true] + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#nav-bar[collapsed=true] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+#nav-bar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
 }
 
