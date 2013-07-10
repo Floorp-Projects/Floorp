@@ -45,15 +45,15 @@ function run_test()
 {
   do_test_pending();
 
-  httpserver = new HttpServer();
-  httpserver.registerPathHandler("/geo", geoHandler);
-  httpserver.start(4444);
-
   if (Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
         .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    httpserver = new HttpServer();
+    httpserver.registerPathHandler("/geo", geoHandler);
+    httpserver.start(-1);
     var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     prefs.setBoolPref("geo.wifi.scan", false);
-    prefs.setCharPref("geo.wifi.uri", "http://localhost:4444/geo");  
+    prefs.setCharPref("geo.wifi.uri", "http://localhost:" +
+                      httpserver.identity.primaryPort + "/geo");
     prefs.setBoolPref("geo.testing.ignore_ipc_principal", true);
   }
 
