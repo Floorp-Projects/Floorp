@@ -5814,6 +5814,9 @@ var IndexedDB = {
 };
 
 var ClipboardHelper = {
+  // Recorded so search with option can be removed/replaced when default engine changed.
+  _searchMenuItem: -1,
+
   init: function() {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
@@ -5822,6 +5825,26 @@ var ClipboardHelper = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.share"), ClipboardHelper.shareContext, ClipboardHelper.share.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
+
+    this._setSearchMenuItem();
+    // Watch for changes to the default search engine so the above label can be tweaked.
+    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+  },
+
+  uninit: function uninit() {
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    if (aTopic == "browser-search-engine-modified" && aData == "engine-default") {
+      // Update search-with context menu element label to reflect new default engine.
+      NativeWindow.contextmenus.remove(this._searchMenuItem);
+      this._setSearchMenuItem();
+    }
+  },
+
+  _setSearchMenuItem: function setSearchMenuItem() {
+    this._searchMenuItem = NativeWindow.contextmenus.add(Strings.browser.formatStringFromName("contextmenu.search", [Services.search.defaultEngine.name], 1), ClipboardHelper.searchWithContext, ClipboardHelper.searchWith.bind(ClipboardHelper));
   },
 
   get clipboardHelper() {
@@ -5856,6 +5879,10 @@ var ClipboardHelper = {
 
   selectAll: function(aElement, aX, aY) {
     SelectionHandler.selectAll(aElement, aX, aY);
+  },
+
+  searchWith: function(aElement) {
+    SelectionHandler.searchSelection(aElement);
   },
 
   share: function() {
@@ -5924,6 +5951,12 @@ var ClipboardHelper = {
   shareContext: {
     matches: function shareContextMatches(aElement, aX, aY) {
       return SelectionHandler.shouldShowContextMenu(aX, aY);
+    }
+  },
+
+  searchWithContext: {
+    matches: function searchWithContextMatches(aElement, aX, aY) {
+      return SelectionHandler.shouldShowContextMenu(aX, aY) && Services.search.defaultEngine;
     }
   },
 
