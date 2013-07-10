@@ -5324,10 +5324,8 @@ Parser<ParseHandler>::unaryExpr()
         if (!expr)
             return null();
 
-        // Per spec, deleting any unary expression is valid -- it simply returns
-        // true -- except for a few cases that are illegal in strict mode.
-        if (foldConstants && !FoldConstants(context, &expr, this))
-            return null();
+        // Per spec, deleting any unary expression is valid -- it simply
+        // returns true -- except for one case that is illegal in strict mode.
         if (handler.isName(expr)) {
             if (!report(ParseStrictError, pc->sc->strict, expr, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return null();
