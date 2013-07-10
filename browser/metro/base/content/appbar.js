@@ -115,7 +115,7 @@ var Appbar = {
       }
 
       var x = this.menuButton.getBoundingClientRect().left;
-      var y = Elements.navbar.getBoundingClientRect().top;
+      var y = Elements.toolbar.getBoundingClientRect().top;
       ContextMenuUI.showContextMenu({
         json: {
           types: typesArray,

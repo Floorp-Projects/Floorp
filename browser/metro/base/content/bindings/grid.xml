@@ -86,12 +86,13 @@
 
       <method name="handleItemClick">
         <parameter name="aItem"/>
+        <parameter name="aEvent"/>
         <body>
           <![CDATA[
             if(!this.isBound)
               return;
             if (this.controller)
-              this.controller.handleItemClick(aItem);
+              this.controller.handleItemClick(aItem, aEvent);
           ]]>
         </body>
       </method>
