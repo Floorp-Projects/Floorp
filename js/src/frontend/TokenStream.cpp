@@ -40,12 +40,13 @@ using mozilla::PodZero;
 struct KeywordInfo {
     const char  *chars;         /* C string with keyword text */
     TokenKind   tokentype;
+    JSOp        op;             /* JSOp */
     JSVersion   version;        /* JSVersion */
 };
 
 static const KeywordInfo keywords[] = {
-#define KEYWORD_INFO(keyword, name, type, version) \
-    {js_##keyword##_str, type, version},
+#define KEYWORD_INFO(keyword, name, type, op, version) \
+    {js_##keyword##_str, type, op, version},
     FOR_EACH_JAVASCRIPT_KEYWORD(KEYWORD_INFO)
 #undef KEYWORD_INFO
 };
@@ -311,6 +312,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
      * - A single char long.
      * - Cannot be a prefix of any longer token (e.g. '+' is excluded because
      *   '+=' is a valid token).
+     * - Doesn't need tp->t_op set (e.g. this excludes '~').
      *
      * The few token kinds satisfying these properties cover roughly 35--45%
      * of the tokens seen in practice.
@@ -329,7 +331,6 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     oneCharTokens[unsigned('}')] = TOK_RC;
     oneCharTokens[unsigned('(')] = TOK_LP;
     oneCharTokens[unsigned(')')] = TOK_RP;
-    oneCharTokens[unsigned('~')] = TOK_BITNOT;
 
     /* See getChar() for an explanation of maybeEOL[]. */
     memset(maybeEOL, 0, sizeof(maybeEOL));
@@ -969,8 +970,10 @@ TokenStream::putIdentInTokenbuf(const jschar *identStart)
 }
 
 bool
-TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp)
+TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSOp *topp)
 {
+    JS_ASSERT(!ttp == !topp);
+
     const KeywordInfo *kw = FindKeyword(s, length);
     if (!kw)
         return true;
@@ -983,6 +986,7 @@ TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp)
             /* Working keyword. */
             if (ttp) {
                 *ttp = kw->tokentype;
+                *topp = (JSOp) kw->op;
                 return true;
             }
             return reportError(JSMSG_RESERVED_ID, kw->chars);
@@ -1021,8 +1025,7 @@ enum FirstCharKind {
 #define _______ Other
 
 /*
- * OneChar:  40,  41,  44,  59,  63,  91,  93, 123, 125, 126:
- *          '(', ')', ',', ';', '?', '[', ']', '{', '}', '~'
+ * OneChar: 40, 41, 44, 59, 63, 91, 93, 123, 125: '(', ')', ',', ';', '?', '[', ']', '{', '}'
  * Ident:   36, 65..90, 95, 97..122: '$', 'A'..'Z', '_', 'a'..'z'
  * Dot:     46: '.'
  * Equals:  61: '='
@@ -1048,7 +1051,7 @@ static const uint8_t firstCharKinds[] = {
 /*  90+ */   Ident, OneChar, _______, OneChar, _______,   Ident, _______,   Ident,   Ident,   Ident,
 /* 100+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /* 110+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
-/* 120+ */   Ident,   Ident,   Ident, OneChar, _______, OneChar, OneChar, _______
+/* 120+ */   Ident,   Ident,   Ident, OneChar, _______, OneChar, _______, _______
 };
 
 #undef _______
@@ -1176,7 +1179,7 @@ TokenStream::getTokenInternal()
                 length = userbuf.addressOfNextRawChar() - identStart;
             }
             tt = TOK_NAME;
-            if (!checkForKeyword(chars, length, &tt))
+            if (!checkForKeyword(chars, length, &tt, &tp->t_op))
                 goto error;
             if (tt != TOK_NAME)
                 goto out;
@@ -1194,7 +1197,7 @@ TokenStream::getTokenInternal()
             atom = atomize(cx, tokenbuf);
         if (!atom)
             goto error;
-        tp->setName(atom->asPropertyName());
+        tp->setName(JSOP_NAME, atom->asPropertyName());
         tt = TOK_NAME;
         goto out;
     }
@@ -1221,12 +1224,20 @@ TokenStream::getTokenInternal()
     }
 
     if (c1kind == Equals) {
-        if (matchChar('='))
-            tt = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
-        else if (matchChar('>'))
+        if (matchChar('=')) {
+            if (matchChar('=')) {
+                tp->t_op = JSOP_STRICTEQ;
+                tt = TOK_STRICTEQ;
+            } else {
+                tp->t_op = JSOP_EQ;
+                tt = TOK_EQ;
+            }
+        } else if (matchChar('>')) {
             tt = TOK_ARROW;
-        else
+        } else {
+            tp->t_op = JSOP_NOP;
             tt = TOK_ASSIGN;
+        }
         goto out;
     }
 
@@ -1328,7 +1339,7 @@ TokenStream::getTokenInternal()
         JSAtom *atom = atomize(cx, tokenbuf);
         if (!atom)
             goto error;
-        tp->setAtom(atom);
+        tp->setAtom(JSOP_STRING, atom);
         tt = TOK_STRING;
         goto out;
     }
@@ -1393,15 +1404,21 @@ TokenStream::getTokenInternal()
     }
 
     if (c1kind == Colon) {
+        tp->t_op = JSOP_NOP;
         tt = TOK_COLON;
         goto out;
     }
 
     if (c1kind == Plus) {
-        if (matchChar('+'))
+        if (matchChar('=')) {
+            tp->t_op = JSOP_ADD;
+            tt = TOK_ADDASSIGN;
+        } else if (matchChar('+')) {
             tt = TOK_INC;
-        else
-            tt = matchChar('=') ? TOK_ADDASSIGN : TOK_PLUS;
+        } else {
+            tp->t_op = JSOP_POS;
+            tt = TOK_PLUS;
+        }
         goto out;
     }
 
@@ -1479,28 +1496,49 @@ TokenStream::getTokenInternal()
         goto badchar;
 
       case '|':
-        if (matchChar('|'))
+        if (matchChar(c)) {
             tt = TOK_OR;
-        else
-            tt = matchChar('=') ? TOK_BITORASSIGN : TOK_BITOR;
+        } else if (matchChar('=')) {
+            tp->t_op = JSOP_BITOR;
+            tt = TOK_BITORASSIGN;
+        } else {
+            tt = TOK_BITOR;
+        }
         break;
 
       case '^':
-        tt = matchChar('=') ? TOK_BITXORASSIGN : TOK_BITXOR;
+        if (matchChar('=')) {
+            tp->t_op = JSOP_BITXOR;
+            tt = TOK_BITXORASSIGN;
+        } else {
+            tt = TOK_BITXOR;
+        }
         break;
 
       case '&':
-        if (matchChar('&'))
+        if (matchChar('&')) {
             tt = TOK_AND;
-        else
-            tt = matchChar('=') ? TOK_BITANDASSIGN : TOK_BITAND;
+        } else if (matchChar('=')) {
+            tp->t_op = JSOP_BITAND;
+            tt = TOK_BITANDASSIGN;
+        } else {
+            tt = TOK_BITAND;
+        }
         break;
 
       case '!':
-        if (matchChar('='))
-            tt = matchChar('=') ? TOK_STRICTNE : TOK_NE;
-        else
+        if (matchChar('=')) {
+            if (matchChar('=')) {
+                tp->t_op = JSOP_STRICTNE;
+                tt = TOK_STRICTNE;
+            } else {
+                tp->t_op = JSOP_NE;
+                tt = TOK_NE;
+            }
+        } else {
+            tp->t_op = JSOP_NOT;
             tt = TOK_NOT;
+        }
         break;
 
       case '<':
@@ -1516,24 +1554,41 @@ TokenStream::getTokenInternal()
             ungetChar('!');
         }
         if (matchChar('<')) {
+            tp->t_op = JSOP_LSH;
             tt = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
         } else {
-            tt = matchChar('=') ? TOK_LE : TOK_LT;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_LE;
+                tt = TOK_LE;
+            } else {
+                tp->t_op = JSOP_LT;
+                tt = TOK_LT;
+            }
         }
         break;
 
       case '>':
         if (matchChar('>')) {
-            if (matchChar('>'))
+            if (matchChar('>')) {
+                tp->t_op = JSOP_URSH;
                 tt = matchChar('=') ? TOK_URSHASSIGN : TOK_URSH;
-            else
+            } else {
+                tp->t_op = JSOP_RSH;
                 tt = matchChar('=') ? TOK_RSHASSIGN : TOK_RSH;
+            }
         } else {
-            tt = matchChar('=') ? TOK_GE : TOK_GT;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_GE;
+                tt = TOK_GE;
+            } else {
+                tp->t_op = JSOP_GT;
+                tt = TOK_GT;
+            }
         }
         break;
 
       case '*':
+        tp->t_op = JSOP_MUL;
         tt = matchChar('=') ? TOK_MULASSIGN : TOK_STAR;
         break;
 
@@ -1648,22 +1703,33 @@ TokenStream::getTokenInternal()
             break;
         }
 
+        tp->t_op = JSOP_DIV;
         tt = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
         break;
 
       case '%':
+        tp->t_op = JSOP_MOD;
         tt = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
         break;
 
+      case '~':
+        tp->t_op = JSOP_BITNOT;
+        tt = TOK_BITNOT;
+        break;
+
       case '-':
-        if (matchChar('-')) {
+        if (matchChar('=')) {
+            tp->t_op = JSOP_SUB;
+            tt = TOK_SUBASSIGN;
+        } else if (matchChar(c)) {
             if (peekChar() == '>' && !(flags & TSF_DIRTYLINE)) {
                 flags &= ~TSF_IN_HTML_COMMENT;
                 goto skipline;
             }
             tt = TOK_DEC;
         } else {
-            tt = matchChar('=') ? TOK_SUBASSIGN : TOK_MINUS;
+            tp->t_op = JSOP_NEG;
+            tt = TOK_MINUS;
         }
         break;
 
