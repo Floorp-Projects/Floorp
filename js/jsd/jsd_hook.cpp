@@ -40,11 +40,6 @@ jsd_InterruptHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rva
     if( ! jsdscript )
         return JSTRAP_CONTINUE;
 
-#ifdef LIVEWIRE
-    if( ! jsdlw_UserCodeAtPC(jsdc, jsdscript, (uintptr_t)pc) )
-        return JSTRAP_CONTINUE;
-#endif
-
     return jsd_CallExecutionHook(jsdc, cx, JSD_HOOK_INTERRUPTED,
                                  hook, hookData, rval);
 }
