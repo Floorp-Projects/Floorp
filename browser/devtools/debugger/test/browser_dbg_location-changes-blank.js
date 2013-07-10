@@ -95,7 +95,7 @@ function testLocationChange()
         closeDebuggerAndFinish();
       });
     });
-    content.location = "about:blank";
+    gDebugger.DebuggerController.client.activeTab.navigateTo("about:blank");
   });
 }
 

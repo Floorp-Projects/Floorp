@@ -7,32 +7,25 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=715472#c17
  */
 .theme-body {
-  background: #131c26;
-  color: #8fa1b2
+  background: white;
+  color: black;
 }
 
 .theme-twisty {
   cursor: pointer;
-  margin-right: 5px;
+  width: 14px;
+  height: 14px;
+  background-repeat: no-repeat;
+  background-image: url("chrome://browser/skin/devtools/controls.png");
+  background-position: 0 -14px;
 }
 
 .theme-twisty:-moz-focusring {
   outline-style: none;
 }
 
-.theme-twisty:not([open]) {
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 5px solid rgba(255,255,255,0.5);
-  margin-left: 5px;
-}
-
 .theme-twisty[open] {
-  width: 10px;
-  height: 10px;
-  background-image: linear-gradient(to bottom right, transparent 68%,  rgba(255,255,255,0.5) 68%);
+  background-position: -14px -14px;
 }
 
 .theme-checkbox {
@@ -42,53 +35,54 @@
   height: 14px;
   padding: 0;
   outline: none;
-  background: url("chrome://browser/skin/devtools/checkbox-dark.png") no-repeat;
+  background-image: url("chrome://browser/skin/devtools/controls.png");
+  background-position: 0 0;
 }
 
 .theme-checkbox[checked] {
-  background: url("chrome://browser/skin/devtools/checkbox-dark.png") 14px 0;
+  background-position: -14px 0;
 }
 
 .theme-selected {
-  background: #26384E;
+  background-color: hsl(0,0%,90%);
 }
 
 .theme-bg-darker {
-  background-color: rgba(0,0,0,0.1);
+  background: #F9F9F9;
 }
 
 .theme-link { /* blue */
-  color: #3689b2;
+  color: hsl(208,56%,40%);
 }
 
 .theme-comment { /* grey */
-  color: #5c6773;
+  color: hsl(90,2%,46%);
 }
 
 .theme-gutter {
-  background-color: #0f171f;
+  background-color: hsl(0,0%,90%);
   color: #667380;
-  border-color: #303b47;
+  border-color: hsl(0,0%,65%);
 }
 
 .theme-separator { /* grey */
-  border-color: #303b47;
+  border-color: #cddae5;
 }
 
 .theme-fg-color1 { /* green */
-  color: #5c9966;
+  color: hsl(72,100%,27%);
 }
 
 .theme-fg-color2 { /* blue */
-  color: #3689b2;
+  color: hsl(208,56%,40%);
 }
 
-.theme-fg-color3 { /* pink/lavender */
-  color: #a673bf;
+.theme-fg-color3 { /* dark blue */
+  color: hsl(208,81%,21%)
 }
 
-.theme-fg-color4 { /* purple/violet */
-  color: #6270b2;
+.theme-fg-color4 { /* Orange */
+  color: hsl(24,85%,39%);
 }
 
 .theme-fg-color5 { /* Yellow */
@@ -96,7 +90,7 @@
 }
 
 .theme-fg-color6 { /* Orange */
-  color: #b26b47;
+  color: hsl(24,85%,39%);
 }
 
 .theme-fg-color7 { /* Red */

@@ -98,6 +98,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_bug883220_raise_on_pause.js \
 	browser_dbg_displayName.js \
 	browser_dbg_pause-exceptions.js \
+	browser_dbg_pause-exceptions-reload.js \
 	browser_dbg_multiple-windows.js \
 	browser_dbg_iframes.js \
 	browser_dbg_bfcache.js \
@@ -144,6 +145,7 @@ MOCHITEST_BROWSER_PAGES = \
 	test-location-changes-bp.js \
 	test-location-changes-bp.html \
 	test-step-out.html \
+	test-pause-exceptions-reload.html \
 	$(NULL)
 
 ifneq (Linux,$(OS_ARCH))
