@@ -19,10 +19,12 @@
   (function(exports) {
      "use strict";
 
-     // exports.OS.Win is created by osfile_win_back.jsm
-     if (exports.OS.File) {
-       return; // Avoid double-initialization
+     exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
+      // exports.OS.Win is created by osfile_win_back.jsm
+     if (exports.OS && exports.OS.File) {
+        return; // Avoid double-initialization
      }
+
      exports.OS.Win.File._init();
      let Const = exports.OS.Constants.Win;
      let WinFile = exports.OS.Win.File;

@@ -62,8 +62,16 @@ const Tab = Class({
    * @type {String}
    */
   get favicon() {
-    // TODO: provide the real favicon when it is available
-    console.error(ERR_FENNEC_MSG);
+    /*
+     * Synchronous favicon services were never supported on Fennec,
+     * and as of FF22, are now deprecated. When/if favicon services
+     * are supported for Fennec, this getter should reference
+     * `require('sdk/places/favicon').getFavicon`
+     */
+    console.error(
+      'tab.favicon is deprecated, and currently ' +
+      'favicon helpers are not yet supported by Fennec'
+    );
 
     // return 16x16 blank default
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAEklEQVQ4jWNgGAWjYBSMAggAAAQQAAF/TXiOAAAAAElFTkSuQmCC';

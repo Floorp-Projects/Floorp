@@ -17,9 +17,9 @@
 /* Scratch usage:
 
  Type           Name                size  startpos  endpos
- WebRtc_Word16  pw16_corrVec        62    0         61
- WebRtc_Word16  pw16_data_ds        124   0         123
- WebRtc_Word32  pw32_corr           2*54  124       231
+ int16_t  pw16_corrVec        62    0         61
+ int16_t  pw16_data_ds        124   0         123
+ int32_t  pw32_corr           2*54  124       231
 
  Total:  232
  */
@@ -30,48 +30,48 @@
 
 #define NETEQ_CORRELATOR_DSVECLEN 		124	/* 124 = 60 + 10 + 54 */
 
-WebRtc_Word16 WebRtcNetEQ_Correlator(DSPInst_t *inst,
+int16_t WebRtcNetEQ_Correlator(DSPInst_t *inst,
 #ifdef SCRATCH
-                                     WebRtc_Word16 *pw16_scratchPtr,
+                               int16_t *pw16_scratchPtr,
 #endif
-                                     WebRtc_Word16 *pw16_data,
-                                     WebRtc_Word16 w16_dataLen,
-                                     WebRtc_Word16 *pw16_corrOut,
-                                     WebRtc_Word16 *pw16_corrScale)
+                               int16_t *pw16_data,
+                               int16_t w16_dataLen,
+                               int16_t *pw16_corrOut,
+                               int16_t *pw16_corrScale)
 {
-    WebRtc_Word16 w16_corrLen = 60;
+    int16_t w16_corrLen = 60;
 #ifdef SCRATCH
-    WebRtc_Word16 *pw16_data_ds = pw16_scratchPtr + SCRATCH_pw16_corrVec;
-    WebRtc_Word32 *pw32_corr = (WebRtc_Word32*) (pw16_scratchPtr + SCRATCH_pw32_corr);
-    /*	WebRtc_Word16 *pw16_corrVec = pw16_scratchPtr + SCRATCH_pw16_corrVec;*/
+    int16_t *pw16_data_ds = pw16_scratchPtr + SCRATCH_pw16_corrVec;
+    int32_t *pw32_corr = (int32_t*) (pw16_scratchPtr + SCRATCH_pw32_corr);
+    /*	int16_t *pw16_corrVec = pw16_scratchPtr + SCRATCH_pw16_corrVec;*/
 #else
-    WebRtc_Word16 pw16_data_ds[NETEQ_CORRELATOR_DSVECLEN];
-    WebRtc_Word32 pw32_corr[54];
-    /*	WebRtc_Word16 pw16_corrVec[4+54+4];*/
+    int16_t pw16_data_ds[NETEQ_CORRELATOR_DSVECLEN];
+    int32_t pw32_corr[54];
+    /*	int16_t pw16_corrVec[4+54+4];*/
 #endif
-    /*	WebRtc_Word16 *pw16_corr=&pw16_corrVec[4];*/
-    WebRtc_Word16 w16_maxVal;
-    WebRtc_Word32 w32_maxVal;
-    WebRtc_Word16 w16_normVal;
-    WebRtc_Word16 w16_normVal2;
-    /*	WebRtc_Word16 w16_corrUpsLen;*/
-    WebRtc_Word16 *pw16_B = NULL;
-    WebRtc_Word16 w16_Blen = 0;
-    WebRtc_Word16 w16_factor = 0;
+    /*	int16_t *pw16_corr=&pw16_corrVec[4];*/
+    int16_t w16_maxVal;
+    int32_t w32_maxVal;
+    int16_t w16_normVal;
+    int16_t w16_normVal2;
+    /*	int16_t w16_corrUpsLen;*/
+    int16_t *pw16_B = NULL;
+    int16_t w16_Blen = 0;
+    int16_t w16_factor = 0;
 
     /* Set constants depending on frequency used */
     if (inst->fs == 8000)
     {
         w16_Blen = 3;
         w16_factor = 2;
-        pw16_B = (WebRtc_Word16*) WebRtcNetEQ_kDownsample8kHzTbl;
+        pw16_B = (int16_t*) WebRtcNetEQ_kDownsample8kHzTbl;
 #ifdef NETEQ_WIDEBAND
     }
     else if (inst->fs==16000)
     {
         w16_Blen = 5;
         w16_factor = 4;
-        pw16_B = (WebRtc_Word16*)WebRtcNetEQ_kDownsample16kHzTbl;
+        pw16_B = (int16_t*)WebRtcNetEQ_kDownsample16kHzTbl;
 #endif
 #ifdef NETEQ_32KHZ_WIDEBAND
     }
@@ -79,7 +79,7 @@ WebRtc_Word16 WebRtcNetEQ_Correlator(DSPInst_t *inst,
     {
         w16_Blen = 7;
         w16_factor = 8;
-        pw16_B = (WebRtc_Word16*)WebRtcNetEQ_kDownsample32kHzTbl;
+        pw16_B = (int16_t*)WebRtcNetEQ_kDownsample32kHzTbl;
 #endif
 #ifdef NETEQ_48KHZ_WIDEBAND
     }
@@ -87,19 +87,19 @@ WebRtc_Word16 WebRtcNetEQ_Correlator(DSPInst_t *inst,
     {
         w16_Blen = 7;
         w16_factor = 12;
-        pw16_B = (WebRtc_Word16*)WebRtcNetEQ_kDownsample48kHzTbl;
+        pw16_B = (int16_t*)WebRtcNetEQ_kDownsample48kHzTbl;
 #endif
     }
 
     /* Downsample data in order to work on a 4 kHz sampled signal */
     WebRtcSpl_DownsampleFast(
         pw16_data + w16_dataLen - (NETEQ_CORRELATOR_DSVECLEN * w16_factor),
-        (WebRtc_Word16) (NETEQ_CORRELATOR_DSVECLEN * w16_factor), pw16_data_ds,
-        NETEQ_CORRELATOR_DSVECLEN, pw16_B, w16_Blen, w16_factor, (WebRtc_Word16) 0);
+        (int16_t) (NETEQ_CORRELATOR_DSVECLEN * w16_factor), pw16_data_ds,
+        NETEQ_CORRELATOR_DSVECLEN, pw16_B, w16_Blen, w16_factor, (int16_t) 0);
 
     /* Normalize downsampled vector to using entire 16 bit */
     w16_maxVal = WebRtcSpl_MaxAbsValueW16(pw16_data_ds, 124);
-    w16_normVal = 16 - WebRtcSpl_NormW32((WebRtc_Word32) w16_maxVal);
+    w16_normVal = 16 - WebRtcSpl_NormW32((int32_t) w16_maxVal);
     WebRtcSpl_VectorBitShiftW16(pw16_data_ds, NETEQ_CORRELATOR_DSVECLEN, pw16_data_ds,
         w16_normVal);
 

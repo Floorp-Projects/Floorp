@@ -22,76 +22,62 @@ namespace webrtc {
 // This class is not thread-safe and must be protected by its caller.
 class RTPReceiverStrategy {
  public:
-  RTPReceiverStrategy();
+  // The data callback is where we should send received payload data.
+  // See ParseRtpPacket. This class does not claim ownership of the callback.
+  // Implementations must NOT hold any critical sections while calling the
+  // callback.
+  //
+  // Note: Implementations may call the callback for other reasons than calls
+  // to ParseRtpPacket, for instance if the implementation somehow recovers a
+  // packet.
+  RTPReceiverStrategy(RtpData* data_callback);
   virtual ~RTPReceiverStrategy() {}
 
-  // Parses the RTP packet. Implementations should keep a reference to the
-  // calling RTPReceiver and call CallbackOfReceivedPayloadData if parsing
-  // succeeds.
-  // TODO(phoglund): This interaction is really ugly: clean up by removing
-  // the need of a back reference to parent, perhaps by returning something
-  // instead of calling back.
-  virtual WebRtc_Word32 ParseRtpPacket(
+  // Parses the RTP packet and calls the data callback with the payload data.
+  // Implementations are encouraged to use the provided packet buffer and RTP
+  // header as arguments to the callback; implementations are also allowed to
+  // make changes in the data as necessary. The specific_payload argument
+  // provides audio or video-specific data. The is_first_packet argument is true
+  // if this packet is either the first packet ever or the first in its frame.
+  virtual int32_t ParseRtpPacket(
     WebRtcRTPHeader* rtp_header,
     const ModuleRTPUtility::PayloadUnion& specific_payload,
     const bool is_red,
-    const WebRtc_UWord8* packet,
-    const WebRtc_UWord16 packet_length,
-    const WebRtc_Word64 timestamp_ms) = 0;
+    const uint8_t* packet,
+    const uint16_t packet_length,
+    const int64_t timestamp_ms,
+    const bool is_first_packet) = 0;
 
   // Retrieves the last known applicable frequency.
-  virtual WebRtc_Word32 GetFrequencyHz() const = 0;
+  virtual int32_t GetFrequencyHz() const = 0;
 
   // Computes the current dead-or-alive state.
   virtual RTPAliveType ProcessDeadOrAlive(
-    WebRtc_UWord16 last_payload_length) const = 0;
+    uint16_t last_payload_length) const = 0;
 
-  // Checks if the provided payload can be handled by this strategy and if
-  // it is compatible with the provided parameters.
-  virtual bool PayloadIsCompatible(
-    const ModuleRTPUtility::Payload& payload,
-    const WebRtc_UWord32 frequency,
-    const WebRtc_UWord8 channels,
-    const WebRtc_UWord32 rate) const = 0;
+  // Returns true if we should report CSRC changes for this payload type.
+  // TODO(phoglund): should move out of here along with other payload stuff.
+  virtual bool ShouldReportCsrcChanges(uint8_t payload_type) const = 0;
 
-  // Updates the rate in the payload in a media-specific way.
-  virtual void UpdatePayloadRate(
-    ModuleRTPUtility::Payload* payload,
-    const WebRtc_UWord32 rate) const = 0;
-
-  // Creates a media-specific payload instance from the provided parameters.
-  virtual ModuleRTPUtility::Payload* CreatePayloadType(
-    const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-    const WebRtc_Word8 payload_type,
-    const WebRtc_UWord32 frequency,
-    const WebRtc_UWord8 channels,
-    const WebRtc_UWord32 rate) = 0;
+  // Notifies the strategy that we have created a new non-RED payload type in
+  // the payload registry.
+  virtual int32_t OnNewPayloadTypeCreated(
+      const char payloadName[RTP_PAYLOAD_NAME_SIZE],
+      const int8_t payloadType,
+      const uint32_t frequency) = 0;
 
   // Invokes the OnInitializeDecoder callback in a media-specific way.
-  virtual WebRtc_Word32 InvokeOnInitializeDecoder(
+  virtual int32_t InvokeOnInitializeDecoder(
     RtpFeedback* callback,
-    const WebRtc_Word32 id,
-    const WebRtc_Word8 payload_type,
+    const int32_t id,
+    const int8_t payload_type,
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     const ModuleRTPUtility::PayloadUnion& specific_payload) const = 0;
-
-  // Prunes the payload type map of the specific payload type, if it exists.
-  // TODO(phoglund): Move this responsibility into some payload management
-  // class along with rtp_receiver's payload management.
-  virtual void PossiblyRemoveExistingPayloadType(
-    ModuleRTPUtility::PayloadTypeMap* payload_type_map,
-    const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-    const size_t payload_name_length,
-    const WebRtc_UWord32 frequency,
-    const WebRtc_UWord8 channels,
-    const WebRtc_UWord32 rate) const {
-    // Default: do nothing.
-  }
 
   // Checks if the payload type has changed, and returns whether we should
   // reset statistics and/or discard this packet.
   virtual void CheckPayloadChanged(
-    const WebRtc_Word8 payload_type,
+    const int8_t payload_type,
     ModuleRTPUtility::PayloadUnion* specific_payload,
     bool* should_reset_statistics,
     bool* should_discard_changes) {
@@ -108,6 +94,7 @@ class RTPReceiverStrategy {
 
  protected:
   ModuleRTPUtility::PayloadUnion last_payload_;
+  RtpData* data_callback_;
 };
 
 }  // namespace webrtc

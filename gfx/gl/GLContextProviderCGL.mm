@@ -146,6 +146,8 @@ public:
         return [NSOpenGLContext currentContext] == mContext;
     }
 
+    virtual GLenum GetPreferredARGB32Format() MOZ_OVERRIDE { return LOCAL_GL_BGRA; }
+
     bool SetupLookupFunction()
     {
         return false;

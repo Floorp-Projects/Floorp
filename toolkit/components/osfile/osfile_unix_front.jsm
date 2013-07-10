@@ -19,10 +19,12 @@
   (function(exports) {
      "use strict";
 
+     exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
      // exports.OS.Unix is created by osfile_unix_back.jsm
-     if (exports.OS.File) {
+     if (exports.OS && exports.OS.File) {
        return; // Avoid double-initialization
      }
+
      exports.OS.Unix.File._init();
      let Const = exports.OS.Constants.libc;
      let UnixFile = exports.OS.Unix.File;

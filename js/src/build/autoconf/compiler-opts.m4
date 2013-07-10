@@ -148,32 +148,35 @@ dnl ========================================================
 dnl = Automatically remove dead symbols
 dnl ========================================================
 
-if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
-   dnl See bug 670659
-   AC_CACHE_CHECK([whether removing dead symbols breaks debugging],
-       GC_SECTIONS_BREAKS_DEBUG_RANGES,
-       [echo 'int foo() {return 42;}' \
-             'int bar() {return 1;}' \
-             'int main() {return foo();}' > conftest.${ac_ext}
-        if AC_TRY_COMMAND([${CC-cc} -o conftest.${ac_objext} $CFLAGS $MOZ_DEBUG_FLAGS -c conftest.${ac_ext} 1>&2]) &&
-           AC_TRY_COMMAND([${CC-cc} -o conftest${ac_exeext} $LDFLAGS $MOZ_DEBUG_FLAGS -Wl,--gc-sections conftest.${ac_objext} $LIBS 1>&2]) &&
-           test -s conftest${ac_exeext} -a -s conftest.${ac_objext}; then
-            if test "`$PYTHON "$_topsrcdir"/build/autoconf/check_debug_ranges.py conftest.${ac_objext} conftest.${ac_ext}`" = \
-                    "`$PYTHON "$_topsrcdir"/build/autoconf/check_debug_ranges.py conftest${ac_exeext} conftest.${ac_ext}`"; then
-                GC_SECTIONS_BREAKS_DEBUG_RANGES=no
-            else
-                GC_SECTIONS_BREAKS_DEBUG_RANGES=yes
-            fi
-        else
-             dnl We really don't expect to get here, but just in case
-             GC_SECTIONS_BREAKS_DEBUG_RANGES="no, but it's broken in some other way"
-        fi
-        rm -rf conftest*])
-    if test "$GC_SECTIONS_BREAKS_DEBUG_RANGES" = no; then
+if test "$GNU_CC" -a "$GCC_USE_GNU_LD"; then
+    if test -n "$MOZ_DEBUG_FLAGS"; then
+        dnl See bug 670659
+        AC_CACHE_CHECK([whether removing dead symbols breaks debugging],
+            GC_SECTIONS_BREAKS_DEBUG_RANGES,
+            [echo 'int foo() {return 42;}' \
+                  'int bar() {return 1;}' \
+                  'int main() {return foo();}' > conftest.${ac_ext}
+            if AC_TRY_COMMAND([${CC-cc} -o conftest.${ac_objext} $CFLAGS $MOZ_DEBUG_FLAGS -c conftest.${ac_ext} 1>&2]) &&
+                AC_TRY_COMMAND([${CC-cc} -o conftest${ac_exeext} $LDFLAGS $MOZ_DEBUG_FLAGS -Wl,--gc-sections conftest.${ac_objext} $LIBS 1>&2]) &&
+                test -s conftest${ac_exeext} -a -s conftest.${ac_objext}; then
+                 if test "`$PYTHON "$_topsrcdir"/build/autoconf/check_debug_ranges.py conftest.${ac_objext} conftest.${ac_ext}`" = \
+                         "`$PYTHON "$_topsrcdir"/build/autoconf/check_debug_ranges.py conftest${ac_exeext} conftest.${ac_ext}`"; then
+                     GC_SECTIONS_BREAKS_DEBUG_RANGES=no
+                 else
+                     GC_SECTIONS_BREAKS_DEBUG_RANGES=yes
+                 fi
+             else
+                  dnl We really don't expect to get here, but just in case
+                  GC_SECTIONS_BREAKS_DEBUG_RANGES="no, but it's broken in some other way"
+             fi
+             rm -rf conftest*])
+         if test "$GC_SECTIONS_BREAKS_DEBUG_RANGES" = no; then
+             DSO_LDOPTS="$DSO_LDOPTS -Wl,--gc-sections"
+         fi
+    else
         DSO_LDOPTS="$DSO_LDOPTS -Wl,--gc-sections"
     fi
 fi
-
 ])
 
 dnl GCC and clang will fail if given an unknown warning option like -Wfoobar. 

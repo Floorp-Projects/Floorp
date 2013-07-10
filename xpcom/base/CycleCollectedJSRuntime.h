@@ -11,9 +11,11 @@
 #include "jsprvtd.h"
 #include "jsapi.h"
 
+#include "nsCycleCollector.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsTArray.h"
 
 class nsCycleCollectionNoteRootCallback;
 class nsScriptObjectTracer;
@@ -38,7 +40,7 @@ public:
     return NS_OK;
   }
 
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
   {
   }
 
@@ -65,7 +67,7 @@ public:
     return NS_OK;
   }
 
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
   {
   }
 
@@ -73,10 +75,13 @@ public:
                                 nsCycleCollectionTraversalCallback &cb);
 };
 
+class IncrementalFinalizeRunnable;
+
 class CycleCollectedJSRuntime
 {
   friend class JSGCThingParticipant;
   friend class JSZoneParticipant;
+  friend class IncrementalFinalizeRunnable;
 protected:
   CycleCollectedJSRuntime(uint32_t aMaxbytes,
                           JSUseHelperThreads aUseHelperThreads,
@@ -94,6 +99,8 @@ protected:
 
   virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
   virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
+
+  virtual void CustomGCCallback(JSGCStatus aStatus) {}
 
 private:
 
@@ -143,9 +150,19 @@ private:
 
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
+  static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
+
+  enum DeferredFinalizeType {
+    FinalizeIncrementally,
+    FinalizeNow,
+  };
+
+  void FinalizeDeferredThings(DeferredFinalizeType aType);
+
+  void OnGC(JSGCStatus aStatus);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
@@ -175,6 +192,11 @@ public:
   virtual void PrepareForForgetSkippable() {}
   virtual void PrepareForCollection() {}
 
+  void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
+                        DeferredFinalizeFunction aFunc,
+                        void* aThing);
+  void DeferredFinalize(nsISupports* aSupports);
+
 private:
   typedef const CCParticipantVTable<JSGCThingParticipant>::Type GCThingParticipantVTable;
   const GCThingParticipantVTable mGCThingCycleCollectorGlobal;
@@ -185,6 +207,13 @@ private:
   JSRuntime* mJSRuntime;
 
   nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
+
+  nsTArray<nsISupports*> mDeferredSupports;
+  typedef nsDataHashtable<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
+    DeferredFinalizerTable;
+  DeferredFinalizerTable mDeferredFinalizerTable;
+
+  nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
 #ifdef DEBUG
   void* mObjectToUnlink;

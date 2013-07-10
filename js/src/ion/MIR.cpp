@@ -339,12 +339,6 @@ MDefinition::emptyResultTypeSet() const
     return resultTypeSet() && resultTypeSet()->empty();
 }
 
-static inline bool
-IsPowerOfTwo(uint32_t n)
-{
-    return (n > 0) && ((n & (n - 1)) == 0);
-}
-
 MConstant *
 MConstant::New(const Value &v)
 {
@@ -1173,6 +1167,35 @@ bool
 MDiv::fallible()
 {
     return !isTruncated();
+}
+
+bool
+MMod::canBeDivideByZero() const
+{
+    JS_ASSERT(specialization_ == MIRType_Int32);
+    return !rhs()->isConstant() || rhs()->toConstant()->value().toInt32() == 0;
+}
+
+bool
+MMod::canBeNegativeDividend() const
+{
+    JS_ASSERT(specialization_ == MIRType_Int32);
+    return !lhs()->range() || lhs()->range()->lower() < 0;
+}
+
+bool
+MMod::canBePowerOfTwoDivisor() const
+{
+    JS_ASSERT(specialization_ == MIRType_Int32);
+
+    if (!rhs()->isConstant())
+        return true;
+
+    int32_t i = rhs()->toConstant()->value().toInt32();
+    if (i <= 0 || !IsPowerOfTwo(i))
+        return false;
+
+    return true;
 }
 
 static inline MDefinition *

@@ -492,7 +492,7 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> 
     nsScriptSecurityManager *ssm =
         nsScriptSecurityManager::GetScriptSecurityManager();
 
-    NS_ASSERTION(ssm, "Failed to get security manager service");
+    NS_WARN_IF_FALSE(ssm, "Failed to get security manager service");
     if (!ssm)
         return JS_FALSE;
 
@@ -2494,13 +2494,12 @@ nsScriptSecurityManager::Shutdown()
 nsScriptSecurityManager *
 nsScriptSecurityManager::GetScriptSecurityManager()
 {
-    if (!gScriptSecMan)
+    if (!gScriptSecMan && nsXPConnect::XPConnect())
     {
         nsRefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
 
         nsresult rv;
         rv = ssManager->Init();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to initialize nsScriptSecurityManager");
         if (NS_FAILED(rv)) {
             return nullptr;
         }

@@ -12,9 +12,10 @@
 #include "mozilla/PodOperations.h"
 
 #include "jscompartment.h"
-#include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
+
+#include "vm/Runtime.h"
 
 class JSScript;
 

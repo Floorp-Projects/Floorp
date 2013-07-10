@@ -1167,21 +1167,18 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   // This value of "now" is used both here for OCSP stapling and later
   // when calling CreateCertErrorRunnable.
   PRTime now = PR_Now();
-  PRBool enabled;
-  if (SECSuccess != SSL_OptionGet(fd, SSL_ENABLE_OCSP_STAPLING, &enabled)) {
-    return SECFailure;
-  }
-  if (enabled) {
-      // no ownership
-      const SECItemArray *csa = SSL_PeerStapledOCSPResponses(fd);
-      // we currently only support single stapled responses
-      if (csa && csa->len == 1) {
-          CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
-          SECStatus cacheResult = CERT_CacheOCSPResponseFromSideChannel(
-              handle, serverCert, now, &csa->items[0], arg);
-          if (cacheResult != SECSuccess) {
-              return SECFailure;
-          }
+  // SSL_PeerStapledOCSPResponses will never return a non-empty response if
+  // OCSP stapling wasn't enabled because libssl wouldn't have let the server
+  // return a stapled OCSP response.
+  // We don't own this pointer.
+  const SECItemArray *csa = SSL_PeerStapledOCSPResponses(fd);
+  // we currently only support single stapled responses
+  if (csa && csa->len == 1) {
+      CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
+      SECStatus cacheResult = CERT_CacheOCSPResponseFromSideChannel(
+          handle, serverCert, now, &csa->items[0], arg);
+      if (cacheResult != SECSuccess) {
+          return SECFailure;
       }
   }
 

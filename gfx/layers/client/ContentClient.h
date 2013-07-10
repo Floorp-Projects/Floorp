@@ -53,7 +53,7 @@ class BasicLayerManager;
  * Updated() is called when we are done painting and packages up the change in
  * the appropriate way to be passed to the compositor in the layers transation.
  *
- * SwapBuffers is called in repsonse to the transaction reply from the compositor.
+ * SwapBuffers is called in response to the transaction reply from the compositor.
  */
 class ContentClient : public CompositableClient
 {
@@ -155,7 +155,7 @@ private:
  * the rendering side and destroyed on the compositing side. They are only
  * passed from one side to the other when the TextureClient/Hosts are created.
  * *Ownership* of the SurfaceDescriptor moves from the rendering side to the
- * comnpositing side with the create message (send from CreateBuffer) which
+ * compositing side with the create message (send from CreateBuffer) which
  * tells the compositor that TextureClients have been created and that the
  * compositor should assign the corresponding TextureHosts to our corresponding
  * ContentHost.
@@ -172,7 +172,7 @@ public:
   ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
     : ContentClientRemote(aForwarder)
     , ThebesLayerBuffer(ContainsVisibleBounds)
-    , mTextureClient(nullptr)
+    , mDeprecatedTextureClient(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
     , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
@@ -240,10 +240,10 @@ protected:
                                        const nsIntRegion& aVisibleRegion,
                                        bool aDidSelfCopy);
 
-  // create and configure mTextureClient
-  void BuildTextureClients(ContentType aType,
-                           const nsIntRect& aRect,
-                           uint32_t aFlags);
+  // create and configure mDeprecatedTextureClient
+  void BuildDeprecatedTextureClients(ContentType aType,
+                                     const nsIntRect& aRect,
+                                     uint32_t aFlags);
 
   // Create the front buffer for the ContentClient/Host pair if necessary
   // and notify the compositor that we have created the buffer(s).
@@ -253,11 +253,11 @@ protected:
   // lock it now.
   virtual void LockFrontBuffer() {}
 
-  RefPtr<TextureClient> mTextureClient;
-  RefPtr<TextureClient> mTextureClientOnWhite;
+  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
+  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClientOnWhite;
   // keep a record of texture clients we have created and need to keep
   // around, then unlock when we are done painting
-  nsTArray<RefPtr<TextureClient> > mOldTextures;
+  nsTArray<RefPtr<DeprecatedTextureClient> > mOldTextures;
 
   TextureInfo mTextureInfo;
   bool mIsNewBuffer;
@@ -267,14 +267,14 @@ protected:
 };
 
 /**
- * A double buffered ContentClient. mTextureClient is the back buffer, which
+ * A double buffered ContentClient. mDeprecatedTextureClient is the back buffer, which
  * we draw into. mFrontClient is the front buffer which we may read from, but
  * not write to, when the compositor does not have the 'soft' lock. We can write
- * into mTextureClient at any time.
+ * into mDeprecatedTextureClient at any time.
  *
  * The ContentHost keeps a reference to both corresponding texture hosts, in
- * repsonse to our UpdateTextureRegion message, the compositor swaps its
- * references. In repsonse to the compositor's reply we swap our references
+ * response to our UpdateTextureRegion message, the compositor swaps its
+ * references. In response to the compositor's reply we swap our references
  * (in SwapBuffers).
  */
 class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
@@ -300,8 +300,8 @@ private:
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
                              const nsIntRegion& aUpdateRegion);
 
-  RefPtr<TextureClient> mFrontClient;
-  RefPtr<TextureClient> mFrontClientOnWhite;
+  RefPtr<DeprecatedTextureClient> mFrontClient;
+  RefPtr<DeprecatedTextureClient> mFrontClientOnWhite;
   nsIntRegion mFrontUpdatedRegion;
   nsIntRect mFrontBufferRect;
   nsIntPoint mFrontBufferRotation;
@@ -311,7 +311,7 @@ private:
  * A single buffered ContentClient. We have a single TextureClient/Host
  * which we update and then send a message to the compositor that we are
  * done updating. It is not safe for the compositor to use the corresponding
- * TextureHost's memory directly, it most upload it to video memory of some
+ * TextureHost's memory directly, it must upload it to video memory of some
  * kind. We are free to modify the TextureClient once we receive reply from
  * the compositor.
  */

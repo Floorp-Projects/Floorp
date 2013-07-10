@@ -147,10 +147,12 @@
       if (typeof path != "string" || path.indexOf("://") == -1) {
         throw new TypeError("The argument to require() must be a string uri, got " + path);
       }
-      // Determine uri for the module
-      let uri = path;
-      if (!(uri.endsWith(".js"))) {
-        uri += ".js";
+      // Automatically add ".js" if there is no extension
+      let uri;
+      if (path.lastIndexOf(".") <= path.lastIndexOf("/")) {
+        uri = path + ".js";
+      } else {
+        uri = path;
       }
 
       // Exports provided by the module
@@ -191,14 +193,14 @@
         // we do not mess up with line numbers. However, using object URLs
         // messes up with stack traces in instances of Error().
         source = "require._tmpModules[\"" + name + "\"] = " +
-          "function(exports, require, modules) {" +
+          "function(exports, require, module) {" +
           source +
         "\n}\n";
         let blob = new Blob([(new TextEncoder()).encode(source)]);
         objectURL = URL.createObjectURL(blob);
         paths.set(objectURL, path);
         importScripts(objectURL);
-        require._tmpModules[name](exports, require, modules);
+        require._tmpModules[name].call(null, exports, require, module);
 
       } catch (ex) {
         // Module loading has failed, exports should not be made available

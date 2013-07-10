@@ -26,7 +26,8 @@ class ViEExternalCodecImpl
   virtual int Release();
   virtual int RegisterExternalSendCodec(const int video_channel,
                                         const unsigned char pl_type,
-                                        VideoEncoder* encoder);
+                                        VideoEncoder* encoder,
+                                        bool internal_source = false);
   virtual int DeRegisterExternalSendCodec(const int video_channel,
                                           const unsigned char pl_type);
   virtual int RegisterExternalReceiveCodec(const int video_channel,

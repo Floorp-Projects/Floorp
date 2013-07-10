@@ -21,47 +21,46 @@ namespace webrtc {
 
 class ACMG729_1 : public ACMGenericCodec {
  public:
-  explicit ACMG729_1(WebRtc_Word16 codec_id);
+  explicit ACMG729_1(int16_t codec_id);
   ~ACMG729_1();
 
   // for FEC
   ACMGenericCodec* CreateInstance(void);
 
-  WebRtc_Word16 InternalEncode(WebRtc_UWord8* bitstream,
-                               WebRtc_Word16* bitstream_len_byte);
+  int16_t InternalEncode(uint8_t* bitstream, int16_t* bitstream_len_byte);
 
-  WebRtc_Word16 InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
 
-  WebRtc_Word16 InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
 
  protected:
-  WebRtc_Word16 DecodeSafe(WebRtc_UWord8* bitstream,
-                           WebRtc_Word16 bitstream_len_byte,
-                           WebRtc_Word16* audio,
-                           WebRtc_Word16* audio_samples,
-                           WebRtc_Word8* speech_type);
+  int16_t DecodeSafe(uint8_t* bitstream,
+                     int16_t bitstream_len_byte,
+                     int16_t* audio,
+                     int16_t* audio_samples,
+                     int8_t* speech_type);
 
-  WebRtc_Word32 CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                         const CodecInst& codec_inst);
+  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                   const CodecInst& codec_inst);
 
   void DestructEncoderSafe();
 
   void DestructDecoderSafe();
 
-  WebRtc_Word16 InternalCreateEncoder();
+  int16_t InternalCreateEncoder();
 
-  WebRtc_Word16 InternalCreateDecoder();
+  int16_t InternalCreateDecoder();
 
   void InternalDestructEncoderInst(void* ptr_inst);
 
-  WebRtc_Word16 SetBitRateSafe(const WebRtc_Word32 rate);
+  int16_t SetBitRateSafe(const int32_t rate);
 
   G729_1_inst_t_* encoder_inst_ptr_;
   G729_1_inst_t_* decoder_inst_ptr_;
 
-  WebRtc_UWord16 my_rate_;
-  WebRtc_Word16 flag_8khz_;
-  WebRtc_Word16 flag_g729_mode_;
+  uint16_t my_rate_;
+  int16_t flag_8khz_;
+  int16_t flag_g729_mode_;
 };
 
 }  // namespace webrtc

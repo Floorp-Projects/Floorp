@@ -64,57 +64,57 @@ typedef struct
 {
 
     /* Filtered current buffer level */
-    WebRtc_UWord16 levelFiltFact; /* filter forgetting factor in Q8 */
-    WebRtc_UWord16 buffLevelFilt; /* filtered buffer level in Q8 */
+    uint16_t levelFiltFact; /* filter forgetting factor in Q8 */
+    int buffLevelFilt; /* filtered buffer level in Q8 */
 
     /* Inter-arrival time (iat) statistics */
-    WebRtc_Word32 iatProb[MAX_IAT + 1]; /* iat probabilities in Q30 */
-    WebRtc_Word16 iatProbFact; /* iat forgetting factor in Q15 */
-    WebRtc_UWord32 packetIatCountSamp; /* time (in timestamps) elapsed since last
+    int32_t iatProb[MAX_IAT + 1]; /* iat probabilities in Q30 */
+    int16_t iatProbFact; /* iat forgetting factor in Q15 */
+    uint32_t packetIatCountSamp; /* time (in timestamps) elapsed since last
      packet arrival, based on RecOut calls */
-    WebRtc_UWord16 optBufLevel; /* current optimal buffer level in Q8 */
+    int optBufLevel; /* current optimal buffer level in Q8 */
 
     /* Packet related information */
-    WebRtc_Word16 packetSpeechLenSamp; /* speech samples per incoming packet */
-    WebRtc_Word16 lastPackCNGorDTMF; /* indicates that the last received packet
+    int16_t packetSpeechLenSamp; /* speech samples per incoming packet */
+    int16_t lastPackCNGorDTMF; /* indicates that the last received packet
      contained special information */
-    WebRtc_UWord16 lastSeqNo; /* sequence number for last packet received */
-    WebRtc_UWord32 lastTimeStamp; /* timestamp for the last packet received */
-    WebRtc_Word32 sampleMemory; /* memory position for keeping track of how many
+    uint16_t lastSeqNo; /* sequence number for last packet received */
+    uint32_t lastTimeStamp; /* timestamp for the last packet received */
+    int32_t sampleMemory; /* memory position for keeping track of how many
      samples we cut during expand */
-    WebRtc_Word16 prevTimeScale; /* indicates that the last mode was an accelerate
+    int16_t prevTimeScale; /* indicates that the last mode was an accelerate
      or pre-emptive expand operation */
-    WebRtc_UWord32 timescaleHoldOff; /* counter that is shifted one step right each
+    uint32_t timescaleHoldOff; /* counter that is shifted one step right each
      RecOut call; time-scaling allowed when it has
      reached 0 */
-    WebRtc_Word16 extraDelayMs; /* extra delay for sync with video */
+    int16_t extraDelayMs; /* extra delay for sync with video */
 
     /* Peak-detection */
     /* vector with the latest peak periods (peak spacing in samples) */
-    WebRtc_UWord32 peakPeriodSamp[NUM_PEAKS];
+    uint32_t peakPeriodSamp[NUM_PEAKS];
     /* vector with the latest peak heights (in packets) */
-    WebRtc_Word16 peakHeightPkt[NUM_PEAKS];
-    WebRtc_Word16 peakIndex; /* index for the vectors peakPeriodSamp and peakHeightPkt;
+    int16_t peakHeightPkt[NUM_PEAKS];
+    int16_t peakIndex; /* index for the vectors peakPeriodSamp and peakHeightPkt;
      -1 if still waiting for first peak */
-    WebRtc_UWord16 peakThresholdPkt; /* definition of peak (in packets);
+    uint16_t peakThresholdPkt; /* definition of peak (in packets);
      calculated from PEAK_HEIGHT */
-    WebRtc_UWord32 peakIatCountSamp; /* samples elapsed since last peak was observed */
-    WebRtc_UWord32 curPeakPeriod; /* current maximum of peakPeriodSamp vector */
-    WebRtc_Word16 curPeakHeight; /* derived from peakHeightPkt vector;
+    uint32_t peakIatCountSamp; /* samples elapsed since last peak was observed */
+    uint32_t curPeakPeriod; /* current maximum of peakPeriodSamp vector */
+    int16_t curPeakHeight; /* derived from peakHeightPkt vector;
      used as optimal buffer level in peak mode */
-    WebRtc_Word16 peakModeDisabled; /* ==0 if peak mode can be engaged; >0 if not */
+    int16_t peakModeDisabled; /* ==0 if peak mode can be engaged; >0 if not */
     uint16_t peakFound; /* 1 if peaks are detected and extra delay is applied;
                         * 0 otherwise. */
 
     /* Post-call statistics */
-    WebRtc_UWord32 countIAT500ms; /* number of times we got small network outage */
-    WebRtc_UWord32 countIAT1000ms; /* number of times we got medium network outage */
-    WebRtc_UWord32 countIAT2000ms; /* number of times we got large network outage */
-    WebRtc_UWord32 longestIATms; /* mSec duration of longest network outage */
+    uint32_t countIAT500ms; /* number of times we got small network outage */
+    uint32_t countIAT1000ms; /* number of times we got medium network outage */
+    uint32_t countIAT2000ms; /* number of times we got large network outage */
+    uint32_t longestIATms; /* mSec duration of longest network outage */
 
-    WebRtc_Word16 cSumIatQ8; /* cumulative sum of inter-arrival times */
-    WebRtc_Word16 maxCSumIatQ8; /* max cumulative sum IAT */
-    WebRtc_UWord32 maxCSumUpdateTimer;/* time elapsed since maximum was observed */
+    int16_t cSumIatQ8; /* cumulative sum of inter-arrival times */
+    int16_t maxCSumIatQ8; /* max cumulative sum IAT */
+    uint32_t maxCSumUpdateTimer;/* time elapsed since maximum was observed */
 
 } AutomodeInst_t;
 
@@ -148,8 +148,8 @@ typedef struct
  */
 
 int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
-                                    WebRtc_UWord16 seqNumber, WebRtc_UWord32 timeStamp,
-                                    WebRtc_Word32 fsHz, int mdCodec, int streamingMode);
+                                    uint16_t seqNumber, uint32_t timeStamp,
+                                    int32_t fsHz, int mdCodec, int streamingMode);
 
 /****************************************************************************
  * WebRtcNetEQ_CalcOptimalBufLvl(...)
@@ -172,9 +172,9 @@ int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
  *                        <0 - Error
  */
 
-WebRtc_Word16 WebRtcNetEQ_CalcOptimalBufLvl(AutomodeInst_t *inst, WebRtc_Word32 fsHz,
-                                            int mdCodec, WebRtc_UWord32 timeIatPkts,
-                                            int streamingMode);
+int16_t WebRtcNetEQ_CalcOptimalBufLvl(AutomodeInst_t *inst, int32_t fsHz,
+                                      int mdCodec, uint32_t timeIatPkts,
+                                      int streamingMode);
 
 /****************************************************************************
  * WebRtcNetEQ_BufferLevelFilter(...)
@@ -197,8 +197,8 @@ WebRtc_Word16 WebRtcNetEQ_CalcOptimalBufLvl(AutomodeInst_t *inst, WebRtc_Word32 
  *                      : <0 - Error
  */
 
-int WebRtcNetEQ_BufferLevelFilter(WebRtc_Word32 curSizeMs8, AutomodeInst_t *inst,
-                                  int sampPerCall, WebRtc_Word16 fsMult);
+int WebRtcNetEQ_BufferLevelFilter(int32_t curSizeMs8, AutomodeInst_t *inst,
+                                  int sampPerCall, int16_t fsMult);
 
 /****************************************************************************
  * WebRtcNetEQ_SetPacketSpeechLen(...)
@@ -220,8 +220,8 @@ int WebRtcNetEQ_BufferLevelFilter(WebRtc_Word32 curSizeMs8, AutomodeInst_t *inst
  *                        <0 - Error
  */
 
-int WebRtcNetEQ_SetPacketSpeechLen(AutomodeInst_t *inst, WebRtc_Word16 newLenSamp,
-                                   WebRtc_Word32 fsHz);
+int WebRtcNetEQ_SetPacketSpeechLen(AutomodeInst_t *inst, int16_t newLenSamp,
+                                   int32_t fsHz);
 
 /****************************************************************************
  * WebRtcNetEQ_ResetAutomode(...)

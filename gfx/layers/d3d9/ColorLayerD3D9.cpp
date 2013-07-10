@@ -23,14 +23,14 @@ RenderColorLayerD3D9(ColorLayer* aLayer, LayerManagerD3D9 *aManager)
     return;
   }
 
-  nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
+  nsIntRect bounds = aLayer->GetBounds();
 
   aManager->device()->SetVertexShaderConstantF(
     CBvLayerQuad,
-    ShaderConstantRect(visibleRect.x,
-                       visibleRect.y,
-                       visibleRect.width,
-                       visibleRect.height),
+    ShaderConstantRect(bounds.x,
+                       bounds.y,
+                       bounds.width,
+                       bounds.height),
     1);
 
   const gfx3DMatrix& transform = aLayer->GetEffectiveTransform();

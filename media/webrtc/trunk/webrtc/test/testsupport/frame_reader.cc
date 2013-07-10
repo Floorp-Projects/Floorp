@@ -12,13 +12,13 @@
 
 #include <cassert>
 
-#include "testsupport/fileutils.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 namespace test {
 
 FrameReaderImpl::FrameReaderImpl(std::string input_filename,
-                                 int frame_length_in_bytes)
+                                 size_t frame_length_in_bytes)
     : input_filename_(input_filename),
       frame_length_in_bytes_(frame_length_in_bytes),
       input_file_(NULL) {
@@ -30,7 +30,7 @@ FrameReaderImpl::~FrameReaderImpl() {
 
 bool FrameReaderImpl::Init() {
   if (frame_length_in_bytes_ <= 0) {
-    fprintf(stderr, "Frame length must be >0, was %d\n",
+    fprintf(stderr, "Frame length must be >0, was %zu\n",
             frame_length_in_bytes_);
     return false;
   }
@@ -46,7 +46,8 @@ bool FrameReaderImpl::Init() {
     fprintf(stderr, "Found empty file: %s\n", input_filename_.c_str());
     return false;
   }
-  number_of_frames_ = source_file_size / frame_length_in_bytes_;
+  number_of_frames_ = static_cast<int>(source_file_size /
+                                       frame_length_in_bytes_);
   return true;
 }
 
@@ -57,7 +58,7 @@ void FrameReaderImpl::Close() {
   }
 }
 
-bool FrameReaderImpl::ReadFrame(WebRtc_UWord8* source_buffer) {
+bool FrameReaderImpl::ReadFrame(uint8_t* source_buffer) {
   assert(source_buffer);
   if (input_file_ == NULL) {
     fprintf(stderr, "FrameReader is not initialized (input file is NULL)\n");

@@ -53,6 +53,77 @@ accomplish most of what it needs using the supported APIs, then it might
 still be worth migrating: we'll add more supported APIs in future releases
 to meet important use cases.
 
+## <a name="user-interface-components">User Interface Components</a>##
+
+XUL-based add-ons typically implement a user interface using a combination
+of two techniques: XUL overlays and XUL windows.
+
+### XUL Overlays ###
+
+XUL overlays are used to modify existing windows such as the main browser
+window. In this way an extension can integrate its user interface into the
+browser: for example, adding menu items, buttons, and toolbars.
+
+Because SDK-based extensions are restartless, they can't use XUL overlays. To
+add user interface components to the browser, there are a few different
+options. In order of complexity, the main options are:
+
+* the SDK includes modules that implement some basic user interface
+components including [buttons](modules/sdk/widget.html),
+[dialogs](modules/sdk/panel.html), and
+[context menu items](modules/sdk/context-menu.html).
+
+* there is a collection of
+[community-developed modules](https://github.com/mozilla/addon-sdk/wiki/Community-developed-modules)
+that includes various user interface components, including
+[toolbar buttons](https://github.com/voldsoftware/toolbarbutton-jplib) and
+[menu items](https://github.com/voldsoftware/menuitems-jplib).
+
+* by using the SDK's
+[low-level APIs](dev-guide/guides/xul-migration.html#Using the Low-level APIs)
+you can directly modify the browser chrome.
+
+### XUL Windows
+
+XUL windows are used to define completely new windows to host user interface
+elements specific to the add-on.
+
+The SDK generally expects you to specify your user interface using HTML, not
+XUL. However, you can include a
+[chrome.manifest file](https://developer.mozilla.org/en-US/docs/Chrome_Registration)
+in your add-on and it will be included in the generated XPI.
+
+<ul class="tree">
+  <li>my-addon
+    <ul>
+    <li class="highlight-tree-node">chrome
+      <ul><li>content</li>
+          <li>locale</li>
+          <li>skin</li></ul>
+    </li>
+    <li class="highlight-tree-node">chrome.manifest</li>
+    <li>data</li>
+    <li>lib</li>
+    <li>package.json</li>
+    </ul>
+  </li>
+</ul>
+
+There are limitations on what you can do in this manifest file: for example,
+you can't register overlays, `resource:` URIs, or components. However, you
+can register a `chrome:` URI, with a skin and locale, and this means you
+can include XUL windows in an SDK-based add-on.
+
+You can keep the "chrome.manifest" file in your add-on's root directory
+and create a directory there called "chrome". In that directory you can keep
+your "content", "locale", and "skin" subdirectories:
+
+This allows you to refer to objects in these directories from "chrome.manifest" using a relative path, like "chrome/content".
+
+This is provided only as a migration aid, and it's still a good idea to port XUL windows to HTML.
+
+<div style="clear:both"></div>
+
 ## <a name="content-scripts">Content Scripts</a> ##
 
 In a XUL-based add-on, code that uses XPCOM objects, code that manipulates
@@ -71,27 +142,8 @@ page script.
 
 A XUL-based add-on will need to be reorganized to respect this distinction.
 
-Suppose an add-on wants to make a cross-domain XMLHttpRequest based on some
-data extracted from a web page. In a XUL-based extension you would implement
-all this in a single script. An SDK-based equivalent would need to be
-structured like this:
-
-* the main add-on code (1) attaches a content script to the page, and (2)
-registers a listener function for messages from the content script
-* the content script (3) extracts the data from the page and (4) sends
-it to the main add-on code in a message
-* the main add-on code (5) receives the message and (6) sends the request,
-using the SDK's [`request`](modules/sdk/request.html) API
-
-<img class="image-center" src="static-files/media/xul-migration-cs.png"
-alt="Content script organization">
-
-There are two related reasons for this design. The first is security: it
-reduces the risk that a malicious web page will be able to access privileged
-APIs. The second is the need to be compatible with the multi-process architecture
-planned for Firefox: after this is implemented in Firefox, all add-ons will
-need to use a similar pattern, so it's likely that a XUL-based add-on will
-need to be rewritten anyway.
+The main reason for this design is security: it reduces the risk that a
+malicious web page will be able to access privileged APIs.
 
 There's much more information on content scripts in the
 [Working With Content Scripts](dev-guide/guides/content-scripts/index.html) guide.

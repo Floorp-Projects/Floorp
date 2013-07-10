@@ -19,8 +19,9 @@ and writes them into header files.
 """
 
 import os
-import sys
+import re
 import subprocess
+import sys
 from optparse import OptionParser
 
 def main(argv):
@@ -44,6 +45,7 @@ def main(argv):
   # Set the shell command with the compiler and options inputs.
   compiler_command = (options.compiler + " " + options.options + " " +
       input_filename + " -o " + interim_filename)
+
   # Run the shell command and generate the intermediate file.
   subprocess.check_call(compiler_command, shell=True)
 
@@ -51,13 +53,19 @@ def main(argv):
   out_file = open(out_filename, 'w')  # The output header file.
 
   # Generate the output header file.
-  for line in interim_file:  # Iterate though all the lines in the input file.
+  while True:
+    line = interim_file.readline()
+    if not line: break
     if line.startswith(options.pattern):
-      out_file.write('#define ')
-      out_file.write(line.split(':')[0])  # Write the constant name.
-      out_file.write(' ')
-    if line.find('.word') >= 0:
-      out_file.write(line.split('.word')[1])  # Write the constant value.
+      # Find name of the next constant and write to the output file.
+      const_name = re.sub(r'^_', '', line.split(':')[0])
+      out_file.write('#define %s ' % const_name)
+
+      # Find value of the constant we just found and write to the output file.
+      line = interim_file.readline()
+      const_value = filter(str.isdigit, line.split(' ')[0])
+      if const_value != '':
+        out_file.write('%s\n' % const_value)
 
   interim_file.close()
   out_file.close()

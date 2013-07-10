@@ -47,10 +47,21 @@ using namespace videocapturemodule;
 /// ***** Returns nothing
 - (void)dealloc {
     if(_captureSession)
-    {
         [_captureSession stopRunning];
-        [_captureSession release];
+
+    if (_captureVideoDeviceInput)
+    {
+        if([[_captureVideoDeviceInput device] isOpen])
+            [[_captureVideoDeviceInput device] close];
+
+        [_captureVideoDeviceInput release];
     }
+
+    [_captureDecompressedVideoOutput release];
+    [_captureSession release];
+    [_captureDevices release];
+    [_rLock release];
+
     [super dealloc];
 }
 
@@ -290,7 +301,6 @@ using namespace videocapturemodule;
     }
 
     memset(_captureDeviceNameUTF8, 0, 1024);
-    _counter = 0;
     _framesDelivered = 0;
     _framesRendered = 0;
     _captureDeviceCount = 0;
@@ -299,7 +309,6 @@ using namespace videocapturemodule;
     _frameRate = DEFAULT_FRAME_RATE;
     _frameWidth = DEFAULT_FRAME_WIDTH;
     _frameHeight = DEFAULT_FRAME_HEIGHT;
-    _captureDeviceName = [[NSString alloc] initWithFormat:@""];
     _rLock = [[VideoCaptureRecursiveLock alloc] init];
     _captureSession = [[QTCaptureSession alloc] init];
     _captureDecompressedVideoOutput = [[QTCaptureDecompressedVideoOutput alloc]
@@ -367,17 +376,8 @@ using namespace videocapturemodule;
         return [NSNumber numberWithInt:-1];
     }
 
-    QTCaptureDevice* videoDevice =
-        (QTCaptureDevice*)[_captureDevices objectAtIndex:0];
-
     bool success = NO;
     NSError*    error;
-
-    success = [videoDevice open:&error];
-    if(!success)
-    {
-        return [NSNumber numberWithInt:-1];
-    }
 
     [_captureDecompressedVideoOutput setPixelBufferAttributes:
         [NSDictionary dictionaryWithObjectsAndKeys:

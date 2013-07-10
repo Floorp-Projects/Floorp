@@ -27,7 +27,7 @@ namespace webrtc {
 
 #ifndef WEBRTC_CODEC_G729
 
-ACMG729::ACMG729(WebRtc_Word16 /* codec_id */)
+ACMG729::ACMG729(int16_t /* codec_id */)
 : encoder_inst_ptr_(NULL),
   decoder_inst_ptr_(NULL) {
   return;
@@ -37,50 +37,50 @@ ACMG729::~ACMG729() {
   return;
 }
 
-WebRtc_Word16 ACMG729::InternalEncode(
-    WebRtc_UWord8* /* bitstream */,
-    WebRtc_Word16* /* bitstream_len_byte */) {
+int16_t ACMG729::InternalEncode(
+    uint8_t* /* bitstream */,
+    int16_t* /* bitstream_len_byte */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG729::EnableDTX() {
+int16_t ACMG729::EnableDTX() {
   return -1;
 }
 
-WebRtc_Word16 ACMG729::DisableDTX() {
+int16_t ACMG729::DisableDTX() {
   return -1;
 }
 
-WebRtc_Word32 ACMG729::ReplaceInternalDTXSafe(
+int32_t ACMG729::ReplaceInternalDTXSafe(
     const bool /*replace_internal_dtx */) {
   return -1;
 }
 
-WebRtc_Word32 ACMG729::IsInternalDTXReplacedSafe(
+int32_t ACMG729::IsInternalDTXReplacedSafe(
     bool* /* internal_dtx_replaced */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG729::DecodeSafe(WebRtc_UWord8* /* bitstream */,
-                                  WebRtc_Word16 /* bitstream_len_byte */,
-                                  WebRtc_Word16* /* audio */,
-                                  WebRtc_Word16* /* audio_samples */,
-                                  WebRtc_Word8* /* speech_type */) {
+int16_t ACMG729::DecodeSafe(uint8_t* /* bitstream */,
+                            int16_t /* bitstream_len_byte */,
+                            int16_t* /* audio */,
+                            int16_t* /* audio_samples */,
+                            int8_t* /* speech_type */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG729::InternalInitEncoder(
+int16_t ACMG729::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG729::InternalInitDecoder(
+int16_t ACMG729::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word32 ACMG729::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def  */,
-                                const CodecInst& /* codec_inst */) {
+int32_t ACMG729::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def  */,
+                          const CodecInst& /* codec_inst */) {
   return -1;
 }
 
@@ -88,7 +88,7 @@ ACMGenericCodec* ACMG729::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMG729::InternalCreateEncoder() {
+int16_t ACMG729::InternalCreateEncoder() {
   return -1;
 }
 
@@ -96,7 +96,7 @@ void ACMG729::DestructEncoderSafe() {
   return;
 }
 
-WebRtc_Word16 ACMG729::InternalCreateDecoder() {
+int16_t ACMG729::InternalCreateDecoder() {
   return -1;
 }
 
@@ -109,7 +109,7 @@ void ACMG729::InternalDestructEncoderInst(void* /* ptr_inst */) {
 }
 
 #else     //===================== Actual Implementation =======================
-ACMG729::ACMG729(WebRtc_Word16 codec_id)
+ACMG729::ACMG729(int16_t codec_id)
     : encoder_inst_ptr_(NULL),
       decoder_inst_ptr_(NULL) {
   codec_id_ = codec_id;
@@ -131,19 +131,19 @@ ACMG729::~ACMG729() {
   return;
 }
 
-WebRtc_Word16 ACMG729::InternalEncode(WebRtc_UWord8* bitstream,
-                                      WebRtc_Word16* bitstream_len_byte) {
+int16_t ACMG729::InternalEncode(uint8_t* bitstream,
+                                int16_t* bitstream_len_byte) {
   // Initialize before entering the loop
-  WebRtc_Word16 num_encoded_samples = 0;
-  WebRtc_Word16 tmp_len_byte = 0;
-  WebRtc_Word16 vad_decision = 0;
+  int16_t num_encoded_samples = 0;
+  int16_t tmp_len_byte = 0;
+  int16_t vad_decision = 0;
   *bitstream_len_byte = 0;
   while (num_encoded_samples < frame_len_smpl_) {
     // Call G.729 encoder with pointer to encoder memory, input
     // audio, number of samples and bitsream
     tmp_len_byte = WebRtcG729_Encode(
         encoder_inst_ptr_, &in_audio_[in_audio_ix_read_], 80,
-        (WebRtc_Word16*)(&(bitstream[*bitstream_len_byte])));
+        (int16_t*)(&(bitstream[*bitstream_len_byte])));
 
     // increment the read index this tell the caller that how far
     // we have gone forward in reading the audio buffer
@@ -173,7 +173,7 @@ WebRtc_Word16 ACMG729::InternalEncode(WebRtc_UWord8* bitstream,
         // check if G.729 internal DTX is enabled
         if (has_internal_dtx_ && dtx_enabled_) {
           vad_decision = 0;
-          for (WebRtc_Word16 n = 0; n < MAX_FRAME_SIZE_10MSEC; n++) {
+          for (int16_t n = 0; n < MAX_FRAME_SIZE_10MSEC; n++) {
             vad_label_[n] = vad_decision;
           }
         }
@@ -197,7 +197,7 @@ WebRtc_Word16 ACMG729::InternalEncode(WebRtc_UWord8* bitstream,
 
   // update VAD decision vector
   if (has_internal_dtx_ && !vad_decision && dtx_enabled_) {
-    for (WebRtc_Word16 n = 0; n < MAX_FRAME_SIZE_10MSEC; n++) {
+    for (int16_t n = 0; n < MAX_FRAME_SIZE_10MSEC; n++) {
       vad_label_[n] = vad_decision;
     }
   }
@@ -206,7 +206,7 @@ WebRtc_Word16 ACMG729::InternalEncode(WebRtc_UWord8* bitstream,
   return *bitstream_len_byte;
 }
 
-WebRtc_Word16 ACMG729::EnableDTX() {
+int16_t ACMG729::EnableDTX() {
   if (dtx_enabled_) {
     // DTX already enabled, do nothing
     return 0;
@@ -222,7 +222,7 @@ WebRtc_Word16 ACMG729::EnableDTX() {
   }
 }
 
-WebRtc_Word16 ACMG729::DisableDTX() {
+int16_t ACMG729::DisableDTX() {
   if (!dtx_enabled_) {
     // DTX already dissabled, do nothing
     return 0;
@@ -239,7 +239,7 @@ WebRtc_Word16 ACMG729::DisableDTX() {
   }
 }
 
-WebRtc_Word32 ACMG729::ReplaceInternalDTXSafe(const bool replace_internal_dtx) {
+int32_t ACMG729::ReplaceInternalDTXSafe(const bool replace_internal_dtx) {
   // This function is used to disable the G.729 built in DTX and use an
   // external instead.
 
@@ -256,7 +256,7 @@ WebRtc_Word32 ACMG729::ReplaceInternalDTXSafe(const bool replace_internal_dtx) {
       ACMGenericCodec::DisableDTX();
     }
     has_internal_dtx_ = !replace_internal_dtx;
-    WebRtc_Word16 status = SetVADSafe(old_enable_dtx, old_enable_vad, old_mode);
+    int16_t status = SetVADSafe(old_enable_dtx, old_enable_vad, old_mode);
     // Check if VAD status has changed from inactive to active, or if error was
     // reported
     if (status == 1) {
@@ -270,35 +270,35 @@ WebRtc_Word32 ACMG729::ReplaceInternalDTXSafe(const bool replace_internal_dtx) {
   return 0;
 }
 
-WebRtc_Word32 ACMG729::IsInternalDTXReplacedSafe(bool* internal_dtx_replaced) {
+int32_t ACMG729::IsInternalDTXReplacedSafe(bool* internal_dtx_replaced) {
   // Get status of wether DTX is replaced or not
   *internal_dtx_replaced = !has_internal_dtx_;
   return 0;
 }
 
-WebRtc_Word16 ACMG729::DecodeSafe(WebRtc_UWord8* /* bitstream */,
-                                  WebRtc_Word16 /* bitstream_len_byte */,
-                                  WebRtc_Word16* /* audio */,
-                                  WebRtc_Word16* /* audio_samples */,
-                                  WebRtc_Word8* /* speech_type */) {
+int16_t ACMG729::DecodeSafe(uint8_t* /* bitstream */,
+                            int16_t /* bitstream_len_byte */,
+                            int16_t* /* audio */,
+                            int16_t* /* audio_samples */,
+                            int8_t* /* speech_type */) {
   // This function is not used. G.729 decoder is called from inside NetEQ
   return 0;
 }
 
-WebRtc_Word16 ACMG729::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
+int16_t ACMG729::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
   // Init G.729 encoder
   return WebRtcG729_EncoderInit(encoder_inst_ptr_,
                                 ((codec_params->enable_dtx) ? 1 : 0));
 }
 
-WebRtc_Word16 ACMG729::InternalInitDecoder(
+int16_t ACMG729::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   // Init G.729 decoder
   return WebRtcG729_DecoderInit(decoder_inst_ptr_);
 }
 
-WebRtc_Word32 ACMG729::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                                const CodecInst& codec_inst) {
+int32_t ACMG729::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                          const CodecInst& codec_inst) {
   if (!decoder_initialized_) {
     // Todo:
     // log error
@@ -320,7 +320,7 @@ ACMGenericCodec* ACMG729::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMG729::InternalCreateEncoder() {
+int16_t ACMG729::InternalCreateEncoder() {
   // Create encoder memory
   return WebRtcG729_CreateEnc(&encoder_inst_ptr_);
 }
@@ -335,7 +335,7 @@ void ACMG729::DestructEncoderSafe() {
   }
 }
 
-WebRtc_Word16 ACMG729::InternalCreateDecoder() {
+int16_t ACMG729::InternalCreateDecoder() {
   // Create decoder memory
   return WebRtcG729_CreateDec(&decoder_inst_ptr_);
 }

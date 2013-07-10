@@ -12,6 +12,8 @@ module.metadata = {
 const BaseAssert = require("sdk/test/assert").Assert;
 const { isFunction, isObject } = require("sdk/lang/type");
 
+exports.Assert = BaseAssert;
+
 function extend(target) {
   let descriptor = {}
   Array.slice(arguments, 1).forEach(function(source) {

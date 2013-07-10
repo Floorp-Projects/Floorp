@@ -36,7 +36,7 @@ const double WebRtcIsac_kLeftRecPointLpcGain[SUBFRAMES] =
 /*
 * Number of reconstruction points of quantizers for LPC Gains.
 */
-const WebRtc_Word16 WebRtcIsac_kNumQCellLpcGain[SUBFRAMES] =
+const int16_t WebRtcIsac_kNumQCellLpcGain[SUBFRAMES] =
 {
     17,  20,  25,  45,  77, 170
 };
@@ -44,7 +44,7 @@ const WebRtc_Word16 WebRtcIsac_kNumQCellLpcGain[SUBFRAMES] =
 * Starting index for entropy decoder to search for the right interval,
 * one entry per LAR coefficient
 */
-const WebRtc_UWord16 WebRtcIsac_kLpcGainEntropySearch[SUBFRAMES] =
+const uint16_t WebRtcIsac_kLpcGainEntropySearch[SUBFRAMES] =
 {
      8,  10,  12,  22,  38,  85
 };
@@ -53,26 +53,26 @@ const WebRtc_UWord16 WebRtcIsac_kLpcGainEntropySearch[SUBFRAMES] =
 * The following 6 vectors define CDF of 6 decorrelated LPC
 * gains.
 */
-const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec0[18] =
+const uint16_t WebRtcIsac_kLpcGainCdfVec0[18] =
 {
      0,    10,    27,    83,   234,   568,  1601,  4683, 16830, 57534, 63437,
  64767, 65229, 65408, 65483, 65514, 65527, 65535
 };
 
-const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec1[21] =
+const uint16_t WebRtcIsac_kLpcGainCdfVec1[21] =
 {
      0,    15,    33,    84,   185,   385,   807,  1619,  3529,  7850, 19488,
  51365, 62437, 64548, 65088, 65304, 65409, 65484, 65507, 65522, 65535
 };
 
-const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec2[26] =
+const uint16_t WebRtcIsac_kLpcGainCdfVec2[26] =
 {
      0,    15,    29,    54,    89,   145,   228,   380,   652,  1493,  4260,
  12359, 34133, 50749, 57224, 60814, 62927, 64078, 64742, 65103, 65311, 65418,
  65473, 65509, 65521, 65535
 };
 
-const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec3[46] =
+const uint16_t WebRtcIsac_kLpcGainCdfVec3[46] =
 {
      0,     8,    12,    16,    26,    42,    56,    76,   111,   164,   247,
    366,   508,   693,  1000,  1442,  2155,  3188,  4854,  7387, 11249, 17617,
@@ -81,7 +81,7 @@ const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec3[46] =
  65523, 65535
 };
 
-const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec4[78] =
+const uint16_t WebRtcIsac_kLpcGainCdfVec4[78] =
 {
      0,    17,    29,    39,    51,    70,   104,   154,   234,   324,   443,
    590,   760,   971,  1202,  1494,  1845,  2274,  2797,  3366,  4088,  4905,
@@ -93,7 +93,7 @@ const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec4[78] =
  65535
 };
 
-const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec5[171] =
+const uint16_t WebRtcIsac_kLpcGainCdfVec5[171] =
 {
      0,    10,    12,    14,    16,    18,    23,    29,    35,    42,    51,
     58,    65,    72,    78,    87,    96,   103,   111,   122,   134,   150,
@@ -116,7 +116,7 @@ const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec5[171] =
 /*
 * An array of pointers to CDFs of decorrelated LPC Gains
 */
-const WebRtc_UWord16* WebRtcIsac_kLpcGainCdfMat[SUBFRAMES] =
+const uint16_t* WebRtcIsac_kLpcGainCdfMat[SUBFRAMES] =
 {
     WebRtcIsac_kLpcGainCdfVec0, WebRtcIsac_kLpcGainCdfVec1,
     WebRtcIsac_kLpcGainCdfVec2, WebRtcIsac_kLpcGainCdfVec3,

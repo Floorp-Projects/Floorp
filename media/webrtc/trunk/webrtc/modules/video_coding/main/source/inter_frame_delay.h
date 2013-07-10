@@ -33,15 +33,15 @@ public:
     //          - currentWallClock  : The current time in milliseconds.
     //                                Should be -1 for normal operation, only used for testing.
     // Return value                 : true if OK, false when reordered timestamps
-    bool CalculateDelay(WebRtc_UWord32 timestamp,
-                        WebRtc_Word64 *delay,
+    bool CalculateDelay(uint32_t timestamp,
+                        int64_t *delay,
                         int64_t currentWallClock);
 
     // Returns the current difference between incoming timestamps
     //
     // Return value                 : Wrap-around compensated difference between incoming
     //                                timestamps.
-    WebRtc_UWord32 CurrentTimeStampDiffMs() const;
+    uint32_t CurrentTimeStampDiffMs() const;
 
 private:
     // Controls if the RTP timestamp counter has had a wrap around
@@ -49,16 +49,16 @@ private:
     //
     // Input:
     //          - timestmap         : RTP timestamp of the current frame.
-    void CheckForWrapArounds(WebRtc_UWord32 timestamp);
+    void CheckForWrapArounds(uint32_t timestamp);
 
-    WebRtc_Word64         _zeroWallClock; // Local timestamp of the first video packet received
-    WebRtc_Word32         _wrapArounds;   // Number of wrapArounds detected
+    int64_t         _zeroWallClock; // Local timestamp of the first video packet received
+    int32_t         _wrapArounds;   // Number of wrapArounds detected
     // The previous timestamp passed to the delay estimate
-    WebRtc_UWord32        _prevTimestamp;
+    uint32_t        _prevTimestamp;
     // The previous wall clock timestamp used by the delay estimate
-    WebRtc_Word64         _prevWallClock;
+    int64_t         _prevWallClock;
     // Wrap-around compensated difference between incoming timestamps
-    WebRtc_Word64         _dTS;
+    int64_t         _dTS;
 };
 
 } // namespace webrtc

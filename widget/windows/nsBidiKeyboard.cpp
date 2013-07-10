@@ -13,15 +13,21 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
+  Reset();
+}
+
+nsBidiKeyboard::~nsBidiKeyboard()
+{
+}
+
+NS_IMETHODIMP nsBidiKeyboard::Reset()
+{
   mInitialized = false;
   mHaveBidiKeyboards = false;
   mLTRKeyboard[0] = '\0';
   mRTLKeyboard[0] = '\0';
   mCurrentLocaleName[0] = '\0';
-}
-
-nsBidiKeyboard::~nsBidiKeyboard()
-{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(uint8_t aLevel)

@@ -31,8 +31,8 @@ VCMPacket::VCMPacket()
     codecSpecificHeader() {
 }
 
-VCMPacket::VCMPacket(const WebRtc_UWord8* ptr,
-                               const WebRtc_UWord32 size,
+VCMPacket::VCMPacket(const uint8_t* ptr,
+                               const uint32_t size,
                                const WebRtcRTPHeader& rtpHeader) :
     payloadType(rtpHeader.header.payloadType),
     timestamp(rtpHeader.header.timestamp),
@@ -51,7 +51,7 @@ VCMPacket::VCMPacket(const WebRtc_UWord8* ptr,
     CopyCodecSpecifics(rtpHeader.type.Video);
 }
 
-VCMPacket::VCMPacket(const WebRtc_UWord8* ptr, WebRtc_UWord32 size, WebRtc_UWord16 seq, WebRtc_UWord32 ts, bool mBit) :
+VCMPacket::VCMPacket(const uint8_t* ptr, uint32_t size, uint16_t seq, uint32_t ts, bool mBit) :
     payloadType(0),
     timestamp(ts),
     seqNum(seq),

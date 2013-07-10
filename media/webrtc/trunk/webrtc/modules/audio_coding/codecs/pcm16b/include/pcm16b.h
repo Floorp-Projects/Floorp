@@ -35,9 +35,9 @@ extern "C" {
  * Returned value		: Size in bytes of speechOut16b
  */
 
-WebRtc_Word16 WebRtcPcm16b_EncodeW16(WebRtc_Word16 *speechIn16b,
-                                     WebRtc_Word16 len,
-                                     WebRtc_Word16 *speechOut16b);
+int16_t WebRtcPcm16b_EncodeW16(int16_t *speechIn16b,
+                               int16_t len,
+                               int16_t *speechOut16b);
 
 /****************************************************************************
  * WebRtcPcm16b_Encode(...)
@@ -54,9 +54,9 @@ WebRtc_Word16 WebRtcPcm16b_EncodeW16(WebRtc_Word16 *speechIn16b,
  * Returned value		: Size in bytes of speech8b
  */
 
-WebRtc_Word16 WebRtcPcm16b_Encode(WebRtc_Word16 *speech16b,
-                                  WebRtc_Word16 len,
-                                  unsigned char *speech8b);
+int16_t WebRtcPcm16b_Encode(int16_t *speech16b,
+                            int16_t len,
+                            unsigned char *speech8b);
 
 /****************************************************************************
  * WebRtcPcm16b_DecodeW16(...)
@@ -73,11 +73,11 @@ WebRtc_Word16 WebRtcPcm16b_Encode(WebRtc_Word16 *speech16b,
  * Returned value		: Samples in speechOut16b
  */
 
-WebRtc_Word16 WebRtcPcm16b_DecodeW16(void *inst,
-                                     WebRtc_Word16 *speechIn16b,
-                                     WebRtc_Word16 len,
-                                     WebRtc_Word16 *speechOut16b,
-                                     WebRtc_Word16* speechType);
+int16_t WebRtcPcm16b_DecodeW16(void *inst,
+                               int16_t *speechIn16b,
+                               int16_t len,
+                               int16_t *speechOut16b,
+                               int16_t* speechType);
 
 /****************************************************************************
  * WebRtcPcm16b_Decode(...)
@@ -95,9 +95,9 @@ WebRtc_Word16 WebRtcPcm16b_DecodeW16(void *inst,
  */
 
 
-WebRtc_Word16 WebRtcPcm16b_Decode(unsigned char *speech8b,
-                                  WebRtc_Word16 len,
-                                  WebRtc_Word16 *speech16b);
+int16_t WebRtcPcm16b_Decode(unsigned char *speech8b,
+                            int16_t len,
+                            int16_t *speech16b);
 
 #ifdef __cplusplus
 }

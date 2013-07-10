@@ -3499,6 +3499,10 @@ class MMod : public MBinaryArithInstruction
         MOZ_ASSUME_UNREACHABLE("not used");
     }
 
+    bool canBeNegativeDividend() const;
+    bool canBeDivideByZero() const;
+    bool canBePowerOfTwoDivisor() const;
+
     bool fallible();
 
     void computeRange();

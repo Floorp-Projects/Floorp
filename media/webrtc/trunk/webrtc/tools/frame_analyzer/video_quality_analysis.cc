@@ -20,6 +20,8 @@
 namespace webrtc {
 namespace test {
 
+using std::string;
+
 int GetI420FrameSize(int width, int height) {
   int half_width = (width + 1) >> 1;
   int half_height = (height + 1) >> 1;
@@ -32,14 +34,14 @@ int GetI420FrameSize(int width, int height) {
 }
 
 int ExtractFrameSequenceNumber(std::string line) {
-  int space_position = line.find(' ');
-  if (space_position == -1) {
+  size_t space_position = line.find(' ');
+  if (space_position == string::npos) {
     return -1;
   }
   std::string frame = line.substr(0, space_position);
 
-  int underscore_position = frame.find('_');
-  if (underscore_position == -1) {
+  size_t underscore_position = frame.find('_');
+  if (underscore_position == string::npos) {
     return -1;
   }
   std::string frame_number = frame.substr(underscore_position + 1);
@@ -48,8 +50,8 @@ int ExtractFrameSequenceNumber(std::string line) {
 }
 
 int ExtractDecodedFrameNumber(std::string line) {
-  int space_position = line.find(' ');
-  if (space_position == -1) {
+  size_t space_position = line.find(' ');
+  if (space_position == string::npos) {
     return -1;
   }
   std::string decoded_number = line.substr(space_position + 1);
@@ -58,8 +60,8 @@ int ExtractDecodedFrameNumber(std::string line) {
 }
 
 bool IsThereBarcodeError(std::string line) {
-  int barcode_error_position = line.find("Barcode error");
-  if (barcode_error_position != -1) {
+  size_t barcode_error_position = line.find("Barcode error");
+  if (barcode_error_position != string::npos) {
     return true;
   }
   return false;

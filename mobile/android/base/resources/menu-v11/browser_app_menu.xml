@@ -61,6 +61,7 @@
             <item android:id="@+id/apps"
                   android:icon="@drawable/ic_menu_apps"
                   android:title="@string/apps"/>
+
         </menu>
 
     </item>

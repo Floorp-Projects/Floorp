@@ -956,7 +956,7 @@ typedef enum JSGCStatus {
 } JSGCStatus;
 
 typedef void
-(* JSGCCallback)(JSRuntime *rt, JSGCStatus status);
+(* JSGCCallback)(JSRuntime *rt, JSGCStatus status, void *data);
 
 typedef enum JSFinalizeStatus {
     /*
@@ -2629,7 +2629,7 @@ extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb);
+JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data);
 
 extern JS_PUBLIC_API(void)
 JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);

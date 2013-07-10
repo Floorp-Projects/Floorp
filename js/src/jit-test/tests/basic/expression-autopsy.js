@@ -1,8 +1,3 @@
-// |jit-test| no-ion
-//
-// We can't guarantee error identity when functions are Ion-compiled due to
-// optimization.
-
 function check_one(expected, f, err) {
     var failed = true;
     try {
