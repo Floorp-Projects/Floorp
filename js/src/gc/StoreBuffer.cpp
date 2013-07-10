@@ -108,18 +108,6 @@ StoreBuffer::MonoTypeBuffer<T>::clear()
 
 template <typename T>
 void
-StoreBuffer::MonoTypeBuffer<T>::compactNotInSet(const Nursery &nursery)
-{
-    T *insert = base;
-    for (T *v = base; v != pos; ++v) {
-        if (v->inRememberedSet(nursery))
-            *insert++ = *v;
-    }
-    pos = insert;
-}
-
-template <typename T>
-void
 StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates()
 {
     JS_ASSERT(duplicates.empty());
@@ -140,7 +128,6 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::compact()
 {
-    compactNotInSet(owner->runtime->gcNursery);
     compactRemoveDuplicates();
 }
 
@@ -192,14 +179,14 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compactMoved()
             for (T *r = this->base; r != v; ++r) {
                 T check = r->untagged();
                 if (check == match)
-                    *r = NULL;
+                    *r = T(NULL);
             }
-            *v = NULL;
+            *v = T(NULL);
         }
     }
     T *insert = this->base;
     for (T *cursor = this->base; cursor != this->pos; ++cursor) {
-        if (*cursor != NULL)
+        if (*cursor != T(NULL))
             *insert++ = *cursor;
     }
     this->pos = insert;
