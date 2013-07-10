@@ -16,6 +16,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.AdapterView;
+import android.widget.HeaderViewListAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 
 /**
@@ -96,7 +98,14 @@ public class BookmarksListView extends HomeListView
         // Absolute position for the adapter.
         position -= headerCount;
 
-        BookmarksListAdapter adapter = (BookmarksListAdapter) getAdapter();
+        BookmarksListAdapter adapter;
+        ListAdapter listAdapter = getAdapter();
+        if (listAdapter instanceof HeaderViewListAdapter) {
+            adapter = (BookmarksListAdapter) ((HeaderViewListAdapter) listAdapter).getWrappedAdapter();
+        } else {
+            adapter = (BookmarksListAdapter) listAdapter;
+        }
+
         if (adapter.isShowingChildFolder()) {
             if (position == 0) {
                 // If we tap on an opened folder, move back to parent folder.
