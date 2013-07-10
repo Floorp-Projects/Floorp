@@ -160,15 +160,15 @@ struct ShapeTable {
      * and returns false.  This will make any extant pointers into the
      * table invalid.  Don't call this unless needsToGrow() is true.
      */
-    bool grow(JSContext *cx);
+    bool grow(ExclusiveContext *cx);
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do however use JSRuntime's calloc_ method in order
-     * to update the malloc counter on success.
+     * cope or ignore. They do however use the context's calloc_ method in
+     * order to update the malloc counter on success.
      */
-    bool            init(JSRuntime *rt, Shape *lastProp);
-    bool            change(int log2Delta, JSContext *cx);
+    bool            init(ExclusiveContext *cx, Shape *lastProp);
+    bool            change(int log2Delta, ExclusiveContext *cx);
     Shape           **search(jsid id, bool adding);
 };
 
@@ -339,7 +339,7 @@ class BaseShape : public js::gc::Cell
     JS::Zone *zone() const { return tenuredZone(); }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
-    static UnownedBaseShape* getUnowned(JSContext *cx, const StackBaseShape &base);
+    static UnownedBaseShape* getUnowned(ExclusiveContext *cx, const StackBaseShape &base);
 
     /* Get the canonical base shape. */
     inline UnownedBaseShape* unowned();
@@ -414,17 +414,8 @@ struct StackBaseShape
         compartment(base->compartment())
     {}
 
-    StackBaseShape(JSCompartment *comp, Class *clasp,
-                   JSObject *parent, JSObject *metadata, uint32_t objectFlags)
-      : flags(objectFlags),
-        clasp(clasp),
-        parent(parent),
-        metadata(metadata),
-        rawGetter(NULL),
-        rawSetter(NULL),
-        compartment(comp)
-    {}
-
+    inline StackBaseShape(ExclusiveContext *cx, Class *clasp,
+                          JSObject *parent, JSObject *metadata, uint32_t objectFlags);
     inline StackBaseShape(Shape *shape);
 
     inline void updateGetterSetter(uint8_t attrs,
@@ -437,12 +428,8 @@ struct StackBaseShape
     class AutoRooter : private JS::CustomAutoRooter
     {
       public:
-        explicit AutoRooter(JSContext *cx, const StackBaseShape *base_
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : CustomAutoRooter(cx), base(base_), skip(cx, base_)
-        {
-            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        }
+        inline AutoRooter(ExclusiveContext *cx, const StackBaseShape *base_
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
       private:
         virtual void trace(JSTracer *trc);
@@ -516,8 +503,8 @@ class Shape : public js::gc::Cell
                                    last, else to obj->shape_ */
     };
 
-    static inline Shape *search(JSContext *cx, Shape *start, jsid id,
-                                  Shape ***pspp, bool adding = false);
+    static inline Shape *search(ExclusiveContext *cx, Shape *start, jsid id,
+                                Shape ***pspp, bool adding = false);
     static inline Shape *searchNoHashify(Shape *start, jsid id);
 
     inline void removeFromDictionary(ObjectImpl *obj);
@@ -526,24 +513,24 @@ class Shape : public js::gc::Cell
     inline void initDictionaryShape(const StackShape &child, uint32_t nfixed,
                                     HeapPtrShape *dictp);
 
-    Shape *getChildBinding(JSContext *cx, const StackShape &child);
+    Shape *getChildBinding(ExclusiveContext *cx, const StackShape &child);
 
     /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
-    static Shape *replaceLastProperty(JSContext *cx, const StackBaseShape &base,
-                                        TaggedProto proto, HandleShape shape);
+    static Shape *replaceLastProperty(ExclusiveContext *cx, const StackBaseShape &base,
+                                      TaggedProto proto, HandleShape shape);
 
-    static bool hashify(JSContext *cx, Shape *shape);
+    static bool hashify(ExclusiveContext *cx, Shape *shape);
     void handoffTableTo(Shape *newShape);
 
     inline void setParent(Shape *p);
 
-    bool ensureOwnBaseShape(JSContext *cx) {
+    bool ensureOwnBaseShape(ExclusiveContext *cx) {
         if (base()->isOwned())
             return true;
         return makeOwnBaseShape(cx);
     }
 
-    bool makeOwnBaseShape(JSContext *cx);
+    bool makeOwnBaseShape(ExclusiveContext *cx);
 
   public:
     bool hasTable() const { return base()->hasTable(); }
@@ -573,13 +560,8 @@ class Shape : public js::gc::Cell
         typename MaybeRooted<Shape*, allowGC>::RootType cursor;
 
       public:
-        Range(JSContext *cx, Shape *shape) : cursor(cx, shape) {
-            JS_STATIC_ASSERT(allowGC == CanGC);
-        }
-
-        Range(Shape *shape) : cursor(NULL, shape) {
-            JS_STATIC_ASSERT(allowGC == NoGC);
-        }
+        inline Range(ExclusiveContext *cx, Shape *shape);
+        inline Range(Shape *shape);
 
         bool empty() const {
             return !cursor || cursor->isEmptyShape();
@@ -600,9 +582,12 @@ class Shape : public js::gc::Cell
     JSObject *getObjectParent() const { return base()->parent; }
     JSObject *getObjectMetadata() const { return base()->metadata; }
 
-    static Shape *setObjectParent(JSContext *cx, JSObject *obj, TaggedProto proto, Shape *last);
-    static Shape *setObjectMetadata(JSContext *cx, JSObject *metadata, TaggedProto proto, Shape *last);
-    static Shape *setObjectFlag(JSContext *cx, BaseShape::Flag flag, TaggedProto proto, Shape *last);
+    static Shape *setObjectParent(ExclusiveContext *cx,
+                                  JSObject *obj, TaggedProto proto, Shape *last);
+    static Shape *setObjectMetadata(JSContext *cx,
+                                    JSObject *metadata, TaggedProto proto, Shape *last);
+    static Shape *setObjectFlag(ExclusiveContext *cx,
+                                BaseShape::Flag flag, TaggedProto proto, Shape *last);
 
     uint32_t getObjectFlags() const { return base()->getObjectFlags(); }
     bool hasObjectFlag(BaseShape::Flag flag) const {
@@ -845,7 +830,7 @@ class Shape : public js::gc::Cell
 
     inline void markChildren(JSTracer *trc);
 
-    inline Shape *search(JSContext *cx, jsid id) {
+    inline Shape *search(ExclusiveContext *cx, jsid id) {
         Shape **_;
         return search(cx, this, id, &_);
     }
@@ -866,15 +851,8 @@ class AutoRooterGetterSetter
     class Inner : private JS::CustomAutoRooter
     {
       public:
-        Inner(JSContext *cx, uint8_t attrs,
-              PropertyOp *pgetter_, StrictPropertyOp *psetter_)
-          : CustomAutoRooter(cx), attrs(attrs),
-            pgetter(pgetter_), psetter(psetter_),
-            getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
-        {
-            JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
-            JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
-        }
+        inline Inner(ExclusiveContext *cx, uint8_t attrs,
+                     PropertyOp *pgetter_, StrictPropertyOp *psetter_);
 
       private:
         virtual void trace(JSTracer *trc);
@@ -886,14 +864,9 @@ class AutoRooterGetterSetter
     };
 
   public:
-    explicit AutoRooterGetterSetter(JSContext *cx, uint8_t attrs,
-                                    PropertyOp *pgetter, StrictPropertyOp *psetter
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
-            inner.construct(cx, attrs, pgetter, psetter);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
+    inline AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
+                                  PropertyOp *pgetter, StrictPropertyOp *psetter
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   private:
     mozilla::Maybe<Inner> inner;
@@ -908,9 +881,11 @@ struct EmptyShape : public js::Shape
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
-    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSObject *metadata,
+    static Shape *getInitialShape(ExclusiveContext *cx, Class *clasp,
+                                  TaggedProto proto, JSObject *metadata,
                                   JSObject *parent, size_t nfixed, uint32_t objectFlags = 0);
-    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSObject *metadata,
+    static Shape *getInitialShape(ExclusiveContext *cx, Class *clasp,
+                                  TaggedProto proto, JSObject *metadata,
                                   JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 
     /*
@@ -918,7 +893,7 @@ struct EmptyShape : public js::Shape
      * getInitialShape calls, until the new shape becomes unreachable in a GC
      * and the table entry is purged.
      */
-    static void insertInitialShape(JSContext *cx, HandleShape shape, HandleObject proto);
+    static void insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleObject proto);
 };
 
 /*
@@ -1020,12 +995,8 @@ struct StackShape
     class AutoRooter : private JS::CustomAutoRooter
     {
       public:
-        explicit AutoRooter(JSContext *cx, const StackShape *shape_
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : CustomAutoRooter(cx), shape(shape_), skip(cx, shape_)
-        {
-            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        }
+        inline AutoRooter(ExclusiveContext *cx, const StackShape *shape_
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
       private:
         virtual void trace(JSTracer *trc);
@@ -1060,7 +1031,7 @@ struct StackShape
 namespace js {
 
 inline Shape *
-Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
+Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 {
     if (start->inDictionary()) {
         *pspp = start->table().search(id, adding);

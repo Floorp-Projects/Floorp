@@ -326,12 +326,12 @@ JSRope::flatten(ThreadSafeContext *maybetcx)
 
 template <AllowGC allowGC>
 JSString *
-js::ConcatStrings(ThreadSafeContext *tcx,
+js::ConcatStrings(ThreadSafeContext *cx,
                   typename MaybeRooted<JSString*, allowGC>::HandleType left,
                   typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
-    JS_ASSERT_IF(!left->isAtom(), tcx->isInsideCurrentZone(left));
-    JS_ASSERT_IF(!right->isAtom(), tcx->isInsideCurrentZone(right));
+    JS_ASSERT_IF(!left->isAtom(), cx->isInsideCurrentZone(left));
+    JS_ASSERT_IF(!right->isAtom(), cx->isInsideCurrentZone(right));
 
     size_t leftLen = left->length();
     if (leftLen == 0)
@@ -342,18 +342,17 @@ js::ConcatStrings(ThreadSafeContext *tcx,
         return left;
 
     size_t wholeLength = leftLen + rightLen;
-    ThreadSafeContext *tcxIfCanGC = allowGC ? tcx : NULL;
-    if (!JSString::validateLength(tcxIfCanGC, wholeLength))
+    if (!JSString::validateLength(cx, wholeLength))
         return NULL;
 
     if (JSShortString::lengthFits(wholeLength)) {
-        JSShortString *str = js_NewGCShortString<allowGC>(tcx);
+        JSShortString *str = js_NewGCShortString<allowGC>(cx);
         if (!str)
             return NULL;
-        const jschar *leftChars = left->getChars(tcx);
+        const jschar *leftChars = left->getChars(cx->asJSContext());
         if (!leftChars)
             return NULL;
-        const jschar *rightChars = right->getChars(tcx);
+        const jschar *rightChars = right->getChars(cx->asJSContext());
         if (!rightChars)
             return NULL;
 
@@ -364,7 +363,7 @@ js::ConcatStrings(ThreadSafeContext *tcx,
         return str;
     }
 
-    return JSRope::new_<allowGC>(tcx, left, right, wholeLength);
+    return JSRope::new_<allowGC>(cx, left, right, wholeLength);
 }
 
 template JSString *

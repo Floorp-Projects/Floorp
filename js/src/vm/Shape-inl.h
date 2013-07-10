@@ -133,6 +133,18 @@ BaseShape::matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter)
 }
 
 inline
+StackBaseShape::StackBaseShape(ExclusiveContext *cx, Class *clasp,
+                               JSObject *parent, JSObject *metadata, uint32_t objectFlags)
+  : flags(objectFlags),
+    clasp(clasp),
+    parent(parent),
+    metadata(metadata),
+    rawGetter(NULL),
+    rawSetter(NULL),
+    compartment(cx->compartment_)
+{}
+
+inline
 StackBaseShape::StackBaseShape(Shape *shape)
   : flags(shape->getObjectFlags()),
     clasp(shape->getObjectClass()),
@@ -529,6 +541,59 @@ static inline uint8_t
 GetShapeAttributes(HandleShape shape)
 {
     return IsImplicitDenseElement(shape) ? JSPROP_ENUMERATE : shape->attributes();
+}
+
+inline
+AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
+                                     PropertyOp *pgetter_, StrictPropertyOp *psetter_)
+  : CustomAutoRooter(cx), attrs(attrs),
+    pgetter(pgetter_), psetter(psetter_),
+    getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
+{
+    JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
+    JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
+}
+
+inline
+AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
+                                               PropertyOp *pgetter, StrictPropertyOp *psetter
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+{
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
+        inner.construct(cx, attrs, pgetter, psetter);
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
+inline
+StackBaseShape::AutoRooter::AutoRooter(ExclusiveContext *cx, const StackBaseShape *base_
+                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : CustomAutoRooter(cx), base(base_), skip(cx, base_)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
+inline
+StackShape::AutoRooter::AutoRooter(ExclusiveContext *cx, const StackShape *shape_
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : CustomAutoRooter(cx), shape(shape_), skip(cx, shape_)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
+template <AllowGC allowGC>
+inline
+Shape::Range<allowGC>::Range(ExclusiveContext *cx, Shape *shape)
+  : cursor(cx, shape)
+{
+    JS_STATIC_ASSERT(allowGC == CanGC);
+}
+
+template <AllowGC allowGC>
+inline
+Shape::Range<allowGC>::Range(Shape *shape)
+  : cursor((ExclusiveContext *) NULL, shape)
+{
+    JS_STATIC_ASSERT(allowGC == NoGC);
 }
 
 } /* namespace js */

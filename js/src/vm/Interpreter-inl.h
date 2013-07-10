@@ -233,7 +233,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             return true;
         }
         JSAutoByteString printable;
-        if (js_AtomToPrintableString(cx, name, &printable))
+        if (AtomToPrintableString(cx, name, &printable))
             js_ReportIsNotDefined(cx, printable.ptr());
         return false;
     }
@@ -329,7 +329,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
             return false;
         if (attrs & JSPROP_READONLY) {
             JSAutoByteString bytes;
-            if (js_AtomToPrintableString(cx, dn, &bytes)) {
+            if (AtomToPrintableString(cx, dn, &bytes)) {
                 JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                                              js_GetErrorMessage,
                                                              NULL, JSMSG_REDECLARED_VAR,

@@ -13,7 +13,7 @@ namespace js {
 
 class Module : public JSObject {
   public:
-    static Module *create(JSContext *cx, js::HandleAtom atom);
+    static Module *create(ExclusiveContext *cx, js::HandleAtom atom);
 
     JSAtom *atom() {
         return &getReservedSlot(ATOM_SLOT).toString()->asAtom();

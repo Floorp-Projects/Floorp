@@ -55,14 +55,14 @@ enum RegExpRunStatus
 
 class RegExpObjectBuilder
 {
-    JSContext             *cx;
+    ExclusiveContext *cx;
     Rooted<RegExpObject*> reobj_;
 
     bool getOrCreate();
     bool getOrCreateClone(RegExpObject *proto);
 
   public:
-    RegExpObjectBuilder(JSContext *cx, RegExpObject *reobj = NULL);
+    RegExpObjectBuilder(ExclusiveContext *cx, RegExpObject *reobj = NULL);
 
     RegExpObject *reobj() { return reobj_; }
 
@@ -150,7 +150,7 @@ class RegExpShared
     bool compileMatchOnlyIfNecessary(JSContext *cx);
 
   public:
-    RegExpShared(JSRuntime *rt, JSAtom *source, RegExpFlag flags);
+    RegExpShared(JSAtom *source, RegExpFlag flags, uint64_t gcNumber);
     ~RegExpShared();
 
     /* Explicit trace function for use by the RegExpStatics and JITs. */
@@ -160,11 +160,11 @@ class RegExpShared
 
     /* Static functions to expose some Yarr logic. */
     static inline bool isJITRuntimeEnabled(JSContext *cx);
-    static void reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error);
-    static bool checkSyntax(JSContext *cx, TokenStream *tokenStream, JSLinearString *source);
+    static void reportYarrError(ExclusiveContext *cx, TokenStream *ts, ErrorCode error);
+    static bool checkSyntax(ExclusiveContext *cx, TokenStream *tokenStream, JSLinearString *source);
 
     /* Called when a RegExpShared is installed into a RegExpObject. */
-    inline void prepareForUse(JSContext *cx);
+    inline void prepareForUse(ExclusiveContext *cx);
 
     /* Primary interface: run this regular expression on the given string. */
     RegExpRunStatus execute(JSContext *cx, const jschar *chars, size_t length,
@@ -219,8 +219,8 @@ class RegExpGuard
     void operator=(const RegExpGuard &) MOZ_DELETE;
 
   public:
-    inline RegExpGuard(JSContext *cx);
-    inline RegExpGuard(JSContext *cx, RegExpShared &re);
+    inline RegExpGuard(ExclusiveContext *cx);
+    inline RegExpGuard(ExclusiveContext *cx, RegExpShared &re);
     inline ~RegExpGuard();
 
   public:
@@ -275,7 +275,7 @@ class RegExpCompartment
     bool init(JSContext *cx);
     void sweep(JSRuntime *rt);
 
-    bool get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g);
+    bool get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g);
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
     bool get(JSContext *cx, HandleAtom source, JSString *maybeOpt, RegExpGuard *g);
@@ -303,15 +303,15 @@ class RegExpObject : public JSObject
      * execution, as opposed to during something like XDR.
      */
     static RegExpObject *
-    create(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
+    create(ExclusiveContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
            RegExpFlag flags, frontend::TokenStream *ts);
 
     static RegExpObject *
-    createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
+    createNoStatics(ExclusiveContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
                     frontend::TokenStream *ts);
 
     static RegExpObject *
-    createNoStatics(JSContext *cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStream *ts);
+    createNoStatics(ExclusiveContext *cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStream *ts);
 
     /* Accessors. */
 
@@ -347,8 +347,8 @@ class RegExpObject : public JSObject
     bool sticky() const     { return getSlot(STICKY_FLAG_SLOT).toBoolean(); }
 
     inline void shared(RegExpGuard *g) const;
-    inline bool getShared(JSContext *cx, RegExpGuard *g);
-    inline void setShared(JSContext *cx, RegExpShared &shared);
+    inline bool getShared(ExclusiveContext *cx, RegExpGuard *g);
+    inline void setShared(ExclusiveContext *cx, RegExpShared &shared);
 
   private:
     friend class RegExpObjectBuilder;
@@ -358,15 +358,15 @@ class RegExpObject : public JSObject
      * encoding their initial properties. Return the shape after
      * changing this regular expression object's last property to it.
      */
-    Shape *assignInitialShape(JSContext *cx);
+    Shape *assignInitialShape(ExclusiveContext *cx);
 
-    bool init(JSContext *cx, HandleAtom source, RegExpFlag flags);
+    bool init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags);
 
     /*
      * Precondition: the syntax for |source| has already been validated.
      * Side effect: sets the private field.
      */
-    bool createShared(JSContext *cx, RegExpGuard *g);
+    bool createShared(ExclusiveContext *cx, RegExpGuard *g);
     RegExpShared *maybeShared() const;
 
     /* Call setShared in preference to setPrivate. */

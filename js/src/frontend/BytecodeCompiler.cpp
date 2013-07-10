@@ -179,16 +179,19 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {
-        syntaxParser.construct(cx, options, chars, length, /* foldConstants = */ false,
+        syntaxParser.construct(cx, &cx->tempLifoAlloc(),
+                               options, chars, length, /* foldConstants = */ false,
                                (Parser<SyntaxParseHandler> *) NULL,
                                (LazyScript *) NULL);
     }
 
-    Parser<FullParseHandler> parser(cx, options, chars, length, /* foldConstants = */ true,
+    Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
+                                    options, chars, length, /* foldConstants = */ true,
                                     canLazilyParse ? &syntaxParser.ref() : NULL, NULL);
     parser.sct = sct;
 
-    GlobalSharedContext globalsc(cx, scopeChain, StrictModeFromContext(cx));
+    GlobalSharedContext globalsc(cx, scopeChain,
+                                 options.strictOption, options.extraWarningsOption);
 
     bool savedCallerFun =
         options.compileAndGo &&
@@ -354,7 +357,7 @@ frontend::CompileLazyFunction(JSContext *cx, HandleFunction fun, LazyScript *laz
            .setNoScriptRval(false)
            .setSelfHostingMode(false);
 
-    Parser<FullParseHandler> parser(cx, options, chars, length,
+    Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
                                     /* foldConstants = */ true, NULL, lazy);
 
     uint32_t staticLevel = lazy->staticLevel(cx);
@@ -422,14 +425,16 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {
-        syntaxParser.construct(cx, options, chars, length, /* foldConstants = */ false,
+        syntaxParser.construct(cx, &cx->tempLifoAlloc(),
+                               options, chars, length, /* foldConstants = */ false,
                                (Parser<SyntaxParseHandler> *) NULL,
                                (LazyScript *) NULL);
     }
 
     JS_ASSERT(!options.forEval);
 
-    Parser<FullParseHandler> parser(cx, options, chars, length, /* foldConstants = */ true,
+    Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
+                                    options, chars, length, /* foldConstants = */ true,
                                     canLazilyParse ? &syntaxParser.ref() : NULL, NULL);
     parser.sct = &sct;
 
@@ -465,7 +470,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     // directive, we backup and reparse it as strict.
     TokenStream::Position start(parser.keepAtoms);
     parser.tokenStream.tell(&start);
-    bool strict = StrictModeFromContext(cx);
+    bool strict = options.strictOption;
     bool becameStrict;
     FunctionBox *funbox;
     ParseNode *pn;
