@@ -1,313 +1,303 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+'use strict';
 
-var url = require("sdk/url");
-var { Loader } = require("sdk/test/loader");
-var { pathFor } = require("sdk/system");
-var file = require("sdk/io/file");
-var loader = Loader(module);
-var httpd = loader.require("sdk/test/httpd");
-var port = 8099;
-var tabs = require("sdk/tabs");
+const { URL, toFilename, fromFilename, isValidURI, getTLD, DataURL } = require('sdk/url');
+const { pathFor } = require('sdk/system');
+const file = require('sdk/io/file');
+const tabs = require('sdk/tabs');
+const { decode } = require('sdk/base64');
 
-exports.testResolve = function(test) {
-  test.assertEqual(url.URL("bar", "http://www.foo.com/").toString(),
-                   "http://www.foo.com/bar");
+const httpd = require('sdk/test/httpd');
+const port = 8099;
 
-  test.assertEqual(url.URL("bar", "http://www.foo.com"),
-                   "http://www.foo.com/bar");
+const defaultLocation = '{\'scheme\':\'about\',\'userPass\':null,\'host\':null,\'hostname\':null,\'port\':null,\'path\':\'addons\',\'pathname\':\'addons\',\'hash\':\'\',\'href\':\'about:addons\',\'origin\':\'about:\',\'protocol\':\'about:\',\'search\':\'\'}'.replace(/'/g, '"');
 
-  test.assertEqual(url.URL("http://bar.com/", "http://foo.com/"),
-                   "http://bar.com/",
-                   "relative should override base");
+exports.testResolve = function(assert) {
+  assert.equal(URL('bar', 'http://www.foo.com/').toString(),
+                   'http://www.foo.com/bar');
 
-  test.assertRaises(function() { url.URL("blah"); },
-                    "malformed URI: blah",
-                    "url.resolve() should throw malformed URI on base");
+  assert.equal(URL('bar', 'http://www.foo.com'),
+                   'http://www.foo.com/bar');
 
-  test.assertRaises(function() { url.URL("chrome://global"); },
-                    "invalid URI: chrome://global",
-                    "url.resolve() should throw invalid URI on base");
+  assert.equal(URL('http://bar.com/', 'http://foo.com/'),
+                   'http://bar.com/',
+                   'relative should override base');
 
-  test.assertRaises(function() { url.URL("chrome://foo/bar"); },
-                    "invalid URI: chrome://foo/bar",
-                    "url.resolve() should throw on bad chrome URI");
+  assert.throws(function() { URL('blah'); },
+                    /malformed URI: blah/i,
+                    'url.resolve() should throw malformed URI on base');
 
-  test.assertEqual(url.URL("", "http://www.foo.com"),
-                   "http://www.foo.com/",
-                   "url.resolve() should add slash to end of domain");
+  assert.throws(function() { URL('chrome://global'); },
+                    /invalid URI: chrome:\/\/global/i,
+                    'url.resolve() should throw invalid URI on base');
+
+  assert.throws(function() { URL('chrome://foo/bar'); },
+                    /invalid URI: chrome:\/\/foo\/bar/i,
+                    'url.resolve() should throw on bad chrome URI');
+
+  assert.equal(URL('', 'http://www.foo.com'),
+                   'http://www.foo.com/',
+                   'url.resolve() should add slash to end of domain');
 };
 
-exports.testParseHttp = function(test) {
-  var aUrl = "http://sub.foo.com/bar?locale=en-US&otherArg=%20x%20#myhash"; 
-  var info = url.URL(aUrl);
-  test.assertEqual(info.scheme, "http");
-  test.assertEqual(info.protocol, "http:");
-  test.assertEqual(info.host, "sub.foo.com");
-  test.assertEqual(info.hostname, "sub.foo.com");
-  test.assertEqual(info.port, null);
-  test.assertEqual(info.userPass, null);
-  test.assertEqual(info.path, "/bar?locale=en-US&otherArg=%20x%20#myhash");
-  test.assertEqual(info.pathname, "/bar");
-  test.assertEqual(info.href, aUrl);
-  test.assertEqual(info.hash, "#myhash");
-  test.assertEqual(info.search, "?locale=en-US&otherArg=%20x%20");
+exports.testParseHttp = function(assert) {
+  var aUrl = 'http://sub.foo.com/bar?locale=en-US&otherArg=%20x%20#myhash';
+  var info = URL(aUrl);
+
+  assert.equal(info.scheme, 'http');
+  assert.equal(info.protocol, 'http:');
+  assert.equal(info.host, 'sub.foo.com');
+  assert.equal(info.hostname, 'sub.foo.com');
+  assert.equal(info.port, null);
+  assert.equal(info.userPass, null);
+  assert.equal(info.path, '/bar?locale=en-US&otherArg=%20x%20#myhash');
+  assert.equal(info.pathname, '/bar');
+  assert.equal(info.href, aUrl);
+  assert.equal(info.hash, '#myhash');
+  assert.equal(info.search, '?locale=en-US&otherArg=%20x%20');
 };
 
-exports.testParseHttpSearchAndHash = function (test) {
-  var info = url.URL("https://www.moz.com/some/page.html");
-  test.assertEqual(info.hash, "");
-  test.assertEqual(info.search, "");
+exports.testParseHttpSearchAndHash = function (assert) {
+  var info = URL('https://www.moz.com/some/page.html');
+  assert.equal(info.hash, '');
+  assert.equal(info.search, '');
   
-  var hashOnly = url.URL("https://www.sub.moz.com/page.html#justhash");
-  test.assertEqual(hashOnly.search, "");
-  test.assertEqual(hashOnly.hash, "#justhash");
+  var hashOnly = URL('https://www.sub.moz.com/page.html#justhash');
+  assert.equal(hashOnly.search, '');
+  assert.equal(hashOnly.hash, '#justhash');
   
-  var queryOnly = url.URL("https://www.sub.moz.com/page.html?my=query");
-  test.assertEqual(queryOnly.search, "?my=query");
-  test.assertEqual(queryOnly.hash, "");
+  var queryOnly = URL('https://www.sub.moz.com/page.html?my=query');
+  assert.equal(queryOnly.search, '?my=query');
+  assert.equal(queryOnly.hash, '');
 
-  var qMark = url.URL("http://www.moz.org?");
-  test.assertEqual(qMark.search, "");
-  test.assertEqual(qMark.hash, "");
+  var qMark = URL('http://www.moz.org?');
+  assert.equal(qMark.search, '');
+  assert.equal(qMark.hash, '');
   
-  var hash = url.URL("http://www.moz.org#");
-  test.assertEqual(hash.search, "");
-  test.assertEqual(hash.hash, "");
+  var hash = URL('http://www.moz.org#');
+  assert.equal(hash.search, '');
+  assert.equal(hash.hash, '');
   
-  var empty = url.URL("http://www.moz.org?#");
-  test.assertEqual(hash.search, "");
-  test.assertEqual(hash.hash, "");
+  var empty = URL('http://www.moz.org?#');
+  assert.equal(hash.search, '');
+  assert.equal(hash.hash, '');
 
-  var strange = url.URL("http://moz.org?test1#test2?test3");
-  test.assertEqual(strange.search, "?test1");
-  test.assertEqual(strange.hash, "#test2?test3");
+  var strange = URL('http://moz.org?test1#test2?test3');
+  assert.equal(strange.search, '?test1');
+  assert.equal(strange.hash, '#test2?test3');
 };
 
-exports.testParseHttpWithPort = function(test) {
-  var info = url.URL("http://foo.com:5/bar");
-  test.assertEqual(info.port, 5);
+exports.testParseHttpWithPort = function(assert) {
+  var info = URL('http://foo.com:5/bar');
+  assert.equal(info.port, 5);
 };
 
-exports.testParseChrome = function(test) {
-  var info = url.URL("chrome://global/content/blah");
-  test.assertEqual(info.scheme, "chrome");
-  test.assertEqual(info.host, "global");
-  test.assertEqual(info.port, null);
-  test.assertEqual(info.userPass, null);
-  test.assertEqual(info.path, "/content/blah");
+exports.testParseChrome = function(assert) {
+  var info = URL('chrome://global/content/blah');
+  assert.equal(info.scheme, 'chrome');
+  assert.equal(info.host, 'global');
+  assert.equal(info.port, null);
+  assert.equal(info.userPass, null);
+  assert.equal(info.path, '/content/blah');
 };
 
-exports.testParseAbout = function(test) {
-  var info = url.URL("about:boop");
-  test.assertEqual(info.scheme, "about");
-  test.assertEqual(info.host, null);
-  test.assertEqual(info.port, null);
-  test.assertEqual(info.userPass, null);
-  test.assertEqual(info.path, "boop");
+exports.testParseAbout = function(assert) {
+  var info = URL('about:boop');
+  assert.equal(info.scheme, 'about');
+  assert.equal(info.host, null);
+  assert.equal(info.port, null);
+  assert.equal(info.userPass, null);
+  assert.equal(info.path, 'boop');
 };
 
-exports.testParseFTP = function(test) {
-  var info = url.URL("ftp://1.2.3.4/foo");
-  test.assertEqual(info.scheme, "ftp");
-  test.assertEqual(info.host, "1.2.3.4");
-  test.assertEqual(info.port, null);
-  test.assertEqual(info.userPass, null);
-  test.assertEqual(info.path, "/foo");
+exports.testParseFTP = function(assert) {
+  var info = URL('ftp://1.2.3.4/foo');
+  assert.equal(info.scheme, 'ftp');
+  assert.equal(info.host, '1.2.3.4');
+  assert.equal(info.port, null);
+  assert.equal(info.userPass, null);
+  assert.equal(info.path, '/foo');
 };
 
-exports.testParseFTPWithUserPass = function(test) {
-  var info = url.URL("ftp://user:pass@1.2.3.4/foo");
-  test.assertEqual(info.userPass, "user:pass");
+exports.testParseFTPWithUserPass = function(assert) {
+  var info = URL('ftp://user:pass@1.2.3.4/foo');
+  assert.equal(info.userPass, 'user:pass');
 };
 
-exports.testToFilename = function(test) {
-  test.assertRaises(
-    function() { url.toFilename("resource://nonexistent"); },
-    "resource does not exist: resource://nonexistent/",
-    "url.toFilename() on nonexistent resources should throw"
+exports.testToFilename = function(assert) {
+  assert.throws(
+    function() { toFilename('resource://nonexistent'); },
+    /resource does not exist: resource:\/\/nonexistent\//i,
+    'toFilename() on nonexistent resources should throw'
   );
 
-  test.assertRaises(
-    function() { url.toFilename("http://foo.com/"); },
-    "cannot map to filename: http://foo.com/",
-    "url.toFilename() on http: URIs should raise error"
+  assert.throws(
+    function() { toFilename('http://foo.com/'); },
+    /cannot map to filename: http:\/\/foo.com\//i,
+    'toFilename() on http: URIs should raise error'
   );
 
   try {
-    test.assertMatches(
-      url.toFilename("chrome://global/content/console.xul"),
-      /.*console\.xul$/,
-      "url.toFilename() w/ console.xul works when it maps to filesystem"
+    assert.ok(
+      /.*console\.xul$/.test(toFilename('chrome://global/content/console.xul')),
+      'toFilename() w/ console.xul works when it maps to filesystem'
     );
-  } catch (e) {
+  }
+  catch (e) {
     if (/chrome url isn\'t on filesystem/.test(e.message))
-      test.pass("accessing console.xul in jar raises exception");
+      assert.pass('accessing console.xul in jar raises exception');
     else
-      test.fail("accessing console.xul raises " + e);
+      assert.fail('accessing console.xul raises ' + e);
   }
 
   // TODO: Are there any chrome URLs that we're certain exist on the
   // filesystem?
-  // test.assertMatches(url.toFilename("chrome://myapp/content/main.js"),
-  //                    /.*main\.js$/);
+  // assert.ok(/.*main\.js$/.test(toFilename('chrome://myapp/content/main.js')));
 };
 
-exports.testFromFilename = function(test) {
-  var profileDirName = require("sdk/system").pathFor("ProfD");
-  var fileUrl = url.fromFilename(profileDirName);
-  test.assertEqual(url.URL(fileUrl).scheme, 'file',
-                   'url.toFilename() should return a file: url');
-  test.assertEqual(url.fromFilename(url.toFilename(fileUrl)),
-                   fileUrl);
+exports.testFromFilename = function(assert) {
+  var profileDirName = require('sdk/system').pathFor('ProfD');
+  var fileUrl = fromFilename(profileDirName);
+  assert.equal(URL(fileUrl).scheme, 'file',
+                   'toFilename() should return a file: url');
+  assert.equal(fromFilename(toFilename(fileUrl)), fileUrl);
 };
 
-exports.testURL = function(test) {
-  let URL = url.URL;
-  test.assert(URL("h:foo") instanceof URL, "instance is of correct type");
-  test.assertRaises(function() URL(),
-                    "malformed URI: undefined",
-                    "url.URL should throw on undefined");
-  test.assertRaises(function() URL(""),
-                    "malformed URI: ",
-                    "url.URL should throw on empty string");
-  test.assertRaises(function() URL("foo"),
-                    "malformed URI: foo",
-                    "url.URL should throw on invalid URI");
-  test.assert(URL("h:foo").scheme, "has scheme");
-  test.assertEqual(URL("h:foo").toString(),
-                   "h:foo",
-                   "toString should roundtrip");
+exports.testURL = function(assert) {
+  assert.ok(URL('h:foo') instanceof URL, 'instance is of correct type');
+  assert.throws(function() URL(),
+                    /malformed URI: undefined/i,
+                    'url.URL should throw on undefined');
+  assert.throws(function() URL(''),
+                    /malformed URI: /i,
+                    'url.URL should throw on empty string');
+  assert.throws(function() URL('foo'),
+                    /malformed URI: foo/i,
+                    'url.URL should throw on invalid URI');
+  assert.ok(URL('h:foo').scheme, 'has scheme');
+  assert.equal(URL('h:foo').toString(),
+                   'h:foo',
+                   'toString should roundtrip');
   // test relative + base
-  test.assertEqual(URL("mypath", "http://foo").toString(),
-                   "http://foo/mypath",
-                   "relative URL resolved to base");
+  assert.equal(URL('mypath', 'http://foo').toString(),
+                   'http://foo/mypath',
+                   'relative URL resolved to base');
   // test relative + no base
-  test.assertRaises(function() URL("path").toString(),
-                    "malformed URI: path",
-                    "no base for relative URI should throw");
+  assert.throws(function() URL('path').toString(),
+                    /malformed URI: path/i,
+                    'no base for relative URI should throw');
 
-  let a = URL("h:foo");
+  let a = URL('h:foo');
   let b = URL(a);
-  test.assertEqual(b.toString(),
-                   "h:foo",
-                   "a URL can be initialized from another URL");
-  test.assertNotStrictEqual(a, b,
-                            "a URL initialized from another URL is not the same object");
-  test.assert(a == "h:foo",
-              "toString is implicit when a URL is compared to a string via ==");
-  test.assertStrictEqual(a + "", "h:foo",
-                         "toString is implicit when a URL is concatenated to a string");
+  assert.equal(b.toString(),
+                   'h:foo',
+                   'a URL can be initialized from another URL');
+  assert.notStrictEqual(a, b,
+                            'a URL initialized from another URL is not the same object');
+  assert.ok(a == 'h:foo',
+              'toString is implicit when a URL is compared to a string via ==');
+  assert.strictEqual(a + '', 'h:foo',
+                         'toString is implicit when a URL is concatenated to a string');
 };
 
-exports.testStringInterface = function(test) {
-  let URL = url.URL;
-  var EM = "about:addons";
+exports.testStringInterface = function(assert) {
+  var EM = 'about:addons';
   var a = URL(EM);
 
   // make sure the standard URL properties are enumerable and not the String interface bits
-  test.assertEqual(Object.keys(a),
-    "scheme,userPass,host,hostname,port,path,pathname,hash,href,origin,protocol,search",
-    "enumerable key list check for URL.");
-  test.assertEqual(
+  assert.equal(Object.keys(a),
+    'scheme,userPass,host,hostname,port,path,pathname,hash,href,origin,protocol,search',
+    'enumerable key list check for URL.');
+  assert.equal(
       JSON.stringify(a),
-      "{\"scheme\":\"about\",\"userPass\":null,\"host\":null,\"hostname\":null,\"port\":null,\"path\":\"addons\",\"pathname\":\"addons\",\"hash\":\"\",\"href\":\"about:addons\",\"origin\":\"about:\",\"protocol\":\"about:\",\"search\":\"\"}",
-      "JSON.stringify should return a object with correct props and vals.");
+      defaultLocation,
+      'JSON.stringify should return a object with correct props and vals.');
 
   // make sure that the String interface exists and works as expected
-  test.assertEqual(a.indexOf(":"), EM.indexOf(":"), "indexOf on URL works");
-  test.assertEqual(a.valueOf(), EM.valueOf(), "valueOf on URL works.");
-  test.assertEqual(a.toSource(), EM.toSource(), "toSource on URL works.");
-  test.assertEqual(a.lastIndexOf("a"), EM.lastIndexOf("a"), "lastIndexOf on URL works.");
-  test.assertEqual(a.match("t:").toString(), EM.match("t:").toString(), "match on URL works.");
-  test.assertEqual(a.toUpperCase(), EM.toUpperCase(), "toUpperCase on URL works.");
-  test.assertEqual(a.toLowerCase(), EM.toLowerCase(), "toLowerCase on URL works.");
-  test.assertEqual(a.split(":").toString(), EM.split(":").toString(), "split on URL works.");
-  test.assertEqual(a.charAt(2), EM.charAt(2), "charAt on URL works.");
-  test.assertEqual(a.charCodeAt(2), EM.charCodeAt(2), "charCodeAt on URL works.");
-  test.assertEqual(a.concat(EM), EM.concat(a), "concat on URL works.");
-  test.assertEqual(a.substr(2,3), EM.substr(2,3), "substr on URL works.");
-  test.assertEqual(a.substring(2,3), EM.substring(2,3), "substring on URL works.");
-  test.assertEqual(a.trim(), EM.trim(), "trim on URL works.");
-  test.assertEqual(a.trimRight(), EM.trimRight(), "trimRight on URL works.");
-  test.assertEqual(a.trimLeft(), EM.trimLeft(), "trimLeft on URL works.");
+  assert.equal(a.indexOf(':'), EM.indexOf(':'), 'indexOf on URL works');
+  assert.equal(a.valueOf(), EM.valueOf(), 'valueOf on URL works.');
+  assert.equal(a.toSource(), EM.toSource(), 'toSource on URL works.');
+  assert.equal(a.lastIndexOf('a'), EM.lastIndexOf('a'), 'lastIndexOf on URL works.');
+  assert.equal(a.match('t:').toString(), EM.match('t:').toString(), 'match on URL works.');
+  assert.equal(a.toUpperCase(), EM.toUpperCase(), 'toUpperCase on URL works.');
+  assert.equal(a.toLowerCase(), EM.toLowerCase(), 'toLowerCase on URL works.');
+  assert.equal(a.split(':').toString(), EM.split(':').toString(), 'split on URL works.');
+  assert.equal(a.charAt(2), EM.charAt(2), 'charAt on URL works.');
+  assert.equal(a.charCodeAt(2), EM.charCodeAt(2), 'charCodeAt on URL works.');
+  assert.equal(a.concat(EM), EM.concat(a), 'concat on URL works.');
+  assert.equal(a.substr(2,3), EM.substr(2,3), 'substr on URL works.');
+  assert.equal(a.substring(2,3), EM.substring(2,3), 'substring on URL works.');
+  assert.equal(a.trim(), EM.trim(), 'trim on URL works.');
+  assert.equal(a.trimRight(), EM.trimRight(), 'trimRight on URL works.');
+  assert.equal(a.trimLeft(), EM.trimLeft(), 'trimLeft on URL works.');
 }
 
-exports.testDataURLwithouthURI = function (test) {
-  const { DataURL } = url;
-
+exports.testDataURLwithouthURI = function (assert) {
   let dataURL = new DataURL();
 
-  test.assertEqual(dataURL.base64, false, "base64 is false for empty uri")
-  test.assertEqual(dataURL.data, "", "data is an empty string for empty uri")
-  test.assertEqual(dataURL.mimeType, "", "mimeType is an empty string for empty uri")
-  test.assertEqual(Object.keys(dataURL.parameters).length, 0, "parameters is an empty object for empty uri");
+  assert.equal(dataURL.base64, false, 'base64 is false for empty uri')
+  assert.equal(dataURL.data, '', 'data is an empty string for empty uri')
+  assert.equal(dataURL.mimeType, '', 'mimeType is an empty string for empty uri')
+  assert.equal(Object.keys(dataURL.parameters).length, 0, 'parameters is an empty object for empty uri');
 
-  test.assertEqual(dataURL.toString(), "data:,");
+  assert.equal(dataURL.toString(), 'data:,');
 }
 
-exports.testDataURLwithMalformedURI = function (test) {
-  const { DataURL } = url;
-
-  test.assertRaises(function() {
-      let dataURL = new DataURL("http://www.mozilla.com/");
+exports.testDataURLwithMalformedURI = function (assert) {
+  assert.throws(function() {
+      let dataURL = new DataURL('http://www.mozilla.com/');
     },
-    "Malformed Data URL: http://www.mozilla.com/",
-    "DataURL raises an exception for malformed data uri"
+    /Malformed Data URL: http:\/\/www.mozilla.com\//i,
+    'DataURL raises an exception for malformed data uri'
   );
 }
 
-exports.testDataURLparse = function (test) {
-  const { DataURL } = url;
+exports.testDataURLparse = function (assert) {
+  let dataURL = new DataURL('data:text/html;charset=US-ASCII,%3Ch1%3EHello!%3C%2Fh1%3E');
 
-  let dataURL = new DataURL("data:text/html;charset=US-ASCII,%3Ch1%3EHello!%3C%2Fh1%3E");
+  assert.equal(dataURL.base64, false, 'base64 is false for non base64 data uri')
+  assert.equal(dataURL.data, '<h1>Hello!</h1>', 'data is properly decoded')
+  assert.equal(dataURL.mimeType, 'text/html', 'mimeType is set properly')
+  assert.equal(Object.keys(dataURL.parameters).length, 1, 'one parameters specified');
+  assert.equal(dataURL.parameters['charset'], 'US-ASCII', 'charset parsed');
 
-  test.assertEqual(dataURL.base64, false, "base64 is false for non base64 data uri")
-  test.assertEqual(dataURL.data, "<h1>Hello!</h1>", "data is properly decoded")
-  test.assertEqual(dataURL.mimeType, "text/html", "mimeType is set properly")
-  test.assertEqual(Object.keys(dataURL.parameters).length, 1, "one parameters specified");
-  test.assertEqual(dataURL.parameters["charset"], "US-ASCII", "charset parsed");
-
-  test.assertEqual(dataURL.toString(), "data:text/html;charset=US-ASCII,%3Ch1%3EHello!%3C%2Fh1%3E");
+  assert.equal(dataURL.toString(), 'data:text/html;charset=US-ASCII,%3Ch1%3EHello!%3C%2Fh1%3E');
 }
 
-exports.testDataURLparseBase64 = function (test) {
-  const { DataURL } = url;
-  const { decode } = require("sdk/base64");
+exports.testDataURLparseBase64 = function (assert) {
+  let text = 'Awesome!';
+  let b64text = 'QXdlc29tZSE=';
+  let dataURL = new DataURL('data:text/plain;base64,' + b64text);
 
-  let text = "Awesome!";
-  let b64text = "QXdlc29tZSE=";
-  let dataURL = new DataURL("data:text/plain;base64," + b64text);
-
-  test.assertEqual(dataURL.base64, true, "base64 is true for base64 encoded data uri")
-  test.assertEqual(dataURL.data, text, "data is properly decoded")
-  test.assertEqual(dataURL.mimeType, "text/plain", "mimeType is set properly")
-  test.assertEqual(Object.keys(dataURL.parameters).length, 1, "one parameters specified");
-  test.assertEqual(dataURL.parameters["base64"], "", "parameter set without value");
-
-  test.assertEqual(dataURL.toString(), "data:text/plain;base64," + encodeURIComponent(b64text));
+  assert.equal(dataURL.base64, true, 'base64 is true for base64 encoded data uri')
+  assert.equal(dataURL.data, text, 'data is properly decoded')
+  assert.equal(dataURL.mimeType, 'text/plain', 'mimeType is set properly')
+  assert.equal(Object.keys(dataURL.parameters).length, 1, 'one parameters specified');
+  assert.equal(dataURL.parameters['base64'], '', 'parameter set without value');
+  assert.equal(dataURL.toString(), 'data:text/plain;base64,' + encodeURIComponent(b64text));
 }
 
-exports.testIsValidURI = function (test) {
+exports.testIsValidURI = function (assert) {
   validURIs().forEach(function (aUri) {
-    test.assertEqual(url.isValidURI(aUri), true, aUri + ' is a valid URL');
+    assert.equal(isValidURI(aUri), true, aUri + ' is a valid URL');
   });
 };
 
-exports.testIsInvalidURI = function (test) {
+exports.testIsInvalidURI = function (assert) {
   invalidURIs().forEach(function (aUri) {
-    test.assertEqual(url.isValidURI(aUri), false, aUri + ' is an invalid URL');
+    assert.equal(isValidURI(aUri), false, aUri + ' is an invalid URL');
   });
 };
 
-exports.testURLFromURL = function(test) {
-  let aURL = url.URL('http://mozilla.org');
-  let bURL = url.URL(aURL);
-  test.assertEqual(aURL.toString(), bURL.toString(), 'Making a URL from a URL works');
+exports.testURLFromURL = function(assert) {
+  let aURL = URL('http://mozilla.org');
+  let bURL = URL(aURL);
+  assert.equal(aURL.toString(), bURL.toString(), 'Making a URL from a URL works');
 };
 
-exports.testTLD = function(test) {
+exports.testTLD = function(assert) {
   let urls = [
     { url: 'http://my.sub.domains.mozilla.co.uk', tld: 'co.uk' },
     { url: 'http://my.mozilla.com', tld: 'com' },
@@ -318,16 +308,19 @@ exports.testTLD = function(test) {
   ];
 
   urls.forEach(function (uri) {
-    test.assertEqual(url.getTLD(uri.url), uri.tld);
-    test.assertEqual(url.getTLD(url.URL(uri.url)), uri.tld);
+    assert.equal(getTLD(uri.url), uri.tld);
+    assert.equal(getTLD(URL(uri.url)), uri.tld);
   });
 }
 
-exports.testWindowLocationMatch = function (test) {
-  let srv = serve();
+exports.testWindowLocationMatch = function (assert, done) {
+  let server = httpd.startServerAsync(port);
+  server.registerPathHandler('/index.html', function (request, response) {
+    response.write('<html><head></head><body><h1>url tests</h1></body></html>');
+  });
+
   let aUrl = 'http://localhost:' + port + '/index.html?q=aQuery#somehash';
-  let urlObject = url.URL(aUrl);
-  test.waitUntilDone();
+  let urlObject = URL(aUrl);
 
   tabs.open({
     url: aUrl,
@@ -335,10 +328,10 @@ exports.testWindowLocationMatch = function (test) {
       tab.attach({
         onMessage: function (loc) {
           for (let prop in loc) {
-            test.assertEqual(urlObject[prop], loc[prop], prop + ' matches');
+            assert.equal(urlObject[prop], loc[prop], prop + ' matches');
           }
-          tab.close();
-          srv.stop(test.done.bind(test));
+
+          tab.close(function() server.stop(done));
         },
         contentScript: '(' + function () {
           let res = {};
@@ -446,15 +439,4 @@ function invalidURIs () {
   ];
 }
 
-function serve () {
-  let basePath = pathFor("ProfD");
-  let filePath = file.join(basePath, 'index.html');
-  let content = "<html><head></head><body><h1>url tests</h1></body></html>";
-  let fileStream = file.open(filePath, 'w');
-  fileStream.write(content);
-  fileStream.close();
-
-  let srv = httpd.startServerAsync(port, basePath);
-  return srv;
-}
-
+require('sdk/test').run(exports);

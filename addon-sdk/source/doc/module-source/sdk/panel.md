@@ -33,13 +33,6 @@ listening to its `show` and `hide` events.
 
 Opening a panel will close an already opened panel.
 
-<div class="warning">
-If your add-on has
-<a href="modules/sdk/private-browsing.html#Opting into private browsing">opted into private browsing</a>,
-then you can't use panels in your add-on. This is due to a platform bug which we expect to
-be fixed in Firefox 21.
-</div>
-
 ## Panel Content ##
 
 The panel's content is specified as HTML, which is loaded from the URL
@@ -394,13 +387,9 @@ then the panel's text will be invisible on OS X although it looks fine on Ubuntu
 
 ## Private Browsing ##
 
-If your add-on has
+If your add-on has not
 [opted into private browsing](modules/sdk/private-browsing.html#Opting into private browsing),
-then **you can't use panels in your add-on**. This is due to a platform bug which we expect to
-be fixed in Firefox 21.
-
-If your add-on has not opted into private browsing, and it calls `panel.show()`
-when the currently active window is a
+and it calls `panel.show()` when the currently active window is a
 [private window](modules/sdk/private-browsing.html#Per-window private browsing),
 then the panel will not be shown.
 

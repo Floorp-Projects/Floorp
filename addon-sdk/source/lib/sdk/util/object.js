@@ -8,6 +8,8 @@ module.metadata = {
   "stability": "unstable"
 };
 
+const { flatten } = require('./array');
+
 /**
  * Merges all the properties of all arguments into first argument. If two or
  * more argument objects have own properties with the same name, the property
@@ -29,6 +31,7 @@ module.metadata = {
  */
 function merge(source) {
   let descriptor = {};
+
   // `Boolean` converts the first parameter to a boolean value. Any object is
   // converted to `true` where `null` and `undefined` becames `false`. Therefore
   // the `filter` method will keep only objects that are defined and not null.
@@ -54,4 +57,36 @@ function extend(source) {
 }
 exports.extend = extend;
 
+function has(obj, key) obj.hasOwnProperty(key);
+exports.has = has;
 
+function each(obj, fn) {
+  for (let key in obj) has(obj, key) && fn(obj[key], key, obj);
+}
+exports.each = each;
+
+/**
+ * Like `merge`, except no property descriptors are manipulated, for use
+ * with platform objects. Identical to underscore's `extend`. Useful for
+ * merging XPCOM objects
+ */
+function safeMerge(source) {
+  Array.slice(arguments, 1).forEach(function onEach (obj) {
+    for (let prop in obj) source[prop] = obj[prop];
+  });
+  return source;
+}
+exports.safeMerge = safeMerge;
+
+/*
+ * Returns a copy of the object without blacklisted properties
+ */
+function omit(source, ...values) {
+  let copy = {};
+  let keys = flatten(values);
+  for (let prop in source)
+    if (!~keys.indexOf(prop)) 
+      copy[prop] = source[prop];
+  return copy;
+}
+exports.omit = omit;
