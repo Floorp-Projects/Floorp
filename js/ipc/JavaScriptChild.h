@@ -58,9 +58,14 @@ class JavaScriptChild
                                         const uint32_t &flags,
                                         ReturnStatus *rs,
                                         PPropertyDescriptor *out);
-    bool AnswerGetOwnPropertyNames(const ObjectId &objId,
-                                   ReturnStatus *rs,
-                                   nsTArray<nsString> *names);
+    bool AnswerDefineProperty(const ObjectId &objId,
+                              const nsString &id,
+                              const PPropertyDescriptor &flags,
+                              ReturnStatus *rs);
+    bool AnswerGetPropertyNames(const ObjectId &objId,
+                                const uint32_t &flags,
+                                ReturnStatus *rs,
+                                nsTArray<nsString> *names);
     bool AnswerKeys(const ObjectId &objId,
                     ReturnStatus *rs,
                     nsTArray<nsString> *names);
@@ -74,6 +79,8 @@ class JavaScriptChild
                             bool *result);
     bool AnswerPreventExtensions(const ObjectId &objId,
                                  ReturnStatus *rs);
+    bool AnswerDelete(const ObjectId &objId, const nsString &id,
+                      ReturnStatus *rs, bool *success);
 
   protected:
     JSObject *unwrap(JSContext *cx, ObjectId id);
