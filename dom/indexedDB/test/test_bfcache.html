@@ -59,7 +59,7 @@
       window.onmessage = grabEventAndContinueHandler;
 
       iframe.src = "bfcache_iframe1.html";
-      var event = yield;
+      var event = yield undefined;
       is(event.data, "go", "set up database successfully");
 
       iframe.src = "bfcache_iframe2.html";
@@ -72,7 +72,7 @@
 
       setCachePref(false);
       finishTest();
-      yield;
+      yield undefined;
     }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

@@ -40,7 +40,7 @@
         window.addEventListener("indexedDB-done", onDone, true);
 
         setTimeout(testFinishedCallback, 0, "ready");
-        yield;
+        yield undefined;
       }
     </script>
 

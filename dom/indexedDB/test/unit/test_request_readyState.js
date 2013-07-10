@@ -14,7 +14,7 @@ function testSteps()
 
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   is(request.readyState, "done", "Correct readyState");
 
@@ -28,7 +28,7 @@ function testSteps()
 
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(request.readyState, "done", "Correct readyState");
   is(event.target.result, key, "Correct key");
@@ -37,11 +37,11 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   is(request.readyState, "pending", "Correct readyState");
-  event = yield;
+  event = yield undefined;
 
   ok(event.target.result, "Got something");
   is(request.readyState, "done", "Correct readyState");
 
   finishTest();
-  yield;
+  yield undefined;
 }

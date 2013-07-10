@@ -13,7 +13,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onerror = errorHandler;
@@ -23,13 +23,13 @@ function testSteps()
   // Make object store, add data.
   let objectStore = db.createObjectStore("foo", { keyPath: "id" });
   objectStore.add(data);
-  yield;
+  yield undefined;
   db.close();
 
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db2 = event.target.result;
   db2.onerror = errorHandler;
@@ -38,7 +38,7 @@ function testSteps()
 
   // Create index.
   event.target.transaction.objectStore("foo").createIndex("foo", "num");
-  yield;
+  yield undefined;
 
   // Make sure our object made it into the index.
   let seenCount = 0;
@@ -57,10 +57,10 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(seenCount, 1, "Saw our entry");
 
   finishTest();
-  yield;
+  yield undefined;
 }

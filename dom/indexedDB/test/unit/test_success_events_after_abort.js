@@ -10,7 +10,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -19,7 +19,7 @@ function testSteps()
   let objectStore = db.createObjectStore("foo");
   objectStore.add({}, 1).onerror = errorHandler;
 
-  yield;
+  yield undefined;
 
   objectStore = db.transaction("foo").objectStore("foo");
 
@@ -39,7 +39,7 @@ function testSteps()
 
   transaction.abort();
 
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "abort", "Got abort event");
   is(sawError, true, "Saw get() error");
@@ -55,6 +55,6 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }
 

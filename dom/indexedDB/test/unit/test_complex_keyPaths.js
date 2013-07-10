@@ -71,7 +71,7 @@ function testSteps()
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
-  let event = yield;
+  let event = yield undefined;
   let db = event.target.result;
 
   let stores = {};
@@ -116,26 +116,26 @@ function testSteps()
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
 
-    let e = yield;
+    let e = yield undefined;
     is(e.type, "success", "inserted successfully" + test);
     is(e.target, request, "expected target" + test);
     ok(compareKeys(request.result, info.key), "found correct key" + test);
     is(indexedDB.cmp(request.result, info.key), 0, "returned key compares correctly" + test);
 
     store.get(info.key).onsuccess = grabEventAndContinueHandler;
-    e = yield;
+    e = yield undefined;
     isnot(e.target.result, undefined, "Did find entry");
 
     // Check that cursor.update work as expected
     request = store.openCursor();
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    e = yield;
+    e = yield undefined;
     let cursor = e.target.result;
     request = cursor.update(info.value);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    yield;
+    yield undefined;
     ok(true, "Successfully updated cursor" + test);
 
     // Check that cursor.update throws as expected when key is changed
@@ -160,7 +160,7 @@ function testSteps()
 
     // Clear object store to prepare for next test
     store.clear().onsuccess = grabEventAndContinueHandler;
-    yield;
+    yield undefined;
   }
 
   // Attempt to create indexes and insert data
@@ -193,17 +193,17 @@ function testSteps()
     request = store.add(info.value, 1);
     if ("key" in info) {
       index.getKey(info.key).onsuccess = grabEventAndContinueHandler;
-      e = yield;
+      e = yield undefined;
       is(e.target.result, 1, "found value when reading" + test);
     }
     else {
       index.count().onsuccess = grabEventAndContinueHandler;
-      e = yield;
+      e = yield undefined;
       is(e.target.result, 0, "should be empty" + test);
     }
 
     store.clear().onsuccess = grabEventAndContinueHandler;
-    yield;
+    yield undefined;
   }
 
   // Autoincrement and complex key paths
@@ -252,18 +252,18 @@ function testSteps()
       }
     }
 
-    let e = yield;
+    let e = yield undefined;
     is(e.target.result, info.k, "got correct return key" + test);
 
     store.get(info.k).onsuccess = grabEventAndContinueHandler;
-    e = yield;
+    e = yield undefined;
     is(JSON.stringify(e.target.result), JSON.stringify(info.res || info.v),
        "expected value stored" + test);
   }
 
   openRequest.onsuccess = grabEventAndContinueHandler;
-  yield;
+  yield undefined;
 
   finishTest();
-  yield;
+  yield undefined;
 }

@@ -29,7 +29,7 @@ function testSteps()
     request = indexedDB.open(name, i + 1);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let db = event.target.result;
 
@@ -49,14 +49,14 @@ function testSteps()
               objectStore.add(info.entry);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
     ok(true, "3");
 
     // Use a cursor to update 'data' to END_DATA.
     request = objectStore.openCursor();
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
     ok(true, "4");
 
     let cursor = request.result;
@@ -65,14 +65,14 @@ function testSteps()
     request = cursor.update(obj);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
     ok(true, "5");
 
     // Check both indexes to make sure that they were updated.
     request = index.get(END_DATA);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
     ok(true, "6");
     ok(obj.data, event.target.result.data,
                   "Non-unique index was properly updated.");
@@ -80,7 +80,7 @@ function testSteps()
     request = uniqueIndex.get(END_DATA);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     ok(true, "7");
     ok(obj.data, event.target.result.data,
@@ -89,6 +89,6 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }
 

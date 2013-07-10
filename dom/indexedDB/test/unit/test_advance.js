@@ -12,7 +12,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onerror = errorHandler;
@@ -25,7 +25,7 @@ function testSteps()
   for (let i = 0; i < dataCount; i++) {
     objectStore.add({ key: i, index: i });
   }
-  yield;
+  yield undefined;
 
   function getObjectStore() {
     return db.transaction("").objectStore("");
@@ -47,7 +47,7 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, dataCount, "Saw all data");
 
@@ -70,7 +70,7 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, dataCount, "Saw all data");
 
@@ -93,7 +93,7 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, dataCount, "Saw all data");
 
@@ -116,7 +116,7 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, dataCount, "Saw all data");
 
@@ -138,7 +138,7 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, 0, "Saw all data");
 
@@ -161,7 +161,7 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, -1, "Saw all data");
 
@@ -183,10 +183,10 @@ function testSteps()
       continueToNextStep();
     }
   };
-  yield;
+  yield undefined;
 
   is(count, dataCount - 1, "Saw all data");
 
   finishTest();
-  yield;
+  yield undefined;
 }

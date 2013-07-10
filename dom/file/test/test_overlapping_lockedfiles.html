@@ -16,7 +16,7 @@
       let request = getFileHandle(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       let fileHandle = event.target.result;
       fileHandle.onerror = errorHandler;
@@ -46,14 +46,14 @@
         }
 
         stepNumber++;
-        yield; yield; yield;;
+        yield undefined; yield undefined; yield undefined;;
 
         is(stepNumber, 4, "All callbacks received");
       }
     }
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

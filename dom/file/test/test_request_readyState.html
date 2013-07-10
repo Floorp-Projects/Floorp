@@ -18,7 +18,7 @@
 
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       is(request.readyState, "done", "Correct readyState");
 
@@ -30,7 +30,7 @@
       is(request.readyState, "pending", "Correct readyState");
 
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(request.readyState, "done", "Correct readyState");
 
@@ -38,14 +38,14 @@
       request = lockedFile.readAsText(6);
       request.onsuccess = grabEventAndContinueHandler;
       is(request.readyState, "pending", "Correct readyState");
-      event = yield;
+      event = yield undefined;
 
       ok(event.target.result, "Got something");
       is(request.readyState, "done", "Correct readyState");
     }
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
