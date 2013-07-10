@@ -53,9 +53,6 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
   {
     nr_ice_cand_pair *pair=0;
     UINT8 o_priority, a_priority;
-    char *lufrag,*rufrag;
-    char *lpwd,*rpwd;
-    char *l2ruser=0,*r2lpass=0;
     int r,_status;
     UINT4 RTO;
     nr_ice_candidate tmpcand;
@@ -98,17 +95,6 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
       rcand->foundation,NULL))
       ABORT(r);
 
-
-    /* OK, now the STUN data */
-    lufrag=lcand->stream->ufrag?lcand->stream->ufrag:pctx->ctx->ufrag;
-    lpwd=lcand->stream->pwd?lcand->stream->pwd:pctx->ctx->pwd;
-    assert(lufrag);
-    assert(lpwd);
-    rufrag=rcand->stream->ufrag?rcand->stream->ufrag:pctx->peer_ufrag;
-    rpwd=rcand->stream->pwd?rcand->stream->pwd:pctx->peer_pwd;
-    if (!rufrag || !rpwd)
-      ABORT(R_BAD_DATA);
-
     /* Compute the RTO per S 16 */
     RTO = MAX(100, (pctx->ctx->Ta * pctx->waiting_pairs));
 
@@ -121,38 +107,27 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     t_priority = tmpcand.priority;
 
     /* Our sending context */
-    if(r=nr_concat_strings(&l2ruser,rufrag,":",lufrag,NULL))
-      ABORT(r);
     if(r=nr_stun_client_ctx_create(pair->as_string,
       lcand->osock,
       &rcand->addr,RTO,&pair->stun_client))
       ABORT(r);
-    if(!(pair->stun_client->params.ice_binding_request.username=r_strdup(l2ruser)))
+    if(!(pair->stun_client->params.ice_binding_request.username=r_strdup(rcand->stream->l2r_user)))
       ABORT(R_NO_MEMORY);
-    if(r=r_data_make(&pair->stun_client->params.ice_binding_request.password,(UCHAR *)rpwd,strlen(rpwd)))
+    if(r=r_data_copy(&pair->stun_client->params.ice_binding_request.password,
+      &rcand->stream->l2r_pass))
       ABORT(r);
     pair->stun_client->params.ice_binding_request.priority=t_priority;
+    /* TODO(ekr@rtfm.com): Do we need to frob this when we change role. Bug 890667 */
     pair->stun_client->params.ice_binding_request.control = pctx->controlling?
       NR_ICE_CONTROLLING:NR_ICE_CONTROLLED;
+    pair->stun_client->params.ice_use_candidate.priority=t_priority;
 
     pair->stun_client->params.ice_binding_request.tiebreaker=pctx->tiebreaker;
-
-    /* Our receiving username/passwords. Stash these for later
-       injection into the stun server ctx*/
-    if(r=nr_concat_strings(&pair->r2l_user,lufrag,":",rufrag,NULL))
-      ABORT(r);
-    if(!(r2lpass=r_strdup(lpwd)))
-      ABORT(R_NO_MEMORY);
-    INIT_DATA(pair->r2l_pwd,(UCHAR *)r2lpass,strlen(r2lpass));
-    // Give up ownership of r2lpass
-    r2lpass=0;
 
     *pairp=pair;
 
     _status=0;
   abort:
-    RFREE(l2ruser);
-    RFREE(r2lpass);
     if(_status){
       nr_ice_candidate_pair_destroy(&pair);
     }
@@ -177,9 +152,6 @@ int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp)
       RFREE(pair->stun_client->params.ice_binding_request.password.data);
       nr_stun_client_ctx_destroy(&pair->stun_client);
     }
-
-    RFREE(pair->r2l_user);
-    RFREE(pair->r2l_pwd.data);
 
     NR_async_timer_cancel(pair->stun_cb_timer);
     NR_async_timer_cancel(pair->restart_controlled_cb_timer);
@@ -559,7 +531,6 @@ void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s):%d: Restarting pair %s as nominated",pair->pctx->label,pair->local->stream->label,pair->remote->component->component_id,pair->as_string);
 
     nr_stun_client_reset(pair->stun_client);
-    pair->stun_client->params.ice_binding_request.control=NR_ICE_CONTROLLING;
 
     if(r=nr_stun_client_start(pair->stun_client,NR_ICE_CLIENT_MODE_USE_CANDIDATE,nr_ice_candidate_pair_stun_cb,pair))
       ABORT(r);
