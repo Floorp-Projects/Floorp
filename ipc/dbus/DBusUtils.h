@@ -20,6 +20,7 @@
 #define mozilla_ipc_dbus_dbusutils_h__
 
 #include <dbus/dbus.h>
+#include "mozilla/RefPtr.h"
 #include "mozilla/Scoped.h"
 
 // LOGE and free a D-Bus error
@@ -50,8 +51,45 @@ private:
   DBusMessage* mMsg;
 };
 
-typedef void (*DBusCallback)(DBusMessage *, void *);
+/**
+ * DBusReplyHandler represents a handler for DBus reply messages. Inherit
+ * from this class and implement the Handle method. The method Callback
+ * should be passed to the DBus send function, with the class instance as
+ * user-data argument.
+ */
+class DBusReplyHandler : public mozilla::RefCounted<DBusReplyHandler>
+{
+public:
+  virtual ~DBusReplyHandler() {
+  }
 
+  /**
+   * Implements a call-back function for DBus. The supplied value for
+   * aData must be a pointer to an instance of DBusReplyHandler.
+   */
+  static void Callback(DBusMessage* aReply, void* aData);
+
+  /**
+   * Call-back method for handling the reply message from DBus.
+   */
+  virtual void Handle(DBusMessage* aReply) = 0;
+
+protected:
+  DBusReplyHandler()
+  {
+  }
+
+  DBusReplyHandler(const DBusReplyHandler& aHandler)
+  {
+  }
+
+  DBusReplyHandler& operator = (const DBusReplyHandler& aRhs)
+  {
+    return *this;
+  }
+};
+
+typedef void (*DBusCallback)(DBusMessage *, void *);
 
 void log_and_free_dbus_error(DBusError* err,
                              const char* function,

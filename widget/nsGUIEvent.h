@@ -30,6 +30,7 @@
 #include "nsStyleConsts.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/Touch.h"
 
 namespace mozilla {
 namespace dom {
@@ -1651,7 +1652,7 @@ public:
     MOZ_COUNT_DTOR(nsTouchEvent);
   }
 
-  nsTArray<nsCOMPtr<nsIDOMTouch> > touches;
+  nsTArray< nsRefPtr<mozilla::dom::Touch> > touches;
 };
 
 /**

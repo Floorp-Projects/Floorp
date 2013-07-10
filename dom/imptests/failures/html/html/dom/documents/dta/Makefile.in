@@ -10,7 +10,6 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_document.body-getter.html.json \
   test_document.title-03.html.json \
   test_document.title-04.xhtml.json \
   test_document.title-06.html.json \

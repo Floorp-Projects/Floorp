@@ -131,16 +131,6 @@ nsDOMUIEvent::GetMovementPoint()
   return current - last;
 }
 
-nsIntPoint
-nsDOMUIEvent::GetClientPoint()
-{
-  if (mIsPointerLocked) {
-    return mLastClientPoint;
-  }
-
-  return CalculateClientPoint(mPresContext, mEvent, &mClientPoint);
-}
-
 NS_IMETHODIMP
 nsDOMUIEvent::GetView(nsIDOMWindow** aView)
 {

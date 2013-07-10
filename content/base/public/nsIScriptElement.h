@@ -151,7 +151,7 @@ public:
 
   void SetCreatorParser(nsIParser* aParser)
   {
-    mCreatorParser = getter_AddRefs(NS_GetWeakReference(aParser));
+    mCreatorParser = do_GetWeakReference(aParser);
   }
 
   /**
