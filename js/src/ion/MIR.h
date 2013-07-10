@@ -329,9 +329,10 @@ class MDefinition : public MNode
 
     virtual Opcode op() const = 0;
     virtual const char *opName() const = 0;
-    void printName(FILE *fp);
+    void printName(FILE *fp) const;
     static void PrintOpcodeName(FILE *fp, Opcode op);
-    virtual void printOpcode(FILE *fp);
+    virtual void printOpcode(FILE *fp) const;
+    void dump(FILE *fp) const;
 
     // For LICM.
     virtual bool neverHoist() const { return false; }
@@ -745,7 +746,7 @@ class MConstant : public MNullaryInstruction
         return &value_;
     }
 
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 
     HashNumber valueHash() const;
     bool congruentTo(MDefinition * const &ins) const;
@@ -779,7 +780,7 @@ class MParameter : public MNullaryInstruction
     int32_t index() const {
         return index_;
     }
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 
     HashNumber valueHash() const;
     bool congruentTo(MDefinition * const &ins) const;
@@ -823,7 +824,7 @@ class MControlInstruction : public MInstruction
         return true;
     }
 
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 };
 
 class MTableSwitch MOZ_FINAL
@@ -1920,7 +1921,7 @@ class MCompare
         return AliasSet::None();
     }
 
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 
   protected:
     bool congruentTo(MDefinition *const &ins) const {
@@ -2046,7 +2047,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 };
 
 class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
@@ -2399,7 +2400,7 @@ class MPassArg : public MUnaryInstruction
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 };
 
 // Converts a primitive (either typed or untyped) to a double. If the input is
@@ -3737,7 +3738,7 @@ class MBeta : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Beta)
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
     static MBeta *New(MDefinition *val, const Range *comp)
     {
         return new MBeta(val, comp);
@@ -4185,7 +4186,7 @@ class MConstantElements : public MNullaryInstruction
         return value_;
     }
 
-    void printOpcode(FILE *fp);
+    void printOpcode(FILE *fp) const;
 
     HashNumber valueHash() const {
         return (HashNumber)(size_t) value_;

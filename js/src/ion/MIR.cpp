@@ -132,7 +132,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
 }
 
 void
-MDefinition::printName(FILE *fp)
+MDefinition::printName(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, "%u", id());
@@ -228,13 +228,22 @@ MTest::foldsTo(bool useValueNumbers)
 }
 
 void
-MDefinition::printOpcode(FILE *fp)
+MDefinition::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     for (size_t j = 0, e = numOperands(); j < e; j++) {
         fprintf(fp, " ");
         getOperand(j)->printName(fp);
     }
+}
+
+void
+MDefinition::dump(FILE *fp) const
+{
+    printName(fp);
+    fprintf(fp, " = ");
+    printOpcode(fp);
+    fprintf(fp, "\n");
 }
 
 size_t
@@ -386,7 +395,7 @@ MConstant::congruentTo(MDefinition * const &ins) const
 }
 
 void
-MConstant::printOpcode(FILE *fp)
+MConstant::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
@@ -438,7 +447,7 @@ MConstant::printOpcode(FILE *fp)
 }
 
 void
-MControlInstruction::printOpcode(FILE *fp)
+MControlInstruction::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
     for (size_t j = 0; j < numSuccessors(); j++)
@@ -446,14 +455,14 @@ MControlInstruction::printOpcode(FILE *fp)
 }
 
 void
-MCompare::printOpcode(FILE *fp)
+MCompare::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
     fprintf(fp, " %s", js_CodeName[jsop()]);
 }
 
 void
-MConstantElements::printOpcode(FILE *fp)
+MConstantElements::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %p", value());
@@ -466,7 +475,7 @@ MParameter::New(int32_t index, types::StackTypeSet *types)
 }
 
 void
-MParameter::printOpcode(FILE *fp)
+MParameter::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %d", index());
@@ -554,7 +563,7 @@ MGoto::New(MBasicBlock *target)
 }
 
 void
-MUnbox::printOpcode(FILE *fp)
+MUnbox::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
@@ -843,15 +852,11 @@ MPrepareCall::argc() const
 }
 
 void
-MPassArg::printOpcode(FILE *fp)
+MPassArg::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %d ", argnum_);
-    for (size_t j = 0, e = numOperands(); j < e; j++) {
-        getOperand(j)->printName(fp);
-        if (j != numOperands() - 1)
-            fprintf(fp, " ");
-    }
+    getOperand(0)->printName(fp);
 }
 
 void
@@ -2187,7 +2192,7 @@ MBoundsCheckLower::fallible()
 }
 
 void
-MBeta::printOpcode(FILE *fp)
+MBeta::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
