@@ -7,15 +7,13 @@
 #ifndef mozilla_dom_TextTrackCue_h
 #define mozilla_dom_TextTrackCue_h
 
-#define WEBVTT_NO_CONFIG_H 1
-#define WEBVTT_STATIC 1
-
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackCueBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
-#include "webvtt/node.h"
+
+struct webvtt_node;
 
 namespace mozilla {
 namespace dom {

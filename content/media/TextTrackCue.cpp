@@ -10,7 +10,9 @@
 #include "nsIFrame.h"
 #include "nsTextNode.h"
 #include "nsVideoFrame.h"
-#include "webvtt/cue.h"
+
+// Alternate value for the 'auto' keyword.
+#define WEBVTT_AUTO -1
 
 namespace mozilla {
 namespace dom {
@@ -69,8 +71,7 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
   , mHead(head)
   , mReset(false)
 {
-  // Use the webvtt library's reference counting.
-  webvtt_ref_node(mHead);
+  // Ref mHead here.
   SetDefaultCueSettings();
   MOZ_ASSERT(aGlobal);
   SetIsDOMBinding();
@@ -79,8 +80,7 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
 TextTrackCue::~TextTrackCue()
 {
   if (mHead) {
-    // Release our reference and null mHead.
-    webvtt_release_node(&mHead);
+    // Release mHead here.
   }
 }
 
@@ -173,88 +173,19 @@ struct WebVTTNodeParentPair
   {}
 };
 
-static void
-PushChildren(nsTArray<WebVTTNodeParentPair> &aNodeParentPairStack,
-             webvtt_node* aNode, nsIContent* aParentContent)
-{
-  // Push on in reverse order so we process the nodes in the correct
-  // order -- left to right.
-  for (int i = aNode->data.internal_data->length; i > 0; i--) {
-    WebVTTNodeParentPair nodeParentPair(
-      aNode->data.internal_data->children[i - 1],
-      aParentContent);
-    aNodeParentPairStack.AppendElement(nodeParentPair);
-  }
-}
-
-static WebVTTNodeParentPair
-PopChild(nsTArray<WebVTTNodeParentPair> &aNodeParentPairStack) {
-  WebVTTNodeParentPair temp =
-    aNodeParentPairStack.LastElement();
-  aNodeParentPairStack.RemoveElementAt(aNodeParentPairStack.Length() - 1);
-  return temp;
-}
-
 void
 TextTrackCue::ConvertNodeTreeToDOMTree(nsIContent* aParentContent)
 {
   nsTArray<WebVTTNodeParentPair> nodeParentPairStack;
 
   // mHead should actually be the head of a node tree.
-  if (!mHead || mHead->kind != WEBVTT_HEAD_NODE) {
-    return;
-  }
   // Seed the stack for traversal.
-  PushChildren(nodeParentPairStack, mHead, aParentContent);
-
-  while (!nodeParentPairStack.IsEmpty()) {
-    WebVTTNodeParentPair nodeParentPair = PopChild(nodeParentPairStack);
-    nsCOMPtr<nsIContent> content;
-    if (WEBVTT_IS_VALID_LEAF_NODE(nodeParentPair.mNode->kind)) {
-      content = ConvertLeafNodeToContent(nodeParentPair.mNode);
-    } else if (WEBVTT_IS_VALID_INTERNAL_NODE(nodeParentPair.mNode->kind)) {
-      content = ConvertInternalNodeToContent(nodeParentPair.mNode);
-      // Push the children of the current node onto the stack for traversal.
-      PushChildren(nodeParentPairStack, nodeParentPair.mNode, content);
-    }
-    if (content && nodeParentPair.mParent) {
-      ErrorResult rv;
-      nodeParentPair.mParent->AppendChild(*content, rv);
-    }
-  }
 }
 
 already_AddRefed<nsIContent>
 TextTrackCue::ConvertInternalNodeToContent(const webvtt_node* aWebVTTNode)
 {
-  nsIAtom* atom;
-
-  switch (aWebVTTNode->kind) {
-    case WEBVTT_BOLD:
-      atom = nsGkAtoms::b;
-      break;
-    case WEBVTT_ITALIC:
-      atom = nsGkAtoms::i;
-      break;
-    case WEBVTT_UNDERLINE:
-      atom = nsGkAtoms::u;
-      break;
-    case WEBVTT_RUBY:
-      atom = nsGkAtoms::ruby;
-      break;
-    case WEBVTT_RUBY_TEXT:
-      atom = nsGkAtoms::rt;
-      break;
-    case WEBVTT_VOICE:
-      atom = nsGkAtoms::span;
-      break;
-    case WEBVTT_CLASS:
-      atom = nsGkAtoms::span;
-      break;
-    default:
-      return nullptr;
-      break;
-  }
+  nsIAtom* atom = nsGkAtoms::span;
 
   nsCOMPtr<nsIContent> cueTextContent;
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
@@ -268,37 +199,6 @@ TextTrackCue::ConvertInternalNodeToContent(const webvtt_node* aWebVTTNode)
   document->CreateElem(nsDependentAtomString(atom), nullptr,
                        kNameSpaceID_XHTML,
                        getter_AddRefs(cueTextContent));
-
-  if (aWebVTTNode->kind == WEBVTT_VOICE) {
-    const char* text =
-      webvtt_string_text(&aWebVTTNode->data.internal_data->annotation);
-    if (text) {
-      nsGenericHTMLElement* genericHtmlElement =
-        static_cast<nsGenericHTMLElement*>(cueTextContent.get());
-      genericHtmlElement->SetTitle(NS_ConvertUTF8toUTF16(text));
-    }
-  }
-
-  webvtt_stringlist* classes = aWebVTTNode->data.internal_data->css_classes;
-  if (classes && classes->items && classes->length > 0) {
-    nsAutoString classString;
-
-    const char *text = webvtt_string_text(classes->items);
-    if (text) {
-      AppendUTF8toUTF16(text, classString);
-      for (uint32_t i = 1; i < classes->length; i++) {
-        text = webvtt_string_text(classes->items + i);
-        if (text) {
-          classString.Append(' ');
-          AppendUTF8toUTF16(text, classString);
-        }
-      }
-    }
-
-    nsGenericHTMLElement* genericHtmlElement =
-      static_cast<nsGenericHTMLElement*>(cueTextContent.get());
-    genericHtmlElement->SetClassName(classString);
-  }
   return cueTextContent.forget();
 }
 
@@ -313,30 +213,6 @@ TextTrackCue::ConvertLeafNodeToContent(const webvtt_node* aWebVTTNode)
   nsIDocument* document = window->GetDoc();
   if(!document) {
     return nullptr;
-  }
-  nsNodeInfoManager* nimgr = document->NodeInfoManager();
-  switch (aWebVTTNode->kind) {
-    case WEBVTT_TEXT:
-    {
-      cueTextContent = new nsTextNode(nimgr);
-      const char* text = webvtt_string_text(&aWebVTTNode->data.text);
-      if (text) {
-        cueTextContent->SetText(NS_ConvertUTF8toUTF16(text), false);
-      }
-      break;
-    }
-    case WEBVTT_TIME_STAMP:
-    {
-      nsAutoString timeStamp;
-      timeStamp.AppendInt(aWebVTTNode->data.timestamp);
-      cueTextContent =
-          NS_NewXMLProcessingInstruction(nimgr, NS_LITERAL_STRING("timestamp"),
-                                         timeStamp);
-      break;
-    }
-    default:
-      return nullptr;
-      break;
   }
   return cueTextContent.forget();
 }
