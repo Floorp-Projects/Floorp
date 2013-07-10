@@ -456,7 +456,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     // used when painting the former, but not when painting the latter)) is
     // handled in SVGSVGElement::FlushImageTransformInvalidation.
     //
-    if (svgElem->HasViewBoxRect() || svgElem->ShouldSynthesizeViewBox()) {
+    if (svgElem->HasViewBoxOrSyntheticViewBox()) {
       nsIFrame* anonChild = GetFirstPrincipalChild();
       anonChild->AddStateBits(NS_FRAME_IS_DIRTY);
       for (nsIFrame* child = anonChild->GetFirstPrincipalChild(); child;
