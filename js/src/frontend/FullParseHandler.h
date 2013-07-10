@@ -464,7 +464,7 @@ class FullParseHandler
         return pn->isKind(PNK_CALL);
     }
     PropertyName *isGetProp(ParseNode *pn) {
-        return pn->isOp(JSOP_GETPROP) ? pn->pn_atom->asPropertyName() : NULL;
+        return pn->is<PropertyAccess>() ? &pn->as<PropertyAccess>().name() : NULL;
     }
     JSAtom *isStringExprStatement(ParseNode *pn, TokenPos *pos) {
         if (JSAtom *atom = pn->isStringExprStatement()) {
