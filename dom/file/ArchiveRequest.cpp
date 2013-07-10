@@ -11,7 +11,6 @@
 #include "nsCxPusher.h"
 #include "nsLayoutStatics.h"
 #include "nsEventDispatcher.h"
-#include "nsDOMClassInfoID.h"
 
 USING_FILE_NAMESPACE
 
@@ -279,5 +278,3 @@ NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
 
 NS_IMPL_ADDREF_INHERITED(ArchiveRequest, DOMRequest)
 NS_IMPL_RELEASE_INHERITED(ArchiveRequest, DOMRequest)
-
-DOMCI_DATA(ArchiveRequest, ArchiveRequest)
