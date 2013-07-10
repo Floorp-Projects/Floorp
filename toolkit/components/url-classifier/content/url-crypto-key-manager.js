@@ -37,6 +37,9 @@
 // server updates.
 const kKeyFilename = "urlclassifierkey3.txt";
 
+Components.utils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/Promise.jsm");
+
 /**
  * A key manager for UrlCrypto. There should be exactly one of these
  * per appplication, and all UrlCrypto's should share it. This is
@@ -234,13 +237,15 @@ PROT_UrlCryptoKeyManager.prototype.unUrlSafe = function(key)
 /**
  * Set a new key and serialize it to disk.
  *
- * @param clientKey String containing the base64-encoded client key 
+ * @param clientKey String containing the base64-encoded client key
  *                  we wish to use
  *
  * @param wrappedKey String containing the opaque base64-encoded WrappedKey
  *                   the server gave us (i.e., K_C encrypted with K_S)
+ *
+ * @returns Promise of a boolean indicating whether we succeeded in replacing
  */
-PROT_UrlCryptoKeyManager.prototype.replaceKey_ = function(clientKey, 
+PROT_UrlCryptoKeyManager.prototype.replaceKey_ = function(clientKey,
                                                           wrappedKey) {
   if (this.clientKey_)
     G_Debug(this, "Replacing " + this.clientKey_ + " with " + clientKey);
@@ -250,57 +255,52 @@ PROT_UrlCryptoKeyManager.prototype.replaceKey_ = function(clientKey,
                                    function(c) { return c.charCodeAt(0); });
   this.wrappedKey_ = wrappedKey;
 
-  this.serializeKey_(this.clientKey_, this.wrappedKey_);
+  let promise = this.serializeKey_(this.clientKey_, this.wrappedKey_);
 
-  if (this.onNewKey_) {
-    this.onNewKey_();
-  }
+  return promise.then(() => {
+    if (this.onNewKey_) {
+      this.onNewKey_();
+    }
+    return true;
+  });
 }
 
 /**
  * Try to write the key to disk so we can fall back on it. Fail
  * silently if we cannot. The keys are serialized in protocol4 format.
  *
- * @returns Boolean indicating whether we succeeded in serializing
+ * @returns Promise of a boolean indicating whether we succeeded in serializing
  */
 PROT_UrlCryptoKeyManager.prototype.serializeKey_ = function() {
 
   var map = {};
   map[this.CLIENT_KEY_NAME] = this.clientKey_;
   map[this.WRAPPED_KEY_NAME] = this.wrappedKey_;
-  
-  try {  
 
-    var keyfile = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties)
-                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
-    keyfile.append(this.keyFilename_);
+  let keypath = OS.Path.join(OS.Constants.Path.profileDir, this.keyFilename_);
 
-    if (!this.clientKey_ || !this.wrappedKey_) {
-      keyfile.remove(true);
-      return;
-    }
+  // if we have an invalid client key or wrapped key, we remove the
+  // invalid keyfile from disk
+  if (!this.clientKey_ || !this.wrappedKey_) {
+    return OS.File.remove(keypath).then(() => false,
+                                         e => {
+                                          if (!e.becauseNoSuchFile)
+                                            throw e;
+                                          return false;
+                                         });
+  }
 
-    var data = (new G_Protocol4Parser()).serialize(map);
+  let data = (new G_Protocol4Parser()).serialize(map);
 
-    try {
-      var stream = Cc["@mozilla.org/network/file-output-stream;1"]
-                   .createInstance(Ci.nsIFileOutputStream);
-      stream.init(keyfile,
-                  0x02 | 0x08 | 0x20 /* PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE */,
-                  -1 /* default perms */, 0 /* no special behavior */);
-      stream.write(data, data.length);
-    } finally {
-      stream.close();
-    }
-    return true;
-
-  } catch(e) {
-
+  let encoder = new TextEncoder();
+  let array = encoder.encode(data);
+  let promise = OS.File.writeAtomic(keypath, array, { tmpPath: keypath + ".tmp",
+                                                      flush:   false });
+  return promise.then(() => true,
+                       e => {
     G_Error(this, "Failed to serialize new key: " + e);
     return false;
-
-  }
+  });
 }
 
 /**
@@ -308,7 +308,10 @@ PROT_UrlCryptoKeyManager.prototype.serializeKey_ = function() {
  * request. Try to parse it and set this key as the new one if we can.
  *
  *  @param responseText String containing the protocol4 getkey response
- */ 
+ *
+ *  @returns Promise of a boolean indicating whether we succeeded in setting
+ *           the new key
+ */
 PROT_UrlCryptoKeyManager.prototype.onGetKeyResponse = function(responseText) {
 
   var response = (new G_Protocol4Parser).parse(responseText);
@@ -320,9 +323,10 @@ PROT_UrlCryptoKeyManager.prototype.onGetKeyResponse = function(responseText) {
 
   if (response && clientKey && wrappedKey) {
     G_Debug(this, "Got new key from: " + responseText);
-    this.replaceKey_(clientKey, wrappedKey);
+    return this.replaceKey_(clientKey, wrappedKey);
   } else {
     G_Debug(this, "Not a valid response for /newkey");
+    return Promise.resolve(false);
   }
 }
 
@@ -344,7 +348,10 @@ PROT_UrlCryptoKeyManager.prototype.onNewKey = function(callback)
  *
  * This method should be invoked early, like when the user's profile
  * becomes available.
- */ 
+ *
+ * @returns Promise of a boolean indicating whether we succeeded in
+ *          loading old key
+ */
 PROT_UrlCryptoKeyManager.prototype.maybeLoadOldKey = function() {
   
   var oldKey = null;
@@ -369,12 +376,12 @@ PROT_UrlCryptoKeyManager.prototype.maybeLoadOldKey = function() {
     }
   } catch(e) {
     G_Debug(this, "Caught " + e + " trying to read keyfile");
-    return;
+    return Promise.resolve(false);
   }
-   
+
   if (!oldKey) {
     G_Debug(this, "Couldn't find old key.");
-    return;
+    return Promise.resolve(false);
   }
 
   oldKey = (new G_Protocol4Parser).parse(oldKey);
@@ -383,8 +390,9 @@ PROT_UrlCryptoKeyManager.prototype.maybeLoadOldKey = function() {
 
   if (oldKey && clientKey && wrappedKey && !this.hasKey()) {
     G_Debug(this, "Read old key from disk.");
-    this.replaceKey_(clientKey, wrappedKey);
+    return this.replaceKey_(clientKey, wrappedKey);
   }
+  return Promise.resolve(false);
 }
 
 PROT_UrlCryptoKeyManager.prototype.shutdown = function() {
@@ -393,100 +401,3 @@ PROT_UrlCryptoKeyManager.prototype.shutdown = function() {
     this.fetcher_ = null;
   }
 }
-
-
-#ifdef DEBUG
-/**
- * Cheesey tests
- */
-function TEST_PROT_UrlCryptoKeyManager() {
-  if (G_GDEBUG) {
-    var z = "urlcryptokeymanager UNITTEST";
-    G_debugService.enableZone(z);
-
-    G_Debug(z, "Starting");
-
-    // Let's not clobber any real keyfile out there
-    var kf = "keytest.txt";
-
-    // Let's be able to clean up after ourselves
-    function removeTestFile(f) {
-      var file = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties)
-                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
-      file.append(f);
-      if (file.exists())
-        file.remove(false /* do not recurse */);
-    };
-    removeTestFile(kf);
-
-    var km = new PROT_UrlCryptoKeyManager(kf, true /* testing */);
-
-    // CASE: simulate nothing on disk, then get something from server
-
-    G_Assert(z, !km.hasKey(), "KM already has key?");
-    km.maybeLoadOldKey();
-    G_Assert(z, !km.hasKey(), "KM loaded nonexistent key?");
-    km.onGetKeyResponse(null);
-    G_Assert(z, !km.hasKey(), "KM got key from null response?");
-    km.onGetKeyResponse("");
-    G_Assert(z, !km.hasKey(), "KM got key from empty response?");
-    km.onGetKeyResponse("aslkaslkdf:34:a230\nskdjfaljsie");
-    G_Assert(z, !km.hasKey(), "KM got key from garbage response?");
-    
-    var realResponse = "clientkey:24:zGbaDbx1pxoYe7siZYi8VA==\n" +
-                       "wrappedkey:24:MTr1oDt6TSOFQDTvKCWz9PEn";
-    km.onGetKeyResponse(realResponse);
-    // Will have written it to file as a side effect
-    G_Assert(z, km.hasKey(), "KM couldn't get key from real response?");
-    G_Assert(z, km.clientKey_ == "zGbaDbx1pxoYe7siZYi8VA==", 
-             "Parsed wrong client key from response?");
-    G_Assert(z, km.wrappedKey_ == "MTr1oDt6TSOFQDTvKCWz9PEn", 
-             "Parsed wrong wrapped key from response?");
-
-    // CASE: simulate something on disk, then get something from server
-    
-    km = new PROT_UrlCryptoKeyManager(kf, true /* testing */);
-    G_Assert(z, !km.hasKey(), "KM already has key?");
-    km.maybeLoadOldKey();
-    G_Assert(z, km.hasKey(), "KM couldn't load existing key from disk?");
-    G_Assert(z, km.clientKey_ == "zGbaDbx1pxoYe7siZYi8VA==", 
-             "Parsed wrong client key from disk?");
-    G_Assert(z, km.wrappedKey_ == "MTr1oDt6TSOFQDTvKCWz9PEn", 
-             "Parsed wrong wrapped key from disk?");
-    var realResponse2 = "clientkey:24:dtmbEN1kgN/LmuEoYifaFw==\n" +
-                        "wrappedkey:24:MTpPH3pnLDKihecOci+0W5dk";
-    km.onGetKeyResponse(realResponse2);
-    // Will have written it to disk
-    G_Assert(z, km.hasKey(), "KM couldn't replace key from server response?");
-    G_Assert(z, km.clientKey_ == "dtmbEN1kgN/LmuEoYifaFw==",
-             "Replace client key from server failed?");
-    G_Assert(z, km.wrappedKey == "MTpPH3pnLDKihecOci+0W5dk", 
-             "Replace wrapped key from server failed?");
-
-    // CASE: check overwriting a key on disk
-
-    km = new PROT_UrlCryptoKeyManager(kf, true /* testing */);
-    G_Assert(z, !km.hasKey(), "KM already has key?");
-    km.maybeLoadOldKey();
-    G_Assert(z, km.hasKey(), "KM couldn't load existing key from disk?");
-    G_Assert(z, km.clientKey_ == "dtmbEN1kgN/LmuEoYifaFw==",
-             "Replace client on from disk failed?");
-    G_Assert(z, km.wrappedKey_ == "MTpPH3pnLDKihecOci+0W5dk", 
-             "Replace wrapped key on disk failed?");
-
-    // Test that we only fetch at most two getkey's per lifetime of the manager
-
-    km = new PROT_UrlCryptoKeyManager(kf, true /* testing */);
-    km.reKey();
-    for (var i = 0; i < km.MAX_REKEY_TRIES; i++)
-      G_Assert(z, km.maybeReKey(), "Couldn't rekey?");
-    G_Assert(z, !km.maybeReKey(), "Rekeyed when max hit");
-    
-    removeTestFile(kf);
-
-    G_Debug(z, "PASSED");  
-
-  }
-}
-#endif
