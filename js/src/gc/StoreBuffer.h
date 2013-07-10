@@ -103,7 +103,7 @@ class StoreBuffer
 
         mozilla::DebugOnly<bool> entered;
 
-        MonoTypeBuffer(StoreBuffer *owner)
+        explicit MonoTypeBuffer(StoreBuffer *owner)
           : owner(owner), base(NULL), pos(NULL), top(NULL), entered(false)
         {
             duplicates.init();
@@ -120,7 +120,6 @@ class StoreBuffer
         bool isAboutToOverflow() const { return pos >= highwater; }
 
         /* Compaction algorithms. */
-        void compactNotInSet(const Nursery &nursery);
         void compactRemoveDuplicates();
 
         /*
@@ -145,9 +144,10 @@ class StoreBuffer
              */
             *pos++ = v;
             if (isAboutToOverflow()) {
-                owner->setAboutToOverflow();
+                compact();
+                if (isAboutToOverflow())
+                    owner->setAboutToOverflow();
                 if (isFull()) {
-                    compact();
                     if (isFull()) {
                         owner->setOverflowed();
                         clear();
@@ -169,7 +169,7 @@ class StoreBuffer
     {
         friend class StoreBuffer;
 
-        RelocatableMonoTypeBuffer(StoreBuffer *owner)
+        explicit RelocatableMonoTypeBuffer(StoreBuffer *owner)
           : MonoTypeBuffer<T>(owner)
         {}
 
@@ -197,7 +197,7 @@ class StoreBuffer
 
         mozilla::DebugOnly<bool> entered;
 
-        GenericBuffer(StoreBuffer *owner)
+        explicit GenericBuffer(StoreBuffer *owner)
           : owner(owner), base(NULL), pos(NULL), top(NULL), entered(false)
         {}
 
@@ -245,7 +245,7 @@ class StoreBuffer
 
         Cell **edge;
 
-        CellPtrEdge(Cell **v) : edge(v) {}
+        explicit CellPtrEdge(Cell **v) : edge(v) {}
         bool operator==(const CellPtrEdge &other) const { return edge == other.edge; }
         bool operator!=(const CellPtrEdge &other) const { return edge != other.edge; }
 
@@ -274,7 +274,7 @@ class StoreBuffer
 
         Value *edge;
 
-        ValueEdge(Value *v) : edge(v) {}
+        explicit ValueEdge(Value *v) : edge(v) {}
         bool operator==(const ValueEdge &other) const { return edge == other.edge; }
         bool operator!=(const ValueEdge &other) const { return edge != other.edge; }
 
@@ -320,11 +320,8 @@ class StoreBuffer
         JS_ALWAYS_INLINE HeapSlot *slotLocation() const;
 
         JS_ALWAYS_INLINE void *deref() const;
-
         JS_ALWAYS_INLINE void *location() const;
-
         JS_ALWAYS_INLINE bool inRememberedSet(const Nursery &nursery) const;
-
         JS_ALWAYS_INLINE bool isNullEdge() const;
 
         void mark(JSTracer *trc);
@@ -420,14 +417,24 @@ class StoreBuffer
     bool hasOverflowed() const { return overflowed; }
 
     /* Insert a single edge into the buffer/remembered set. */
-    void putValue(Value *v) {
-        bufferVal.put(v);
+    void putValue(Value *valuep) {
+        ValueEdge edge(valuep);
+        if (!edge.inRememberedSet(nursery_))
+            return;
+        bufferVal.put(edge);
     }
-    void putCell(Cell **o) {
-        bufferCell.put(o);
+    void putCell(Cell **cellp) {
+        CellPtrEdge edge(cellp);
+        if (!edge.inRememberedSet(nursery_))
+            return;
+        bufferCell.put(edge);
     }
-    void putSlot(JSObject *obj, HeapSlot::Kind kind, uint32_t slot) {
-        bufferSlot.put(SlotEdge(obj, kind, slot));
+    void putSlot(JSObject *obj, HeapSlot::Kind kind, uint32_t slot, void *target) {
+        SlotEdge edge(obj, kind, slot);
+        /* This is manually inlined because slotLocation cannot be defined here. */
+        if (nursery_.isInside(obj) || !nursery_.isInside(target))
+            return;
+        bufferSlot.put(edge);
     }
     void putWholeCell(Cell *cell) {
         bufferWholeCell.put(WholeCellEdges(cell));
@@ -435,16 +442,16 @@ class StoreBuffer
 
     /* Insert or update a single edge in the Relocatable buffer. */
     void putRelocatableValue(Value *v) {
-        bufferRelocVal.put(v);
+        bufferRelocVal.put(ValueEdge(v));
     }
     void putRelocatableCell(Cell **c) {
-        bufferRelocCell.put(c);
+        bufferRelocCell.put(CellPtrEdge(c));
     }
     void removeRelocatableValue(Value *v) {
-        bufferRelocVal.unput(v);
+        bufferRelocVal.unput(ValueEdge(v));
     }
     void removeRelocatableCell(Cell **c) {
-        bufferRelocCell.unput(c);
+        bufferRelocCell.unput(CellPtrEdge(c));
     }
 
     /* Insert an entry into the generic buffer. */
