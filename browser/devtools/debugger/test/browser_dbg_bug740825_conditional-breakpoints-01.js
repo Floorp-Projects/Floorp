@@ -293,7 +293,7 @@ function test()
     });
 
     finalCheck();
-    gDebuggee.location.reload();
+    gDebugger.DebuggerController.client.activeTab.reload();
   }
 
   function finalCheck() {

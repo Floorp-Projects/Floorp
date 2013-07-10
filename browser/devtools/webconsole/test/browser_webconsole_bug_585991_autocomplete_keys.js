@@ -279,5 +279,50 @@ function popupHideAfterReturnWithNoSelection()
   is(jsterm.history[jsterm.history.length-1], "window.testBug",
      "jsterm history is correct");
 
-  executeSoon(finishTest);
+  executeSoon(testCompletionInText);
+}
+
+function testCompletionInText()
+{
+  info("test that completion works inside text, see bug 812618");
+
+  popup._panel.addEventListener("popupshown", function onShown() {
+    popup._panel.removeEventListener("popupshown", onShown);
+
+    ok(popup.isOpen, "popup is open");
+    is(popup.itemCount, 2, "popup.itemCount is correct");
+
+    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("VK_DOWN", {});
+    is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
+    ok(!completeNode.value, "completeNode.value is empty");
+
+    let items = popup.getItems().reverse().map(e => e.label);
+    let sameItems = items.every((prop, index) =>
+      ["testBug873250a", "testBug873250b"][index] === prop);
+    ok(sameItems, "getItems returns the items we expect");
+
+    info("press Tab and wait for popup to hide");
+    popup._panel.addEventListener("popuphidden", popupHideAfterCompletionInText);
+    EventUtils.synthesizeKey("VK_TAB", {});
+  });
+
+  jsterm.setInputValue("dump(window.testBu)");
+  inputNode.selectionStart = inputNode.selectionEnd = 18;
+  EventUtils.synthesizeKey("g", {});
+}
+
+function popupHideAfterCompletionInText()
+{
+  // At this point the completion suggestion should be accepted.
+  popup._panel.removeEventListener("popuphidden", popupHideAfterCompletionInText);
+
+  ok(!popup.isOpen, "popup is not open");
+  is(inputNode.value, "dump(window.testBug873250b)",
+     "completion was successful after VK_TAB");
+  is(inputNode.selectionStart, 26, "cursor location is correct");
+  is(inputNode.selectionStart, inputNode.selectionEnd, "cursor location (confirmed)");
+  ok(!completeNode.value, "completeNode is empty");
+
+  finishTest();
 }

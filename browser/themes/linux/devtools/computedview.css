@@ -87,10 +87,6 @@ body {
   margin-left: -12px!important;
 }
 
-.expander[open] {
-  margin-left: -17px!important;
-}
-
 .expandable {
   visibility: visible;
 }
