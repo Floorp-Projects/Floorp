@@ -46,29 +46,31 @@
 #include "base/cpu.h"
 #include "base/singleton.h"
 #include "base/system_monitor.h"
+#include "mozilla/Casting.h"
 
 using base::Time;
 using base::TimeDelta;
 using base::TimeTicks;
+using mozilla::BitwiseCast;
 
 namespace {
 
 // From MSDN, FILETIME "Contains a 64-bit value representing the number of
 // 100-nanosecond intervals since January 1, 1601 (UTC)."
 int64_t FileTimeToMicroseconds(const FILETIME& ft) {
-  // Need to bit_cast to fix alignment, then divide by 10 to convert
+  // Need to BitwiseCast to fix alignment, then divide by 10 to convert
   // 100-nanoseconds to milliseconds. This only works on little-endian
   // machines.
-  return bit_cast<int64_t, FILETIME>(ft) / 10;
+  return BitwiseCast<int64_t>(ft) / 10;
 }
 
 void MicrosecondsToFileTime(int64_t us, FILETIME* ft) {
   DCHECK(us >= 0) << "Time is less than 0, negative values are not "
       "representable in FILETIME";
 
-  // Multiply by 10 to convert milliseconds to 100-nanoseconds. Bit_cast will
+  // Multiply by 10 to convert milliseconds to 100-nanoseconds. BitwiseCast will
   // handle alignment problems. This only works on little-endian machines.
-  *ft = bit_cast<FILETIME, int64_t>(us * 10);
+  *ft = BitwiseCast<FILETIME>(us * 10);
 }
 
 int64_t CurrentWallclockMicroseconds() {
