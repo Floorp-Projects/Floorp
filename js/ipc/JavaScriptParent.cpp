@@ -78,8 +78,6 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
                      JS::HandleId id, bool strict, JS::MutableHandleValue vp) MOZ_OVERRIDE;
     virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                         MutableHandleValue vp) MOZ_OVERRIDE;
 
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
@@ -151,7 +149,28 @@ bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                  PropertyDescriptor *desc)
 {
-    MOZ_CRASH("unimplemented");
+    return ParentOf(proxy)->defineProperty(cx, proxy, id, desc);
+}
+
+bool
+JavaScriptParent::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
+                                 PropertyDescriptor *desc)
+{
+    ObjectId objId = idOf(proxy);
+
+    nsString idstr;
+    if (!convertIdToGeckoString(cx, id, &idstr))
+        return false;
+
+    PPropertyDescriptor descriptor;
+    if (!fromDescriptor(cx, *desc, &descriptor))
+        return false;
+
+    ReturnStatus status;
+    if (!CallDefineProperty(objId, idstr, descriptor, &status))
+        return ipcfail(cx);
+
+    return ok(cx, status);
 }
 
 bool
@@ -163,24 +182,7 @@ CPOWProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdV
 bool
 JavaScriptParent::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    ObjectId objId = idOf(proxy);
-
-    ReturnStatus status;
-    InfallibleTArray<nsString> names;
-    if (!CallGetOwnPropertyNames(objId, &status, &names))
-        return ipcfail(cx);
-    if (!ok(cx, status))
-        return false;
-
-    RootedId name(cx);
-    for (size_t i = 0; i < names.Length(); i++) {
-        if (!convertGeckoStringToId(cx, names[i], &name))
-            return false;
-        if (!props.append(name))
-            return false;
-    }
-
-    return true;
+    return getPropertyNames(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
 bool
@@ -192,36 +194,41 @@ CPOWProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 bool
 JavaScriptParent::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    ObjectId objId = idOf(proxy);
-
-    ReturnStatus status;
-    InfallibleTArray<nsString> names;
-    if (!CallKeys(objId, &status, &names))
-        return ipcfail(cx);
-    if (!ok(cx, status))
-        return false;
-
-    RootedId name(cx);
-    for (size_t i = 0; i < names.Length(); i++) {
-        if (!convertGeckoStringToId(cx, names[i], &name))
-            return false;
-        if (!props.append(name))
-            return false;
-    }
-
-    return true;
-}
-
-bool
-CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
-{
-    MOZ_CRASH("unimplemented");
+    return getPropertyNames(cx, proxy, JSITER_OWNONLY, props);
 }
 
 bool
 CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    MOZ_CRASH("unimplemented");
+    return ParentOf(proxy)->enumerate(cx, proxy, props);
+}
+
+bool
+JavaScriptParent::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
+{
+    return getPropertyNames(cx, proxy, 0, props);
+}
+
+bool
+CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
+{
+    return ParentOf(proxy)->delete_(cx, proxy, id, bp);
+}
+
+bool
+JavaScriptParent::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
+{
+    ObjectId objId = idOf(proxy);
+
+    nsString idstr;
+    if (!convertIdToGeckoString(cx, id, &idstr))
+        return false;
+
+    ReturnStatus status;
+    if (!CallDelete(objId, idstr, &status, bp))
+        return ipcfail(cx);
+
+    return ok(cx, status);
 }
 
 bool
@@ -364,13 +371,6 @@ JavaScriptParent::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject re
         return false;
 
     return toValue(cx, result, vp);
-}
-
-bool
-CPOWProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                          MutableHandleValue vp)
-{
-    MOZ_CRASH("unimplemented");
 }
 
 bool
@@ -522,6 +522,29 @@ JavaScriptParent::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
     }
 
     *idp = idOf(obj);
+    return true;
+}
+
+bool
+JavaScriptParent::getPropertyNames(JSContext *cx, HandleObject proxy, uint32_t flags, AutoIdVector &props)
+{
+    ObjectId objId = idOf(proxy);
+
+    ReturnStatus status;
+    InfallibleTArray<nsString> names;
+    if (!CallGetPropertyNames(objId, flags, &status, &names))
+        return ipcfail(cx);
+    if (!ok(cx, status))
+        return false;
+
+    for (size_t i = 0; i < names.Length(); i++) {
+        RootedId name(cx);
+        if (!convertGeckoStringToId(cx, names[i], &name))
+            return false;
+        if (!props.append(name))
+            return false;
+    }
+
     return true;
 }
 

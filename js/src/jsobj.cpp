@@ -553,7 +553,7 @@ Reject(JSContext *cx, HandleId id, unsigned errorNumber, bool throwError, bool *
 //
 // DefinePropertyOnObject has its own implementation of these checks.
 //
-bool
+JS_FRIEND_API(bool)
 js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
                         PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
