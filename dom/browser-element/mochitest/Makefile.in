@@ -16,6 +16,8 @@ include $(DEPTH)/config/autoconf.mk
 # process.  Default is OOP.
 
 MOCHITEST_FILES = \
+                $(topsrcdir)/browser/base/content/test/audio.ogg \
+                $(topsrcdir)/content/media/test/short-video.ogv \
 		file_empty_script.js \
 		file_empty.html \
 		file_focus.html \
