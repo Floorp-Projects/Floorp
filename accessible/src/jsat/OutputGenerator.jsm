@@ -595,10 +595,10 @@ this.UtteranceGenerator = {
   _getListUtterance: function _getListUtterance(aAccessible, aRoleStr, aFlags, aItemCount) {
     let desc = [];
     let roleStr = this._getLocalizedRole(aRoleStr);
-    if (roleStr)
+    if (roleStr) {
       desc.push(roleStr);
-    desc.push
-      (gStringBundle.formatStringFromName('listItemCount', [aItemCount], 1));
+    }
+    desc.push(this._getPluralFormString('listItemCount', aItemCount));
     let utterance = [desc.join(' ')];
 
     this._addName(utterance, aAccessible, aFlags);
