@@ -16,6 +16,6 @@ function test() {
     [" example/a ", {ctrlKey: true}, "http://www.example.com/a"]
   ];
   for (let [input, modifiers, result] of testcases) {
-    is(BrowserUI._canonizeURL(input, modifiers), result, input + " -> " + result);
+    is(BrowserUI._edit._canonizeURL(input, modifiers), result, input + " -> " + result);
   }
 }
