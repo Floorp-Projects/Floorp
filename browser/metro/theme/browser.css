@@ -711,6 +711,11 @@ setting[type="radio"] > vbox {
   max-height: 25px;
 }
 
+#clearprivacythrobber {
+  max-width: 25px;
+  max-height: 25px;
+}
+
 #clearprivacythrobber .progressContainer {
   width: 25px;
   height: 25px;
