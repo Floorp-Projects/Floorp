@@ -122,7 +122,7 @@ nsWeakFrame nsEventStateManager::sLastDragOverFrame = nullptr;
 nsIntPoint nsEventStateManager::sLastRefPoint = kInvalidRefPoint;
 nsIntPoint nsEventStateManager::sLastScreenPoint = nsIntPoint(0,0);
 nsIntPoint nsEventStateManager::sSynthCenteringPoint = kInvalidRefPoint;
-nsIntPoint nsEventStateManager::sLastClientPoint = nsIntPoint(0,0);
+CSSIntPoint nsEventStateManager::sLastClientPoint = CSSIntPoint(0, 0);
 bool nsEventStateManager::sIsPointerLocked = false;
 // Reference to the pointer locked element.
 nsWeakPtr nsEventStateManager::sPointerLockedElement;

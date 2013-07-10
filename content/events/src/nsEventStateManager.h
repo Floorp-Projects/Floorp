@@ -23,6 +23,7 @@
 #include "nsEventStates.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIFrame.h"
+#include "Units.h"
 
 class nsIPresShell;
 class nsIContent;
@@ -212,7 +213,7 @@ public:
   // Holds the point in client coords of the last mouse event. Used by
   // nsDOMEvent::GetClientCoords() to make mouse events' client coords appear
   // frozen at the last mouse position while the pointer is locked.
-  static nsIntPoint sLastClientPoint;
+  static mozilla::CSSIntPoint sLastClientPoint;
 
   static bool sIsPointerLocked;
   static nsWeakPtr sPointerLockedElement;
