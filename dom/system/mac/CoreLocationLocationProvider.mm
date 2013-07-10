@@ -12,10 +12,10 @@
 #include "CoreLocationLocationProvider.h"
 #include "prtime.h"
 
-#include <Corelocation/CLError.h>
-#include <Corelocation/CLLocation.h>
-#include <Corelocation/CLLocationManager.h>
-#include <Corelocation/CLLocationManagerDelegate.h>
+#include <CoreLocation/CLError.h>
+#include <CoreLocation/CLLocation.h>
+#include <CoreLocation/CLLocationManager.h>
+#include <CoreLocation/CLLocationManagerDelegate.h>
 
 using namespace mozilla;
 
