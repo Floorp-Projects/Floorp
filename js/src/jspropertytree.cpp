@@ -32,11 +32,11 @@ ShapeHasher::match(const Key k, const Lookup &l)
 }
 
 Shape *
-PropertyTree::newShape(JSContext *cx)
+PropertyTree::newShape(ExclusiveContext *cx)
 {
     Shape *shape = js_NewGCShape(cx);
     if (!shape)
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfMemory(cx);
     return shape;
 }
 
@@ -55,13 +55,13 @@ HashChildren(Shape *kid1, Shape *kid2)
 }
 
 bool
-PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
+PropertyTree::insertChild(ExclusiveContext *cx, Shape *parent, Shape *child)
 {
     JS_ASSERT(!parent->inDictionary());
     JS_ASSERT(!child->parent);
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(cx->compartment() == compartment);
     JS_ASSERT(child->compartment() == parent->compartment());
+    JS_ASSERT(cx->isInsideCurrentCompartment(this));
 
     KidsPointer *kidp = &parent->kids;
 
@@ -78,7 +78,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
 
         KidsHash *hash = HashChildren(shape, child);
         if (!hash) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportOutOfMemory(cx);
             return false;
         }
         kidp->setHash(hash);
@@ -87,7 +87,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     }
 
     if (!kidp->toHash()->putNew(child, child)) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfMemory(cx);
         return false;
     }
 
@@ -127,7 +127,7 @@ Shape::removeChild(Shape *child)
 }
 
 Shape *
-PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
+PropertyTree::getChild(ExclusiveContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
 {
     {
         Shape *shape = NULL;

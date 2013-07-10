@@ -25,6 +25,7 @@
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 using namespace js::gc;

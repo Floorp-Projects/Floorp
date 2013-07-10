@@ -44,10 +44,13 @@
 struct DtoaState;
 
 extern void
-js_ReportOutOfMemory(JSContext *cx);
+js_ReportOutOfMemory(js::ThreadSafeContext *cx);
 
 extern void
-js_ReportAllocationOverflow(JSContext *cx);
+js_ReportAllocationOverflow(js::ThreadSafeContext *cx);
+
+extern void
+js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
 namespace js {
 
@@ -1162,9 +1165,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     typedef js::Vector<ExtraTracer, 4, js::SystemAllocPolicy> ExtraTracerVector;
     ExtraTracerVector   gcBlackRootTracers;
     ExtraTracer         gcGrayRootTracer;
-
-    /* Stack of thread-stack-allocated GC roots. */
-    js::AutoGCRooter   *autoGCRooters;
 
     /*
      * The GC can only safely decommit memory when the page size of the

@@ -446,7 +446,7 @@ SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
             return false;
 
         JSAutoByteString bytes;
-        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        const char *method_name = AtomToPrintableString(cx, func.name, &bytes);
         if (!method_name)
             return false;
 

@@ -57,7 +57,7 @@ class StaticScopeIter
     bool onNamedLambda;
 
   public:
-    explicit StaticScopeIter(JSContext *cx, JSObject *obj);
+    explicit StaticScopeIter(ExclusiveContext *cx, JSObject *obj);
 
     bool done() const;
     void operator++(int);
@@ -345,7 +345,7 @@ class BlockObject : public NestedScopeObject
 class StaticBlockObject : public BlockObject
 {
   public:
-    static StaticBlockObject *create(JSContext *cx);
+    static StaticBlockObject *create(ExclusiveContext *cx);
 
     /* See StaticScopeIter comment. */
     JSObject *enclosingStaticScope() const {
@@ -408,8 +408,8 @@ class StaticBlockObject : public BlockObject
     void initPrevBlockChainFromParser(StaticBlockObject *prev);
     void resetPrevBlockChainFromParser();
 
-    static Shape *addVar(JSContext *cx, Handle<StaticBlockObject*> block, HandleId id,
-                           int index, bool *redeclared);
+    static Shape *addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
+                         int index, bool *redeclared);
 };
 
 class ClonedBlockObject : public BlockObject

@@ -31,7 +31,7 @@ RegExpObject::shared(RegExpGuard *g) const
 }
 
 inline bool
-RegExpObject::getShared(JSContext *cx, RegExpGuard *g)
+RegExpObject::getShared(ExclusiveContext *cx, RegExpGuard *g)
 {
     if (RegExpShared *shared = maybeShared()) {
         g->init(*shared);
@@ -41,7 +41,7 @@ RegExpObject::getShared(JSContext *cx, RegExpGuard *g)
 }
 
 inline void
-RegExpObject::setShared(JSContext *cx, RegExpShared &shared)
+RegExpObject::setShared(ExclusiveContext *cx, RegExpShared &shared)
 {
     shared.prepareForUse(cx);
     JSObject::setPrivate(&shared);
@@ -113,17 +113,17 @@ RegExpToShared(JSContext *cx, HandleObject obj, RegExpGuard *g)
 }
 
 inline void
-RegExpShared::prepareForUse(JSContext *cx)
+RegExpShared::prepareForUse(ExclusiveContext *cx)
 {
-    gcNumberWhenUsed = cx->runtime()->gcNumber;
+    gcNumberWhenUsed = cx->gcNumber();
 }
 
-RegExpGuard::RegExpGuard(JSContext *cx)
+RegExpGuard::RegExpGuard(ExclusiveContext *cx)
   : re_(NULL), source_(cx)
 {
 }
 
-RegExpGuard::RegExpGuard(JSContext *cx, RegExpShared &re)
+RegExpGuard::RegExpGuard(ExclusiveContext *cx, RegExpShared &re)
   : re_(&re), source_(cx, re.source)
 {
     re_->incRef();

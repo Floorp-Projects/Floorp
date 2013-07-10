@@ -51,15 +51,13 @@ class UpvarCookie
     uint16_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
 
     // This fails and issues an error message if newLevel is too large.
-    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot) {
+    bool set(TokenStream &ts, unsigned newLevel, uint16_t newSlot) {
         // This is an unsigned-to-uint16_t conversion, test for too-high
         // values.  In practice, recursion in Parser and/or BytecodeEmitter
         // will blow the stack if we nest functions more than a few hundred
         // deep, so this will never trigger.  Oh well.
-        if (newLevel >= FREE_LEVEL) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
-            return false;
-        }
+        if (newLevel >= FREE_LEVEL)
+            return ts.reportError(JSMSG_TOO_DEEP);
         level_ = newLevel;
         slot_ = newSlot;
         return true;
@@ -803,7 +801,7 @@ class ParseNode
 #endif
     ;
 
-    bool getConstantValue(JSContext *cx, bool strictChecks, MutableHandleValue vp);
+    bool getConstantValue(ExclusiveContext *cx, bool strictChecks, MutableHandleValue vp);
     inline bool isConstant();
 
     template <class NodeType>
@@ -1357,7 +1355,9 @@ struct Definition : public ParseNode
 class ParseNodeAllocator
 {
   public:
-    explicit ParseNodeAllocator(JSContext *cx) : cx(cx), freelist(NULL) {}
+    explicit ParseNodeAllocator(ExclusiveContext *cx, LifoAlloc &alloc)
+      : cx(cx), alloc(alloc), freelist(NULL)
+    {}
 
     void *allocNode();
     void freeNode(ParseNode *pn);
@@ -1365,7 +1365,8 @@ class ParseNodeAllocator
     void prepareNodeForMutation(ParseNode *pn);
 
   private:
-    JSContext *cx;
+    ExclusiveContext *cx;
+    LifoAlloc &alloc;
     ParseNode *freelist;
 };
 

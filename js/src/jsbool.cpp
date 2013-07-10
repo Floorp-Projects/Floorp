@@ -178,9 +178,9 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
 }
 
 JSString *
-js_BooleanToString(JSContext *cx, JSBool b)
+js_BooleanToString(ExclusiveContext *cx, JSBool b)
 {
-    return b ? cx->runtime()->atomState.true_ : cx->runtime()->atomState.false_;
+    return b ? cx->names().true_ : cx->names().false_;
 }
 
 JS_PUBLIC_API(bool)

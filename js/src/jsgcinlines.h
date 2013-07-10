@@ -393,7 +393,7 @@ TryNewNurseryGCThing(ThreadSafeContext *tcx, size_t thingSize)
  */
 template <typename T, AllowGC allowGC>
 inline T *
-NewGCThing(js::ThreadSafeContext *tcx, AllocKind kind, size_t thingSize, InitialHeap heap)
+NewGCThing(ThreadSafeContext *tcx, AllocKind kind, size_t thingSize, InitialHeap heap)
 {
     JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
 
@@ -418,7 +418,7 @@ NewGCThing(js::ThreadSafeContext *tcx, AllocKind kind, size_t thingSize, Initial
             MaybeCheckStackRoots(cx);
     }
 
-#if defined(JSGC_GENERATIONAL)
+#ifdef JSGC_GENERATIONAL
     if (tcx->hasNursery() && ShouldNurseryAllocate(tcx->nursery(), kind, heap)) {
         T *t = TryNewNurseryGCThing<T, allowGC>(tcx, thingSize);
         if (t)

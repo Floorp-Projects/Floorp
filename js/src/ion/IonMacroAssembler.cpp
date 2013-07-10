@@ -802,6 +802,12 @@ MacroAssembler::performOsr()
     ret();
 }
 
+static void
+ReportOverRecursed(JSContext *cx)
+{
+    js_ReportOverRecursed(cx);
+}
+
 void
 MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
@@ -823,7 +829,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         loadJSContext(ReturnReg);
         setupUnalignedABICall(1, scratch);
         passABIArg(ReturnReg);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_ReportOverRecursed));
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReportOverRecursed));
         jump(&exception);
     }
 

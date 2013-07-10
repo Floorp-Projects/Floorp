@@ -256,8 +256,8 @@ do {                                                                            
 } while(0)
 
 static ParallelResult
-ParCompareStrings(ForkJoinSlice *slice, HandleString str1,
-                  HandleString str2, int32_t *res)
+ParCompareStrings(ForkJoinSlice *slice, JSString *str1,
+                  JSString *str2, int32_t *res)
 {
     if (!str1->isLinear())
         return TP_RETRY_SEQUENTIALLY;
@@ -283,9 +283,7 @@ ParCompareMaybeStrings(ForkJoinSlice *slice,
         return TP_RETRY_SEQUENTIALLY;
     if (!v2.isString())
         return TP_RETRY_SEQUENTIALLY;
-    RootedString str1(slice->perThreadData, v1.toString());
-    RootedString str2(slice->perThreadData, v2.toString());
-    return ParCompareStrings(slice, str1, str2, res);
+    return ParCompareStrings(slice, v1.toString(), v2.toString(), res);
 }
 
 template<bool Equal>
