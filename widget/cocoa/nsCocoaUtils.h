@@ -315,6 +315,18 @@ class nsCocoaUtils
    */
   static void GetCommandsFromKeyEvent(NSEvent* aEvent,
                                       nsTArray<KeyBindingsCommand>& aCommands);
+
+  /**
+   * Converts the string name of a Gecko key (like "VK_HOME") to the
+   * corresponding Cocoa Unicode character.
+   */
+  static uint32_t ConvertGeckoNameToMacCharCode(const nsAString& aKeyCodeName);
+
+  /**
+   * Converts a Gecko key code (like NS_VK_HOME) to the corresponding Cocoa
+   * Unicode character.
+   */
+  static uint32_t ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode);
 };
 
 #endif // nsCocoaUtils_h_
