@@ -43,9 +43,7 @@
   padding-bottom: 1px;
 }
 
-#nav-bar,
-#nav-bar[collapsed=true] + toolbar,
-#nav-bar[collapsed=true] + #customToolbars + #PersonalToolbar {
+#nav-bar {
   background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
   margin-top: -1px; /* Move up 1px into the TabsToolbar */
