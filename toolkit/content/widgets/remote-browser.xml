@@ -12,8 +12,24 @@
 
     <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener, nsIMessageListener">
 
+      <field name="_securityUI">null</field>
+
       <property name="securityUI"
-                onget="return null;"/>
+                readonly="true">
+        <getter><![CDATA[
+          if (!this._securityUI) {
+            let jsm = "resource://gre/modules/RemoteSecurityUI.jsm";
+            let RemoteSecurityUI = Components.utils.import(jsm, {}).RemoteSecurityUI;
+            this._securityUI = new RemoteSecurityUI();
+          }
+
+          // We want to double-wrap the JS implemented interface, so that QI and instanceof works.
+          var ptr = Cc["@mozilla.org/supports-interface-pointer;1"].
+                        createInstance(Ci.nsISupportsInterfacePointer);
+          ptr.data = this._securityUI;
+          return ptr.data.QueryInterface(Ci.nsISecureBrowserUI);
+        ]]></getter>
+      </property>
 
       <property name="webNavigation"
                 onget="return this._remoteWebNavigation;"
@@ -22,16 +38,16 @@
       <field name="_remoteWebProgress">null</field>
 
       <property name="webProgress" readonly="true">
-	<getter>
-	  <![CDATA[
+      	<getter>
+      	  <![CDATA[
             if (!this._remoteWebProgress) {
-              let RemoteWebProgress = Components.utils.import("resource://gre/modules/RemoteWebProgress.jsm",
- {}).RemoteWebProgress;
+              let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
+              let RemoteWebProgress = Components.utils.import(jsm, {}).RemoteWebProgress;
               this._remoteWebProgress = new RemoteWebProgress(this);
             }
             return this._remoteWebProgress;
-	  ]]>
-	</getter>
+      	  ]]>
+      	</getter>
       </property>
 
       <field name="_contentTitle">null</field>
