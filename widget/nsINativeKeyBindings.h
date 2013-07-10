@@ -17,13 +17,13 @@
 
 struct nsNativeKeyEvent
 {
-  nsEvent *nativeEvent; // see bug 406407 to see how this is used
-  uint32_t keyCode;
-  uint32_t charCode;
-  bool     altKey;
-  bool     ctrlKey;
-  bool     shiftKey;
-  bool     metaKey;
+  nsKeyEvent* mGeckoEvent; // see bug 406407 to see how this is used
+  uint32_t    keyCode;
+  uint32_t    charCode;
+  bool        altKey;
+  bool        ctrlKey;
+  bool        shiftKey;
+  bool        metaKey;
 };
 
 class nsINativeKeyBindings : public nsISupports
