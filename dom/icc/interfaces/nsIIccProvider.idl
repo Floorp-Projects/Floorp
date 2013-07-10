@@ -21,7 +21,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(77487bf0-c2be-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(7131dfbe-9a2c-434d-b6b8-3eebf491ce1a)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -57,6 +57,7 @@ interface nsIIccProvider : nsISupports
   nsIDOMDOMRequest getCardLockState(in nsIDOMWindow window, in DOMString lockType);
   nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
   nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
+  nsIDOMDOMRequest getCardLockRetryCount(in nsIDOMWindow window, in DOMString lockType);
 
   /**
    * Phonebook interfaces.

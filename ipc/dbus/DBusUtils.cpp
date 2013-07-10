@@ -627,7 +627,6 @@ int dbus_returns_int32(DBusMessage *reply)
     LOG_AND_FREE_DBUS_ERROR_WITH_MSG(&err, reply);
   }
 
-  dbus_message_unref(reply);
   return ret;
 }
 
@@ -645,6 +644,16 @@ int dbus_returns_uint32(DBusMessage *reply)
 
   dbus_message_unref(reply);
   return ret;
+}
+
+void DBusReplyHandler::Callback(DBusMessage* aReply, void* aData)
+{
+  MOZ_ASSERT(aData);
+
+  nsRefPtr<DBusReplyHandler> handler =
+    already_AddRefed<DBusReplyHandler>(static_cast<DBusReplyHandler*>(aData));
+
+  handler->Handle(aReply);
 }
 
 }

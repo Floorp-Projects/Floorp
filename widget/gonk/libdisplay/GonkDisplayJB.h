@@ -19,6 +19,7 @@
 #include "GonkDisplay.h"
 #include "FramebufferSurface.h"
 #include "hardware/hwcomposer.h"
+#include "hardware/power.h"
 #include "utils/RefBase.h"
 
 namespace mozilla {
@@ -49,6 +50,7 @@ private:
     hw_module_t const*        mFBModule;
     hwc_composer_device_1_t*  mHwc;
     framebuffer_device_t*     mFBDevice;
+    power_module_t*           mPowerModule;
     android::sp<android::FramebufferSurface> mFBSurface;
     android::sp<ANativeWindow> mSTClient;
     android::sp<android::IGraphicBufferAlloc> mAlloc;
