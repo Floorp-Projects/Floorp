@@ -35,13 +35,24 @@
       'webrtc_root%': '<(webrtc_root)',
 
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
+      'include_g711%': 1,
+      'include_g722%': 1,
+      'include_ilbc%': 1,
       'include_opus%': 1,
+      'include_isac%': 1,
+      'include_pcm16b%': 1,
     },
     'build_with_chromium%': '<(build_with_chromium)',
     'build_with_libjingle%': '<(build_with_libjingle)',
     'webrtc_root%': '<(webrtc_root)',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
+
+    'include_g711%': '<(include_g711)',
+    'include_g722%': '<(include_g722)',
+    'include_ilbc%': '<(include_ilbc)',
     'include_opus%': '<(include_opus)',
+    'include_isac%': '<(include_isac)',
+    'include_pcm16b%': '<(include_pcm16b)',
 
     # The Chromium common.gypi we use treats all gyp files without
     # chromium_code==1 as third party code. This disables many of the
@@ -120,6 +131,21 @@
         # and Java Implementation
         'enable_android_opensl%': 0,
       }],
+      ['OS=="linux"', {
+        'include_alsa_audio%': 1,
+      }, {
+        'include_alsa_audio%': 0,
+      }],
+      ['OS=="solaris" or os_bsd==1', {
+        'include_pulse_audio%': 1,
+      }, {
+        'include_pulse_audio%': 0,
+      }],
+      ['OS=="linux" or OS=="solaris" or os_bsd==1', {
+        'include_v4l2_video_capture%': 1,
+      }, {
+        'include_v4l2_video_capture%': 0,
+      }],
       ['OS=="ios"', {
         'enable_video%': 0,
         'enable_protobuf%': 0,
@@ -150,18 +176,17 @@
     'defines': [
       # TODO(leozwang): Run this as a gclient hook rather than at build-time:
       # http://code.google.com/p/webrtc/issues/detail?id=687
-      'WEBRTC_SVNREVISION="Unavailable(issue687)"',
+      'WEBRTC_SVNREVISION="\\\"Unavailable_issue687\\\""',
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'defines' : [
+          'WEBRTC_GONK',
+        ],
+      }],
       ['enable_tracing==1', {
         'defines': ['WEBRTC_LOGGING',],
-      }],
-      ['build_with_mozilla==1', {
-        'defines': [
-          # Changes settings for Mozilla build.
-          'WEBRTC_MOZILLA_BUILD',
-         ],
       }],
       ['build_with_chromium==1', {
         'defines': [
@@ -185,6 +210,18 @@
           }],
         ],
       }],
+      ['build_with_mozilla==1', {
+        'defines': [
+          # Changes settings for Mozilla build.
+          'WEBRTC_MOZILLA_BUILD',
+        ],
+      }],
+      ['build_with_mozilla==1', {
+        'defines': [
+          # Changes settings for Mozilla build.
+          'WEBRTC_MOZILLA_BUILD',
+        ],
+      }],
       ['target_arch=="arm"', {
         'defines': [
           'WEBRTC_ARCH_ARM',
@@ -194,14 +231,27 @@
             'defines': ['WEBRTC_ARCH_ARM_V7',],
             'conditions': [
               ['arm_neon==1', {
-                'defines': ['WEBRTC_ARCH_ARM_NEON',],
-              }, {
-                'defines': ['WEBRTC_DETECT_ARM_NEON',],
+                'defines': ['WEBRTC_ARCH_ARM_NEON',
+                            'WEBRTC_BUILD_NEON_LIBS',
+                            'WEBRTC_DETECT_ARM_NEON'],
               }],
             ],
           }],
         ],
       }],
+      ['os_bsd==1', {
+        'defines': [
+          'WEBRTC_BSD',
+          'WEBRTC_THREAD_RR',
+        ],
+      }],
+      ['OS=="dragonfly" or OS=="netbsd"', {
+        'defines': [
+          # doesn't support pthread_condattr_setclock
+          'WEBRTC_CLOCK_TYPE_REALTIME',
+        ],
+      }],
+      # Mozilla: if we support Mozilla on MIPS, we'll need to mod the cflags entries here
       ['target_arch=="mipsel"', {
         'defines': [
           'MIPS32_LE',
@@ -264,6 +314,13 @@
         ],
       }],
       ['OS=="linux"', {
+        'conditions': [
+          ['have_clock_monotonic==1', {
+            'defines': [
+              'WEBRTC_CLOCK_TYPE_REALTIME',
+            ],
+          }],
+        ],
         'defines': [
           'WEBRTC_LINUX',
           'WEBRTC_THREAD_RR',
@@ -282,6 +339,7 @@
       ['OS=="win"', {
         'defines': [
           'WEBRTC_WIN',
+	  'WEBRTC_EXPORT',
         ],
         # TODO(andrew): enable all warnings when possible.
         # TODO(phoglund): get rid of 4373 supression when

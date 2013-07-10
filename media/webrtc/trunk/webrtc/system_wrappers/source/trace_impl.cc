@@ -448,13 +448,13 @@ void TraceImpl::AddMessageToList(
   length_[active_queue_][idx] = length;
   memcpy(message_queue_[active_queue_][idx], trace_message, length);
 
-  if (next_free_idx_[active_queue_] == WEBRTC_TRACE_MAX_QUEUE - 1) {
+  if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE - 1) {
     // Logging more messages than can be worked off. Log a warning.
     const char warning_msg[] = "WARNING MISSING TRACE MESSAGES\n";
-    level_[active_queue_][next_free_idx_[active_queue_]] = kTraceWarning;
-    length_[active_queue_][next_free_idx_[active_queue_]] = strlen(warning_msg);
-    memcpy(message_queue_[active_queue_][next_free_idx_[active_queue_]],
-           warning_msg, strlen(warning_msg));
+    level_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = kTraceWarning;
+    length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = strlen(warning_msg);
+    memcpy(message_queue_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1],
+           warning_msg, length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1]);
     next_free_idx_[active_queue_]++;
   }
 }
