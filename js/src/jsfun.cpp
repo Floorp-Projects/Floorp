@@ -1686,6 +1686,23 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
     return fun;
 }
 
+bool
+js::IsConstructor(const Value &v)
+{
+    // Step 2.
+    if (!v.isObject())
+        return false;
+
+    // Step 3-4, a bit complex for us, since we have several flavors of
+    // [[Construct]] internal method.
+    JSObject &obj = v.toObject();
+    if (obj.is<JSFunction>()) {
+        JSFunction &fun = obj.as<JSFunction>();
+        return fun.isNativeConstructor() || fun.isInterpretedConstructor();
+    }
+    return obj.getClass()->construct != NULL;
+}
+
 void
 js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
 {
