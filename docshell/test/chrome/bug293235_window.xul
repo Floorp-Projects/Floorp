@@ -72,11 +72,11 @@
         uri: getHttpUrl("bug293235.html"),
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       // Before we go any further, make sure our link has been notified.
       waitForTrue(notified, nextTest);
-      yield;
+      yield undefined;
 
       // Now that we've been notified, we can check our link color.
       // Since we can't use getComputedStyle() for this because
@@ -124,12 +124,12 @@
           maybeRunNextTest();
         }
       });
-      yield;
+      yield undefined;
 
       // And the nodes get notified after the "link-visited" topic, so
       // we need to execute soon...
       SimpleTest.executeSoon(nextTest);
-      yield;
+      yield undefined;
 
       // Go back, verify the original page was loaded from the bfcache,
       // and verify that the link is now purple, per the
@@ -142,7 +142,7 @@
                             title: "Bug 293235 page1" } ],
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       // Now we can test the link color.
       ok(snapshotsEqual(refVisited, snapshotWindow(TestWindow.getWindow())),
@@ -151,7 +151,7 @@
       // Tell the framework the test is finished.  Include the final 'yield'
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
 
   ]]></script>

@@ -47,28 +47,28 @@ function runTest() {
   popup.hashchangeCallback = onChildHashchange;
   popup.onload = onChildLoad;
   dump('Waiting for initial load.\n');
-  yield;
+  yield undefined;
 
   // Without this wait, the change to location.hash below doesn't create a
   // SHEntry or enable the back button.
   shortWait();
   dump('Got initial load.  Spinning event loop.\n');
-  yield;
+  yield undefined;
 
   popup.location.hash = "#1";
   dump('Waiting for hashchange.\n');
-  yield;
+  yield undefined;
 
   popup.history.back();
   dump('Waiting for second hashchange.\n');
-  yield; // wait for hashchange
+  yield undefined; // wait for hashchange
 
   popup.document.title = "Changed";
 
   // Wait for listeners to be notified of the title change.
   shortWait();
   dump('Got second hashchange.  Spinning event loop.\n');
-  yield;
+  yield undefined;
 
   var sh = SpecialPowers.wrap(popup)
                         .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
@@ -83,7 +83,7 @@ function runTest() {
 
   SimpleTest.executeSoon(SimpleTest.finish);
   dump('Final yield.\n');
-  yield;
+  yield undefined;
 }
 
 window.addEventListener('load', function() {

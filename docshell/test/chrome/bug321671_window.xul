@@ -70,7 +70,7 @@
                                title: "bug321671 page" + (i + 1) } ],
            onNavComplete: nextTest 
           } );
-        yield;
+        yield undefined;
 
         is(TestWindow.getWindow().scrollY, 0, 
           "Page initially has non-zero scrollY position");
@@ -98,7 +98,7 @@
                               persisted: i > 1 } ],
           onNavComplete: nextTest
         } );
-        yield;
+        yield undefined;
         
         is(TestWindow.getWindow().scrollY, scrollPositions[i-1], 
           "Scroll position not restored while going back!");
@@ -121,7 +121,7 @@
                               title: "bug321671 page" + (i + 1) } ],
           onNavComplete: nextTest
         } );
-        yield;
+        yield undefined;
         
         is(TestWindow.getWindow().scrollY, scrollPositions[i],
           "Scroll position not restored while going forward!");
@@ -130,7 +130,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>

@@ -91,24 +91,24 @@ function test() {
                                 'Popup 1' +
                                 '</body></html>');
   waitForLoad(1);
-  yield;
+  yield undefined;
 
   popup.history.pushState('', '', '');
 
   popup.location = 'data:text/html,<html><body onload="opener.childLoad(2)">Popup 2</body></html>';
   waitForLoad(2);
-  yield;
+  yield undefined;
 
   // Now go back 2.  The first page should be retrieved from bfcache.
   popup.history.go(-2);
   waitForShow(1);
-  yield;
+  yield undefined;
 
   popup.close();
   SimpleTest.finish();
   
   // Yield once more so we don't throw a StopIteration exception.
-  yield;
+  yield undefined;
 }
 
 var gGen = test();

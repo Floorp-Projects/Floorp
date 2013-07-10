@@ -35,7 +35,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>
