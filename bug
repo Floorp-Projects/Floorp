@@ -1,2 +1,0 @@
-Input element with type=range does not fire "change" event when it gains focus
-(ie, when clicked)
