@@ -15,14 +15,14 @@
 
 #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 108, 18, 90) center no-repeat;
+                              0, 198, 18, 180) center no-repeat;
   min-width: 18px;
   min-height: 18px;
 }
 
 #downloads-indicator-icon:-moz-lwtheme-brighttext {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"),
-                              0, 108, 18, 90) center no-repeat;
+                              0, 198, 18, 180) center no-repeat;
 }
 
 #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
@@ -34,7 +34,7 @@
 
 #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 108, 18, 90) center no-repeat;
+                              0, 198, 18, 180) center no-repeat;
   background-size: 12px;
 }
 
