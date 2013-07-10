@@ -4850,7 +4850,7 @@ nsGlobalWindow::GetScrollXY(int32_t* aScrollX, int32_t* aScrollY,
     return GetScrollXY(aScrollX, aScrollY, true);
   }
 
-  nsIntPoint scrollPosCSSPixels = sf->GetScrollPositionCSSPixels();
+  CSSIntPoint scrollPosCSSPixels = sf->GetScrollPositionCSSPixels();
   if (aScrollX) {
     *aScrollX = scrollPosCSSPixels.x;
   }
@@ -6103,8 +6103,7 @@ nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 
   if (sf) {
     CSSIntPoint scrollPos =
-      CSSIntPoint::FromAppUnitsRounded(sf->GetScrollPosition()) +
-      CSSIntPoint(aXScrollDif, aYScrollDif);
+      sf->GetScrollPositionCSSPixels() + CSSIntPoint(aXScrollDif, aYScrollDif);
     // It seems like it would make more sense for ScrollBy to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
     // Perhaps Web content does too.
