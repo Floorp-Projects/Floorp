@@ -206,10 +206,10 @@ struct ParamTraits<nsTouchEvent>
     WriteParam(aMsg, static_cast<const nsInputEvent&>(aParam));
     // Sigh, Touch bites us again!  We want to be able to do
     //   WriteParam(aMsg, aParam.touches);
-    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = aParam.touches;
+    const nsTArray< nsRefPtr<mozilla::dom::Touch> >& touches = aParam.touches;
     WriteParam(aMsg, touches.Length());
     for (uint32_t i = 0; i < touches.Length(); ++i) {
-      mozilla::dom::Touch* touch = static_cast<mozilla::dom::Touch*>(touches[i].get());
+      mozilla::dom::Touch* touch = touches[i];
       WriteParam(aMsg, touch->mIdentifier);
       WriteParam(aMsg, touch->mRefPoint);
       WriteParam(aMsg, touch->mRadius);
