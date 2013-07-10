@@ -38,7 +38,6 @@
 #include "nsStyleConsts.h"
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"
-#include "webvtt/parser.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gTrackElementLog;

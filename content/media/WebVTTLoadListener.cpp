@@ -58,18 +58,7 @@ WebVTTLoadListener::LoadResource()
 
   LOG("Loading text track resource.");
   webvtt_parser_t* parser = nullptr;
-  webvtt_status status = webvtt_create_parser(&OnParsedCueWebVTTCallBack,
-                                              &OnReportErrorWebVTTCallBack,
-                                              this, &parser);
-
-  if (status != WEBVTT_SUCCESS) {
-    NS_ENSURE_TRUE(status != WEBVTT_OUT_OF_MEMORY,
-                   NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(status != WEBVTT_INVALID_PARAM,
-                   NS_ERROR_INVALID_ARG);
-    return NS_ERROR_FAILURE;
-  }
-
+  // Create parser here.
   mParser.own(parser);
   NS_ENSURE_TRUE(mParser != nullptr, NS_ERROR_FAILURE);
 
@@ -89,7 +78,7 @@ WebVTTLoadListener::OnStopRequest(nsIRequest* aRequest,
                                   nsISupports* aContext,
                                   nsresult aStatus)
 {
-  webvtt_finish_parsing(mParser);
+  // Flush parser here.
   if(mElement->mReadyState != HTMLTrackElement::ERROR) {
     mElement->mReadyState = HTMLTrackElement::LOADED;
   }
@@ -141,10 +130,10 @@ WebVTTLoadListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
                                const char* aFromSegment, uint32_t aToOffset,
                                uint32_t aCount, uint32_t* aWriteCount)
 {
-  WebVTTLoadListener* loadListener = static_cast<WebVTTLoadListener*>(aClosure);
-
-  if (WEBVTT_FAILED(webvtt_parse_chunk(loadListener->mParser, aFromSegment,
-                                       aCount))) {
+  //WebVTTLoadListener* loadListener = static_cast<WebVTTLoadListener*>(aClosure);
+  // Call parser incrementally on new data.
+  if (1) {
+    LOG("WebVTT parser disabled.");
     LOG("Unable to parse chunk of WEBVTT text. Aborting.");
     *aWriteCount = 0;
     return NS_ERROR_FAILURE;
@@ -156,58 +145,9 @@ WebVTTLoadListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
 void
 WebVTTLoadListener::OnParsedCue(webvtt_cue* aCue)
 {
-  const char* text = webvtt_string_text(&aCue->body);
-
-  nsRefPtr<TextTrackCue> textTrackCue =
-    new TextTrackCue(mElement->OwnerDoc()->GetParentObject(),
-                     MS_TO_SECONDS(aCue->from), MS_TO_SECONDS(aCue->until),
-                     NS_ConvertUTF8toUTF16(text), mElement,
-                     aCue->node_head);
-
-  text = webvtt_string_text(&aCue->id);
-  textTrackCue->SetId(NS_ConvertUTF8toUTF16(text));
-
-  textTrackCue->SetSnapToLines(aCue->snap_to_lines);
-  textTrackCue->SetSize(aCue->settings.size);
-  textTrackCue->SetPosition(aCue->settings.position);
-  textTrackCue->SetLine(aCue->settings.line);
-
-  nsAutoString vertical;
-  switch (aCue->settings.vertical) {
-    case WEBVTT_VERTICAL_LR:
-      vertical = NS_LITERAL_STRING("lr");
-      break;
-    case WEBVTT_VERTICAL_RL:
-      vertical = NS_LITERAL_STRING("rl");
-      break;
-    case WEBVTT_HORIZONTAL:
-      // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=865407
-      // Will be handled in the processing model.
-      break;
-  }
-  textTrackCue->SetVertical(vertical);
-
-  TextTrackCueAlign align;
-  switch (aCue->settings.align) {
-    case WEBVTT_ALIGN_START:
-      align = TextTrackCueAlign::Start;
-      break;
-    case WEBVTT_ALIGN_MIDDLE:
-      align = TextTrackCueAlign::Middle;
-    case WEBVTT_ALIGN_END:
-      align = TextTrackCueAlign::End;
-    case WEBVTT_ALIGN_LEFT:
-      align = TextTrackCueAlign::Left;
-      break;
-    case WEBVTT_ALIGN_RIGHT:
-      align = TextTrackCueAlign::Right;
-      break;
-    default:
-      align = TextTrackCueAlign::Start;
-      break;
-  }
-  textTrackCue->SetAlign(align);
-
+  nsRefPtr<TextTrackCue> textTrackCue;
+  // Create a new textTrackCue here.
+  // Copy settings from the parsed cue here.
   mElement->mTrack->AddCue(*textTrackCue);
 }
 
@@ -223,46 +163,10 @@ WebVTTLoadListener::OnReportError(uint32_t aLine, uint32_t aCol,
   NS_ConvertUTF16toUTF8 file(wideFile);
 
   const char* error = "parser error";
-  if (aError >= 0) {
-    error = webvtt_strerror(aError);
-  }
 
   LOG("error: %s(%d:%d) - %s\n", file.get(), aLine, aCol, error);
 #endif
-
-  switch(aError) {
-    // Non-recoverable errors require us to abort parsing:
-    case WEBVTT_MALFORMED_TAG:
-      mElement->mReadyState = HTMLTrackElement::ERROR;
-      return -1;
-
-    // Errors which should result in dropped cues
-    // if the return value is negative:
-    case WEBVTT_MALFORMED_TIMESTAMP:
-      return -1;
-
-    // By default, we can safely ignore other errors
-    // or else parsing the document will be aborted regardless
-    // of the return value.
-    default:
-      return 0;
-  }
-}
-
-void WEBVTT_CALLBACK
-WebVTTLoadListener::OnParsedCueWebVTTCallBack(void* aUserData, webvtt_cue* aCue)
-{
-  WebVTTLoadListener* self = static_cast<WebVTTLoadListener*>(aUserData);
-  self->OnParsedCue(aCue);
-}
-
-int WEBVTT_CALLBACK
-WebVTTLoadListener::OnReportErrorWebVTTCallBack(void* aUserData, uint32_t aLine,
-                                                uint32_t aCol,
-                                                webvtt_error aError)
-{
-  WebVTTLoadListener* self = static_cast<WebVTTLoadListener*>(aUserData);
-  return self->OnReportError(aLine, aCol, aError);
+  return 0;
 }
 
 } // namespace dom
