@@ -185,16 +185,63 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "developer-button",
+    type: "view",
+    viewId: "PanelUI-developer",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    onCommand: function(aEvent) {
-      let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
-      if (win && win.gDevToolsBrowser) {
-        win.gDevToolsBrowser.toggleToolboxCommand(win.gBrowser);
+    onViewShowing: function(aEvent) {
+      // Populate the subview with whatever menuitems are in the developer
+      // menu. We skip menu elements, because the menu panel has no way
+      // of dealing with those right now.
+      let doc = aEvent.target.ownerDocument;
+      let win = doc.defaultView;
+
+      let items = doc.getElementById("PanelUI-developerItems");
+      let menu = doc.getElementById("menuWebDeveloperPopup");
+      let attrs = ["oncommand", "onclick", "label", "key", "disabled",
+                   "command"];
+
+      let fragment = doc.createDocumentFragment();
+      for (let node of menu.children) {
+        if (node.hidden)
+          continue;
+
+        let item;
+        if (node.localName == "menuseparator") {
+          item = doc.createElementNS(kNSXUL, "menuseparator");
+        } else if (node.localName == "menuitem") {
+          item = doc.createElementNS(kNSXUL, "toolbarbutton");
+        } else {
+          continue;
+        }
+        for (let attr of attrs) {
+          let attrVal = node.getAttribute(attr);
+          if (attrVal)
+            item.setAttribute(attr, attrVal);
+        }
+        fragment.appendChild(item);
       }
+      items.appendChild(fragment);
+
+      aEvent.target.addEventListener("command", win.PanelUI.onCommandHandler);
+    },
+    onViewHiding: function(aEvent) {
+      let doc = aEvent.target.ownerDocument;
+      let win = doc.defaultView;
+      let items = doc.getElementById("PanelUI-developerItems");
+      let parent = items.parentNode;
+      // We'll take the container out of the document before cleaning it out
+      // to avoid reflowing each time we remove something.
+      parent.removeChild(items);
+
+      while (items.firstChild) {
+        items.firstChild.remove();
+      }
+
+      parent.appendChild(items);
+      aEvent.target.removeEventListener("command",
+                                        win.PanelUI.onCommandHandler);
     }
   }, {
     id: "add-ons-button",

@@ -47,6 +47,12 @@
       <label value="&helpMenu.label;"/>
       <vbox id="PanelUI-helpItems"/>
     </panelview>
+
+    <panelview id="PanelUI-developer" flex="1">
+      <label value="&webDeveloperMenu.label;"/>
+      <vbox id="PanelUI-developerItems"/>
+    </panelview>
+
   </panelmultiview>
   <popupset id="customizationContextMenus">
     <menupopup id="customizationContextMenu">
