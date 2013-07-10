@@ -22,11 +22,11 @@
 /* sampling frequency (Hz) */
 #define FS                                      16000
 /* 1.5 times Sampling frequency */
-#define FS_1_HALF        (WebRtc_UWord32) 24000
+#define FS_1_HALF        (uint32_t) 24000
 /* Three times Sampling frequency */
-#define FS3          (WebRtc_UWord32) 48000
+#define FS3          (uint32_t) 48000
 /* Eight times Sampling frequency */
-#define FS8          (WebRtc_UWord32) 128000
+#define FS8          (uint32_t) 128000
 
 /* number of samples per frame (either 480 (30ms) or 960 (60ms)) */
 #define INITIAL_FRAMESAMPLES     960

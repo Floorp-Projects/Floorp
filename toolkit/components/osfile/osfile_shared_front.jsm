@@ -14,6 +14,8 @@ if (typeof Components != "undefined") {
 }
 (function(exports) {
 
+exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
+
 let LOG = exports.OS.Shared.LOG.bind(OS.Shared, "Shared front-end");
 
 /**
@@ -358,9 +360,8 @@ AbstractFile.writeAtomic =
 
   if (!options.flush) {
     // Just write, without any renaming trick
-    let dest;
+    let dest = OS.File.open(path, {write: true, truncate: true});
     try {
-      dest = OS.File.open(path, {write: true, truncate: true});
       return dest.write(buffer, options);
     } finally {
       dest.close();

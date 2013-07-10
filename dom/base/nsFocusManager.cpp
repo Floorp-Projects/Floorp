@@ -687,7 +687,9 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
       return NS_ERROR_FAILURE;
     }
 
-    baseWindow->SetVisibility(true);
+    if (!sTestMode) {
+      baseWindow->SetVisibility(true);
+    }
   }
 
   // inform the DOM window that it has activated, so that the active attribute

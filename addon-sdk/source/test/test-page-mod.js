@@ -143,7 +143,7 @@ exports.testPageModErrorHandling = function(test) {
   test.assertRaises(function() {
       new PageMod();
     },
-    'pattern is undefined',
+    'The `include` option must always contain atleast one rule',
     "PageMod() throws when 'include' option is not specified.");
 };
 

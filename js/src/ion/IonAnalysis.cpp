@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsanalyze.h"
+
 #include "ion/IonBuilder.h"
 #include "ion/MIRGraph.h"
 #include "ion/Ion.h"
@@ -1434,7 +1436,7 @@ ion::UnsplitEdges(LIRGraph *lir)
         // over-conservative, but we're attempting to keep everything in MIR
         // current as we modify the LIR, so only proceed if the MIR is simple.
         if (mirBlock->numPredecessors() == 0 || mirBlock->numSuccessors() != 1 ||
-            !mirBlock->resumePointsEmpty() || !mirBlock->begin()->isGoto())
+            !mirBlock->begin()->isGoto())
         {
             continue;
         }

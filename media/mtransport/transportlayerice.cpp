@@ -113,7 +113,7 @@ TransportResult TransportLayerIce::SendPacket(const unsigned char *data,
         TE_WOULDBLOCK : TE_ERROR;
   }
 
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << " SendPacket(" << len << ") succeeded");
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " SendPacket(" << len << ") succeeded");
 
   return len;
 }
@@ -142,7 +142,7 @@ void TransportLayerIce::IcePacketReceived(NrIceMediaStream *stream, int componen
   if (component_ != component)
     return;
 
-  MOZ_MTLOG(PR_LOG_DEBUG, LAYER_INFO << "PacketReceived(" << stream->name() << ","
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "PacketReceived(" << stream->name() << ","
     << component << "," << len << ")");
   SignalPacketReceived(this, data, len);
 }

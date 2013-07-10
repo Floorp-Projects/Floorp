@@ -257,6 +257,22 @@ void main()
 #endif
 @end
 
+// Single texture in BGRA format, but with a Rect texture.
+// nsChildView needs this for old Mac hardware.
+@shader sBGRARectTextureLayerFS
+#extension GL_ARB_texture_rectangle : enable
+
+$LAYER_FRAGMENT<>$
+
+uniform sampler2DRect uTexture;
+uniform vec2 uTexCoordMultiplier;
+void main()
+{
+  gl_FragColor = texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)).bgra * uLayerOpacity;
+}
+@end
+
+
 // Single texture in RGBA format, but uses external image.  External
 // image is an EGLImage which have internal formats not otherwise
 // supported by OpenGL ES. It is up to the implementation exactly what
@@ -368,6 +384,22 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
+@shader sComponentPass<mask:,Mask>1RGBFS
+
+$LAYER_FRAGMENT<mask>$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = alphas * uLayerOpacity * mask;
+}
+@end
+
 @shader sComponentPass<mask:,Mask>2FS
 
 $LAYER_FRAGMENT<mask>$
@@ -384,6 +416,21 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
+@shader sComponentPass<mask:,Mask>2RGBFS
+
+$LAYER_FRAGMENT<mask>$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity * mask;
+}
+@end
 
 
 //

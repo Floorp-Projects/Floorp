@@ -3487,9 +3487,9 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
 }
 
 static bool
-TypedArrayRequiresFloatingPoint(JSObject *obj)
+TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
 {
-    uint32_t type = TypedArrayObject::type(obj);
+    uint32_t type = tarr->type();
     return (type == TypedArrayObject::TYPE_UINT32 ||
             type == TypedArrayObject::TYPE_FLOAT32 ||
             type == TypedArrayObject::TYPE_FLOAT64);
@@ -3572,14 +3572,15 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     }
 
     // Check for TypedArray[int] => Number accesses.
-    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber() &&
+    if (obj->is<TypedArrayObject>() && rhs.isInt32() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
-        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+        Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
+        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
             return true;
 
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
-        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArrayObject::type(obj));
+        ICGetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type());
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
         if (!typedArrayStub)
             return false;
@@ -3591,7 +3592,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     // GetElem operations on non-native objects other than typed arrays cannot
     // be cached by either Baseline or Ion. Indicate this in the cache so that
     // Ion does not generate a cache for this op.
-    if (!obj->isNative() && !obj->isTypedArray())
+    if (!obj->isNative() && !obj->is<TypedArrayObject>())
         stub->noteNonNativeAccess();
 
     return true;
@@ -3959,12 +3960,9 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
     // unlikely.
     Label failureReconstructInputs;
     regs = availableGeneralRegs(0);
-    if (regs.has(objReg))
-        regs.take(objReg);
-    if (regs.has(idxReg))
-        regs.take(idxReg);
-    if (regs.has(scratchReg))
-        regs.take(scratchReg);
+    regs.takeUnchecked(objReg);
+    regs.takeUnchecked(idxReg);
+    regs.takeUnchecked(scratchReg);
     Register argData = regs.takeAny();
     Register tempReg = regs.takeAny();
 
@@ -4196,7 +4194,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         index.isInt32() && index.toInt32() >= 0 &&
         !rhs.isMagic(JS_ELEMENTS_HOLE))
     {
-        JS_ASSERT(!obj->isTypedArray());
+        JS_ASSERT(!obj->is<TypedArrayObject>());
 
         bool addingCase;
         size_t protoDepth;
@@ -4240,24 +4238,24 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         return true;
     }
 
-    if (obj->isTypedArray() && index.isInt32() && rhs.isNumber()) {
-        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+    if (obj->is<TypedArrayObject>() && index.isInt32() && rhs.isNumber()) {
+        Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
+        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
             return true;
 
-        uint32_t len = TypedArrayObject::length(obj);
+        uint32_t len = tarr->length();
         int32_t idx = index.toInt32();
         bool expectOutOfBounds = (idx < 0) || (static_cast<uint32_t>(idx) >= len);
 
-        if (!TypedArraySetElemStubExists(stub, obj, expectOutOfBounds)) {
+        if (!TypedArraySetElemStubExists(stub, tarr, expectOutOfBounds)) {
             // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
             if (expectOutOfBounds)
-                RemoveExistingTypedArraySetElemStub(cx, stub, obj);
+                RemoveExistingTypedArraySetElemStub(cx, stub, tarr);
 
             IonSpew(IonSpew_BaselineIC,
                     "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
-                    obj->lastProperty(), TypedArrayObject::type(obj),
-                    expectOutOfBounds ? "yes" : "no");
-            ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArrayObject::type(obj),
+                    tarr->lastProperty(), tarr->type(), expectOutOfBounds ? "yes" : "no");
+            ICSetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type(),
                                                     expectOutOfBounds);
             ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
             if (!typedArrayStub)
@@ -5180,7 +5178,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         stub->addNewStub(newStub);
         return true;
     }
-    if (obj->isTypedArray()) {
+    if (obj->is<TypedArrayObject>()) {
         JS_ASSERT(res.isInt32());
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(TypedArray.length) stub");
         ICGetProp_TypedArrayLength::Compiler compiler(cx);
@@ -7232,8 +7230,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
 
     regs.take(argcReg);
     regs.take(ArgumentsRectifierReg);
-    if (regs.has(BaselineTailCallReg))
-        regs.take(BaselineTailCallReg);
+    regs.takeUnchecked(BaselineTailCallReg);
 
     // Load the callee in R1.
     // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, ..., ArgNVal, +ICStackValueOffset+ ]

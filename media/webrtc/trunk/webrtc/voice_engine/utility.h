@@ -29,26 +29,26 @@ namespace voe
 class Utility
 {
 public:
-    static void MixWithSat(WebRtc_Word16 target[],
+    static void MixWithSat(int16_t target[],
                            int target_channel,
-                           const WebRtc_Word16 source[],
+                           const int16_t source[],
                            int source_channel,
                            int source_len);
 
-    static void MixSubtractWithSat(WebRtc_Word16 target[],
-                                   const WebRtc_Word16 source[],
-                                   WebRtc_UWord16 len);
+    static void MixSubtractWithSat(int16_t target[],
+                                   const int16_t source[],
+                                   uint16_t len);
 
-    static void MixAndScaleWithSat(WebRtc_Word16 target[],
-                                   const WebRtc_Word16 source[],
+    static void MixAndScaleWithSat(int16_t target[],
+                                   const int16_t source[],
                                    float scale,
-                                   WebRtc_UWord16 len);
+                                   uint16_t len);
 
-    static void Scale(WebRtc_Word16 vector[], float scale, WebRtc_UWord16 len);
+    static void Scale(int16_t vector[], float scale, uint16_t len);
 
-    static void ScaleWithSat(WebRtc_Word16 vector[],
+    static void ScaleWithSat(int16_t vector[],
                              float scale,
-                             WebRtc_UWord16 len);
+                             uint16_t len);
 };
 
 } // namespace voe

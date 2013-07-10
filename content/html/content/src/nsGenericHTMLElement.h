@@ -1461,16 +1461,6 @@ protected:
                                      mNodeInfo->Equals(nsGkAtoms::_tag))
 
 
-#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(_getter) \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||               \
-      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {             \
-    foundInterface = _getter ();                             \
-    if (!foundInterface) {                                   \
-      *aInstancePtr = nullptr;                                \
-      return NS_ERROR_OUT_OF_MEMORY;                         \
-    }                                                        \
-  } else
-
 #define NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC                                \
   NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL {                                 \
     mozilla::dom::Element::GetId(aId);                                         \

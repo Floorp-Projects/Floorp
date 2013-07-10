@@ -12,18 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 EXPORT_LIBRARY = ..
 LIBXUL_LIBRARY = 1
 
-DISABLED_CMMSRCS = \
-          AccessibleWrap.mm \
-          DocAccessibleWrap.mm \
-          mozAccessible.mm \
-          mozDocAccessible.mm \
-          mozActionElements.mm \
-          mozTextAccessible.mm \
-          mozHTMLAccessible.mm \
-          MacUtils.mm \
-          Platform.mm \
-          RootAccessibleWrap.mm \
-          $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

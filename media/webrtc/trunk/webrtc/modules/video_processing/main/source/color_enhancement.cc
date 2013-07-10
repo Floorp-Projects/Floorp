@@ -17,14 +17,14 @@ namespace webrtc {
 
 namespace VideoProcessing
 { 
-    WebRtc_Word32
+    int32_t
     ColorEnhancement(I420VideoFrame* frame)
     {
         assert(frame);
         // pointers to U and V color pixels
-        WebRtc_UWord8* ptrU;
-        WebRtc_UWord8* ptrV;
-        WebRtc_UWord8 tempChroma;
+        uint8_t* ptrU;
+        uint8_t* ptrV;
+        uint8_t tempChroma;
 
         if (frame->IsZeroSize())
         {

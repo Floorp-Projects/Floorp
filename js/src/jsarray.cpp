@@ -37,6 +37,7 @@
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
+#include "vm/Runtime-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -2695,6 +2696,75 @@ array_isArray(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+IsArrayConstructor(const Value &v)
+{
+    // This must only return true if v is *the* Array constructor for the
+    // current compartment; we rely on the fact that any other Array
+    // constructor would be represented as a wrapper.
+    return v.isObject() &&
+           v.toObject().is<JSFunction>() &&
+           v.toObject().as<JSFunction>().isNative() &&
+           v.toObject().as<JSFunction>().native() == js_Array;
+}
+
+static JSBool
+ArrayFromCallArgs(JSContext *cx, RootedTypeObject &type, CallArgs &args)
+{
+    if (!InitArrayTypes(cx, type, args.array(), args.length()))
+        return false;
+    JSObject *obj = (args.length() == 0)
+        ? NewDenseEmptyArray(cx)
+        : NewDenseCopiedArray(cx, args.length(), args.array());
+    if (!obj)
+        return false;
+    obj->setType(type);
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static JSBool
+array_of(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (IsArrayConstructor(args.thisv()) || !IsConstructor(args.thisv())) {
+        // IsArrayConstructor(this) will usually be true in practice. This is
+        // the most common path.
+        RootedTypeObject type(cx, GetTypeCallerInitObject(cx, JSProto_Array));
+        if (!type)
+            return false;
+        return ArrayFromCallArgs(cx, type, args);
+    }
+
+    // Step 4.
+    RootedObject obj(cx);
+    {
+        RootedValue v(cx);
+        Value argv[1] = {NumberValue(argc)};
+        if (!InvokeConstructor(cx, args.thisv(), 1, argv, v.address()))
+            return false;
+        obj = ToObject(cx, v);
+        if (!obj)
+            return false;
+    }
+
+    // Step 8.
+    for (unsigned k = 0; k < argc; k++) {
+        if (!JSObject::defineElement(cx, obj, k, args.handleAt(k)))
+            return false;
+    }
+
+    // Steps 9-10.
+    RootedValue v(cx, NumberValue(argc));
+    if (!JSObject::setProperty(cx, obj, obj, cx->names().length, &v, true))
+        return false;
+
+    // Step 11.
+    args.rval().setObject(*obj);
+    return true;
+}
+
 #define GENERIC JSFUN_GENERIC_NATIVE
 
 static const JSFunctionSpec array_methods[] = {
@@ -2732,7 +2802,6 @@ static const JSFunctionSpec array_methods[] = {
          {"find",               {NULL, NULL},       1,0, "ArrayFind"},
          {"findIndex",          {NULL, NULL},       1,0, "ArrayFindIndex"},
 
-    JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
 };
 
@@ -2746,6 +2815,7 @@ static const JSFunctionSpec array_static_methods[] = {
          {"some",               {NULL, NULL},       2,0, "ArrayStaticSome"},
          {"reduce",             {NULL, NULL},       2,0, "ArrayStaticReduce"},
          {"reduceRight",        {NULL, NULL},       2,0, "ArrayStaticReduceRight"},
+    JS_FN("of",                 array_of,           0,0),
     JS_FS_END
 };
 
@@ -2758,18 +2828,8 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
     if (!type)
         return false;
 
-    if (args.length() != 1 || !args[0].isNumber()) {
-        if (!InitArrayTypes(cx, type, args.array(), args.length()))
-            return false;
-        JSObject *obj = (args.length() == 0)
-                        ? NewDenseEmptyArray(cx)
-                        : NewDenseCopiedArray(cx, args.length(), args.array());
-        if (!obj)
-            return false;
-        obj->setType(type);
-        args.rval().setObject(*obj);
-        return true;
-    }
+    if (args.length() != 1 || !args[0].isNumber())
+        return ArrayFromCallArgs(cx, type, args);
 
     uint32_t length;
     if (args[0].isInt32()) {
@@ -2863,6 +2923,14 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     }
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Array, ctor, arrayProto))
+        return NULL;
+
+    JSFunction *fun = JS_DefineFunction(cx, arrayProto, "values", JS_ArrayIterator, 0, 0);
+    if (!fun)
+        return NULL;
+
+    RootedValue funval(cx, ObjectValue(*fun));
+    if (!JS_DefineProperty(cx, arrayProto, "iterator", funval, NULL, NULL, 0))
         return NULL;
 
     return arrayProto;

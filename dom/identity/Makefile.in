@@ -11,11 +11,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_EXTRA_COMPONENTS = \
-    nsDOMIdentity.js \
-    nsIDService.js \
-    Identity.manifest \
-    $(NULL)
 
 EXTRA_PP_JS_MODULES = \
     DOMIdentity.jsm \

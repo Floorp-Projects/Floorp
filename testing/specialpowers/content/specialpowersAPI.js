@@ -10,6 +10,7 @@ var Cc = Components.classes;
 var Cu = Components.utils;
 
 Cu.import("resource://specialpowers/MockFilePicker.jsm");
+Cu.import("resource://specialpowers/MockColorPicker.jsm");
 Cu.import("resource://specialpowers/MockPermissionPrompt.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -483,6 +484,10 @@ SpecialPowersAPI.prototype = {
 
   get MockFilePicker() {
     return MockFilePicker
+  },
+
+  get MockColorPicker() {
+    return MockColorPicker
   },
 
   get MockPermissionPrompt() {

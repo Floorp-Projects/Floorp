@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @font-face { font-family: Linux Libertine; src: url(../../fonts/LinLibertine_Re-4.7.5.woff); }
+    svg { font: 50px Linux Libertine; text-rendering: geometricPrecision; }
+  </style>
+  <!-- the unscaled width of the "123" is 66 -->
+  <g text-anchor="end" transform="translate(200,0)">
+    <g stroke="red">
+      <path d="M 0,40 h-66"/>
+      <path d="M 0,80 h-132"/>
+      <path d="M 0,120 h-132"/>
+      <path d="M 0,160 h-44"/>
+      <path d="M 0,200 h-44"/>
+    </g>
+
+    <g fill="aqua">
+      <text y="40">123</text>
+      <text y="80" textLength="132">123</text>
+      <text y="120" textLength="132" lengthAdjust="spacingAndGlyphs">123</text>
+      <text y="160" textLength="44">123</text>
+      <text y="200" textLength="44" lengthAdjust="spacingAndGlyphs">123</text>
+    </g>
+
+    <g fill="none" stroke="black" stroke-width="2px">
+      <text y="40">123</text>
+      <text x="-132" y="80" text-anchor="start">1</text>
+      <text x="-66" y="80" text-anchor="middle">2</text>
+      <text y="80">3</text>
+      <text transform="scale(2,1)" y="120">123</text>
+      <text x="-44" y="160" text-anchor="start">1</text>
+      <text x="-22" y="160" text-anchor="middle">2</text>
+      <text y="160">3</text>
+      <text transform="scale(0.6666666666,1)" y="200">123</text>
+    </g>
+  </g>
+</svg>

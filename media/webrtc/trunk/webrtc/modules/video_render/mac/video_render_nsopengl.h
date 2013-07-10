@@ -63,23 +63,23 @@ public:
     virtual int UpdateStretchSize(int stretchHeight, int stretchWidth);
 
     // ********** new module functions ************ //
-    virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 streamId,
-                                      I420VideoFrame& videoFrame);
+    virtual int32_t RenderFrame(const uint32_t streamId,
+                                I420VideoFrame& videoFrame);
 
     // ********** new module helper functions ***** //
     int ChangeContext(NSOpenGLContext *nsglContext);
-    WebRtc_Word32 GetChannelProperties(float& left,
-            float& top,
-            float& right,
-            float& bottom);
+    int32_t GetChannelProperties(float& left,
+                                 float& top,
+                                 float& right,
+                                 float& bottom);
 
 private:
 
     NSOpenGLContext* _nsglContext;
     int _id;
     VideoRenderNSOpenGL* _owner;
-    WebRtc_Word32 _width;
-    WebRtc_Word32 _height;
+    int32_t _width;
+    int32_t _height;
     float _startWidth;
     float _startHeight;
     float _stopWidth;
@@ -123,26 +123,26 @@ public: // methods
 
     // ********** new module functions ************ //
     int ChangeWindow(CocoaRenderView* newWindowRef);
-    WebRtc_Word32 ChangeUniqueID(WebRtc_Word32 id);
-    WebRtc_Word32 StartRender();
-    WebRtc_Word32 StopRender();
-    WebRtc_Word32 DeleteNSGLChannel(const WebRtc_UWord32 streamID);
-    WebRtc_Word32 GetChannelProperties(const WebRtc_UWord16 streamId,
-            WebRtc_UWord32& zOrder,
-            float& left,
-            float& top,
-            float& right,
-            float& bottom);
+    int32_t ChangeUniqueID(int32_t id);
+    int32_t StartRender();
+    int32_t StopRender();
+    int32_t DeleteNSGLChannel(const uint32_t streamID);
+    int32_t GetChannelProperties(const uint16_t streamId,
+                                 uint32_t& zOrder,
+                                 float& left,
+                                 float& top,
+                                 float& right,
+                                 float& bottom);
 
-    WebRtc_Word32 SetText(const WebRtc_UWord8 textId,
-            const WebRtc_UWord8* text,
-            const WebRtc_Word32 textLength,
-            const WebRtc_UWord32 textColorRef,
-            const WebRtc_UWord32 backgroundColorRef,
-            const float left,
-            const float top,
-            const float right,
-            const float bottom);
+    int32_t SetText(const uint8_t textId,
+                    const uint8_t* text,
+                    const int32_t textLength,
+                    const uint32_t textColorRef,
+                    const uint32_t backgroundColorRef,
+                    const float left,
+                    const float top,
+                    const float right,
+                    const float bottom);
 
     // ********** new module helper functions ***** //
     int configureNSOpenGLEngine();

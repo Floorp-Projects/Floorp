@@ -1,6 +1,39 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+function whenNewWindowLoaded(aOptions, aCallback) {
+  let win = OpenBrowserWindow(aOptions);
+  let gotLoad = false;
+  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == win);
+
+  function maybeRunCallback() {
+    if (gotLoad && gotActivate) {
+      win.BrowserChromeTest.runWhenReady(function() {
+        executeSoon(function() { aCallback(win); });
+      });
+    }
+  }
+
+  if (!gotActivate) {
+    win.addEventListener("activate", function onActivate() {
+      info("Got activate.");
+      win.removeEventListener("activate", onActivate, false);
+      gotActivate = true;
+      maybeRunCallback();
+    }, false);
+  } else {
+    info("Was activated.");
+  }
+
+  win.addEventListener("load", function onLoad() {
+    info("Got load");
+    win.removeEventListener("load", onLoad, false);
+    gotLoad = true;
+    maybeRunCallback();
+  }, false);
+  return win;
+}
+
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.

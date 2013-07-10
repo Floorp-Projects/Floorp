@@ -101,7 +101,6 @@ function fromIterator(iterator) {
 }
 exports.fromIterator = fromIterator;
 
-
 function find(array, predicate) {
   var index = 0;
   var count = array.length;

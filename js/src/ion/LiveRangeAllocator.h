@@ -495,6 +495,12 @@ IsNunbox(VirtualRegister *vreg)
 }
 
 static inline bool
+IsSlotsOrElements(VirtualRegister *vreg)
+{
+    return vreg->type() == LDefinition::SLOTS;
+}
+
+static inline bool
 IsTraceable(VirtualRegister *reg)
 {
     if (reg->type() == LDefinition::OBJECT)

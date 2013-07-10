@@ -147,7 +147,7 @@ public:
   void ReplaceStyleRule(mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
 
   int32_t StyleRuleCount() const;
-  nsresult GetStyleRuleAt(int32_t aIndex, mozilla::css::Rule*& aRule) const;
+  mozilla::css::Rule* GetStyleRuleAt(int32_t aIndex) const;
 
   nsresult DeleteRuleFromGroup(mozilla::css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule, mozilla::css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);

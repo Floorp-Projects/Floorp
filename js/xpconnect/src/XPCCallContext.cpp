@@ -26,12 +26,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                unsigned argc       /* = NO_ARGS               */,
                                jsval *argv         /* = nullptr               */,
                                jsval *rval         /* = nullptr               */)
-    :   mAr(cx),
+    :   mPusher(cx),
         mState(INIT_FAILED),
         mXPC(nsXPConnect::XPConnect()),
         mXPCContext(nullptr),
         mJSContext(cx),
-        mContextPopRequired(false),
         mCallerLanguage(callerLanguage),
         mFlattenedJSObject(cx),
         mWrapper(nullptr),
@@ -44,27 +43,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
     if (!mXPC)
         return;
 
-    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-    JSContext *topJSContext = stack->Peek();
-
-    if (topJSContext != mJSContext) {
-        if (!stack->Push(mJSContext)) {
-            NS_ERROR("bad!");
-            return;
-        }
-        mContextPopRequired = true;
-    }
-
     mXPCContext = XPCContext::GetXPCContext(mJSContext);
     mPrevCallerLanguage = mXPCContext->SetCallingLangType(mCallerLanguage);
 
     // hook into call context chain.
     mPrevCallContext = XPCJSRuntime::Get()->SetCallContext(this);
-
-    // We only need to addref xpconnect once so only do it if this is the first
-    // context in the chain.
-    if (!mPrevCallContext)
-        NS_ADDREF(mXPC);
 
     mState = HAVE_CONTEXT;
 
@@ -253,30 +236,12 @@ XPCCallContext::SystemIsBeingShutDown()
 
 XPCCallContext::~XPCCallContext()
 {
-    // do cleanup...
-
-    bool shouldReleaseXPC = false;
-
     if (mXPCContext) {
         mXPCContext->SetCallingLangType(mPrevCallerLanguage);
 
         DebugOnly<XPCCallContext*> old = XPCJSRuntime::Get()->SetCallContext(mPrevCallContext);
         NS_ASSERTION(old == this, "bad pop from per thread data");
-
-        shouldReleaseXPC = mPrevCallContext == nullptr;
     }
-
-    if (mContextPopRequired) {
-        XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-        NS_ASSERTION(stack, "bad!");
-        if (stack) {
-            DebugOnly<JSContext*> poppedCX = stack->Pop();
-            NS_ASSERTION(poppedCX == mJSContext, "bad pop");
-        }
-    }
-
-    if (shouldReleaseXPC && mXPC)
-        NS_RELEASE(mXPC);
 }
 
 /* readonly attribute nsISupports Callee; */

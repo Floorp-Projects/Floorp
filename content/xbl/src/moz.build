@@ -12,13 +12,16 @@ EXPORTS += [
     'nsXBLService.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'XBLChildrenElement.h',
+]
+
 CPP_SOURCES += [
     'nsBindingManager.cpp',
     'nsXBLBinding.cpp',
     'nsXBLContentSink.cpp',
     'nsXBLDocumentInfo.cpp',
     'nsXBLEventHandler.cpp',
-    'nsXBLChildrenElement.cpp',
     'nsXBLProtoImpl.cpp',
     'nsXBLProtoImplField.cpp',
     'nsXBLProtoImplMethod.cpp',
@@ -30,5 +33,6 @@ CPP_SOURCES += [
     'nsXBLSerialize.cpp',
     'nsXBLService.cpp',
     'nsXBLWindowKeyHandler.cpp',
+    'XBLChildrenElement.cpp',
 ]
 

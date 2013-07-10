@@ -12,9 +12,6 @@
 
 const TEST_HTTPS_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-bug-737873-mixedcontent.html";
 
-var origBlockDisplay;
-var origBlockActive;
-
 function test() {
   addTab("data:text/html;charset=utf8,Web Console mixed content test");
   browser.addEventListener("load", onLoad, true);
@@ -22,8 +19,6 @@ function test() {
 
 function onLoad(aEvent) {
   browser.removeEventListener("load", onLoad, true);
-  origBlockDisplay = Services.prefs.getBoolPref("security.mixed_content.block_display_content");
-  origBlockActive = Services.prefs.getBoolPref("security.mixed_content.block_active_content")
   Services.prefs.setBoolPref("security.mixed_content.block_display_content", false);
   Services.prefs.setBoolPref("security.mixed_content.block_active_content", false);
   openConsole(null, testMixedContent);
@@ -31,66 +26,50 @@ function onLoad(aEvent) {
 
 function testMixedContent(hud) {
   content.location = TEST_HTTPS_URI;
-  var aOutputNode = hud.outputNode;
 
-  waitForSuccess(
-    {
-      name: "mixed content warning displayed successfully",
-      timeout: 20000,
-      validatorFn: function() {
-        return ( aOutputNode.querySelector(".webconsole-mixed-content") );
-      },
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "example.com",
+      category: CATEGORY_NETWORK,
+      severity: SEVERITY_WARNING,
+    }],
+  }).then((results) => {
+    let msg = [...results[0].matched][0];
+    ok(msg, "page load logged");
 
-      successFn: function() {
+    let mixedContent = msg.querySelector(".webconsole-mixed-content");
+    ok(mixedContent, ".webconsole-mixed-content element");
 
-        //tests on the urlnode
-        let node = aOutputNode.querySelector(".webconsole-mixed-content");
-        ok(testSeverity(node), "Severity type is SEVERITY_WARNING.");
+    let link = msg.querySelector(".webconsole-mixed-content-link");
+    ok(link, "mixed content link element");
+    is(link.value, "[Mixed Content]", "link text is accurate");
 
-        //tests on the warningNode
-        let warningNode = aOutputNode.querySelector(".webconsole-mixed-content-link");
-        is(warningNode.value, "[Mixed Content]", "Message text is accurate." );
-        testClickOpenNewTab(warningNode);
-
-        endTest();
-      },
-
-      failureFn: endTest,
-    }
-  );
-
-}
-
-function testSeverity(node) {
-  let linkNode = node.parentNode;
-  let msgNode = linkNode.parentNode;
-  let bodyNode = msgNode.parentNode;
-  let finalNode = bodyNode.parentNode;
-
-  return finalNode.classList.contains("webconsole-msg-warn");
-}
-
-function testClickOpenNewTab(warningNode) {
-  /* Invoke the click event and check if a new tab would open to the correct page */
-  let linkOpened = false;
-  let oldOpenUILinkIn = window.openUILinkIn;
-
-  window.openUILinkIn = function(aLink) {
-    if (aLink == "https://developer.mozilla.org/en/Security/MixedContent") {
+    let oldOpenLink = hud.openLink;
+    let linkOpened = false;
+    hud.openLink = (url) => {
+      is(url, "https://developer.mozilla.org/en/Security/MixedContent",
+         "url opened");
       linkOpened = true;
-    }
-  }
+    };
 
-  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
-                             warningNode.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(link, 2, 2, {}, link.ownerDocument.defaultView);
 
-  ok(linkOpened, "Clicking the Mixed Content Warning node opens the desired page");
+    ok(linkOpened, "clicking the Mixed Content link opened a page");
 
-  window.openUILinkIn = oldOpenUILinkIn;
-}
+    hud.openLink = oldOpenLink;
 
-function endTest() {
-  Services.prefs.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
-  Services.prefs.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
-  finishTest();
+    ok(!msg.classList.contains("hud-filtered-by-type"), "message is not filtered");
+
+    hud.setFilterState("netwarn", false);
+
+    ok(msg.classList.contains("hud-filtered-by-type"), "message is filtered");
+
+    hud.setFilterState("netwarn", true);
+
+    Services.prefs.clearUserPref("security.mixed_content.block_display_content");
+    Services.prefs.clearUserPref("security.mixed_content.block_active_content");
+
+    finishTest();
+  });
 }

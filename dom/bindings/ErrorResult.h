@@ -53,6 +53,8 @@ public:
     MOZ_ASSERT(!IsTypeError(), "Don't overwite TypeError");
     MOZ_ASSERT(rv != NS_ERROR_DOM_JS_EXCEPTION, "Use ThrowJSException()");
     MOZ_ASSERT(!IsJSException(), "Don't overwrite JS exceptions");
+    MOZ_ASSERT(rv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "Use ThrowNotEnoughArgsError()");
+    MOZ_ASSERT(!IsNotEnoughArgsError(), "Don't overwrite not enough args error");
     mResult = rv;
   }
 
@@ -70,6 +72,12 @@ public:
   void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
   void ReportJSException(JSContext* cx);
   bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
+
+  void ThrowNotEnoughArgsError() { mResult = NS_ERROR_XPC_NOT_ENOUGH_ARGS; }
+  void ReportNotEnoughArgsError(JSContext* cx,
+                                const char* ifaceName,
+                                const char* memberName);
+  bool IsNotEnoughArgsError() const { return ErrorCode() == NS_ERROR_XPC_NOT_ENOUGH_ARGS; }
 
   // StealJSException steals the JS Exception from the object. This method must
   // be called only if IsJSException() returns true. This method also resets the
@@ -101,6 +109,8 @@ public:
     MOZ_ASSERT(!IsTypeError(), "Don't overwite TypeError");
     MOZ_ASSERT(rv != NS_ERROR_DOM_JS_EXCEPTION, "Use ThrowJSException()");
     MOZ_ASSERT(!IsJSException(), "Don't overwrite JS exceptions");
+    MOZ_ASSERT(rv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "Use ThrowNotEnoughArgsError()");
+    MOZ_ASSERT(!IsNotEnoughArgsError(), "Don't overwrite not enough args error");
     mResult = rv;
   }
 

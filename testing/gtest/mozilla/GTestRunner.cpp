@@ -43,7 +43,7 @@ public:
   }
   virtual void OnTestPartResult(const TestPartResult& aTestPartResult) MOZ_OVERRIDE {
     printf("TEST-%s | %s.%s | %s @ %s:%i\n",
-           aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
+           !aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
            mTestInfo->test_case_name(), mTestInfo->name(),
            aTestPartResult.summary(),
            aTestPartResult.file_name(), aTestPartResult.line_number());

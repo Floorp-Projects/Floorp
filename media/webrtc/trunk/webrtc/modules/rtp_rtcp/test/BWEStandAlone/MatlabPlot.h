@@ -74,14 +74,14 @@ class MatlabTimeLine : public MatlabLine
 {
 public:
     MatlabTimeLine(int horizonSeconds = -1, const char *plotAttrib = NULL, const char *name = NULL,
-        WebRtc_Word64 refTimeMs = -1);
+        int64_t refTimeMs = -1);
     ~MatlabTimeLine() {};
     void Append(double y);
     void PurgeOldData();
-    WebRtc_Word64 GetRefTime();
+    int64_t GetRefTime();
 
 private:
-    WebRtc_Word64 _refTimeMs;
+    int64_t _refTimeMs;
     int _timeHorizon;
 };
 
@@ -96,7 +96,7 @@ public:
 
     int AddLine(int maxLen = -1, const char *plotAttrib = NULL, const char *name = NULL);
     int AddTimeLine(int maxLen = -1, const char *plotAttrib = NULL, const char *name = NULL,
-        WebRtc_Word64 refTimeMs = -1);
+        int64_t refTimeMs = -1);
     int GetLineIx(const char *name);
     void Append(int lineIndex, double x, double y);
     void Append(int lineIndex, double y);
@@ -118,8 +118,8 @@ public:
     int MakeTrend(const char *sourceName, const char *trendName, double slope, double offset, const char *plotAttrib = NULL);
 
 #ifdef PLOT_TESTING
-    WebRtc_Word64 _plotStartTime;
-    WebRtc_Word64 _plotDelay;
+    int64_t _plotStartTime;
+    int64_t _plotDelay;
 #endif
 
 private:

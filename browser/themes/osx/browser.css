@@ -2135,6 +2135,14 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
   display: none;
 }
 
+/* ----- CONTENT ----- */
+
+.browserContainer > findbar {
+  background: @scopeBarBackground@;
+  border-top: @scopeBarSeparatorBorder@;
+  color: -moz-DialogText;
+  text-shadow: none;
+}
 
 /* ----- THROBBER ----- */
 
@@ -3062,6 +3070,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .notification-anchor-icon:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
               0 0 3px 2px -moz-mac-focusring;
+}
+
+#social-notification-icon > .toolbarbutton-icon {
+  height: 16px;
 }
 
 .default-notification-icon,

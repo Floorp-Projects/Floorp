@@ -53,7 +53,7 @@ function testLocationChange()
         });
       });
     });
-    content.location = STACK_URL;
+    gDebugger.DebuggerController.client.activeTab.navigateTo(STACK_URL);
   });
 }
 

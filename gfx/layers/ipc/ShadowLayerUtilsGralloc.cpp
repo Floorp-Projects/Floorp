@@ -199,7 +199,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(GrallocBufferActor,
 
 GrallocBufferActor::GrallocBufferActor()
 : mAllocBytes(0)
-, mTextureHost(nullptr)
+, mDeprecatedTextureHost(nullptr)
 {
   static bool registered;
   if (!registered) {
@@ -253,15 +253,15 @@ GrallocBufferActor::Create(const gfxIntSize& aSize,
 // used only for hacky fix in gecko 23 for bug 862324
 void GrallocBufferActor::ActorDestroy(ActorDestroyReason)
 {
-  if (mTextureHost) {
-    mTextureHost->ForgetBuffer();
+  if (mDeprecatedTextureHost) {
+    mDeprecatedTextureHost->ForgetBuffer();
   }
 }
 
 // used only for hacky fix in gecko 23 for bug 862324
-void GrallocBufferActor::SetTextureHost(TextureHost* aTextureHost)
+void GrallocBufferActor::SetDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost)
 {
-  mTextureHost = aTextureHost;
+  mDeprecatedTextureHost = aDeprecatedTextureHost;
 }
 
 /*static*/ already_AddRefed<TextureImage>

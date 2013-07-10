@@ -20,8 +20,6 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
 
   // XXX we might be able to improve performance by using glClear
 
-  nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
-
   /* Multiply color by the layer opacity, as the shader
    * ignores layer opacity and expects a final color to
    * write to the color buffer.  This saves a needless
@@ -34,10 +32,10 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   color.b *= opacity;
   color.a = opacity;
 
-  ShaderProgramOGL *program = aManager->GetProgram(gl::ColorLayerProgramType,
+  ShaderProgramOGL *program = aManager->GetProgram(ColorLayerProgramType,
                                                    aLayer->GetMaskLayer());
   program->Activate();
-  program->SetLayerQuadRect(visibleRect);
+  program->SetLayerQuadRect(aLayer->GetBounds());
   program->SetLayerTransform(aLayer->GetEffectiveTransform());
   program->SetRenderOffset(aOffset);
   program->SetRenderColor(color);

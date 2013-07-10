@@ -30,6 +30,7 @@
 #include "nsStyleConsts.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/Touch.h"
 
 namespace mozilla {
 namespace dom {
@@ -460,6 +461,12 @@ enum nsEventStructType {
 #define NS_NETWORK_EVENT_START       5600
 #define NS_NETWORK_UPLOAD_EVENT      (NS_NETWORK_EVENT_START + 1)
 #define NS_NETWORK_DOWNLOAD_EVENT    (NS_NETWORK_EVENT_START + 2)
+
+// MediaRecorder events.
+#define NS_MEDIARECORDER_EVENT_START 5700
+#define NS_MEDIARECORDER_DATAAVAILABLE  (NS_MEDIARECORDER_EVENT_START + 1)
+#define NS_MEDIARECORDER_WARNING        (NS_MEDIARECORDER_EVENT_START + 2)
+#define NS_MEDIARECORDER_STOP           (NS_MEDIARECORDER_EVENT_START + 3)
 
 #ifdef MOZ_GAMEPAD
 // Gamepad input events
@@ -1645,7 +1652,7 @@ public:
     MOZ_COUNT_DTOR(nsTouchEvent);
   }
 
-  nsTArray<nsCOMPtr<nsIDOMTouch> > touches;
+  nsTArray< nsRefPtr<mozilla::dom::Touch> > touches;
 };
 
 /**

@@ -115,7 +115,7 @@ public:
   bool IsFirstPaint() { return mIsFirstPaint; }
 
 private:
-  void TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform);
+  void TransformScrollableLayer(Layer* aLayer, const LayoutDeviceToLayerScale& aResolution);
   // Return true if an AsyncPanZoomController content transform was
   // applied for |aLayer|.  *aWantNextFrame is set to true if the
   // controller wants another animation frame.

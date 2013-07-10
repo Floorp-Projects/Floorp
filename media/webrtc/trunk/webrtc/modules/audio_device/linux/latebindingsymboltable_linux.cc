@@ -38,7 +38,7 @@ namespace webrtc_adm_linux {
 
 inline static const char *GetDllError() {
 #if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-  char *err = dlerror();
+  const char *err = dlerror();
   if (err) {
     return err;
   } else {
@@ -57,7 +57,7 @@ DllHandle InternalLoadDll(const char dll_name[]) {
 #endif
   if (handle == kInvalidDllHandle) {
     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, -1,
-               "Can't load %s : %d", dll_name, GetDllError());
+               "Can't load %s : %s", dll_name, GetDllError());
   }
   return handle;
 }
@@ -66,7 +66,7 @@ void InternalUnloadDll(DllHandle handle) {
 #if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   if (dlclose(handle) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-               "%d", GetDllError());
+               "%s", GetDllError());
   }
 #else
 #error Not implemented
@@ -78,7 +78,7 @@ static bool LoadSymbol(DllHandle handle,
                        void **symbol) {
 #if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   *symbol = dlsym(handle, symbol_name);
-  char *err = dlerror();
+  const char *err = dlerror();
   if (err) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                "Error loading symbol %s : %d", symbol_name, err);

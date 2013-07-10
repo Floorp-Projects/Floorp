@@ -640,8 +640,78 @@
           ]]>
         </body>
       </method>
+
+      <method name="bendItem">
+        <parameter name="aItem"/>
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // apply the transform to the contentBox element of the item
+          let bendNode = 'richgriditem' == aItem.nodeName && aItem._contentBox;
+          if (!bendNode)
+            return;
+
+          let event = aEvent;
+          let rect = bendNode.getBoundingClientRect();
+          let angle;
+          let x = (event.clientX - rect.left) / rect.width;
+          let y = (event.clientY - rect.top) / rect.height;
+          let perspective = '450px';
+          // scaling factors for the angle of deflection,
+          //   based on the aspect-ratio of the tile
+          let aspectRatio = rect.width/rect.height;
+          let deflectX = 10 * Math.ceil(1/aspectRatio);
+          let deflectY = 10 * Math.ceil(aspectRatio);
+
+          if (Math.abs(x - .5) < .1 && Math.abs(y - .5) < .1) {
+            bendNode.style.transform = "perspective("+perspective+") translateZ(-10px)";
+          }
+          else if (x > y) {
+            if (1 - y > x) {
+              angle = Math.ceil((.5 - y) * deflectY);
+              bendNode.style.transform = "perspective("+perspective+") rotateX(" + angle + "deg)";
+              bendNode.style.transformOrigin = "center bottom";
+            } else {
+              angle = Math.ceil((x - .5) * deflectX);
+              bendNode.style.transform = "perspective("+perspective+") rotateY(" + angle + "deg)";
+              bendNode.style.transformOrigin = "left center";
+            }
+          } else {
+            if (1 - y < x) {
+              angle = -Math.ceil((y - .5) * deflectY);
+              bendNode.style.transform = "perspective("+perspective+") rotateX(" + angle + "deg)";
+              bendNode.style.transformOrigin = "center top";
+            } else {
+              angle = -Math.ceil((.5 - x) * deflectX);
+              bendNode.style.transform = "perspective("+perspective+") rotateY(" + angle + "deg)";
+              bendNode.style.transformOrigin = "right center";
+            }
+          }
+          // mark when bend effect is applied
+          aItem.setAttribute("bending", true);
+        ]]></body>
+      </method>
+      <method name="unbendItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          // clear the 'bend' transform on the contentBox element of the item
+          let bendNode = 'richgriditem' == aItem.nodeName && aItem._contentBox;
+          if (bendNode && aItem.hasAttribute("bending")) {
+            bendNode.style.removeProperty('transform');
+            bendNode.style.removeProperty('transformOrigin');
+            aItem.removeAttribute("bending");
+          }
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
+      <!--  item bend effect handlers -->
+      <handler event="mousedown" button="0" phase="capturing" action="this.bendItem(event.target, event)"/>
+      <handler event="touchstart" action="this.bendItem(event.target, event.touches[0])"/>
+      <handler event="mouseup" button="0" action="this.unbendItem(event.target)"/>
+      <handler event="mouseout" button="0" action="this.unbendItem(event.target)"/>
+      <handler event="touchend" action="this.unbendItem(event.target)"/>
+      <!--  /item bend effect handler -->
+
       <handler event="context-action">
         <![CDATA[
           // context-action is an event fired by the appbar typically
@@ -667,12 +737,16 @@
           let transformValue;
           switch(state) {
             case "cancelled":
-              // hopefully nothing else is transform-ing the tile
+              this.unbendItem(event.target);
               event.target.removeAttribute('crosssliding');
+              // hopefully nothing else is transform-ing the tile
               event.target.style.removeProperty('transform');
               break;
             case "dragging":
             case "selecting":
+              // remove bend/depress effect when a cross-slide begins
+              this.unbendItem(event.target);
+
               event.target.setAttribute("crosssliding", true);
               // just track the mouse in the initial phases of the drag gesture
               transformValue = (event.direction=='x') ?
@@ -727,7 +801,6 @@
             this.refresh();
         ]]>
       </constructor>
-      <property name="_boundNode" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile').parentNode;"/>
       <property name="_contentBox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-content');"/>
       <property name="_textbox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-desc');"/>
       <property name="_top" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-start-container');"/>
@@ -851,6 +924,7 @@
           event.stopPropagation();
         ]]>
       </handler>
+
       <handler event="contextmenu">
         <![CDATA[
           // fires for right-click, long-click and (keyboard) contextmenu input

@@ -7,7 +7,7 @@
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     mmsdir = 'android'
 elif CONFIG['MOZ_B2G_RIL']:
-    mmsdir = 'ril'
+    mmsdir = 'gonk'
 else:
     mmsdir = 'fallback'
 
@@ -23,10 +23,10 @@ EXPORTS.mozilla.dom.mobilemessage += [
 
 if CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES = [
-        'ril/MmsPduHelper.jsm',
-        'ril/WspPduHelper.jsm',
-        'ril/mms_consts.js',
-        'ril/wap_consts.js',
+        'gonk/MmsPduHelper.jsm',
+        'gonk/WspPduHelper.jsm',
+        'gonk/mms_consts.js',
+        'gonk/wap_consts.js',
     ]
 else:
     EXPORTS.mozilla.dom.mobilemessage += [
@@ -66,3 +66,9 @@ CPP_SOURCES += [
     'SmsServicesFactory.cpp',
 ]
 
+IPDL_SOURCES += [
+    'ipc/PMobileMessageCursor.ipdl',
+    'ipc/PSms.ipdl',
+    'ipc/PSmsRequest.ipdl',
+    'ipc/SmsTypes.ipdlh',
+]

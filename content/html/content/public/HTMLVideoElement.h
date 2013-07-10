@@ -116,7 +116,7 @@ public:
 
   void NotifyOwnerDocumentActivityChanged() MOZ_OVERRIDE;
 
-  already_AddRefed<dom::VideoPlaybackQuality> VideoPlaybackQuality();
+  already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,

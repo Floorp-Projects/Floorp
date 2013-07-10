@@ -18,9 +18,9 @@
     #include <stdio.h>
     #include <math.h>
 
-    WebRtc_UWord32 BitRateBPS(WebRtc_UWord16 x )
+    uint32_t BitRateBPS(uint16_t x )
     {
-        return (x & 0x3fff) * WebRtc_UWord32(pow(10.0f,(2 + (x >> 14))));
+        return (x & 0x3fff) * uint32_t(pow(10.0f,(2 + (x >> 14))));
     }
 
 #endif
@@ -52,7 +52,7 @@ H264Information::Reset()
     memset(_info.type, 0, sizeof(_info.type));
     memset(_info.accLayerSize, 0, sizeof(_info.accLayerSize));
 
-    for (WebRtc_Word32 i = 0; i < KMaxNumberOfNALUs; i++)
+    for (int32_t i = 0; i < KMaxNumberOfNALUs; i++)
     {
         _info.SVCheader[i].idr =            0;
         _info.SVCheader[i].priorityID =     0;
@@ -81,8 +81,8 @@ H264Information::Reset()
 }
 
 /*******************************************************************************
- * WebRtc_Word32 GetInfo(const WebRtc_UWord8* ptrEncodedBuffer,
- *             const WebRtc_UWord32 length,
+ * int32_t GetInfo(const uint8_t* ptrEncodedBuffer,
+ *             const uint32_t length,
  *             const H264Info*& ptrInfo);
  *
  * Gets information from an encoded stream.
@@ -98,9 +98,9 @@ H264Information::Reset()
  *          - 0                 : ok
  *          - (-1)              : Error
  */
-WebRtc_Word32
-H264Information::GetInfo(const WebRtc_UWord8* ptrEncodedBuffer,
-                             const WebRtc_UWord32 length,
+int32_t
+H264Information::GetInfo(const uint8_t* ptrEncodedBuffer,
+                             const uint32_t length,
                              const H264Info*& ptrInfo)
 {
     if (!ptrEncodedBuffer || length < 4)
@@ -132,7 +132,7 @@ H264Information::Type()
 
 
 /*******************************************************************************
- * bool HasInfo(const WebRtc_UWord32 length);
+ * bool HasInfo(const uint32_t length);
  *
  * Checks if information has already been stored for this encoded stream.
  *
@@ -144,7 +144,7 @@ H264Information::Type()
  */
 
 bool
-H264Information::HasInfo(const WebRtc_UWord32 length)
+H264Information::HasInfo(const uint32_t length)
 {
     if (!_info.numNALUs)
     {
@@ -162,8 +162,8 @@ H264Information::HasInfo(const WebRtc_UWord32 length)
 }
 
 /*******************************************************************************
- * WebRtc_Word32 FindInfo(const WebRtc_UWord8* ptrEncodedBuffer,
- *              const WebRtc_UWord32 length);
+ * int32_t FindInfo(const uint8_t* ptrEncodedBuffer,
+ *              const uint32_t length);
  *
  * Parses the encoded stream.
  *
@@ -175,8 +175,8 @@ H264Information::HasInfo(const WebRtc_UWord32 length)
  *          - 0                 : ok
  *          - (-1)              : Error
  */
-WebRtc_Word32
-H264Information::FindInfo(const WebRtc_UWord8* ptrEncodedBuffer, const WebRtc_UWord32 length)
+int32_t
+H264Information::FindInfo(const uint8_t* ptrEncodedBuffer, const uint32_t length)
 {
     _ptrData = ptrEncodedBuffer;
     _length = length;
@@ -193,7 +193,7 @@ H264Information::FindInfo(const WebRtc_UWord8* ptrEncodedBuffer, const WebRtc_UW
         }
 
         // Get NAL unit payload size
-        WebRtc_Word32 foundLast = FindNALU();
+        int32_t foundLast = FindNALU();
         if (foundLast == -1)
         {
             Reset();
@@ -251,7 +251,7 @@ H264Information::FindInfo(const WebRtc_UWord8* ptrEncodedBuffer, const WebRtc_UW
 }
 
 /*******************************************************************************
- * WebRtc_Word32 FindNALUStartCodeSize();
+ * int32_t FindNALUStartCodeSize();
  *
  * Finds the start code length of the current NAL unit.
  *
@@ -262,15 +262,15 @@ H264Information::FindInfo(const WebRtc_UWord8* ptrEncodedBuffer, const WebRtc_UW
  *          - 0                 : ok
  *          - (-1)              : Error
  */
-WebRtc_Word32
+int32_t
 H264Information::FindNALUStartCodeSize()
 {
     // NAL unit start code. Ex. {0,0,1} or {0,0,0,1}
-    for (WebRtc_UWord32 i = 2; i < _remLength; i++)
+    for (uint32_t i = 2; i < _remLength; i++)
     {
         if (_ptrData[i] == 1 && _ptrData[i - 1] == 0 && _ptrData[i - 2] == 0)
         {
-            _info.startCodeSize[_info.numNALUs] = WebRtc_UWord8(i + 1);
+            _info.startCodeSize[_info.numNALUs] = uint8_t(i + 1);
             return 0;
         }
     }
@@ -278,7 +278,7 @@ H264Information::FindNALUStartCodeSize()
 }
 
 /*******************************************************************************
- * WebRtc_Word32 FindNALU();
+ * int32_t FindNALU();
  *
  * Finds the length of the current NAL unit.
  *
@@ -292,14 +292,14 @@ H264Information::FindNALUStartCodeSize()
  *          - 0                 : ok
  *          - (-1)              : Error
  */
-WebRtc_Word32
+int32_t
 H264Information::FindNALU()
 {
-    for (WebRtc_UWord32 i = _info.startCodeSize[_info.numNALUs]; i < _remLength - 2; i += 2)
+    for (uint32_t i = _info.startCodeSize[_info.numNALUs]; i < _remLength - 2; i += 2)
     {
         if (_ptrData[i] == 0)
         {
-            WebRtc_Word32 size = 0;
+            int32_t size = 0;
             if ((_ptrData[i + 1] == 1 && _ptrData[i - 1] == 0) ||
                 (_ptrData[i + 2] == 1 && _ptrData[i + 1] == 0))
             {
@@ -354,7 +354,7 @@ H264Information::GetNRI()
     //                                    in the same layer, or contains a parameter set.
 
 
-    const WebRtc_UWord8 type = _ptrData[_info.startCodeSize[_info.numNALUs]] & 0x1f;
+    const uint8_t type = _ptrData[_info.startCodeSize[_info.numNALUs]] & 0x1f;
 
     // NALU type of 5, 7 and 8 shoud have NRI to b011
     if( type == 5 ||
@@ -370,7 +370,7 @@ H264Information::GetNRI()
 
 
 /*******************************************************************************
- * WebRtc_Word32 FindNALUType();
+ * int32_t FindNALUType();
  *
  * Finds the type of the current NAL unit.
  *
@@ -381,7 +381,7 @@ H264Information::GetNRI()
  *          - 0                        : ok
  *          - (-1)                     : Error
  */
-WebRtc_Word32
+int32_t
 H264Information::FindNALUType()
 {
     //  NAL unit header (1 byte)
@@ -406,7 +406,7 @@ H264Information::FindNALUType()
 }
 
 /*******************************************************************************
- * WebRtc_Word32 ParseSVCNALUHeader();
+ * int32_t ParseSVCNALUHeader();
  *
  * Finds the extended header of the current NAL unit. Included for NAL unit types 14 and 20.
  *
@@ -417,7 +417,7 @@ H264Information::FindNALUType()
  *          - 0                             : ok
  *          - (-1)                          : Error
  */
-WebRtc_Word32
+int32_t
 H264Information::ParseSVCNALUHeader()
 {
     if (_info.type[_info.numNALUs] == 5)
@@ -426,16 +426,16 @@ H264Information::ParseSVCNALUHeader()
     }
     if (_info.type[_info.numNALUs] == 6)
     {
-        WebRtc_UWord32 seiPayloadSize;
+        uint32_t seiPayloadSize;
         do
         {
             // SEI message
             seiPayloadSize = 0;
 
-            WebRtc_UWord32 curByte = _info.startCodeSize[_info.numNALUs] + 1;
-            const WebRtc_UWord32 seiStartOffset = curByte;
+            uint32_t curByte = _info.startCodeSize[_info.numNALUs] + 1;
+            const uint32_t seiStartOffset = curByte;
 
-            WebRtc_UWord32 seiPayloadType = 0;
+            uint32_t seiPayloadType = 0;
             while(_ptrData[curByte] == 0xff)
             {
                 seiPayloadType += 255;
@@ -466,27 +466,27 @@ H264Information::ParseSVCNALUHeader()
                 {
                     _info.PACSI[0].seiMessageLength[0] = seiPayloadSize;
                     delete [] _info.PACSI[0].seiMessageData[0];
-                    _info.PACSI[0].seiMessageData[0] = new WebRtc_UWord8[seiPayloadSize];
+                    _info.PACSI[0].seiMessageData[0] = new uint8_t[seiPayloadSize];
                 }
                 memcpy(_info.PACSI[0].seiMessageData[0], _ptrData+seiStartOffset, seiPayloadSize);
 
                 _info.PACSI[0].NALlength += seiPayloadSize + 2; // additional 2 is the length
 
 #ifdef DEBUG_SEI_MESSAGE
-                const WebRtc_UWord8 numberOfLayers = 10;
-                WebRtc_UWord16 avgBitrate[numberOfLayers]= {0,0,0,0,0,0,0,0,0,0};
-                WebRtc_UWord16 maxBitrateLayer[numberOfLayers]= {0,0,0,0,0,0,0,0,0,0};
-                WebRtc_UWord16 maxBitrateLayerRepresentation[numberOfLayers] = {0,0,0,0,0,0,0,0,0,0};
-                WebRtc_UWord16 maxBitrareCalcWindow[numberOfLayers] = {0,0,0,0,0,0,0,0,0,0};
+                const uint8_t numberOfLayers = 10;
+                uint16_t avgBitrate[numberOfLayers]= {0,0,0,0,0,0,0,0,0,0};
+                uint16_t maxBitrateLayer[numberOfLayers]= {0,0,0,0,0,0,0,0,0,0};
+                uint16_t maxBitrateLayerRepresentation[numberOfLayers] = {0,0,0,0,0,0,0,0,0,0};
+                uint16_t maxBitrareCalcWindow[numberOfLayers] = {0,0,0,0,0,0,0,0,0,0};
 
                 BitstreamParser parserScalabilityInfo(_ptrData+curByte, seiPayloadSize);
 
                 parserScalabilityInfo.Get1Bit(); // not used in futher parsing
-                const WebRtc_UWord8 priority_layer_info_present = parserScalabilityInfo.Get1Bit();
-                const WebRtc_UWord8 priority_id_setting_flag = parserScalabilityInfo.Get1Bit();
+                const uint8_t priority_layer_info_present = parserScalabilityInfo.Get1Bit();
+                const uint8_t priority_id_setting_flag = parserScalabilityInfo.Get1Bit();
 
-                WebRtc_UWord32 numberOfLayersMinusOne = parserScalabilityInfo.GetUE();
-                for(WebRtc_UWord32 j = 0; j<= numberOfLayersMinusOne; j++)
+                uint32_t numberOfLayersMinusOne = parserScalabilityInfo.GetUE();
+                for(uint32_t j = 0; j<= numberOfLayersMinusOne; j++)
                 {
                     printf("\nLayer ID:%d \n",parserScalabilityInfo.GetUE());
                     printf("Priority ID:%d \n", parserScalabilityInfo.Get6Bits());
@@ -496,24 +496,24 @@ H264Information::ParseSVCNALUHeader()
                     printf("Quality ID:%d \n", parserScalabilityInfo.Get4Bits());
                     printf("Temporal ID:%d \n", parserScalabilityInfo.Get3Bits());
 
-                    const WebRtc_UWord8 sub_pic_layer_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 sub_region_layer_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 iroi_division_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 profile_level_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 bitrate_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 frm_rate_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 frm_size_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 layer_dependency_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 parameter_sets_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 bitstream_restriction_info_present_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 exact_inter_layer_pred_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
+                    const uint8_t sub_pic_layer_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t sub_region_layer_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t iroi_division_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t profile_level_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t bitrate_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t frm_rate_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t frm_size_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t layer_dependency_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t parameter_sets_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t bitstream_restriction_info_present_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t exact_inter_layer_pred_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
 
                     if(sub_pic_layer_flag || iroi_division_info_present_flag)
                     {
                         parserScalabilityInfo.Get1Bit();
                     }
-                    const WebRtc_UWord8 layer_conversion_flag = parserScalabilityInfo.Get1Bit();
-                    const WebRtc_UWord8 layer_output_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
+                    const uint8_t layer_conversion_flag = parserScalabilityInfo.Get1Bit();
+                    const uint8_t layer_output_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
 
                     if(profile_level_info_present_flag)
                     {
@@ -565,8 +565,8 @@ H264Information::ParseSVCNALUHeader()
                             parserScalabilityInfo.GetUE();
                         }else
                         {
-                            const WebRtc_UWord32 numRoisMinusOne = parserScalabilityInfo.GetUE();
-                            for(WebRtc_UWord32 k = 0; k <= numRoisMinusOne; k++)
+                            const uint32_t numRoisMinusOne = parserScalabilityInfo.GetUE();
+                            for(uint32_t k = 0; k <= numRoisMinusOne; k++)
                             {
                                 parserScalabilityInfo.GetUE();
                                 parserScalabilityInfo.GetUE();
@@ -576,8 +576,8 @@ H264Information::ParseSVCNALUHeader()
                     }
                     if(layer_dependency_info_present_flag)
                     {
-                        const WebRtc_UWord32 numDirectlyDependentLayers = parserScalabilityInfo.GetUE();
-                        for(WebRtc_UWord32 k = 0; k < numDirectlyDependentLayers; k++)
+                        const uint32_t numDirectlyDependentLayers = parserScalabilityInfo.GetUE();
+                        for(uint32_t k = 0; k < numDirectlyDependentLayers; k++)
                         {
                             parserScalabilityInfo.GetUE();
                         }
@@ -587,18 +587,18 @@ H264Information::ParseSVCNALUHeader()
                     }
                     if(parameter_sets_info_present_flag)
                     {
-                        const WebRtc_UWord32 numSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
-                        for(WebRtc_UWord32 k = 0; k <= numSeqParameterSetMinusOne; k++)
+                        const uint32_t numSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
+                        for(uint32_t k = 0; k <= numSeqParameterSetMinusOne; k++)
                         {
                             parserScalabilityInfo.GetUE();
                         }
-                        const WebRtc_UWord32 numSubsetSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
-                        for(WebRtc_UWord32 l = 0; l <= numSubsetSeqParameterSetMinusOne; l++)
+                        const uint32_t numSubsetSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
+                        for(uint32_t l = 0; l <= numSubsetSeqParameterSetMinusOne; l++)
                         {
                             parserScalabilityInfo.GetUE();
                         }
-                        const WebRtc_UWord32 numPicParameterSetMinusOne = parserScalabilityInfo.GetUE();
-                        for(WebRtc_UWord32 m = 0; m <= numPicParameterSetMinusOne; m++)
+                        const uint32_t numPicParameterSetMinusOne = parserScalabilityInfo.GetUE();
+                        for(uint32_t m = 0; m <= numPicParameterSetMinusOne; m++)
                         {
                             parserScalabilityInfo.GetUE();
                         }
@@ -619,7 +619,7 @@ H264Information::ParseSVCNALUHeader()
                     if(layer_conversion_flag)
                     {
                         parserScalabilityInfo.GetUE();
-                        for(WebRtc_UWord32 k = 0; k <2;k++)
+                        for(uint32_t k = 0; k <2;k++)
                         {
                             if(parserScalabilityInfo.Get1Bit())
                             {
@@ -632,12 +632,12 @@ H264Information::ParseSVCNALUHeader()
                 }
                 if(priority_layer_info_present)
                 {
-                    const WebRtc_UWord32 prNumDidMinusOne = parserScalabilityInfo.GetUE();
-                    for(WebRtc_UWord32 k = 0; k <= prNumDidMinusOne;k++)
+                    const uint32_t prNumDidMinusOne = parserScalabilityInfo.GetUE();
+                    for(uint32_t k = 0; k <= prNumDidMinusOne;k++)
                     {
                         parserScalabilityInfo.Get3Bits();
-                        const WebRtc_UWord32 prNumMinusOne = parserScalabilityInfo.GetUE();
-                        for(WebRtc_UWord32 l = 0; l <= prNumMinusOne; l++)
+                        const uint32_t prNumMinusOne = parserScalabilityInfo.GetUE();
+                        for(uint32_t l = 0; l <= prNumMinusOne; l++)
                         {
                             parserScalabilityInfo.GetUE();
                             parserScalabilityInfo.Get24Bits();
@@ -648,8 +648,8 @@ H264Information::ParseSVCNALUHeader()
                 }
                 if(priority_id_setting_flag)
                 {
-                    WebRtc_UWord8 priorityIdSettingUri;
-                    WebRtc_UWord32 priorityIdSettingUriIdx = 0;
+                    uint8_t priorityIdSettingUri;
+                    uint32_t priorityIdSettingUriIdx = 0;
                     do
                     {
                         priorityIdSettingUri = parserScalabilityInfo.Get8Bits();
@@ -686,7 +686,7 @@ H264Information::ParseSVCNALUHeader()
     if (_info.type[_info.numNALUs] == 14 ||
         _info.type[_info.numNALUs] == 20)
     {
-        WebRtc_UWord32 curByte = _info.startCodeSize[_info.numNALUs] + 1;
+        uint32_t curByte = _info.startCodeSize[_info.numNALUs] + 1;
 
         if (_remLength < curByte + 3)
         {
@@ -726,7 +726,7 @@ H264Information::ParseSVCNALUHeader()
  *
  */
 void
-H264Information::SetLayerSEBit(WebRtc_Word32 foundLast)
+H264Information::SetLayerSEBit(int32_t foundLast)
 {
     if (_info.numNALUs == 0)
     {
@@ -766,7 +766,7 @@ H264Information::SetLayerSEBit(WebRtc_Word32 foundLast)
 }
 
 /*******************************************************************************
- * WebRtc_Word32 SetLayerLengths();
+ * int32_t SetLayerLengths();
  *
  * Sets the accumulated layer length.
  *
@@ -778,17 +778,17 @@ H264Information::SetLayerSEBit(WebRtc_Word32 foundLast)
  *          - (-1)                     : Error
  *
  */
-WebRtc_Word32
+int32_t
 H264Information::SetLayerLengths()
 {
-    for (WebRtc_UWord32 curNALU = 0; curNALU < _info.numNALUs; curNALU++)
+    for (uint32_t curNALU = 0; curNALU < _info.numNALUs; curNALU++)
     {
         _info.accLayerSize[_info.numLayers] += _info.startCodeSize[curNALU] + _info.payloadSize[curNALU];
 
         if (_info.PACSI[curNALU].E == 1)
         {
             _info.numLayers++;
-            if (curNALU == WebRtc_UWord32(_info.numNALUs - 1))
+            if (curNALU == uint32_t(_info.numNALUs - 1))
             {
                 break;
             }
@@ -807,7 +807,7 @@ H264Information::SetLayerLengths()
         return -1;
     }
 
-    if (_info.accLayerSize[_info.numLayers - 1] != WebRtc_Word32(_length))
+    if (_info.accLayerSize[_info.numLayers - 1] != int32_t(_length))
     {
         Reset();
         return -1;

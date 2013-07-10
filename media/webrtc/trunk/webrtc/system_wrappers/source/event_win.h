@@ -33,7 +33,7 @@ class EventWindows : public EventWrapper {
 
  private:
   HANDLE  event_;
-  WebRtc_UWord32 timerID_;
+  uint32_t timerID_;
 };
 
 }  // namespace webrtc

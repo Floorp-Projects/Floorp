@@ -13,11 +13,14 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "GLContextTypes.h"
+#include "GLDefs.h"
 #include "gfx3DMatrix.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/CompositorTypes.h"
 #include "gfxColor.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/RefPtr.h"
+#include "gfxASurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -26,6 +29,72 @@ class GLContext;
 namespace layers {
 
 class Layer;
+
+enum ShaderProgramType {
+  RGBALayerProgramType,
+  RGBALayerExternalProgramType,
+  BGRALayerProgramType,
+  RGBXLayerProgramType,
+  BGRXLayerProgramType,
+  RGBARectLayerProgramType,
+  BGRARectLayerProgramType,
+  RGBAExternalLayerProgramType,
+  ColorLayerProgramType,
+  YCbCrLayerProgramType,
+  ComponentAlphaPass1ProgramType,
+  ComponentAlphaPass1RGBProgramType,
+  ComponentAlphaPass2ProgramType,
+  ComponentAlphaPass2RGBProgramType,
+  Copy2DProgramType,
+  Copy2DRectProgramType,
+  NumProgramTypes
+};
+
+static inline ShaderProgramType
+ShaderProgramFromSurfaceFormat(gfx::SurfaceFormat aFormat)
+{
+  switch (aFormat) {
+    case gfx::FORMAT_B8G8R8A8:
+      return BGRALayerProgramType;
+    case gfx::FORMAT_B8G8R8X8:
+      return BGRXLayerProgramType;
+    case gfx::FORMAT_R8G8B8A8:
+      return RGBALayerProgramType;
+    case gfx::FORMAT_R8G8B8X8:
+    case gfx::FORMAT_R5G6B5:
+      return RGBXLayerProgramType;
+    case gfx::FORMAT_A8:
+      // We don't have a specific luminance shader
+      break;
+    default:
+      NS_ASSERTION(false, "Unhandled surface format!");
+  }
+  return ShaderProgramType(0);
+}
+
+static inline ShaderProgramType
+ShaderProgramFromTargetAndFormat(GLenum aTarget,
+                                 gfx::SurfaceFormat aFormat)
+{
+  switch(aTarget) {
+    case LOCAL_GL_TEXTURE_EXTERNAL:
+      MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
+      return RGBALayerExternalProgramType;
+    case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
+      MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
+      return RGBARectLayerProgramType;
+    default:
+      return ShaderProgramFromSurfaceFormat(aFormat);
+  }
+}
+
+static inline ShaderProgramType
+ShaderProgramFromContentType(gfxASurface::gfxContentType aContentType)
+{
+  if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA)
+    return RGBALayerProgramType;
+  return RGBXLayerProgramType;
+}
 
 /**
  * This struct represents the shaders that make up a program and the uniform
@@ -39,16 +108,16 @@ struct ProgramProfileOGL
    * Factory method; creates an instance of this class for the given
    * ShaderProgramType
    */
-  static ProgramProfileOGL GetProfileFor(gl::ShaderProgramType aType,
+  static ProgramProfileOGL GetProfileFor(ShaderProgramType aType,
                                          MaskType aMask);
 
   /**
    * returns true if such a shader program exists
    */
-  static bool ProgramExists(gl::ShaderProgramType aType, MaskType aMask)
+  static bool ProgramExists(ShaderProgramType aType, MaskType aMask)
   {
     if (aType < 0 ||
-        aType >= gl::NumProgramTypes)
+        aType >= NumProgramTypes)
       return false;
 
     if (aMask < MaskNone ||
@@ -56,13 +125,17 @@ struct ProgramProfileOGL
       return false;
 
     if (aMask == Mask2d &&
-        (aType == gl::Copy2DProgramType ||
-         aType == gl::Copy2DRectProgramType))
+        (aType == Copy2DProgramType ||
+         aType == Copy2DRectProgramType))
+      return false;
+
+    if (aMask != MaskNone &&
+        aType == BGRARectLayerProgramType)
       return false;
 
     return aMask != Mask3d ||
-           aType == gl::RGBARectLayerProgramType ||
-           aType == gl::RGBALayerProgramType;
+           aType == RGBARectLayerProgramType ||
+           aType == RGBALayerProgramType;
   }
 
 

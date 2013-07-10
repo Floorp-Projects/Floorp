@@ -961,8 +961,6 @@ static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
 #endif
 static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
-static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
-static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
@@ -1004,9 +1002,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  bool usePCCounts = Preferences::GetBool(chromeWindow || !contentWindow ?
-                                            js_pccounts_chrome_str :
-                                            js_pccounts_content_str);
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   bool useBaselineJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
@@ -1022,7 +1017,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     bool safeMode = false;
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
-      usePCCounts = false;
       useTypeInference = false;
       useHardening = false;
       useBaselineJIT = false;
@@ -1032,11 +1026,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useAsmJS = false;
     }
   }
-
-  if (usePCCounts)
-    newDefaultJSOptions |= JSOPTION_PCCOUNT;
-  else
-    newDefaultJSOptions &= ~JSOPTION_PCCOUNT;
 
   if (useTypeInference)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
@@ -1165,6 +1154,11 @@ nsJSContext::~nsJSContext()
   }
 }
 
+// This function is called either by the destructor or unlink, which means that
+// it can never be called when there is an outstanding ref to the
+// nsIScriptContext on the stack. Our stack-scoped cx pushers hold such a ref,
+// so we can assume here that mContext is not on the stack (and therefore not
+// in use).
 void
 nsJSContext::DestroyJSContext()
 {
@@ -1182,14 +1176,8 @@ nsJSContext::DestroyJSContext()
   if (mGCOnDestruction) {
     PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
   }
-        
-  // Let xpconnect destroy the JSContext when it thinks the time is right.
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  if (xpc) {
-    xpc->ReleaseJSContext(mContext, true);
-  } else {
-    ::JS_DestroyContextNoGC(mContext);
-  }
+
+  JS_DestroyContextNoGC(mContext);
   mContext = nullptr;
 }
 
@@ -2900,6 +2888,9 @@ nsJSContext::MaybePokeCC()
     if (!sCCTimer) {
       return;
     }
+    // We can kill some objects before running forgetSkippable.
+    nsCycleCollector_dispatchDeferredDeletion();
+
     sCCTimer->InitWithFuncCallback(CCTimerFired, nullptr,
                                    NS_CC_SKIPPABLE_DELAY,
                                    nsITimer::TYPE_REPEATING_SLACK);

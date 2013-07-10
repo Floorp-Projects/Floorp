@@ -112,8 +112,6 @@ skip-if(B2G) HTTP(..) == name-collision.html name-collision-ref.html # bug 77348
 skip-if(B2G) HTTP(..) == name-collision-bad-url.html name-collision-bad-url-ref.html # bug 773482
 
 HTTP(..) == name-collision-with-prefs-font.html name-collision-with-prefs-font-ref.html # bug 668758
-
-# t2embed lib on windows is picky about fullname
 HTTP(..) == load-badfullname.html load-badfullname-ref.html
 
 # 507960-1-* : a collection of tests using DeLarge from openfontlibrary.org

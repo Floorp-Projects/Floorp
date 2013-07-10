@@ -46,7 +46,6 @@
 #include "prmjtime.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
-#include "jstypedarray.h"
 #ifdef JS_THREADSAFE
 #include "jsworkers.h"
 #endif
@@ -72,6 +71,7 @@
 #include "vm/Shape.h"
 #include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
+#include "vm/TypedArrayObject.h"
 #include "vm/WeakMapObject.h"
 #include "vm/Xdr.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -2411,6 +2411,18 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
     js::TraceChildren(trc, thing, kind);
 }
 
+static size_t
+CountDecimalDigits(size_t num)
+{
+    size_t numDigits = 0;
+    do {
+        num /= 10;
+        numDigits++;
+    } while (num > 0);
+
+    return numDigits;
+}
+
 JS_PUBLIC_API(void)
 JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
                      JSGCTraceKind kind, JSBool details)
@@ -2492,8 +2504,19 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             *buf++ = ' ';
             bufsize--;
             JSString *str = (JSString *)thing;
-            if (str->isLinear())
+
+            if (str->isLinear()) {
+                bool willFit = str->length() + strlen("<length > ") +
+                               CountDecimalDigits(str->length()) < bufsize;
+
+                n = JS_snprintf(buf, bufsize, "<length %d%s> ",
+                                (int)str->length(),
+                                willFit ? "" : " (truncated)");
+                buf += n;
+                bufsize -= n;
+
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
+            }
             else
                 JS_snprintf(buf, bufsize, "<rope: length %d>", (int)str->length());
             break;
@@ -2784,10 +2807,11 @@ JS_MaybeGC(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb)
+JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
     rt->gcCallback = cb;
+    rt->gcCallbackData = data;
 }
 
 JS_PUBLIC_API(void)

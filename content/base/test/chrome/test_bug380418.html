@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=380418 -->
+<head>
+  <title>Test for Bug 380418</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=380418">Mozilla Bug 380418</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var xhrPath = "http://mochi.test:8888" +
+                window.location.pathname.substring("/content".length);
+
+  var request = new XMLHttpRequest();
+  request.open("GET", xhrPath, false);
+  request.send(null);
+
+  // Try reading headers in privileged context
+  is(request.getResponseHeader("Set-Cookie"), "test", "Reading Set-Cookie response header in privileged context");
+  is(request.getResponseHeader("Set-Cookie2"), "test2", "Reading Set-Cookie2 response header in privileged context");
+  is(request.getResponseHeader("X-Dummy"), "test", "Reading X-Dummy response header in privileged context");
+
+  ok(/\bSet-Cookie:/i.test(request.getAllResponseHeaders()), "Looking for Set-Cookie in all response headers in privileged context");
+  ok(/\bSet-Cookie2:/i.test(request.getAllResponseHeaders()), "Looking for Set-Cookie2 in all response headers in privileged context");
+  ok(/\bX-Dummy:/i.test(request.getAllResponseHeaders()), "Looking for X-Dummy in all response headers in privileged context");
+
+</script>
+</pre>
+</body>
+</html>

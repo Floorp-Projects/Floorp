@@ -27,13 +27,13 @@ namespace webrtc {
 
 struct ACMTestISACConfig
 {
-    WebRtc_Word32  currentRateBitPerSec;
-    WebRtc_Word16  currentFrameSizeMsec;
-    WebRtc_UWord32 maxRateBitPerSec;
-    WebRtc_Word16  maxPayloadSizeByte;
-    WebRtc_Word16  encodingMode;
-    WebRtc_UWord32 initRateBitPerSec;
-    WebRtc_Word16  initFrameSizeInMsec;
+    int32_t  currentRateBitPerSec;
+    int16_t  currentFrameSizeMsec;
+    uint32_t maxRateBitPerSec;
+    int16_t  maxPayloadSizeByte;
+    int16_t  encodingMode;
+    uint32_t initRateBitPerSec;
+    int16_t  initFrameSizeInMsec;
     bool           enforceFrameSize;
 };
 
@@ -47,10 +47,10 @@ public:
 
     void Perform();
 private:
-    WebRtc_Word16 Setup();
-    WebRtc_Word16 SetupConference();
-    WebRtc_Word16 RunConference();    
-    
+    int16_t Setup();
+    int16_t SetupConference();
+    int16_t RunConference();    
+
 
     void Run10ms();
 
@@ -78,8 +78,8 @@ private:
     PCMFile _outFileA;
     PCMFile _outFileB;
 
-    WebRtc_UWord8 _idISAC16kHz;
-    WebRtc_UWord8 _idISAC32kHz;
+    uint8_t _idISAC16kHz;
+    uint8_t _idISAC32kHz;
     CodecInst _paramISAC16kHz;
     CodecInst _paramISAC32kHz;
 

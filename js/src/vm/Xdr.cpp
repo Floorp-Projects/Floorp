@@ -10,10 +10,10 @@
 
 #include "jsprf.h"
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsscript.h"
 
 #include "vm/Debugger.h"
+#include "vm/Runtime.h"
 
 #include "jsscriptinlines.h"
 

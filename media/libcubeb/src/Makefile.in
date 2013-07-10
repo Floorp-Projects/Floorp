@@ -23,7 +23,7 @@ ifeq ($(OS_TARGET),WINNT)
 DISABLED_CSRCS           += \
                 cubeb_winmm.c \
                 $(NULL)
-DEFINES         += -DUSE_WINMM
+DEFINES         += -DUSE_WINMM -DUSE_WASAPI
 endif
 
 ifeq ($(OS_TARGET),Android)

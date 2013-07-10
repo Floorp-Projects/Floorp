@@ -19,9 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-  "resource://gre/modules/FileUtils.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "gPrincipal", function () {
   let uri = Services.io.newURI("about:newtab", null, null);
   return Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
@@ -79,7 +76,9 @@ function LinksStorage() {
     if (this._storedVersion < this._version) {
       // This is either an upgrade, or version information is missing.
       if (this._storedVersion < 1) {
-        this._migrateToV1();
+        // Version 1 moved data from DOM Storage to prefs.  Since migrating from
+        // version 0 is no more supported, we just reportError a dataloss later.
+        throw new Error("Unsupported newTab storage version");
       }
       // Add further migration steps here.
     }
@@ -117,7 +116,13 @@ LinksStorage.prototype = {
         this.__storedVersion =
           Services.prefs.getIntPref("browser.newtabpage.storageVersion");
       } catch (ex) {
-        this.__storedVersion = 0;
+        // The storage version is unknown, so either:
+        // - it's a new profile
+        // - it's a profile where versioning information got lost
+        // In this case we still run through all of the valid migrations,
+        // starting from 1, as if it was a downgrade.  As previously stated the
+        // migrations should already support running on an updated store.
+        this.__storedVersion = 1;
       }
     }
     return this.__storedVersion;
@@ -126,44 +131,6 @@ LinksStorage.prototype = {
     Services.prefs.setIntPref("browser.newtabpage.storageVersion", aValue);
     this.__storedVersion = aValue;
     return aValue;
-  },
-
-  /**
-   * V1 changes storage from chromeappsstore.sqlite to prefs.
-   */
-  _migrateToV1: function Storage__migrateToV1() {
-    // Import data from the old chromeappsstore.sqlite file, if exists.
-    let file = FileUtils.getFile("ProfD", ["chromeappsstore.sqlite"]);
-    if (!file.exists())
-      return;
-    let db = Services.storage.openUnsharedDatabase(file);
-    let stmt = db.createStatement(
-      "SELECT key, value FROM webappsstore2 WHERE scope = 'batwen.:about'");
-    try {
-      while (stmt.executeStep()) {
-        let key = stmt.row.key;
-        let value = JSON.parse(stmt.row.value);
-        switch (key) {
-          case "pinnedLinks":
-            this.set(key, value);
-            break;
-          case "blockedLinks":
-            // Convert urls to hashes.
-            let hashes = {};
-            for (let url in value) {
-              hashes[toHash(url)] = 1;
-            }
-            this.set(key, hashes);
-            break;
-          default:
-            // Ignore unknown keys.
-            break;
-        }
-      }
-    } finally {
-      stmt.finalize();
-      db.close();
-    }
   },
 
   /**

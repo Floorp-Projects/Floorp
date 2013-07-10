@@ -15,12 +15,11 @@ class nsIDOMSVGLength;
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedLength MOZ_FINAL : public nsISupports,
-                                    public nsWrapperCache
+class SVGAnimatedLength MOZ_FINAL : public nsWrapperCache
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGAnimatedLength)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedLength)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedLength)
 
   SVGAnimatedLength(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement)

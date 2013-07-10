@@ -236,6 +236,11 @@ private:
    */
   void Render();
 
+  /**
+   * Render debug overlays such as the FPS/FrameCounter above the frame.
+   */
+  void RenderDebugOverlay(const gfx::Rect& aBounds);
+
   void WorldTransformRect(nsIntRect& aRect);
 
   /** Our more efficient but less powerful alter ego, if one is available. */

@@ -558,6 +558,7 @@
                                 this.isAudioOnly = true;
                                 this.clickToPlay.hidden = true;
                                 this.startFadeIn(this.controlBar);
+                                this.setFullscreenButtonState();
                             }
                             this.showDuration(Math.round(this.video.duration * 1000));
                             if (!this.isAudioOnly && !this.video.mozHasAudio) {

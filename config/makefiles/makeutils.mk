@@ -118,4 +118,4 @@ ifdef USE_RCS_MK
 endif
 
 ## copy(src, dst): recursive copy
-copy_dir = (cd $(1)/. && $(TAR) $(TAR_CREATE_FLAGS_QUIET) - .) | (cd $(2)/. && tar -xf -)
+copy_dir = (cd $(1)/. && $(TAR) $(TAR_CREATE_FLAGS) - .) | (cd $(2)/. && tar -xf -)

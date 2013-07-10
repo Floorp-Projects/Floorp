@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 FORCE_SHARED_LIB = 1
 DIST_INSTALL     = 1
 
-DISABLED_CMMSRCS = $(LIBRARY_NAME).mm plugin_child_quirks.mm
 
 EXTRA_DSO_LDOPTS += \
   -framework Carbon \

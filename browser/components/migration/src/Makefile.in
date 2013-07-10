@@ -12,14 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
-DISABLED_EXTRA_COMPONENTS = \
-  ProfileMigrator.js \
-  FirefoxProfileMigrator.js \
-  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-DISABLED_EXTRA_COMPONENTS += IEProfileMigrator.js \
-                    $(NULL)
 
 DEFINES += -DHAS_IE_MIGRATOR -DHAS_SAFARI_MIGRATOR
 endif

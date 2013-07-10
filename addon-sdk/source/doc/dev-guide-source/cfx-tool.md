@@ -22,22 +22,13 @@ commands (for example `--help`). `cfx` supports the following global options:
 
 "Command-specific options" are documented alongside the commands.
 
-There are five supported cfx commands:
+There are four supported cfx commands:
 
 <table>
   <colgroup>
     <col width="10%">
     <col width="90%">
   </colgroup>
-
-  <tr>
-    <td>
-      <a href="dev-guide/cfx-tool.html#cfx-docs"><code>cfx docs</code></a>
-    </td>
-    <td>
-      Display the documentation for the SDK.
-    </td>
-  </tr>
 
   <tr>
     <td>
@@ -81,27 +72,6 @@ There are five supported cfx commands:
 There are also a number of
 [internal commands](dev-guide/cfx-tool.html#internal-commands),
 which are more likely to be useful to SDK developers than to add-on developers.
-
-## <a name="cfx-docs">cfx docs</a> ##
-
-This command displays the documentation for the SDK. The documentation is
-shipped with the SDK in [Markdown](http://daringfireball.net/projects/markdown/)
-format. The first time this command is executed, and any time after the
-Markdown files on disk have changed, `cfx docs` will generate a set of HTML
-pages from them and launch a web browser to display them. If the Markdown files
-haven't changed, `cfx docs` just launches a browser initialized to the set of
-generated pages.
-
-To regenerate the documentation associated with a single file, you can
-specify the file as an argument. For example:
-
-<pre>
-  cfx docs doc/dev-guide-source/addon-development/cfx-tool.md 
-</pre>
-
-This command will regenerate only the HTML page you're reading.
-This is useful if you're iteratively editing a single file, and don't want to wait for cfx to
-regenerate the complete documentation tree.
 
 ## <a name="cfx-init">cfx init</a> ##
 
@@ -810,8 +780,7 @@ add-on whenever it is run.
 ### cfx sdocs ###
 
 Executing this command builds a static HTML version of the SDK documentation
-that can be hosted on a web server without the special application support
-required by `cfx docs`.
+that can be hosted on a web server.
 
 #### Options ####
 

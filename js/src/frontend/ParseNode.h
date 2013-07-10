@@ -51,7 +51,19 @@ class UpvarCookie
     uint16_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
 
     // This fails and issues an error message if newLevel is too large.
-    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot);
+    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot) {
+        // This is an unsigned-to-uint16_t conversion, test for too-high
+        // values.  In practice, recursion in Parser and/or BytecodeEmitter
+        // will blow the stack if we nest functions more than a few hundred
+        // deep, so this will never trigger.  Oh well.
+        if (newLevel >= FREE_LEVEL) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
+            return false;
+        }
+        level_ = newLevel;
+        slot_ = newSlot;
+        return true;
+    }
 
     void makeFree() {
         level_ = FREE_LEVEL;
@@ -794,6 +806,11 @@ class ParseNode
     bool getConstantValue(JSContext *cx, bool strictChecks, MutableHandleValue vp);
     inline bool isConstant();
 
+    template <class NodeType>
+    inline bool is() const {
+        return NodeType::test(*this);
+    }
+
     /* Casting operations. */
     template <class NodeType>
     inline NodeType &as() {
@@ -1165,7 +1182,7 @@ class PropertyAccess : public ParseNode
 {
   public:
     PropertyAccess(ParseNode *lhs, PropertyName *name, uint32_t begin, uint32_t end)
-      : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos(begin, end))
+      : ParseNode(PNK_DOT, JSOP_NOP, PN_NAME, TokenPos(begin, end))
     {
         JS_ASSERT(lhs != NULL);
         JS_ASSERT(name != NULL);
@@ -1192,7 +1209,7 @@ class PropertyByValue : public ParseNode
 {
   public:
     PropertyByValue(ParseNode *lhs, ParseNode *propExpr, uint32_t begin, uint32_t end)
-      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos(begin, end))
+      : ParseNode(PNK_ELEM, JSOP_NOP, PN_BINARY, TokenPos(begin, end))
     {
         pn_u.binary.left = lhs;
         pn_u.binary.right = propExpr;

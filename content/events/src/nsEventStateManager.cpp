@@ -122,7 +122,7 @@ nsWeakFrame nsEventStateManager::sLastDragOverFrame = nullptr;
 nsIntPoint nsEventStateManager::sLastRefPoint = kInvalidRefPoint;
 nsIntPoint nsEventStateManager::sLastScreenPoint = nsIntPoint(0,0);
 nsIntPoint nsEventStateManager::sSynthCenteringPoint = kInvalidRefPoint;
-nsIntPoint nsEventStateManager::sLastClientPoint = nsIntPoint(0,0);
+CSSIntPoint nsEventStateManager::sLastClientPoint = CSSIntPoint(0, 0);
 bool nsEventStateManager::sIsPointerLocked = false;
 // Reference to the pointer locked element.
 nsWeakPtr nsEventStateManager::sPointerLockedElement;
@@ -1553,7 +1553,7 @@ nsEventStateManager::MapEventCoordinatesForChildProcess(
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
     // Then offset all the touch points by that distance, to put them
     // in the space where top-left is 0,0.
-    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       nsIDOMTouch* touch = touches[i];
       if (touch) {
@@ -1637,7 +1637,7 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
     // This loop is similar to the one used in
     // PresShell::DispatchTouchEvent().
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
-    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       nsIDOMTouch* touch = touches[i];
       // NB: the |mChanged| check is an optimization, subprocesses can

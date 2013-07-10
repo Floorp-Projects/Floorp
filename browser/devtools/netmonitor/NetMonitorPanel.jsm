@@ -18,13 +18,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 this.NetMonitorPanel = function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
+  this._destroyer = null;
 
   this._view = this.panelWin.NetMonitorView;
   this._controller = this.panelWin.NetMonitorController;
   this._controller._target = this.target;
 
   EventEmitter.decorate(this);
-}
+};
 
 NetMonitorPanel.prototype = {
   /**
@@ -53,14 +54,22 @@ NetMonitorPanel.prototype = {
       })
       .then(null, function onError(aReason) {
         Cu.reportError("NetMonitorPanel open failed. " +
-                       reason.error + ": " + reason.message);
+                       aReason.error + ": " + aReason.message);
       });
   },
 
   // DevToolPanel API
+
   get target() this._toolbox.target,
 
   destroy: function() {
-    this._controller.shutdownNetMonitor().then(() => this.emit("destroyed"));
+    // Make sure this panel is not already destroyed.
+    if (this._destroyer) {
+      return this._destroyer;
+    }
+
+    return this._destroyer = this._controller.shutdownNetMonitor().then(() => {
+      this.emit("destroyed");
+    });
   }
 };

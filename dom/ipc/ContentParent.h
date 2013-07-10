@@ -246,33 +246,33 @@ private:
     void ShutDownProcess();
 
     PCompositorParent*
-    AllocPCompositor(mozilla::ipc::Transport* aTransport,
-                     base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+    AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
+                           base::ProcessId aOtherProcess) MOZ_OVERRIDE;
     PImageBridgeParent*
-    AllocPImageBridge(mozilla::ipc::Transport* aTransport,
-                      base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+    AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
+                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual bool RecvGetProcessAttributes(uint64_t* aId,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline) MOZ_OVERRIDE;
 
-    virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScript();
-    virtual bool DeallocPJavaScript(mozilla::jsipc::PJavaScriptParent*);
+    virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();
+    virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
 
-    virtual PBrowserParent* AllocPBrowser(const IPCTabContext& aContext,
-                                          const uint32_t& aChromeFlags);
-    virtual bool DeallocPBrowser(PBrowserParent* frame);
+    virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
+                                                const uint32_t& aChromeFlags);
+    virtual bool DeallocPBrowserParent(PBrowserParent* frame);
 
-    virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);
-    virtual bool DeallocPDeviceStorageRequest(PDeviceStorageRequestParent*);
+    virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequestParent(const DeviceStorageParams&);
+    virtual bool DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent*);
 
-    virtual PBlobParent* AllocPBlob(const BlobConstructorParams& aParams);
-    virtual bool DeallocPBlob(PBlobParent*);
+    virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams);
+    virtual bool DeallocPBlobParent(PBlobParent*);
 
-    virtual PCrashReporterParent* AllocPCrashReporter(const NativeThreadId& tid,
-                                                      const uint32_t& processType);
-    virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
+    virtual PCrashReporterParent* AllocPCrashReporterParent(const NativeThreadId& tid,
+                                                            const uint32_t& processType);
+    virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter);
     virtual bool RecvPCrashReporterConstructor(PCrashReporterParent* actor,
                                                const NativeThreadId& tid,
                                                const uint32_t& processType);
@@ -280,46 +280,46 @@ private:
     virtual bool RecvGetRandomValues(const uint32_t& length,
                                      InfallibleTArray<uint8_t>* randomValues);
 
-    virtual PHalParent* AllocPHal() MOZ_OVERRIDE;
-    virtual bool DeallocPHal(PHalParent*) MOZ_OVERRIDE;
+    virtual PHalParent* AllocPHalParent() MOZ_OVERRIDE;
+    virtual bool DeallocPHalParent(PHalParent*) MOZ_OVERRIDE;
 
-    virtual PIndexedDBParent* AllocPIndexedDB();
+    virtual PIndexedDBParent* AllocPIndexedDBParent();
 
-    virtual bool DeallocPIndexedDB(PIndexedDBParent* aActor);
+    virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor);
 
     virtual bool
     RecvPIndexedDBConstructor(PIndexedDBParent* aActor);
 
-    virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
-    virtual bool DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor);
+    virtual PMemoryReportRequestParent* AllocPMemoryReportRequestParent();
+    virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor);
 
-    virtual PTestShellParent* AllocPTestShell();
-    virtual bool DeallocPTestShell(PTestShellParent* shell);
+    virtual PTestShellParent* AllocPTestShellParent();
+    virtual bool DeallocPTestShellParent(PTestShellParent* shell);
 
-    virtual PNeckoParent* AllocPNecko();
-    virtual bool DeallocPNecko(PNeckoParent* necko);
+    virtual PNeckoParent* AllocPNeckoParent();
+    virtual bool DeallocPNeckoParent(PNeckoParent* necko);
 
-    virtual PExternalHelperAppParent* AllocPExternalHelperApp(
+    virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
             const OptionalURIParams& aUri,
             const nsCString& aMimeContentType,
             const nsCString& aContentDisposition,
             const bool& aForceSave,
             const int64_t& aContentLength,
             const OptionalURIParams& aReferrer);
-    virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
+    virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
 
-    virtual PSmsParent* AllocPSms();
-    virtual bool DeallocPSms(PSmsParent*);
+    virtual PSmsParent* AllocPSmsParent();
+    virtual bool DeallocPSmsParent(PSmsParent*);
 
-    virtual PStorageParent* AllocPStorage();
-    virtual bool DeallocPStorage(PStorageParent* aActor);
+    virtual PStorageParent* AllocPStorageParent();
+    virtual bool DeallocPStorageParent(PStorageParent* aActor);
 
-    virtual PBluetoothParent* AllocPBluetooth();
-    virtual bool DeallocPBluetooth(PBluetoothParent* aActor);
+    virtual PBluetoothParent* AllocPBluetoothParent();
+    virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor);
     virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor);
 
-    virtual PSpeechSynthesisParent* AllocPSpeechSynthesis();
-    virtual bool DeallocPSpeechSynthesis(PSpeechSynthesisParent* aActor);
+    virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
+    virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
     virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs);
@@ -415,6 +415,10 @@ private:
     virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus);
 
     virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
+
+    virtual bool RecvCreateFakeVolume(const nsString& fsName, const nsString& mountPoint) MOZ_OVERRIDE;
+
+    virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) MOZ_OVERRIDE;
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 

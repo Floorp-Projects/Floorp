@@ -249,7 +249,6 @@ LayerManagerOGL::ReadDrawFPSPref::Run()
 {
   // NOTE: This must match the code in Initialize()'s NS_IsMainThread check.
   Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-  Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
   return NS_OK;
 }
 
@@ -292,7 +291,7 @@ LayerManagerOGL::Initialize(bool force)
   }
 
   // initialise a common shader to check that we can actually compile a shader
-  if (!mPrograms[gl::RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
+  if (!mPrograms[RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
 #ifdef MOZ_WIDGET_ANDROID
     NS_RUNTIMEABORT("Shader initialization failed");
 #endif
@@ -440,7 +439,6 @@ LayerManagerOGL::Initialize(bool force)
   if (NS_IsMainThread()) {
     // NOTE: This must match the code in ReadDrawFPSPref::Run().
     Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-    Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
   } else {
     // We have to dispatch an event to the main thread to read the pref.
     NS_DispatchToMainThread(new ReadDrawFPSPref());
@@ -688,8 +686,6 @@ LayerManagerOGL::RootLayer() const
 }
 
 bool LayerManagerOGL::sDrawFPS = false;
-bool LayerManagerOGL::sFrameCounter = false;
-
 
 // |aTexCoordRect| is the rectangle from the texture that we want to
 // draw using the given program.  The program already has a necessary
@@ -896,8 +892,6 @@ LayerManagerOGL::Render()
 
   if (mFPS) {
     mFPS->DrawFPS(TimeStamp::Now(), mGLContext, GetProgram(Copy2DProgramType));
-  } else if (sFrameCounter) {
-    FPSState::DrawFrameCounter(mGLContext);
   }
 
   if (mGLContext->IsDoubleBuffered()) {

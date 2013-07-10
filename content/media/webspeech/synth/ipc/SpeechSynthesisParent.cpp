@@ -27,12 +27,12 @@ SpeechSynthesisParent::RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
 }
 
 PSpeechSynthesisRequestParent*
-SpeechSynthesisParent::AllocPSpeechSynthesisRequest(const nsString& aText,
-                                                    const nsString& aLang,
-                                                    const nsString& aUri,
-                                                    const float& aVolume,
-                                                    const float& aRate,
-                                                    const float& aPitch)
+SpeechSynthesisParent::AllocPSpeechSynthesisRequestParent(const nsString& aText,
+                                                          const nsString& aLang,
+                                                          const nsString& aUri,
+                                                          const float& aVolume,
+                                                          const float& aRate,
+                                                          const float& aPitch)
 {
   nsRefPtr<SpeechTaskParent> task = new SpeechTaskParent(aVolume, aText);
   SpeechSynthesisRequestParent* actor = new SpeechSynthesisRequestParent(task);
@@ -40,7 +40,7 @@ SpeechSynthesisParent::AllocPSpeechSynthesisRequest(const nsString& aText,
 }
 
 bool
-SpeechSynthesisParent::DeallocPSpeechSynthesisRequest(PSpeechSynthesisRequestParent* aActor)
+SpeechSynthesisParent::DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor)
 {
   delete aActor;
   return true;

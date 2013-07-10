@@ -781,6 +781,9 @@ pref("dom.forms.color", false);
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
 
+// Enable pre-installed applications.
+pref("dom.webapps.useCurrentProfile", false);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
@@ -811,8 +814,6 @@ pref("javascript.options.baselinejit.chrome",  true);
 pref("javascript.options.ion.content",      true);
 pref("javascript.options.asmjs",            true);
 pref("javascript.options.ion.parallel_compilation", true);
-pref("javascript.options.pccounts.content", false);
-pref("javascript.options.pccounts.chrome",  false);
 pref("javascript.options.jit_hardening", true);
 pref("javascript.options.typeinference", true);
 // This preference limits the memory usage of javascript.
@@ -4036,6 +4037,7 @@ pref("layers.acceleration.force-enabled", false);
 pref("layers.acceleration.draw-fps", false);
 
 pref("layers.draw-borders", false);
+pref("layers.frame-counter", false);
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);

@@ -592,47 +592,45 @@ nsRangeUpdater::DidInsertContainer()
 }
 
 
-nsresult
+void
 nsRangeUpdater::WillMoveNode()
 {
-  if (mLock) return NS_ERROR_UNEXPECTED;  
   mLock = true;
-  return NS_OK;
 }
 
 
-nsresult
-nsRangeUpdater::DidMoveNode(nsIDOMNode *aOldParent, int32_t aOldOffset, nsIDOMNode *aNewParent, int32_t aNewOffset)
+void
+nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
+                            nsINode* aNewParent, int32_t aNewOffset)
 {
-  NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);  
+  MOZ_ASSERT(aOldParent);
+  MOZ_ASSERT(aNewParent);
+  NS_ENSURE_TRUE_VOID(mLock);
   mLock = false;
 
-  NS_ENSURE_TRUE(aOldParent && aNewParent, NS_ERROR_NULL_POINTER);
-  uint32_t i, count = mArray.Length();
-  if (!count) {
-    return NS_OK;
-  }
+  nsIDOMNode* oldParent = aOldParent->AsDOMNode();
+  nsIDOMNode* newParent = aNewParent->AsDOMNode();
 
-  nsRangeStore *item;
-  
-  for (i=0; i<count; i++)
-  {
-    item = mArray[i];
-    NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
+  for (uint32_t i = 0, count = mArray.Length(); i < count; ++i) {
+    nsRangeStore* item = mArray[i];
+    NS_ENSURE_TRUE_VOID(item);
     
     // like a delete in aOldParent
-    if ((item->startNode.get() == aOldParent) && (item->startOffset > aOldOffset))
+    if (item->startNode == oldParent && item->startOffset > aOldOffset) {
       item->startOffset--;
-    if ((item->endNode.get() == aOldParent) && (item->endOffset > aOldOffset))
+    }
+    if (item->endNode == oldParent && item->endOffset > aOldOffset) {
       item->endOffset--;
+    }
       
     // and like an insert in aNewParent
-    if ((item->startNode.get() == aNewParent) && (item->startOffset > aNewOffset))
+    if (item->startNode == newParent && item->startOffset > aNewOffset) {
       item->startOffset++;
-    if ((item->endNode.get() == aNewParent) && (item->endOffset > aNewOffset))
+    }
+    if (item->endNode == newParent && item->endOffset > aNewOffset) {
       item->endOffset++;
+    }
   }
-  return NS_OK;
 }
 
 

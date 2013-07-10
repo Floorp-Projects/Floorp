@@ -10,8 +10,6 @@
 
 /* ::::: XBL bindings ::::: */
 
-@namespace xbl "http://www.mozilla.org/xbl";
-
 menulist > menupopup,
 .menulist-menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
@@ -241,7 +239,6 @@ description {
 
 .text-link {
   color: -moz-nativehyperlinktext;
-  border: 1px solid transparent;
   cursor: pointer;
 }
 
@@ -250,7 +247,7 @@ description {
 }
   
 .text-link:-moz-focusring {
-  border: 1px dotted -moz-DialogText;
+  box-shadow: @focusRingShadow@;
 }
 
 .toolbar-focustarget {
@@ -283,7 +280,7 @@ notification > button:active:hover:-moz-focusring {
   box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
-notification > button > .button-box > xbl|children > .button-text {
+notification > button > .button-box > .button-text {
   margin: 0 !important;
 }
 

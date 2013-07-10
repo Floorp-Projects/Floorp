@@ -10,9 +10,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE_NAME = StartupCacheModule
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
-IS_COMPONENT = 1
 
 include $(topsrcdir)/config/rules.mk

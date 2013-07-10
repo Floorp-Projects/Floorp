@@ -65,8 +65,8 @@ OpenParent(TestOpensOpenedParent* aParent,
 }
 
 PTestOpensOpenedParent*
-TestOpensParent::AllocPTestOpensOpened(Transport* transport,
-                                       ProcessId otherProcess)
+TestOpensParent::AllocPTestOpensOpenedParent(Transport* transport,
+                                             ProcessId otherProcess)
 {
     gMainThread = MessageLoop::current();
 
@@ -178,8 +178,8 @@ OpenChild(TestOpensOpenedChild* aChild,
 }
 
 PTestOpensOpenedChild*
-TestOpensChild::AllocPTestOpensOpened(Transport* transport,
-                                      ProcessId otherProcess)
+TestOpensChild::AllocPTestOpensOpenedChild(Transport* transport,
+                                           ProcessId otherProcess)
 {
     gMainThread = MessageLoop::current();
 

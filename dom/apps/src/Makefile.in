@@ -9,11 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_EXTRA_COMPONENTS = \
-  AppsService.js \
-  AppsService.manifest \
-  Webapps.manifest \
-  $(NULL)
 
 EXTRA_PP_JS_MODULES += \
   Webapps.jsm \

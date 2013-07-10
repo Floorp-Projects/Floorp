@@ -35,6 +35,7 @@
 #include "XPCQuickStubs.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/IDBVersionChangeEventBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/DOMErrorBinding.h"
@@ -480,7 +481,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
-    if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
+    if (!IDBVersionChangeEventBinding::GetConstructorObject(aJSContext, global) ||
+        !TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
         !TextEncoderBinding::GetConstructorObject(aJSContext, global) ||
         !DOMErrorBinding::GetConstructorObject(aJSContext, global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -937,41 +939,6 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     return NS_OK;
 }
 
-/* void releaseJSContext (in JSContextPtr aJSContext, in bool noGC); */
-NS_IMETHODIMP
-nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
-{
-    NS_ASSERTION(aJSContext, "bad param");
-    XPCCallContext* ccx = nullptr;
-    for (XPCCallContext* cur = GetRuntime()->GetCallContext();
-         cur;
-         cur = cur->GetPrevCallContext()) {
-        if (cur->GetJSContext() == aJSContext) {
-            ccx = cur;
-            // Keep looping to find the deepest matching call context.
-        }
-    }
-
-    if (ccx) {
-#ifdef DEBUG_xpc_hacker
-        printf("!xpc - deferring destruction of JSContext @ %p\n",
-               (void *)aJSContext);
-#endif
-        ccx->SetDestroyJSContextInDestructor();
-        return NS_OK;
-    }
-    // else continue on and synchronously destroy the JSContext ...
-
-    NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->HasJSContext(aJSContext),
-                 "JSContext still in threadjscontextstack!");
-
-    if (noGC)
-        JS_DestroyContextNoGC(aJSContext);
-    else
-        JS_DestroyContext(aJSContext);
-    return NS_OK;
-}
-
 /* void debugDump (in short depth); */
 NS_IMETHODIMP
 nsXPConnect::DebugDump(int16_t depth)
@@ -1129,7 +1096,7 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
     // Push a null JSContext so that we don't see any script during
     // event processing.
     MOZ_ASSERT(NS_IsMainThread());
-    bool ok = PushJSContext(nullptr);
+    bool ok = PushJSContextNoScriptContext(nullptr);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     return NS_OK;
 }
@@ -1148,7 +1115,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     nsJSContext::MaybePokeCC();
     nsDOMMutationObserver::HandleMutations();
 
-    PopJSContext();
+    PopJSContextNoScriptContext();
 
     // If the cx stack is empty, that means we're at the an un-nested event
     // loop. This is a good time to make changes to debug mode.
@@ -1189,16 +1156,16 @@ nsXPConnect::GetRuntime(JSRuntime **runtime)
     return NS_OK;
 }
 
-/* [noscript, notxpcom] void registerGCCallback(in JSGCCallback func); */
+/* [noscript, notxpcom] void registerGCCallback(in xpcGCCallback func); */
 NS_IMETHODIMP_(void)
-nsXPConnect::RegisterGCCallback(JSGCCallback func)
+nsXPConnect::RegisterGCCallback(xpcGCCallback func)
 {
     mRuntime->AddGCCallback(func);
 }
 
-/* [noscript, notxpcom] void unregisterGCCallback(in JSGCCallback func); */
+/* [noscript, notxpcom] void unregisterGCCallback(in xpcGCCallback func); */
 NS_IMETHODIMP_(void)
-nsXPConnect::UnregisterGCCallback(JSGCCallback func)
+nsXPConnect::UnregisterGCCallback(xpcGCCallback func)
 {
     mRuntime->RemoveGCCallback(func);
 }
@@ -1284,13 +1251,14 @@ nsXPConnect::GetSafeJSContext()
 namespace xpc {
 
 bool
-PushJSContext(JSContext *aCx)
+PushJSContextNoScriptContext(JSContext *aCx)
 {
+    MOZ_ASSERT_IF(aCx, !GetScriptContextFromJSContext(aCx));
     return XPCJSRuntime::Get()->GetJSContextStack()->Push(aCx);
 }
 
 void
-PopJSContext()
+PopJSContextNoScriptContext()
 {
     XPCJSRuntime::Get()->GetJSContextStack()->Pop();
 }
@@ -1349,7 +1317,8 @@ namespace xpc {
 bool
 DeferredRelease(nsISupports *obj)
 {
-    return nsXPConnect::GetRuntimeInstance()->DeferredRelease(obj);
+    nsContentUtils::DeferredFinalize(obj);
+    return true;
 }
 
 NS_EXPORT_(bool)

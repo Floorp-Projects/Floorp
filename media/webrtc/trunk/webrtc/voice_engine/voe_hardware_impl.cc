@@ -12,7 +12,6 @@
 
 #include <cassert>
 
-#include "cpu_wrapper.h"
 #include "critical_section_wrapper.h"
 #include "trace.h"
 #include "voe_errors.h"
@@ -30,7 +29,7 @@ VoEHardware* VoEHardware::GetInterface(VoiceEngine* voiceEngine)
     {
         return NULL;
     }
-    VoiceEngineImpl* s = reinterpret_cast<VoiceEngineImpl*>(voiceEngine);
+    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
     s->AddRef();
     return s;
 #endif
@@ -38,29 +37,16 @@ VoEHardware* VoEHardware::GetInterface(VoiceEngine* voiceEngine)
 
 #ifdef WEBRTC_VOICE_ENGINE_HARDWARE_API
 
-VoEHardwareImpl::VoEHardwareImpl(voe::SharedData* shared) :
-    _cpu(NULL), _shared(shared)
+VoEHardwareImpl::VoEHardwareImpl(voe::SharedData* shared) : _shared(shared)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "VoEHardwareImpl() - ctor");
-
-    _cpu = CpuWrapper::CreateCpu();
-    if (_cpu)
-    {
-        _cpu->CpuUsage(); // init cpu usage
-    }
 }
 
 VoEHardwareImpl::~VoEHardwareImpl()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "~VoEHardwareImpl() - dtor");
-
-    if (_cpu)
-    {
-        delete _cpu;
-        _cpu = NULL;
-    }
 }
 
 int VoEHardwareImpl::SetAudioDeviceLayer(AudioLayers audioLayer)
@@ -225,7 +211,7 @@ int VoEHardwareImpl::GetRecordingDeviceName(int index,
     // Note that strGuidUTF8 is allowed to be NULL
 
     // Init len variable to length of supplied vectors
-    const WebRtc_UWord16 strLen = 128;
+    const uint16_t strLen = 128;
 
     // Check if length has been changed in module
     assert(strLen == kAdmMaxDeviceNameSize);
@@ -283,7 +269,7 @@ int VoEHardwareImpl::GetPlayoutDeviceName(int index,
     // Note that strGuidUTF8 is allowed to be NULL
 
     // Init len variable to length of supplied vectors
-    const WebRtc_UWord16 strLen = 128;
+    const uint16_t strLen = 128;
 
     // Check if length has been changed in module
     assert(strLen == kAdmMaxDeviceNameSize);
@@ -375,9 +361,9 @@ int VoEHardwareImpl::SetRecordingDevice(int index,
     }
 
     // Map indices to unsigned since underlying functions need that
-    WebRtc_UWord16 indexU = static_cast<WebRtc_UWord16> (index);
+    uint16_t indexU = static_cast<uint16_t> (index);
 
-    WebRtc_Word32 res(0);
+    int32_t res(0);
 
     if (index == -1)
     {
@@ -484,9 +470,9 @@ int VoEHardwareImpl::SetPlayoutDevice(int index)
     // We let the module do the index sanity
 
     // Map indices to unsigned since underlying functions need that
-    WebRtc_UWord16 indexU = static_cast<WebRtc_UWord16> (index);
+    uint16_t indexU = static_cast<uint16_t> (index);
 
-    WebRtc_Word32 res(0);
+    int32_t res(0);
 
     if (index == -1)
     {
@@ -736,47 +722,8 @@ int VoEHardwareImpl::GetCPULoad(int& loadPercent)
     }
 
     // Get CPU load from ADM
-    WebRtc_UWord16 load(0);
+    uint16_t load(0);
     if (_shared->audio_device()->CPULoad(&load) != 0)
-    {
-        _shared->SetLastError(VE_CPU_INFO_ERROR, kTraceError,
-            "  error getting system CPU load");
-        return -1;
-    }
-
-    loadPercent = static_cast<int> (load);
-
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
-        VoEId(_shared->instance_id(), -1),
-        "  Output: loadPercent = %d", loadPercent);
-
-    return 0;
-}
-
-int VoEHardwareImpl::GetSystemCPULoad(int& loadPercent)
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "GetSystemCPULoad(loadPercent=?)");
-    ANDROID_NOT_SUPPORTED(_shared->statistics());
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
-
-    if (!_shared->statistics().Initialized())
-    {
-        _shared->SetLastError(VE_NOT_INITED, kTraceError);
-        return -1;
-    }
-
-    // Check if implemented for this platform
-    if (!_cpu)
-    {
-        _shared->SetLastError(VE_FUNC_NOT_SUPPORTED, kTraceError,
-            "  no support for getting system CPU load");
-        return -1;
-    }
-
-    // Get CPU load
-    WebRtc_Word32 load = _cpu->CpuUsage();
-    if (load < 0)
     {
         _shared->SetLastError(VE_CPU_INFO_ERROR, kTraceError,
             "  error getting system CPU load");

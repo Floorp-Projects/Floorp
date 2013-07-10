@@ -1587,7 +1587,6 @@ ia64*-hpux*)
         # -Os has been broken on Intel's C/C++ compilers for quite a
         # while; Intel recommends against using it.
         MOZ_OPTIMIZE_FLAGS="-O2"
-        MOZ_DEBUG_FLAGS="-g"
     elif test "$GNU_CC" -o "$GNU_CXX"; then
         case $GCC_VERSION in
         4.5.*)
@@ -1596,7 +1595,6 @@ ia64*-hpux*)
         esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
         MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
-        MOZ_DEBUG_FLAGS="-g"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -1605,9 +1603,6 @@ ia64*-hpux*)
     alpha*)
     	CFLAGS="$CFLAGS -mieee"
     	CXXFLAGS="$CXXFLAGS -mieee"
-    ;;
-    mips*)
-        MOZ_DEBUG_FLAGS="-g" # We want inlining
     ;;
     esac
 
@@ -2067,41 +2062,25 @@ dnl Configure JIT support
 
 case "$target" in
 i?86-*)
-    ENABLE_METHODJIT=1
     ENABLE_ION=1
-    ENABLE_MONOIC=1
-    ENABLE_POLYIC=1
-    ENABLE_METHODJIT_TYPED_ARRAY=1
     ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_X86)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 x86_64*-*)
-    ENABLE_METHODJIT=1
     ENABLE_ION=1
-    ENABLE_MONOIC=1
-    ENABLE_POLYIC=1
-    ENABLE_METHODJIT_TYPED_ARRAY=1
     ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_X64)
     AC_DEFINE(JS_PUNBOX64)
     ;;
 arm*-*)
-    ENABLE_METHODJIT=1
     ENABLE_ION=1
-    ENABLE_MONOIC=1
-    ENABLE_POLYIC=1
-    ENABLE_METHODJIT_TYPED_ARRAY=1
     ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_ARM)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
     if test ! "$HAVE_64BIT_OS" ; then
-    ENABLE_METHODJIT=1
-    ENABLE_MONOIC=1
-    ENABLE_POLYIC=1
-    ENABLE_METHODJIT_TYPED_ARRAY=1
     ENABLE_YARR_JIT=1
 dnl ENABLE_ION=0
     AC_DEFINE(JS_CPU_SPARC)
@@ -2109,10 +2088,6 @@ dnl ENABLE_ION=0
     fi
     ;;
 mips*-*)
-    ENABLE_METHODJIT=1
-    ENABLE_MONOIC=1
-    ENABLE_POLYIC=1
-    ENABLE_METHODJIT_TYPED_ARRAY=1
     ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_MIPS)
     AC_DEFINE(JS_NUNBOX32)
@@ -2127,26 +2102,7 @@ MOZ_ARG_DISABLE_BOOL(yarr-jit,
 [  --disable-yarr-jit    Disable YARR JIT support],
   ENABLE_YARR_JIT= )
 
-AC_SUBST(ENABLE_METHODJIT)
 AC_SUBST(ENABLE_METHODJIT_SPEW)
-
-if test "$ENABLE_METHODJIT"; then
-    AC_DEFINE(JS_METHODJIT)
-else
-    ENABLE_ION=
-fi
-
-if test "$ENABLE_MONOIC"; then
-    AC_DEFINE(JS_MONOIC)
-fi
-
-if test "$ENABLE_POLYIC"; then
-    AC_DEFINE(JS_POLYIC)
-fi
-
-if test "$ENABLE_METHODJIT_TYPED_ARRAY"; then
-    AC_DEFINE(JS_METHODJIT_TYPED_ARRAY)
-fi
 
 AC_SUBST(ENABLE_ION)
 
@@ -2158,6 +2114,88 @@ AC_SUBST(ENABLE_YARR_JIT)
 
 if test "$ENABLE_YARR_JIT"; then
     AC_DEFINE(ENABLE_YARR_JIT)
+fi
+
+dnl ========================================================
+dnl =
+dnl = Debugging Options
+dnl =
+dnl = These must come before MOZ_COMPILER_OPTS so that MOZ_COMPILER_OPTS
+dnl = sees any debug flags set by the user.
+dnl =
+dnl ========================================================
+MOZ_ARG_HEADER(Debugging)
+
+dnl ========================================================
+dnl = Debug info is ON by default.
+dnl ========================================================
+if test -z "$MOZ_DEBUG_FLAGS"; then
+  MOZ_DEBUG_FLAGS="-g"
+fi
+
+MOZ_ARG_ENABLE_STRING(debug,
+[  --enable-debug[=DBG]    Enable building with developer debug info
+                           (using compiler flags DBG)],
+[ if test "$enableval" != "no"; then
+    MOZ_DEBUG=1
+    if test -n "$enableval" -a "$enableval" != "yes"; then
+        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+        _MOZ_DEBUG_FLAGS_SET=1
+    fi
+  else
+    MOZ_DEBUG=
+  fi ],
+  MOZ_DEBUG=)
+
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
+MOZ_ARG_WITH_STRING(debug-label,
+[  --with-debug-label=LABELS
+                          Define DEBUG_<value> for each comma-separated
+                          value given.],
+[ for option in `echo $withval | sed 's/,/ /g'`; do
+    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
+done])
+
+MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
+
+if test -n "$MOZ_DEBUG"; then
+    AC_MSG_CHECKING([for valid debug flags])
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
+    AC_TRY_COMPILE([#include <stdio.h>],
+        [printf("Hello World\n");],
+        _results=yes,
+        _results=no)
+    AC_MSG_RESULT([$_results])
+    if test "$_results" = "no"; then
+        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
+    fi
+    CFLAGS=$_SAVE_CFLAGS
+fi
+
+dnl ========================================================
+dnl = Enable generation of debug symbols
+dnl ========================================================
+MOZ_ARG_ENABLE_STRING(debug-symbols,
+[  --enable-debug-symbols[=DBG]
+                          Enable debugging symbols (using compiler flags DBG)],
+[ if test "$enableval" != "no"; then
+      MOZ_DEBUG_SYMBOLS=1
+      if test -n "$enableval" -a "$enableval" != "yes"; then
+          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
+              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+          else
+              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
+          fi
+      fi
+  else
+      MOZ_DEBUG_SYMBOLS=
+  fi ],
+  MOZ_DEBUG_SYMBOLS=1)
+
+if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
+    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
+    export MOZ_DEBUG_SYMBOLS
 fi
 
 MOZ_COMPILER_OPTS
@@ -3265,58 +3303,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Debugging and Optimizations)
 
-dnl ========================================================
-dnl = Disable building with debug info.
-dnl = Debugging is OFF by default
-dnl ========================================================
-if test -z "$MOZ_DEBUG_FLAGS"; then
-  MOZ_DEBUG_FLAGS="-g"
-fi
-
-MOZ_ARG_ENABLE_STRING(debug,
-[  --enable-debug[=DBG]    Enable building with developer debug info
-                           (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-    MOZ_DEBUG=1
-    if test "$ENABLE_METHODJIT" -o "$ENABLE_YARR_JIT"; then
-         # needs MethodJIT or YarrJIT
-         ENABLE_METHODJIT_SPEW=1
-    fi
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-        _MOZ_DEBUG_FLAGS_SET=1
-    fi
-  else
-    MOZ_DEBUG=
-  fi ],
-  MOZ_DEBUG=)
-
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
-MOZ_ARG_WITH_STRING(debug-label,
-[  --with-debug-label=LABELS
-                          Define DEBUG_<value> for each comma-separated
-                          value given.],
-[ for option in `echo $withval | sed 's/,/ /g'`; do
-    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
-done])
-
-MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
-
-if test -n "$MOZ_DEBUG"; then
-    AC_MSG_CHECKING([for valid debug flags])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [printf("Hello World\n");],
-        _results=yes,
-        _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
-    fi
-    CFLAGS=$_SAVE_CFLAGS
-fi
-
 if test "$ENABLE_METHODJIT_SPEW"; then
     AC_DEFINE(JS_METHODJIT_SPEW)
 fi
@@ -3366,31 +3352,6 @@ AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
-
-dnl ========================================================
-dnl = Enable generation of debug symbols
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]
-                          Enable debugging symbols (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-      MOZ_DEBUG_SYMBOLS=1
-      if test -n "$enableval" -a "$enableval" != "yes"; then
-          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
-              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-          else
-              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
-          fi
-      fi
-  else
-      MOZ_DEBUG_SYMBOLS=
-  fi ],
-  MOZ_DEBUG_SYMBOLS=1)
-
-if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
-    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
-    export MOZ_DEBUG_SYMBOLS
-fi
 
 dnl ========================================================
 dnl = Enable trace logging

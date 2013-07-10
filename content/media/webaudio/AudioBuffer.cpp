@@ -38,12 +38,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AudioBuffer)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AudioBuffer)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AudioBuffer)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioBuffer)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioBuffer, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioBuffer, Release)
 
 AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
                          float aSampleRate)
@@ -53,7 +49,7 @@ AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
 {
   SetIsDOMBinding();
 
-  NS_HOLD_JS_OBJECTS(this, AudioBuffer);
+  nsContentUtils::HoldJSObjects(this, NS_CYCLE_COLLECTION_PARTICIPANT(AudioBuffer));
 }
 
 AudioBuffer::~AudioBuffer()
@@ -65,7 +61,7 @@ void
 AudioBuffer::ClearJSChannels()
 {
   mJSChannels.Clear();
-  NS_DROP_JS_OBJECTS(this, AudioBuffer);
+  nsContentUtils::DropJSObjects(this);
 }
 
 bool

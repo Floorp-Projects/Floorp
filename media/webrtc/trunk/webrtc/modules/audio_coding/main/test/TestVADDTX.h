@@ -29,10 +29,10 @@ class ActivityMonitor : public ACMVADCallback
 public:
     ActivityMonitor();
     ~ActivityMonitor();
-    WebRtc_Word32 InFrameType(WebRtc_Word16 frameType);
+    int32_t InFrameType(int16_t frameType);
     void PrintStatistics(int testMode);
     void ResetStatistics();
-    void GetStatistics(WebRtc_UWord32* getCounter);
+    void GetStatistics(uint32_t* getCounter);
 private:
     // counting according to
     /*enum WebRtcACMEncodingType
@@ -44,7 +44,7 @@ private:
         kPassiveDTXWB,
         kPassiveDTXSWB
     };*/
-    WebRtc_UWord32 _counter[6];
+    uint32_t _counter[6];
 };
 
 class TestVADDTX : public ACMTest
@@ -57,17 +57,17 @@ public:
 private:
     // Registration can be based on codec name only, codec name and sampling frequency, or 
     // codec name, sampling frequency and rate.
-    WebRtc_Word16 RegisterSendCodec(char side, 
+    int16_t RegisterSendCodec(char side, 
         char* codecName, 
-        WebRtc_Word32 samplingFreqHz = -1,
-        WebRtc_Word32 rateKhz = -1);
+        int32_t samplingFreqHz = -1,
+        int32_t rateKhz = -1);
     void Run();
-    void OpenOutFile(WebRtc_Word16 testNumber);
+    void OpenOutFile(int16_t testNumber);
     void runTestCases();
     void runTestInternalDTX();
-    void SetVAD(bool statusDTX, bool statusVAD, WebRtc_Word16 vadMode);
+    void SetVAD(bool statusDTX, bool statusVAD, int16_t vadMode);
     VADDTXstruct GetVAD();
-    WebRtc_Word16 VerifyTest();//VADDTXstruct setDTX, VADDTXstruct getDTX);
+    int16_t VerifyTest();//VADDTXstruct setDTX, VADDTXstruct getDTX);
     AudioCodingModule* _acmA;
     AudioCodingModule* _acmB;
 
@@ -77,7 +77,7 @@ private:
     PCMFile                _outFileB;
 
     ActivityMonitor        _monitor;
-    WebRtc_UWord32           _statCounter[6];
+    uint32_t           _statCounter[6];
 
     int                    _testMode;
     int                    _testResults;
