@@ -1,4 +1,5 @@
 /* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=4 sw=4 tw=99 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -51,15 +52,19 @@ public:
     return true;
   }
 
-  virtual bool DoSendSyncMessage(const nsAString& aMessage,
+  virtual bool DoSendSyncMessage(JSContext* aCx,
+                                 const nsAString& aMessage,
                                  const mozilla::dom::StructuredCloneData& aData,
+                                 JS::Handle<JSObject *> aCpows,
                                  InfallibleTArray<nsString>* aJSONRetVal)
   {
     return true;
   }
 
-  virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData)
+  virtual bool DoSendAsyncMessage(JSContext* aCx,
+                                  const nsAString& aMessage,
+                                  const mozilla::dom::StructuredCloneData& aData,
+                                  JS::Handle<JSObject *> aCpows)
   {
     return true;
   }
@@ -86,11 +91,11 @@ public:
 
 protected:
   bool BuildClonedMessageDataForParent(ContentParent* aParent,
-				       const StructuredCloneData& aData,
-				       ClonedMessageData& aClonedData);
+                                       const StructuredCloneData& aData,
+                                       ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(ContentChild* aChild,
-				      const StructuredCloneData& aData,
-				      ClonedMessageData& aClonedData);
+                                      const StructuredCloneData& aData,
+                                      ClonedMessageData& aClonedData);
 };
 
 StructuredCloneData UnpackClonedMessageDataForParent(const ClonedMessageData& aData);
@@ -110,6 +115,25 @@ struct nsMessageListenerInfo
   nsCOMPtr<nsIAtom> mMessage;
 };
 
+class CpowHolder
+{
+  public:
+    virtual bool ToObject(JSContext* cx, JSObject** objp) = 0;
+};
+
+class MOZ_STACK_CLASS SameProcessCpowHolder : public CpowHolder
+{
+  public:
+    SameProcessCpowHolder(JSRuntime *aRuntime, JS::Handle<JSObject *> aObj)
+      : mObj(aRuntime, aObj)
+    {
+    }
+
+    bool ToObject(JSContext* aCx, JSObject** aObjp);
+
+  private:
+    JS::RootedObject mObj;
+};
 
 class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
                                         public nsIMessageBroadcaster,
@@ -183,7 +207,7 @@ public:
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aSync, const StructuredCloneData* aCloneData,
-                          JS::Handle<JSObject*> aObjectsArray,
+                          CpowHolder* aCpows,
                           InfallibleTArray<nsString>* aJSONRetVal);
 
   void AddChildManager(nsFrameMessageManager* aManager,
@@ -202,11 +226,14 @@ public:
   }
 
   nsresult DispatchAsyncMessage(const nsAString& aMessageName,
-                                const JS::Value& aObject,
+                                const JS::Value& aJSON,
+                                const JS::Value& aObjects,
                                 JSContext* aCx,
                                 uint8_t aArgc);
-  nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
-                                        const StructuredCloneData& aData);
+  nsresult DispatchAsyncMessageInternal(JSContext* aCx,
+                                        const nsAString& aMessage,
+                                        const StructuredCloneData& aData,
+                                        JS::Handle<JSObject *> aCpows);
   void RemoveFromParent();
   nsFrameMessageManager* GetParentManager() { return mParentManager; }
   void SetParentManager(nsFrameMessageManager* aParent)

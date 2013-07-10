@@ -61,6 +61,9 @@ MOCHITEST_CHROME_FILES = \
     host_bug814638.xul \
     test_document_register.xul \
     frame_bug814638.xul \
+    test_cpows.xul \
+    cpows_parent.xul \
+    cpows_child.js \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

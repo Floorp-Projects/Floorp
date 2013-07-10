@@ -395,3 +395,78 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in, JSP
     return true;
 }
 
+bool
+CpowIdHolder::ToObject(JSContext *cx, JSObject **objp)
+{
+    return js_->Unwrap(cx, cpows_, objp);
+}
+
+bool
+JavaScriptShared::Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpows, JSObject **objp)
+{
+    *objp = NULL;
+
+    if (!aCpows.Length())
+        return true;
+
+    RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    if (!obj)
+        return false;
+
+    RootedValue v(cx);
+    RootedString str(cx);
+    for (size_t i = 0; i < aCpows.Length(); i++) {
+        const nsString &name = aCpows[i].name();
+
+        if (!toValue(cx, aCpows[i].value(), &v))
+            return false;
+
+        if (!JS_DefineUCProperty(cx,
+                                 obj,
+                                 name.BeginReading(),
+                                 name.Length(),
+                                 v,
+                                 NULL,
+                                 NULL,
+                                 JSPROP_ENUMERATE))
+        {
+            return false;
+        }
+    }
+
+    *objp = obj;
+    return true;
+}
+
+bool
+JavaScriptShared::Wrap(JSContext *cx, HandleObject aObj, InfallibleTArray<CpowEntry> *outCpows)
+{
+    if (!aObj)
+        return true;
+
+    AutoIdArray ids(cx, JS_Enumerate(cx, aObj));
+    if (!ids)
+        return false;
+
+    RootedId id(cx);
+    RootedValue v(cx);
+    for (size_t i = 0; i < ids.length(); i++) {
+        id = ids[i];
+
+        nsString str;
+        if (!convertIdToGeckoString(cx, id, &str))
+            return false;
+
+        if (!JS_GetPropertyById(cx, aObj, id, v.address()))
+            return false;
+
+        JSVariant var;
+        if (!toVariant(cx, v, &var))
+            return false;
+
+        outCpows->AppendElement(CpowEntry(str, var));
+    }
+
+    return true;
+}
+
