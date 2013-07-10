@@ -39,6 +39,10 @@ class Range
       return mStart[offset];
     }
 
+    const T& operator[](size_t offset) const {
+      return mStart[offset];
+    }
+
     operator ConvertibleToBool() const { return mStart ? &Range::nonNull : 0; }
 };
 
