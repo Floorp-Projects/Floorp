@@ -3417,7 +3417,6 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
             }
 
             MUST_MATCH_TOKEN(TOK_ASSIGN, JSMSG_BAD_DESTRUCT_DECL);
-            JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NOP);
 
             Node init = assignExpr();
             if (!init)
@@ -3449,8 +3448,6 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
         handler.addList(pn, pn2);
 
         if (tokenStream.matchToken(TOK_ASSIGN)) {
-            JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NOP);
-
             if (psimple)
                 *psimple = false;
 
@@ -3938,7 +3935,7 @@ Parser<FullParseHandler>::forStatement()
             pn2 = pn1;
             pn1 = NULL;
 
-            if (!setAssignmentLhsOps(pn2, JSOP_NOP))
+            if (!setAssignmentLhsOps(pn2, true))
                 return null();
         }
 
@@ -4163,7 +4160,7 @@ Parser<SyntaxParseHandler>::forStatement()
             return null();
         }
 
-        if (!isForDecl && !setAssignmentLhsOps(lhsNode, JSOP_NOP))
+        if (!isForDecl && !setAssignmentLhsOps(lhsNode, true))
             return null();
 
         if (!expr())
@@ -5096,7 +5093,7 @@ Parser<ParseHandler>::condExpr1()
 
 template <>
 bool
-Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, JSOp op)
+Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, bool isPlainAssignment)
 {
     switch (pn->getKind()) {
       case PNK_NAME:
@@ -5114,7 +5111,7 @@ Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, JSOp op)
 #if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
-        if (op != JSOP_NOP) {
+        if (!isPlainAssignment) {
             report(ParseError, false, null(), JSMSG_BAD_DESTRUCT_ASS);
             return false;
         }
@@ -5135,7 +5132,7 @@ Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, JSOp op)
 
 template <>
 bool
-Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, JSOp op)
+Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, bool isPlainAssignment)
 {
     /* Full syntax checking of valid assignment LHS terms requires a parse tree. */
     if (pn != SyntaxParseHandler::NodeName &&
@@ -5168,19 +5165,20 @@ Parser<ParseHandler>::assignExpr()
         return null();
 
     ParseNodeKind kind;
+    JSOp op;
     switch (tokenStream.currentToken().type) {
-      case TOK_ASSIGN:       kind = PNK_ASSIGN;       break;
-      case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    break;
-      case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    break;
-      case TOK_BITORASSIGN:  kind = PNK_BITORASSIGN;  break;
-      case TOK_BITXORASSIGN: kind = PNK_BITXORASSIGN; break;
-      case TOK_BITANDASSIGN: kind = PNK_BITANDASSIGN; break;
-      case TOK_LSHASSIGN:    kind = PNK_LSHASSIGN;    break;
-      case TOK_RSHASSIGN:    kind = PNK_RSHASSIGN;    break;
-      case TOK_URSHASSIGN:   kind = PNK_URSHASSIGN;   break;
-      case TOK_MULASSIGN:    kind = PNK_MULASSIGN;    break;
-      case TOK_DIVASSIGN:    kind = PNK_DIVASSIGN;    break;
-      case TOK_MODASSIGN:    kind = PNK_MODASSIGN;    break;
+      case TOK_ASSIGN:       kind = PNK_ASSIGN;       op = JSOP_NOP;    break;
+      case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    op = JSOP_ADD;    break;
+      case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    op = JSOP_SUB;    break;
+      case TOK_BITORASSIGN:  kind = PNK_BITORASSIGN;  op = JSOP_BITOR;  break;
+      case TOK_BITXORASSIGN: kind = PNK_BITXORASSIGN; op = JSOP_BITXOR; break;
+      case TOK_BITANDASSIGN: kind = PNK_BITANDASSIGN; op = JSOP_BITAND; break;
+      case TOK_LSHASSIGN:    kind = PNK_LSHASSIGN;    op = JSOP_LSH;    break;
+      case TOK_RSHASSIGN:    kind = PNK_RSHASSIGN;    op = JSOP_RSH;    break;
+      case TOK_URSHASSIGN:   kind = PNK_URSHASSIGN;   op = JSOP_URSH;   break;
+      case TOK_MULASSIGN:    kind = PNK_MULASSIGN;    op = JSOP_MUL;    break;
+      case TOK_DIVASSIGN:    kind = PNK_DIVASSIGN;    op = JSOP_DIV;    break;
+      case TOK_MODASSIGN:    kind = PNK_MODASSIGN;    op = JSOP_MOD;    break;
 
       case TOK_ARROW: {
         tokenStream.seek(start);
@@ -5201,8 +5199,7 @@ Parser<ParseHandler>::assignExpr()
         return lhs;
     }
 
-    JSOp op = tokenStream.currentToken().t_op;
-    if (!setAssignmentLhsOps(lhs, op))
+    if (!setAssignmentLhsOps(lhs, kind == PNK_ASSIGN))
         return null();
 
     Node rhs = assignExpr();
@@ -5264,7 +5261,7 @@ template <>
 bool
 Parser<SyntaxParseHandler>::setIncOpKid(Node pn, Node kid, TokenKind tt, bool preorder)
 {
-    return setAssignmentLhsOps(kid, JSOP_NOP);
+    return setAssignmentLhsOps(kid, false);
 }
 
 template <typename ParseHandler>
@@ -6617,7 +6614,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                 if (!abortIfSyntaxParser())
                     return null();
                 tokenStream.ungetToken();
-                if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), NULL, NULL))
+                if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), NULL))
                     return null();
                 handler.setListFlag(pn, PNX_DESTRUCT | PNX_NONCONST);
                 PropertyName *name = handler.isName(pn3);
