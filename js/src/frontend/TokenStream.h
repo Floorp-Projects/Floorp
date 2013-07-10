@@ -246,18 +246,10 @@ struct Token {
     TokenKind           type;           /* char value or above enumerator */
     TokenPos            pos;            /* token position in file */
     union {
-        struct {                        /* name or string literal */
-            JSOp        op;             /* operator, for minimal parser */
-            union {
-              private:
-                friend struct Token;
-                PropertyName *name;     /* non-numeric atom */
-                JSAtom       *atom;     /* potentially-numeric atom */
-            } n;
-        } s;
-
       private:
         friend struct Token;
+        PropertyName *name;             /* non-numeric atom */
+        JSAtom       *atom;             /* potentially-numeric atom */
         struct {
             double       value;         /* floating point number */
             DecimalPoint decimalPoint;  /* literal contains . or exponent */
@@ -273,18 +265,14 @@ struct Token {
      *        type-safety.  See bug 697000.
      */
 
-    void setName(JSOp op, PropertyName *name) {
-        JS_ASSERT(op == JSOP_NAME);
+    void setName(PropertyName *name) {
         JS_ASSERT(!IsPoisonedPtr(name));
-        u.s.op = op;
-        u.s.n.name = name;
+        u.name = name;
     }
 
-    void setAtom(JSOp op, JSAtom *atom) {
-        JS_ASSERT(op == JSOP_STRING);
+    void setAtom(JSAtom *atom) {
         JS_ASSERT(!IsPoisonedPtr(atom));
-        u.s.op = op;
-        u.s.n.atom = atom;
+        u.atom = atom;
     }
 
     void setRegExpFlags(js::RegExpFlag flags) {
@@ -301,12 +289,12 @@ struct Token {
 
     PropertyName *name() const {
         JS_ASSERT(type == TOK_NAME);
-        return u.s.n.name->asPropertyName(); /* poor-man's type verification */
+        return u.name->asPropertyName(); /* poor-man's type verification */
     }
 
     JSAtom *atom() const {
         JS_ASSERT(type == TOK_STRING);
-        return u.s.n.atom;
+        return u.atom;
     }
 
     js::RegExpFlag regExpFlags() const {
@@ -325,8 +313,6 @@ struct Token {
         return u.number.decimalPoint;
     }
 };
-
-#define t_op            u.s.op
 
 enum TokenStreamFlags
 {
@@ -687,19 +673,17 @@ class MOZ_STACK_CLASS TokenStream
 
     /*
      * If the name at s[0:length] is not a keyword in this version, return
-     * true with *ttp and *topp unchanged.
+     * true with *ttp unchanged.
      *
      * If it is a reserved word in this version and strictness mode, and thus
      * can't be present in correct code, report a SyntaxError and return false.
      *
-     * If it is a keyword, like "if", the behavior depends on ttp/topp. If ttp
-     * and topp are null, report a SyntaxError ("if is a reserved identifier")
-     * and return false. If ttp and topp are non-null, return true with the
-     * keyword's TokenKind in *ttp and its JSOp in *topp.
-     *
-     * ttp and topp must be either both null or both non-null.
+     * If it is a keyword, like "if", the behavior depends on ttp. If ttp is
+     * null, report a SyntaxError ("if is a reserved identifier") and return
+     * false. If ttp is non-null, return true with the keyword's TokenKind in
+     * *ttp.
      */
-    bool checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSOp *topp);
+    bool checkForKeyword(const jschar *s, size_t length, TokenKind *ttp);
 
     // This class maps a userbuf offset (which is 0-indexed) to a line number
     // (which is 1-indexed) and a column index (which is 0-indexed).
