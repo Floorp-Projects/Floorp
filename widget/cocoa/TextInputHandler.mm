@@ -4282,6 +4282,76 @@ TextInputHandlerBase::GetWindowLevel()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNormalWindowLevel);
 }
 
+NS_IMETHODIMP
+TextInputHandlerBase::AttachNativeKeyEvent(nsKeyEvent& aKeyEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Don't try to replace a native event if one already exists.
+  // OS X doesn't have an OS modifier, can't make a native event.
+  if (aKeyEvent.mNativeKeyEvent || aKeyEvent.modifiers & MODIFIER_OS) {
+    return NS_OK;
+  }
+
+  PR_LOG(gLog, PR_LOG_ALWAYS,
+    ("%p TextInputHandlerBase::AttachNativeKeyEvent, key=0x%X, char=0x%X, "
+     "mod=0x%X", this, aKeyEvent.keyCode, aKeyEvent.charCode,
+     aKeyEvent.modifiers));
+
+  NSEventType eventType;
+  if (aKeyEvent.message == NS_KEY_UP) {
+    eventType = NSKeyUp;
+  } else {
+    eventType = NSKeyDown;
+  }
+
+  static const uint32_t sModifierFlagMap[][2] = {
+    { MODIFIER_SHIFT,    NSShiftKeyMask },
+    { MODIFIER_CONTROL,  NSControlKeyMask },
+    { MODIFIER_ALT,      NSAlternateKeyMask },
+    { MODIFIER_ALTGRAPH, NSAlternateKeyMask },
+    { MODIFIER_META,     NSCommandKeyMask },
+    { MODIFIER_CAPSLOCK, NSAlphaShiftKeyMask },
+    { MODIFIER_NUMLOCK,  NSNumericPadKeyMask }
+  };
+
+  NSUInteger modifierFlags = 0;
+  for (uint32_t i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
+    if (aKeyEvent.modifiers & sModifierFlagMap[i][0]) {
+      modifierFlags |= sModifierFlagMap[i][1];
+    }
+  }
+
+  NSInteger windowNumber = [[mView window] windowNumber];
+
+  NSString* characters;
+  if (aKeyEvent.charCode) {
+    characters = [NSString stringWithCharacters:
+      reinterpret_cast<const unichar*>(&(aKeyEvent.charCode)) length:1];
+  } else {
+    uint32_t cocoaCharCode =
+      nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.keyCode);
+    characters = [NSString stringWithCharacters:
+      reinterpret_cast<const unichar*>(&cocoaCharCode) length:1];
+  }
+
+  aKeyEvent.mNativeKeyEvent =
+    [NSEvent     keyEventWithType:eventType
+                         location:NSMakePoint(0,0)
+                    modifierFlags:modifierFlags
+                        timestamp:0
+                     windowNumber:windowNumber
+                          context:[NSGraphicsContext currentContext]
+                       characters:characters
+      charactersIgnoringModifiers:characters
+                        isARepeat:NO
+                          keyCode:0]; // Native key code not currently needed
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 bool
 TextInputHandlerBase::SetSelection(NSRange& aRange)
 {

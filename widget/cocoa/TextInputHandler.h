@@ -379,6 +379,15 @@ public:
                                     const nsAString& aUnmodifiedCharacters);
 
   /**
+   * Utility method intended for testing. Attempts to construct a native key
+   * event that would have been generated during an actual key press. This
+   * *does not dispatch* the native event. Instead, it is attached to the
+   * |mNativeKeyEvent| field of the Gecko event that is passed in.
+   * @param aKeyEvent  Gecko key event to attach the native event to
+   */
+  NS_IMETHOD AttachNativeKeyEvent(nsKeyEvent& aKeyEvent);
+
+  /**
    * GetWindowLevel() returns the window level of current focused (in Gecko)
    * window.  E.g., if an <input> element in XUL panel has focus, this returns
    * the XUL panel's window level.
