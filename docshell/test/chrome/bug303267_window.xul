@@ -37,7 +37,7 @@
         onNavComplete: nextTest
       };
       doPageNavigation(navData);
-      yield;
+      yield undefined;
       
       // Save the HTML of the test page for later comparison.
       var originalHTML = getInnerHTMLById("div1");
@@ -57,7 +57,7 @@
         onNavComplete: nextTest
       };
       doPageNavigation(navData);
-      yield;
+      yield undefined;
       
       // Go back.  Verify that the pageshow event for the original test page 
       // had a .persisted property of true, indicating that it came from the 
@@ -73,7 +73,7 @@
         onNavComplete: nextTest
       };
       doPageNavigation(navData);
-      yield;
+      yield undefined;
       
       // After going back, if showpagecount() could access a global variable
       // and change the test div's innerHTML, then we pass.  Otherwise, it
@@ -85,7 +85,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
 
     ////
