@@ -50,7 +50,7 @@ MDefinition::earlyAbortCheck()
 {
     if (isPhi())
         return false;
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->earlyAbort()) {
             block()->setEarlyAbort();
             IonSpew(IonSpew_Range, "Ignoring value from block %d because instruction %d is in a block that aborts", block()->id(), getOperand(i)->id());
@@ -145,7 +145,7 @@ HashNumber
 MDefinition::valueHash() const
 {
     HashNumber out = op();
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         uint32_t valueNumber = getOperand(i)->valueNumber();
         out = valueNumber + (out << 6) + (out << 16) - out;
     }
@@ -167,7 +167,7 @@ MDefinition::congruentIfOperandsEqual(MDefinition * const &ins) const
     if (isEffectful() || ins->isEffectful())
         return false;
 
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->valueNumber() != ins->getOperand(i)->valueNumber())
             return false;
     }
@@ -231,7 +231,7 @@ void
 MDefinition::printOpcode(FILE *fp)
 {
     PrintOpcodeName(fp, op());
-    for (size_t j = 0; j < numOperands(); j++) {
+    for (size_t j = 0, e = numOperands(); j < e; j++) {
         fprintf(fp, " ");
         getOperand(j)->printName(fp);
     }
@@ -324,7 +324,7 @@ MDefinition::replaceAllUsesWith(MDefinition *dom)
     if (dom == this)
         return;
 
-    for (size_t i = 0; i < numOperands(); i++)
+    for (size_t i = 0, e = numOperands(); i < e; i++)
         getOperand(i)->setUseRemovedUnchecked();
 
     for (MUseIterator i(usesBegin()); i != usesEnd(); ) {
@@ -847,7 +847,7 @@ MPassArg::printOpcode(FILE *fp)
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %d ", argnum_);
-    for (size_t j = 0; j < numOperands(); j++) {
+    for (size_t j = 0, e = numOperands(); j < e; j++) {
         getOperand(j)->printName(fp);
         if (j != numOperands() - 1)
             fprintf(fp, " ");
@@ -1049,7 +1049,7 @@ NeedNegativeZeroCheck(MDefinition *def)
             if (use_def->getOperand(0) == def)
                 return true;
             if (use_def->numOperands() > 2) {
-                for (size_t i = 2; i < use_def->numOperands(); i++) {
+                for (size_t i = 2, e = use_def->numOperands(); i < e; i++) {
                     if (use_def->getOperand(i) == def)
                         return true;
                 }

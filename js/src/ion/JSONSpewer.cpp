@@ -252,7 +252,7 @@ JSONSpewer::spewMDef(MDefinition *def)
     endList();
 
     beginListProperty("inputs");
-    for (size_t i = 0; i < def->numOperands(); i++)
+    for (size_t i = 0, e = def->numOperands(); i < e; i++)
         integerValue(def->getOperand(i)->id());
     endList();
 

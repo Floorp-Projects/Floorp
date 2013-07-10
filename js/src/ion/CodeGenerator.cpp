@@ -7091,7 +7091,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
     MAsmJSCall *mir = ins->mir();
 
 #if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
-    for (unsigned i = 0; i < ins->numOperands(); i++) {
+    for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
         LAllocation *a = ins->getOperand(i);
         if (a->isFloatReg()) {
             FloatRegister fr = ToFloatRegister(a);
