@@ -8350,9 +8350,10 @@ class CGBindingRoot(CGThing):
         requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
         hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
         requiresContentUtils = any(d.interface.hasInterfaceObject() for d in descriptors)
-        def descriptorHasChromeOnlyMembers(desc):
-            return any(isChromeOnly(a) for a in desc.interface.members)
-        hasChromeOnlyMembers = any(descriptorHasChromeOnlyMembers(d) for d in descriptors)
+        def descriptorHasChromeOnly(desc):
+            return (any(isChromeOnly(a) for a in desc.interface.members) or
+                    desc.interface.getExtendedAttribute("ChromeOnly") is not None)
+        hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         isEventTarget = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
@@ -8469,7 +8470,7 @@ class CGBindingRoot(CGThing):
                             + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
                             + (['nsContentUtils.h'] if requiresContentUtils else [])
                             + (['nsCxPusher.h'] if mainDictionaries else [])
-                            + (['AccessCheck.h'] if hasChromeOnlyMembers else [])
+                            + (['AccessCheck.h'] if hasChromeOnly else [])
                             + (['xpcprivate.h'] if isEventTarget else []),
                          prefix,
                          curr,
