@@ -185,7 +185,7 @@ function runTest() {
     else {
       clickImage(elem, 10, 7);
     }
-    yield;
+    yield undefined;
 
     var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
     checkSubmission(submission, expectedSub[i]);
@@ -204,7 +204,7 @@ function runTest() {
     else {
       clickImage(elem, 10, 7);
     }
-    yield;
+    yield undefined;
 
     is(elem.disabled, true, "didn't disable");
     elem.disabled = false;
@@ -215,7 +215,7 @@ function runTest() {
   }
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 </script>

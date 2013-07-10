@@ -92,13 +92,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
   function runTest()
   {
     test('input');
-    yield;
+    yield undefined;
     test('textarea');
-    yield;
+    yield undefined;
     testCorrectUpdateOnScroll();
-    yield;
+    yield undefined;
     SimpleTest.finish();
-    yield;
+    yield undefined;
   }
 
   gTestRunner = runTest();

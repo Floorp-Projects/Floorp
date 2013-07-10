@@ -224,7 +224,7 @@ try {
     }
     xhr.send(test.body);
     if (test.resType)
-      yield;
+      yield undefined;
 
     if (test.resContentType) {
       is(xhr.getResponseHeader("Result-Content-Type"), test.resContentType,
@@ -278,7 +278,7 @@ function is_identical_arraybuffer(ab1, ab2) {
 }
 
 SimpleTest.finish();
-yield;
+yield undefined;
 } /* runTests */
 
 </script>

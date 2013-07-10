@@ -203,11 +203,11 @@ function runTests() {
         xhr.send("ready");
         xhr.onreadystatechange = getEvent;
 
-        let e = yield;
+        let e = yield undefined;
         is(e.type, "readystatechange", "should readystate to headers-received starting " + testState.name);
         is(xhr.readyState, xhr.HEADERS_RECEIVED, "should be in state HEADERS_RECEIVED starting " + testState.name);
   
-        e = yield;
+        e = yield undefined;
         is(e.type, "readystatechange", "should readystate to loading starting " + testState.name);
         is(xhr.readyState, xhr.LOADING, "should be in state LOADING starting " + testState.name);
         if (typeof testState.total == "undefined")
@@ -223,7 +223,7 @@ function runTests() {
         if (!testState.file)
           xhrClose = closeConn();
 
-        e = yield;
+        e = yield undefined;
         is(e.type, "readystatechange", "should readystate to done closing " + testState.name);
         is(xhr.readyState, xhr.DONE, "should be in state DONE closing " + testState.name);
         log("readystate to 4");
@@ -233,7 +233,7 @@ function runTests() {
           is(xhr.response, null, "chunked data has null response for " + testState.name);
         }
       
-        e = yield;
+        e = yield undefined;
         is(e.type, "load", "should fire load closing " + testState.name);
         is(e.lengthComputable, true, "length should be computable during load closing " + testState.name);
         log("got load");
@@ -242,7 +242,7 @@ function runTests() {
           is(xhr.response, null, "chunked data has null response for " + testState.name);
         }
       
-        e = yield;
+        e = yield undefined;
         is(e.type, "loadend", "should fire loadend closing " + testState.name);
         is(e.lengthComputable, true, "length should be computable during loadend closing " + testState.name);
         log("got loadend");
@@ -253,7 +253,7 @@ function runTests() {
         if (xhrClose && xhrClose.readyState != xhrClose.DONE) {
           log("wait for closeConn to finish");
           xhrClose.onloadend = getEvent;
-          yield;
+          yield undefined;
           is(xhrClose.readyState, xhrClose.DONE, "closeConn finished");
         }
 
@@ -273,7 +273,7 @@ function runTests() {
           let reader = new FileReader;
           reader.readAsBinaryString(xhr.response);
           reader.onloadend = getEvent;
-          yield;
+          yield undefined;
 
           is(reader.result, testState.pendingResult,
              "full response in blob for " + testState.name);
@@ -295,7 +295,7 @@ function runTests() {
   
       while(testState.pendingBytes) {
         log("waiting for more bytes: " + testState.pendingBytes);
-        e = yield;
+        e = yield undefined;
         // Readystate can fire several times between each progress event.
         if (e.type === "readystatechange")
           continue;
@@ -318,7 +318,7 @@ function runTests() {
   }
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 </script>
