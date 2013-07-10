@@ -33,6 +33,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
+#include "vm/RegExpStatics.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
@@ -45,7 +46,6 @@
 #include "frontend/SharedContext-inl.h"
 
 #include "vm/NumericConversions.h"
-#include "vm/RegExpStatics-inl.h"
 
 using namespace js;
 using namespace js::gc;
