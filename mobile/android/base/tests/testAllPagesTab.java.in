@@ -21,7 +21,6 @@ import @ANDROID_PACKAGE_NAME@.*;
 */
 
 public class testAllPagesTab extends BaseTest {
-    private static final String ABOUT_HOME_URL = "about:home";
     private static ListView listview = null;
 
     private String[] mBookmarks = new String[] {
