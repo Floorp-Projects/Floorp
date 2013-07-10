@@ -6209,13 +6209,6 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
 
-            /*
-             * Do folding so we don't have roundtrip changes for cases like:
-             * function (obj) { return obj["a" + "b"] }
-             */
-            if (foldConstants && !FoldConstants(context, &propExpr, this))
-                return null();
-
             nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
                 return null();
