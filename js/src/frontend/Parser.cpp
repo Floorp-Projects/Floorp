@@ -4416,8 +4416,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     if (next == TOK_ERROR)
         return null();
     if (next == TOK_EOF || next == TOK_EOL || next == TOK_SEMI || next == TOK_RC ||
-        (isYield && (next == TOK_YIELD || next == TOK_RB || next == TOK_RP ||
-                     next == TOK_COLON || next == TOK_COMMA)))
+        (isYield && (next == TOK_RB || next == TOK_RP || next == TOK_COLON || next == TOK_COMMA)))
     {
         if (isYield) {
             if (!reportWithOffset(ParseWarning, false, pos().begin, JSMSG_YIELD_WITHOUT_OPERAND))
