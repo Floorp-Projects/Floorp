@@ -15,7 +15,7 @@
 /* header file for coding tables for the pitch filter side-info in the entropy coder */
 /********************* Pitch Filter Gain Coefficient Tables ************************/
 /* cdf for quantized pitch filter gains */
-const WebRtc_UWord16 WebRtcIsac_kQPitchGainCdf[255] = {
+const uint16_t WebRtcIsac_kQPitchGainCdf[255] = {
   0,  2,  4,  6,  64,  901,  903,  905,  16954,  16956,
   16961,  17360,  17362,  17364,  17366,  17368,  17370,  17372,  17374,  17411,
   17514,  17516,  17583,  18790,  18796,  18802,  20760,  20777,  20782,  21722,
@@ -44,22 +44,22 @@ const WebRtc_UWord16 WebRtcIsac_kQPitchGainCdf[255] = {
   65535,  65535,  65535,  65535,  65535};
 
 /* index limits and ranges */
-const WebRtc_Word16 WebRtcIsac_kIndexLowerLimitGain[3] = {
+const int16_t WebRtcIsac_kIndexLowerLimitGain[3] = {
   -7, -2, -1};
 
-const WebRtc_Word16 WebRtcIsac_kIndexUpperLimitGain[3] = {
+const int16_t WebRtcIsac_kIndexUpperLimitGain[3] = {
   0,  3,  1};
 
-const WebRtc_UWord16 WebRtcIsac_kIndexMultsGain[2] = {
+const uint16_t WebRtcIsac_kIndexMultsGain[2] = {
   18,  3};
 
 /* size of cdf table */
-const WebRtc_UWord16 WebRtcIsac_kQCdfTableSizeGain[1] = {
+const uint16_t WebRtcIsac_kQCdfTableSizeGain[1] = {
   256};
 
 ///////////////////////////FIXED POINT
 /* mean values of pitch filter gains in FIXED point */
-const WebRtc_Word16 WebRtcIsac_kQMeanGain1Q12[144] = {
+const int16_t WebRtcIsac_kQMeanGain1Q12[144] = {
    843,    1092,    1336,    1222,    1405,    1656,    1500,    1815,    1843,    1838,    1839,    1843,    1843,    1843,    1843,    1843,
   1843,    1843,     814,     846,    1092,    1013,    1174,    1383,    1391,    1511,    1584,    1734,    1753,    1843,    1843,    1843,
   1843,    1843,    1843,    1843,     524,     689,     777,     845,     947,    1069,    1090,    1263,    1380,    1447,    1559,    1676,
@@ -70,7 +70,7 @@ const WebRtc_Word16 WebRtcIsac_kQMeanGain1Q12[144] = {
    112,     120,     190,     283,     442,     343,     526,     809,     684,     935,    1134,    1020,    1265,    1506,       0,       0,
      0,       0,       0,       0,       0,     111,     256,      87,     373,     597,     430,     684,     935,     770,    1020,    1265};
 
-const WebRtc_Word16 WebRtcIsac_kQMeanGain2Q12[144] = {
+const int16_t WebRtcIsac_kQMeanGain2Q12[144] = {
   1760,    1525,    1285,    1747,    1671,    1393,    1843,    1826,    1555,    1843,    1784,    1606,    1843,    1843,    1711,    1843,
   1843,    1814,    1389,    1275,    1040,    1564,    1414,    1252,    1610,    1495,    1343,    1753,    1592,    1405,    1804,    1720,
   1475,    1843,    1814,    1581,    1208,    1061,    856,    1349,    1148,    994,    1390,    1253,    1111,    1495,    1343,    1178,
@@ -81,7 +81,7 @@ const WebRtc_Word16 WebRtcIsac_kQMeanGain2Q12[144] = {
   222,    38,        513,    271,    124,    624,    325,    157,    737,    484,    233,    849,    597,    343,    27,        0,
   0,    141,    0,    0,    256,    69,        0,    370,    87,        0,    484,    229,    0,    597,    343,    87};
 
-const WebRtc_Word16 WebRtcIsac_kQMeanGain3Q12[144] = {
+const int16_t WebRtcIsac_kQMeanGain3Q12[144] = {
   1843,    1843,    1711,    1843,    1818,    1606,    1843,    1827,    1511,    1814,    1639,    1393,    1760,    1525,    1285,    1656,
   1419,    1176,    1835,    1718,    1475,    1841,    1650,    1387,    1648,    1498,    1287,    1600,    1411,    1176,    1522,    1299,
   1040,    1419,    1176,    928,    1773,    1461,    1128,    1532,    1355,    1202,    1429,    1260,    1115,    1398,    1151,    1025,
@@ -93,7 +93,7 @@ const WebRtc_Word16 WebRtcIsac_kQMeanGain3Q12[144] = {
   0,    370,    57,        0,    256,    43,        0,    141,    0,        0,    27,        0,    0,    0,    0,    0};
 
 
-const WebRtc_Word16 WebRtcIsac_kQMeanGain4Q12[144] = {
+const int16_t WebRtcIsac_kQMeanGain4Q12[144] = {
   1843,    1843,    1843,    1843,    1841,    1843,    1500,    1821,    1843,    1222,    1434,    1656,    843,    1092,    1336,    504,
   757,    1007,    1843,    1843,    1843,    1838,    1791,    1843,    1265,    1505,    1599,    965,    1219,    1425,    730,    821,
   1092,    249,    504,    757,    1783,    1819,    1843,    1351,    1567,    1727,    1096,    1268,    1409,    805,    961,    1131,

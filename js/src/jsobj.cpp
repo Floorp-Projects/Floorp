@@ -50,6 +50,7 @@
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
+#include "vm/Runtime-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
 
@@ -552,7 +553,7 @@ Reject(JSContext *cx, HandleId id, unsigned errorNumber, bool throwError, bool *
 //
 // DefinePropertyOnObject has its own implementation of these checks.
 //
-bool
+JS_FRIEND_API(bool)
 js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
                         PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
@@ -3943,7 +3944,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
          * or throw if we're in strict mode.
          */
         if (!shape->hasGetterValue() && shape->hasDefaultSetter())
-            return js_ReportGetterOnlyAssignment(cx);
+            return js_ReportGetterOnlyAssignment(cx, strict);
     }
 
     RootedValue ovp(cx, vp);
@@ -4474,7 +4475,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
             if (shape->hasDefaultSetter())
-                return js_ReportGetterOnlyAssignment(cx);
+                return js_ReportGetterOnlyAssignment(cx, strict);
         } else {
             JS_ASSERT(shape->isDataDescriptor());
 
@@ -5131,11 +5132,12 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 }
 
 JSBool
-js_ReportGetterOnlyAssignment(JSContext *cx)
+js_ReportGetterOnlyAssignment(JSContext *cx, bool strict)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
-                                        JSREPORT_WARNING | JSREPORT_STRICT |
-                                        JSREPORT_STRICT_MODE_ERROR,
+                                        strict
+                                        ? JSREPORT_ERROR 
+                                        : JSREPORT_WARNING | JSREPORT_STRICT,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_GETTER_ONLY);
 }

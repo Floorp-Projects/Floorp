@@ -223,7 +223,8 @@ class SmallXPI(unittest.TestCase):
             os.path.join("sdk", "self.js"),
             os.path.join("sdk", "core", "promise.js"),
             os.path.join("sdk", "net", "url.js"),
-            os.path.join("sdk", "util", "object.js")
+            os.path.join("sdk", "util", "object.js"),
+            os.path.join("sdk", "util", "array.js")
             ]])
 
         missing = set(expected) - set(used_files)
@@ -265,6 +266,7 @@ class SmallXPI(unittest.TestCase):
                     "resources/addon-sdk/lib/sdk/net/",
                     "resources/addon-sdk/lib/sdk/core/promise.js",
                     "resources/addon-sdk/lib/sdk/util/object.js",
+                    "resources/addon-sdk/lib/sdk/util/array.js",
                     "resources/addon-sdk/lib/sdk/net/url.js",
                     "resources/three/",
                     "resources/three/lib/",

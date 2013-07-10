@@ -18,6 +18,13 @@
         'test/libvietest/libvietest.gypi',
         'test/auto_test/vie_auto_test.gypi',
       ],
+      'conditions': [
+        ['OS=="android"', {
+          'includes': [
+            'test/android/android_video_demo.gypi',
+          ],
+        }],
+      ],
     }],
   ],
 }

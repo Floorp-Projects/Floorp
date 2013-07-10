@@ -123,11 +123,11 @@ struct nsCycleCollectionParticipantVTableCommon
     nsresult (NS_STDCALL *Unlink)(void *p);
     nsresult (NS_STDCALL *Unroot)(void *p);
 
-    void (NS_STDCALL *UnmarkIfPurple)(void *p);
-
     bool (NS_STDCALL *CanSkipReal)(void *p, bool aRemovingAllowed);
     bool (NS_STDCALL *CanSkipInCCReal)(void *p);
     bool (NS_STDCALL *CanSkipThisReal)(void *p);
+
+    void (NS_STDCALL *DeleteCycleCollectable)(void*);
 };
 
 typedef nsCycleCollectionParticipantVTableCommon<nsCycleCollectionParticipant>
@@ -547,9 +547,9 @@ T* DowncastCCParticipant(void *p)
 public:                                                                        \
   static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_CLASSNAME(_class) *that,   \
                             void *p, nsCycleCollectionTraversalCallback &cb);  \
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *s)                          \
+  static NS_METHOD_(void) DeleteCycleCollectableImpl(void* p)                  \
   {                                                                            \
-    Downcast(static_cast<nsISupports *>(s))->UnmarkIfPurple();                 \
+    DowncastCCParticipant<_class>(p)->DeleteCycleCollectable();                \
   }                                                                            \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
@@ -710,17 +710,6 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
 };
 
 /**
- * This implements a stub UnmarkIfPurple function for classes that want to be
- * traversed but whose AddRef/Release functions don't add/remove them to/from
- * the purple buffer. If you're just using NS_DECL_CYCLE_COLLECTING_ISUPPORTS
- * then you don't need this.
- */
-#define NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(_class)                    \
-  NS_IMETHODIMP_(void) UnmarkIfPurple()                                        \
-  {                                                                            \
-  }                                                                            \
-
-/**
  * Dummy class with a definition for CanSkip* function members, but no
  * implementation.
  * Implementation was added to please Win PGO. (See bug 765159)
@@ -752,10 +741,10 @@ struct Skippable
     &_class::RootImpl,                                                         \
     &_class::UnlinkImpl,                                                       \
     &_class::UnrootImpl,                                                       \
-    &_class::UnmarkIfPurpleImpl,                                               \
     _class::isSkippable ? &Skippable<_class>::CanSkipImpl : NULL,              \
     _class::isSkippable ? &Skippable<_class>::CanSkipInCCImpl : NULL,          \
-    _class::isSkippable ? &Skippable<_class>::CanSkipThisImpl : NULL           \
+    _class::isSkippable ? &Skippable<_class>::CanSkipThisImpl : NULL,          \
+    &_class::DeleteCycleCollectableImpl                                        \
   }
 
 #define NS_IMPL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_VTABLE(_class)           \
@@ -774,22 +763,21 @@ struct Skippable
     static NS_METHOD UnlinkImpl(void *n);                                      \
     static NS_METHOD UnrootImpl(void *n);                                      \
     static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_CLASSNAME(_class) *that, \
-                           void *n, nsCycleCollectionTraversalCallback &cb);
-
-#define NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)               \
-    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p)                        \
+                           void *n, nsCycleCollectionTraversalCallback &cb);   \
+    static NS_METHOD_(void) DeleteCycleCollectableImpl(void* p)                \
     {                                                                          \
-        _class *tmp = static_cast<_class *>(p);                                \
-        if (MOZ_LIKELY(tmp->mRefCnt.HasPurpleBufferEntry()))                   \
-            tmp->mRefCnt.ReleasePurpleBufferEntry();                           \
+      DowncastCCParticipant<_class>(p)->DeleteCycleCollectable();              \
     }
 
 #define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
+  void DeleteCycleCollectable(void)                                            \
+  {                                                                            \
+    delete this;                                                               \
+  }                                                                            \
   class NS_CYCLE_COLLECTION_INNERCLASS                                         \
    : public nsCycleCollectionParticipant                                       \
   {                                                                            \
      NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                        \
-     NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)                  \
      static nsCycleCollectionParticipant* GetParticipant()                     \
      {                                                                         \
         static const CCParticipantVTable<NS_CYCLE_COLLECTION_CLASSNAME(_class)> \
@@ -802,11 +790,14 @@ struct Skippable
   };
 
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(_class)            \
+  void DeleteCycleCollectable(void)                                            \
+  {                                                                            \
+    delete this;                                                               \
+  }                                                                            \
   class NS_CYCLE_COLLECTION_INNERCLASS                                         \
    : public nsScriptObjectTracer                                               \
   {                                                                            \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
-    NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)                   \
     static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb,       \
                                       void *closure);                          \
     static nsScriptObjectTracer* GetParticipant()                              \

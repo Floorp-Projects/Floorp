@@ -133,12 +133,12 @@ TEST(TestDataLog, VerifySingleTable) {
   DataLog::AddColumn(DataLog::Combine("table", 1), "arrival", 1);
   DataLog::AddColumn(DataLog::Combine("table", 1), "timestamp", 1);
   DataLog::AddColumn(DataLog::Combine("table", 1), "size", 5);
-  WebRtc_UWord32 sizes[5] = {1400, 1500, 1600, 1700, 1800};
+  uint32_t sizes[5] = {1400, 1500, 1600, 1700, 1800};
   for (int i = 0; i < 10; ++i) {
     DataLog::InsertCell(DataLog::Combine("table", 1), "arrival",
                         static_cast<double>(i));
     DataLog::InsertCell(DataLog::Combine("table", 1), "timestamp",
-                        static_cast<WebRtc_Word64>(4354 + i));
+                        static_cast<int64_t>(4354 + i));
     DataLog::InsertCell(DataLog::Combine("table", 1), "size", sizes, 5);
     DataLog::NextRow(DataLog::Combine("table", 1));
   }
@@ -188,19 +188,19 @@ TEST(TestDataLog, VerifyMultipleTables) {
   DataLog::AddColumn(DataLog::Combine("table", 3), "timestamp", 1);
   DataLog::AddColumn(DataLog::Combine("table", 3), "arrival", 1);
   DataLog::AddColumn(DataLog::Combine("table", 4), "size", 1);
-  for (WebRtc_Word32 i = 0; i < 10; ++i) {
+  for (int32_t i = 0; i < 10; ++i) {
     DataLog::InsertCell(DataLog::Combine("table", 2), "arrival",
-                        static_cast<WebRtc_Word32>(i));
+                        static_cast<int32_t>(i));
     DataLog::InsertCell(DataLog::Combine("table", 2), "timestamp",
-                        static_cast<WebRtc_Word32>(4354 + i));
+                        static_cast<int32_t>(4354 + i));
     DataLog::InsertCell(DataLog::Combine("table", 2), "size",
-                        static_cast<WebRtc_Word32>(1200 + 10 * i));
+                        static_cast<int32_t>(1200 + 10 * i));
     DataLog::InsertCell(DataLog::Combine("table", 3), "timestamp",
-                        static_cast<WebRtc_Word32>(4354 + i));
+                        static_cast<int32_t>(4354 + i));
     DataLog::InsertCell(DataLog::Combine("table", 3), "arrival",
-                        static_cast<WebRtc_Word32>(i));
+                        static_cast<int32_t>(i));
     DataLog::InsertCell(DataLog::Combine("table", 4), "size",
-                        static_cast<WebRtc_Word32>(1200 + 10 * i));
+                        static_cast<int32_t>(1200 + 10 * i));
     DataLog::NextRow(DataLog::Combine("table", 4));
     DataLog::NextRow(DataLog::Combine("table", 2));
     DataLog::NextRow(DataLog::Combine("table", 3));

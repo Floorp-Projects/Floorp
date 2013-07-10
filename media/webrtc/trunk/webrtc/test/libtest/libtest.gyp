@@ -12,7 +12,7 @@
   'targets': [
     {
       'target_name': 'libtest',
-      'type': '<(library)',
+      'type': 'static_library',
       'sources': [
         # Helper classes
         'include/bit_flip_encryption.h',

@@ -32,16 +32,16 @@ void WebRtcIlbcfix_AbsQuant(
     iLBC_bits *iLBC_encbits, /* (i/o) Encoded bits (outputs idxForMax
                                    and idxVec, uses state_first as
                                    input) */
-    WebRtc_Word16 *in,     /* (i) vector to encode */
-    WebRtc_Word16 *weightDenum   /* (i) denominator of synthesis filter */
+    int16_t *in,     /* (i) vector to encode */
+    int16_t *weightDenum   /* (i) denominator of synthesis filter */
                             ) {
-  WebRtc_Word16 *syntOut;
-  WebRtc_Word16 quantLen[2];
+  int16_t *syntOut;
+  int16_t quantLen[2];
 
   /* Stack based */
-  WebRtc_Word16 syntOutBuf[LPC_FILTERORDER+STATE_SHORT_LEN_30MS];
-  WebRtc_Word16 in_weightedVec[STATE_SHORT_LEN_30MS+LPC_FILTERORDER];
-  WebRtc_Word16 *in_weighted = &in_weightedVec[LPC_FILTERORDER];
+  int16_t syntOutBuf[LPC_FILTERORDER+STATE_SHORT_LEN_30MS];
+  int16_t in_weightedVec[STATE_SHORT_LEN_30MS+LPC_FILTERORDER];
+  int16_t *in_weighted = &in_weightedVec[LPC_FILTERORDER];
 
   /* Initialize the buffers */
   WebRtcSpl_MemSetW16(syntOutBuf, 0, LPC_FILTERORDER+STATE_SHORT_LEN_30MS);

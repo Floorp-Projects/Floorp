@@ -58,12 +58,8 @@ function test() {
   };
 
   function testOnWindow(options, callback) {
-    let win = OpenBrowserWindow(options);
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
-      windowsToClose.push(win);
-      executeSoon(function() callback(win));
-    }, false);
+    let win = whenNewWindowLoaded(options, callback);
+    windowsToClose.push(win);
   };
 
   registerCleanupFunction(function() {

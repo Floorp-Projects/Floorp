@@ -70,7 +70,7 @@ public:
     std::string GetName() const;
 
     VideoSize GetSize() const;
-    static VideoSize GetSize(WebRtc_UWord16 width, WebRtc_UWord16 height);
+    static VideoSize GetSize(uint16_t width, uint16_t height);
     unsigned int GetFrameLength() const;
 
     // Returns a human-readable size string.

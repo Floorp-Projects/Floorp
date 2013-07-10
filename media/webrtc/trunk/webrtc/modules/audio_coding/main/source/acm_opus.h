@@ -61,7 +61,7 @@ class ACMOpus : public ACMGenericCodec {
   WebRtcOpusEncInst* encoder_inst_ptr_;
   WebRtcOpusDecInst* decoder_inst_ptr_;
   uint16_t sample_freq_;
-  uint16_t bitrate_;
+  uint32_t bitrate_;
   int channels_;
 };
 

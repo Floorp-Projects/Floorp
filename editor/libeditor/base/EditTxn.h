@@ -24,6 +24,8 @@ public:
 
   virtual ~EditTxn();
 
+  virtual void LastRelease() {}
+
   NS_IMETHOD RedoTransaction(void);
   NS_IMETHOD GetIsTransient(bool *aIsTransient);
   NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge);

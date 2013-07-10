@@ -147,13 +147,18 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     if (passes == 2) {
       ShaderProgramOGL* alphaProgram;
       if (pass == 1) {
-        alphaProgram = aManager->GetProgram(ComponentAlphaPass1ProgramType,
-                                            mLayer->GetMaskLayer());
+        ShaderProgramType type = gl()->GetPreferredARGB32Format() == LOCAL_GL_BGRA ?
+                                 ComponentAlphaPass1RGBProgramType :
+                                 ComponentAlphaPass1ProgramType;
+
+        alphaProgram = aManager->GetProgram(type, mLayer->GetMaskLayer());
         gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       } else {
-        alphaProgram = aManager->GetProgram(ComponentAlphaPass2ProgramType,
-                                            mLayer->GetMaskLayer());
+        ShaderProgramType type = gl()->GetPreferredARGB32Format() == LOCAL_GL_BGRA ?
+                                 ComponentAlphaPass2RGBProgramType :
+                                 ComponentAlphaPass2ProgramType;
+        alphaProgram = aManager->GetProgram(type, mLayer->GetMaskLayer());
         gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       }

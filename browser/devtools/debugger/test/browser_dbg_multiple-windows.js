@@ -52,13 +52,40 @@ function test_open_window()
                    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                    .getInterface(Components.interfaces.nsIDOMWindow);
   is(top, main2, "The second window is on top.");
-  executeSoon(function() {
-    gClient.listTabs(function(aResponse) {
-      is(aResponse.selected, 2, "Tab2 is selected.");
+  let gotLoad = false;
+  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == main2);
+  function maybeWindowLoadedAndActive() {
+    if (gotLoad && gotActivate) {
+      top.BrowserChromeTest.runWhenReady(function() {
+        executeSoon(function() {
+          gClient.listTabs(function(aResponse) {
+            is(aResponse.selected, 2, "Tab2 is selected.");
+            test_focus_first();
+          });
+        });
+      })
+    }
+  }
 
-      test_focus_first();
-    });
-  });
+  if (!gotActivate) {
+    main2.addEventListener("activate", function() {
+        main2.removeEventListener("activate", arguments.callee, true);
+        gotActivate = true;
+        maybeWindowLoadedAndActive();
+      },
+      true
+    );
+  }
+  main2.document.addEventListener("load", function(e) {
+      if (e.target.documentURI != TAB2_URL) {
+        return;
+      }
+      main2.document.removeEventListener("load", arguments.callee, true);
+      gotLoad = true;
+      maybeWindowLoadedAndActive();
+    },
+    true
+  );
 }
 
 function test_focus_first()

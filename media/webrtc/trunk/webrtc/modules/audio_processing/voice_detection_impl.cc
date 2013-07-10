@@ -61,7 +61,7 @@ int VoiceDetectionImpl::ProcessCaptureAudio(AudioBuffer* audio) {
   }
   assert(audio->samples_per_split_channel() <= 160);
 
-  WebRtc_Word16* mixed_data = audio->low_pass_split_data(0);
+  int16_t* mixed_data = audio->low_pass_split_data(0);
   if (audio->num_channels() > 1) {
     audio->CopyAndMixLowPass(1);
     mixed_data = audio->mixed_low_pass_data(0);

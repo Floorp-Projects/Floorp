@@ -30,8 +30,8 @@ public:
 /**
  * Texture source and host implementaion for software compositing.
  */
-class TextureHostBasic : public TextureHost
-                             , public TextureSourceBasic
+class DeprecatedTextureHostBasic : public DeprecatedTextureHost
+                                 , public TextureSourceBasic
 {
 public:
   virtual IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
@@ -45,7 +45,7 @@ public:
     mCompositor = static_cast<BasicCompositor*>(aCompositor);
   }
 
-  virtual const char *Name() { return "TextureHostBasic"; }
+  virtual const char *Name() { return "DeprecatedTextureHostBasic"; }
 
 protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
@@ -105,7 +105,7 @@ DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, Pl
   aData.mPicSize = aDeserializer.GetYSize();
 }
 
-class YCbCrTextureHostBasic : public TextureHostBasic
+class YCbCrDeprecatedTextureHostBasic : public DeprecatedTextureHostBasic
 {
 public:
   virtual void UpdateImpl(const SurfaceDescriptor& aImage,
@@ -162,19 +162,19 @@ public:
 
 };
 
-TemporaryRef<TextureHost>
-CreateBasicTextureHost(SurfaceDescriptorType aDescriptorType,
-                       uint32_t aTextureHostFlags,
-                       uint32_t aTextureFlags)
+TemporaryRef<DeprecatedTextureHost>
+CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                             uint32_t aTextureHostFlags,
+                             uint32_t aTextureFlags)
 {
   if (aDescriptorType == SurfaceDescriptor::TYCbCrImage) {
-    return new YCbCrTextureHostBasic();
+    return new YCbCrDeprecatedTextureHostBasic();
   }
 
   MOZ_ASSERT(aDescriptorType == SurfaceDescriptor::TShmem ||
              aDescriptorType == SurfaceDescriptor::TMemoryImage,
              "We can only support Shmem currently");
-  return new TextureHostBasic();
+  return new DeprecatedTextureHostBasic();
 }
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
@@ -187,8 +187,13 @@ BasicCompositor::BasicCompositor(nsIWidget *aWidget)
 
 BasicCompositor::~BasicCompositor()
 {
-  Destroy();
   MOZ_COUNT_DTOR(BasicCompositor);
+}
+
+void BasicCompositor::Destroy()
+{
+  mWidget->CleanupRemoteDrawing();
+  mWidget = nullptr;
 }
 
 TemporaryRef<CompositingRenderTarget>
@@ -357,6 +362,8 @@ BasicCompositor::BeginFrame(const gfx::Rect *aClipRectIn,
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Create a dummy
     // placeholder so that CreateRenderTarget() works.
     mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1,1), FORMAT_B8G8R8A8);
+  } else {
+    mDrawTarget = mWidget->StartRemoteDrawing();
   }
   if (!mDrawTarget) {
     if (aRenderBoundsOut) {
@@ -395,13 +402,28 @@ BasicCompositor::EndFrame()
     mCopyTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
     mCopyTarget->SetSource(thebes);
     mCopyTarget->Paint();
+    mCopyTarget = nullptr;
+  } else {
+    // Most platforms require us to buffer drawing to the widget surface.
+    // That's why we don't draw to mDrawTarget directly.
+    RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
+    mDrawTarget->DrawSurface(source,
+                             Rect(0, 0, mWidgetSize.width, mWidgetSize.height),
+                             Rect(0, 0, mWidgetSize.width, mWidgetSize.height),
+                             DrawSurfaceOptions(),
+                             DrawOptions());
+    mWidget->EndRemoteDrawing();
   }
+  mDrawTarget = nullptr;
+  mRenderTarget = nullptr;
 }
 
 void
 BasicCompositor::AbortFrame()
 {
-  mDrawTarget->PopClip();
+  mRenderTarget->mDrawTarget->PopClip();
+  mDrawTarget = nullptr;
+  mRenderTarget = nullptr;
 }
 
 }

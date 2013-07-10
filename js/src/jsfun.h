@@ -397,6 +397,9 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                gc::AllocKind allocKind = JSFunction::FinalizeKind,
                NewObjectKind newKind = GenericObject);
 
+// ES6 9.2.5 IsConstructor
+bool IsConstructor(const Value &v);
+
 /*
  * Function extended with reserved slots for use by various kinds of functions.
  * Most functions do not have these extensions, but enough do that efficient

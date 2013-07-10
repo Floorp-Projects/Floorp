@@ -8,8 +8,6 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 
-#include "frontend/Parser-inl.h"
-
 using namespace js;
 using namespace js::frontend;
 

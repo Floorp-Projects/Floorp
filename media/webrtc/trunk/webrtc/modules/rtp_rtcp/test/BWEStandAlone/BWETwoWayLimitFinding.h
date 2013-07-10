@@ -23,7 +23,7 @@ public:
 
     virtual ~BWETwoWayLimitFinding();
 
-    virtual int Init(std::string ip, WebRtc_UWord16 port);
+    virtual int Init(std::string ip, uint16_t port);
 
 protected:
     virtual bool StoppingCriterionMaster();

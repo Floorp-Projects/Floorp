@@ -31,7 +31,7 @@ VoEFile* VoEFile::GetInterface(VoiceEngine* voiceEngine)
     {
         return NULL;
     }
-    VoiceEngineImpl* s = reinterpret_cast<VoiceEngineImpl*>(voiceEngine);
+    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
     s->AddRef();
     return s;
 #endif
@@ -205,8 +205,8 @@ int VoEFileImpl::StartPlayingFileAsMicrophone(int channel,
         return -1;
     }
 
-    const WebRtc_UWord32 startPointMs(0);
-    const WebRtc_UWord32 stopPointMs(0);
+    const uint32_t startPointMs(0);
+    const uint32_t stopPointMs(0);
 
     if (channel == -1)
     {
@@ -282,8 +282,8 @@ int VoEFileImpl::StartPlayingFileAsMicrophone(int channel,
         return -1;
     }
 
-    const WebRtc_UWord32 startPointMs(0);
-    const WebRtc_UWord32 stopPointMs(0);
+    const uint32_t startPointMs(0);
+    const uint32_t stopPointMs(0);
 
     if (channel == -1)
     {
@@ -692,9 +692,9 @@ int VoEFileImpl::ConvertPCMToWAV(const char* fileNameInUTF8,
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -704,17 +704,10 @@ int VoEFileImpl::ConvertPCMToWAV(const char* fileNameInUTF8,
             break;
         }
 
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength,
-                                   frequency, AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertPCMToWAV failed during conversion (audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength,
+                               frequency, AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -782,9 +775,9 @@ int VoEFileImpl::ConvertPCMToWAV(InStream* streamIn, OutStream* streamOut)
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -794,18 +787,10 @@ int VoEFileImpl::ConvertPCMToWAV(InStream* streamIn, OutStream* streamOut)
             break;
         }
 
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength, frequency,
-                                   AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertPCMToWAV failed during conversion "
-                "(create audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength, frequency,
+                               AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -870,9 +855,9 @@ int VoEFileImpl::ConvertWAVToPCM(const char* fileNameInUTF8,
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -882,17 +867,10 @@ int VoEFileImpl::ConvertWAVToPCM(const char* fileNameInUTF8,
             break;
         }
 
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                   (WebRtc_UWord16)decLength,
-                                   frequency, AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertWAVToPCM failed during conversion (audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength,
+                               frequency, AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -962,9 +940,9 @@ int VoEFileImpl::ConvertWAVToPCM(InStream* streamIn, OutStream* streamOut)
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -974,17 +952,10 @@ int VoEFileImpl::ConvertWAVToPCM(InStream* streamIn, OutStream* streamOut)
             break;
         }
 
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength, frequency,
-                                   AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertWAVToPCM failed during conversion (audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength, frequency,
+                               AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -1048,9 +1019,9 @@ int VoEFileImpl::ConvertPCMToCompressed(const char* fileNameInUTF8,
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -1059,18 +1030,10 @@ int VoEFileImpl::ConvertPCMToCompressed(const char* fileNameInUTF8,
             // This is an OK way to end
             break;
         }
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength,
-                                  frequency, AudioFrame::kNormalSpeech,
-                                  AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertPCMToCompressed failed during conversion "
-                "(audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength,
+                               frequency, AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -1140,9 +1103,9 @@ int VoEFileImpl::ConvertPCMToCompressed(InStream* streamIn,
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -1151,18 +1114,10 @@ int VoEFileImpl::ConvertPCMToCompressed(InStream* streamIn,
             // This is an OK way to end
             break;
         }
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength,
-                                   frequency, AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertPCMToCompressed failed during conversion "
-                "(audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength,
+                               frequency, AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -1230,9 +1185,9 @@ int VoEFileImpl::ConvertCompressedToPCM(const char* fileNameInUTF8,
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -1241,19 +1196,11 @@ int VoEFileImpl::ConvertCompressedToPCM(const char* fileNameInUTF8,
             // This is an OK way to end
             break;
         }
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength,
-                                   frequency,
-                                   AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertCompressedToPCM failed during conversion "
-                "(create audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength,
+                               frequency,
+                               AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -1327,9 +1274,9 @@ int VoEFileImpl::ConvertCompressedToPCM(InStream* streamIn,
 
     // Run throught the file
     AudioFrame audioFrame;
-    WebRtc_Word16 decodedData[160];
+    int16_t decodedData[160];
     int decLength=0;
-    const WebRtc_UWord32 frequency = 16000;
+    const uint32_t frequency = 16000;
 
     while(!playerObj.Get10msAudioFromFile(decodedData,decLength,frequency))
     {
@@ -1338,19 +1285,11 @@ int VoEFileImpl::ConvertCompressedToPCM(InStream* streamIn,
             // This is an OK way to end
             break;
         }
-        res=audioFrame.UpdateFrame(-1, 0, decodedData,
-                                  (WebRtc_UWord16)decLength,
-                                   frequency,
-                                   AudioFrame::kNormalSpeech,
-                                   AudioFrame::kVadActive);
-        if(res)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                VoEId(_shared->instance_id(), -1),
-                "ConvertCompressedToPCM failed during conversion "
-                "(audio frame)");
-            break;
-        }
+        audioFrame.UpdateFrame(-1, 0, decodedData,
+                               (uint16_t)decLength,
+                               frequency,
+                               AudioFrame::kNormalSpeech,
+                               AudioFrame::kVadActive);
 
         res=recObj.RecordAudioToFile(audioFrame);
         if(res)
@@ -1383,7 +1322,7 @@ int VoEFileImpl::GetFileDuration(const char* fileNameUTF8,
     MediaFile * fileModule=MediaFile::CreateMediaFile(-1);
 
     // Temp container of the right format
-    WebRtc_UWord32 duration;
+    uint32_t duration;
     int res=fileModule->FileDurationMs(fileNameUTF8,duration,format);
     if (res)
     {

@@ -27,17 +27,19 @@ class Image;
 class CompositableForwarder;
 
 /**
+ * XXX - This class is deprecated, will be removed soon.
+ *
  * This class allows texture clients to draw into textures through Azure or
  * thebes and applies locking semantics to allow GPU or CPU level
  * synchronization.
- * TextureClient's purpose is for the texture data to be
+ * DeprecatedTextureClient's purpose is for the texture data to be
  * forwarded to the right place on the compositor side and with correct locking
  * semantics.
  *
- * When modifying a TextureClient's data, first call LockDescriptor, modify the
+ * When modifying a DeprecatedTextureClient's data, first call LockDescriptor, modify the
  * data in the descriptor, and then call Unlock. This makes sure that if the
  * data is shared with the compositor, the later will not try to read while the
- * data is being modified (on the other side, TextureHost also has Lock/Unlock
+ * data is being modified (on the other side, DeprecatedTextureHost also has Lock/Unlock
  * semantics).
  * After unlocking, call Updated in order to add the modification to the current
  * layer transaction.
@@ -45,23 +47,23 @@ class CompositableForwarder;
  * can be no-ops. What's important is that the Client/Host pair implement the
  * same semantics.
  *
- * Ownership of the surface descriptor depends on how the TextureClient/Host is
+ * Ownership of the surface descriptor depends on how the DeprecatedTextureClient/Host is
  * used by the CompositableClient/Host.
  */
-class TextureClient : public RefCounted<TextureClient>
+class DeprecatedTextureClient : public RefCounted<DeprecatedTextureClient>
 {
 public:
   typedef gl::SharedTextureHandle SharedTextureHandle;
   typedef gl::GLContext GLContext;
   typedef gl::TextureImage TextureImage;
 
-  virtual ~TextureClient();
+  virtual ~DeprecatedTextureClient();
 
   /* This will return an identifier that can be sent accross a process or
-   * thread boundary and used to construct a TextureHost object
+   * thread boundary and used to construct a DeprecatedTextureHost object
    * which can then be used as a texture for rendering by a compatible
    * compositor. This texture should have been created with the
-   * TextureHostIdentifier specified by the compositor that this identifier
+   * DeprecatedTextureHostIdentifier specified by the compositor that this identifier
    * is to be used with.
    */
   virtual const TextureInfo& GetTextureInfo() const
@@ -69,7 +71,7 @@ public:
     return mTextureInfo;
   }
 
-  virtual bool SupportsType(TextureClientType aType) { return false; }
+  virtual bool SupportsType(DeprecatedTextureClientType aType) { return false; }
 
   /**
    * The Lock* methods lock the texture client for drawing into, providing some
@@ -140,24 +142,24 @@ public:
   virtual gfxASurface::gfxContentType GetContentType() = 0;
 
 protected:
-  TextureClient(CompositableForwarder* aForwarder,
+  DeprecatedTextureClient(CompositableForwarder* aForwarder,
                 const TextureInfo& aTextureInfo);
 
   CompositableForwarder* mForwarder;
-  // So far all TextureClients use a SurfaceDescriptor, so it makes sense to
+  // So far all DeprecatedTextureClients use a SurfaceDescriptor, so it makes sense to
   // keep the reference here.
   SurfaceDescriptor mDescriptor;
   TextureInfo mTextureInfo;
   AccessMode mAccessMode;
 };
 
-class TextureClientShmem : public TextureClient
+class DeprecatedTextureClientShmem : public DeprecatedTextureClient
 {
 public:
-  TextureClientShmem(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo);
-  ~TextureClientShmem() { ReleaseResources(); }
+  DeprecatedTextureClientShmem(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo);
+  ~DeprecatedTextureClientShmem() { ReleaseResources(); }
 
-  virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE
   {
     return aType == TEXTURE_SHMEM || aType == TEXTURE_CONTENT;
   }
@@ -181,15 +183,15 @@ private:
   friend class CompositingFactory;
 };
 
-class TextureClientShmemYCbCr : public TextureClient
+class DeprecatedTextureClientShmemYCbCr : public DeprecatedTextureClient
 {
 public:
-  TextureClientShmemYCbCr(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
-    : TextureClient(aForwarder, aTextureInfo)
+  DeprecatedTextureClientShmemYCbCr(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
+    : DeprecatedTextureClient(aForwarder, aTextureInfo)
   { }
-  ~TextureClientShmemYCbCr() { ReleaseResources(); }
+  ~DeprecatedTextureClientShmemYCbCr() { ReleaseResources(); }
 
-  virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_YCBCR; }
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_YCBCR; }
   void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
   virtual void SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
@@ -197,13 +199,13 @@ public:
   virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
 };
 
-class TextureClientTile : public TextureClient
+class DeprecatedTextureClientTile : public DeprecatedTextureClient
 {
 public:
-  TextureClientTile(const TextureClientTile& aOther);
-  TextureClientTile(CompositableForwarder* aForwarder,
+  DeprecatedTextureClientTile(const DeprecatedTextureClientTile& aOther);
+  DeprecatedTextureClientTile(CompositableForwarder* aForwarder,
                     const TextureInfo& aTextureInfo);
-  ~TextureClientTile();
+  ~DeprecatedTextureClientTile();
 
   virtual void EnsureAllocated(gfx::IntSize aSize,
                                gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
@@ -230,25 +232,16 @@ private:
   friend class CompositingFactory;
 };
 
-/*
- * The logic of converting input image data into a Surface descriptor should be
- * outside of TextureClient. For Image layers we implement them in the AutoLock*
- * idiom so that the states need for the purpose of convertion only exist within
- * the conversion operation, and to avoid adding special interfaces in
- * TextureClient tht are only used in one place and not implemented everywhere.
- * We should do this for all the input data type.
- */
-
 /**
  * Base class for AutoLock*Client.
  * handles lock/unlock
  */
-class AutoLockTextureClient
+class AutoLockDeprecatedTextureClient
 {
 public:
-  AutoLockTextureClient(TextureClient* aTexture)
+  AutoLockDeprecatedTextureClient(DeprecatedTextureClient* aTexture)
   {
-    mTextureClient = aTexture;
+    mDeprecatedTextureClient = aTexture;
     mDescriptor = aTexture->LockSurfaceDescriptor();
   }
 
@@ -257,35 +250,35 @@ public:
     return mDescriptor;
   }
 
-  virtual ~AutoLockTextureClient()
+  virtual ~AutoLockDeprecatedTextureClient()
   {
-    mTextureClient->Unlock();
+    mDeprecatedTextureClient->Unlock();
   }
 protected:
-  TextureClient* mTextureClient;
+  DeprecatedTextureClient* mDeprecatedTextureClient;
   SurfaceDescriptor* mDescriptor;
 };
 
 /**
  * Writes the content of a PlanarYCbCrImage into a SurfaceDescriptor.
  */
-class AutoLockYCbCrClient : public AutoLockTextureClient
+class AutoLockYCbCrClient : public AutoLockDeprecatedTextureClient
 {
 public:
-  AutoLockYCbCrClient(TextureClient* aTexture) : AutoLockTextureClient(aTexture) {}
+  AutoLockYCbCrClient(DeprecatedTextureClient* aTexture) : AutoLockDeprecatedTextureClient(aTexture) {}
   bool Update(PlanarYCbCrImage* aImage);
 protected:
-  bool EnsureTextureClient(PlanarYCbCrImage* aImage);
+  bool EnsureDeprecatedTextureClient(PlanarYCbCrImage* aImage);
 };
 
 /**
  * Writes the content of a gfxASurface into a SurfaceDescriptor.
  */
-class AutoLockShmemClient : public AutoLockTextureClient
+class AutoLockShmemClient : public AutoLockDeprecatedTextureClient
 {
 public:
-  AutoLockShmemClient(TextureClient* aTexture) : AutoLockTextureClient(aTexture) {}
-  bool Update(Image* aImage, uint32_t aContentFlags, gfxPattern* pat);
+  AutoLockShmemClient(DeprecatedTextureClient* aTexture) : AutoLockDeprecatedTextureClient(aTexture) {}
+  bool Update(Image* aImage, uint32_t aContentFlags, gfxASurface *aSurface);
 };
 
 }

@@ -17,12 +17,12 @@
 #include <tchar.h>
 #include <windows.h>
 
-WebRtc_UWord32 BitRateBPS(WebRtc_UWord16 x )
+uint32_t BitRateBPS(uint16_t x )
 {
-    return (x & 0x3fff) * WebRtc_UWord32(pow(10.0f,(2 + (x >> 14))));
+    return (x & 0x3fff) * uint32_t(pow(10.0f,(2 + (x >> 14))));
 }
 
-WebRtc_UWord16 BitRateBPSInv(WebRtc_UWord32 x )
+uint16_t BitRateBPSInv(uint32_t x )
 {
     // 16383 0x3fff
     //     1 638 300    exp 0
@@ -32,16 +32,16 @@ WebRtc_UWord16 BitRateBPSInv(WebRtc_UWord32 x )
     const float exp = log10(float(x>>14)) - 2;
     if(exp < 0.0)
     {
-        return WebRtc_UWord16(x /100);
+        return uint16_t(x /100);
     }else if(exp < 1.0)
     {
-        return 0x4000 + WebRtc_UWord16(x /1000);
+        return 0x4000 + uint16_t(x /1000);
     }else if(exp < 2.0)
     {
-        return 0x8000 + WebRtc_UWord16(x /10000);
+        return 0x8000 + uint16_t(x /10000);
     }else if(exp < 3.0)
     {
-        return 0xC000 + WebRtc_UWord16(x /100000);
+        return 0xC000 + uint16_t(x /100000);
     } else
     {
         assert(false);
@@ -52,7 +52,7 @@ WebRtc_UWord16 BitRateBPSInv(WebRtc_UWord32 x )
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-    WebRtc_UWord8 dataBuffer[128];
+    uint8_t dataBuffer[128];
     BitstreamBuilder builder(dataBuffer, sizeof(dataBuffer));
 
     // test 1 to 4 bits
@@ -278,27 +278,27 @@ int _tmain(int argc, _TCHAR* argv[])
     BitstreamBuilder builderScalabilityInfo(dataBuffer, sizeof(dataBuffer));
     BitstreamParser parserScalabilityInfo(dataBuffer, sizeof(dataBuffer));
 
-    const WebRtc_UWord8 numberOfLayers = 4;
-    const WebRtc_UWord8 layerId[numberOfLayers] = {0,1,2,3};
-    const WebRtc_UWord8 priorityId[numberOfLayers] = {0,1,2,3};
-    const WebRtc_UWord8 discardableId[numberOfLayers] = {0,1,1,1};
+    const uint8_t numberOfLayers = 4;
+    const uint8_t layerId[numberOfLayers] = {0,1,2,3};
+    const uint8_t priorityId[numberOfLayers] = {0,1,2,3};
+    const uint8_t discardableId[numberOfLayers] = {0,1,1,1};
 
-    const WebRtc_UWord8 dependencyId[numberOfLayers]= {0,1,1,1};
-    const WebRtc_UWord8 qualityId[numberOfLayers]= {0,0,0,1};
-    const WebRtc_UWord8 temporalId[numberOfLayers]= {0,0,1,1};
+    const uint8_t dependencyId[numberOfLayers]= {0,1,1,1};
+    const uint8_t qualityId[numberOfLayers]= {0,0,0,1};
+    const uint8_t temporalId[numberOfLayers]= {0,0,1,1};
 
-    const WebRtc_UWord16 avgBitrate[numberOfLayers]= {BitRateBPSInv(100000),
+    const uint16_t avgBitrate[numberOfLayers]= {BitRateBPSInv(100000),
                                                     BitRateBPSInv(200000),
                                                     BitRateBPSInv(400000),
                                                     BitRateBPSInv(800000)};
 
     // todo which one is the sum?
-    const WebRtc_UWord16 maxBitrateLayer[numberOfLayers]= {BitRateBPSInv(150000),
+    const uint16_t maxBitrateLayer[numberOfLayers]= {BitRateBPSInv(150000),
                                                          BitRateBPSInv(300000),
                                                          BitRateBPSInv(500000),
                                                          BitRateBPSInv(900000)};
 
-    const WebRtc_UWord16 maxBitrateLayerRepresentation[numberOfLayers] = {BitRateBPSInv(150000),
+    const uint16_t maxBitrateLayerRepresentation[numberOfLayers] = {BitRateBPSInv(150000),
                                                                         BitRateBPSInv(450000),
                                                                         BitRateBPSInv(950000),
                                                                         BitRateBPSInv(1850000)};
@@ -314,7 +314,7 @@ int _tmain(int argc, _TCHAR* argv[])
     assert( 18500000 == BitRateBPS(BitRateBPSInv(18500000)));
     assert( 185000000 == BitRateBPS(BitRateBPSInv(185000000)));
 
-    const WebRtc_UWord16 maxBitrareCalcWindow[numberOfLayers] = {200, 200,200,200};// in 1/100 of second
+    const uint16_t maxBitrareCalcWindow[numberOfLayers] = {200, 200,200,200};// in 1/100 of second
 
     builderScalabilityInfo.Add1Bit(0);  // temporal_id_nesting_flag
     builderScalabilityInfo.Add1Bit(0);    // priority_layer_info_present_flag
@@ -360,11 +360,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
     // Scalability Info parser
     parserScalabilityInfo.Get1Bit(); // not used in futher parsing
-    const WebRtc_UWord8 priority_layer_info_present = parserScalabilityInfo.Get1Bit();
-    const WebRtc_UWord8 priority_id_setting_flag = parserScalabilityInfo.Get1Bit();
+    const uint8_t priority_layer_info_present = parserScalabilityInfo.Get1Bit();
+    const uint8_t priority_id_setting_flag = parserScalabilityInfo.Get1Bit();
 
-    WebRtc_UWord32 numberOfLayersMinusOne = parserScalabilityInfo.GetUE();
-    for(WebRtc_UWord32 j = 0; j<= numberOfLayersMinusOne; j++)
+    uint32_t numberOfLayersMinusOne = parserScalabilityInfo.GetUE();
+    for(uint32_t j = 0; j<= numberOfLayersMinusOne; j++)
     {
         parserScalabilityInfo.GetUE();
         parserScalabilityInfo.Get6Bits();
@@ -373,24 +373,24 @@ int _tmain(int argc, _TCHAR* argv[])
         parserScalabilityInfo.Get4Bits();
         parserScalabilityInfo.Get3Bits();
 
-        const WebRtc_UWord8 sub_pic_layer_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 sub_region_layer_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 iroi_division_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 profile_level_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 bitrate_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 frm_rate_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 frm_size_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 layer_dependency_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 parameter_sets_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 bitstream_restriction_info_present_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 exact_inter_layer_pred_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
+        const uint8_t sub_pic_layer_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t sub_region_layer_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t iroi_division_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t profile_level_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t bitrate_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t frm_rate_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t frm_size_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t layer_dependency_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t parameter_sets_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t bitstream_restriction_info_present_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t exact_inter_layer_pred_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
 
         if(sub_pic_layer_flag || iroi_division_info_present_flag)
         {
             parserScalabilityInfo.Get1Bit();
         }
-        const WebRtc_UWord8 layer_conversion_flag = parserScalabilityInfo.Get1Bit();
-        const WebRtc_UWord8 layer_output_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
+        const uint8_t layer_conversion_flag = parserScalabilityInfo.Get1Bit();
+        const uint8_t layer_output_flag = parserScalabilityInfo.Get1Bit();  // not used in futher parsing
 
         if(profile_level_info_present_flag)
         {
@@ -440,8 +440,8 @@ int _tmain(int argc, _TCHAR* argv[])
                 parserScalabilityInfo.GetUE();
             }else
             {
-                const WebRtc_UWord32 numRoisMinusOne = parserScalabilityInfo.GetUE();
-                for(WebRtc_UWord32 k = 0; k <= numRoisMinusOne; k++)
+                const uint32_t numRoisMinusOne = parserScalabilityInfo.GetUE();
+                for(uint32_t k = 0; k <= numRoisMinusOne; k++)
                 {
                     parserScalabilityInfo.GetUE();
                     parserScalabilityInfo.GetUE();
@@ -451,8 +451,8 @@ int _tmain(int argc, _TCHAR* argv[])
         }
         if(layer_dependency_info_present_flag)
         {
-            const WebRtc_UWord32 numDirectlyDependentLayers = parserScalabilityInfo.GetUE();
-            for(WebRtc_UWord32 k = 0; k < numDirectlyDependentLayers; k++)
+            const uint32_t numDirectlyDependentLayers = parserScalabilityInfo.GetUE();
+            for(uint32_t k = 0; k < numDirectlyDependentLayers; k++)
             {
                 parserScalabilityInfo.GetUE();
             }
@@ -462,18 +462,18 @@ int _tmain(int argc, _TCHAR* argv[])
         }
         if(parameter_sets_info_present_flag)
         {
-            const WebRtc_UWord32 numSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
-            for(WebRtc_UWord32 k = 0; k <= numSeqParameterSetMinusOne; k++)
+            const uint32_t numSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
+            for(uint32_t k = 0; k <= numSeqParameterSetMinusOne; k++)
             {
                 parserScalabilityInfo.GetUE();
             }
-            const WebRtc_UWord32 numSubsetSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
-            for(WebRtc_UWord32 l = 0; l <= numSubsetSeqParameterSetMinusOne; l++)
+            const uint32_t numSubsetSeqParameterSetMinusOne = parserScalabilityInfo.GetUE();
+            for(uint32_t l = 0; l <= numSubsetSeqParameterSetMinusOne; l++)
             {
                 parserScalabilityInfo.GetUE();
             }
-            const WebRtc_UWord32 numPicParameterSetMinusOne = parserScalabilityInfo.GetUE();
-            for(WebRtc_UWord32 m = 0; m <= numPicParameterSetMinusOne; m++)
+            const uint32_t numPicParameterSetMinusOne = parserScalabilityInfo.GetUE();
+            for(uint32_t m = 0; m <= numPicParameterSetMinusOne; m++)
             {
                 parserScalabilityInfo.GetUE();
             }
@@ -494,7 +494,7 @@ int _tmain(int argc, _TCHAR* argv[])
         if(layer_conversion_flag)
         {
             parserScalabilityInfo.GetUE();
-            for(WebRtc_UWord32 k = 0; k <2;k++)
+            for(uint32_t k = 0; k <2;k++)
             {
                 if(parserScalabilityInfo.Get1Bit())
                 {
@@ -507,12 +507,12 @@ int _tmain(int argc, _TCHAR* argv[])
     }
     if(priority_layer_info_present)
     {
-        const WebRtc_UWord32 prNumDidMinusOne = parserScalabilityInfo.GetUE();
-        for(WebRtc_UWord32 k = 0; k <= prNumDidMinusOne;k++)
+        const uint32_t prNumDidMinusOne = parserScalabilityInfo.GetUE();
+        for(uint32_t k = 0; k <= prNumDidMinusOne;k++)
         {
             parserScalabilityInfo.Get3Bits();
-            const WebRtc_UWord32 prNumMinusOne = parserScalabilityInfo.GetUE();
-            for(WebRtc_UWord32 l = 0; l <= prNumMinusOne; l++)
+            const uint32_t prNumMinusOne = parserScalabilityInfo.GetUE();
+            for(uint32_t l = 0; l <= prNumMinusOne; l++)
             {
                 parserScalabilityInfo.GetUE();
                 parserScalabilityInfo.Get24Bits();
@@ -523,8 +523,8 @@ int _tmain(int argc, _TCHAR* argv[])
     }
     if(priority_id_setting_flag)
     {
-        WebRtc_UWord8 priorityIdSettingUri;
-        WebRtc_UWord32 priorityIdSettingUriIdx = 0;
+        uint8_t priorityIdSettingUri;
+        uint32_t priorityIdSettingUriIdx = 0;
         do
         {
             priorityIdSettingUri = parserScalabilityInfo.Get8Bits();

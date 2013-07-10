@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ReentrantMonitor.h"
+#include "nsMemoryPressure.h"
 #include "nsThread.h"
 #include "nsThreadManager.h"
 #include "nsIClassInfoImpl.h"
@@ -56,23 +57,6 @@ GetThreadLog()
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
 nsIThreadObserver* nsThread::sMainThreadObserver = nullptr;
-
-namespace mozilla {
-
-// Fun fact: Android's GCC won't convert bool* to int32_t*, so we can't
-// PR_ATOMIC_SET a bool.
-static int32_t sMemoryPressurePending = 0;
-
-/*
- * It's important that this function not acquire any locks, nor do anything
- * which might cause malloc to run.
- */
-void ScheduleMemoryPressureEvent()
-{
-  PR_ATOMIC_SET(&sMemoryPressurePending, 1);
-}
-
-} // namespace mozilla
 
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
@@ -580,14 +564,20 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   // Fire a memory pressure notification, if we're the main thread and one is
   // pending.
   if (MAIN_THREAD == mIsMainThread && !ShuttingDown()) {
-    bool mpPending = PR_ATOMIC_SET(&sMemoryPressurePending, 0);
-    if (mpPending) {
+    MemoryPressureState mpPending = NS_GetPendingMemoryPressure();
+    if (mpPending != MemPressure_None) {
       nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+
+      // Use no-forward to prevent the notifications from being transferred to
+      // the children of this process.
+      NS_NAMED_LITERAL_STRING(lowMem, "low-memory-no-forward");
+      NS_NAMED_LITERAL_STRING(lowMemOngoing, "low-memory-ongoing-no-forward");
+
       if (os) {
         os->NotifyObservers(nullptr, "memory-pressure",
-                            NS_LITERAL_STRING("low-memory").get());
-      }
-      else {
+                            mpPending == MemPressure_New ? lowMem.get() :
+                                                           lowMemOngoing.get());
+      } else {
         NS_WARNING("Can't get observer service!");
       }
     }

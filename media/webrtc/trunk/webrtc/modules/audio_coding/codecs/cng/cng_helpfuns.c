@@ -36,9 +36,7 @@ void WebRtcCng_K2a16(int16_t* k, int useOrder, int16_t* a) {
     any[m + 1] = (*kptr + 4) >> 3;
     for (i = 0; i < m; i++) {
       *anyptr++ = (*aptr++) +
-          (WebRtc_Word16)(
-              (((WebRtc_Word32)(*aptr2--) * (WebRtc_Word32) * kptr) + 16384)
-                  >> 15);
+          (int16_t)((((int32_t)(*aptr2--) * (int32_t) * kptr) + 16384) >> 15);
     }
 
     aptr = a;

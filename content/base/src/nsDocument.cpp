@@ -1616,11 +1616,15 @@ nsDocument::Release()
       return mRefCnt.get();
     }
     NS_ASSERT_OWNINGTHREAD(nsDocument);
-    mRefCnt.stabilizeForDeletion();
     nsNodeUtils::LastRelease(this);
-    return 0;
   }
   return count;
+}
+
+NS_IMETHODIMP_(void)
+nsDocument::DeleteCycleCollectable()
+{
+  delete this;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)

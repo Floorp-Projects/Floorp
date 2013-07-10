@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jscntxt.h"
 #include "jslock.h"
 
 #include "vm/Monitor.h"
+#include "vm/Runtime.h"
 #include "vm/ThreadPool.h"
 
 #ifdef JS_THREADSAFE

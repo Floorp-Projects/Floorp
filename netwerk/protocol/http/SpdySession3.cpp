@@ -377,6 +377,11 @@ SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
     mQueuedStreams.Push(stream);
   }
 
+  if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE)) {
+    LOG3(("SpdySession3::AddStream %p transaction %p forces keep-alive off.\n",
+          this, aHttpTransaction));
+    DontReuse();
+  }
   return true;
 }
 

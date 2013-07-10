@@ -5,6 +5,11 @@ function test() {
 
   prefs.setBoolPref("geo.prompt.testing", true);
   prefs.setBoolPref("geo.prompt.testing.allow", true);
+  var origScanValue = true; // same default in NetworkGeolocationProvider.js.
+  try {
+    origScanValue = prefs.getBoolPref("geo.wifi.scan");
+  } catch(ex) {}
+  prefs.setBoolPref("geo.wifi.scan", false);
 
   const testPageURL = "http://mochi.test:8888/browser/" +
     "dom/tests/browser/browser_geolocation_privatebrowsing_page.html";
@@ -12,19 +17,33 @@ function test() {
 
   var windowsToClose = [];
   function testOnWindow(aIsPrivate, aCallback) {
-    var win = OpenBrowserWindow({private: aIsPrivate});
+    let win = OpenBrowserWindow({private: aIsPrivate});
+    let gotLoad = false;
+    let gotActivate = 
+      (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == win);
+    if (!gotActivate) {
+      win.addEventListener("activate", function onActivate() {
+        info("got activate");
+        win.removeEventListener("activate", onActivate, true);
+        gotActivate = true;
+        if (gotLoad) {
+          windowsToClose.push(win);
+          win.BrowserChromeTest.runWhenReady(function() { aCallback(win) });
+        }
+      }, true);
+    } else {
+      info("Was activated");
+    }
     win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
-      windowsToClose.push(win);
-      executeSoon(function() { aCallback(win); });
-    }, false);
+      info("Got load");
+      win.removeEventListener("load", onLoad, true);
+      gotLoad = true;
+      if (gotActivate) {
+        windowsToClose.push(win);
+        setTimeout(function() { aCallback(win) }, 1000);
+      }
+    }, true);
   }
-
-  registerCleanupFunction(function () {
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
 
   testOnWindow(false, function(aNormalWindow) {
     aNormalWindow.gBrowser.selectedBrowser.addEventListener("georesult", function load(ev) {
@@ -46,7 +65,10 @@ function test() {
               is(ev.detail, 200, "unexpected access token");
               prefs.setBoolPref("geo.prompt.testing", false);
               prefs.setBoolPref("geo.prompt.testing.allow", false);
-
+              prefs.setBoolPref("geo.wifi.scan", origScanValue);
+              windowsToClose.forEach(function(win) {
+                                       win.close();
+                                     });
               finish();
             }, false, true);
             aAnotherNormalWindow.content.location = testPageURL;

@@ -82,7 +82,7 @@ class AudioProcessingImpl : public AudioProcessing {
   virtual VoiceDetection* voice_detection() const;
 
   // Module methods.
-  virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
+  virtual int32_t ChangeUniqueId(const int32_t id);
 
  private:
   bool is_data_processed() const;

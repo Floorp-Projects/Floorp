@@ -43,9 +43,12 @@ static int WebRtcNetEQ_UpdatePackSizeSamples(MCUInst_t* inst, int buffer_pos,
     if (codec_pos >= 0) {
       codec_pos = inst->codec_DB_inst.position[codec_pos];
       if (codec_pos >= 0) {
-        return WebRtcNetEQ_PacketBufferGetPacketSize(
-          &inst->PacketBuffer_inst, buffer_pos,
-          &inst->codec_DB_inst, codec_pos, pack_size_samples);
+        int temp_packet_size_samples = WebRtcNetEQ_PacketBufferGetPacketSize(
+            &inst->PacketBuffer_inst, buffer_pos, &inst->codec_DB_inst,
+            codec_pos, pack_size_samples, inst->av_sync);
+        if (temp_packet_size_samples > 0)
+          return temp_packet_size_samples;
+        return pack_size_samples;
       }
     }
   }
@@ -59,21 +62,21 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
 {
 
     int i_bufferpos, i_res;
-    WebRtc_UWord16 uw16_instr;
+    uint16_t uw16_instr;
     DSP2MCU_info_t dspInfo;
-    WebRtc_Word16 *blockPtr, blockLen;
-    WebRtc_UWord32 uw32_availableTS;
+    int16_t *blockPtr, blockLen;
+    uint32_t uw32_availableTS;
     RTPPacket_t temp_pkt;
-    WebRtc_Word32 w32_bufsize, w32_tmp;
-    WebRtc_Word16 payloadType = -1;
-    WebRtc_Word16 wantedNoOfTimeStamps;
-    WebRtc_Word32 totalTS;
-    WebRtc_Word16 oldPT, latePacketExist = 0;
-    WebRtc_UWord32 oldTS, prevTS, uw32_tmp;
-    WebRtc_UWord16 prevSeqNo;
-    WebRtc_Word16 nextSeqNoAvail;
-    WebRtc_Word16 fs_mult, w16_tmp;
-    WebRtc_Word16 lastModeBGNonly = 0;
+    int32_t w32_bufsize, w32_tmp;
+    int16_t payloadType = -1;
+    int16_t wantedNoOfTimeStamps;
+    int32_t totalTS;
+    int16_t oldPT, latePacketExist = 0;
+    uint32_t oldTS, prevTS, uw32_tmp;
+    uint16_t prevSeqNo;
+    int16_t nextSeqNoAvail;
+    int16_t fs_mult, w16_tmp;
+    int16_t lastModeBGNonly = 0;
 #ifdef NETEQ_DELAY_LOGGING
     int temp_var;
 #endif
@@ -94,7 +97,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
     /* Set blockPtr to first payload block */
     blockPtr = &inst->pw16_writeAddress[3];
 
-    /* Clear instruction word and number of lost samples (2*WebRtc_Word16) */
+    /* Clear instruction word and number of lost samples (2*int16_t) */
     inst->pw16_writeAddress[0] = 0;
     inst->pw16_writeAddress[1] = 0;
     inst->pw16_writeAddress[2] = 0;
@@ -245,7 +248,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
 
     /* Check packet buffer */
     w32_bufsize = WebRtcNetEQ_PacketBufferGetSize(&inst->PacketBuffer_inst,
-        &inst->codec_DB_inst);
+        &inst->codec_DB_inst, inst->av_sync);
 
     if (dspInfo.lastMode == MODE_SUCCESS_ACCELERATE || dspInfo.lastMode
         == MODE_LOWEN_ACCELERATE || dspInfo.lastMode == MODE_SUCCESS_PREEMPTIVE
@@ -342,7 +345,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
             if (WebRtcNetEQ_DbIsCNGPayload(&inst->codec_DB_inst, payloadType))
             {
                 /* The currently extracted packet is CNG; get CNG fs */
-                WebRtc_UWord16 tempFs;
+                uint16_t tempFs;
 
                 tempFs = WebRtcNetEQ_DbGetSampleRate(&inst->codec_DB_inst, payloadType);
                 /* TODO(tlegrand): Remove this limitation once ACM has full
@@ -356,12 +359,12 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
                     inst->fs = tempFs;
                 }
             }
-            WebRtcSpl_MemSetW16((WebRtc_Word16*) &cinst, 0,
-                                sizeof(CodecFuncInst_t) / sizeof(WebRtc_Word16));
+            WebRtcSpl_MemSetW16((int16_t*) &cinst, 0,
+                                sizeof(CodecFuncInst_t) / sizeof(int16_t));
             cinst.codec_fs = inst->fs;
         }
         cinst.timeStamp = inst->timeStamp;
-        blockLen = (sizeof(CodecFuncInst_t)) >> (sizeof(WebRtc_Word16) - 1); /* in Word16 */
+        blockLen = (sizeof(CodecFuncInst_t)) >> (sizeof(int16_t) - 1); /* in Word16 */
         *blockPtr = blockLen * 2;
         blockPtr++;
         WEBRTC_SPL_MEMCPY_W8(blockPtr,&cinst,sizeof(CodecFuncInst_t));
@@ -395,7 +398,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
         else
         {
             /* CNG exists */
-            blockLen = (sizeof(cinst.codec_state)) >> (sizeof(WebRtc_Word16) - 1);
+            blockLen = (sizeof(cinst.codec_state)) >> (sizeof(int16_t) - 1);
             *blockPtr = blockLen * 2;
             blockPtr++;
             WEBRTC_SPL_MEMCPY_W8(blockPtr,&cinst.codec_state,sizeof(cinst.codec_state));
@@ -500,15 +503,15 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
     /* Do DTMF without extracting any new packets from buffer */
     if (uw16_instr == BUFSTATS_DO_DTMF_ONLY)
     {
-        WebRtc_UWord32 timeStampJump = 0;
+        uint32_t timeStampJump = 0;
 
         /* Update timestamp */
         if ((inst->BufferStat_inst.uw32_CNGplayedTS > 0) && (dspInfo.lastMode != MODE_DTMF))
         {
             /* Jump in timestamps if needed */
             timeStampJump = inst->BufferStat_inst.uw32_CNGplayedTS;
-            inst->pw16_writeAddress[1] = (WebRtc_UWord16) (timeStampJump >> 16);
-            inst->pw16_writeAddress[2] = (WebRtc_UWord16) (timeStampJump & 0xFFFF);
+            inst->pw16_writeAddress[1] = (uint16_t) (timeStampJump >> 16);
+            inst->pw16_writeAddress[2] = (uint16_t) (timeStampJump & 0xFFFF);
         }
 
         inst->timeStamp = dspInfo.playedOutTS + timeStampJump;
@@ -532,7 +535,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
                     | DSP_INSTR_ACCELERATE;
             *blockPtr = 0;
             inst->BufferStat_inst.Automode_inst.sampleMemory
-            = (WebRtc_Word32) dspInfo.samplesLeft;
+            = (int32_t) dspInfo.samplesLeft;
             inst->BufferStat_inst.Automode_inst.prevTimeScale = 1;
             return 0;
         }
@@ -576,7 +579,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
                     | DSP_INSTR_PREEMPTIVE_EXPAND;
             *blockPtr = 0;
             inst->BufferStat_inst.Automode_inst.sampleMemory
-            = (WebRtc_Word32) dspInfo.samplesLeft;
+            = (int32_t) dspInfo.samplesLeft;
             inst->BufferStat_inst.Automode_inst.prevTimeScale = 1;
             return 0;
         }
@@ -591,7 +594,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
                     | DSP_INSTR_PREEMPTIVE_EXPAND;
             *blockPtr = 0;
             inst->BufferStat_inst.Automode_inst.sampleMemory
-            = (WebRtc_Word32) dspInfo.samplesLeft;
+            = (int32_t) dspInfo.samplesLeft;
             inst->BufferStat_inst.Automode_inst.prevTimeScale = 1;
             return 0;
         }
@@ -631,8 +634,8 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
         && (uw16_instr != BUFSTATS_DO_AUDIO_REPETITION_INC_TS))
     {
         uw32_tmp = (uw32_availableTS - dspInfo.playedOutTS);
-        inst->pw16_writeAddress[1] = (WebRtc_UWord16) (uw32_tmp >> 16);
-        inst->pw16_writeAddress[2] = (WebRtc_UWord16) (uw32_tmp & 0xFFFF);
+        inst->pw16_writeAddress[1] = (uint16_t) (uw32_tmp >> 16);
+        inst->pw16_writeAddress[2] = (uint16_t) (uw32_tmp & 0xFFFF);
         if (inst->BufferStat_inst.w16_cngOn == CNG_OFF)
         {
             /*
@@ -682,9 +685,9 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_DECODE;
             if ((fwrite(&temp_var, sizeof(int),
                         1, delay_fid2) != 1) ||
-                (fwrite(&temp_pkt.timeStamp, sizeof(WebRtc_UWord32),
+                (fwrite(&temp_pkt.timeStamp, sizeof(uint32_t),
                         1, delay_fid2) != 1) ||
-                (fwrite(&dspInfo.samplesLeft, sizeof(WebRtc_UWord16),
+                (fwrite(&dspInfo.samplesLeft, sizeof(uint16_t),
                         1, delay_fid2) != 1)) {
               return -1;
             }
@@ -744,7 +747,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
         else
         {
             inst->BufferStat_inst.Automode_inst.sampleMemory
-            = (WebRtc_Word32) dspInfo.samplesLeft + totalTS;
+            = (int32_t) dspInfo.samplesLeft + totalTS;
             inst->BufferStat_inst.Automode_inst.prevTimeScale = 1;
         }
     }

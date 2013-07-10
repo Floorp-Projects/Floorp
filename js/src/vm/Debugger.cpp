@@ -22,7 +22,6 @@
 #include "jsgcinlines.h"
 #include "jsopcodeinlines.h"
 
-#include "gc/FindSCCs-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -364,7 +363,7 @@ Breakpoint::nextInSite()
 
 Debugger::Debugger(JSContext *cx, JSObject *dbg)
   : object(dbg), uncaughtExceptionHook(NULL), enabled(true),
-    frames(cx), scripts(cx), sources(cx), objects(cx), environments(cx)
+    frames(cx->runtime()), scripts(cx), sources(cx), objects(cx), environments(cx)
 {
     assertSameCompartment(cx, dbg);
 
@@ -2266,7 +2265,9 @@ class Debugger::ScriptQuery {
   public:
     /* Construct a ScriptQuery to use matching scripts for |dbg|. */
     ScriptQuery(JSContext *cx, Debugger *dbg):
-        cx(cx), debugger(dbg), compartments(cx), url(cx), innermostForCompartment(cx) {}
+        cx(cx), debugger(dbg), compartments(cx->runtime()), url(cx),
+        innermostForCompartment(cx->runtime())
+    {}
 
     /*
      * Initialize this ScriptQuery. Raise an error and return false if we

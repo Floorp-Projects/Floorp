@@ -195,7 +195,8 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 bool
 CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
-    JS_ASSERT(label->used() && !label->bound());
+    JS_ASSERT(label->used());
+    JS_ASSERT(!label->bound());
 
     CompileInfo &info = snapshot->mir()->block()->info();
     switch (info.executionMode()) {
@@ -651,22 +652,26 @@ CodeGeneratorARM::visitModI(LModI *ins)
     // save the lhs in case we end up with a 0 that should be a -0.0 because lhs < 0.
     JS_ASSERT(callTemp.code() > r3.code() && callTemp.code() < r12.code());
     masm.ma_mov(lhs, callTemp);
+
     // Prevent INT_MIN % -1;
     // The integer division will give INT_MIN, but we want -(double)INT_MIN.
-    masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
-    masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
-    if (mir->isTruncated()) {
-        // (INT_MIN % -1)|0 == 0
-        Label skip;
-        masm.ma_b(&skip, Assembler::NotEqual);
-        masm.ma_mov(Imm32(0), r1);
-        masm.ma_b(&done);
-        masm.bind(&skip);
-    } else {
-        JS_ASSERT(mir->fallible());
-        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-            return false;
+    if (mir->canBeNegativeDividend()) {
+        masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
+        masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
+        if (mir->isTruncated()) {
+            // (INT_MIN % -1)|0 == 0
+            Label skip;
+            masm.ma_b(&skip, Assembler::NotEqual);
+            masm.ma_mov(Imm32(0), r1);
+            masm.ma_b(&done);
+            masm.bind(&skip);
+        } else {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+                return false;
+        }
     }
+
     // 0/X (with X < 0) is bad because both of these values *should* be doubles, and
     // the result should be -0.0, which cannot be represented in integers.
     // X/0 is bad because it will give garbage (or abort), when it should give

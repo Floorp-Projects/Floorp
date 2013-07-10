@@ -22,15 +22,15 @@ class CriticalSectionWrapper;
 class TimeScheduler
 {
 public:
-    TimeScheduler(const WebRtc_UWord32 periodicityInMs);
+    TimeScheduler(const uint32_t periodicityInMs);
     ~TimeScheduler();
 
     // Signal that a periodic event has been triggered.
-    WebRtc_Word32 UpdateScheduler();
+    int32_t UpdateScheduler();
 
     // Set updateTimeInMs to the amount of time until UpdateScheduler() should
     // be called. This time will never be negative.
-    WebRtc_Word32 TimeToNextUpdate(WebRtc_Word32& updateTimeInMS) const;
+    int32_t TimeToNextUpdate(int32_t& updateTimeInMS) const;
 
 private:
     CriticalSectionWrapper* _crit;
@@ -38,9 +38,9 @@ private:
     bool _isStarted;
     TickTime _lastPeriodMark;
 
-    WebRtc_UWord32 _periodicityInMs;
-    WebRtc_Word64  _periodicityInTicks;
-    WebRtc_UWord32 _missedPeriods;
+    uint32_t _periodicityInMs;
+    int64_t  _periodicityInTicks;
+    uint32_t _missedPeriods;
 };
 } // namespace webrtc
 
