@@ -19,7 +19,7 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #include <mmsystem.h>
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
@@ -233,11 +233,11 @@ bool RtpDumpImpl::RTCP(const uint8_t* packet) const
 }
 
 // TODO (hellner): why is TickUtil not used here?
-inline uint32_t RtpDumpImpl::GetTimeInMS() const
+inline WebRtc_UWord32 RtpDumpImpl::GetTimeInMS() const
 {
 #if defined(_WIN32)
     return timeGetTime();
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
     struct timeval tv;
     struct timezone tz;
     unsigned long val;

@@ -18,7 +18,7 @@
 #include <Windows.h>  // FILETIME
 #include <WinSock.h>  // timeval
 #include <MMSystem.h>  // timeGetTime
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
 #include <sys/time.h>  // gettimeofday
 #include <time.h>
 #endif
@@ -69,9 +69,9 @@ uint32_t GetCurrentRTP(Clock* clock, uint32_t freq) {
 }
 
 uint32_t ConvertNTPTimeToRTP(uint32_t NTPsec, uint32_t NTPfrac, uint32_t freq) {
-  float ftemp = (float)NTPfrac / (float)NTP_FRAC;
+  float ftemp = (float)NTPfrac / (float)NTP_FRAC; 
   uint32_t tmp = (uint32_t)(ftemp * freq);
-  return NTPsec * freq + tmp;
+ return NTPsec * freq + tmp;
 }
 
 uint32_t ConvertNTPTimeToMS(uint32_t NTPsec, uint32_t NTPfrac) {
@@ -103,7 +103,7 @@ bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return (_strnicmp(str1, str2, length) == 0) ? true : false;
 }
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return (strncasecmp(str1, str2, length) == 0) ? true : false;
@@ -143,7 +143,7 @@ void AssignUWord24ToBuffer(uint8_t* dataBuffer, uint32_t value) {
 }
 
 void AssignUWord16ToBuffer(uint8_t* dataBuffer, uint16_t value) {
-#if defined(WEBRTC_LITTLE_ENDIAN)
+#if defined(WEBRTC_LITTLE_ENDIAN) 
   dataBuffer[0] = static_cast<uint8_t>(value >> 8);
   dataBuffer[1] = static_cast<uint8_t>(value);
 #else
