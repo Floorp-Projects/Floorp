@@ -431,7 +431,7 @@ void
 ParallelSafetyAnalysis::replaceOperandsOnResumePoint(MResumePoint *resumePoint,
                                                      MDefinition *withDef)
 {
-    for (size_t i = 0; i < resumePoint->numOperands(); i++)
+    for (size_t i = 0, e = resumePoint->numOperands(); i < e; i++)
         resumePoint->replaceOperand(i, withDef);
 }
 
