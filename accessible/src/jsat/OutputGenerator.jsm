@@ -39,6 +39,8 @@ this.EXPORTED_SYMBOLS = ['UtteranceGenerator', 'BrailleGenerator'];
 
 this.OutputGenerator = {
 
+  defaultOutputOrder: OUTPUT_DESC_LAST,
+
   /**
    * Generates output for a PivotContext.
    * @param {PivotContext} aContext object that generates and caches
@@ -383,8 +385,6 @@ this.OutputGenerator = {
 this.UtteranceGenerator = {
   __proto__: OutputGenerator,
 
-  defaultOutputOrder: OUTPUT_DESC_FIRST,
-
   gActionMap: {
     jump: 'jumpAction',
     press: 'pressAction',
@@ -611,8 +611,6 @@ this.UtteranceGenerator = {
 
 this.BrailleGenerator = {
   __proto__: OutputGenerator,
-
-  defaultOutputOrder: OUTPUT_DESC_LAST,
 
   genForContext: function genForContext(aContext) {
     let output = OutputGenerator.genForContext.apply(this, arguments);
