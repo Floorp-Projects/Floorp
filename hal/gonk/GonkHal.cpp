@@ -435,7 +435,7 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
     aBatteryInfo->charging() = true;
   }
 
-  if (aBatteryInfo->charging() && (aBatteryInfo->level() < 1.0)) {
+  if (!aBatteryInfo->charging() || (aBatteryInfo->level() < 1.0)) {
     aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
   } else {
     aBatteryInfo->remainingTime() = dom::battery::kDefaultRemainingTime;
