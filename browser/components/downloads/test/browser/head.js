@@ -127,7 +127,7 @@ var testRunner = {
 // test generator to perform specific tasks asynchronously.  To invoke these
 // subroutines correctly, an iteration syntax should be used:
 //
-//   for (let yy in gen_example("Parameter")) yield;
+//   for (let yy in gen_example("Parameter")) yield undefined;
 //
 
 function gen_resetState(aData)
@@ -146,7 +146,7 @@ function gen_resetState(aData)
         testRunner.continueTest();
       }
     });
-    yield;
+    yield undefined;
   } finally {
     statement.finalize();
   }
@@ -161,7 +161,7 @@ function gen_resetState(aData)
 
   // Wait for focus on the main window.
   waitForFocus(testRunner.continueTest);
-  yield;
+  yield undefined;
 }
 
 function gen_addDownloadRows(aDataRows)
@@ -200,7 +200,7 @@ function gen_addDownloadRows(aDataRows)
           testRunner.continueTest();
         }
       });
-      yield;
+      yield undefined;
 
       // At each iteration, ensure that the start and end time in the global
       // template is distinct, as these column are used to sort each download
@@ -228,11 +228,11 @@ function gen_openPanel(aData)
 
   // Wait for focus on the main window.
   waitForFocus(testRunner.continueTest);
-  yield;
+  yield undefined;
 
   // Open the downloads panel, waiting until loading is completed.
   DownloadsPanel.showPanel();
-  yield;
+  yield undefined;
 }
 
 /**
@@ -259,7 +259,7 @@ function waitFor(aSeconds)
  *
  * prepareForPanelOpen();
  * // Do something to open the panel
- * yield;
+ * yield undefined;
  * // We can assume the panel is open now.
  */
 function prepareForPanelOpen()
