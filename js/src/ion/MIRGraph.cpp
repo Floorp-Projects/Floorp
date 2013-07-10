@@ -1088,7 +1088,9 @@ MIRGraph::dump(FILE *fp)
 {
 #ifdef DEBUG
     for (MBasicBlockIterator iter(begin()); iter != end(); iter++) {
+        fprintf(fp, "block%d:\n", iter->id());
         iter->dump(fp);
+        fprintf(fp, "\n");
     }
 #endif
 }
@@ -1098,12 +1100,10 @@ MBasicBlock::dump(FILE *fp)
 {
 #ifdef DEBUG
     for (MPhiIterator iter(phisBegin()); iter != phisEnd(); iter++) {
-        iter->printOpcode(fp);
-        fprintf(fp, "\n");
+        iter->dump(fp);
     }
     for (MInstructionIterator iter(begin()); iter != end(); iter++) {
-        iter->printOpcode(fp);
-        fprintf(fp, "\n");
+        iter->dump(fp);
     }
 #endif
 }
