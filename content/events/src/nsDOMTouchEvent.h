@@ -15,6 +15,8 @@
 
 class nsDOMTouchList MOZ_FINAL : public nsIDOMTouchList
 {
+  typedef mozilla::dom::Touch Touch;
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMTouchList)
@@ -24,9 +26,9 @@ public:
   {
     nsJSContext::LikelyShortLivingObjectCreated();
   }
-  nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches);
+  nsDOMTouchList(const nsTArray< nsRefPtr<Touch> >& aTouches);
 
-  void Append(nsIDOMTouch* aPoint)
+  void Append(Touch* aPoint)
   {
     mPoints.AppendElement(aPoint);
   }
@@ -37,7 +39,7 @@ public:
   }
 
 protected:
-  nsTArray<nsCOMPtr<nsIDOMTouch> > mPoints;
+  nsTArray< nsRefPtr<Touch> > mPoints;
 };
 
 class nsDOMTouchEvent : public nsDOMUIEvent,

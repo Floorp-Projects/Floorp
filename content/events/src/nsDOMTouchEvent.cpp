@@ -15,7 +15,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 // TouchList
-nsDOMTouchList::nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches)
+nsDOMTouchList::nsDOMTouchList(const nsTArray< nsRefPtr<Touch> >& aTouches)
 {
   mPoints.AppendElements(aTouches);
   nsJSContext::LikelyShortLivingObjectCreated();
@@ -53,11 +53,9 @@ nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier, nsIDOMTouch** aRetVal)
 {
   *aRetVal = nullptr;
   for (uint32_t i = 0; i < mPoints.Length(); ++i) {
-    nsCOMPtr<nsIDOMTouch> point = mPoints[i];
-    int32_t identifier;
-    if (point && NS_SUCCEEDED(point->GetIdentifier(&identifier)) &&
-        aIdentifier == identifier) {
-      point.swap(*aRetVal);
+    nsRefPtr<Touch> point = mPoints[i];
+    if (point && point->Identifier() == aIdentifier) {
+      point.forget(aRetVal);
       break;
     }
   }
@@ -151,8 +149,8 @@ nsDOMTouchEvent::Touches()
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
     if (mEvent->message == NS_TOUCH_END || mEvent->message == NS_TOUCH_CANCEL) {
       // for touchend events, remove any changed touches from the touches array
-      nsTArray<nsCOMPtr<nsIDOMTouch> > unchangedTouches;
-      const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+      nsTArray< nsRefPtr<Touch> > unchangedTouches;
+      const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
       for (uint32_t i = 0; i < touches.Length(); ++i) {
         if (!touches[i]->mChanged) {
           unchangedTouches.AppendElement(touches[i]);
@@ -178,16 +176,15 @@ nsDOMTouchList*
 nsDOMTouchEvent::TargetTouches()
 {
   if (!mTargetTouches) {
-    nsTArray<nsCOMPtr<nsIDOMTouch> > targetTouches;
+    nsTArray< nsRefPtr<Touch> > targetTouches;
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
-    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       // for touchend/cancel events, don't append to the target list if this is a
       // touch that is ending
       if ((mEvent->message != NS_TOUCH_END &&
            mEvent->message != NS_TOUCH_CANCEL) || !touches[i]->mChanged) {
-        EventTarget* targetPtr = touches[i]->GetTarget();
-        if (targetPtr == mEvent->originalTarget) {
+        if (touches[i]->mTarget == mEvent->originalTarget) {
           targetTouches.AppendElement(touches[i]);
         }
       }
@@ -209,9 +206,9 @@ nsDOMTouchList*
 nsDOMTouchEvent::ChangedTouches()
 {
   if (!mChangedTouches) {
-    nsTArray<nsCOMPtr<nsIDOMTouch> > changedTouches;
+    nsTArray< nsRefPtr<Touch> > changedTouches;
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
-    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       if (touches[i]->mChanged) {
         changedTouches.AppendElement(touches[i]);
