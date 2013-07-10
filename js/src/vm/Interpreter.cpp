@@ -3263,7 +3263,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
 
     if (!shape) {
         JSAutoByteString printable;
-        if (js_AtomToPrintableString(cx, name, &printable))
+        if (AtomToPrintableString(cx, name, &printable))
             js_ReportIsNotDefined(cx, printable.ptr());
         return false;
     }
@@ -3392,7 +3392,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
         if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
             JSAutoByteString bytes;
-            if (js_AtomToPrintableString(cx, name, &bytes)) {
+            if (AtomToPrintableString(cx, name, &bytes)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REDEFINE_PROP,
                                      bytes.ptr());
             }

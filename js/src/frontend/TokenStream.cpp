@@ -117,7 +117,7 @@ frontend::IsKeyword(JSLinearString *str)
     return FindKeyword(str->chars(), str->length()) != NULL;
 }
 
-TokenStream::SourceCoords::SourceCoords(JSContext *cx, uint32_t ln)
+TokenStream::SourceCoords::SourceCoords(ExclusiveContext *cx, uint32_t ln)
   : lineStartOffsets_(cx), initialLineNum_(ln), lastLineIndex_(0)
 {
     // This is actually necessary!  Removing it causes compile errors on
@@ -262,10 +262,11 @@ TokenStream::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t *line
 #endif
 
 /* Initialize members that aren't initialized in |init|. */
-TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
+TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
                          const jschar *base, size_t length, StrictModeGetter *smg,
                          AutoKeepAtoms& keepAtoms)
   : srcCoords(cx, options.lineno),
+    options_(options),
     tokens(),
     cursor(),
     lookahead(),
@@ -276,9 +277,7 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
     userbuf(cx, base - options.column, length + options.column), // See comment below
     filename(options.filename),
     sourceMap(NULL),
-    listenerTSData(),
     tokenbuf(cx),
-    version(options.version),
     cx(cx),
     originPrincipals(JSScript::normalizeOriginPrincipals(options.principals,
                                                          options.originPrincipals)),
@@ -293,14 +292,19 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
     // this line then adjust the next character.
     userbuf.setAddressOfNextRawChar(base);
 
-    if (originPrincipals)
-        JS_HoldPrincipals(originPrincipals);
+    JSContext *ncx = cx->asJSContext();
+    {
+        if (originPrincipals)
+            JS_HoldPrincipals(originPrincipals);
 
-    JSSourceHandler listener = cx->runtime()->debugHooks.sourceHandler;
-    void *listenerData = cx->runtime()->debugHooks.sourceHandlerData;
+        JSSourceHandler listener = ncx->runtime()->debugHooks.sourceHandler;
+        void *listenerData = ncx->runtime()->debugHooks.sourceHandlerData;
 
-    if (listener)
-        listener(options.filename, options.lineno, base, length, &listenerTSData, listenerData);
+        if (listener) {
+            void *listenerTSData;
+            listener(options.filename, options.lineno, base, length, &listenerTSData, listenerData);
+        }
+    }
 
     /*
      * This table holds all the token kinds that satisfy these properties:
@@ -355,7 +359,7 @@ TokenStream::~TokenStream()
     if (sourceMap)
         js_free(sourceMap);
     if (originPrincipals)
-        JS_DropPrincipals(cx->runtime(), originPrincipals);
+        JS_DropPrincipals(cx->asJSContext()->runtime(), originPrincipals);
 }
 
 /* Use the fastest available getc. */
@@ -583,7 +587,7 @@ TokenStream::reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, uns
     unsigned flags = JSREPORT_STRICT;
     if (strictMode)
         flags |= JSREPORT_ERROR;
-    else if (cx->hasExtraWarningsOption())
+    else if (options().extraWarningsOption)
         flags |= JSREPORT_WARNING;
     else
         return true;
@@ -649,10 +653,15 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
 {
     bool warning = JSREPORT_IS_WARNING(flags);
 
-    if (warning && cx->hasWErrorOption()) {
+    if (warning && options().werrorOption) {
         flags &= ~JSREPORT_WARNING;
         warning = false;
     }
+
+    if (!this->cx->isJSContext())
+        return warning;
+
+    JSContext *cx = this->cx->asJSContext();
 
     CompileError err(cx);
 
@@ -762,7 +771,7 @@ TokenStream::reportWarning(unsigned errorNumber, ...)
 bool
 TokenStream::reportStrictWarningErrorNumberVA(uint32_t offset, unsigned errorNumber, va_list args)
 {
-    if (!cx->hasExtraWarningsOption())
+    if (!options().extraWarningsOption)
         return true;
 
     return reportCompileErrorNumberVA(offset, JSREPORT_STRICT|JSREPORT_WARNING, errorNumber, args);
@@ -903,7 +912,7 @@ TokenStream::newToken(ptrdiff_t adjust)
 }
 
 JS_ALWAYS_INLINE JSAtom *
-TokenStream::atomize(JSContext *cx, CharBuffer &cb)
+TokenStream::atomize(ExclusiveContext *cx, CharBuffer &cb)
 {
     return AtomizeChars<CanGC>(cx, cb.begin(), cb.length());
 }

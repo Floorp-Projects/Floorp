@@ -832,7 +832,7 @@ ReturnedValueMustNotBePrimitive(JSContext *cx, HandleObject proxy, JSAtom *atom,
 {
     if (v.isPrimitive()) {
         JSAutoByteString bytes;
-        if (js_AtomToPrintableString(cx, atom, &bytes)) {
+        if (AtomToPrintableString(cx, atom, &bytes)) {
             RootedValue val(cx, ObjectOrNullValue(proxy));
             js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
                                  JSDVG_SEARCH_STACK, val, NullPtr(), bytes.ptr());
@@ -1546,7 +1546,7 @@ ReportInvalidTrapResult(JSContext *cx, JSObject *proxy, JSAtom *atom)
 {
     RootedValue v(cx, ObjectOrNullValue(proxy));
     JSAutoByteString bytes;
-    if (!js_AtomToPrintableString(cx, atom, &bytes))
+    if (!AtomToPrintableString(cx, atom, &bytes))
         return;
     js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK, v,
                          NullPtr(), bytes.ptr());
@@ -1882,7 +1882,7 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdV
     // step f
     if (trapResult.isPrimitive()) {
         JSAutoByteString bytes;
-        if (!js_AtomToPrintableString(cx, cx->names().enumerate, &bytes))
+        if (!AtomToPrintableString(cx, cx->names().enumerate, &bytes))
             return false;
         RootedValue v(cx, ObjectOrNullValue(proxy));
         js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_SEARCH_STACK,
@@ -2202,7 +2202,7 @@ ScriptedDirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector
     // step f
     if (trapResult.isPrimitive()) {
         JSAutoByteString bytes;
-        if (!js_AtomToPrintableString(cx, cx->names().keys, &bytes))
+        if (!AtomToPrintableString(cx, cx->names().keys, &bytes))
             return false;
         RootedValue v(cx, ObjectOrNullValue(proxy));
         js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK,
@@ -3379,7 +3379,7 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject proto(cx);
     if (!JSObject::getProto(cx, target, &proto))
         return false;
-    RootedObject fun(cx, target->isCallable() ? target : (JSObject *) NULL);
+    RootedObject fun(cx, target->isCallable() ? target.get() : (JSObject *) NULL);
     RootedValue priv(cx, ObjectValue(*target));
     JSObject *proxy = NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
                                      priv, proto, cx->global(),

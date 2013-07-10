@@ -27,7 +27,7 @@ js::ObjectImpl::compartment() const
 }
 
 inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, Shape *shape)
+js::ObjectImpl::nativeContains(ExclusiveContext *cx, Shape *shape)
 {
     return nativeLookup(cx, shape->propid()) == shape;
 }
@@ -48,12 +48,12 @@ js::ObjectImpl::nonProxyIsExtensible() const
 }
 
 /* static */ inline bool
-js::ObjectImpl::isExtensible(JSContext *cx, js::Handle<ObjectImpl*> obj, bool *extensible)
+js::ObjectImpl::isExtensible(ExclusiveContext *cx, js::Handle<ObjectImpl*> obj, bool *extensible)
 {
     if (obj->isProxy()) {
         HandleObject h =
             HandleObject::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
-        return Proxy::isExtensible(cx, h, extensible);
+        return Proxy::isExtensible(cx->asJSContext(), h, extensible);
     }
 
     *extensible = obj->nonProxyIsExtensible();

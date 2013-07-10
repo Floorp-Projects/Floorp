@@ -232,7 +232,7 @@ class JSString : public js::gc::Cell
      * representable by a JSString. An allocation overflow is reported if false
      * is returned.
      */
-    static inline bool validateLength(js::ThreadSafeContext *maybetcx, size_t length);
+    static inline bool validateLength(js::ThreadSafeContext *maybecx, size_t length);
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
@@ -445,7 +445,7 @@ class JSRope : public JSString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSRope *new_(js::ThreadSafeContext *tcx,
+    static inline JSRope *new_(js::ThreadSafeContext *cx,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
                                size_t length);
@@ -508,7 +508,7 @@ class JSDependentString : public JSLinearString
     JSDependentString &asDependent() const MOZ_DELETE;
 
   public:
-    static inline JSLinearString *new_(JSContext *cx, JSLinearString *base,
+    static inline JSLinearString *new_(js::ExclusiveContext *cx, JSLinearString *base,
                                        const jschar *chars, size_t length);
 };
 
@@ -565,7 +565,8 @@ class JSStableString : public JSFlatString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSStableString *new_(js::ThreadSafeContext *cx, const jschar *chars, size_t length);
+    static inline JSStableString *new_(js::ThreadSafeContext *cx,
+                                       const jschar *chars, size_t length);
 
     JS_ALWAYS_INLINE
     JS::StableCharPtr chars() const {
@@ -662,7 +663,7 @@ class JSInlineString : public JSFlatString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSInlineString *new_(js::ThreadSafeContext *tcx);
+    static inline JSInlineString *new_(js::ThreadSafeContext *cx);
 
     inline jschar *init(size_t length);
 
@@ -698,7 +699,7 @@ class JSShortString : public JSInlineString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSShortString *new_(js::ThreadSafeContext *tcx);
+    static inline JSShortString *new_(js::ThreadSafeContext *cx);
 
     static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
                                            INLINE_EXTENSION_CHARS

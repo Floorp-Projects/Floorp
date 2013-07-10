@@ -662,6 +662,20 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
         return false;
 
+    /*
+     * In self-hosting mode, scripts emit JSOP_CALLINTRINSIC instead of
+     * JSOP_NAME or JSOP_GNAME to access unbound variables. JSOP_CALLINTRINSIC
+     * does a name lookup in a special object, whose properties are filled in
+     * lazily upon first access for a given global.
+     *
+     * As that object is inaccessible to client code, the lookups are
+     * guaranteed to return the original objects, ensuring safe implementation
+     * of self-hosted builtins.
+     *
+     * Additionally, the special syntax _CallFunction(receiver, ...args, fun)
+     * is supported, for which bytecode is emitted that invokes |fun| with
+     * |receiver| as the this-object and ...args as the arguments..
+     */
     CompileOptions options(cx);
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);

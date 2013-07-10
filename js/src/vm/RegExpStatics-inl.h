@@ -577,12 +577,12 @@ RegExpStatics::checkInvariants()
 #endif /* DEBUG */
 }
 
-} /* namespace js */
-
-inline js::RegExpStatics *
-JSContext::regExpStatics()
+inline RegExpStatics *
+ExclusiveContext::regExpStatics()
 {
     return global()->getRegExpStatics();
 }
+
+} /* namespace js */
 
 #endif /* vm_RegExpStatics_inl_h */

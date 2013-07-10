@@ -342,7 +342,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
         JSAutoByteString bytes;
-        if (!js_AtomToPrintableString(cx, name, &bytes))
+        if (!AtomToPrintableString(cx, name, &bytes))
             return false;
         RootedValue val(cx, ObjectValue(*obj));
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
@@ -375,7 +375,7 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &PropertyIteratorObject::class_, NULL));
+        RootedTypeObject type(cx, cx->getNewType(&PropertyIteratorObject::class_, NULL));
         if (!type)
             return NULL;
 

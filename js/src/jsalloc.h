@@ -13,6 +13,8 @@ struct JSContext;
 
 namespace js {
 
+class ContextFriendFields;
+
 /*
  * Allocation policies.  These model the concept:
  *  - public copy constructor, assignment, destructor
@@ -52,7 +54,7 @@ class SystemAllocPolicy
  */
 class TempAllocPolicy
 {
-    JSContext *const cx_;
+    ContextFriendFields *const cx_;
 
     /*
      * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
@@ -61,11 +63,8 @@ class TempAllocPolicy
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
 
   public:
-    TempAllocPolicy(JSContext *cx) : cx_(cx) {}
-
-    JSContext *context() const {
-        return cx_;
-    }
+    TempAllocPolicy(JSContext *cx) : cx_((ContextFriendFields *) cx) {} // :(
+    TempAllocPolicy(ContextFriendFields *cx) : cx_(cx) {}
 
     void *malloc_(size_t bytes) {
         void *p = js_malloc(bytes);

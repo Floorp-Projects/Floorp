@@ -16,7 +16,7 @@ namespace frontend {
 inline bool
 SharedContext::needStrictChecks()
 {
-    return context->hasExtraWarningsOption() || strict;
+    return strict || extraWarnings;
 }
 
 } /* namespace frontend */
