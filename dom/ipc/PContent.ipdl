@@ -515,6 +515,10 @@ parent:
     // Notify the parent that the child has finished handling a system message.
     async SystemMessageHandled();
 
+    // called by the child (test code only) to propagate volume changes to the parent
+    async CreateFakeVolume(nsString fsName, nsString mountPoint);
+    async SetFakeVolumeState(nsString fsName, int32_t fsState);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };
