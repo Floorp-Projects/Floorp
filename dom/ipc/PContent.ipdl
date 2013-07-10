@@ -46,6 +46,7 @@ using IPC::Principal;
 using mozilla::null_t;
 using mozilla::void_t;
 using mozilla::dom::AudioChannelType;
+using mozilla::dom::BlobConstructorParams;
 using mozilla::dom::NativeThreadId;
 using mozilla::hal::ProcessPriority;
 using gfxIntSize;
@@ -121,39 +122,6 @@ union DeviceStorageParams
   DeviceStorageFreeSpaceParams;
   DeviceStorageUsedSpaceParams;
   DeviceStorageAvailableParams;
-};
-
-struct SlicedBlobConstructorParams
-{
-  PBlob source;
-  uint64_t begin;
-  uint64_t end;
-  nsString contentType;
-};
-
-struct MysteryBlobConstructorParams
-{
-  // Nothing is known about this type of blob.
-};
-
-union ChildBlobConstructorParams
-{
-  NormalBlobConstructorParams;
-  FileBlobConstructorParams;
-  SlicedBlobConstructorParams;
-  MysteryBlobConstructorParams;
-};
-
-struct ParentBlobConstructorParams
-{
-  ChildBlobConstructorParams blobParams;
-  OptionalInputStreamParams optionalInputStreamParams;
-};
-
-union BlobConstructorParams
-{
-  ChildBlobConstructorParams;
-  ParentBlobConstructorParams;
 };
 
 union PrefValue {
