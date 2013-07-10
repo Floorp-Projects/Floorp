@@ -9,7 +9,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMContact;
 
-[scriptable, builtinclass, uuid(d21b7070-c2bc-11e2-8b8b-0800200c9a66)]
+[scriptable, builtinclass, uuid(5f405112-4da9-4d4d-942c-4da3cb7928e1)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -431,6 +431,20 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * e.g. {lockType: "pin", retryCount: 2}.
    */
   [implicit_jscontext] attribute jsval onicccardlockerror;
+
+  /**
+   * Retrieve the number of remaining tries for unlocking the card.
+   *
+   * @param lockType
+   *        Identifies the lock type, e.g. "pin" for the PIN lock, "puk" for
+   *        the PUK lock.
+   *
+   * @return a DOM Request.
+   *         If the lock type is "pin", or "puk", the request's result will be
+   *         an object containing the number of retries for the specified
+   *         lock. For any other lock type, the result is undefined.
+   */
+  nsIDOMDOMRequest getCardLockRetryCount(in DOMString lockType);
 
   // UICC Phonebook Interfaces.
 

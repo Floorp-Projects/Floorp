@@ -326,7 +326,7 @@ nsVolumeService::FindVolumeByName(const nsAString& aName)
 
 //static
 already_AddRefed<nsVolume>
-nsVolumeService::CreateOrFindVolumeByName(const nsAString& aName)
+nsVolumeService::CreateOrFindVolumeByName(const nsAString& aName, bool aIsFake /*= false*/)
 {
   MonitorAutoLock autoLock(mArrayMonitor);
 
@@ -337,6 +337,7 @@ nsVolumeService::CreateOrFindVolumeByName(const nsAString& aName)
   }
   // Volume not found - add a new one
   vol = new nsVolume(aName);
+  vol->SetIsFake(aIsFake);
   mVolumeArray.AppendElement(vol);
   return vol.forget();
 }
@@ -348,11 +349,19 @@ nsVolumeService::UpdateVolume(nsIVolume* aVolume)
 
   nsString volName;
   aVolume->GetName(volName);
-  nsRefPtr<nsVolume> vol = CreateOrFindVolumeByName(volName);
+  bool aIsFake;
+  aVolume->GetIsFake(&aIsFake);
+  nsRefPtr<nsVolume> vol = CreateOrFindVolumeByName(volName, aIsFake);
   if (vol->Equals(aVolume)) {
     // Nothing has really changed. Don't bother telling anybody.
     return;
   }
+
+  if (!vol->IsFake() && aIsFake) {
+    // Prevent an incoming fake volume from overriding an existing real volume.
+    return;
+  }
+
   vol->Set(aVolume);
   nsCOMPtr<nsIObserverService> obs = GetObserverService();
   if (!obs) {
@@ -360,6 +369,41 @@ nsVolumeService::UpdateVolume(nsIVolume* aVolume)
   }
   NS_ConvertUTF8toUTF16 stateStr(vol->StateStr());
   obs->NotifyObservers(vol, NS_VOLUME_STATE_CHANGED, stateStr.get());
+}
+
+NS_IMETHODIMP
+nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_INIT, -1);
+    vol->SetIsFake(true);
+    UpdateVolume(vol.get());
+    return NS_OK;
+  }
+
+  ContentChild::GetSingleton()->SendCreateFakeVolume(nsString(name), nsString(path));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsVolumeService::SetFakeVolumeState(const nsAString& name, int32_t state)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsRefPtr<nsVolume> vol;
+    {
+      MonitorAutoLock autoLock(mArrayMonitor);
+      vol = FindVolumeByName(name);
+    }
+    if (!vol || !vol->IsFake()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    vol->SetState(state);
+    UpdateVolume(vol.get());
+    return NS_OK;
+  }
+
+  ContentChild::GetSingleton()->SendSetFakeVolumeState(nsString(name), state);
+  return NS_OK;
 }
 
 /***************************************************************************

@@ -171,6 +171,16 @@ IccManager::UnlockCardLock(const JS::Value& aInfo, nsIDOMDOMRequest** aDomReques
 }
 
 NS_IMETHODIMP
+IccManager::GetCardLockRetryCount(const nsAString& aLockType, nsIDOMDOMRequest** aDomRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCardLockRetryCount(GetOwner(), aLockType, aDomRequest);
+}
+
+NS_IMETHODIMP
 IccManager::IccOpenChannel(const nsAString& aAid, nsIDOMDOMRequest** aRequest)
 {
   if (!mProvider) {
