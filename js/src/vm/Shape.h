@@ -312,8 +312,9 @@ class BaseShape : public js::gc::Cell
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
 
-    inline bool matchesGetterSetter(PropertyOp rawGetter,
-                                    StrictPropertyOp rawSetter) const;
+    bool matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter) const {
+        return rawGetter == this->rawGetter && rawSetter == this->rawSetter;
+    }
 
     inline void adoptUnowned(UnownedBaseShape *other);
     inline void setOwned(UnownedBaseShape *unowned);
@@ -418,9 +419,20 @@ struct StackBaseShape
                           JSObject *parent, JSObject *metadata, uint32_t objectFlags);
     inline StackBaseShape(Shape *shape);
 
-    inline void updateGetterSetter(uint8_t attrs,
-                                   PropertyOp rawGetter,
-                                   StrictPropertyOp rawSetter);
+    void updateGetterSetter(uint8_t attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter) {
+        flags &= ~(BaseShape::HAS_GETTER_OBJECT | BaseShape::HAS_SETTER_OBJECT);
+        if ((attrs & JSPROP_GETTER) && rawGetter) {
+            JS_ASSERT(!IsPoisonedPtr(rawGetter));
+            flags |= BaseShape::HAS_GETTER_OBJECT;
+        }
+        if ((attrs & JSPROP_SETTER) && rawSetter) {
+            JS_ASSERT(!IsPoisonedPtr(rawSetter));
+            flags |= BaseShape::HAS_SETTER_OBJECT;
+        }
+
+        this->rawGetter = rawGetter;
+        this->rawSetter = rawSetter;
+    }
 
     static inline HashNumber hash(const StackBaseShape *lookup);
     static inline bool match(UnownedBaseShape *key, const StackBaseShape *lookup);
@@ -560,8 +572,13 @@ class Shape : public js::gc::Cell
         typename MaybeRooted<Shape*, allowGC>::RootType cursor;
 
       public:
-        inline Range(ExclusiveContext *cx, Shape *shape);
-        inline Range(Shape *shape);
+        Range(ExclusiveContext *cx, Shape *shape) : cursor(cx, shape) {
+            JS_STATIC_ASSERT(allowGC == CanGC);
+        }
+
+        Range(Shape *shape) : cursor((ExclusiveContext *) NULL, shape) {
+            JS_STATIC_ASSERT(allowGC == NoGC);
+        }
 
         bool empty() const {
             return !cursor || cursor->isEmptyShape();
@@ -675,11 +692,23 @@ class Shape : public js::gc::Cell
 
     void update(PropertyOp getter, StrictPropertyOp setter, uint8_t attrs);
 
-    inline bool matches(const Shape *other) const;
+    bool matches(const Shape *other) const {
+        return propid_.get() == other->propid_.get() &&
+               matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
+                                    other->flags, other->shortid_);
+    }
+
     inline bool matches(const StackShape &other) const;
-    inline bool matchesParamsAfterId(BaseShape *base,
-                                     uint32_t aslot, unsigned aattrs, unsigned aflags,
-                                     int ashortid) const;
+
+    bool matchesParamsAfterId(BaseShape *base, uint32_t aslot, unsigned aattrs, unsigned aflags,
+                              int ashortid) const
+    {
+        return base->unowned() == this->base()->unowned() &&
+               maybeSlot() == aslot &&
+               attrs == aattrs &&
+               ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
+               shortid_ == ashortid;
+    }
 
     bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, MutableHandleValue vp);
     bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, MutableHandleValue vp);
@@ -990,7 +1019,17 @@ struct StackShape
         slot_ = slot;
     }
 
-    inline HashNumber hash() const;
+    HashNumber hash() const {
+        HashNumber hash = uintptr_t(base);
+
+        /* Accumulate from least to most random so the low bits are most random. */
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ slot_;
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid);
+        return hash;
+    }
 
     class AutoRooter : private JS::CustomAutoRooter
     {
@@ -1095,6 +1134,37 @@ Shape::searchNoHashify(Shape *start, jsid id)
 
 template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};
 template<> struct RootKind<BaseShape *> : SpecificRootKind<BaseShape *, THING_ROOT_BASE_SHAPE> {};
+
+// Property lookup hooks on objects are required to return a non-NULL shape to
+// signify that the property has been found. For cases where the property is
+// not actually represented by a Shape, use a dummy value. This includes all
+// properties of non-native objects, and dense elements for native objects.
+// Use separate APIs for these two cases.
+
+static inline void
+MarkNonNativePropertyFound(MutableHandleShape propp)
+{
+    propp.set(reinterpret_cast<Shape*>(1));
+}
+
+template <AllowGC allowGC>
+static inline void
+MarkDenseElementFound(typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
+{
+    propp.set(reinterpret_cast<Shape*>(1));
+}
+
+static inline bool
+IsImplicitDenseElement(Shape *prop)
+{
+    return prop == reinterpret_cast<Shape*>(1);
+}
+
+static inline uint8_t
+GetShapeAttributes(HandleShape shape)
+{
+    return IsImplicitDenseElement(shape) ? JSPROP_ENUMERATE : shape->attributes();
+}
 
 } // namespace js
 
