@@ -9,7 +9,6 @@
 #include "nsROCSSPrimitiveValue.h"
 #include "nsContentUtils.h"
 #include "nsDOMCSSRect.h"
-#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 
@@ -26,13 +25,9 @@ nsDOMCSSRect::~nsDOMCSSRect(void)
 {
 }
 
-DOMCI_DATA(CSSRect, nsDOMCSSRect)
-
-// QueryInterface implementation for nsCSSRect
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSRect)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRect)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSRect)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 

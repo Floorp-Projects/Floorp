@@ -113,6 +113,10 @@ class Channel : public Message::Sender {
 
   // Return the server side of the socketpair.
   int GetServerFileDescriptor() const;
+
+  // Close the client side of the socketpair.
+  void CloseClientFileDescriptor();
+
 #elif defined(OS_WIN)
   // Return the server pipe handle.
   void* GetServerPipeHandle() const;
