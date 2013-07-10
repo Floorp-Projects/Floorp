@@ -32,7 +32,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   let oldScrollTop = scrollBox.scrollTop;
   ok(oldScrollTop > 0, "scroll location is not at the top");
@@ -58,7 +58,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   is(scrollBox.scrollTop, topPosition, "scroll location is still at the top");
 
@@ -80,7 +80,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   isnot(scrollBox.scrollTop, oldScrollTop,
         "scroll location updated (moved to bottom)");
@@ -88,7 +88,7 @@ function testGen() {
   hud = testDriver = null;
   finishTest();
   
-  yield;
+  yield undefined;
 }
 
 function test() {

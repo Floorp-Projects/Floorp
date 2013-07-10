@@ -107,7 +107,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   info("test 1");
 
@@ -227,7 +227,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: true,
@@ -266,7 +266,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: true,
@@ -301,7 +301,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: true,
@@ -331,7 +331,7 @@ function testGen() {
     networkPanel.panel.hidePopup();
     testDriver.next();
   }, false);
-  yield;
+  yield undefined;
 
   // Check cached image request.
   info("test 8: cached image request");
@@ -347,7 +347,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: true,
@@ -382,7 +382,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: false,
@@ -411,7 +411,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: false,
@@ -443,7 +443,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: false,
@@ -476,7 +476,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: false,
@@ -512,7 +512,7 @@ function testGen() {
     testDriver.next();
   }
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestBody: false,
@@ -539,5 +539,5 @@ function testGen() {
   testDriver = null;
   executeSoon(finishTest);
 
-  yield;
+  yield undefined;
 }

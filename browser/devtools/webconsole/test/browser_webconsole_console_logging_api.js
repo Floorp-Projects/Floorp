@@ -30,24 +30,24 @@ function onLoad() {
 
 function testGen() {
   subtestGen("log");
-  yield;
+  yield undefined;
 
   subtestGen("info");
-  yield;
+  yield undefined;
 
   subtestGen("warn");
-  yield;
+  yield undefined;
 
   subtestGen("error");
-  yield;
+  yield undefined;
 
   subtestGen("debug"); // bug 616742
-  yield;
+  yield undefined;
 
   testDriver = subtestDriver = null;
   finishTest();
 
-  yield;
+  yield undefined;
 }
 
 function subtestGen(aMethod) {
@@ -78,7 +78,7 @@ function testConsoleLoggingAPI(aMethod) {
     failureFn: nextTest,
   });
 
-  yield;
+  yield undefined;
 
   hud.jsterm.clearOutput();
 
@@ -99,7 +99,7 @@ function testConsoleLoggingAPI(aMethod) {
     failureFn: nextTest,
   });
 
-  yield;
+  yield undefined;
 
   hud.jsterm.clearOutput();
   hud.setFilterState(aMethod, true);
@@ -115,7 +115,7 @@ function testConsoleLoggingAPI(aMethod) {
     failureFn: nextTest,
   });
 
-  yield;
+  yield undefined;
 
   hud.jsterm.clearOutput();
   setStringFilter("");
@@ -134,9 +134,9 @@ function testConsoleLoggingAPI(aMethod) {
     failureFn: nextTest,
   });
 
-  yield;
+  yield undefined;
   testDriver.next();
-  yield;
+  yield undefined;
 }
 
 function setStringFilter(aValue) {

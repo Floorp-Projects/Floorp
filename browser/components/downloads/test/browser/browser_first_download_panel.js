@@ -12,7 +12,7 @@ function gen_test()
 {
   try {
     // Ensure that state is reset in case previous tests didn't finish.
-    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield;
+    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield undefined;
 
     // With this set to false, we should automatically open the panel
     // the first time a download is started.
@@ -20,7 +20,7 @@ function gen_test()
 
     prepareForPanelOpen();
     DownloadsCommon.getData(window)._notifyDownloadEvent("start");
-    yield;
+    yield undefined;
 
     // If we got here, that means the panel opened.
     DownloadsPanel.hidePanel();
@@ -37,7 +37,7 @@ function gen_test()
     ok(false, e);
   } finally {
     // Clean up when the test finishes.
-    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield;
+    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield undefined;
   }
 }
 
