@@ -12,6 +12,7 @@
 #include "imgIContainer.h"
 #include "nsEvent.h"
 #include "npapi.h"
+#include "nsTArray.h"
 
 // This must be the last include:
 #include "nsObjCExceptions.h"
@@ -77,6 +78,26 @@ private:
 - (void)setHelpMenu:(NSMenu *)helpMenu;
 
 @end
+
+struct KeyBindingsCommand
+{
+  SEL selector;
+  id data;
+};
+
+@interface NativeKeyBindingsRecorder : NSResponder
+{
+@private
+  nsTArray<KeyBindingsCommand>* mCommands;
+}
+
+- (void)startRecording:(nsTArray<KeyBindingsCommand>&)aCommands;
+
+- (void)doCommandBySelector:(SEL)aSelector;
+
+- (void)insertText:(id)aString;
+
+@end // NativeKeyBindingsRecorder
 
 class nsCocoaUtils
 {
@@ -286,6 +307,14 @@ class nsCocoaUtils
    * once we're comfortable with the HiDPI behavior.
    */
   static bool HiDPIEnabled();
+
+  /**
+   * Keys can optionally be bound by system or user key bindings to one or more
+   * commands based on selectors. This collects any such commands in the
+   * provided array.
+   */
+  static void GetCommandsFromKeyEvent(NSEvent* aEvent,
+                                      nsTArray<KeyBindingsCommand>& aCommands);
 };
 
 #endif // nsCocoaUtils_h_
