@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<title>WebGL test: 'webgl' context request</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c"></canvas>
+<script>
+
+var canvas = document.getElementById('c');
+var gl = canvas.getContext('webgl');
+
+var isAndroid = /Android/.test(navigator.userAgent);
+var shouldBeConformant = !isAndroid;
+
+if (shouldBeConformant) {
+  ok(gl, 'Expected conformance on: ' + navigator.userAgent);
+} else {
+  ok(!gl, 'Unexpected conformance on: ' + navigator.userAgent);
+}
+
+</script>
+
