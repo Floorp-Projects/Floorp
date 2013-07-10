@@ -134,6 +134,8 @@ CustomizeMode.prototype = {
       this.visiblePalette.addEventListener("drop", this, true);
       this.visiblePalette.addEventListener("dragend", this, true);
 
+      window.gNavToolbox.addEventListener("toolbarvisibilitychange", this);
+
       // Same goes for the menu button - if we're customizing, a click to the
       // menu button means a quick exit from customization mode.
       window.PanelUI.menuButton.addEventListener("click", this, false);
@@ -184,6 +186,8 @@ CustomizeMode.prototype = {
       browser.parentNode.selectedPanel = browser;
 
       yield this.depopulatePalette();
+
+      window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
       window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
       this.visiblePalette.removeEventListener("dragstart", this, true);
@@ -570,6 +574,15 @@ CustomizeMode.prototype = {
     }.bind(this));
   },
 
+  _onToolbarVisibilityChange: function(aEvent) {
+    let toolbar = aEvent.target;
+    if (aEvent.detail.visible) {
+      toolbar.setAttribute("customizing", "true");
+    } else {
+      toolbar.removeAttribute("customizing");
+    }
+  },
+
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
     this._onUIChange();
   },
@@ -601,6 +614,9 @@ CustomizeMode.prototype = {
 
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
+      case "toolbarvisibilitychange":
+        this._onToolbarVisibilityChange(aEvent);
+        break;
       case "contextmenu":
         aEvent.preventDefault();
         aEvent.stopPropagation();

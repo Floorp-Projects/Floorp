@@ -4302,6 +4302,14 @@ function setToolbarVisibility(toolbar, isVisible) {
 
   toolbar.setAttribute(hidingAttribute, !isVisible);
   document.persist(toolbar.id, hidingAttribute);
+  let eventParams = {
+    detail: {
+      visible: isVisible
+    },
+    bubbles: true
+  };
+  let event = new CustomEvent("toolbarvisibilitychange", eventParams);
+  toolbar.dispatchEvent(event);
 
   PlacesToolbarHelper.init();
   BookmarkingUI.onToolbarVisibilityChange();
