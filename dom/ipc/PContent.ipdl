@@ -23,6 +23,7 @@ include protocol PTestShell;
 include protocol PJavaScript;
 include DOMTypes;
 include InputStreamParams;
+include PTabContext;
 include URIParams;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
@@ -47,7 +48,6 @@ using mozilla::void_t;
 using mozilla::dom::AudioChannelType;
 using mozilla::dom::NativeThreadId;
 using mozilla::hal::ProcessPriority;
-using mozilla::layout::ScrollingBehavior;
 using gfxIntSize;
 
 namespace mozilla {
@@ -154,67 +154,6 @@ union BlobConstructorParams
 {
   ChildBlobConstructorParams;
   ParentBlobConstructorParams;
-};
-
-// An IPCTabContext which corresponds to a PBrowser opened by a child when it
-// receives window.open().
-//
-// If isBrowserElement is false, this PopupIPCTabContext corresponds to an app
-// frame, and the frame's app-id and app-frame-owner-app-id will be equal to the
-// opener's values.
-//
-// If isBrowserElement is true, the frame's browserFrameOwnerAppId will be equal
-// to the opener's app-id.
-//
-// It's an error to set isBrowserElement == false if opener is a browser
-// element.  Such a PopupIPCTabContext should be rejected by code which receives
-// it.
-struct PopupIPCTabContext
-{
-  PBrowser opener;
-  bool isBrowserElement;
-};
-
-// An IPCTabContext which corresponds to an app frame.
-struct AppFrameIPCTabContext
-{
-  // The ID of the app this frame corresponds to.  May be NO_APP_ID.
-  uint32_t ownAppId;
-
-  // The ID of the app containing this frame.  May be NO_APP_ID.
-  uint32_t appFrameOwnerAppId;
-};
-
-// An IPCTabContext which corresponds to a browser frame.
-struct BrowserFrameIPCTabContext
-{
-  // The ID of the app which contains this browser frame.  May be NO_APP_ID.
-  uint32_t browserFrameOwnerAppId;
-};
-
-// This is equivalent to AppFrameIPCTabContext with all fields set to NO_APP_ID.
-struct VanillaFrameIPCTabContext
-{};
-
-// IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
-// iframe/PBrowser's own and containing app-ids and tell you whether the
-// iframe/PBrowser is a browser frame.  But only IPCTabContext is allowed to
-// travel over IPC.
-//
-// We need IPCTabContext (specifically, PopupIPCTabContext) to prevent a
-// privilege escalation attack by a compromised child process.  See the comment
-// on AllocPBrowser for details.
-union IPCTabAppBrowserContext
-{
-  PopupIPCTabContext;
-  AppFrameIPCTabContext;
-  BrowserFrameIPCTabContext;
-  VanillaFrameIPCTabContext;
-};
-
-struct IPCTabContext {
-  IPCTabAppBrowserContext appBrowserContext;
-  ScrollingBehavior scrollingBehavior;
 };
 
 union PrefValue {
