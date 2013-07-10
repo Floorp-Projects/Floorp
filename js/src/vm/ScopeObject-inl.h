@@ -13,30 +13,6 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-template<>
-inline bool
-JSObject::is<js::ClonedBlockObject>() const
-{
-    return is<js::BlockObject>() && !!getProto();
-}
-
-template<>
-inline bool
-JSObject::is<js::StaticBlockObject>() const
-{
-    return is<js::BlockObject>() && !getProto();
-}
-
-inline JSObject *
-JSObject::enclosingScope()
-{
-    return is<js::ScopeObject>()
-           ? &as<js::ScopeObject>().enclosingScope()
-           : is<js::DebugScopeObject>()
-           ? &as<js::DebugScopeObject>().enclosingScope()
-           : getParent();
-}
-
 namespace js {
 
 inline void
@@ -45,13 +21,6 @@ ScopeObject::setEnclosingScope(HandleObject obj)
     JS_ASSERT_IF(obj->is<CallObject>() || obj->is<DeclEnvObject>() || obj->is<BlockObject>(),
                  obj->isDelegate());
     setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*obj));
-}
-
-inline const Value &
-ScopeObject::aliasedVar(ScopeCoordinate sc)
-{
-    JS_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
-    return getSlot(sc.slot);
 }
 
 inline void
@@ -68,33 +37,6 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
         types::AddTypePropertyId(cx, this, NameToId(name), v);
 }
 
-/*static*/ inline size_t
-ScopeObject::offsetOfEnclosingScope()
-{
-    return getFixedSlotOffset(SCOPE_CHAIN_SLOT);
-}
-
-inline bool
-CallObject::isForEval() const
-{
-    JS_ASSERT(getReservedSlot(CALLEE_SLOT).isObjectOrNull());
-    JS_ASSERT_IF(getReservedSlot(CALLEE_SLOT).isObject(),
-                 getReservedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
-    return getReservedSlot(CALLEE_SLOT).isNull();
-}
-
-inline JSFunction &
-CallObject::callee() const
-{
-    return getReservedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
-}
-
-inline const Value &
-CallObject::aliasedVar(AliasedFormalIter fi)
-{
-    return getSlot(fi.scopeSlot());
-}
-
 inline void
 CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name, const Value &v)
 {
@@ -102,55 +44,6 @@ CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *nam
     setSlot(fi.scopeSlot(), v);
     if (hasSingletonType())
         types::AddTypePropertyId(cx, this, NameToId(name), v);
-}
-
-/*static*/ inline size_t
-CallObject::offsetOfCallee()
-{
-    return getFixedSlotOffset(CALLEE_SLOT);
-}
-
-inline uint32_t
-NestedScopeObject::stackDepth() const
-{
-    return getReservedSlot(DEPTH_SLOT).toPrivateUint32();
-}
-
-inline JSObject &
-WithObject::withThis() const
-{
-    return getReservedSlot(THIS_SLOT).toObject();
-}
-
-inline JSObject &
-WithObject::object() const
-{
-    return *JSObject::getProto();
-}
-
-inline uint32_t
-BlockObject::slotCount() const
-{
-    return propertyCount();
-}
-
-inline unsigned
-BlockObject::slotToLocalIndex(const Bindings &bindings, unsigned slot)
-{
-    JS_ASSERT(slot < RESERVED_SLOTS + slotCount());
-    return bindings.numVars() + stackDepth() + (slot - RESERVED_SLOTS);
-}
-
-inline unsigned
-BlockObject::localIndexToSlot(const Bindings &bindings, unsigned i)
-{
-    return RESERVED_SLOTS + (i - (bindings.numVars() + stackDepth()));
-}
-
-inline const Value &
-BlockObject::slotValue(unsigned i)
-{
-    return getSlotRef(RESERVED_SLOTS + i);
 }
 
 inline void
@@ -178,19 +71,6 @@ StaticBlockObject::initEnclosingStaticScope(JSObject *obj)
     setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(obj));
 }
 
-inline StaticBlockObject *
-StaticBlockObject::enclosingBlock() const
-{
-    JSObject *obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    return obj && obj->is<StaticBlockObject>() ? &obj->as<StaticBlockObject>() : NULL;
-}
-
-inline JSObject *
-StaticBlockObject::enclosingStaticScope() const
-{
-    return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-}
-
 inline void
 StaticBlockObject::setStackDepth(uint32_t depth)
 {
@@ -205,13 +85,6 @@ StaticBlockObject::setDefinitionParseNode(unsigned i, frontend::Definition *def)
     setSlotValue(i, PrivateValue(def));
 }
 
-inline frontend::Definition *
-StaticBlockObject::maybeDefinitionParseNode(unsigned i)
-{
-    Value v = slotValue(i);
-    return v.isUndefined() ? NULL : reinterpret_cast<frontend::Definition *>(v.toPrivate());
-}
-
 inline void
 StaticBlockObject::setAliased(unsigned i, bool aliased)
 {
@@ -221,37 +94,6 @@ StaticBlockObject::setAliased(unsigned i, bool aliased)
         setSlotValue(0, MagicValue(JS_BLOCK_NEEDS_CLONE));
         JS_ASSERT(needsClone());
     }
-}
-
-inline bool
-StaticBlockObject::isAliased(unsigned i)
-{
-    return slotValue(i).isTrue();
-}
-
-inline bool
-StaticBlockObject::needsClone()
-{
-    return !slotValue(0).isFalse();
-}
-
-inline bool
-StaticBlockObject::containsVarAtDepth(uint32_t depth)
-{
-    return depth >= stackDepth() && depth < stackDepth() + slotCount();
-}
-
-inline StaticBlockObject &
-ClonedBlockObject::staticBlock() const
-{
-    return getProto()->as<StaticBlockObject>();
-}
-
-inline const Value &
-ClonedBlockObject::var(unsigned i, MaybeCheckAliasing checkAliasing)
-{
-    JS_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
-    return slotValue(i);
 }
 
 inline void

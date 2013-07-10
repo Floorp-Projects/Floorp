@@ -24,40 +24,40 @@
  Coefficients are in Q12. */
 
 /* {0.3, 0.4, 0.3} */
-const WebRtc_Word16 WebRtcNetEQ_kDownsample8kHzTbl[] = { 1229, 1638, 1229 };
+const int16_t WebRtcNetEQ_kDownsample8kHzTbl[] = { 1229, 1638, 1229 };
 
 #ifdef NETEQ_WIDEBAND
 /* {0.15, 0.2, 0.3, 0.2, 0.15} */
-const WebRtc_Word16 WebRtcNetEQ_kDownsample16kHzTbl[] =
+const int16_t WebRtcNetEQ_kDownsample16kHzTbl[] =
 {   614, 819, 1229, 819, 614};
 #endif
 
 #ifdef NETEQ_32KHZ_WIDEBAND
 /* {0.1425, 0.1251, 0.1525, 0.1628, 0.1525, 0.1251, 0.1425} */
-const WebRtc_Word16 WebRtcNetEQ_kDownsample32kHzTbl[] =
+const int16_t WebRtcNetEQ_kDownsample32kHzTbl[] =
 {   584, 512, 625, 667, 625, 512, 584};
 #endif
 
 #ifdef NETEQ_48KHZ_WIDEBAND
 /* {0.2487, 0.0952, 0.1042, 0.1074, 0.1042, 0.0952, 0.2487} */
-const WebRtc_Word16 WebRtcNetEQ_kDownsample48kHzTbl[] =
+const int16_t WebRtcNetEQ_kDownsample48kHzTbl[] =
 {   1019, 390, 427, 440, 427, 390, 1019};
 #endif
 
 /* Constants used in expand function WebRtcNetEQ_Expand */
 
 /* Q12: -1.264421 + 4.8659148*x - 4.0092827*x^2 + 1.4100529*x^3 */
-const WebRtc_Word16 WebRtcNetEQ_kMixFractionFuncTbl[4] = { -5179, 19931, -16422, 5776 };
+const int16_t WebRtcNetEQ_kMixFractionFuncTbl[4] = { -5179, 19931, -16422, 5776 };
 
 /* Tabulated divisions to save complexity */
 /* 1049/{0, .., 6} */
-const WebRtc_Word16 WebRtcNetEQ_k1049div[7] = { 0, 1049, 524, 349, 262, 209, 174 };
+const int16_t WebRtcNetEQ_k1049div[7] = { 0, 1049, 524, 349, 262, 209, 174 };
 
 /* 2097/{0, .., 6} */
-const WebRtc_Word16 WebRtcNetEQ_k2097div[7] = { 0, 2097, 1048, 699, 524, 419, 349 };
+const int16_t WebRtcNetEQ_k2097div[7] = { 0, 2097, 1048, 699, 524, 419, 349 };
 
 /* 5243/{0, .., 6} */
-const WebRtc_Word16 WebRtcNetEQ_k5243div[7] = { 0, 5243, 2621, 1747, 1310, 1048, 873 };
+const int16_t WebRtcNetEQ_k5243div[7] = { 0, 5243, 2621, 1747, 1310, 1048, 873 };
 
 #ifdef WEBRTC_NETEQ_40BITACC_TEST
 /*
@@ -89,17 +89,17 @@ const WebRtc_Word16 WebRtcNetEQ_k5243div[7] = { 0, 5243, 2621, 1747, 1310, 1048,
  *		- crossCorr		: The cross correlation in Q-rShift
  */
 
-void WebRtcNetEQ_40BitAccCrossCorr(WebRtc_Word32 *crossCorr,
-    WebRtc_Word16 *seq1,
-    WebRtc_Word16 *seq2,
-    WebRtc_Word16 dimSeq,
-    WebRtc_Word16 dimCrossCorr,
-    WebRtc_Word16 rShift,
-    WebRtc_Word16 step_seq2)
+void WebRtcNetEQ_40BitAccCrossCorr(int32_t *crossCorr,
+    int16_t *seq1,
+    int16_t *seq2,
+    int16_t dimSeq,
+    int16_t dimCrossCorr,
+    int16_t rShift,
+    int16_t step_seq2)
 {
     int i, j;
-    WebRtc_Word16 *seq1Ptr, *seq2Ptr;
-    WebRtc_Word64 acc;
+    int16_t *seq1Ptr, *seq2Ptr;
+    int64_t acc;
 
     for (i = 0; i < dimCrossCorr; i++)
     {
@@ -117,7 +117,7 @@ void WebRtcNetEQ_40BitAccCrossCorr(WebRtc_Word32 *crossCorr,
             seq2Ptr++;
         }
 
-        (*crossCorr) = (WebRtc_Word32) (acc >> rShift);
+        (*crossCorr) = (int32_t) (acc >> rShift);
         crossCorr++;
     }
 }
@@ -125,7 +125,7 @@ void WebRtcNetEQ_40BitAccCrossCorr(WebRtc_Word32 *crossCorr,
 /****************************************************************************
  * WebRtcNetEQ_40BitAccDotW16W16(...)
  *
- * Calculates the dot product between two vectors (WebRtc_Word16)
+ * Calculates the dot product between two vectors (int16_t)
  *
  * Input:
  *		- vector1		: Vector 1
@@ -137,14 +137,14 @@ void WebRtcNetEQ_40BitAccCrossCorr(WebRtc_Word32 *crossCorr,
  * Return value			: The dot product
  */
 
-WebRtc_Word32 WebRtcNetEQ_40BitAccDotW16W16(WebRtc_Word16 *vector1,
-    WebRtc_Word16 *vector2,
+int32_t WebRtcNetEQ_40BitAccDotW16W16(int16_t *vector1,
+    int16_t *vector2,
     int len,
     int scaling)
 {
-    WebRtc_Word32 sum;
+    int32_t sum;
     int i;
-    WebRtc_Word64 acc;
+    int64_t acc;
 
     acc = 0;
     for (i = 0; i < len; i++)
@@ -152,7 +152,7 @@ WebRtc_Word32 WebRtcNetEQ_40BitAccDotW16W16(WebRtc_Word16 *vector1,
         acc += WEBRTC_SPL_MUL_16_16(*vector1++, *vector2++);
     }
 
-    sum = (WebRtc_Word32) (acc >> scaling);
+    sum = (int32_t) (acc >> scaling);
 
     return(sum);
 }
@@ -175,11 +175,11 @@ WebRtc_Word32 WebRtcNetEQ_40BitAccDotW16W16(WebRtc_Word16 *vector1,
  *                      : non-zero - error
  */
 
-int WebRtcNetEQ_DSPInit(DSPInst_t *inst, WebRtc_UWord16 fs)
+int WebRtcNetEQ_DSPInit(DSPInst_t *inst, uint16_t fs)
 {
 
     int res = 0;
-    WebRtc_Word16 fs_mult;
+    int16_t fs_mult;
 
     /* Pointers and values to save before clearing the instance */
 #ifdef NETEQ_CNG_CODEC
@@ -193,22 +193,22 @@ int WebRtcNetEQ_DSPInit(DSPInst_t *inst, WebRtc_UWord16 fs)
     VADInitFunction savedVADinit = inst->VADInst.initFunction;
     VADSetmodeFunction savedVADsetmode = inst->VADInst.setmodeFunction;
     VADFunction savedVADfunc = inst->VADInst.VADFunction;
-    WebRtc_Word16 savedVADEnabled = inst->VADInst.VADEnabled;
+    int16_t savedVADEnabled = inst->VADInst.VADEnabled;
     int savedVADMode = inst->VADInst.VADMode;
 #endif /* NETEQ_VAD */
     DSPStats_t saveStats;
-    WebRtc_Word16 saveMsPerCall = inst->millisecondsPerCall;
+    int16_t saveMsPerCall = inst->millisecondsPerCall;
     enum BGNMode saveBgnMode = inst->BGNInst.bgnMode;
 #ifdef NETEQ_STEREO
     MasterSlaveInfo saveMSinfo;
 #endif
 
     /* copy contents of statInst to avoid clearing */WEBRTC_SPL_MEMCPY_W16(&saveStats, &(inst->statInst),
-        sizeof(DSPStats_t)/sizeof(WebRtc_Word16));
+        sizeof(DSPStats_t)/sizeof(int16_t));
 
 #ifdef NETEQ_STEREO
     /* copy contents of msInfo to avoid clearing */WEBRTC_SPL_MEMCPY_W16(&saveMSinfo, &(inst->msInfo),
-        sizeof(MasterSlaveInfo)/sizeof(WebRtc_Word16));
+        sizeof(MasterSlaveInfo)/sizeof(int16_t));
 #endif
 
     /* check that the sample rate is valid */
@@ -232,14 +232,14 @@ int WebRtcNetEQ_DSPInit(DSPInst_t *inst, WebRtc_UWord16 fs)
     fs_mult = WebRtcSpl_DivW32W16ResW16(fs, 8000);
 
     /* Set everything to zero since most variables should be zero at start */
-    WebRtcSpl_MemSetW16((WebRtc_Word16 *) inst, 0, sizeof(DSPInst_t) / sizeof(WebRtc_Word16));
+    WebRtcSpl_MemSetW16((int16_t *) inst, 0, sizeof(DSPInst_t) / sizeof(int16_t));
 
     /* Restore saved pointers  */
 #ifdef NETEQ_CNG_CODEC
     inst->CNG_Codec_inst = (CNG_dec_inst *)savedPtr1;
 #endif
-    inst->pw16_readAddress = (WebRtc_Word16 *) savedPtr2;
-    inst->pw16_writeAddress = (WebRtc_Word16 *) savedPtr3;
+    inst->pw16_readAddress = (int16_t *) savedPtr2;
+    inst->pw16_writeAddress = (int16_t *) savedPtr3;
     inst->main_inst = savedPtr4;
 #ifdef NETEQ_VAD
     inst->VADInst.VADState = savedVADptr;
@@ -289,11 +289,11 @@ int WebRtcNetEQ_DSPInit(DSPInst_t *inst, WebRtc_UWord16 fs)
     inst->BGNInst.bgnMode = saveBgnMode;
 
     /* Recreate statistics counters */WEBRTC_SPL_MEMCPY_W16(&(inst->statInst), &saveStats,
-        sizeof(DSPStats_t)/sizeof(WebRtc_Word16));
+        sizeof(DSPStats_t)/sizeof(int16_t));
 
 #ifdef NETEQ_STEREO
     /* Recreate MSinfo */WEBRTC_SPL_MEMCPY_W16(&(inst->msInfo), &saveMSinfo,
-        sizeof(MasterSlaveInfo)/sizeof(WebRtc_Word16));
+        sizeof(MasterSlaveInfo)/sizeof(int16_t));
 #endif
 
 #ifdef NETEQ_CNG_CODEC
@@ -335,8 +335,8 @@ int WebRtcNetEQ_AddressInit(DSPInst_t *inst, const void *data2McuAddress,
 {
 
     /* set shared-memory addresses in the DSP instance */
-    inst->pw16_readAddress = (WebRtc_Word16 *) data2DspAddress;
-    inst->pw16_writeAddress = (WebRtc_Word16 *) data2McuAddress;
+    inst->pw16_readAddress = (int16_t *) data2DspAddress;
+    inst->pw16_writeAddress = (int16_t *) data2McuAddress;
 
     /* set pointer to main NetEQ instance */
     inst->main_inst = (void *) mainInst;
@@ -396,6 +396,23 @@ int WebRtcNetEQ_ClearPostCallStats(DSPInst_t *inst)
     return (0);
 }
 
+/****************************************************************************
+ * WebRtcNetEQ_ClearActivityStats(...)
+ *
+ * Reset processing activity statistics.
+ *
+ * Input:
+ *    - inst          : NetEQ DSP instance
+ *
+ * Output:
+ *    - inst          : Updated instance
+ *
+ */
+
+void WebRtcNetEQ_ClearActivityStats(DSPInst_t *inst) {
+  memset(&inst->activity_stats, 0, sizeof(ActivityStats));
+}
+
 #ifdef NETEQ_VAD
 
 /****************************************************************************
@@ -414,7 +431,7 @@ int WebRtcNetEQ_ClearPostCallStats(DSPInst_t *inst)
  *						  -1 - Error
  */
 
-int WebRtcNetEQ_InitVAD(PostDecodeVAD_t *VADInst, WebRtc_UWord16 fs)
+int WebRtcNetEQ_InitVAD(PostDecodeVAD_t *VADInst, uint16_t fs)
 {
 
     int res = 0;
@@ -505,7 +522,7 @@ int WebRtcNetEQ_SetVADModeInternal(PostDecodeVAD_t *VADInst, int mode)
 
 int WebRtcNetEQ_FlushSpeechBuffer(DSPInst_t *inst)
 {
-    WebRtc_Word16 fs_mult;
+    int16_t fs_mult;
 
     /* calcualte fs/8000 */
     fs_mult = WebRtcSpl_DivW32W16ResW16(inst->fs, 8000);

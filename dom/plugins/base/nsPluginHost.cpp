@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include "prio.h"
 #include "prmem.h"
-#include "nsIComponentManager.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsNPAPIPluginInstance.h"
@@ -23,7 +22,6 @@
 #include "nsIObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIUploadChannel.h"
 #include "nsIByteRangeRequest.h"
 #include "nsIStreamListener.h"
@@ -38,17 +36,11 @@
 #if defined(XP_MACOSX)
 #include "nsILocalFileMac.h"
 #endif
-#include "nsIInputStream.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIChannel.h"
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
-#include "nsICachingChannel.h"
 #include "nsHashtable.h"
-#include "nsIProxyInfo.h"
 #include "nsPluginLogging.h"
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
@@ -71,44 +63,20 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
-#include "nsIPrincipal.h"
-
 #include "nsNetCID.h"
-#include "nsIDOMPlugin.h"
-#include "nsIDOMMimeType.h"
-#include "nsMimeTypes.h"
 #include "prprf.h"
 #include "nsThreadUtils.h"
 #include "nsIInputStreamTee.h"
-#include "nsIInterfaceInfoManager.h"
-#include "xptinfo.h"
 
-#include "nsIMIMEService.h"
-#include "nsCExternalHandlerService.h"
-#include "nsIFileChannel.h"
-
-#include "nsICharsetConverterManager.h"
-#include "nsIPlatformCharset.h"
-
-#include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsXULAppAPI.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsPluginDirServiceProvider.h"
-#include "nsError.h"
 
 #include "nsUnicharUtils.h"
 #include "nsPluginManifestLineReader.h"
 
 #include "nsIWeakReferenceUtils.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMHTMLEmbedElement.h"
 #include "nsIPresShell.h"
-#include "nsIWebNavigation.h"
-#include "nsIDocShell.h"
 #include "nsPluginNativeWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIContentPolicy.h"
@@ -1159,105 +1127,20 @@ nsPluginHost::IsPluginEnabledForExtension(const char* aExtension,
   return NS_ERROR_FAILURE;
 }
 
-class DOMPluginImpl : public nsIDOMPlugin {
-public:
-  NS_DECL_ISUPPORTS
-
-  DOMPluginImpl(nsPluginTag* aPluginTag) : mPluginTag(aPluginTag)
-  {
-  }
-
-  virtual ~DOMPluginImpl() {
-  }
-
-  NS_METHOD GetDescription(nsAString& aDescription)
-  {
-    CopyUTF8toUTF16(mPluginTag.mDescription, aDescription);
-    return NS_OK;
-  }
-
-  NS_METHOD GetFilename(nsAString& aFilename)
-  {
-    CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
-    return NS_OK;
-  }
-
-  NS_METHOD GetVersion(nsAString& aVersion)
-  {
-    CopyUTF8toUTF16(mPluginTag.mVersion, aVersion);
-    return NS_OK;
-  }
-
-  NS_METHOD GetName(nsAString& aName)
-  {
-    CopyUTF8toUTF16(mPluginTag.mName, aName);
-    return NS_OK;
-  }
-
-  NS_METHOD GetLength(uint32_t* aLength)
-  {
-    *aLength = mPluginTag.mMimeTypes.Length();
-    return NS_OK;
-  }
-
-  NS_METHOD Item(uint32_t aIndex, nsIDOMMimeType** aReturn)
-  {
-    nsIDOMMimeType* mimeType = new DOMMimeTypeImpl(&mPluginTag, aIndex);
-    NS_IF_ADDREF(mimeType);
-    *aReturn = mimeType;
-    return NS_OK;
-  }
-
-  NS_METHOD NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
-  {
-    for (int i = mPluginTag.mMimeTypes.Length() - 1; i >= 0; --i) {
-      if (aName.Equals(NS_ConvertUTF8toUTF16(mPluginTag.mMimeTypes[i])))
-        return Item(i, aReturn);
-    }
-    return NS_OK;
-  }
-
-private:
-  nsPluginTag mPluginTag;
-};
-
-NS_IMPL_ISUPPORTS1(DOMPluginImpl, nsIDOMPlugin)
-
-nsresult
-nsPluginHost::GetPluginCount(uint32_t* aPluginCount)
+void
+nsPluginHost::GetPlugins(nsTArray<nsRefPtr<nsPluginTag> >& aPluginArray)
 {
-  LoadPlugins();
+  aPluginArray.Clear();
 
-  uint32_t count = 0;
+  LoadPlugins();
 
   nsPluginTag* plugin = mPlugins;
   while (plugin != nullptr) {
-    if (plugin->IsActive()) {
-      ++count;
+    if (plugin->IsEnabled()) {
+      aPluginArray.AppendElement(plugin);
     }
     plugin = plugin->mNext;
   }
-
-  *aPluginCount = count;
-
-  return NS_OK;
-}
-
-nsresult
-nsPluginHost::GetPlugins(uint32_t aPluginCount, nsIDOMPlugin** aPluginArray)
-{
-  LoadPlugins();
-
-  nsPluginTag* plugin = mPlugins;
-  for (uint32_t i = 0; i < aPluginCount && plugin; plugin = plugin->mNext) {
-    if (plugin->IsActive()) {
-      nsIDOMPlugin* domPlugin = new DOMPluginImpl(plugin);
-      NS_IF_ADDREF(domPlugin);
-      aPluginArray[i++] = domPlugin;
-    }
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2768,9 +2651,6 @@ nsPluginHost::ReadPluginInfo()
       mimetypecount, lastmod, true);
     if (heapalloced)
       delete [] heapalloced;
-
-    if (!tag)
-      continue;
 
     // Import flags from registry into prefs for old registry versions
     if (hasValidFlags && !pluginStateImported) {

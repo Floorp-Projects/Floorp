@@ -29,7 +29,7 @@ TMMBRSet::~TMMBRSet()
 }
 
 void
-TMMBRSet::VerifyAndAllocateSet(WebRtc_UWord32 minimumSize)
+TMMBRSet::VerifyAndAllocateSet(uint32_t minimumSize)
 {
     if(minimumSize > _sizeOfSet)
     {
@@ -38,7 +38,7 @@ TMMBRSet::VerifyAndAllocateSet(WebRtc_UWord32 minimumSize)
         _sizeOfSet = minimumSize;
     }
     // reset memory
-    for(WebRtc_UWord32 i = 0; i < _sizeOfSet; i++)
+    for(uint32_t i = 0; i < _sizeOfSet; i++)
     {
         _data.at(i).tmmbr = 0;
         _data.at(i).packet_oh = 0;
@@ -48,7 +48,7 @@ TMMBRSet::VerifyAndAllocateSet(WebRtc_UWord32 minimumSize)
 }
 
 void
-TMMBRSet::VerifyAndAllocateSetKeepingData(WebRtc_UWord32 minimumSize)
+TMMBRSet::VerifyAndAllocateSetKeepingData(uint32_t minimumSize)
 {
     if(minimumSize > _sizeOfSet)
     {
@@ -60,9 +60,9 @@ TMMBRSet::VerifyAndAllocateSetKeepingData(WebRtc_UWord32 minimumSize)
 }
 
 void TMMBRSet::SetEntry(unsigned int i,
-                         WebRtc_UWord32 tmmbrSet,
-                         WebRtc_UWord32 packetOHSet,
-                         WebRtc_UWord32 ssrcSet) {
+                         uint32_t tmmbrSet,
+                         uint32_t packetOHSet,
+                         uint32_t ssrcSet) {
   assert(i < _sizeOfSet);
   _data.at(i).tmmbr = tmmbrSet;
   _data.at(i).packet_oh = packetOHSet;
@@ -72,28 +72,28 @@ void TMMBRSet::SetEntry(unsigned int i,
   }
 }
 
-void TMMBRSet::AddEntry(WebRtc_UWord32 tmmbrSet,
-                        WebRtc_UWord32 packetOHSet,
-                        WebRtc_UWord32 ssrcSet) {
+void TMMBRSet::AddEntry(uint32_t tmmbrSet,
+                        uint32_t packetOHSet,
+                        uint32_t ssrcSet) {
   assert(_lengthOfSet < _sizeOfSet);
   SetEntry(_lengthOfSet, tmmbrSet, packetOHSet, ssrcSet);
 }
 
-void TMMBRSet::RemoveEntry(WebRtc_UWord32 sourceIdx) {
+void TMMBRSet::RemoveEntry(uint32_t sourceIdx) {
   assert(sourceIdx < _lengthOfSet);
   _data.erase(_data.begin() + sourceIdx);
   _lengthOfSet--;
   _data.resize(_sizeOfSet);  // Ensure that size remains the same.
 }
 
-void TMMBRSet::SwapEntries(WebRtc_UWord32 i, WebRtc_UWord32 j) {
+void TMMBRSet::SwapEntries(uint32_t i, uint32_t j) {
     SetElement temp;
     temp = _data[i];
     _data[i] = _data[j];
     _data[j] = temp;
 }
 
-void TMMBRSet::ClearEntry(WebRtc_UWord32 idx) {
+void TMMBRSet::ClearEntry(uint32_t idx) {
   SetEntry(idx, 0, 0, 0);
 }
 
@@ -115,7 +115,7 @@ TMMBRHelp::~TMMBRHelp() {
 }
 
 TMMBRSet*
-TMMBRHelp::VerifyAndAllocateBoundingSet(WebRtc_UWord32 minimumSize)
+TMMBRHelp::VerifyAndAllocateBoundingSet(uint32_t minimumSize)
 {
     CriticalSectionScoped lock(_criticalSection);
 
@@ -138,9 +138,9 @@ TMMBRSet* TMMBRHelp::BoundingSet() {
   return &_boundingSet;
 }
 
-WebRtc_Word32
+int32_t
 TMMBRHelp::SetTMMBRBoundingSetToSend(const TMMBRSet* boundingSetToSend,
-                                     const WebRtc_UWord32 maxBitrateKbit)
+                                     const uint32_t maxBitrateKbit)
 {
     CriticalSectionScoped lock(_criticalSection);
 
@@ -152,10 +152,10 @@ TMMBRHelp::SetTMMBRBoundingSetToSend(const TMMBRSet* boundingSetToSend,
 
     VerifyAndAllocateBoundingSetToSend(boundingSetToSend->lengthOfSet());
     _boundingSetToSend.clearSet();
-    for (WebRtc_UWord32 i = 0; i < boundingSetToSend->lengthOfSet(); i++)
+    for (uint32_t i = 0; i < boundingSetToSend->lengthOfSet(); i++)
     {
         // cap at our configured max bitrate
-        WebRtc_UWord32 bitrate = boundingSetToSend->Tmmbr(i);
+        uint32_t bitrate = boundingSetToSend->Tmmbr(i);
         if(maxBitrateKbit)
         {
             // do we have a configured max bitrate?
@@ -171,8 +171,8 @@ TMMBRHelp::SetTMMBRBoundingSetToSend(const TMMBRSet* boundingSetToSend,
     return 0;
 }
 
-WebRtc_Word32
-TMMBRHelp::VerifyAndAllocateBoundingSetToSend(WebRtc_UWord32 minimumSize)
+int32_t
+TMMBRHelp::VerifyAndAllocateBoundingSetToSend(uint32_t minimumSize)
 {
     CriticalSectionScoped lock(_criticalSection);
 
@@ -181,7 +181,7 @@ TMMBRHelp::VerifyAndAllocateBoundingSetToSend(WebRtc_UWord32 minimumSize)
 }
 
 TMMBRSet*
-TMMBRHelp::VerifyAndAllocateCandidateSet(WebRtc_UWord32 minimumSize)
+TMMBRHelp::VerifyAndAllocateCandidateSet(uint32_t minimumSize)
 {
     CriticalSectionScoped lock(_criticalSection);
 
@@ -201,7 +201,7 @@ TMMBRHelp::BoundingSetToSend()
     return &_boundingSetToSend;
 }
 
-WebRtc_Word32
+int32_t
 TMMBRHelp::FindTMMBRBoundingSet(TMMBRSet*& boundingSet)
 {
     CriticalSectionScoped lock(_criticalSection);
@@ -211,7 +211,7 @@ TMMBRHelp::FindTMMBRBoundingSet(TMMBRSet*& boundingSet)
     candidateSet.VerifyAndAllocateSet(_candidateSet.sizeOfSet());
 
     // TODO(hta) Figure out if this should be lengthOfSet instead.
-    for (WebRtc_UWord32 i = 0; i < _candidateSet.sizeOfSet(); i++)
+    for (uint32_t i = 0; i < _candidateSet.sizeOfSet(); i++)
     {
         if(_candidateSet.Tmmbr(i))
         {
@@ -229,9 +229,9 @@ TMMBRHelp::FindTMMBRBoundingSet(TMMBRSet*& boundingSet)
     }
 
     // Number of set candidates
-    WebRtc_Word32 numSetCandidates = candidateSet.lengthOfSet();
+    int32_t numSetCandidates = candidateSet.lengthOfSet();
     // Find bounding set
-    WebRtc_UWord32 numBoundingSet = 0;
+    uint32_t numBoundingSet = 0;
     if (numSetCandidates > 0)
     {
         numBoundingSet =  FindTMMBRBoundingSet(numSetCandidates, candidateSet);
@@ -245,18 +245,18 @@ TMMBRHelp::FindTMMBRBoundingSet(TMMBRSet*& boundingSet)
 }
 
 
-WebRtc_Word32
-TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidateSet)
+int32_t
+TMMBRHelp::FindTMMBRBoundingSet(int32_t numCandidates, TMMBRSet& candidateSet)
 {
     CriticalSectionScoped lock(_criticalSection);
 
-    WebRtc_UWord32 numBoundingSet = 0;
+    uint32_t numBoundingSet = 0;
     VerifyAndAllocateBoundingSet(candidateSet.sizeOfSet());
 
     if (numCandidates == 1)
     {
         // TODO(hta): lengthOfSet instead of sizeOfSet?
-        for (WebRtc_UWord32 i = 0; i < candidateSet.sizeOfSet(); i++)
+        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
         {
             if (candidateSet.Tmmbr(i) > 0)
             {
@@ -284,15 +284,15 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
             }
         }
         // 2. For tuples with same OH, keep the one w/ the lowest bitrate
-        for (WebRtc_UWord32 i = 0; i < candidateSet.sizeOfSet(); i++)
+        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
         {
             if (candidateSet.Tmmbr(i) > 0)
             {
                 // get min bitrate for packets w/ same OH
-                WebRtc_UWord32 currentPacketOH = candidateSet.PacketOH(i);
-                WebRtc_UWord32 currentMinTMMBR = candidateSet.Tmmbr(i);
-                WebRtc_UWord32 currentMinIndexTMMBR = i;
-                for (WebRtc_UWord32 j = i+1; j < candidateSet.sizeOfSet(); j++)
+                uint32_t currentPacketOH = candidateSet.PacketOH(i);
+                uint32_t currentMinTMMBR = candidateSet.Tmmbr(i);
+                uint32_t currentMinIndexTMMBR = i;
+                for (uint32_t j = i+1; j < candidateSet.sizeOfSet(); j++)
                 {
                     if(candidateSet.PacketOH(j) == currentPacketOH)
                     {
@@ -304,7 +304,7 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
                     }
                 }
                 // keep lowest bitrate
-                for (WebRtc_UWord32 j = 0; j < candidateSet.sizeOfSet(); j++)
+                for (uint32_t j = 0; j < candidateSet.sizeOfSet(); j++)
                 {
                   if(candidateSet.PacketOH(j) == currentPacketOH
                      && j != currentMinIndexTMMBR)
@@ -316,9 +316,9 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
         }
         // 3. Select and remove tuple w/ lowest tmmbr.
         // (If more than 1, choose the one w/ highest OH).
-        WebRtc_UWord32 minTMMBR = 0;
-        WebRtc_UWord32 minIndexTMMBR = 0;
-        for (WebRtc_UWord32 i = 0; i < candidateSet.sizeOfSet(); i++)
+        uint32_t minTMMBR = 0;
+        uint32_t minIndexTMMBR = 0;
+        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
         {
             if (candidateSet.Tmmbr(i) > 0)
             {
@@ -328,7 +328,7 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
             }
         }
 
-        for (WebRtc_UWord32 i = 0; i < candidateSet.sizeOfSet(); i++)
+        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
         {
             if (candidateSet.Tmmbr(i) > 0 && candidateSet.Tmmbr(i) <= minTMMBR)
             {
@@ -356,7 +356,7 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
 
         // 4. Discard from candidate list all tuple w/ lower OH
         // (next tuple must be steeper)
-        for (WebRtc_UWord32 i = 0; i < candidateSet.sizeOfSet(); i++)
+        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
         {
             if(candidateSet.Tmmbr(i) > 0
                && candidateSet.PacketOH(i) < _boundingSet.PacketOH(0))
@@ -383,7 +383,7 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
             if (getNewCandidate)
             {
                 // 5. Remove first remaining tuple from candidate list
-                for (WebRtc_UWord32 i = 0; i < candidateSet.sizeOfSet(); i++)
+                for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
                 {
                     if (candidateSet.Tmmbr(i) > 0)
                     {
@@ -443,15 +443,15 @@ TMMBRHelp::FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidate
     return numBoundingSet;
 }
 
-bool TMMBRHelp::IsOwner(const WebRtc_UWord32 ssrc,
-                        const WebRtc_UWord32 length) const {
+bool TMMBRHelp::IsOwner(const uint32_t ssrc,
+                        const uint32_t length) const {
   CriticalSectionScoped lock(_criticalSection);
 
   if (length == 0) {
     // Empty bounding set.
     return false;
   }
-  for(WebRtc_UWord32 i = 0;
+  for(uint32_t i = 0;
       (i < length) && (i < _boundingSet.sizeOfSet()); ++i) {
     if(_boundingSet.Ssrc(i) == ssrc) {
       return true;
@@ -460,7 +460,7 @@ bool TMMBRHelp::IsOwner(const WebRtc_UWord32 ssrc,
   return false;
 }
 
-bool TMMBRHelp::CalcMinBitRate( WebRtc_UWord32* minBitrateKbit) const {
+bool TMMBRHelp::CalcMinBitRate( uint32_t* minBitrateKbit) const {
   CriticalSectionScoped lock(_criticalSection);
 
   if (_candidateSet.sizeOfSet() == 0) {
@@ -469,8 +469,8 @@ bool TMMBRHelp::CalcMinBitRate( WebRtc_UWord32* minBitrateKbit) const {
   }
   *minBitrateKbit = std::numeric_limits<uint32_t>::max();
 
-  for (WebRtc_UWord32 i = 0; i < _candidateSet.lengthOfSet(); ++i) {
-    WebRtc_UWord32 curNetBitRateKbit = _candidateSet.Tmmbr(i);
+  for (uint32_t i = 0; i < _candidateSet.lengthOfSet(); ++i) {
+    uint32_t curNetBitRateKbit = _candidateSet.Tmmbr(i);
     if (curNetBitRateKbit < MIN_VIDEO_BW_MANAGEMENT_BITRATE) {
       curNetBitRateKbit = MIN_VIDEO_BW_MANAGEMENT_BITRATE;
     }

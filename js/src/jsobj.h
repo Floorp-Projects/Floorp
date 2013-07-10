@@ -1513,7 +1513,7 @@ extern void
 js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
 extern JSBool
-js_ReportGetterOnlyAssignment(JSContext *cx);
+js_ReportGetterOnlyAssignment(JSContext *cx, bool strict);
 
 extern unsigned
 js_InferFlags(JSContext *cx, unsigned defaultFlags);
@@ -1552,23 +1552,6 @@ Throw(JSContext *cx, jsid id, unsigned errorNumber);
 
 extern bool
 Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
-
-/*
- * Helper function. To approximate a call to the [[DefineOwnProperty]] internal
- * method described in ES5, first call this, then call JS_DefinePropertyById.
- *
- * JS_DefinePropertyById by itself does not enforce the invariants on
- * non-configurable properties when obj->isNative(). This function performs the
- * relevant checks (specified in ES5 8.12.9 [[DefineOwnProperty]] steps 1-11),
- * but only if obj is native.
- *
- * The reason for the messiness here is that ES5 uses [[DefineOwnProperty]] as
- * a sort of extension point, but there is no hook in js::Class,
- * js::ProxyHandler, or the JSAPI with precisely the right semantics for it.
- */
-extern bool
-CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
 }  /* namespace js */
 

@@ -30,7 +30,6 @@
 @interface VideoCaptureMacQTKitObjC : NSObject{
     // class properties
     bool                                    _capturing;
-    int                                    _counter;
     int                                    _frameRate;
     int                                    _frameWidth;
     int                                    _frameHeight;
@@ -49,16 +48,8 @@
     QTCaptureDecompressedVideoOutput*    _captureDecompressedVideoOutput;
     NSArray*                            _captureDevices;
     int                                    _captureDeviceCount;
-    int                                    _captureDeviceIndex;
-    NSString*                            _captureDeviceName;
     char                                _captureDeviceNameUTF8[1024];
     char                                _captureDeviceNameUniqueID[1024];
-    char                                _captureDeviceNameProductID[1024];
-    NSString*                            _key;
-    NSNumber*                            _val;
-    NSDictionary*                        _videoSettings;
-    NSString*                            _captureQuality;
-
 }
 /**************************************************************************
  *

@@ -21,16 +21,13 @@ namespace webrtc
 
 class VideoRenderOpenGles20 {
  public:
-  VideoRenderOpenGles20(WebRtc_Word32 id);
+  VideoRenderOpenGles20(int32_t id);
   ~VideoRenderOpenGles20();
 
-  WebRtc_Word32 Setup(WebRtc_Word32 widht, WebRtc_Word32 height);
-  WebRtc_Word32 Render(const I420VideoFrame& frameToRender);
-  WebRtc_Word32 SetCoordinates(WebRtc_Word32 zOrder,
-                               const float left,
-                               const float top,
-                               const float right,
-                               const float bottom);
+  int32_t Setup(int32_t widht, int32_t height);
+  int32_t Render(const I420VideoFrame& frameToRender);
+  int32_t SetCoordinates(int32_t zOrder, const float left, const float top,
+                         const float right, const float bottom);
 
  private:
   void printGLString(const char *name, GLenum s);
@@ -41,7 +38,7 @@ class VideoRenderOpenGles20 {
   void SetupTextures(const I420VideoFrame& frameToRender);
   void UpdateTextures(const I420VideoFrame& frameToRender);
 
-  WebRtc_Word32 _id;
+  int32_t _id;
   GLuint _textureIds[3]; // Texture id of Y,U and V texture.
   GLuint _program;
   GLuint _vPositionHandle;

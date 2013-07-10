@@ -149,7 +149,7 @@ const RTPFragmentationHeader* VCMEncodedFrame::FragmentationHeader() const {
   return &_fragmentation;
 }
 
-WebRtc_Word32
+int32_t
 VCMEncodedFrame::Store(VCMFrameStorageCallback& storeCallback) const
 {
     EncodedVideoData frameToStore;
@@ -172,13 +172,13 @@ VCMEncodedFrame::Store(VCMFrameStorageCallback& storeCallback) const
     return VCM_OK;
 }
 
-WebRtc_Word32
-VCMEncodedFrame::VerifyAndAllocate(const WebRtc_UWord32 minimumSize)
+int32_t
+VCMEncodedFrame::VerifyAndAllocate(const uint32_t minimumSize)
 {
     if(minimumSize > _size)
     {
         // create buffer of sufficient size
-        WebRtc_UWord8* newBuffer = new WebRtc_UWord8[minimumSize];
+        uint8_t* newBuffer = new uint8_t[minimumSize];
         if (newBuffer == NULL)
         {
             return -1;

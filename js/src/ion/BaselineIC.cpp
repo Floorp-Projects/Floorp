@@ -3960,12 +3960,9 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
     // unlikely.
     Label failureReconstructInputs;
     regs = availableGeneralRegs(0);
-    if (regs.has(objReg))
-        regs.take(objReg);
-    if (regs.has(idxReg))
-        regs.take(idxReg);
-    if (regs.has(scratchReg))
-        regs.take(scratchReg);
+    regs.takeUnchecked(objReg);
+    regs.takeUnchecked(idxReg);
+    regs.takeUnchecked(scratchReg);
     Register argData = regs.takeAny();
     Register tempReg = regs.takeAny();
 
@@ -7233,8 +7230,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
 
     regs.take(argcReg);
     regs.take(ArgumentsRectifierReg);
-    if (regs.has(BaselineTailCallReg))
-        regs.take(BaselineTailCallReg);
+    regs.takeUnchecked(BaselineTailCallReg);
 
     // Load the callee in R1.
     // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, ..., ArgNVal, +ICStackValueOffset+ ]

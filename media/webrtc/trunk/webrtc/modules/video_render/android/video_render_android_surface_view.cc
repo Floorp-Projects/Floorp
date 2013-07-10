@@ -26,7 +26,7 @@
 namespace webrtc {
 
 AndroidSurfaceViewRenderer::AndroidSurfaceViewRenderer(
-    const WebRtc_Word32 id,
+    const int32_t id,
     const VideoRenderType videoRenderType,
     void* window,
     const bool fullscreen) :
@@ -77,7 +77,7 @@ AndroidSurfaceViewRenderer::~AndroidSurfaceViewRenderer() {
   }
 }
 
-WebRtc_Word32 AndroidSurfaceViewRenderer::Init() {
+int32_t AndroidSurfaceViewRenderer::Init() {
   WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, _id, "%s", __FUNCTION__);
   if (!g_jvm) {
     WEBRTC_TRACE(kTraceError,
@@ -200,8 +200,8 @@ WebRtc_Word32 AndroidSurfaceViewRenderer::Init() {
 
 AndroidStream*
 AndroidSurfaceViewRenderer::CreateAndroidRenderChannel(
-    WebRtc_Word32 streamId,
-    WebRtc_Word32 zOrder,
+    int32_t streamId,
+    int32_t zOrder,
     const float left,
     const float top,
     const float right,
@@ -223,7 +223,7 @@ AndroidSurfaceViewRenderer::CreateAndroidRenderChannel(
 }
 
 AndroidSurfaceViewChannel::AndroidSurfaceViewChannel(
-    WebRtc_UWord32 streamId,
+    uint32_t streamId,
     JavaVM* jvm,
     VideoRenderAndroid& renderer,
     jobject javaRenderObj) :
@@ -284,8 +284,8 @@ AndroidSurfaceViewChannel::~AndroidSurfaceViewChannel() {
   }
 }
 
-WebRtc_Word32 AndroidSurfaceViewChannel::Init(
-    WebRtc_Word32 /*zOrder*/,
+int32_t AndroidSurfaceViewChannel::Init(
+    int32_t /*zOrder*/,
     const float left,
     const float top,
     const float right,
@@ -410,8 +410,8 @@ WebRtc_Word32 AndroidSurfaceViewChannel::Init(
 }
 
 
-WebRtc_Word32 AndroidSurfaceViewChannel::RenderFrame(
-    const WebRtc_UWord32 /*streamId*/,
+int32_t AndroidSurfaceViewChannel::RenderFrame(
+    const uint32_t /*streamId*/,
     I420VideoFrame& videoFrame) {
   // WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer,_id, "%s:" ,__FUNCTION__);
   _renderCritSect.Enter();

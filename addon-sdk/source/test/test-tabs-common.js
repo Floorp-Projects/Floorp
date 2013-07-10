@@ -42,11 +42,47 @@ exports.testTabCounts = function(test) {
   });
 };
 
+
+// TEST: tabs.activeTab getter
+exports.testActiveTab_getter = function(test) {
+  test.waitUntilDone();
+  let evtCount = 0;
+  let activeTab = null;
+
+  function endTest(type, tab) {
+    if (type == 'activate') {
+      test.assertStrictEqual(tabs.activeTab, tab, 'the active tab is the opened tab');
+      activeTab = tabs.activeTab;
+    }
+    else {
+      test.assertEqual(tab.url, url, 'the opened tab has the correct url');
+    }
+
+    if (++evtCount != 2)
+      return;
+
+    test.assertStrictEqual(activeTab, tab, 'the active tab is the ready tab');
+    test.assertStrictEqual(tabs.activeTab, tab, 'the active tab is the ready tab');
+
+    tab.close(function() {
+      // end test
+      test.done();
+    });
+  }
+
+  let url = URL.replace("#title#", "testActiveTab_getter");
+  tabs.open({
+    url: url,
+    onReady: endTest.bind(null, 'ready'),
+    onActivate: endTest.bind(null, 'activate')
+  });
+};
+
 // TEST: tab.activate()
-exports.testActiveTab_setter_alt = function(test) {
+exports.testActiveTab_setter = function(test) {
   test.waitUntilDone();
 
-  let url = URL.replace("#title#", "testActiveTab_setter_alt");
+  let url = URL.replace("#title#", "testActiveTab_setter");
   let tab1URL = URL.replace("#title#", "tab1");
 
   tabs.open({

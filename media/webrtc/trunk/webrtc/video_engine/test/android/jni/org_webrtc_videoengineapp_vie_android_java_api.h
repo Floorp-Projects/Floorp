@@ -291,6 +291,14 @@ JNIEXPORT jint JNICALL Java_org_webrtc_videoengineapp_ViEAndroidJavaAPI_VoE_1Del
 
 /*
  * Class:     org_webrtc_videoengineapp_ViEAndroidJavaAPI
+ * Method:    ViE_DeleteChannel
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_org_webrtc_videoengineapp_ViEAndroidJavaAPI_ViE_1DeleteChannel
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     org_webrtc_videoengineapp_ViEAndroidJavaAPI
  * Method:    VoE_SetLocalReceiver
  * Signature: (II)I
  */

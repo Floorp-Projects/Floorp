@@ -23,19 +23,19 @@
  *  Classification of subframes to localize start state
  *---------------------------------------------------------------*/
 
-WebRtc_Word16 WebRtcIlbcfix_FrameClassify(
+int16_t WebRtcIlbcfix_FrameClassify(
     /* (o) Index to the max-energy sub frame */
     iLBC_Enc_Inst_t *iLBCenc_inst,
     /* (i/o) the encoder state structure */
-    WebRtc_Word16 *residualFIX /* (i) lpc residual signal */
+    int16_t *residualFIX /* (i) lpc residual signal */
                                                 ){
-  WebRtc_Word16 max, scale;
-  WebRtc_Word32 ssqEn[NSUB_MAX-1];
-  WebRtc_Word16 *ssqPtr;
-  WebRtc_Word32 *seqEnPtr;
-  WebRtc_Word32 maxW32;
-  WebRtc_Word16 scale1;
-  WebRtc_Word16 pos;
+  int16_t max, scale;
+  int32_t ssqEn[NSUB_MAX-1];
+  int16_t *ssqPtr;
+  int32_t *seqEnPtr;
+  int32_t maxW32;
+  int16_t scale1;
+  int16_t pos;
   int n;
 
   /*
@@ -62,7 +62,7 @@ WebRtc_Word16 WebRtcIlbcfix_FrameClassify(
   }
 
   /* Scale to maximum 20 bits in order to allow for the 11 bit window */
-  maxW32 = WebRtcSpl_MaxValueW32(ssqEn, (WebRtc_Word16)(iLBCenc_inst->nsub-1));
+  maxW32 = WebRtcSpl_MaxValueW32(ssqEn, (int16_t)(iLBCenc_inst->nsub-1));
   scale = WebRtcSpl_GetSizeInBits(maxW32) - 20;
   scale1 = WEBRTC_SPL_MAX(0, scale);
 
@@ -71,9 +71,9 @@ WebRtc_Word16 WebRtcIlbcfix_FrameClassify(
   */
   seqEnPtr=ssqEn;
   if (iLBCenc_inst->mode==20) {
-    ssqPtr=(WebRtc_Word16*)WebRtcIlbcfix_kStartSequenceEnrgWin+1;
+    ssqPtr=(int16_t*)WebRtcIlbcfix_kStartSequenceEnrgWin+1;
   } else {
-    ssqPtr=(WebRtc_Word16*)WebRtcIlbcfix_kStartSequenceEnrgWin;
+    ssqPtr=(int16_t*)WebRtcIlbcfix_kStartSequenceEnrgWin;
   }
   for (n=(iLBCenc_inst->nsub-1); n>0; n--) {
     (*seqEnPtr)=WEBRTC_SPL_MUL(((*seqEnPtr)>>scale1), (*ssqPtr));
@@ -82,7 +82,7 @@ WebRtc_Word16 WebRtcIlbcfix_FrameClassify(
   }
 
   /* Extract the best choise of start state */
-  pos = WebRtcSpl_MaxIndexW32(ssqEn, (WebRtc_Word16)(iLBCenc_inst->nsub-1)) + 1;
+  pos = WebRtcSpl_MaxIndexW32(ssqEn, (int16_t)(iLBCenc_inst->nsub-1)) + 1;
 
   return(pos);
 }

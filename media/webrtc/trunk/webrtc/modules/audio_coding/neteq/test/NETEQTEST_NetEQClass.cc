@@ -30,7 +30,7 @@ NETEQTEST_NetEQClass::NETEQTEST_NetEQClass()
 }
 
 NETEQTEST_NetEQClass::NETEQTEST_NetEQClass(enum WebRtcNetEQDecoder *usedCodec, int noOfCodecs,
-        WebRtc_UWord16 fs, WebRtcNetEQNetworkType nwType)
+        uint16_t fs, WebRtcNetEQNetworkType nwType)
     :
     _inst(NULL),
     _instMem(NULL),
@@ -84,7 +84,7 @@ int NETEQTEST_NetEQClass::assign()
         _instMem = NULL;
     }
 
-    _instMem = new WebRtc_Word8[memSize];
+    _instMem = new int8_t[memSize];
 
     int ret = WebRtcNetEQ_Assign(&_inst, _instMem);
 
@@ -97,7 +97,7 @@ int NETEQTEST_NetEQClass::assign()
 }
 
 
-int NETEQTEST_NetEQClass::init(WebRtc_UWord16 fs)
+int NETEQTEST_NetEQClass::init(uint16_t fs)
 {
     int ret;
 
@@ -127,7 +127,7 @@ int NETEQTEST_NetEQClass::init(WebRtc_UWord16 fs)
 
 int NETEQTEST_NetEQClass::assignBuffer(enum WebRtcNetEQDecoder *usedCodec, int noOfCodecs, WebRtcNetEQNetworkType nwType)
 {
-    int numPackets, memSize, ret;
+    int numPackets, memSize, ret, overhead_bytes;
 
     if (!_inst)
     {
@@ -149,7 +149,9 @@ int NETEQTEST_NetEQClass::assignBuffer(enum WebRtcNetEQDecoder *usedCodec, int n
         }
     }
 
-    ret = WebRtcNetEQ_GetRecommendedBufferSize(_inst, usedCodec, noOfCodecs, nwType, &numPackets, &memSize);
+    ret = WebRtcNetEQ_GetRecommendedBufferSize(_inst, usedCodec, noOfCodecs,
+                                               nwType, &numPackets, &memSize,
+                                               &overhead_bytes);
 
     if (ret != 0)
     {
@@ -163,7 +165,7 @@ int NETEQTEST_NetEQClass::assignBuffer(enum WebRtcNetEQDecoder *usedCodec, int n
         _bufferMem = NULL;
     }
 
-    _bufferMem = new WebRtc_Word8[memSize];
+    _bufferMem = new int8_t[memSize];
 
     memset(_bufferMem, -1, memSize);
 
@@ -251,7 +253,7 @@ int NETEQTEST_NetEQClass::recIn(NETEQTEST_RTPpacket &rtp)
         QueryPerformanceCounter(&countA); // get start count for processor
 #endif
 
-        err = WebRtcNetEQ_RecIn(_inst, (WebRtc_Word16 *) rtp.datagram(), rtp.dataLen(), rtp.time() * _fsmult * 8);
+        err = WebRtcNetEQ_RecIn(_inst, (int16_t *) rtp.datagram(), rtp.dataLen(), rtp.time() * _fsmult * 8);
 
 #ifdef WINDOWS_TIMING
         QueryPerformanceCounter(&countB); // get stop count for processor
@@ -270,10 +272,10 @@ int NETEQTEST_NetEQClass::recIn(NETEQTEST_RTPpacket &rtp)
 }
 
 
-WebRtc_Word16 NETEQTEST_NetEQClass::recOut(WebRtc_Word16 *outData, void *msInfo, enum WebRtcNetEQOutputType *outputType)
+int16_t NETEQTEST_NetEQClass::recOut(int16_t *outData, void *msInfo, enum WebRtcNetEQOutputType *outputType)
 {
     int err;
-    WebRtc_Word16 outLen = 0;
+    int16_t outLen = 0;
 #ifdef WINDOWS_TIMING
     LARGE_INTEGER countA, countB;
 #endif
@@ -297,7 +299,7 @@ WebRtc_Word16 NETEQTEST_NetEQClass::recOut(WebRtc_Word16 *outData, void *msInfo,
     else
     {
         // master/slave mode
-        err = WebRtcNetEQ_RecOutMasterSlave(_inst, outData, &outLen, msInfo, static_cast<WebRtc_Word16>(_isMaster));
+        err = WebRtcNetEQ_RecOutMasterSlave(_inst, outData, &outLen, msInfo, static_cast<int16_t>(_isMaster));
     }
 
 #ifdef WINDOWS_TIMING
@@ -336,10 +338,10 @@ WebRtc_Word16 NETEQTEST_NetEQClass::recOut(WebRtc_Word16 *outData, void *msInfo,
 }
 
 
-WebRtc_UWord32 NETEQTEST_NetEQClass::getSpeechTimeStamp()
+uint32_t NETEQTEST_NetEQClass::getSpeechTimeStamp()
 {
 
-    WebRtc_UWord32 ts = 0;
+    uint32_t ts = 0;
     int err;
 
     err = WebRtcNetEQ_GetSpeechTimeStamp(_inst, &ts);
@@ -377,7 +379,7 @@ WebRtcNetEQOutputType NETEQTEST_NetEQClass::getOutputType() {
 //}
 //
 //NETEQTEST_NetEQVector::NETEQTEST_NetEQVector(int numChannels, enum WebRtcNetEQDecoder *usedCodec, int noOfCodecs,
-//                      WebRtc_UWord16 fs, WebRtcNetEQNetworkType nwType)
+//                      uint16_t fs, WebRtcNetEQNetworkType nwType)
 //                      :
 //channels(numChannels, new NETEQTEST_NetEQClass(usedCodec, noOfCodecs, fs, nwType))
 //{

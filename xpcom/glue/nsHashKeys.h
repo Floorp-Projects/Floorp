@@ -362,6 +362,37 @@ typedef nsPtrHashKey<const void> nsVoidPtrHashKey;
 typedef nsClearingPtrHashKey<const void> nsClearingVoidPtrHashKey;
 
 /**
+ * hashkey wrapper using a function pointer KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+template<class T>
+class nsFuncPtrHashKey : public PLDHashEntryHdr
+{
+ public:
+  typedef T &KeyType;
+  typedef const T *KeyTypePointer;
+
+  nsFuncPtrHashKey(const T *key) : mKey(*const_cast<T*>(key)) {}
+  nsFuncPtrHashKey(const nsFuncPtrHashKey<T> &toCopy) : mKey(toCopy.mKey) {}
+  ~nsFuncPtrHashKey() {}
+
+  KeyType GetKey() const { return const_cast<T&>(mKey); }
+
+  bool KeyEquals(KeyTypePointer key) const { return *key == mKey; }
+
+  static KeyTypePointer KeyToPointer(KeyType key) { return &key; }
+  static PLDHashNumber HashKey(KeyTypePointer key)
+  {
+    return NS_PTR_TO_INT32(*key) >> 2;
+  }
+  enum { ALLOW_MEMMOVE = true };
+
+ protected:
+  T mKey;
+};
+
+/**
  * hashkey wrapper using nsID KeyType
  *
  * @see nsTHashtable::EntryType for specification

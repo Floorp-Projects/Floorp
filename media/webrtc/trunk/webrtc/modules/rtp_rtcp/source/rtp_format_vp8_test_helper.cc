@@ -46,8 +46,8 @@ bool RtpFormatVp8TestHelper::Init(const int* partition_sizes,
     payload_size_ += partition_sizes[p];
   }
   buffer_size_ = payload_size_ + 6;  // Add space for payload descriptor.
-  payload_data_ = new WebRtc_UWord8[payload_size_];
-  buffer_ = new WebRtc_UWord8[buffer_size_];
+  payload_data_ = new uint8_t[payload_size_];
+  buffer_ = new uint8_t[buffer_size_];
   int j = 0;
   // Loop through the partitions again.
   for (int p = 0; p < num_partitions; ++p) {

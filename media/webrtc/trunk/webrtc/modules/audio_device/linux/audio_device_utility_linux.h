@@ -21,14 +21,14 @@ class CriticalSectionWrapper;
 class AudioDeviceUtilityLinux: public AudioDeviceUtility
 {
 public:
-    AudioDeviceUtilityLinux(const WebRtc_Word32 id);
+    AudioDeviceUtilityLinux(const int32_t id);
     ~AudioDeviceUtilityLinux();
 
-    virtual WebRtc_Word32 Init();
+    virtual int32_t Init();
 
 private:
     CriticalSectionWrapper& _critSect;
-    WebRtc_Word32 _id;
+    int32_t _id;
 };
 
 } // namespace webrtc

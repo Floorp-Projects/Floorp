@@ -322,6 +322,29 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
     // under-approximating the types will cause the loop body to be analyzed
     // multiple times as the correct types are deduced (see finishLoop).
 
+    // If we restarted processing of an outer loop then get loop header types
+    // directly from the last time we have previously processed this loop. This
+    // both avoids repeated work from the bytecode traverse below, and will
+    // also pick up types discovered while previously building the loop body.
+    for (size_t i = 0; i < loopHeaders_.length(); i++) {
+        if (loopHeaders_[i].pc == start) {
+            MBasicBlock *oldEntry = loopHeaders_[i].header;
+            for (MPhiIterator oldPhi = oldEntry->phisBegin();
+                 oldPhi != oldEntry->phisEnd();
+                 oldPhi++)
+            {
+                MPhi *newPhi = entry->getSlot(oldPhi->slot())->toPhi();
+                newPhi->addBackedgeType(oldPhi->type(), oldPhi->resultTypeSet());
+            }
+            // Update the most recent header for this loop encountered, in case
+            // new types flow to the phis and the loop is processed at least
+            // three times.
+            loopHeaders_[i].header = entry;
+            return;
+        }
+    }
+    loopHeaders_.append(LoopHeader(start, entry));
+
     jsbytecode *last = NULL, *earlier = NULL;
     for (jsbytecode *pc = start; pc != end; earlier = last, last = pc, pc += GetBytecodeLength(pc)) {
         uint32_t slot;

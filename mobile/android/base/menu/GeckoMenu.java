@@ -298,6 +298,18 @@ public class GeckoMenu extends ListView
         if (item == null)
             return;
 
+        // Remove it from any sub-menu.
+        for (GeckoMenuItem menuItem : mItems) {
+            if (menuItem.hasSubMenu()) {
+                SubMenu subMenu = menuItem.getSubMenu();
+                if (subMenu != null && subMenu.findItem(id) != null) {
+                    subMenu.removeItem(id);
+                    return;
+                }
+            }
+        }
+
+        // Remove it from own menu.
         if (mActionItems.containsKey(item)) {
             if (mActionItemBarPresenter != null)
                 mActionItemBarPresenter.removeActionItem(mActionItems.get(item));

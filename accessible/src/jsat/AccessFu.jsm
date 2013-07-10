@@ -269,7 +269,7 @@ this.AccessFu = {
         this.Input.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
       case 'Accessibility:ActivateObject':
-        this.Input.activateCurrent();
+        this.Input.activateCurrent(JSON.parse(aData));
         break;
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
@@ -358,6 +358,49 @@ this.AccessFu = {
 };
 
 var Output = {
+  brailleState: {
+    startOffset: 0,
+    endOffset: 0,
+    text: '',
+
+    init: function init(aOutput) {
+      if (aOutput && 'output' in aOutput) {
+        this.startOffset = aOutput.startOffset;
+        this.endOffset = aOutput.endOffset;
+        // We need to append a space at the end so that the routing key corresponding
+        // to the end of the output (i.e. the space) can be hit to move the caret there.
+        this.text = aOutput.output + ' ';
+        return this.text;
+      }
+    },
+
+    update: function update(aText) {
+      let newBraille = [];
+      let braille = {};
+
+      let prefix = this.text.substring(0, this.startOffset).trim();
+      if (prefix) {
+        prefix += ' ';
+        newBraille.push(prefix);
+      }
+
+      let newText = aText;
+      newBraille.push(newText);
+
+      let suffix = this.text.substring(this.endOffset).trim();
+      if (suffix) {
+        suffix = ' ' + suffix;
+        newBraille.push(suffix);
+      }
+
+      braille.startOffset = prefix.length;
+      braille.output = newBraille.join('');
+      braille.endOffset = braille.output.length - suffix.length;
+
+      return braille;
+    }
+  },
+
   start: function start() {
     Cu.import('resource://gre/modules/Geometry.jsm');
   },
@@ -458,13 +501,23 @@ var Output = {
   },
 
   Android: function Android(aDetails, aBrowser) {
+    const ANDROID_VIEW_TEXT_CHANGED = 0x10;
+
     if (!this._bridge)
       this._bridge = Cc['@mozilla.org/android/bridge;1'].getService(Ci.nsIAndroidBridge);
 
     for each (let androidEvent in aDetails) {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
-        androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
+        androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser, true);
+      if (androidEvent.eventType === ANDROID_VIEW_TEXT_CHANGED) {
+        androidEvent.brailleText = this.brailleState.update(androidEvent.text);
+      }
+      let (output = this.brailleState.init(androidEvent.brailleText)) {
+        if (typeof output === 'string') {
+          androidEvent.brailleText = output;
+        }
+      };
       this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
@@ -477,7 +530,7 @@ var Output = {
     Logger.debug('Braille output: ' + aDetails.text);
   },
 
-  _adjustBounds: function(aJsonBounds, aBrowser) {
+  _adjustBounds: function(aJsonBounds, aBrowser, aIncludeZoom) {
     let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                           aJsonBounds.right - aJsonBounds.left,
                           aJsonBounds.bottom - aJsonBounds.top);
@@ -495,8 +548,13 @@ var Output = {
       offset.top += clientRect.top + win.mozInnerScreenY;
     }
 
-    return bounds.scale(scale, scale).translate(offset.left, offset.top).
-      scale(vp.zoom, vp.zoom).expandToIntegers();
+    let newBounds = bounds.scale(scale, scale).translate(offset.left, offset.top);
+
+    if (aIncludeZoom) {
+      newBounds = newBounds.scale(vp.zoom, vp.zoom);
+    }
+
+    return newBounds.expandToIntegers();
   }
 };
 
@@ -526,6 +584,9 @@ var Input = {
         this._handleKeypress(aEvent);
         break;
       case 'mozAccessFuGesture':
+        let vp = Utils.getViewport(Utils.win) || { zoom: 1.0 };
+        aEvent.detail.x *= vp.zoom;
+        aEvent.detail.y *= vp.zoom;
         this._handleGesture(aEvent.detail);
         break;
       }
@@ -684,9 +745,12 @@ var Input = {
     mm.sendAsyncMessage('AccessFu:MoveCaret', aDetails);
   },
 
-  activateCurrent: function activateCurrent() {
+  activateCurrent: function activateCurrent(aData) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:Activate', {});
+    let offset = aData && typeof aData.keyIndex === 'number' ?
+                 aData.keyIndex - Output.brailleState.startOffset : -1;
+
+    mm.sendAsyncMessage('AccessFu:Activate', {offset: offset});
   },
 
   sendContextMenuMessage: function sendContextMenuMessage() {

@@ -21,7 +21,7 @@ namespace layers {
 class ImageHost : public CompositableHost
 {
 public:
-  TextureHost* GetTextureHost() MOZ_OVERRIDE { return nullptr; }
+  DeprecatedTextureHost* GetDeprecatedTextureHost() MOZ_OVERRIDE { return nullptr; }
 
 protected:
   ImageHost(const TextureInfo& aTextureInfo)
@@ -36,24 +36,24 @@ protected:
   }
 };
 
-// ImageHost with a single TextureHost
+// ImageHost with a single DeprecatedTextureHost
 class ImageHostSingle : public ImageHost
 {
 public:
   ImageHostSingle(const TextureInfo& aTextureInfo)
     : ImageHost(aTextureInfo)
-    , mTextureHost(nullptr)
+    , mDeprecatedTextureHost(nullptr)
     , mHasPictureRect(false)
   {}
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
 
-  virtual void EnsureTextureHost(TextureIdentifier aTextureId,
+  virtual void EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
                                  const SurfaceDescriptor& aSurface,
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
 
-  TextureHost* GetTextureHost() MOZ_OVERRIDE { return mTextureHost; }
+  DeprecatedTextureHost* GetDeprecatedTextureHost() MOZ_OVERRIDE { return mDeprecatedTextureHost; }
 
   virtual void Composite(EffectChain& aEffectChain,
                          float aOpacity,
@@ -78,8 +78,8 @@ public:
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE
   {
-    if (mTextureHost) {
-      return mTextureHost->GetRenderState();
+    if (mDeprecatedTextureHost) {
+      return mDeprecatedTextureHost->GetRenderState();
     }
     return LayerRenderState();
   }
@@ -97,17 +97,17 @@ public:
 #ifdef MOZ_DUMP_PAINTING
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE
   {
-    return mTextureHost->GetAsSurface();
+    return mDeprecatedTextureHost->GetAsSurface();
   }
 #endif
 
 protected:
-  virtual void MakeTextureHost(TextureIdentifier aTextureId,
+  virtual void MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
                                const SurfaceDescriptor& aSurface,
                                ISurfaceAllocator* aAllocator,
                                const TextureInfo& aTextureInfo);
 
-  RefPtr<TextureHost> mTextureHost;
+  RefPtr<DeprecatedTextureHost> mDeprecatedTextureHost;
   nsIntRect mPictureRect;
   bool mHasPictureRect;
 };
@@ -126,7 +126,7 @@ public:
                       SurfaceDescriptor* aResult = nullptr) MOZ_OVERRIDE;
 
 protected:
-  virtual void MakeTextureHost(TextureIdentifier aTextureId,
+  virtual void MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
                                const SurfaceDescriptor& aSurface,
                                ISurfaceAllocator* aAllocator,
                                const TextureInfo& aTextureInfo) MOZ_OVERRIDE;

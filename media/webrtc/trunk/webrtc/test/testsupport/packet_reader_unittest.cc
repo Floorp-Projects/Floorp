@@ -28,8 +28,8 @@ class PacketReaderTest: public PacketRelatedTest {
   }
   void VerifyPacketData(int expected_length,
                         int actual_length,
-                        WebRtc_UWord8* original_data_pointer,
-                        WebRtc_UWord8* new_data_pointer) {
+                        uint8_t* original_data_pointer,
+                        uint8_t* new_data_pointer) {
     EXPECT_EQ(expected_length, actual_length);
     EXPECT_EQ(*original_data_pointer, *new_data_pointer);
     EXPECT_EQ(0, memcmp(original_data_pointer, new_data_pointer,
@@ -40,7 +40,7 @@ class PacketReaderTest: public PacketRelatedTest {
 
 // Test lack of initialization
 TEST_F(PacketReaderTest, Uninitialized) {
-  WebRtc_UWord8* data_pointer = NULL;
+  uint8_t* data_pointer = NULL;
   EXPECT_EQ(-1, reader_->NextPacket(&data_pointer));
   EXPECT_EQ(NULL, data_pointer);
 }
@@ -53,8 +53,8 @@ TEST_F(PacketReaderTest, InitializeZeroLengthArgument) {
 // Test with something smaller than one packet
 TEST_F(PacketReaderTest, NormalSmallData) {
   const int kDataLengthInBytes = 1499;
-  WebRtc_UWord8 data[kDataLengthInBytes];
-  WebRtc_UWord8* data_pointer = data;
+  uint8_t data[kDataLengthInBytes];
+  uint8_t* data_pointer = data;
   memset(data, 1, kDataLengthInBytes);
 
   reader_->InitializeReading(data, kDataLengthInBytes, kPacketSizeInBytes);
@@ -70,8 +70,8 @@ TEST_F(PacketReaderTest, NormalSmallData) {
 
 // Test with data length that exactly matches one packet
 TEST_F(PacketReaderTest, NormalOnePacketData) {
-  WebRtc_UWord8 data[kPacketSizeInBytes];
-  WebRtc_UWord8* data_pointer = data;
+  uint8_t data[kPacketSizeInBytes];
+  uint8_t* data_pointer = data;
   memset(data, 1, kPacketSizeInBytes);
 
   reader_->InitializeReading(data, kPacketSizeInBytes, kPacketSizeInBytes);
@@ -112,8 +112,8 @@ TEST_F(PacketReaderTest, NormalLargeData) {
 TEST_F(PacketReaderTest, EmptyData) {
   const int kDataLengthInBytes = 0;
   // But don't really try to allocate a zero-length array...
-  WebRtc_UWord8 data[kPacketSizeInBytes];
-  WebRtc_UWord8* data_pointer = data;
+  uint8_t data[kPacketSizeInBytes];
+  uint8_t* data_pointer = data;
   reader_->InitializeReading(data, kDataLengthInBytes, kPacketSizeInBytes);
   EXPECT_EQ(kDataLengthInBytes, reader_->NextPacket(&data_pointer));
   // Do it again to make sure nothing changes

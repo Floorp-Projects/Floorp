@@ -147,7 +147,7 @@ exports.testValidateOptions = function(assert) {
 
   assert.throws(
     function () Page({ onMessage: "This is not a function."}),
-    /The event listener must be a function\./,
+    /The option "onMessage" must be one of the following types: function/,
     "Validation correctly denied a non-function onMessage."
   );
 
@@ -301,6 +301,108 @@ exports.testPingPong = function(assert, done) {
     }
   });
 };
+
+exports.testRedirect = function (assert, done) {
+  let page = Page({
+    contentURL: 'data:text/html;charset=utf-8,first-page',
+    contentScript: '(function () {' +
+      'if (/first-page/.test(document.location.href)) ' +
+      '  document.location.href = "data:text/html;charset=utf-8,redirect";' +
+      'else ' +
+      '  self.port.emit("redirect", document.location.href);' +
+      '})();'
+  });
+
+  page.port.on('redirect', function (url) {
+    assert.equal(url, 'data:text/html;charset=utf-8,redirect', 'Reinjects contentScript on reload');
+    done();
+  });
+};
+
+exports.testRedirectIncludeArrays = function (assert, done) {
+  let firstURL = 'data:text/html;charset=utf-8,first-page';
+  let page = Page({
+    contentURL: firstURL,
+    contentScript: '(function () {' +
+      'self.port.emit("load", document.location.href);' +
+      '  self.port.on("redirect", function (url) {' +
+      '   document.location.href = url;' +
+      '  })' +
+      '})();',
+    include: ['about:blank', 'data:*']
+  });
+
+  page.port.on('load', function (url) {
+    if (url === firstURL) {
+      page.port.emit('redirect', 'about:blank');
+    } else if (url === 'about:blank') {
+      page.port.emit('redirect', 'about:home');
+      assert.ok('`include` property handles arrays');
+      assert.equal(url, 'about:blank', 'Redirects work with accepted domains');
+      done();
+    } else if (url === 'about:home') {
+      assert.fail('Should not redirect to restricted domain');
+    }
+  });
+};
+
+exports.testRedirectFromWorker = function (assert, done) {
+  let firstURL = 'data:text/html;charset=utf-8,first-page';
+  let secondURL = 'data:text/html;charset=utf-8,second-page';
+  let thirdURL = 'data:text/html;charset=utf-8,third-page';
+  let page = Page({
+    contentURL: firstURL,
+    contentScript: '(function () {' +
+      'self.port.emit("load", document.location.href);' +
+      '  self.port.on("redirect", function (url) {' +
+      '   document.location.href = url;' +
+      '  })' +
+      '})();',
+    include: 'data:*'
+  });
+
+  page.port.on('load', function (url) {
+    if (url === firstURL) {
+      page.port.emit('redirect', secondURL);
+    } else if (url === secondURL) {
+      page.port.emit('redirect', thirdURL);
+    } else if (url === thirdURL) {
+      page.port.emit('redirect', 'about:home');
+      assert.equal(url, thirdURL, 'Redirects work with accepted domains on include strings');
+      done();
+    } else {
+      assert.fail('Should not redirect to unauthorized domains');
+    }
+  });
+};
+
+exports.testRedirectWithContentURL = function (assert, done) {
+  let firstURL = 'data:text/html;charset=utf-8,first-page';
+  let secondURL = 'data:text/html;charset=utf-8,second-page';
+  let thirdURL = 'data:text/html;charset=utf-8,third-page';
+  let page = Page({
+    contentURL: firstURL,
+    contentScript: '(function () {' +
+      'self.port.emit("load", document.location.href);' +
+      '})();',
+    include: 'data:*'
+  });
+
+  page.port.on('load', function (url) {
+    if (url === firstURL) {
+      page.contentURL = secondURL;
+    } else if (url === secondURL) {
+      page.contentURL = thirdURL;
+    } else if (url === thirdURL) {
+      page.contentURL = 'about:home';
+      assert.equal(url, thirdURL, 'Redirects work with accepted domains on include strings');
+      done();
+    } else {
+      assert.fail('Should not redirect to unauthorized domains');
+    }
+  });
+};
+
 
 exports.testMultipleDestroys = function(assert) {
   let page = Page();

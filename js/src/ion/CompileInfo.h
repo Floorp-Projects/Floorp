@@ -40,7 +40,26 @@ class CompileInfo
 {
   public:
     CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
-                ExecutionMode executionMode);
+                ExecutionMode executionMode)
+      : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
+        executionMode_(executionMode)
+    {
+        JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
+
+        // The function here can flow in from anywhere so look up the canonical function to ensure that
+        // we do not try to embed a nursery pointer in jit-code.
+        if (fun_) {
+            fun_ = fun_->nonLazyScript()->function();
+            JS_ASSERT(fun_->isTenured());
+        }
+
+        nimplicit_ = StartArgSlot(script, fun)              /* scope chain and argument obj */
+                   + (fun ? 1 : 0);                         /* this */
+        nargs_ = fun ? fun->nargs : 0;
+        nlocals_ = script->nfixed;
+        nstack_ = script->nslots - script->nfixed;
+        nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
+    }
 
     CompileInfo(unsigned nlocals, ExecutionMode executionMode)
       : script_(NULL), fun_(NULL), osrPc_(NULL), constructing_(false),
@@ -78,7 +97,9 @@ class CompileInfo
         return script_->code + script_->length;
     }
 
-    inline const char *filename() const;
+    const char *filename() const {
+        return script_->filename();
+    }
 
     unsigned lineno() const {
         return script_->lineno;
@@ -89,13 +110,29 @@ class CompileInfo
 
     // Script accessors based on PC.
 
-    inline JSAtom *getAtom(jsbytecode *pc) const;
-    inline PropertyName *getName(jsbytecode *pc) const;
+    JSAtom *getAtom(jsbytecode *pc) const {
+        return script_->getAtom(GET_UINT32_INDEX(pc));
+    }
+
+    PropertyName *getName(jsbytecode *pc) const {
+        return script_->getName(GET_UINT32_INDEX(pc));
+    }
+
     inline RegExpObject *getRegExp(jsbytecode *pc) const;
-    inline JSObject *getObject(jsbytecode *pc) const;
+
+    JSObject *getObject(jsbytecode *pc) const {
+        return script_->getObject(GET_UINT32_INDEX(pc));
+    }
+
     inline JSFunction *getFunction(jsbytecode *pc) const;
-    inline const Value &getConst(jsbytecode *pc) const;
-    inline jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const;
+
+    const Value &getConst(jsbytecode *pc) const {
+        return script_->getConst(GET_UINT32_INDEX(pc));
+    }
+
+    jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const {
+        return js_GetSrcNote(cx, script(), pc);
+    }
 
     // Total number of slots: args, locals, and stack.
     unsigned nslots() const {

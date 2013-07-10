@@ -62,7 +62,7 @@ VideoSource::GetSize() const
 }
 
 VideoSize
-VideoSource::GetSize(WebRtc_UWord16 width, WebRtc_UWord16 height)
+VideoSource::GetSize(uint16_t width, uint16_t height)
 {
     if(width == 128 && height == 96)
     {

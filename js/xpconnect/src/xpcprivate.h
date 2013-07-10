@@ -596,7 +596,6 @@ public:
 // So, xpconnect can only be used on one JSRuntime within the process.
 
 class XPCJSContextStack;
-class XPCIncrementalReleaseRunnable;
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
@@ -663,37 +662,13 @@ public:
     NoteCustomGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
                                    nsCycleCollectionTraversalCallback& aCb) const;
 
-    bool DeferredRelease(nsISupports* obj);
-
-
     /**
      * Infrastructure for classes that need to defer part of the finalization
      * until after the GC has run, for example for objects that we don't want to
      * destroy during the GC.
      */
 
-private:
-    struct DeferredFinalizeFunctions
-    {
-        DeferredFinalizeStartFunction start;
-        DeferredFinalizeFunction run;
-    };
-    nsAutoTArray<DeferredFinalizeFunctions, 16> mDeferredFinalizeFunctions;
-
 public:
-    // Register deferred finalization functions. Should only be called once per
-    // pair of start and run.
-    bool RegisterDeferredFinalize(DeferredFinalizeStartFunction start,
-                                  DeferredFinalizeFunction run)
-    {
-        DeferredFinalizeFunctions* item =
-            mDeferredFinalizeFunctions.AppendElement();
-        item->start = start;
-        item->run = run;
-        return true;
-    }
-
-
     JSBool GetDoingFinalization() const {return mDoingFinalization;}
 
     // Mapping of often used strings to jsid atoms that live 'forever'.
@@ -744,7 +719,7 @@ public:
     void PrepareForForgetSkippable() MOZ_OVERRIDE;
     void PrepareForCollection() MOZ_OVERRIDE;
 
-    static void GCCallback(JSRuntime *rt, JSGCStatus status);
+    void CustomGCCallback(JSGCStatus status) MOZ_OVERRIDE;
     static void GCSliceCallback(JSRuntime *rt,
                                 JS::GCProgress progress,
                                 const JS::GCDescription &desc);
@@ -829,8 +804,8 @@ private:
 public:
 #endif
 
-    void AddGCCallback(JSGCCallback cb);
-    void RemoveGCCallback(JSGCCallback cb);
+    void AddGCCallback(xpcGCCallback cb);
+    void RemoveGCCallback(xpcGCCallback cb);
 
     static void ActivityCallback(void *arg, JSBool active);
     static void CTypesActivityCallback(JSContext *cx,
@@ -884,11 +859,10 @@ private:
     PRLock *mWatchdogLock;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
-    nsTArray<JSGCCallback> extraGCCallbacks;
+    nsTArray<xpcGCCallback> extraGCCallbacks;
     bool mWatchdogHibernating;
     enum { RUNTIME_ACTIVE, RUNTIME_INACTIVE } mRuntimeState;
     PRTime mTimeAtLastRuntimeStateChange;
-    nsRefPtr<XPCIncrementalReleaseRunnable> mReleaseRunnable;
     JS::GCSliceCallback mPrevGCSliceCallback;
     JSObject* mJunkScope;
 
@@ -2281,7 +2255,7 @@ public:
                                  &participant);
       }
     };
-    NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(XPCWrappedNative)
+    void DeleteCycleCollectable() {}
 
     nsIPrincipal* GetObjectPrincipal() const;
 
@@ -2749,7 +2723,7 @@ public:
     NS_DECL_NSIPROPERTYBAG
 
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
-    NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(nsXPCWrappedJS)
+    void DeleteCycleCollectable() {}
 
     NS_IMETHOD CallMethod(uint16_t methodIndex,
                           const XPTMethodDescriptor *info,

@@ -18,6 +18,8 @@
 #include "Utils.h"
 #include "Logging.h"
 
+Logging Logging::Singleton;
+
 const char *filterName[] = {
   "none",
   "thumb",
@@ -469,6 +471,8 @@ int main(int argc, char* argv[])
   size_t chunkSize = 0;
   SeekableZStream::FilterId filter = SzipCompress::DEFAULT_FILTER;
   size_t dictSize = (size_t) 0;
+
+  Logging::Init();
 
   for (firstArg = &argv[1]; argc > 2; argc--, firstArg++) {
     if (!firstArg[0] || firstArg[0][0] != '-')

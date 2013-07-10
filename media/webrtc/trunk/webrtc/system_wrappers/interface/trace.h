@@ -19,12 +19,23 @@
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
 
+#if !defined(WEBRTC_LOGGING)
+#define WEBRTC_TRACE (true) ? (void)0 : Trace::Add
+#else
 #define WEBRTC_TRACE Trace::Add
+#endif
 
 namespace webrtc {
 
 class Trace {
  public:
+  // The length of the trace text preceeding the log message.
+  static const int kBoilerplateLength;
+  // The position of the timestamp text within a trace.
+  static const int kTimestampPosition;
+  // The length of the timestamp (without "delta" field).
+  static const int kTimestampLength;
+
   // Increments the reference count to the trace.
   static void CreateTrace();
   // Decrements the reference count to the trace.
@@ -37,24 +48,24 @@ class Trace {
   // filter parameter is a bitmask where each message type is enumerated by the
   // TraceLevel enumerator. TODO(hellner): why is the TraceLevel enumerator not
   // defined in this file?
-  static WebRtc_Word32 SetLevelFilter(const WebRtc_UWord32 filter);
+  static int32_t SetLevelFilter(const uint32_t filter);
 
   // Returns what type of messages are written to the trace file.
-  static WebRtc_Word32 LevelFilter(WebRtc_UWord32& filter);
+  static int32_t LevelFilter(uint32_t& filter);
 
   // Sets the file name. If add_file_counter is false the same file will be
   // reused when it fills up. If it's true a new file with incremented name
   // will be used.
-  static WebRtc_Word32 SetTraceFile(const char* file_name,
-                                    const bool add_file_counter = false);
+  static int32_t SetTraceFile(const char* file_name,
+                              const bool add_file_counter = false);
 
   // Returns the name of the file that the trace is currently writing to.
-  static WebRtc_Word32 TraceFile(char file_name[1024]);
+  static int32_t TraceFile(char file_name[1024]);
 
   // Registers callback to receive trace messages.
   // TODO(hellner): Why not use OutStream instead? Why is TraceCallback not
   // defined in this file?
-  static WebRtc_Word32 SetTraceCallback(TraceCallback* callback);
+  static int32_t SetTraceCallback(TraceCallback* callback);
 
   // Adds a trace message for writing to file. The message is put in a queue
   // for writing to file whenever possible for performance reasons. I.e. there
@@ -68,7 +79,7 @@ class Trace {
   // TODO(hellner) Why is TraceModule not defined in this file?
   static void Add(const TraceLevel level,
                   const TraceModule module,
-                  const WebRtc_Word32 id,
+                  const int32_t id,
                   const char* msg, ...);
 };
 

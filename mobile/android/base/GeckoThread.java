@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONObject;
 
@@ -14,6 +15,8 @@ import android.content.Intent;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.app.Activity;
@@ -73,6 +76,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         GeckoLoader.loadSQLiteLibs(app, resourcePath);
         GeckoLoader.loadNSSLibs(app, resourcePath);
         GeckoLoader.loadGeckoLibs(app, resourcePath);
+        GeckoJavaSampler.setLibsLoaded();
 
         Locale.setDefault(locale);
 
@@ -100,6 +104,9 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     @Override
     public void run() {
+        Looper.prepare();
+        ThreadUtils.setGeckoThread(this, new Handler());
+
         String path = initGeckoEnvironment();
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");

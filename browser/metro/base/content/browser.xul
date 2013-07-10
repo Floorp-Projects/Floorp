@@ -290,7 +290,6 @@
                      flex="1"
                      onpaste="this.focus();"
                      ontextentered="BrowserUI.handleUrlbarEnter(param);"
-                     onkeydown="BrowserUI.navEditKeyPress();"
                      onblur="BrowserUI._urlbarBlurred();"/>
           </hbox>
 

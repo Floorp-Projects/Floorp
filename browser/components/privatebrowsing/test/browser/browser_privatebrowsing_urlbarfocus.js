@@ -33,22 +33,25 @@ function test() {
     });
   }
 
-  registerCleanupFunction(function() {
+  function doneWithTests() {
     windowsToClose.forEach(function(win) {
       win.close();
     });
-  });
+    finish();
+  }
 
   function whenLoadTab(aPrivate, aCallback) {
     testOnWindow(aPrivate, function(win) {
-      let browser = win.gBrowser.selectedBrowser;
-      browser.addEventListener("load", function() {
-        browser.removeEventListener("load", arguments.callee, true);
-        aCallback(win);
-      }, true);
       if (!aPrivate) {
+        let browser = win.gBrowser.selectedBrowser;
+        browser.addEventListener("load", function() {
+          browser.removeEventListener("load", arguments.callee, true);
+          aCallback(win);
+        }, true);
         browser.focus();
         browser.loadURI(TEST_URL);
+      } else {
+        aCallback(win);
       }
     });
   }
@@ -58,7 +61,7 @@ function test() {
       whenLoadTab(true, function(win) {
         checkUrlbarFocus(win, true, function() {
           whenLoadTab(false, function(win) {
-            checkUrlbarFocus(win, false, finish);
+            checkUrlbarFocus(win, false, doneWithTests);
           });
         });
       });

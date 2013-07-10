@@ -16,70 +16,32 @@
 #include "common_types.h"
 #include "rtp_rtcp.h"
 #include "typedefs.h"
-#include "rtp_player.h"
 #include "test_util.h"
 
 #include <string>
 #include <stdio.h>
 
-class RtpDataCallback : public webrtc::RtpData
-{
-public:
-    RtpDataCallback(webrtc::VideoCodingModule* vcm)
-        : _vcm(vcm) {};
+class RtpDataCallback : public webrtc::RtpData {
+ public:
+  RtpDataCallback(webrtc::VideoCodingModule* vcm) : vcm_(vcm) {}
+  virtual ~RtpDataCallback() {}
 
-    virtual WebRtc_Word32 OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
-                                              const WebRtc_UWord16 payloadSize,
-                                              const webrtc::WebRtcRTPHeader* rtpHeader);
-private:
-    webrtc::VideoCodingModule* _vcm;
+  virtual WebRtc_Word32 OnReceivedPayloadData(
+      const WebRtc_UWord8* payload_data,
+      const WebRtc_UWord16 payload_size,
+      const webrtc::WebRtcRTPHeader* rtp_header) {
+    return vcm_->IncomingPacket(payload_data, payload_size, *rtp_header);
+  }
+
+ private:
+  webrtc::VideoCodingModule* vcm_;
 };
 
-class FrameReceiveCallback : public webrtc::VCMReceiveCallback
-{
-public:
-    FrameReceiveCallback(std::string outFilename) :
-        _outFilename(outFilename),
-        _outFile(NULL),
-        _timingFile(NULL),
-        width_(0),
-        height_(0) {}
-
-    virtual ~FrameReceiveCallback();
-
-    WebRtc_Word32 FrameToRender(webrtc::I420VideoFrame& videoFrame);
-
-private:
-    static void SplitFilename(std::string filename, std::string* basename,
-                              std::string* ending);
-    static std::string AppendWidthAndHeight(std::string basename,
-                                            unsigned int width,
-                                            unsigned int height);
-    std::string     _outFilename;
-    FILE*           _outFile;
-    FILE*           _timingFile;
-    unsigned int width_;
-    unsigned int height_;
-};
-
-class SharedState
-{
-public:
-    SharedState(webrtc::VideoCodingModule& vcm, RTPPlayer& rtpPlayer) :
-        _vcm(vcm),
-        _rtpPlayer(rtpPlayer) {}
-    webrtc::VideoCodingModule&  _vcm;
-    RTPPlayer&              _rtpPlayer;
-};
-
-
-int RtpPlay(CmdArgs& args);
-int RtpPlayMT(CmdArgs& args,
-              int releaseTest = 0,
-              webrtc::VideoCodecType releaseTestVideoType = webrtc::kVideoCodecVP8);
+int RtpPlay(const CmdArgs& args);
+int RtpPlayMT(const CmdArgs& args);
 int ReceiverTimingTests(CmdArgs& args);
 int JitterBufferTest(CmdArgs& args);
-int DecodeFromStorageTest(CmdArgs& args);
+int DecodeFromStorageTest(const CmdArgs& args);
 
 // Thread functions:
 bool ProcessingThread(void* obj);

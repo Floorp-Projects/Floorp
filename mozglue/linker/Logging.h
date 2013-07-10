@@ -5,6 +5,8 @@
 #ifndef Logging_h
 #define Logging_h
 
+#include "mozilla/Likely.h"
+
 #ifdef ANDROID
 #include <android/log.h>
 #define LOG(...) __android_log_print(ANDROID_LOG_ERROR, "GeckoLinker", __VA_ARGS__)
@@ -36,11 +38,35 @@
 
 #endif
 
-#ifdef MOZ_DEBUG_LINKER
-#define DEBUG_LOG LOG
-#else
-#define DEBUG_LOG(...)
-#endif
+class Logging
+{
+public:
+  static bool isVerbose()
+  {
+    return Singleton.verbose;
+  }
+
+private:
+  bool verbose;
+
+public:
+  static void Init()
+  {
+    const char *env = getenv("MOZ_DEBUG_LINKER");
+    if (env && *env == '1')
+      Singleton.verbose = true;
+  }
+
+private:
+  static Logging Singleton;
+};
+
+#define DEBUG_LOG(...)   \
+  do {                   \
+    if (MOZ_UNLIKELY(Logging::isVerbose())) {  \
+      LOG(__VA_ARGS__);  \
+    }                    \
+  } while(0)
 
 /* HAVE_64BIT_OS is not defined when building host tools, so use
  * __SIZEOF_POINTER__ */

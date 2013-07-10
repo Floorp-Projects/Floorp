@@ -83,10 +83,6 @@
 #include "nsJSEnvironment.h"
 
 // DOM base includes
-#include "nsIDOMPluginArray.h"
-#include "nsIDOMPlugin.h"
-#include "nsIDOMMimeTypeArray.h"
-#include "nsIDOMMimeType.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -209,9 +205,6 @@
 #include "nsIDOMNavigatorDeviceStorage.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "Navigator.h"
-
-#include "nsPluginArray.h"
-#include "nsMimeTypeArray.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
@@ -449,14 +442,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
                            nsIXPCScriptable::WANT_NEWRESOLVE)
-  NS_DEFINE_CLASSINFO_DATA(Plugin, nsPluginSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(PluginArray, nsPluginArraySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MimeType, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MimeTypeArray, nsMimeTypeArraySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
@@ -1319,22 +1304,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIMozNavigatorAudioChannelManager)
 #endif
 
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPlugin)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(PluginArray, nsIDOMPluginArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MimeType, nsIDOMMimeType)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeType)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MimeTypeArray, nsIDOMMimeTypeArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeTypeArray)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
@@ -5340,7 +5309,7 @@ nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
   nsIHTMLDocument* doc = GetDocument(obj);
   if (doc) {
-    xpc::DeferredRelease(doc);
+    nsContentUtils::DeferredFinalize(doc);
   }
 }
 
@@ -5386,69 +5355,6 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 
   return ::JS_GetUCProperty(cx, self, chars, length, vp);
 }
-
-// Plugin helper
-
-nsISupports*
-nsPluginSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                      nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
-
-  return plugin->GetItemAt(aIndex, aResult);
-}
-
-nsISupports*
-nsPluginSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                         nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
-
-  return plugin->GetNamedItem(aName, aResult);
-}
-
-
-// PluginArray helper
-
-nsISupports*
-nsPluginArraySH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                           nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginArray* array = nsPluginArray::FromSupports(aNative);
-
-  return array->GetItemAt(aIndex, aResult);
-}
-
-nsISupports*
-nsPluginArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginArray* array = nsPluginArray::FromSupports(aNative);
-
-  return array->GetNamedItem(aName, aResult);
-}
-
-
-// MimeTypeArray helper
-
-nsISupports*
-nsMimeTypeArraySH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                             nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
-
-  return array->GetItemAt(aIndex, aResult);
-}
-
-nsISupports*
-nsMimeTypeArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                                nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
-
-  return array->GetNamedItem(aName, aResult);
-}
-
 
 // StringArray helper
 

@@ -1084,6 +1084,9 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
         }
       }
 
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
+
       // Home key, arrow down and if not on last line then home key.
       *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectLine);
@@ -1108,6 +1111,9 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
           return NS_OK;
         }
       }
+
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
 
       // In contrast to word end boundary we follow the spec here. End key,
       // then up arrow and if not on first line then end key.

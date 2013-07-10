@@ -36,7 +36,7 @@ class ViECaptureSnapshot : public ViEFrameCallback {
   virtual void DeliverFrame(int id,
                             I420VideoFrame* video_frame,
                             int num_csrcs = 0,
-                            const WebRtc_UWord32 CSRC[kRtpCsrcSize] = NULL);
+                            const uint32_t CSRC[kRtpCsrcSize] = NULL);
   virtual void DelayChanged(int id, int frame_delay) {}
   virtual int GetPreferedFrameSettings(int* width,
                                        int* height,
@@ -125,8 +125,7 @@ class ViEFileImpl
   virtual ~ViEFileImpl();
 
  private:
-  WebRtc_Word32 GetNextCapturedFrame(WebRtc_Word32 capture_id,
-                                     I420VideoFrame* video_frame);
+  int32_t GetNextCapturedFrame(int32_t capture_id, I420VideoFrame* video_frame);
 
   ViESharedData* shared_data_;
 };

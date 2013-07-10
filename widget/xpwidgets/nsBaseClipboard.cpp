@@ -15,7 +15,7 @@ nsBaseClipboard::nsBaseClipboard()
   mClipboardOwner          = nullptr;
   mTransferable            = nullptr;
   mIgnoreEmptyNotification = false;
-
+  mEmptyingForSetData      = false;
 }
 
 nsBaseClipboard::~nsBaseClipboard()
@@ -42,7 +42,9 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
   if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
     return NS_ERROR_FAILURE;
 
+  mEmptyingForSetData = true;
   EmptyClipboard(aWhichClipboard);
+  mEmptyingForSetData = false;
 
   mClipboardOwner = anOwner;
   if ( anOwner )

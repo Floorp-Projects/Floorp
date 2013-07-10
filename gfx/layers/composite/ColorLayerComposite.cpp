@@ -20,12 +20,12 @@ ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                                            color.g,
                                                            color.b,
                                                            color.a));
-  nsIntRect visibleRect = GetEffectiveVisibleRegion().GetBounds();
+  nsIntRect boundRect = GetBounds();
 
   LayerManagerComposite::AddMaskEffect(GetMaskLayer(), effects);
 
-  gfx::Rect rect(visibleRect.x, visibleRect.y,
-                 visibleRect.width, visibleRect.height);
+  gfx::Rect rect(boundRect.x, boundRect.y,
+                 boundRect.width, boundRect.height);
   gfx::Rect clipRect(aClipRect.x, aClipRect.y,
                      aClipRect.width, aClipRect.height);
 

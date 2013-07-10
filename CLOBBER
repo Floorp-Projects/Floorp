@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 848491 - Skia update.
+Bug 887463 - Remove webvtt parser.
