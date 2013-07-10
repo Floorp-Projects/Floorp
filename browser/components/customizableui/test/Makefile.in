@@ -18,6 +18,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_880382_drag_wide_widgets_in_panel.js \
   browser_885530_showInPrivateBrowsing.js \
   browser_887438_currentset_shim.js \
+  browser_890262_destroyWidget_after_add_to_panel.js \
   head.js \
   $(NULL)
 
