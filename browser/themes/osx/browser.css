@@ -417,8 +417,8 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 @media not all and (min-resolution: 2dppx) {
-%include ../shared/toolbarbuttons.inc
-%include ../shared/menupanel.inc
+%include ../shared/toolbarbuttons.inc.css
+%include ../shared/menupanel.inc.css
 
   #back-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(18px, 36px, 36px, 18px);
