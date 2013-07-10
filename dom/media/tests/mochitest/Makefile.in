@@ -48,6 +48,7 @@ MOCHITEST_FILES = \
   test_peerConnection_setRemoteAnswerInHaveRemoteOffer.html \
   test_peerConnection_addCandidateInHaveLocalOffer.html \
   test_peerConnection_bug822674.html \
+  test_peerConnection_bug825703.html \
   test_peerConnection_bug827843.html \
   test_peerConnection_bug834153.html \
   test_peerConnection_bug835370.html \
@@ -56,9 +57,6 @@ MOCHITEST_FILES = \
   pc.js \
   templates.js \
   $(NULL)
-
-# Disabled for hitting services outside of build infra (bug 890832)
-# test_peerConnection_bug825703.html
 
 # The following tests are leaking and cannot be run by default yet
 ifdef MOZ_WEBRTC_LEAKING_TESTS
