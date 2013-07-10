@@ -10,9 +10,9 @@ function test() {
   testWindow = OpenBrowserWindow();
   whenDelayedStartupFinished(testWindow, function () {
     let selectedBrowser = testWindow.gBrowser.selectedBrowser;
-    selectedBrowser.addEventListener("pageshow", function() {
-      selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
-      ok(true, "pageshow listener called");
+    selectedBrowser.addEventListener("load", function onLoad() {
+      selectedBrowser.removeEventListener("load", onLoad, true);
+      ok(true, "load listener called");
       waitForFocus(onFocus, testWindow.content);
     }, true);
     testWindow.gBrowser.loadURI("data:text/html,<h1>A Page</h1>");
