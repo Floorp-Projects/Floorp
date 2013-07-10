@@ -41,8 +41,12 @@ class JavaScriptParent
                                JSPropertyDescriptor *desc, unsigned flags);
     bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                                   JSPropertyDescriptor *desc, unsigned flags);
+    bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
+                        JSPropertyDescriptor *desc);
     bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
     bool keys(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+    bool enumerate(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+    bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool objectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);
     const char* className(JSContext *cx, JS::HandleObject proxy);
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy);
@@ -64,6 +68,7 @@ class JavaScriptParent
 
   private:
     bool makeId(JSContext *cx, JSObject *obj, ObjectId *idp);
+    bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags, js::AutoIdVector &props);
     ObjectId idOf(JSObject *obj);
 
     // Catastrophic IPC failure.

@@ -13,8 +13,29 @@
 
 #include "before_initialization_fixture.h"
 #include "scoped_ptr.h"
+#include "webrtc/common_types.h"
 
 class TestErrorObserver;
+
+class LoopBackTransport : public webrtc::Transport {
+ public:
+  LoopBackTransport(webrtc::VoENetwork* voe_network)
+      : voe_network_(voe_network) {
+  }
+
+  virtual int SendPacket(int channel, const void *data, int len) {
+    voe_network_->ReceivedRTPPacket(channel, data, len);
+    return len;
+  }
+
+  virtual int SendRTCPPacket(int channel, const void *data, int len) {
+    voe_network_->ReceivedRTCPPacket(channel, data, len);
+    return len;
+  }
+
+ private:
+  webrtc::VoENetwork* voe_network_;
+};
 
 // This fixture initializes the voice engine in addition to the work
 // done by the before-initialization fixture. It also registers an error

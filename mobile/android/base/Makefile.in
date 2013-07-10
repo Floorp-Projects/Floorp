@@ -1316,7 +1316,7 @@ $(RES_BRANDING_DRAWABLE_MDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE
 	$(NSINSTALL) -D res/drawable-mdpi
 	$(NSINSTALL) $^ res/drawable-mdpi/
 
-$(RES_DIRS):
+$(RES_DIRS): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(RM) -r $@
 	$(NSINSTALL) -D $@
 
@@ -1324,6 +1324,8 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	@echo "creating $@"
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
+res/values/strings.xml:
+	$(MAKE) -C locales
 
 R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko

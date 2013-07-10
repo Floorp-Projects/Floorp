@@ -87,6 +87,8 @@
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                       prefKey="network"/>
+            <menuitem label="&btnConsoleWarnings;" type="checkbox" autocheck="false"
+                      prefKey="netwarn"/>
             <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
                       prefKey="networkinfo"/>
             <menuseparator id="saveBodiesSeparator" />

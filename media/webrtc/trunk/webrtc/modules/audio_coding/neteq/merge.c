@@ -44,11 +44,11 @@
 /* Scratch usage:
 
  Type           Name                    size            startpos        endpos
- WebRtc_Word16  pw16_expanded           210*fs/8000     0               209*fs/8000
- WebRtc_Word16  pw16_expandedLB         100             210*fs/8000     99+210*fs/8000
- WebRtc_Word16  pw16_decodedLB          40              100+210*fs/8000 139+210*fs/8000
- WebRtc_Word32  pw32_corr               2*60            140+210*fs/8000 260+210*fs/8000
- WebRtc_Word16  pw16_corrVec            68              210*fs/8000     67+210*fs/8000
+ int16_t  pw16_expanded           210*fs/8000     0               209*fs/8000
+ int16_t  pw16_expandedLB         100             210*fs/8000     99+210*fs/8000
+ int16_t  pw16_decodedLB          40              100+210*fs/8000 139+210*fs/8000
+ int32_t  pw32_corr               2*60            140+210*fs/8000 260+210*fs/8000
+ int16_t  pw16_corrVec            68              210*fs/8000     67+210*fs/8000
 
  [gap in scratch vector]
 
@@ -86,40 +86,40 @@
 
 int WebRtcNetEQ_Merge(DSPInst_t *inst,
 #ifdef SCRATCH
-                      WebRtc_Word16 *pw16_scratchPtr,
+                      int16_t *pw16_scratchPtr,
 #endif
-                      WebRtc_Word16 *pw16_decoded, int len, WebRtc_Word16 *pw16_outData,
-                      WebRtc_Word16 *pw16_len)
+                      int16_t *pw16_decoded, int len, int16_t *pw16_outData,
+                      int16_t *pw16_len)
 {
 
-    WebRtc_Word16 fs_mult;
-    WebRtc_Word16 fs_shift;
-    WebRtc_Word32 w32_En_new_frame, w32_En_old_frame;
-    WebRtc_Word16 w16_expmax, w16_newmax;
-    WebRtc_Word16 w16_tmp, w16_tmp2;
-    WebRtc_Word32 w32_tmp;
+    int16_t fs_mult;
+    int16_t fs_shift;
+    int32_t w32_En_new_frame, w32_En_old_frame;
+    int16_t w16_expmax, w16_newmax;
+    int16_t w16_tmp, w16_tmp2;
+    int32_t w32_tmp;
 #ifdef SCRATCH
-    WebRtc_Word16 *pw16_expanded = pw16_scratchPtr + SCRATCH_pw16_expanded;
-    WebRtc_Word16 *pw16_expandedLB = pw16_scratchPtr + SCRATCH_pw16_expandedLB;
-    WebRtc_Word16 *pw16_decodedLB = pw16_scratchPtr + SCRATCH_pw16_decodedLB;
-    WebRtc_Word32 *pw32_corr = (WebRtc_Word32*) (pw16_scratchPtr + SCRATCH_pw32_corr);
-    WebRtc_Word16 *pw16_corrVec = pw16_scratchPtr + SCRATCH_pw16_corrVec;
+    int16_t *pw16_expanded = pw16_scratchPtr + SCRATCH_pw16_expanded;
+    int16_t *pw16_expandedLB = pw16_scratchPtr + SCRATCH_pw16_expandedLB;
+    int16_t *pw16_decodedLB = pw16_scratchPtr + SCRATCH_pw16_decodedLB;
+    int32_t *pw32_corr = (int32_t*) (pw16_scratchPtr + SCRATCH_pw32_corr);
+    int16_t *pw16_corrVec = pw16_scratchPtr + SCRATCH_pw16_corrVec;
 #else
-    WebRtc_Word16 pw16_expanded[(125+80+5)*FSMULT];
-    WebRtc_Word16 pw16_expandedLB[100];
-    WebRtc_Word16 pw16_decodedLB[40];
-    WebRtc_Word32 pw32_corr[60];
-    WebRtc_Word16 pw16_corrVec[4+60+4];
+    int16_t pw16_expanded[(125+80+5)*FSMULT];
+    int16_t pw16_expandedLB[100];
+    int16_t pw16_decodedLB[40];
+    int32_t pw32_corr[60];
+    int16_t pw16_corrVec[4+60+4];
 #endif
-    WebRtc_Word16 *pw16_corr = &pw16_corrVec[4];
-    WebRtc_Word16 w16_stopPos = 0, w16_bestIndex, w16_interpLen;
-    WebRtc_Word16 w16_bestVal; /* bestVal is dummy */
-    WebRtc_Word16 w16_startfact, w16_inc;
-    WebRtc_Word16 w16_expandedLen;
-    WebRtc_Word16 w16_startPos;
-    WebRtc_Word16 w16_expLen, w16_newLen = 0;
-    WebRtc_Word16 *pw16_decodedOut;
-    WebRtc_Word16 w16_muted;
+    int16_t *pw16_corr = &pw16_corrVec[4];
+    int16_t w16_stopPos = 0, w16_bestIndex, w16_interpLen;
+    int16_t w16_bestVal; /* bestVal is dummy */
+    int16_t w16_startfact, w16_inc;
+    int16_t w16_expandedLen;
+    int16_t w16_startPos;
+    int16_t w16_expLen, w16_newLen = 0;
+    int16_t *pw16_decodedOut;
+    int16_t w16_muted;
 
     int w16_decodedLen = len;
 
@@ -209,13 +209,13 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
 
     /* Adjust muting factor (main muting factor times expand muting factor) */
     inst->w16_muteFactor
-        = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16_RSFT(inst->w16_muteFactor,
+        = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(inst->w16_muteFactor,
             inst->ExpandInst.w16_expandMuteFactor, 14);
 
     /* Adjust muting factor if new vector is more or less of the BGN energy */
     len = WEBRTC_SPL_MIN(64*fs_mult, w16_decodedLen);
-    w16_expmax = WebRtcSpl_MaxAbsValueW16(pw16_expanded, (WebRtc_Word16) len);
-    w16_newmax = WebRtcSpl_MaxAbsValueW16(pw16_decoded, (WebRtc_Word16) len);
+    w16_expmax = WebRtcSpl_MaxAbsValueW16(pw16_expanded, (int16_t) len);
+    w16_newmax = WebRtcSpl_MaxAbsValueW16(pw16_decoded, (int16_t) len);
 
     /* Calculate energy of old data */
     w16_tmp = 6 + fs_shift - WebRtcSpl_NormW32(WEBRTC_SPL_MUL_16_16(w16_expmax, w16_expmax));
@@ -251,10 +251,10 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
         w16_tmp = w16_tmp + 14;
         w32_En_old_frame = WEBRTC_SPL_SHIFT_W32(w32_En_old_frame, w16_tmp);
         w16_tmp
-            = WebRtcSpl_DivW32W16ResW16(w32_En_old_frame, (WebRtc_Word16) w32_En_new_frame);
+            = WebRtcSpl_DivW32W16ResW16(w32_En_old_frame, (int16_t) w32_En_new_frame);
         /* Calculate sqrt(w32_En_old_frame/w32_En_new_frame) in Q14 */
-        w16_muted = (WebRtc_Word16) WebRtcSpl_SqrtFloor(
-            WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)w16_tmp,14));
+        w16_muted = (int16_t) WebRtcSpl_SqrtFloor(
+            WEBRTC_SPL_LSHIFT_W32((int32_t)w16_tmp,14));
     }
     else
     {
@@ -288,56 +288,56 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
         /* Downsample to 4 kHz */
         if (inst->fs == 8000)
         {
-            WebRtcSpl_DownsampleFast(&pw16_expanded[2], (WebRtc_Word16) (w16_expandedLen - 2),
-                pw16_expandedLB, (WebRtc_Word16) (100),
-                (WebRtc_Word16*) WebRtcNetEQ_kDownsample8kHzTbl, (WebRtc_Word16) 3,
-                (WebRtc_Word16) 2, (WebRtc_Word16) 0);
+            WebRtcSpl_DownsampleFast(&pw16_expanded[2], (int16_t) (w16_expandedLen - 2),
+                pw16_expandedLB, (int16_t) (100),
+                (int16_t*) WebRtcNetEQ_kDownsample8kHzTbl, (int16_t) 3,
+                (int16_t) 2, (int16_t) 0);
             if (w16_decodedLen <= 80)
             {
                 /* Not quite long enough, so we have to cheat a bit... */
-                WebRtc_Word16 temp_len = w16_decodedLen - 2;
+                int16_t temp_len = w16_decodedLen - 2;
                 w16_tmp = temp_len / 2;
                 WebRtcSpl_DownsampleFast(&pw16_decoded[2], temp_len,
                                          pw16_decodedLB, w16_tmp,
-                                         (WebRtc_Word16*) WebRtcNetEQ_kDownsample8kHzTbl,
-                    (WebRtc_Word16) 3, (WebRtc_Word16) 2, (WebRtc_Word16) 0);
+                                         (int16_t*) WebRtcNetEQ_kDownsample8kHzTbl,
+                    (int16_t) 3, (int16_t) 2, (int16_t) 0);
                 WebRtcSpl_MemSetW16(&pw16_decodedLB[w16_tmp], 0, (40 - w16_tmp));
             }
             else
             {
                 WebRtcSpl_DownsampleFast(&pw16_decoded[2],
-                    (WebRtc_Word16) (w16_decodedLen - 2), pw16_decodedLB,
-                    (WebRtc_Word16) (40), (WebRtc_Word16*) WebRtcNetEQ_kDownsample8kHzTbl,
-                    (WebRtc_Word16) 3, (WebRtc_Word16) 2, (WebRtc_Word16) 0);
+                    (int16_t) (w16_decodedLen - 2), pw16_decodedLB,
+                    (int16_t) (40), (int16_t*) WebRtcNetEQ_kDownsample8kHzTbl,
+                    (int16_t) 3, (int16_t) 2, (int16_t) 0);
             }
 #ifdef NETEQ_WIDEBAND
         }
         else if (inst->fs==16000)
         {
             WebRtcSpl_DownsampleFast(
-                &pw16_expanded[4], (WebRtc_Word16)(w16_expandedLen-4),
-                pw16_expandedLB, (WebRtc_Word16)(100),
-                (WebRtc_Word16*)WebRtcNetEQ_kDownsample16kHzTbl, (WebRtc_Word16)5,
-                (WebRtc_Word16)4, (WebRtc_Word16)0);
+                &pw16_expanded[4], (int16_t)(w16_expandedLen-4),
+                pw16_expandedLB, (int16_t)(100),
+                (int16_t*)WebRtcNetEQ_kDownsample16kHzTbl, (int16_t)5,
+                (int16_t)4, (int16_t)0);
             if (w16_decodedLen<=160)
             {
                 /* Not quite long enough, so we have to cheat a bit... */
-                WebRtc_Word16 temp_len = w16_decodedLen - 4;
+                int16_t temp_len = w16_decodedLen - 4;
                 w16_tmp = temp_len / 4;
                 WebRtcSpl_DownsampleFast(
                     &pw16_decoded[4], temp_len,
                     pw16_decodedLB, w16_tmp,
-                    (WebRtc_Word16*)WebRtcNetEQ_kDownsample16kHzTbl, (WebRtc_Word16)5,
-                    (WebRtc_Word16)4, (WebRtc_Word16)0);
+                    (int16_t*)WebRtcNetEQ_kDownsample16kHzTbl, (int16_t)5,
+                    (int16_t)4, (int16_t)0);
                 WebRtcSpl_MemSetW16(&pw16_decodedLB[w16_tmp], 0, (40-w16_tmp));
             }
             else
             {
                 WebRtcSpl_DownsampleFast(
-                    &pw16_decoded[4], (WebRtc_Word16)(w16_decodedLen-4),
-                    pw16_decodedLB, (WebRtc_Word16)(40),
-                    (WebRtc_Word16*)WebRtcNetEQ_kDownsample16kHzTbl, (WebRtc_Word16)5,
-                    (WebRtc_Word16)4, (WebRtc_Word16)0);
+                    &pw16_decoded[4], (int16_t)(w16_decodedLen-4),
+                    pw16_decodedLB, (int16_t)(40),
+                    (int16_t*)WebRtcNetEQ_kDownsample16kHzTbl, (int16_t)5,
+                    (int16_t)4, (int16_t)0);
             }
 #endif
 #ifdef NETEQ_32KHZ_WIDEBAND
@@ -348,29 +348,29 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
              * TODO(hlundin) Why is the offset into pw16_expanded 6?
              */
             WebRtcSpl_DownsampleFast(
-                &pw16_expanded[6], (WebRtc_Word16)(w16_expandedLen-6),
-                pw16_expandedLB, (WebRtc_Word16)(100),
-                (WebRtc_Word16*)WebRtcNetEQ_kDownsample32kHzTbl, (WebRtc_Word16)7,
-                (WebRtc_Word16)8, (WebRtc_Word16)0);
+                &pw16_expanded[6], (int16_t)(w16_expandedLen-6),
+                pw16_expandedLB, (int16_t)(100),
+                (int16_t*)WebRtcNetEQ_kDownsample32kHzTbl, (int16_t)7,
+                (int16_t)8, (int16_t)0);
             if (w16_decodedLen<=320)
             {
                 /* Not quite long enough, so we have to cheat a bit... */
-                WebRtc_Word16 temp_len = w16_decodedLen - 6;
+                int16_t temp_len = w16_decodedLen - 6;
                 w16_tmp = temp_len / 8;
                 WebRtcSpl_DownsampleFast(
                       &pw16_decoded[6], temp_len,
                       pw16_decodedLB, w16_tmp,
-                      (WebRtc_Word16*)WebRtcNetEQ_kDownsample32kHzTbl, (WebRtc_Word16)7,
-                      (WebRtc_Word16)8, (WebRtc_Word16)0);
+                      (int16_t*)WebRtcNetEQ_kDownsample32kHzTbl, (int16_t)7,
+                      (int16_t)8, (int16_t)0);
                 WebRtcSpl_MemSetW16(&pw16_decodedLB[w16_tmp], 0, (40-w16_tmp));
             }
             else
             {
                 WebRtcSpl_DownsampleFast(
-                    &pw16_decoded[6], (WebRtc_Word16)(w16_decodedLen-6),
-                    pw16_decodedLB, (WebRtc_Word16)(40),
-                    (WebRtc_Word16*)WebRtcNetEQ_kDownsample32kHzTbl, (WebRtc_Word16)7,
-                    (WebRtc_Word16)8, (WebRtc_Word16)0);
+                    &pw16_decoded[6], (int16_t)(w16_decodedLen-6),
+                    pw16_decodedLB, (int16_t)(40),
+                    (int16_t*)WebRtcNetEQ_kDownsample32kHzTbl, (int16_t)7,
+                    (int16_t)8, (int16_t)0);
             }
 #endif
 #ifdef NETEQ_48KHZ_WIDEBAND
@@ -381,10 +381,10 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
              * TODO(hlundin) Why is the offset into pw16_expanded 6?
              */
             WebRtcSpl_DownsampleFast(
-                &pw16_expanded[6], (WebRtc_Word16)(w16_expandedLen-6),
-                pw16_expandedLB, (WebRtc_Word16)(100),
-                (WebRtc_Word16*)WebRtcNetEQ_kDownsample48kHzTbl, (WebRtc_Word16)7,
-                (WebRtc_Word16)12, (WebRtc_Word16)0);
+                &pw16_expanded[6], (int16_t)(w16_expandedLen-6),
+                pw16_expandedLB, (int16_t)(100),
+                (int16_t*)WebRtcNetEQ_kDownsample48kHzTbl, (int16_t)7,
+                (int16_t)12, (int16_t)0);
             if (w16_decodedLen<=320)
             {
                 /* Not quite long enough, so we have to cheat a bit... */
@@ -393,29 +393,29 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
                  * but w16_tmp = temp_len / 8.
                  * (Was w16_tmp = ((w16_decodedLen-6)>>3) before re-write.)
                  */
-                WebRtc_Word16 temp_len = w16_decodedLen - 6;
+                int16_t temp_len = w16_decodedLen - 6;
                 w16_tmp = temp_len / 8;
                 WebRtcSpl_DownsampleFast(
                     &pw16_decoded[6], temp_len,
                     pw16_decodedLB, w16_tmp,
-                    (WebRtc_Word16*)WebRtcNetEQ_kDownsample48kHzTbl, (WebRtc_Word16)7,
-                    (WebRtc_Word16)12, (WebRtc_Word16)0);
+                    (int16_t*)WebRtcNetEQ_kDownsample48kHzTbl, (int16_t)7,
+                    (int16_t)12, (int16_t)0);
                 WebRtcSpl_MemSetW16(&pw16_decodedLB[w16_tmp], 0, (40-w16_tmp));
             }
             else
             {
                 WebRtcSpl_DownsampleFast(
-                    &pw16_decoded[6], (WebRtc_Word16)(w16_decodedLen-6),
-                    pw16_decodedLB, (WebRtc_Word16)(40),
-                    (WebRtc_Word16*)WebRtcNetEQ_kDownsample48kHzTbl, (WebRtc_Word16)7,
-                    (WebRtc_Word16)12, (WebRtc_Word16)0);
+                    &pw16_decoded[6], (int16_t)(w16_decodedLen-6),
+                    pw16_decodedLB, (int16_t)(40),
+                    (int16_t*)WebRtcNetEQ_kDownsample48kHzTbl, (int16_t)7,
+                    (int16_t)12, (int16_t)0);
             }
 #endif
         }
 
         /* Calculate correlation without any normalization (40 samples) */
-        w16_tmp = WebRtcSpl_DivW32W16ResW16((WebRtc_Word32) inst->ExpandInst.w16_maxLag,
-            (WebRtc_Word16) (fs_mult * 2)) + 1;
+        w16_tmp = WebRtcSpl_DivW32W16ResW16((int32_t) inst->ExpandInst.w16_maxLag,
+            (int16_t) (fs_mult * 2)) + 1;
         w16_stopPos = WEBRTC_SPL_MIN(60, w16_tmp);
         w32_tmp = WEBRTC_SPL_MUL_16_16(w16_expmax, w16_newmax);
         if (w32_tmp > 26843546)
@@ -428,9 +428,9 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
         }
 
         WebRtcNetEQ_CrossCorr(pw32_corr, pw16_decodedLB, pw16_expandedLB, 40,
-            (WebRtc_Word16) w16_stopPos, w16_tmp, 1);
+            (int16_t) w16_stopPos, w16_tmp, 1);
 
-        /* Normalize correlation to 14 bits and put in a WebRtc_Word16 vector */
+        /* Normalize correlation to 14 bits and put in a int16_t vector */
         WebRtcSpl_MemSetW16(pw16_corrVec, 0, (4 + 60 + 4));
         w32_tmp = WebRtcSpl_MaxAbsValueW32(pw32_corr, w16_stopPos);
         w16_tmp = 17 - WebRtcSpl_NormW32(w32_tmp);
@@ -445,8 +445,8 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
         w16_tmp = WEBRTC_SPL_MAX(0, WEBRTC_SPL_MAX(w16_startPos,
                 inst->timestampsPerCall+inst->ExpandInst.w16_overlap) - w16_decodedLen);
         /* Downscale starting index to 4kHz domain */
-        w16_tmp2 = WebRtcSpl_DivW32W16ResW16((WebRtc_Word32) w16_tmp,
-            (WebRtc_Word16) (fs_mult << 1));
+        w16_tmp2 = WebRtcSpl_DivW32W16ResW16((int32_t) w16_tmp,
+            (int16_t) (fs_mult << 1));
 
 #ifdef NETEQ_STEREO
     } /* end if (msInfo->msMode != NETEQ_SLAVE)  */
@@ -500,10 +500,10 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
     if (inst->w16_muteFactor < 16384)
     {
         WebRtcNetEQ_UnmuteSignal(pw16_decoded, &inst->w16_muteFactor, pw16_decoded, w16_inc,
-            (WebRtc_Word16) w16_interpLen);
+            (int16_t) w16_interpLen);
         WebRtcNetEQ_UnmuteSignal(&pw16_decoded[w16_interpLen], &inst->w16_muteFactor,
             &pw16_decodedOut[w16_interpLen], w16_inc,
-            (WebRtc_Word16) (w16_decodedLen - w16_interpLen));
+            (int16_t) (w16_decodedLen - w16_interpLen));
     }
     else
     {
@@ -514,7 +514,7 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
     }
 
     /* Do overlap and interpolate linearly */
-    w16_inc = WebRtcSpl_DivW32W16ResW16(16384, (WebRtc_Word16) (w16_interpLen + 1)); /* Q14 */
+    w16_inc = WebRtcSpl_DivW32W16ResW16(16384, (int16_t) (w16_interpLen + 1)); /* Q14 */
     w16_startfact = (16384 - w16_inc);
     WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_expanded, w16_bestIndex);
     WebRtcNetEQ_MixVoiceUnvoice(pw16_decodedOut, &pw16_expanded[w16_bestIndex], pw16_decoded,
@@ -535,11 +535,17 @@ int WebRtcNetEQ_Merge(DSPInst_t *inst,
     {
         /* expansion generates noise only */
         inst->statInst.expandedNoiseSamples += (*pw16_len - w16_decodedLen);
+        /* Short-term activity statistics. */
+       inst->activity_stats.merge_expand_bgn_samples +=
+            (*pw16_len - w16_decodedLen);
     }
     else
     {
         /* expansion generates more than only noise */
         inst->statInst.expandedVoiceSamples += (*pw16_len - w16_decodedLen);
+        /* Short-term activity statistics. */
+        inst->activity_stats.merge_expand_normal_samples +=
+            (*pw16_len - w16_decodedLen);
     }
     inst->statInst.expandLength += (*pw16_len - w16_decodedLen);
 

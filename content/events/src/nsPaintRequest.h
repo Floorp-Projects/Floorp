@@ -7,7 +7,6 @@
 #define NSPAINTREQUEST_H_
 
 #include "nsIDOMPaintRequest.h"
-#include "nsIDOMPaintRequestList.h"
 #include "nsPresContext.h"
 #include "nsIDOMEvent.h"
 #include "mozilla/Attributes.h"
@@ -53,7 +52,7 @@ private:
   nsInvalidateRequestList::Request mRequest;
 };
 
-class nsPaintRequestList MOZ_FINAL : public nsIDOMPaintRequestList,
+class nsPaintRequestList MOZ_FINAL : public nsISupports,
                                      public nsWrapperCache
 {
 public:
@@ -64,10 +63,9 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequestList)
-  NS_DECL_NSIDOMPAINTREQUESTLIST
   
-  virtual JSObject* WrapObject(JSContext *cx,
-                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
   nsISupports* GetParentObject()
   {
     return mParent;
@@ -76,23 +74,6 @@ public:
   void Append(nsPaintRequest* aElement)
   {
     mArray.AppendElement(aElement);
-  }
-
-  static nsPaintRequestList* FromSupports(nsISupports* aSupports)
-  {
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDOMPaintRequestList> list_qi = do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsIDOMClientRectList pointer as the nsISupports
-      // pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(list_qi == static_cast<nsIDOMPaintRequestList*>(aSupports),
-                   "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<nsPaintRequestList*>(aSupports);
   }
 
   uint32_t Length()

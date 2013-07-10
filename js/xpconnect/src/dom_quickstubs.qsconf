@@ -53,13 +53,6 @@ members = [
     # dom/interfaces/core
     'nsIDOMDOMStringList.*',
 
-    'nsIDOMProgressEvent.lengthComputable',
-    'nsIDOMProgressEvent.loaded',
-    'nsIDOMProgressEvent.total',
-    #XXX Can't quickstub initProgressEvent because it has long long parameters.
-
-    'nsIDOMTouchList.*',
-
     # dom/interfaces/storage
     'nsIDOMToString.toString',
     'nsIDOMStorage.setItem',
@@ -120,14 +113,8 @@ members = [
 irregularFilenames = {
     # stowaways
     'nsIDOMBlob': 'nsIDOMFile',
-
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
-
-    'nsIDOMTouch': 'nsIDOMTouchEvent',
-    'nsIDOMTouchList': 'nsIDOMTouchEvent',
-
     'nsITelephoneCallback': 'nsITelephone',
-
     'nsIDOMWindowPerformance': 'nsIDOMWindow',
     }
 
@@ -135,7 +122,6 @@ customIncludes = [
     'nsDOMQS.h',
     'nsPerformance.h',
     'mozilla/dom/EventTargetBinding.h',
-    'mozilla/dom/EventBinding.h',
     ]
 
 nsIDOMStorage_Clear_customMethodCallCode = """
@@ -175,5 +161,4 @@ newBindingProperties = {
     # Once the last entry here goes away, we can make the sNativePropertyHooks
     # of bindings static.
     'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMEvent': 'mozilla::dom::EventBinding::sNativePropertyHooks.mNativeProperties.regular',
     }

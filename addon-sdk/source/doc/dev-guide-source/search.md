@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <div id="cse" style="width: 100%;">Loading</div>
-<script src="http://www.google.com/jsapi" type="text/javascript"></script>
+<script src="https://www.google.com/jsapi" type="text/javascript"></script>
 <script type="text/javascript">
 function parseQueryFromUrl () {
   var queryParamName = "q";
@@ -38,7 +38,7 @@ google.setOnLoadCallback(function() {
 }, true);
 </script>
 
-<link rel="stylesheet" href="http://www.google.com/cse/style/look/default.css" type="text/css" />
+<link rel="stylesheet" href="https://www.google.com/cse/style/look/default.css" type="text/css" />
 
 <style type="text/css">
   #cse table, #cse tr, #cse td {

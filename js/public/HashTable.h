@@ -70,15 +70,7 @@ class HashMap
 
     // HashMap construction is fallible (due to OOM); thus the user must call
     // init after constructing a HashMap and check the return value.
-    HashMap(AllocPolicy a = AllocPolicy())
-      : impl(a)
-    {
-        MOZ_STATIC_ASSERT(tl::IsRelocatableHeapType<Key>::result,
-                          "Key type must be relocatable");
-        MOZ_STATIC_ASSERT(tl::IsRelocatableHeapType<Value>::result,
-                          "Value type must be relocatable");
-    }
-
+    HashMap(AllocPolicy a = AllocPolicy()) : impl(a)  {}
     bool init(uint32_t len = 16)                      { return impl.init(len); }
     bool initialized() const                          { return impl.initialized(); }
 
@@ -313,11 +305,7 @@ class HashSet
 
     // HashSet construction is fallible (due to OOM); thus the user must call
     // init after constructing a HashSet and check the return value.
-    HashSet(AllocPolicy a = AllocPolicy()) : impl(a)
-    {
-        MOZ_STATIC_ASSERT(tl::IsRelocatableHeapType<T>::result,
-                          "Set element type must be relocatable");
-    }
+    HashSet(AllocPolicy a = AllocPolicy()) : impl(a)  {}
     bool init(uint32_t len = 16)                      { return impl.init(len); }
     bool initialized() const                          { return impl.initialized(); }
 
@@ -456,6 +444,14 @@ class HashSet
     void remove(const Lookup &l) {
         if (Ptr p = lookup(l))
             remove(p);
+    }
+
+    // Infallibly rekey one entry, if present.
+    void rekey(const Lookup &old_key, const T &new_key) {
+        if (old_key != new_key) {
+            if (Ptr p = lookup(old_key))
+                impl.rekey(p, new_key, new_key);
+        }
     }
 
     // HashSet is movable

@@ -344,7 +344,6 @@ CompositorOGL::ReadDrawFPSPref::Run()
 {
   // NOTE: This must match the code in Initialize()'s NS_IsMainThread check.
   Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-  Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
   return NS_OK;
 }
 
@@ -384,7 +383,7 @@ CompositorOGL::Initialize()
   }
 
   // initialise a common shader to check that we can actually compile a shader
-  if (!mPrograms[gl::RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
+  if (!mPrograms[RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
     return false;
   }
 
@@ -520,7 +519,6 @@ CompositorOGL::Initialize()
   if (NS_IsMainThread()) {
     // NOTE: This must match the code in ReadDrawFPSPref::Run().
     Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-    Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
   } else {
     // We have to dispatch an event to the main thread to read the pref.
     NS_DispatchToMainThread(new ReadDrawFPSPref());
@@ -738,34 +736,6 @@ GetFrameBufferInternalFormat(GLContext* gl,
 }
 
 bool CompositorOGL::sDrawFPS = false;
-bool CompositorOGL::sFrameCounter = false;
-
-static uint16_t sFrameCount = 0;
-void
-FPSState::DrawFrameCounter(GLContext* context)
-{
-  profiler_set_frame_number(sFrameCount);
-
-  context->fEnable(LOCAL_GL_SCISSOR_TEST);
-
-  uint16_t frameNumber = sFrameCount;
-  for (size_t i = 0; i < 16; i++) {
-    context->fScissor(3*i, 0, 3, 3);
-
-    // We should do this using a single draw call
-    // instead of 16 glClear()
-    if ((frameNumber >> i) & 0x1) {
-      context->fClearColor(0.0, 0.0, 0.0, 0.0);
-    } else {
-      context->fClearColor(1.0, 1.0, 1.0, 0.0);
-    }
-    context->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-  }
-  // We intentionally overflow at 2^16.
-  sFrameCount++;
-
-  context->fDisable(LOCAL_GL_SCISSOR_TEST);
-}
 
 /*
  * Returns a size that is larger than and closest to aSize where both
@@ -952,12 +922,12 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, SurfaceInitMode aInit,
   *aTexture = tex;
 }
 
-gl::ShaderProgramType
+ShaderProgramType
 CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
 {
   switch(aEffect->mType) {
   case EFFECT_SOLID_COLOR:
-    return gl::ColorLayerProgramType;
+    return ColorLayerProgramType;
   case EFFECT_RGBA:
   case EFFECT_RGBX:
   case EFFECT_BGRA:
@@ -966,14 +936,16 @@ CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
     TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffect);
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
-    return source->GetShaderProgram();
+
+    return ShaderProgramFromTargetAndFormat(source->GetTextureTarget(),
+                                            source->GetTextureFormat());
   }
   case EFFECT_YCBCR:
-    return gl::YCbCrLayerProgramType;
+    return YCbCrLayerProgramType;
   case EFFECT_RENDER_TARGET:
     return GetFBOLayerProgramType();
   default:
-    return gl::RGBALayerProgramType;
+    return RGBALayerProgramType;
   }
 }
 
@@ -1046,10 +1018,10 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
     maskType = MaskNone;
   }
 
-  gl::ShaderProgramType programType = GetProgramTypeForEffect(aEffectChain.mPrimaryEffect);
+  ShaderProgramType programType = GetProgramTypeForEffect(aEffectChain.mPrimaryEffect);
   ShaderProgramOGL *program = GetProgram(programType, maskType);
   program->Activate();
-  if (programType == gl::RGBARectLayerProgramType) {
+  if (programType == RGBARectLayerProgramType) {
     TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
@@ -1105,7 +1077,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       }
 
       AutoBindTexture bindSource(source->AsSourceOGL(), LOCAL_GL_TEXTURE0);
-      if (programType == gl::RGBALayerExternalProgramType) {
+      if (programType == RGBALayerExternalProgramType) {
         program->SetTextureTransform(source->AsSourceOGL()->GetTextureTransform());
       }
 
@@ -1213,11 +1185,17 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       for (int32_t pass = 1; pass <=2; ++pass) {
         ShaderProgramOGL* program;
         if (pass == 1) {
-          program = GetProgram(gl::ComponentAlphaPass1ProgramType, maskType);
+          ShaderProgramType type = gl()->GetPreferredARGB32Format() == LOCAL_GL_BGRA ?
+                                   ComponentAlphaPass1RGBProgramType :
+                                   ComponentAlphaPass1ProgramType;
+          program = GetProgram(type, maskType);
           gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                    LOCAL_GL_ONE, LOCAL_GL_ONE);
         } else {
-          program = GetProgram(gl::ComponentAlphaPass2ProgramType, maskType);
+          ShaderProgramType type = gl()->GetPreferredARGB32Format() == LOCAL_GL_BGRA ?
+                                   ComponentAlphaPass2RGBProgramType :
+                                   ComponentAlphaPass2ProgramType;
+          program = GetProgram(type, maskType);
           gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                    LOCAL_GL_ONE, LOCAL_GL_ONE);
         }
@@ -1297,8 +1275,6 @@ CompositorOGL::EndFrame()
 
   if (mFPS) {
     mFPS->DrawFPS(TimeStamp::Now(), mGLContext, GetProgram(Copy2DProgramType));
-  } else if (sFrameCounter) {
-    FPSState::DrawFrameCounter(mGLContext);
   }
 
   mGLContext->SwapBuffers();

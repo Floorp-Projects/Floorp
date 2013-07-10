@@ -15,7 +15,7 @@ namespace layers {
 
 class CompositableChild;
 class CompositableClient;
-class TextureClient;
+class DeprecatedTextureClient;
 class ImageBridgeChild;
 class ShadowableLayer;
 class CompositableForwarder;
@@ -24,7 +24,7 @@ class SurfaceDescriptor;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
- * independently of the layer. It is the content side of a ConmpositableClient/
+ * independently of the layer. It is the content side of a CompositableClient/
  * CompositableHost pair.
  *
  * CompositableClient's purpose is to send texture data to the compositor side
@@ -78,8 +78,8 @@ public:
 
   LayersBackend GetCompositorBackendType() const;
 
-  TemporaryRef<TextureClient>
-  CreateTextureClient(TextureClientType aTextureClientType);
+  TemporaryRef<DeprecatedTextureClient>
+  CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)

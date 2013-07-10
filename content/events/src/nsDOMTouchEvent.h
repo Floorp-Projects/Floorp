@@ -12,32 +12,69 @@
 #include "mozilla/Attributes.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/dom/TouchEventBinding.h"
+#include "nsWrapperCache.h"
 
 class nsDOMTouchList MOZ_FINAL : public nsIDOMTouchList
+                               , public nsWrapperCache
 {
+  typedef mozilla::dom::Touch Touch;
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMTouchList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTouchList)
   NS_DECL_NSIDOMTOUCHLIST
 
-  nsDOMTouchList()
+  nsDOMTouchList(nsISupports* aParent)
+    : mParent(aParent)
   {
+    SetIsDOMBinding();
     nsJSContext::LikelyShortLivingObjectCreated();
   }
-  nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches);
+  nsDOMTouchList(nsISupports* aParent,
+                 const nsTArray< nsRefPtr<Touch> >& aTouches)
+    : mParent(aParent)
+    , mPoints(aTouches)
+  {
+    SetIsDOMBinding();
+    nsJSContext::LikelyShortLivingObjectCreated();
+  }
 
-  void Append(nsIDOMTouch* aPoint)
+  void Append(Touch* aPoint)
   {
     mPoints.AppendElement(aPoint);
   }
 
-  nsIDOMTouch* GetItemAt(uint32_t aIndex)
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  nsISupports* GetParentObject() const
   {
-    return mPoints.SafeElementAt(aIndex, nullptr);
+    return mParent;
   }
 
+  static bool PrefEnabled();
+
+  uint32_t Length() const
+  {
+    return mPoints.Length();
+  }
+  Touch* Item(uint32_t aIndex) const
+  {
+    return mPoints.SafeElementAt(aIndex);
+  }
+  Touch* IndexedGetter(uint32_t aIndex, bool& aFound) const
+  {
+    aFound = aIndex < mPoints.Length();
+    if (!aFound) {
+      return nullptr;
+    }
+    return mPoints[aIndex];
+  }
+  Touch* IdentifiedTouch(int32_t aIdentifier) const;
+
 protected:
-  nsTArray<nsCOMPtr<nsIDOMTouch> > mPoints;
+  nsCOMPtr<nsISupports> mParent;
+  nsTArray< nsRefPtr<Touch> > mPoints;
 };
 
 class nsDOMTouchEvent : public nsDOMUIEvent,

@@ -7,26 +7,16 @@
 
 The `tabs` module provides easy access to tabs and tab-related events.
 
-The module itself can be used like a basic list of all opened
-tabs across all windows. In particular, you can enumerate it:
+## Module-level Operations ##
 
-    var tabs = require('sdk/tabs');
-    for each (var tab in tabs)
-      console.log(tab.title);
-
-You can also access individual tabs by index:
-
-    var tabs = require('sdk/tabs');
-
-    tabs.on('ready', function () {
-      console.log('first: ' + tabs[0].title);
-      console.log('last: ' + tabs[tabs.length-1].title);
-    });
+### Open a Tab ###
 
 You can open a new tab, specifying various properties including location:
 
     var tabs = require("sdk/tabs");
     tabs.open("http://www.example.com");
+
+### Track Tabs ###
 
 You can register event listeners to be notified when tabs open, close, finish
 loading DOM content, or are made active or inactive:
@@ -43,6 +33,71 @@ loading DOM content, or are made active or inactive:
       console.log('tab is loaded', tab.title, tab.url)
     });
 
+### Access Tabs ###
+
+The module itself can be used as a list of all opened
+tabs across all windows. In particular, you can enumerate it:
+
+    var tabs = require('sdk/tabs');
+    for each (var tab in tabs)
+      console.log(tab.title);
+
+You can also access individual tabs by index:
+
+    var tabs = require('sdk/tabs');
+
+    tabs.on('ready', function () {
+      console.log('first: ' + tabs[0].title);
+      console.log('last: ' + tabs[tabs.length-1].title);
+    });
+
+You can access the currently active tab:
+
+    var tabs = require('sdk/tabs');
+
+    tabs.on('activate', function () {
+      console.log('active: ' + tabs.activeTab.url);
+    });
+
+## Tab-level Operations ##
+
+### Track a Tab ###
+
+Given a tab, you can register event listeners to be notified when the
+tab is closed, activated or deactivated, or when the page hosted by the
+tab is loaded or retrieved from the
+["back-forward cache"](https://developer.mozilla.org/en-US/docs/Working_with_BFCache):
+
+    var tabs = require("sdk/tabs");
+
+    function onOpen(tab) {
+      console.log(tab.url + " is open");
+      tab.on("pageshow", logShow);
+      tab.on("activate", logActivate);
+      tab.on("deactivate", logDeactivate);
+      tab.on("close", logClose);
+    }
+
+    function logShow(tab) {
+      console.log(tab.url + " is loaded");
+    }
+
+    function logActivate(tab) {
+      console.log(tab.url + " is activated");
+    }
+
+    function logDeactivate(tab) {
+      console.log(tab.url + " is deactivated");
+    }
+
+    function logClose(tab) {
+      console.log(tab.url + " is closed");
+    }
+
+    tabs.on('open', onOpen);
+
+### Manipulate a Tab ###
+
 You can get and set various properties of tabs (but note that properties
  relating to the tab's content, such as the URL, will not contain valid
 values until after the tab's `ready` event fires). By setting the `url`
@@ -52,6 +107,8 @@ property you can load a new page in the tab:
     tabs.on('activate', function(tab) {
       tab.url = "http://www.example.com";
     });
+
+### Run Scripts in a Tab ###
 
 You can attach a [content script](dev-guide/guides/content-scripts/index.html)
 to the page hosted in a tab, and use that to access and manipulate the page's
@@ -162,25 +219,25 @@ If present and true, then the new tab will be pinned as an
 [app tab](http://support.mozilla.com/en-US/kb/what-are-app-tabs).
 
 @prop [onOpen] {function}
-A callback function that will be registered for 'open' event.
+A callback function that will be registered for the 'open' event.
 This is an optional property.
 @prop [onClose] {function}
-A callback function that will be registered for 'close' event.
+A callback function that will be registered for the 'close' event.
 This is an optional property.
 @prop [onReady] {function}
-A callback function that will be registered for 'ready' event.
+A callback function that will be registered for the 'ready' event.
 This is an optional property.
 @prop [onLoad] {function}
-A callback function that will be registered for 'load' event.
+A callback function that will be registered for the 'load' event.
 This is an optional property.
 @prop [onPageShow] {function}
-A callback function that will be registered for 'pageshow' event.
+A callback function that will be registered for the 'pageshow' event.
 This is an optional property.
 @prop [onActivate] {function}
-A callback function that will be registered for 'activate' event.
+A callback function that will be registered for the 'activate' event.
 This is an optional property.
 @prop [onDeactivate] {function}
-A callback function that will be registered for 'deactivate' event.
+A callback function that will be registered for the 'deactivate' event.
 This is an optional property.
 </api>
 
@@ -340,11 +397,12 @@ Listeners are passed the tab object.
 @event
 
 This event is emitted when the DOM for the tab's content is ready. It is
-equivalent to the `DOMContentLoaded` event for the given content page.
+equivalent to the
+[`DOMContentLoaded`](https://developer.mozilla.org/en-US/docs/Web/Reference/Events/DOMContentLoaded)
+event for the given content page.
 
 A single tab will emit this event every time the DOM is loaded: so it will be
 emitted again if the tab's location changes or the content is reloaded.
-
 After this event has been emitted, all properties relating to the tab's
 content can be used.
 
@@ -356,16 +414,19 @@ Listeners are passed the tab object.
 @event
 
 This event is emitted when the page for the tab's content is loaded. It is
-equivalent to the `load` event for the given content page.
+equivalent to the
+[`load`](https://developer.mozilla.org/en-US/docs/Web/Reference/Events/load)
+event for the given content page.
 
 A single tab will emit this event every time the page is loaded: so it will be
 emitted again if the tab's location changes or the content is reloaded.
+This event is similar to the [`ready`](modules/sdk/tabs.html#ready) event,
+except that it can be used for pages that do not have a `DOMContentLoaded`
+event, like images.
 
 After this event has been emitted, all properties relating to the tab's
-content can be used.
-
-This is fired after the `ready` event on DOM content pages and can be used
-for pages that do not have a `DOMContentLoaded` event, like images.
+content can be used. For pages that have a `DOMContentLoaded` event, `load`
+is fired after `ready`.
 
 @argument {Tab}
 Listeners are passed the tab object.
@@ -374,23 +435,32 @@ Listeners are passed the tab object.
 <api name="pageshow">
 @event
 
-This event is emitted when the page for the tab's content is potentially
-from the cache. It is equivilent to the [pageshow](https://developer.mozilla.org/en-US/docs/DOM/Mozilla_event_reference/pageshow) event for the given
-content page.
+The `pageshow` event is emitted when the page for a tab's content is loaded.
+It is equivalent to the
+[`pageshow`](https://developer.mozilla.org/en-US/docs/DOM/Mozilla_event_reference/pageshow)
+event for the given content page.
+
+This event is similar to the [`load`](modules/sdk/tabs.html#load) and
+[`ready`](modules/sdk/tabs.html#ready) events, except unlike
+`load` and `ready`, `pageshow` is triggered if the page was retrieved from the
+[bfcache](https://developer.mozilla.org/en-US/docs/Working_with_BFCache).
+This means that if the user loads a page, loads a new page, then
+moves back to the previous page using the "Back" button,
+the `pageshow` event is emitted when the user moves back to the previous
+page, while the `load` and `ready` events are not.
+
+This event is *not* emitted when the tab is made the active tab: to get
+notified about that, you need to listen to the
+[`activate`](modules/sdk/tabs.html#activate) event.
 
 After this event has been emitted, all properties relating to the tab's
-content can be used.
-
-While the `ready` and `load` events will not be fired when a user uses the back
-or forward buttons to navigate history, the `pageshow` event will be fired.
-If the `persisted` argument is true, then the contents were loaded from the
-bfcache.
+content can be used. It is emitted after `load` and `ready`.
 
 @argument {Tab}
 Listeners are passed the tab object.
 @argument {persisted}
 Listeners are passed a boolean value indicating whether or not the page
-was loaded from the [bfcache](https://developer.mozilla.org/en-US/docs/Working_with_BFCache) or not.
+was loaded from the [bfcache](https://developer.mozilla.org/en-US/docs/Working_with_BFCache).
 </api>
 
 <api name="activate">

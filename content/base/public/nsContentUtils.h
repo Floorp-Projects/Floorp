@@ -125,6 +125,16 @@ namespace layers {
 class LayerManager;
 } // namespace layers
 
+// Called back from DeferredFinalize.  Should add 'thing' to the array of smart
+// pointers in 'pointers', creating the array if 'pointers' is null, and return
+// the array.
+typedef void* (*DeferredFinalizeAppendFunction)(void* pointers, void* thing);
+
+// Called to finalize a number of objects. Slice is the number of objects
+// to finalize, or if it's UINT32_MAX, all objects should be finalized.
+// Return value indicates whether it finalized all objects in the buffer.
+typedef bool (*DeferredFinalizeFunction)(uint32_t slice, void* data);
+
 } // namespace mozilla
 
 #ifdef IBMBIDI
@@ -1263,6 +1273,11 @@ public:
   static bool AreJSObjectsHeld(void* aScriptObjectHolder); 
 #endif
 
+  static void DeferredFinalize(nsISupports* aSupports);
+  static void DeferredFinalize(mozilla::DeferredFinalizeAppendFunction aAppendFunc,
+                               mozilla::DeferredFinalizeFunction aFunc,
+                               void* aThing);
+
   static void ReleaseWrapper(void* aScriptObjectHolder,
                              nsWrapperCache* aCache);
 
@@ -1309,6 +1324,11 @@ public:
    * Returns true if aPrincipal is the system principal.
    */
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
+
+  /**
+   * Returns true if aPrincipal is an nsExpandedPrincipal.
+   */
+  static bool IsExpandedPrincipal(nsIPrincipal* aPrincipal);
 
   /**
    * Gets the system principal from the security manager.
@@ -1518,15 +1538,6 @@ public:
   static nsViewportInfo GetViewportInfo(nsIDocument* aDocument,
                                         uint32_t aDisplayWidth,
                                         uint32_t aDisplayHeight);
-
-#ifdef MOZ_WIDGET_ANDROID
-  /**
-   * The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
-   * XXX Not to be used --- use nsIWidget::GetDefaultScale instead. Will be
-   * removed when bug 803207 is fixed.
-   */
-  static double GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget);
-#endif
 
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.

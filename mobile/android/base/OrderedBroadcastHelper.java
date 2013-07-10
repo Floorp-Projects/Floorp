@@ -5,10 +5,10 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -73,12 +73,15 @@ public final class OrderedBroadcastHelper
             }
 
             // It's fine if the caller-provided token is missing or null.
-            final Object token = (message.has("token") && !message.isNull("token")) ?
+            final JSONObject token = (message.has("token") && !message.isNull("token")) ?
                 message.getJSONObject("token") : null;
 
-            // And a missing or null permission means no permission.
-            final String permission = (message.has("permission") && !message.isNull("permission")) ?
-                message.getString("permission") : null;
+            // A missing (undefined) permission means the intent will be limited
+            // to the current package. A null means no permission, so any
+            // package can receive the intent.
+            final String permission = message.has("permission") ?
+                                      (message.isNull("permission") ? null : message.getString("permission")) :
+                                      GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION;
 
             final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
                 @Override
@@ -105,6 +108,12 @@ public final class OrderedBroadcastHelper
             };
 
             Intent intent = new Intent(action);
+            // OrderedBroadcast.jsm adds its callback ID to the caller's token;
+            // this unwraps that wrapping.
+            if (token != null && token.has("data")) {
+                intent.putExtra("token", token.getString("data"));
+            }
+
             mContext.sendOrderedBroadcast(intent,
                                           permission,
                                           resultReceiver,

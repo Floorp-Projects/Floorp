@@ -18,7 +18,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
-#include "base/compiler_specific.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/DNS.h"
@@ -34,7 +34,7 @@ namespace net {
 //-----------------------------------------------------------------------------
 
 HttpChannelChild::HttpChannelChild()
-  : ALLOW_THIS_IN_INITIALIZER_LIST(HttpAsyncAborter<HttpChannelChild>(this))
+  : HttpAsyncAborter<HttpChannelChild>(MOZ_THIS_IN_INITIALIZER_LIST())
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
@@ -469,7 +469,7 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
     mKeptAlive = true;
     SendDocumentChannelCleanup();
   } else {
-    // This calls NeckoChild::DeallocPHttpChannel(), which deletes |this| if IPDL
+    // This calls NeckoChild::DeallocPHttpChannelChild(), which deletes |this| if IPDL
     // holds the last reference.  Don't rely on |this| existing after here.
     PHttpChannelChild::Send__delete__(this);
   }

@@ -3518,7 +3518,7 @@ js_String(JSContext *cx, unsigned argc, Value *vp)
         str = cx->runtime()->emptyString;
     }
 
-    if (IsConstructing(args)) {
+    if (args.isConstructing()) {
         StringObject *strobj = StringObject::create(cx, str);
         if (!strobj)
             return false;

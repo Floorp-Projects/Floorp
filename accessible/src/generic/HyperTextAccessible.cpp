@@ -719,17 +719,22 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
                          aWordMovementType);
   rv = aFromFrame->PeekOffset(&pos);
   if (NS_FAILED(rv)) {
+    pos.mResultContent = aFromFrame->GetContent();
     if (aDirection == eDirPrevious) {
       // Use passed-in frame as starting point in failure case for now,
       // this is a hack to deal with starting on a list bullet frame,
       // which fails in PeekOffset() because the line iterator doesn't see it.
       // XXX Need to look at our overall handling of list bullets, which are an odd case
-      pos.mResultContent = aFromFrame->GetContent();
       int32_t endOffsetUnused;
       aFromFrame->GetOffsets(pos.mContentOffset, endOffsetUnused);
     }
     else {
-      return -1;
+      // XXX: PeekOffset fails on a last frame in the document for
+      // eSelectLine/eDirNext. DOM selection (up/down arrowing processing) has
+      // similar code to handle this case. One day it should be incorporated
+      // into PeekOffset.
+      int32_t startOffsetUnused;
+      aFromFrame->GetOffsets(startOffsetUnused, pos.mContentOffset);
     }
   }
 
@@ -759,21 +764,6 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
       hyperTextOffset = 0;
     }
     if (!aNeedsStart && hyperTextOffset > 0) {
-      -- hyperTextOffset;
-    }
-  }
-  else if (aAmount == eSelectEndLine && finalAccessible) { 
-    // If not at very end of hypertext, we may need change the end of line offset by 1, 
-    // to make sure we are in the right place relative to the line ending
-    if (finalAccessible->Role() == roles::WHITESPACE) {  // Landed on <br> hard line break
-      // if aNeedsStart, set end of line exactly 1 character past line break
-      // XXX It would be cleaner if we did not have to have the hard line break check,
-      // and just got the correct results from PeekOffset() for the <br> case -- the returned offset should
-      // come after the new line, as it does in other cases.
-      ++ hyperTextOffset;  // Get past hard line break
-    }
-    // We are now 1 character past the line break
-    if (!aNeedsStart) {
       -- hyperTextOffset;
     }
   }
@@ -1082,6 +1072,21 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_START: {
+      // Empty last line doesn't have own frame (a previous line contains '\n'
+      // character instead) thus we can't operate on last line separately
+      // from previous line.
+      if (offset == CharacterCount()) {
+        nsAutoString lastChar;
+        GetText(offset -1, -1, lastChar);
+        if (lastChar.EqualsLiteral("\n")) {
+          *aStartOffset = *aEndOffset = offset;
+          return NS_OK;
+        }
+      }
+
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
+
       // Home key, arrow down and if not on last line then home key.
       *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectLine);
@@ -1093,6 +1098,23 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
     }
 
     case BOUNDARY_LINE_END: {
+      // Empty last line doesn't have own frame (a previous line contains '\n'
+      // character instead) thus we can't operate on last line separately
+      // from the previous line.
+      if (offset == CharacterCount()) {
+        nsAutoString lastChar;
+        GetText(offset -1, -1, lastChar);
+        if (lastChar.EqualsLiteral("\n")) {
+          *aStartOffset = offset - 1;
+          *aEndOffset = offset;
+          aText = lastChar;
+          return NS_OK;
+        }
+      }
+
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
+
       // In contrast to word end boundary we follow the spec here. End key,
       // then up arrow and if not on first line then end key.
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);

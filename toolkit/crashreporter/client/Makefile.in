@@ -39,7 +39,6 @@ MOZ_WINCONSOLE = 0
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-DISABLED_CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \

@@ -15,7 +15,6 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIDOMMimeType.h"
 #include "nsPluginLogging.h"
 #include "nsNPAPIPlugin.h"
 #include "mozilla/TimeStamp.h"
@@ -63,28 +62,7 @@ GetStatePrefNameForPlugin(nsPluginTag* aTag)
   return MakePrefNameForPlugin("state", aTag);
 }
 
-NS_IMPL_ISUPPORTS1(DOMMimeTypeImpl, nsIDOMMimeType)
-
 /* nsPluginTag */
-
-nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
-  : mName(aPluginTag->mName),
-    mDescription(aPluginTag->mDescription),
-    mMimeTypes(aPluginTag->mMimeTypes),
-    mMimeDescriptions(aPluginTag->mMimeDescriptions),
-    mExtensions(aPluginTag->mExtensions),
-    mLibrary(nullptr),
-    mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
-    mIsFlashPlugin(aPluginTag->mIsFlashPlugin),
-    mFileName(aPluginTag->mFileName),
-    mFullPath(aPluginTag->mFullPath),
-    mVersion(aPluginTag->mVersion),
-    mLastModifiedTime(0),
-    mNiceFileName(),
-    mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
-    mCachedBlocklistStateValid(false)
-{
-}
 
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
   : mName(aPluginInfo->fName),

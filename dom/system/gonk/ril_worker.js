@@ -1197,6 +1197,36 @@ let RIL = {
   },
 
   /**
+   * Helper function for fetching the number of unlock retries of ICC locks.
+   */
+  iccGetCardLockRetryCount: function iccGetCardLockRetryCount(options) {
+    switch (options.lockType) {
+      case "pin":
+      case "puk":
+      case "pin2":
+      case "puk2":
+      case "nck":
+      case "cck":
+      case "spck":
+        options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
+        options.success = false;
+        this.sendDOMMessage(options);
+        return;
+      default:
+        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+        options.success = false;
+        this.sendDOMMessage(options);
+        return;
+    }
+
+    // TODO: We currently don't have a way for
+    // reading the retry count. See bug 868896.
+    options.retryCount = 0;
+    options.success = true;
+    this.sendDOMMessage(options);
+  },
+
+  /**
    * Query ICC facility lock.
    *
    * @param facility

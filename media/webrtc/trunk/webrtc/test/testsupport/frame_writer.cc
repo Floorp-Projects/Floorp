@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testsupport/frame_writer.h"
+#include "webrtc/test/testsupport/frame_writer.h"
 
 #include <cassert>
 
@@ -16,7 +16,7 @@ namespace webrtc {
 namespace test {
 
 FrameWriterImpl::FrameWriterImpl(std::string output_filename,
-                                 int frame_length_in_bytes)
+                                 size_t frame_length_in_bytes)
     : output_filename_(output_filename),
       frame_length_in_bytes_(frame_length_in_bytes),
       output_file_(NULL) {
@@ -28,7 +28,7 @@ FrameWriterImpl::~FrameWriterImpl() {
 
 bool FrameWriterImpl::Init() {
   if (frame_length_in_bytes_ <= 0) {
-    fprintf(stderr, "Frame length must be >0, was %d\n",
+    fprintf(stderr, "Frame length must be >0, was %zu\n",
             frame_length_in_bytes_);
     return false;
   }
@@ -48,16 +48,16 @@ void FrameWriterImpl::Close() {
   }
 }
 
-bool FrameWriterImpl::WriteFrame(WebRtc_UWord8* frame_buffer) {
+bool FrameWriterImpl::WriteFrame(uint8_t* frame_buffer) {
   assert(frame_buffer);
   if (output_file_ == NULL) {
     fprintf(stderr, "FrameWriter is not initialized (output file is NULL)\n");
     return false;
   }
-  int bytes_written = fwrite(frame_buffer, 1, frame_length_in_bytes_,
-                             output_file_);
+  size_t bytes_written = fwrite(frame_buffer, 1, frame_length_in_bytes_,
+                                output_file_);
   if (bytes_written != frame_length_in_bytes_) {
-    fprintf(stderr, "Failed to write %d bytes to file %s\n",
+    fprintf(stderr, "Failed to write %zu bytes to file %s\n",
             frame_length_in_bytes_, output_filename_.c_str());
     return false;
   }

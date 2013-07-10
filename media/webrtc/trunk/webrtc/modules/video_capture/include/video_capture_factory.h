@@ -24,20 +24,20 @@ class VideoCaptureFactory {
   // id - unique identifier of this video capture module object.
   // deviceUniqueIdUTF8 - name of the device.
   //                      Available names can be found by using GetDeviceName
-  static VideoCaptureModule* Create(const WebRtc_Word32 id,
+  static VideoCaptureModule* Create(const int32_t id,
                                     const char* deviceUniqueIdUTF8);
 
   // Create a video capture module object used for external capture.
   // id - unique identifier of this video capture module object
   // externalCapture - [out] interface to call when a new frame is captured.
-  static VideoCaptureModule* Create(const WebRtc_Word32 id,
+  static VideoCaptureModule* Create(const int32_t id,
                                     VideoCaptureExternal*& externalCapture);
 
   static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(
-      const WebRtc_Word32 id);
+      const int32_t id);
 
 #ifdef WEBRTC_ANDROID
-  static WebRtc_Word32 SetAndroidObjects(void* javaVM, void* javaContext);
+  static int32_t SetAndroidObjects(void* javaVM, void* javaContext);
 #endif
 
  private:

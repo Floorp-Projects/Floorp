@@ -644,6 +644,8 @@ public:
                  const nsAString& aOptions, nsIDOMWindow **_retval) = 0;
 
   void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
+  void MuteAudioContexts();
+  void UnmuteAudioContexts();
 
   // Given an inner window, return its outer if the inner is the current inner.
   // Otherwise (argument null or not an inner or not current) return null.

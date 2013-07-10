@@ -31,8 +31,9 @@ add_task(function test_send() {
 
   let observer = makeObserver();
 
+  let token = { a: "bcde", b: 1234 };
   sendOrderedBroadcast("org.mozilla.gecko.test.receiver",
-                       { a: "bcde", b: 1234 }, observer.callback);
+                       token, observer.callback);
 
   let value = yield observer.promise;
 
@@ -40,15 +41,19 @@ add_task(function test_send() {
 
   // We get back the correct action and token.
   do_check_neq(value, null);
-  do_check_neq(value.token, null);
-  do_check_eq(value.token.a, "bcde");
-  do_check_eq(value.token.b, 1234);
+  do_check_matches(value.token, token);
   do_check_eq(value.action, "org.mozilla.gecko.test.receiver");
 
   // Data is provided by testOrderedBroadcast.java.in.
   do_check_neq(value.data, null);
   do_check_eq(value.data.c, "efg");
   do_check_eq(value.data.d, 456);
+
+  // And the provided token is returned to us (as a string) by
+  // testOrderedBroadcast.java.in.
+  do_check_neq(value.data.token, null);
+  do_check_eq(typeof(value.data.token), "string");
+  do_check_matches(JSON.parse(value.data.token), token);
 });
 
 add_task(function test_null_token() {
@@ -72,6 +77,33 @@ add_task(function test_null_token() {
   do_check_neq(value.data, null);
   do_check_eq(value.data.c, "efg");
   do_check_eq(value.data.d, 456);
+});
+
+add_task(function test_string_token() {
+  let deferred = Promise.defer();
+
+  let observer = makeObserver();
+
+  let token = "string_token";
+  let permission = null; // means any receiver can listen for our intent
+  sendOrderedBroadcast("org.mozilla.gecko.test.receiver",
+                       token, observer.callback, permission);
+
+  let value = yield observer.promise;
+
+  do_check_eq(observer.count, 1);
+
+  // We get back the correct action and token.
+  do_check_neq(value, null);
+  do_check_eq(value.token, token);
+  do_check_eq(typeof(value.token), "string");
+  do_check_eq(value.action, "org.mozilla.gecko.test.receiver");
+
+  // Data is provided by testOrderedBroadcast.java.in.
+  do_check_neq(value.data, null);
+  do_check_eq(value.data.c, "efg");
+  do_check_eq(value.data.d, 456);
+  do_check_eq(value.data.token, token);
 });
 
 add_task(function test_permission() {

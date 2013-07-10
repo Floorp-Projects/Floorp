@@ -48,32 +48,32 @@ int main(int argc, char* argv[])
 	int framecnt, endfile;
 
 	int i, errtype, VADusage = 0, packetLossPercent = 0;
-	WebRtc_Word16 CodingMode;
-	WebRtc_Word32 bottleneck;
-	WebRtc_Word16 framesize = 30;           /* ms */
+	int16_t CodingMode;
+	int32_t bottleneck;
+	int16_t framesize = 30;           /* ms */
 	int cur_framesmpls, err;
 
 	/* Runtime statistics */
 	double starttime, runtime, length_file;
 
-	WebRtc_Word16 stream_len = 0;
-	WebRtc_Word16 declen, lostFrame = 0, declenTC = 0;
+	int16_t stream_len = 0;
+	int16_t declen, lostFrame = 0, declenTC = 0;
 
-	WebRtc_Word16 shortdata[SWBFRAMESAMPLES_10ms];
-	WebRtc_Word16 vaddata[SWBFRAMESAMPLES_10ms*3];
-	WebRtc_Word16 decoded[MAX_FRAMESAMPLES << 1];
-	WebRtc_Word16 decodedTC[MAX_FRAMESAMPLES << 1];
-	WebRtc_UWord16 streamdata[500];
-	WebRtc_Word16	speechType[1];
-    WebRtc_Word16 rateBPS = 0;
-    WebRtc_Word16 fixedFL = 0;
-    WebRtc_Word16 payloadSize = 0;
-    WebRtc_Word32 payloadRate = 0;
+	int16_t shortdata[SWBFRAMESAMPLES_10ms];
+	int16_t vaddata[SWBFRAMESAMPLES_10ms*3];
+	int16_t decoded[MAX_FRAMESAMPLES << 1];
+	int16_t decodedTC[MAX_FRAMESAMPLES << 1];
+	uint16_t streamdata[500];
+	int16_t	speechType[1];
+    int16_t rateBPS = 0;
+    int16_t fixedFL = 0;
+    int16_t payloadSize = 0;
+    int32_t payloadRate = 0;
     int setControlBWE = 0;
     short FL, testNum;
 	char version_number[20];
     FILE  *plFile;
-    WebRtc_Word32 sendBN;
+    int32_t sendBN;
 
 #ifdef _DEBUG
 	FILE *fy;
@@ -92,12 +92,12 @@ int main(int argc, char* argv[])
     short useAssign = 0;
     //FILE logFile;
     bool doTransCoding = false;
-    WebRtc_Word32 rateTransCoding = 0;
-    WebRtc_UWord16 streamDataTransCoding[600];
-    WebRtc_Word16 streamLenTransCoding = 0;
+    int32_t rateTransCoding = 0;
+    uint16_t streamDataTransCoding[600];
+    int16_t streamLenTransCoding = 0;
     FILE* transCodingFile = NULL;
     FILE* transcodingBitstream = NULL;
-    WebRtc_UWord32 numTransCodingBytes = 0;
+    uint32_t numTransCodingBytes = 0;
 
 	/* only one structure used for ISAC encoder */
 	ISACStruct* ISAC_main_inst = NULL;
@@ -180,14 +180,14 @@ int main(int argc, char* argv[])
     useAssign = 0;
     //logFile = NULL;
     char transCodingFileName[500];
-    WebRtc_Word16 totFileLoop = 0;
-    WebRtc_Word16 numFileLoop = 0;
+    int16_t totFileLoop = 0;
+    int16_t numFileLoop = 0;
 	for (i = 1; i < argc-2;i++)
     {
         if(!strcmp("-LOOP", argv[i]))
         {
             i++;
-            totFileLoop = (WebRtc_Word16)atol(argv[i]);
+            totFileLoop = (int16_t)atol(argv[i]);
             if(totFileLoop <= 0)
             {
                 fprintf(stderr, "Invalid number of runs for the given input file, %d.", totFileLoop);
@@ -609,8 +609,8 @@ int main(int argc, char* argv[])
     cout << "\n" << flush;
 
     length_file = 0;
-    WebRtc_Word16 bnIdxTC;
-    WebRtc_Word16 jitterInfoTC;
+    int16_t bnIdxTC;
+    int16_t jitterInfoTC;
     while (endfile == 0)
     {
         /* Call init functions at random, fault test number 7 */
@@ -663,7 +663,7 @@ int main(int argc, char* argv[])
             {
                 stream_len = WebRtcIsac_Encode(ISAC_main_inst,
                     shortdata,
-                    (WebRtc_Word16*)streamdata);
+                    (int16_t*)streamdata);
                 if((payloadSize != 0) && (stream_len > payloadSize))
                 {
                     if(testNum == 0)
@@ -681,40 +681,40 @@ int main(int argc, char* argv[])
                 {
                     if(doTransCoding)
                     {
-                        WebRtc_Word16 indexStream;
-                        WebRtc_UWord8 auxUW8;
+                        int16_t indexStream;
+                        uint8_t auxUW8;
 
                         /************************* Main Transcoding stream *******************************/
                         WebRtcIsac_GetDownLinkBwIndex(ISAC_main_inst, &bnIdxTC, &jitterInfoTC);
                         streamLenTransCoding = WebRtcIsac_GetNewBitStream(
                             ISAC_main_inst, bnIdxTC, jitterInfoTC, rateTransCoding,
-                            (WebRtc_Word16*)streamDataTransCoding, false);
+                            (int16_t*)streamDataTransCoding, false);
                         if(streamLenTransCoding < 0)
                         {
                             fprintf(stderr, "Error in trans-coding\n");
                             exit(0);
                         }
-                        auxUW8 = (WebRtc_UWord8)(((streamLenTransCoding & 0xFF00) >> 8) &  0x00FF);
-                        if (fwrite(&auxUW8, sizeof(WebRtc_UWord8), 1,
+                        auxUW8 = (uint8_t)(((streamLenTransCoding & 0xFF00) >> 8) &  0x00FF);
+                        if (fwrite(&auxUW8, sizeof(uint8_t), 1,
                                    transcodingBitstream) != 1) {
                           return -1;
                         }
 
-                        auxUW8 = (WebRtc_UWord8)(streamLenTransCoding & 0x00FF);
-                        if (fwrite(&auxUW8, sizeof(WebRtc_UWord8),
+                        auxUW8 = (uint8_t)(streamLenTransCoding & 0x00FF);
+                        if (fwrite(&auxUW8, sizeof(uint8_t),
                                    1, transcodingBitstream) != 1) {
                           return -1;
                         }
 
-                        if (fwrite((WebRtc_UWord8*)streamDataTransCoding,
-                                   sizeof(WebRtc_UWord8),
+                        if (fwrite((uint8_t*)streamDataTransCoding,
+                                   sizeof(uint8_t),
                                    streamLenTransCoding,
                                    transcodingBitstream) !=
                             static_cast<size_t>(streamLenTransCoding)) {
                           return -1;
                         }
 
-                        WebRtcIsac_ReadBwIndex((WebRtc_Word16*)streamDataTransCoding, &indexStream);
+                        WebRtcIsac_ReadBwIndex((int16_t*)streamDataTransCoding, &indexStream);
                         if(indexStream != bnIdxTC)
                         {
                             fprintf(stderr, "Error in inserting Bandwidth index into transcoding stream.\n");
@@ -781,13 +781,13 @@ int main(int argc, char* argv[])
         if(lostFrame)
         {
             stream_len = WebRtcIsac_GetRedPayload(ISAC_main_inst,
-                (WebRtc_Word16*)streamdata);
+                (int16_t*)streamdata);
 
             if(doTransCoding)
             {
                 streamLenTransCoding = WebRtcIsac_GetNewBitStream(
                     ISAC_main_inst, bnIdxTC, jitterInfoTC, rateTransCoding,
-                    (WebRtc_Word16*)streamDataTransCoding, true);
+                    (int16_t*)streamDataTransCoding, true);
                 if(streamLenTransCoding < 0)
                 {
                     fprintf(stderr, "Error in RED trans-coding\n");
@@ -873,7 +873,7 @@ int main(int argc, char* argv[])
 
             /* Call getFramelen, only used here for function test */
             err = WebRtcIsac_ReadFrameLen(ISAC_main_inst,
-                (WebRtc_Word16*)streamdata, &FL);
+                (int16_t*)streamdata, &FL);
             if(err < 0)
             {
                 /* exit if returned with error */
@@ -951,7 +951,7 @@ int main(int argc, char* argv[])
         /* Write decoded speech frame to file */
         if((declen > 0) && (numFileLoop == 0))
         {
-          if (fwrite(decoded, sizeof(WebRtc_Word16), declen,
+          if (fwrite(decoded, sizeof(int16_t), declen,
                      outp) != static_cast<size_t>(declen)) {
             return -1;
           }
@@ -959,7 +959,7 @@ int main(int argc, char* argv[])
 
         if((declenTC > 0) && (numFileLoop == 0))
         {
-          if (fwrite(decodedTC, sizeof(WebRtc_Word16), declen,
+          if (fwrite(decodedTC, sizeof(int16_t), declen,
                      transCodingFile) != static_cast<size_t>(declen)) {
             return -1;
           }

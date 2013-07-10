@@ -27,103 +27,6 @@
 
 namespace js {
 
-inline void
-NewObjectCache::staticAsserts()
-{
-    JS_STATIC_ASSERT(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
-    JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
-}
-
-inline bool
-NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry)
-{
-    uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
-    *pentry = hash % mozilla::ArrayLength(entries);
-
-    Entry *entry = &entries[*pentry];
-
-    /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
-    return (entry->clasp == clasp && entry->key == key);
-}
-
-inline bool
-NewObjectCache::lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
-{
-    JS_ASSERT(!proto->is<GlobalObject>());
-    return lookup(clasp, proto, kind, pentry);
-}
-
-inline bool
-NewObjectCache::lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry)
-{
-    return lookup(clasp, global, kind, pentry);
-}
-
-inline bool
-NewObjectCache::lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry)
-{
-    return lookup(clasp, type, kind, pentry);
-}
-
-inline void
-NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj)
-{
-    JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
-    Entry *entry = &entries[entry_];
-
-    JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
-
-    entry->clasp = clasp;
-    entry->key = key;
-    entry->kind = kind;
-
-    entry->nbytes = gc::Arena::thingSize(kind);
-    js_memcpy(&entry->templateObject, obj, entry->nbytes);
-}
-
-inline void
-NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
-{
-    //JS_ASSERT(global == obj->getGlobal());
-    return fill(entry, clasp, global, kind, obj);
-}
-
-inline void
-NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj)
-{
-    JS_ASSERT(obj->type() == type);
-    return fill(entry, clasp, type, kind, obj);
-}
-
-inline void
-NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind)
-{
-    js_memcpy(dst, src, gc::Arena::thingSize(kind));
-#ifdef JSGC_GENERATIONAL
-    Shape::writeBarrierPost(dst->shape_, &dst->shape_);
-    types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
-#endif
-}
-
-inline JSObject *
-NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::InitialHeap heap)
-{
-    // The new object cache does not account for metadata attached via callbacks.
-    JS_ASSERT(!cx->compartment()->objectMetadataCallback);
-
-    JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
-    Entry *entry = &entries[entry_];
-
-    JSObject *obj = js_NewGCObject<NoGC>(cx, entry->kind, heap);
-    if (obj) {
-        copyCachedToObject(obj, reinterpret_cast<JSObject *>(&entry->templateObject), entry->kind);
-        Probes::createObject(cx, obj);
-        return obj;
-    }
-
-    return NULL;
-}
-
 #ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
 {
@@ -425,7 +328,7 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
     }
 
     if (attrs & JSPROP_GETTER)
-        return js_ReportGetterOnlyAssignment(cx);
+        return js_ReportGetterOnlyAssignment(cx, strict);
 
     if (!(attrs & JSPROP_SHORTID))
         return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
@@ -572,27 +475,6 @@ JSContext::currentScript(jsbytecode **ppc,
         JS_ASSERT(*ppc >= script->code && *ppc < script->code + script->length);
     }
     return script;
-}
-
-template <typename T>
-inline bool
-js::ThreadSafeContext::isInsideCurrentZone(T thing) const
-{
-    return thing->isInsideZone(zone_);
-}
-
-inline js::AllowGC
-js::ThreadSafeContext::allowGC() const
-{
-    switch (contextKind_) {
-      case Context_JS:
-        return CanGC;
-      case Context_ForkJoin:
-        return NoGC;
-      default:
-        /* Silence warnings. */
-        MOZ_ASSUME_UNREACHABLE("Bad context kind");
-    }
 }
 
 #endif /* jscntxtinlines_h */

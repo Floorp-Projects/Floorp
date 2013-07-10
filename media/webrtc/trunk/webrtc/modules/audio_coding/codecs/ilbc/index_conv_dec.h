@@ -22,7 +22,7 @@
 #include "defines.h"
 
 void WebRtcIlbcfix_IndexConvDec(
-    WebRtc_Word16 *index   /* (i/o) Codebook indexes */
+    int16_t *index   /* (i/o) Codebook indexes */
                                 );
 
 #endif

@@ -31,8 +31,7 @@ namespace dom {
  * are Float32Arrays, or in mSharedChannels if the mJSChannels objects have
  * been neutered.
  */
-class AudioBuffer MOZ_FINAL : public nsISupports,
-                              public nsWrapperCache,
+class AudioBuffer MOZ_FINAL : public nsWrapperCache,
                               public EnableWebAudioCheck
 {
 public:
@@ -45,8 +44,8 @@ public:
   bool InitializeBuffers(uint32_t aNumberOfChannels,
                          JSContext* aJSContext);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AudioBuffer)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioBuffer)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioBuffer)
 
   AudioContext* GetParentObject() const
   {
@@ -82,12 +81,6 @@ public:
    */
   JSObject* GetChannelData(JSContext* aJSContext, uint32_t aChannel,
                            ErrorResult& aRv);
-
-  JSObject* GetChannelData(uint32_t aChannel) const {
-    // Doesn't perform bounds checking
-    MOZ_ASSERT(aChannel < mJSChannels.Length());
-    return mJSChannels[aChannel];
-  }
 
   /**
    * Returns a ThreadSharedFloatArrayBufferList containing the sample data.

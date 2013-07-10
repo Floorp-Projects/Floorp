@@ -251,7 +251,6 @@ JavaScriptChild::AnswerSet(const ObjectId &objId, const ObjectId &receiverId,
     MOZ_ASSERT(obj == receiver);
 
     RootedValue val(cx);
-
     if (!toValue(cx, value, &val))
         return fail(cx, rs);
 
@@ -364,6 +363,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId,
     return ok(rs);
 }
 
+
 bool
 JavaScriptChild::AnswerInstanceOf(const ObjectId &objId,
                                   const JSIID &iid,
@@ -471,9 +471,39 @@ JavaScriptChild::AnswerGetOwnPropertyDescriptor(const ObjectId &objId,
 }
 
 bool
-JavaScriptChild::AnswerGetOwnPropertyNames(const ObjectId &objId,
-                                           ReturnStatus *rs,
-                                           nsTArray<nsString> *names)
+JavaScriptChild::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
+                                      const PPropertyDescriptor &descriptor, ReturnStatus *rs)
+{
+    AutoSafeJSContext cx;
+    JSAutoRequest request(cx);
+
+    RootedObject obj(cx, findObject(objId));
+    if (!obj)
+        return false;
+
+    JSAutoCompartment comp(cx, obj);
+
+    RootedId internedId(cx);
+    if (!convertGeckoStringToId(cx, id, &internedId))
+        return fail(cx, rs);
+
+    JSPropertyDescriptor desc;
+    if (!toDescriptor(cx, descriptor, &desc))
+        return false;
+
+    RootedValue v(cx, desc.value);
+    if (!js::CheckDefineProperty(cx, obj, internedId, v, desc.getter, desc.setter, desc.attrs) ||
+        !JS_DefinePropertyById(cx, obj, internedId, v, desc.getter, desc.setter, desc.attrs))
+    {
+        return fail(cx, rs);
+    }
+
+    return ok(rs);
+}
+
+bool
+JavaScriptChild::AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
+                                        ReturnStatus *rs, nsTArray<nsString> *names)
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
@@ -485,7 +515,7 @@ JavaScriptChild::AnswerGetOwnPropertyNames(const ObjectId &objId,
     JSAutoCompartment comp(cx, obj);
 
     AutoIdVector props(cx);
-    if (!js::GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+    if (!js::GetPropertyNames(cx, obj, flags, &props))
         return fail(cx, rs);
 
     for (size_t i = 0; i < props.length(); i++) {
@@ -600,6 +630,36 @@ JavaScriptChild::AnswerPreventExtensions(const ObjectId &objId,
     JSAutoCompartment comp(cx, obj);
     if (!JS_PreventExtensions(cx, obj))
         return fail(cx, rs);
+
+    return ok(rs);
+}
+
+
+bool
+JavaScriptChild::AnswerDelete(const ObjectId &objId, const nsString &id,
+                              ReturnStatus *rs, bool *success)
+{
+    AutoSafeJSContext cx;
+    JSAutoRequest request(cx);
+
+    JSObject *obj = findObject(objId);
+    if (!obj)
+        return false;
+
+    JSAutoCompartment comp(cx, obj);
+
+    RootedId internedId(cx);
+    if (!convertGeckoStringToId(cx, id, &internedId))
+        return fail(cx, rs);
+
+    RootedValue v(cx);
+    if (!JS_DeletePropertyById2(cx, obj, internedId, v.address()))
+        return fail(cx, rs);
+
+    JSBool b;
+    if (!JS_ValueToBoolean(cx, v, &b))
+        return fail(cx, rs);
+    *success = !!b;
 
     return ok(rs);
 }

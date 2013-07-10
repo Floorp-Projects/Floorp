@@ -26,12 +26,12 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_CbConstruct(
-    WebRtc_Word16 *decvector,  /* (o) Decoded vector */
-    WebRtc_Word16 *index,   /* (i) Codebook indices */
-    WebRtc_Word16 *gain_index,  /* (i) Gain quantization indices */
-    WebRtc_Word16 *mem,   /* (i) Buffer for codevector construction */
-    WebRtc_Word16 lMem,   /* (i) Length of buffer */
-    WebRtc_Word16 veclen   /* (i) Length of vector */
+    int16_t *decvector,  /* (o) Decoded vector */
+    int16_t *index,   /* (i) Codebook indices */
+    int16_t *gain_index,  /* (i) Gain quantization indices */
+    int16_t *mem,   /* (i) Buffer for codevector construction */
+    int16_t lMem,   /* (i) Length of buffer */
+    int16_t veclen   /* (i) Length of vector */
                                );
 
 

@@ -26,3 +26,6 @@ CPP_SOURCES += [
     'nsDeviceStorage.cpp',
 ]
 
+IPDL_SOURCES += [
+    'PDeviceStorageRequest.ipdl',
+]

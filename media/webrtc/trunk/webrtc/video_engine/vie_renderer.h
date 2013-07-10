@@ -32,8 +32,8 @@ class ViEExternalRendererImpl : public VideoRenderCallback {
                              RawVideoType video_input_format);
 
   // Implements VideoRenderCallback.
-  virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 stream_id,
-                                    I420VideoFrame& video_frame);
+  virtual int32_t RenderFrame(const uint32_t stream_id,
+                              I420VideoFrame& video_frame);
 
  private:
   ExternalRenderer* external_renderer_;
@@ -46,68 +46,68 @@ class ViEExternalRendererImpl : public VideoRenderCallback {
 
 class ViERenderer: public ViEFrameCallback {
  public:
-  static ViERenderer* CreateViERenderer(const WebRtc_Word32 render_id,
-                                        const WebRtc_Word32 engine_id,
+  static ViERenderer* CreateViERenderer(const int32_t render_id,
+                                        const int32_t engine_id,
                                         VideoRender& render_module,
                                         ViERenderManager& render_manager,
-                                        const WebRtc_UWord32 z_order,
+                                        const uint32_t z_order,
                                         const float left,
                                         const float top,
                                         const float right,
                                         const float bottom);
   ~ViERenderer(void);
 
-  WebRtc_Word32 StartRender();
-  WebRtc_Word32 StopRender();
+  int32_t StartRender();
+  int32_t StopRender();
 
-  WebRtc_Word32 GetLastRenderedFrame(const WebRtc_Word32 renderID,
-                                     I420VideoFrame& video_frame);
+  int32_t GetLastRenderedFrame(const int32_t renderID,
+                               I420VideoFrame& video_frame);
 
   int SetExpectedRenderDelay(int render_delay);
 
-  WebRtc_Word32 ConfigureRenderer(const unsigned int z_order,
-                                  const float left,
-                                  const float top,
-                                  const float right,
-                                  const float bottom);
+  int32_t ConfigureRenderer(const unsigned int z_order,
+                            const float left,
+                            const float top,
+                            const float right,
+                            const float bottom);
 
   VideoRender& RenderModule();
 
-  WebRtc_Word32 EnableMirroring(const WebRtc_Word32 render_id,
-                                const bool enable,
-                                const bool mirror_xaxis,
-                                const bool mirror_yaxis);
+  int32_t EnableMirroring(const int32_t render_id,
+                          const bool enable,
+                          const bool mirror_xaxis,
+                          const bool mirror_yaxis);
 
-  WebRtc_Word32 SetTimeoutImage(const I420VideoFrame& timeout_image,
-                                const WebRtc_Word32 timeout_value);
-  WebRtc_Word32 SetRenderStartImage(const I420VideoFrame& start_image);
-  WebRtc_Word32 SetExternalRenderer(const WebRtc_Word32 render_id,
-                                    RawVideoType video_input_format,
-                                    ExternalRenderer* external_renderer);
+  int32_t SetTimeoutImage(const I420VideoFrame& timeout_image,
+                          const int32_t timeout_value);
+  int32_t SetRenderStartImage(const I420VideoFrame& start_image);
+  int32_t SetExternalRenderer(const int32_t render_id,
+                              RawVideoType video_input_format,
+                              ExternalRenderer* external_renderer);
 
  private:
-  ViERenderer(const WebRtc_Word32 render_id, const WebRtc_Word32 engine_id,
+  ViERenderer(const int32_t render_id, const int32_t engine_id,
                 VideoRender& render_module,
                 ViERenderManager& render_manager);
 
-  WebRtc_Word32 Init(const WebRtc_UWord32 z_order,
-                     const float left,
-                     const float top,
-                     const float right,
-                     const float bottom);
+  int32_t Init(const uint32_t z_order,
+               const float left,
+               const float top,
+               const float right,
+               const float bottom);
 
   // Implement ViEFrameCallback
   virtual void DeliverFrame(int id,
                             I420VideoFrame* video_frame,
                             int num_csrcs = 0,
-                            const WebRtc_UWord32 CSRC[kRtpCsrcSize] = NULL);
+                            const uint32_t CSRC[kRtpCsrcSize] = NULL);
   virtual void DelayChanged(int id, int frame_delay);
   virtual int GetPreferedFrameSettings(int* width,
                                        int* height,
                                        int* frame_rate);
   virtual void ProviderDestroyed(int id);
 
-  WebRtc_UWord32 render_id_;
+  uint32_t render_id_;
   VideoRender& render_module_;
   ViERenderManager& render_manager_;
   VideoRenderCallback* render_callback_;

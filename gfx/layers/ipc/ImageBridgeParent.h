@@ -35,19 +35,19 @@ public:
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   virtual PGrallocBufferParent*
-  AllocPGrallocBuffer(const gfxIntSize&, const uint32_t&, const uint32_t&,
-                      MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
+  AllocPGrallocBufferParent(const gfxIntSize&, const uint32_t&, const uint32_t&,
+                            MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
 
   virtual bool
-  DeallocPGrallocBuffer(PGrallocBufferParent* actor) MOZ_OVERRIDE;
+  DeallocPGrallocBufferParent(PGrallocBufferParent* actor) MOZ_OVERRIDE;
 
   // PImageBridge
   virtual bool RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply);
   virtual bool RecvUpdateNoSwap(const EditArray& aEdits);
 
-  PCompositableParent* AllocPCompositable(const TextureInfo& aInfo,
-                                          uint64_t*) MOZ_OVERRIDE;
-  bool DeallocPCompositable(PCompositableParent* aActor) MOZ_OVERRIDE;
+  PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo,
+                                                uint64_t*) MOZ_OVERRIDE;
+  bool DeallocPCompositableParent(PCompositableParent* aActor) MOZ_OVERRIDE;
 
   bool RecvStop() MOZ_OVERRIDE;
 

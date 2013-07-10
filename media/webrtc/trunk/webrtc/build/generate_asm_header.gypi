@@ -32,6 +32,21 @@
   'variables': {
     'out_dir': '<(SHARED_INTERMEDIATE_DIR)/<(asm_header_dir)',
     'process_outputs_as_sources': 1,
+    'conditions': [
+      # We only support Android and iOS.
+      ['OS=="android"', {
+        'compiler_to_use':
+          '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <(android_toolchain)/*-gcc)',
+        'compiler_options': '-I<(webrtc_root)/.. -I<@(android_ndk_include) -S',
+        'pattern_to_detect': 'offset_',
+      }],
+      ['OS=="ios"', {
+        'compiler_to_use': 'clang',
+        'compiler_options':
+          '-arch armv7 -I<(webrtc_root)/.. -isysroot $(SDKROOT) -S',
+        'pattern_to_detect': '_offset_',
+      }],
+    ]
   },
   'rules': [
     {
@@ -46,9 +61,9 @@
       'action': [
         'python',
         '<(webrtc_root)/build/generate_asm_header.py',
-        '--compiler=<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} '
-          '<(android_toolchain)/*-gcc)',
-        '--options=-I.. -I<@(android_ndk_include) -S',  # Compiler options.
+        '--compiler=<(compiler_to_use)',
+        '--options=<(compiler_options)',
+        '--pattern=<(pattern_to_detect)',
         '--dir=<(out_dir)',
         '<(RULE_INPUT_PATH)',
       ],

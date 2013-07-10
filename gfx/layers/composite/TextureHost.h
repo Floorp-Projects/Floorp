@@ -30,7 +30,7 @@ class TextureSourceBasic;
 class TextureParent;
 
 /**
- * A view on a TextureHost where the texture is internally represented as tiles
+ * A view on a DeprecatedTextureHost where the texture is internally represented as tiles
  * (contrast with a tiled buffer, where each texture is a tile). For iteration by
  * the texture's buffer host.
  * This is only useful when the underlying surface is too big to fit in one
@@ -103,28 +103,30 @@ public:
 };
 
 /**
- * TextureHost is a thin abstraction over texture data that need to be shared
- * or transfered from the content process to the compositor process. It is the
- * compositor-side half of a TextureClient/TextureHost pair. A corresponding
- * TextureClient lives on the client-side.
+ * XXX - This class is deprectaed, will be removed soon.
  *
- * TextureHost only knows how to deserialize or synchronize generic image data
+ * DeprecatedTextureHost is a thin abstraction over texture data that need to be shared
+ * or transfered from the content process to the compositor process. It is the
+ * compositor-side half of a DeprecatedTextureClient/DeprecatedTextureHost pair. A corresponding
+ * DeprecatedTextureClient lives on the client-side.
+ *
+ * DeprecatedTextureHost only knows how to deserialize or synchronize generic image data
  * (SurfaceDescriptor) and provide access to one or more TextureSource objects
  * (these provide the necessary APIs for compositor backends to composite the
  * image).
  *
- * A TextureHost should mostly correspond to one or several SurfaceDescriptor
+ * A DeprecatedTextureHost should mostly correspond to one or several SurfaceDescriptor
  * types. This means that for YCbCr planes, even though they are represented as
- * 3 textures internally, use 1 TextureHost and not 3, because the 3 planes
+ * 3 textures internally, use 1 DeprecatedTextureHost and not 3, because the 3 planes
  * arrive in the same IPC message.
  *
- * The Lock/Unlock mecanism here mirrors Lock/Unlock in TextureClient. These two
+ * The Lock/Unlock mecanism here mirrors Lock/Unlock in DeprecatedTextureClient. These two
  * methods don't always have to use blocking locks, unless a resource is shared
  * between the two sides (like shared texture handles). For instance, in some
  * cases the data received in Update(...) is a copy in shared memory of the data
  * owned by the content process, in which case no blocking lock is required.
  *
- * TextureHosts can be changed at any time, for example if we receive a
+ * DeprecatedTextureHosts can be changed at any time, for example if we receive a
  * SurfaceDescriptor type that was not expected. This should be an incentive
  * to keep the ownership model simple (especially on the OpenGL case, where
  * we have additionnal constraints).
@@ -135,38 +137,38 @@ public:
  * composition when the compositor 'ticks'. We may composite many times before
  * update.
  *
- * Update ends up at TextureHost::UpdateImpl. It always occurs in a layers
+ * Update ends up at DeprecatedTextureHost::UpdateImpl. It always occurs in a layers
  * transacton. (TextureParent should call EnsureTexture before updating to
- * ensure the TextureHost exists and is of the correct type).
+ * ensure the DeprecatedTextureHost exists and is of the correct type).
  *
  * CompositableHost::Composite does compositing. It should check the texture
  * host exists (and give up otherwise), then lock the texture host
- * (TextureHost::Lock). Then it passes the texture host to the Compositor in an
+ * (DeprecatedTextureHost::Lock). Then it passes the texture host to the Compositor in an
  * effect as a texture source, which does the actual composition. Finally the
- * compositable calls Unlock on the TextureHost.
+ * compositable calls Unlock on the DeprecatedTextureHost.
  *
- * The class TextureImageTextureHostOGL is a good example of a TextureHost
+ * The class TextureImageDeprecatedTextureHostOGL is a good example of a DeprecatedTextureHost
  * implementation.
  *
  * This class is used only on the compositor side.
  */
-class TextureHost : public TextureSource
+class DeprecatedTextureHost : public TextureSource
 {
 public:
   /**
    * Create a new texture host to handle surfaces of aDescriptorType
    *
    * @param aDescriptorType The SurfaceDescriptor type being passed
-   * @param aTextureHostFlags Modifier flags that specify changes in
-   * the usage of a aDescriptorType, see TextureHostFlags
-   * @param aTextureFlags Flags to pass to the new TextureHost
+   * @param aDeprecatedTextureHostFlags Modifier flags that specify changes in
+   * the usage of a aDescriptorType, see DeprecatedTextureHostFlags
+   * @param aTextureFlags Flags to pass to the new DeprecatedTextureHost
    */
-  static TemporaryRef<TextureHost> CreateTextureHost(SurfaceDescriptorType aDescriptorType,
-                                                     uint32_t aTextureHostFlags,
+  static TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                                                     uint32_t aDeprecatedTextureHostFlags,
                                                      uint32_t aTextureFlags);
 
-  TextureHost();
-  virtual ~TextureHost();
+  DeprecatedTextureHost();
+  virtual ~DeprecatedTextureHost();
 
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
@@ -200,7 +202,7 @@ public:
   	                  const gfx::IntSize& aSize) {}
 
   /**
-   * Lock the texture host for compositing, returns true if the TextureHost is
+   * Lock the texture host for compositing, returns true if the DeprecatedTextureHost is
    * valid for composition.
    */
   virtual bool Lock() { return IsValid(); }
@@ -216,10 +218,10 @@ public:
   TextureFlags GetFlags() { return mFlags; }
 
   /**
-   * Sets ths TextureHost's compositor.
-   * A TextureHost can change compositor on certain occasions, in particular if
+   * Sets ths DeprecatedTextureHost's compositor.
+   * A DeprecatedTextureHost can change compositor on certain occasions, in particular if
    * it belongs to an async Compositable.
-   * aCompositor can be null, in which case the TextureHost must cleanup  all
+   * aCompositor can be null, in which case the DeprecatedTextureHost must cleanup  all
    * of it's device textures.
    */
   virtual void SetCompositor(Compositor* aCompositor) {}
@@ -229,11 +231,11 @@ public:
     return mDeAllocator;
   }
 
-  bool operator== (const TextureHost& o) const
+  bool operator== (const DeprecatedTextureHost& o) const
   {
     return GetIdentifier() == o.GetIdentifier();
   }
-  bool operator!= (const TextureHost& o) const
+  bool operator!= (const DeprecatedTextureHost& o) const
   {
     return GetIdentifier() != o.GetIdentifier();
   }
@@ -258,11 +260,11 @@ public:
    */
   virtual void EnsureBuffer(const nsIntSize& aSize, gfxASurface::gfxContentType aType)
   {
-    NS_RUNTIMEABORT("TextureHost doesn't support EnsureBuffer");
+    NS_RUNTIMEABORT("DeprecatedTextureHost doesn't support EnsureBuffer");
   }
 
   /**
-   * Copy the contents of this TextureHost to aDest. aDest must already
+   * Copy the contents of this DeprecatedTextureHost to aDest. aDest must already
    * have a suitable buffer allocated using EnsureBuffer.
    *
    * @param aSourceRect Area of this texture host to copy.
@@ -270,10 +272,10 @@ public:
    * @param aDestRect Destination rect.
    */
   virtual void CopyTo(const nsIntRect& aSourceRect,
-                      TextureHost *aDest,
+                      DeprecatedTextureHost *aDest,
                       const nsIntRect& aDestRect)
   {
-    NS_RUNTIMEABORT("TextureHost doesn't support CopyTo");
+    NS_RUNTIMEABORT("DeprecatedTextureHost doesn't support CopyTo");
   }
 
 
@@ -281,11 +283,11 @@ public:
 
   /**
    * Set a SurfaceDescriptor for this texture host. By setting a buffer and
-   * allocator/de-allocator for the TextureHost, you cause the TextureHost to
+   * allocator/de-allocator for the DeprecatedTextureHost, you cause the DeprecatedTextureHost to
    * retain a SurfaceDescriptor.
    * Ownership of the SurfaceDescriptor passes to this.
    */
-  // only made virtual to allow overriding in GrallocTextureHostOGL, for hacky fix in gecko 23 for bug 862324.
+  // only made virtual to allow overriding in GrallocDeprecatedTextureHostOGL, for hacky fix in gecko 23 for bug 862324.
   // see bug 865908 about fixing this.
   virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
   {
@@ -300,7 +302,7 @@ public:
 
 protected:
   /**
-   * Should be implemented by the backend-specific TextureHost classes
+   * Should be implemented by the backend-specific DeprecatedTextureHost classes
    *
    * It should not take a reference to aImage, unless it knows the data
    * to be thread-safe.
@@ -313,7 +315,7 @@ protected:
   }
 
   /**
-   * Should be implemented by the backend-specific TextureHost classes.
+   * Should be implemented by the backend-specific DeprecatedTextureHost classes.
    *
    * Doesn't need to do the actual surface descriptor swap, just
    * any preparation work required to use the new descriptor.
@@ -347,29 +349,29 @@ protected:
   ISurfaceAllocator* mDeAllocator;
 };
 
-class AutoLockTextureHost
+class AutoLockDeprecatedTextureHost
 {
 public:
-  AutoLockTextureHost(TextureHost* aHost)
-    : mTextureHost(aHost)
+  AutoLockDeprecatedTextureHost(DeprecatedTextureHost* aHost)
+    : mDeprecatedTextureHost(aHost)
     , mIsValid(true)
   {
-    if (mTextureHost) {
-      mIsValid = mTextureHost->Lock();
+    if (mDeprecatedTextureHost) {
+      mIsValid = mDeprecatedTextureHost->Lock();
     }
   }
 
-  ~AutoLockTextureHost()
+  ~AutoLockDeprecatedTextureHost()
   {
-    if (mTextureHost && mIsValid) {
-      mTextureHost->Unlock();
+    if (mDeprecatedTextureHost && mIsValid) {
+      mDeprecatedTextureHost->Unlock();
     }
   }
 
   bool IsValid() { return mIsValid; }
 
 private:
-  TextureHost *mTextureHost;
+  DeprecatedTextureHost *mDeprecatedTextureHost;
   bool mIsValid;
 };
 

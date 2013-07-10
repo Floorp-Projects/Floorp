@@ -678,8 +678,15 @@ this.PushService = {
     else if (this._currentState == STATE_READY) {
       // Send a ping.
       // Bypass the queue; we don't want this to be kept pending.
-      this._ws.sendMsg('{}');
-      debug("Sent ping.");
+      // Watch out for exception in case the socket has disconnected.
+      // When this happens, we pretend the ping was sent and don't specially
+      // handle the exception, as the lack of a pong will lead to the socket
+      // being reset.
+      try {
+        this._ws.sendMsg('{}');
+      } catch (e) {
+      }
+
       this._waitingForPong = true;
       this._setAlarm(prefs.get("requestTimeout"));
     }
@@ -1200,7 +1207,7 @@ this.PushService = {
       this._db.delete(record.channelID, function() {
         // Let's be nice to the server and try to inform it, but we don't care
         // about the reply.
-        this._sendRequest("unregister", {channelID: record.channelID});
+        this._send("unregister", {channelID: record.channelID});
         aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
           requestID: aPageRecord.requestID,
           pushEndpoint: aPageRecord.pushEndpoint

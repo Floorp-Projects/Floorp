@@ -22,11 +22,3 @@ setRestoreFunction((function () {
         Array.prototype.sort = Array_sort;
     };
 }()));
-
-/*
- * Loading include files into the browser from a script so that they become
- * synchronously available to that same script is difficult. Instead, request
- * all of them to be loaded before we start.
- */
-include("supporting/testBuiltInObject.js");
-include("supporting/testIntl.js");

@@ -38,25 +38,25 @@ TestDescParent::RecvOk(PTestDescSubsubParent* a)
 
 
 PTestDescSubParent*
-TestDescParent::AllocPTestDescSub(PTestDescSubsubParent* dummy) {
+TestDescParent::AllocPTestDescSubParent(PTestDescSubsubParent* dummy) {
     if (dummy)
         fail("actor supposed to be null");
     return new TestDescSubParent();
 }
 bool
-TestDescParent::DeallocPTestDescSub(PTestDescSubParent* actor)
+TestDescParent::DeallocPTestDescSubParent(PTestDescSubParent* actor)
 {
     delete actor;
     return true;
 }
 
 PTestDescSubsubParent*
-TestDescSubParent::AllocPTestDescSubsub()
+TestDescSubParent::AllocPTestDescSubsubParent()
 {
     return new TestDescSubsubParent();
 }
 bool
-TestDescSubParent::DeallocPTestDescSubsub(PTestDescSubsubParent* actor)
+TestDescSubParent::DeallocPTestDescSubsubParent(PTestDescSubsubParent* actor)
 {
     delete actor;
     return true;
@@ -77,25 +77,25 @@ TestDescChild::RecvTest(PTestDescSubsubChild* a)
 }
 
 PTestDescSubChild*
-TestDescChild::AllocPTestDescSub(PTestDescSubsubChild* dummy) {
+TestDescChild::AllocPTestDescSubChild(PTestDescSubsubChild* dummy) {
     if (dummy)
         fail("actor supposed to be null");
     return new TestDescSubChild();
 }
 bool
-TestDescChild::DeallocPTestDescSub(PTestDescSubChild* actor)
+TestDescChild::DeallocPTestDescSubChild(PTestDescSubChild* actor)
 {
     delete actor;
     return true;
 }
 
 PTestDescSubsubChild*
-TestDescSubChild::AllocPTestDescSubsub()
+TestDescSubChild::AllocPTestDescSubsubChild()
 {
     return new TestDescSubsubChild();
 }
 bool
-TestDescSubChild::DeallocPTestDescSubsub(PTestDescSubsubChild* actor)
+TestDescSubChild::DeallocPTestDescSubsubChild(PTestDescSubsubChild* actor)
 {
     delete actor;
     return true;

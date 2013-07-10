@@ -87,9 +87,9 @@ protected:
     virtual bool AnswerNP_Initialize(const uint32_t& aFlags, NPError* rv);
 
     virtual PPluginIdentifierChild*
-    AllocPPluginIdentifier(const nsCString& aString,
-                           const int32_t& aInt,
-                           const bool& aTemporary);
+    AllocPPluginIdentifierChild(const nsCString& aString,
+                                const int32_t& aInt,
+                                const bool& aTemporary);
 
     virtual bool
     RecvPPluginIdentifierConstructor(PPluginIdentifierChild* actor,
@@ -98,17 +98,17 @@ protected:
                                      const bool& aTemporary);
 
     virtual bool
-    DeallocPPluginIdentifier(PPluginIdentifierChild* aActor);
+    DeallocPPluginIdentifierChild(PPluginIdentifierChild* aActor);
 
     virtual PPluginInstanceChild*
-    AllocPPluginInstance(const nsCString& aMimeType,
-                         const uint16_t& aMode,
-                         const InfallibleTArray<nsCString>& aNames,
-                         const InfallibleTArray<nsCString>& aValues,
-                         NPError* rv);
+    AllocPPluginInstanceChild(const nsCString& aMimeType,
+                              const uint16_t& aMode,
+                              const InfallibleTArray<nsCString>& aNames,
+                              const InfallibleTArray<nsCString>& aValues,
+                              NPError* rv);
 
     virtual bool
-    DeallocPPluginInstance(PPluginInstanceChild* aActor);
+    DeallocPPluginInstanceChild(PPluginInstanceChild* aActor);
 
     virtual bool
     AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
@@ -143,10 +143,10 @@ protected:
     RecvSetParentHangTimeout(const uint32_t& aSeconds);
 
     virtual PCrashReporterChild*
-    AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                        uint32_t* processType);
+    AllocPCrashReporterChild(mozilla::dom::NativeThreadId* id,
+                             uint32_t* processType);
     virtual bool
-    DeallocPCrashReporter(PCrashReporterChild* actor);
+    DeallocPCrashReporterChild(PCrashReporterChild* actor);
     virtual bool
     AnswerPCrashReporterConstructor(PCrashReporterChild* actor,
                                     mozilla::dom::NativeThreadId* id,

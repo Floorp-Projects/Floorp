@@ -222,6 +222,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MInstructionReverseIterator discardAt(MInstructionReverseIterator &iter);
     MDefinitionIterator discardDefAt(MDefinitionIterator &iter);
     void discardAllInstructions();
+    void discardAllPhiOperands();
     void discardAllPhis();
     void discardAllResumePoints(bool discardEntry = true);
 
@@ -608,6 +609,9 @@ class MIRGraph
     }
     ReversePostorderIterator rpoBegin() {
         return blocks_.begin();
+    }
+    ReversePostorderIterator rpoBegin(MBasicBlock *at) {
+        return blocks_.begin(at);
     }
     ReversePostorderIterator rpoEnd() {
         return blocks_.end();

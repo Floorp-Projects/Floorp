@@ -42,6 +42,8 @@ class AfterStreamingFixture : public AfterInitializationFixture {
 
  private:
   void SetUpLocalPlayback();
+
+  LoopBackTransport* transport_;
 };
 
 

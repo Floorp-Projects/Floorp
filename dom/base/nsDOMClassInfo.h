@@ -23,6 +23,7 @@
 #endif
 
 class nsContentList;
+class nsDocument;
 class nsGlobalWindow;
 class nsIDOMWindow;
 class nsIForm;
@@ -178,8 +179,7 @@ protected:
             id == sScrollMaxY_id   ||
             id == sLength_id       ||
             id == sFrames_id       ||
-            id == sSelf_id         ||
-            id == sURL_id);
+            id == sSelf_id);
   }
 
   static nsIXPConnect *sXPConnect;
@@ -202,7 +202,6 @@ public:
   static jsid sLocationbar_id;
   static jsid sPersonalbar_id;
   static jsid sStatusbar_id;
-  static jsid sDialogArguments_id;
   static jsid sControllers_id;
   static jsid sLength_id;
   static jsid sScrollX_id;
@@ -218,15 +217,7 @@ public:
   static jsid sFrames_id;
   static jsid sSelf_id;
   static jsid sJava_id;
-  static jsid sPackages_id;
   static jsid sWrappedJSObject_id;
-  static jsid sURL_id;
-  static jsid sOnload_id;
-  static jsid sOnerror_id;
-
-protected:
-  static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
-  static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
 };
 
 // THIS ONE ISN'T SAFE!! It assumes that the private of the JSObject is
@@ -524,96 +515,6 @@ public:
 };
 
 
-// Plugin helper
-
-class nsPluginSH : public nsNamedArraySH
-{
-protected:
-  nsPluginSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
-  {
-  }
-
-  virtual ~nsPluginSH()
-  {
-  }
-
-  virtual nsISupports* GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                                 nsWrapperCache **aCache, nsresult *aResult) MOZ_OVERRIDE;
-
-  // Override nsNamedArraySH::GetNamedItem()
-  virtual nsISupports* GetNamedItem(nsISupports *aNative,
-                                    const nsAString& aName,
-                                    nsWrapperCache **cache,
-                                    nsresult *aResult) MOZ_OVERRIDE;
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsPluginSH(aData);
-  }
-};
-
-
-// PluginArray helper
-
-class nsPluginArraySH : public nsNamedArraySH
-{
-protected:
-  nsPluginArraySH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
-  {
-  }
-
-  virtual ~nsPluginArraySH()
-  {
-  }
-
-  virtual nsISupports* GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                                 nsWrapperCache **aCache, nsresult *aResult) MOZ_OVERRIDE;
-
-  // Override nsNamedArraySH::GetNamedItem()
-  virtual nsISupports* GetNamedItem(nsISupports *aNative,
-                                    const nsAString& aName,
-                                    nsWrapperCache **cache,
-                                    nsresult *aResult) MOZ_OVERRIDE;
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsPluginArraySH(aData);
-  }
-};
-
-
-// MimeTypeArray helper
-
-class nsMimeTypeArraySH : public nsNamedArraySH
-{
-protected:
-  nsMimeTypeArraySH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
-  {
-  }
-
-  virtual ~nsMimeTypeArraySH()
-  {
-  }
-
-  virtual nsISupports* GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                                 nsWrapperCache **aCache, nsresult *aResult) MOZ_OVERRIDE;
-
-  // Override nsNamedArraySH::GetNamedItem()
-  virtual nsISupports* GetNamedItem(nsISupports *aNative,
-                                    const nsAString& aName,
-                                    nsWrapperCache **cache,
-                                    nsresult *aResult) MOZ_OVERRIDE;
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsMimeTypeArraySH(aData);
-  }
-};
-
-
 // String array helper
 
 class nsStringArraySH : public nsGenericArraySH
@@ -758,27 +659,6 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsCSSRuleListSH(aData);
-  }
-};
-
-class nsDOMTouchListSH : public nsArraySH
-{
-  protected:
-  nsDOMTouchListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
-  {
-  }
-
-  virtual ~nsDOMTouchListSH()
-  {
-  }
-
-  virtual nsISupports* GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                                 nsWrapperCache **aCache, nsresult *aResult) MOZ_OVERRIDE;
-
-  public:
-  static nsIClassInfo* doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsDOMTouchListSH(aData);
   }
 };
 

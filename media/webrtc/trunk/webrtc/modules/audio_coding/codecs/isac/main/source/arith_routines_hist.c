@@ -17,14 +17,14 @@
  */
 void WebRtcIsac_EncHistMulti(Bitstr *streamdata, /* in-/output struct containing bitstream */
                              const int *data,  /* input: data vector */
-                             const WebRtc_UWord16 **cdf, /* input: array of cdf arrays */
+                             const uint16_t **cdf, /* input: array of cdf arrays */
                              const int N)   /* input: data vector length */
 {
-  WebRtc_UWord32 W_lower, W_upper;
-  WebRtc_UWord32 W_upper_LSB, W_upper_MSB;
-  WebRtc_UWord8 *stream_ptr;
-  WebRtc_UWord8 *stream_ptr_carry;
-  WebRtc_UWord32 cdf_lo, cdf_hi;
+  uint32_t W_lower, W_upper;
+  uint32_t W_upper_LSB, W_upper_MSB;
+  uint8_t *stream_ptr;
+  uint8_t *stream_ptr_carry;
+  uint32_t cdf_lo, cdf_hi;
   int k;
 
 
@@ -35,8 +35,8 @@ void WebRtcIsac_EncHistMulti(Bitstr *streamdata, /* in-/output struct containing
   for (k=N; k>0; k--)
   {
     /* fetch cdf_lower and cdf_upper from cdf tables */
-    cdf_lo = (WebRtc_UWord32) *(*cdf + *data);
-    cdf_hi = (WebRtc_UWord32) *(*cdf++ + *data++ + 1);
+    cdf_lo = (uint32_t) *(*cdf + *data);
+    cdf_hi = (uint32_t) *(*cdf++ + *data++ + 1);
 
     /* update interval */
     W_upper_LSB = W_upper & 0x0000FFFF;
@@ -64,7 +64,7 @@ void WebRtcIsac_EncHistMulti(Bitstr *streamdata, /* in-/output struct containing
     while ( !(W_upper & 0xFF000000) )      /* W_upper < 2^24 */
     {
       W_upper <<= 8;
-      *stream_ptr++ = (WebRtc_UWord8) (streamdata->streamval >> 24);
+      *stream_ptr++ = (uint8_t) (streamdata->streamval >> 24);
       streamdata->streamval <<= 8;
     }
   }
@@ -84,16 +84,16 @@ void WebRtcIsac_EncHistMulti(Bitstr *streamdata, /* in-/output struct containing
  */
 int WebRtcIsac_DecHistBisectMulti(int *data,     /* output: data vector */
                                   Bitstr *streamdata,   /* in-/output struct containing bitstream */
-                                  const WebRtc_UWord16 **cdf,  /* input: array of cdf arrays */
-                                  const WebRtc_UWord16 *cdf_size, /* input: array of cdf table sizes+1 (power of two: 2^k) */
+                                  const uint16_t **cdf,  /* input: array of cdf arrays */
+                                  const uint16_t *cdf_size, /* input: array of cdf table sizes+1 (power of two: 2^k) */
                                   const int N)    /* input: data vector length */
 {
-  WebRtc_UWord32    W_lower, W_upper;
-  WebRtc_UWord32    W_tmp;
-  WebRtc_UWord32    W_upper_LSB, W_upper_MSB;
-  WebRtc_UWord32    streamval;
-  const   WebRtc_UWord8 *stream_ptr;
-  const   WebRtc_UWord16 *cdf_ptr;
+  uint32_t    W_lower, W_upper;
+  uint32_t    W_tmp;
+  uint32_t    W_upper_LSB, W_upper_MSB;
+  uint32_t    streamval;
+  const   uint8_t *stream_ptr;
+  const   uint16_t *cdf_ptr;
   int     size_tmp;
   int     k;
 
@@ -192,16 +192,16 @@ int WebRtcIsac_DecHistBisectMulti(int *data,     /* output: data vector */
  */
 int WebRtcIsac_DecHistOneStepMulti(int *data,        /* output: data vector */
                                    Bitstr *streamdata,      /* in-/output struct containing bitstream */
-                                   const WebRtc_UWord16 **cdf,   /* input: array of cdf arrays */
-                                   const WebRtc_UWord16 *init_index, /* input: vector of initial cdf table search entries */
+                                   const uint16_t **cdf,   /* input: array of cdf arrays */
+                                   const uint16_t *init_index, /* input: vector of initial cdf table search entries */
                                    const int N)     /* input: data vector length */
 {
-  WebRtc_UWord32    W_lower, W_upper;
-  WebRtc_UWord32    W_tmp;
-  WebRtc_UWord32    W_upper_LSB, W_upper_MSB;
-  WebRtc_UWord32    streamval;
-  const   WebRtc_UWord8 *stream_ptr;
-  const   WebRtc_UWord16 *cdf_ptr;
+  uint32_t    W_lower, W_upper;
+  uint32_t    W_tmp;
+  uint32_t    W_upper_LSB, W_upper_MSB;
+  uint32_t    streamval;
+  const   uint8_t *stream_ptr;
+  const   uint16_t *cdf_ptr;
   int     k;
 
 

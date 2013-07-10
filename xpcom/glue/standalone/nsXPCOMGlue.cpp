@@ -954,6 +954,15 @@ NS_CycleCollectorSuspect2(void* obj, nsCycleCollectionParticipant *p)
     return xpcomFunctions.cycleSuspect2Func(obj, p);
 }
 
+XPCOM_API(void)
+NS_CycleCollectorSuspect3(void* obj, nsCycleCollectionParticipant *p,
+                          nsCycleCollectingAutoRefCnt* aRefCnt,
+                          bool* aShouldDelete)
+{
+    if (xpcomFunctions.cycleSuspect3Func)
+        xpcomFunctions.cycleSuspect3Func(obj, p, aRefCnt, aShouldDelete);
+}
+
 XPCOM_API(bool)
 NS_CycleCollectorForget2(nsPurpleBufferEntry* e)
 {

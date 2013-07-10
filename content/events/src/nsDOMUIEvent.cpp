@@ -18,6 +18,7 @@
 #include "nsIScrollableFrame.h"
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
+#include "prtime.h"
 
 using namespace mozilla;
 
@@ -128,16 +129,6 @@ nsDOMUIEvent::GetMovementPoint()
   nsIntPoint current = DevPixelsToCSSPixels(mEvent->refPoint, mPresContext);
   nsIntPoint last = DevPixelsToCSSPixels(mEvent->lastRefPoint, mPresContext);
   return current - last;
-}
-
-nsIntPoint
-nsDOMUIEvent::GetClientPoint()
-{
-  if (mIsPointerLocked) {
-    return mLastClientPoint;
-  }
-
-  return CalculateClientPoint(mPresContext, mEvent, &mClientPoint);
 }
 
 NS_IMETHODIMP

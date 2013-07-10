@@ -1,0 +1,154 @@
+<html>
+<head>
+  <title> [AccessFu] Speak landmarks</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="output.js"></script>
+  <script type="application/javascript">
+
+    function doTest() {
+      // Test the following accOrElmOrID.
+      var tests = [{
+        accOrElmOrID: "nav",
+        expectedUtterance: [["navigation", "a nav"], ["a nav", "navigation"]],
+        expectedBraille: [["navigation", "a nav"], ["a nav", "navigation"]]
+      }, {
+        accOrElmOrID: "main",
+        expectedUtterance: [["main", "a main area"], ["a main area", "main"]],
+        expectedBraille: [["main", "a main area"], ["a main area", "main"]]
+      }, {
+        accOrElmOrID: "header",
+        expectedUtterance: [["banner", "header", "a header"], ["a header",
+          "header", "banner"]],
+        expectedBraille: [["banner", "header", "a header"], ["a header",
+          "header", "banner"]]
+      }, {
+        accOrElmOrID: "footer",
+        expectedUtterance: [["content info", "footer", "a footer"], [
+          "a footer", "footer", "content info"]],
+        expectedBraille: [["content info", "footer", "a footer"], ["a footer",
+          "footer", "content info"]]
+      }, {
+        accOrElmOrID: "article_header",
+        expectedUtterance: [["header", "a header within an article"], [
+          "a header within an article", "header"]],
+        expectedBraille: [["header", "a header within an article"], [
+          "a header within an article", "header"]],
+      }, {
+        accOrElmOrID: "article_footer",
+        expectedUtterance: [["footer", "a footer within an article"], [
+          "a footer within an article", "footer"]],
+        expectedBraille: [["footer", "a footer within an article"], [
+          "a footer within an article", "footer"]]
+      }, {
+        accOrElmOrID: "section_header",
+        expectedUtterance: [["header", "a header within a section"], [
+          "a header within a section", "header"]],
+        expectedBraille: [["header", "a header within a section"], [
+          "a header within a section", "header"]]
+      }, {
+        accOrElmOrID: "section_footer",
+        expectedUtterance: [["footer", "a footer within a section"], [
+          "a footer within a section", "footer"]],
+        expectedBraille: [["footer", "a footer within a section"], [
+          "a footer within a section", "footer"]]
+      }, {
+        accOrElmOrID: "aside",
+        expectedUtterance: [["complementary", "by the way I am an aside"], [
+          "by the way I am an aside", "complementary"]],
+        expectedBraille: [["complementary", "by the way I am an aside"], [
+          "by the way I am an aside", "complementary"]]
+      }, {
+        accOrElmOrID: "main_element",
+        expectedUtterance: [["main", "another main area"], [
+          "another main area", "main"]],
+        expectedBraille: [["main", "another main area"], ["another main area",
+          "main"]]
+      }, {
+        accOrElmOrID: "complementary",
+        expectedUtterance: [["list 1 items", "complementary", "First item",
+          "A complementary"], ["A complementary", "First item",
+          "complementary", "list 1 items"]],
+        // XXX: The '*' should probably come before all of the context
+        // utterance.
+        expectedBraille: [["complementary", "*", "A complementary"], ["*",
+          "A complementary", "complementary"]]
+      }, {
+        accOrElmOrID: "parent_main",
+        expectedUtterance: [["main", "a parent main", "complementary",
+          "a child complementary"], ["a parent main", "a child complementary",
+          "complementary", "main"]],
+        expectedBraille: [["main", "a parent main", "complementary",
+          "a child complementary"], ["a parent main", "a child complementary",
+          "complementary", "main"]]
+      }, {
+        accOrElmOrID: "child_complementary",
+        expectedUtterance: [["main", "complementary", "a child complementary"],
+          ["a child complementary", "complementary", "main"]],
+        expectedBraille: [["complementary", "a child complementary"],
+          ["a child complementary", "complementary"]]
+      }];
+
+      // Test outputs (utterance and braille) for landmarks.
+      tests.forEach(function run(test) {
+        var outputOrderValues = [0, 1];
+        outputOrderValues.forEach(function testOutputOrder(outputOrder) {
+          SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, outputOrder);
+          testOutput(test.expectedUtterance[outputOrder], test.accOrElmOrID,
+            test.oldAccOrElmOrID, 1);
+          testOutput(test.expectedBraille[outputOrder], test.accOrElmOrID,
+            test.oldAccOrElmOrID, 0);
+        });
+      });
+
+      // If there was an original utterance order preference, revert to it.
+      SpecialPowers.clearUserPref(PREF_UTTERANCE_ORDER);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <div id="root">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=888256"
+       title="[AccessFu] Speak landmarks">
+       Mozilla Bug 888256
+       </a>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+    <nav id="nav">a nav</nav>
+    <header id="header">a header</header>
+    <footer id="footer">a footer</footer>
+    <article id="article_with_header_and_footer">
+      <header id="article_header">a header within an article</header>
+      <footer id="article_footer">a footer within an article</footer>
+    </article>
+    <section id="section_with_header_and_footer">
+      <header id="section_header">a header within a section</header>
+      <footer id="section_footer">a footer within a section</footer>
+    </section>
+    <aside id="aside">by the way I am an aside</aside>
+    <article id="main" role="main">a main area</article>
+    <main id="main_element">another main area</main>
+    <ul style="list-style-type: none;">
+      <li role="complementary" id="complementary">
+        A complementary
+      </li>
+    </ul>
+    <main id="parent_main">
+      a parent main
+      <p id="child_complementary" role="complementary">a child complementary</article>
+    </main>
+  </div>
+</body>
+</html>

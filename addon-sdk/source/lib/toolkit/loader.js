@@ -350,7 +350,7 @@ exports.Require = Require;
 const main = iced(function main(loader, id) {
   let uri = resolveURI(id, loader.mapping)
   let module = loader.main = loader.modules[uri] = Module(id, uri);
-  return load(loader, module).exports;
+  return loader.load(loader, module).exports;
 });
 exports.main = main;
 

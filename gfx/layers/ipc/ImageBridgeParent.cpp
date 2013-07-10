@@ -114,10 +114,10 @@ static  uint64_t GenImageContainerID() {
 }
 
 PGrallocBufferParent*
-ImageBridgeParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
-                                       const uint32_t& aFormat,
-                                       const uint32_t& aUsage,
-                                       MaybeMagicGrallocBufferHandle* aOutHandle)
+ImageBridgeParent::AllocPGrallocBufferParent(const gfxIntSize& aSize,
+                                             const uint32_t& aFormat,
+                                             const uint32_t& aUsage,
+                                             MaybeMagicGrallocBufferHandle* aOutHandle)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   return GrallocBufferActor::Create(aSize, aFormat, aUsage, aOutHandle);
@@ -128,7 +128,7 @@ ImageBridgeParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
 }
 
 bool
-ImageBridgeParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
+ImageBridgeParent::DeallocPGrallocBufferParent(PGrallocBufferParent* actor)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   delete actor;
@@ -140,15 +140,15 @@ ImageBridgeParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
 }
 
 PCompositableParent*
-ImageBridgeParent::AllocPCompositable(const TextureInfo& aInfo,
-                                      uint64_t* aID)
+ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo,
+                                            uint64_t* aID)
 {
   uint64_t id = GenImageContainerID();
   *aID = id;
   return new CompositableParent(this, aInfo, id);
 }
 
-bool ImageBridgeParent::DeallocPCompositable(PCompositableParent* aActor)
+bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
   delete aActor;
   return true;

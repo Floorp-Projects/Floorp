@@ -87,7 +87,7 @@ class TestAgent {
   void Start() {
     nsresult ret;
 
-    MOZ_MTLOG(PR_LOG_DEBUG, "Starting");
+    MOZ_MTLOG(ML_DEBUG, "Starting");
 
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
@@ -107,7 +107,7 @@ class TestAgent {
   }
 
   void Stop() {
-    MOZ_MTLOG(PR_LOG_DEBUG, "Stopping");
+    MOZ_MTLOG(ML_DEBUG, "Stopping");
 
     if (audio_pipeline_)
       audio_pipeline_->ShutdownMedia_m();

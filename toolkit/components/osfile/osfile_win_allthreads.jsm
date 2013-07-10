@@ -17,22 +17,25 @@
  * - opened from a chrome worker through importScripts.
  */
 
+let SharedAll;
 if (typeof Components != "undefined") {
   // Module is opened as a jsm module
   this.EXPORTED_SYMBOLS = ["OS"];
   Components.utils.import("resource://gre/modules/ctypes.jsm");
-  Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", this);
+
+  SharedAll = {};
+  Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+} else {
+  SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 }
 
 (function(exports) {
   "use strict";
-  if (!exports.OS || !exports.OS.Shared) {
-    throw new Error("osfile_win_allthreads.jsm must be loaded after osfile_shared_allthreads.jsm");
-  }
-  if (exports.OS.Shared.Win) {
+  if (exports.OS && exports.OS.Shared && exports.OS.Shared.Win) {
     // Avoid double inclusion
     return;
   }
+  exports.OS = SharedAll.OS;
   exports.OS.Shared.Win = {};
 
   let LOG = OS.Shared.LOG.bind(OS.Shared, "Win", "allthreads");

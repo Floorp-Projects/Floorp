@@ -50,6 +50,7 @@ simple_events = [
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent',
     'BlobEvent',
+    'RecordErrorEvent',
 #ifdef MOZ_GAMEPAD
     'GamepadEvent',
     'GamepadButtonEvent',
@@ -62,7 +63,6 @@ simple_events = [
 
 """ include file names """
 special_includes = [
-    'DictionaryHelpers.h',
     'nsContentUtils.h',
     'nsIDOMApplicationRegistry.h',
     'nsIDOMFile.h'

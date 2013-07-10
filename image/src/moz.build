@@ -18,6 +18,7 @@ CPP_SOURCES += [
     'Decoder.cpp',
     'DiscardTracker.cpp',
     'FrameBlender.cpp',
+    'FrameSequence.cpp',
     'FrozenImage.cpp',
     'Image.cpp',
     'ImageFactory.cpp',

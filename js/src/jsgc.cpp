@@ -73,7 +73,6 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-#include "gc/FindSCCs-inl.h"
 #include "vm/String-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -4553,7 +4552,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_BEGIN);
             if (JSGCCallback callback = rt->gcCallback)
-                callback(rt, JSGC_BEGIN);
+                callback(rt, JSGC_BEGIN, rt->gcCallbackData);
         }
 
         rt->gcPoke = false;
@@ -4562,7 +4561,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_END);
             if (JSGCCallback callback = rt->gcCallback)
-                callback(rt, JSGC_END);
+                callback(rt, JSGC_END, rt->gcCallbackData);
         }
 
         /* Need to re-schedule all zones for GC. */
@@ -5053,6 +5052,12 @@ AutoSuppressGC::AutoSuppressGC(JSCompartment *comp)
   : suppressGC_(comp->rt->mainThread.suppressGC)
 {
     suppressGC_++;
+}
+
+bool
+js::UninlinedIsInsideNursery(JSRuntime *rt, const void *thing)
+{
+    return IsInsideNursery(rt, thing);
 }
 
 #ifdef DEBUG

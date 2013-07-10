@@ -441,16 +441,6 @@ if __name__ == '__main__':
 
     conf = readConfigFile(filename)
 
-    if (len(filenames) > 1):
-        eventconfig = {}
-        execfile(filenames[1], eventconfig)
-        simple_events = eventconfig.get('simple_events', [])
-        for e in simple_events:
-            eventdict = ("%sInit" % e)
-            eventidl = ("nsIDOM%s.idl" % e)
-            conf.dictionaries.append([eventdict, eventidl]);
-
-
     if options.header_output is not None:
         outfd = open(options.header_output, 'w')
         print_header_file(outfd, conf)

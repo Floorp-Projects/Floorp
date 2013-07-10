@@ -75,7 +75,7 @@ extern "C" {
   /* This function initializes the struct                    */
   /* to be called before using the struct for anything else  */
   /* returns 0 if everything went fine, -1 otherwise         */
-  WebRtc_Word32 WebRtcIsac_InitBandwidthEstimator(
+  int32_t WebRtcIsac_InitBandwidthEstimator(
       BwEstimatorstr*           bwest_str,
       enum IsacSamplingRate encoderSampRate,
       enum IsacSamplingRate decoderSampRate);
@@ -89,42 +89,42 @@ extern "C" {
   /* pksize        - size of packet in bytes, from NetEq                                               */
   /* Index         - integer (range 0...23) indicating bottle neck & jitter as estimated by other side */
   /* returns 0 if everything went fine, -1 otherwise                                                   */
-  WebRtc_Word16 WebRtcIsac_UpdateBandwidthEstimator(
+  int16_t WebRtcIsac_UpdateBandwidthEstimator(
       BwEstimatorstr*    bwest_str,
-      const WebRtc_UWord16 rtp_number,
-      const WebRtc_Word32  frame_length,
-      const WebRtc_UWord32 send_ts,
-      const WebRtc_UWord32 arr_ts,
-      const WebRtc_Word32  pksize);
+      const uint16_t rtp_number,
+      const int32_t  frame_length,
+      const uint32_t send_ts,
+      const uint32_t arr_ts,
+      const int32_t  pksize);
 
   /* Update receiving estimates. Used when we only receive BWE index, no iSAC data packet. */
-  WebRtc_Word16 WebRtcIsac_UpdateUplinkBwImpl(
+  int16_t WebRtcIsac_UpdateUplinkBwImpl(
       BwEstimatorstr*           bwest_str,
-      WebRtc_Word16               Index,
+      int16_t               Index,
       enum IsacSamplingRate encoderSamplingFreq);
 
   /* Returns the bandwidth/jitter estimation code (integer 0...23) to put in the sending iSAC payload */
-  WebRtc_UWord16 WebRtcIsac_GetDownlinkBwJitIndexImpl(
+  uint16_t WebRtcIsac_GetDownlinkBwJitIndexImpl(
       BwEstimatorstr*           bwest_str,
-      WebRtc_Word16*              bottleneckIndex,
-      WebRtc_Word16*              jitterInfo,
+      int16_t*              bottleneckIndex,
+      int16_t*              jitterInfo,
       enum IsacSamplingRate decoderSamplingFreq);
 
   /* Returns the bandwidth estimation (in bps) */
-  WebRtc_Word32 WebRtcIsac_GetDownlinkBandwidth(
+  int32_t WebRtcIsac_GetDownlinkBandwidth(
       const BwEstimatorstr *bwest_str);
 
   /* Returns the max delay (in ms) */
-  WebRtc_Word32 WebRtcIsac_GetDownlinkMaxDelay(
+  int32_t WebRtcIsac_GetDownlinkMaxDelay(
       const BwEstimatorstr *bwest_str);
 
   /* Returns the bandwidth that iSAC should send with in bps */
   void WebRtcIsac_GetUplinkBandwidth(
       const BwEstimatorstr* bwest_str,
-      WebRtc_Word32*          bitRate);
+      int32_t*          bitRate);
 
   /* Returns the max delay value from the other side in ms */
-  WebRtc_Word32 WebRtcIsac_GetUplinkMaxDelay(
+  int32_t WebRtcIsac_GetUplinkMaxDelay(
       const BwEstimatorstr *bwest_str);
 
 
@@ -139,7 +139,7 @@ extern "C" {
       const double       BottleNeck,    /* bottle neck rate; excl headers (bps) */
       const double       DelayBuildUp,  /* max delay from bottleneck buffering (ms) */
       enum ISACBandwidth bandwidth
-      /*,WebRtc_Word16        frequentLargePackets*/);
+      /*,int16_t        frequentLargePackets*/);
 
   /*
    * update long-term average bitrate and amount of data in buffer
@@ -165,9 +165,9 @@ extern "C" {
       int    new_framelength);
 
 
-  WebRtc_Word16 WebRtcIsac_UpdateUplinkJitter(
+  int16_t WebRtcIsac_UpdateUplinkJitter(
       BwEstimatorstr*              bwest_str,
-      WebRtc_Word32                  index);
+      int32_t                  index);
 
 #if defined(__cplusplus)
 }

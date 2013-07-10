@@ -289,12 +289,37 @@ function closeAllButPrimaryWindow() {
   }
 }
 
-function whenNewWindowLoaded(aIsPrivate, aCallback) {
-  let win = OpenBrowserWindow({private: aIsPrivate});
+function whenNewWindowLoaded(aOptions, aCallback) {
+  let win = OpenBrowserWindow(aOptions);
+  let gotLoad = false;
+  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == win);
+
+  function maybeRunCallback() {
+    if (gotLoad && gotActivate) {
+      win.BrowserChromeTest.runWhenReady(function() {
+        executeSoon(function() { aCallback(win); });
+      });
+    }
+  }
+
+  if (!gotActivate) {
+    win.addEventListener("activate", function onActivate() {
+      info("Got activate.");
+      win.removeEventListener("activate", onActivate, false);
+      gotActivate = true;
+      maybeRunCallback();
+    }, false);
+  } else {
+    info("Was activated.");
+  }
+
   win.addEventListener("load", function onLoad() {
+    info("Got load");
     win.removeEventListener("load", onLoad, false);
-    aCallback(win);
+    gotLoad = true;
+    maybeRunCallback();
   }, false);
+  return win;
 }
 
 /**

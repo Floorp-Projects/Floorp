@@ -100,6 +100,7 @@ public class ViEAndroidJavaAPI {
     // Channel functions
     public native int VoE_CreateChannel();
     public native int VoE_DeleteChannel(int channel);
+    public native int ViE_DeleteChannel(int channel);
 
     // Receiver & Destination functions
     public native int VoE_SetLocalReceiver(int channel, int port);

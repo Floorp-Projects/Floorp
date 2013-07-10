@@ -331,7 +331,6 @@ function StyleSheetActor(aStyleSheet, aParentActor) {
   this._transitionRefCount = 0;
 
   this._onSourceLoad = this._onSourceLoad.bind(this);
-  this._notifyError = this._notifyError.bind(this);
 
   // if this sheet has an @import, then it's rules are loaded async
   let ownerNode = this.styleSheet.ownerNode;
@@ -444,43 +443,38 @@ StyleSheetActor.prototype = {
   _notifyPropertyChanged: function(property) {
     this.conn.send({
       from: this.actorID,
-      type: "propertyChange-" + this.actorID,
+      type: "propertyChange",
       property: property,
       value: this.form()[property]
     })
   },
 
   /**
-   * Send an event notifying that an error has occured
-   *
-   * @param  {string} message
-   *         Error message
-   */
-  _notifyError: function(message) {
-    this.conn.send({
-      from: this.actorID,
-      type: "error-" + this.actorID,
-      errorMessage: message
-    });
-  },
-
-  /**
    * Handler for event when the style sheet's full text has been
    * loaded from its source.
    *
+   * @param  {string} error
+   *         Error from source load, null if no error
    * @param  {string} source
    *         Text of the style sheet
    * @param  {[type]} charset
    *         Optional charset of the source
    */
-  _onSourceLoad: function(source, charset) {
-    this.text = this._decodeCSSCharset(source, charset || "");
-
-    this.conn.send({
+  _onSourceLoad: function(error, source, charset) {
+    let message = {
       from: this.actorID,
-      type: "sourceLoad-" + this.actorID,
-      source: this.text
-    });
+      type: "sourceLoad",
+    };
+
+    if (error) {
+      message.error = error;
+    }
+    else {
+      this.text = this._decodeCSSCharset(source, charset || "");
+      message.source = this.text;
+    }
+
+    this.conn.send(message);
   },
 
   /**
@@ -490,7 +484,7 @@ StyleSheetActor.prototype = {
     if (!this.styleSheet.href) {
       // this is an inline <style> sheet
       let source = this.styleSheet.ownerNode.textContent;
-      this._onSourceLoad(source);
+      this._onSourceLoad(null, source);
       return {};
     }
 
@@ -602,15 +596,15 @@ StyleSheetActor.prototype = {
     try {
       NetUtil.asyncFetch(href, (stream, status) => {
         if (!Components.isSuccessCode(status)) {
-          this._notifyError(LOAD_ERROR);
+          this._onSourceLoad(LOAD_ERROR);
           return;
         }
         let source = NetUtil.readInputStreamToString(stream, stream.available());
         stream.close();
-        this._onSourceLoad(source);
+        this._onSourceLoad(null, source);
       });
     } catch (ex) {
-      this._notifyError(LOAD_ERROR);
+      this._onSourceLoad(LOAD_ERROR);
     }
   },
 
@@ -628,7 +622,7 @@ StyleSheetActor.prototype = {
     let streamListener = { // nsIStreamListener inherits nsIRequestObserver
       onStartRequest: (aRequest, aContext, aStatusCode) => {
         if (!Components.isSuccessCode(aStatusCode)) {
-          this._notifyError(LOAD_ERROR);
+          this._onSourceLoad(LOAD_ERROR);
         }
       },
       onDataAvailable: (aRequest, aContext, aStream, aOffset, aCount) => {
@@ -640,11 +634,11 @@ StyleSheetActor.prototype = {
       },
       onStopRequest: (aRequest, aContext, aStatusCode) => {
         if (!Components.isSuccessCode(aStatusCode)) {
-          this._notifyError(LOAD_ERROR);
+          this._onSourceLoad(LOAD_ERROR);
           return;
         }
         let source = chunks.join("");
-        this._onSourceLoad(source, channelCharset);
+        this._onSourceLoad(null, source, channelCharset);
       }
     };
 
@@ -722,7 +716,7 @@ StyleSheetActor.prototype = {
   {
     this.conn.send({
       from: this.actorID,
-      type: "styleApplied-" + this.actorID
+      type: "styleApplied"
     })
   }
 }

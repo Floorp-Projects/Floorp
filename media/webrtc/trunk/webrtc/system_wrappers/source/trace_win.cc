@@ -39,14 +39,14 @@ TraceWindows::~TraceWindows() {
   StopThread();
 }
 
-WebRtc_Word32 TraceWindows::AddTime(char* trace_message,
-                                    const TraceLevel level) const {
-  WebRtc_UWord32 dw_current_time = timeGetTime();
+int32_t TraceWindows::AddTime(char* trace_message,
+                              const TraceLevel level) const {
+  uint32_t dw_current_time = timeGetTime();
   SYSTEMTIME system_time;
   GetSystemTime(&system_time);
 
   if (level == kTraceApiCall) {
-    WebRtc_UWord32 dw_delta_time = dw_current_time - prev_tick_count_;
+    uint32_t dw_delta_time = dw_current_time - prev_tick_count_;
     prev_tick_count_ = dw_current_time;
 
     if (prev_tick_count_ == 0) {
@@ -64,7 +64,7 @@ WebRtc_Word32 TraceWindows::AddTime(char* trace_message,
             system_time.wMinute, system_time.wSecond,
             system_time.wMilliseconds, dw_delta_time);
   } else {
-    WebRtc_UWord32 dw_delta_time = dw_current_time - prev_api_tick_count_;
+    uint32_t dw_delta_time = dw_current_time - prev_api_tick_count_;
     prev_api_tick_count_ = dw_current_time;
 
     if (prev_api_tick_count_ == 0) {
@@ -84,14 +84,14 @@ WebRtc_Word32 TraceWindows::AddTime(char* trace_message,
   return 22;
 }
 
-WebRtc_Word32 TraceWindows::AddBuildInfo(char* trace_message) const {
+int32_t TraceWindows::AddBuildInfo(char* trace_message) const {
   // write data and time to text file
   sprintf(trace_message, "Build info: %s", BUILDINFO);
   // Include NULL termination (hence + 1).
-  return static_cast<WebRtc_Word32>(strlen(trace_message) + 1);
+  return static_cast<int32_t>(strlen(trace_message) + 1);
 }
 
-WebRtc_Word32 TraceWindows::AddDateTimeInfo(char* trace_message) const {
+int32_t TraceWindows::AddDateTimeInfo(char* trace_message) const {
   prev_api_tick_count_ = timeGetTime();
   prev_tick_count_ = prev_api_tick_count_;
 
@@ -113,7 +113,7 @@ WebRtc_Word32 TraceWindows::AddDateTimeInfo(char* trace_message) const {
           sz_time_str);
 
   // Include NULL termination (hence + 1).
-  return static_cast<WebRtc_Word32>(strlen(trace_message) + 1);
+  return static_cast<int32_t>(strlen(trace_message) + 1);
 }
 
 }  // namespace webrtc

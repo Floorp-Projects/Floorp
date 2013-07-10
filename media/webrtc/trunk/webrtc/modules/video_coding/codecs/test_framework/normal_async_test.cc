@@ -44,7 +44,7 @@ _waitForKey(false)
 {
 }
 
-NormalAsyncTest::NormalAsyncTest(WebRtc_UWord32 bitRate)
+NormalAsyncTest::NormalAsyncTest(uint32_t bitRate)
 :
 NormalTest("Async Normal Test 1", "A test of normal execution of the codec",
            bitRate, _testNo),
@@ -86,7 +86,7 @@ _waitForKey(false)
 }
 
 NormalAsyncTest::NormalAsyncTest(std::string name, std::string description,
-                                 WebRtc_UWord32 bitRate, unsigned int testNo)
+                                 uint32_t bitRate, unsigned int testNo)
 :
 NormalTest(name, description, bitRate, _testNo),
 _decodeCompleteTime(0),
@@ -107,7 +107,7 @@ _waitForKey(false)
 }
 
 NormalAsyncTest::NormalAsyncTest(std::string name, std::string description,
-                                 WebRtc_UWord32 bitRate, unsigned int testNo,
+                                 uint32_t bitRate, unsigned int testNo,
                                  unsigned int rttFrames)
 :
 NormalTest(name, description, bitRate, _testNo),
@@ -223,12 +223,12 @@ bool FrameQueue::Empty()
     return _frameBufferQueue.empty();
 }
 
-WebRtc_UWord32 VideoEncodeCompleteCallback::EncodedBytes()
+uint32_t VideoEncodeCompleteCallback::EncodedBytes()
 {
     return _encodedBytes;
 }
 
-WebRtc_Word32
+int32_t
 VideoEncodeCompleteCallback::Encoded(EncodedImage& encodedImage,
                                      const webrtc::CodecSpecificInfo* codecSpecificInfo,
                                      const webrtc::RTPFragmentationHeader*
@@ -256,12 +256,12 @@ VideoEncodeCompleteCallback::Encoded(EncodedImage& encodedImage,
     return 0;
 }
 
-WebRtc_UWord32 VideoDecodeCompleteCallback::DecodedBytes()
+uint32_t VideoDecodeCompleteCallback::DecodedBytes()
 {
     return _decodedBytes;
 }
 
-WebRtc_Word32
+int32_t
 VideoDecodeCompleteCallback::Decoded(I420VideoFrame& image)
 {
     _test.Decoded(image);
@@ -273,16 +273,16 @@ VideoDecodeCompleteCallback::Decoded(I420VideoFrame& image)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 VideoDecodeCompleteCallback::ReceivedDecodedReferenceFrame(
-    const WebRtc_UWord64 pictureId)
+    const uint64_t pictureId)
 {
     return _test.ReceivedDecodedReferenceFrame(pictureId);
 }
 
-WebRtc_Word32
+int32_t
 VideoDecodeCompleteCallback::ReceivedDecodedFrame(
-    const WebRtc_UWord64 pictureId)
+    const uint64_t pictureId)
 {
     return _test.ReceivedDecodedFrame(pictureId);
 }
@@ -511,7 +511,7 @@ NormalAsyncTest::Decode(int lossValue)
         // add an SLI feedback to the feedback "queue"
         // to be delivered to encoder with _rttFrames delay
         _signalSLI.push_back(fbSignal(_rttFrames,
-            static_cast<WebRtc_UWord8>((_lastDecPictureId) & 0x3f))); // 6 lsb
+            static_cast<uint8_t>((_lastDecPictureId) & 0x3f))); // 6 lsb
 
         ret = WEBRTC_VIDEO_CODEC_OK;
     }
@@ -520,7 +520,7 @@ NormalAsyncTest::Decode(int lossValue)
         // add an SLI feedback to the feedback "queue"
         // to be delivered to encoder with _rttFrames delay
         _signalSLI.push_back(fbSignal(_rttFrames,
-            static_cast<WebRtc_UWord8>((_lastDecPictureId + 1) & 0x3f)));//6 lsb
+            static_cast<uint8_t>((_lastDecPictureId + 1) & 0x3f)));//6 lsb
 
         ret = WEBRTC_VIDEO_CODEC_OK;
     }
@@ -574,19 +574,19 @@ void NormalAsyncTest::CopyEncodedImage(VideoFrame& dest,
 {
     dest.CopyFrame(src._length, src._buffer);
     //dest.SetFrameType(src._frameType);
-    dest.SetWidth((WebRtc_UWord16)src._encodedWidth);
-    dest.SetHeight((WebRtc_UWord16)src._encodedHeight);
+    dest.SetWidth((uint16_t)src._encodedWidth);
+    dest.SetHeight((uint16_t)src._encodedHeight);
     dest.SetTimeStamp(src._timeStamp);
 }
 
-WebRtc_Word32 NormalAsyncTest::ReceivedDecodedReferenceFrame(
-    const WebRtc_UWord64 pictureId) {
+int32_t NormalAsyncTest::ReceivedDecodedReferenceFrame(
+    const uint64_t pictureId) {
   _lastDecRefPictureId = pictureId;
   return 0;
 }
 
-WebRtc_Word32 NormalAsyncTest::ReceivedDecodedFrame(
-    const WebRtc_UWord64 pictureId) {
+int32_t NormalAsyncTest::ReceivedDecodedFrame(
+    const uint64_t pictureId) {
   _lastDecPictureId = pictureId;
   return 0;
 }

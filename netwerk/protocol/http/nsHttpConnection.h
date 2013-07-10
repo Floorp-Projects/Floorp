@@ -119,6 +119,7 @@ public:
     nsresult ResumeSend();
     nsresult ResumeRecv();
     int64_t  MaxBytesRead() {return mMaxBytesRead;}
+    uint8_t GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
     friend class nsHttpConnectionForceRecv;
     nsresult ForceRecv();
@@ -134,6 +135,7 @@ public:
     void EndIdleMonitoring();
 
     bool UsingSpdy() { return !!mUsingSpdyVersion; }
+    uint8_t GetSpdyVersion() { return mUsingSpdyVersion; }
     bool EverUsedSpdy() { return mEverUsedSpdy; }
     PRIntervalTime Rtt() { return mRtt; }
 
@@ -159,6 +161,11 @@ public:
     void    PrintDiagnostics(nsCString &log);
 
     void    SetTransactionCaps(uint32_t aCaps) { mTransactionCaps = aCaps; }
+
+    // IsExperienced() returns true when the connection has started at least one
+    // non null HTTP transaction of any version.
+    bool    IsExperienced() { return mExperienced; }
+
 private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
@@ -227,6 +234,7 @@ private:
     bool                            mLastTransactionExpectedNoContent;
     bool                            mIdleMonitoring;
     bool                            mProxyConnectInProgress;
+    bool                            mExperienced;
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
@@ -252,6 +260,9 @@ private:
 
     // mUsingSpdyVersion is cleared when mSpdySession is freed, this is permanent
     bool                            mEverUsedSpdy;
+
+    // mLastHttpResponseVersion stores the last response's http version seen.
+    uint8_t                         mLastHttpResponseVersion;
 
     // The capabailities associated with the most recent transaction
     uint32_t                        mTransactionCaps;

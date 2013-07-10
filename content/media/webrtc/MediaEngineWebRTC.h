@@ -154,6 +154,10 @@ public:
                           StreamTime aDesiredTime,
                           TrackTicks &aLastEndTime);
 
+  virtual bool IsFake() {
+    return false;
+  }
+
   NS_DECL_ISUPPORTS
 #ifdef MOZ_B2G_CAMERA
   NS_DECL_NSICAMERAGETCAMERACALLBACK
@@ -291,6 +295,10 @@ public:
                           TrackID aId,
                           StreamTime aDesiredTime,
                           TrackTicks &aLastEndTime);
+
+  virtual bool IsFake() {
+    return false;
+  }
 
   // VoEMediaProcess.
   void Process(const int channel, const webrtc::ProcessingTypes type,

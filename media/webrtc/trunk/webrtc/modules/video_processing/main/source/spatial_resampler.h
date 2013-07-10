@@ -29,16 +29,15 @@ class VPMSpatialResampler
 {
 public:
   virtual ~VPMSpatialResampler() {};
-  virtual WebRtc_Word32 SetTargetFrameSize(WebRtc_Word32 width,
-                                           WebRtc_Word32 height) = 0;
+  virtual int32_t SetTargetFrameSize(int32_t width, int32_t height) = 0;
   virtual void SetInputFrameResampleMode(VideoFrameResampling
                                          resamplingMode) = 0;
   virtual void Reset() = 0;
-  virtual WebRtc_Word32 ResampleFrame(const I420VideoFrame& inFrame,
-                                      I420VideoFrame* outFrame) = 0;
-  virtual WebRtc_Word32 TargetWidth() = 0;
-  virtual WebRtc_Word32 TargetHeight() = 0;
-  virtual bool ApplyResample(WebRtc_Word32 width, WebRtc_Word32 height) = 0;
+  virtual int32_t ResampleFrame(const I420VideoFrame& inFrame,
+                                I420VideoFrame* outFrame) = 0;
+  virtual int32_t TargetWidth() = 0;
+  virtual int32_t TargetHeight() = 0;
+  virtual bool ApplyResample(int32_t width, int32_t height) = 0;
 };
 
 class VPMSimpleSpatialResampler : public VPMSpatialResampler
@@ -46,21 +45,20 @@ class VPMSimpleSpatialResampler : public VPMSpatialResampler
 public:
   VPMSimpleSpatialResampler();
   ~VPMSimpleSpatialResampler();
-  virtual WebRtc_Word32 SetTargetFrameSize(WebRtc_Word32 width,
-                                           WebRtc_Word32 height);
+  virtual int32_t SetTargetFrameSize(int32_t width, int32_t height);
   virtual void SetInputFrameResampleMode(VideoFrameResampling resamplingMode);
   virtual void Reset();
-  virtual WebRtc_Word32 ResampleFrame(const I420VideoFrame& inFrame,
-                                      I420VideoFrame* outFrame);
-  virtual WebRtc_Word32 TargetWidth();
-  virtual WebRtc_Word32 TargetHeight();
-  virtual bool ApplyResample(WebRtc_Word32 width, WebRtc_Word32 height);
+  virtual int32_t ResampleFrame(const I420VideoFrame& inFrame,
+                                I420VideoFrame* outFrame);
+  virtual int32_t TargetWidth();
+  virtual int32_t TargetHeight();
+  virtual bool ApplyResample(int32_t width, int32_t height);
 
 private:
 
   VideoFrameResampling        _resamplingMode;
-  WebRtc_Word32               _targetWidth;
-  WebRtc_Word32               _targetHeight;
+  int32_t                     _targetWidth;
+  int32_t                     _targetHeight;
   Scaler                      _scaler;
 };
 

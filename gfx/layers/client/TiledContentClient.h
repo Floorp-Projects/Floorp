@@ -23,38 +23,38 @@ namespace layers {
  * Ideal place to store per tile debug information.
  */
 struct BasicTiledLayerTile {
-  RefPtr<TextureClientTile> mTextureClient;
+  RefPtr<DeprecatedTextureClientTile> mDeprecatedTextureClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
 #endif
 
   // Placeholder
   BasicTiledLayerTile()
-    : mTextureClient(nullptr)
+    : mDeprecatedTextureClient(nullptr)
   {}
 
   BasicTiledLayerTile(const BasicTiledLayerTile& o) {
-    mTextureClient = o.mTextureClient;
+    mDeprecatedTextureClient = o.mDeprecatedTextureClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
     mLastUpdate = o.mLastUpdate;
 #endif
   }
   BasicTiledLayerTile& operator=(const BasicTiledLayerTile& o) {
     if (this == &o) return *this;
-    mTextureClient = o.mTextureClient;
+    mDeprecatedTextureClient = o.mDeprecatedTextureClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
     mLastUpdate = o.mLastUpdate;
 #endif
     return *this;
   }
   bool operator== (const BasicTiledLayerTile& o) const {
-    return mTextureClient == o.mTextureClient;
+    return mDeprecatedTextureClient == o.mDeprecatedTextureClient;
   }
   bool operator!= (const BasicTiledLayerTile& o) const {
-    return mTextureClient != o.mTextureClient;
+    return mDeprecatedTextureClient != o.mDeprecatedTextureClient;
   }
 
-  bool IsPlaceholderTile() { return mTextureClient == nullptr; }
+  bool IsPlaceholderTile() { return mDeprecatedTextureClient == nullptr; }
 
   void ReadUnlock() {
     GetSurface()->ReadUnlock();
@@ -64,7 +64,7 @@ struct BasicTiledLayerTile {
   }
 
   gfxReusableSurfaceWrapper* GetSurface() {
-    return mTextureClient->GetReusableSurfaceWrapper();
+    return mDeprecatedTextureClient->GetReusableSurfaceWrapper();
   }
 };
 
@@ -133,7 +133,7 @@ public:
 
   /**
    * Performs a progressive update of a given tiled buffer.
-   * See ComputeProgressiveUpdateRegion above for parameter documentation.
+   * See ComputeProgressiveUpdateRegion below for parameter documentation.
    */
   bool ProgressiveUpdate(nsIntRegion& aValidRegion,
                          nsIntRegion& aInvalidRegion,
@@ -198,10 +198,6 @@ private:
    * current transaction.
    * aRegionToPaint will be filled with the region to update. This may be empty,
    * which indicates that there is no more work to do.
-   * aTransform is the transform required to convert from screen-space to
-   * layer-space.
-   * aScrollOffset is the current scroll offset of the primary scrollable layer.
-   * aResolution is the render resolution of the layer.
    * aIsRepeated should be true if this function has already been called during
    * this transaction.
    *

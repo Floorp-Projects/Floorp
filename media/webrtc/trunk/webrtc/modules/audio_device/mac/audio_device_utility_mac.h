@@ -21,14 +21,14 @@ class CriticalSectionWrapper;
 class AudioDeviceUtilityMac: public AudioDeviceUtility
 {
 public:
-    AudioDeviceUtilityMac(const WebRtc_Word32 id);
+    AudioDeviceUtilityMac(const int32_t id);
     ~AudioDeviceUtilityMac();
 
-    virtual WebRtc_Word32 Init();
+    virtual int32_t Init();
 
 private:
     CriticalSectionWrapper& _critSect;
-    WebRtc_Word32 _id;
+    int32_t _id;
 };
 
 } //  namespace webrtc

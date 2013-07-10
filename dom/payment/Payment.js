@@ -31,7 +31,8 @@ PaymentContentHelper.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavigatorPayment,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
+                                         Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsISupportsWeakReference]),
   classID:        PAYMENTCONTENTHELPER_CID,
   classInfo:      XPCOMUtils.generateCI({
     classID: PAYMENTCONTENTHELPER_CID,
@@ -78,7 +79,7 @@ PaymentContentHelper.prototype = {
 
   init: function(aWindow) {
     this._window = aWindow;
-    this.initHelper(aWindow, PAYMENT_IPC_MSG_NAMES);
+    this.initDOMRequestHelper(aWindow, PAYMENT_IPC_MSG_NAMES);
     return this.pay.bind(this);
   },
 

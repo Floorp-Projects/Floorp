@@ -326,9 +326,12 @@ NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports *aObject);
 #ifdef __cplusplus
 
 class nsCycleCollectionParticipant;
+class nsCycleCollectingAutoRefCnt;
 
-XPCOM_API(nsPurpleBufferEntry*)
-NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *p);
+XPCOM_API(void)
+NS_CycleCollectorSuspect3(void *n, nsCycleCollectionParticipant *p,
+                          nsCycleCollectingAutoRefCnt *aRefCnt,
+                          bool* aShouldDelete);
 
 #endif
 

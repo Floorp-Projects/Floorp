@@ -82,7 +82,7 @@ function test() {
   const testURL2 = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_248970_b_sample.html";
 
-  whenNewWindowLoaded(false, function(aWin) {
+  whenNewWindowLoaded({ private: false }, function(aWin) {
     windowsToClose.push(aWin);
 
     // get closed tab count
@@ -124,7 +124,7 @@ function test() {
            "it's the same tab that we expect");
         aWin.gBrowser.removeTab(tab_A_restored);
 
-        whenNewWindowLoaded(true, function(aWin) {
+        whenNewWindowLoaded({ private: true }, function(aWin) {
           windowsToClose.push(aWin);
 
           // setup a state for tab (B) so we can check that its duplicated

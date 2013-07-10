@@ -317,6 +317,33 @@ class TestRecursiveMakeBackend(BackendTester):
         self._consume('stub0', RecursiveMakeBackend, env)
         self.assertFalse(os.path.exists(manifest_path))
 
+    def test_ipdl_sources(self):
+        """Test that IPDL_SOURCES are written to ipdlsrcs.mk correctly."""
+        env = self._consume('ipdl_sources', RecursiveMakeBackend)
+
+        manifest_path = os.path.join(env.topobjdir,
+            'ipc', 'ipdl', 'ipdlsrcs.mk')
+        lines = [l.strip() for l in open(manifest_path, 'rt').readlines()]
+
+        # Handle Windows paths correctly
+        topsrcdir = env.topsrcdir.replace(os.sep, '/')
+
+        expected = [
+            "ALL_IPDLSRCS += %s/bar/bar.ipdl" % topsrcdir,
+            "CPPSRCS += bar.cpp",
+            "CPPSRCS += barChild.cpp",
+            "CPPSRCS += barParent.cpp",
+            "ALL_IPDLSRCS += %s/bar/bar2.ipdlh" % topsrcdir,
+            "CPPSRCS += bar2.cpp",
+            "ALL_IPDLSRCS += %s/foo/foo.ipdl" % topsrcdir,
+            "CPPSRCS += foo.cpp",
+            "CPPSRCS += fooChild.cpp",
+            "CPPSRCS += fooParent.cpp",
+            "ALL_IPDLSRCS += %s/foo/foo2.ipdlh" % topsrcdir,
+            "CPPSRCS += foo2.cpp",
+            "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
+        ]
+        self.assertEqual(lines, expected)
 
 if __name__ == '__main__':
     main()

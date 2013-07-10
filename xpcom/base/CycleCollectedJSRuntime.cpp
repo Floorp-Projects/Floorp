@@ -55,6 +55,7 @@
 // traversed.
 
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include <algorithm>
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMJSClass.h"
@@ -69,6 +70,44 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
+
+struct DeferredFinalizeFunctionHolder
+{
+  DeferredFinalizeFunction run;
+  void *data;
+};
+
+class IncrementalFinalizeRunnable : public nsRunnable
+{
+  typedef nsAutoTArray<DeferredFinalizeFunctionHolder, 16> DeferredFinalizeArray;
+  typedef CycleCollectedJSRuntime::DeferredFinalizerTable DeferredFinalizerTable;
+
+  CycleCollectedJSRuntime* mRuntime;
+  nsTArray<nsISupports*> mSupports;
+  DeferredFinalizeArray mDeferredFinalizeFunctions;
+  uint32_t mFinalizeFunctionToRun;
+
+  static const PRTime SliceMillis = 10; /* ms */
+
+  static PLDHashOperator
+  DeferredFinalizerEnumerator(DeferredFinalizeFunction& aFunction,
+                              void*& aData,
+                              void* aClosure);
+
+public:
+  IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
+                              nsTArray<nsISupports*>& mSupports,
+                              DeferredFinalizerTable& aFinalizerTable);
+  virtual ~IncrementalFinalizeRunnable();
+
+  void ReleaseNow(bool aLimited);
+
+  NS_DECL_NSIRUNNABLE
+};
+
+} // namespace mozilla
 
 inline bool
 AddToCCKind(JSGCTraceKind kind)
@@ -253,7 +292,7 @@ public:
   {
     return NS_OK;
   }
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
   {
   }
   static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
@@ -468,14 +507,20 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
     MOZ_CRASH();
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
+  JS_SetGCCallback(mJSRuntime, GCCallback, this);
 
   mJSHolders.Init(512);
 
   nsCycleCollector_registerJSRuntime(this);
+
+  mDeferredFinalizerTable.Init();
 }
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 {
+  MOZ_ASSERT(!mDeferredFinalizerTable.Count());
+  MOZ_ASSERT(!mDeferredSupports.Length());
+
   nsCycleCollector_forgetJSRuntime();
 
   JS_DestroyRuntime(mJSRuntime);
@@ -751,6 +796,18 @@ CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData)
   self->TraceNativeGrayRoots(aTracer);
 }
 
+/* static */ void
+CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
+                                    JSGCStatus aStatus,
+                                    void* aData)
+{
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+
+  MOZ_ASSERT(aRuntime == self->Runtime());
+
+  self->OnGC(aStatus);
+}
+
 struct JsGcTracer : public TraceCallbacks
 {
   virtual void Trace(JS::Heap<JS::Value> *p, const char *name, void *closure) const MOZ_OVERRIDE {
@@ -967,4 +1024,198 @@ CycleCollectedJSRuntime::Collect(uint32_t aReason) const
 
   JS::PrepareForFullGC(mJSRuntime);
   JS::GCForReason(mJSRuntime, gcreason);
+}
+
+void
+CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
+                                          DeferredFinalizeFunction aFunc,
+                                          void* aThing)
+{
+  void* thingArray = nullptr;
+  bool hadThingArray = mDeferredFinalizerTable.Get(aFunc, &thingArray);
+
+  thingArray = aAppendFunc(thingArray, aThing);
+  if (!hadThingArray) {
+    mDeferredFinalizerTable.Put(aFunc, thingArray);
+  }
+}
+
+void
+CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
+{
+  mDeferredSupports.AppendElement(aSupports);
+}
+
+bool
+ReleaseSliceNow(uint32_t aSlice, void* aData)
+{
+  MOZ_ASSERT(aSlice > 0, "nonsensical/useless call with slice == 0");
+  nsTArray<nsISupports*>* items = static_cast<nsTArray<nsISupports*>*>(aData);
+
+  uint32_t length = items->Length();
+  aSlice = std::min(aSlice, length);
+  for (uint32_t i = length; i > length - aSlice; --i) {
+    // Remove (and NS_RELEASE) the last entry in "items":
+    uint32_t lastItemIdx = i - 1;
+
+    nsISupports* wrapper = items->ElementAt(lastItemIdx);
+    items->RemoveElementAt(lastItemIdx);
+    NS_RELEASE(wrapper);
+  }
+
+  return items->IsEmpty();
+}
+
+/* static */ PLDHashOperator
+IncrementalFinalizeRunnable::DeferredFinalizerEnumerator(DeferredFinalizeFunction& aFunction,
+                                                         void*& aData,
+                                                         void* aClosure)
+{
+  DeferredFinalizeArray* array = static_cast<DeferredFinalizeArray*>(aClosure);
+
+  DeferredFinalizeFunctionHolder* function = array->AppendElement();
+  function->run = aFunction;
+  function->data = aData;
+
+  return PL_DHASH_REMOVE;
+}
+
+IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
+                                                         nsTArray<nsISupports*>& aSupports,
+                                                         DeferredFinalizerTable& aFinalizers)
+  : mRuntime(aRt),
+    mFinalizeFunctionToRun(0)
+{
+  this->mSupports.SwapElements(aSupports);
+  DeferredFinalizeFunctionHolder* function = mDeferredFinalizeFunctions.AppendElement();
+  function->run = ReleaseSliceNow;
+  function->data = &this->mSupports;
+
+  // Enumerate the hashtable into our array.
+  aFinalizers.Enumerate(DeferredFinalizerEnumerator, &mDeferredFinalizeFunctions);
+}
+
+IncrementalFinalizeRunnable::~IncrementalFinalizeRunnable()
+{
+  MOZ_ASSERT(this != mRuntime->mFinalizeRunnable);
+}
+
+void
+IncrementalFinalizeRunnable::ReleaseNow(bool aLimited)
+{
+  //MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mDeferredFinalizeFunctions.Length() != 0,
+             "We should have at least ReleaseSliceNow to run");
+  MOZ_ASSERT(mFinalizeFunctionToRun < mDeferredFinalizeFunctions.Length(),
+             "No more finalizers to run?");
+
+  TimeDuration sliceTime = TimeDuration::FromMilliseconds(SliceMillis);
+  TimeStamp started = TimeStamp::Now();
+  bool timeout = false;
+  do {
+    const DeferredFinalizeFunctionHolder &function =
+      mDeferredFinalizeFunctions[mFinalizeFunctionToRun];
+    if (aLimited) {
+      bool done = false;
+      while (!timeout && !done) {
+        /*
+         * We don't want to read the clock too often, so we try to
+         * release slices of 100 items.
+         */
+        done = function.run(100, function.data);
+        timeout = TimeStamp::Now() - started >= sliceTime;
+      }
+      if (done) {
+        ++mFinalizeFunctionToRun;
+      }
+      if (timeout) {
+        break;
+      }
+    } else {
+      function.run(UINT32_MAX, function.data);
+      ++mFinalizeFunctionToRun;
+    }
+  } while (mFinalizeFunctionToRun < mDeferredFinalizeFunctions.Length());
+
+  if (mFinalizeFunctionToRun == mDeferredFinalizeFunctions.Length()) {
+    MOZ_ASSERT(mRuntime->mFinalizeRunnable == this);
+    mDeferredFinalizeFunctions.Clear();
+    // NB: This may delete this!
+    mRuntime->mFinalizeRunnable = nullptr;
+  }
+}
+
+NS_IMETHODIMP
+IncrementalFinalizeRunnable::Run()
+{
+  if (mRuntime->mFinalizeRunnable != this) {
+    /* These items were already processed synchronously in JSGC_END. */
+    MOZ_ASSERT(!mSupports.Length());
+    MOZ_ASSERT(!mDeferredFinalizeFunctions.Length());
+    return NS_OK;
+  }
+
+  ReleaseNow(true);
+
+  if (mDeferredFinalizeFunctions.Length()) {
+    nsresult rv = NS_DispatchToCurrentThread(this);
+    if (NS_FAILED(rv)) {
+      ReleaseNow(false);
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+CycleCollectedJSRuntime::FinalizeDeferredThings(DeferredFinalizeType aType)
+{
+  MOZ_ASSERT(!mFinalizeRunnable);
+  mFinalizeRunnable = new IncrementalFinalizeRunnable(this,
+                                                      mDeferredSupports,
+                                                      mDeferredFinalizerTable);
+
+  // Everything should be gone now.
+  MOZ_ASSERT(!mDeferredSupports.Length());
+  MOZ_ASSERT(!mDeferredFinalizerTable.Count());
+
+  if (aType == FinalizeIncrementally) {
+    NS_DispatchToCurrentThread(mFinalizeRunnable);
+  } else {
+    mFinalizeRunnable->ReleaseNow(false);
+    MOZ_ASSERT(!mFinalizeRunnable);
+  }
+}
+
+void
+CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
+{
+  switch (aStatus) {
+    case JSGC_BEGIN:
+    {
+      break;
+    }
+    case JSGC_END:
+    {
+      /*
+       * If the previous GC created a runnable to finalize objects
+       * incrementally, and if it hasn't finished yet, finish it now. We
+       * don't want these to build up. We also don't want to allow any
+       * existing incremental finalize runnables to run after a
+       * non-incremental GC, since they are often used to detect leaks.
+       */
+      if (mFinalizeRunnable) {
+        mFinalizeRunnable->ReleaseNow(false);
+      }
+
+      // Do any deferred finalization of native objects.
+      FinalizeDeferredThings(JS::WasIncrementalGC(mJSRuntime) ? FinalizeIncrementally :
+                                                                FinalizeNow);
+      break;
+    }
+    default:
+      MOZ_CRASH();
+  }
+
+  CustomGCCallback(aStatus);
 }

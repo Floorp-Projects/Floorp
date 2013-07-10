@@ -32,14 +32,14 @@ void AudioDeviceUtility::WaitForKey()
 	_getch();
 }
 
-WebRtc_UWord32 AudioDeviceUtility::GetTimeInMS()
+uint32_t AudioDeviceUtility::GetTimeInMS()
 {
 	return timeGetTime();
 }
 
 bool AudioDeviceUtility::StringCompare(
     const char* str1 , const char* str2,
-    const WebRtc_UWord32 length)
+    const uint32_t length)
 {
 	return ((_strnicmp(str1, str2, length) == 0) ? true : false);
 }
@@ -90,19 +90,19 @@ void AudioDeviceUtility::WaitForKey()
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt );
 }
 
-WebRtc_UWord32 AudioDeviceUtility::GetTimeInMS()
+uint32_t AudioDeviceUtility::GetTimeInMS()
 {
     struct timeval tv;
     struct timezone tz;
-    WebRtc_UWord32 val;
+    uint32_t val;
 
     gettimeofday(&tv, &tz);
-    val = (WebRtc_UWord32)(tv.tv_sec*1000 + tv.tv_usec/1000);
+    val = (uint32_t)(tv.tv_sec*1000 + tv.tv_usec/1000);
     return val;
 }
 
 bool AudioDeviceUtility::StringCompare(
-    const char* str1 , const char* str2, const WebRtc_UWord32 length)
+    const char* str1 , const char* str2, const uint32_t length)
 {
     return (strncasecmp(str1, str2, length) == 0)?true: false;
 }

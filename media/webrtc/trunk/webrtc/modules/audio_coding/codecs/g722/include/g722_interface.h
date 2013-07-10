@@ -43,7 +43,7 @@ extern "C" {
  * Return value               :  0 - Ok
  *                              -1 - Error
  */
-WebRtc_Word16 WebRtcG722_CreateEncoder(G722EncInst **G722enc_inst);
+int16_t WebRtcG722_CreateEncoder(G722EncInst **G722enc_inst);
 
 
 /****************************************************************************
@@ -59,7 +59,7 @@ WebRtc_Word16 WebRtcG722_CreateEncoder(G722EncInst **G722enc_inst);
  *                              -1 - Error
  */
 
-WebRtc_Word16 WebRtcG722_EncoderInit(G722EncInst *G722enc_inst);
+int16_t WebRtcG722_EncoderInit(G722EncInst *G722enc_inst);
 
 
 /****************************************************************************
@@ -73,7 +73,7 @@ WebRtc_Word16 WebRtcG722_EncoderInit(G722EncInst *G722enc_inst);
  * Return value               :  0 - Ok
  *                              -1 - Error
  */
-WebRtc_Word16 WebRtcG722_FreeEncoder(G722EncInst *G722enc_inst);
+int16_t WebRtcG722_FreeEncoder(G722EncInst *G722enc_inst);
 
 
 
@@ -95,10 +95,10 @@ WebRtc_Word16 WebRtcG722_FreeEncoder(G722EncInst *G722enc_inst);
  *                              -1 - Error
  */
 
-WebRtc_Word16 WebRtcG722_Encode(G722EncInst *G722enc_inst,
-                                WebRtc_Word16 *speechIn,
-                                WebRtc_Word16 len,
-                                WebRtc_Word16 *encoded);
+int16_t WebRtcG722_Encode(G722EncInst *G722enc_inst,
+                          int16_t *speechIn,
+                          int16_t len,
+                          int16_t *encoded);
 
 
 /****************************************************************************
@@ -112,7 +112,7 @@ WebRtc_Word16 WebRtcG722_Encode(G722EncInst *G722enc_inst,
  * Return value               :  0 - Ok
  *                              -1 - Error
  */
-WebRtc_Word16 WebRtcG722_CreateDecoder(G722DecInst **G722dec_inst);
+int16_t WebRtcG722_CreateDecoder(G722DecInst **G722dec_inst);
 
 
 /****************************************************************************
@@ -128,7 +128,7 @@ WebRtc_Word16 WebRtcG722_CreateDecoder(G722DecInst **G722dec_inst);
  *                           -1 - Error
  */
 
-WebRtc_Word16 WebRtcG722_DecoderInit(G722DecInst *G722dec_inst);
+int16_t WebRtcG722_DecoderInit(G722DecInst *G722dec_inst);
 
 
 /****************************************************************************
@@ -143,7 +143,7 @@ WebRtc_Word16 WebRtcG722_DecoderInit(G722DecInst *G722dec_inst);
  *                              -1 - Error
  */
 
-WebRtc_Word16 WebRtcG722_FreeDecoder(G722DecInst *G722dec_inst);
+int16_t WebRtcG722_FreeDecoder(G722DecInst *G722dec_inst);
 
 
 /****************************************************************************
@@ -167,11 +167,11 @@ WebRtc_Word16 WebRtcG722_FreeDecoder(G722DecInst *G722dec_inst);
  *                            -1 - Error
  */
 
-WebRtc_Word16 WebRtcG722_Decode(G722DecInst *G722dec_inst,
-                                WebRtc_Word16 *encoded,
-                                WebRtc_Word16 len,
-                                WebRtc_Word16 *decoded,
-                                WebRtc_Word16 *speechType);
+int16_t WebRtcG722_Decode(G722DecInst *G722dec_inst,
+                          int16_t *encoded,
+                          int16_t len,
+                          int16_t *decoded,
+                          int16_t *speechType);
 
 /****************************************************************************
  * WebRtcG722_Version(...)
@@ -179,7 +179,7 @@ WebRtc_Word16 WebRtcG722_Decode(G722DecInst *G722dec_inst,
  * Get a string with the current version of the codec
  */
 
-WebRtc_Word16 WebRtcG722_Version(char *versionStr, short len);
+int16_t WebRtcG722_Version(char *versionStr, short len);
 
 
 #ifdef __cplusplus

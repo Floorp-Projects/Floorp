@@ -14,7 +14,7 @@
          MakeConstructible: false, DecompileArg: false,
          RuntimeDefaultLocale: false,
          ParallelDo: false, ParallelSlices: false, NewDenseArray: false,
-         UnsafeSetElement: false, ShouldForceSequential: false,
+         UnsafePutElements: false, ShouldForceSequential: false,
          ParallelTestsShouldPass: false,
          Dump: false,
          callFunction: false,
@@ -26,6 +26,13 @@
 /* Utility macros */
 #define TO_INT32(x) (x | 0)
 #define TO_UINT32(x) (x >>> 0)
+
+/* Assertions */
+#ifdef DEBUG
+#define assert(b, info) if (!(b)) AssertionFailed(info)
+#else
+#define assert(b, info)
+#endif
 
 /* cache built-in functions before applications can change them */
 var std_isFinite = isFinite;
@@ -140,13 +147,4 @@ function IsObject(v) {
     // these objects using strict equality, which said bogosity doesn't affect.
     return (typeof v === "object" && v !== null) ||
            (typeof v === "undefined" && v !== undefined);
-}
-
-
-/********** Assertions **********/
-
-
-function assert(b, info) {
-    if (!b)
-        AssertionFailed(info);
 }

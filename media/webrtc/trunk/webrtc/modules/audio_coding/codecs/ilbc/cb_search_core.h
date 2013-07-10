@@ -22,19 +22,19 @@
 #include "defines.h"
 
 void WebRtcIlbcfix_CbSearchCore(
-    WebRtc_Word32 *cDot,    /* (i) Cross Correlation */
-    WebRtc_Word16 range,    /* (i) Search range */
-    WebRtc_Word16 stage,    /* (i) Stage of this search */
-    WebRtc_Word16 *inverseEnergy,  /* (i) Inversed energy */
-    WebRtc_Word16 *inverseEnergyShift, /* (i) Shifts of inversed energy
+    int32_t *cDot,    /* (i) Cross Correlation */
+    int16_t range,    /* (i) Search range */
+    int16_t stage,    /* (i) Stage of this search */
+    int16_t *inverseEnergy,  /* (i) Inversed energy */
+    int16_t *inverseEnergyShift, /* (i) Shifts of inversed energy
                                           with the offset 2*16-29 */
-    WebRtc_Word32 *Crit,    /* (o) The criteria */
-    WebRtc_Word16 *bestIndex,   /* (o) Index that corresponds to
+    int32_t *Crit,    /* (o) The criteria */
+    int16_t *bestIndex,   /* (o) Index that corresponds to
                                    maximum criteria (in this
                                    vector) */
-    WebRtc_Word32 *bestCrit,   /* (o) Value of critera for the
+    int32_t *bestCrit,   /* (o) Value of critera for the
                                   chosen index */
-    WebRtc_Word16 *bestCritSh);  /* (o) The domain of the chosen
+    int16_t *bestCritSh);  /* (o) The domain of the chosen
                                     criteria */
 
 #endif

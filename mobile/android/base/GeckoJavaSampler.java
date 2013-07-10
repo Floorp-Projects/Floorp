@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.os.SystemClock;
 import android.util.Log;
 import java.lang.Thread;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ public class GeckoJavaSampler {
     private static Thread sSamplingThread = null;
     private static SamplingThread sSamplingRunnable = null;
     private static Thread sMainThread = null;
+    private static volatile boolean sLibsLoaded = false;
 
     // Use the same timer primitive as the profiler
     // to get a perfect sample syncing.
@@ -24,9 +26,17 @@ public class GeckoJavaSampler {
     private static class Sample {
         public Frame[] mFrames;
         public double mTime;
+        public long mJavaTime; // non-zero if Android system time is used
         public Sample(StackTraceElement[] aStack) {
             mFrames = new Frame[aStack.length];
-            mTime = getProfilerTime();
+            if (sLibsLoaded) {
+                mTime = getProfilerTime();
+            }
+            if (mTime == 0.0d) {
+                // getProfilerTime is not available yet; either libs are not loaded,
+                // or profiling hasn't started on the Gecko side yet
+                mJavaTime = SystemClock.elapsedRealtime();
+            }
             for (int i = 0; i < aStack.length; i++) {
                 mFrames[aStack.length - 1 - i] = new Frame();
                 mFrames[aStack.length - 1 - i].fileName = aStack[i].getFileName();
@@ -122,9 +132,14 @@ public class GeckoJavaSampler {
     private synchronized static Sample getSample(int aThreadId, int aSampleId) {
         return sSamplingRunnable.getSample(aThreadId, aSampleId);
     }
+
     public synchronized static double getSampleTime(int aThreadId, int aSampleId) {
         Sample sample = getSample(aThreadId, aSampleId);
         if (sample != null) {
+            if (sample.mJavaTime != 0) {
+                return (double)(sample.mJavaTime -
+                    SystemClock.elapsedRealtime()) + getProfilerTime();
+            }
             System.out.println("Sample: " + sample.mTime);
             return sample.mTime;
         }
@@ -144,6 +159,9 @@ public class GeckoJavaSampler {
 
     public static void start(int aInterval, int aSamples) {
         synchronized (GeckoJavaSampler.class) {
+            if (sSamplingRunnable != null) {
+                return;
+            }
             sSamplingRunnable = new SamplingThread(aInterval, aSamples);
             sSamplingThread = new Thread(sSamplingRunnable, "Java Sampler");
             sSamplingThread.start();
@@ -177,6 +195,10 @@ public class GeckoJavaSampler {
             sSamplingThread = null;
             sSamplingRunnable = null;
         }
+    }
+
+    public static void setLibsLoaded() {
+        sLibsLoaded = true;
     }
 }
 

@@ -26,7 +26,7 @@
 namespace webrtc
 {
 
-VideoCaptureMacQuickTime::VideoCaptureMacQuickTime(WebRtc_Word32 iID) :
+VideoCaptureMacQuickTime::VideoCaptureMacQuickTime(int32_t iID) :
     VideoCaptureImpl(iID), // super class constructor
     _id(iID),
     _isCapturing(false),
@@ -64,12 +64,12 @@ VideoCaptureMacQuickTime::~VideoCaptureMacQuickTime()
 
 }
 
-WebRtc_Word32 VideoCaptureMacQuickTime::Init(
-    const WebRtc_Word32 id, const char* deviceUniqueIdUTF8)
+int32_t VideoCaptureMacQuickTime::Init(
+    const int32_t id, const char* deviceUniqueIdUTF8)
 {
 
-    const WebRtc_Word32 nameLength =
-        (WebRtc_Word32) strlen((char*) deviceUniqueIdUTF8);
+    const int32_t nameLength =
+        (int32_t) strlen((char*) deviceUniqueIdUTF8);
     if (nameLength > kVideoCaptureUniqueNameLength)
         return -1;
 
@@ -153,7 +153,7 @@ WebRtc_Word32 VideoCaptureMacQuickTime::Init(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureMacQuickTime::StartCapture(
+int32_t VideoCaptureMacQuickTime::StartCapture(
     const VideoCaptureCapability& capability)
 {
     WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id, "%s:%d "
@@ -175,7 +175,7 @@ WebRtc_Word32 VideoCaptureMacQuickTime::StartCapture(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureMacQuickTime::StopCapture()
+int32_t VideoCaptureMacQuickTime::StopCapture()
 {
 
     if (VideoCaptureStop() == -1)
@@ -191,7 +191,7 @@ bool VideoCaptureMacQuickTime::CaptureStarted()
     return _isCapturing;
 }
 
-WebRtc_Word32 VideoCaptureMacQuickTime::CaptureSettings(
+int32_t VideoCaptureMacQuickTime::CaptureSettings(
     VideoCaptureCapability& settings)
 {
 	settings.width = _captureCapability.width;
@@ -1003,9 +1003,9 @@ int VideoCaptureMacQuickTime::SendFrame(SGChannel /*sgChannel*/, char* data,
         // Will be set to true if we don't recognize the size and/or video
         // format.
         bool convertFrame = false;
-        WebRtc_Word32 width = 352;
-        WebRtc_Word32 height = 288;
-        WebRtc_Word32 frameSize = 0;
+        int32_t width = 352;
+        int32_t height = 288;
+        int32_t frameSize = 0;
 
         VideoCaptureCapability captureCapability;
         captureCapability.width = width;
@@ -1042,8 +1042,8 @@ int VideoCaptureMacQuickTime::SendFrame(SGChannel /*sgChannel*/, char* data,
                     == _captureCapability.height)
                 {
                     // Ok format and size, send the frame to super class
-                    IncomingFrame((WebRtc_UWord8*) data,
-                                  (WebRtc_Word32) frameSize, captureCapability,
+                    IncomingFrame((uint8_t*) data,
+                                  (int32_t) frameSize, captureCapability,
                                   TickTime::MillisecondTimestamp());
 
                 }
@@ -1078,8 +1078,8 @@ int VideoCaptureMacQuickTime::SendFrame(SGChannel /*sgChannel*/, char* data,
                     Ptr capturedFrame = GetPixBaseAddr(pixMap);
 
                     // Send the converted frame out to super class
-                    IncomingFrame((WebRtc_UWord8*) data,
-                                  (WebRtc_Word32) frameSize, captureCapability,
+                    IncomingFrame((uint8_t*) data,
+                                  (int32_t) frameSize, captureCapability,
                                   TickTime::MillisecondTimestamp());
 
                     // Unlock the image data to get ready for the next frame.
@@ -1133,10 +1133,10 @@ int VideoCaptureMacQuickTime::SendFrame(SGChannel /*sgChannel*/, char* data,
             int height = (*rgbPixMap)->bounds.bottom;
 
             // 16 is for YUY2 format.
-            WebRtc_Word32 frameSize = (width * height * 16) >> 3;
+            int32_t frameSize = (width * height * 16) >> 3;
 
             // Ok format and size, send the frame to super class
-            IncomingFrame((WebRtc_UWord8*) data, (WebRtc_Word32) frameSize,
+            IncomingFrame((uint8_t*) data, (int32_t) frameSize,
                           captureCapability, TickTime::MillisecondTimestamp());
 
             UnlockPixels(rgbPixMap);

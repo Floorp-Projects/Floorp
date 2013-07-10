@@ -2,33 +2,33 @@
 default-preferences pref(dom.experimental_forms_range,true)
 
 # sanity checks:
-!= input-range-not-other-type-unthemed-1.html input-range-not-other-type-unthemed-1a-notref.html
-!= input-range-not-other-type-unthemed-1.html input-range-not-other-type-unthemed-1b-notref.html
-!= input-range-not-other-type-unthemed-1.html input-range-not-other-type-unthemed-1c-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1c-notref.html
 
 # dynamic type changes:
-== input-to-range-from-other-type-unthemed-1.html input-to-range-from-other-type-unthemed-1-ref.html
-== input-from-range-to-other-type-unthemed-1.html input-from-range-to-other-type-unthemed-1-ref.html
+== to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
+== from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
 
 # for different values:
-!= input-range-different-fraction-of-range-unthemed-1.html input-range-different-fraction-of-range-unthemed-1-notref.html
-== input-range-same-fraction-of-range-unthemed-1.html input-range-same-fraction-of-range-unthemed-1-ref.html
+!= different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1-notref.html
+== same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1-ref.html
 
 # dynamic value changes:
-== input-value-prop-unthemed.html input-75pct-unthemed-common-ref.html
-== input-value-prop.html input-75pct-common-ref.html
-== input-valueAsNumber-prop-unthemed.html input-75pct-unthemed-common-ref.html
-== input-valueAsNumber-prop.html input-75pct-common-ref.html
-fails-if(B2G) == input-stepDown-unthemed.html input-75pct-unthemed-common-ref.html
-fails-if(B2G) == input-stepDown.html input-75pct-common-ref.html
-== input-stepUp-unthemed.html input-75pct-unthemed-common-ref.html
-== input-stepUp.html input-75pct-common-ref.html
+== value-prop-unthemed.html 75pct-unthemed-common-ref.html
+== value-prop.html 75pct-common-ref.html
+== valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
+== valueAsNumber-prop.html 75pct-common-ref.html
+fails-if(B2G) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
+fails-if(B2G) == stepDown.html 75pct-common-ref.html
+== stepUp-unthemed.html 75pct-unthemed-common-ref.html
+== stepUp.html 75pct-common-ref.html
 
 # 'direction' property:
-== input-range-direction-unthemed-1.html input-range-direction-unthemed-1-ref.html
+== direction-unthemed-1.html direction-unthemed-1-ref.html
 
 # ::-moz-range-progress pseudo-element:
-fails-if(B2G) == input-range-moz-range-progress-1.html input-range-moz-range-progress-1-ref.html
-== input-range-moz-range-progress-2.html input-range-moz-range-progress-2-ref.html
-== input-range-moz-range-progress-3.html input-range-moz-range-progress-3-ref.html
+fails-if(B2G) == moz-range-progress-1.html moz-range-progress-1-ref.html
+== moz-range-progress-2.html moz-range-progress-2-ref.html
+== moz-range-progress-3.html moz-range-progress-3-ref.html
 

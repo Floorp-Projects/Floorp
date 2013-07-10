@@ -56,12 +56,12 @@ class VideoSource
 public:
   VideoSource();
   VideoSource(std::string fileName, VideoSize size, float frameRate, webrtc::VideoType type = webrtc::kI420);
-  VideoSource(std::string fileName, WebRtc_UWord16 width, WebRtc_UWord16 height,
+  VideoSource(std::string fileName, uint16_t width, uint16_t height,
       float frameRate = 30, webrtc::VideoType type = webrtc::kI420);
 
     std::string GetFileName() const { return _fileName; }
-    WebRtc_UWord16  GetWidth() const { return _width; }
-    WebRtc_UWord16 GetHeight() const { return _height; }
+    uint16_t  GetWidth() const { return _width; }
+    uint16_t GetHeight() const { return _height; }
     webrtc::VideoType GetType() const { return _type; }
     float GetFrameRate() const { return _frameRate; }
     int GetWidthHeight( VideoSize size);
@@ -69,12 +69,12 @@ public:
     // Returns the filename with the path (including the leading slash) removed.
     std::string GetName() const;
 
-    WebRtc_Word32 GetFrameLength() const;
+    int32_t GetFrameLength() const;
 
 private:
     std::string         _fileName;
-    WebRtc_UWord16      _width;
-    WebRtc_UWord16      _height;
+    uint16_t      _width;
+    uint16_t      _height;
     webrtc::VideoType   _type;
     float               _frameRate;
 };
