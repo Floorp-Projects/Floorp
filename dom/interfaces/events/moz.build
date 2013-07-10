@@ -40,7 +40,6 @@ XPIDL_SOURCES += [
     'nsIDOMNotifyPaintEvent.idl',
     'nsIDOMPageTransitionEvent.idl',
     'nsIDOMPaintRequest.idl',
-    'nsIDOMPaintRequestList.idl',
     'nsIDOMPopStateEvent.idl',
     'nsIDOMPopupBlockedEvent.idl',
     'nsIDOMProgressEvent.idl',
