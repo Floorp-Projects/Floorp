@@ -195,7 +195,8 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 bool
 CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
-    JS_ASSERT(label->used() && !label->bound());
+    JS_ASSERT(label->used());
+    JS_ASSERT(!label->bound());
 
     CompileInfo &info = snapshot->mir()->block()->info();
     switch (info.executionMode()) {
