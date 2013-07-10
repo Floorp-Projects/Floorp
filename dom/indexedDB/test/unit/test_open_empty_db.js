@@ -20,7 +20,7 @@ function testSteps()
     let request = indexedDB.open(name, version);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     if (name === null) {
       name = "null";
@@ -41,6 +41,6 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }
 

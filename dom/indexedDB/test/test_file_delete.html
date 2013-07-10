@@ -27,7 +27,7 @@
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -40,14 +40,14 @@
       objectStore.add(fileData2.file, fileData2.key);
       objectStore.add(fileData3.file, fileData3.key);
 
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "success", "Got correct event type");
 
       let trans = db.transaction([objectStoreName], READ_WRITE);
       trans.objectStore(objectStoreName).delete(fileData1.key);
       trans.oncomplete = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "complete", "Got correct event type");
 
@@ -59,7 +59,7 @@
     }
 
     scheduleGC();
-    yield;
+    yield undefined;
 
     ok(!hasFileInfo(name, 1), "Correct ref count");
     ok(hasFileInfo(name, 2), "Correct ref count");
@@ -69,7 +69,7 @@
       let request = indexedDB.open(name, 1);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       is(event.type, "success", "Got correct event type");
 
@@ -81,7 +81,7 @@
 
       request = objectStore.get(fileData2.key);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       let result = event.target.result;
       ok(result, "Got result");
@@ -89,7 +89,7 @@
       objectStore.delete(fileData2.key);
 
       trans.oncomplete = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "complete", "Got correct event type");
 
@@ -102,7 +102,7 @@
       objectStore.delete(fileData3.key);
 
       trans.oncomplete = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "complete", "Got correct event type");
 
@@ -113,14 +113,14 @@
     }
 
     scheduleGC();
-    yield;
+    yield undefined;
 
     ok(!hasFileInfo(name, 1), "Correct ref count");
     ok(!hasFileInfo(name, 2), "Correct ref count");
     ok(!hasFileInfo(name, 3), "Correct ref count");
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

@@ -12,7 +12,7 @@
         let request = indexedDB.open("browser_forgetThisSite.js");
         request.onerror = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
-        let event = yield;
+        let event = yield undefined;
 
         if (event.type == "error") {
           testException = event.target.error.name;
@@ -23,7 +23,7 @@
         }
 
         finishTest()
-        yield;
+        yield undefined;
       }
     </script>
 

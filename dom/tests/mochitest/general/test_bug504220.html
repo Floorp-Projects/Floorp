@@ -49,11 +49,11 @@ function run_test() {
     else
       location.hash = "#bar";
 
-    yield;
+    yield undefined;
 
     is(numEvents, 1, "Exactly one hashchange should have been fired.");
     SimpleTest.finish();
-    yield;
+    yield undefined;
   }
 
   var gGen = waitForHashchange();

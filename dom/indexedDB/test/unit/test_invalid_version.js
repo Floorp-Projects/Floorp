@@ -28,5 +28,5 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }

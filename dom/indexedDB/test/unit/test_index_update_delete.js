@@ -13,7 +13,7 @@ function testSteps()
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onerror = errorHandler;
@@ -36,7 +36,7 @@ function testSteps()
     }
   }
 
-  event = yield;
+  event = yield undefined;
   is(event.type, "success", "expect a success event");
 
   for each (let autoIncrement in [false, true]) {
@@ -44,7 +44,7 @@ function testSteps()
                         .objectStore(autoIncrement);
 
     objectStore.count().onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.target.result, 20, "Correct number of entries in objectStore");
 
@@ -57,7 +57,7 @@ function testSteps()
                     .index(unique);
 
       index.count().onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       is(event.target.result, indexCount,
          "Correct number of entries in index");
@@ -81,7 +81,7 @@ function testSteps()
           continueToNextStep();
         }
       }
-      yield;
+      yield undefined;
 
       is(sawEntry, true, "Saw entry for key value " + modifiedEntry);
 
@@ -91,7 +91,7 @@ function testSteps()
                 .index(unique);
 
       index.count().onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.result, indexCount,
          "Correct number of entries in index");
@@ -116,7 +116,7 @@ function testSteps()
           continueToNextStep();
         }
       }
-      yield;
+      yield undefined;
 
       is(sawEntry, true, "Saw entry for key value " + modifiedEntry);
 
@@ -125,7 +125,7 @@ function testSteps()
                       .objectStore(autoIncrement);
 
       objectStore.count().onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.result, objectStoreCount,
          "Correct number of entries in objectStore");
@@ -134,7 +134,7 @@ function testSteps()
       index = objectStore.index(unique);
 
       index.count().onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.result, indexCount,
          "Correct number of entries in index");
@@ -143,19 +143,19 @@ function testSteps()
 
       objectStore.delete(modifiedEntry).onsuccess =
         grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       objectStoreCount--;
       indexCount--;
 
       objectStore.count().onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.result, objectStoreCount,
          "Correct number of entries in objectStore");
 
       index.count().onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.result, indexCount,
          "Correct number of entries in index");
@@ -163,5 +163,5 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }

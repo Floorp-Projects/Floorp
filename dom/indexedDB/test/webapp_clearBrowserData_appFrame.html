@@ -53,7 +53,7 @@
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
-      let event = yield;
+      let event = yield undefined;
 
       let db = event.target.result;
       db.onerror = errorHandler;
@@ -65,14 +65,14 @@
       objectStore.add(testValue, testKey);
 
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       ok(db === event.target.result, "created database");
 
       objectStore =
         db.transaction(objectStoreName).objectStore(objectStoreName);
       objectStore.get(testKey).onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       ok(testValue == event.target.result, "data exists");
 
@@ -113,13 +113,13 @@
       info("loading browser frame");
 
       document.body.appendChild(iframe);
-      yield;
+      yield undefined;
 
       request = indexedDB.open(dbName, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = unexpectedSuccessHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       db = event.target.result;
       db.onerror = errorHandler;
@@ -127,12 +127,12 @@
       objectStore =
         db.transaction(objectStoreName).objectStore(objectStoreName);
       objectStore.get(testKey).onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       ok(testValue == event.target.result, "data still exists");
 
       finish();
-      yield;
+      yield undefined;
     }
 
   </script>

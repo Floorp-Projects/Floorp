@@ -155,7 +155,7 @@ function testHandlingUserInput() {
         }
       });
 
-      yield;
+      yield undefined;
     }
 
     SimpleTest.executeSoon(function() {
@@ -171,7 +171,7 @@ function testHandlingUserInput() {
 function runner() {
   for (let i=0; i<gTests.length; ++i) {
     gTests[i]();
-    yield;
+    yield undefined;
   }
 
   SimpleTest.finish();
