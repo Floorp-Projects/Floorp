@@ -37,7 +37,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   let oldScrollTop = scrollBoxElement.scrollTop;
   ok(oldScrollTop > 0, "scroll location is not at the top");
@@ -69,7 +69,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   // Scroll location needs to change, because one message is also removed, and
   // we need to scroll a bit towards the top, to keep the current view in sync.
@@ -84,7 +84,7 @@ function testGen() {
   hud = testDriver = null;
   finishTest();
 
-  yield;
+  yield undefined;
 }
 
 function test() {

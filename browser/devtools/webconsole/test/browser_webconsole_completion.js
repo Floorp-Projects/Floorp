@@ -34,7 +34,7 @@ function testCompletion(hud) {
   input.value = "docu";
   input.setSelectionRange(4, 4);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
-  yield;
+  yield undefined;
 
   is(input.value, "docu", "'docu' completion (input.value)");
   is(jsterm.completeNode.value, "    ment", "'docu' completion (completeNode)");
@@ -43,7 +43,7 @@ function testCompletion(hud) {
   input.value = "docu";
   input.setSelectionRange(4, 4);
   jsterm.complete(jsterm.COMPLETE_FORWARD, testNext);
-  yield;
+  yield undefined;
 
   is(input.value, "document", "'docu' tab completion");
   is(input.selectionStart, 8, "start selection is alright");
@@ -55,7 +55,7 @@ function testCompletion(hud) {
   input.value = "window.Ob";
   input.setSelectionRange(9, 9);
   jsterm.complete(jsterm.COMPLETE_FORWARD, testNext);
-  yield;
+  yield undefined;
 
   is(input.value, "window.Object", "'window.Ob' tab completion");
 
@@ -63,21 +63,21 @@ function testCompletion(hud) {
   input.value = "document.getElem";
   input.setSelectionRange(16, 16);
   jsterm.complete(jsterm.COMPLETE_FORWARD, testNext);
-  yield;
+  yield undefined;
 
   is(input.value, "document.getElem", "'document.getElem' completion");
   is(jsterm.completeNode.value, "", "'document.getElem' completion");
 
   // Test pressing tab another time.
   jsterm.complete(jsterm.COMPLETE_FORWARD, testNext);
-  yield;
+  yield undefined;
 
   is(input.value, "document.getElem", "'document.getElem' completion");
   is(jsterm.completeNode.value, "                entsByTagNameNS", "'document.getElem' another tab completion");
 
   // Test pressing shift_tab.
   jsterm.complete(jsterm.COMPLETE_BACKWARD, testNext);
-  yield;
+  yield undefined;
 
   is(input.value, "document.getElem", "'document.getElem' untab completion");
   is(jsterm.completeNode.value, "", "'document.getElem' completion");
@@ -86,7 +86,7 @@ function testCompletion(hud) {
 
   input.value = "docu";
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
-  yield;
+  yield undefined;
 
   is(jsterm.completeNode.value, "    ment", "'docu' completion");
   jsterm.execute();
@@ -95,26 +95,26 @@ function testCompletion(hud) {
   // Test multi-line completion works
   input.value =                 "console.log('one');\nconsol";
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
-  yield;
+  yield undefined;
 
   is(jsterm.completeNode.value, "                   \n      e", "multi-line completion");
 
   // Test non-object autocompletion.
   input.value = "Object.name.sl";
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
-  yield;
+  yield undefined;
 
   is(jsterm.completeNode.value, "              ice", "non-object completion");
 
   // Test string literal autocompletion.
   input.value = "'Asimov'.sl";
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
-  yield;
+  yield undefined;
 
   is(jsterm.completeNode.value, "           ice", "string literal completion");
 
   testDriver = jsterm = input = null;
   executeSoon(finishTest);
-  yield;
+  yield undefined;
 }
 
