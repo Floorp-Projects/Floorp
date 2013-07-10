@@ -37,12 +37,28 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     private static LaunchState sLaunchState = LaunchState.Launching;
 
-    private Intent mIntent;
-    private final String mUri;
+    static GeckoThread sGeckoThread;
+    static String sUri;
+    static String sArgs;
+    static String sAction;
 
-    GeckoThread(Intent intent, String uri) {
-        mIntent = intent;
-        mUri = uri;
+    static void setStartupArgs(String uri, String args, String action) {
+        if (uri != null)
+            sUri = uri;
+        if (args != null)
+            sArgs = args;
+        if (action != null)
+            sAction = action;
+    }
+
+    static GeckoThread getInstance() {
+        if (sGeckoThread == null) {
+            sGeckoThread = new GeckoThread();
+        }
+        return sGeckoThread;
+    }
+
+    private GeckoThread() {
         setName("Gecko");
         GeckoAppShell.getEventDispatcher().registerEventListener("Gecko:Ready", this);
     }
@@ -111,14 +127,16 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
-        String args = addCustomProfileArg(mIntent.getStringExtra("args"));
-        String type = getTypeFromAction(mIntent.getAction());
-        mIntent = null;
+        String args = addCustomProfileArg(sArgs);
+        String type = getTypeFromAction(sAction != null ? sAction :
+                                        sUri != null ? Intent.ACTION_VIEW : Intent.ACTION_MAIN);
 
         // and then fire us up
         Log.i(LOGTAG, "RunGecko - args = " + args);
-        GeckoAppShell.runGecko(path, args, mUri, type);
+        GeckoAppShell.runGecko(path, args, sUri, type);
     }
+
+    static Object sLock = new Object();
 
     @Override
     public void handleMessage(String event, JSONObject message) {
@@ -130,13 +148,13 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     public static boolean checkLaunchState(LaunchState checkState) {
-        synchronized (sLaunchState) {
+        synchronized (sLock) {
             return sLaunchState == checkState;
         }
     }
 
     static void setLaunchState(LaunchState setState) {
-        synchronized (sLaunchState) {
+        synchronized (sLock) {
             sLaunchState = setState;
         }
     }
@@ -146,7 +164,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
      * state is <code>checkState</code>; otherwise do nothing and return false.
      */
     static boolean checkAndSetLaunchState(LaunchState checkState, LaunchState setState) {
-        synchronized (sLaunchState) {
+        synchronized (sLock) {
             if (sLaunchState != checkState)
                 return false;
             sLaunchState = setState;
