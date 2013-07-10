@@ -821,23 +821,23 @@ let CustomizableUIInternal = {
         LOG("Widget " + aWidget.id + " has a view with showing and hiding events. Auto-registering event handlers.");
         let viewNode = aDocument.getElementById(aWidget.viewId);
 
-        if (!viewNode) {
-          ERROR("Could not find the view node with id: " + aWidget.viewId);
-          throw new Error("Could not find the view node with id: " + aWidget.viewId);
-        }
+        if (viewNode) {
+          // PanelUI relies on the .PanelUI-subView class to be able to show only
+          // one sub-view at a time.
+          viewNode.classList.add("PanelUI-subView");
 
-        // PanelUI relies on the .PanelUI-subView class to be able to show only
-        // one sub-view at a time.
-        viewNode.classList.add("PanelUI-subView");
-
-        for (let eventName of kSubviewEvents) {
-          let handler = "on" + eventName;
-          if (typeof aWidget[handler] == "function") {
-            viewNode.addEventListener(eventName, aWidget[handler], false);
+          for (let eventName of kSubviewEvents) {
+            let handler = "on" + eventName;
+            if (typeof aWidget[handler] == "function") {
+              viewNode.addEventListener(eventName, aWidget[handler], false);
+            }
           }
-        }
 
-        LOG("Widget " + aWidget.id + " showing and hiding event handlers set.");
+          LOG("Widget " + aWidget.id + " showing and hiding event handlers set.");
+        } else {
+          ERROR("Could not find the view node with id: " + aWidget.viewId +
+                ", for widget: " + aWidget.id + ".");
+        }
       }
 
       if (aWidget.onCreated) {
