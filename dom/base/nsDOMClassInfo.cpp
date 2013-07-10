@@ -799,9 +799,6 @@ jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
 jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
 jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
-jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
-jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
-jsid nsDOMClassInfo::sOnerror_id         = JSID_VOID;
 
 static const JSClass *sObjectClass = nullptr;
 
@@ -994,9 +991,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSID_TO_STRING(sSelf_id,            cx, "self");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
-  SET_JSID_TO_STRING(sURL_id,             cx, "URL");
-  SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
-  SET_JSID_TO_STRING(sOnerror_id,         cx, "onerror");
 
   return NS_OK;
 }
@@ -2418,8 +2412,6 @@ nsDOMClassInfo::ShutDown()
   sFrames_id          = JSID_VOID;
   sSelf_id            = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
-  sOnload_id          = JSID_VOID;
-  sOnerror_id         = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);

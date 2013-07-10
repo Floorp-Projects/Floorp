@@ -179,8 +179,7 @@ protected:
             id == sScrollMaxY_id   ||
             id == sLength_id       ||
             id == sFrames_id       ||
-            id == sSelf_id         ||
-            id == sURL_id);
+            id == sSelf_id);
   }
 
   static nsIXPConnect *sXPConnect;
@@ -203,7 +202,6 @@ public:
   static jsid sLocationbar_id;
   static jsid sPersonalbar_id;
   static jsid sStatusbar_id;
-  static jsid sDialogArguments_id;
   static jsid sControllers_id;
   static jsid sLength_id;
   static jsid sScrollX_id;
@@ -219,11 +217,7 @@ public:
   static jsid sFrames_id;
   static jsid sSelf_id;
   static jsid sJava_id;
-  static jsid sPackages_id;
   static jsid sWrappedJSObject_id;
-  static jsid sURL_id;
-  static jsid sOnload_id;
-  static jsid sOnerror_id;
 };
 
 // THIS ONE ISN'T SAFE!! It assumes that the private of the JSObject is
