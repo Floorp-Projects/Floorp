@@ -1508,9 +1508,9 @@ let CustomizableUIInternal = {
     // returns.
 
     let area = widget.currentArea;
-    if (area) {
-      let buildArea = gBuildAreas.get(area);
-      for (let buildNode of buildArea) {
+    let buildAreaNodes = area && gBuildAreas.get(area);
+    if (buildAreaNodes) {
+      for (let buildNode of buildAreaNodes) {
         let widgetNode = buildNode.ownerDocument.getElementById(aWidgetId);
         if (widgetNode) {
           widgetNode.parentNode.removeChild(widgetNode);
