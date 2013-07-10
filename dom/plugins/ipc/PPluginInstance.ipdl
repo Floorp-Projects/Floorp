@@ -12,7 +12,7 @@ include protocol PStreamNotify;
 include protocol PPluginSurface;
 
 include "mozilla/plugins/PluginMessageUtils.h";
-include "IPC/nsGUIEventIPC.h";
+include "ipc/nsGUIEventIPC.h";
 
 using NPError;
 using NPRemoteWindow;
