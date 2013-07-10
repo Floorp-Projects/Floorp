@@ -494,14 +494,11 @@ CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy)
 void
 JavaScriptParent::drop(JSObject *obj)
 {
-    if (inactive_)
-        return;
-
     ObjectId objId = idOf(obj);
 
     objects_.remove(objId);
-    if (!SendDropObject(objId))
-        MOZ_CRASH();
+    if (!inactive_ && !SendDropObject(objId))
+        (void)0;
     decref();
 }
 

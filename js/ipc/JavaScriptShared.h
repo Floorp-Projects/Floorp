@@ -21,6 +21,24 @@ namespace jsipc {
 
 typedef uint64_t ObjectId;
 
+class JavaScriptShared;
+
+class CpowIdHolder : public CpowHolder
+{
+  public:
+    CpowIdHolder(JavaScriptShared *js, const InfallibleTArray<CpowEntry> &cpows)
+      : js_(js),
+        cpows_(cpows)
+    {
+    }
+
+    bool ToObject(JSContext *cx, JSObject **objp);
+
+  private:
+    JavaScriptShared *js_;
+    const InfallibleTArray<CpowEntry> &cpows_;
+};
+
 // Map ids -> JSObjects
 class ObjectStore
 {
@@ -69,6 +87,9 @@ class JavaScriptShared
 
     static const uint32_t OBJECT_EXTRA_BITS  = 1;
     static const uint32_t OBJECT_IS_CALLABLE = (1 << 0);
+
+    bool Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpows, JSObject **objp);
+    bool Wrap(JSContext *cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry> *outCpows);
 
   protected:
     bool toVariant(JSContext *cx, jsval from, JSVariant *to);
